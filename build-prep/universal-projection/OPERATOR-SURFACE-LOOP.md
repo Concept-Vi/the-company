@@ -544,3 +544,28 @@ Tim's "first composed product" — the keystone retargeted at decisions, resolut
     hollow-building — waiting correctly on the sequenced foundation with my seam pinned.
   - **NEXT:** build projection's residual (explain-wire / memory-route / host-mount — whichever the seam answers leave) when composition's
     types + the 3 answers land; meanwhile the V/inspector/chip legibility is converged + the registry-name + Tim-placement items sit with their owners.
+- **2026-06-18 — ✅ ALL 3 seam answers IN (projection's decision piece confirmed ~zero net-new); ✅ ran the FIRST task-scoped END-TO-END stranger test → found the #1 operator gap (DNA's drill-face), escalated. Honest: no projection code beat (the gap is DNA's RUNG-C; my data's shipped; the host's gated on types).**
+  - **SEAM ANSWERS (thread g-1781731457) — all confirm projection ~ZERO net-new:** (1) explain-wire = REUSE fork's brain turn
+    (/api/claude/turn / forkBrainCore.talk with the decision address — DNA's render calls it; projection adds nothing); (2) memory =
+    FOLD recall into territory_for as a guarded leg (recollection drafts, fork applies) → /api/territory carries it FREE; (3) host-mount
+    = REUSE GalleryMount + renderGallery (DNA resolves decision:// via my /api/territory, RUNG-C renders, mounts in the existing host,
+    the slide-walk re-renders one container). I DECIDED the window-event = REUSE `gallery:rendered` (per lead's reuse steer) + owned a
+    lifecycle note (decouple the decision-slide's close from wheel-deselect — I verify/harden that against DNA's REAL render, not a stub).
+    So projection's decision residual is genuinely ~nil; I build/verify the instant composition's types + DNA's render land.
+  - **★ TASK-SCOPED END-TO-END TEST (the advisor's reserve, warranted as the build-wait stretched — verify-by-use, not research):**
+    drove the surface cold on a phone against a stranger's GOAL ("find what the company's been doing, understand one thing"), fresh-eyes
+    judged the WHOLE journey (E1/E2/E3 screenshots). VERDICT: goal technically reachable, PRACTICALLY UNREACHABLE for a stranger:
+    • E1 cold open — WORKS (the legend reads human; a stranger forms a plan: tap a dot).
+    • ★ E2 tap-a-dot (the PRIMARY path) — BROKEN: DNA's gallery FACE; the panel titled "What this is" answers with GLYPHS (★✓✕?☆→),
+      no words. ROOT-bar failure on the most common action. (The face I flagged ~5 fires ago — still unfixed.)
+    • E3 V→"See the record" — WORKS (my legible Source) but "buried behind a mystery button most first-timers won't discover."
+  - **★ THE FINDING (what the test was FOR — redirects the build):** the #1 operator gap is NOT my polished components — it's DNA's
+    drill-FACE, and it's the SAME RUNG-C render gap the decision-surface needs (DNA's "build once, three payoffs"). So RUNG-C is doubly
+    urgent: it fixes the #1 operator gap AND the decision-card. The data is READY (kind_name+kind_meaning on every point + /api/territory).
+    projection's lane = ZERO net-new (data shipped; the face is DNA's render) → escalated the PRIORITY to lead+DNA (g-1781732544) + the
+    naming-inconsistency (E2 thing-name vs E3 kind) to composition (one registry-declared legibility `name` both surfaces render).
+  - **HONEST — no projection code commit this fire:** the #1 gap is DNA's render (not my lane); the decision host is gated on composition's
+    types; the naming-name is composition's registry. Forcing a projection code change = hollow/wrong-lane. The test (verify-by-use) +
+    the escalation IS the high-leverage work — it proved the next real beat is RUNG-C, not more projection polish. Sent Tim the journey.
+  - **NEXT:** when RUNG-C lands (DNA), re-run the end-to-end stranger test to confirm the primary path now reads human; build projection's
+    decision residual (likely just the gallery:rendered host + the lifecycle-decouple) the instant composition's types + DNA's render land.
