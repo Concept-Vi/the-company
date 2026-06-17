@@ -361,3 +361,45 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     per-aim ACTION); specify drive/open-source actions for sector vs point aims; MAKE wiring is wildcard's gated keystone.
   - **NEXT:** composition's per-aim action spec → wire drive/open-source; resolve the gallery-intercept so point-verbs
     are one-tap; DNA's vee-dock swap (emits the same `gallery:verb`); TUTORIAL gated OQ3.
+- **2026-06-17 — ✅ the V's "SOURCE" (open-source) VERB GOES LIVE — drill past the dot to the fuller record (commit `660fd40`).**
+  composition CONFIRMED the per-aim spec (their 22:51 reply): open-source = REVEAL THE AIMED THING'S SOURCE — for a real
+  point, its definition/record + provenance. The advisor caught a conservative drift (I'd argued myself out of this on a
+  redundancy worry composition had already refuted): open-source's ACTION is NOT blocked — only its button-PLACEMENT is
+  (composition escalating verb-bar-on-face to Tim). The App `gallery:verb` dispatcher consumes the verb regardless of
+  who/where emits it, so the action survives whatever placement Tim picks. So I built it (a READ — safe for the away-sprint,
+  no write-gate like generate, no socket like drive; the most-specified verb; serves the ROOT bar most). Built:
+  - **NEW `GET /api/territory`** — the structured, scheme-agnostic SOURCE read; REUSES fork's `territory_for` (NOT rebuilt);
+    sibling of `/api/territory/label` + `/write`. **This is the projection-HOST's named "/api/territory wiring" leg** the
+    lead's seam map calls projection's lane. Hands the surface the structured dict — `territory_prose` is brain-framed
+    ("[internal handle — never shown to operator]…") so the SURFACE does the human translation, not the resolver. Route-table
+    acceptance green (8/8). Bridge restarted to load it.
+  - **NEW `surface/app/src/source/{SourcePanel.tsx,source.css}`** — a DURABLE, swap-INDEPENDENT App-level surface (NOT inside
+    the replaceable V `rhm/`): reads the comprehended record and shows it in PLAIN WORDS. `readTerritoryContent` handles
+    `output`-as-prose AND `output`-as-LIST (→ bullet lines) — recursive; a STRUCTURED/unresolvable record degrades clean
+    ("not in plain words here"), NEVER a raw dict/code/address dump (operator-law). Provenance line only when real board refs
+    exist (0 for corpus points → honestly absent). Paper-tokened; design-lint 0/0.
+  - **App.tsx dispatcher:** `open-source` → `fetchTerritory(selected)` → the panel; a synthetic sector/surface aim → a calm
+    Notice (sector-DERIVATION source is the next beat), never a silent no-op. Opening Source clears the point selection so the
+    redundant inspector doesn't double up behind it.
+  - **VERIFIED BY USE, BOTH viewports (390 first, then 1440):** drove the real path (pick a corpus point → dismiss DNA's face →
+    V → Source) → the 6 captured principles render (the inspector showed NOTHING — summary is empty for these points). Address-
+    less point → the honest Notice. tsc 0.
+  - **★ FRESH-EYES critic (separate agent, screenshots):** strongest findings FIXED — (a) the bullets floated with no heading
+    → added a "What's in it" body label so it coheres; (b) the tag "SOURCE" read as "source code" → reframed "The full record"
+    (+ relayed the verb-LABEL rename signal "The full story"/"See the record" to composition, whose contract owns the draft
+    label); (c) two same-titled cards read as broken → clearing selection on Source-open removes the duplicate inspector.
+    FILTERED OUT (intentional): the bullet CONTENT being engineer-speak ("structured JSON output") — that's the REAL stored
+    record; sanitizing it = fabrication and defeats "Source = the actual thing." Faithful display is correct.
+  - **⚠ HONEST / flagged (not blocking):** the RELATIONS (provenance) leg in `territory_for` throws ModuleNotFoundError ONLY
+    in the live bridge process (degrade-clean note; reproduces clean in a fresh interpreter AND on `import runtime.bridge`, so
+    it's the threaded-request import state). edges_in=0 for corpus points regardless → Source's provenance line correctly shows
+    nothing. → flagged to fork (ch-8djrpmsl) with evidence + asked them to (a) diagnose, (b) put the exception MESSAGE in the
+    degrade-note. NOT claimed fixed (couldn't root-cause without instrumenting the live process).
+  - **COORDINATION (via fabric):** composition (Source live + label signal + drive held on placement); fork (/api/territory +
+    the relations-bug flag); lead (confirmed wildcard's HOST/TAKE conflation correction — projection=HOST, wildcard=TAKE; +
+    RESOLUTION-FIRST absorbed); DNA (the DECISION-SURFACE-BUILD.md company-repo PATH they asked for + the meaning-fields +
+    /api/territory reuse for their decision-card render).
+  - **NEXT:** **sector-human-names on points** (the advisor-noted few-line ride-along, deferred to keep this beat clean — the
+    Disclosure "in" row still shows a machine sector leaf on non-Kinds lenses; carry `_kind_name(sid,_sector_meta)` onto each
+    point); DRIVE / open-source-on-SECTOR (sector-derivation source) once Tim's verb-PLACEMENT steer lands; DNA's decision-card
+    render reuses /api/territory; TUTORIAL gated OQ3.
