@@ -43,7 +43,18 @@ non-technical critic + Tim on his phone.
 
 ---
 
-## THE PHASES (sequenced so the loop can't build on sand)
+## ⚡ SPRINT MODE — 2026-06-17 (Tim away; loop ~7min, overlapping fires fine)
+
+Tim left for a while and called for a BIG IMPLEMENTATION SPRINT — "this is building a main part of the application."
+So the loop is now IMPLEMENT-mode, not research-only. The reconciliation with "don't build on sand":
+- **Build NOW** (low/medium-ambiguity): the V-overlay SHELL, the legibility-type mechanism (composition's vessel),
+  the address-aim + brain-load integrations (WITH fork). Research only just enough to build the next SAFE piece.
+- **Draft, don't stall** (operator-facing COPY — tutorial text, field names): the AI SUPPLIES a tentative draft
+  (marked for Tim's later steer). Only FINAL ratification of copy is gated on Tim / OQ1–4.
+- **Partners:** fork (`ch-8djrpmsl`) = build-together on address resolution + the loadable brain (split the integration).
+  DNA = a point-in-time CLONE the lead is spinning (DNA herself is occupied) for the visual+verbal face.
+
+## THE PHASES (sequenced so the loop can't build on sand — but in sprint mode they overlap)
 
 ### Phase 0 — THE OPERATOR JOURNEY  ·  ✅ APPROVED by Tim ("yeah OK", 2026-06-17)  ·  Part 1
 The design ground everything else conforms to.
@@ -130,3 +141,10 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
   integration** (thread `t-1781684391`) — Tim's pointer (fork built the loadable-brain wire + knows the resolve path).
   Asked: address-resolution path + traps, how a brain loads/binds + carries across every page (RHM connection), what to
   reuse-not-parallel. Awaiting fork's reply; will fold into the research synthesis.
+- **2026-06-17 — ⚡ SPRINT MODE on (Tim away).** Loop cadence → **~7min** (job `961a66ef`; was 2h). Fork now a BUILD
+  PARTNER (split the integration; thread `t-1781684391`). Lead asked to spin a **DNA point-in-time clone** for the
+  visual+verbal face (thread `t-1781684666`; Tim's model intent "a fable… system should change it to opus" — lead owns
+  the mechanics). NEXT BEAT for the loop: research-just-enough then START the V-overlay shell — (a) get/confirm the V
+  icon (composition `t-1781683048`) or use a placeholder, (b) find existing overlay/floating/draggable patterns in the
+  design system via MCP, (c) build the shell (bottom-right, radial expansion, draggable, every page, replaceable seam),
+  verify on 390 first. Draft tutorial/field copy as tentative; gate only final ratification on Tim/OQ1–4.
