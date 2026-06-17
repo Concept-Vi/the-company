@@ -52,7 +52,7 @@ BRIDGE_ROUTES = (
     "/api/conversations", "/api/conversation", "/api/rhm-config", "/api/inbox", "/api/last-change",
     "/api/self-change-log", "/api/panels", "/api/capabilities", "/api/capabilities/introspection",
     "/api/ui_info", "/api/scope",
-    "/api/address-help", "/api/context", "/api/up-translate", "/api/self-changes-at", "/api/annotations",
+    "/api/address-help", "/api/context", "/api/territory", "/api/up-translate", "/api/self-changes-at", "/api/annotations",
     "/api/presentation-pref", "/api/chats", "/api/address-history", "/api/stale-at", "/api/ref-versions",
     "/api/review/current", "/api/review/status", "/api/journey/replay", "/api/journeys", "/api/voice",
     "/api/personas", "/api/trial/sessions", "/api/trial/transcript", "/api/cognition/models_for_role",
@@ -1300,6 +1300,19 @@ class H(BaseHTTPRequestHandler):
                 # 400 (fail loud, mirrors /api/scope + /api/address-help).
                 from runtime.territory import territory_label
                 self._send(200, json.dumps({"label": territory_label(q["address"], suite=SUITE)}))
+            elif path == "/api/territory":                 # the STRUCTURED territory read — the V's "Source" verb backing
+                # The scheme-agnostic SOURCE resolver (fork's territory_for — REUSE, not rebuilt): resolves ANY
+                # address (run://·code://·corpus·board://·ui://·…) → {identity, identity_kind, corpus_content,
+                # relations, notes, legs_present, …}. This is the projection-HOST's named /api/territory read leg
+                # (sibling of /api/territory/label + /api/territory/write): the "Source" verb drills PAST the
+                # 140-char point summary to the comprehended record + its provenance. The SURFACE renders the
+                # human-legible parts (operator-law: meaning, never raw code/addresses); territory_prose is the
+                # BRAIN-framed string (not operator-facing), so it is NOT used here — we hand the structured dict.
+                # Mirrors /api/context exactly: missing `address` → KeyError → 400 (fail loud); a non-address
+                # (no '://') → ValueError from territory_for's gate → 400; an unresolvable record degrades CLEAN
+                # (notes name the absent leg, legs_present flags it) — never a crash, never a fabricated source.
+                from runtime.territory import territory_for
+                self._send(200, json.dumps(territory_for(q["address"], suite=SUITE)))
             elif path == "/api/context":                   # R2: the addressed-context inspector (the R2 read-face)
                 # The standalone read that EXPOSES the EXISTING R2 engine (Suite.context_at — composes
                 # `_r2_gather` + `_r2_score_and_cap`, the SAME scoring the chat runs at the live locus,

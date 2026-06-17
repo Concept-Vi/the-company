@@ -1,0 +1,153 @@
+/* THE SOURCE SURFACE — the V's "Source" verb result: the fuller record behind a tapped dot. A paper reading
+   card, sibling in feel to the V's note/brain panels (so the right-hand-man's surfaces read as one organism)
+   but roomier, because it shows comprehended PROSE, not a one-liner. Built on the Fresh Paper tokens
+   (tokens/paper.css) — ZERO hardcoded colour. z-index: scrim 58 / card 59 — above the V handle (45) + its
+   panels (46), just below the gallery modal (60) so a drilled gallery face still wins if both somehow open. */
+
+.src-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 58;
+  background: var(--ground-primary);
+  opacity: 0.5;
+  animation: src-fade 160ms ease both;
+}
+@keyframes src-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+
+/* the card: bottom-right anchored on wide viewports (rises off the V corner), a bottom sheet on narrow ones
+   (thumb-reachable, full-width reading column). Content scrolls within a bounded height — never a runaway wall. */
+.v-source {
+  position: fixed;
+  z-index: 59;
+  right: var(--s-4);
+  bottom: calc(var(--s-7) + var(--safe-b, 0px) + 56px + var(--s-3)); /* clear the 56px V handle */
+  width: min(420px, 92vw);
+  max-height: 64vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  background: var(--ground-accent);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  box-shadow: var(--elev-4);
+  padding: var(--s-4);
+  overflow: auto;
+  animation: src-pop 160ms ease both;
+}
+@keyframes src-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* on a portrait phone the card becomes a bottom sheet: full-width reading column, anchored to the bottom edge */
+@media (max-width: 560px) {
+  .v-source {
+    right: var(--s-2);
+    left: var(--s-2);
+    width: auto;
+    bottom: calc(var(--safe-b, 0px) + var(--s-2));
+    max-height: 72vh;
+    border-radius: var(--r-card);
+  }
+}
+
+.v-source-close {
+  position: absolute;
+  top: var(--s-2);
+  right: var(--s-2);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: var(--t-base, 1rem);
+  line-height: 1;
+  cursor: pointer;
+}
+.v-source-close:hover {
+  color: var(--ink-primary);
+}
+.v-source-close:focus-visible {
+  outline: 2px solid var(--ink-dim);
+  outline-offset: 2px;
+}
+
+/* the small "what verb gave you this" tag — quiet, mono, so the NAME is the headline */
+.v-source-tag {
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.v-source-name {
+  margin: 0;
+  padding-right: var(--s-6); /* clear the close × */
+  font-size: var(--t-base, 1rem);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink-primary);
+}
+
+.v-source-meaning {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--ink-dim);
+  line-height: 1.4;
+}
+
+/* the body heading — names what the content IS (so the list/prose doesn't float under the meaning line). It
+   also carries the divider between the header and the record. Quiet (mono, faint) so the NAME stays headline. */
+.v-source-bodylabel {
+  margin-top: var(--s-1);
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--hairline);
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-xs);
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+}
+
+/* the fuller comprehended prose/points — the drill-past-the-summary value. A readable column; preserve the
+   record's paragraphing/bullets; scroll within the card's bounded height. */
+.v-source-body {
+  font-size: var(--t-sm);
+  color: var(--ink-primary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.v-source-empty,
+.v-source-status {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--ink-dim);
+  line-height: 1.4;
+}
+.v-source-status--err {
+  color: var(--pig-strain);
+}
+
+.v-source-prov {
+  margin: 0;
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--hairline);
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { fetchProjection, type Projection, type ProjPoint, ApiError } from './lib/api'
+import { fetchProjection, fetchTerritory, type Projection, type ProjPoint, ApiError } from './lib/api'
+import { SourcePanel, readTerritoryContent, territoryRefCount, type SourceView } from './source/SourcePanel'
 import { installAddressCapture, subscribeLocus, getLocus, clearNotice } from './lib/address'
 import type { MotionFeel } from './tokens/motion'
 import { Desktop } from './layouts/Desktop'
@@ -154,6 +155,9 @@ export function App() {
     setCentre({ ref, label })
   }, [])
   const [notice, setNotice] = useState<string | null>(null)
+  // the V's "Source" verb result — the fuller record behind the aimed point (null = panel closed). Lives here
+  // (the durable App, not the swappable V) because it consumes the App-side gallery:verb dispatch.
+  const [source, setSource] = useState<SourceView | null>(null)
 
   useEffect(() => {
     installAddressCapture()
@@ -213,9 +217,52 @@ export function App() {
       if (d.verb === 'navigate') {
         if (isThing && selected) focusCentre(selected) // re-centre the whole space on the aimed thing
         else setNotice('“Go to” re-centres the view on a thing — tap a dot first, then point the V at it.')
-      } else if (d.verb === 'drive' || d.verb === 'open-source' || d.verb === 'generate') {
-        // drive/open-source actions are pending composition's per-aim spec; generate (Make) is wildcard's gated
-        // keystone (writable-aim only, lead-governed) — not yet wired for the V. Honest Notice, never a silent no-op.
+      } else if (d.verb === 'open-source') {
+        // composition's per-aim spec (confirmed): open-source = REVEAL THE AIMED THING'S SOURCE — for a real
+        // point, its definition/record + provenance (drill to source). We resolve it through /api/territory
+        // (territory_for) and render the human-legible parts in the Source panel. A synthetic sector/surface
+        // aim has no underlying record → a calm Notice (sector-derivation source is the next beat), never a no-op.
+        if (isThing && selected) {
+          const addr = selected.address || selected.source
+          if (addr) {
+            setSource({
+              addr,
+              label: selected.kind_name || selected.kind || 'this',
+              meaning: selected.kind_meaning ?? null,
+              content: null,
+              refs: 0,
+              loading: true,
+              error: null,
+            })
+            // the Source panel IS the focused drill now — clear the point selection so the redundant inspector
+            // (the Disclosure that shows once the gallery face is dismissed) doesn't double up behind it
+            // (fresh-eyes critic: two cards titled the same read as broken). Source is self-contained (it
+            // captured addr/label/meaning above), so dropping selection never starves it.
+            setSelected(null)
+            fetchTerritory(addr)
+              .then((t) =>
+                // apply only if the panel is still showing THIS address (a later pick supersedes a slow fetch)
+                setSource((s) =>
+                  s && s.addr === addr
+                    ? { ...s, content: readTerritoryContent(t), refs: territoryRefCount(t), loading: false }
+                    : s,
+                ),
+              )
+              .catch((e: unknown) =>
+                setSource((s) =>
+                  s && s.addr === addr
+                    ? { ...s, loading: false, error: e instanceof ApiError ? e.message : String(e) }
+                    : s,
+                ),
+              )
+          }
+        } else {
+          setNotice('“Source” reveals where a thing comes from — tap a dot first, then point the V at it.')
+        }
+      } else if (d.verb === 'drive' || d.verb === 'generate') {
+        // drive's actions await Tim's verb-PLACEMENT steer (composition is escalating verb-bar-on-face vs the
+        // V-handle); generate (Make) is wildcard's gated keystone (writable-aim only, lead-governed) — not yet
+        // wired for the V. Honest Notice, never a silent no-op.
         setNotice(`“${LABEL[d.verb]}” is coming next.`)
       }
       // ask/annotate are the V's own legs (handled in RightHand, never emitted here).
@@ -383,6 +430,8 @@ export function App() {
       <GalleryMount open={galleryOpen} onOpenChange={setGalleryOpen} />
       {/* THE RIGHT-HAND-MAN (the 'V') — persistent overlay, every page (sibling to the layout + gallery). */}
       <RightHand />
+      {/* THE SOURCE SURFACE — the V's "Source" verb result; durable + swap-independent (survives the V swap). */}
+      <SourcePanel source={source} onClose={() => setSource(null)} />
     </>
   )
 }

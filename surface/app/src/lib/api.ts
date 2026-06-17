@@ -85,6 +85,23 @@ export type ContextBundle = {
   [k: string]: unknown
 }
 
+// The STRUCTURED territory at an address (GET /api/territory) — the scheme-agnostic SOURCE resolver
+// (runtime/territory.py territory_for): the comprehended record + provenance BEHIND an addressed thing,
+// resolved through the ONE resolver. Kept loose (we read what's present); the surface extracts the
+// human-legible parts (operator-law: prose, never a raw dict/code/address) and fails loud on transport error.
+export type Territory = {
+  address: string
+  scheme?: string | null
+  identity?: unknown
+  identity_kind?: string | null
+  corpus_content?: unknown
+  corpus_record?: unknown
+  relations?: { edges_in?: unknown[]; edges_out?: unknown[]; [k: string]: unknown } | null
+  notes?: string[]
+  legs_present?: Record<string, boolean>
+  [k: string]: unknown
+}
+
 async function getJSON<T>(url: string): Promise<T> {
   let res: Response
   try {
@@ -115,6 +132,11 @@ export function fetchProjection(params: Record<string, string | number | undefin
 
 export function fetchContext(address: string): Promise<ContextBundle> {
   return getJSON<ContextBundle>(`/api/context?address=${encodeURIComponent(address)}`)
+}
+
+// The V's "Source" verb backing — resolve the comprehended record + provenance behind an addressed point.
+export function fetchTerritory(address: string): Promise<Territory> {
+  return getJSON<Territory>(`/api/territory?address=${encodeURIComponent(address)}`)
 }
 
 // The multi-layer model's self-description: {space: [embedder-layer, …]} — registry-true (the engine scans the
