@@ -177,13 +177,52 @@ export function App() {
   // Consumers hook `projection:select`; same-page can read `drillAddress` off the state. We meet at the address
   // (the FIRST_SLICE contract); the look is DNA's, the brain is fork's — projection hands off WHICH addressed
   // unit was pointed at + which field resolves vs which field is the write-back target. null on deselect.
+  const lastSelectRef = useRef<string | null>(null)
   useEffect(() => {
     const resolveAddr = selected ? (selected.address || selected.source || null) : null  // run:// record first → resolve_address-readable
+    // Dispatch ONLY when the selected UNIT changes — NOT on every re-projection. `proj` is a dep so this runs on
+    // re-fetch, but we early-return if the selected address is unchanged: re-firing select on every lens/centre/
+    // time/live-pulse re-fetch re-announced the SAME selection, which made DNA's drill re-render → the drill face
+    // re-opened spuriously (e.g. on each live pulse, and right after a V "Go to" re-centre). Selection-change is
+    // the real signal; space-change already clears the selection (setSpace), so the space in the detail stays current.
+    if (resolveAddr === lastSelectRef.current) return
+    lastSelectRef.current = resolveAddr
     window.dispatchEvent(new CustomEvent('projection:select', {
       detail: resolveAddr ? { address: resolveAddr, source: selected?.source ?? null, record: selected?.address ?? null,
                               seq: selected?.seq, kind: selected?.kind, space: proj?.binding?.space ?? null } : null,
     }))
   }, [selected, proj])
+
+  // THE V's VERB DISPATCH — composition's UNIFIED `gallery:verb` contract ({verb, aim_address, payload}). projection
+  // owns navigate/drive/open-source (the surface handlers); generate → wildcard's gated keystone (not here);
+  // ask/annotate are the V's own legs. The V (RightHand) + wildcard's binder both emit this ONE event; this is the
+  // projection-side consumer. navigate = RE-CENTRE the instrument on the aimed THING (the seed's relative-centre,
+  // §8 — "attention IS origin-selection") — a PROPOSED mapping (confirming the per-verb actions with composition).
+  // Only a real-thing aim (a point) can be a centre; a synthetic sector/surface aim has no vector to centre on →
+  // a calm Notice, never a silent no-op. drive/open-source actions are pending composition's per-aim spec → Notice.
+  useEffect(() => {
+    const LABEL: Record<string, string> = { navigate: 'Go to', drive: 'Drive', 'open-source': 'Source', generate: 'Make' }
+    const onVerb = (e: Event) => {
+      const d = (e as CustomEvent).detail as { verb?: string; aim_address?: string } | null
+      if (!d?.verb) return
+      const aim = d.aim_address || ''
+      // a real unit aim (a picked point — its address is a run://·code://·corpus scheme) vs a synthetic instrument
+      // aim (ui://instrument/sector|surface, or an address-less point that aims at the surface) — only a real unit
+      // can be re-centred on (focusCentre needs the unit's embeddable source; a synthetic address has no vector).
+      const isThing = !!aim && !aim.startsWith('ui://instrument/')
+      if (d.verb === 'navigate') {
+        if (isThing && selected) focusCentre(selected) // re-centre the whole space on the aimed thing
+        else setNotice('“Go to” re-centres the view on a thing — tap a dot first, then point the V at it.')
+      } else if (d.verb === 'drive' || d.verb === 'open-source' || d.verb === 'generate') {
+        // drive/open-source actions are pending composition's per-aim spec; generate (Make) is wildcard's gated
+        // keystone (writable-aim only, lead-governed) — not yet wired for the V. Honest Notice, never a silent no-op.
+        setNotice(`“${LABEL[d.verb]}” is coming next.`)
+      }
+      // ask/annotate are the V's own legs (handled in RightHand, never emitted here).
+    }
+    window.addEventListener('gallery:verb', onVerb)
+    return () => window.removeEventListener('gallery:verb', onVerb)
+  }, [selected, focusCentre])
 
   useEffect(() => {
     let alive = true

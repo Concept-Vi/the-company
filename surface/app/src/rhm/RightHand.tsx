@@ -212,8 +212,14 @@ export function RightHand() {
         setNoteOpen(true)
         return
       }
-      // the remaining verbs are SEAMS: their integration phase (with fork) wires each to its backend
-      window.dispatchEvent(new CustomEvent('rhm:verb', { detail: { verb: id } }))
+      // navigate/drive/open-source/generate → composition's UNIFIED `gallery:verb` envelope (the V-corner-handle
+      // verb contract, verb-discriminated). ONE dispatch path: projection's surface handlers take
+      // navigate/drive/open-source; wildcard's binder takes generate (the gated keystone). ask/annotate are the
+      // V's own legs (handled above). The verb ids here are already composition's canonical ids. aim_address =
+      // the V's live aim; payload is empty for these (the aim suffices, per the contract).
+      window.dispatchEvent(
+        new CustomEvent('gallery:verb', { detail: { verb: id, aim_address: aimRef.current, payload: {} } }),
+      )
       setOpen(false)
     },
     [clearCloseTimer],

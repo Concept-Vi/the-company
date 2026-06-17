@@ -330,3 +330,34 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     sector-human-names aren't carried on the point yet — a later enrichment).
   - **NEXT:** DNA renders point.kind_name/kind_meaning + labels the gallery-face icons (routed); composition's verb
     contract → build a verb; carry sector-human-names on points for non-Kinds "in"; TUTORIAL gated OQ3.
+- **2026-06-17 — ✅ the V's VERBS are now LIVE on composition's unified `gallery:verb` contract; ✅ `navigate` (Go to) =
+  re-centre wired + verified; ✅ fixed a latent gallery-reopen bug.** The verb contract LANDED (composition ch-2mnxl9j0
+  + wildcard ch-piffgfxv): canonical ids navigate/ask/annotate/drive/open-source/generate; ONE event `gallery:verb`
+  `{verb, aim_address, payload}`; projection owns navigate/drive/open-source, ask→fork, annotate/generate→wildcard;
+  verb-order GO-TO+SOURCE first, MAKE last (writable-aim-gated). Built:
+  - **The V (RightHand) now emits the unified `gallery:verb` envelope** for navigate/drive/open-source/generate
+    (replacing the bare `rhm:verb` stub); ask/annotate stay the V's own legs. The verb ids already match composition's
+    canonical ids.
+  - **projection-side DISPATCHER (App.tsx)** consumes `gallery:verb` and routes by verb — the durable, swap-independent
+    consumer (survives DNA's incoming vee-dock V). **`navigate` (Go to) = RE-CENTRE the instrument on the aimed THING**
+    (reuses the proven `focusCentre` — the seed §8 relative-centre). Aim-type-gated: a real-unit aim (a picked point,
+    run://·code:// addr) re-centres; a synthetic sector/surface aim → a calm Notice ("Go to re-centres on a thing — tap
+    a dot first"). drive/open-source/generate → honest "… is coming next." Notice (no silent no-op) — actions pending.
+  - **★ BUG FIXED (latent, mine): the `projection:select` effect re-fired on EVERY re-projection** (it had `proj` in
+    deps), re-announcing the same selection on each lens/centre/time/**live-pulse** re-fetch → DNA's drill re-rendered
+    → the drill face **re-opened spuriously** (incl. right after a Go-to re-centre, and on every live pulse while a
+    point was selected). Fixed: dispatch only when the selected UNIT changes (ref-guarded); space-change already clears
+    selection so the detail stays current. Files: `surface/app/src/{rhm/RightHand.tsx,App.tsx}`.
+  - **VERIFIED BY USE, BOTH viewports.** 390 + 1440: picked an addressed point (seq-5849 → run://…/voice.py) → dismiss
+    drill → V → **Go to → the wheel re-projected around "voice.py"** (CentreChip "⊙ voice.py", radius flips to
+    "distance: structural from voice.py"), and the drill face did NOT re-open (fix holds). Sector-aim Go-to → the
+    honest Notice (390). Drive → "Drive is coming next." (1440). tsc 0 (no CSS this fire).
+  - **★ ARCHITECTURAL OBSTACLE surfaced to composition/DNA:** point-aim verbs fight the interaction model — picking a
+    thing opens DNA's gallery FACE which (a) sits ABOVE the V (z-order, V unreachable while open) and (b) is the only
+    way to aim the V at a real point (address-less points aim at the surface). So a point-verb needs a pick→dismiss→V
+    dance. The verbs want either a usable aim WITHOUT the face dominating, or to operate from within the face. Design
+    call for composition (contract) + DNA (face).
+  - **OPEN with composition (asked):** confirm `navigate`=re-centre (vs locate — the contract gave the EVENT, not the
+    per-aim ACTION); specify drive/open-source actions for sector vs point aims; MAKE wiring is wildcard's gated keystone.
+  - **NEXT:** composition's per-aim action spec → wire drive/open-source; resolve the gallery-intercept so point-verbs
+    are one-tap; DNA's vee-dock swap (emits the same `gallery:verb`); TUTORIAL gated OQ3.
