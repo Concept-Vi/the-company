@@ -17,11 +17,16 @@ export function CentreChip({ centre, onReset }: { centre: Centre | null; onReset
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={transition('enter')}
-          title="return to the root origin"
+          // plain-words affordance (a stranger re-aim test: "I changed the view and can't tell how to get back —
+          // only a tiny ×"). The WHOLE chip resets; say so in human terms (tooltip + the visible "show all" tag),
+          // and prefix "Centred on" so it reads as a STATE you're in, not just a label.
+          title={`Centred on ${centre.label} — tap to show everything again`}
+          aria-label={`Centred on ${centre.label}. Tap to show everything again.`}
         >
           <span className="centrechip-glyph" aria-hidden>⊙</span>
+          <span className="centrechip-pre">Centred on</span>
           <span className="centrechip-label">{centre.label}</span>
-          <span className="centrechip-x" aria-hidden>×</span>
+          <span className="centrechip-x">show all ×</span>
         </motion.button>
       )}
     </AnimatePresence>

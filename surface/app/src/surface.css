@@ -131,9 +131,13 @@
   min-height: 36px; white-space: nowrap; transition: background 150ms cubic-bezier(0.4,0,0.2,1); }
 .centrechip:hover { background: var(--ground-secondary); }
 .centrechip-glyph { color: var(--pig-accent); font-size: var(--t-xs); }
-.centrechip-label { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+/* "Centred on" — the quiet state-prefix so the chip reads as a mode you're in, not a bare label */
+.centrechip-pre { font-size: var(--t-xs); color: var(--ink-faint); }
+.centrechip-label { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-size: var(--t-md); color: var(--ink-primary); letter-spacing: 0.01em; }
-.centrechip-x { color: var(--ink-faint); font-size: var(--t-xs); }
+/* the exit — plain words ("show all"), not a bare × a stranger fears to press */
+.centrechip-x { color: var(--ink-dim); font-size: var(--t-xs); border: 1px solid var(--hairline);
+  border-radius: var(--r-pill); padding: 0 var(--s-1); }
 
 /* ---- controls: lens + taste pills ---------------------------------------- */
 .lens, .taste { display: flex; gap: var(--s-2); align-items: center; }
