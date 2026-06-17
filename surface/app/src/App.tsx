@@ -192,8 +192,15 @@ export function App() {
     if (resolveAddr === lastSelectRef.current) return
     lastSelectRef.current = resolveAddr
     window.dispatchEvent(new CustomEvent('projection:select', {
+      // the HUMAN meaning-fields ride on the detail too (not just the machine `kind`) — DNA's drill-face needs a
+      // meaning-SOURCE to render "What this is" in words (the RUNG-C / #1-operator-gap fix): neither /api/territory
+      // nor /api/cognition/corpus carries them, and the face opens off THIS event. kind_name/kind_meaning/summary
+      // are projection's computed legibility (from the kind registry) — they map straight onto composition's
+      // canonical legibility name/is (the registry-declared shape supersedes this when it lands; interim source now).
       detail: resolveAddr ? { address: resolveAddr, source: selected?.source ?? null, record: selected?.address ?? null,
-                              seq: selected?.seq, kind: selected?.kind, space: proj?.binding?.space ?? null } : null,
+                              seq: selected?.seq, kind: selected?.kind, space: proj?.binding?.space ?? null,
+                              kind_name: selected?.kind_name ?? null, kind_meaning: selected?.kind_meaning ?? null,
+                              summary: selected?.summary ?? null } : null,
     }))
   }, [selected, proj])
 
