@@ -8,7 +8,14 @@
 # radius) — centre/radius stay variable like every binding. Empty/edge-sparse honestly when few cascades exist.
 BINDING = {
     "id": "by_cascade",
-    "label": "Cascade flow — the roles connected by cascade precedence",
+    "label": "Flow — the steps, in the order they run",
+    # human meaning (registry-true, declared-first; TENTATIVE draft — Tim/DNA ratify; never machine names)
+    "meta": {
+        "name": "Flow",
+        "is": "The Company's steps, connected in the order they run.",
+        "fills": "Each slice is a step; the connections show which step runs before which — the chain of work.",
+        "why": "To see the order things happen in — what leads to what.",
+    },
     "angle_from": "cascade-flow",
     "radius_from": "time",
     "order_by": "edge",

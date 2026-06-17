@@ -6,7 +6,14 @@
 # worldview/repo — registry-is-truth; a space with no vectors yet just yields an empty meaning-ring).
 BINDING = {
     "id": "semantic",
-    "label": "Meaning — semantic radius (cosine from centre)",
+    "label": "Meaning — how close in meaning to the centre",
+    # human meaning (registry-true, declared-first; TENTATIVE draft — Tim/DNA ratify; never machine names)
+    "meta": {
+        "name": "Meaning",
+        "is": "Everything arranged by how close in meaning it is to one thing you choose.",
+        "fills": "You pick a centre; everything else sits near or far by how related in meaning it is — near means close in meaning, far means unrelated.",
+        "why": "To find what's most related in meaning to something you care about.",
+    },
     "angle_from": "kind",
     "radius_from": "semantic",
     "space": "topics",

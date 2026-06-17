@@ -26,7 +26,14 @@ clustering is scoped to where vectors exist."""
 
 BINDING = {
     "id": "by_nucleation",
-    "label": "Type-nucleation — where new types are born",
+    "label": "New kinds forming — where new types are born",
+    # human meaning (registry-true, declared-first; TENTATIVE draft — Tim/DNA ratify; never machine names)
+    "meta": {
+        "name": "New kinds forming",
+        "is": "Where new kinds of things are being born out of the ones that don't fit.",
+        "fills": "Each slice is a kind that already exists; things that fit no kind gather at the edge, and when enough gather they become a new kind.",
+        "why": "To see what new kinds are forming, and out of what.",
+    },
     "angle_from": "nucleation",      # sectors = the registry's types + one outer ZONE per candidate (resolved)
     "radius_from": "nucleation",
     "order_by": "count",

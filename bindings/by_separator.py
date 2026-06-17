@@ -14,7 +14,14 @@ is the general two-gravity field."""
 
 BINDING = {
     "id": "by_separator",
-    "label": "Two gravities — lean between two poles",
+    "label": "Two gravities — what each thing leans toward",
+    # human meaning (registry-true, declared-first; TENTATIVE draft — Tim/DNA ratify; never machine names)
+    "meta": {
+        "name": "Two gravities",
+        "is": "Everything pulled between two ends you choose — which way each thing leans.",
+        "fills": "You pick two ends (two poles); each thing sits along the line between them, nearer whichever it's more like. The middle is the balance point.",
+        "why": "To see what pulls toward one side versus the other.",
+    },
     "angle_from": "kind",            # the angular division composes freely; the separator owns only radius
     "radius_from": "separator",
     "order_by": "count",

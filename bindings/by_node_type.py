@@ -8,7 +8,14 @@
 # centre/radius stay variable like every binding.
 BINDING = {
     "id": "by_node_type",
-    "label": "Connections — the node registry by its directional type-flow",
+    "label": "Connections — how things flow into each other",
+    # human meaning (registry-true, declared-first; TENTATIVE draft — Tim/DNA ratify; never machine names)
+    "meta": {
+        "name": "Connections",
+        "is": "How the kinds of things in the Company flow into one another.",
+        "fills": "Each slice is a kind of thing; the curved lines are the real connections between them — which kind leads to which, with a direction.",
+        "why": "To see how the parts of the Company feed into each other.",
+    },
     "angle_from": "node-types",
     "radius_from": "time",
     "order_by": "edge",
