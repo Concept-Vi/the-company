@@ -33,6 +33,12 @@ os.environ["SUPABASE_URL"] = "FAKE-url"
 os.environ["SUPABASE_ANON_KEY"] = "FAKE-anon"
 os.environ["VI_VISION_SUPABASE_KEY"] = "FAKE"
 os.environ["VI_VISION_RESOLVE_URL"] = "FAKE"
+# the REAL factory cred var names (composition, 2026-06-17) — the write-capable SA principal + the anon key.
+# Confirms the prefix denylist actually catches them (else the scrub is a paper guarantee — fork's flag).
+os.environ["VI_VISION_SA_EMAIL"] = "FAKE-sa@x"
+os.environ["VI_VISION_SA_PASSWORD"] = "FAKE-sa-pw"
+os.environ["VI_VISION_SA_REFRESH_TOKEN"] = "FAKE-sa-refresh"
+os.environ["VI_VISION_ANON_KEY"] = "FAKE-anon-key"
 os.environ.setdefault("ANTHROPIC_API_KEY", "FAKE-anthropic")
 os.environ.setdefault("PATH", "/usr/bin")
 os.environ.setdefault("HOME", "/home/tim")
@@ -46,6 +52,11 @@ check("SUPABASE_URL / SUPABASE_ANON_KEY stripped",
       "SUPABASE_URL" not in env and "SUPABASE_ANON_KEY" not in env)
 check("VI_VISION_* (factory transport vars) stripped",
       "VI_VISION_SUPABASE_KEY" not in env and "VI_VISION_RESOLVE_URL" not in env)
+check("the REAL write-capable SA cred (VI_VISION_SA_EMAIL/PASSWORD/REFRESH_TOKEN) is stripped — the prefix "
+      "denylist actually catches the named creds (not a paper guarantee)",
+      not any(k in env for k in ("VI_VISION_SA_EMAIL", "VI_VISION_SA_PASSWORD", "VI_VISION_SA_REFRESH_TOKEN")))
+check("VI_VISION_ANON_KEY (the read cred) also stripped (low-risk, but the brain never needs it either)",
+      "VI_VISION_ANON_KEY" not in env)
 check("NO var under any deny-prefix leaks into the brain env",
       not any(k.startswith(_BRAIN_ENV_DENY_PREFIXES) for k in env))
 
