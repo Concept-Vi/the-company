@@ -181,3 +181,19 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
   - **NEXT:** wire the OTHER verbs (navigate/note/drive/source/make → their backends), the built-in TUTORIAL (Phase-0
     pedagogy delivered BY the RHM), and the legibility meaning-layer (composition's `legibility.js` `resolveLegibility`,
     built + ready — the instrument reads registry `meta` for the aim + renders human meaning).
+- **2026-06-17 — ✅ LEGIBILITY (first slice): the legend reads HUMAN meaning from the REGISTRY (commit `7d9b646`).**
+  Tim's #1 complaint ("I don't know what I'm looking at") — the Kinds-view legend was hardcoded jargon in `Legend.tsx`
+  ("11 sectors · angle = the kind of each event"). MOVED the meaning into the REGISTRY: seeded `bindings/raw.py`
+  `meta:{name,is,fills,why}` (composition's SEED shape; TENTATIVE draft copy), passed it through `/api/projection`,
+  typed in `api.ts`, rendered DECLARED-FIRST in `Legend.tsx` (fallback = the computed lines for un-seeded lenses). The
+  Kinds view now reads: "What's happening · A live map of everything the Company is doing · Each dot is one thing that
+  happened — a note saved, a job run, a message; its slice is what KIND it is; how far from the centre is how long
+  ago…". VERIFIED BY USE 390 + 1440 (jargon gone, human, registry-sourced), design-lint 0, tsc 0, 0 console errors.
+  The instrument stays EMPTY of meaning (reads `binding.meta`) — registry-is-truth, the architecture Tim ratified.
+  - **Coordinated composition** (thread `g-1781668099`): I seeded `binding.meta` with their SEED field shape on the
+    surface/registry side; their legibility-type validate/backfill machinery enforces/declares it; field-set stays
+    journey-gated (OQ1–4).
+  - **NEXT:** (a) seed the OTHER lenses' `meta` so every view is legible (connections / two-gravities / meaning / …);
+    (b) the SECTOR names (the ~51 machine kind-ids → human) — the lexical layer, needs per-kind meaning + an endpoint;
+    (c) a HIDE toggle for the legend (Tim: "be able to hide them"); (d) the remaining verbs (Go to/Note/Drive/Source/
+    Make) + the built-in tutorial.
