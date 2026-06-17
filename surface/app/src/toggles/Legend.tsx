@@ -1,6 +1,11 @@
+import { useState } from 'react'
 import type { SurfaceState, ViewMode } from '../App'
 import type { Projection } from '../lib/api'
 import { stamp } from '../lib/address'
+
+// the operator can HIDE the explanation (Tim 2026-06-17: "I should be able to hide them if wanted"). The TITLE
+// stays (so they always know which view they're on); the explanation lines collapse. Preference persists.
+const COLLAPSE_KEY = 'instrument.legend.collapsed'
 
 // A calm, always-present ORIENTATION (Tim 2026-06-14: "just looking at it I don't know what it is or what it
 // chose"). Says, for the active lens: what it is, what the ANGLE/sectors mean, what the RADIUS means, and the
@@ -97,45 +102,70 @@ function describe(proj: Projection, view: ViewMode, centred: string | null): { t
 }
 
 export function Legend({ s }: { s: SurfaceState }) {
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(COLLAPSE_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
   if (!s.proj) return null
-  // DECLARED human meaning (registry-true): if the binding carries `meta`, render it — lead with WHAT-IT-IS,
-  // then what-fills-it + why (conceptual before mechanical; Tim 2026-06-17: the operator must know what they're
-  // looking at). The meaning lives in the REGISTRY (bindings/*.py meta), not here. TENTATIVE seed copy
-  // (name/is/fills/why); the field-set is journey-gated (OPERATOR-SURFACE-LOOP.md OQ1–4). Never machine names.
+
+  // Compute the orientation ONCE: DECLARED human meaning (registry-true — the binding's `meta`, lead with
+  // WHAT-IT-IS then what-fills-it + why; Tim 2026-06-17: the operator must know what they're looking at), else
+  // the computed mechanical lines for lenses not yet seeded. The meaning lives in the REGISTRY, never here.
   const meta = s.proj.binding.meta
+  let title: string
+  let lines: string[]
   if (meta && meta.is) {
-    const mlines = [meta.is, meta.fills, meta.why].filter(Boolean) as string[]
-    return (
-      <div className="legend" {...stamp('ui://instrument/legend')}>
-        <div className="legend-title display">{meta.name || s.proj.binding.label}</div>
+    title = meta.name || s.proj.binding.label
+    lines = [meta.is, meta.fills, meta.why].filter(Boolean) as string[]
+  } else {
+    const d = describe(s.proj, s.view, s.centre?.label ?? null)
+    // In Both, name the coincidence spine (seed §3): the diamonds on the axes are where the SQUARE (grid) and
+    // the CIRCLE (rings) meet — lens-neutral, and only for lenses whose wheel actually draws it.
+    const rf = s.proj.binding.radius_from
+    const wheelLens = rf !== 'separator' && rf !== 'nucleation'
+    title = d.title
+    lines =
+      s.view === 'both' && wheelLens
+        ? [...d.lines, '◆ on the axes · where grid & circle meet — the ratified spine']
+        : d.lines
+  }
+
+  const toggle = () =>
+    setCollapsed((c) => {
+      const next = !c
+      try {
+        localStorage.setItem(COLLAPSE_KEY, next ? '1' : '0')
+      } catch {
+        /* storage blocked — the choice still holds for the session */
+      }
+      return next
+    })
+
+  return (
+    <div className="legend" data-collapsed={collapsed} {...stamp('ui://instrument/legend')}>
+      <div className="legend-head">
+        <div className="legend-title display">{title}</div>
+        <button
+          type="button"
+          className="legend-toggle"
+          onClick={toggle}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? 'Show the explanation' : 'Hide the explanation'}
+          title={collapsed ? 'Show the explanation' : 'Hide the explanation'}
+        >
+          {collapsed ? '⌄' : '⌃'}
+        </button>
+      </div>
+      {!collapsed && (
         <ul className="legend-lines">
-          {mlines.map((l, i) => (
+          {lines.map((l, i) => (
             <li key={i}>{l}</li>
           ))}
         </ul>
-      </div>
-    )
-  }
-  // FALLBACK — the computed (mechanical) lines for lenses that haven't declared their meaning yet
-  const { title, lines } = describe(s.proj, s.view, s.centre?.label ?? null)
-  // In Both, the circle and square are over one space — name the coincidence spine (seed §3): the diamonds on
-  // the axes are where the SQUARE (grid) and the CIRCLE (rings) meet — the ratified / addressable spine. Lens-
-  // NEUTRAL wording (a geometric substrate fact, true whatever the radius encodes — never says "meaning" on a
-  // lens whose radius is age/etc.). Only the WHEEL draws the spine (the separator/nucleation lenses have their
-  // own forms), so only name it for those — never promise diamonds a lens doesn't render.
-  const rf = s.proj.binding.radius_from
-  const wheelLens = rf !== 'separator' && rf !== 'nucleation'
-  const all = s.view === 'both' && wheelLens
-    ? [...lines, '◆ on the axes · where grid & circle meet — the ratified spine']
-    : lines
-  return (
-    <div className="legend" {...stamp('ui://instrument/legend')}>
-      <div className="legend-title display">{title}</div>
-      <ul className="legend-lines">
-        {all.map((l, i) => (
-          <li key={i}>{l}</li>
-        ))}
-      </ul>
+      )}
     </div>
   )
 }

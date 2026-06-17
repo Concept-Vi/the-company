@@ -282,7 +282,14 @@
 
 /* ---- the lens legend (orientation: what this is + what angle/radius mean) - */
 .legend { padding: var(--s-3); max-width: 248px; }
-.legend-title { font-size: var(--t-base); color: var(--ink-primary); margin-bottom: var(--s-2); line-height: 1.25; }
+.legend-title { font-size: var(--t-base); color: var(--ink-primary); line-height: 1.25; }
+.legend-head { display: flex; align-items: baseline; gap: var(--s-2); margin-bottom: var(--s-2); }
+.legend[data-collapsed='true'] .legend-head { margin-bottom: 0; }
+.legend-toggle { background: transparent; border: none; color: var(--ink-faint); font-size: var(--t-sm);
+  line-height: 1; cursor: pointer; padding: 0 var(--s-1); align-self: center; }
+.legend-toggle:hover { color: var(--ink-primary); }
+.legend-toggle:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }
+.layout--portrait .legend-head { justify-content: center; }
 .legend-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
 .legend-lines li { font-size: var(--t-xs); color: var(--ink-dim); line-height: 1.45; position: relative; padding-left: var(--s-3); }
 .legend-lines li::before { content: '·'; position: absolute; left: 4px; color: var(--ink-faint); }
