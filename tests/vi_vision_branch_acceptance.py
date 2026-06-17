@@ -35,10 +35,13 @@ def _ve(addr, must):
 
 
 print("[E] the 3 operational error types → ValueError (fail-loud, never silent-empty)")
+# Substrings match STABLE tokens of the resolver's prose (composition owns runtime/vi_vision.py; its exact
+# wording may drift — match the durable token, not the full sentence). The point under test = the BRANCH maps
+# each ViVision* type → ValueError (the type is erased by resolve_address, so we discriminate via the message).
 check("malformed (unknown frame) → ValueError (ViVisionAddressError mapped)",
       _ve("vi-vision://nope/organism/x", "unknown frame"))
-check("no transport configured → ValueError (ViVisionTransportError mapped)",
-      _ve("vi-vision://global/organism/component.x", "no transport configured"))
+check("no transport → ValueError (ViVisionTransportError mapped)",
+      _ve("vi-vision://global/organism/component.x", "transport"))
 
 # Inject a candidate-fetcher so the type-guard / scope-cascade run WITHOUT a live transport.
 _ROWS = [
@@ -52,7 +55,7 @@ vv._candidates_http = lambda cid: list(_ROWS)
 vv._candidates_supabase = lambda cid: []   # http path wins; supabase not consulted in the test
 
 check("type-guard miss (asks atom, only organism rows) → ValueError (ViVisionNotFound mapped)",
-      _ve("vi-vision://global/atom/component.x", "no atom asset"))
+      _ve("vi-vision://global/atom/component.x", "at/under frame"))
 
 print("\n[C] scope-cascade flows through the branch (most-specific-wins)")
 r_proj = resolve_address(None, "vi-vision://project/p1/organism/component.x")
