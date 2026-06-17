@@ -495,3 +495,27 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
   - **NEXT:** the "in"-label clarity (needs the binding to DECLARE a division-noun — composition's registry, not an FE hardcode —
     flag it); DRIVE / open-source-on-SECTOR once Tim's verb-PLACEMENT steer lands; composition's real-V presentation (touch-visible
     descriptions); the decision-surface bridge-route once the lead sequences it; TUTORIAL gated OQ3.
+- **2026-06-18 — ✅ operator-law: stripped ML jargon from the meaning-reading controls (Layer/Res/Quant chips) (commit `12d8cf6`) + signalled the lead projection is ready for decision-surface sequencing.**
+  The three "how meaning is read" chips leaked raw ML terms to the operator (the clearest remaining operator-law violation in
+  the chrome): LayerChip "the embedder layer — which embedding you look through"; ResChip "how many vector dims … (MRL zoom)";
+  QuantChip "full float (cosine) or binary sign-bits (Hamming-geometry)". Translated the instrument-authored copy → human PURPOSE
+  ("How it reads meaning" / "How finely it reads meaning" / "How meaning is compared"), TENTATIVE for Tim's steer. QuantChip values
+  full·float→"Full", binary·Hamming→"Coarse".
+  - **★ CAREFUL not to mistranslate (blast-radius × reversibility — a MISLEADING human label teaches wrong, worse than honest
+    jargon):** the code's own measured note says binary is a coarser GEOMETRY, NOT a speed win (the resolution picker is the speed
+    lever). So "Coarse", never "quick". The subtle/risky translations I did NOT guess (see flagged).
+  - **VERIFIED BY USE both viewports** (Meaning lens): all three tooltips jargon-free (regex-checked: no embed/MRL/dims/float/
+    cosine/Hamming/sign-bit/vector); QuantChip drives Full↔Coarse live (chip → "▦ coarse"). tsc 0, no CSS.
+  - **★ FRESH-EYES critic (separate, phone):** confirmed my tooltip fix is DESKTOP/screen-reader only — on the phone (no hover)
+    the chip VALUES stay opaque ("◫ default · ◎ full · ▦ coarse" + abstract glyphs = "mystery settings I'd be afraid to touch";
+    the ◎ bullseye misreads as 'focus'). Its actionable fix = put the DIMENSION-NOUN on the label ("Detail: Full"/"Grouping:
+    Coarse"). FILTERED: this is the SAME phone-no-hover pattern composition owns for the V verbs → flagged for ONE consistent
+    phone-label treatment (NOT unilateral chrome churn: the chrome already wraps 2 lines at 390, and Tim's model-experimentation
+    intent [[native model layer]] wants these accessible, so NOT expert-gated). Also flagged composition: registry human-NAMES for
+    embedder layers (so "◫ default"/"pplx" read human) + the binding division-noun for the "in"-label — both registry-true, their lane.
+  - **★ READINESS SIGNAL to lead:** projection's unblocked surface has CONVERGED (V placeholder, inspector, Source/relations, chip
+    legibility). The remaining in-lane items are gated (drive=Tim's placement) or owned-elsewhere (real-V presentation, registry
+    names). Signalled the lead I have capacity for the DECISION-SURFACE host/bridge-route the moment it's sequenced (HOST + /api/
+    territory shipped + /api/cognition + recollection's "bridge route" memory leg) — rather than spin on polish.
+  - **NEXT (mostly awaiting others):** decision-surface host/route (lead to sequence); DRIVE/source-on-sector (Tim's placement);
+    composition's real-V touch-labels + registry human-names (layers, division-noun); TUTORIAL gated OQ3.
