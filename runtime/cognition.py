@@ -1009,6 +1009,23 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
             return _mr().resolve(addr[len("mind://"):])
         except _ME as e:
             raise ValueError(f"resolve_address: {e}") from e
+    if sch == "vi-vision":
+        # islands-join-mainland (Tim 2026-06-17) — the FACTORY's asset registry joins the ONE addressed graph.
+        # vi-vision://<frame>/<type>/<id> → the factory component record (runtime/vi_vision.py, composition's
+        # good-part built INTO the company; the factory's Supabase asset library stays the source of TRUTH,
+        # the spine resolves INTO it — separate + bridged, never joined). Mirrors board://·clone://·mind://: a
+        # Python callable that RAISES on malformed/unknown (fail-loud, never silent-empty). LAZY import (keeps
+        # this dispatcher's import graph clean; the module is self-contained, zero company deps). Transport is
+        # env-selected inside the resolver (VI_VISION_SUPABASE_*/_RESOLVE_URL) — until a transport is set it
+        # fail-louds "no transport configured" (honest register-but-defer, not broken).
+        from runtime.vi_vision import (resolve_vi_vision as _rvv, ViVisionAddressError as _VVAE,
+                                       ViVisionNotFound as _VVNF, ViVisionTransportError as _VVTE)
+        try:
+            return _rvv(addr)
+        except (_VVAE, _VVNF, _VVTE) as e:
+            # operational (Tim 2026-06-17): three honest fail-loud paths — malformed · not-found-at-frame ·
+            # transport (no creds / store down / non-JSON) — all surface as ValueError (never silent-empty).
+            raise ValueError(f"resolve_address: {e}") from e
     if sch is not None:
         # a REGISTERED scheme (blob/vec/ui/code/exchange) with no content-resolver wired into this
         # dispatcher yet (exchange:// is register-but-defer — recollection's capture/recall lane owns it).
