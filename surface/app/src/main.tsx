@@ -2,6 +2,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import './tokens/paper.css'
 import './surface.css'
+import './rhm/rhm.css'
 import { App } from './App'
 
 const el = document.getElementById('root')

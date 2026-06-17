@@ -6,6 +6,7 @@ import { Desktop } from './layouts/Desktop'
 import { Portrait } from './layouts/Portrait'
 import { Landscape } from './layouts/Landscape'
 import { GalleryMount } from './gallery/GalleryMount'
+import { RightHand } from './rhm/RightHand'
 
 export type FormFactor = 'desktop' | 'portrait' | 'landscape'
 // The seed's two coordinate systems over one space, three ways: BOTH = the circle inscribed in the square
@@ -341,6 +342,8 @@ export function App() {
     <>
       {layout}
       <GalleryMount open={galleryOpen} onOpenChange={setGalleryOpen} />
+      {/* THE RIGHT-HAND-MAN (the 'V') — persistent overlay, every page (sibling to the layout + gallery). */}
+      <RightHand />
     </>
   )
 }

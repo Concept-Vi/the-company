@@ -1,0 +1,101 @@
+/* THE RIGHT-HAND-MAN HANDLE (the 'V') — the persistent, draggable overlay on every page; the swap-seam
+   container for the real V organism (composition's V-corner-handle contract). Built on the Fresh Paper tokens
+   (tokens/paper.css) — ZERO hardcoded colour: the gold lives in the icon SVG, not here. Sizes/geometry are px
+   (the radial arc is geometry, like the wheel). z-index 45 = above the scrubber (20) + bottom sheet (30),
+   below notices (50) + the gallery modal (60). */
+
+/* the open-fan overlay veil — a gentle paper wash that lifts the fan off the chart for legibility (the RHM is
+   an overlay), light enough to not feel like a full takeover. Sits just below the handle (45) so the V + fan
+   stay crisp above it. */
+.vhandle-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  background: var(--ground-primary);
+  opacity: 0.4;
+  animation: vhandle-fade 160ms ease both;
+}
+@keyframes vhandle-fade {
+  from { opacity: 0; }
+  to { opacity: 0.4; }
+}
+
+.vhandle {
+  position: fixed;
+  right: var(--s-4);
+  bottom: calc(var(--s-7) + var(--safe-b, 0px)); /* clear of the bottom-centre scrubber */
+  z-index: 45;
+  width: 56px;
+  height: 56px;
+}
+
+.vhandle-icon {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--hairline);
+  background: var(--ground-accent);
+  box-shadow: var(--elev-3);
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  touch-action: none; /* the handle owns the gesture (drag), not the page */
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+.vhandle-icon:hover { box-shadow: var(--elev-4); }
+.vhandle-icon:active { cursor: grabbing; transform: scale(0.96); }
+.vhandle[data-open='true'] .vhandle-icon { box-shadow: var(--elev-4); }
+
+/* a paper-ethos focus ring (the default UA ring is off-palette); keyboard-only via :focus-visible */
+.vhandle-icon:focus { outline: none; }
+.vhandle-icon:focus-visible,
+.vhandle-verb:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 3px; }
+
+.vhandle-icon img {
+  width: 66%;
+  height: 66%;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* the fan origin sits at the icon centre; each verb is translated out along the corner arc (inline transform) */
+.vhandle-fan {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+
+.vhandle-verb {
+  position: absolute;
+  left: 0;
+  top: 0;
+  min-width: 52px;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--hairline);
+  background: var(--ground-accent);
+  box-shadow: var(--elev-2);
+  color: var(--ink-primary);
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-xs);
+  line-height: 1.1;
+  white-space: nowrap;
+  text-align: center;
+  cursor: pointer;
+  animation: vhandle-pop 160ms ease both;
+}
+.vhandle-verb:hover { background: var(--ground-primary); box-shadow: var(--elev-3); }
+
+@keyframes vhandle-pop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vhandle-verb { animation: none; }
+  .vhandle-icon { transition: none; }
+}
