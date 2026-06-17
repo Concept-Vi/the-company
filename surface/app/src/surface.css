@@ -272,10 +272,12 @@
 
 /* ---- connections (G10) drive-to-explore readout -------------------------- */
 .conn-readout { position: absolute; top: var(--s-3); left: 50%; transform: translateX(-50%);
-  display: flex; align-items: baseline; gap: var(--s-3); font-size: var(--t-xs); color: var(--ink-dim);
-  background: color-mix(in srgb, var(--ground-accent) 80%, transparent); padding: 2px var(--s-3);
-  border-radius: var(--r-pill); white-space: nowrap; }
-.conn-name { color: var(--ink-primary); }
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 2px var(--s-3);
+  max-width: 86%; font-size: var(--t-xs); color: var(--ink-dim);
+  background: color-mix(in srgb, var(--ground-accent) 80%, transparent); padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-card); }
+.conn-name { color: var(--ink-primary); font-weight: 500; }
+.conn-meaning { flex-basis: 100%; text-align: center; color: var(--ink-dim); line-height: 1.35; }
 .conn-out { color: var(--pig-leanB); }
 .conn-in { color: var(--ink-primary); }
 .conn-finding { color: var(--ink-faint); font-style: italic; }

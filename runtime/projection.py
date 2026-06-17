@@ -24,6 +24,35 @@ from datetime import datetime, timezone
 TAU = 2 * math.pi
 BINDING_FIELDS = ("id", "label", "angle_from", "radius_from")
 
+# THE KINDS REGISTRY (composition 2026-06-17: "same legibility-type, OWN registry") — human MEANING per event
+# kind, read DECLARED-FIRST for the wheel's sectors and rendered by the surface; un-seeded kinds fall back to a
+# humanized id so they're still legible. Meaning lives in the DATA (kinds/raw.py), never in the instrument.
+# Defensive import: a missing/malformed registry degrades to humanize-only (never breaks projection — fail-soft).
+try:
+    from kinds.raw import KIND_META as _KIND_META
+except Exception:
+    _KIND_META = {}
+
+
+def _humanize_kind(kind: str) -> str:
+    """Fallback human label for an un-seeded kind/sector id: split on . _ - / and Title-Case (machine-id → words)."""
+    import re
+    words = re.sub(r"[._\-/]+", " ", str(kind)).strip()
+    return words.title() if words else str(kind)
+
+
+def _kind_name(kind: str) -> str:
+    """DECLARED-first human name (kinds-registry meta.name) → humanized-id fallback. The operator never sees a raw
+    machine kind-id (Tim's #1 law); declared names are human, the fallback at least reads as words."""
+    m = _KIND_META.get(kind)
+    return (m.get("name") if isinstance(m, dict) else None) or _humanize_kind(kind)
+
+
+def _kind_meaning(kind: str):
+    """DECLARED one-line meaning (meta.is) for the tapped-sector readout; None if un-seeded (no fabrication)."""
+    m = _KIND_META.get(kind)
+    return m.get("is") if isinstance(m, dict) else None
+
 
 class BindingRegistry:
     """File-discovered BINDINGS (bindings/<id>.py) — the lenses. A binding is a declared filling of
@@ -880,7 +909,11 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
                         "space": binding.get("space")} if nuc else {})},
         "bindings": [{"id": b["id"], "label": b["label"]} for b in reg.list()] or
                     [{"id": "raw", "label": "Kinds (raw)"}],
-        "sectors": [{"id": s, "label": s, "from": round(TAU * i / n, 5), "to": round(TAU * (i + 1) / n, 5)}
+        # sector label = the kind's HUMAN name (kinds-registry, declared-first → humanized-id fallback); `meaning`
+        # = the kind's one-line "what it is" (the tap-a-sector readout). The instrument stays empty of meaning —
+        # it reads these off the data. id stays the machine key (the engine indexes/edges by it, never shown raw).
+        "sectors": [{"id": s, "label": _kind_name(s), "meaning": _kind_meaning(s),
+                     "from": round(TAU * i / n, 5), "to": round(TAU * (i + 1) / n, 5)}
                     for i, s in enumerate(sectors)],
         "edges": edges,   # the directional typed edges between sectors (directed chords; bidir = a real cycle)
         # THE FIFTH GATE (Group 9): the separation report — the witness that the two-gravity field actually

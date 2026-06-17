@@ -134,8 +134,8 @@ export function Wheel({
                   fillOpacity={sel ? 0.3 : dim ? 0.05 : 0.13}
                   stroke="var(--hairline)"
                   strokeWidth={1}
-                  style={hasEdges ? { cursor: 'pointer' } : undefined}
-                  onClick={hasEdges ? (e) => { e.stopPropagation(); setSelSector(sel ? null : i) } : undefined}
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => { e.stopPropagation(); setSelSector(sel ? null : i) }}
                 />
               )
             })}
@@ -320,15 +320,18 @@ export function Wheel({
 
       {/* GROUP 10 readout — name the tapped sector + its directional degree; 0-in/0-out is a FINDING
          (a pure source feeds but is unfed; a pure sink is fed but feeds nothing), not an empty state */}
-      {hasEdges && selSector != null && (() => {
+      {selSector != null && (() => {
+        const sec = proj.sectors[selSector]
+        if (!sec) return null
         const out = proj.edges.filter((e) => e.from === selSector).length
         const inc = proj.edges.filter((e) => e.to === selSector).length
-        const finding = out > 0 && inc === 0 ? 'pure source' : inc > 0 && out === 0 ? 'pure sink' : null
+        const finding = hasEdges ? (out > 0 && inc === 0 ? 'pure source' : inc > 0 && out === 0 ? 'pure sink' : null) : null
         return (
           <div className="conn-readout" {...stamp('ui://instrument/connections')}>
-            <span className="conn-name">{(proj.sectors[selSector]?.id || '').split('/').pop()}</span>
-            <span className="conn-out">{out} out</span>
-            <span className="conn-in">{inc} in</span>
+            <span className="conn-name">{sec.label}</span>
+            {sec.meaning && <span className="conn-meaning">{sec.meaning}</span>}
+            {hasEdges && <span className="conn-out">{out} out</span>}
+            {hasEdges && <span className="conn-in">{inc} in</span>}
             {finding && <span className="conn-finding">{finding}</span>}
           </div>
         )

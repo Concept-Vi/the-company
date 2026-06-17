@@ -34,7 +34,7 @@ export type ProjPoint = {
   scale_exemplar?: string
 }
 
-export type Sector = { id: string; label: string; from: number; to: number }
+export type Sector = { id: string; label: string; meaning?: string | null; from: number; to: number }
 export type Edge = { from: number; to: number; bidir?: boolean }
 export type BindingRef = { id: string; label: string }
 
