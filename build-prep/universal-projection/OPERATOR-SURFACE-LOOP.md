@@ -126,3 +126,7 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
 - **2026-06-17 — loop armed.** Phase 0 ✅ approved (operator journey). V-icon asked of composition (`t-1781683048`).
   Legibility-type skeleton in progress with composition (`g-1781668099`). NEXT: Phase 1 research (address system / RHM
   connection / loadable brain / overlay patterns) — NOT building yet. OQ1–OQ4 open.
+- **2026-06-17 — Phase 1 research started.** Fork (`ch-8djrpmsl`) engaged on **address resolution + the loadable-brain
+  integration** (thread `t-1781684391`) — Tim's pointer (fork built the loadable-brain wire + knows the resolve path).
+  Asked: address-resolution path + traps, how a brain loads/binds + carries across every page (RHM connection), what to
+  reuse-not-parallel. Awaiting fork's reply; will fold into the research synthesis.
