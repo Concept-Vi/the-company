@@ -14,9 +14,12 @@ import { useChipMenu } from './useChipMenu'
 // still runs ±1 floats through the float cosine (binary nucleation ≈ full, ~21s). The actual SPEED lever is
 // the resolution picker (◎ dim=128 → ~1.5s). The true "32×-compact / whole-corpus-at-once" needs bit-packed
 // vectors + popcount-Hamming (a separate metric path) — a future optimization, not claimed here.
+// operator-facing labels in HUMAN meaning (TENTATIVE — AI-drafted, for Tim's steer). The id stays the machine
+// key. "Coarse" (not "quick"): binary is a coarser/simpler GEOMETRY, NOT a speed win (the detail picker is the
+// speed lever) — naming it "quick" would mislead. The full technical detail is intentionally NOT shown (operator-law).
 const OPTS = [
-  { id: 'full', label: 'full · float' },
-  { id: 'binary', label: 'binary · Hamming' },
+  { id: 'full', label: 'Full' },
+  { id: 'binary', label: 'Coarse' },
 ]
 
 export function QuantChip({ proj, quant, setQuant }:
@@ -31,9 +34,9 @@ export function QuantChip({ proj, quant, setQuant }:
         {...stamp('ui://controls/representation/current')}
         onClick={toggle}
         aria-expanded={open}
-        title="the representation — full float (cosine) or binary sign-bits (a coarse Hamming-geometry view of meaning; for SPEED use the resolution picker)"
+        title="How meaning is compared — the full exact reading, or a coarser, simpler one. (For speed, use the detail picker.)"
       >
-        <span className="lenschip-label display">▦ {current}</span>
+        <span className="lenschip-label display">▦ {current === 'binary' ? 'coarse' : 'full'}</span>
         <span className="lenschip-caret" aria-hidden>{open ? '▾' : '▸'}</span>
       </button>
       <AnimatePresence>

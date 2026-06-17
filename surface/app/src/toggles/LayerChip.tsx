@@ -40,7 +40,7 @@ export function LayerChip({ emb, setEmb }: { emb: string | null; setEmb: (e: str
         {...stamp('ui://controls/layer/current')}
         onClick={toggle}
         aria-expanded={open}
-        title="the embedder layer — which embedding you look through"
+        title="How it reads meaning — different readers weigh what counts as similar differently."
       >
         <span className="lenschip-label display">◫ {current}</span>
         <span className="lenschip-caret" aria-hidden>{open ? '▾' : '▸'}</span>

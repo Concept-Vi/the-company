@@ -40,7 +40,7 @@ export function ResChip({ proj, dim, setDim, emb }:
         {...stamp('ui://controls/resolution/current')}
         onClick={toggle}
         aria-expanded={open}
-        title="the resolution — how many vector dims the meaning is read at (the MRL zoom)"
+        title="How finely it reads meaning — coarser is faster, finer is more exact."
       >
         <span className="lenschip-label display">◎ {current === FULL ? 'full' : `${current}d`}</span>
         <span className="lenschip-caret" aria-hidden>{open ? '▾' : '▸'}</span>
