@@ -230,3 +230,35 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
   composition (kinds/raw.py is their home; their validate/backfill set-diff covers un-seeded kinds).
   - **NEXT:** the remaining verbs (Go to/Note/Drive/Source/Make → their backends); the built-in TUTORIAL (Phase-0
     pedagogy by the RHM); seed more kinds + the OTHER registries' meta (node-types/lenses/…) as views surface them.
+- **2026-06-17 — ✅ the 'NOTE' VERB wired (the first ROUTE-BACK from the V).** Tapping the V's **Note** opens a paper
+  composer that writes the operator's comment AT THE CURRENT AIM — reusing fork's brain (`brain.direct({type:'comment'})`
+  → `/api/territory/write` → `suite.mark`); NO parallel writer. The V now re-aims at a **tapped sector** via a new
+  `projection:aim` window event (Wheel→RightHand) — deliberately NOT `projection:select` (that opens a content face;
+  a synthetic `ui://instrument/sector/<id>` would fail-loud in GalleryMount). The event carries the sector's HUMAN
+  name **and** one-line meaning, so the composer head reads "Note about: A session turn / A working session finished
+  one back-and-forth." (operator-law: meaning, never the address). After Save → "Noted ✓" then the composer
+  **auto-closes** (timer cleared on edit/reopen/close/unmount — no lingering empty box). Files (this fire):
+  `surface/app/src/wheel/Wheel.tsx`, `surface/app/src/rhm/{RightHand.tsx,rhm.css}`.
+  - **VERIFIED — round-trip, by use, BOTH viewports.** Pre-flight curl proved `comment` is a registered mark_type +
+    `suite.mark` accepts a sector target. Then DRIVEN: 390 (tap `agent_sessions.turn` → V → Note → type → Save) and
+    1440 (`corpus.record`) — each note **READ BACK** from `suite.marks_for(ui://instrument/sector/<id>)`
+    (value = the typed text, source=`operator`), not a POST-200. Auto-close + clean reopen verified by use at 390.
+    tsc 0, design-lint 0.
+  - **HONEST coverage:** the happy path is use-verified at both viewports + store read-back. The **error path** (brain
+    module unmounted, or a write failure → "Couldn't save") is **logic-traced only**, not driven — it surfaces loud
+    (no silent no-op) but has not been exercised live. (Two test marks now sit at `sector/_probe` +
+    `sector/agent_sessions.turn` + `sector/corpus.record` — harmless; nothing renders sector-notes yet; the store has
+    no delete API.)
+  - **FRESH-EYES CRITIC (separate agent, cold-drive 390):** returned NEEDS-WORK, but its headline ("context chain
+    broken — header steals a toast string") was a **MISDIAGNOSIS** — it drove blind (checked SVG `title` attrs, never
+    saw the `.conn-readout`) and pattern-matched the sector-identity readout as a save-toast. Proof it's wrong: the
+    `agent_sessions.turn` test showed "A session turn" (no save-connotation) and read back at that address. REAL signal
+    extracted + FIXED this fire: (a) composer ambiguity → added the **meaning line** under the name; (b) the
+    no-auto-close dead-end → **auto-close**.
+  - **ROUTED to the legibility beat (not deferral — wrong evaluator here):** several kind NAMES read as past-tense
+    EVENTS rather than CATEGORIES ("A note saved" ≈ "a note was just saved"). Cross-cutting (touches every kind, copy
+    is TENTATIVE pending Tim/DNA); **Tim's eyes on his phone are the real fresh-eyes test** per THE BAR. The legibility
+    beat should revisit `kinds/raw.py` naming. Also flagged: verb labels **Drive/Source/Make read as jargon** to a
+    non-technical operator (tentative; ratification gated on Tim/DNA + OQ3 tutorial).
+  - **NEXT:** the remaining verbs (Go to/Drive/Source/Make → backends); the built-in TUTORIAL (gated OQ3); seed more
+    kinds + other registries' meta as views surface them.

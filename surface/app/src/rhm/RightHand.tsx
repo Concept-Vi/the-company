@@ -30,13 +30,18 @@ const SURFACE_AIM = 'ui://instrument/surface'
 
 type Pos = { x: number; y: number } | null
 type Drag = { id: number; ox: number; oy: number; sx: number; sy: number; moved: boolean }
-type Brain = { ask: (p?: string) => unknown; direct: (i: unknown) => unknown; aimChanged: () => void; destroy: () => void }
+type Brain = { ask: (p?: string) => unknown; direct: (i: unknown) => Promise<unknown[]>; aimChanged: () => void; destroy: () => void }
 
 const POS_KEY = 'rhm.handle.pos'
 
 export function RightHand() {
   const [open, setOpen] = useState(false) // the verb fan
   const [panelOpen, setPanelOpen] = useState(false) // the brain (Ask) panel
+  const [noteOpen, setNoteOpen] = useState(false) // the Note (annotate) composer
+  const [noteText, setNoteText] = useState('')
+  const [noteStatus, setNoteStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [aimLabel, setAimLabel] = useState('this part of the surface') // human aim label, mirrored for the Note head
+  const [aimMeaning, setAimMeaning] = useState<string | null>(null) // the aim's one-line meaning (sectors carry it)
   const [pos, setPos] = useState<Pos>(() => {
     try {
       const r = localStorage.getItem(POS_KEY)
@@ -48,7 +53,9 @@ export function RightHand() {
   const dragRef = useRef<Drag | null>(null)
   const elRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const noteRef = useRef<HTMLDivElement>(null)
   const brainRef = useRef<Brain | null>(null)
+  const closeTimer = useRef<number | null>(null) // pending "Noted ✓ → auto-close" timer (cleared on edit/close/unmount)
   const aimRef = useRef<string>(SURFACE_AIM) // the CURRENT aim address (read live by the brain)
   const labelRef = useRef<string>('this part of the surface') // the HUMAN aim label (never the raw address)
 
@@ -79,31 +86,58 @@ export function RightHand() {
   }, [])
 
   // ── FOLLOW THE OPERATOR'S AIM ───────────────────────────────────────────────────────────────────────
-  // selecting a wheel-point (projection:select) re-aims the V's brain at that addressed unit; fetch its HUMAN
-  // label (operator-law: the panel shows MEANING, never the address) + refresh. Default = the surface itself.
+  // The V's aim re-points wherever the operator points: a wheel-POINT pick (projection:select) OR a SECTOR
+  // tap (projection:aim — its own event, because projection:select opens a content face and a synthetic
+  // sector address would fail-loud there). The label drives both the brain ("Ask about: …") and the Note
+  // composer head — operator-law: MEANING, never the raw address. A caller may hand us the label (sectors do,
+  // because territory_label has no kind-meta); otherwise we resolve it from the bridge. Default = the surface.
+  const setAim = useCallback((address: string | null | undefined, label?: string | null, meaning?: string | null) => {
+    aimRef.current = address || SURFACE_AIM
+    setAimMeaning(meaning ?? null) // sectors carry a one-line meaning; point-picks/surface clear it
+    if (label) {
+      labelRef.current = label
+      setAimLabel(label)
+      try {
+        brainRef.current?.aimChanged()
+      } catch {
+        /* not mounted */
+      }
+      return
+    }
+    fetch(`/api/territory/label?address=${encodeURIComponent(aimRef.current)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { label?: string } | null) => {
+        if (j?.label) {
+          labelRef.current = j.label
+          setAimLabel(j.label)
+          try {
+            brainRef.current?.aimChanged()
+          } catch {
+            /* not mounted */
+          }
+        }
+      })
+      .catch(() => {
+        /* label is best-effort; the brain still talks/writes at the aim */
+      })
+  }, [])
+
   useEffect(() => {
     const onSelect = (e: Event) => {
       const d = (e as CustomEvent).detail as { address?: string; source?: string } | null
-      aimRef.current = d?.address || d?.source || SURFACE_AIM
-      fetch(`/api/territory/label?address=${encodeURIComponent(aimRef.current)}`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((j: { label?: string } | null) => {
-          if (j?.label) {
-            labelRef.current = j.label
-            try {
-              brainRef.current?.aimChanged()
-            } catch {
-              /* not mounted */
-            }
-          }
-        })
-        .catch(() => {
-          /* label is best-effort; the brain still talks at the aim */
-        })
+      setAim(d?.address || d?.source || SURFACE_AIM)
+    }
+    const onAim = (e: Event) => {
+      const d = (e as CustomEvent).detail as { address?: string; label?: string | null; meaning?: string | null } | null
+      setAim(d?.address || SURFACE_AIM, d?.label ?? undefined, d?.meaning ?? null)
     }
     window.addEventListener('projection:select', onSelect)
-    return () => window.removeEventListener('projection:select', onSelect)
-  }, [])
+    window.addEventListener('projection:aim', onAim)
+    return () => {
+      window.removeEventListener('projection:select', onSelect)
+      window.removeEventListener('projection:aim', onAim)
+    }
+  }, [setAim])
 
   const onPointerDown = useCallback((e: RPE<HTMLButtonElement>) => {
     const el = elRef.current
@@ -152,35 +186,92 @@ export function RightHand() {
     e.currentTarget.releasePointerCapture?.(e.pointerId)
   }, [])
 
-  const onVerb = useCallback((id: string) => {
-    if (id === 'ask') {
-      // the WIRED verb: open the brain panel — talk to the right-hand-man about the current aim
-      setOpen(false)
-      setPanelOpen(true)
-      return
+  // cancel any pending "Noted ✓ → auto-close" so a re-edit or re-open never closes the live composer
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimer.current != null) {
+      clearTimeout(closeTimer.current)
+      closeTimer.current = null
     }
-    // the other verbs are SEAMS: the integration phase (with fork) wires each to its backend
-    window.dispatchEvent(new CustomEvent('rhm:verb', { detail: { verb: id } }))
-    setOpen(false)
   }, [])
 
-  // close the fan / panel on Escape or an outside press
-  useEffect(() => {
-    if (!open && !panelOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+  const onVerb = useCallback(
+    (id: string) => {
+      if (id === 'ask') {
+        // the WIRED verb: open the brain panel — talk to the right-hand-man about the current aim
         setOpen(false)
-        setPanelOpen(false)
+        setPanelOpen(true)
+        return
       }
+      if (id === 'annotate') {
+        // the WIRED Note verb: open a composer → write a comment AT THE CURRENT AIM. The mark rides the
+        // company's scheme-agnostic route-back (brain.direct → /api/territory/write → suite.mark), so a note
+        // lands on whatever the V is pointed at (a tapped sector, else the surface). Reuse, no parallel POST.
+        clearCloseTimer()
+        setOpen(false)
+        setNoteStatus('idle')
+        setNoteOpen(true)
+        return
+      }
+      // the remaining verbs are SEAMS: their integration phase (with fork) wires each to its backend
+      window.dispatchEvent(new CustomEvent('rhm:verb', { detail: { verb: id } }))
+      setOpen(false)
+    },
+    [clearCloseTimer],
+  )
+
+  // SAVE A NOTE — route the comment back at the current aim via fork's brain.direct (writeDirections →
+  // /api/territory/write → suite.mark). Success = every per-element result carries ok:true; anything else
+  // (HTTP error → [null], network → [true]+gallery:write-error, brain not mounted) surfaces an error — no
+  // silent no-op (no-silent-failures). Verified round-trip by curl before wiring (mark persists + reads back).
+  const saveNote = useCallback(async () => {
+    const text = noteText.trim()
+    if (!text) return
+    const brain = brainRef.current
+    if (!brain) {
+      setNoteStatus('error') // the brain module never mounted — fail loud, never pretend it saved
+      return
+    }
+    setNoteStatus('saving')
+    try {
+      const r = await brain.direct({ type: 'comment', text })
+      const ok = Array.isArray(r) && r.length > 0 && r.every((x) => !!x && (x as { ok?: boolean }).ok === true)
+      if (ok) {
+        setNoteStatus('saved')
+        setNoteText('')
+        // confirm, then close on its own — no lingering empty box + disabled Save (fresh-eyes dead-end).
+        // the timer is cleared if the operator edits again or reopens (clearCloseTimer), so it can't close a live box.
+        clearCloseTimer()
+        closeTimer.current = window.setTimeout(() => {
+          setNoteOpen(false)
+          setNoteStatus('idle')
+          closeTimer.current = null
+        }, 1100)
+      } else {
+        setNoteStatus('error')
+      }
+    } catch {
+      setNoteStatus('error')
+    }
+  }, [noteText, clearCloseTimer])
+
+  // close the fan / panel / note composer on Escape or an outside press
+  useEffect(() => {
+    if (!open && !panelOpen && !noteOpen) return
+    const closeAll = () => {
+      clearCloseTimer()
+      setOpen(false)
+      setPanelOpen(false)
+      setNoteOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeAll()
     }
     const onDown = (e: PointerEvent) => {
       const t = e.target as Node
       const inHandle = !!elRef.current?.contains(t)
       const inPanel = !!panelRef.current?.contains(t)
-      if (!inHandle && !inPanel) {
-        setOpen(false)
-        setPanelOpen(false)
-      }
+      const inNote = !!noteRef.current?.contains(t)
+      if (!inHandle && !inPanel && !inNote) closeAll()
     }
     window.addEventListener('keydown', onKey)
     window.addEventListener('pointerdown', onDown, true)
@@ -188,20 +279,34 @@ export function RightHand() {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('pointerdown', onDown, true)
     }
-  }, [open, panelOpen])
+  }, [open, panelOpen, noteOpen, clearCloseTimer])
+
+  // never leave a timer running past unmount (it would setState on a gone component)
+  useEffect(() => () => clearCloseTimer(), [clearCloseTimer])
+
+  // a route-back failure (network, or a non-2xx the brain core swallows) surfaces as a Note error — never a
+  // silent success. Active only while the composer is open (it is the only writer here).
+  useEffect(() => {
+    if (!noteOpen) return
+    const onErr = () => setNoteStatus('error')
+    window.addEventListener('gallery:write-error', onErr)
+    return () => window.removeEventListener('gallery:write-error', onErr)
+  }, [noteOpen])
 
   const style = pos ? { left: `${pos.x}px`, top: `${pos.y}px`, right: 'auto', bottom: 'auto' } : undefined
 
   return (
     <>
-      {/* a soft paper scrim so the open fan / brain panel reads as an overlay ABOVE the surface (legible over
-          the chart), without a heavy modal takeover; a press anywhere on it closes them */}
-      {(open || panelOpen) && (
+      {/* a soft paper scrim so the open fan / brain panel / note composer reads as an overlay ABOVE the surface
+          (legible over the chart), without a heavy modal takeover; a press anywhere on it closes them */}
+      {(open || panelOpen || noteOpen) && (
         <div
           className="vhandle-scrim"
           onClick={() => {
+            clearCloseTimer()
             setOpen(false)
             setPanelOpen(false)
+            setNoteOpen(false)
           }}
         />
       )}
@@ -213,6 +318,61 @@ export function RightHand() {
           ×
         </button>
       </div>
+
+      {/* THE NOTE COMPOSER — the WIRED 'Note' verb. Leave a note ABOUT the current aim; it routes back through
+          fork's brain.direct → /api/territory/write → suite.mark (the same engine the gallery uses, no parallel
+          writer). The head names what it lands on in HUMAN terms (operator-law: meaning, never the address). */}
+      {noteOpen && (
+        <div ref={noteRef} className="v-note" data-status={noteStatus} {...stamp('ui://rhm/note')}>
+          <button
+            className="v-note-close"
+            type="button"
+            aria-label="Close"
+            onClick={() => {
+              clearCloseTimer()
+              setNoteOpen(false)
+            }}
+          >
+            ×
+          </button>
+          <div className="v-note-aim">Note about: {aimLabel}</div>
+          {aimMeaning && <div className="v-note-meaning">{aimMeaning}</div>}
+          <textarea
+            className="v-note-input"
+            rows={3}
+            placeholder="Leave a note about this…"
+            value={noteText}
+            // biome-ignore lint/a11y/noAutofocus: a composer the operator just opened — focus is the intent
+            autoFocus
+            onChange={(e) => {
+              setNoteText(e.target.value)
+              clearCloseTimer() // typing again cancels a pending auto-close
+              if (noteStatus !== 'idle') setNoteStatus('idle') // editing clears the last result
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                void saveNote() // Enter saves; Shift+Enter newlines
+              }
+            }}
+          />
+          <div className="v-note-foot">
+            {noteStatus === 'saving' && <span className="v-note-msg" role="status">Saving…</span>}
+            {noteStatus === 'saved' && <span className="v-note-msg" role="status">Noted ✓</span>}
+            {noteStatus === 'error' && (
+              <span className="v-note-msg v-note-msg--err" role="status">Couldn’t save — try again</span>
+            )}
+            <button
+              className="v-note-save"
+              type="button"
+              disabled={noteStatus === 'saving' || !noteText.trim()}
+              onClick={() => void saveNote()}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      )}
 
       <div ref={elRef} className="vhandle" data-open={open} style={style} {...stamp('ui://rhm/handle')}>
         {open && (

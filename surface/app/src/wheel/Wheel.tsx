@@ -135,7 +135,20 @@ export function Wheel({
                   stroke="var(--hairline)"
                   strokeWidth={1}
                   style={{ cursor: 'pointer' }}
-                  onClick={(e) => { e.stopPropagation(); setSelSector(sel ? null : i) }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const next = sel ? null : i
+                    setSelSector(next)
+                    // RE-AIM the right-hand-man at the tapped sector. NOT projection:select — that opens a
+                    // content face (GalleryMount), and a synthetic sector address would fail-loud there. We
+                    // carry the HUMAN label so the V shows MEANING with no refetch (territory_label has no
+                    // kind-meta). Deselect → aim back at the surface (null label → the V resolves it).
+                    window.dispatchEvent(new CustomEvent('projection:aim', {
+                      detail: next != null
+                        ? { address: `ui://instrument/sector/${encodeURIComponent(s.id)}`, label: s.label, meaning: s.meaning ?? null }
+                        : { address: 'ui://instrument/surface', label: null, meaning: null },
+                    }))
+                  }}
                 />
               )
             })}
