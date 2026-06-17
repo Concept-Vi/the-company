@@ -589,3 +589,16 @@ Tim's "first composed product" — the keystone retargeted at decisions, resolut
     real render). projection's decision residual ~nil, gated on composition's types + DNA's render.
   - **NEXT:** DNA renders meaning-first off the new detail fields → re-run the end-to-end stranger test to confirm the primary path reads
     human; build the decision residual when types + render land; carry composition's canonical legibility name/is when its registry lands.
+- **2026-06-18 — HOLD + ✅ verified meaning-source coverage complete + ★ NUDGED the critical path (RUNG-C shouldn't gate on Tim).**
+  Probe-by-use: RUNG-C NOT landed yet (the face still shows glyphs, not the meaning-words — DNA building). Verified the meaning-source is
+  COMPLETE: all 11 live kinds carry good kind_name+kind_meaning (not just the one I tested) → DNA's RUNG-C render has real meaning for every
+  kind. projection's parts (host, /api/territory, the select-detail meaning-source, the window-event decision) are shipped + complete; the
+  active build (RUNG-C) is DNA's.
+  - **★ CRITICAL-PATH NUDGE (advisor-caught — the real action this fire):** DNA said it's "escalating to Tim NOW for the go" on RUNG-C, but
+    the sprint is explicit — do NOT gate on Tim; git-revert is the safety. RUNG-C is reversible, the live #1-gap fix, AND the decision-surface
+    gate; parking it on an absent "go" stalls the whole critical path. So I nudged DNA+lead (g-1781733996): RUNG-C is buildable NOW (revert
+    covers the FORM), zero-cost status check. Keeping the critical path moving once my part's shipped = reactive coordination, not filler.
+  - **WATCH (not a beat now):** `corpus.record` is >half the dots; my kind-meta renders "A note saved" — borderline for a comprehended
+    role's-principles (name-vs-thing slippage). The per-instance name is composition's `name` lane; but when RUNG-C lands + I re-run the
+    stranger test, if "A note saved" misreads the majority, tuning the kind-MEANING is mine.
+  - **NEXT:** await DNA's RUNG-C (nudged) → re-run the end-to-end stranger test; build the decision residual when types+render land.
