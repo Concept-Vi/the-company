@@ -109,11 +109,24 @@ as *labels* so the whole node grammar is ONE Company address space (the Heart's 
 their RESOLVERS are recollection's lane (file://→whatTouchedFile, project://→containment edges), wired
 when its store absorbs — register-but-defer, mirroring `ui://`/`exchange://`. Purely additive; no
 record-shape or schema_ver change.
+
+Note on `vi-vision://` (the FACTORY's asset library, built INTO the company — islands-join-mainland,
+Tim 2026-06-17): `vi-vision://<frame>/<type>/<id>` addresses the factory's visual-component registry
+(frame = global | project/<id> | user/<id> | session/<id>; type = atom|molecule|organism|template;
+id = a component_id). A *label* resolved by `runtime/cognition.py:resolve_address`, which lazy-dispatches
+to `runtime/vi_vision.py:resolve_vi_vision(addr)` (mirrors cc_board.get_item / cc_clone.get_by_address — a
+Python callable that RAISES on unknown, never a silent empty). The factory's Supabase asset library stays
+the source of TRUTH; the spine resolves INTO it (separate + bridged, never joined). The resolver +
+`parse_vi_vision_address` (the ONE shared grammar) were authored by composition (ch-2mnxl9j0) as the
+factory's good-part contributed to the centre. Adding `vi-vision` to SCHEMES is purely additive (mirrors
+the `ui://`/`cap://` precedent); no record-shape or schema_ver change. (Register-but-defer until the
+resolver module is brought into the company tree + the dispatch branch wired — externally-sourced code,
+confirm-first.)
 """
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "clone", "mind", "exchange", "file", "project")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "clone", "mind", "exchange", "file", "project", "vi-vision")
 
 
 class Provenance(BaseModel):
