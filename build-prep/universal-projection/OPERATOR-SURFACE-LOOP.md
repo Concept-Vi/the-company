@@ -220,3 +220,13 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     validate/backfill machinery, not beside it. RENDER plan = TAP-A-SECTOR → human name + one-line meaning (reuse the
     existing sector-selection), NOT 51 labels at once (crowds at 390). Then: the remaining verbs (Go to/Note/Drive/
     Source/Make) + the built-in tutorial.
+- **2026-06-17 — ✅ LEGIBILITY: SECTOR kind-names → human (commit `d704e27`).** Tim's "I don't know what a sector
+  is" — the wheel's sectors were raw machine-ids. NEW kinds-registry `kinds/raw.py` (composition's specified home:
+  mirror bindings/raw.py, ONE meta map `{kind:{name,is}}`); `projection.py` sets each sector's `label` = the kind's
+  human name (declared-first via the registry) + `meaning`, humanize-id fallback for un-seeded; sectors now tappable
+  in ALL views (was edges-only); the tap-a-sector readout shows the human name + one-line meaning. VERIFIED BY USE
+  390: tap `corpus.record` → "A note saved · The system wrote something into its memory"; all 11 raw-view sectors
+  read human. Registry-true, instrument empty of meaning. tsc 0, design-lint 0, 0 console errors. Coordinated
+  composition (kinds/raw.py is their home; their validate/backfill set-diff covers un-seeded kinds).
+  - **NEXT:** the remaining verbs (Go to/Note/Drive/Source/Make → their backends); the built-in TUTORIAL (Phase-0
+    pedagogy by the RHM); seed more kinds + the OTHER registries' meta (node-types/lenses/…) as views surface them.
