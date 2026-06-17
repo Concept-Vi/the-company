@@ -471,3 +471,27 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     Source verb's "Referenced by N" line works (silent for corpus points = correct, real for board things). Confirmed to fork.
   - **NEXT:** the "in"-label clarity; re-flag the inspector summary+howto leaks;
     DRIVE / open-source-on-SECTOR once Tim's verb-PLACEMENT steer lands; DNA's decision-card reuses /api/territory; TUTORIAL gated OQ3.
+- **2026-06-18 — ✅ V fan conformed to composition's RATIFIED order+copy (commit `7dce89c`) + ✅ operator-law: the inspector's context items never show a raw machine address (commit `0ae6064`).**
+  - **✅ Beat A — V-fan order+copy (RATIFIED by composition, thread t-1781706789):** display order → live-first, read→write arc:
+    **Go to · See the record · Ask · Note · Drive(soon) · Make(soon)** (4 live lead = thumb-reach; 2 soon trail together —
+    resolves the fresh-eyes interleave). Descriptions → canonical wording ("Re-centre the view on this", "Open the full record
+    behind this"). A fresh-eyes RE-CHECK confirmed the grouping reads at a glance (usable-vs-coming clear; boxed SOON = "later",
+    not "broken"). Verified both viewports. composition RULED the touch-visible-descriptions + scrim + fan-header are the REAL V's
+    presentation (their lane) → I kept the placeholder honest, did NOT redesign; flagged the additive findings (header, SOON
+    wording, order-direction) for their backlog.
+  - **✅ Beat B — context-item operator-law guard (commit `0ae6064`):** the inspector's context section showed
+    `[how-to @ ui://canvas] WHAT: …` — a raw ui:// address in operator-facing text. Reframed CORRECTLY: the R2 text legitimately
+    carries the address FOR THE BRAIN (suite.py composes it; fed to the RHM via territory_prose) → the fix is the RENDER boundary,
+    not upstream (the brain wants it). New `humanizeCtx()` in Disclosure strips a composed `[label @ scheme://addr]` frame + any
+    bare `scheme://…` token; the useful content stays ("WHAT: the canvas — the live board…"). VERIFIED BY USE both viewports:
+    `hasAddr=false` at 390 + 1440. (This beat's verify was by-use — the address is provably gone; the fresh-eyes this fire was on
+    the fan. Root-correct, not a band-aid: the surface translates for the operator, the text keeps the address for the brain.)
+  - **✅ RELATIONS-BUG fully closed + acknowledged by fork** (last fire's live verify holds — territory_for's provenance leg alive
+    for every consumer). fork flagged a LATENT PATTERN (noted, NOT biting): `roles/`·`skills/`·`mark_types/` have the same
+    module-shadows-package shape as lifters did; harmless today (the bridge never `from roles.X`), but if any bridge-path code ever
+    package-imports a registry-rows dir it'll hit the identical shadow → the fix is the same (rename the registry module).
+  - **HONEST / still open (others' lanes):** the `routine:self_status` event SUMMARY in the inspector is machine-ish — but it's
+    CAPTURE-side content (the routine's own output), not the render boundary; humanizing it = fabrication → flagged, not mine.
+  - **NEXT:** the "in"-label clarity (needs the binding to DECLARE a division-noun — composition's registry, not an FE hardcode —
+    flag it); DRIVE / open-source-on-SECTOR once Tim's verb-PLACEMENT steer lands; composition's real-V presentation (touch-visible
+    descriptions); the decision-surface bridge-route once the lead sequences it; TUTORIAL gated OQ3.
