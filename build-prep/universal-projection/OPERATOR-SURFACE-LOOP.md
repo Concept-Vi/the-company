@@ -118,6 +118,13 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
 - **Multi-select comm/channel groups** through the RHM *(NEEDS TIM CONFIRM — see open questions)*.
 - Connecting the **RHM connection** + **loadable brain** + **address system** into the surface behind the V.
 
+### Phase 4 — THE DECISION SURFACE (the prove-on-one; lead-SEQUENCED 2026-06-18, thread g-1781731059)  ·  ACTIVE
+Tim's "first composed product" — the keystone retargeted at decisions, resolution-first. Spec: `build-prep/the-one-application/DECISION-SURFACE-BUILD.md`. Build order (foundations first): **1 composition** (the 3 TYPES: decision/option/decision-card — the long pole, gates the rest) → **2 fork** (decision:// scheme + keystone wire + RHM brain) → **3 DNA** (decision-card archetype render, slide format) → **4 projection (HOST — us)** → **5 wildcard** (the TAKE: verbs→territory_write) → **6 recollection** (the common-memory recall leg).
+**projection's piece (stream #4) — DESIGN-CONFIRMED (mostly ALREADY BUILT — the resolution-first payoff):**
+- BUILT (reuse, zero net-new): `/api/territory` (scheme-agnostic resolve — PROBED on `decision://` → degrades clean, full resolution the moment fork registers the scheme); the HOST (instrument + V + GalleryMount); the gallery:verb dispatcher (the TAKE rides it).
+- NEEDED (small; 3 seam Qs broadcast g-1781731457): (1) /api/cognition EXPLAIN-WIRE — fork: do I route your brain-turn-from-address, or do you provide it? (2) the universal-MEMORY route — recollection/fork: fold the recall into territory_for (then /api/territory carries it, zero net-new) or a recall:// scheme (projection adds a route)? (3) the decision-SLIDE host-mount — DNA: via window.DNA.renderGallery (existing host, zero net-new) or a new slide-sequence path (projection adds a container)?
+- SMALLEST PATH: if (2) folds into territory_for + (3) reuses renderGallery, projection's ONLY net-new is (1) the explain-wire — possibly just routing fork's brain. **Build the residual the instant composition's types (#1) + the 3 answers land.**
+
 ---
 
 ## OPEN QUESTIONS (block freezing the field-set / Phase 3; nothing earlier)
@@ -519,3 +526,21 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     territory shipped + /api/cognition + recollection's "bridge route" memory leg) — rather than spin on polish.
   - **NEXT (mostly awaiting others):** decision-surface host/route (lead to sequence); DRIVE/source-on-sector (Tim's placement);
     composition's real-V touch-labels + registry human-names (layers, division-noun); TUTORIAL gated OQ3.
+- **2026-06-18 — ✅ the LEAD SEQUENCED the decision-surface build (projection = stream #4, the HOST); I DESIGN-CONFIRMED projection's seam (no code beat this fire — honest: the foundation isn't there to build against yet).**
+  The lead sequenced (thread g-1781731059): composition's 3 TYPES gate the rest (the long pole, starting now) → fork (scheme+keystone) →
+  DNA (render) → **projection #4** → wildcard (take) → recollection (memory). The lead asked each stream to design-confirm its seam then
+  build IN ORDER. So projection's correct move NOW = design-confirm (not a hollow build on not-yet-existing types — that would fail the
+  real-data bar + jump the sequence).
+  - **★ EVIDENCE-BACKED design-confirm:** PROBED `/api/territory` on a `decision://` address → degrades CLEAN (no crash; scheme
+    unregistered → honest "no content-resolver yet" note; relations leg works). So projection's RESOLVE leg is decision-READY with ZERO
+    net-new — the moment fork registers the decision:// scheme, /api/territory carries the full resolution. The resolution-first payoff:
+    the same resolver/host serve the new type. projection's piece is NEARLY ZERO net-new (HOST + /api/territory already cover SHOW+RESOLVE).
+  - **3 SEAM Qs broadcast (g-1781731457) to pin the small residual:** (1) fork — is the /api/cognition explain-wire me-routing-your-brain
+    or you-provide-it? (2) recollection/fork — fold the recall into territory_for (→ /api/territory carries it, zero new route) or a
+    recall:// scheme (→ projection routes it)? (3) DNA — decision-slide via renderGallery (existing host) or a new slide path (new mount)?
+  - **HONEST — why no code commit this fire:** every projection net-new piece needs (a) composition's types (#1, gating), (b) a render
+    consumer (DNA #3), or (c) a seam answer — building any now = hollow (no real data, nothing to drive) + out-of-order. The design-confirm
+    IS the lead-requested productive step; I build the residual the instant the foundation + answers land. NOT spinning on polish, NOT
+    hollow-building — waiting correctly on the sequenced foundation with my seam pinned.
+  - **NEXT:** build projection's residual (explain-wire / memory-route / host-mount — whichever the seam answers leave) when composition's
+    types + the 3 answers land; meanwhile the V/inspector/chip legibility is converged + the registry-name + Tim-placement items sit with their owners.
