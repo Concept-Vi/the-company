@@ -1,15 +1,18 @@
-# Substrate Unification — Implementation Guide (the HOW for the loop)
+# Substrate Unification — Implementation Guide (the HOW for the loop) · THE ONE APPLICATION
 
-> Loop-prep doc 2 of 3. **These docs live at `/home/tim/company/build-prep/the-one-application/`.** Pairs with the
-> **Research Synthesis** (`UNION-RESEARCH-SYNTHESIS.md` — the master; PARTS 1–6, the verified anchors, the
-> feasible/blocks arbitration) + the **CANONICAL trigger-system pillar designs**
-> (`../trigger-system/DESIGN-forms-built.md`, `DESIGN-lifters.md`, `DESIGN-trigger-registry.md` — these are the
-> source set; `../trigger-system/DESIGN-SYNTHESIS.md`'s lifter=predicate crux is **PARTLY SUPERSEDED** by the
-> verified lifter≠predicate correction in B-0.5/B-1.4b — cite the pillars, not DESIGN-SYNTHESIS, for the
-> recogniser split) + the orientation set (`THE-ONE-SYSTEM.md` · `FORMS-ARE-PLACEHOLDER.md` ·
-> `SUBSTRATE-IN-THE-COMPANY-REFLECTION.md`). The criteria doc (`COMPLETION-CRITERIA.md`) uses an identical source
-> set. This doc is the build sequence, the dos/don'ts, and the file map. **It references the synthesis for the
-> WHY + the file:line evidence — it does not duplicate it.**
+> Loop-prep doc 2 of 3. **These docs live at `/home/tim/company/build-prep/the-one-application/`.** This is the
+> **UNION** guide — the canonical, adherence-clean HOW that pairs with **`UNION-COMPLETION-CRITERIA.md`** (doc 1,
+> the truth-table the loop builds against) and the **`UNION-RESEARCH-SYNTHESIS.md`** (doc 3, the MASTER — PARTS
+> 1–6, the verified anchors, the feasible/blocks arbitration; + `UNION-MAP.md` + the three `CHALLENGE-*.md`). The
+> adherence record is **`UNION-DIVERGENCE-LEDGER.md`** — this guide must **not regress any fix it records**
+> (5 round-1 fatals + 37 round-2 findings; see the LEDGER-CONFORMANCE block below). The **CANONICAL trigger-system
+> pillar designs** are `../trigger-system/DESIGN-forms-built.md`, `DESIGN-lifters.md`, `DESIGN-trigger-registry.md`
+> (the source set; `../trigger-system/DESIGN-SYNTHESIS.md`'s lifter=predicate crux is **PARTLY SUPERSEDED** by the
+> verified lifter≠predicate correction in B-0.5 / B-1.4b / ACT3-ACT4 — cite the pillars, not DESIGN-SYNTHESIS, for
+> the recogniser split). Orientation = `THE-ONE-SYSTEM.md` · `FORMS-ARE-PLACEHOLDER.md` ·
+> `SUBSTRATE-IN-THE-COMPANY-REFLECTION.md`. **This doc is the build sequence, the dos/don'ts (each with a
+> *because*), and the file map. It references the synthesis for the WHY + the file:line evidence — it does not
+> duplicate it.**
 >
 > **Streams reconciled before this build (the SCAN-BEFORE-BUILD law).** This build does not decide the union
 > alone. The sibling streams that are facets of the one application — `instrument-surface/`,
@@ -29,6 +32,37 @@
 
 ---
 
+## HOW THIS GUIDE MAPS ONTO THE CRITERIA (section-for-group correspondence — read FIRST)
+
+The criteria (`UNION-COMPLETION-CRITERIA.md`) is grouped by CONCEPT (GRAMMAR · RESOLUTION · IDENTITY · REG · SEAM
+· STORE · ACT · LENS · EDGE · INST · LEGIBILITY · thesis-guard TH · coverage COV · RECONCILE RCN). This guide is
+grouped by BUILD-PHASE + the lettered B-* criteria, because the loop builds in dependency order, not in concept
+order. Every criteria group has a guide home — that correspondence is the contract this guide honours:
+
+| Criteria group (UNION-COMPLETION-CRITERIA) | Guide home (this doc) |
+|---|---|
+| GRAMMAR (GR1 SCHEMES-derive · GR2 `_RESOLVABLE` drift-guard · GR3 table-dispatch · GR4 parsers · GR5 recursive grammar) | **PHASE 0**: B-0.2 · B-0.1 · B-0.3 · B-0.4 · B-0.5b |
+| RESOLUTION (RES1 collapse `resolve_scope` · RES2 vec-nesting · RES3 `resolve_model` via #71) | **PHASE 0**: B-0.4b · B-0.5b/RES2-note · R-71/R-LIVE |
+| IDENTITY (ID1 file/cas · ID2 channel dual-face · ID3 cluster · ID4 blob/exchange/file/project) | **GROUP IDENTITY** section + B-0.2 row-discipline + DECISIONS-FOR-TIM #1–#3 |
+| REG (REG1 recount · REG2 already-done · REG3 population-path · REG4 hardcoded-vocab migrate · REG5 `ui://` derive · REG6 = RCN1) | **GROUP REG** section + B-0.2/B-0.6/B-1.3 reuse-seams + R-REGISTRY-GEN |
+| SEAM (SEAM1 ratio-metric · SEAM2 widen · SEAM3 re-type · SEAM4 absorb-bypasses) | **PHASE 0**: B-0.7 (LEAD DELIVERABLE #1) |
+| STORE (STORE0 re-census · STORE1 ext4 · STORE2 registries-don't-move · STORE3 vectors · STORE4 ordered-migration · STORE5 union-query · STORE6 extensions · STORE7 fs-disposition) | **THE STORAGE MIGRATION** section (the ordered shape) + the ACCEPTANCE TEST |
+| ACT (ACT1 trigger-registry · ACT2 self-guard · ACT3 RULE_OPS split · ACT4 lifter-contract+tree-sitter · ACT5 structured-output · ACT6 keystone-loop · ACT7 disposition) | **PHASE 2**: B-2.1–B-2.6 + **PHASE 3** B-3.2 (disposition) |
+| LENS (LENS1 two-lenses · LENS2 generalize-DNA · LENS3 ghost-keystone · LENS4 parallel-scheduler · LENS5 coherence-on-event-log) | **GROUP LENS** section + **PHASE 3** B-3.1 / B-3.3 |
+| EDGE (EDGE1 family-only law · EDGE2 ports/join_keys/lineage named-distinct · EDGE3 minds-order registry) | **GROUP EDGE** section (the walk-back) |
+| INST (INST1 one-engine · INST2 registries-are-config · INST3 drill-in · INST4 shared-lib + token FORM handoff) | **GROUP INST** section (backend face; FORM via R-INST) |
+| LEGIBILITY (LEG1 the six-facet legibility type · LEG2 everywhere) | **GROUP LEGIBILITY** section (co-owned, FORM handed off) |
+| TH (TH1 thesis-not-earned · TH2 Shape-B → Tim · TH3 unwired-reverify) | **THE THESIS GUARD** section + DECISIONS-FOR-TIM #4 |
+| COV (COV1 open-ended-converge · COV2 Tim-taxonomy · COV3 placeholders-provisional) | **PHASE 1**: B-1.0 + the COV2 fail-loud gate on B-1.2/B-1.3/B-1.4 |
+| RECONCILE (RCN1–RCN7) | **RECONCILE-GATES (R-*)** section |
+| DECISIONS-FOR-TIM (the 5 genuine meaning calls) | **DECISIONS-FOR-TIM (the gates B-* depend on)** section |
+
+> **A build-worker uses this table both ways:** open a criterion → find its guide section for the HOW; finish a
+> guide section → confirm every criterion in its group is satisfied. If a criterion has no guide home, that is a
+> gap in THIS doc, not a thing to skip.
+
+---
+
 ## THE ONE LAW THAT GOVERNS THIS WHOLE BUILD — unions-not-bridges (ABSORB, don't connect)
 
 The synthesis's corrected thesis is **not** "everything collapses by adding a row." It is:
@@ -42,8 +76,8 @@ So this guide splits **hard** into three tiers, and a build-worker treats them a
   every developer/architecture call the lead has DECIDED** (the lead picked it, coordinating via the fabric;
   the criterion records the decision and is built — see the next bullet).
 - **TIM-DECISIONS (T-*)** — the small set of genuine **direction/meaning** choices only Tim can make,
-  translated to his altitude. These live in the criteria's **DECISIONS-FOR-TIM** section. A T-* criterion stays
-  🔴 until Tim records the meaning; a row-add/migration-size through it must **fail loud**.
+  translated to his altitude. These live in **DECISIONS-FOR-TIM**. A T-* criterion stays 🔴 until Tim records
+  the meaning; a row-add/migration-size through it must **fail loud**.
 - **RECONCILE-GATES (R-*)** — the sibling-stream reconciles. **Lead/fabric-owned, NOT Tim.** Each is resolved
   ancestor/live/distinct-seam via the channel before the FORM/interface build proceeds.
 
@@ -62,6 +96,10 @@ file-discovered `scheme/` registry (`SCHEMES = tuple(scheme_registry)`), don't k
 authority** (the same derive-discipline; the prior draft's "keep the literal, add a side-table" left a two-place
 hand-edit), one trigger registry mechanism (reuse the shared base, don't clone a bespoke class). When two
 mechanisms exist in embryo, the union is to **unify them into one**, never to wire a bridge between two survivors.
+**Island → mainland INTO the centre (THE-ONE-SYSTEM):** an island's good parts get built INTO the company centre
+(the centre improves to hold them) AND the island drops its parallel scaffolding to ride the company spine —
+accumulation always INTO the centre, never "the centre never bends." (This is why DNA's cut is generalized into
+the company engine, not adopted in place — B-3.3 / LENS2.)
 
 ---
 
@@ -74,13 +112,14 @@ preserved by DERIVATION, not by keeping a literal) · **fail-loud** (no silent n
 fallback**, **no silent under-extraction** — a lifter that cannot extract a construct emits a Gap, never silently
 omits — surface a Notice + record a Gap) · **reuse-don't-parallel** (extend the ONE mechanism / the shared
 registry base; never stand up a second fan/store/bus or clone a bespoke registry class) · **the floor** (a
-parse/lift is a pure in-process READ — no resolve/dispatch) · **storage-on-ext4 (AGENTS.md Rule 5)** — any DB
-data dir (PGDATA / container volume) lives on ext4 (`~/...`), NEVER `/mnt/c` (WSL fsync corrupts DBs); a
-`/mnt/c` data dir fails loud at stand-up · **Rule-7 confirm-on-real-source-data (AGENTS.md Rule 7)** — anything
-irreversible touching real source data (the migration, a second-project census, the fs-source disposition) is
-SURFACED + operator-CONFIRMED BEFORE the mutation; rollback is recovery-after, not the confirm-before gate · **the
-operator-gated build wire (C9.2)** — no role/rule/trigger/driver/cc_launch/MCP path may emit
-`resolve`/`approve`/`dispatch` or launch `claude -p` by construction; a build-dispatch routes
+parse/lift is a pure in-process READ — no resolve/dispatch; and **never resolve/approve/dispatch** by
+construction — the keystone routes through the operator-gated wire, ACT6/B-2.2/B-2.5) · **storage-on-ext4
+(AGENTS.md Rule 5)** — any DB data dir (PGDATA / container volume) lives on ext4 (`~/...`), NEVER `/mnt/c` (WSL
+fsync corrupts DBs); a `/mnt/c` data dir fails loud at stand-up · **Rule-7 confirm-on-real-source-data (AGENTS.md
+Rule 7)** — anything irreversible touching real source data (the migration, a second-project census, the
+fs-source disposition) is SURFACED + operator-CONFIRMED BEFORE the mutation; rollback is recovery-after, not the
+confirm-before gate · **the operator-gated build wire (C9.2)** — no role/rule/trigger/driver/cc_launch/MCP path
+may emit `resolve`/`approve`/`dispatch` or launch `claude -p` by construction; a build-dispatch routes
 `decision.surfaced_for_review` → operator `resolve_surfaced` → `dispatch_decision` (which enforces its gates +
 refuses a double-launch); the structural gate holds INDEPENDENT of arming (prove by use, not by "the driver is
 dormant"); **built-not-armed (env-gated dormant) is a TIMING gate ON TOP of this, never a substitute** · **C9.4
@@ -101,7 +140,7 @@ not-yet-decided · **honest status — FOUR buckets** (✅ Verified · 🟡 Desi
 [code exists, never run by use] · 🔴 Gap/Broken); never collapse 🟡 and 🟠 (assume-more-work) · **verify-by-use**
 (a criterion is done when the END-TO-END path runs against real data, not when "no error"; a code-read is never a
 green) · claim a shared file in `WORK-SPLIT.md § CLAIMS` before editing it · `company suites` green (incl.
-`drift_acceptance`) before any shared-file commit.
+`drift_acceptance`) before any shared-file commit. **No feature branches in `~/company` — commit to main.**
 
 **Evidence labels are load-bearing.** Carry these into the build, never present them as fact:
 - SEAM C "3-line fix" = **Inferred** (the *drop* is Verified; the *fix scope* is not). Verify before sizing.
@@ -115,6 +154,42 @@ green) · claim a shared file in `WORK-SPLIT.md § CLAIMS` before editing it · 
   the deliberate, correct mirror of which schemes have a resolver. The 7 absent RAISE **by design** (the
   documented extensible seam). **There is no drift and no bug** — the prior draft's "verified 7-out-of-sync"
   claim is the error; see B-0.1.
+
+---
+
+## LEDGER-CONFORMANCE — the fixes this guide MUST NOT regress (from `UNION-DIVERGENCE-LEDGER.md`)
+
+> A build-worker re-deriving from synthesis+criteria alone WILL drop some of these. This guide encodes all of
+> them; treat any deviation as a regression. (Numbered to the ledger's arc.)
+
+- **F1 (G-* mislabel) →** the developer/architecture calls are LEAD DECISIONS, recorded + artifact-backed, NOT
+  routed to Tim: GR1-derive (B-0.2) · GR3 table-dispatch (B-0.3) · GR5 recursive-grammar (B-0.5b) · RES1
+  resolver-collapse (B-0.4b) · form-gate Option C (B-1.4) · event-taxonomy A2 (B-2.3) · lifter producer-contract
+  + tree-sitter (B-1.4b) · `ui://` derivation (REG5). The Tim-gate set is **~3 + a residual + the taxonomy**, not
+  ~13.
+- **F2 (keystone had no operator-resolution node) →** ACT6/B-2.5: the keystone routes THROUGH the operator-gated
+  wire (`decision.surfaced_for_review` → `resolve_surfaced` → `dispatch_decision`); the structural gate holds
+  INDEPENDENT of arming (proven by use, not by "dormant"); built-not-armed is a timing gate ON TOP.
+- **F3 (built without comparing siblings) →** RCN1–RCN7 / R-* reconciles, each artifact-backed; the FORM build is
+  gated; coordination-window provisional if a sibling is silent.
+- **F4 (`_RESOLVABLE` mislabelled a bug) →** B-0.1 is a DRIFT-GUARD over the live dispatch set, GREEN-on-unmodified
+  (green = proof there is no bug), NOT a fix; it derives from GR3's `SCHEME_HANDLERS`, never from a settable
+  `resolution_path` field.
+- **F5 (FORM accepted at 🟡-terminal) →** overall-done is BLOCKED until RCN2/R-INST (+R-COHERENCE) record AND the
+  handed-off FORM Gaps (INST1-4, LEG1-2, the coherence burn-down, the scheme catalogue / trigger inventory
+  listings) return design-critic + design-lint + render-for-cognition on BOTH faces.
+- **STORE1b →** the PG data dir is ext4 (`~/...`), NEVER `/mnt/c`; fail-loud at stand-up if it resolves under
+  `/mnt/c`. **STORE4b →** operator SURFACE + CONFIRM before the FIRST real-data mutation (step 3), distinct from
+  and prior to per-step rollback. **STORE7 →** post-cutover fs disposition decided (decommission-by-confirm OR
+  retain-read-only-with-PG-the-single-authority), no silent dual-authority / silent delete.
+- **Honest-status split →** 🟡 (not-written) ≠ 🟠 (built-unexercised); never collapse them. (INST1 is 🟠, not ✅.)
+- **Tree-sitter false dichotomy →** B-1.4b/B-1.7: IN-PROCESS `py-tree-sitter` + `tree-sitter-typescript` NOW
+  (complete, like the in-process `ast`/PyYAML) — no regex stand-in, no silent under-extraction.
+- **RCN7 / coverage →** B-1.0 CONVERGES onto the COMPLETED sweep, EXTENDS it, never re-derives from zero.
+- **Lead-decision artifacts do not yet exist (the live residual, ledger §C) →** every "LEAD DECISION recorded"
+  tag earns its decision-half only when a durable artifact (channel synthesis / decision row) EXISTS; a
+  build-worker that finds the tag but no artifact treats it as not-yet-made (🔴-needs-the-artifact). The build
+  loop must PRODUCE the fabric-coordinated artifacts before building to any such tag.
 
 ---
 
@@ -161,7 +236,13 @@ registry) precedes B-0.3 (table dispatch) which precedes the B-0.1 drift-guard (
 fail-loud-unwritable until B-0.5b is green. The prior "derive `_RESOLVABLE` first, lead with it" was wrong on two
 counts (it's a non-bug, and it can't derive from a field that doesn't exist until the registry lands).
 
-### B-0.1 · `_RESOLVABLE` is a DRIFT-GUARD over the live dispatch set — NOT a bug fix (CORRECTED)
+> **The C9.4 three-anchor floor for ANY new registry (binds every B-* that lands one):** `runtime/<reg>.py`
+> (or the registry dir) + `<reg>/AGENTS.md` (the drift home) + `tests/<reg>_acceptance.py` + the
+> self-description update (`refresh_self_description`), or `drift_acceptance` / `cognition_governance_acceptance`
+> fail loud at the commit gate. Build the registry ON the shared file-discovered mechanism
+> (the `board_edges`-reuses-`relation_types`-class-with-its-own-dir pattern), never a bespoke class.
+
+### B-0.1 · `_RESOLVABLE` is a DRIFT-GUARD over the live dispatch set — NOT a bug fix (CORRECTED) [criteria GR2]
 - **Lands:** `runtime/territory.py:32` (the 9-tuple) ← derives from the live `resolve_address` dispatch set
   (cleanly `tuple(SCHEME_HANDLERS)` once B-0.3 lands).
 - **★ THE CORRECTION (Verified this session, the prior draft is wrong):** the prior draft called this a
@@ -183,7 +264,7 @@ counts (it's a non-bug, and it can't derive from a field that doesn't exist unti
   today). Then keep it as the drift-guard: add a 10th scheme's dispatch branch → it auto-appears; remove a
   branch → it drops; a `_RESOLVABLE` hand-edit that diverges fails the guard loud.
 
-### B-0.2 · `SCHEMES` is DERIVED from a file-discovered `scheme/` registry — `SCHEMES = tuple(scheme_registry)` (LEAD DECISION FLIPPED)
+### B-0.2 · `SCHEMES` is DERIVED from a file-discovered `scheme/` registry — `SCHEMES = tuple(scheme_registry)` (LEAD DECISION FLIPPED) [criteria GR1]
 - **Lands:** a new file-discovered `scheme/<id>.py` registry (the AUTHORITY) + `contracts/address.py:116` where
   the importable name becomes `SCHEMES = tuple(scheme_registry)` (a DERIVATION, not a hand-edited literal) + a
   `set(scheme_registry) == set(SCHEMES)` fail-loud drift-guard.
@@ -223,7 +304,7 @@ counts (it's a non-bug, and it can't derive from a field that doesn't exist unti
   only after the meaning/dual-face is recorded. And don't keep a hand-edited literal alongside the registry —
   that re-creates the two-place edit the flip removes.
 
-### B-0.3 · `resolve_address` if/elif → `SCHEME_HANDLERS[scheme]` table dispatch — the 9 RESOLVABLE schemes
+### B-0.3 · `resolve_address` if/elif → `SCHEME_HANDLERS[scheme]` table dispatch — the 9 RESOLVABLE schemes [criteria GR3]
 - **Lands:** `runtime/cognition.py` (`resolve_address` if/elif chain → a `SCHEME_HANDLERS` table).
 - **★ LEAD DECISION (recorded, artifact-backed — table-dispatch-for-the-resolvable-9):** the per-scheme resolver
   functions already exist behind the if/elif; build the table ON them. `_RESOLVABLE` then = `tuple(SCHEME_HANDLERS)` (B-0.1).
@@ -238,7 +319,7 @@ counts (it's a non-bug, and it can't derive from a field that doesn't exist unti
 - **Don't:** "just split on the first `://`" to cover `vec://cluster://` — *because* that mis-keys it; the
   nested grammar is a declared recursive parser (B-0.5b, a lead decision), not a parse trick.
 
-### B-0.4 · Consolidate sub-address parsers in `address.py` — GREP-FIRST (no second parser for one shape)
+### B-0.4 · Consolidate sub-address parsers in `address.py` — GREP-FIRST (no second parser for one shape) [criteria GR4]
 - **Lands:** `contracts/address.py` (alongside `parse_session_address`/`parse_clone_address`).
 - **★ Grep-first (required):** BEFORE adding `parse_vec_address`/`parse_mind_address`, **grep
   `contracts/address.py` + Task #59's in-flight minds work for any existing mind/vec parser** — the file warns
@@ -250,7 +331,7 @@ counts (it's a non-bug, and it can't derive from a field that doesn't exist unti
 - **Verify-by-use:** round-trip each scheme's address through its parser; `_safe()` of a known address ==
   today's filename, by use; AND the grep-first confirmed no pre-existing parser to fork.
 
-### B-0.4b · COLLAPSE the second resolver `resolve_scope` into the one dispatch path (LEAD DECISION)
+### B-0.4b · COLLAPSE the second resolver `resolve_scope` into the one dispatch path (LEAD DECISION) [criteria RES1]
 - **Lands:** `runtime/suite.py:9117` (`resolve_scope`, JSON-backed `design/_system/addresses.json`, explicitly
   *"NOT live"*) collapsed into the `resolve_address`/`SCHEME_HANDLERS` chain.
 - **★ LEAD DECISION (recorded — collapse-the-second-resolver):** `ui://`/`code://` resolve through this PARALLEL
@@ -259,17 +340,18 @@ counts (it's a non-bug, and it can't derive from a field that doesn't exist unti
   `live-resolution-surface/`, R-LIVE — that stream owns the live-intent FORM; this is the resolver-collapse
   backend.)
 - **Verify-by-use:** a `ui://`/`code://` address resolves through the SAME dispatch entry as a resolvable scheme.
-- **Don't:** leave two resolvers with a bridge between them.
+- **Don't:** leave two resolvers with a bridge between them — *because* two resolvers for one address space IS the
+  bridge unions-not-bridges forbids; absorb, don't connect.
 
-### B-0.5 · RECOGNISERS → DATA (RULE_OPS shape-ops) — **for predicates only** (lifters are producers)
+### B-0.5 · RECOGNISERS → DATA (RULE_OPS shape-ops) — **for predicates only** (lifters are producers) [criteria ACT3]
 - **Lands:** `runtime/rules.py:65` (`RULE_OPS`). Add bounded shape-recognition ops: **regex-on-head**,
   **line-count / line-ratio**, **extension-match** (synthesis SEAM B + DESIGN-forms PART 3).
 - **Reuse seam:** `RULE_OPS` is the **ONE predicate language** (**Verified** `rules.py:65`: a closed grammar —
   field/lit, and/or/not, comparisons, arithmetic, in/contains). `mode_detection_rules` is the prior art. Build
   the shape-ops ON it.
-- **★ THE CORRECTION (UNION over the pillar synthesis, authoritative):** the trigger-system DESIGN-SYNTHESIS
-  asserts the crux holds for all three recognisers including lifters. It does NOT. `RULE_OPS` has **no
-  produce/extract/emit op** (**Verified**). So:
+- **★ THE CORRECTION (UNION over the pillar synthesis, authoritative — SEAM B):** the trigger-system
+  DESIGN-SYNTHESIS asserts the crux holds for all three recognisers including lifters. It does NOT. `RULE_OPS`
+  has **no produce/extract/emit op** (**Verified**). So:
   - `forms.match` = a **predicate** → fits RULE_OPS ✅ → pure data → a `_CORPUS_REGISTRIES` row authored through
     the ONE shared gate (`_write_registry_file`) — B-1.4.
   - `triggers.when` = a **predicate** → fits RULE_OPS ✅. Whether `create(kind='trigger')` rides the create-gate
@@ -277,25 +359,32 @@ counts (it's a non-bug, and it can't derive from a field that doesn't exist unti
     is pure-data yet kept off `_CORPUS_REGISTRIES`). The `triggers` MCP tool ships regardless (B-2.6).
   - `lifters.extract` = a **producer** → **RULE_OPS CANNOT express it** ❌. The callable-guard (**Observed**
     `suite.py:9886`) blocks lifters for the right reason: *extraction is code, not a predicate.* Lifters get a
-    separate producer-authoring contract (B-1.5 selector-is-data, extract-is-code — LEAD DECISION B-1.4b).
+    separate producer-authoring contract (B-1.4b/B-1.5 selector-is-data, extract-is-code — LEAD DECISION). **This
+    is SEAM B: recogniser-as-RULE_OPS works for triggers + forms, but lifters need a producer contract.**
 - **Preserves:** existing `mode_detection_rules` predicates evaluate identically; adding ops is additive.
 - **Verify-by-use:** a data-AST form with `regex-on-head` selects the same units the current callable matchers
   do (DESIGN-forms §3: head-of-first-8-lines regex + `linky/len(lines)>0.6` ratio + `ts_lines>=3` count).
 - **Don't:** add a `produce`/`emit` op to RULE_OPS to "include lifters" — *because* that turns the closed
   predicate grammar into an open code-eval surface (breaks the floor) — exactly the bridge the union forbids.
 
-### B-0.5b · DECLARE THE RECURSIVE GRAMMAR for the live nested `vec://cluster://…#space=scale:…` key (LEAD DECISION)
+### B-0.5b · DECLARE THE RECURSIVE GRAMMAR for the live nested `vec://cluster://…#space=scale:…` key (LEAD DECISION) [criteria GR5, RES2]
 - **Lands:** `contracts/address.py` — `parse_vec_address` returns the nested structure (a `vec://` whose body
   is a whole `cluster://` address + the `scale:<space>:k<K>` fragment sub-grammar).
 - **★ LEAD DECISION (recorded — the grammar IS recursive):** the prior draft routed this to Tim ("Tim decides the
   grammar is recursive"). That is a parser-architecture call the lead owns, NOT a Tim gate. The grammar is
   declared recursive and built against the **live key** (`scale.py:34,282`); the flat-table alternative is wrong
   because it mis-keys the nested body. This must land before vec's `nesting` metadata (B-0.2) is trusted.
+- **★ FOUNDATION-FIRST ORDER (synthesis line 66):** GR5 is "the single load-bearing thing the union design must
+  model BEFORE flattening SCHEMES" — so B-0.5b lands BEFORE B-0.2's vec/cluster rows, which are
+  fail-loud-unwritable until this is green. Grammar-as-data (GR*) + the recursive grammar precede every feature.
 - **Verify-by-use (falsify-first):** the flat first-`://`-split mis-keys the live key on UNMODIFIED code (red),
   then the recursive parser returns the nested structure (green). Then RES2 (vec reached via the one path,
   honouring nesting) is unblocked.
+- **RES2 note (criteria):** `vec://` is computed, body-is-an-address; it is reached via
+  `store.put_vector`/`get_vector`, not `resolve_address` today. The resolver must honour the nesting rule, not
+  flatten it. CONDITIONAL on this criterion's green.
 
-### B-0.6 · A SHARED scope base (global / project / user) — forms is the PILOT, roles MIGRATES onto it in-scope
+### B-0.6 · A SHARED scope base (global / project / user) — forms is the PILOT, roles MIGRATES onto it in-scope [criteria REG-reuse]
 - **Lands:** new shared registry base; **forms** as the pilot consumer (`runtime/forms.py:61` `FORM_FIELDS`,
   `route()` `:171`); **AND `roles.mode_scope` MIGRATED onto the same base** (not left on its own copy).
 - **Reuse seam:** `roles.py` `mode_scope` is the exact prior art (a declared data field; the consumer filters by
@@ -317,8 +406,10 @@ counts (it's a non-bug, and it can't derive from a field that doesn't exist unti
   of the filter (reuse-don't-parallel). Forms + roles are the in-scope consumers; further promotion is per-need,
   but roles is NOT deferred to a NOTE.
 
-### B-0.7 · STORAGE SEAM — widen Protocol 10→the live DISTINCT-method surface, re-type `Suite.store`, absorb the 2 bypasses (LEAD DELIVERABLE #1)
-> **This is the FIRST storage deliverable — it ships BEFORE any Postgres/Supabase backend exists. Uncontested.**
+### B-0.7 · STORAGE SEAM — widen Protocol 10→the live DISTINCT-method surface, re-type `Suite.store`, absorb the 2 bypasses (LEAD DELIVERABLE #1) [criteria SEAM1–4]
+> **This is the FIRST storage deliverable — it ships BEFORE any Postgres/Supabase backend exists. Uncontested.
+> The storage-seam is a foundation: it lands in Phase 0 alongside grammar-as-data + registry-base, before any
+> store FEATURE.**
 - **Lands:** `contracts/resolver.py` (the 10-method Protocol) · `runtime/suite.py` (`Suite.store` type + the two
   bypass namespaces).
 - **Reuse seam:** `FsStore` already implements the full surface; build the widened Protocol ON the real
@@ -326,17 +417,18 @@ counts (it's a non-bug, and it can't derive from a field that doesn't exist unti
 - **The load-bearing number (Verified — but state the METRIC precisely):** Protocol = **10**; `FsStore` = **77**
   defs. **★ The widen target is the count of DISTINCT store-method NAMES invoked on `self.store`, NOT call-SITES**
   (a reviewer grep gave ~48 distinct names vs ~61 call-sites; the prior draft's "→61" conflated them — you widen a
-  Protocol by distinct methods, padding it to a call-site count mis-scopes the seam). **1a:** re-measure LIVE,
-  report distinct-method-names (the widen target) AND call-sites (a separate count), then widen Protocol 10 → the
-  distinct-method count. **1b:** re-type `Suite.store` (stays green on fs — makes a 2nd backend *possible*).
-  **1c — absorb the 2 bypasses:** `cascades.json` via `_ActionRegistry(store.root / "cascades.json")` (**Verified**
-  `suite.py:394`) and `agent_sessions/channels.jsonl` via `session_channels.py` both reach the store root
-  *outside* the method surface → silently stranded by a backend swap. Absorb them into the store surface
-  (unions-not-bridges: pull the bypass in, don't leave a side-channel).
+  Protocol by distinct methods, padding it to a call-site count mis-scopes the seam). **1a (SEAM1):** re-measure
+  LIVE, report distinct-method-names (the widen target) AND call-sites (a separate count), then widen Protocol
+  10 → the distinct-method count. **1b (SEAM2/SEAM3):** widen the Protocol; re-type `Suite.store` (stays green on
+  fs — makes a 2nd backend *possible*). **1c (SEAM4) — absorb the 2 bypasses:** `cascades.json` via
+  `_ActionRegistry(store.root / "cascades.json")` (**Verified** `suite.py:394`) and `agent_sessions/channels.jsonl`
+  via `session_channels.py` both reach the store root *outside* the method surface → silently stranded by a
+  backend swap. Absorb them into the store surface (unions-not-bridges: pull the bypass in, don't leave a
+  side-channel).
 - **Preserves:** the fs path stays green at every step. No hot-path read changes today.
 - **Verify-by-use:** the live distinct-method re-measure recorded; `company suites` green after the re-type on fs;
   a synthetic "no-op backend" satisfies the widened Protocol surface (proves the seam is the real surface, not the
-  10-method illusion).
+  10-method illusion); a swap test proves neither bypass is stranded.
 - **Don't:** point the hot path at a cloud backend, build HNSW/IVFFlat/halfvec, or move the registries —
   *because* local-first is the stack's law (cloud is later sync/realtime/mobile, addressed identically because
   *the address never changes*), ~9k vectors exact-cosine is sub-10ms, and **Git holds every `<registry>/*.py`
@@ -344,6 +436,96 @@ counts (it's a non-bug, and it can't derive from a field that doesn't exist unti
   — "reversible" means an operator-initiated ROLLBACK of a migration step, NOT a runtime path where a PG failure
   silently serves fs (a PG failure FAILS LOUD — Notice + Gap; see the migration order below). **And: the PG data
   dir is ext4 (`~/...`), NEVER `/mnt/c` — see the migration section's ext4 + Rule-7-confirm gates.**
+
+---
+
+## GROUP IDENTITY — the four classes; row-adds fail loud until the decision is recorded [criteria ID1–ID4]
+
+> Schemes carry incompatible identity models a row-add cannot reconcile (content-hash · mutable-location · uuid ·
+> computed-centroid). **A row-add attempted WITHOUT the recorded decision MUST fail loud** (the row-add-before-
+> decision guard in B-0.2). **★ Both-plus-others first:** before forcing a one-winner choice, the lead FIRST
+> models whether it can be BOTH faces, addressed distinctly (a `file://` mutable-location AND a `cas://`
+> content-identity that DERIVE from each other; a cluster that is BOTH a stable-named pin AND a live query). ID1
+> and ID3 hinge on what a thing IS to Tim → DECISIONS-FOR-TIM (#1/#3). ID2 is a LEAD dual-face reconcile, NOT a
+> Tim binary. ID4 is a lead/build call.
+
+- **ID1 (→ DECISIONS-FOR-TIM #1) — `file://` (mutable-location) ↔ `cas://` (content-hash).** They cannot
+  dedup/cache/resolve the same way. **Build half (lead, now):** model them as BOTH-with-a-derivation (a `file://`
+  resolves to its current `cas://`); the registry must be able to HOLD both faces. **Tim half (gated):** the
+  residual MEANING — when the system points by location vs by content, is it "the same thing" for dedup/cache, or
+  two distinct kinds of reference? **Do:** carry both `identity_class` rows; *because* the derivation is the union,
+  the meaning is Tim's. **Don't:** add a `file://` row into the unified resolution path WITHOUT the recorded
+  decision — *because* the floor demands it fail loud (by-use: it RAISES without the decision, resolves with it).
+- **ID2 (LEAD dual-face reconcile; only a RESIDUAL → DECISIONS-FOR-TIM #2) — `channel://`.** VERIFIED: `cc_channels`
+  member-ID = handle vs `session_channels` member-ID = session UUID, **no join key**; `channel` is USED but NOT in
+  `SCHEMES` (real gap). **This is the textbook multi-job-elements case** — one element (a channel member) with TWO
+  contextual faces, not a binary. **Do:** the lead models BOTH faces and DECLARES the join (a session belongs to a
+  handle; the member address carries both, one derivable from the other), artifact-backed; only the residual
+  (which face is the durable referent when a session ends) may reach Tim. **Don't:** route "is a member a person or
+  a session?" to Tim — *because* that violates record-both-faces-first + both-plus-others. **By-use:** adding the
+  row before the dual-face model fails loud.
+- **ID3 (→ DECISIONS-FOR-TIM #3) — `cluster://` is a COMPUTED AGGREGATE.** Re-clustering changes the referent, so
+  the address is not a stable referent; `cluster` is USED (`bridge.py` clustering) but NOT in `SCHEMES`. **Do:** the
+  lead FIRST models whether a cluster is BOTH (a stable-named PIN you return to AND a live re-computing query,
+  addressed distinctly). **Tim half:** when you save a reference to a cluster, should it be the frozen thing or the
+  always-current query (or both)? **Don't:** add a `cluster://` row before the meaning is recorded.
+- **ID4 (LEAD/build call) — `blob://` fails loud until wired; `exchange://`/`file://`/`project://` register-but-defer.**
+  `blob` has no wired resolution → fail-loud (trivial when wired); `exchange`(uuid)/`file`/`project` are
+  recollection-lane-promised, registered with `status=defer` **AND a return-when written as a SYSTEM-MEMORY
+  Gap/registry row** (registry-is-truth — NOT prose in this doc; the runtime never reads doc prose). **By-use:** an
+  unresolved `blob://` surfaces Notice + Gap, never a silent null; each deferred scheme's `status=defer` row + its
+  return-when Gap row exist by use. **Don't:** let a deferred scheme silently resolve to nothing — *because* that
+  is a silent fallback (the floor forbids it).
+
+---
+
+## GROUP REG — one mechanism, recounted by the right unit, no work-that-exists proposed [criteria REG1–REG6]
+
+> The dedup is PARTLY ALREADY DONE — Spine-2 must not propose work that exists. This group's WORK is mostly a
+> guard + a recount + the migrations the census names; the registry-base it leans on is the same shared
+> file-discovered mechanism B-0.2/B-0.6 use.
+
+- **REG1 (recount by the right unit) — and there is ONE `CapabilityRegistry`, not two.** Class-defs vs
+  file-discovered instances vs dirs are three different counts — run the LIVE recount, never the map's number.
+  **★ CORRECTED (verified):** exactly ONE `class CapabilityRegistry` (`introspection/registry.py:55`, instantiated
+  at `suite.py:532`); what the prior draft called a "second registry" is the discovery/population PATH
+  (`introspection/discover.py` + adapters) that FILLS the same singleton. The real `PanelRegistry`
+  (`runtime/verdict_panels.py:31`) ≠ the map's phantom `VerdictPanelRegistry`. **Do:** run the live recount of
+  DISTINCT class-defs. **Don't:** cite the map's count.
+- **REG2 (note the dedup ALREADY DONE — propose no existing work).** VERIFIED already-shared:
+  `SkillRegistry`+`ContextRegistry` share `_BaseEntryRegistry`; `board_edges` already reuses the `relation_types`
+  class verbatim with its own dir (the canonical reuse pattern — this is the pattern every new registry copies);
+  the repo already names the "FUTURE NEWMOD reuse pass" (`projections.py`). **Do:** treat this as a guard — reject
+  any consolidation criterion that re-proposes these. *Because* re-proposing existing work is the duplication the
+  union forbids.
+- **REG3 (population path + JSON outlier reconciled honestly).** The single `CapabilityRegistry` is reconciled
+  with its binary-discovery POPULATION PATH (not a phantom second class, REG1); `UI_REGISTRY` (JSON-loaded) is the
+  one JSON outlier with its derivation (REG5).
+- **REG4 (hardcoded vocabularies → rows — CONVERGING onto the EXISTING registry-coverage census).** **★ ANCESTOR
+  (do NOT re-derive):** a completed registry-coverage census exists —
+  `build-prep/cognition-self-improvement/registry-coverage-findings.md` (Tim's 2026-06-09 test, a proven
+  TIER-1→TIER-3 composition). REG4 ADOPTS that pipeline + its finding set as input. The census's TIER-1
+  deterministic findings to carry: `("temperature","max_tokens","top_p")` `_SAMPLING_KEYS` subset hardcoded ×3
+  (`suite.py:2231`, `suite.py:5653` vs authoritative `fabric/transport.py`); `authoring.py:494` `("skill","context")`
+  is a `SCHEMES` subset; the built-twice dups `("plan","apply")` ×2 and `("propose","panel","extend")` ×2 — each
+  → one source. Default disposition = **MIGRATE to rows** (registry-is-truth, never patch-in-place): `EDGE_KINDS`
+  dict (`contracts/node_record.py`) · port-types as bare strings · `CONTENT_KINDS` **defined twice** (verified:
+  `runtime/registry.py:15` AND `runtime/suite.py:21`) — de-dup then migrate. `SCHEMES` is handled by B-0.2 (now
+  DERIVED — the spine vocabulary is NOT exempted from the law). TIER-3 candidacies are the census's
+  escalate-to-Tim list — surfaced, not re-decided. **Do:** flag-and-keep-as-code ONLY for grammars intentionally
+  closed by construction (RULE_OPS-class whitelists), naming WHY. **Don't:** re-scan from zero — *because* that
+  duplicates completed work AND under-covers (the prior draft omitted findings the census holds).
+- **REG5 (the dual `ui://` registry collapsed to ONE source by DERIVATION — NOT a diff-gate) [LEAD DECISION].**
+  Static `design/_system/addresses.json` and runtime `/api/ui_info` are two authorities for the same `ui://`
+  vocabulary; a diff-gate BETWEEN two authorities is the **bridge** unions-not-bridges forbids. The fix is
+  **derivation**: static `addresses.json` authoritative, the runtime view PROJECTED from it — one definition,
+  nothing to diff. **Do:** make the runtime view provably derived (change the source → the view changes). **Don't:**
+  institutionalize a diff-gate — *because* it is a bridge where the law demands a union (this corrects the prior
+  draft's `ui://` diff-gate, ledger F-cluster).
+- **REG6 (= RCN1 / R-REGISTRY-GEN) — RECONCILE the in-flight `registry-generation` effort.** Same decision as
+  RCN1; carried here so the registry-of-registries view is complete. ✅ requires the recorded one-pipeline-two-grain
+  decision; this build converges onto registry-generation's candidate-unit/dossier seam contract if live. See the
+  RECONCILE-GATES section.
 
 ---
 
@@ -360,7 +542,7 @@ taxonomy); **B-1.2/B-1.3/B-1.4 effort-routing is HARD-GATED — fail-loud — un
 exists** (wiring routing to ANY taxonomy before COV2 mislabels the placeholders "emergent" — scaffolding-as-spec).
 Mark the placeholder forms/stages PROVISIONAL everywhere.
 
-### B-1.0 · OPEN-ENDED coverage pass — CONVERGE onto the COMPLETED sweep FIRST (RCN7), then EXTEND (no re-derive)
+### B-1.0 · OPEN-ENDED coverage pass — CONVERGE onto the COMPLETED sweep FIRST (RCN7), then EXTEND (no re-derive) [criteria COV1/COV2/COV3, RCN7]
 - **★ ANCESTOR (RCN7 — do NOT re-derive): a COMPLETED open per-unit coverage sweep already exists** —
   `build-prep/guided-review-surface/findings/coverage/` ("Full territory coverage of the design corpus, 250+
   documents, completed 2026-06-08", with `substrate.md` reading every file in `contracts/`/`store/`/`fabric/`
@@ -372,10 +554,11 @@ Mark the placeholder forms/stages PROVISIONAL everywhere.
 - **Reuse seam:** the existing `findings/coverage/` sweep + the capture path + a describe-only role/output_schema.
 - **Verify-by-use:** the existing sweep ingested + RCN7 recorded; the extending pass runs over the real corpus;
   its emergent natural kinds are recorded and **proposed to Tim** as the seed of his real form taxonomy (T-* —
-  COV2; the effort-routing is fail-loud-blocked until it lands).
+  COV2; the effort-routing is fail-loud-blocked until it lands). COV3: the placeholder forms/stages are marked
+  PROVISIONAL everywhere.
 - **Do:** converge-then-extend, open-ended — *because* forms come FROM the coverage, not imposed on it (Tim's
   coverage law) AND completed work is adopted, not re-run (scaffolding-not-spec / incomplete-work-in-scope).
-  **Don't:** re-derive the sweep from zero; don't lock the placeholder taxonomy as the routing spine.
+- **Don't:** re-derive the sweep from zero; don't lock the placeholder taxonomy as the routing spine.
 
 ### B-1.1 · `policy=` passthrough `run_items → run_role`
 - **Lands:** `runtime/cognition.py:1204` (add `policy: str | None = None`), forward on the `run_role` call `:1344`.
@@ -406,7 +589,7 @@ Mark the placeholder forms/stages PROVISIONAL everywhere.
 - **Don't:** "call `route()` and log the stage" without the buckets (relabelling, not retiering); and don't
   build the bands on the placeholder taxonomy as if it's correct, and don't wire routing before COV2.
 
-### B-1.3 · Form CONTEXT/OUTPUT selectors + the effort-band field — RIDE `GenerationPolicy`, don't fork a registry
+### B-1.3 · Form CONTEXT/OUTPUT selectors + the effort-band field — RIDE `GenerationPolicy`, don't fork a registry [criteria REG-reuse]
 - **Lands:** `runtime/forms.py:61` (optional `context`, `lens` fields) · the per-unit slice hardcode
   `WALK_MAX_CHARS = 6000` (`runtime/corpus.py:255`) · **the effort band as an ADDITIVE field on
   `GenerationPolicy` / `GenerationPolicyRegistry`** (`generation_policies.py`), NOT a net-new `effort_bands/`
@@ -428,7 +611,7 @@ Mark the placeholder forms/stages PROVISIONAL everywhere.
 - **Don't:** leave `WALK_MAX_CHARS=6000` as the universal slice on the form path; and don't fork a registry for
   a field a policy row can hold.
 
-### B-1.4 · `create_form` — data-AST forms ride the ONE shared gate (LEAD DECISION: Option C)
+### B-1.4 · `create_form` — data-AST forms ride the ONE shared gate (LEAD DECISION: Option C) [criteria ACT3]
 - **Lands:** `runtime/suite.py` — add `form` to `_CORPUS_REGISTRIES` (`:360-371`, **adopting Task #59's `minds`
   row in the same table — do not clobber it; coordinate via the channel**); `create_form` is a one-liner like
   `create_projection` (`:9933-9939`): `return self._write_registry_file("form", spec)`. `_build_form`
@@ -446,14 +629,15 @@ Mark the placeholder forms/stages PROVISIONAL everywhere.
   rows. C9.4: the `form` registry already has `forms/AGENTS.md` + `tests/forms_acceptance.py` — extend them.
 - **Preserves:** the placeholder callable matchers keep working (route evaluates whichever a form is); none rewritten.
 - **Verify-by-use:** `create(kind='form', spec={data-AST match})` writes `forms/<id>.py`, the gate rediscovers
-  it, `route()` selects it on a matching unit; `drift_acceptance` green.
+  it, `route()` selects it on a matching unit; `drift_acceptance` green. (HARD-GATED on COV2 — see B-1.2.)
 
-### B-1.4b · LIFTERS get a producer-authoring contract — selector-is-DATA, extract-is-CODE, COMPLETE per-engine parser (LEAD DECISION)
+### B-1.4b · LIFTERS get a producer-authoring contract — selector-is-DATA, extract-is-CODE, COMPLETE per-engine parser (LEAD DECISION) [criteria ACT4, SEAM B]
 - **★ LEAD DECISION (recorded, artifact-backed — the prior draft routed this to Tim as G-LIFTER-AUTHOR):**
-  `lifters.extract` is a **producer**, not a predicate — RULE_OPS cannot author it. The producer-authoring
-  contract is: lifters stay **developer-authored file-drops** in this loop; the `create` path is limited to
-  predicate registries. The `extensions`/`match`-regex-string SELECTOR is DATA (B-1.5); the `extract` body stays
-  CODE. (A gated code-render `propose→apply` for lifters is a possible future upgrade — flagged, not built here.)
+  `lifters.extract` is a **producer**, not a predicate — RULE_OPS cannot author it (**SEAM B**: recogniser-as-
+  RULE_OPS works for triggers + forms; lifters need a PRODUCER CONTRACT). The producer-authoring contract is:
+  lifters stay **developer-authored file-drops** in this loop; the `create` path is limited to predicate
+  registries. The `extensions`/`match`-regex-string SELECTOR is DATA (B-1.5); the `extract` body stays CODE. (A
+  gated code-render `propose→apply` for lifters is a possible future upgrade — flagged, not built here.)
 - **★ EVERY engine gets a COMPLETE in-process parser — TS/JS via tree-sitter NOW, not a regex stand-in
   (make-each-thing-work, no-MVP):** Python uses the complete `ast` parser (B-1.7); TS/JS must match that
   completeness via **IN-PROCESS `py-tree-sitter` + `tree-sitter-typescript`** (C-extension bindings, no
@@ -531,7 +715,7 @@ Mark the placeholder forms/stages PROVISIONAL everywhere.
 **Cross-feature dependency (encode in loop order):** **B-2.1 (structured_output capture) precedes B-2.5's
 structured cc_launch branch.** A trigger launching a CC with `--json-schema` gets its output dropped until C is fixed.
 
-### B-2.1 · Close the `structured_output` capture gap (SEAM C)
+### B-2.1 · Close the `structured_output` capture gap (SEAM C) [criteria ACT5]
 - **Lands:** `runtime/session_supervisor.py:1086-1097` (`_turn_done`) + `runtime/cc_clone.py:330-339`
   (`msg_clone`) + `runtime/routine_runner.py:81-91,115` (`_capture_done`/`fire`).
 - **Reuse seam:** the `--json-schema` **input** side exists (`SPAWN_FLAG_ASSEMBLY["json_schema"]`,
@@ -543,19 +727,22 @@ structured cc_launch branch.** A trigger launching a CC with `--json-schema` get
 - **Preserves:** add `"structured_output": ev.get("structured_output")` → None when no schema → byte-identical
   for non-schema spawns (earns its ✅ by regression-diff on a plain spawn's `done`).
 - **★ Label discipline:** the "3-line fix" is **Inferred, not traced.** Verify the scope across all three files
-  (falsify-first: a `--json-schema` CC drops its output on UNMODIFIED code → red; fix; green).
+  (falsify-first PER PATH: a `--json-schema` CC drops its output on UNMODIFIED code → red per file; fix; green
+  per file — a fix verified in one path and ASSUMED in the other two is the first-assumption-implemented pattern
+  the floor forbids).
 - **Don't:** rename to `structuredOutput` or assume one file.
 
-### B-2.2 · `nodes/cc_launch.py` — the composable launch unit (runs ONLY through the operator-gated wire)
+### B-2.2 · `nodes/cc_launch.py` — the composable launch unit (runs ONLY through the operator-gated wire) [criteria ACT6]
 - **Lands:** new `nodes/cc_launch.py` (self-registers, `registry.py:55-90`).
 - **Reuse seam:** the node contract (CLONE `nodes/ask.py`'s shape) + the supervisor `/spawn → /watch done` cycle
   (REUSE the engine) + the scheduler writing each `PORTS_OUT` port to its `run://` address (REUSE). Copy the
   `routine_runner.fire()` orchestration onto the **raw `/spawn`** route (`build_spawn_body` drops
   `provider`/`flags`/`effort`/`fallback`; the raw route reads them, `session_supervisor.py:1591-1602`).
-- **★ Operator-gated by construction (C9.2):** `cc_launch` is a NODE the operator-gated wire runs — it is NEVER
-  launched directly by a trigger/driver. The dispatch route is `decision.surfaced_for_review` → operator
+- **★ Operator-gated by construction (C9.2 — THE FLOOR):** `cc_launch` is a NODE the operator-gated wire runs — it
+  is NEVER launched directly by a trigger/driver. The dispatch route is `decision.surfaced_for_review` → operator
   `resolve_surfaced` → `dispatch_decision` (which enforces its gates + refuses a double-launch). The node does
-  not emit `resolve`/`approve`/`dispatch`.
+  not emit `resolve`/`approve`/`dispatch`. **(The keystone never resolves/approves/dispatches by construction —
+  ACT6.)**
 - **Preserves:** `VOLATILE = True` is **MANDATORY** (a CC launch reads mutable truth; without it the memo-gate
   serves the first result forever, `nodes/AGENTS.md:15`). `keep_session=False`; the floor spawn = plan permission
   + `mcp__company` only.
@@ -563,7 +750,7 @@ structured cc_launch branch.** A trigger launching a CC with `--json-schema` get
   a `--json-schema` launch fills `structured` (proves B-2.1 wired through).
 - **Don't:** route the launch through a rule verb (a CC-launch is a node the gated wire runs, not a 6th destination).
 
-### B-2.3 · `runtime/triggers.py` + `trigger/` dir on the SHARED registry mechanism (LEAD DECISION) + event-kind A2
+### B-2.3 · `runtime/triggers.py` + `trigger/` dir on the SHARED registry mechanism (LEAD DECISION) + event-kind A2 [criteria ACT1]
 - **Lands:** new `runtime/triggers.py` + `trigger/<id>.py` rows; one discover line in `Suite.__init__` beside
   `mode_detection_rule_registry` (`suite.py:308-310`). C9.4: ship `trigger/AGENTS.md` + `tests/triggers_acceptance.py`.
 - **★ LEAD DECISION (recorded — reuse the SHARED base, do NOT clone the bespoke class):** the prior draft said
@@ -591,6 +778,9 @@ structured cc_launch branch.** A trigger launching a CC with `--json-schema` get
   ACTIVATION_CONTEXTS`).
 - **Verify-by-use:** drop a `trigger/<id>.py`, discover, `op="run"` a synthetic event → the matching row fires;
   `drift_acceptance` green with `trigger/`'s anchors.
+- **★ FORM (LEG1-governed):** the trigger inventory is operator-meaningful (what each trigger watches / does /
+  why), rendered from registry fields so SHAPE carries the meaning (render-for-cognition), NOT a CLI dump, NOT a
+  flat wall-of-rows — handed off as an enforced Gap if owned by a separate FE session.
 - **Don't:** add a 6th `DESTINATION_KIND` for launch — the floor holds *by construction* only while a rule cannot
   forge a launch verb; and don't clone the bespoke registry class.
 
@@ -607,7 +797,7 @@ structured cc_launch branch.** A trigger launching a CC with `--json-schema` get
   it; a CC files back `links=[{responds_to → board://id}]` → `relations(…, "in")` surfaces it.
 - **Don't:** bolt a pub/sub bus onto `cc_board.py` (parallel-channel anti-pattern); ride the one event log.
 
-### B-2.5 · `runtime/trigger_driver.py` (BUILT-NOT-ARMED) — EXTEND activation's tick, don't fork a 2nd cursor (LEAD DECISION)
+### B-2.5 · `runtime/trigger_driver.py` (BUILT-NOT-ARMED) — EXTEND activation's tick, don't fork a 2nd cursor (LEAD DECISION) [criteria ACT2, ACT6]
 - **Lands:** new `runtime/trigger_driver.py` — built as an **extension of `activation`'s existing tick layer**,
   not a second independent driver.
 - **★ LEAD DECISION (recorded — extend activation's tick / trigger-as-context, not a parallel cursor):**
@@ -625,8 +815,8 @@ structured cc_launch branch.** A trigger launching a CC with `--json-schema` get
 - **Preserves:** **BUILT-NOT-ARMED** — env-gated dormant (mirroring `activation_driver`'s
   `COMPANY_ACTIVATION_LOOP`-style gate). This is the **TIMING** gate ON TOP of the structural operator gate
   (B-2.2). A build-worker must NEVER arm the driver (Autonomous-Spawn-Lead-Only).
-- **★ Self-trigger loop guard (non-negotiable):** the reply `file_item(...)` re-emits `board.filed` → re-read →
-  same trigger fires → runaway. Wire the proven fix: `OPERATOR_ACTIVITY_KINDS` self-exclusion
+- **★ Self-trigger loop guard (ACT2, non-negotiable):** the reply `file_item(...)` re-emits `board.filed` →
+  re-read → same trigger fires → runaway. Wire the proven fix: `OPERATOR_ACTIVITY_KINDS` self-exclusion
   (`activation.py:359-364`) — **(a) exclude items carrying a `responds_to` edge** (structural, no new field —
   recommended), or (b) stamp the emit with an `origin` and skip trigger-authored origins.
 - **Verify-by-use:** feed one synthetic `board.filed` → the (extended) driver fires the matching trigger once,
@@ -640,7 +830,7 @@ structured cc_launch branch.** A trigger launching a CC with `--json-schema` get
   forge is possible on a broken build, green proves the floor holds.
 - **Don't:** stand up an always-on tick loop, arm any source, or build a second cursor over the one log.
 
-### B-2.6 · `mcp_face/tools/triggers.py` — agents author triggers via the tools
+### B-2.6 · `mcp_face/tools/triggers.py` — agents author triggers via the tools [criteria ACT1]
 - **Lands:** new `mcp_face/tools/triggers.py` (auto-registered by `server.py` pkgutil discovery — no `server.py`
   edit, mirrors `routines.py:27-29`).
 - **Reuse seam:** CLONE the `routines.py`/`flows.py`/`node.py` tool shape — ONE parameterised tool, an `op`
@@ -657,7 +847,7 @@ structured cc_launch branch.** A trigger launching a CC with `--json-schema` get
 
 # PHASE 3 — THE UNION SEAMS (the SAME substrate at different aspects) — absorb, don't add
 
-### B-3.1 · Coherence as ONE LENS over the same substrate (SEAM E) — FORM handed to guided-review (R-COHERENCE)
+### B-3.1 · Coherence as ONE LENS over the same substrate (SEAM E) — FORM handed to guided-review (R-COHERENCE) [criteria LENS5]
 - **Lands:** the three coherence gates → the first rows of a `finding-type` registry; findings ride the
   **existing** event log (`kind="coherence.finding"`, address-stamped); dispositions ride the **existing**
   pin-overlay; burn-down = read-time rollup. C9.4: `finding-type` ships its three anchors.
@@ -675,7 +865,7 @@ structured cc_launch branch.** A trigger launching a CC with `--json-schema` get
 - **Don't:** mint a `coherence://` scheme; don't discharge the burn-down as a CLI; don't hand the FORM off as a
   prose pointer (use the enforced Gap).
 
-### B-3.2 · Unify the DISPOSITION system that exists TWICE in embryo (SEAM F) — with C9.4 anchors if it lands a registry
+### B-3.2 · Unify the DISPOSITION system that exists TWICE in embryo (SEAM F) — with C9.4 anchors if it lands a registry [criteria ACT7]
 - **Lands:** `_ORPHAN_ROUTES` hardcoded dict **and** `governance.POLICY` (AUTO/SURFACE/CONFIRM/LOCKED) → **one**
   disposition mechanism.
 - **Reuse seam:** pick the survivor and absorb the other (the disposition overlay + governance posture are the
@@ -692,12 +882,12 @@ structured cc_launch branch.** A trigger launching a CC with `--json-schema` get
 - **Don't:** leave both running with a bridge — the union is one, never invent a third; don't land a registry
   without its anchors.
 
-### B-3.3 · The COMPANY substrate engine — GENERALIZE DNA's cut, never adopt it (SEAM D); the cross-repo READ is R-DNA
+### B-3.3 · The COMPANY substrate engine — GENERALIZE DNA's cut, never adopt it (SEAM D); the cross-repo READ is R-DNA [criteria LENS1, LENS2]
 - **Lands:** the company's canonical substrate engine, pointable at any project (project-registry +
   global/project/user scope). DNA's proven cut is the **SEED + reference**.
 - **Reuse seam:** generalize the engine pattern; the census feeds **BOTH** the structural substrate (the
   address-registry / typed graph) AND the semantic corpus (the `vec://<source>#space=<projection>` embeddings) —
-  two lenses on the SAME addressed units (SEAM D).
+  two lenses on the SAME addressed units (SEAM D = LENS1).
 - **★ Label + cross-repo discipline:** DNA's numbers (621 addrs / 1,050 edges / 22 types / 14 ghost nodes) are
   **DNA-self-reported, uncited to any live Company file**, in a **separate repo**
   (`/home/tim/repos/counterpart/design/`). `dna/types.json` + `substrate-assemble.py` are **PHANTOM in
@@ -706,11 +896,146 @@ structured cc_launch branch.** A trigger launching a CC with `--json-schema` get
   decision** (found-elsewhere ≠ replacement). Confirm with operator/lead whether counterpart/design is an input
   this build reads, an ancestor, or a layer the union absorbs — BEFORE relying on it as "census a second project."
 - **Preserves:** DNA remains architect-of-record for her instance; her design repo becomes one project the
-  company's substrate covers (once R-DNA confirms the relationship) — not superseded.
+  company's substrate covers (once R-DNA confirms the relationship) — not superseded. (Island → mainland into the
+  centre: DNA's good parts build INTO the company engine; her repo drops its parallel scaffolding to ride the
+  company spine.)
 - **Verify-by-use:** the company engine censuses a project (e.g. the company repo) and produces the structural
   graph + feeds the corpus — without touching DNA's instance; the cross-repo relationship recorded (R-DNA).
 - **Don't:** build the company's substrate ON DNA's instance or into the counterpart repo; and don't treat the
   cross-repo READ as a settled build input — it is a reconcile.
+
+---
+
+## GROUP LENS — structural ⨯ semantic ⨯ coherence over ONE substrate [criteria LENS1–LENS5]
+
+> Two lenses on the SAME addressed units — LENS5 (coherence) is built as B-3.1; LENS1/LENS2 are built as B-3.3
+> (the generalized engine feeds both lenses); LENS3 (the ghost-keystone) is built as the ACT-layer keystone
+> (B-2.x) + this; LENS4 is the scheduler upgrade the parallel census needs. Collected here so the LENS group is
+> visible whole.
+
+- **LENS1 — substrate (structural) ⨯ corpus (semantic) are TWO LENSES on the same addresses** (built in B-3.3 /
+  SEAM D). Substrate = the address-registry (typed structure); corpus = the same units embedded into
+  `vec://<source>#space=<projection>` spaces (cosine+rerank); both **key the same address grammar**. ✅ requires
+  one address queried both structurally AND semantically by use.
+- **LENS2 — DNA's substrate is GENERALIZED into the company, NOT adopted; the cross-repo READ is an OPEN decision**
+  (built in B-3.3; reconciled R-DNA). ✅ requires the company engine censusing a SECOND project as an instance,
+  by use, with the cross-repo relationship recorded.
+- **LENS3 — ghost nodes = the introspective self-build seam — CONDITIONAL-on-RCN3/RCN5.** A ghost node (an edge
+  pointing at what isn't there) detected by the census → trigger (B-2.3) → **SURFACES a build-intent → operator
+  resolves (ACT6's gated wire)** → build-brain (#71, R-71) reconstructs from implicating edges → writeback →
+  re-census. **★ CONDITIONAL:** the "SAME circuit as `self-build-surface/GROUNDED-MAP.md`, not a fork" claim is the
+  REQUIRED OUTCOME of RCN3 (still open), and the build-brain is #71 (RCN5) — **GATED, not built-to.** Build the
+  census→ghost-detection→surface backend now; the convergence + brain halves land after RCN3/RCN5 record. ✅
+  requires one real ghost detected → surfaced → operator-resolved → reconstructed → re-censused by use, AFTER the
+  reconciles record. **Do:** build the RCN-independent backend half now. **Don't:** design the ACT-layer to the
+  presumed convergence while RCN3 is open — *because* require-vs-assert forbids building to an asserted-but-open
+  reconcile.
+- **LENS4 — the serial scheduler is parallelized for real concurrent census.**
+  `concurrent-cognition/02-graph-substrate-reuse.md` flags the scheduler SERIAL; a parallel census across the
+  ~1k+ Shape-A units (the live STORE0 re-census is the binding count) needs it. ✅ requires a measured parallel
+  census run (the substrate is the use-case that earns the upgrade). **Don't:** size it off a doc number — use
+  STORE0's live re-census.
+- **LENS5 — coherence rides the EXISTING event log** (built as B-3.1; FORM handed to guided-review via the
+  enforced Gap, R-COHERENCE).
+
+---
+
+## GROUP EDGE — the typed-edge law is FAMILY-ONLY (the map's biggest abstraction error, walked back) [criteria EDGE1–EDGE3]
+
+> **The hard walk-back: do NOT deliver "one law over 7 surfaces."** The law — *"a valid typed edge is a VERB with
+> an EQUAL OPPOSITE; direction is which end you read from"* — holds for ~2 of the 7 claimed surfaces. Express it
+> once for the family it fits; NAME the rest as the distinct edge categories they are. This BLOCKS as stated — it
+> is a wrong abstraction, not unbuilt work.
+
+- **EDGE1 — express the equal-opposite law ONCE for the relation-type family ONLY.** It holds for
+  `relation_types` + `board_edges` (already share the class, REG2) → one `relation_types/` dir with a
+  `scope:["board","corpus"]` field. **Lands:** the `scope` field on the existing `relation_types/` dir; both
+  surfaces consume it. **Reuse seam:** `relation_types` already has its C9.4 anchors (extend, don't re-create).
+  ✅ requires the scoped family expressed once + consumed by both surfaces by use. **Don't:** force ports /
+  join_keys / lineage under this validator — *because* they are different edge categories (EDGE2).
+- **EDGE2 — ports / join_keys / lineage / DNA-file-edges are NAMED as DISTINCT edge categories, NOT forced under
+  the law.** node-graph PORTS = a type-compatibility check (no inverse verb); `source_types.join_keys` =
+  set-intersection; Provenance lineage = an immutable made-from DAG (direction intrinsic, not "which end you
+  read"); minds composition order → EDGE3; and DNA file-edges live in the SEPARATE counterpart repo — the
+  `dna/types.json` typed-edge "law" cited there is **phantom as Company ground truth** (generalized per LENS2,
+  NEVER cited as proof the equal-opposite law holds). ✅ requires, by use: **a PORT cannot pass the relation-type
+  validator (category error, fail-loud)** — the categories are kept distinct, not papered; and the DNA file-edge
+  surface is generalized-not-adopted. **Don't:** write "express it once, each surface consumes it" — *because* it
+  cannot span three incompatible edge kinds (the map's biggest abstraction error).
+- **EDGE3 — minds composition order gets a registry (the named gap).** Minds order has **no registry today**; it
+  is given one (the equal-opposite family does NOT cover it). **Lands:** a minds-order registry + its three C9.4
+  anchors. ✅ requires it built + verified by use. (Coordinate with Task #59's minds-first-classness work.)
+
+---
+
+# THE STORAGE MIGRATION — local PG + pgvector, registries don't move, sized on a RE-CENSUS [criteria STORE0–STORE7]
+
+> **Verdict (synthesis Part 3): GO — local Postgres + pgvector as the union store; cloud Supabase a LATER
+> sync/realtime/mobile tier, addressed identically because the address never changes.** The registries DO NOT
+> move — git holds every `<registry>/*.py` row. The SEAM (B-0.7) is the FIRST deliverable and ships in Phase 0,
+> before any backend exists. The migration below runs ONLY after the seam is green + the reconciles/decisions it
+> depends on are recorded.
+
+**The storage SHAPE (the dos/don'ts):**
+- **STORE0 — RE-CENSUS ALL OF SHAPE-A before sizing anything; the live re-census is the ONLY number that binds.**
+  The map's `agent_sessions` count was **13** against a real ~1,000+ (an ~80× error); the prior draft's "1,068"
+  had itself drifted to **1,069** live. **★ This criterion pins NO hard count** — every count-sized step requires
+  a full live re-census, not a slice, not a doc-number (`agent_sessions` is a far bigger dir-scan than
+  `events.jsonl`'s ~6.4k lines). **Do:** run the live re-census this session/by the loop, record it as the binding
+  sizing input. **Don't:** size any step off a number written in any doc — *because* the whole point of this
+  criterion is that written counts drift.
+- **STORE1 / STORE1b — local-first, NOT cloud; PG data dir on ext4, NEVER `/mnt/c`.** Every `head()`/`get_vector()`
+  /`load_agent_session()` is a cheap local ext4 read; pointing the hot path at cloud PG = network round-trips = a
+  regression on the local-first stack. **★ The PGDATA / container volume MUST resolve to ext4 under `~/...`** (WSL
+  fsync corrupts DBs under `/mnt/c`; the build-prep tree itself lives under `/mnt/c` — this is a live hazard).
+  **Do:** a fail-loud check at stand-up that REFUSES to init/migrate if the data dir resolves under `/mnt/c`, +
+  inspect the live cluster's `data_directory` on ext4 by use. **Don't:** point the hot path at cloud — *because*
+  local-first is the stack's law.
+- **STORE2 — the registries DO NOT move; git is the migration system.** Tables hold the addressed graph +
+  embeddings; git holds every `<registry>/*.py` row; `_CORPUS_REGISTRIES` becomes an enumerable index over them,
+  not a relocation into SQL.
+- **STORE3 — the vectors table mirrors `put_vector` verbatim; mixed-dim is BY DESIGN.** 2560-dim (`pplx`) AND
+  1024-dim (`bge-m3`) coexist at distinct `(item, space, emb)` keys (Tim's multi-layer model, NOT corruption).
+  At ~9k vectors: `WHERE space=X AND emb=Y` then **exact cosine scan is sub-10ms — do NOT build
+  HNSW/IVFFlat/halfvec/per-dim-split** (*because* the `(space,emb)` filter isolates each layer, so you never
+  compare across dims). The `vectors.bge-backup-20260615/` (~2.8k vectors) is a separate **archival decision
+  DECIDED at migration step 8 by a NAMED criterion** (re-ingest as a named `emb` layer OR archive out of root —
+  the chosen disposition recorded as a system-memory note/row, not a bare "later").
+  ```sql
+  CREATE TABLE vectors (
+    address text PRIMARY KEY, source text NOT NULL, space text, emb text,
+    dim int NOT NULL, model text NOT NULL, content_hash text NOT NULL,
+    vector float4[], ts timestamptz );
+  CREATE INDEX ON vectors (space, emb);   -- the filter, not the vector
+  ```
+- **STORE4 / STORE4b — the migration is ORDERED + operator-ROLLBACKABLE per step + operator-CONFIRMED before the
+  FIRST real-data mutation — NOT a runtime fs-fallback.** **★ BEFORE the first real-data-mutating step (step 3),
+  the migration plan is SURFACED (`decision.surfaced_for_review`) and requires an explicit operator CONFIRM**
+  (Rule 7: confirm-before, distinct from and PRIOR to per-step rollback). **"Reversible" means an operator-initiated
+  ROLLBACK of the step to fs — NOT a runtime path where a PG failure silently serves fs** (a PG failure FAILS
+  LOUD — Notice + Gap). **Do:** a fault-injection test — kill PG mid-read → loud failure, NOT a silent fs read.
+  **Don't:** substitute rollback for the confirm-before gate — *because* Rule 7 demands surface/confirm BEFORE the
+  mutation.
+- **STORE5 — THE ONE UNION QUERY RUNS (the definition-of-done for "the union is real").** See the ACCEPTANCE TEST
+  below. If the migration serves it, the union is real; if you can't write it, the union is hollow.
+- **STORE6 — extensions, scoped honestly; every deferral's return-when is a SYSTEM-MEMORY Gap row.** pgvector
+  **YES core** · Realtime (`postgres_changes`) **YES — strongest concrete win** (`events_since(seq)` →
+  logical-replication feed → fabric/board/coherence go poll→push) · RLS **deferred** (one entity, single operator;
+  returns when the mobile PWA hits Postgres directly) · Storage/CAS-blobs **in-scope at migration step 7** (built +
+  verified by use; not "optional") · PostgREST/Auth **deferred** (returns when a non-Company client needs a
+  REST/auth surface). **★ Every deferral's return-when is a SYSTEM-MEMORY Gap/registry ROW** (registry-is-truth —
+  NOT only doc prose; no_unconditional_deferrals). **Don't:** write a bare "optional/later" — *because* the
+  runtime/next session reads stored Gaps, not this doc.
+- **STORE7 — the fs SOURCE disposition AFTER cutover is decided — no silent dual-authority, no silent delete.**
+  After cutover-verified-by-use: the fs source is **either [decommissioned via an explicit operator CONFIRM gate
+  per Rule 7] OR [retained read-only with Postgres declared the SINGLE authority and the fs path proven
+  non-authoritative by use]** — the chosen disposition recorded as a Tim/operator confirmation (it touches real
+  source data) and proven by use. **Don't:** silently keep fs as a parallel copy (two authorities = the bridge
+  unions-not-bridges forbids) OR silently delete it (irreversible op on real source data, Rule 7).
+
+**Storage build ORDER within the group (foundations first):** the SEAM (B-0.7) is a Phase-0 foundation and lands
+FIRST; the storage-seam-widening precedes every store FEATURE; then STORE0 (re-census) sizes everything; then the
+ordered migration runs ext4-pinned + operator-confirmed; then STORE5 (the union query) is the definition-of-done.
 
 ---
 
@@ -743,7 +1068,100 @@ drifted to 1,069 live, which is why the criterion forbids trusting any written c
 
 ---
 
-# RECONCILE-GATES (R-*) — sibling-stream reconciles — LEAD/FABRIC-OWNED, NOT Tim (the SCAN-BEFORE-BUILD law)
+# GROUP INST — the projection engine + registry-driven rendering (the BACKEND face; FORM via R-INST) [criteria INST1–INST4]
+
+> The instrument = the universal projection (the wheel/lattice), the **literal operation of Tim's seed equation**.
+> **Nothing that carries meaning lives IN the instrument — all meaning comes FROM the data.** PART 6 here is the
+> BACKEND face (engine reuse + registry-driven rendering); the FORM (the wheel/lattice render, the operator
+> surface loop) is owned by `instrument-surface/` + `universal-projection/` (R-INST / RCN2, still 🔴-open → these
+> FORM lines are CONDITIONAL). The FORM criteria are enumerated AND **handed off as ENFORCED system-memory Gap
+> rows** (one per FORM line, `return-when` = "the owning stream's FORM is ✅ on both faces, render-for-cognition"),
+> never a prose pointer. **★ Overall-done is BLOCKED until RCN2 (+RCN6) record AND those FORM Gaps close.**
+
+- **INST1 — ONE projection engine for both doors (the strongest-grounded line — but NOT yet by-use verified).**
+  `runtime/projection.py` (`build_projection`, pure `project()`); `/api/projection` AND the MCP `project` door
+  route through the **SAME `Suite.project` engine** (`runtime/bridge.py:866`'s docstring states this), fulfilling
+  *"everything done through the UI must be done through the MCP doors."* **FUNCTION: 🟠 Built-unexercised** — the
+  code EXISTS + the routing is a code-read (the docstring + shared call-site) + survived all three CHALLENGE
+  reviews; this is the nearest-to-green criterion BUT a docstring/shared-call-site is a code-read, not by-use
+  (hence 🟠, not 🟡 and NOT ✅). ✅ ONLY when both doors are driven against the same real input in one session and
+  byte-identical (or identical resolved-structure) output is inspected by use. **Reuse seam:** reuse the engine as
+  a slot — NEVER touch its internals (file-territory). **FORM:** the wheel/lattice render — owned by
+  instrument-surface / universal-projection (R-INST), handed off as an enforced Gap.
+- **INST2 — registries ARE the instrument's configuration — zero hardcoded layout.** `BindingRegistry` fills the
+  seed-equation slots (`angle_from`/`radius_from`/`space`/poles/`order_by`) → every sector derives from the active
+  row (no hardcoded sectors); `ProjectionRegistry` lenses become `vec://<item>#space=<projection>` spaces;
+  `NodeRegistry`→`/api/object_info`→ONE generic `ai-node` shape (zero per-type frontend code; states via CSS
+  custom-property tokens); `render_hint` + `mark_types.direction` = rendering intent as data. ✅ requires: adding a
+  binding row re-aims the wheel with NO instrument code edit, by use. **FORM:** the re-aim renders legibly so SHAPE
+  carries it (render-for-cognition) — handed off as an enforced Gap (R-INST, CONDITIONAL).
+- **INST3 — drill-in resolves through the ONE resolver.** Wheel tap → `projection:select {address,...}` window
+  event → DNA gallery renders the drilled unit; the address resolves through the one resolution path (Phase 0).
+  **FORM:** progressive disclosure (human-meaning on top, full technical depth reachable beneath — Tim NEVER sees
+  machine names as the first/main view); operable on the phone face too (native-mobile-always); handed off as an
+  enforced Gap. ✅ requires the meaning-first → drill-to-depth path walked by use on both faces.
+- **INST4 — the shared-lib backend part is IN-SCOPE; the token/render FORM part is a separate session, handed off
+  as an ENFORCED Gap.** Two `address.ts` (canvas + surface) → one shared lib (**this is a code/shared-lib dedup
+  the loop CAN do — carve it as a B-* shared-lib lane**); `NODE_STATES` tokens → drawn from `dna/tokens.json`
+  semantic tree, and `company/design/` read-copy from Windows-side canonical guarded against silent overwrite
+  (these are FORM/front-end — owned by the separate FE session, R-INST). **FUNCTION: 🟡** (shared-lib part).
+  **FORM:** token/render parts handed to the FE session as an enforced Gap row (`return-when` = the FE session's
+  token/render criterion is ✅), the Gap existing by use, never stranded.
+
+---
+
+# GROUP LEGIBILITY — meaning lives in the registries (CO-OWNED with composition; named, not claimed) [criteria LEG1–LEG2]
+
+> This is the architecture for the standing law *"translate everything → human meaning"* — Tim NEVER sees
+> code/files/machine names; surfaces translate ALL technical names → human MEANING + context. **OWNER:
+> composition** (registry field-schemas + the declared-requirement + backfill); this build CONSUMES it; the seam
+> is named via an enforced Gap, not silently claimed or dropped.
+
+- **LEG1 — the legibility TYPE: registry rows carry self-describing FIELDS across the SIX synthesis facets.** Every
+  addressable thing self-describes via DECLARED fields. **★ The synthesis (line 191) names SIX facets the
+  legibility type must absorb (today hardcoded React strings): `address/thing · lens · element · control ·
+  destination · journey/state`.** The per-address CORE fields are **human name · what-it-is · what-fills-it ·
+  why-you'd-look** (born-filled when a type is created, backfilled ONCE for existing things); the type ALSO carries
+  field-families for **lens** (what projection/view), **element** (the UI element's meaning), **control** (what an
+  operator can DO here), **destination** (where an action goes), **journey/state** (where in a flow / what state) —
+  so it self-describes the surface's CONTROLS/DESTINATIONS/JOURNEY, not only its nouns. (A legibility type that
+  describes nouns but not controls/destinations silently drops three of the six facets.) The instrument/gallery
+  READS those fields and renders them, staying empty of meaning. **It governs every operator-meaningful listing in
+  this build — the scheme catalogue (B-0.2/GR1), the trigger inventory (B-2.3/ACT1), the coherence burn-down
+  (B-3.1/LENS5) — none discharged as a CLI/inspect dump, each rendering so SHAPE carries the meaning.** ✅ requires:
+  the surface shows what-is-it/what-data/why (+ the relevant lens/control/destination/journey facets) for a live
+  address from its registry fields (no hardcoded label), by use. **FORM:** meaning-first, progressive disclosure,
+  render-for-cognition — handed off as an enforced Gap; design-critic + render-for-cognition + BOTH faces +
+  surfaced-for-review. **Don't:** silently claim or drop the composition seam — name it via the enforced Gap.
+- **LEG2 — it applies EVERYWHERE — the whole system + whole interface, not just the instrument.** Everything in
+  registries, declared, nothing hardcoded; meaning-first surface on top, full technical depth always reachable
+  beneath. **FORM:** every surface reads meaning-from-data, render-for-cognition — handed off as an enforced Gap;
+  seam to composition + the FACE/Phase B.
+
+---
+
+# THE THESIS GUARD — state what is NOT earned, never paper it [criteria TH1–TH3]
+
+> A standing guard on the LANGUAGE of the build — the thesis must stop claiming the subsumption it lacks.
+
+- **TH1 — the thesis "one flat address space subsumes ALL granularities" is NOT claimed as earned.** Contradicted
+  by (a) the live nested `vec://cluster://...#space=scale:...` key (B-0.5b/GR5) and (b) the unaddressed Shape-B
+  tier (TH2). The honest claim is **"one address space for content + one (decided) event tier."** **Do:** write
+  the build's language to this; **Don't:** let any criterion claim subsumption it lacks.
+- **TH2 — Shape-B addressability is DECIDED by Tim, not papered (→ DECISIONS-FOR-TIM #4).** The 8 JSONL leaves
+  (events, marks, pins, dispositions, annotations, findings, chat, mail; events.jsonl the highest-volume live
+  tier) have **NO scheme** — they reference addresses but are not in the address space. **Both-plus-others
+  framing:** not strictly admit-OR-carve — a tier could be partially addressable (some leaves first-class, others
+  reference-only). ✅ requires a recorded Tim decision: admit (give a scheme) OR explicitly carve out (written as a
+  system-memory note) OR a mixed disposition — never silently papered.
+- **TH3 — every "unwired" claim re-verified with invocation-vs-reference discipline.** `resolve_model` (defined,
+  imported nowhere, "callers" are comments → **unwired stands**) · `LifterRegistry.extract()` (no caller →
+  unwired) · `forms` (exposed at `bridge.py:908`, no ingest `route()` caller → unwired as an ingest path). ✅
+  requires the caller-grep run distinguishing invocation from reference for each.
+
+---
+
+# RECONCILE-GATES (R-*) — sibling-stream reconciles — LEAD/FABRIC-OWNED, NOT Tim (the SCAN-BEFORE-BUILD law) [criteria RCN1–RCN7]
 
 > Per THE-ONE-SYSTEM's LAW: any plan made WITHOUT the full-scope scan WILL FAIL. The scan is DISTRIBUTED across
 > the fabric (each stream deep-scans its own project + posts a synthesis; the lead assembles). These are
@@ -789,6 +1207,28 @@ Tim-gate set — ~3 + a residual + the taxonomy, refined, not ~13.**
 
 ---
 
+# DECISIONS-FOR-TIM (the gates B-* depend on — only genuine direction/meaning calls, at Tim's altitude)
+
+> These reach Tim translated to his altitude — what-it-is, what-breaks, the trade-off, in plain language,
+> machine-names removed. Each is a MEANING/direction choice only Tim can make. The developer/architecture calls
+> (grammar-recursive, SCHEMES-derive, form-gate Option C, event-taxonomy, lifter producer-contract + tree-sitter,
+> resolver-collapse, ui-derivation) were DECIDED by the lead, recorded (artifact-backed), and are NOT here. The
+> reconciles (RCN1–RCN7) are lead/fabric-owned and NOT here. **Before any of the below is presented as a binary,
+> the lead has FIRST modelled "can it be BOTH, addressed distinctly?" (both-plus-others).** These are GATES the
+> matching B-* criteria depend on (a row-add/route through an undecided gate FAILS LOUD).
+
+1. **(gates ID1 / B-0.2 row-add) Is a saved file "the same thing" as its content, or its own thing? (file:// vs cas://)** — The lead FIRST models them as BOTH-with-a-derivation (a location-reference that resolves to its current content-identity). The residual MEANING: when the system points by location vs by content, treat them as one identity (dedup/cache together) or two distinct kinds of reference? *What breaks if undecided:* the system can't safely cache or dedup file references. *Trade-off:* one identity is simpler but loses the "this exact content, forever" guarantee; two is honest but the system carries both.
+2. **(RESIDUAL only — gates ID2 / channel row) When a session ends, which face is the durable channel member — the person, or the session?** — **NOT "pick person or session"** — a member IS BOTH; the LEAD reconciles the dual-face with a declared join. The only thing that may reach Tim is the residual: which face is the *durable referent* once a session is gone. *What breaks:* a saved channel reference may dangle. *Trade-off:* the person-handle is durable; the session is precise-but-ephemeral. (If the dual-face model resolves it, nothing reaches Tim.)
+3. **(gates ID3 / cluster row) Is a "cluster" a thing you name and return to, a live result that re-computes — or BOTH?** — The lead FIRST models whether a cluster can be BOTH (a pinned snapshot AND a live re-computing handle, addressed distinctly). The residual: when you save a reference to a cluster, should it be the frozen thing or the always-current query (or both)? *What breaks:* a saved reference may point at something different later. *Trade-off:* stable-named is referenceable but can go stale; live-query is always current but not a fixed referent.
+4. **(gates TH2 / Shape-B addressability) Should the event streams (history log, marks, pins, notes) become first-class addressable, stay references-only, or a mix?** — The highest-volume live data currently references addresses but isn't in the address space. *What breaks:* the thesis "one address space" silently over-claims. *Trade-off:* admitting them makes everything uniformly addressable (bigger surface); carving them out keeps the address space for content only (honest, smaller); a mix admits some leaves and leaves others as references.
+5. **(gates COV2 — a HARD fail-loud predecessor of B-1.2/B-1.3/B-1.4 effort-routing) What are the REAL kinds of things in the corpus? (the form taxonomy)** — The current form-kinds (`decision`/`log`/`registry`/`prose`) are prior-AI scaffolding, not Tim's canonical taxonomy. The open coverage pass (extending the existing sweep, B-1.0) describes what's actually here; its emergent natural kinds are surfaced so YOUR taxonomy is authored to your principles. The effort-routing is BLOCKED (fail-loud) until your taxonomy is recorded — forms come FROM the coverage, never imposed on it.
+
+*(ID4's blob/exchange/file/project register-and-defer, and the cross-repo DNA READ in LENS2/R-DNA, are
+lead/operator confirmations, not full meaning-gates — noted in-criteria with return-conditions written as
+system-memory Gap rows, surfaced to the operator, not stacked here.)*
+
+---
+
 # THE BUILD ORDER (one line)
 
 **RECONCILE-FIRST for dependent parts (R-* via the fabric — gates the FORM/interface build; coordination-window
@@ -809,10 +1249,13 @@ files [TS via in-process tree-sitter] + inbound-links) → **Phase 2 trigger** (
 [LEAD] + event-kind A2 [LEAD] → B-2.4 board.filed + responds_to → B-2.5 driver [EXTEND activation's tick, dormant,
 loop-guard, dispatch-forge-rejected, **structural-gate-independent-of-arming proven by use**] → B-2.6 triggers
 MCP tool) → **Phase 3 union seams** (B-3.1 coherence-as-lens [FORM→guided-review as enforced Gap] → B-3.2
-disposition union [C9.4 anchors if a registry] → B-3.3 generalize-DNA-engine [R-DNA reconcile first]) → **VERIFY
-by use** (incl. `drift_acceptance` + the dispatch-forge-rejected + the arming-independent gate + the
-regression-diffs + the ext4 refusal + the Rule-7 confirm + the kill-PG fault test) + run the converged coverage →
-the union acceptance query → the map → Tim (the ~3+residual+taxonomy DECISIONS-FOR-TIM, at altitude). **★
-OVERALL-DONE is BLOCKED until RCN2/R-INST (+R-COHERENCE) record AND the handed-off FORM Gaps (INST1-4, LEG1-2,
-the coherence burn-down, the LEG1 listings) return design-critic + design-lint + render-for-cognition on BOTH
-faces; until then the status is FUNCTION-complete / FORM-pending-external — NEVER done.**
+disposition union [C9.4 anchors if a registry] → B-3.3 generalize-DNA-engine [R-DNA reconcile first]) →
+**the LENS/EDGE/INST/LEGIBILITY/STORE-migration groups** (LENS1-5 over the now-real substrate · EDGE family-only
+walk-back · the ordered ext4 migration → STORE5 the union query · INST backend face + LEG six-facet type, FORM
+handed off) → **VERIFY by use** (incl. `drift_acceptance` + the dispatch-forge-rejected + the
+arming-independent gate + the regression-diffs + the ext4 refusal + the Rule-7 confirm + the kill-PG fault test) +
+run the converged coverage → the union acceptance query → the map → Tim (the ~3+residual+taxonomy
+DECISIONS-FOR-TIM, at altitude). **★ OVERALL-DONE is BLOCKED until RCN2/R-INST (+R-COHERENCE) record AND the
+handed-off FORM Gaps (INST1-4, LEG1-2, the coherence burn-down, the LEG1 listings — scheme catalogue / trigger
+inventory) return design-critic + design-lint + render-for-cognition on BOTH faces; until then the status is
+FUNCTION-complete / FORM-pending-external — NEVER done.**
