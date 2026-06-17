@@ -569,3 +569,23 @@ Tim's "first composed product" — the keystone retargeted at decisions, resolut
     the escalation IS the high-leverage work — it proved the next real beat is RUNG-C, not more projection polish. Sent Tim the journey.
   - **NEXT:** when RUNG-C lands (DNA), re-run the end-to-end stranger test to confirm the primary path now reads human; build projection's
     decision residual (likely just the gallery:rendered host + the lifecycle-decouple) the instant composition's types + DNA's render land.
+- **2026-06-18 — ✅ CODE BEAT (unblocks the #1-gap fix): fed DNA's RUNG-C a meaning-SOURCE — kind_name/kind_meaning/summary now ride on the `projection:select` detail (commit `368e631`).**
+  The lead sequenced RUNG-C (DNA's lane) as the leading edge + said "projection: hold, data's shipped." Before holding, I PROBED whether
+  DNA's render-path actually RECEIVES the meaning — and found a real blocker in MY lane: it doesn't. Neither /api/territory nor
+  /api/cognition/corpus carries kind_name/kind_meaning, and the projection:select detail (DNA's face open-trigger) carried only the machine
+  `kind`. So "the data's shipped" was HALF-TRUE — the human meaning rode on the projection POINTS but never reached the face. RUNG-C
+  literally couldn't render "What this is" in words without a meaning-source.
+  - **FIX:** the `projection:select` detail now carries `kind_name` + `kind_meaning` + `summary` alongside the address/kind. DNA reads
+    detail.kind_meaning (lead) + kind_name (heading) + summary → "What this is" in WORDS. No extra resolve, no new endpoint (the face already
+    receives this event). Interim source (projection's kind-registry legibility); maps onto composition's canonical legibility name/is when
+    that registry lands. VERIFIED BY USE: drove a real corpus-point pick → detail = {…, kind:'corpus.record', kind_name:'A note saved',
+    kind_meaning:'The system wrote something into its memory.', summary}. Data-contract change (viewport-independent; no FORM/CSS — the
+    operator-visible render is DNA's, fresh-eyes-judged when RUNG-C ships). tsc 0. Told DNA (thread t-1781733363).
+  - **★ WHY THIS, not "hold":** the lead's "data's shipped" assessment missed that the meaning never reached DNA's render-path — a probe-by-
+    use caught it. This is the opposite of filler-polish: it's the one piece of MY data-plumbing that genuinely gates the #1-operator-gap fix.
+    Found by NOT taking "hold" at face value + verifying the actual seam.
+  - **DECISION-SURFACE seams all settled:** Q1 explain = reuse fork's brain turn; Q2 memory = fold into territory_for (free); Q3 host = reuse
+    GalleryMount + gallery:rendered (DNA confirmed the source-keyed lifecycle decouple — key on detail.source==='decision', deferred to the
+    real render). projection's decision residual ~nil, gated on composition's types + DNA's render.
+  - **NEXT:** DNA renders meaning-first off the new detail fields → re-run the end-to-end stranger test to confirm the primary path reads
+    human; build the decision residual when types + render land; carry composition's canonical legibility name/is when its registry lands.
