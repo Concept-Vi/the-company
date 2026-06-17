@@ -40,6 +40,7 @@
       const reader = resp.body.getReader();
       const dec = new TextDecoder();
       let buf = '';
+      let prevKind = null;   // last event kind — to soft-break between DISTINCT text runs (not mid-stream deltas)
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
@@ -50,8 +51,14 @@
           if (!line) continue;
           let ev; try { ev = JSON.parse(line); } catch { continue; }
           if (ev.type === 'init' && ev.session_id) _sessions[address] = ev.session_id;
-          else if (ev.type === 'text' && ev.text) { acc += ev.text; setText(acc); }
-          else if (ev.type === 'tool') { if (opts.onTool) opts.onTool(ev); }
+          else if (ev.type === 'text' && ev.text) {
+            // soft paragraph break between DISTINCT text runs (e.g. narration → tool-use → answer) so they
+            // don't concatenate ("…not guessed.You're looking at…"). Consecutive text deltas (prevKind===
+            // 'text') stay joined — never break mid-stream/mid-sentence. (projection's cosmetic, 2026-06-17.)
+            if (acc && prevKind && prevKind !== 'text') acc += '\n\n';
+            acc += ev.text; setText(acc); prevKind = 'text';
+          }
+          else if (ev.type === 'tool') { prevKind = 'tool'; if (opts.onTool) opts.onTool(ev); }
           else if (ev.type === 'done') { if (ev.result && !acc) setText(ev.result); if (opts.onDone) opts.onDone(ev); }
           else if (ev.type === 'error') { setText('brain error: ' + ev.error); if (opts.onError) opts.onError(ev); }
         }
