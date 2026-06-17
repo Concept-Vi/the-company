@@ -19,12 +19,15 @@ import vIcon from './v-icon.svg'
 // misled into a dead-end (no green-paint / half-done-as-done). `drive` waits on Tim's verb-PLACEMENT steer + the
 // dominant aim having a dial; `generate` (Make) is wildcard's gated keystone. The desc rides on title/aria-label
 // (desktop hover tooltip + screen-reader); the soon-state is visible on every device.
+// DISPLAY ORDER + descriptions RATIFIED by composition (the V-contract owner, thread t-1781706789): live-first,
+// then a read→write arc — orient → understand → inquire → mark → adjust → create. The 4 live verbs lead (bottom
+// of the fan = thumb-reach), the 2 soon verbs trail together (resolves the fresh-eyes "interleaved soon" finding).
 const VERBS = [
-  { id: 'navigate', label: 'Go to', desc: 'Re-centre the map on this', live: true },
+  { id: 'navigate', label: 'Go to', desc: 'Re-centre the view on this', live: true },
+  { id: 'open-source', label: 'See the record', desc: 'Open the full record behind this', live: true },
   { id: 'ask', label: 'Ask', desc: 'Ask the right-hand-man about this', live: true },
   { id: 'annotate', label: 'Note', desc: 'Leave a note here', live: true },
   { id: 'drive', label: 'Drive', desc: 'Adjust its settings', live: false },
-  { id: 'open-source', label: 'See the record', desc: 'Open the fuller record behind this', live: true },
   { id: 'generate', label: 'Make', desc: 'Create something from this', live: false },
 ] as const
 
