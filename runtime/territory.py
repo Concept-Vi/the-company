@@ -113,14 +113,14 @@ def territory_for(address, *, suite=None, store=None, max_relations: int = 20) -
                         from runtime.cognition import resolve_address as _ra
                         terr["corpus_content"] = _ra(store, cas)
                     except Exception as e:
-                        terr["notes"].append(f"corpus content (cas) unresolved ({type(e).__name__})")
+                        terr["notes"].append(f"corpus content (cas) unresolved ({type(e).__name__}: {e})")
                 if terr["identity"] is None:
                     terr["identity"] = terr.get("corpus_content") or cr   # prefer the content; else the record
                     terr["identity_kind"] = "corpus.content" if terr.get("corpus_content") else "corpus.record"
                     # drop the now-superseded "no content-resolver" note (the corpus content/record IS it)
                     terr["notes"] = [n for n in terr["notes"] if "no content-resolver" not in n]
         except Exception as e:
-            terr["notes"].append(f"corpus_record leg unresolved ({type(e).__name__})")
+            terr["notes"].append(f"corpus_record leg unresolved ({type(e).__name__}: {e})")
     terr["legs_present"]["corpus_record"] = bool(terr.get("corpus_record"))
 
     # ── CONTEXT leg (ui:// only — scored R2 items + chats at the locus; guarded) ──
@@ -128,11 +128,11 @@ def territory_for(address, *, suite=None, store=None, max_relations: int = 20) -
         try:
             terr["context_items"] = (suite.context_at(address) or {}).get("items", [])
         except Exception as e:
-            terr["notes"].append(f"context_at leg unresolved ({type(e).__name__})")
+            terr["notes"].append(f"context_at leg unresolved ({type(e).__name__}: {e})")
         try:
             terr["chats"] = suite.chats_at(address) or []
         except Exception as e:
-            terr["notes"].append(f"chats_at leg unresolved ({type(e).__name__})")
+            terr["notes"].append(f"chats_at leg unresolved ({type(e).__name__}: {e})")
     terr["legs_present"]["context"] = bool(terr["context_items"] or terr["chats"])
 
     # ── RELATIONS leg (H1.2 typed-edge graph, ANY scheme; structural, store-optional; guarded) ──
@@ -145,7 +145,7 @@ def territory_for(address, *, suite=None, store=None, max_relations: int = 20) -
                 rel[f"{k}_truncated"] = True
         terr["relations"] = rel
     except Exception as e:
-        terr["notes"].append(f"relations leg unresolved ({type(e).__name__})")
+        terr["notes"].append(f"relations leg unresolved ({type(e).__name__}: {e})")
     terr["legs_present"]["relations"] = terr["relations"] is not None
 
     # ── LIBRARY leg (vi-vision:// only — the compose-PALETTE for the credential-free brain, 2026-06-17) ──
@@ -161,7 +161,7 @@ def territory_for(address, *, suite=None, store=None, max_relations: int = 20) -
             cap = 25
             terr["library"] = {"items": rows[:cap], "total": len(rows), "capped": len(rows) > cap}
         except Exception as e:
-            terr["notes"].append(f"library leg unresolved ({type(e).__name__})")
+            terr["notes"].append(f"library leg unresolved ({type(e).__name__}: {e})")
     terr["legs_present"]["library"] = bool(terr.get("library"))
 
     return terr
