@@ -291,6 +291,11 @@ recall-under-element, RIDES my `/api/cognition/neighbours`. Order = **floor → 
 
 ## 🔴 LEGIBILITY — THE BAR's ROOT GAP (Tim can't read it → can't drive it) · 2026-06-17 (Tim-direct, on his phone)
 
+> ▶ This grew into a major commission (Tim 2026-06-17): the OPERATOR SURFACE + RIGHT-HAND-MAN build, now run by a
+> long loop whose LIVING SPEC is **`OPERATOR-SURFACE-LOOP.md`** (the cron reads that, not this). This section remains
+> the root-cause record + the legibility ARCHITECTURE; the phased build + open questions live in that doc. Engine
+> (G10/G9) stays at THE BAR, not churned.
+
 Tim drove the live instrument on his phone (4 screenshots, IMG_1922–1925) and reported the deepest possible
 failure: **"I don't know what I'm looking at. I don't know what a sector is, what it means, what's even being
 shown. I have no controls, no tools. It's too hard to give deeper feedback because I don't even know what I'm
