@@ -117,7 +117,14 @@ export function Legend({ s }: { s: SurfaceState }) {
   const meta = s.proj.binding.meta
   let title: string
   let lines: string[]
-  if (meta && meta.is) {
+  // The declared meta describes the lens in its DEFAULT (un-centred) state — its radius clause is the default
+  // ("how far = how long ago, the centre is now"). But when the operator RE-CENTRES (Go to → s.centre set), the
+  // radius MEANS something else (distance from the centred thing — radius_from flips to 'address'/'semantic'), so
+  // the static meta now MISDESCRIBES the view. Caught by a re-aim stranger test: re-centred on a thing, the legend
+  // still said "how long ago." So when centred, use the centre-AWARE computed description (describe() reads the
+  // live radius_from + the centre), never the stale static meta. (Reflecting the operator's runtime re-centre is
+  // the instrument's job; the radius MEANING it states is still registry-true via radius_from.)
+  if (meta && meta.is && !s.centre) {
     title = meta.name || s.proj.binding.label
     lines = [meta.is, meta.fills, meta.why].filter(Boolean) as string[]
   } else {
