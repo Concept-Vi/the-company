@@ -648,3 +648,15 @@ Tim's "first composed product" — the keystone retargeted at decisions, resolut
     rings change meaning (legend now updates, but silent) — a secondary enhancement.
   - **NEXT (mine):** plain-word the inspector's "structural from X / 1.00" distance row; (composition) per-instance `name` closes the filename
     label; the decision-card render when composition's types land (all projection pieces staged + verified).
+- **2026-06-18 — ✅ operator-law: the re-centred inspector distance row reads "filed · close by from X" not "structural … 1.00" (commit `d2d8d4c`).**
+  Cleared my own queued NEXT (the re-aim test's mine-to-fix item). The decision-card is HARD-GATED: composition won't author the 3 types
+  without Tim's EXPLICIT scope word (a 5-stream cascade on the flagship = principal-level confirm, not a routine GO; Tim away; the lead can
+  only clear it WITH Tim's word). So I built the unblocked in-lane fix.
+  - Traced the value (projection.py: address-centre r = tree_distance/max = normalized FILING-tree distance) → accurate plain words near/mid/far
+    "in how it's filed" (NOT a mistranslation — filing-distance, mirroring the semantic row's close/mid/far). KEPT the real value in `num` (did
+    NOT drop the number on one row only — respects Disclosure's "plain words + the REAL value" law + row consistency; the show-raw-nums-at-all
+    question is a Disclosure-wide design call, not a piecemeal override). VERIFIED both viewports: "filed · close by from voice.py 0.20", no jargon.
+  - **STATE:** the re-aim (③) journey axis is now fully stranger-legible end-to-end (legend-after-Go-to ✓, centre-chip-not-trapped ✓, distance-row
+    plain ✓). The remaining re-aim item — the filename centre LABEL — is composition's per-instance `name` (gated with the types).
+  - **NEXT:** decision-card render the instant composition's types land (Tim's scope-word clears it; all projection pieces staged); meanwhile the
+    operator surface's three journey axes tested so far (understand-a-thing ①, controls ③-act, re-aim ③) all read human.
