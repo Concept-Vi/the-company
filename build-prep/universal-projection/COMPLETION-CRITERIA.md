@@ -322,9 +322,28 @@ verbal+visual face — loop her lightly, do not hand off).
 4. VERIFY FRESH-EYES — the done-criterion for THIS beat = "someone who knows NOTHING about projection can say what
    they're looking at." A critic briefed to know nothing + Tim himself, on **390 portrait** (where he reads it) —
    NOT 1440-first, NOT "lint is green" (the existing battery assumes a reader who already knows projection).
-- **STANCE:** words are Tim's (he's live — capture his vocabulary now) + DNA's (verbal face — systematize after).
-  Lead with the plain-language draft for his correction; render from the registry; build the hide toggle + named
-  sectors with HIS words. Engine untouched, at THE BAR.
+- **REFRAME (Tim 2026-06-17, ratified — supersedes "draft words for Tim to correct"):** the instrument is ALL
+  VARIABLES — aim it at any address/registry, dial what centre/angle/radius/poles MEAN; the events corpus was just
+  the FIRST thing loaded, NOT the subject. So **NOTHING that carries meaning can live IN the instrument** — meaning
+  must come FROM the data. (My "the real kinds" was the error: they're only what sits at one address.) Tim corrected
+  twice: he NEVER sees code/files/machine names; the AI SUPPLIES the human meaning; Tim reacts to MEANING, never asked
+  to validate technical words (he DENIED an options-menu that did exactly that). See [[feedback-translate-everything-human-meaning]].
+- **ARCHITECTURE (where the meaning lives):** the human meaning of every addressable thing becomes **self-describing
+  FIELDS in the registries** (or linked) — a human name · what-it-is · what-fills-it · why-you'd-look. As **DECLARED
+  REQUIREMENTS**: a new type is filled at birth (can't mint a type that can't explain itself); existing things are
+  **BACKFILLED** once. The instrument just READS those fields for whatever it's aimed at + renders them — staying empty
+  of meaning. Legibility = a property of the MEMORY, enforced at the registry, surfaced by the instrument (composes with
+  everything-is-a-variable: everything also self-declares in human terms).
+- **WHICH fields = a DEEP design (NOT a quick list):** downstream of the VIEWER's journey — first entry → what they
+  see → do → might want → every branch — shaped by pedagogy + drill-down, because this is an INSTRUMENT that's USED
+  *and* SEEN, not a viewer. Do not guess fields ahead of that design.
+- **OWNER = composition (`ch-2mnxl9j0`):** the instrument is ONE ASSET with many faces/parts; wiring it to
+  self-describing registries is registries/components/assets work (Tim). Engaged on thread **g-1781668099** (told to
+  REFLECT/recollect first — their registry/asset context is back a ways). DNA's verbal face pulled in later via
+  reflection, NOT her current state. Asked the lead for the how-to on recollecting own + members' session history.
+- **STANCE:** design phase, not build phase — co-design the self-describing registry-field architecture WITH composition
+  (build on their asset/registry mechanisms, never parallel). Engine (G10/G9) untouched, at THE BAR. No field-build until
+  the viewer-journey/pedagogy design says what the viewer needs.
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
