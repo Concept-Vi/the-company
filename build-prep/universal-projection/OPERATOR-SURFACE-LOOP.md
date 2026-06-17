@@ -210,3 +210,13 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     kind rows with `meta` now (tentative), the set-diff finds misses → needs the kinds-registry + a per-kind meaning
     path + the wheel-label render; (b) the HIDE toggle for the legend (Tim's "be able to hide them"); (c) the remaining
     verbs (Go to/Note/Drive/Source/Make) + the built-in tutorial.
+- **2026-06-17 — ✅ legend HIDE TOGGLE (commit `add09df`).** Tim's "I should be able to hide them if wanted" — the
+  legend explanation now collapses (the TITLE stays for orientation; the preference persists, localStorage). Refactored
+  Legend to compute the orientation once (meta-first → fallback) then wrap it in the collapse; paper-token toggle +
+  focus-ring. VERIFIED BY USE 390: collapse hides the lines + keeps the title, flips Hide↔Show, persists across reload;
+  tsc 0, design-lint 0 (1440 = shared Legend component).
+  - **NEXT (sector kind-names — coordinating composition, thread `g-1781668099`):** asked WHERE the kinds-meaning
+    registry should live (no existing kind→human registry found — only closed primitive tuples) so I seed on their
+    validate/backfill machinery, not beside it. RENDER plan = TAP-A-SECTOR → human name + one-line meaning (reuse the
+    existing sector-selection), NOT 51 labels at once (crowds at 390). Then: the remaining verbs (Go to/Note/Drive/
+    Source/Make) + the built-in tutorial.
