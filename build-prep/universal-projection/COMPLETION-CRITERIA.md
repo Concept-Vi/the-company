@@ -289,6 +289,43 @@ recall-under-element, RIDES my `/api/cognition/neighbours`. Order = **floor → 
   Tim said updates are incoming ("keep going with") — holding the START of the floor-build for his updates so I point
   the loop where HE sees it, not where the fabric + I alone infer. Engine (G10/G9) untouched, at THE BAR.
 
+## 🔴 LEGIBILITY — THE BAR's ROOT GAP (Tim can't read it → can't drive it) · 2026-06-17 (Tim-direct, on his phone)
+
+Tim drove the live instrument on his phone (4 screenshots, IMG_1922–1925) and reported the deepest possible
+failure: **"I don't know what I'm looking at. I don't know what a sector is, what it means, what's even being
+shown. I have no controls, no tools. It's too hard to give deeper feedback because I don't even know what I'm
+meant to be looking at."** This is THE BAR failing at its root — #3 (drive) and #4 (interactive) and the whole
+PURPOSE: a thing you cannot read is a thing you cannot drive. Engine (G10/G9) is fine; the SURFACE doesn't speak
+to a human. Highest priority, in projection's lane (the instrument surface is mine; the WORDS+look are DNA's
+verbal+visual face — loop her lightly, do not hand off).
+
+**Root cause — traced, evidence (not speculation):**
+- The legend EXISTS (`surface/app/src/toggles/Legend.tsx`) but it describes the **mechanism** ("angle = the kind
+  of each event", "radius · age") — it never says **a dot is one event**, never **names the sectors**, never says
+  **why you'd look**. (Its own comment quotes Tim from 2026-06-14 with the SAME complaint — the prior fix explained
+  mechanism, not meaning. Conceptual-before-lexical: name-the-parts can't land before what-it-shows/why.)
+- The orientation LINES are **HARDCODED** in `Legend.tsx` `describe()`, branched by `radius_from` — a
+  registry-is-truth gap. The lens NAMES are registry rows (`bindings/*.py` `label`), but the explanatory text is not.
+- **The sectors are raw machine kind-ids** — live bridge: `/api/projection?lens=raw` → **6443 events · 51 kinds**:
+  `corpus.record · op.run · cognition.role.fire · agent_sessions.turn · cognition.items · mode · connect · chat …`.
+  The registry `label` == the `id` (no human name exists). THIS is "I don't know what a sector is."
+- **No hide/show toggle** for labels (Tim asked for one). **Controls are unlabeled icons** (form-factor toggles,
+  gear, time slider) → read as "no tools".
+
+**Plan (scoped to the ONE view Tim's on — Kinds — raw; do NOT redesign all 9 lenses; conceptual→lexical):**
+1. AUTHOR the orientation in the REGISTRY (binding `orient`/`description` field), render it — LEAD with what-it-shows
+   + why (a dot = one event; angle = what KIND; radius = how recently; centre = now), THEN the mechanics. Fixes the
+   hardcoding gap; makes the words Tim-correctable WITHOUT a React rebuild (the "instrument authors" floor).
+2. HUMAN labels per kind, authored in a registry (kind→plain-name), hide-able. (Seed the mechanism; the full 51
+   words = Tim's vocabulary + DNA's verbal face — capture Tim's first, hand DNA the systematization.)
+3. Tap-to-identify a dot (what is this event); LABEL the icon controls so they read as tools.
+4. VERIFY FRESH-EYES — the done-criterion for THIS beat = "someone who knows NOTHING about projection can say what
+   they're looking at." A critic briefed to know nothing + Tim himself, on **390 portrait** (where he reads it) —
+   NOT 1440-first, NOT "lint is green" (the existing battery assumes a reader who already knows projection).
+- **STANCE:** words are Tim's (he's live — capture his vocabulary now) + DNA's (verbal face — systematize after).
+  Lead with the plain-language draft for his correction; render from the registry; build the hide toggle + named
+  sectors with HIS words. Engine untouched, at THE BAR.
+
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
 Tim's 4-item program (1 BQ · 2 Postgres · 3 cron · 4 reconnect): #4 ✅ closed; #1 ✅ BUILT + FORM-passed; #3
