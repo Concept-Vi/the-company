@@ -788,6 +788,10 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
     grid_m = (1 << max_d) if max_d > 0 else 1          # 2^max_d (1 if no addressed events)
     rings = max(grid_m // 2, 1)
 
+    # pick the declared-meaning registry for THIS lens's sectors (kinds default; node-types for Connections; an
+    # unmapped domain → kinds map, which yields humanize-only for ids it doesn't hold — still legible, never raw).
+    # Computed BEFORE the points loop so each point can carry its sector's HUMAN name (the inspector's "in" row).
+    _sector_meta = _SECTOR_META_BY_DOMAIN.get(binding.get("angle_from", "kind"), _KIND_META)
     points = []
     for idx, (e, t) in enumerate(stamped):
         kind = e.get("kind") or "?"
@@ -868,6 +872,11 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
             # face, the inspector, a tooltip — shows MEANING, never the machine kind-id (operator-law). Read
             # declared-first from the kind registry; humanized-id fallback. `kind` stays the machine key.
             "kind_name": _kind_name(kind), "kind_meaning": _kind_meaning(kind),
+            # the sector's HUMAN name (registry-true, via the lens's meta-registry) rides on the point too, so the
+            # inspector's "in" row reads a human division on EVERY lens — not the machine sector-id on non-Kinds
+            # lenses (operator-law). On the Kinds lens sector==kind so this equals kind_name; on Connections/graph
+            # lenses it's the node-type/row human name. `sector` stays the machine key (the engine indexes by it).
+            "sector_name": _kind_name(sid, _sector_meta),
             "theta": round(theta, 5), "r": round(r, 5), "depth": depth,
             "cell": {"i": gi, "j": gj, "d": gd},   # the dyadic structural coordinate (the square half)
             "address": e.get("address") or e.get("source_address") or "",
@@ -909,9 +918,6 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
     _eset = {(a, b) for (a, b) in (sector_edges or []) if a in _sidx and b in _sidx and a != b}
     edges = [{"from": _sidx[a], "to": _sidx[b], **({"bidir": True} if (b, a) in _eset else {})}
              for (a, b) in sorted(_eset)]
-    # pick the declared-meaning registry for THIS lens's sectors (kinds default; node-types for Connections; an
-    # unmapped domain → kinds map, which yields humanize-only for ids it doesn't hold — still legible, never raw).
-    _sector_meta = _SECTOR_META_BY_DOMAIN.get(binding.get("angle_from", "kind"), _KIND_META)
     return {
         "center": addr_center or "now", "now": now.isoformat(), "n": n,
         "binding": {"id": binding["id"], "label": binding["label"],

@@ -20,7 +20,7 @@ const VERBS = [
   { id: 'ask', label: 'Ask' },
   { id: 'annotate', label: 'Note' },
   { id: 'drive', label: 'Drive' },
-  { id: 'open-source', label: 'Source' },
+  { id: 'open-source', label: 'See the record' },
   { id: 'generate', label: 'Make' },
 ] as const
 

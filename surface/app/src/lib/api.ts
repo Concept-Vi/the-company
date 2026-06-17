@@ -10,6 +10,10 @@ export type ProjPoint = {
   kind_name?: string
   kind_meaning?: string | null
   sector: string
+  // the sector's HUMAN name (registry-true, via the lens's meta-registry) — render THIS in the "in" row, never
+  // the machine `sector` id (operator-law). On the Kinds lens it equals kind_name; on other lenses it's the
+  // node-type/row human name. Present on every point from the projection contract.
+  sector_name?: string
   theta: number // radians
   r: number // [0.06,1.0]; pile >1 in nucleation
   depth: number

@@ -18,9 +18,10 @@ function leaf(s: string): string {
   return t.split('/').pop() || t
 }
 function placement(p: ProjPoint, binding: Projection['binding'] | undefined, centre: string | null): Place[] {
-  // the division it sits in — for the Kinds lens (sector == kind) show the HUMAN kind name, never the machine
-  // id; other lenses fall back to the sector leaf (their human sector-name isn't carried on the point yet).
-  const inDiv = p.kind && p.sector === p.kind && p.kind_name ? p.kind_name : leaf(p.sector)
+  // the division it sits in — the sector's HUMAN name now rides on the point (registry-true, via the lens's
+  // meta-registry) so EVERY lens reads human, never the machine sector-id (operator-law). Falls back to the
+  // sector leaf only if an older point lacks the field (never the raw id when the human name is present).
+  const inDiv = p.sector_name || leaf(p.sector)
   const out: Place[] = [{ k: 'in', v: inDiv }] // the division (its kind/type) it sits in
   const rf = binding?.radius_from
   const num = (x: number | undefined) => (typeof x === 'number' ? x.toFixed(2) : '—')
