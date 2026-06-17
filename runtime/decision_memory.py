@@ -25,15 +25,54 @@ from __future__ import annotations
 DEFAULT_DECISION_SPACES = ("common_knowledge", "principles", "worldview", "topics", "history", "repo")
 
 
+def prior_decisions_about(suite, topic_text: str, *, k: int = 6) -> list[dict]:
+    """"Decisions made about X resurfacing" (the lead's step-6 framing) — surface PRIOR decision-content
+    about a topic so Tim sees "you've decided about this before." Decision-FRAMED recall over the
+    history + common_knowledge spaces (where decision-notes/comprehended-choices live). Returns
+    [{source, space, score}] (rerank-precision when available). Read-only; degrade-clean (a down space →
+    fewer items, never fabricated).
+
+    FUTURE (when the decision-surface produces decision-ARTIFACTS — write-backs with scope/kind=decision):
+    this filters to those artifacts (find_corpus by the decision kind), so "prior decisions" becomes the
+    real decided-artifact set, not just decision-shaped prose. Today it's the decision-framed recall —
+    the same compute, a richer source once the surface runs."""
+    if not (isinstance(topic_text, str) and topic_text.strip()):
+        return []
+    framed = f"prior decision, ruling, or chosen approach about: {topic_text}"
+    pooled: list[dict] = []
+    for sp in ("history", "common_knowledge"):                   # where decisions/choices are recorded
+        try:
+            out = suite.query_corpus(framed, space=sp, k=k)
+        except Exception:
+            continue
+        for h in out.get("ranked", []):
+            pooled.append({"source": h.get("id") or h.get("address"), "space": sp,
+                           "score": round(h.get("score", 0.0), 4)})
+    if not pooled:
+        return []
+    try:                                                          # precision pass (reuse the committed stage)
+        from runtime import corpus_rerank as _cr
+        rr = _cr.rerank_hits(suite.store, framed,
+                             [{"id": p["source"], "score": p["score"]} for p in pooled], top_n=k)
+        by = {p["source"]: p for p in pooled}
+        return [{**by.get(r["address"], {}), "source": r["address"], "rerank_score": r["rerank_score"]}
+                for r in rr["reranked"]]
+    except Exception:
+        return sorted(pooled, key=lambda p: -p["score"])[:k]
+
+
 def recall_for_decision(suite, decision_text: str, *, address: str | None = None,
                         spaces: tuple | list | None = None, k_per_space: int = 4,
-                        rerank: bool = True, top_n: int = 10) -> dict:
+                        rerank: bool = True, top_n: int = 10,
+                        include_prior_decisions: bool = True) -> dict:
     """The decision's memory-context bundle for the RHM's explanation.
 
     `decision_text` — the decision/question text (what the RHM explains). `address` — optional code://
     /run:// of the decision's subject (adds its neighbour node-field). `spaces` — which corpus spaces to
-    draw context from (default = the why+content+history set). Returns
-    {decision, context:[{source, space, score, ...}], neighbours:[...]?, note}. Read-only.
+    draw context from (default = the why+content+history set). `include_prior_decisions` — add the
+    "decisions made about this before" leg (step-6 framing). Returns
+    {decision, context:[{source, space, score, ...}], neighbours:[...]?, prior_decisions:[...]?, note}.
+    Read-only.
 
     DEGRADE-CLEAN (the no-silent-failure floor): a down embedder / empty space yields a smaller bundle +
     an honest note, never a fabricated context. FAIL-LOUD only on a malformed call."""
@@ -86,6 +125,16 @@ def recall_for_decision(suite, decision_text: str, *, address: str | None = None
                 notes.append(f"neighbours: {nb['note'][:60]}")
         except Exception as e:
             notes.append(f"neighbours: {type(e).__name__}")
+
+    # "decisions made about X resurfacing" (step-6) — prior decision-content on the same topic
+    if include_prior_decisions:
+        try:
+            pd = prior_decisions_about(suite, decision_text, k=6)
+            if pd:
+                result["prior_decisions"] = pd
+                notes.append(f"prior_decisions: {len(pd)}")
+        except Exception as e:
+            notes.append(f"prior_decisions: {type(e).__name__}")
 
     if notes:
         result["note"] = " · ".join(notes)
