@@ -197,3 +197,16 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     (b) the SECTOR names (the ~51 machine kind-ids → human) — the lexical layer, needs per-kind meaning + an endpoint;
     (c) a HIDE toggle for the legend (Tim: "be able to hide them"); (d) the remaining verbs (Go to/Note/Drive/Source/
     Make) + the built-in tutorial.
+- **2026-06-17 — ✅ LEGIBILITY: the WHOLE lens system reads human (commit `9b5da09`).** Seeded `meta:{name,is,fills,why}`
+  + humanized the jargon `label` across ALL 9 bindings (raw / by_node_type / by_separator / by_nucleation / semantic /
+  by_cascade / by_lens / grouped / time-of-day). Fixes Tim's IMG_1925 dropdown complaint: "Connections — the node
+  registry by its directional type-flow" → "Connections — how things flow into each other"; "Type-nucleation" → "New
+  kinds forming"; "Lenses — angle by the projection registry" → "Ways of looking"; etc. Registry-true (meaning in the
+  rows; the Legend renders declared-first). Composition CONFIRMED the shape (19:53 — meta on any row; their validate/
+  backfill covers it; ONE legibility-type, MANY registries). TENTATIVE copy (Tim/DNA ratify; field-set journey-gated
+  OQ1–4). VERIFIED BY USE 390: switched to Connections → the human legend renders + the dropdown is fully humanized
+  (raw verified at 1440 earlier; shared Legend component). The instrument stays empty of meaning.
+  - **NEXT:** (a) the ~51 SECTOR kind-ids → human — composition's answer: SAME legibility-type, OWN kinds-registry; seed
+    kind rows with `meta` now (tentative), the set-diff finds misses → needs the kinds-registry + a per-kind meaning
+    path + the wheel-label render; (b) the HIDE toggle for the legend (Tim's "be able to hide them"); (c) the remaining
+    verbs (Go to/Note/Drive/Source/Make) + the built-in tutorial.
