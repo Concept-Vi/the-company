@@ -55,6 +55,13 @@ try:
     from bindings.by_lens import PROJECTION_SPACE_META as _PROJECTION_SPACE_META
 except Exception:
     _PROJECTION_SPACE_META = {}
+# THE FLOW-STEPS legibility registry (the "Flow" lens, binding=by_cascade — sectors are the STEPS/roles,
+# angle_from="cascade-flow"). SAME legibility-type shape; kept in bindings/by_cascade.py beside its binding
+# (no runtime-module collision — the projections/_meta.py lesson). Same defensive import.
+try:
+    from bindings.by_cascade import CASCADE_FLOW_META as _CASCADE_FLOW_META
+except Exception:
+    _CASCADE_FLOW_META = {}
 
 # which declared-meaning registry backs a given sector DOMAIN (binding.angle_from). Each domain maps to its own
 # {id: {name, is}} registry; an unmapped domain falls through to humanize-only (still legible, never raw).
@@ -64,6 +71,7 @@ _SECTOR_META_BY_DOMAIN = {
     "node_types": _NODE_TYPE_META,
     "kind-group": _GROUP_META,
     "projections": _PROJECTION_SPACE_META,
+    "cascade-flow": _CASCADE_FLOW_META,
 }
 
 
