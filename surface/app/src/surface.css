@@ -454,7 +454,20 @@
    side text compete). Warm-ink dim, strong enough to recede the background while staying on the paper key. */
 .gallery-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink-primary) 54%, transparent); }
 .gallery-frame { position: relative; max-width: 100%; max-height: 100%; overflow: auto;
-  border-radius: var(--r-card); box-shadow: var(--elev-4); background: var(--ground-accent); }
+  border-radius: var(--r-card); box-shadow: var(--elev-4); background: var(--ground-accent);
+  /* ISOLATE the card's stacking context (fresh-eyes critic FAIL, verified by use): DNA's card carries a faux
+     phone status bar `.sbar` at z-index:3; with the frame at z-index:auto that z-3 LEAKED into the overlay's
+     stacking context and painted OVER the dismiss ✕ (z-index:2) — a real tap hit the status bar, not close, so
+     the operator was TRAPPED on phone (the card fills the frame edge-to-edge there, so ✕ overlaps the card top).
+     isolation:isolate makes the frame one atomic context: DNA's internal z-indexes stay CONTAINED, and the
+     dismiss (a sibling at z-2) paints above the whole frame. Variant-agnostic — holds for any card internals. */
+  isolation: isolate; }
+/* the faux phone STATUS BAR ("9:41 ●●●") is a device-screen decoration from DNA's archetype — meaningless in the
+   operator modal (this is real content the operator acts on, not a phone-screen demo) AND it overlaps the header
+   text ("Decision" eyebrow + title) on desktop/landscape (critic, by use). Hide it HERE (host-scoped; DNA's
+   standalone render keeps it). Same "this modal is content, not a device screen" framing as the layout overrides
+   below. Flagged DNA to consider making it conditional in the render. */
+.gallery-frame .sbar { display: none; }
 /* DNA's render (.screen, 390×844 archetype) sits inside untouched — the frame hugs it */
 .gallery-mount { display: block; }
 /* ── ANY .ar-responsive ARCHETYPE in this modal: hold DNA's PROVEN single-column (portrait) layout ──────

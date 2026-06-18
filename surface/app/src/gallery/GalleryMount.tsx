@@ -179,7 +179,9 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
       // card carries — `data-decision-address` — NOT a cosmetic class: since the one-engine collapse (renderDecision
       // RETIRED 2026-06-19) the card draws through DNA.renderArchetype, whose root is `.ar-card`, not `.decision-card`.
       // The data-attribute is engine-agnostic (set whichever renderer draws it), so the host stays variant-agnostic.
-      if (container?.querySelector('[data-decision-address], .decision-card')) return
+      // Clear loading HERE too (not only via the decision:rendered event) so the "Opening…" state can never WEDGE if
+      // the card is already present (e.g. opening a second decision while one is up — the event may not re-fire).
+      if (container?.querySelector('[data-decision-address], .decision-card')) { setDlState(''); return }
       if (!inFlight && container && window.DNA?.renderGallery) {
         inFlight = true
         window.DNA.renderGallery(addr, { container }).catch(() => { inFlight = false /* rejected → allow a retry */ })
