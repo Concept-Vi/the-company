@@ -40,9 +40,17 @@ type Drag = { id: number; ox: number; oy: number; sx: number; sy: number; moved:
 type Brain = { ask: (p?: string) => unknown; direct: (i: unknown) => Promise<unknown[]>; aimChanged: () => void; destroy: () => void }
 
 const POS_KEY = 'rhm.handle.pos'
+// FIRST-CONTACT GREETING — the RHM is "the always-present guide… the teacher that walks the operator through
+// the surface" (commission 2026-06-17). The icon alone is MUTE: a cold stranger sees a gold V and can't know
+// it's the right-hand-man, that it can teach them, or that "Ask" explains what they're looking at. So on first
+// contact the V INTRODUCES itself once (gated by this flag), then never again. Copy is TENTATIVE draft (the AI
+// supplies it; DNA owns the verbal face, Tim ratifies) — marked for steer, not final.
+const GREETED_KEY = 'rhm.greeted'
 
 export function RightHand() {
   const [open, setOpen] = useState(false) // the verb fan
+  const [greet, setGreet] = useState(false) // the one-time first-contact self-introduction
+  const [aimedThing, setAimedThing] = useState(false) // false = the surface default (nothing picked) → the fan caption
   const [panelOpen, setPanelOpen] = useState(false) // the brain (Ask) panel
   const [noteOpen, setNoteOpen] = useState(false) // the Note (annotate) composer
   const [noteText, setNoteText] = useState('')
@@ -93,6 +101,30 @@ export function RightHand() {
     }
   }, [])
 
+  // ── FIRST-CONTACT GREETING ──────────────────────────────────────────────────────────────────────────
+  // On a brand-new operator (no greeted flag), the RHM introduces itself a beat after load — long enough that
+  // the surface has settled so the bubble is noticed, not jarring. Shown ONCE; dismissed by "Got it", by Esc/
+  // outside-press, or simply by the operator engaging the V (opening the fan = they found it → no need to tell).
+  const dismissGreet = useCallback(() => {
+    setGreet(false)
+    try {
+      localStorage.setItem(GREETED_KEY, '1')
+    } catch {
+      /* storage blocked — it just greets again next load; harmless */
+    }
+  }, [])
+  useEffect(() => {
+    let already = false
+    try {
+      already = localStorage.getItem(GREETED_KEY) === '1'
+    } catch {
+      /* storage blocked → treat as not-yet-greeted */
+    }
+    if (already) return
+    const t = window.setTimeout(() => setGreet(true), 900)
+    return () => clearTimeout(t)
+  }, [])
+
   // ── FOLLOW THE OPERATOR'S AIM ───────────────────────────────────────────────────────────────────────
   // The V's aim re-points wherever the operator points: a wheel-POINT pick (projection:select) OR a SECTOR
   // tap (projection:aim — its own event, because projection:select opens a content face and a synthetic
@@ -105,6 +137,10 @@ export function RightHand() {
     // it aims at NOTHING writable and the record-verbs go honestly unavailable until the thing becomes addressable.
     aimRef.current = available ? (address || SURFACE_AIM) : ''
     setAimAvailable(available)
+    // is a SPECIFIC thing picked, or are we at the surface default (nothing pointed at)? The fan caption needs
+    // this so it never says "this part of the surface" (jargon, and points at nothing) when the operator hasn't
+    // picked anything — it says "everything here" + teaches the drill instead.
+    setAimedThing(!(available && (!address || address === SURFACE_AIM)))
     setAimMeaning(meaning ?? null) // sectors carry a one-line meaning; point-picks/surface clear it
     if (label) {
       labelRef.current = label
@@ -206,6 +242,7 @@ export function RightHand() {
       })
     } else {
       setOpen((o) => !o) // a tap (no drag) toggles the fan
+      if (greet) dismissGreet() // engaging the V = they found it; retire the one-time intro
     }
     // SYMMETRIC with onPointerDown's best-effort setPointerCapture: releasing is cleanup, and it THROWS
     // NotFoundError if nothing was captured (capture is best-effort → can silently fail; a pointercancel or
@@ -216,7 +253,7 @@ export function RightHand() {
     } catch {
       /* nothing captured — release is best-effort cleanup, safe to skip */
     }
-  }, [])
+  }, [greet, dismissGreet])
 
   // cancel any pending "Noted ✓ → auto-close" so a re-edit or re-open never closes the live composer
   const clearCloseTimer = useCallback(() => {
@@ -435,9 +472,38 @@ export function RightHand() {
         </div>
       )}
 
-      <div ref={elRef} className="vhandle" data-open={open} style={style} {...stamp('ui://rhm/handle')}>
+      {/* FIRST-CONTACT GREETING — the RHM introduces itself as the guide, once. A gentle non-modal bubble by the
+          V (no scrim → the surface stays usable behind it); dismissed by "Got it" or by opening the V. Copy is a
+          TENTATIVE draft for DNA/Tim to ratify (the AI supplies the words; the operator reacts to meaning). */}
+      {greet && !open && !panelOpen && !noteOpen && (
+        <div className="v-greet" role="status" {...stamp('ui://rhm/greet')}>
+          <div className="v-greet-h">I’m your right-hand-man</div>
+          <p className="v-greet-b">
+            Your guide here. Tap me anytime — choose <b>Ask</b> and I’ll explain whatever you’re looking at, or use
+            the other actions to do something with whatever you point at.
+          </p>
+          <button className="v-greet-dismiss" type="button" onClick={dismissGreet}>
+            Got it
+          </button>
+        </div>
+      )}
+
+      <div ref={elRef} className="vhandle" data-open={open} data-greet={greet} style={style} {...stamp('ui://rhm/handle')}>
         {open && (
           <div className="vhandle-fan" role="menu" aria-label="Right-hand-man actions">
+            {/* THE AIM CAPTION — names, in human terms, what the verbs will act on RIGHT NOW (the default aim is
+                the whole surface until the operator points at a thing). Without it the fan is a menu with no
+                object: a stranger can't tell "Note" notes the surface vs a picked thing. Non-interactive label;
+                sits above the verb arc. */}
+            <div
+              className="vhandle-aim"
+              aria-hidden="true"
+              style={{ transform: `translate(-100%, -50%) translate(-28px, ${-(44 + VERBS.length * 38 + 6)}px)` }}
+            >
+              <span className="vhandle-aim-k">These act on</span>
+              <span className="vhandle-aim-v">{aimedThing ? aimLabel : 'everything here'}</span>
+              {!aimedThing && <span className="vhandle-aim-hint">tap a dot to focus on one thing</span>}
+            </div>
             {VERBS.map((v, i) => {
               // a thumb arc rising from the bottom-right corner: EVEN vertical spacing (no overlap), leaning
               // LEFT as it climbs (the "around the angle" curve). Pills RIGHT-edge anchored (translate(-100%,…)).

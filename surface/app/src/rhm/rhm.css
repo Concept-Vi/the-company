@@ -46,6 +46,13 @@
 .vhandle-icon:hover { box-shadow: var(--elev-4); }
 .vhandle-icon:active { cursor: grabbing; transform: scale(0.96); }
 .vhandle[data-open='true'] .vhandle-icon { box-shadow: var(--elev-4); }
+/* while the first-contact greeting shows, the V gently pulses so the eye connects the "tap me" card to THIS
+   icon (the fresh-eyes gap: the card pointed at nothing). A scale breath, not a colour ring — token-clean. */
+.vhandle[data-greet='true'] .vhandle-icon { animation: vhandle-attract 1600ms ease-in-out infinite; }
+@keyframes vhandle-attract {
+  0%, 100% { transform: scale(1); box-shadow: var(--elev-3); }
+  50% { transform: scale(1.07); box-shadow: var(--elev-4); }
+}
 
 /* a paper-ethos focus ring (the default UA ring is off-palette); keyboard-only via :focus-visible */
 .vhandle-icon:focus { outline: none; }
@@ -120,9 +127,115 @@
   to { opacity: 1; }
 }
 
+/* THE AIM CAPTION — names what the open fan's verbs act on, in human terms (the default aim is the whole
+   surface). A non-interactive label pinned above the verb arc; right-edge anchored at the icon centre (the
+   inline transform), max-width so a long human label ellipsizes instead of overflowing the screen edge. */
+.vhandle-aim {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  width: max-content;
+  max-width: min(248px, 72vw);
+  text-align: right;
+  animation: vhandle-pop 160ms ease both;
+  pointer-events: none;
+}
+.vhandle-aim-k {
+  font-family: var(--font-mono, inherit);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.vhandle-aim-v {
+  max-width: 100%;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--ink-dim);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* the teach-the-drill hint, shown only at the surface default (nothing picked) — answers "where can I go" in
+   plain words: pick a dot to aim at one thing. Wraps (it's a sentence, not a label), right-aligned. */
+.vhandle-aim-hint {
+  max-width: 100%;
+  font-size: 0.66rem;
+  color: var(--ink-faint);
+  line-height: 1.25;
+  white-space: normal;
+}
+
+/* THE FIRST-CONTACT GREETING — the RHM's one-time self-introduction; the same paper card as its other surfaces
+   so it reads as the V "speaking". Pinned above the handle, right-anchored (like the brain/note panels). No
+   scrim: it's a gentle non-modal intro, the surface stays usable behind it. z-index 46 = above the handle. */
+.v-greet {
+  position: fixed;
+  z-index: 46;
+  right: var(--s-4);
+  bottom: calc(var(--s-7) + var(--safe-b, 0px) + 56px + var(--s-3)); /* clear the 56px V handle */
+  width: min(300px, 84vw);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  background: var(--ground-accent);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  box-shadow: var(--elev-4);
+  padding: var(--s-3);
+  animation: vhandle-pop 200ms ease both;
+}
+/* a tail off the bottom-right of the card, pointing DOWN at the V handle directly below — the visual line that
+   says "this card is THAT icon talking" (the fresh-eyes gap: "tap me" pointed at nothing). Sits over the s-3
+   gap between the card bottom and the icon top; right:22px ≈ above the 56px icon's centre. */
+.v-greet::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  right: 22px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid var(--ground-accent);
+  filter: drop-shadow(0 1px 0 var(--hairline));
+}
+.v-greet-h {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+.v-greet-b {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--ink-dim);
+  line-height: 1.45;
+}
+.v-greet-b b { color: var(--ink-primary); font-weight: 700; }
+.v-greet-dismiss {
+  align-self: flex-end;
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-xs);
+  color: var(--ink-primary);
+  background: var(--ground-primary);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  padding: var(--s-1) var(--s-3);
+  cursor: pointer;
+}
+.v-greet-dismiss:hover { background: var(--ground-secondary); }
+.v-greet-dismiss:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }
+
 @media (prefers-reduced-motion: reduce) {
   .vhandle-verb { animation: none; }
   .vhandle-icon { transition: none; }
+  .vhandle[data-greet='true'] .vhandle-icon { animation: none; } /* no attract-pulse when motion is reduced */
 }
 
 /* THE BRAIN PANEL — the right-hand-man's talk surface; fork's `.v-brain` renders inside (DNA re-skins
