@@ -36,4 +36,42 @@ KIND_META = {
     "decision":             {"name": "A decision",         "is": "A choice the system recorded."},
     "approve":              {"name": "An approval",        "is": "Something was approved."},
     "resolve":              {"name": "A resolution",       "is": "Something was resolved."},
+    # --- 2026-06-18: completed the default-lens kinds (grounded from each kind's own _emit message in
+    #     runtime/suite.py, cognition.py, activation.py, session_supervisor.py — the system's own words,
+    #     paraphrased into operator language; TENTATIVE for Tim/DNA). The AI-thinking layer reads "AI turn /
+    #     AI minds / AI step" (never "cognition"); a cascade reads "flow" (matches the Flow lens); a journey
+    #     reads "walk-through". Two live kinds (config_writer.git, projection.verify) are intentionally LEFT
+    #     to the humanized fallback — no emit-site exists to ground them (config_writer was removed), and
+    #     fabricating meaning would break the evidence rule. ---
+    # The copy below was tightened after a fresh-eyes copy critic (non-technical reader): insider words —
+    # "turn / wave / activated / context / flow / trial / debrief / surface / minds" — were translated to
+    # plain English, and the journey.* trio was corrected (the names had implied a USER tour, but these are
+    # the system RECORDING a path). The MEANING stays faithful to each kind's own _emit message.
+    "cognition.turn.start": {"name": "The AI started thinking", "is": "The AI began a round of thinking (one or more helpers)."},
+    "cognition.turn.done":  {"name": "The AI finished thinking","is": "The AI completed a round of thinking."},
+    "cognition.part":       {"name": "A step in the AI's thinking","is": "One step within a longer round of AI thinking."},
+    "cognition.wave":       {"name": "Several AI steps at once","is": "A batch of AI helpers ran together at the same time."},
+    "cognition.inject":     {"name": "Background added",     "is": "Extra background was fed into the AI's thinking."},
+    "cognition.reduce":     {"name": "AI answers merged",    "is": "The AI merged several answers into one."},
+    "activation":           {"name": "AI helpers started",   "is": "A group of AI helpers was set running."},
+    "ask":                  {"name": "Needs your input",     "is": "The system surfaced something for you to answer or decide."},
+    "grow":                 {"name": "The system added to itself","is": "The assistant wrote a new piece of itself — waiting for your approval."},
+    "decision.intent":      {"name": "A build proposed",     "is": "Something to build was surfaced for your approval."},
+    "decision.dispatch":    {"name": "A decision put into action","is": "A recorded decision was sent to be carried out."},
+    "decision.verify":      {"name": "A decision checked",   "is": "A decision's outcome was verified."},
+    "cascade.save":         {"name": "A sequence saved",     "is": "A reusable sequence of steps was saved."},
+    "review.start":         {"name": "A review started",     "is": "A review opened over a set of items."},
+    "review.advance":       {"name": "Review went to the next","is": "The review moved to its next item."},
+    "review.comment":       {"name": "A review comment",     "is": "Someone left a comment during a review."},
+    "guide.start":          {"name": "A guide started",      "is": "A guided, step-by-step sequence began."},
+    "journey.start":        {"name": "Path recording started","is": "The system started recording a path of where it went."},
+    "journey.step":         {"name": "A step in a recorded path","is": "A recorded path moved to a new place."},
+    "journey.stop":         {"name": "Path recording finished","is": "The system finished recording a path."},
+    "trial.turn":           {"name": "A test-run exchange",  "is": "One back-and-forth inside a test run."},
+    "trial.debrief.start":  {"name": "A test-run wrap-up",   "is": "A test run started its wrap-up review."},
+    "dial":                 {"name": "A dial set",           "is": "A tuning control was changed to a new value."},
+    "presentation_pref":    {"name": "A display preference", "is": "A learned preference for how something should be shown."},
+    "react":                {"name": "The assistant reacted","is": "The assistant noticed something in the chat and responded."},
+    "revert":               {"name": "A change undone",      "is": "A change the system made to itself was rolled back."},
+    "agent_sessions.render_drop": {"name": "A skipped screen update","is": "A working session had a screen update that wasn't shown."},
 }
