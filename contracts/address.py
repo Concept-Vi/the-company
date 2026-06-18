@@ -122,11 +122,26 @@ factory's good-part contributed to the centre. Adding `vi-vision` to SCHEMES is 
 the `ui://`/`cap://` precedent); no record-shape or schema_ver change. (Register-but-defer until the
 resolver module is brought into the company tree + the dispatch branch wired — externally-sourced code,
 confirm-first.)
+
+Note on `decision://` (the DECISION-SURFACE — the resolution-first decision-surface's first content type +
+the FACE pipeline's reconcile vessel, composition's contract 2026-06-18): `decision://<frame>/<id>` addresses
+a DECISION (a typed thing the system needs an owner to decide ON). frame = global | project/<id> | user/<id> |
+session/<id>; a BARE `decision://<id>` (no frame keyword) = global. A *label* resolved by
+`runtime/cognition.py:resolve_address`, which dispatches to the file-discovered `runtime/decision_registry.py`
+(mirrors board://·vi-vision//: a registry read, fail-loud on unknown). The row carried in the registry is the
+PENDING DEFINITION only ({id, meaning(human), options[], explanation_source?, scope?, legibility?} — the
+schemas/vi-vision/v1/decision.schema.json contract). STATE (pending|decided) and decided_value/by/at are NOT
+authored fields — they RESOLVE from the LATEST `decision_take` mark on the decision's CANONICAL address
+(registry-is-truth: the take IS the artifact; the resolver COMPOSES the state, the row never mutates). The
+canonical mark target is `decision_address(parse_decision_address(addr))` — `decision://global/<id>` always
+(frame explicit) — so a take written via the bare form and a row resolved via the global form share ONE mark
+key (else the take silently misses → a decided decision reads pending). Adding `decision` to SCHEMES is purely
+additive (mirrors the vi-vision precedent); no record-shape or schema_ver change.
 """
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "clone", "mind", "exchange", "file", "project", "vi-vision")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "clone", "mind", "exchange", "file", "project", "vi-vision", "decision")
 
 
 class Provenance(BaseModel):
@@ -264,3 +279,51 @@ def parse_clone_address(addr: str) -> dict:
             f"with both segments non-empty (got source_sid={source_sid!r}, cut={cut!r}). Fail loud, "
             f"never a silent-pass.")
     return {"source_sid": source_sid, "cut": cut}
+
+
+# ── decision:// sub-address grammar + canonicalizer — declared ONCE (the decision-surface joins the spine) ─
+# decision://<frame>/<id> → a DECISION. frame = global | project/<id> | user/<id> | session/<id>; a BARE
+# decision://<id> (no frame keyword) = global. Declared here beside parse_session/clone (one grammar home);
+# the resolver (runtime/cognition.py:resolve_address) + the take-writer (runtime/territory.py:territory_write,
+# wildcard's gallery:direction) BOTH ride this shape. The decision's IDENTITY is decision://<frame>/<id>
+# (id+frame) — NOT the schema's optional `address` field (which names the thing the decision decides ON). The
+# CANONICAL form (decision_address) is the ONE mark key the take is written to + the resolver reads marks off.
+def parse_decision_address(addr: str) -> dict:
+    """decision://<frame>/<id> → {frame, scope_kind, scope_id, id}. frame = global | project/<id> |
+    user/<id> | session/<id>; a BARE decision://<id> (no frame keyword) = global (scope_kind='global',
+    scope_id=None). FAIL-LOUD (ValueError) on anything malformed — never a silent-pass / guessed-nearest.
+    The canonical decision-address parse (resolver + take-writer both call it). Mirrors
+    parse_vi_vision_address's frame grammar; the trailing <id> is one segment (dots ok, no '/')."""
+    if not isinstance(addr, str) or not addr.startswith("decision://"):
+        raise ValueError(f"parse_decision_address: not a decision:// address ({addr!r}). Fail loud.")
+    rest = addr[len("decision://"):]
+    if not rest:
+        raise ValueError(f"parse_decision_address: empty decision body ({addr!r}). Fail loud.")
+    parts = rest.split("/")
+    head = parts[0]
+    if head in ("project", "user", "session"):
+        if len(parts) < 2 or not parts[1]:
+            raise ValueError(
+                f"parse_decision_address: frame {head!r} needs an id ('{head}/<id>') in {addr!r}. Fail loud.")
+        scope_kind, scope_id, tail = head, parts[1], parts[2:]
+    elif head == "global":
+        scope_kind, scope_id, tail = "global", None, parts[1:]
+    else:
+        # BARE form: decision://<id> = global (no frame keyword). The single segment IS the id.
+        scope_kind, scope_id, tail = "global", None, parts
+    if len(tail) != 1 or not tail[0]:
+        raise ValueError(
+            f"parse_decision_address: malformed {addr!r} — expected 'decision://<frame>/<id>' (one id "
+            f"segment after the frame) or bare 'decision://<id>'. Fail loud, never a silent-pass.")
+    frame = "global" if scope_kind == "global" else f"{scope_kind}/{scope_id}"
+    return {"frame": frame, "scope_kind": scope_kind, "scope_id": scope_id, "id": tail[0]}
+
+
+def decision_address(parsed: dict) -> str:
+    """The CANONICAL decision IDENTITY string → `decision://<frame>/<id>` (frame ALWAYS explicit, 'global'
+    written). The ONE form the resolver keys marks off AND the take-writer writes the `decision_take` mark to —
+    so a take written via the bare form `decision://<id>` and a row resolved via `decision://global/<id>` share
+    ONE mark target (else the take silently misses → a decided decision reads pending; the adversary-verified
+    normalization). Mirrors vi_vision's frame normalization. Pass parse_decision_address(addr)."""
+    frame = parsed.get("frame") or "global"
+    return f"decision://{frame}/{parsed['id']}"

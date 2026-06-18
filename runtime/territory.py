@@ -31,7 +31,9 @@ from __future__ import annotations
 # Schemes cognition.resolve_address resolves to a record/content (its dispatch, cognition.py:842-1029).
 # vi-vision added 2026-06-17 (islands-join-mainland): the identity leg resolves the AIMED factory asset via
 # resolve_address → resolve_vi_vision (degrades clean if no transport; the LIBRARY leg adds the palette).
-_RESOLVABLE = ("run", "cas", "skill", "context", "session", "cap", "board", "clone", "mind", "vi-vision")
+# decision added 2026-06-18 (decision-surface): the identity leg resolves the AIMED decision (row + composed
+# state) via resolve_address → decision_registry + compose_state; territory_prose renders it humanly below.
+_RESOLVABLE = ("run", "cas", "skill", "context", "session", "cap", "board", "clone", "mind", "vi-vision", "decision")
 
 
 def _scheme_of(address: str):
@@ -217,6 +219,38 @@ def territory_prose(territory_or_address, *, suite=None, store=None, max_chars: 
                               for it in libitems[:12] if isinstance(it, dict))
             more = lib.get("total", len(libitems)) - min(12, len(libitems))
             bits.append("Available pieces in this library: " + named + (f" (+{more} more)" if more > 0 else "") + ".")
+        # DECISION (decision:// resolved row+state) — the question + options + resolved state, all HUMAN. The
+        # "What this is" line above already gave the decision's name (territory_label → legibility.name/meaning);
+        # this adds the question to decide, the choices (label + what each entails, the suggested one flagged),
+        # and whether it's still open or already decided. Operator-law: meaning-words only, never a machine id.
+        ident = terr.get("identity")
+        if terr.get("scheme") == "decision" and isinstance(ident, dict):
+            meaning = (ident.get("meaning") or "").strip()
+            if meaning:
+                bits.append("The decision: " + _clip(meaning, 320))
+            rendered = []
+            for o in (ident.get("options") or []):
+                if not isinstance(o, dict):
+                    continue
+                lab = (o.get("label") or "").strip()
+                if not lab:
+                    continue
+                piece = lab
+                impl = (o.get("implication") or o.get("description") or "").strip()
+                if impl:
+                    piece += " — " + _clip(impl, 220)
+                if o.get("recommended"):
+                    piece += " (suggested)"
+                rendered.append(piece)
+            if rendered:
+                bits.append("The options are: " + "  ||  ".join(rendered[:6]))
+            st = ident.get("state")
+            if st == "decided":
+                dv = str(ident.get("decided_value") or "").strip()
+                bits.append(f"This has already been decided — the choice was: {dv}." if dv
+                            else "This has already been decided.")
+            elif st == "pending":
+                bits.append("This is still open — no choice has been made yet.")
         return "\n".join(bits)[:max_chars]
     except Exception as e:
         return f"(context render error: {type(e).__name__})"   # no raw address (operator-law)
@@ -226,12 +260,13 @@ def territory_prose(territory_or_address, *, suite=None, store=None, max_chars: 
 # The FE getAimLabel helper (fork-v-brain.attach) is backed by this via a thin bridge route (proposed:
 # GET /api/territory/label?address=… → {label}). The operator NEVER sees code/files/machine names — so this
 # NEVER returns the raw address; it reads the identity leg's human meaning and degrades to a human NOUN.
-_HUMAN_IDENTITY_KEYS = ("what_this_is", "title", "name", "heading", "label", "summary", "desc", "description")
+_HUMAN_IDENTITY_KEYS = ("what_this_is", "title", "name", "heading", "label", "summary", "meaning", "desc", "description")
 _SCHEME_HUMAN_NOUN = {
     "ui": "this part of the surface", "run": "a result", "cas": "a stored piece",
     "skill": "a skill", "context": "a working context", "session": "a past conversation",
     "cap": "a capability", "board": "a noticeboard item", "clone": "a past self",
     "mind": "a way of thinking", "code": "a piece of the work", "corpus": "a piece of the work",
+    "decision": "a decision to make",
 }
 
 
@@ -251,6 +286,11 @@ def _human_from_identity(ident):
                 return ln
         return None
     if isinstance(ident, dict):
+        # legibility-bearing types (a decision, and any type carrying the legibility meaning-fields) put THIS
+        # thing's human name under legibility.name — the operator-legibility law's anchor (prefer it first).
+        leg = ident.get("legibility")
+        if isinstance(leg, dict) and isinstance(leg.get("name"), str) and leg["name"].strip():
+            return leg["name"]
         # ui:// address_help nests its human line under what_this_is (a dict or str) — reach one level in.
         wti = ident.get("what_this_is")
         if isinstance(wti, dict):
@@ -289,7 +329,12 @@ def territory_label(address, *, suite=None, store=None, max_len: int = 80) -> st
 # re-render. Uses the company's SCHEME-AGNOSTIC mark mechanism (suite.mark — any target string), NOT the
 # ui://-gated annotate, NOT vi-visual's /api/submit_response (lead's directive). Re-render reads
 # territory_directions_at. Requires the direction mark_types (comment/reaction/favour) registered.
-DIRECTION_MARK_TYPES = ("comment", "reaction", "favour")   # = wildcard's gallery:direction item.type values
+# = wildcard's gallery:direction item.type values. decision_take added 2026-06-18 (decision-surface): a
+# decision-card TAKE is the same route-back — wildcard emits {type:"decision_take", value:<chosen option label>,
+# element_id:<canonical decision://global/<id>>}; territory_write routes it generically (suite.mark) and the
+# decision:// resolver composes the decided state from it. The take's `value` MUST be the option LABEL (the
+# decided_value); the target MUST be the CANONICAL decision address (contracts.address.decision_address).
+DIRECTION_MARK_TYPES = ("comment", "reaction", "favour", "decision_take")
 
 
 def territory_write(element_id, item, *, suite):

@@ -45,7 +45,8 @@ from typing import Any, Callable, Iterator
 
 from pydantic import BaseModel, Field
 
-from contracts.address import scheme as _scheme, parse_session_address as _parse_session
+from contracts.address import (scheme as _scheme, parse_session_address as _parse_session,
+                                parse_decision_address as _parse_decision, decision_address as _decision_address)
 from fabric import client, transport
 from fabric.vram import VramGate
 
@@ -93,6 +94,21 @@ def context_registry() -> ContextRegistry:
     """Discover the file-based context registry (contexts/*.py) — fresh each call (mirrors
     role_registry()). `context://<id>` resolves through this."""
     return ContextRegistry().discover([_CONTEXTS_DIR])
+
+
+# decision-surface — the file-discovered DECISION registry (decisions/*.py). `decision://<id>` resolves through
+# this for the ROW; STATE composes from the decision_take mark thread (decision_registry.compose_state). A
+# RESOLVER-TARGET (like cc_board/vi_vision), reached fresh each call (mirrors role/skill); LAZY-imported (keep
+# the module-load graph clean — the module is self-contained, importlib/os only, no company deps).
+_DECISIONS_DIR = os.path.join(os.path.dirname(_ROLES_DIR), "decisions")
+
+
+def decision_registry():
+    """Discover the file-based decision registry (decisions/*.py) — fresh each call, so an added/removed
+    decision file is picked up (mirrors role_registry()/skill_registry()). `decision://<frame>/<id>` resolves
+    through this (the pending definition); resolved STATE is composed separately from the decision_take marks."""
+    from runtime.decision_registry import DecisionRegistry   # lazy: resolver-target, module-load graph stays clean
+    return DecisionRegistry().discover([_DECISIONS_DIR])
 
 
 # O2 — the GENERATION-POLICY registry (file-discovered, `generation_policies/*.py`). `run_role` reads
@@ -1026,6 +1042,37 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
             # operational (Tim 2026-06-17): three honest fail-loud paths — malformed · not-found-at-frame ·
             # transport (no creds / store down / non-JSON) — all surface as ValueError (never silent-empty).
             raise ValueError(f"resolve_address: {e}") from e
+    if sch == "decision":
+        # decision-surface (composition's contract, 2026-06-18) — decision://<frame>/<id> → the decision row
+        # COMPOSED with its resolved STATE. The ROW is the PENDING DEFINITION from the file-discovered
+        # decision_registry (registry-is-truth: a decision is a file). STATE is NOT a row field — it RESOLVES
+        # from the LATEST `decision_take` mark on the decision's CANONICAL address (decision_address: frame
+        # explicit, so a take written via the bare form + a row resolved via the global form share ONE mark key
+        # — the adversary-verified normalization, else a decided decision silently reads pending). Mirrors
+        # board://·vi-vision//: a registry read, fail-loud on unknown. The marks read NEEDS the store (the take
+        # lives in marks.jsonl); the row resolves without it but the STATE cannot — so a missing store FAILS
+        # LOUD (never report a guessed/silent state). LAZY import (resolver-target, module-load graph clean).
+        # `.get(` (a READ) + compose_state (a pure fold) — NO `.resolve(` (the C9.2 floor token stays clean).
+        from runtime.decision_registry import compose_state as _compose_state, DecisionError as _DErr
+        try:
+            parsed = _parse_decision(addr)
+        except ValueError as e:
+            raise ValueError(f"resolve_address: {e}") from e
+        canonical = _decision_address(parsed)
+        try:
+            row = decision_registry().get(parsed["id"])
+        except _DErr as e:
+            raise ValueError(f"resolve_address: {e}") from e
+        if row is None:
+            raise ValueError(
+                f"resolve_address: unknown decision {parsed['id']!r} (address {addr!r}) — no decisions/ "
+                f"registry row. registry-is-truth: a decision is a file; author one in decisions/. Fail loud.")
+        if store is None or not hasattr(store, "marks_for"):
+            raise ValueError(
+                f"resolve_address: decision {addr!r} needs a store to compose its take-state (the take lives in "
+                f"marks). Fail loud — never report a guessed/silent decision state.")
+        marks = store.marks_for(canonical)                # keyed by the CANONICAL address (the ONE mark target)
+        return _compose_state(row, marks)
     if sch is not None:
         # a REGISTERED scheme (blob/vec/ui/code/exchange) with no content-resolver wired into this
         # dispatcher yet (exchange:// is register-but-defer — recollection's capture/recall lane owns it).

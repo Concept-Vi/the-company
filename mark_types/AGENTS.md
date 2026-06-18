@@ -47,6 +47,12 @@ non-`MARK_TYPE`/`_`-file is skipped.
   (the radial tension segment r_struct↔r); this row lets it be MARKED + surfaced as a finding. Render,
   NEVER auto-correct — operator-overridable (Group 7). Value the 0..1 magnitude.
 
+*The INTERACTION mark-types (the directions-at-address vocabulary — wildcard's taxonomies.json — written by the route-back `gallery:direction` -> `runtime.territory.territory_write` -> `suite.mark`; additive beside the analysis types above, registry-is-truth):*
+- **`comment`** — free · **surface**. An operator comment/direction at an addressed element; the sub-type rides in `annotation_type` (note/direction/correction/question/praise/discuss), `value` = the free text.
+- **`reaction`** — label · **surface**. An operator reaction-stamp at an addressed element; `value` = the reaction (good/wrong/explain/remember_this/do_this).
+- **`favour`** — score · **surface**. An operator favour score at an addressed element; `value` = a number.
+- **`decision_take`** — free · **surface**. The operator's CHOICE on an addressed decision (decision-surface, 2026-06-18) — `value` = the chosen option's LABEL (= the decided_value), `target` = the CANONICAL decision address (`contracts.address.decision_address` → `decision://global/<id>`, frame explicit), optional `by` = who decided. The `decision://` resolver (`runtime/decision_registry.compose_state`) composes the decided state from the LATEST `decision_take` mark on that address (none ⇒ pending). Registered id is `decision_take` (underscore = file stem) — composition's "decision-take" (hyphen) is informal, exactly as `ai_fingerprint` is the informally-named "ai-fingerprint".
+
 **The floor + render-not-judge:** a mark-type is DECLARED DATA — a vocabulary, not an action. Reading is
 a READ (`subtractive`/`as_records`, never `resolve`). A mark DESCRIBES a disposition; judgement of
 truth/quality is a later reduce pass, and the operator can overrule. A mark-pass appends a finding
