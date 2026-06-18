@@ -102,6 +102,10 @@ export type Territory = {
   corpus_record?: unknown
   relations?: { edges_in?: unknown[]; edges_out?: unknown[]; [k: string]: unknown } | null
   notes?: string[]
+  // the operator's OWN directions at this address (their notes/reactions, from the Note verb) — operator-safe
+  // fields only (the bridge omits the raw target address). `value` carries a comment's text. Closes the
+  // note round-trip: a note left here is read back into the Source panel.
+  directions?: Array<{ type?: string | null; value?: unknown; source?: string | null; when?: string | null }>
   legs_present?: Record<string, boolean>
   [k: string]: unknown
 }

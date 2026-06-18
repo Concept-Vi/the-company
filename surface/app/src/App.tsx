@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { fetchProjection, fetchTerritory, type Projection, type ProjPoint, ApiError } from './lib/api'
-import { SourcePanel, readTerritoryContent, territoryRefCount, type SourceView } from './source/SourcePanel'
+import { SourcePanel, readTerritoryContent, territoryRefCount, territoryNotes, type SourceView } from './source/SourcePanel'
 import { installAddressCapture, subscribeLocus, getLocus, clearNotice } from './lib/address'
 import type { MotionFeel } from './tokens/motion'
 import { Desktop } from './layouts/Desktop'
@@ -238,6 +238,7 @@ export function App() {
               meaning: selected.kind_meaning ?? null,
               content: null,
               refs: 0,
+              notes: [],
               loading: true,
               error: null,
             })
@@ -251,7 +252,7 @@ export function App() {
                 // apply only if the panel is still showing THIS address (a later pick supersedes a slow fetch)
                 setSource((s) =>
                   s && s.addr === addr
-                    ? { ...s, content: readTerritoryContent(t), refs: territoryRefCount(t), loading: false }
+                    ? { ...s, content: readTerritoryContent(t), refs: territoryRefCount(t), notes: territoryNotes(t), loading: false }
                     : s,
                 ),
               )

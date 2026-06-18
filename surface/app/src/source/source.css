@@ -133,6 +133,28 @@
   word-break: break-word;
 }
 
+/* the operator's OWN notes, read back from the store (the Note verb round-trip). A small stack of quiet cards
+   so they read as "things you left here", distinct from the system's content above. */
+.v-source-notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.v-source-note {
+  font-size: var(--t-sm);
+  color: var(--ink-primary);
+  line-height: 1.45;
+  padding: var(--s-2) var(--s-3);
+  background: var(--ground-primary);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .v-source-empty,
 .v-source-status {
   margin: 0;

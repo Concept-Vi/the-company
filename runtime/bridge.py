@@ -1311,8 +1311,21 @@ class H(BaseHTTPRequestHandler):
                 # Mirrors /api/context exactly: missing `address` → KeyError → 400 (fail loud); a non-address
                 # (no '://') → ValueError from territory_for's gate → 400; an unresolvable record degrades CLEAN
                 # (notes name the absent leg, legs_present flags it) — never a crash, never a fabricated source.
-                from runtime.territory import territory_for
-                self._send(200, json.dumps(territory_for(q["address"], suite=SUITE)))
+                from runtime.territory import territory_for, territory_directions_at
+                terr = territory_for(q["address"], suite=SUITE)
+                # Fold in the OPERATOR'S DIRECTIONS — their own notes/reactions at THIS address (the Note verb's
+                # write side persists them via suite.mark; territory_for's `notes` field is a DIAGNOSTIC channel
+                # [leg-unresolved messages], NOT operator notes). WITHOUT this read leg the round-trip was broken:
+                # the operator leaves a note → "See the record" never showed it back (write-only, invisible). Shape
+                # to operator-SAFE fields only (type/value/source/when) — NEVER the raw `target` address (operator-law),
+                # mirroring how `relations` already omits raw target addresses. Degrades clean ([] on absence/error).
+                _dirs = territory_directions_at(q["address"], suite=SUITE)
+                terr["directions"] = [
+                    {"type": m.get("mark_type") or m.get("type"), "value": m.get("value") or m.get("text"),
+                     "source": m.get("source"), "when": m.get("ts")}
+                    for m in (_dirs or []) if isinstance(m, dict)
+                ]
+                self._send(200, json.dumps(terr))
             elif path == "/api/context":                   # R2: the addressed-context inspector (the R2 read-face)
                 # The standalone read that EXPOSES the EXISTING R2 engine (Suite.context_at — composes
                 # `_r2_gather` + `_r2_score_and_cap`, the SAME scoring the chat runs at the live locus,

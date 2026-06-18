@@ -17,6 +17,7 @@ export type SourceView = {
   meaning: string | null // the kind's one-line meaning
   content: string | null // the fuller comprehended prose (the drill-past-the-summary value); null = none resolved
   refs: number // board references INTO this thing (provenance) — rendered only when > 0
+  notes: string[] // the operator's OWN notes left on this thing (the Note verb → directions read back)
   loading: boolean
   error: string | null
 }
@@ -59,6 +60,17 @@ function contentFrom(cand: unknown): string | null {
 export function territoryRefCount(t: Territory): number {
   const ei = t.relations?.edges_in
   return Array.isArray(ei) ? ei.length : 0
+}
+
+// The operator's OWN notes left on this thing (the Note verb → directions). Comment-type directions carry the
+// typed text in `value`; reactions/favours are wordless stamps (not shown as prose notes). This closes the Note
+// round-trip — a note the operator left here reads back into "See the record". (The bridge already stripped the
+// raw target address from each direction → operator-law holds; we render only the human text.)
+export function territoryNotes(t: Territory): string[] {
+  const dirs = Array.isArray(t.directions) ? t.directions : []
+  return dirs
+    .filter((d) => d?.type === 'comment' && typeof d?.value === 'string' && (d.value as string).trim().length > 0)
+    .map((d) => (d.value as string).trim())
 }
 
 export function SourcePanel({ source, onClose }: { source: SourceView | null; onClose: () => void }) {
@@ -105,6 +117,22 @@ export function SourcePanel({ source, onClose }: { source: SourceView | null; on
               </>
             ) : (
               <p className="v-source-empty">The fuller record isn’t in plain words here — only the summary above.</p>
+            )}
+            {source.notes.length > 0 && (
+              <>
+                {/* the operator's own notes, read back from the store (the Note verb's round-trip closing) —
+                    so "See the record" shows what they left here, not just the system's content. */}
+                {/* past-tense + possessive so it reads as a note ALREADY left, not an empty "type here" prompt
+                    (fresh-eyes critic: "Your note here" momentarily reads like placeholder text). */}
+                <div className="v-source-bodylabel">The {source.notes.length === 1 ? 'note' : 'notes'} you left here</div>
+                <ul className="v-source-notes">
+                  {source.notes.map((n, i) => (
+                    <li key={i} className="v-source-note">
+                      {n}
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
             {source.refs > 0 && (
               <p className="v-source-prov">
