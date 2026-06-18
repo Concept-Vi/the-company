@@ -24,8 +24,9 @@ export function DecisionsInbox() {
 
   const pick = (address: string, id: string) => {
     closeDecisionsList()
-    // open through the ONE decision host (same path as the URL deep-link) — no parallel render
-    window.dispatchEvent(new CustomEvent('decision:open', { detail: { address, id } }))
+    // open through the ONE decision host (same path as the URL deep-link) — no parallel render. fromInbox:true so
+    // closing the card RETURNS to this list (work-the-queue), not to the wheel.
+    window.dispatchEvent(new CustomEvent('decision:open', { detail: { address, id, fromInbox: true } }))
   }
 
   return (

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
+import { openDecisionsList } from '../decisions/decisionsStore'
 
 // THE DOM-MOUNT SEAM (front-interface FIRST SLICE — the lead/DNA/fork converged ask, 2026-06-16).
 //
@@ -57,8 +58,19 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
   // recall-grounding), then the card (cleared by onDecisionRendered), or a fail-LOUD error if it never arrives —
   // never a silent blank (no-silent-failures).
   const [dlState, setDlState] = useState<'' | 'loading'>('')
+  // WORK-THE-QUEUE: did the current decision open FROM the inbox? If so, closing it RETURNS to the inbox list
+  // (so the operator can pick the next of "N decisions waiting" without re-opening the pill + re-scrolling —
+  // fresh-eyes critic's flagged friction). A deep-link or corpus open clears this → those close to the wheel.
+  const fromInboxRef = useRef(false)
 
-  const dismiss = useCallback(() => { decisionModeRef.current = false; setDlState(''); onOpenChange(false) }, [onOpenChange])
+  // close the face. If the decision came from the inbox, re-open the inbox (work-the-queue) — it reloads, so a
+  // just-decided card drops off the pending list and the next is one tap away; closing the last → "all caught up".
+  const dismiss = useCallback(() => {
+    decisionModeRef.current = false
+    setDlState('')
+    onOpenChange(false)
+    if (fromInboxRef.current) { fromInboxRef.current = false; openDecisionsList() }
+  }, [onOpenChange])
 
   // a focused modal: when the FACE is open, recede the competing chrome (header/side-text/scrubber). A scrim
   // alone can't — dark chrome text stays legible over a dark scrim, and the header sits in the same top band as
@@ -91,6 +103,7 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
     const onRendered = (e: Event) => {
       const d = (e as CustomEvent).detail || {}
       decisionModeRef.current = false // a normal corpus drill exits any decision walk (modes mutually exclusive)
+      fromInboxRef.current = false // a corpus drill isn't from the inbox → it closes to the wheel, not the queue
       currentAddrRef.current = d.address || ''
       currentSubtypeRef.current = ''; currentRenderKindRef.current = 'slide' // a corpus face carries no decision subtype
       titleRef.current?.removeAttribute('data-decision-subtype')
@@ -142,7 +155,7 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
       if (decisionModeRef.current) return // a decision walk isn't tied to wheel selection — ignore deselect while it's up
       if (!d || !d.address) onOpenChange(false) // deselect / address-less point closes the (corpus) face
     }
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { decisionModeRef.current = false; onOpenChange(false) } }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') dismiss() } // Esc closes via the same path (returns to the inbox if from-inbox)
     window.addEventListener('gallery:rendered', onRendered)
     window.addEventListener('decision:rendered', onDecisionRendered)
     window.addEventListener('gallery:rerender', onRerender)
@@ -155,7 +168,7 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
       window.removeEventListener('projection:select', onSelect)
       window.removeEventListener('keydown', onKey)
     }
-  }, [onOpenChange])
+  }, [onOpenChange, dismiss])
 
   // OPEN A DECISION INTO THE HOST — the ONE opener, shared by the URL deep-link AND the in-surface inbox.
   // Renders the decision address into the host container with an honest LOADING state (the resolve can be slow —
@@ -163,10 +176,11 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
   // re-attempts the render only if the previous one REJECTED (inFlight cleared on .catch; on success it stays
   // in-flight while the slow resolve completes, and the card render clears the loading via onDecisionRendered).
   // `<id>` → decision://global/<id>; a full address (with ://) is accepted as-is. Honest no-op if DNA isn't loaded.
-  const openDecision = useCallback((rawId: string) => {
+  const openDecision = useCallback((rawId: string, fromInbox = false) => {
     const id = (rawId || '').trim()
     if (!id) return () => {}
     const addr = id.includes('://') ? id : `decision://global/${id}`
+    fromInboxRef.current = fromInbox // remember the origin → close returns to the inbox queue (true) or the wheel (false)
     setDlState('loading')
     onOpenChange(true)
     let cancelled = false
@@ -208,7 +222,7 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
   useEffect(() => {
     const onOpen = (e: Event) => {
       const d = (e as CustomEvent).detail || {}
-      openDecision(d.address || d.id || '')
+      openDecision(d.address || d.id || '', !!d.fromInbox) // fromInbox → closing returns to the queue
     }
     window.addEventListener('decision:open', onOpen)
     return () => window.removeEventListener('decision:open', onOpen)
