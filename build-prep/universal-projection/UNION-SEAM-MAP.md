@@ -21,24 +21,37 @@ mismatch) or UNWELDED (a side missing / a silent drop). Re-run this map whenever
 | `gallery:rerender` | fork-brain-core (post-write) | **GalleryMount** | ✅ welded THIS PASS (6e4e2c5) — was UNWELDED (no listener → writes never refreshed) |
 | `projection:select` | App | GalleryMount · RightHand | ✅ welded |
 | `projection:aim` | Wheel | RightHand | ✅ welded |
-| `decision:rendered` | DNA's decision-card (post-reorg) | GalleryMount · *(should: fork HOOK 1)* | ⏳ staged — GalleryMount listens; DNA emits when her card lands |
-| `gallery:write-error` | fork-brain-core (write fail) | RightHand (V's Note) | 🟡 partial — a TAKE/card-write failure has no on-CARD display (the V's Note is the wrong surface + the card overlay covers the surface chrome) → DNA's card lane |
+| `decision:rendered` | DNA's decision-card | GalleryMount · fork HOOK 1b | ✅ welded + VERIFIED — DNA emits on the real card; host opens+holds; fork HOOK 1b binds the in-card Ask. Driven end-to-end both viewports (the flagship prove-on-one) |
+| `gallery:write-error` | fork-brain-core (write fail) | DNA's decision-card (on-card banner) | ✅ welded + VERIFIED THIS FIRE — the card listens (`unit-view.js:492`), matches `element_id`===`data-decision-address`, shows the "Couldn't save — try again" banner + disables the options. DROVE it on the real card (390+1440): banner shown, `.write-error` set, options opacity .6 / pointer-events none |
 | `projection:rendered` | — | — | ⚪ dead (unused name; harmless) |
 
-## Unwelded / partial seams → routed to their owners (the union work)
+## The four flagged seams → ALL WELDED + CLOSED (the union work, done)
 
-1. **`gallery:rerender` had no listener** → WELDED this pass (host re-renders the mounted face; replaceable by
+Every seam this audit surfaced as "assumed not welded" is now welded by its owner AND driven at its meeting
+point (not trusted as "code looks right"). The union of the decision surface is whole.
+
+1. **`gallery:rerender` had no listener** → ✅ WELDED (6e4e2c5; host re-renders the mounted face; replaceable by
    DNA's finer in-place refresh later). Was: every write (annotation, take) succeeded but never visually
-   refreshed.
-2. **`decision:rendered` → fork's in-card Ask (HOOK 1)** — HOOK 1 listens only for `gallery:rendered`, so a
-   decision card gets no interactive "Ask about this" (only its pre-filled explanation slot), and the V is
-   covered by the overlay. Routed to fork (extend HOOK 1 to decision:rendered) — thread g-1781731457.
-3. **`gallery:write-error` on a card** — a take/annotation write failure must surface ON the card (the surface
-   chrome Notice + the V are both covered by the card overlay z-60). DNA's card lane (the card shows its own
-   write-fail state). Flag to DNA.
-4. **canonicalization at the take write-point** — `territory_write` marks at the LITERAL element_id; the
-   binder claims server-side canonicalization. Happy path safe (DNA stamps canonical); latent silent-miss for
-   a non-canonical address. Routed to fork (territory.py) — thread g-1781731457.
+   refreshed. Verified: a take flips the card to decided via this refresh.
+2. **`decision:rendered` → fork's in-card Ask** → ✅ WELDED — fork added HOOK 1b (`fork-gallery-brain-hooks.js`,
+   listens for `decision:rendered`, binds the same in-card Ask keyed to the decision's canonical address).
+   Verified: the Ask mounts on the real card (the flagship prove-on-one, both viewports).
+3. **`gallery:write-error` on a card** → ✅ WELDED + VERIFIED THIS FIRE — the seam projection structurally
+   COULD NOT cover (the card overlay z-60 hides the surface chrome's Notice + the V, so only the card can show
+   a save failure). The fork built it INTO the card render: a `.dc-error-banner` + a global `gallery:write-error`
+   listener that matches `element_id`===the card's `data-decision-address` and reveals the banner. DROVE it on
+   the real merge-sa-authorize card, BOTH viewports: fire `gallery:write-error{element_id: bare canonical}` →
+   "Couldn't save — try again" banner shows (red, DNA-token styled), `.write-error` class set, options disabled
+   (opacity .6 / pointer-events:none). A failed take is now LOUD, not silent. no-silent-failure satisfied.
+4. **canonicalization at the take write-point** → ✅ WELDED — wildcard's `decide()` REFUSES a non-canonical
+   address (fail-LOUD guard, TEST9), so a bad/`#elem` stamp SCREAMS at the emit point. Verified the match
+   chain end-to-end: the card's `data-decision-address` === the bare canonical (so both the take write AND the
+   write-error match key agree). ⚠ HARDENING NOTE (verified-safe, not a bug): `/api/territory` does NOT return
+   `identity.address` (it's `None`), so the card's match key comes from the render-time `d.address` fallback,
+   NOT from registry-truth. It's CLEAN today (driven: `matchesBareCanonical: true`), but a future render-path
+   change that drops the fallback would silently break the write-error match. The robust weld = the resolver
+   returns `identity.address` (registry-is-truth) so the card never depends on a render-time fallback. Routed
+   to fork as a small hardening (not blocking — verified working).
 
 ## Seam class 2 — the surface↔bridge API routes (audited 2026-06-18; ALL WELDED)
 
