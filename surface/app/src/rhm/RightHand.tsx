@@ -207,7 +207,15 @@ export function RightHand() {
     } else {
       setOpen((o) => !o) // a tap (no drag) toggles the fan
     }
-    e.currentTarget.releasePointerCapture?.(e.pointerId)
+    // SYMMETRIC with onPointerDown's best-effort setPointerCapture: releasing is cleanup, and it THROWS
+    // NotFoundError if nothing was captured (capture is best-effort → can silently fail; a pointercancel or
+    // a synthetic pointer also leaves nothing to release). `?.` only guards the method being absent, not the
+    // throw — so wrap it. (Caught by the cumulative regression smoke-test: an uncaught NotFoundError here.)
+    try {
+      e.currentTarget.releasePointerCapture?.(e.pointerId)
+    } catch {
+      /* nothing captured — release is best-effort cleanup, safe to skip */
+    }
   }, [])
 
   // cancel any pending "Noted ✓ → auto-close" so a re-edit or re-open never closes the live composer
