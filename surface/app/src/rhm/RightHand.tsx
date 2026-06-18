@@ -35,6 +35,13 @@ const VERBS = [
 // degrades this to a human noun; the brain composes whatever context it can). Never shown raw to the operator.
 const SURFACE_AIM = 'ui://instrument/surface'
 
+// THE THREE-QUESTION WALK (Phase 0's spine, Tim-approved): the RHM is the teacher that walks the operator
+// through — but the brain's Ask panel starts BLANK, and a stranger doesn't know what to ask (the cold-stranger
+// gap). So the panel offers the three questions as one-tap starters; tapping one asks the REAL brain about the
+// CURRENT aim (it answers grounded on wherever the V is pointed — self-similar at every level). This is the
+// proactive walk in its grounded seed form: the RHM offers the questions; the existing brain teaches the answer.
+const STARTERS = ['What am I looking at?', 'What can I do here?', 'Where can I go from here?'] as const
+
 type Pos = { x: number; y: number } | null
 type Drag = { id: number; ox: number; oy: number; sx: number; sy: number; moved: boolean }
 type Brain = { ask: (p?: string) => unknown; direct: (i: unknown) => Promise<unknown[]>; aimChanged: () => void; destroy: () => void }
@@ -435,6 +442,29 @@ export function RightHand() {
         <button className="v-brain-close" type="button" aria-label="Close" onClick={() => setPanelOpen(false)}>
           ×
         </button>
+        {/* THE THREE-QUESTION STARTERS — the proactive walk's seed. Rendered in projection's wrapper ABOVE fork's
+            appended `.v-brain` (a stable React subtree React owns; fork's brain node trails it, untouched). Tapping
+            a starter asks the REAL brain (forkVBrain.ask) about the current aim → it answers in the reply slot.
+            A stranger no longer faces a blank "what do I ask?" — the RHM offers the three questions to walk. */}
+        <div className="v-brain-starters" role="group" aria-label="Questions to get started">
+          <div className="v-brain-starters-cap">Not sure where to start? Ask me —</div>
+          {STARTERS.map((q) => (
+            <button
+              key={q}
+              className="v-brain-starter"
+              type="button"
+              onClick={() => {
+                try {
+                  brainRef.current?.ask(q)
+                } catch {
+                  /* brain not mounted — the starter is a no-op rather than a crash (fail-soft, like the panel) */
+                }
+              }}
+            >
+              {q}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* THE NOTE COMPOSER — the WIRED 'Note' verb. Leave a note ABOUT the current aim; it routes back through
