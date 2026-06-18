@@ -45,7 +45,11 @@
     const _emit = opts.onText || (replyEl ? (t) => { replyEl.textContent = t; } : function () {});
     const setText = (t) => _emit(_stripMd(t));
     let acc = '';
-    setText('…');
+    // reassuring WAIT state (was a bare '…' — a cold stranger wondered if it broke). The text reads as a voice
+    // ("Looking…"); _loading toggles a .brain-loading class so projection can style a subtle animated ellipsis.
+    const _loading = (on) => { try { if (replyEl && !opts.onText) replyEl.classList.toggle('brain-loading', !!on); } catch (e) {} };
+    _loading(true);
+    setText('Looking…');
     try {
       const body = { prompt, address };
       if (_sessions[address]) body.session_id = _sessions[address];   // continue the per-address conversation
@@ -67,6 +71,7 @@
           let ev; try { ev = JSON.parse(line); } catch { continue; }
           if (ev.type === 'init' && ev.session_id) _sessions[address] = ev.session_id;
           else if (ev.type === 'text' && ev.text) {
+            _loading(false);                          // first token arrived — the wait is over
             // soft paragraph break between DISTINCT text runs (e.g. narration → tool-use → answer) so they
             // don't concatenate ("…not guessed.You're looking at…"). Consecutive text deltas (prevKind===
             // 'text') stay joined — never break mid-stream/mid-sentence. (projection's cosmetic, 2026-06-17.)
@@ -74,16 +79,18 @@
             acc += ev.text; setText(acc); prevKind = 'text';
           }
           else if (ev.type === 'tool') { prevKind = 'tool'; if (opts.onTool) opts.onTool(ev); }
-          else if (ev.type === 'done') { if (ev.result && !acc) setText(ev.result); if (opts.onDone) opts.onDone(ev); }
-          else if (ev.type === 'error') { setText('brain error: ' + ev.error); if (opts.onError) opts.onError(ev); }
+          else if (ev.type === 'done') { _loading(false); if (ev.result && !acc) setText(ev.result); if (opts.onDone) opts.onDone(ev); }
+          else if (ev.type === 'error') { _loading(false); setText('brain error: ' + ev.error); if (opts.onError) opts.onError(ev); }
         }
       }
       if (!acc) {                                  // never leave the placeholder hanging
+        _loading(false);
         const cur = replyEl ? replyEl.textContent : null;
-        if (cur === '…' || opts.onText) setText('(no reply)');
+        if (cur === 'Looking…' || opts.onText) setText('(no reply)');
       }
       return acc;
     } catch (err) {
+      _loading(false);
       const msg = 'brain unreachable: ' + ((err && err.message) || err);   // fail-loud to the surface
       setText(msg);
       if (opts.onError) opts.onError({ error: msg });
