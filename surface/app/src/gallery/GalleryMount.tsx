@@ -43,6 +43,8 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
   // decision). This flag is set by `decision:rendered` and cleared by any real close (dismiss/Esc) or by a
   // normal corpus drill (gallery:rendered) — the two modes stay mutually exclusive.
   const decisionModeRef = useRef(false)
+  // the address of the CURRENTLY-mounted face — so a write's re-render (gallery:rerender) can refresh THIS face.
+  const currentAddrRef = useRef<string>('')
 
   const dismiss = useCallback(() => { decisionModeRef.current = false; onOpenChange(false) }, [onOpenChange])
 
@@ -77,8 +79,28 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
     const onRendered = (e: Event) => {
       const d = (e as CustomEvent).detail || {}
       decisionModeRef.current = false // a normal corpus drill exits any decision walk (modes mutually exclusive)
+      currentAddrRef.current = d.address || ''
       setTitle(d.address || '', 'drilled unit')
       onOpenChange(true)
+    }
+    // UNION-SEAM WELD (2026-06-18 seam audit): fork-brain-core fires `gallery:rerender {element_id}` after a
+    // route-back WRITE (an annotation, or a decision TAKE) so the affected face refreshes with the new mark —
+    // but NOTHING listened, so a write never visually refreshed (the seam was unwelded). The HOST owns the mount
+    // lifecycle → re-mounting is the host's job. On a rerender whose element_id belongs to the CURRENTLY-mounted
+    // face (element_id is the bare address or `<addr>#elem`), re-render it: a decision face re-fires
+    // decision:rendered (DNA re-renders the now-decided card); a corpus face re-invokes window.DNA.renderGallery
+    // (re-fetch → show the new annotation). Degrade-clean (no DNA.renderGallery / no match → no-op; never throws).
+    // Replaceable: DNA may later refresh IN PLACE (finer than a full re-mount) — this is the baseline weld.
+    const onRerender = (e: Event) => {
+      const d = (e as CustomEvent).detail || {}
+      const base = String(d.element_id || '').split('#')[0]
+      const cur = currentAddrRef.current
+      if (!cur || !base || base !== cur) return // not the mounted face → not ours to refresh
+      if (decisionModeRef.current) {
+        window.dispatchEvent(new CustomEvent('decision:rendered', { detail: { address: cur } })) // DNA re-renders the decided card
+      } else {
+        try { window.DNA?.renderGallery?.(cur, { container: containerRef.current as HTMLElement }) } catch { /* best-effort refresh */ }
+      }
     }
     // DNA fires `decision:rendered` per decision-SLIDE (g-1781731457 Q3 — projection's chosen key, a sibling to
     // gallery:rendered with the same payload shape). Advancing the walk re-renders the SAME hosted container
@@ -86,6 +108,7 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
     const onDecisionRendered = (e: Event) => {
       const d = (e as CustomEvent).detail || {}
       decisionModeRef.current = true
+      currentAddrRef.current = d.address || ''
       setTitle(d.address || '', 'decision')
       onOpenChange(true)
     }
@@ -97,11 +120,13 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { decisionModeRef.current = false; onOpenChange(false) } }
     window.addEventListener('gallery:rendered', onRendered)
     window.addEventListener('decision:rendered', onDecisionRendered)
+    window.addEventListener('gallery:rerender', onRerender)
     window.addEventListener('projection:select', onSelect)
     window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('gallery:rendered', onRendered)
       window.removeEventListener('decision:rendered', onDecisionRendered)
+      window.removeEventListener('gallery:rerender', onRerender)
       window.removeEventListener('projection:select', onSelect)
       window.removeEventListener('keydown', onKey)
     }
