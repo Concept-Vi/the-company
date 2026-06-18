@@ -45,6 +45,14 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
   const decisionModeRef = useRef(false)
   // the address of the CURRENTLY-mounted face — so a write's re-render (gallery:rerender) can refresh THIS face.
   const currentAddrRef = useRef<string>('')
+  // CARRY the decision's `subtype` + `render_kind` (composition's locked subtype contract, g-1781731457; lead-ruled
+  // the host's one contract-time change). The host stays VARIANT-AGNOSTIC — it never SELECTS a variant (that's DNA's
+  // render, from the subtype); it only CARRIES these so its own re-emit of decision:rendered (on the rerender
+  // refresh) preserves the contract shape instead of dropping fields, and advertises them on the frame for any
+  // consumer. render_kind is the lifecycle lever ('slide' = single, handled now; 'sequence' = a future host
+  // walk-driver, built only when a real sequence instance renders — lead's steer, not speculatively).
+  const currentSubtypeRef = useRef<string>('')
+  const currentRenderKindRef = useRef<string>('slide')
 
   const dismiss = useCallback(() => { decisionModeRef.current = false; onOpenChange(false) }, [onOpenChange])
 
@@ -80,6 +88,9 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
       const d = (e as CustomEvent).detail || {}
       decisionModeRef.current = false // a normal corpus drill exits any decision walk (modes mutually exclusive)
       currentAddrRef.current = d.address || ''
+      currentSubtypeRef.current = ''; currentRenderKindRef.current = 'slide' // a corpus face carries no decision subtype
+      titleRef.current?.removeAttribute('data-decision-subtype')
+      titleRef.current?.removeAttribute('data-render-kind')
       setTitle(d.address || '', 'drilled unit')
       onOpenChange(true)
     }
@@ -97,7 +108,9 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
       const cur = currentAddrRef.current
       if (!cur || !base || base !== cur) return // not the mounted face → not ours to refresh
       if (decisionModeRef.current) {
-        window.dispatchEvent(new CustomEvent('decision:rendered', { detail: { address: cur } })) // DNA re-renders the decided card
+        // re-render the decided card — PRESERVE the contract shape (subtype/render_kind) so the host's re-emit
+        // doesn't drop fields a consumer (or DNA's variant-select) reads off the event.
+        window.dispatchEvent(new CustomEvent('decision:rendered', { detail: { address: cur, subtype: currentSubtypeRef.current || undefined, render_kind: currentRenderKindRef.current } }))
       } else {
         try { window.DNA?.renderGallery?.(cur, { container: containerRef.current as HTMLElement }) } catch { /* best-effort refresh */ }
       }
@@ -106,9 +119,16 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
     // gallery:rendered with the same payload shape). Advancing the walk re-renders the SAME hosted container
     // (content swaps per decision); we open + HOLD open. Mark decision-mode so a wheel-deselect can't kill the walk.
     const onDecisionRendered = (e: Event) => {
-      const d = (e as CustomEvent).detail || {}
+      const d = (e as CustomEvent).detail as { address?: string; subtype?: string; render_kind?: string } || {}
       decisionModeRef.current = true
       currentAddrRef.current = d.address || ''
+      currentSubtypeRef.current = String(d.subtype || '')                 // carry it (DNA SELECTS the variant from it; host only carries)
+      currentRenderKindRef.current = String(d.render_kind || 'slide')     // the lifecycle lever; 'slide' handled now
+      if (titleRef.current) { // advertise on the frame for any consumer (inspectable carry)
+        if (currentSubtypeRef.current) titleRef.current.setAttribute('data-decision-subtype', currentSubtypeRef.current)
+        else titleRef.current.removeAttribute('data-decision-subtype')
+        titleRef.current.setAttribute('data-render-kind', currentRenderKindRef.current)
+      }
       setTitle(d.address || '', 'decision')
       onOpenChange(true)
     }
