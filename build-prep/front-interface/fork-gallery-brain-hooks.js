@@ -74,6 +74,22 @@
     }
   });
 
+  // ── SELF-WIRE HOOK 1b: DECISION cards (decision-surface, 2026-06-18 — projection's whole-screen verify
+  // caught that HOOK 1 fired only on gallery:rendered, so a decision card got the pre-filled explanation but
+  // NO interactive follow-up, and the V handle is COVERED by the card overlay). REUSE-DON'T-PARALLEL: bind the
+  // SAME in-card Ask on DNA's `decision:rendered`, keyed by the decision's CANONICAL address — talk(decisionAddr)
+  // resolves the decision's territory (meaning/options/state, verified operator-grade) so a follow-up is
+  // grounded ON the decision: the RHM "walks through it WITH" the operator (Tim's frame), beyond the one-shot
+  // explanation. Mirrors the gallery:rendered contract (detail.element + the address); the address is the BARE
+  // canonical decision://global/<id> (the decision IDENTITY — same handle the take targets, NOT a #elem). Harmless
+  // before DNA's card lands (the event simply doesn't fire yet); READY the instant it emits. NEVER fall back to document.
+  window.addEventListener('decision:rendered', (e) => {
+    const d = e.detail || {};
+    const addr = d.address || d.decision || d.source;   // the decision's canonical address (decision://global/<id>)
+    const root = d.element || d.root;
+    if (addr && root && root.nodeType === 1) bindBrain(root, addr);
+  });
+
   // ── HOOK 2: route-back write. gallery:direction → batch per microtask → forkBrainCore.writeDirections
   // (groups by element_id, POSTs /api/territory/write, emits gallery:rerender / gallery:write-error). ──
   let _pending = [];
