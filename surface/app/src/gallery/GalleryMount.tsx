@@ -181,21 +181,26 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
     if (!id) return () => {}
     const addr = id.includes('://') ? id : `decision://global/${id}`
     fromInboxRef.current = fromInbox // remember the origin → close returns to the inbox queue (true) or the wheel (false)
+    // CLEAR any stale card from a PREVIOUS open before polling. Without this, the "already rendered" check below saw
+    // the previous decision's card (the container is never emptied on close) and bailed before rendering THIS address
+    // — so every open after the first showed decision #1 (the work-the-queue stale-card bug, fresh-eyes critic FAIL,
+    // reproduced by use). The loading state shows over the cleared mount; renderGallery then fills it with THIS addr.
+    if (containerRef.current) containerRef.current.innerHTML = ''
     setDlState('loading')
     onOpenChange(true)
     let cancelled = false
     let inFlight = false
     let tries = 0
+    const cssAddr = addr.replace(/\\/g, '\\\\').replace(/"/g, '\\"') // safe attribute-selector value
     const tick = () => {
       if (cancelled) return
       const container = containerRef.current
-      // rendered → stop polling (onDecisionRendered already cleared dlState). Key off the SEMANTIC marker the
-      // card carries — `data-decision-address` — NOT a cosmetic class: since the one-engine collapse (renderDecision
-      // RETIRED 2026-06-19) the card draws through DNA.renderArchetype, whose root is `.ar-card`, not `.decision-card`.
-      // The data-attribute is engine-agnostic (set whichever renderer draws it), so the host stays variant-agnostic.
-      // Clear loading HERE too (not only via the decision:rendered event) so the "Opening…" state can never WEDGE if
-      // the card is already present (e.g. opening a second decision while one is up — the event may not re-fire).
-      if (container?.querySelector('[data-decision-address], .decision-card')) { setDlState(''); return }
+      // rendered → stop polling (onDecisionRendered already cleared dlState). Match the SPECIFIC address — not just
+      // ANY card — so a stale card can never satisfy the check (the bug above). `data-decision-address` is the
+      // engine-agnostic semantic marker (since the one-engine collapse the root is `.ar-card`, not `.decision-card`),
+      // so the host stays variant-agnostic. Clear loading HERE too (not only via decision:rendered) so "Opening…"
+      // can never WEDGE.
+      if (container?.querySelector(`[data-decision-address="${cssAddr}"]`)) { setDlState(''); return }
       if (!inFlight && container && window.DNA?.renderGallery) {
         inFlight = true
         window.DNA.renderGallery(addr, { container }).catch(() => { inFlight = false /* rejected → allow a retry */ })
