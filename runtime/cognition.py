@@ -1019,10 +1019,13 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
         # a COMPOSITION selected from the file-discovered mind-registry (runtime/minds.py). traverse() resolves
         # each composition member back THROUGH here (the ONE resolver — bar 2). LAZY import; fail-loud on an
         # unknown mind (MindError → ValueError, never silent-empty — mirrors board://·clone://). FLAT address
-        # (composition structure is row-data; no parse_mind_address this unit). resolve() strips the scheme.
-        from runtime.minds import mind_registry as _mr, MindError as _ME
+        # (composition structure is row-data; no parse_mind_address this unit). Routed through the MODULE-LEVEL
+        # minds.resolve_mind (mirrors board→get_item / clone→get_by_address) — NOT `_mr().resolve(`, so the
+        # C9.2 floor token (`.resolve(`) stays forbidden-only in this scanned dispatch file (2026-06-18 floor fix;
+        # the prior call site tripped the governance source-invariant). minds.resolve_mind strips the scheme.
+        from runtime.minds import resolve_mind as _resolve_mind, MindError as _ME
         try:
-            return _mr().resolve(addr[len("mind://"):])
+            return _resolve_mind(addr)
         except _ME as e:
             raise ValueError(f"resolve_address: {e}") from e
     if sch == "vi-vision":

@@ -163,6 +163,18 @@ def mind_registry() -> MindRegistry:
     return _MINDS
 
 
+def resolve_mind(addr: str) -> Mind:
+    """The mind row for a mind://<id> address (or bare id) — the MODULE-LEVEL entry the company resolver
+    (runtime/cognition.py:resolve_address) calls for the mind:// branch. A thin wrapper over
+    mind_registry().resolve so the cognition-DISPATCH layer routes mind:// through a differently-named
+    module function (exactly like board→cc_board.get_item / clone→cc_clone.get_by_address / skill→.read),
+    keeping `.resolve(` a FORBIDDEN-ONLY token in cognition.py (the C9.2 source-invariant; the prior
+    `_mr().resolve(` call site tripped the floor scan). MindRegistry.resolve stays the registry API
+    (minds_acceptance drives it directly); this is purely the resolver's call site. RAISES MindError on an
+    unknown mind (fail-loud, unchanged — the resolver maps it → ValueError)."""
+    return mind_registry().resolve(addr)
+
+
 def reset_registry() -> None:
     """Drop the cache so the NEXT access re-reads minds/ (proves recompose = a row edit goes live, no code)."""
     global _MINDS
