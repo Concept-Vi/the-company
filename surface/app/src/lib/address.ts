@@ -56,7 +56,12 @@ export function indicate(addr: string) {
 }
 
 // THE SINGLE SINK: every address-driven navigation (click / future voice / future gesture) comes here.
-export function resolveUiTarget(addr: string): boolean {
+// `transient` decouples the V-POINTING path from the CLICK-NAV path (DNA + fork's call): a CLICK is navigation
+// ("you located that → here") so .ui-indicated PERSISTS (the default — the "selected/you are here" marker); but the
+// V pointing as it speaks is attention-DIRECTION ("look here NOW") — transient, so it fully RELEASES with the glow
+// (else a walkthrough leaves the last-named thing stuck lit — the off-note the cold-stranger caught). Two acts, two
+// behaviours; same meaning-as-difference law as plum-vs-gold.
+export function resolveUiTarget(addr: string, opts?: { transient?: boolean }): boolean {
   const parsed = parseUiAddress(addr)
   if (!parsed.ok) {
     // Fail loud — a calm Notice, never a silent swallow (mirrors the backend 400).
@@ -68,7 +73,10 @@ export function resolveUiTarget(addr: string): boolean {
   if (el) {
     el.classList.add('ui-spotlight')
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
-    window.setTimeout(() => el.classList.remove('ui-spotlight'), 1200)
+    window.setTimeout(() => {
+      el.classList.remove('ui-spotlight')
+      if (opts && opts.transient) el.classList.remove('ui-indicated') // the V's "look here" releases fully; click stays
+    }, 1200)
   }
   return true
 }
@@ -120,6 +128,6 @@ export function installPointerBridge() {
   _pointerInstalled = true
   window.addEventListener('ui:point', (e) => {
     const addr = String(((e as CustomEvent).detail || {}).address || '')
-    if (addr.indexOf('ui://') === 0) resolveUiTarget(addr)
+    if (addr.indexOf('ui://') === 0) resolveUiTarget(addr, { transient: true }) // the V pointing = transient attention
   })
 }

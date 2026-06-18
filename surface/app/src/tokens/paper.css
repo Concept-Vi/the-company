@@ -98,6 +98,12 @@ html, body, #root {
    highlight, just no motion). Surface-visual lane (mine, on DNA's token); DNA refines the aesthetic if she wants. */
 .ui-indicated { outline: 2px solid var(--pig-accent); outline-offset: 2px; }
 .ui-spotlight {
+  /* during a V conversation the surface dims under a paper scrim (rhm.css .vhandle-scrim, z-index 44) — but the
+     SPOTLIGHT must be the BRIGHTEST thing (the dim's whole point is to make the pointed-at control pop). Lift it
+     ABOVE the scrim (z 45, below the V panel z 46) so the ring stays full-strength, not washed by the dim. DNA's
+     steer. Scoped to .ui-spotlight = only the brief active-point moment; it settles back when the glow clears. */
+  position: relative;
+  z-index: 45;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--pig-accent) 60%, transparent);
   /* ONE radiate per spotlight event, then SETTLE to the steady ring — single-shot, NOT a loop/pulse (DNA's
      end-frame law: motion resolves to a stable end-frame, calm-not-nagging — a repeating pulse reads as alarm).
