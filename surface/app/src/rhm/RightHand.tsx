@@ -180,6 +180,21 @@ export function RightHand({ binding }: { binding?: string }) {
     return () => clearTimeout(t)
   }, [])
 
+  // PROACTIVE LEAD-IN — the RHM doesn't just OFFER the walk, it BEGINS it. "Show me around" (in the greeting)
+  // retires the intro, opens the Ask panel, and asks the first of the three questions AT THE CURRENT AIM, so a
+  // first-timer is immediately shown a grounded answer ("You're looking at…") without having to discover the
+  // tap-V → tap-Ask → tap-a-question sequence. The remaining two questions wait as starters for them to continue.
+  // This is the teacher starting to talk — the proactive seed of the walk. Uses the proven ask() path; fail-soft.
+  const startTour = useCallback(() => {
+    dismissGreet()
+    setPanelOpen(true)
+    try {
+      brainRef.current?.ask(STARTERS[0])
+    } catch {
+      /* brain not mounted — the panel still opens; the starters are there to tap */
+    }
+  }, [dismissGreet])
+
   // ── FOLLOW THE OPERATOR'S AIM ───────────────────────────────────────────────────────────────────────
   // The V's aim re-points wherever the operator points: a wheel-POINT pick (projection:select) OR a SECTOR
   // tap (projection:aim — its own event, because projection:select opens a content face and a synthetic
@@ -582,12 +597,17 @@ export function RightHand({ binding }: { binding?: string }) {
         <div className="v-greet" role="status" {...stamp('ui://rhm/greet')}>
           <div className="v-greet-h">I’m your right-hand-man</div>
           <p className="v-greet-b">
-            Your guide here. Tap me anytime — choose <b>Ask</b> and I’ll explain whatever you’re looking at, or use
-            the other actions to do something with whatever you point at.
+            Your guide here — I can explain whatever you’re looking at, or act on anything you point at. New here?
+            Let me show you around.
           </p>
-          <button className="v-greet-dismiss" type="button" onClick={dismissGreet}>
-            Got it
-          </button>
+          <div className="v-greet-actions">
+            <button className="v-greet-dismiss" type="button" onClick={dismissGreet}>
+              I’ll explore
+            </button>
+            <button className="v-greet-tour" type="button" onClick={startTour}>
+              Show me around
+            </button>
+          </div>
         </div>
       )}
 

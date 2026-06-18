@@ -270,19 +270,38 @@
   line-height: 1.45;
 }
 .v-greet-b b { color: var(--ink-primary); font-weight: 700; }
+/* two actions: "Show me around" (primary — the RHM leads in) + "I'll explore" (secondary — dismiss). */
+.v-greet-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
 .v-greet-dismiss {
-  align-self: flex-end;
   font-family: var(--font-mono, inherit);
   font-size: var(--t-xs);
+  color: var(--ink-dim);
+  background: transparent;
+  border: none;
+  padding: var(--s-1) var(--s-2);
+  cursor: pointer;
+}
+.v-greet-dismiss:hover { color: var(--ink-primary); }
+.v-greet-dismiss:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }
+/* the primary lead-in: a filled paper-accent button so it reads as the recommended next step (the tour). */
+.v-greet-tour {
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-xs);
+  font-weight: 700;
   color: var(--ink-primary);
-  background: var(--ground-primary);
-  border: 1px solid var(--hairline);
+  background: var(--ground-secondary);
+  border: 1px solid var(--ink-faint);
   border-radius: var(--r-pill);
   padding: var(--s-1) var(--s-3);
   cursor: pointer;
 }
-.v-greet-dismiss:hover { background: var(--ground-secondary); }
-.v-greet-dismiss:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }
+.v-greet-tour:hover { background: var(--ground-primary); border-color: var(--ink-dim); }
+.v-greet-tour:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   .vhandle-verb { animation: none; }
