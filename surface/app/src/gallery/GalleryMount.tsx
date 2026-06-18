@@ -157,27 +157,16 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
     }
   }, [onOpenChange])
 
-  // DEEP-LINK — open a specific decision card straight from the URL (`?decide=<id>`). The decision surface is
-  // ROOT-passing but has NO in-surface operator entry yet (the "decisions waiting" inbox is the next beat), so
-  // this gives the operator (Tim on his phone) a direct "open this" link to a pending decision — the lead hands
-  // him the link, he lands on card #1, makes the call in-surface. Renders into the host container; the
-  // decision:rendered listener above opens it (this effect runs after, so the listener is already registered).
-  // Honest no-op if DNA isn't loaded or the param is absent. `decide=<id>` → decision://global/<id>; a full
-  // address (with ://) is also accepted.
-  useEffect(() => {
-    let id = ''
-    try {
-      id = new URLSearchParams(window.location.search).get('decide') || ''
-    } catch {
-      /* no/blocked search params → no deep-link */
-    }
-    if (!id) return
+  // OPEN A DECISION INTO THE HOST — the ONE opener, shared by the URL deep-link AND the in-surface inbox.
+  // Renders the decision address into the host container with an honest LOADING state (the resolve can be slow —
+  // the recall-grounding — so show "opening…", never a blank). Polls every 250ms over a generous ~20s window:
+  // re-attempts the render only if the previous one REJECTED (inFlight cleared on .catch; on success it stays
+  // in-flight while the slow resolve completes, and the card render clears the loading via onDecisionRendered).
+  // `<id>` → decision://global/<id>; a full address (with ://) is accepted as-is. Honest no-op if DNA isn't loaded.
+  const openDecision = useCallback((rawId: string) => {
+    const id = (rawId || '').trim()
+    if (!id) return () => {}
     const addr = id.includes('://') ? id : `decision://global/${id}`
-    // Open with an honest LOADING state immediately (the decision resolve can be slow — the recall-grounding —
-    // so show "opening…", never a blank). Poll every 250ms over a generous ~20s window: re-attempt the render
-    // only if the previous one REJECTED (inFlight cleared on .catch; on success it stays in-flight while the slow
-    // resolve completes, and the card render clears the state via onDecisionRendered). After the window with no
-    // card → fail LOUD (error), not a perpetual spinner.
     setDlState('loading')
     onOpenChange(true)
     let cancelled = false
@@ -202,6 +191,26 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
     tick()
     return () => { cancelled = true }
   }, [onOpenChange])
+
+  // DEEP-LINK (trigger 1) — open a specific decision card straight from the URL (`?decide=<id>`). The direct
+  // "open this" link for Tim on his phone (the lead hands him the link → he lands on the card → decides in-surface).
+  useEffect(() => {
+    let id = ''
+    try { id = new URLSearchParams(window.location.search).get('decide') || '' } catch { /* blocked search params */ }
+    if (!id) return
+    return openDecision(id)
+  }, [openDecision])
+
+  // THE INBOX (trigger 2) — the in-surface "decisions waiting" list dispatches `decision:open {id|address}` when the
+  // operator taps a row; this renders that decision through the SAME opener (one path, no parallel render logic).
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const d = (e as CustomEvent).detail || {}
+      openDecision(d.address || d.id || '')
+    }
+    window.addEventListener('decision:open', onOpen)
+    return () => window.removeEventListener('decision:open', onOpen)
+  }, [openDecision])
 
   // The overlay is ALWAYS rendered (visibility toggled by class) — never React-unmounted — so the inner
   // #gallery-mount stays in the DOM and DNA's captured container ref + the rendered element stay valid.

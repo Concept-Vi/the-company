@@ -8,6 +8,7 @@ import { Portrait } from './layouts/Portrait'
 import { Landscape } from './layouts/Landscape'
 import { GalleryMount } from './gallery/GalleryMount'
 import { RightHand } from './rhm/RightHand'
+import { DecisionsInbox } from './decisions/DecisionsInbox'
 
 export type FormFactor = 'desktop' | 'portrait' | 'landscape'
 // The seed's two coordinate systems over one space, three ways: BOTH = the circle inscribed in the square
@@ -483,6 +484,9 @@ export function App() {
     <>
       {layout}
       <GalleryMount open={galleryOpen} onOpenChange={setGalleryOpen} />
+      {/* THE DECISIONS INBOX — the in-surface "decisions waiting" entry (CTA when pending + the list); a tapped row
+          opens through the same decision host (decision:open → GalleryMount). Sibling overlay, all form factors. */}
+      <DecisionsInbox />
       {/* THE RIGHT-HAND-MAN (the 'V') — persistent overlay, every page (sibling to the layout + gallery). The
           active binding (which projection VIEW is up) rides into the V's surface-default aim so the brain grounds
           "what am I looking at?" on the CURRENT view's self-description (fork's hybrid grounding, meet-at-the-aim). */}

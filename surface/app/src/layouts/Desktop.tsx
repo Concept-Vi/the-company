@@ -1,4 +1,5 @@
 import type { SurfaceState } from '../App'
+import { DecisionsBar } from '../decisions/DecisionsBar'
 import { LensChip } from '../toggles/LensChip'
 import { SpaceChip } from '../toggles/SpaceChip'
 import { LayerChip } from '../toggles/LayerChip'
@@ -38,6 +39,9 @@ export function Desktop({ s }: { s: SurfaceState }) {
           <Settings feel={s.feel} setFeel={s.setFeel} />
         </div>
       </header>
+
+      {/* the "decisions waiting" entry — in-flow below the header (clears the top chrome on every form factor) */}
+      <DecisionsBar />
 
       <main className="stage">
         <aside className="strata strata--left" {...stamp('ui://strata/left')}>

@@ -1,4 +1,5 @@
 import type { SurfaceState } from '../App'
+import { DecisionsBar } from '../decisions/DecisionsBar'
 import { LensChip } from '../toggles/LensChip'
 import { SpaceChip } from '../toggles/SpaceChip'
 import { LayerChip } from '../toggles/LayerChip'
@@ -29,6 +30,8 @@ export function Landscape({ s }: { s: SurfaceState }) {
       </section>
 
       <aside className="rail" {...stamp('ui://strata/rail')}>
+        {/* the "decisions waiting" entry — atop the rail (landscape has no top header) */}
+        <DecisionsBar />
         <div className="rail-head">
           <div className="bar-left">
             {s.proj && <LensChip proj={s.proj} current={s.binding} onPick={s.setBinding} />}
