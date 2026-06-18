@@ -29,6 +29,21 @@ COMPANY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 STAMP_FILE="$COMPANY_ROOT/store/claude-code.version_stamp"
 CLAUDE_BIN="${COMPANY_CLAUDE_BIN:-claude}"
 
+# Capture the SessionStart hook stdin (Claude Code's {session_id, transcript_path, cwd, …}) for the
+# #69 self-marker write below. tty-guarded so a MANUAL run (no piped stdin) never hangs on cat.
+HOOK_STDIN=""
+if [ ! -t 0 ]; then HOOK_STDIN="$(cat 2>/dev/null || true)"; fi
+
+# ── #69 SELF-MARKER (FAILURE-ISOLATED — runs fabric-wide on EVERY session-start; a failure here must
+#    NEVER break anyone's session-start). The whole block is wrapped so any error → silent continue:
+#    the marker-write degrades to no-marker (= today's behaviour) and the freshness check proceeds.
+#    Isolation proven by use (empty/malformed/no-sid/unwritable stdin all exit 0). ──
+{
+    if [ -n "$HOOK_STDIN" ]; then
+        printf '%s' "$HOOK_STDIN" | "${COMPANY_PYTHON:-python3}" "$COMPANY_ROOT/ops/hooks/write_self_marker.py" || true
+    fi
+} >/dev/null 2>&1 || true
+
 # Suppress all output if nothing is stale (clean session, no noise)
 warn() {
     echo "REGISTRY FRESHNESS: $*"
