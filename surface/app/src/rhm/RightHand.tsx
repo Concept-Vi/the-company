@@ -129,11 +129,30 @@ export function RightHand({ binding }: { binding?: string }) {
     surfaceAimRef.current = sa
     if (!aimedThing) {
       aimRef.current = sa
-      try {
-        brainRef.current?.aimChanged()
-      } catch {
-        /* not mounted */
-      }
+      // refresh the HUMAN label to the LIVE view's name — territory_label now resolves the surface aim to the
+      // active view ("What's happening" / "Meaning" / …, fork's grounding). So the brain panel reads "Ask about:
+      // What's happening" + the Note head names the real view — consistent with the now-grounded answer (instead
+      // of the generic "this part of the surface"). The fan caption stays "everything here" (it names the SCOPE).
+      fetch(`/api/territory/label?address=${encodeURIComponent(sa)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j: { label?: string } | null) => {
+          if (j?.label) {
+            labelRef.current = j.label
+            setAimLabel(j.label)
+          }
+          try {
+            brainRef.current?.aimChanged()
+          } catch {
+            /* not mounted */
+          }
+        })
+        .catch(() => {
+          try {
+            brainRef.current?.aimChanged()
+          } catch {
+            /* best-effort */
+          }
+        })
     }
   }, [binding, aimedThing])
 
