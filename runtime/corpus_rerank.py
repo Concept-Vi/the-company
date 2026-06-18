@@ -53,13 +53,20 @@ def _digest_text(store, source_address: str) -> str:
 
 
 def rerank_hits(store, query: str, ranked: list, *, top_n: int | None = None,
-                url: str = DEFAULT_RERANK_URL, timeout: int = 90) -> dict:
+                url: str = DEFAULT_RERANK_URL, timeout: int = 90, skip_missing: bool = False) -> dict:
     """Rerank `ranked` (query_corpus's hits: [{id|address, score}, ...]) by the jina-v3 cross-encoder.
 
     Returns {reranked: [{address, cosine, rerank_score, orig_rank, rank}, ...], stage: 'rerank',
-    backend, count}. FAIL-LOUD: if a hit has no resolvable digest text, RAISE (a corpus record without
-    retrievable text is a real data gap to surface — never silently rerank a blank). An empty `ranked`
-    returns an empty reranked list (honest, not a crash)."""
+    backend, count, skipped?}. An empty `ranked` returns an empty reranked list (honest, not a crash).
+
+    MISSING-DIGEST policy (two modes — the same-space vs cross-space distinction):
+    • `skip_missing=False` (default) — FAIL-LOUD: a hit with no resolvable digest text RAISES. Correct
+      for SAME-SPACE callers (e.g. corpus query/neighbours) where every hit MUST have a digest — a blank
+      is a real data gap to surface, never silently reranked.
+    • `skip_missing=True` — CROSS-SPACE callers (e.g. decision_memory's pooled multi-space bundle, where
+      some spaces' sources legitimately lack a CAS digest): SKIP the text-less hits (counted in `skipped`)
+      and rerank the rest, so the precision pass actually FIRES on the with-text majority instead of the
+      whole call degrading to cosine. Never reranks a blank (skipped, not blanked)."""
     hits = list(ranked or [])
     if not hits:
         return {"reranked": [], "stage": "rerank", "backend": None, "count": 0}
@@ -70,11 +77,15 @@ def rerank_hits(store, query: str, ranked: list, *, top_n: int | None = None,
         text = _digest_text(store, addr)
         if not (isinstance(text, str) and text.strip()):
             missing.append(addr)
+            if skip_missing:
+                continue                                          # cross-space: drop the text-less hit, rerank the rest
         cands.append({"address": addr, "cosine": h.get("score"), "text": text})
-    if missing:
+    if missing and not skip_missing:
         raise ValueError(
             f"corpus_rerank: {len(missing)} candidate(s) have no resolvable digest text "
             f"(CAS read returned empty) — fail loud, never rerank a blank. First: {missing[:3]}")
+    if not cands:                                                  # all skipped — nothing to rerank (honest empty)
+        return {"reranked": [], "stage": "rerank", "backend": None, "count": 0, "skipped": len(missing)}
 
     body = json.dumps({"query": query, "candidates": cands, "top_n": top_n}).encode()
     req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
@@ -91,8 +102,11 @@ def rerank_hits(store, query: str, ranked: list, *, top_n: int | None = None,
             "orig_rank": r.get("orig_rank"),
             "rank": r.get("rank"),
         })
-    return {"reranked": reranked, "stage": "rerank",
-            "backend": resp.get("backend"), "count": len(reranked)}
+    out = {"reranked": reranked, "stage": "rerank",
+           "backend": resp.get("backend"), "count": len(reranked)}
+    if missing and skip_missing:
+        out["skipped"] = len(missing)
+    return out
 
 
 def query_and_rerank(suite, query: str, *, space: str = "common_knowledge", k: int = 10,

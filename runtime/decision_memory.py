@@ -53,7 +53,8 @@ def prior_decisions_about(suite, topic_text: str, *, k: int = 6) -> list[dict]:
     try:                                                          # precision pass (reuse the committed stage)
         from runtime import corpus_rerank as _cr
         rr = _cr.rerank_hits(suite.store, framed,
-                             [{"id": p["source"], "score": p["score"]} for p in pooled], top_n=k)
+                             [{"id": p["source"], "score": p["score"]} for p in pooled],
+                             top_n=k, skip_missing=True)
         by = {p["source"]: p for p in pooled}
         return [{**by.get(r["address"], {}), "source": r["address"], "rerank_score": r["rerank_score"]}
                 for r in rr["reranked"]]
@@ -99,8 +100,11 @@ def recall_for_decision(suite, decision_text: str, *, address: str | None = None
     if rerank and pooled:
         try:
             from runtime import corpus_rerank as _cr
+            # skip_missing=True: cross-space pool — some spaces' sources lack a CAS digest; skip those so
+            # the precision pass FIRES on the with-text majority instead of degrading the whole call to cosine.
             rr = _cr.rerank_hits(suite.store, decision_text,
-                                 [{"id": p["source"], "score": p["score"]} for p in pooled], top_n=top_n)
+                                 [{"id": p["source"], "score": p["score"]} for p in pooled],
+                                 top_n=top_n, skip_missing=True)
             by_src = {p["source"]: p for p in pooled}
             context = [{**by_src.get(r["address"], {}), "source": r["address"],
                         "rerank_score": r["rerank_score"], "cosine": r.get("cosine")}
