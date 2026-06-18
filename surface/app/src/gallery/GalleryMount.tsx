@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 
 // THE DOM-MOUNT SEAM (front-interface FIRST SLICE — the lead/DNA/fork converged ask, 2026-06-16).
 //
@@ -53,8 +53,12 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
   // walk-driver, built only when a real sequence instance renders — lead's steer, not speculatively).
   const currentSubtypeRef = useRef<string>('')
   const currentRenderKindRef = useRef<string>('slide')
+  // a deep-link (?decide=) shows an honest LOADING state while the decision resolves (it can be slow — the
+  // recall-grounding), then the card (cleared by onDecisionRendered), or a fail-LOUD error if it never arrives —
+  // never a silent blank (no-silent-failures).
+  const [dlState, setDlState] = useState<'' | 'loading'>('')
 
-  const dismiss = useCallback(() => { decisionModeRef.current = false; onOpenChange(false) }, [onOpenChange])
+  const dismiss = useCallback(() => { decisionModeRef.current = false; setDlState(''); onOpenChange(false) }, [onOpenChange])
 
   // a focused modal: when the FACE is open, recede the competing chrome (header/side-text/scrubber). A scrim
   // alone can't — dark chrome text stays legible over a dark scrim, and the header sits in the same top band as
@@ -121,6 +125,7 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
     const onDecisionRendered = (e: Event) => {
       const d = (e as CustomEvent).detail as { address?: string; subtype?: string; render_kind?: string } || {}
       decisionModeRef.current = true
+      setDlState('') // a card rendered → clear any deep-link loading/error state
       currentAddrRef.current = d.address || ''
       currentSubtypeRef.current = String(d.subtype || '')                 // carry it (DNA SELECTS the variant from it; host only carries)
       currentRenderKindRef.current = String(d.render_kind || 'slide')     // the lifecycle lever; 'slide' handled now
@@ -152,6 +157,48 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
     }
   }, [onOpenChange])
 
+  // DEEP-LINK — open a specific decision card straight from the URL (`?decide=<id>`). The decision surface is
+  // ROOT-passing but has NO in-surface operator entry yet (the "decisions waiting" inbox is the next beat), so
+  // this gives the operator (Tim on his phone) a direct "open this" link to a pending decision — the lead hands
+  // him the link, he lands on card #1, makes the call in-surface. Renders into the host container; the
+  // decision:rendered listener above opens it (this effect runs after, so the listener is already registered).
+  // Honest no-op if DNA isn't loaded or the param is absent. `decide=<id>` → decision://global/<id>; a full
+  // address (with ://) is also accepted.
+  useEffect(() => {
+    let id = ''
+    try {
+      id = new URLSearchParams(window.location.search).get('decide') || ''
+    } catch {
+      /* no/blocked search params → no deep-link */
+    }
+    if (!id) return
+    const addr = id.includes('://') ? id : `decision://global/${id}`
+    // Open with an honest LOADING state immediately (the decision resolve can be slow — the recall-grounding —
+    // so show "opening…", never a blank). Poll every 250ms over a generous ~20s window: re-attempt the render
+    // only if the previous one REJECTED (inFlight cleared on .catch; on success it stays in-flight while the slow
+    // resolve completes, and the card render clears the state via onDecisionRendered). After the window with no
+    // card → fail LOUD (error), not a perpetual spinner.
+    setDlState('loading')
+    onOpenChange(true)
+    let cancelled = false
+    let inFlight = false
+    let tries = 0
+    const tick = () => {
+      if (cancelled) return
+      const container = containerRef.current
+      if (container?.querySelector('.decision-card')) return // rendered → onDecisionRendered cleared dlState
+      if (!inFlight && container && window.DNA?.renderGallery) {
+        inFlight = true
+        window.DNA.renderGallery(addr, { container }).catch(() => { inFlight = false /* rejected → allow a retry */ })
+      }
+      if (tries++ < 80) setTimeout(tick, 250)
+      // after the window we stop RE-attempting, but the in-flight render (slow resolve) still resolves later +
+      // clears the loading state via onDecisionRendered. The honest "Opening…" stays until the card arrives.
+    }
+    tick()
+    return () => { cancelled = true }
+  }, [onOpenChange])
+
   // The overlay is ALWAYS rendered (visibility toggled by class) — never React-unmounted — so the inner
   // #gallery-mount stays in the DOM and DNA's captured container ref + the rendered element stay valid.
   return (
@@ -163,6 +210,13 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
       <div className="gallery-frame" role="dialog" aria-label="drilled unit" ref={titleRef}>
         {/* DNA owns this subtree's innerHTML — React renders the div once and never reconciles its children */}
         <div id="gallery-mount" ref={containerRef} className="gallery-mount" />
+        {/* deep-link loading — an honest "opening…" while the decision resolves (it can be slow), never a silent
+            blank. React sibling of the (empty) mount; cleared when the card renders (onDecisionRendered). */}
+        {dlState === 'loading' && (
+          <div className="gallery-deeplink-error" role="status">
+            <p>Opening this decision…</p>
+          </div>
+        )}
       </div>
     </div>
   )

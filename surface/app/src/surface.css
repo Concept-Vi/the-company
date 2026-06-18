@@ -408,6 +408,13 @@
   border-radius: var(--r-card); box-shadow: var(--elev-4); background: var(--ground-accent); }
 /* DNA's render (.screen, 390×844 archetype) sits inside untouched — the frame hugs it */
 .gallery-mount { display: block; }
+/* deep-link fail-loud — a decision that couldn't be opened (resolve down/slow) shows this, never a blank */
+.gallery-deeplink-error { padding: var(--s-5) var(--s-4); max-width: 360px; text-align: center;
+  display: flex; flex-direction: column; gap: var(--s-3); align-items: center; }
+.gallery-deeplink-error p { margin: 0; color: var(--ink-primary); font-size: var(--t-base); line-height: 1.5; }
+.gallery-deeplink-error button { font-size: var(--t-sm); color: var(--ink-primary); background: var(--ground-primary);
+  border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: var(--s-2) var(--s-4); cursor: pointer; }
+.gallery-deeplink-error button:hover { background: var(--ground-secondary); }
 /* the dismiss is a MODAL-level control (child of the overlay, not the card) — positioned at the viewport
    top-right so on desktop it clears the centred card and on every form factor it's distinct from DNA's
    in-card sbar glyphs. */
