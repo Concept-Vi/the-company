@@ -59,6 +59,8 @@ export function RightHand({ binding }: { binding?: string }) {
   const [moreOpen, setMoreOpen] = useState(false) // the not-yet-live ("soon") verbs, revealed on demand (composition-ratified: first contact = live only)
   const [greet, setGreet] = useState(false) // the one-time first-contact self-introduction
   const [aimedThing, setAimedThing] = useState(false) // false = the surface default (nothing picked) → the fan caption
+  const [tourStep, setTourStep] = useState<number | null>(null) // the guided walk: 0/1/2 = stepping ①②③; null = not touring
+  const [tourAnswering, setTourAnswering] = useState(false) // true while the current step's answer is still streaming
   const [panelOpen, setPanelOpen] = useState(false) // the brain (Ask) panel
   const [noteOpen, setNoteOpen] = useState(false) // the Note (annotate) composer
   const [noteText, setNoteText] = useState('')
@@ -120,6 +122,11 @@ export function RightHand({ binding }: { binding?: string }) {
   useEffect(() => {
     if (!open) setMoreOpen(false)
   }, [open])
+
+  // closing the Ask panel ends any guided walk → reopening starts fresh (the normal starters), never mid-tour.
+  useEffect(() => {
+    if (!panelOpen) setTourStep(null)
+  }, [panelOpen])
 
   // keep the surface-default aim carrying the LIVE view (which projection binding is up) so the brain grounds
   // "what am I looking at?" on the real on-screen view. When the V is currently AT the surface default (nothing
@@ -185,15 +192,30 @@ export function RightHand({ binding }: { binding?: string }) {
   // first-timer is immediately shown a grounded answer ("You're looking at…") without having to discover the
   // tap-V → tap-Ask → tap-a-question sequence. The remaining two questions wait as starters for them to continue.
   // This is the teacher starting to talk — the proactive seed of the walk. Uses the proven ask() path; fail-soft.
+  // run ONE step of the guided walk: ask that question at the current aim + track when its answer finishes
+  // streaming (so the "Next" control only appears once the operator has something to read). fail-soft.
+  const runTourStep = useCallback((step: number) => {
+    setTourStep(step)
+    setTourAnswering(true)
+    try {
+      Promise.resolve(brainRef.current?.ask(STARTERS[step])).finally(() => setTourAnswering(false))
+    } catch {
+      setTourAnswering(false)
+    }
+  }, [])
+  // "Show me around" — the RHM BEGINS the guided walk at ① (vs leaving the operator to find the next tap).
   const startTour = useCallback(() => {
     dismissGreet()
     setPanelOpen(true)
-    try {
-      brainRef.current?.ask(STARTERS[0])
-    } catch {
-      /* brain not mounted — the panel still opens; the starters are there to tap */
-    }
-  }, [dismissGreet])
+    runTourStep(0)
+  }, [dismissGreet, runTourStep])
+  // advance the walk to the next question, or finish (back to the normal panel) after the third.
+  const tourNext = useCallback(() => {
+    if (tourStep == null) return
+    const next = tourStep + 1
+    if (next >= STARTERS.length) setTourStep(null)
+    else runTourStep(next)
+  }, [tourStep, runTourStep])
 
   // ── FOLLOW THE OPERATOR'S AIM ───────────────────────────────────────────────────────────────────────
   // The V's aim re-points wherever the operator points: a wheel-POINT pick (projection:select) OR a SECTOR
@@ -503,25 +525,51 @@ export function RightHand({ binding }: { binding?: string }) {
             appended `.v-brain` (a stable React subtree React owns; fork's brain node trails it, untouched). Tapping
             a starter asks the REAL brain (forkVBrain.ask) about the current aim → it answers in the reply slot.
             A stranger no longer faces a blank "what do I ask?" — the RHM offers the three questions to walk. */}
-        <div className="v-brain-starters" role="group" aria-label="Questions to get started">
-          <div className="v-brain-starters-cap">Not sure where to start? Ask me —</div>
-          {STARTERS.map((q) => (
-            <button
-              key={q}
-              className="v-brain-starter"
-              type="button"
-              onClick={() => {
-                try {
-                  brainRef.current?.ask(q)
-                } catch {
-                  /* brain not mounted — the starter is a no-op rather than a crash (fail-soft, like the panel) */
-                }
-              }}
-            >
-              {q}
-            </button>
-          ))}
-        </div>
+        {tourStep != null ? (
+          // GUIDED WALK — the RHM leads through ①②③ in sequence (vs leaving the starters for the operator to find).
+          // The current question's answer streams in fork's reply below; "Next" appears once it's done, so they
+          // read before advancing. This is the faithful "the teacher walks you through" (commission), operator-paced.
+          <div className="v-brain-tour" role="group" aria-label="Guided walk">
+            <div className="v-brain-tour-step">Step {tourStep + 1} of {STARTERS.length}</div>
+            <div className="v-brain-tour-q">{STARTERS[tourStep]}</div>
+            {!tourAnswering &&
+              (tourStep < STARTERS.length - 1 ? (
+                <button className="v-brain-tour-next" type="button" onClick={tourNext}>
+                  Next — {STARTERS[tourStep + 1]} →
+                </button>
+              ) : (
+                // the final step CLOSES the panel (the panel-close effect ends the tour) → the operator is handed
+                // back to the surface to explore, matching what the button says (the fresh-eyes caught the old
+                // version only swapping back to the starters — a broken promise between the label and the behaviour).
+                <button className="v-brain-tour-next" type="button" onClick={() => setPanelOpen(false)}>
+                  That’s the tour — I’ll explore →
+                </button>
+              ))}
+          </div>
+        ) : (
+          // THE THREE-QUESTION STARTERS — the reactive seed (tap any one). Rendered in projection's wrapper ABOVE
+          // fork's appended `.v-brain` (a stable React subtree; fork's brain node trails it, untouched). A stranger
+          // never faces a blank "what do I ask?" — the RHM offers the three questions to walk on their own.
+          <div className="v-brain-starters" role="group" aria-label="Questions to get started">
+            <div className="v-brain-starters-cap">Not sure where to start? Ask me —</div>
+            {STARTERS.map((q) => (
+              <button
+                key={q}
+                className="v-brain-starter"
+                type="button"
+                onClick={() => {
+                  try {
+                    brainRef.current?.ask(q)
+                  } catch {
+                    /* brain not mounted — the starter is a no-op rather than a crash (fail-soft, like the panel) */
+                  }
+                }}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* THE NOTE COMPOSER — the WIRED 'Note' verb. Leave a note ABOUT the current aim; it routes back through

@@ -377,6 +377,47 @@
 .v-brain-starter:hover { background: var(--ground-secondary); }
 .v-brain-starter:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }
 
+/* THE GUIDED-WALK STEPPER — replaces the starters while the RHM leads ①②③. Step indicator + the current
+   question + a "Next" control (appears once the answer is in). Built on paper tokens. */
+.v-brain-tour {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-1);
+  margin-bottom: var(--s-2);
+  padding-right: var(--s-5); /* clear the close × */
+}
+.v-brain-tour-step {
+  font-family: var(--font-mono, inherit);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.v-brain-tour-q {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--ink-primary);
+  line-height: 1.25;
+}
+.v-brain-tour-next {
+  max-width: 100%;
+  text-align: left;
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--ink-primary);
+  background: var(--ground-secondary);
+  border: 1px solid var(--ink-faint);
+  border-radius: var(--r-pill);
+  padding: var(--s-1) var(--s-3);
+  margin-top: var(--s-1);
+  cursor: pointer;
+  animation: vhandle-pop 160ms ease both;
+}
+.v-brain-tour-next:hover { background: var(--ground-primary); border-color: var(--ink-dim); }
+.v-brain-tour-next:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }
+
 /* baseline look for fork's brain UI (DNA re-skins these classes later) */
 .v-brain { display: flex; flex-direction: column; gap: var(--s-2); }
 .v-brain-aim {
