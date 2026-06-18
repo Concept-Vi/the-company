@@ -46,6 +46,15 @@ try:
     from bindings.grouped import GROUP_META as _GROUP_META
 except Exception:
     _GROUP_META = {}
+# THE PROJECTION-SPACES legibility registry (the "Ways of looking" lens, binding=by_lens — sectors are the
+# corpus SPACES, angle_from="projections"). SAME legibility-type shape; kept in bindings/by_lens.py (NOT a
+# projections/_meta.py) because the bridge has runtime/ on sys.path where `import projections` resolves to
+# runtime/projections.py (the registry MODULE), so `projections._meta` silently fails — bindings/ has no such
+# collision (bindings.grouped already imports clean). Same defensive import.
+try:
+    from bindings.by_lens import PROJECTION_SPACE_META as _PROJECTION_SPACE_META
+except Exception:
+    _PROJECTION_SPACE_META = {}
 
 # which declared-meaning registry backs a given sector DOMAIN (binding.angle_from). Each domain maps to its own
 # {id: {name, is}} registry; an unmapped domain falls through to humanize-only (still legible, never raw).
@@ -54,6 +63,7 @@ _SECTOR_META_BY_DOMAIN = {
     "node-types": _NODE_TYPE_META,
     "node_types": _NODE_TYPE_META,
     "kind-group": _GROUP_META,
+    "projections": _PROJECTION_SPACE_META,
 }
 
 
