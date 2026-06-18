@@ -257,6 +257,15 @@
   line-height: 1.3;
 }
 
+/* the HONEST-UNAVAILABLE message — shown in place of the composer when a thing is aimed but it's an activity
+   event with no saved record yet (no-silent-failure: say so, never silently write to the surface). */
+.v-note-unavailable {
+  margin: var(--s-1) 0 0;
+  font-size: var(--t-sm);
+  color: var(--ink-dim);
+  line-height: 1.45;
+}
+
 .v-note-input {
   width: 100%;
   box-sizing: border-box;

@@ -49,6 +49,7 @@ export function RightHand() {
   const [noteStatus, setNoteStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [aimLabel, setAimLabel] = useState('this part of the surface') // human aim label, mirrored for the Note head
   const [aimMeaning, setAimMeaning] = useState<string | null>(null) // the aim's one-line meaning (sectors carry it)
+  const [aimAvailable, setAimAvailable] = useState(true) // false = a thing is aimed but unaddressable (activity event) → record-verbs honestly unavailable
   const [pos, setPos] = useState<Pos>(() => {
     try {
       const r = localStorage.getItem(POS_KEY)
@@ -98,8 +99,12 @@ export function RightHand() {
   // sector address would fail-loud there). The label drives both the brain ("Ask about: …") and the Note
   // composer head — operator-law: MEANING, never the raw address. A caller may hand us the label (sectors do,
   // because territory_label has no kind-meta); otherwise we resolve it from the bridge. Default = the surface.
-  const setAim = useCallback((address: string | null | undefined, label?: string | null, meaning?: string | null) => {
-    aimRef.current = address || SURFACE_AIM
+  const setAim = useCallback((address: string | null | undefined, label?: string | null, meaning?: string | null, available = true) => {
+    // `available=false` = a THING is aimed but it has NO resolvable address (an activity event — ~28% of the
+    // stream). The V must NOT silently retarget the surface (that wrote the operator's notes to the whole surface);
+    // it aims at NOTHING writable and the record-verbs go honestly unavailable until the thing becomes addressable.
+    aimRef.current = available ? (address || SURFACE_AIM) : ''
+    setAimAvailable(available)
     setAimMeaning(meaning ?? null) // sectors carry a one-line meaning; point-picks/surface clear it
     if (label) {
       labelRef.current = label
@@ -131,8 +136,20 @@ export function RightHand() {
 
   useEffect(() => {
     const onSelect = (e: Event) => {
-      const d = (e as CustomEvent).detail as { address?: string; source?: string } | null
-      setAim(d?.address || d?.source || SURFACE_AIM)
+      const d = (e as CustomEvent).detail as { address?: string; source?: string; kind_name?: string | null; kind_meaning?: string | null } | null
+      if (!d) {
+        setAim(SURFACE_AIM) // a genuine deselect → back to the surface (which IS notable/askable)
+        return
+      }
+      const addr = d.address || d.source
+      if (addr) {
+        setAim(addr) // an addressed thing → aim + resolve its rich label (unchanged)
+        return
+      }
+      // a SELECTED but ADDRESSLESS thing (an activity event: create/run/op.run/agent_sessions/…). It has no
+      // resolvable address, so the V can't open/note/re-centre it (the real fix = events becoming addressable,
+      // routed to fork). Be HONEST: name the thing by its kind + mark it unavailable — NEVER the silent surface aim.
+      setAim('', d.kind_name || 'this kind of thing', d.kind_meaning ?? null, false)
     }
     const onAim = (e: Event) => {
       const d = (e as CustomEvent).detail as { address?: string; label?: string | null; meaning?: string | null } | null
@@ -203,6 +220,18 @@ export function RightHand() {
 
   const onVerb = useCallback(
     (id: string) => {
+      // a THING is aimed but it has no resolvable address (an activity event) → the V's own legs (Ask/Note) can't
+      // act on it. Show the honest "can't act on this kind yet" card (the Note panel in unavailable mode), NEVER a
+      // silent surface action (Note used to write the operator's comment to the whole surface). navigate/open-source
+      // (gallery:verb → App) handle their own honest Notice. (Coming-soon = the real fix: events becoming addressable.)
+      if ((id === 'ask' || id === 'annotate') && !aimAvailable) {
+        clearCloseTimer()
+        setOpen(false)
+        setPanelOpen(false)
+        setNoteStatus('idle')
+        setNoteOpen(true)
+        return
+      }
       if (id === 'ask') {
         // the WIRED verb: open the brain panel — talk to the right-hand-man about the current aim
         setOpen(false)
@@ -229,7 +258,7 @@ export function RightHand() {
       )
       setOpen(false)
     },
-    [clearCloseTimer],
+    [clearCloseTimer, aimAvailable],
   )
 
   // SAVE A NOTE — route the comment back at the current aim via fork's brain.direct (writeDirections →
@@ -348,42 +377,53 @@ export function RightHand() {
           >
             ×
           </button>
-          <div className="v-note-aim">Note about: {aimLabel}</div>
+          <div className="v-note-aim">{aimAvailable ? `Note about: ${aimLabel}` : aimLabel}</div>
           {aimMeaning && <div className="v-note-meaning">{aimMeaning}</div>}
-          <textarea
-            className="v-note-input"
-            rows={3}
-            placeholder="Leave a note about this…"
-            value={noteText}
-            // biome-ignore lint/a11y/noAutofocus: a composer the operator just opened — focus is the intent
-            autoFocus
-            onChange={(e) => {
-              setNoteText(e.target.value)
-              clearCloseTimer() // typing again cancels a pending auto-close
-              if (noteStatus !== 'idle') setNoteStatus('idle') // editing clears the last result
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                void saveNote() // Enter saves; Shift+Enter newlines
-              }
-            }}
-          />
-          <div className="v-note-foot">
-            {noteStatus === 'saving' && <span className="v-note-msg" role="status">Saving…</span>}
-            {noteStatus === 'saved' && <span className="v-note-msg" role="status">Noted ✓</span>}
-            {noteStatus === 'error' && (
-              <span className="v-note-msg v-note-msg--err" role="status">Couldn’t save — try again</span>
-            )}
-            <button
-              className="v-note-save"
-              type="button"
-              disabled={noteStatus === 'saving' || !noteText.trim()}
-              onClick={() => void saveNote()}
-            >
-              Save
-            </button>
-          </div>
+          {aimAvailable ? (
+            <>
+              <textarea
+                className="v-note-input"
+                rows={3}
+                placeholder="Leave a note about this…"
+                value={noteText}
+                // biome-ignore lint/a11y/noAutofocus: a composer the operator just opened — focus is the intent
+                autoFocus
+                onChange={(e) => {
+                  setNoteText(e.target.value)
+                  clearCloseTimer() // typing again cancels a pending auto-close
+                  if (noteStatus !== 'idle') setNoteStatus('idle') // editing clears the last result
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    void saveNote() // Enter saves; Shift+Enter newlines
+                  }
+                }}
+              />
+              <div className="v-note-foot">
+                {noteStatus === 'saving' && <span className="v-note-msg" role="status">Saving…</span>}
+                {noteStatus === 'saved' && <span className="v-note-msg" role="status">Noted ✓</span>}
+                {noteStatus === 'error' && (
+                  <span className="v-note-msg v-note-msg--err" role="status">Couldn’t save — try again</span>
+                )}
+                <button
+                  className="v-note-save"
+                  type="button"
+                  disabled={noteStatus === 'saving' || !noteText.trim()}
+                  onClick={() => void saveNote()}
+                >
+                  Save
+                </button>
+              </div>
+            </>
+          ) : (
+            // HONEST UNAVAILABLE (no-silent-failure): a thing is aimed but it's an activity EVENT with no saved
+            // record to note/open/ask-about yet. Say so plainly — never the old silent write to the whole surface.
+            <p className="v-note-unavailable">
+              This is something the Company <em>did</em> — an activity event, not a saved record. You can’t note or open
+              it yet; that’s coming once these can be opened.
+            </p>
+          )}
         </div>
       )}
 

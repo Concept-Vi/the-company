@@ -183,24 +183,29 @@ export function App() {
   // unit was pointed at + which field resolves vs which field is the write-back target. null on deselect.
   const lastSelectRef = useRef<string | null>(null)
   useEffect(() => {
-    const resolveAddr = selected ? (selected.address || selected.source || null) : null  // run:// record first → resolve_address-readable
+    const resolveAddr = selected ? (selected.address || selected.source || null) : null  // run:// record → resolve_address-readable (DNA's content render); EMPTY for activity events
     // Dispatch ONLY when the selected UNIT changes — NOT on every re-projection. `proj` is a dep so this runs on
-    // re-fetch, but we early-return if the selected address is unchanged: re-firing select on every lens/centre/
-    // time/live-pulse re-fetch re-announced the SAME selection, which made DNA's drill re-render → the drill face
-    // re-opened spuriously (e.g. on each live pulse, and right after a V "Go to" re-centre). Selection-change is
-    // the real signal; space-change already clears the selection (setSpace), so the space in the detail stays current.
-    if (resolveAddr === lastSelectRef.current) return
-    lastSelectRef.current = resolveAddr
+    // re-fetch; we early-return if the selected UNIT is unchanged (re-firing select on every lens/centre/time/live
+    // re-fetch re-announced the SAME selection, which made DNA's drill re-render → the face re-opened spuriously).
+    // KEY ON THE UNIT (its seq), NOT the content-address: ~28% of events (create/run/op.run/agent_sessions/…) carry
+    // NO resolvable address, so keying on the address made an addressless selection INDISTINGUISHABLE from a deselect
+    // (both → null) → the V silently collapsed its aim to the surface (the operator taps such a thing, then "Note"
+    // wrote to the WHOLE surface — a silent mis-write). Now an addressless selection fires a DISTINCT detail
+    // (address:'' but the unit's MEANING present) so the V can be HONEST ("this kind can't be opened/noted yet")
+    // instead of silently mis-aiming. A genuine deselect (selected=null) still fires detail=null. SAFE for the other
+    // consumers: GalleryMount + DNA's unit-view render BOTH gate on a non-empty d.address (`if (!d || !d.address)`),
+    // so address:'' is a no-op for them (face stays closed, nothing drills) — only the V reads the meaning-fields.
+    const unitKey = selected ? `u-${selected.seq}` : null
+    if (unitKey === lastSelectRef.current) return
+    lastSelectRef.current = unitKey
     window.dispatchEvent(new CustomEvent('projection:select', {
-      // the HUMAN meaning-fields ride on the detail too (not just the machine `kind`) — DNA's drill-face needs a
-      // meaning-SOURCE to render "What this is" in words (the RUNG-C / #1-operator-gap fix): neither /api/territory
-      // nor /api/cognition/corpus carries them, and the face opens off THIS event. kind_name/kind_meaning/summary
-      // are projection's computed legibility (from the kind registry) — they map straight onto composition's
-      // canonical legibility name/is (the registry-declared shape supersedes this when it lands; interim source now).
-      detail: resolveAddr ? { address: resolveAddr, source: selected?.source ?? null, record: selected?.address ?? null,
-                              seq: selected?.seq, kind: selected?.kind, space: proj?.binding?.space ?? null,
-                              kind_name: selected?.kind_name ?? null, kind_meaning: selected?.kind_meaning ?? null,
-                              summary: selected?.summary ?? null } : null,
+      // the HUMAN meaning-fields ride on the detail (not just the machine `kind`) — DNA's drill-face needs a
+      // meaning-SOURCE to render "What this is" in words (RUNG-C / #1-operator-gap). `address` is the
+      // content-resolvable handle (empty for activity events → DNA won't drill); the V reads kind_name/meaning.
+      detail: selected ? { address: resolveAddr || '', source: selected.source ?? null, record: selected.address ?? null,
+                            seq: selected.seq, kind: selected.kind, space: proj?.binding?.space ?? null,
+                            kind_name: selected.kind_name ?? null, kind_meaning: selected.kind_meaning ?? null,
+                            summary: selected.summary ?? null } : null,
     }))
   }, [selected, proj])
 
@@ -223,6 +228,10 @@ export function App() {
       const isThing = !!aim && !aim.startsWith('ui://instrument/')
       if (d.verb === 'navigate') {
         if (isThing && selected) focusCentre(selected) // re-centre the whole space on the aimed thing
+        // HONEST when a thing IS selected but it's an activity event (no resolvable address) — don't say "tap a dot
+        // first" (they did); name it + why it can't be re-centred. (no-silent-failure; coming when events addressable.)
+        else if (selected && !(selected.address || selected.source))
+          setNotice(`“${selected.kind_name || 'That'}” is something the Company did — an activity event with no saved record yet, so it can’t be re-centred on.`)
         else setNotice('“Go to” re-centres the view on a thing — tap a dot first, then point the V at it.')
       } else if (d.verb === 'open-source') {
         // composition's per-aim spec (confirmed): open-source = REVEAL THE AIMED THING'S SOURCE — for a real
@@ -264,6 +273,9 @@ export function App() {
                 ),
               )
           }
+        } else if (selected && !(selected.address || selected.source)) {
+          // a thing IS selected but it's an activity event with no record to reveal — be honest, not "tap a dot first".
+          setNotice(`“${selected.kind_name || 'That'}” is something the Company did — an activity event with no saved record to open yet.`)
         } else {
           setNotice('“Source” reveals where a thing comes from — tap a dot first, then point the V at it.')
         }
