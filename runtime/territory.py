@@ -179,9 +179,11 @@ def territory_prose(territory_or_address, *, suite=None, store=None, max_chars: 
         return f"(context unavailable: {type(e).__name__})"   # no raw address in the fail line (operator-law)
     try:
         bits = []
-        # The address is the brain's INTERNAL handle (per PANEL_BRIEFING it is FOR the brain to read, NEVER
-        # echoed to the operator). Kept so the brain can investigate via its tools; labeled so it stays internal.
-        bits.append(f"[internal handle — for you, never shown to the operator]: {terr.get('address')}")
+        # ★ The raw address is DELIBERATELY ABSENT from this operator-facing block (projection by-use 2026-06-18:
+        # the brain PARROTED the old "[internal handle — never shown]" line into its reply despite the label —
+        # the model can't echo what it isn't given). Operator-law: the brain answers from the RESOLVED MEANING
+        # below; it never needs the raw scheme:// to orient. The address stays server-side (the bridge holds the
+        # request param; build-intent uses it) — passed out-of-band if a tool genuinely needs it, never inline here.
         # WHAT THIS IS — HUMAN meaning ONLY (territory_label: address-safe + jargon-safe). Was json.dumps(the
         # raw address_help dict) — which dumped the blast_radius/scope developer-diagnostics + the "(unregistered)"
         # raw address into context, so the brain narrated system-readout jargon + leaked the address (2026-06-17 fix).
