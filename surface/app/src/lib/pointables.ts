@@ -17,8 +17,12 @@
 export type Pointable = { token: string; address: string; label: string }
 
 // the curated affordance catalog — token (opaque handle), the stamped ui:// address, the human role-description.
+// Deliberately the SPECIFIC controls + the legend — NOT the whole wheel: pointing at the whole map is
+// spotlight-everything (low value — the operator already sees the map) AND it's occluded by the V panel which
+// covers the centre during a conversation (verified by use 390: wheel 364–738 sits behind the panel 235–708, while
+// the top chips + the scrubber stay visible above/below it). The valuable, visible targets are the specific
+// affordances. (Sectors would be valuable too but DNA suppresses their spotlight visual — deferred.)
 const CATALOG: Pointable[] = [
-  { token: 'wheel', address: 'ui://instrument/wheel', label: 'the live map — every recent thing, shown as dots' },
   { token: 'lens', address: 'ui://controls/lens', label: 'the lens — what the dots are grouped by' },
   { token: 'space', address: 'ui://controls/space', label: 'which set of things is shown' },
   { token: 'layer', address: 'ui://controls/layer', label: 'what signal positions the dots' },
