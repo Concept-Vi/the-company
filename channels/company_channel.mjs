@@ -25,10 +25,38 @@ const SUPERVISOR = process.env.COMPANY_SUPERVISOR_BASE || 'http://127.0.0.1:8771
 const REGDIR = path.join(REPO, '.data', 'channels')
 const REG = path.join(REGDIR, HANDLE + '.json')
 
+// #69 fold-home: record this session's CLAUDE-ANCESTOR PID on the registration — the session-unique
+// self-id key (resolve_own_session scans .data/channels/*.json by it). The channel server, the company
+// MCP server, and the SessionStart hook are all children of the SAME claude session process, so all
+// three walk to the SAME PID = the shared key. FAILURE-ISOLATED (the LEAD's caution #1): any /proc
+// error → null, NEVER throw — a thrown announce = a session fails to register on the live fabric (high
+// blast radius). Computed ONCE at load (the ancestor is stable for the session's life).
+function claudeAncestorPid() {
+  try {
+    let pid = process.pid
+    for (let i = 0; i < 40 && pid > 1; i++) {
+      const stat = fs.readFileSync(`/proc/${pid}/stat`, 'utf8')
+      // comm is parenthesised + may contain spaces/parens → slice between first '(' and last ')'
+      const lp = stat.indexOf('('), rp = stat.lastIndexOf(')')
+      const comm = stat.slice(lp + 1, rp)
+      const after = stat.slice(rp + 2).split(' ')   // fields after comm: state ppid ...
+      const ppid = parseInt(after[1], 10)
+      let argv0 = ''   // the EXECUTABLE (argv0 basename), NOT a loose '/claude' substring anywhere in
+      try { argv0 = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').split('\0')[0] } catch {}   // argv
+      const base = argv0.slice(argv0.lastIndexOf('/') + 1)    // (a substring match would mis-identify self)
+      if (comm === 'claude' || base === 'claude' || /^\d+\.\d+\.\d+$/.test(comm)) return pid
+      pid = ppid
+    }
+  } catch { return null }
+  return null
+}
+const CLAUDE_PID = claudeAncestorPid()
+
 function regEntry(port) {
   return {
     handle: HANDLE, session_id: SESSION_ID, cwd: process.cwd(), description: DESCRIPTION,
-    model: MODEL, profile: PROFILE, pid: process.pid, port, started: new Date().toISOString(),
+    model: MODEL, profile: PROFILE, pid: process.pid, claude_pid: CLAUDE_PID,
+    port, started: new Date().toISOString(),
   }
 }
 function writeReg(port) {

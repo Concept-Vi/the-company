@@ -62,12 +62,12 @@ def _claude_ancestor_pid(pid: int | None = None) -> int | None:
             with open(f"/proc/{pid}/stat") as f:
                 parts = f.read().split()
             comm = parts[1].strip("()"); ppid = int(parts[3])
-            try:
-                cmdline = open(f"/proc/{pid}/cmdline").read().replace("\0", " ")
-            except OSError:
-                cmdline = ""
-            if comm == "claude" or "/claude" in cmdline or cmdline.strip().startswith("claude") \
-               or re.match(r"^\d+\.\d+\.\d+$", comm):
+            try:                                               # argv0 BASENAME — the executable, not a loose
+                argv0 = open(f"/proc/{pid}/cmdline").read().split("\0")[0]   # substring (a /claude path
+            except OSError:                                    # ANYWHERE in argv would mis-match → mis-id self,
+                argv0 = ""                                     # the silent-corruption hazard the gate guards)
+            if comm == "claude" or os.path.basename(argv0) == "claude" \
+               or re.match(r"^\d+\.\d+\.\d+$", comm):          # claude sometimes sets comm to its version
                 return pid
             pid = ppid
     except (OSError, ValueError, IndexError):
