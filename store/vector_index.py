@@ -168,10 +168,13 @@ def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb="_
         return ranked
     _scope = "default space" if space is None else (f"space '{space}'" if space is not store.ALL_SPACES else "all spaces")
     if not corpus:
-        return {"ranked": [], "note": (f"the vector index is EMPTY ({_scope}) — it may have been built "
-                                       "while the embedder :8001 was down, or no item is embedded in this "
-                                       "space; no addresses to rank, the caller should fall back "
-                                       "(e.g. keyword/consult). Live population is the :8001-up follow-up.")}
+        _hint = (" — the DEFAULT/unspaced index holds almost nothing; the durable records live in SPACES: "
+                 "pass space='history' (cross-session discussion records) · 'common_knowledge' (comprehended "
+                 "content) · 'principles'/'worldview'/'topics' · 'repo' (the codebase). e.g. "
+                 "corpus(op='query', space='history', text=…).") if space is None else \
+                (f" — no item is embedded in {_scope} at this layer (emb={emb!r}); try another space or "
+                 "check the embedder is up (:8007).")
+        return {"ranked": [], "note": (f"the vector index is EMPTY ({_scope}){_hint} No addresses to rank.")}
     return {"ranked": ranked, "note": f"ranked {len(ranked)} of {len(corpus)} indexed addresses by cosine ({_scope})"}
 
 
