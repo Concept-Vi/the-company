@@ -54,7 +54,7 @@ const POS_KEY = 'rhm.handle.pos'
 // supplies it; DNA owns the verbal face, Tim ratifies) — marked for steer, not final.
 const GREETED_KEY = 'rhm.greeted'
 
-export function RightHand() {
+export function RightHand({ binding }: { binding?: string }) {
   const [open, setOpen] = useState(false) // the verb fan
   const [moreOpen, setMoreOpen] = useState(false) // the not-yet-live ("soon") verbs, revealed on demand (composition-ratified: first contact = live only)
   const [greet, setGreet] = useState(false) // the one-time first-contact self-introduction
@@ -82,6 +82,12 @@ export function RightHand() {
   const closeTimer = useRef<number | null>(null) // pending "Noted ✓ → auto-close" timer (cleared on edit/close/unmount)
   const aimRef = useRef<string>(SURFACE_AIM) // the CURRENT aim address (read live by the brain)
   const labelRef = useRef<string>('this part of the surface') // the HUMAN aim label (never the raw address)
+  // the SURFACE-DEFAULT aim, carrying which projection VIEW is live as a fragment (`#binding=<id>`) — fork's
+  // territory_prose grounds the brain on THAT view's registry meta (name/is/fills/why), so "what am I looking
+  // at?" with nothing picked answers with the real on-screen view, not a thin generic placeholder. The format
+  // (`#binding=<id>`) is the seam fork agreed to parse (thread t-1781769953). Held in a ref so the live
+  // callbacks read the current view without re-binding listeners.
+  const surfaceAimRef = useRef<string>(SURFACE_AIM)
 
   // ── MOUNT THE BRAIN (fork's forkVBrain) into the panel, once ────────────────────────────────────────
   // The V host owns the aim (getAimAddress/getAimLabel); fork owns the turn/stream/write. Fail-soft if the
@@ -114,6 +120,22 @@ export function RightHand() {
   useEffect(() => {
     if (!open) setMoreOpen(false)
   }, [open])
+
+  // keep the surface-default aim carrying the LIVE view (which projection binding is up) so the brain grounds
+  // "what am I looking at?" on the real on-screen view. When the V is currently AT the surface default (nothing
+  // picked), update its live aim too, so the very next Ask grounds on the current view without a re-pick.
+  useEffect(() => {
+    const sa = `${SURFACE_AIM}#binding=${binding || 'raw'}`
+    surfaceAimRef.current = sa
+    if (!aimedThing) {
+      aimRef.current = sa
+      try {
+        brainRef.current?.aimChanged()
+      } catch {
+        /* not mounted */
+      }
+    }
+  }, [binding, aimedThing])
 
   // ── FIRST-CONTACT GREETING ──────────────────────────────────────────────────────────────────────────
   // On a brand-new operator (no greeted flag), the RHM introduces itself a beat after load — long enough that
@@ -149,12 +171,13 @@ export function RightHand() {
     // `available=false` = a THING is aimed but it has NO resolvable address (an activity event — ~28% of the
     // stream). The V must NOT silently retarget the surface (that wrote the operator's notes to the whole surface);
     // it aims at NOTHING writable and the record-verbs go honestly unavailable until the thing becomes addressable.
-    aimRef.current = available ? (address || SURFACE_AIM) : ''
+    aimRef.current = available ? (address || surfaceAimRef.current) : ''
     setAimAvailable(available)
     // is a SPECIFIC thing picked, or are we at the surface default (nothing pointed at)? The fan caption needs
     // this so it never says "this part of the surface" (jargon, and points at nothing) when the operator hasn't
-    // picked anything — it says "everything here" + teaches the drill instead.
-    setAimedThing(!(available && (!address || address === SURFACE_AIM)))
+    // picked anything — it says "everything here" + teaches the drill instead. (Compare the BASE, ignoring the
+    // `#binding=<id>` fragment — any ui://instrument/surface[#…] is still the surface default.)
+    setAimedThing(!(available && (!address || address.split('#')[0] === SURFACE_AIM)))
     setAimMeaning(meaning ?? null) // sectors carry a one-line meaning; point-picks/surface clear it
     if (label) {
       labelRef.current = label
@@ -188,7 +211,7 @@ export function RightHand() {
     const onSelect = (e: Event) => {
       const d = (e as CustomEvent).detail as { address?: string; source?: string; kind_name?: string | null; kind_meaning?: string | null } | null
       if (!d) {
-        setAim(SURFACE_AIM) // a genuine deselect → back to the surface (which IS notable/askable)
+        setAim(surfaceAimRef.current) // a genuine deselect → back to the surface (the live view; notable/askable)
         return
       }
       const addr = d.address || d.source
@@ -203,7 +226,7 @@ export function RightHand() {
     }
     const onAim = (e: Event) => {
       const d = (e as CustomEvent).detail as { address?: string; label?: string | null; meaning?: string | null } | null
-      setAim(d?.address || SURFACE_AIM, d?.label ?? undefined, d?.meaning ?? null)
+      setAim(d?.address || surfaceAimRef.current, d?.label ?? undefined, d?.meaning ?? null)
     }
     window.addEventListener('projection:select', onSelect)
     window.addEventListener('projection:aim', onAim)

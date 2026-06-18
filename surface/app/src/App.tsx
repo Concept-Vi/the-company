@@ -483,8 +483,10 @@ export function App() {
     <>
       {layout}
       <GalleryMount open={galleryOpen} onOpenChange={setGalleryOpen} />
-      {/* THE RIGHT-HAND-MAN (the 'V') — persistent overlay, every page (sibling to the layout + gallery). */}
-      <RightHand />
+      {/* THE RIGHT-HAND-MAN (the 'V') — persistent overlay, every page (sibling to the layout + gallery). The
+          active binding (which projection VIEW is up) rides into the V's surface-default aim so the brain grounds
+          "what am I looking at?" on the CURRENT view's self-description (fork's hybrid grounding, meet-at-the-aim). */}
+      <RightHand binding={binding} />
       {/* THE SOURCE SURFACE — the V's "Source" verb result; durable + swap-independent (survives the V swap). */}
       <SourcePanel source={source} onClose={() => setSource(null)} />
     </>

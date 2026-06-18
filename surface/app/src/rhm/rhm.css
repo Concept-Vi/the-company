@@ -12,12 +12,14 @@
   inset: 0;
   z-index: 44;
   background: var(--ground-primary);
-  opacity: 0.4;
+  /* composition-ratified (Tim: polish IS the point): dim UP so the fan/Ask cards are beautifully legible — the
+     bound (not a veto) is that the chart's presence still reads beneath ("read under it / never take over"). */
+  opacity: 0.66;
   animation: vhandle-fade 160ms ease both;
 }
 @keyframes vhandle-fade {
   from { opacity: 0; }
-  to { opacity: 0.4; }
+  to { opacity: 0.66; }
 }
 
 .vhandle {
