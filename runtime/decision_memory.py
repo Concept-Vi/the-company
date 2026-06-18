@@ -25,7 +25,7 @@ from __future__ import annotations
 DEFAULT_DECISION_SPACES = ("common_knowledge", "principles", "worldview", "topics", "history", "repo")
 
 
-def prior_decisions_about(suite, topic_text: str, *, k: int = 6) -> list[dict]:
+def prior_decisions_about(suite, topic_text: str, *, k: int = 6, rerank: bool = True) -> list[dict]:
     """"Decisions made about X resurfacing" (the lead's step-6 framing) — surface PRIOR decision-content
     about a topic so Tim sees "you've decided about this before." Decision-FRAMED recall over the
     history + common_knowledge spaces (where decision-notes/comprehended-choices live). Returns
@@ -50,6 +50,8 @@ def prior_decisions_about(suite, topic_text: str, *, k: int = 6) -> list[dict]:
                            "score": round(h.get("score", 0.0), 4)})
     if not pooled:
         return []
+    if not rerank:                                                # HOT-PATH (3s budget): cosine order, skip the
+        return sorted(pooled, key=lambda p: -p["score"])[:k]      # CPU jina rerank (13-20s for ~24 hits — off the live path)
     try:                                                          # precision pass (reuse the committed stage)
         from runtime import corpus_rerank as _cr
         rr = _cr.rerank_hits(suite.store, framed,
@@ -116,6 +118,8 @@ def recall_for_decision(suite, decision_text: str, *, address: str | None = None
             notes.append(f"rerank-degraded: {type(e).__name__}")
     else:
         context = sorted(pooled, key=lambda p: -p["score"])[:top_n]
+        if pooled:
+            notes.append("cosine-ranked (rerank off the live hot-path)")
 
     result = {"decision": decision_text, "context": context}
 
@@ -133,7 +137,7 @@ def recall_for_decision(suite, decision_text: str, *, address: str | None = None
     # "decisions made about X resurfacing" (step-6) — prior decision-content on the same topic
     if include_prior_decisions:
         try:
-            pd = prior_decisions_about(suite, decision_text, k=6)
+            pd = prior_decisions_about(suite, decision_text, k=6, rerank=rerank)
             if pd:
                 result["prior_decisions"] = pd
                 notes.append(f"prior_decisions: {len(pd)}")

@@ -258,7 +258,13 @@ def territory_for(address, *, suite=None, store=None, max_relations: int = 20) -
                 _box = {}
                 def _recall(_b=_box):
                     try:
-                        _b["m"] = recall_for_decision(suite, anchor, address=subj)
+                        # HOT-PATH: rerank=False → cosine grounding within the 3s budget. The CPU jina rerank
+                        # (13-20s for ~24 hits, 2026-06-18 measured) is OFF the live resolve — it would blow
+                        # the budget and re-trigger the timeout-degrade (the surface would resolve UNGROUNDED
+                        # every time). rerank stays available for the unbounded paths (projection's route /
+                        # a background refinement). With the X12-FAST index cache, the 6-space cosine recall
+                        # completes well under budget → the decision resolves WITH its grounding.
+                        _b["m"] = recall_for_decision(suite, anchor, address=subj, rerank=False)
                     except Exception as _e:  # noqa: BLE001
                         _b["e"] = _e
                 _t = _th.Thread(target=_recall, daemon=True)

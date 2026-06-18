@@ -135,6 +135,14 @@ class FsStore:
         self._surfaced_lock = threading.RLock()    # T1-RACE: surfaced read-modify-write across both faces
         self._graph_locks_guard = threading.Lock()  # guards the per-graph cross-process lock map below
         self._graph_locks: dict = {}                # T-LOCK: one CROSS-PROCESS lock per graph id
+        # X12-FAST: the incremental in-memory vector-index cache (see _vector_records). index_corpus/
+        # index_addresses read+parse the WHOLE vectors/ dir on every call (5862 files ≈ 1.5s) — re-paid
+        # per query_index, ×8 per recall_for_decision = the >15s decision-surface hang (2026-06-18). The
+        # cache parses each file ONCE, revalidates by a cheap per-file (mtime_ns,size) signature on every
+        # call (CROSS-PROCESS correct: another session's atomic put_vector → a new mtime/size → re-parsed;
+        # a removed file → dropped), and re-reads ONLY changed/new files. _safe-filename -> ((mtime_ns,size), rec).
+        self._vec_cache: dict = {}
+        self._vec_cache_lock = threading.Lock()    # held ONLY during the refresh (scandir+stat+parse-changed)
 
     def _safe_lock_name(self, key: str) -> str:
         """A filename-safe lockfile name for an arbitrary key (graph id, claim key). Reuses the
@@ -990,6 +998,73 @@ class FsStore:
     # whole index regardless of space (used by nothing on the hot path; available for an index-wide audit).
     ALL_SPACES = object()
 
+    def _vector_records(self) -> list[dict]:
+        """Every persisted vector record, parsed — the ONE read path index_corpus/index_addresses share,
+        with an incremental in-memory cache (X12-FAST, 2026-06-18). The naive path read+parsed all 5862
+        `vectors/*.json` on EVERY call (~1.5s), re-paid per query_index and x8 per recall_for_decision →
+        the >15s decision-surface hang. Here each file is parsed ONCE and revalidated cheaply.
+
+        CORRECTNESS (the cache must never serve a stale ranking — no-silent-failures):
+          - Revalidate EVERY call by a per-file (st_mtime_ns, st_size) signature from a single os.scandir.
+            put_vector writes ATOMICALLY (tmp+fsync+os.replace) → a changed entry gets a new mtime → its
+            signature differs → it is RE-PARSED. A NEW file appears in the scan → parsed. A REMOVED file
+            drops from the scan → evicted. This holds ACROSS PROCESSES (Tim runs many sessions against one
+            store): the signature is read from the filesystem, not an in-process counter, so another
+            session's write is seen on the next call.
+          - Only NEW/CHANGED files are read+parsed — the full ~1.5s parse is paid only on the first call
+            after a (re)start; steady-state is scandir+stat (~10ms for 5862) + parse-of-the-few-changed.
+          - The lock is held ONLY for the refresh (scandir+stat+parse); the returned list is consumed by
+            the cosine/rerank stages OUTSIDE the lock, so a slow/abandoned recall thread never holds it.
+        Returns the list of parsed record dicts (read-only — callers must not mutate them)."""
+        import json as _j
+        d = self.root / "vectors"
+        with self._vec_cache_lock:
+            cache = self._vec_cache
+            if not d.exists():
+                if cache:
+                    cache.clear()
+                return []
+            try:
+                scan = list(os.scandir(d))
+            except OSError:
+                return []
+            seen = set()
+            out = []
+            for entry in scan:
+                name = entry.name
+                if not name.endswith(".json"):
+                    continue
+                seen.add(name)
+                try:
+                    st = entry.stat()
+                except OSError:
+                    continue
+                sig = (st.st_mtime_ns, st.st_size)
+                cached = cache.get(name)
+                if cached is not None and cached[0] == sig:
+                    rec = cached[1]                          # UNCHANGED — reuse the parsed record
+                else:
+                    try:
+                        with open(entry.path, "r", encoding="utf-8") as fh:
+                            rec = _j.loads(fh.read())
+                    except Exception:
+                        cache.pop(name, None)               # torn/unreadable → skip + forget (retry next call)
+                        continue
+                    cache[name] = (sig, rec)               # NEW/CHANGED — parse once, remember
+                out.append(rec)
+            if len(cache) != len(seen):                     # evict entries whose file vanished
+                for gone in [n for n in cache if n not in seen]:
+                    cache.pop(gone, None)
+            return out
+
+    def warm_vector_cache(self) -> int:
+        """Populate the X12-FAST in-memory vector cache up front (returns the record count). Called at bridge
+        startup so the FIRST semantic query after a (re)start — e.g. a decision-open, whose memory leg has a
+        3s budget — is already warm; otherwise its cold full-parse (~1.5s) pushes the leg over budget and the
+        decision resolves UNGROUNDED once (verified 2026-06-18: cold first-resolve 3.08s→timeout; after warm
+        1.84s→grounded). Idempotent + cheap when already warm (revalidate-only)."""
+        return len(self._vector_records())
+
     def index_addresses(self, space=None) -> list[str]:
         """Every address currently in the vector index, sorted. Reads the entries (the `address` field is
         the truth, not the _safe filename) so the canonical address is returned verbatim. Empty index → []
@@ -998,17 +1073,12 @@ class FsStore:
         SPACE filter (additive — default unchanged): `space=None` (the default) → only DEFAULT/unspaced
         entries (`rec.space is None`), so the legacy callers + index_staleness see EXACTLY today's address
         set (no spaced entries leaking in as phantom `extra`s). `space="<proj>"` → only that projection's
-        entries. `space=FsStore.ALL_SPACES` → every entry regardless of space."""
-        import json as _j
-        d = self.root / "vectors"
-        if not d.exists():
-            return []
+        entries. `space=FsStore.ALL_SPACES` → every entry regardless of space.
+
+        Reads via the cached _vector_records() (X12-FAST) — the SAME per-record filter as before, byte-
+        identical results; only the file-read is cached/incremental now."""
         out = []
-        for p in sorted(d.glob("*.json")):
-            try:
-                rec = _j.loads(p.read_text())
-            except Exception:
-                continue
+        for rec in self._vector_records():
             if space is self.ALL_SPACES or rec.get("space") == space:
                 out.append(rec["address"])
         return sorted(out)
@@ -1024,17 +1094,12 @@ class FsStore:
         BARE item address it embeds) — so a per-space query RETURNS THE ITEM (which round-trips through the
         existing code://-resolution), not the internal vec://#space= key. `space=FsStore.ALL_SPACES` → every
         entry (id = the verbatim stored address). A legacy entry with no `source` field falls back to its
-        own `address` (it IS its own source)."""
-        import json as _j
-        d = self.root / "vectors"
-        if not d.exists():
-            return []
+        own `address` (it IS its own source).
+
+        Reads via the cached _vector_records() (X12-FAST) — the SAME per-record filter as before, byte-
+        identical results; only the file-read is cached/incremental now."""
         out = []
-        for p in sorted(d.glob("*.json")):
-            try:
-                rec = _j.loads(p.read_text())
-            except Exception:
-                continue
+        for rec in self._vector_records():
             if space is self.ALL_SPACES:
                 out.append({"id": rec["address"], "vector": rec["vector"]})
             elif rec.get("space") == space and rec.get("emb") == emb:

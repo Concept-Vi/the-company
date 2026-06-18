@@ -434,6 +434,18 @@ def _stream_parts(parts_gen, *, speak_fn, emit_fn, gone, split_sentences, on_par
 
 SUITE = Suite(FsStore(fcfg.STORE_DIR),
               NodeRegistry().discover([os.path.join(ROOT, "nodes")]))
+
+# X12-FAST (2026-06-18): warm the vector-index cache in the background so the FIRST semantic query after a
+# restart — notably a decision-open, whose memory leg has a hard 3s budget — is already hot. A cold full
+# parse of vectors/ (~1.5s) would otherwise push the leg over budget and the decision would resolve
+# UNGROUNDED once. Daemon thread → never blocks boot; failure-isolated → never breaks startup.
+def _warm_vector_cache():
+    try:
+        SUITE.store.warm_vector_cache()
+    except Exception:
+        pass
+import threading as _x12_thr   # threading is imported locally elsewhere in this module, not at top level
+_x12_thr.Thread(target=_warm_vector_cache, daemon=True, name="x12-warm").start()
 DEMO = "codebase"
 
 
