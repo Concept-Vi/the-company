@@ -24,6 +24,21 @@ python -c "import sys;sys.path.insert(0,'/home/tim/company');from runtime.sessio
 
 ★ **Keep the nonce PRIVATE** — don't paste it into a channel message, or it gets quoted into OTHER sessions' transcripts and the grep matches >1 (the helper will tell you and refuse — use a fresh nonce).
 
+## DETACHED / BACKGROUND-JOB SESSIONS (the marker does NOT fit them — found 2026-06-18, projection)
+A session whose Bash tool runs as a **detached subprocess** (not parented to the interactive `claude`
+process — a background-job / `claude -p`-style launch) cannot use the claude_pid marker at all:
+`_claude_ancestor_pid()` walks /proc up and never hits `comm=='claude'` → returns None. This breaks BOTH
+ends: seed_self can't KEY the marker, **and** resolve_own_session can't LOOK UP a marker (it does the same
+walk). So don't force a marker on a bg-job — `seed_self.py` now detects this and prints
+`status: no_claude_pid_detached_bgjob` with the session's resolved sid + the safe path:
+- **AUTO / going-forward**: launch the bg-job with **`COMPANY_SESSION_ID=<sid>`** in its env.
+  `resolve_own_session` checks that FIRST (session_scan.py:154) and env is inherited by the detached bash →
+  the bg-job-safe durable self-id. (Can't be set on an already-running process — it's a launcher change.)
+- **NOW (no relaunch)**: the bg-job still self-ids on demand via nonce-grep (it doesn't need claude_pid) →
+  then uses its sid EXPLICITLY: `resolve_own_session(session_id='<sid>')` / `session_recall(session='<sid>')`.
+- `seed_self.py --claude-pid <pid>` exists for a session that obtains a trusted pid another way, but a
+  marker is moot for a bg-job (it can't read it back). COMPANY_SESSION_ID is the real fix.
+
 ## WHY NOT identify from outside (the hard lesson — do NOT /proc-backfill)
 A peer cannot reliably derive your CURRENT session_id from `/proc`:
 - `cmdline --resume` is the **stale launch anchor**, not the current (post-compaction) sid — they diverge after the first compaction.

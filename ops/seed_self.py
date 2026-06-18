@@ -79,13 +79,13 @@ def main() -> int:
     ap.add_argument("--sid", help="this session's id, if already known")
     ap.add_argument("--fold-registration", metavar="HANDLE",
                     help="also fold {claude_pid, session_id} into this session's OWN fabric registration")
+    ap.add_argument("--claude-pid", type=int, default=None,
+                    help="explicit claude_pid (override the /proc ancestry walk — for a detached bg-job session "
+                         "that knows its pid by a trusted means)")
     a = ap.parse_args()
 
-    pid = _claude_ancestor_pid()
-    if not pid:
-        print("seed_self: could not find the claude ancestor pid (run me INSIDE the session).", file=sys.stderr)
-        return 2
-
+    # 1) resolve the SID FIRST — a session knows its sid (via nonce-grep) even when its process tree is
+    #    detached, so we report it regardless of whether a marker can be written below.
     sid = a.sid
     transcript = None
     if not sid:
@@ -95,13 +95,37 @@ def main() -> int:
         sid, matches = _find_sid_by_phrase(a.phrase)
         if not sid:
             print(f"seed_self: phrase matched {len(matches)} transcripts (need exactly 1 for an "
-                  f"unambiguous self-id). Use a more unique phrase. Matches: "
+                  f"unambiguous self-id). Use a more unique PRIVATE phrase (don't paste it into a channel — "
+                  f"that leaks it into other transcripts → >1 match). Matches: "
                   f"{[os.path.basename(m) for m in matches[:5]]}", file=sys.stderr)
             return 3
         transcript = matches[0]
     if not transcript:
         hits = glob.glob(os.path.join(PROJECTS_DIR, "*", f"{sid}.jsonl"))
         transcript = hits[0] if hits else None
+
+    # 2) claude_pid — the marker KEY. --claude-pid overrides the /proc ancestry walk, which returns None for a
+    #    DETACHED background-job session (its Bash tool isn't parented to the interactive claude process).
+    pid = a.claude_pid or _claude_ancestor_pid()
+    if not pid:
+        # BG-JOB CASE: the claude_pid marker can't be written AND wouldn't help — resolve_own_session ALSO walks
+        # /proc to the claude ancestor, so a detached bg-job can't LOOK UP a marker either. The marker mechanism
+        # simply doesn't fit detached sessions. The bg-job-safe self-id is below.
+        print(json.dumps({
+            "status": "no_claude_pid_detached_bgjob",
+            "session_id": sid, "transcript": transcript,
+            "why": ("no 'claude' ancestor in the /proc walk — a detached background-job session's Bash tool "
+                    "isn't parented to the interactive claude process. The claude_pid MARKER needs that ancestor "
+                    "on BOTH seed and resolve, so it doesn't fit bg-job sessions."),
+            "bg_job_safe_path": [
+                "AUTO/going-forward: launch with COMPANY_SESSION_ID=" + sid + " in the env — resolve_own_session "
+                "uses it FIRST and env is inherited by the detached bash (the bg-job-safe durable self-id).",
+                "NOW (no relaunch): you already have your sid (above, via nonce-grep) — use it directly: "
+                "resolve_own_session(session_id='" + sid + "') / session_recall(session='" + sid + "'). No marker needed.",
+                "If you obtain a TRUSTED claude_pid by another means, re-run with --claude-pid <pid>.",
+            ],
+        }, indent=2))
+        return 4
 
     os.makedirs(MARKER_DIR, exist_ok=True)
     marker = {"session_id": sid, "transcript_path": transcript,
