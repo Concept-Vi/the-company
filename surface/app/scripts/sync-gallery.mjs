@@ -47,7 +47,9 @@ function resolveDna(file) {
 // the files the host needs to render the gallery face: DNA's organism generators (DNA.org.* — renderUnit
 // calls DNA.org.hubNetwork for the unit→neighbour constellation; MUST load before unit-view.js), her renderer,
 // and its look. organisms.js is a pure generator module (no global *-reset / body rule), safe to host whole.
-const FILES = ['organisms.js', 'unit-view.js', 'phone.css']
+// archetype.js = DNA's ONE generic renderer (renderArchetype) — since the 2026-06-19 one-engine collapse the
+// decision card draws through it (renderDecision RETIRED), so the host MUST carry it or decision:// renders empty.
+const FILES = ['organisms.js', 'unit-view.js', 'archetype.js', 'phone.css']
 
 const resolved = FILES.map((f) => ({ f, src: resolveDna(f) }))
 const missing = resolved.filter((r) => !r.src)
@@ -71,6 +73,22 @@ for (const { f, src } of resolved) {
   copyFileSync(src, dst)
   console.log(`[sync-gallery] ${f}  (${statSync(src).size}B)  ← ${src}`)
 }
+
+// dna/layouts.json — the ARCHETYPE definitions renderArchetype fills (renderDecisionGallery fetches
+// "/dna/layouts.json" at runtime → archetypes["decision-card"]). Lives in DNA's repo dna/ dir; the host must
+// serve it at /dna/layouts.json (public/dna/). FAIL LOUD if absent — without it the decision card draws empty.
+const LAYOUTS_SRC = join(DNA_REPO, 'dna', 'layouts.json')
+if (!existsSync(LAYOUTS_SRC)) {
+  console.error(`\n[sync-gallery] FAIL LOUD — DNA's archetype definitions not found:\n  · ${LAYOUTS_SRC}\n` +
+    `Since the one-engine collapse (renderDecision RETIRED 2026-06-19) the decision card draws through\n` +
+    `renderArchetype + layouts.json["decision-card"]; without it decision:// renders empty. Ensure counterpart/design\n` +
+    `is checked out (DNA_REPO_DIR).\n`)
+  process.exit(1)
+}
+const PUBLIC_DNA = join(HERE, '..', 'public', 'dna')
+mkdirSync(PUBLIC_DNA, { recursive: true })
+copyFileSync(LAYOUTS_SRC, join(PUBLIC_DNA, 'layouts.json'))
+console.log(`[sync-gallery] layouts.json  (${statSync(LAYOUTS_SRC).size}B)  ← ${LAYOUTS_SRC}  → public/dna/`)
 
 // DNA's TOKEN VOCABULARY (:root --dna-space-*/--dna-radius-*/--warmpole-* etc.) lives in piece.css — but
 // piece.css ALSO carries a global `*{margin:0;padding:0}` reset + a `body{display:flex;background}` rule that

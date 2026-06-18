@@ -186,7 +186,11 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
     const tick = () => {
       if (cancelled) return
       const container = containerRef.current
-      if (container?.querySelector('.decision-card')) return // rendered → onDecisionRendered cleared dlState
+      // rendered → stop polling (onDecisionRendered already cleared dlState). Key off the SEMANTIC marker the
+      // card carries — `data-decision-address` — NOT a cosmetic class: since the one-engine collapse (renderDecision
+      // RETIRED 2026-06-19) the card draws through DNA.renderArchetype, whose root is `.ar-card`, not `.decision-card`.
+      // The data-attribute is engine-agnostic (set whichever renderer draws it), so the host stays variant-agnostic.
+      if (container?.querySelector('[data-decision-address], .decision-card')) return
       if (!inFlight && container && window.DNA?.renderGallery) {
         inFlight = true
         window.DNA.renderGallery(addr, { container }).catch(() => { inFlight = false /* rejected → allow a retry */ })

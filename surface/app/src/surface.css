@@ -408,6 +408,45 @@
   border-radius: var(--r-card); box-shadow: var(--elev-4); background: var(--ground-accent); }
 /* DNA's render (.screen, 390×844 archetype) sits inside untouched — the frame hugs it */
 .gallery-mount { display: block; }
+/* ── ANY .ar-responsive ARCHETYPE in this modal: hold DNA's PROVEN single-column (portrait) layout ──────
+   DNA's generic renderArchetype (gallery archetype.js) tags every card it draws with `.ar-responsive` (the
+   .ar is "the ONE renderer every surface unifies to" — phone.css:260). That class resolves form-factor BY THE
+   VIEWPORT — @media (min-width:760/1180) switches it to a 2-COLUMN grid — DNA's deliberate grammar for a card
+   that OWNS the screen (her standalone context). Hosted HERE, the card lives in a phone-width modal centred on
+   a wide desktop viewport, so the @media reads the VIEWPORT (1440), not the card, and the 2-column grid
+   overflows the ~390 frame — clipped on desktop (verified by use). This host is documented (above) to "hug the
+   390 phone archetype", so inside the frame we hold DNA's OWN base portrait stack at EVERY viewport — the
+   cold-stranger-proven reading.
+   BLAST RADIUS: this is INTENTIONALLY broad — it scopes to .ar-responsive, not the decision card, because the
+   modal is phone-width for WHATEVER archetype it hosts, and the viewport @media would misfire for any of them.
+   Today (post one-engine collapse, 2026-06-19) the decision card is the only .ar-responsive in this host
+   (corpus drills render as .screen.uv, pieces as .screen.piece — neither matches), but as more surfaces unify
+   onto renderArchetype they correctly inherit the phone-width single-column too.
+   NOT a bespoke layout: it un-applies DNA's viewport grid and falls back to her base
+   `.ar-responsive{display:flex;flex-direction:column}`. Bridge until DNA moves .ar-responsive to @container
+   queries (flagged to DNA ch-ovxwz8k8 2026-06-19) — then the card resolves by THIS frame's width natively and
+   this override drops. (We don't set container-type yet: it would break the frame's shrink-to-fit hug of the
+   card; the host adds it together with DNA's container-query cutover.) */
+.gallery-frame .screen.ar.ar-responsive {
+  display: flex; flex-direction: column;
+  grid-template-columns: none; grid-template-rows: none;
+  gap: 0; padding: 0;
+}
+.gallery-frame .ar-responsive .ar-zone-head,
+.gallery-frame .ar-responsive .ar-zone-body,
+.gallery-frame .ar-responsive .ar-zone-foot { grid-column: auto; grid-row: auto; }
+.gallery-frame .ar-responsive .ar-options { margin-top: var(--dna-space-16); }
+.gallery-frame .ar-responsive .ar-hatch { display: block; }
+/* ── TALL decisions must stay REACHABLE: the card SIZES TO CONTENT, the frame SCROLLS ───────────────
+   DNA's .screen is a fixed-height phone DEVICE screen (height:844; overflow-y:hidden) — correct when content
+   fits, but a content-heavy decision (long question + two option descriptions + the "Ask about this" button)
+   runs to ~1002px and the fixed screen CLIPS the tail: option 2's "Choose ›" CTA and the Ask button become
+   UNREACHABLE — there is no inner scroll region, so a touch user can't get to them (fresh-eyes critic FAIL,
+   confirmed by use: card scrollHeight 1002 vs clientHeight 844, overflow-y hidden, on BOTH viewports). In THIS
+   modal the card is scrollable CONTENT, not a fixed device screen: let it grow to its natural height and let
+   the frame (overflow:auto, max-height:100%) scroll the overflow. Host-scoped — DNA's standalone screen
+   metaphor is untouched; this only changes how the card behaves INSIDE the operator-surface modal. */
+.gallery-frame .screen.ar { height: auto; max-height: none; overflow: visible; }
 /* deep-link fail-loud — a decision that couldn't be opened (resolve down/slow) shows this, never a blank */
 .gallery-deeplink-error { padding: var(--s-5) var(--s-4); max-width: 360px; text-align: center;
   display: flex; flex-direction: column; gap: var(--s-3); align-items: center; }
