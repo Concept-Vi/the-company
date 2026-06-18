@@ -376,14 +376,26 @@ def territory_prose(territory_or_address, *, suite=None, store=None, max_chars: 
                             else "This has already been decided.")
             elif st == "pending":
                 bits.append("This is still open — no choice has been made yet.")
-        # MEMORY leg (decision:// → recalled grounding for the RHM) — counts + prior-decision TEXT only, NEVER the
-        # raw source ids/addresses (operator-law). The resurfacing signal now ("there IS relevant memory");
-        # the full grounded CONTENT lands when recall includes each item's digest (flagged to recollection —
-        # the bundle returns source-ids+scores today, not the human text).
+        # MEMORY leg (decision:// → recalled grounding for the RHM) — surface the digest MEANING now, NEVER the
+        # raw source ids/addresses (operator-law). recall_for_decision attaches each item's clean digest text
+        # (recollection 5d9e645, legibility-safe — no JSON, no ids); we render the top meanings so the grounding
+        # is CONTENT, not just a count. DEGRADE-CLEAN: ~half the items lack text today (the corpus-write
+        # non-string-output gap, recollection-tracked) → they still count toward the resurfacing signal, and if
+        # NONE carry text we fall back to the count line. Operator-law safety belt: drop any text leaking an address.
         mem = terr.get("memory") if isinstance(terr.get("memory"), dict) else {}
         ctx = mem.get("context") or []
         if ctx:
-            bits.append(f"What's known about this: {len(ctx)} relevant piece(s) in your memory to draw on.")
+            ctexts = [str(c.get("text") or "").strip() for c in ctx if isinstance(c, dict)]
+            ctexts = [t for t in ctexts if t and "://" not in t]
+            if ctexts:
+                shown = ctexts[:2]
+                line = "What's known about this: " + "  |  ".join(_clip(t, 160) for t in shown)
+                extra = len(ctx) - len(shown)
+                if extra > 0:
+                    line += f" (plus {extra} more relevant piece{'s' if extra != 1 else ''} to draw on)"
+                bits.append(line)
+            else:
+                bits.append(f"What's known about this: {len(ctx)} relevant piece(s) in your memory to draw on.")
         prior = mem.get("prior_decisions") or []
         if prior:
             ptexts = [str(p.get("text") or p.get("meaning") or p.get("decision") or "").strip()
