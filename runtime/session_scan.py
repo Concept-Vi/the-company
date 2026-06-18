@@ -42,6 +42,59 @@ def _encode_cwd(cwd: str) -> str:
     return cwd.replace("/", "-").replace(".", "-")
 
 
+SELF_MARKER_DIR = os.path.join(os.path.expanduser("~"), ".recollection", "self")
+
+
+def _claude_ancestor_pid(pid: int | None = None) -> int | None:
+    """Walk /proc from `pid` (default: this process) to the `claude` SESSION process — the SESSION-UNIQUE
+    disambiguator (#69). Each live session IS one claude process; the company MCP server + the SessionStart
+    hook are both its children, so both resolve to the SAME claude PID → a shared, cwd-independent key
+    (cwd alone COLLIDES — 3 sessions share /home/tim). Robust match: comm=='claude' OR the cmdline names
+    the claude binary OR comm is a version-string (claude sets comm to its version, e.g. '2.1.175').
+    Returns None on no-claude-ancestor (an ORPHANED session whose claude exited → degrade to the
+    ambiguous-raise, NEVER a wrong self). Best-effort: any /proc error → None (Linux-only; degrade-clean)."""
+    import re
+    pid = pid or os.getpid()
+    try:
+        for _ in range(40):                                    # bounded walk (no infinite loop on a cycle)
+            if not pid or pid <= 1:
+                return None
+            with open(f"/proc/{pid}/stat") as f:
+                parts = f.read().split()
+            comm = parts[1].strip("()"); ppid = int(parts[3])
+            try:
+                cmdline = open(f"/proc/{pid}/cmdline").read().replace("\0", " ")
+            except OSError:
+                cmdline = ""
+            if comm == "claude" or "/claude" in cmdline or cmdline.strip().startswith("claude") \
+               or re.match(r"^\d+\.\d+\.\d+$", comm):
+                return pid
+            pid = ppid
+    except (OSError, ValueError, IndexError):
+        return None
+    return None
+
+
+def _self_marker(proj: str) -> dict | None:
+    """#69 — the SessionStart-hook self-marker read: resolve THIS session via its claude-ancestor PID.
+    The hook (a child of claude) writes ~/.recollection/self/<claude-pid>.json = {session_id, ...}; the
+    resolver (also a child of the same claude) walks to that PID + reads it. Returns the marker dict IF
+    its session_id has a transcript in `proj` (the cwd cross-check — belt+braces against a stale/wrong-cwd
+    marker), else None (degrade-clean — falls through to the newest-mtime/ambiguous path)."""
+    cp = _claude_ancestor_pid()
+    if cp is None:
+        return None
+    mpath = os.path.join(SELF_MARKER_DIR, f"{cp}.json")
+    try:
+        m = json.load(open(mpath))
+    except (OSError, ValueError):
+        return None
+    sid = m.get("session_id")
+    if sid and os.path.exists(os.path.join(proj, f"{sid}.jsonl")):
+        return m
+    return None
+
+
 def resolve_own_session(cwd: str | None = None, session_id: str | None = None,
                         *, allow_ambiguous: bool = False) -> dict:
     """Let ANY session find ITS OWN transcript UNAMBIGUOUSLY (the self-serve-memory keystone — Tim:
@@ -68,6 +121,15 @@ def resolve_own_session(cwd: str | None = None, session_id: str | None = None,
                 f"(this session's project dir encodes from its cwd) or wrong sid.")
         return {"path": path, "session_id": sid, "project_dir": proj, "cwd": cwd,
                 "how": "explicit" if session_id else "env COMPANY_SESSION_ID", "ambiguous": False}
+    # 2.5 — #69 SELF-MARKER: the SessionStart hook wrote this session's id keyed by its claude-ancestor
+    # PID (session-unique, cwd-independent). The unambiguous self-id for a top-level session with no
+    # COMPANY_SESSION_ID env — disambiguates MULTIPLE same-cwd sessions (the cwd-key collision). Degrade-
+    # clean: no marker / orphaned session → fall through to the newest-mtime/ambiguous-raise below.
+    _m = _self_marker(proj)
+    if _m:
+        _sid = _m["session_id"]
+        return {"path": os.path.join(proj, f"{_sid}.jsonl"), "session_id": _sid, "project_dir": proj,
+                "cwd": cwd, "how": "claude-pid self-marker (#69)", "ambiguous": False}
     if not os.path.isdir(proj):
         raise FileNotFoundError(
             f"resolve_own_session: no project dir {proj} for cwd {cwd} — a session's transcript lives "
