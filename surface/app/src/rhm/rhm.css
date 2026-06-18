@@ -80,28 +80,57 @@
   position: absolute;
   left: 0;
   top: 0;
-  min-width: 52px;
-  padding: var(--s-1) var(--s-2);
-  border-radius: var(--r-pill);
+  /* LIVE verbs now carry a touch-visible description → a 2-line card (label + desc), left-aligned, width-capped
+     so the description wraps instead of overflowing the screen edge as the arc leans left. */
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  /* a FIXED width (not max-width) so the description wraps to ~2 lines instead of collapsing to min-content
+     (one word per line); uniform-width cards stack cleanly. */
+  width: min(208px, 64vw);
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-card);
   border: 1px solid var(--hairline);
   background: var(--ground-accent);
   box-shadow: var(--elev-2);
   color: var(--ink-primary);
-  font-family: var(--font-mono, inherit);
-  font-size: var(--t-xs);
-  line-height: 1.1;
-  white-space: nowrap;
-  text-align: center;
+  text-align: left;
   cursor: pointer;
   animation: vhandle-pop 160ms ease both;
 }
 .vhandle-verb:hover { background: var(--ground-primary); box-shadow: var(--elev-3); }
+.vhandle-verb-label {
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  line-height: 1.15;
+  white-space: nowrap;
+  color: var(--ink-primary);
+}
+.vhandle-verb-desc {
+  font-size: 0.66rem;
+  line-height: 1.22;
+  color: var(--ink-dim);
+  white-space: normal;
+}
 
 /* NOT-YET-WIRED verbs (Drive, Make) — muted (faint text + a DASHED, provisional border + subtler ground) + a
    quiet "soon" tag, so they read as in-the-contract-but-coming, never as working controls (no green-paint).
    Muted via colour/border, NOT opacity — the vhandle-pop animation holds opacity:1 (fill `both`) and would win.
    Still tappable → the honest "coming soon" Notice. */
 .vhandle-verb--soon {
+  /* a SOON verb is a single short label + tag — revert to the compact ROW pill (no description line) */
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-1);
+  width: auto;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-pill);
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-xs);
+  line-height: 1.1;
+  white-space: nowrap;
+  text-align: center;
   color: var(--ink-faint);
   background: var(--ground-primary);
   border-style: dashed;
@@ -121,6 +150,27 @@
   border-radius: var(--r-pill);
   vertical-align: middle;
 }
+
+/* THE "WHAT'S COMING" TOGGLE — the honest reveal for the not-yet-live verbs. A quiet, secondary affordance
+   (dashed, transparent, dim) so it never competes with the live actions; reveals the SOON verbs on demand. */
+.vhandle-more {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-pill);
+  border: 1px dashed var(--hairline);
+  background: transparent;
+  color: var(--ink-dim);
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-xs);
+  line-height: 1.1;
+  white-space: nowrap;
+  cursor: pointer;
+  animation: vhandle-pop 160ms ease both;
+}
+.vhandle-more:hover { color: var(--ink-primary); background: var(--ground-primary); }
+.vhandle-more:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 3px; }
 
 @keyframes vhandle-pop {
   from { opacity: 0; }

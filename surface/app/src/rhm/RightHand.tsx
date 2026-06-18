@@ -49,6 +49,7 @@ const GREETED_KEY = 'rhm.greeted'
 
 export function RightHand() {
   const [open, setOpen] = useState(false) // the verb fan
+  const [moreOpen, setMoreOpen] = useState(false) // the not-yet-live ("soon") verbs, revealed on demand (composition-ratified: first contact = live only)
   const [greet, setGreet] = useState(false) // the one-time first-contact self-introduction
   const [aimedThing, setAimedThing] = useState(false) // false = the surface default (nothing picked) → the fan caption
   const [panelOpen, setPanelOpen] = useState(false) // the brain (Ask) panel
@@ -100,6 +101,12 @@ export function RightHand() {
       brainRef.current = null
     }
   }, [])
+
+  // each time the fan closes, collapse the "soon" reveal — so EVERY open starts at the clean live-only first
+  // contact (composition's ratified call: the not-yet-built stays off the critical first impression).
+  useEffect(() => {
+    if (!open) setMoreOpen(false)
+  }, [open])
 
   // ── FIRST-CONTACT GREETING ──────────────────────────────────────────────────────────────────────────
   // On a brand-new operator (no greeted flag), the RHM introduces itself a beat after load — long enough that
@@ -382,6 +389,30 @@ export function RightHand() {
 
   const style = pos ? { left: `${pos.x}px`, top: `${pos.y}px`, right: 'auto', bottom: 'auto' } : undefined
 
+  // ── THE FAN LAYOUT — a thumb arc rising from the corner, leaning left as it climbs ("around the angle"). ──
+  // FIRST CONTACT = the LIVE verbs only (each with its touch-visible description — composition's operator-
+  // legibility law: descriptions VISIBLE ON TOUCH, never hover-only), capped by a "what's coming" toggle that
+  // reveals the not-yet-live verbs (honestly SOON-labeled) — they're discoverable, never on the first impression
+  // and never shown as working. Slots are taller for the 2-line live pills; the caption sits above the top item.
+  // Pills are RIGHT-edge anchored (translate(-100%,…)); cumulative y so variable heights never overlap.
+  const liveVerbs = VERBS.filter((v) => v.live)
+  const soonVerbs = VERBS.filter((v) => !v.live)
+  const fanSeq: Array<{ type: 'verb'; v: (typeof VERBS)[number] } | { type: 'toggle' }> = [
+    ...liveVerbs.map((v) => ({ type: 'verb' as const, v })),
+    { type: 'toggle' as const },
+    ...(moreOpen ? soonVerbs.map((v) => ({ type: 'verb' as const, v })) : []),
+  ]
+  let _fanY = 40 // gap from the icon centre to the bottom of the first slot
+  const fanItems = fanSeq.map((it) => {
+    const tall = it.type === 'verb' && it.v.live // live pills carry a description → taller slot
+    const slot = tall ? 58 : 40
+    const center = _fanY + slot / 2
+    _fanY += slot + 6 // a breath between slots
+    return { it, dy: -center, dx: -(22 + Math.round((center - 28) * 0.24)) }
+  })
+  const _capCenter = _fanY + 28 // the aim caption sits above the top item
+  const fanCap = { dy: -_capCenter, dx: -(22 + Math.round((_capCenter - 28) * 0.24)) }
+
   return (
     <>
       {/* a soft paper scrim so the open fan / brain panel / note composer reads as an overlay ABOVE the surface
@@ -495,35 +526,71 @@ export function RightHand() {
                 the whole surface until the operator points at a thing). Without it the fan is a menu with no
                 object: a stranger can't tell "Note" notes the surface vs a picked thing. Non-interactive label;
                 sits above the verb arc. */}
-            <div
-              className="vhandle-aim"
-              aria-hidden="true"
-              style={{ transform: `translate(-100%, -50%) translate(-28px, ${-(44 + VERBS.length * 38 + 6)}px)` }}
-            >
-              <span className="vhandle-aim-k">These act on</span>
-              <span className="vhandle-aim-v">{aimedThing ? aimLabel : 'everything here'}</span>
-              {!aimedThing && <span className="vhandle-aim-hint">tap a dot to focus on one thing</span>}
-            </div>
-            {VERBS.map((v, i) => {
-              // a thumb arc rising from the bottom-right corner: EVEN vertical spacing (no overlap), leaning
-              // LEFT as it climbs (the "around the angle" curve). Pills RIGHT-edge anchored (translate(-100%,…)).
-              const dy = -(44 + i * 38)
-              const dx = -(28 + Math.round(104 * Math.sin((i / (VERBS.length - 1)) * (Math.PI / 2))))
+            {/* the aim caption rides ABOVE the top item; suppressed while "what's coming" is expanded (the taller
+                fan would otherwise push it up into the page's own description text). It returns on collapse. */}
+            {!moreOpen && (
+              <div
+                className="vhandle-aim"
+                aria-hidden="true"
+                style={{ transform: `translate(-100%, -50%) translate(${fanCap.dx}px, ${fanCap.dy}px)` }}
+              >
+                <span className="vhandle-aim-k">These act on</span>
+                <span className="vhandle-aim-v">{aimedThing ? aimLabel : 'everything here'}</span>
+                {!aimedThing && <span className="vhandle-aim-hint">tap a dot to focus on one thing</span>}
+              </div>
+            )}
+            {fanItems.map(({ it, dx, dy }) => {
+              const transform = `translate(-100%, -50%) translate(${dx}px, ${dy}px)`
+              if (it.type === 'toggle') {
+                // the honest reveal: "what's coming" shows the not-yet-live verbs (still SOON-labeled); never
+                // hidden-forever, never shown as working. Keeps the first impression to the live, usable actions.
+                return (
+                  <button
+                    key="__more"
+                    className="vhandle-more"
+                    type="button"
+                    aria-expanded={moreOpen}
+                    style={{ transform }}
+                    onClick={() => setMoreOpen((o) => !o)}
+                  >
+                    {moreOpen ? 'Show less' : 'What’s coming'}
+                  </button>
+                )
+              }
+              const v = it.v
+              if (v.live) {
+                // a LIVE verb: the label + its description, BOTH visible on touch (the operator-legibility law —
+                // the description must not hide on a hover/title the phone can't show).
+                return (
+                  <button
+                    key={v.id}
+                    className="vhandle-verb"
+                    role="menuitem"
+                    data-verb={v.id}
+                    aria-label={`${v.label}. ${v.desc}`}
+                    style={{ transform }}
+                    onClick={() => onVerb(v.id)}
+                  >
+                    <span className="vhandle-verb-label">{v.label}</span>
+                    <span className="vhandle-verb-desc">{v.desc}</span>
+                  </button>
+                )
+              }
+              // a NOT-YET-LIVE verb (only ever shown after "what's coming") — honestly soon-tagged + still tappable
+              // to the "coming soon" Notice; never presented as working.
               return (
                 <button
                   key={v.id}
-                  className={`vhandle-verb${v.live ? '' : ' vhandle-verb--soon'}`}
+                  className="vhandle-verb vhandle-verb--soon"
                   role="menuitem"
                   data-verb={v.id}
-                  // the desc rides on title/aria-label — a desktop hover tooltip + the screen-reader name; the
-                  // operator on touch reads the label + the visible "soon" state, and learns the live verbs by use.
-                  title={v.live ? `${v.label} — ${v.desc}` : `${v.label} — ${v.desc} (coming soon)`}
-                  aria-label={v.live ? `${v.label}. ${v.desc}` : `${v.label}. ${v.desc}. Coming soon.`}
-                  style={{ transform: `translate(-100%, -50%) translate(${dx}px, ${dy}px)` }}
+                  title={`${v.label} — ${v.desc} (coming soon)`}
+                  aria-label={`${v.label}. ${v.desc}. Coming soon.`}
+                  style={{ transform }}
                   onClick={() => onVerb(v.id)}
                 >
                   {v.label}
-                  {!v.live && <span className="vhandle-verb-soon">soon</span>}
+                  <span className="vhandle-verb-soon">soon</span>
                 </button>
               )
             })}
