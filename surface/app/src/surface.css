@@ -462,12 +462,10 @@
      isolation:isolate makes the frame one atomic context: DNA's internal z-indexes stay CONTAINED, and the
      dismiss (a sibling at z-2) paints above the whole frame. Variant-agnostic — holds for any card internals. */
   isolation: isolate; }
-/* the faux phone STATUS BAR ("9:41 ●●●") is a device-screen decoration from DNA's archetype — meaningless in the
-   operator modal (this is real content the operator acts on, not a phone-screen demo) AND it overlaps the header
-   text ("Decision" eyebrow + title) on desktop/landscape (critic, by use). Hide it HERE (host-scoped; DNA's
-   standalone render keeps it). Same "this modal is content, not a device screen" framing as the layout overrides
-   below. Flagged DNA to consider making it conditional in the render. */
-.gallery-frame .sbar { display: none; }
+/* (The faux phone status bar `.sbar` host-scoped hide is GONE — DNA made `.sbar` OPT-IN (f625746, emits only on
+   opts.chrome===true; default OFF), so the embedded operator render no longer carries it. The two renders
+   CONVERGED — nothing to mask. The isolation:isolate above STAYS as defense-in-depth (it contains ANY future card
+   z-index from leaking over the dismiss ✕, not just .sbar) — DNA's steer.) */
 /* DNA's render (.screen, 390×844 archetype) sits inside untouched — the frame hugs it */
 .gallery-mount { display: block; }
 /* ── ANY .ar-responsive ARCHETYPE in this modal: hold DNA's PROVEN single-column (portrait) layout ──────
