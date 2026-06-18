@@ -74,7 +74,19 @@ function humanizeCtx(s: string): string {
   return (s || '')
     .replace(/\[\s*[\w-]+\s*@\s*[a-z][\w-]*:\/\/[^\]]*\]\s*/gi, '') // a composed "[how-to @ ui://canvas] " frame
     .replace(/\b[a-z][\w-]*:\/\/\S+/gi, '') // any bare machine address token elsewhere in the text
+    // machine PROVENANCE the brain-facing text legitimately carries but the operator must NEVER see (operator-law):
+    // a "· <hash> @ <abs-path>" tail, a bare absolute filesystem path, and a `name:machine_id` token (e.g.
+    // "routine:self_status · a7dde1d0 @ /home/tim/company"). Stripped at the RENDER boundary ONLY — the underlying
+    // text keeps them FOR THE BRAIN (same contract as the address strip above; the source must not be filtered or the
+    // brain starves). Conservative: each pattern is machine-unambiguous (verified it leaves prose — colons/times/
+    // em-dashes — untouched), so a stray strip can't mangle a real sentence.
+    .replace(/\s*[·•|]\s*[0-9a-f]{6,}\s*@\s*\/\S+/gi, '') // "· a7dde1d0 @ /home/tim/company" provenance tail
+    .replace(/\s*@\s*\/\S+/g, '') // any remaining "@ /abs/path"
+    .replace(/\/(?:home|mnt|usr|users|var|tmp|opt|etc|root)\/\S+/gi, '') // a bare absolute system path
+    .replace(/\b[a-z][\w-]*:[a-z][\w-]*_[\w-]*\b/gi, '') // a `routine:self_status`-style machine id (colon + underscore token)
     .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([.,;:])/g, '$1')
+    .replace(/^[\s·•|–—-]+|[\s·•|–—-]+$/g, '') // trim dangling separators the strips can leave
     .trim()
 }
 
