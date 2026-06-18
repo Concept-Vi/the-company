@@ -219,7 +219,7 @@ export function App() {
   useEffect(() => {
     const LABEL: Record<string, string> = { navigate: 'Go to', drive: 'Drive', 'open-source': 'Source', generate: 'Make' }
     const onVerb = (e: Event) => {
-      const d = (e as CustomEvent).detail as { verb?: string; aim_address?: string } | null
+      const d = (e as CustomEvent).detail as { verb?: string; aim_address?: string; payload?: Record<string, unknown> } | null
       if (!d?.verb) return
       const aim = d.aim_address || ''
       // a real unit aim (a picked point — its address is a run://·code://·corpus scheme) vs a synthetic instrument
@@ -284,8 +284,28 @@ export function App() {
         // V-handle); generate (Make) is wildcard's gated keystone (writable-aim only, lead-governed) — not yet
         // wired for the V. Honest Notice, never a silent no-op.
         setNotice(`“${LABEL[d.verb]}” is coming next.`)
+      } else if (d.verb === 'annotate' && d.payload?.is_decision_take) {
+        // THE TAKE — the operator picks an option on a decision card (wildcard's binder decide() →
+        // gallery:verb{verb:'annotate', payload:{mark_type:'decision_take', value:<option label>, is_decision_take:true}}).
+        // fork's binder contract is EXPLICIT: "is_decision_take lets THE DISPATCHER route to territory_write" — and
+        // this onVerb is the sole gallery:verb listener, so the dispatcher is HERE. The take is the ONLY annotate the
+        // dispatcher routes: generic comment/reaction/favour ride wildcard's `gallery:direction` alias → fork's HOOK 2,
+        // so routing them here too would DOUBLE-write (we deliberately don't). The target is the BARE CANONICAL decision
+        // address (DNA stamps data-decision canonical; a `#elem` target would make a decided decision silently read
+        // pending — fork's silent-miss seam). Reuse fork's writeDirections — the SAME route-back the annotations use
+        // (POST /api/territory/write → suite.mark at the canonical address → the decision:// resolver composes
+        // state=decided from the latest decision_take mark; + gallery:rerender for the card; fail-loud on error).
+        // value = the chosen option LABEL (= decided_value). territory_write reads `type` (not mark_type), so map it.
+        const core = (window as unknown as { forkBrainCore?: { writeDirections?: (items: unknown[]) => unknown } }).forkBrainCore
+        const item: Record<string, unknown> = { element_id: aim, type: 'decision_take', value: d.payload.value }
+        if (d.payload.by != null) item.by = d.payload.by
+        if (core?.writeDirections) core.writeDirections([item])
+        else // defensive fallback if the brain core isn't hosted (still fail-loud at the server)
+          fetch('/api/territory/write', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ element_id: aim, items: [item] }) })
       }
-      // ask/annotate are the V's own legs (handled in RightHand, never emitted here).
+      // ask + GENERIC annotate (comment/reaction/favour) are NOT routed here: ask is the V's own leg (RightHand);
+      // generic annotate rides wildcard's gallery:direction alias → fork's HOOK 2 write. Only the decision TAKE
+      // (is_decision_take, which has NO gallery:direction alias) is dispatched here, per wildcard's binder contract.
     }
     window.addEventListener('gallery:verb', onVerb)
     return () => window.removeEventListener('gallery:verb', onVerb)
