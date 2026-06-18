@@ -64,6 +64,65 @@ def prior_decisions_about(suite, topic_text: str, *, k: int = 6, rerank: bool = 
         return sorted(pooled, key=lambda p: -p["score"])[:k]
 
 
+def _clean_meaning(rec: dict, *, max_chars: int = 600) -> str:
+    """A corpus record → render-ready MEANING (legibility: prose, NOT raw JSON, NOT machine ids). The
+    digest `output` is often a STRUCTURED dict (e.g. {"decision": "...", "bug_fix": "", "frustration": ""}):
+    take the NON-EMPTY string fields as `key: value` (skipping the empties that json.dumps would dump as
+    noise), so the consumer gets clean meaning. A plain-string output / text / content is used as-is.
+    Returns '' when there's nothing legible (caller leaves the item text-less — degrade-clean)."""
+    if not isinstance(rec, dict):
+        return (str(rec).strip()[:max_chars]) if rec else ""
+    out = rec.get("output")
+    if isinstance(out, str) and out.strip():
+        return out.strip()[:max_chars]
+    if isinstance(out, dict):
+        if isinstance(out.get("text"), str) and out["text"].strip():
+            return out["text"].strip()[:max_chars]
+        if isinstance(out.get("summary"), str) and out["summary"].strip():
+            return out["summary"].strip()[:max_chars]
+        parts = [f"{k}: {v.strip()}" for k, v in out.items()
+                 if isinstance(v, str) and v.strip()]          # the non-empty meaningful fields, labelled
+        if parts:
+            return " · ".join(parts)[:max_chars]
+    for k in ("text", "content"):
+        v = rec.get(k)
+        if isinstance(v, str) and v.strip():
+            return v.strip()[:max_chars]
+    return ""
+
+
+def _attach_digest_text(store, context: list[dict], *, max_chars: int = 600) -> list[dict]:
+    """Surface each context item's DIGEST MEANING in-place, so a consumer (fork's RHM / territory_prose)
+    renders the grounding WITHOUT a second fetch — and renders MEANING, never the source id or raw JSON
+    (legibility: Tim never sees machine shapes). recall already fetches this to RERANK; the cosine hot-path
+    didn't surface it at all (fork flagged the gap 2026-06-18: 'recall_for_decision fetches CAS digests for
+    rerank but doesn't surface the text in returned items'). ONE list_corpus pass for all sources (not N
+    scans), then read_record per source → _clean_meaning. Bounded to the already-trimmed top_n. Degrade-
+    clean: a text-less / non-string-output source keeps its other fields (the `text` key is simply absent;
+    that residue is the corpus-write normalisation tracked in GAP-corpus-output-nonstring.md), never a crash."""
+    try:
+        from runtime import corpus as _corpus
+        wanted = {c.get("source") for c in context if c.get("source")}
+        if not wanted:
+            return context
+        latest: dict[str, dict] = {}                          # source_address -> its newest corpus row (ONE scan)
+        for row in _corpus.list_corpus(store):                # newest-first already (dedup-on-read)
+            sa = row.get("source_address")
+            if sa in wanted and sa not in latest:
+                latest[sa] = row
+        for c in context:
+            row = latest.get(c.get("source"))
+            if not row:
+                continue
+            rec = _corpus.read_record(store, row["address"])
+            meaning = _clean_meaning(rec, max_chars=max_chars) if rec else ""
+            if meaning:
+                c["text"] = meaning
+    except Exception:
+        pass                                                  # legibility nicety, never fatal to the bundle
+    return context
+
+
 def recall_for_decision(suite, decision_text: str, *, address: str | None = None,
                         spaces: tuple | list | None = None, k_per_space: int = 4,
                         rerank: bool = True, top_n: int = 10,
@@ -124,6 +183,10 @@ def recall_for_decision(suite, decision_text: str, *, address: str | None = None
             # rerank-loadout decision (board://item-a3844c46) that, once decided, can restore the sharper sort.
             notes.append("grounded by rough similarity for now — the sharper re-sorting of this context "
                          "is itself a decision waiting for you")
+
+    # surface the digest TEXT (meaning) in each context item — the consumer (RHM/territory_prose) renders
+    # the grounding from this, no re-fetch, no source-id leak (fork's gating ask, 2026-06-18). Bounded to top_n.
+    _attach_digest_text(suite.store, context)
 
     result = {"decision": decision_text, "context": context}
 
