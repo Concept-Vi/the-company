@@ -119,7 +119,11 @@ def recall_for_decision(suite, decision_text: str, *, address: str | None = None
     else:
         context = sorted(pooled, key=lambda p: -p["score"])[:top_n]
         if pooled:
-            notes.append("cosine-ranked (rerank off the live hot-path)")
+            # OPERATOR-VISIBLE (no-silent-failures): the degraded precision must SHOW on the card, not ride
+            # invisibly. Tim-altitude wording (DNA renders this note on the explanation); points at the
+            # rerank-loadout decision (board://item-a3844c46) that, once decided, can restore the sharper sort.
+            notes.append("grounded by rough similarity for now — the sharper re-sorting of this context "
+                         "is itself a decision waiting for you")
 
     result = {"decision": decision_text, "context": context}
 
