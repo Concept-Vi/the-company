@@ -14,29 +14,56 @@ import { fileURLToPath } from 'node:url'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const PUBLIC_GALLERY = join(HERE, '..', 'public', 'gallery')
 
-// DNA's canonical source (env-overridable so a relocated checkout still resolves; default = the fleet path).
-const DNA_UI = process.env.DNA_UI_DIR || '/home/tim/repos/counterpart/design/ui'
+// DNA's render module is MID-REORG: her repo is moving `ui/` → `surface/runtime/` (DNA's own
+// docs/dev/REORGANISATION-PROPOSAL.md, target tree — organisms.js/unit-view.js/phone.css/piece.css all
+// land in surface/runtime/). To dissolve the move-RACE — so the reorg can land on ANY beat without a
+// paired edit here AND without ever serving a silently-stale copy — we resolve EACH source file across a
+// PRIORITISED list of candidate homes and FAIL LOUD if it's in none:
+//   1. an explicit DNA_UI_DIR override (a relocated checkout / manual pin) — honoured first of all;
+//   2. <repo>/surface/runtime/ — the reorg TARGET, tried before today's home so the instant DNA's move
+//      lands we pick up the new canonical home (and never prefer a lingering stale ui/ copy after it);
+//   3. <repo>/ui/ — today's home, the fallback until the move lands.
+// The per-file log prints the ACTUAL resolved path, so which home a file came from is VISIBLE, not silent.
+const DNA_REPO = process.env.DNA_REPO_DIR || '/home/tim/repos/counterpart/design'
+const DNA_DIRS = [
+  process.env.DNA_UI_DIR, // explicit override (legacy var / relocated checkout) — first
+  join(DNA_REPO, 'surface', 'runtime'), // the reorg target (ui/ → surface/runtime/) — preferred
+  join(DNA_REPO, 'ui'), // today's home — fallback until the move lands
+].filter(Boolean)
+
+// resolve a DNA source file across the candidate homes; returns the first existing path, or null (the
+// caller FAILS LOUD — never a silent empty/stale gallery).
+function resolveDna(file) {
+  for (const dir of DNA_DIRS) {
+    const p = join(dir, file)
+    if (existsSync(p)) return p
+  }
+  return null
+}
 
 // the files the host needs to render the gallery face: DNA's organism generators (DNA.org.* — renderUnit
 // calls DNA.org.hubNetwork for the unit→neighbour constellation; MUST load before unit-view.js), her renderer,
 // and its look. organisms.js is a pure generator module (no global *-reset / body rule), safe to host whole.
 const FILES = ['organisms.js', 'unit-view.js', 'phone.css']
 
-const missing = FILES.filter((f) => !existsSync(join(DNA_UI, f)))
+const resolved = FILES.map((f) => ({ f, src: resolveDna(f) }))
+const missing = resolved.filter((r) => !r.src)
 if (missing.length) {
-  // FAIL LOUD (no silent fallback) — a missing DNA source means the gallery face can't be hosted; say so.
+  // FAIL LOUD (no silent fallback) — a missing DNA source means the gallery face can't be hosted; say so,
+  // and list every home we searched so the fix (checkout / DNA_REPO_DIR / DNA_UI_DIR) is obvious.
   console.error(
-    `\n[sync-gallery] FAIL LOUD — DNA's render module is missing at ${DNA_UI}:\n` +
-      missing.map((f) => `  - ${f}`).join('\n') +
-      `\nThe gallery first-slice FACE is hosted FROM DNA's repo (she owns it).\n` +
-      `Fix: ensure counterpart/design is checked out, or set DNA_UI_DIR to its ui/ path.\n`,
+    `\n[sync-gallery] FAIL LOUD — DNA's render module file(s) not found in ANY known home:\n` +
+      missing.map((r) => `  - ${r.f}`).join('\n') +
+      `\nSearched (in priority order):\n` +
+      DNA_DIRS.map((d) => `  · ${d}`).join('\n') +
+      `\nThe gallery first-slice FACE is hosted FROM DNA's repo (she owns it; mid-reorg ui/ → surface/runtime/).\n` +
+      `Fix: ensure counterpart/design is checked out, or set DNA_REPO_DIR (repo root) / DNA_UI_DIR (exact dir).\n`,
   )
   process.exit(1)
 }
 
 mkdirSync(PUBLIC_GALLERY, { recursive: true })
-for (const f of FILES) {
-  const src = join(DNA_UI, f)
+for (const { f, src } of resolved) {
   const dst = join(PUBLIC_GALLERY, f)
   copyFileSync(src, dst)
   console.log(`[sync-gallery] ${f}  (${statSync(src).size}B)  ← ${src}`)
@@ -48,9 +75,10 @@ for (const f of FILES) {
 // every padding/radius collapses (DNA's diagnosis: .uv-chips render run-together). So we EXTRACT ONLY the
 // :root token blocks into a standalone dna-tokens.css — the tokens phone.css needs, none of the dangerous
 // globals. FAIL LOUD if piece.css or its :root is absent (the face's look depends on these tokens).
-const PIECE = join(DNA_UI, 'piece.css')
-if (!existsSync(PIECE)) {
-  console.error(`\n[sync-gallery] FAIL LOUD — DNA's token source piece.css missing at ${PIECE}\n` +
+const PIECE = resolveDna('piece.css') // same prioritised homes (piece.css also moves ui/ → surface/runtime/)
+if (!PIECE) {
+  console.error(`\n[sync-gallery] FAIL LOUD — DNA's token source piece.css not found in ANY known home:\n` +
+    DNA_DIRS.map((d) => `  · ${join(d, 'piece.css')}`).join('\n') + `\n` +
     `phone.css is token-based; without :root tokens the face's spacing/radius/warmth collapse.\n`)
   process.exit(1)
 }
