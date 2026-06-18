@@ -8,6 +8,18 @@ THE BAR and is NOT churned by this loop.
 
 ---
 
+## ★ CURRENT STATE — read this first (snapshot, updated in place; the STATUS LOG below is the full history)
+
+**Phase:** Phase 4, the DECISION SURFACE (the flagship prove-on-one). Projection's whole lane is BUILT + verified; the surface is one render from end-to-end.
+- **Projection COMPLETE + proven (both viewports):** the decision HOST (GalleryMount: open/hold/advance/close, slide+sequence lifecycle, variant-AGNOSTIC, subtype-carry) · `/api/territory` resolve · explain (forkBrainCore.talk) · the TAKE dispatch (is_decision_take→territory_write→state flips) · the gallery:rerender refresh · the decision:rendered seam (DNA-confirmed). PLUS the operator surface: all 8 lenses legible (kinds/node-types/spaces/families/flow-steps) · the V's 4 live verbs (Go-to/Ask/Note/See-the-record) · RUNG-C gallery · time-travel · lens-continuity (persists). Union-seam audit: events + API routes welded.
+- **The ONLY gate = the decision-card fork's VISUAL render** (ch-2er2g9ja, cwd counterpart/design; Tim's move — the card is its own fork; DNA's on the graph). When it paints → run the harness + the real on-card prove-on-one.
+- **READY for it:** the host-integration contract `build-prep/the-one-application/DECISION-CARD-HOST-CONTRACT.md` (every seam + silent-failure-if-missed) + the harness `surface/app/scripts/prove-decision-harness.js` (`proveDecision(addr)` asserts every leg, same-second verdict). Both handed to the fork.
+- **Gated on others:** the card render (fork) · composition's `subtype` field + decision_subtypes registry · the deeper-union pass (Tim's steer, lead-HELD — do NOT run speculatively).
+- **Durable laws (projection):** the instrument stays EMPTY — of machine-names, of meaning (registry-is-truth: meaning lives in registry fields), AND of variant-knowledge (the host hosts what the data declares, never branches per kind → a new subtype/variant needs ZERO host change). No-silent-seams = fail loud + verify BY USE (drive the meeting point, never "code looks right"). Operator never sees code/files/addresses.
+- **Standing rule each gated fire:** probe `decision://` + the card fork's render. If a real card is up → run `proveDecision` + drive the on-card prove-on-one (the real beat). Else: at most ONE in-lane increment (a real gap, verified) or honest coordination — NEVER manufacture a build (green-paint). Don't re-litigate settled seams.
+
+---
+
 ## THE MISSION
 
 Significantly upgrade the surface so an **OPERATOR** (Tim's word — one who *uses and sees* an instrument, not a
