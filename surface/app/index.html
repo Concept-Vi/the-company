@@ -21,6 +21,15 @@
          when React mounts (avoids a StrictMode double-bind race on projection:select). -->
     <link rel="stylesheet" href="/gallery/dna-tokens.css" />
     <link rel="stylesheet" href="/gallery/phone.css" />
+    <!-- DNA's SHARED RUNTIME (DNA.injectVars/injectSpace/ordinal/surfaces — the live resolvers renderArchetype's
+         resolveOnto calls to wake the elegance: warmth-shifted surfaces + bond-derived spacing + ordinal ramp,
+         instead of frozen literals). resolveOnto self-fetches /dna/tokens.json + /dna/grammar.json (served by
+         sync-gallery) and writes the live vars onto the card element. ⚠️ MUST LOAD FIRST: surface.js does a HARD
+         `window.DNA = {…}` (overwrite, no `||{}` guard) — every other module EXTENDS DNA (`DNA = DNA || {}`), so if
+         surface.js loaded after them it would WIPE renderArchetype/renderGallery/org. First = it seeds DNA, the rest
+         extend it. (Without surface.js the renderer no-ops the resolve and the elegance stays dormant — lead-confirmed
+         the host load is REQUIRED, not optional; GENERATIVE-FLOOR-SPEC.md projection team-ask.) -->
+    <script src="/gallery/surface.js"></script>
     <!-- DNA's organism generators (DNA.org.* — the unit→neighbour constellation hubNetwork). MUST load BEFORE
          unit-view.js, whose renderUnit calls DNA.org.hubNetwork (else the constellation renders empty in-host —
          DNA's host-wiring note 2026-06-16). A pure generator module; no global CSS, safe as a classic script. -->

@@ -49,7 +49,13 @@ function resolveDna(file) {
 // and its look. organisms.js is a pure generator module (no global *-reset / body rule), safe to host whole.
 // archetype.js = DNA's ONE generic renderer (renderArchetype) — since the 2026-06-19 one-engine collapse the
 // decision card draws through it (renderDecision RETIRED), so the host MUST carry it or decision:// renders empty.
-const FILES = ['organisms.js', 'unit-view.js', 'archetype.js', 'phone.css']
+// surface.js = DNA's SHARED RUNTIME (DNA.injectVars/injectSpace/ordinal/surfaces — the live resolvers). The
+// resolver-fix (69740aa) made renderArchetype CALL these to resolve the live DNA language (warmth surfaces + bond
+// spacing + ordinal ramp) instead of frozen literals — but only if surface.js is loaded (else it no-ops). The host
+// MUST carry it or the elegance stays DORMANT (the "elegance unlock" the lead confirmed REQUIRED, GENERATIVE-FLOOR-
+// SPEC.md projection team-ask). ⚠️ surface.js does a HARD `global.DNA = {…}` (overwrite, no `||{}` guard), so it
+// MUST load FIRST in index.html — before organisms/unit-view/archetype (which extend DNA) — or it wipes them.
+const FILES = ['surface.js', 'organisms.js', 'unit-view.js', 'archetype.js', 'phone.css']
 
 const resolved = FILES.map((f) => ({ f, src: resolveDna(f) }))
 const missing = resolved.filter((r) => !r.src)
@@ -74,21 +80,29 @@ for (const { f, src } of resolved) {
   console.log(`[sync-gallery] ${f}  (${statSync(src).size}B)  ← ${src}`)
 }
 
-// dna/layouts.json — the ARCHETYPE definitions renderArchetype fills (renderDecisionGallery fetches
-// "/dna/layouts.json" at runtime → archetypes["decision-card"]). Lives in DNA's repo dna/ dir; the host must
-// serve it at /dna/layouts.json (public/dna/). FAIL LOUD if absent — without it the decision card draws empty.
-const LAYOUTS_SRC = join(DNA_REPO, 'dna', 'layouts.json')
-if (!existsSync(LAYOUTS_SRC)) {
-  console.error(`\n[sync-gallery] FAIL LOUD — DNA's archetype definitions not found:\n  · ${LAYOUTS_SRC}\n` +
-    `Since the one-engine collapse (renderDecision RETIRED 2026-06-19) the decision card draws through\n` +
-    `renderArchetype + layouts.json["decision-card"]; without it decision:// renders empty. Ensure counterpart/design\n` +
-    `is checked out (DNA_REPO_DIR).\n`)
-  process.exit(1)
-}
+// DNA's dna/ JSON the renderer fetches at runtime, served at /dna/<name> (public/dna/). FAIL LOUD on any miss —
+// each is load-bearing:
+//   • layouts.json  — the ARCHETYPE definitions renderArchetype fills (renderDecisionGallery → archetypes["decision-card"]); without it decision:// draws empty.
+//   • tokens.json   — the COLOUR/warmth token set DNA.injectVars resolves (resolveOnto self-fetches "/dna/tokens.json"); without it the live warmth/surfaces stay frozen.
+//   • grammar.json  — the SPACE/bond/scale grammar DNA.injectSpace resolves (resolveOnto self-fetches "/dna/grammar.json"); without it bond spacing / ordinal ramp stay frozen.
+// tokens+grammar are the elegance-unlock inputs (the resolver-fix 69740aa self-fetches them when the caller passes none, which the decision host doesn't — so serving them = the live resolution path).
 const PUBLIC_DNA = join(HERE, '..', 'public', 'dna')
 mkdirSync(PUBLIC_DNA, { recursive: true })
-copyFileSync(LAYOUTS_SRC, join(PUBLIC_DNA, 'layouts.json'))
-console.log(`[sync-gallery] layouts.json  (${statSync(LAYOUTS_SRC).size}B)  ← ${LAYOUTS_SRC}  → public/dna/`)
+const DNA_JSON = ['layouts.json', 'tokens.json', 'grammar.json']
+const missingJson = DNA_JSON.filter((f) => !existsSync(join(DNA_REPO, 'dna', f)))
+if (missingJson.length) {
+  console.error(`\n[sync-gallery] FAIL LOUD — DNA's dna/ JSON not found:\n` +
+    missingJson.map((f) => `  · ${join(DNA_REPO, 'dna', f)}`).join('\n') + `\n` +
+    `The decision card draws through renderArchetype (layouts.json) + resolves the live DNA language through\n` +
+    `tokens.json/grammar.json (DNA.injectVars/injectSpace, the elegance unlock). Without them the card draws empty\n` +
+    `or stays frozen. Ensure counterpart/design is checked out (DNA_REPO_DIR).\n`)
+  process.exit(1)
+}
+for (const f of DNA_JSON) {
+  const src = join(DNA_REPO, 'dna', f)
+  copyFileSync(src, join(PUBLIC_DNA, f))
+  console.log(`[sync-gallery] ${f}  (${statSync(src).size}B)  ← ${src}  → public/dna/`)
+}
 
 // DNA's TOKEN VOCABULARY (:root --dna-space-*/--dna-radius-*/--warmpole-* etc.) lives in piece.css — but
 // piece.css ALSO carries a global `*{margin:0;padding:0}` reset + a `body{display:flex;background}` rule that
