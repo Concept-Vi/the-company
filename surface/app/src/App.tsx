@@ -96,7 +96,22 @@ export function App() {
   const [proj, setProj] = useState<Projection | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [binding, setBinding] = useState('raw')
+  // CONTINUITY: the operator's chosen LENS persists across reload/reopen (Tim 2026-06-18 "we want continuity")
+  // — so reopening continues where they left off, not a reset to 'raw'. Same localStorage pattern as the V
+  // handle position + the legend collapse. Degrade-clean: a persisted lens that no longer exists is reset to
+  // 'raw' once the projection's binding list loads (the validate effect below). (Centre + time view-state are
+  // follow-ups — they carry staleness risk: a centred address can be deleted; a scrub position is transient.)
+  const [binding, setBinding] = useState(() => {
+    try { return localStorage.getItem('projection.lens') || 'raw' } catch { return 'raw' }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('projection.lens', binding) } catch { /* private mode / quota — best-effort */ }
+  }, [binding])
+  // degrade-clean: a persisted lens that's no longer a real binding (a lens removed since) → reset to the
+  // default, so a stale restore can never leave the operator stuck on a non-existent way of looking.
+  useEffect(() => {
+    if (proj?.bindings && binding !== 'raw' && !proj.bindings.some((b) => b.id === binding)) setBinding('raw')
+  }, [proj, binding])
   // THE EMBEDDER LAYER (the multi-layer model): null = the default (BGE) layer; a named layer (e.g. 'pplx')
   // reads that embedder's vectors — every lens is layer-aware (registry-true, driven by /api/layers).
   const [emb, setEmb] = useState<string | null>(null)
