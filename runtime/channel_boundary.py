@@ -53,6 +53,11 @@ def build_post_row(channel_id: str, from_session: str, text: str, *, to_session:
     """PURE: the channel_posts row the company publishes for a SHARED-channel post (unit-testable, no backend).
     sender_kind='session' (a company session) — the Edge Function writes 'client' for Claude Design. RAISES on
     a missing required field (channel_id/from_session/text) — never publish an unfindable/unroutable row."""
+    # thread is NOT NULL in channel_posts (live-verify caught it 2026-06-18) + the company convention always
+    # carries a thread (cc_channels.send generates t-<ts>-<handle> if unset) — so default-generate a thread for
+    # a fresh post (a reply/threaded post passes its thread). The post grouping; satisfies the column.
+    if not thread:
+        thread = f"t-{int(time.time())}-{channel_id}"
     row = {"channel_id": channel_id, "from_session": from_session, "to_session": to_session,
            "thread": thread, "text": text, "kind": kind, "sender_kind": sender_kind}
     missing = [k for k in _POST_REQUIRED if not row.get(k)]
