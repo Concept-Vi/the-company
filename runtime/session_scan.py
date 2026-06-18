@@ -84,14 +84,34 @@ def _self_marker(proj: str) -> dict | None:
     cp = _claude_ancestor_pid()
     if cp is None:
         return None
-    mpath = os.path.join(SELF_MARKER_DIR, f"{cp}.json")
+
+    def _ok(sid):                                              # cwd cross-check (belt+braces vs a stale entry)
+        return bool(sid) and os.path.exists(os.path.join(proj, f"{sid}.jsonl"))
+
+    # 1) THE FABRIC REGISTRATION (the ONE store — fold-home): the .mjs announce wrote claude_pid; the
+    #    SessionStart hook populated session_id. Scan .data/channels/*.json for THIS claude_pid. This is
+    #    the home; the marker (below) is the proven fallback kept until this path is verified (caution #2).
     try:
-        m = json.load(open(mpath))
+        regdir = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".data", "channels")
+        for fn in os.listdir(regdir):
+            if not fn.endswith(".json") or fn.startswith("_"):
+                continue
+            try:
+                r = json.load(open(os.path.join(regdir, fn)))
+            except (OSError, ValueError):
+                continue
+            if r.get("claude_pid") == cp and _ok(r.get("session_id")):
+                return {"session_id": r["session_id"], "how": "fabric-registration (#69 claude_pid)"}
+    except OSError:
+        pass
+
+    # 2) THE MARKER (the proven fallback — kept until the registration path is verified)
+    try:
+        m = json.load(open(os.path.join(SELF_MARKER_DIR, f"{cp}.json")))
     except (OSError, ValueError):
         return None
-    sid = m.get("session_id")
-    if sid and os.path.exists(os.path.join(proj, f"{sid}.jsonl")):
-        return m
+    if _ok(m.get("session_id")):
+        return {"session_id": m["session_id"], "how": "claude-pid marker"}
     return None
 
 
@@ -129,7 +149,7 @@ def resolve_own_session(cwd: str | None = None, session_id: str | None = None,
     if _m:
         _sid = _m["session_id"]
         return {"path": os.path.join(proj, f"{_sid}.jsonl"), "session_id": _sid, "project_dir": proj,
-                "cwd": cwd, "how": "claude-pid self-marker (#69)", "ambiguous": False}
+                "cwd": cwd, "how": _m.get("how", "claude-pid self-marker (#69)"), "ambiguous": False}
     if not os.path.isdir(proj):
         raise FileNotFoundError(
             f"resolve_own_session: no project dir {proj} for cwd {cwd} — a session's transcript lives "

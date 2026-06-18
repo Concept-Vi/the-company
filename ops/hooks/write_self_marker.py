@@ -39,7 +39,33 @@ def main() -> int:
         final = os.path.join(SELF_MARKER_DIR, f"{cp}.json")
         with open(tmp, "w") as f:
             json.dump(marker, f)
-        os.replace(tmp, final)                         # atomic
+        os.replace(tmp, final)                         # atomic — the marker (the proven fallback, kept)
+
+        # ★ FOLD-HOME 2/2: ALSO populate the fabric registration (the ONE store) — find the reg the
+        # .mjs wrote for THIS claude_pid and set its session_id+transcript (the .mjs can't; only the hook
+        # has them). The empty-top-level-session_id fix. Best-effort + failure-isolated (a reg not-yet-
+        # written by the announce → the marker covers it; never raise). Atomic per-file rewrite.
+        try:
+            regdir = os.path.join(os.path.dirname(__file__), "..", "..", ".data", "channels")
+            for fn in os.listdir(regdir):
+                if not fn.endswith(".json") or fn.startswith("_"):
+                    continue
+                fp = os.path.join(regdir, fn)
+                try:
+                    reg = json.load(open(fp))
+                except (OSError, ValueError):
+                    continue
+                if reg.get("claude_pid") == cp and not reg.get("session_id"):
+                    reg["session_id"] = sid
+                    if data.get("transcript_path"):
+                        reg["transcript_path"] = data["transcript_path"]
+                    rtmp = fp + ".tmp"
+                    with open(rtmp, "w") as f:
+                        json.dump(reg, f, indent=2)
+                    os.replace(rtmp, fp)
+                    break                              # one reg per claude_pid
+        except Exception:
+            pass                                       # reg-population is best-effort; the marker is the floor
         return 0
     except Exception:
         return 0                                       # NEVER break the hook — silent on any failure
