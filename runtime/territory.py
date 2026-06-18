@@ -28,6 +28,15 @@ LAWS:
 """
 from __future__ import annotations
 
+import os
+
+# The memory leg (recall_for_decision) reaches the embed service via query_corpus — a DOWN/SLOW embed would HANG
+# the whole decision resolve (a HANG ≠ an exception; the per-leg try/except catches exceptions, not hangs). So
+# the leg is BOUNDED by this hard timeout (env-overridable); on timeout it degrades clean — the decision still
+# resolves to row+state+options (the card renders + is decidable), only the recall-grounding is absent. Live
+# regression 2026-06-18: EVERY external-dependency leg needs a TIMEOUT, not just a guard.
+_MEMORY_LEG_TIMEOUT_S = float(os.environ.get("COMPANY_MEMORY_LEG_TIMEOUT_S", "3.0"))
+
 # Schemes cognition.resolve_address resolves to a record/content (its dispatch, cognition.py:842-1029).
 # vi-vision added 2026-06-17 (islands-join-mainland): the identity leg resolves the AIMED factory asset via
 # resolve_address → resolve_vi_vision (degrades clean if no transport; the LIBRARY leg adds the palette).
@@ -240,7 +249,29 @@ def territory_for(address, *, suite=None, store=None, max_relations: int = 20) -
             cand = ident.get("address") or ident.get("explanation_source")
             subj = cand if (isinstance(cand, str) and cand.startswith("code://")) else None
             if anchor:
-                terr["memory"] = recall_for_decision(suite, anchor, address=subj)
+                # BOUNDED (timeout, NOT just try/except — a HANG ≠ an exception): recall hits the embed service
+                # (query_corpus); a down/slow embed would HANG the whole resolve → the surface goes down (live
+                # regression 2026-06-18). Run it in a daemon thread + join with a hard timeout; on timeout the
+                # resolve PROCEEDS without the recall-grounding (the card renders + is decidable; the hung thread
+                # is a daemon — it dies with the process, never blocks). A working recall completes well under it.
+                import threading as _th
+                _box = {}
+                def _recall(_b=_box):
+                    try:
+                        _b["m"] = recall_for_decision(suite, anchor, address=subj)
+                    except Exception as _e:  # noqa: BLE001
+                        _b["e"] = _e
+                _t = _th.Thread(target=_recall, daemon=True)
+                _t.start()
+                _t.join(timeout=_MEMORY_LEG_TIMEOUT_S)
+                if _t.is_alive():
+                    terr["notes"].append(
+                        f"memory leg timed out (>{_MEMORY_LEG_TIMEOUT_S}s — recall/embed slow or down; "
+                        f"degrade-clean, the decision still resolves + is decidable)")
+                elif "e" in _box:
+                    terr["notes"].append(f"memory leg unresolved ({type(_box['e']).__name__}: {_box['e']})")
+                elif "m" in _box:
+                    terr["memory"] = _box["m"]
         except Exception as e:
             terr["notes"].append(f"memory leg unresolved ({type(e).__name__}: {e})")
     terr["legs_present"]["memory"] = bool(terr.get("memory"))
