@@ -221,6 +221,30 @@ def territory_for(address, *, suite=None, store=None, max_relations: int = 20) -
             terr["notes"].append(f"library leg unresolved ({type(e).__name__}: {e})")
     terr["legs_present"]["library"] = bool(terr.get("library"))
 
+    # ── MEMORY leg (decision:// → the RHM's explanation grounding; guarded → degrade-clean, 2026-06-18) ──
+    # unify-to-ONE step-1 (the lead's independent early win): the orphaned recall_for_decision is now WIRED —
+    # a decision's explanation RESOLVES through recall, not stored (resolution-first). recall_for_decision
+    # composes the corpus-grounded bundle (multi-space query + jina rerank + prior-decisions + neighbours) the
+    # RHM explains FROM. KEYED on decision:// so the HEAVY bundle fires only when a decision is explained, NOT
+    # every turn. Needs the suite (query_corpus/rerank); GUARDED → a down embedder/space degrades clean (the
+    # never-raises contract holds — never kills the explain turn). recollection owns recall_for_decision; this
+    # is the territory_prose path (auto-grounds every decision:// resolve), projection's optional route serves
+    # the same compute (no conflict). ANCHOR = the decision's `meaning` (confirmed: decision://'s resolved
+    # identity IS the row {id,meaning,options,...}+state). SUBJECT (neighbours) = a code:// the decision
+    # decides-on (the schema's `address`/`explanation_source` when code://); else skip neighbours (clean no-op).
+    if sch == "decision" and suite is not None:
+        try:
+            from runtime.decision_memory import recall_for_decision
+            ident = terr.get("identity") if isinstance(terr.get("identity"), dict) else {}
+            anchor = ident.get("meaning")
+            cand = ident.get("address") or ident.get("explanation_source")
+            subj = cand if (isinstance(cand, str) and cand.startswith("code://")) else None
+            if anchor:
+                terr["memory"] = recall_for_decision(suite, anchor, address=subj)
+        except Exception as e:
+            terr["notes"].append(f"memory leg unresolved ({type(e).__name__}: {e})")
+    terr["legs_present"]["memory"] = bool(terr.get("memory"))
+
     return terr
 
 
@@ -315,6 +339,26 @@ def territory_prose(territory_or_address, *, suite=None, store=None, max_chars: 
                             else "This has already been decided.")
             elif st == "pending":
                 bits.append("This is still open — no choice has been made yet.")
+        # MEMORY leg (decision:// → recalled grounding for the RHM) — counts + prior-decision TEXT only, NEVER the
+        # raw source ids/addresses (operator-law). The resurfacing signal now ("there IS relevant memory");
+        # the full grounded CONTENT lands when recall includes each item's digest (flagged to recollection —
+        # the bundle returns source-ids+scores today, not the human text).
+        mem = terr.get("memory") if isinstance(terr.get("memory"), dict) else {}
+        ctx = mem.get("context") or []
+        if ctx:
+            bits.append(f"What's known about this: {len(ctx)} relevant piece(s) in your memory to draw on.")
+        prior = mem.get("prior_decisions") or []
+        if prior:
+            ptexts = [str(p.get("text") or p.get("meaning") or p.get("decision") or "").strip()
+                      for p in prior if isinstance(p, dict)]
+            ptexts = [t for t in ptexts if t and "://" not in t]
+            if ptexts:
+                bits.append("Decided before: " + " | ".join(_clip(t, 120) for t in ptexts[:3]) + ".")
+            else:
+                bits.append(f"Decided before: {len(prior)} earlier decision(s) on this.")
+        nbrs = mem.get("neighbours") or []
+        if nbrs:
+            bits.append(f"Related: {len(nbrs)} connected piece(s).")
         return "\n".join(bits)[:max_chars]
     except Exception as e:
         return f"(context render error: {type(e).__name__})"   # no raw address (operator-law)
