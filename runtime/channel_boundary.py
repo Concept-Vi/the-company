@@ -31,6 +31,8 @@ builder's live tables + the CD end — NOT offline green (this boundary is the n
 from __future__ import annotations
 
 import json
+import threading
+import time
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
 
@@ -108,36 +110,146 @@ def route_inject(post_row: dict, member_sessions: list[str]) -> list[str]:
     return [s for s in (member_sessions or []) if s and s != origin]
 
 
-class ChannelInjectSubscriber:
-    """The OUTBOUND Realtime subscriber → live-session injector for SHARED channels. The ROUTING (`on_insert`)
-    is built + tested now; the WS TRANSPORT (`start`) is STUBBED pending builder's Realtime topic + payload
-    shape + the RLS-Realtime auth handshake (no guessed protocol). Wire `members_of` (channel_id → live company
-    member-session handles) + `inject` (deliver into a live session — the supervisor /channel-send → cc_channels
-    .send path) at construction; the live WS connect lands when builder posts the mechanism."""
+def _ws_url(http_url: str, anon: str) -> str:
+    """The Supabase Realtime WS endpoint from the project URL: https→wss, http→ws (the local stack is http)."""
+    base = http_url.rstrip("/")
+    if base.startswith("https://"):
+        base = "wss://" + base[len("https://"):]
+    elif base.startswith("http://"):
+        base = "ws://" + base[len("http://"):]
+    return f"{base}/realtime/v1/websocket?apikey={anon}&vsn=1.0.0"
 
-    def __init__(self, *, members_of, inject, principal: SupabasePrincipal | None = None):
-        self._members_of = members_of       # (channel_id) -> [session handle, ...]
-        self._inject = inject               # (session_handle, post_row) -> None (deliver into a live session)
+
+def build_join_msg(topic: str, access_token: str, *, table: str = "channel_posts", schema: str = "public",
+                   event: str = "INSERT", ref: str = "1") -> dict:
+    """The phx_join frame subscribing to `table` INSERTs. ★ LOAD-BEARING (the lead's RLS answer): the principal
+    JWT rides as payload.access_token — Supabase Realtime applies RLS to postgres_changes and streams ONLY rows
+    the JWT can SELECT, so NO access_token → RLS streams nothing → a silent-empty subscription (looks connected,
+    delivers nothing). The 0005 authed-SELECT grant is what makes Realtime deliver these rows."""
+    return {"topic": f"realtime:{topic}", "event": "phx_join",
+            "payload": {"config": {"postgres_changes": [{"event": event, "schema": schema, "table": table}]},
+                        "access_token": access_token},
+            "ref": ref}
+
+
+def parse_realtime_message(raw) -> tuple:
+    """(event, record|None) from a raw Realtime WS frame. event=='postgres_changes' + type INSERT → the new
+    channel_posts row; everything else (phx_reply join-ack, system, heartbeat) → record None. Defensive dig
+    (payload.data.record). (None, None) on non-JSON. The pure parse — offline-testable; start() acts on it."""
+    try:
+        msg = json.loads(raw)
+    except (ValueError, TypeError):
+        return None, None
+    if not isinstance(msg, dict):
+        return None, None
+    event = msg.get("event")
+    if event == "postgres_changes":
+        data = (msg.get("payload") or {}).get("data") or {}
+        rec = data.get("record")
+        if data.get("type") == "INSERT" and isinstance(rec, dict):
+            return event, rec
+    return event, None
+
+
+class ChannelInjectSubscriber:
+    """The OUTBOUND Realtime subscriber → live-session injector for SHARED channels. Connects the company's box
+    OUT to Supabase Realtime (nothing connects IN — no box exposure), phx_joins channel_posts INSERTs WITH the
+    principal JWT (RLS-gated), and injects each new row into the live company member-sessions (skip-by-origin,
+    BOTH kinds). `members_of`(channel_id)→[handles], `inject`(handle, row)→deliver (the supervisor /channel-send
+    → cc_channels.send path), `principal` (the COMPANY_CHANNEL least-privilege login), `topic` (builder's
+    Realtime topic for channel_posts). on_status(kind, detail) is an optional log/Notice sink.
+
+    FALLBACK SEAM (the lead's safety net): if Supabase's Phoenix protocol rabbit-holes, the start() body swaps
+    to a urllib SELECT-since-last-seen POLL calling self.on_insert — transport-only; publish/parse/inject/
+    skip-origin are unchanged. Target stays Realtime; flag the rabbit-hole rather than ship-laggy-then-redo."""
+
+    def __init__(self, *, members_of, inject, principal: SupabasePrincipal, topic: str,
+                 table: str = "channel_posts", on_status=None):
+        self._members_of = members_of
+        self._inject = inject
         self._principal = principal
+        self._topic = topic
+        self._table = table
+        self._on_status = on_status or (lambda *_a: None)
+        self._ws = None
+        self._stop = threading.Event()
+        self._ref = 0
 
     def on_insert(self, post_row: dict) -> list[str]:
-        """Handle one new channel_posts row (called by the Realtime transport per INSERT): route skip-by-origin
-        to the channel's live company member-sessions + inject each. Returns the handles injected (for the log).
-        BUILT + TESTABLE NOW — the transport feeds it real rows once wired."""
+        """Handle one new channel_posts row: route skip-by-origin to the channel's live company member-sessions
+        + inject each (an inject failure is logged, never aborts the others). Returns the handles injected."""
         targets = route_inject(post_row, self._members_of(post_row.get("channel_id")))
         for handle in targets:
-            self._inject(handle, post_row)
+            try:
+                self._inject(handle, post_row)
+            except Exception as e:  # noqa: BLE001 — one dead session never blocks the rest
+                self._on_status("inject_error", f"{post_row.get('channel_id')}→{handle}: {e}")
         return targets
 
-    def start(self):  # pragma: no cover - transport stub
-        """STUB — connect the outbound WS to Supabase Realtime + subscribe channel_posts INSERTs, calling
-        on_insert per row. NOT IMPLEMENTED until builder posts: the Realtime mechanism (postgres_changes vs
-        broadcast-from-DB), the topic, the new_record payload shape, and the Bearer/RLS-Realtime handshake.
-        Fail-loud so it is never mistaken for live."""
-        raise NotImplementedError(
-            "ChannelInjectSubscriber.start: the Realtime WS transport is pending builder's Realtime topic + "
-            "payload shape + RLS-Realtime auth handshake (no guessed protocol). on_insert/route_inject are "
-            "built + tested; wire start() against builder's posted mechanism, then verify the live round-trip.")
+    def _next_ref(self) -> str:
+        self._ref += 1
+        return str(self._ref)
+
+    def start(self, *, reconnect: bool = True, backoff: float = 3.0):
+        """Connect + subscribe in a DAEMON thread (non-blocking); reconnect with backoff on drop, fresh token
+        each connect. Returns the thread. (Lazy-imports websocket so the publish half needs no WS dep.)"""
+        import websocket  # lazy: publish-only callers don't need the WS dep
+
+        def _run():
+            while not self._stop.is_set():
+                join = build_join_msg(self._topic, self._principal.access_token(),
+                                      table=self._table, ref=self._next_ref())
+                url = _ws_url(self._principal.url(), self._principal.anon_key())
+
+                def on_open(ws):
+                    ws.send(json.dumps(join))
+                    self._on_status("joined", self._topic)
+
+                def on_message(ws, raw):
+                    _event, rec = parse_realtime_message(raw)
+                    if rec is not None:
+                        self.on_insert(rec)
+
+                def on_error(ws, err):
+                    self._on_status("error", str(err))
+
+                def on_close(ws, *_a):
+                    self._on_status("closed", self._topic)
+
+                self._ws = websocket.WebSocketApp(url, on_open=on_open, on_message=on_message,
+                                                  on_error=on_error, on_close=on_close)
+                threading.Thread(target=self._heartbeat, args=(self._ws,), daemon=True).start()
+                self._ws.run_forever()
+                if not reconnect or self._stop.is_set():
+                    break
+                self._stop.wait(backoff)
+
+        t = threading.Thread(target=_run, daemon=True)
+        t.start()
+        return t
+
+    def _heartbeat(self, ws, *, interval: float = 25.0):
+        """Phoenix heartbeat + token refresh — keeps the RLS subscription alive past the JWT's expiry (re-sends
+        a fresh access_token; access_token() refreshes near expiry). Exits when the socket drops (run reconnects)."""
+        while not self._stop.is_set():
+            self._stop.wait(interval)
+            if self._stop.is_set():
+                break
+            try:
+                ws.send(json.dumps({"topic": "phoenix", "event": "heartbeat", "payload": {}, "ref": self._next_ref()}))
+                ws.send(json.dumps({"topic": f"realtime:{self._topic}", "event": "access_token",
+                                    "payload": {"access_token": self._principal.access_token()},
+                                    "ref": self._next_ref()}))
+            except Exception:  # noqa: BLE001 — socket closed; the run loop reconnects
+                break
+
+    def stop(self):
+        self._stop.set()
+        if self._ws is not None:
+            try:
+                self._ws.close()
+            except Exception:  # noqa: BLE001
+                pass
 
 
 if __name__ == "__main__":
@@ -169,16 +281,35 @@ if __name__ == "__main__":
     # NEVER client-only: a session row is NOT filtered out — company sessions see each other
     assert route_inject(sess_row, members) != [], "single-source: company↔company must inject (not client-only)"
 
-    # subscriber on_insert fan-out via fake inject
+    # subscriber on_insert fan-out via fake inject (a dummy principal — on_insert never touches it; start() does)
+    dummy = SupabasePrincipal("COMPANY_CHANNEL",
+                              env={"COMPANY_CHANNEL_SUPABASE_URL": "https://gctunhsuwpaxeatwlmuv.supabase.co",
+                                   "COMPANY_CHANNEL_ANON_KEY": "anon"},
+                              fetch=lambda *_: {"access_token": "jwt.x.y"})
     delivered = []
-    sub = ChannelInjectSubscriber(members_of=lambda cid: members,
+    sub = ChannelInjectSubscriber(members_of=lambda cid: members, principal=dummy, topic="channel_posts",
                                   inject=lambda h, row: delivered.append((h, row["text"])))
     injected = sub.on_insert(cd_row)
     assert injected == members and len(delivered) == 3, (injected, delivered)
-    # start() is a fail-loud stub (never mistaken for live)
-    try:
-        sub.start(); raise SystemExit("FAIL: start() should be a NotImplementedError stub")
-    except NotImplementedError:
-        pass
+
+    # ★ build_join_msg — the LOAD-BEARING JWT-in-join (no access_token → RLS silent-empty subscription)
+    join = build_join_msg("channel_posts", "JWT123")
+    assert join["event"] == "phx_join" and join["payload"]["access_token"] == "JWT123", join
+    assert join["payload"]["config"]["postgres_changes"][0]["table"] == "channel_posts", join
+
+    # parse_realtime_message — INSERT→record · join-ack→None · junk→(None,None)
+    ev, rec = parse_realtime_message(json.dumps({"event": "postgres_changes",
+                                                 "payload": {"data": {"type": "INSERT", "record": cd_row}}}))
+    assert ev == "postgres_changes" and rec == cd_row, (ev, rec)
+    ev2, rec2 = parse_realtime_message(json.dumps({"event": "phx_reply", "payload": {"status": "ok"}}))
+    assert ev2 == "phx_reply" and rec2 is None, (ev2, rec2)
+    assert parse_realtime_message("not json") == (None, None)
+
+    # _ws_url — https→wss (prod), http→ws (local stack)
+    assert _ws_url("https://gctunhsuwpaxeatwlmuv.supabase.co", "anon").startswith(
+        "wss://gctunhsuwpaxeatwlmuv.supabase.co/realtime/v1/websocket?apikey=anon"), _ws_url("https://x", "a")
+    assert _ws_url("http://localhost:54321", "a").startswith("ws://localhost:54321/realtime/v1/websocket"), "local"
+
     print("channel_boundary OFFLINE self-test: ALL PASS (build_row·publish[ok+fail-loud]·skip-by-origin-both-kinds"
-          "·on_insert-fanout·start-stub). LIVE round-trip pending builder's tables + Realtime payload + CD end.")
+          "·on_insert-fanout·build_join[JWT-load-bearing]·parse-realtime·ws-url). LIVE WS round-trip pending "
+          "builder's local URL/topic + minted principal + 0005 RLS — verified at step-c, NOT offline green.")
