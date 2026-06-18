@@ -41,6 +41,50 @@ def _scheme_of(address: str):
     return scheme(address)
 
 
+# ── VIEW grounding (the instrument SURFACE aim → the ACTIVE projection view's self-description) ────────
+# ui://instrument/surface carries NO registered ui:// identity, but the meaning the OPERATOR sees on the
+# surface is the ACTIVE projection view's meta — bindings/<id>.py `meta` {name,is,fills,why}. So the RHM
+# grounds the surface aim on that registry meta (the SAME self-description the surface renders), instead of
+# punting "thin pointer" (projection's stranger-Ask gap, fork's lane, 2026-06-18). registry-is-truth: read
+# bindings/, never hardcode the copy. The active view rides the aim fragment (#binding=<id>, projection passes
+# it — the surface knows which view is live); default 'raw' = "What's happening…" (the fallback, bridge.py:879).
+def _instrument_view_binding(address):
+    """If `address` is the instrument SURFACE aim (ui://instrument/surface[#binding=<id>]) → the active binding
+    id (from the #binding= fragment; default 'raw'). Else None."""
+    if not isinstance(address, str):
+        return None
+    if address.split("#", 1)[0].rstrip("/") != "ui://instrument/surface":
+        return None
+    binding = "raw"
+    if "#" in address:
+        for part in address.split("#", 1)[1].replace("&", ";").split(";"):
+            if part.startswith("binding="):
+                binding = part[len("binding="):].strip() or "raw"
+    return binding
+
+
+def _binding_meta(binding_id):
+    """The projection view's legibility meta {name,is,fills,why} from bindings/<id>.py (the SAME self-description
+    the surface renders). None if absent/malformed/path-unsafe — degrade-clean, never raises."""
+    try:
+        import importlib.util
+        import os
+        if not isinstance(binding_id, str) or not binding_id or "/" in binding_id or ".." in binding_id:
+            return None
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(root, "bindings", f"{binding_id}.py")
+        if not os.path.isfile(path):
+            return None
+        spec = importlib.util.spec_from_file_location(f"_binding_{binding_id}", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        b = getattr(mod, "BINDING", None)
+        m = b.get("meta") if isinstance(b, dict) else None
+        return m if isinstance(m, dict) and m.get("name") else None
+    except Exception:
+        return None
+
+
 def territory_for(address, *, suite=None, store=None, max_relations: int = 20) -> dict:
     """Compose the territory at `address` → a structured, brain-agnostic dict:
       {address, scheme, identity, identity_kind, context_items, chats, relations, notes, legs_present}
@@ -88,6 +132,17 @@ def territory_for(address, *, suite=None, store=None, max_relations: int = 20) -
         # Case (3): a well-formed resolvable scheme pointing at a NONEXISTENT record raises here → noted-absent.
         terr["notes"].append(f"identity leg unresolved ({type(e).__name__}: {e})")
         terr["identity"] = None
+
+    # ── VIEW leg: the instrument SURFACE aim → OVERRIDE the thin ui:// identity with the ACTIVE projection
+    # view's meta (bindings/ registry), so the RHM grounds on the real on-screen view meaning, not "(unregistered)".
+    _vb = _instrument_view_binding(address)
+    if _vb is not None:
+        _vmeta = _binding_meta(_vb)
+        if _vmeta is not None:
+            terr["identity"] = _vmeta
+            terr["identity_kind"] = "view.meta"
+            terr["view_binding"] = _vb
+            terr["notes"] = [n for n in terr["notes"] if "unregistered" not in n and "needs a suite" not in n]
     terr["legs_present"]["identity"] = terr["identity"] is not None
 
     # ── CORPUS-RECORD leg (the comprehended/embedded record AT this address — what DNA's renderGallery
@@ -190,6 +245,15 @@ def territory_prose(territory_or_address, *, suite=None, store=None, max_chars: 
         # raw address_help dict) — which dumped the blast_radius/scope developer-diagnostics + the "(unregistered)"
         # raw address into context, so the brain narrated system-readout jargon + leaked the address (2026-06-17 fix).
         bits.append("What this is: " + territory_label(terr, max_len=200))
+        # VIEW meta (the instrument-surface aim → the ACTIVE projection view's self-description, the SAME the
+        # operator sees) — the RHM's grounding so it answers "what am I looking at?" from the real view meaning,
+        # not a thin pointer. is=what-kind · fills=what-each-element-is · why=what-it's-for (bindings/<id>.py meta).
+        if terr.get("identity_kind") == "view.meta" and isinstance(terr.get("identity"), dict):
+            _vm = terr["identity"]
+            _vparts = [s for s in (_vm.get("is"), _vm.get("fills"), _vm.get("why"))
+                       if isinstance(s, str) and s.strip()]
+            if _vparts:
+                bits.append("What this view shows: " + _clip(" ".join(_vparts), 600))
         # the comprehended CONTENT (the readable meaning) — corpus units / content identities.
         content = terr.get("identity") if (terr.get("identity_kind") == "corpus.content"
                                             and isinstance(terr.get("identity"), str)) else None
