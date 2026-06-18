@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { fetchProjection, fetchTerritory, type Projection, type ProjPoint, ApiError } from './lib/api'
 import { SourcePanel, readTerritoryContent, territoryRefCount, territoryNotes, type SourceView } from './source/SourcePanel'
-import { installAddressCapture, subscribeLocus, getLocus, clearNotice } from './lib/address'
+import { installAddressCapture, installPointerBridge, subscribeLocus, getLocus, clearNotice } from './lib/address'
 import type { MotionFeel } from './tokens/motion'
 import { Desktop } from './layouts/Desktop'
 import { Portrait } from './layouts/Portrait'
@@ -177,6 +177,7 @@ export function App() {
 
   useEffect(() => {
     installAddressCapture()
+    installPointerBridge() // the non-click spotlight trigger — lets the RHM/brain point at the thing it discusses
     const unsub = subscribeLocus((l) => setNotice(l.notice))
     setNotice(getLocus().notice)
     return unsub

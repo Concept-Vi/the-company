@@ -105,3 +105,21 @@ function cssEscape(s: string): string {
   // Minimal escape for attribute-selector quoting (CSS.escape isn't guaranteed in every runtime).
   return s.replace(/(["\\])/g, '\\$1')
 }
+
+// ---- the POINTER bridge — the programmatic twin of installAddressCapture (clicks) ----------------
+// "Point at the thing": so the RHM / brain can spotlight the element it's DISCUSSING (not only the operator's
+// clicks). Anything dispatches `window.dispatchEvent(new CustomEvent('ui:point', { detail: { address: 'ui://…' } }))`
+// → it routes to the SAME single sink (resolveUiTarget: indicate + spotlight-glow + scroll-into-view, fail-loud on a
+// malformed ui:// address). REUSES the existing highlight mechanism — no parallel spotlight path (the law). Only
+// ui:// loci point (mirrors the click gate); a non-ui:// / empty address is an honest no-op (a brain pointing at a
+// non-locus must not spam the operator with an error Notice). This is the surface half of the cross-stream spotlight;
+// the brain's emit (fork) is the other half — it dispatches ui:point{address} when it references an on-surface thing.
+let _pointerInstalled = false
+export function installPointerBridge() {
+  if (_pointerInstalled) return
+  _pointerInstalled = true
+  window.addEventListener('ui:point', (e) => {
+    const addr = String(((e as CustomEvent).detail || {}).address || '')
+    if (addr.indexOf('ui://') === 0) resolveUiTarget(addr)
+  })
+}
