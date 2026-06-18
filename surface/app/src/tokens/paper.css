@@ -88,9 +88,24 @@ html, body, #root {
 /* serif for the few display words (a name, a count) */
 .display { font-family: var(--font-serif); line-height: var(--lh-display); }
 
-/* the soft paper highlight for an indicated/spotlit address (animated by Motion) */
-.ui-indicated { outline: 1.5px solid var(--pig-accent); outline-offset: 2px; }
-.ui-spotlight { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pig-accent) 35%, transparent); }
+/* the highlight for an indicated/spotlit address. `.ui-indicated` = the persistent marker (an accent outline);
+   `.ui-spotlight` = the ATTENTION moment when the V points HERE (or a click lands) — a strong steady ring PLUS a
+   2× expanding "ping" halo that radiates out + fades, drawing the eye, then settles to the .ui-indicated outline.
+   This is the "look HERE" punch (was a faint static ring — too subtle when the V walks the operator through; the
+   spotlight should pull the eye to what's being named). On-system: uses DNA's --pig-accent only, no new colour.
+   The ping is guarded by the reduced-motion rule below — it collapses to the strong STATIC ring (still a clear
+   highlight, just no motion). Surface-visual lane (mine, on DNA's token); DNA refines the aesthetic if she wants. */
+.ui-indicated { outline: 2px solid var(--pig-accent); outline-offset: 2px; }
+.ui-spotlight {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pig-accent) 60%, transparent);
+  animation: ui-spotlight-ping 600ms ease-out 2;
+}
+@keyframes ui-spotlight-ping {
+  from { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pig-accent) 60%, transparent),
+                     0 0 0 1px color-mix(in srgb, var(--pig-accent) 45%, transparent); }
+  to   { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pig-accent) 60%, transparent),
+                     0 0 0 18px color-mix(in srgb, var(--pig-accent) 0%, transparent); }
+}
 
 /* respect reduced motion at the platform level too */
 @media (prefers-reduced-motion: reduce) {
