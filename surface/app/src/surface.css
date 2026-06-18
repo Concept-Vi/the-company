@@ -490,7 +490,14 @@
 .gallery-frame .screen.ar.ar-responsive {
   display: flex; flex-direction: column;
   grid-template-columns: none; grid-template-rows: none;
-  gap: 0; padding: 0;
+  gap: 0;
+  /* padding-bottom RESERVES a band for DNA's absolute `.p-hatch` (the gold bottom-closure, position:absolute
+     bottom:0 z-index:2). In the operator host, fork's `.brain-ask` button is APPENDED as the card's last in-flow
+     child — and DNA's standalone render has no such appended element, so only HERE (composing both streams) did
+     the absolute hatch paint over the button's bottom (fresh-eyes critic FAIL, verified by use both viewports/
+     variants). The padding sits the in-flow content above the hatch's band → no overlap. Host-composition seam
+     (mine — I own composing DNA's render + fork's hooks in the modal); flagged DNA + fork. */
+  padding: 0 0 var(--s-6);
 }
 .gallery-frame .ar-responsive .ar-zone-head,
 .gallery-frame .ar-responsive .ar-zone-body,
