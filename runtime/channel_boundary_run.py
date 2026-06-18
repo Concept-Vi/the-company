@@ -109,6 +109,58 @@ def _log_status(kind: str, detail: str):
     print(f"[boundary] {kind}: {detail}", flush=True)
 
 
+def post_to_channel(principal, channel: str, content: str, from_session: str, *,
+                    thread: str | None = None, to_session: str | None = None,
+                    sender_kind: str = "session") -> dict:
+    """The shared-aware POST (the publish hook): a company session posting to `channel` →
+      • SHARED (cc_channels.is_shared) → publish to Supabase channel_posts (single-source; the boundary sub
+        delivers to members + CD). Returns publish_shared_post's {ok, status, id?, error?}.
+      • INTERNAL → the existing LOCAL path (broadcast to channel_members via cc_channels.send) — UNCHANGED;
+        internal posts never leave the box. Returns {ok, internal:True, delivered:[...]}.
+    The gate of single-source: only shared=true publishes outward (fail-closed — is_shared False ⇒ internal)."""
+    from runtime import cc_channels
+    from runtime.channel_boundary import build_post_row, publish_shared_post
+    if cc_channels.is_shared(channel):
+        row = build_post_row(channel, from_session, content, thread=thread, to_session=to_session,
+                             sender_kind=sender_kind)
+        res = publish_shared_post(row, principal=principal)
+        if not res.get("ok"):
+            _log_status("publish_failed", f"{channel}: [{res.get('status')}] {res.get('error')}")
+        return res
+    # INTERNAL: the existing local broadcast (unchanged fabric) — never leaves the box.
+    delivered = []
+    for handle in cc_channels.channel_members(channel):
+        try:
+            cc_channels.send(handle, content, frm=from_session, topic=channel)
+            delivered.append(handle)
+        except Exception as e:  # noqa: BLE001 — a dead member never blocks the rest
+            _log_status("internal_send_error", f"{channel}→{handle}: {e}")
+    return {"ok": True, "internal": True, "delivered": delivered}
+
+
+def ensure_design_channel(*, members: list | None = None) -> dict:
+    """Seed the `design` SHARED channel (CD's home) if absent — shared=True so its posts publish outward +
+    CD can participate. Idempotent (returns the existing record if present). `members` = the company session
+    handles to seat in it (the inject targets); the operator/lead adds the real participants. The per-CLIENT
+    grant (clients.channels) is builder's Supabase side — this is the company-side record (membership + the
+    shared flag for the publish-hook routing + members_of)."""
+    from runtime import cc_channels
+    rec = cc_channels._read_channel("design")
+    if not rec:
+        rec = cc_channels.create_channel("design", purpose="Claude Design ⨯ company — shared design channel",
+                                         shared=True)
+    elif not rec.get("shared"):
+        rec["shared"] = True
+        cc_channels._write_channel(rec)
+    for h in (members or []):
+        if h not in rec.get("members", []):
+            try:
+                cc_channels.add_member("design", h)
+            except Exception:  # noqa: BLE001 — already a member / archived; idempotent
+                pass
+    return cc_channels._read_channel("design")
+
+
 def run_boundary(*, env_file: str | None = None, block: bool = True):
     """Load env → build → start the Realtime sub (daemon). Returns (subscriber, principal, thread). If block,
     keeps the process alive (the boundary is a long-running service)."""

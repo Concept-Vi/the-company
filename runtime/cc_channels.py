@@ -456,9 +456,14 @@ def _write_channel(rec: dict) -> None:
     os.replace(tmp, p)
 
 
-def create_channel(name: str, purpose: str = "", coordinator: str = "") -> dict:
+def create_channel(name: str, purpose: str = "", coordinator: str = "", *, shared: bool = False) -> dict:
     """Create a named channel (a managed group). Fails loud if a channel with this name already
-    exists (no silent overwrite). `coordinator` is an optional member handle that owns the channel."""
+    exists (no silent overwrite). `coordinator` is an optional member handle that owns the channel.
+    `shared` (default False — fail-closed, the lead's rule): a SHARED channel is single-source on Supabase
+    (its posts publish OUT to the channel_boundary + an external client like Claude Design can participate);
+    an INTERNAL channel (shared=False) stays LOCAL + never leaves the box. The flag is the publish-hook gate:
+    only shared=true channels route a post to the Supabase boundary. Additive — every existing channel is
+    INTERNAL (no `shared` key ⇒ is_shared False)."""
     if not (name or "").strip():
         raise ChannelError("create_channel needs a non-empty `name`.")
     cid = _channel_id(name)
@@ -466,9 +471,18 @@ def create_channel(name: str, purpose: str = "", coordinator: str = "") -> dict:
         raise ChannelError(f"channel {name!r} (id {cid!r}) already exists — list_channels() shows it. "
                            f"Pick a different name, or add_member/remove_member on the existing one.")
     rec = {"id": cid, "name": name.strip(), "purpose": purpose or "", "coordinator": coordinator or "",
-           "members": [], "status": "active", "created": time.strftime("%Y-%m-%dT%H:%M:%S")}
+           "members": [], "status": "active", "shared": bool(shared),
+           "created": time.strftime("%Y-%m-%dT%H:%M:%S")}
     _write_channel(rec)
     return rec
+
+
+def is_shared(channel: str) -> bool:
+    """True iff `channel` is a SHARED channel (single-source on Supabase, publish-eligible). Fail-closed:
+    an absent channel / a record with no `shared` key ⇒ False (INTERNAL — never publishes out). The publish
+    hook's gate (a post routes to the Supabase boundary ONLY when this is True)."""
+    rec = _read_channel(channel)
+    return bool(rec and rec.get("shared"))
 
 
 def list_channels(*, include_archived: bool = False) -> list:
