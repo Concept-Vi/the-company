@@ -85,8 +85,23 @@ def _self_marker(proj: str) -> dict | None:
     if cp is None:
         return None
 
-    def _ok(sid):                                              # cwd cross-check (belt+braces vs a stale entry)
-        return bool(sid) and os.path.exists(os.path.join(proj, f"{sid}.jsonl"))
+    def _locate(sid):
+        """The sid's transcript, found ANYWHERE under PROJECTS_DIR — not only in the passed `proj`. The
+        marker/registration is keyed by the session-unique, compaction-stable claude_pid, so the sid is
+        already a trustworthy self-id; requiring it in the PASSED proj was an over-tight check that broke
+        a disoriented session resolving from a cwd ≠ its launch cwd (the live bug, 2026-06-18). Validating
+        the transcript EXISTS (anywhere) still rejects a stale/recycled-pid marker, and returns the REAL
+        project_dir so the caller gets the right path regardless of its cwd. Returns (path, project_dir)
+        or (None, None)."""
+        if not sid:
+            return None, None
+        direct = os.path.join(proj, f"{sid}.jsonl")            # fast path: the common (correct-cwd) case
+        if os.path.exists(direct):
+            return direct, proj
+        import glob as _g
+        for p in _g.glob(os.path.join(PROJECTS_DIR, "*", f"{sid}.jsonl")):
+            return p, os.path.dirname(p)
+        return None, None
 
     # 1) THE FABRIC REGISTRATION (the ONE store — fold-home): the .mjs announce wrote claude_pid; the
     #    SessionStart hook populated session_id. Scan .data/channels/*.json for THIS claude_pid. This is
@@ -100,8 +115,11 @@ def _self_marker(proj: str) -> dict | None:
                 r = json.load(open(os.path.join(regdir, fn)))
             except (OSError, ValueError):
                 continue
-            if r.get("claude_pid") == cp and _ok(r.get("session_id")):
-                return {"session_id": r["session_id"], "how": "fabric-registration (#69 claude_pid)"}
+            if r.get("claude_pid") == cp:
+                _p, _pd = _locate(r.get("session_id"))
+                if _p:
+                    return {"session_id": r["session_id"], "how": "fabric-registration (#69 claude_pid)",
+                            "path": _p, "project_dir": _pd}
     except OSError:
         pass
 
@@ -110,8 +128,9 @@ def _self_marker(proj: str) -> dict | None:
         m = json.load(open(os.path.join(SELF_MARKER_DIR, f"{cp}.json")))
     except (OSError, ValueError):
         return None
-    if _ok(m.get("session_id")):
-        return {"session_id": m["session_id"], "how": "claude-pid marker"}
+    _p, _pd = _locate(m.get("session_id"))
+    if _p:
+        return {"session_id": m["session_id"], "how": "claude-pid marker", "path": _p, "project_dir": _pd}
     return None
 
 
@@ -147,8 +166,11 @@ def resolve_own_session(cwd: str | None = None, session_id: str | None = None,
     # clean: no marker / orphaned session → fall through to the newest-mtime/ambiguous-raise below.
     _m = _self_marker(proj)
     if _m:
-        _sid = _m["session_id"]
-        return {"path": os.path.join(proj, f"{_sid}.jsonl"), "session_id": _sid, "project_dir": proj,
+        # use the marker's REAL location (it may differ from the passed-cwd proj — a disoriented session
+        # resolving from a different cwd still gets its right transcript; claude_pid is the true self-id).
+        _pd = _m.get("project_dir", proj)
+        return {"path": _m.get("path", os.path.join(_pd, f"{_m['session_id']}.jsonl")),
+                "session_id": _m["session_id"], "project_dir": _pd,
                 "cwd": cwd, "how": _m.get("how", "claude-pid self-marker (#69)"), "ambiguous": False}
     if not os.path.isdir(proj):
         raise FileNotFoundError(
