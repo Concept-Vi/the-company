@@ -14,21 +14,24 @@ import { fileURLToPath } from 'node:url'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const PUBLIC_GALLERY = join(HERE, '..', 'public', 'gallery')
 
-// DNA's render module is MID-REORG: her repo is moving `ui/` → `surface/runtime/` (DNA's own
-// docs/dev/REORGANISATION-PROPOSAL.md, target tree — organisms.js/unit-view.js/phone.css/piece.css all
-// land in surface/runtime/). To dissolve the move-RACE — so the reorg can land on ANY beat without a
-// paired edit here AND without ever serving a silently-stale copy — we resolve EACH source file across a
-// PRIORITISED list of candidate homes and FAIL LOUD if it's in none:
+// DNA's render module went through a repo reorg: `ui/` → `surface/`, and the move SPLIT BY FILE-TYPE —
+// the JS modules (organisms.js / unit-view.js) landed in `surface/runtime/`, the CSS (phone.css /
+// piece.css) in `surface/styles/`. (The pre-reorg proposal had them all under surface/runtime/; the
+// actual move separated styles — confirmed by-use 2026-06-18: ui/ gone, runtime/ has the JS, styles/ has
+// the CSS.) The dissolve-the-RACE design holds REGARDLESS — we resolve EACH source file independently
+// across a PRIORITISED list of candidate homes and FAIL LOUD if it's in none (so a split move, a partial
+// move, or a future relocation is found-or-flagged, never silently-stale):
 //   1. an explicit DNA_UI_DIR override (a relocated checkout / manual pin) — honoured first of all;
-//   2. <repo>/surface/runtime/ — the reorg TARGET, tried before today's home so the instant DNA's move
-//      lands we pick up the new canonical home (and never prefer a lingering stale ui/ copy after it);
-//   3. <repo>/ui/ — today's home, the fallback until the move lands.
+//   2. <repo>/surface/runtime/ — the reorg home for the JS modules;
+//   3. <repo>/surface/styles/  — the reorg home for the CSS (the move split styles out of runtime);
+//   4. <repo>/ui/ — the pre-reorg home, kept as a fallback for an older checkout (now gone in the canonical repo).
 // The per-file log prints the ACTUAL resolved path, so which home a file came from is VISIBLE, not silent.
 const DNA_REPO = process.env.DNA_REPO_DIR || '/home/tim/repos/counterpart/design'
 const DNA_DIRS = [
   process.env.DNA_UI_DIR, // explicit override (legacy var / relocated checkout) — first
-  join(DNA_REPO, 'surface', 'runtime'), // the reorg target (ui/ → surface/runtime/) — preferred
-  join(DNA_REPO, 'ui'), // today's home — fallback until the move lands
+  join(DNA_REPO, 'surface', 'runtime'), // reorg home for JS modules (organisms.js / unit-view.js)
+  join(DNA_REPO, 'surface', 'styles'), // reorg home for CSS (phone.css / piece.css) — the move split styles out
+  join(DNA_REPO, 'ui'), // pre-reorg home — fallback for an older checkout (gone in the canonical repo)
 ].filter(Boolean)
 
 // resolve a DNA source file across the candidate homes; returns the first existing path, or null (the
