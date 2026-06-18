@@ -37,8 +37,14 @@ let bound = false // module-level guard — bind the drill exactly once across S
 export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLDivElement>(null)
+  // DECISION-SLIDE lifecycle decouple: a decision walk is a SEQUENCE hosted in ONE container (DNA's
+  // contract, thread g-1781731457 Q3) — NOT tied to a wheel point. So while a decision slide is up, a
+  // wheel-DESELECT (projection:select → null) must NOT close the face (that would kill the walk mid-
+  // decision). This flag is set by `decision:rendered` and cleared by any real close (dismiss/Esc) or by a
+  // normal corpus drill (gallery:rendered) — the two modes stay mutually exclusive.
+  const decisionModeRef = useRef(false)
 
-  const dismiss = useCallback(() => onOpenChange(false), [onOpenChange])
+  const dismiss = useCallback(() => { decisionModeRef.current = false; onOpenChange(false) }, [onOpenChange])
 
   // a focused modal: when the FACE is open, recede the competing chrome (header/side-text/scrubber). A scrim
   // alone can't — dark chrome text stays legible over a dark scrim, and the header sits in the same top band as
@@ -65,22 +71,37 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
 
   // the face opens when DNA's render lands; a deselect (projection:select → null) or Esc closes it.
   useEffect(() => {
+    const setTitle = (addr: string, fallback: string) => {
+      if (titleRef.current) titleRef.current.setAttribute('aria-label', addr ? (addr.replace(/\/+$/, '').split('/').pop() || addr) : fallback)
+    }
     const onRendered = (e: Event) => {
       const d = (e as CustomEvent).detail || {}
-      const addr: string = d.address || ''
-      if (titleRef.current) titleRef.current.setAttribute('aria-label', addr ? (addr.replace(/\/+$/, '').split('/').pop() || addr) : 'drilled unit')
+      decisionModeRef.current = false // a normal corpus drill exits any decision walk (modes mutually exclusive)
+      setTitle(d.address || '', 'drilled unit')
+      onOpenChange(true)
+    }
+    // DNA fires `decision:rendered` per decision-SLIDE (g-1781731457 Q3 — projection's chosen key, a sibling to
+    // gallery:rendered with the same payload shape). Advancing the walk re-renders the SAME hosted container
+    // (content swaps per decision); we open + HOLD open. Mark decision-mode so a wheel-deselect can't kill the walk.
+    const onDecisionRendered = (e: Event) => {
+      const d = (e as CustomEvent).detail || {}
+      decisionModeRef.current = true
+      setTitle(d.address || '', 'decision')
       onOpenChange(true)
     }
     const onSelect = (e: Event) => {
       const d = (e as CustomEvent).detail
-      if (!d || !d.address) onOpenChange(false) // deselect / address-less point closes the face
+      if (decisionModeRef.current) return // a decision walk isn't tied to wheel selection — ignore deselect while it's up
+      if (!d || !d.address) onOpenChange(false) // deselect / address-less point closes the (corpus) face
     }
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onOpenChange(false) }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { decisionModeRef.current = false; onOpenChange(false) } }
     window.addEventListener('gallery:rendered', onRendered)
+    window.addEventListener('decision:rendered', onDecisionRendered)
     window.addEventListener('projection:select', onSelect)
     window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('gallery:rendered', onRendered)
+      window.removeEventListener('decision:rendered', onDecisionRendered)
       window.removeEventListener('projection:select', onSelect)
       window.removeEventListener('keydown', onKey)
     }
