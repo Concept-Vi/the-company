@@ -26,9 +26,24 @@
   // address = ANY address (a unit source, OR the V's current aim — page/surface default, element on aim).
   // Renders accumulated text into replyEl.textContent by default; pass opts.onText(acc) to render your own
   // way (the V may want a richer panel). opts.onTool / opts.onDone / opts.onError are optional hooks.
+  // Strip markdown SYNTAX at the display layer — the RHM is a SPOKEN voice (plain prose), and the reply slot
+  // renders textContent (plain), so any leaked markdown shows as literal asterisks ("**What's happening**"),
+  // which reads as broken/unfinished (projection's stranger flag, 2026-06-18). PANEL_BRIEFING also asks the
+  // brain for no-markdown (the voice); THIS is the reliable safety net so the display is clean prose regardless
+  // of what the model emits. Strips **/__ bold, *italic*, `code`, ```fences```, # headers, and -/*/1. bullet
+  // MARKERS — keeps the text + newlines. Applied to EVERY emit (default replyEl AND a custom opts.onText).
+  function _stripMd(t) {
+    return String(t == null ? '' : t)
+      .replace(/```([\s\S]*?)```/g, '$1').replace(/`([^`]+)`/g, '$1')
+      .replace(/\*\*([\s\S]+?)\*\*/g, '$1').replace(/__([\s\S]+?)__/g, '$1')
+      .replace(/\*([^*\n]+?)\*/g, '$1')
+      .replace(/(^|\n)[ \t]{0,3}#{1,6}[ \t]+/g, '$1')
+      .replace(/(^|\n)[ \t]*[-*+•][ \t]+/g, '$1').replace(/(^|\n)[ \t]*\d+\.[ \t]+/g, '$1');
+  }
   async function talk(replyEl, address, prompt, opts) {
     opts = opts || {};
-    const setText = opts.onText || (replyEl ? (t) => { replyEl.textContent = t; } : function () {});
+    const _emit = opts.onText || (replyEl ? (t) => { replyEl.textContent = t; } : function () {});
+    const setText = (t) => _emit(_stripMd(t));
     let acc = '';
     setText('…');
     try {
