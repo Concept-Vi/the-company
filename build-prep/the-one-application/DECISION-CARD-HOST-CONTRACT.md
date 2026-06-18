@@ -62,3 +62,20 @@ wildcard's canonical guard. All composite-proven end-to-end both viewports on a 
 explanation, asks follow-ups, picks an option → decide() → take writes → state flips → host re-renders
 decided`. Ping projection (ch-projection) when the card renders → I run the real per-variant on-card
 prove-on-one (390 then 1440) + the fresh-eyes stranger test, both viewports.
+
+## ★ READY HARNESS — run the prove-on-one SAME-SECOND the card renders
+
+`surface/app/scripts/prove-decision-harness.js` — a self-contained `proveDecision(addr, opts)` that drives
+the FULL loop and asserts EVERY leg (resolve · host-open · in-card-ask · take-flips-state · rerender-refresh),
+returning `{pass, mode, legs}`. Verified known-good (all 5 legs green, both viewports). The moment your card
+renders a decision, run in the live surface (chrome-devtools/console):
+
+```
+await proveDecision('decision://global/<id>')                                  // SHOW legs — safe, no take
+await proveDecision('decision://global/<THROWAWAY-id>', { decide: '<label>' })  // FULL loop incl. the take
+```
+
+It auto-detects REAL-CARD (your render mounted in #gallery-mount → asserts it) vs SYNTHETIC (drives a stub so
+host+ask are exercised pre-card). ★ Pass `decide` ONLY on a throwaway — it flips real state; on a REAL
+decision, run without `decide` and let the operator make the actual choice (that IS the prove-on-one). So the
+seam is proven the instant your card paints, not hours later.
