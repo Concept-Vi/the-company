@@ -39,6 +39,13 @@ try:
     from nodes._meta import NODE_TYPE_META as _NODE_TYPE_META
 except Exception:
     _NODE_TYPE_META = {}
+# THE FAMILY legibility registry (the "Activity" lens, binding=grouped — sectors are the 7 declared FAMILIES,
+# angle_from="kind-group"). SAME legibility-type shape, OWN registry — and it lives WITH its `groups` definition
+# in bindings/grouped.py (the families' meaning beside what they gather). Same defensive import.
+try:
+    from bindings.grouped import GROUP_META as _GROUP_META
+except Exception:
+    _GROUP_META = {}
 
 # which declared-meaning registry backs a given sector DOMAIN (binding.angle_from). Each domain maps to its own
 # {id: {name, is}} registry; an unmapped domain falls through to humanize-only (still legible, never raw).
@@ -46,6 +53,7 @@ _SECTOR_META_BY_DOMAIN = {
     "kind": _KIND_META,
     "node-types": _NODE_TYPE_META,
     "node_types": _NODE_TYPE_META,
+    "kind-group": _GROUP_META,
 }
 
 
