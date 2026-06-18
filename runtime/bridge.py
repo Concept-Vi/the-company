@@ -1701,6 +1701,10 @@ class H(BaseHTTPRequestHandler):
         # FORAGER D1 (additive) — the operator's SELECTED CONTEXT SET from the canvas (multi-selected
         # forager circles → "give to builder"). An opaque pre-composed block; absent = today's body.
         set_block = b.get("context_block") or None
+        # the per-turn POINTABLES catalog (surface-sourced: window.surfacePointables() → [{token,label}],
+        # NO address — addresses stay client-side, operator-law). Folded into the brain's prompt so it can
+        # point at on-screen things via the point verb. Absent = today's body (the brain just speaks).
+        pointables = b.get("pointables") if isinstance(b.get("pointables"), list) else None
         self.send_response(200)
         self.send_header("Content-Type", "application/x-ndjson")
         self.send_header("Cache-Control", "no-cache")
@@ -1751,7 +1755,8 @@ class H(BaseHTTPRequestHandler):
                     ctx = f"{ctx}\n\n{cb}" if ctx else cb
                 except Exception:
                     pass
-            for ev in run_turn(prompt, session_id=sid, context_block=ctx, should_stop=client_gone):
+            for ev in run_turn(prompt, session_id=sid, context_block=ctx,
+                               pointables=pointables, should_stop=client_gone):
                 emit(ev)
                 if gone[0]:
                     return

@@ -51,7 +51,19 @@
     _loading(true);
     setText('Looking…');
     try {
+      // POINTABLES (the spotlight emit, surface-sourced): read the LIVE catalog at send-time so the brain
+      // only gets tokens for things currently on screen. Send {token,label} ONLY (NO address — operator-law:
+      // addresses stay client-side); keep a local token→address map to dispatch ui:point when the brain calls
+      // the point verb. Absent (a per-unit mount, or a host without the fn) → no pointables, brain just speaks.
+      let _ptMap = {}; let _pointables = [];
+      try {
+        const cat = (typeof window.surfacePointables === 'function') ? (window.surfacePointables() || []) : [];
+        cat.forEach((c) => {
+          if (c && c.token && c.address) { _ptMap[c.token] = c.address; if (c.label) _pointables.push({ token: c.token, label: c.label }); }
+        });
+      } catch (e) { _ptMap = {}; _pointables = []; }
       const body = { prompt, address };
+      if (_pointables.length) body.pointables = _pointables;
       if (_sessions[address]) body.session_id = _sessions[address];   // continue the per-address conversation
       const resp = await fetch(CLAUDE_TURN, {
         method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
@@ -79,6 +91,13 @@
             acc += ev.text; setText(acc); prevKind = 'text';
           }
           else if (ev.type === 'tool') { prevKind = 'tool'; if (opts.onTool) opts.onTool(ev); }
+          else if (ev.type === 'point' && ev.token) {
+            // the brain pointed at an on-screen thing: map its OPAQUE token → ui:// (LOCAL catalog — addresses
+            // never came from the server) → dispatch ui:point → projection's ONE sink spotlights it. Unknown/
+            // stale token → clean no-op (the sink also no-ops a non-ui://). Never breaks the text stream.
+            const _addr = _ptMap[ev.token];
+            if (_addr) { try { window.dispatchEvent(new CustomEvent('ui:point', { detail: { address: _addr } })); } catch (e) {} }
+          }
           else if (ev.type === 'done') { _loading(false); if (ev.result && !acc) setText(ev.result); if (opts.onDone) opts.onDone(ev); }
           else if (ev.type === 'error') { _loading(false); setText('brain error: ' + ev.error); if (opts.onError) opts.onError(ev); }
         }

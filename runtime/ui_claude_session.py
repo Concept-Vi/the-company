@@ -64,6 +64,11 @@ PANEL_BRIEFING = (
     "an orientation answer — that hangs the turn and never reaches them. Investigate ONLY when they EXPLICITLY "
     "ask you to dig into a specific thing. You are in a restricted permission mode: when a change is wanted, DESCRIBE it "
     "crisply and tell them to press 'build this' — the change flows through the system's approval gate. "
+    "★ POINT AS YOU SPEAK: your context may include a 'Things you can point at' list (each item an opaque "
+    "token + a human label). The MOMENT you name one of those on-screen things in your reply, call the point "
+    "tool with its token — the surface highlights that thing for them as you describe it, so their eye goes "
+    "where your words go. Point ONLY at tokens in that list; never invent one; if the list is absent, just "
+    "speak normally. "
     "Never claim something works without having checked."
 )
 
@@ -113,16 +118,42 @@ def _turn_cmd(prompt: str, *, resume: str | None, system_append: str | None) -> 
     return cmd
 
 
+def _render_pointables(pointables) -> str:
+    """The per-turn 'things you can point at' catalog → a prompt block (opaque token + human label, NEVER
+    an address — addresses stay client-side, operator-law). The brain calls point(<token>) when it names
+    one. The live set varies per turn (the surface sends only what's currently on screen), so this rides
+    the PER-TURN prompt, not the persistent system-append. Empty/absent → no block (brain speaks normally)."""
+    if not pointables:
+        return ""
+    lines = []
+    for p in pointables:
+        if not isinstance(p, dict):
+            continue
+        tok = str(p.get("token") or "").strip()
+        lab = str(p.get("label") or "").strip()
+        if tok and lab and "://" not in tok:            # operator-law belt: a token is opaque, never an address
+            lines.append(f'- "{tok}" — {lab}')
+    if not lines:
+        return ""
+    return ('[Things you can point at — call point("<token>") the moment you name one, so the surface '
+            'highlights it as you speak]\n' + "\n".join(lines))
+
+
 def run_turn(prompt: str, *, session_id: str | None = None, context_block: str | None = None,
-             should_stop=None):
+             pointables: list | None = None, should_stop=None):
     """One panel turn → a generator of panel events (dicts, ready for ndjson):
        {type:'init', session_id} · {type:'text', text} · {type:'tool', name, detail} ·
-       {type:'done', result, session_id, num_turns?} · {type:'error', error}.
+       {type:'point', token} · {type:'done', result, session_id, num_turns?} · {type:'error', error}.
     `context_block` (the pointed-at address's help bundle) is folded into the prompt — per-turn
-    context, exactly the indicated-chip semantics of the RHM chat. `should_stop()` (client gone)
-    terminates the subprocess — a hung panel never strands a claude process."""
+    context, exactly the indicated-chip semantics of the RHM chat. `pointables` (a per-turn [{token,label}]
+    catalog the surface sources) is folded in too → the brain points at on-screen things via the point verb
+    (→ a {type:'point', token} event; the client maps token→ui:// + dispatches). `should_stop()` (client
+    gone) terminates the subprocess — a hung panel never strands a claude process."""
     full_prompt = f"[Operator context — what Tim is pointing at]\n{context_block}\n\n{prompt}" \
         if context_block else prompt
+    pblock = _render_pointables(pointables)
+    if pblock:
+        full_prompt = f"{pblock}\n\n{full_prompt}"
     cmd = _turn_cmd(full_prompt, resume=session_id,
                     system_append=None if session_id else PANEL_BRIEFING)
     proc = subprocess.Popen(cmd, cwd=REPO_ROOT, stdout=subprocess.PIPE,
@@ -151,11 +182,18 @@ def run_turn(prompt: str, *, session_id: str | None = None, context_block: str |
                     if block.get("type") == "text" and block.get("text"):
                         yield {"type": "text", "text": block["text"]}
                     elif block.get("type") == "tool_use":
+                        name = block.get("name", "?")
                         inp = block.get("input") or {}
-                        detail = (inp.get("file_path") or inp.get("path") or inp.get("pattern")
-                                  or inp.get("command") or inp.get("description") or "")
-                        yield {"type": "tool", "name": block.get("name", "?"),
-                               "detail": str(detail)[:160]}
+                        # the RHM's POINT verb → a dedicated {type:'point', token} event (fork-brain-core maps
+                        # the opaque token → ui:// client-side + dispatches ui:point). No address rides here.
+                        if name == "mcp__company__point" or name.split("__")[-1] == "point":
+                            tok = str(inp.get("token") or "").strip()
+                            if tok:
+                                yield {"type": "point", "token": tok}
+                        else:
+                            detail = (inp.get("file_path") or inp.get("path") or inp.get("pattern")
+                                      or inp.get("command") or inp.get("description") or "")
+                            yield {"type": "tool", "name": name, "detail": str(detail)[:160]}
             elif et == "result":
                 yield {"type": "done", "result": (ev.get("result") or "")[:4000],
                        "session_id": ev.get("session_id") or sid,
