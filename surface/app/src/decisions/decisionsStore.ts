@@ -46,22 +46,27 @@ export function closeDecisionsList() {
   set({ open: false })
 }
 
-// subscribe a component to the store; on first mount, kick the initial load and wire a refresh on any decision write
-// (gallery:rerender fires on a take → a decided card leaves the pending list).
+// start the store ONCE (on the first subscriber): kick the initial load + wire the refresh-on-write listener at the
+// STORE level — NOT per useDecisions subscriber. (Both DecisionsBar + DecisionsInbox subscribe; a per-subscriber
+// gallery:rerender listener fired N reloads per event — verified 2× per rerender. One store-level listener = one
+// reload regardless of subscriber count.) The store is app-lifetime, so the listener is never removed (no leak).
+function ensureStarted() {
+  if (started) return
+  started = true
+  loadDecisions() // initial load
+  // gallery:rerender fires on a decision write (a take → a decided card leaves the pending list); reload the registry.
+  window.addEventListener('gallery:rerender', () => loadDecisions())
+}
+
+// subscribe a component to the store; the store self-starts on the first subscriber.
 export function useDecisions(): DState {
   const [, force] = useState(0)
   useEffect(() => {
     const cb = () => force((n) => n + 1)
     subs.add(cb)
-    if (!started) {
-      started = true
-      loadDecisions()
-    }
-    const refresh = () => loadDecisions()
-    window.addEventListener('gallery:rerender', refresh)
+    ensureStarted()
     return () => {
       subs.delete(cb)
-      window.removeEventListener('gallery:rerender', refresh)
     }
   }, [])
   return state
