@@ -99,24 +99,13 @@
     _pending.push(e.detail);
     if (_pending.length === 1) Promise.resolve().then(flush);
   });
-
-  // ── HOOK 2b: the decision-card TAKE rides the UNIFIED gallery:verb envelope (galleryBinder.decide →
-  // emitVerb('annotate', canonical, {is_decision_take, value, mark_type})), NOT gallery:direction — so it had
-  // NO consumer (the take was emitted but never written → a decided decision read pending forever; found in
-  // DNA's cutover regression round, 2026-06-18). Consume the take HERE → the decision_take write. Maps the verb
-  // envelope → territory_write's item shape: element_id = the CANONICAL decision address (aim_address — decide()
-  // already validated it's decision://<frame>/<id>, fork's single-source form), type='decision_take' (territory_
-  // write reads `type` as the mark_type), value = the chosen option label. ONLY the take (is_decision_take) is
-  // taken here — the annotate verbs (comment/reaction/favour) still dual-emit gallery:direction above, so they
-  // are NOT double-written. (When the binder drops the gallery:direction back-compat, migrate those here too.)
-  window.addEventListener('gallery:verb', (e) => {
-    const d = e.detail || {};
-    if (!d.payload || !d.payload.is_decision_take || !d.aim_address) return;   // take-only; annotate stays on gallery:direction
-    const item = { element_id: d.aim_address, type: 'decision_take', value: d.payload.value };
-    if (d.payload.by != null) item.by = d.payload.by;
-    _pending.push(item);
-    if (_pending.length === 1) Promise.resolve().then(flush);
-  });
+  // NOTE: the decision-card TAKE (gallery:verb{verb:'annotate', is_decision_take}) is consumed by App.tsx's
+  // dispatcher (onVerb, App.tsx:302 — the SOLE gallery:verb listener, since 41e3738), which routes it to
+  // writeDirections → the decision_take write. The binder contract is explicit: "is_decision_take lets THE
+  // DISPATCHER route to territory_write." So this hook deliberately does NOT consume gallery:verb (a HOOK 2b
+  // here was reverted 2026-06-18 — it DOUBLE-wrote the take: App's dispatcher + the hook both fired. My
+  // "unconsumed" diagnosis was from a .tsx-excluding grep + the standalone harness with no App; on the REAL
+  // surface App owns it. One consumer = App's dispatcher.)
 
   window.forkBrainHooks = { bindBrain };          // expose for explicit binding if projection prefers
 })();
