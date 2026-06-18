@@ -14,3 +14,15 @@ The fix belongs at WRITE time, not read time: the corpus capture/digest path sho
 ## Status
 - Tracked here + noted in board://item-a3844c46 (as a sub-item). Non-blocking; no live decision-surface impact while the sharper sort is OFF (decisions ground by rough similarity over ALL candidates either way).
 - Becomes load-bearing the moment the sharper sort is restored (any rerank-loadout option except "leave it off") — fold this fix in WITH that, so the restored precision actually sees the full candidate set.
+
+## UPDATE 2026-06-18 — READ-SIDE handled (write-side now optional)
+The grounding-legibility half is CLOSED from the read side (5d9e645 + follow-up): `recall_for_decision`'s
+`_clean_meaning` now renders BOTH digest shapes — a structured dict (labelled non-empty fields) AND a
+**list of insight strings** (joined). Verified: context-item text coverage went 5/10 → **10/10** on the
+decision probe, hot-path budget held (~1.9s). So the RHM/territory_prose now get legible meaning for the
+full candidate set today, regardless of the stored `output` shape.
+What REMAINS (downgraded to consistency-nicety, NOT a grounding-blocker): the corpus-WRITE/digest pass
+still emits heterogeneous `output` shapes (dict vs list vs string). Normalising to ONE canonical shape at
+write time would (a) simplify every reader (not just this one), (b) help the RERANK path (which still
+json.dumps a non-string output as the cross-encoder input). Worth doing in a coordinated cognition/digest-
+schema pass; no longer urgent for decision grounding.

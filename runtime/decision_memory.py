@@ -84,6 +84,18 @@ def _clean_meaning(rec: dict, *, max_chars: int = 600) -> str:
                  if isinstance(v, str) and v.strip()]          # the non-empty meaningful fields, labelled
         if parts:
             return " · ".join(parts)[:max_chars]
+    if isinstance(out, list):                                  # a list of insight strings (or dicts) — common
+        items = []                                             # digest shape for code:// units; join them
+        for el in out:
+            if isinstance(el, str) and el.strip():
+                items.append(el.strip())
+            elif isinstance(el, dict):
+                sub = (el.get("text") or el.get("summary") or
+                       " ".join(f"{k}: {v.strip()}" for k, v in el.items() if isinstance(v, str) and v.strip()))
+                if isinstance(sub, str) and sub.strip():
+                    items.append(sub.strip())
+        if items:
+            return " · ".join(items)[:max_chars]
     for k in ("text", "content"):
         v = rec.get(k)
         if isinstance(v, str) and v.strip():
