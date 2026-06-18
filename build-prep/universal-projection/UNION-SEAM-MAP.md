@@ -40,6 +40,21 @@ mismatch) or UNWELDED (a side missing / a silent drop). Re-run this map whenever
    binder claims server-side canonicalization. Happy path safe (DNA stamps canonical); latent silent-miss for
    a non-canonical address. Routed to fork (territory.py) — thread g-1781731457.
 
+## Seam class 2 — the surface↔bridge API routes (audited 2026-06-18; ALL WELDED)
+
+Every `/api/*` the surface (src/) + the synced hooks call, verified live against the bridge — a 404 would
+be a silent seam (the feature breaks). All respond via their correct method:
+
+| route | method | status |
+|---|---|---|
+| `/api/projection` · `/api/cognition/corpus` · `/api/cognition/neighbours` · `/api/context` · `/api/layers` · `/api/layer-dims` · `/api/territory` · `/api/territory/label` | GET | ✅ 200 |
+| `/api/territory/write` · `/api/claude/turn` | POST | ✅ 200 (drove the take + explain this session) |
+| `/api/stream` | GET/SSE (EventSource, App.tsx:368/402) | ✅ 200 (opens the live spine) |
+
+Two false-positive 404s ruled out (recorded so a future audit doesn't re-flag them): **`/api/layer`** — not a
+real route; a regex truncation of `/api/layer-dims` (the real call, welded). **POST `/api/stream`** — 404 only
+because it's a GET-only SSE route; GET → 200. No silent API seam.
+
 ## The pattern (for continuity)
 
 The welds that held were the ones built to **fail loud** (the sync shouted when the reorg split files) and the
