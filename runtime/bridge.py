@@ -1187,6 +1187,12 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.object_info()))
             elif path == "/api/cognition_info":            # L-fe-be: the COGNITION registry (sibling of object_info)
                 self._send(200, json.dumps(SUITE.cognition_info()))
+            elif path == "/api/decisions":                 # the decisions INBOX (projection's operator see-all-pending entry,
+                # beyond the deep-link): [{id, address, name, state, recommended_label}] from the decision_registry,
+                # FAST mark-composed state (decision_registry.decision_inbox — GPU-free, no recall/embed). registry-is-truth.
+                from runtime.cognition import decision_registry as _dreg
+                from runtime.decision_registry import decision_inbox as _dinbox
+                self._send(200, json.dumps(_dinbox(_dreg(), SUITE.store)))
             elif path == "/api/types":
                 self._send(200, json.dumps(sorted(SUITE.list_types())))
             elif path == "/api/layers":                    # the multi-layer model's self-description: {space:[embedder layer,…]}
