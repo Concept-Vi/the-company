@@ -250,6 +250,96 @@
   border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); font-size: var(--t-xs); cursor: pointer; margin-left: var(--s-2); }
 .inbox-retry:hover { background: var(--ground-secondary); }
 
+/* ---- THE TOOL FACE (the pilot palette) — entry + modal + the op-conditional form engine -------------
+   Mirrors the inbox pattern (one modal idiom, not a fork) on DNA tokens only. The entry is a quiet pill at the
+   bottom-LEFT (clear of the V at bottom-right + the centred inbox bar). The form engine (.tf-*) renders a tool's
+   schema as friendly inputs. (Scaffold-grade placement; the seam is openTools(). See ToolsBar/ToolsPanel.) */
+.tools-bar { position: fixed; left: calc(var(--safe-l) + var(--s-3)); bottom: calc(var(--safe-b) + var(--s-3)); z-index: 25; }
+.tools-entry { display: inline-flex; align-items: center; gap: var(--s-2); cursor: pointer; border: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--ground-accent) 90%, transparent); color: var(--ink-dim); border-radius: var(--r-pill);
+  padding: var(--s-2) var(--s-3); box-shadow: var(--elev-1); font-size: var(--t-sm); font-weight: 600;
+  transition: box-shadow 140ms ease, transform 120ms ease, color 120ms ease; }
+.tools-entry:hover { box-shadow: var(--elev-3); transform: translateY(-1px); color: var(--ink-primary); }
+.tools-entry:active { transform: translateY(0); }
+.tools-entry-glyph { font-size: var(--t-md); line-height: 1; }
+.tools-entry-label { white-space: nowrap; }
+
+.tools-overlay { position: fixed; inset: 0; z-index: 58; display: flex; align-items: center; justify-content: center;
+  padding: calc(var(--safe-t) + var(--s-3)) var(--s-3) calc(var(--safe-b) + var(--s-3));
+  opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 180ms ease, visibility 180ms ease; }
+.tools-overlay--open { opacity: 1; visibility: visible; pointer-events: auto; }
+.tools-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink-primary) 54%, transparent); }
+.tools-panel { position: relative; width: 100%; max-width: 460px; max-height: 100%; display: flex; flex-direction: column;
+  background: var(--ground-accent); border-radius: var(--r-card); box-shadow: var(--elev-4); overflow: hidden; }
+.tools-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-3);
+  padding: var(--s-4) var(--s-4) var(--s-3); border-bottom: 1px solid var(--hairline); flex: none; }
+.tools-head-text { min-width: 0; }
+.tools-title { margin: 0; font-size: var(--t-lg); font-weight: 600; color: var(--ink-primary); line-height: 1.2; }
+.tools-sub { margin: var(--s-1) 0 0; font-size: var(--t-sm); color: var(--ink-dim); line-height: 1.4; }
+.tools-back { border: none; background: transparent; color: var(--ink-dim); cursor: pointer; font-size: var(--t-sm);
+  font-weight: 600; padding: var(--s-1) 0; display: inline-flex; align-items: center; gap: var(--s-1); }
+.tools-back:hover { color: var(--ink-primary); }
+.tools-close { border: none; background: transparent; color: var(--ink-faint); cursor: pointer; flex: none;
+  width: 32px; height: 32px; border-radius: var(--r-pill); font-size: var(--t-md); line-height: 1;
+  display: flex; align-items: center; justify-content: center; }
+.tools-close:hover { color: var(--ink-primary); background: var(--ground-secondary); }
+.tools-body { overflow: auto; padding: var(--s-3); }
+.tools-msg { font-size: var(--t-sm); color: var(--ink-dim); text-align: center; padding: var(--s-5) var(--s-4); margin: 0; }
+.tools-msg--error { color: var(--pig-strain); }
+.tools-retry { border: 1px solid var(--hairline); background: var(--ground-primary); color: var(--ink-primary);
+  border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); font-size: var(--t-xs); cursor: pointer; margin-left: var(--s-2); }
+.tools-note { font-size: var(--t-xs); color: var(--ink-faint); text-align: center; padding: var(--s-3) var(--s-4) 0; margin: 0; }
+
+.tools-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s-2); }
+.tools-row { display: flex; align-items: center; gap: var(--s-3); width: 100%; text-align: left; cursor: pointer;
+  background: var(--ground-primary); border: 1px solid var(--hairline); border-radius: var(--r-card);
+  padding: var(--s-3) var(--s-4); transition: border-color 120ms ease, box-shadow 120ms ease, transform 100ms ease; }
+.tools-row:hover { border-color: var(--ink-dim); box-shadow: var(--elev-2); transform: translateY(-1px); }
+.tools-row:active { transform: translateY(0); }
+.tools-row-main { display: flex; flex-direction: column; gap: var(--s-1); min-width: 0; flex: 1; }
+.tools-row-name { font-size: var(--t-base); font-weight: 600; color: var(--ink-primary); line-height: 1.3; }
+.tools-row-desc { font-size: var(--t-xs); color: var(--ink-dim); line-height: 1.45; }
+.tools-row-go { font-size: var(--t-xl); color: var(--ink-faint); flex: none; line-height: 1; }
+
+.tools-detail { display: flex; flex-direction: column; gap: var(--s-3); }
+.tools-detail-name { margin: 0; font-size: var(--t-md); font-weight: 600; color: var(--ink-primary); line-height: 1.25; font-family: var(--font-serif); }
+.tools-detail-desc { margin: 0; font-size: var(--t-sm); color: var(--ink-dim); line-height: 1.5; }
+.tools-run-row { display: flex; justify-content: flex-end; padding-top: var(--s-1); }
+.tools-run { border: none; background: var(--ink-primary); color: var(--ground-accent); cursor: pointer;
+  border-radius: var(--r-pill); padding: var(--s-2) var(--s-5); font-size: var(--t-sm); font-weight: 600;
+  box-shadow: var(--elev-2); transition: box-shadow 140ms ease, transform 120ms ease; }
+.tools-run:hover { box-shadow: var(--elev-3); transform: translateY(-1px); }
+.tools-result { border: 1px solid var(--hairline); border-radius: var(--r-card); background: var(--ground-secondary);
+  padding: var(--s-3) var(--s-4); }
+.tools-result-pending { margin: 0; font-size: var(--t-sm); color: var(--ink-dim); line-height: 1.5; }
+
+/* the op-conditional form engine (schemaForm.tsx) */
+.tf-form { display: flex; flex-direction: column; gap: var(--s-3); }
+.tf-field { display: flex; flex-direction: column; gap: var(--s-1); }
+.tf-field--op { padding-bottom: var(--s-3); border-bottom: 1px solid var(--hairline); }
+.tf-label { font-size: var(--t-sm); font-weight: 600; color: var(--ink-primary); line-height: 1.3; }
+.tf-req { color: var(--pig-strain); }
+.tf-help { margin: 0; font-size: var(--t-xs); color: var(--ink-dim); line-height: 1.4; }
+.tf-input { width: 100%; box-sizing: border-box; font-family: var(--font-sans); font-size: var(--t-base);
+  color: var(--ink-primary); background: var(--ground-primary); border: 1px solid var(--hairline);
+  border-radius: var(--r-chrome); padding: var(--s-2) var(--s-3); transition: border-color 120ms ease; }
+.tf-input:focus { outline: none; border-color: var(--ink-dim); }
+.tf-input--num { width: 9rem; }
+.tf-textarea { resize: vertical; min-height: 3.2rem; line-height: 1.45; }
+.tf-pills { display: flex; flex-wrap: wrap; gap: var(--s-1); }
+.tf-pill { border: 1px solid var(--hairline); background: var(--ground-primary); color: var(--ink-dim); cursor: pointer;
+  border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); font-size: var(--t-sm); line-height: 1.2;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease; }
+.tf-pill:hover { border-color: var(--ink-dim); color: var(--ink-primary); }
+.tf-pill--on { background: var(--ink-primary); color: var(--ground-accent); border-color: var(--ink-primary); }
+.tf-toggle { display: inline-flex; align-items: center; gap: var(--s-2); border: 1px solid var(--hairline);
+  background: var(--ground-primary); border-radius: var(--r-pill); padding: 3px var(--s-2) 3px 3px; cursor: pointer;
+  width: max-content; }
+.tf-toggle-knob { width: 18px; height: 18px; border-radius: var(--r-pill); background: var(--ink-faint);
+  transition: background 140ms ease, transform 140ms ease; }
+.tf-toggle--on .tf-toggle-knob { background: var(--pig-born); transform: translateX(2px); }
+.tf-toggle-state { font-size: var(--t-sm); color: var(--ink-dim); }
+
 /* ---- view-mode toggle (○ circle / ◻ square — the seed's two coordinate systems) ---------------- */
 .bar-right { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; justify-content: flex-end; }
 /* the OPTICS cluster (how you look: lens · layer · centre) — held together at the left so space-between

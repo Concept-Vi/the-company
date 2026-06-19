@@ -11,6 +11,8 @@ import { Landscape } from './layouts/Landscape'
 import { GalleryMount } from './gallery/GalleryMount'
 import { RightHand } from './rhm/RightHand'
 import { DecisionsInbox } from './decisions/DecisionsInbox'
+import { ToolsBar } from './tools/ToolsBar'
+import { ToolsPanel } from './tools/ToolsPanel'
 
 export type FormFactor = 'desktop' | 'portrait' | 'landscape'
 // The seed's two coordinate systems over one space, three ways: BOTH = the circle inscribed in the square
@@ -510,6 +512,12 @@ export function App() {
       {/* THE DECISIONS INBOX — the in-surface "decisions waiting" entry (CTA when pending + the list); a tapped row
           opens through the same decision host (decision:open → GalleryMount). Sibling overlay, all form factors. */}
       <DecisionsInbox />
+      {/* THE TOOL FACE — the pilot palette (Tim 2026-06-19): the entry (ToolsBar) + the modal (ToolsPanel) where an
+          operator picks a tool, sets it up in plain words via the op-conditional form, and runs it. Root siblings,
+          all form factors. FRONT HALF live (list + description + form); Run/result are pending seams (fork's invoke
+          door + DNA's tool-card archetype). See build-prep/the-one-application/TOOL-FACE-BUILD.md. */}
+      <ToolsBar />
+      <ToolsPanel />
       {/* THE RIGHT-HAND-MAN (the 'V') — persistent overlay, every page (sibling to the layout + gallery). The
           active binding (which projection VIEW is up) rides into the V's surface-default aim so the brain grounds
           "what am I looking at?" on the CURRENT view's self-description (fork's hybrid grounding, meet-at-the-aim). */}
