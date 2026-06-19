@@ -1,0 +1,53 @@
+{
+  "_schema": "remote-posture-registry-v1",
+  "_note": "FAIL-CLOSED / deny-by-default. A tool or op not listed here with remote_posture 'safe' or 'design' is NOT exposed on the remote MCP gateway.",
+  "postures": {
+    "safe": {"expose": true, "note": "pure read, no side effects, idempotent"},
+    "design": {"expose": true, "note": "Face Pipeline / Claude Design workflow; reversible/non-destructive"},
+    "consent": {"expose": false, "note": "deferred: writes state but not destructive; requires explicit enable"},
+    "hazard": {"expose": false, "note": "destructive or irreversible; never remote"},
+    "locked": {"expose": false, "note": "operator-only; never remote"}
+  },
+  "tools": {
+    "capability": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "object_info": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "list_by_type": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "list_graphs": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "cognition_info": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "models_for_role": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "cognition_inputs": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "field_types": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "list_skills_contexts": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "reduce_rule_names": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "list_cascades": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "corpus": {"remote_posture": "safe", "allowed": ["list", "find", "read", "query"], "scope": "read"},
+    "instrument": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "territory": {"remote_posture": "safe", "allowed": ["read"], "scope": "read"},
+    "territory_label": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "chat": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "operator": {"remote_posture": "safe", "allowed": ["rules"], "scope": "read"},
+    "sessions": {"remote_posture": "safe", "allowed": ["list", "inbox", "watch", "describe", "search", "timeline"], "scope": "read"},
+    "channels": {"remote_posture": "safe", "allowed": ["list", "describe", "history", "edges"], "scope": "read"},
+    "cc_board": {"remote_posture": "safe", "allowed": null, "scope": "read"},
+    "cc_channel": {"remote_posture": "design", "allowed": ["send"], "scope": "write", "note": "Claude Design participates in channel threads"},
+    "marks": {"remote_posture": "safe", "allowed": ["target", "type", "findings"], "scope": "read", "note": "marks(by=...) read ops; the mark WRITE tool is deferred"},
+    "claude_design": {"remote_posture": "design", "allowed": ["ingest_bundle", "submit_seed", "walk_decision"], "scope": "write", "note": "Face Pipeline inlet"}
+  },
+  "explicitly_denied": {
+    "node": "graph mutation / build dispatch",
+    "connect": "direct graph mutation",
+    "set_config": "direct graph mutation",
+    "run_graph": "compute invocation",
+    "cc_clone": "spawns Claude copies",
+    "cc_gate": "native gate/abort/rewind",
+    "session_post": "spawns sessions (wake/consult)",
+    "resolve_surfaced": "operator-only governance",
+    "approve": "operator-only",
+    "dispatch": "operator-only",
+    "checkpoint": "self-modification",
+    "revert": "self-modification",
+    "self_change_log": "audit surface; writes deferred",
+    "mark": "mark writes deferred",
+    "channel_act": "channel structure writes deferred"
+  }
+}

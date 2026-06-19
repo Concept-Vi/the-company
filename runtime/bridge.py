@@ -58,7 +58,10 @@ BRIDGE_ROUTES = (
     "/api/personas", "/api/trial/sessions", "/api/trial/transcript", "/api/cognition/models_for_role",
     "/api/cognition/inputs", "/api/cognition/field_types", "/api/cognition/list_runs",
     "/api/cognition/find_runs", "/api/cognition/find_relations", "/api/cognition/corpus",
-    "/api/cognition/neighbours", "/api/roles",
+    "/api/cognition/neighbours", "/api/roles", "/api/decisions",
+    # THE TOOL FACE (GAP 2): the interactive MCP tool list — list_tools() machine-truth + the resolved
+    # human form_meta (mcp_face/tool_meta.json), bound to THIS bridge's Suite (GAP 1, no 2nd Suite).
+    "/api/tools",
     "/api/run-stats", "/api/knobs", "/api/voice/engine-knobs", "/api/voice/paths",
     # --- POST routes ---
     "/api/stt", "/api/voice/stt-partial", "/api/tts", "/api/voice/finished-thought", "/api/voice/switch",
@@ -68,6 +71,9 @@ BRIDGE_ROUTES = (
     "/api/revive-offer", "/api/build-intent", "/api/cognition/create_role", "/api/cognition/create_skill",
     "/api/cognition/create_context", "/api/act", "/api/annotate", "/api/apply", "/api/territory/write",
     "/api/territory/label",
+    # THE TOOL FACE (GAP 3): the generic invoke door — FAIL-CLOSED operator gate (mirrors remote.py
+    # _is_allowed + remote_exposure.json + operator-face deltas + the unified-floor attribution slot).
+    "/api/tools/invoke",
     "/api/propose", "/api/decision", "/api/resolve", "/api/revert", "/api/checkpoint", "/api/pin",
     "/api/react", "/api/attach-chat", "/api/approve-reach", "/api/intent-at",
     "/api/review/start", "/api/review/next", "/api/guide/start", "/api/walkthrough/start",
@@ -447,6 +453,179 @@ def _warm_vector_cache():
 import threading as _x12_thr   # threading is imported locally elsewhere in this module, not at top level
 _x12_thr.Thread(target=_warm_vector_cache, daemon=True, name="x12-warm").start()
 DEMO = "codebase"
+
+
+# =================================================================================================
+# THE TOOL FACE (GAPS 1-3) — the interactive MCP tool surface on the operator bridge.
+#
+# GAP 1 (the shared-layer factory): the agent face (mcp_face/server.py) used to construct a SECOND Suite
+# at import, so the bridge deliberately never imported it. server.build_mcp(suite) now binds a FastMCP
+# tool manager to a CALLER-supplied Suite (constructing NO 2nd Suite), so the bridge gets a manager bound
+# to its OWN `SUITE`. We import + bind LAZILY (first /api/tools[/invoke] call), so importing bridge.py
+# stays clean (no mcp_face pull at module load) — the bind happens before any tool fires, against THIS
+# process's SUITE. (Import server, NOT remote: remote.build_mcp() would bind the DEFAULT suite first.)
+#
+# GAP 2 (/api/tools GET): list_tools() machine-truth {name, inputSchema, posture} JOINED with the
+# RESOLVED human form_meta from the lead-owned DECLARED registry (mcp_face/tool_meta.json) — degrade-clean.
+# GAP 3 (/api/tools/invoke POST): the FAIL-CLOSED operator gate — MIRRORS remote.py _is_allowed against
+# remote_exposure.json, with the operator-face deltas + the unified-floor attribution slot. See _tool_*.
+# =================================================================================================
+_TOOL_MGR = None                                    # cached FastMCP tool manager bound to THIS bridge's SUITE
+
+
+def _tool_manager():
+    """The FastMCP tool manager bound to the bridge's OWN Suite (GAP 1). Lazily imports mcp_face.server
+    and calls build_mcp(SUITE) ONCE — binding THIS process's SUITE before any tool fires (no 2nd Suite).
+    Cached. Importing mcp_face.server constructs no Suite (its module SUITE is a lazy proxy); build_mcp
+    binds ours into it. Fail-loud (RuntimeError) on a conflicting rebind surfaces to the route's except."""
+    global _TOOL_MGR
+    if _TOOL_MGR is None:
+        from mcp_face import server as _face        # lazy: no mcp_face pull at bridge import
+        _TOOL_MGR = _face.build_mcp(SUITE)._tool_manager   # bind the bridge's OWN suite (GAP 1)
+    return _TOOL_MGR
+
+
+# --- the DECLARED human-presentation registry (gap 7; lead-owned content, fork builds only the JOIN) ----
+# mcp_face/tool_meta.json — one row per tool {human_name, human_description, op_labels, op_params,
+# param_labels}; _-prefixed keys are HEADER metadata (skipped on join). fork authors NOTHING here.
+_TOOL_META_PATH = os.path.join(ROOT, "mcp_face", "tool_meta.json")
+
+
+def _tool_meta() -> dict:
+    """Load the lead-owned tool-meta registry, FRESH per call (so a lead seed lands without a restart —
+    the file is small + this is a low-frequency route). DEGRADE-CLEAN: a missing/malformed file → {} (the
+    join then yields form_meta=null per tool; the surface still renders from the schema). Never fails the
+    route. Returns the `tools` map (tool-name → row), header `_`-keys excluded."""
+    try:
+        with open(_TOOL_META_PATH, encoding="utf-8") as f:
+            reg = json.load(f)
+    except (FileNotFoundError, ValueError, OSError):
+        return {}                                   # degrade-clean (no registry yet, or malformed)
+    tools = reg.get("tools", {})
+    return {k: v for k, v in tools.items() if not k.startswith("_")}
+
+
+# --- the POSTURE registry (GAP 3 gate source — the SAME remote_exposure.json the remote gateway uses) ---
+# Reuse-don't-parallel: ONE posture/exposure source for both the remote connector AND the operator door.
+# An OPERATOR OVERLAY sits on top for the operator-face deltas (permit locked; hazard→confirm). The
+# overlay carries NO production hazard/locked classification today (remote_exposure.json lists only
+# safe/design tools + an explicitly_denied denylist) — the overlay is the declared HOME where the lead
+# seeds operator-face postures at the gate review. Until then: safe/design read free; explicitly_denied
+# verbs are hard-refused to their dedicated routes; an unclassifiable posture FAILS CLOSED (never allow).
+_EXPOSURE_PATH = os.path.join(ROOT, "mcp_face", "remote_exposure.json")
+_TOOL_OVERLAY_PATH = os.path.join(ROOT, "mcp_face", "tool_operator_overlay.json")
+
+
+def _exposure() -> dict:
+    """Load remote_exposure.json (the posture allow-list + explicitly_denied denylist). FAIL-LOUD on a
+    missing/malformed file — the allow-list IS the security boundary (mirrors remote.py: a missing
+    registry is fail-closed, never a permissive empty gate). Fresh per call (low-frequency route)."""
+    try:
+        with open(_EXPOSURE_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError as e:
+        raise RuntimeError(f"remote_exposure.json MISSING at {_EXPOSURE_PATH!r} — the allow-list is the "
+                           f"security boundary; a missing registry is fail-closed.") from e
+    except (ValueError, OSError) as e:
+        raise RuntimeError(f"remote_exposure.json MALFORMED ({e}) — fail-closed.") from e
+
+
+def _operator_overlay() -> dict:
+    """The OPERATOR-FACE posture overlay (the home for operator-only deltas beyond remote_exposure.json:
+    a tool the operator MAY run that the remote connector can't — incl. `locked` — and a per-tool
+    `hazard` flag that demands an explicit confirm). DEGRADE-CLEAN: absent → {} (no operator extensions,
+    the remote postures alone govern). Lead-owned content; fork builds only the read. Shape:
+    {"tools": {<name>: {"operator_posture": "safe|design|locked|hazard", "hazard": bool}}}."""
+    try:
+        with open(_TOOL_OVERLAY_PATH, encoding="utf-8") as f:
+            reg = json.load(f)
+    except (FileNotFoundError, ValueError, OSError):
+        return {}
+    return reg.get("tools", {})
+
+
+def _tool_posture(name: str, exposure: dict, overlay: dict) -> str:
+    """The EFFECTIVE operator-face posture for a tool: the operator overlay's `operator_posture` wins
+    (operator-face deltas, e.g. permitting `locked`), else the remote_exposure.json `remote_posture`,
+    else "" (unknown → the gate treats as fail-closed). Pure read; no fabrication."""
+    ov = overlay.get(name) or {}
+    if ov.get("operator_posture"):
+        return str(ov["operator_posture"])
+    return str((exposure.get("tools", {}).get(name) or {}).get("remote_posture", ""))
+
+
+def _tool_gate(name: str, args: dict, *, confirm: bool, operator_token: str) -> tuple[bool, str, str]:
+    """THE OPERATOR-FACE INVOKE GATE (GAP 3) — FAIL-CLOSED. Returns (allowed, reason, posture).
+    Enforcement is SERVER-SIDE (the UI hiding a button is NOT the gate). Mirrors remote.py:_is_allowed
+    EXACTLY (deny-by-default + posture ∈ exposable + the allowed-op whitelist), with the operator-face
+    deltas the spec mandates, in this ORDER (most-specific refusal first, so a dangerous verb gets the
+    teaching refusal, not a generic deny):
+
+      1. explicitly_denied (node/connect/set_config/run_graph/cc_clone/cc_gate/session_post/
+         resolve_surfaced/approve/dispatch/checkpoint/revert/mark/channel_act/self_change_log) → REFUSE
+         and point at the dedicated gated route. These NEVER ride this generic door (the truly dangerous
+         self-modify/dispatch/clone/graph-mutation verbs — caller routes to /api/resolve|revert|… ).
+      2. deny-by-default: a tool with NO effective posture (not in exposure, not in the overlay) → DENY.
+      3. posture gate (operator-face): safe/design → allowed (a READ runs free); `locked` → allowed (the
+         operator IS Tim — the remote connector can't, the operator can); `hazard` → allowed ONLY with an
+         explicit `confirm` flag (destructive/irreversible needs the confirm); any OTHER posture
+         (consent/unknown) → FAIL CLOSED (no silent allow).
+      4. allowed-op whitelist (mirrors remote.py): if the tool's exposure row pins `allowed` ops, the
+         call's op/action/by MUST be in it (else DENY); a scoped tool with no op supplied → DENY.
+
+    ★ UNIFIED-FLOOR ATTRIBUTION (the slot — lead+composition ruling): a CONSEQUENTIAL/WRITE tool-run is
+    the SAME gated floor as writing a decision_take — it requires GENUINE-OPERATOR ATTRIBUTION (the
+    per-session operator token, header X-Operator-Session). READS (safe/design) run FREE — so the
+    prove-on-one corpus(op=query) works immediately with no token. The token-mint is not fully wired yet
+    (TODO below) — the slot is DESIGNED IN here so write-tools inherit it without a gate rewrite. The
+    `operator_token` is accepted + threaded; enforcement on consequential runs activates when minting
+    lands (see the TODO at the route)."""
+    exposure = _exposure()
+    denied = exposure.get("explicitly_denied", {})
+    # (1) the never-ride denylist — hard refuse + name the dedicated route (most-specific first).
+    if name in denied:
+        return (False, f"REFUSED: {name!r} is a dangerous verb ({denied[name]}) — it NEVER rides the "
+                f"generic invoke door; use its dedicated gated route (e.g. /api/resolve · /api/revert · "
+                f"/api/checkpoint · /api/node · /api/connect). Server-side floor.", "denied")
+    overlay = _operator_overlay()
+    posture = _tool_posture(name, exposure, overlay)
+    # (2) deny-by-default.
+    if not posture:
+        return (False, f"REFUSED (fail-closed): tool {name!r} is not in the exposure registry or the "
+                f"operator overlay (deny-by-default). A new tool can never auto-leak onto the door.", "")
+    # (3) posture gate (operator-face deltas).
+    is_hazard = bool((overlay.get(name) or {}).get("hazard")) or posture == "hazard"
+    if posture in ("safe", "design"):
+        pass                                        # reads / reversible design ops — allowed
+    elif posture == "locked":
+        pass                                        # operator-only — the OPERATOR (Tim) MAY run it
+    elif posture == "hazard" or is_hazard:
+        if not confirm:
+            return (False, f"REFUSED: tool {name!r} is HAZARD (destructive/irreversible) — re-issue with "
+                    f"an explicit confirm flag to proceed (operator-face safeguard).", posture)
+    else:
+        return (False, f"REFUSED (fail-closed): tool {name!r} posture={posture!r} is not operator-"
+                f"exposable (consent/unknown postures fail closed — no silent allow).", posture)
+    # (4) the allowed-op whitelist (mirror remote.py exactly).
+    entry = exposure.get("tools", {}).get(name) or {}
+    allowed_ops = entry.get("allowed")
+    if allowed_ops is not None:
+        op = (args.get("op") or args.get("action") or args.get("by") or "")
+        if op and op not in allowed_ops:
+            return (False, f"REFUSED (fail-closed): tool {name!r} op={op!r} not in allowed {allowed_ops}.",
+                    posture)
+        if not op and allowed_ops:
+            return (False, f"REFUSED (fail-closed): tool {name!r} requires one of ops {allowed_ops}; "
+                    f"none supplied.", posture)
+    return (True, posture, posture)
+
+
+# CONSEQUENTIAL = a tool-run that writes/mutates (the unified floor's attribution applies). READS
+# (safe/design postures) are FREE. A locked/hazard/consent run is consequential by construction.
+def _tool_is_consequential(posture: str) -> bool:
+    """A tool-run is consequential (→ requires operator attribution) unless its posture is a pure READ
+    (safe/design). locked/hazard/consent → consequential."""
+    return posture not in ("safe", "design")
 
 
 def _semantic_projection(q, binding, reg, evs, center, now, lim):
@@ -1542,6 +1721,30 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.voice_engine_knobs(q.get("engine"))))
             elif path == "/api/voice/paths":               # Tier-4: the swappable voice-path registry (pipeline vs s2s)
                 self._send(200, json.dumps(SUITE.voice_paths()))
+            elif path == "/api/tools":                      # GAP 2: THE TOOL FACE — the interactive MCP tool list
+                # ONE descriptor per tool: the MACHINE TRUTH (name · inputSchema · effective posture) from
+                # the FastMCP tool manager (bound to THIS bridge's Suite via GAP 1, NO 2nd Suite), JOINED
+                # with the RESOLVED human `form_meta` from the lead-owned declared registry
+                # (mcp_face/tool_meta.json — fork builds only the JOIN, authors NO content). The surface's
+                # ONE renderer reads {name, description, inputSchema, posture, form_meta}; form_meta is null
+                # for an unseeded tool (degrade-clean — the 65 not-yet-seeded rows + a missing file).
+                # `description` = the human_description when seeded, else the docstring (the agent-facing
+                # fallback). `posture` is the OPERATOR-FACE effective posture (overlay wins, else remote).
+                meta = _tool_meta()
+                exposure = _exposure()
+                overlay = _operator_overlay()
+                out = []
+                for t in _tool_manager().list_tools():
+                    fm = meta.get(t.name)               # None if no row (degrade-clean) — never authored here
+                    out.append({
+                        "name": t.name,
+                        "description": ((fm or {}).get("human_description") or t.description or ""),
+                        "inputSchema": t.parameters,    # the REAL JSON-Schema (op/params) the form is built from
+                        "posture": _tool_posture(t.name, exposure, overlay),
+                        "form_meta": fm,                # the resolved human layer, or null (surface renders from schema)
+                    })
+                out.sort(key=lambda d: d["name"])
+                self._send(200, json.dumps({"tools": out}))
             else:
                 self._send(404, "{}")
         except Exception as e:                             # fail loud to the UI (parity with do_POST)
@@ -2619,6 +2822,73 @@ class H(BaseHTTPRequestHandler):
                 else:
                     recs = [territory_write(element_id or it.get("element_id"), it, suite=SUITE) for it in items]
                     self._send(200, json.dumps({"ok": True, "written": len(recs), "marks": recs}))
+            elif self.path == "/api/tools/invoke":       # GAP 3: THE TOOL FACE — the generic invoke door
+                # SECURITY-CRITICAL (lead holds the by-use review). The generic invoke door is a gate-
+                # bypass for every consequential verb if ungated — so enforcement is SERVER-SIDE + FAIL-
+                # CLOSED. _tool_gate MIRRORS remote.py:_is_allowed EXACTLY (deny-by-default + posture ∈
+                # exposable + the allowed-op whitelist) against remote_exposure.json, with the OPERATOR-
+                # FACE deltas: MAY permit `locked` (Tim IS the operator); `hazard` demands an explicit
+                # confirm flag; the explicitly_denied dangerous verbs (node/connect/set_config/run_graph/
+                # cc_clone/cc_gate/session_post/resolve_surfaced/approve/dispatch/checkpoint/revert/mark/
+                # channel_act/self_change_log) NEVER ride this door → 403 pointing at their dedicated routes.
+                #
+                # ★ UNIFIED FLOOR (lead+composition): a consequential/WRITE tool-run is the SAME gated
+                # floor as writing a decision_take → it requires GENUINE-OPERATOR ATTRIBUTION (the per-
+                # session operator token, header X-Operator-Session). READS (safe/design — incl. the
+                # corpus prove-on-one) run FREE so they work immediately. The token-mint is the #1b seam,
+                # not fully wired yet — the slot is DESIGNED IN here (accepted + threaded + the
+                # consequential branch ready) so write-tools inherit it without a gate rewrite. See TODO.
+                b = self._body()
+                name = b.get("name") or ""
+                args = b.get("args") or b.get("arguments") or {}
+                confirm = bool(b.get("confirm"))
+                operator_token = self.headers.get("X-Operator-Session", "")   # the unified-floor attribution slot
+                if not name:
+                    self._send(400, json.dumps({"ok": False, "error": "/api/tools/invoke needs a `name` (the tool to run)"}))
+                elif not isinstance(args, dict):
+                    self._send(400, json.dumps({"ok": False, "error": "`args` must be an object (the tool's parameters)"}))
+                else:
+                    allowed, reason, posture = _tool_gate(name, args, confirm=confirm, operator_token=operator_token)
+                    if not allowed:
+                        # 403 = refused by the server-side gate (a denied/unconfirmed/fail-closed verb). The
+                        # reason is the teaching refusal (which route to use / the confirm requirement).
+                        self._send(403, json.dumps({"ok": False, "refused": True, "reason": reason, "tool": name}))
+                    else:
+                        # ★ UNIFIED-FLOOR ATTRIBUTION SLOT (TODO — activate when token-minting lands, #1b):
+                        # a CONSEQUENTIAL run (posture not safe/design) must carry a valid X-Operator-Session
+                        # token (the SAME seam /api/territory/write's decision_take will require). The slot is
+                        # threaded NOW (operator_token captured above + the branch below) so the enforcement
+                        # is a one-line flip when GET /api/operator-session mints + validates tokens — no gate
+                        # rewrite. READS run free (the prove-on-one is a read → unaffected). Today the
+                        # consequential branch is a HONEST no-op placeholder (no write-tool is exposed past
+                        # the gate yet — locked/hazard need the lead's overlay seed first), NOT silent allow
+                        # of a write: the gate above already fail-closes anything not safe/design unless the
+                        # lead's overlay explicitly permits it.
+                        if _tool_is_consequential(posture):
+                            # TODO(#1b): require + validate operator_token here; refuse 401 if absent/invalid
+                            # once GET /api/operator-session mints them. Until then, reaching this branch
+                            # means the lead's overlay explicitly permitted a locked/hazard tool for the
+                            # operator (a deliberate seed) — the attribution token rides along for the audit.
+                            pass
+                        # DISPATCH the allowed tool through the FastMCP manager's fn(**args) — inherits the
+                        # tool's arg-handling + teaching errors + the _guard_tools INTERNAL-error guard
+                        # (mirrors remote.py's dispatch). The manager is bound to THIS bridge's Suite (GAP 1).
+                        tool_obj = _tool_manager()._tools.get(name)
+                        if tool_obj is None:
+                            # in the allow-list/overlay but not in the manager → registry drift; refuse, never guess
+                            self._send(403, json.dumps({"ok": False, "refused": True, "tool": name,
+                                "reason": f"REFUSED: {name!r} not dispatchable (registry drift — gate allowed it "
+                                          f"but the tool manager has no such tool)."}))
+                        else:
+                            try:
+                                result = tool_obj.fn(**args)
+                            except (ValueError, KeyError) as e:
+                                # a TEACHING error from the tool's own contract — surface it (not a server fault)
+                                self._send(400, json.dumps({"ok": False, "tool": name,
+                                    "error": f"{type(e).__name__}: {e}", "teaching": True}))
+                            else:
+                                self._send(200, json.dumps({"ok": True, "tool": name, "posture": posture,
+                                                            "result": result}, default=str))
             elif self.path == "/api/presentation-pref":  # F1 LEARNING LOOP: record "how Tim wants <this>
                 # presented" at a ui:// ADDRESS — the CAPTURE seam. It IS the annotate-branch of the
                 # addressed-feedback channel (a comment at an address WITH a presentation intent), so it

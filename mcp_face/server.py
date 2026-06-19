@@ -19,10 +19,71 @@ from runtime.suite import Suite
 from fabric import config as fcfg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SUITE = Suite(FsStore(fcfg.STORE_DIR),
-              NodeRegistry().discover([os.path.join(ROOT, "nodes")]))
+
+
+# --- THE SHARED-LAYER FACTORY (GAP 1 — the bridge binds a tool manager to its OWN Suite) ----------
+# The agent face used to construct a Suite EAGERLY at module import (`SUITE = Suite(...)`). That made
+# importing this module spin up a SECOND Suite — exactly what the :8770 bridge had to avoid (it builds
+# its own Suite on the SAME store), so the bridge deliberately never imported the face. The cost was a
+# generic /api/tools invoke door: the bridge had no FastMCP tool manager bound to ITS suite.
+#
+# The fix (LOWER-RISK shape, advisor-favored): `SUITE` is a LAZY PROXY that constructs NOTHING at
+# import. The ~40 module-level @mcp.tool defs + the file-discovered register() closures (below) all
+# capture this proxy and dereference it AT CALL TIME (verified: every register() uses `suite.<attr>`
+# only inside its inner tool closure, never at register-time) — so registration stays at import (every
+# importer + every test sees all 66 tools the instant they import, byte-unchanged) while the actual
+# Suite is built on first use. `build_mcp(suite)` BINDS a caller-supplied Suite (the bridge's own) into
+# the proxy BEFORE any tool fires, and returns the FastMCP server whose `_tool_manager` is bound to it.
+# Fail-loud on a conflicting rebind — never a silent second Suite.
+class _LazySuite:
+    """A transparent proxy that defers constructing the real Suite until first attribute access (or an
+    explicit build_mcp(suite) bind). Constructs NOTHING at import — that is the whole point of GAP 1.
+    Every @mcp.tool body that reads `SUITE.<attr>` resolves through __getattr__ at CALL time, so the
+    bind in build_mcp(suite) (or the lazy default) is what the tools actually fire against."""
+    _real: "Suite | None" = None
+
+    @classmethod
+    def _ensure(cls) -> "Suite":
+        if cls._real is None:
+            cls._real = Suite(FsStore(fcfg.STORE_DIR),
+                              NodeRegistry().discover([os.path.join(ROOT, "nodes")]))
+        return cls._real
+
+    def __getattr__(self, name):                    # only called for names NOT found on the proxy itself
+        return getattr(_LazySuite._ensure(), name)
+
+    def __dir__(self):
+        # registry-is-truth at REGISTER-time without constructing the Suite: mcp_face/tools/create.py
+        # builds its `kind` enum from `dir(suite)` (the create_<kind> method NAMES) AT DECORATION time.
+        # The create_* methods are CLASS-level on Suite, so dir(Suite) yields the IDENTICAL name set a
+        # real instance would — byte-identical tool schema, and _real stays None at import (the no-2nd-
+        # Suite-at-import guarantee holds). Any later real dir() on a constructed suite hits __getattr__.
+        return dir(Suite)
+
+
+SUITE = _LazySuite()                                # cheap; constructs no Suite at import
 
 mcp = FastMCP("company")
+
+
+def build_mcp(suite=None):
+    """THE SHARED-LAYER FACTORY. Return the FastMCP server (`mcp`) whose `_tool_manager` exposes all 66
+    tools — bound, via the module `SUITE` proxy, to `suite` (the caller's own Suite, e.g. the bridge's)
+    when one is supplied, else the lazy default (the stdio/remote/test path, unchanged).
+
+    Importing this module constructs NO Suite (the proxy is inert until first use). Calling
+    `build_mcp(bridge_suite)` binds the bridge's Suite into the proxy BEFORE any tool fires, so the same
+    registered tool closures dispatch against the bridge's suite — ONE shared layer both faces call, NO
+    second Suite. Idempotent for the same instance; FAIL-LOUD on a conflicting rebind (never silently
+    swap the suite a running face is already bound to — no silent second Suite)."""
+    if suite is not None:
+        if _LazySuite._real is not None and _LazySuite._real is not suite:
+            raise RuntimeError(
+                "build_mcp: the agent-face SUITE is already bound to a DIFFERENT Suite instance — "
+                "refusing to silently rebind (that would be a hidden second-Suite swap). One Suite per "
+                "process; pass the SAME suite or none.")
+        _LazySuite._real = suite
+    return mcp
 
 # --- MODULAR TOOLS (file-discovered — MCP-DESIGN-PRINCIPLE) ---------------------------------------
 # Consolidated, parameterised tools live in mcp_face/tools/<resource>.py, each exposing
@@ -1021,4 +1082,5 @@ _guard_tools()
 
 
 if __name__ == "__main__":
+    build_mcp()                                     # bind the lazy default Suite before serving (explicit)
     mcp.run(transport="stdio")
