@@ -2605,8 +2605,20 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 element_id = b.get("element_id")
                 items = b.get("items") or ([b.get("item")] if b.get("item") else [])
-                recs = [territory_write(element_id or it.get("element_id"), it, suite=SUITE) for it in items]
-                self._send(200, json.dumps({"ok": True, "written": len(recs), "marks": recs}))
+                # VERIFICATION-MODE server partner (the root-cause server half of projection's page-guard 77a02cb
+                # + fork's writeDirections mirror 4a6f383, both CLIENT-side — a DIRECT POST bypasses them). A
+                # verification driver that hits this endpoint DIRECTLY must declare dry_run/verify → SKIP the
+                # persist (no mark written), so an automated drive can't stamp a ghost here — critically a
+                # source=operator decision_take, which territory_write stamps indistinguishably from Tim. Tim's
+                # real surface never sets it. NO-SILENT: the response says dry_run so the caller knows nothing
+                # persisted. (Attribution-refuse of an UNDECLARED take is the deeper #1b half — needs an
+                # operator-session signal the HTTP endpoint lacks; flagged to lead/Tim as a design call.)
+                if b.get("dry_run") or b.get("verify"):
+                    self._send(200, json.dumps({"ok": True, "written": 0, "dry_run": True, "marks": [],
+                                                "note": "verification mode — not persisted"}))
+                else:
+                    recs = [territory_write(element_id or it.get("element_id"), it, suite=SUITE) for it in items]
+                    self._send(200, json.dumps({"ok": True, "written": len(recs), "marks": recs}))
             elif self.path == "/api/presentation-pref":  # F1 LEARNING LOOP: record "how Tim wants <this>
                 # presented" at a ui:// ADDRESS — the CAPTURE seam. It IS the annotate-branch of the
                 # addressed-feedback channel (a comment at an address WITH a presentation intent), so it
