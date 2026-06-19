@@ -54,22 +54,41 @@ export function SchemaForm({
     const id = `tf-${name}`
     let control
     if (Array.isArray(prop.enum)) {
-      // a small enum → a friendly pill group (operator picks, doesn't type a code)
-      control = (
-        <div className="tf-pills" role="group" aria-labelledby={`${id}-l`}>
-          {prop.enum.map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              className={`tf-pill ${String(val) === opt ? 'tf-pill--on' : ''}`}
-              aria-pressed={String(val) === opt}
-              onClick={() => onChange(name, opt)}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-      )
+      const elabel = (opt: string) => tool.enumLabels?.[name]?.[opt] ?? (opt === '' ? 'Any' : opt)
+      if (prop.enum.length > 4) {
+        // many options → a friendly dropdown (a pill row would wrap to a wall); human labels, never the raw value
+        control = (
+          <select
+            id={id}
+            className="tf-input tf-select"
+            value={String(val)}
+            onChange={(e) => onChange(name, e.target.value)}
+          >
+            {prop.enum.map((opt) => (
+              <option key={opt} value={opt}>
+                {elabel(opt)}
+              </option>
+            ))}
+          </select>
+        )
+      } else {
+        // a small enum → a friendly pill group (operator picks, doesn't type a code)
+        control = (
+          <div className="tf-pills" role="group" aria-labelledby={`${id}-l`}>
+            {prop.enum.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                className={`tf-pill ${String(val) === opt ? 'tf-pill--on' : ''}`}
+                aria-pressed={String(val) === opt}
+                onClick={() => onChange(name, opt)}
+              >
+                {elabel(opt)}
+              </button>
+            ))}
+          </div>
+        )
+      }
     } else if (prop.type === 'boolean') {
       control = (
         <button

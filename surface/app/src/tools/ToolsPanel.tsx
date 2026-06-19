@@ -27,18 +27,54 @@ function defaultsFor(t: ToolDescriptor): Record<string, unknown> {
   return out
 }
 
+// the run state — an honest little machine (idle → running → done|wired-pending|error). NO raw output ever.
+type RunState =
+  | { phase: 'idle' }
+  | { phase: 'running' }
+  | { phase: 'done'; count: number; hits: unknown[] } // hits HELD for DNA's tool-card render (gap 4); we show a human status
+  | { phase: 'pending' } // an op/tool whose invoke isn't wired transitionally yet (honest, not faked)
+  | { phase: 'error'; message: string }
+
 export function ToolsPanel() {
   const { tools, loading, error, scaffold, open, selected } = useTools()
   const [values, setValues] = useState<Record<string, unknown>>({})
-  const [ran, setRan] = useState(false)
+  const [run, setRun] = useState<RunState>({ phase: 'idle' })
 
   const tool = selected ? tools.find((t) => t.name === selected) || null : null
 
   // when the picked tool changes, seed its form from defaults + clear any prior run state.
   useEffect(() => {
     if (tool) setValues(defaultsFor(tool))
-    setRan(false)
+    setRun({ phase: 'idle' })
   }, [selected]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // RUN. Transitional invoke (lead-sanctioned: build the loop against the EXISTING endpoint now, swap onto fork's
+  // generic /api/tools/invoke when it lands). The prove-on-one — corpus op=query — maps to /api/corpus-query (the
+  // semantic door; resolved by-use: /api/cognition/corpus GET is records-list, NOT op=query). READ posture = no
+  // gate. The RESULT CONTENT render stays DNA's tool-card archetype (gap 4) — we hold the hits + show a HUMAN
+  // run-status (count), never raw JSON, never a bespoke content render (from-DNA law).
+  const doRun = async () => {
+    if (!tool) return
+    const op = tool.opField ? String(values[tool.opField] ?? '') : ''
+    if (tool.name !== 'corpus' || op !== 'query') {
+      setRun({ phase: 'pending' }) // other ops/tools ride fork's generic invoke door (not wired transitionally)
+      return
+    }
+    setRun({ phase: 'running' })
+    try {
+      const p = new URLSearchParams()
+      p.set('text', String(values.text ?? ''))
+      if (values.space) p.set('space', String(values.space))
+      if (values.k) p.set('k', String(values.k))
+      const r = await fetch(`/api/corpus-query?${p.toString()}`)
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      const data = await r.json()
+      const hits: unknown[] = Array.isArray(data.hits) ? data.hits : []
+      setRun({ phase: 'done', count: hits.length, hits })
+    } catch {
+      setRun({ phase: 'error', message: 'That didn’t run just now — try again in a moment.' })
+    }
+  }
 
   useEffect(() => {
     if (!open) return
@@ -113,16 +149,33 @@ export function ToolsPanel() {
               <p className="tools-detail-desc">{tool.description}</p>
               <SchemaForm tool={tool} values={values} onChange={onChange} />
               <div className="tools-run-row">
-                <button className="tools-run" onClick={() => setRan(true)}>Run ›</button>
+                <button className="tools-run" onClick={doRun} disabled={run.phase === 'running'}>
+                  {run.phase === 'running' ? 'Looking…' : 'Run ›'}
+                </button>
               </div>
               {/* the RESULT region — the stable container DNA.renderArchetype(toolCard, result) will write into
-                  (gap 4). Until the run door + the tool-card land, an HONEST pending state (never a fake/raw result). */}
-              {ran && (
+                  (gap 4). The invoke is REAL (op=query → /api/corpus-query); we show a HUMAN run-status (count) and
+                  HOLD the hits for DNA's tool-card render — never raw JSON, never a bespoke content render. */}
+              {run.phase !== 'idle' && (
                 <div className="tools-result" aria-live="polite">
-                  <p className="tools-result-pending">
-                    Running connects next — the result will appear here, shown clearly (not raw),
-                    once running and its result view are wired in.
-                  </p>
+                  {run.phase === 'running' && <p className="tools-result-pending">Looking…</p>}
+                  {run.phase === 'done' && run.count > 0 && (
+                    <p className="tools-result-status">
+                      Found {run.count} {run.count === 1 ? 'thing' : 'things'}. The clear view of each is being
+                      designed — it’ll show right here next.
+                    </p>
+                  )}
+                  {run.phase === 'done' && run.count === 0 && (
+                    <p className="tools-result-status">
+                      Nothing matched — try another question, or a different area to look in.
+                    </p>
+                  )}
+                  {run.phase === 'pending' && (
+                    <p className="tools-result-pending">
+                      Running this one connects next — it’ll come through the same door once that’s wired in.
+                    </p>
+                  )}
+                  {run.phase === 'error' && <p className="tools-result-error">{run.message}</p>}
                 </div>
               )}
             </div>

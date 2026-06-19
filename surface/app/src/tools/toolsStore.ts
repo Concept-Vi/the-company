@@ -36,6 +36,7 @@ export type ToolDescriptor = {
   opField?: string // the discriminator enum param (e.g. 'op') → rendered first as a friendly selector
   opParams?: Record<string, string[]> // op value → the params it actually uses (the op-conditional form)
   opLabels?: Record<string, string> // op value → its HUMAN name on the selector pill (never the raw verb)
+  enumLabels?: Record<string, Record<string, string>> // param → (enum value → HUMAN option label)
   labels?: Record<string, { label: string; help?: string }> // param → human label + help
 }
 
@@ -94,7 +95,7 @@ const CORPUS_SEED: ToolDescriptor = {
   labels: {
     op: { label: 'What to do', help: 'Ask a question, or browse/look up what’s stored.' },
     text: { label: 'Your question', help: 'Ask in plain words — like you’d ask a person.' },
-    space: { label: 'Where to look', help: 'Leave blank to search everything, or narrow to one area.' },
+    space: { label: 'Where to look', help: 'Pick which part of the Company’s memory to search.' },
     k: { label: 'How many results', help: 'The number of closest matches to bring back.' },
     detail: { label: 'How much of each', help: '“Concise” = just the gist; “detailed” = the full content.' },
     rerank: { label: 'Sharper ranking', help: 'A slower, more careful re-ordering of the matches.' },
@@ -107,6 +108,19 @@ const CORPUS_SEED: ToolDescriptor = {
     source_address: { label: 'From this source', help: 'Narrow to records made from one source.' },
     limit: { label: 'How many to list', help: 'The most records to bring back.' },
     min_score: { label: 'Minimum closeness', help: 'Only matches at least this close (0 = no floor).' },
+  },
+  // human names for the "Where to look" spaces (AI-draft, Tim-steerable) — the values are injected at load from
+  // the live /api/layers (registry-true), these translate them so the operator never picks a raw space key.
+  enumLabels: {
+    space: {
+      common_knowledge: 'What it’s learned',
+      history: 'Past discussions',
+      operators: 'Operators',
+      principles: 'Principles',
+      repo: 'The code',
+      topics: 'Topics',
+      worldview: 'Worldview',
+    },
   },
 }
 
@@ -141,7 +155,30 @@ export async function loadTools() {
     // /api/tools (fork's gap 2) isn't live yet → fall back to the prove-on-one SEED so the form is verifiable now.
     // HONEST (no silent empty): `scaffold:true` lets the panel say it's showing the pilot tool while the full list
     // is wired up. NOT an error state — it's the sanctioned parallel scaffold.
-    set({ tools: [CORPUS_SEED], scaffold: true, loading: false })
+    // ENRICH "Where to look" with the REAL embeddable spaces (/api/layers keys, registry-true) so it's a friendly
+    // dropdown of real options, not blind text. Degrade-clean: spaces unavailable → space stays a free-text input.
+    let seed = CORPUS_SEED
+    try {
+      const lr = await fetch('/api/layers')
+      if (lr.ok) {
+        const spaces = Object.keys(await lr.json()).filter(Boolean)
+        if (spaces.length) {
+          seed = {
+            ...CORPUS_SEED,
+            inputSchema: {
+              ...CORPUS_SEED.inputSchema,
+              properties: {
+                ...CORPUS_SEED.inputSchema.properties,
+                space: { type: 'string', enum: spaces, default: spaces.includes('history') ? 'history' : spaces[0] },
+              },
+            },
+          }
+        }
+      }
+    } catch {
+      /* spaces unavailable → "Where to look" stays a free-text input (graceful) */
+    }
+    set({ tools: [seed], scaffold: true, loading: false })
   }
 }
 

@@ -312,6 +312,8 @@
 .tools-result { border: 1px solid var(--hairline); border-radius: var(--r-card); background: var(--ground-secondary);
   padding: var(--s-3) var(--s-4); }
 .tools-result-pending { margin: 0; font-size: var(--t-sm); color: var(--ink-dim); line-height: 1.5; }
+.tools-result-status { margin: 0; font-size: var(--t-sm); color: var(--ink-primary); line-height: 1.5; font-weight: 600; }
+.tools-result-error { margin: 0; font-size: var(--t-sm); color: var(--pig-strain); line-height: 1.5; }
 
 /* the op-conditional form engine (schemaForm.tsx) */
 .tf-form { display: flex; flex-direction: column; gap: var(--s-3); }
@@ -325,6 +327,10 @@
   border-radius: var(--r-chrome); padding: var(--s-2) var(--s-3); transition: border-color 120ms ease; }
 .tf-input:focus { outline: none; border-color: var(--ink-dim); }
 .tf-input--num { width: 9rem; }
+.tf-select { width: 100%; cursor: pointer; appearance: none; -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-faint) 50%), linear-gradient(135deg, var(--ink-faint) 50%, transparent 50%);
+  background-position: calc(100% - var(--s-4)) center, calc(100% - var(--s-3)) center; background-size: 6px 6px, 6px 6px; background-repeat: no-repeat;
+  padding-right: var(--s-6); }
 .tf-textarea { resize: vertical; min-height: 3.2rem; line-height: 1.45; }
 .tf-pills { display: flex; flex-wrap: wrap; gap: var(--s-1); }
 .tf-pill { border: 1px solid var(--hairline); background: var(--ground-primary); color: var(--ink-dim); cursor: pointer;
