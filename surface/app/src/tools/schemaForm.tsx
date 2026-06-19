@@ -28,8 +28,10 @@ function visibleParams(tool: ToolDescriptor, op: string | undefined): string[] {
 
 const MULTILINE = /(^|_)(text|question|query|prompt|body|message|content)($|_)/i
 
-function isRequired(tool: ToolDescriptor, name: string): boolean {
-  return (tool.inputSchema.required || []).includes(name)
+function isRequired(tool: ToolDescriptor, name: string, op?: string): boolean {
+  if ((tool.inputSchema.required || []).includes(name)) return true
+  if (op && tool.opRequired?.[op]?.includes(name)) return true // op-conditional requiredness
+  return false
 }
 
 export function SchemaForm({
@@ -49,7 +51,7 @@ export function SchemaForm({
     const prop = props[name]
     if (!prop) return null
     const { label, help } = labelFor(tool, name, prop)
-    const required = isRequired(tool, name)
+    const required = isRequired(tool, name, op)
     const val = values[name] ?? prop.default ?? ''
     const id = `tf-${name}`
     let control

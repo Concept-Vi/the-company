@@ -42,6 +42,19 @@ export function ToolsPanel() {
 
   const tool = selected ? tools.find((t) => t.name === selected) || null : null
 
+  // the Run guard (operator-law: never fire an incomplete form). The current op's required params (op-conditional)
+  // that are still blank → Run is disabled + a gentle human hint names the first one.
+  const curOp = tool?.opField ? String(values[tool.opField] ?? '') : ''
+  const requiredNow = tool
+    ? [...(tool.opRequired?.[curOp] || []), ...(tool.inputSchema.required || [])].filter((n) => n !== tool.opField)
+    : []
+  const missing = requiredNow.filter((n) => {
+    const v = values[n]
+    return v === undefined || v === null || String(v).trim() === ''
+  })
+  const firstMissingLabel = missing.length ? tool?.labels?.[missing[0]]?.label || missing[0] : ''
+  const canRun = missing.length === 0
+
   // when the picked tool changes, seed its form from defaults + clear any prior run state.
   useEffect(() => {
     if (tool) setValues(defaultsFor(tool))
@@ -149,7 +162,14 @@ export function ToolsPanel() {
               <p className="tools-detail-desc">{tool.description}</p>
               <SchemaForm tool={tool} values={values} onChange={onChange} />
               <div className="tools-run-row">
-                <button className="tools-run" onClick={doRun} disabled={run.phase === 'running'}>
+                {!canRun && firstMissingLabel && (
+                  <p className="tools-run-hint">Fill in “{firstMissingLabel}” to run.</p>
+                )}
+                <button
+                  className="tools-run"
+                  onClick={doRun}
+                  disabled={run.phase === 'running' || !canRun}
+                >
                   {run.phase === 'running' ? 'Looking…' : 'Run ›'}
                 </button>
               </div>

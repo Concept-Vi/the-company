@@ -35,6 +35,7 @@ export type ToolDescriptor = {
   // --- projection's friendly-form layer (AI-draft, Tim-steerable) ---
   opField?: string // the discriminator enum param (e.g. 'op') → rendered first as a friendly selector
   opParams?: Record<string, string[]> // op value → the params it actually uses (the op-conditional form)
+  opRequired?: Record<string, string[]> // op value → which of its params are REQUIRED (the op-conditional Run guard)
   opLabels?: Record<string, string> // op value → its HUMAN name on the selector pill (never the raw verb)
   enumLabels?: Record<string, Record<string, string>> // param → (enum value → HUMAN option label)
   // a param whose options come from a LIVE registry endpoint (the agreed form_meta convention, fork+lead): the URL's
@@ -83,6 +84,13 @@ const CORPUS_SEED: ToolDescriptor = {
     query: ['text', 'space', 'k', 'detail', 'rerank'],
     list: ['project', 'limit'],
     find: ['project', 'kind'],
+    read: ['address'],
+    neighbours: ['address'],
+  },
+  // which params each op REQUIRES — the Run guard won't fire an incomplete form (operator-law: never a silent
+  // empty run). query needs a question; read/neighbours need the exact thing; list/find run with no required input.
+  opRequired: {
+    query: ['text'],
     read: ['address'],
     neighbours: ['address'],
   },
