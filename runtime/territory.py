@@ -289,7 +289,16 @@ def territory_prose(territory_or_address, *, suite=None, store=None, max_chars: 
     """Render a territory (or compose+render from an address) → the `[Operator context]` block a CC brain
     turn folds in. NEVER raises (the bridge-facing path: context-gathering must never kill a brain turn,
     the contract bridge._claude_stream already holds at bridge.py:1670-1681). The drop-in replacement for
-    that inline ui://-only composer: `ctx = territory_prose(address, suite=SUITE)`."""
+    that inline ui://-only composer: `ctx = territory_prose(address, suite=SUITE)`.
+
+    DNA voice note (operator_voice.rhm_spoken — "territory_prose frames to it"): this is the STRUCTURAL
+    explanation scaffold the RHM speaks FROM — labelled meaning fields ("What this is", "The decision",
+    "The options are…"), already operator-law-safe (human meaning only, no addresses/jargon). It carries
+    no spoken-VOICE register of its own; the voice (second-person, brief-lead+offer-deeper, phone-aware,
+    translate-not-leak, answer-from-context) is RESOLVED once in the brain's system prompt — PANEL_BRIEFING
+    in ui_claude_session.py, which composes from the DNA rhm_spoken standard. So this frame inherits DNA's
+    voice calibration through the brain with no per-field voice wording here (resolve-not-hardcode upheld;
+    do not author voice copy into these structural labels)."""
     try:
         terr = (territory_or_address if isinstance(territory_or_address, dict)
                 else territory_for(territory_or_address, suite=suite, store=store))

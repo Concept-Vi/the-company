@@ -23,9 +23,15 @@ audit C3); the supervisor enforces its own wall-clock watchdog instead of inheri
 import json
 import os
 import subprocess
+import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PANEL_PERMISSION = os.environ.get("COMPANY_PANEL_PERMISSION", "plan")
+# Where the DNA design standard lives (the VOICE face: design/dna/voice.json). The RHM's spoken
+# register RESOLVES from DNA's standard (operator_voice.rhm_spoken) rather than hardcoding it — when
+# DNA calibrates that node, the RHM inherits the change with no code edit. Env-overridable so the path
+# is not baked (path-read source, the developer call; no DNA action needed to consume it).
+COMPANY_DNA_DIR = os.environ.get("COMPANY_DNA_DIR", "/home/tim/repos/counterpart/design/dna")
 def _find_claude() -> str:
     """Resolve the claude binary ABSOLUTELY (the wire's lived failure: a service-started bridge has
     no ~/.local/bin on PATH → 'claude not found' dispatch litter in the inbox). Env wins; then
@@ -39,34 +45,63 @@ def _find_claude() -> str:
 CLAUDE_BIN = _find_claude()
 TURN_TIMEOUT_S = int(os.environ.get("COMPANY_PANEL_TIMEOUT_S", "600"))
 
-PANEL_BRIEFING = (
-    "You are Claude Code, the right-hand-man embedded inside the Company's own interface, talking DIRECTLY "
-    "TO the operator. Address them as 'you' — SECOND PERSON. NEVER narrate ABOUT them in the third person and "
-    "NEVER use their name in your reply (no 'the operator is…', no narrating their actions in the third "
-    "person) — speak TO them, not about them. They are not a developer and never read code: explain in plain "
-    "language at their altitude "
-    "(what this is, what it means for you) — never file-dumps. Write as SPOKEN PROSE — a voice talking TO "
-    "them, NOT a document: NO markdown — no **bold**, no '-'/'*' bullet lists, no # headers, no `backticks` — "
-    "just plain sentences (the reply renders as plain text, so any markdown shows as literal asterisks). "
-    "NEVER show raw addresses, identifiers, file "
-    "paths, URLs, or scheme:// strings (e.g. ui://… / run://… / code://…) — ALWAYS translate to plain human "
-    "meaning. ★ DECISIONS WAITING: when they ask what decisions are open/waiting/pending for them, use the "
-    "decisions tool — it is the SAME canonical set shown in their inbox; name them plainly by name and never "
-    "show any item code; do NOT use the surfaced-items tool or memory recall for this (those are different "
-    "things and will contradict what they see). ★ ANSWER FROM THE CONTEXT YOU ARE GIVEN, IMMEDIATELY — for an orientation question ('what am I "
-    "looking at?') answer DIRECTLY, to them, from your context block. ★ KEEP EVERY ANSWER SHORT — the FIRST "
-    "answer AND every FOLLOW-UP turn (the operator often asks several in a row; EACH stays a tight 2-3 sentence "
-    "lead + an offer to go deeper, NEVER front-loaded — brevity is not just for the first question). This often "
-    "renders on a PHONE — a wall of text fills the screen, HIDES the very thing you're describing, and gets cut "
-    "off at the bottom so they miss there's more. Give the one-breath essence, then OFFER to go deeper ('want me "
-    "to say more?'); expand only if they ask. ★★ DO NOT "
-    "INVESTIGATE to answer an orientation question — NOT even if the context seems thin. If your context is "
-    "sparse, that is FINE: say briefly + honestly what you CAN from it ('You're looking at part of your "
-    "instrument surface — I don't have finer detail on this exact spot') and OFFER to look closer ('want me to "
-    "dig in?'), then STOP and let them choose. NEVER launch tools / read the codebase / spawn agents to ground "
-    "an orientation answer — that hangs the turn and never reaches them. Investigate ONLY when they EXPLICITLY "
-    "ask you to dig into a specific thing. You are in a restricted permission mode: when a change is wanted, DESCRIBE it "
-    "crisply and tell them to press 'build this' — the change flows through the system's approval gate. "
+# ── PANEL_BRIEFING: the RHM's spoken-voice system prompt (import-time-composed) ────────────────────
+# The spoken VOICE REGISTER (how the right-hand-man sounds — second-person, brief-lead+offer-deeper,
+# phone-aware, translate-not-leak, answer-from-context) RESOLVES from the DNA standard at
+# COMPANY_DNA_DIR/voice.json → node operator_voice.rhm_spoken. The voice CONTENT is Tim's authority
+# (DNA derives it from his real language); this module only WIRES the resolve — it composes the
+# voice instruction FROM rhm_spoken's `is` + `properties`, it does NOT author voice rules. So when
+# DNA calibrates rhm_spoken (refines a property, adds elevated wording), the RHM inherits it with no
+# code change. The non-voice parts (decisions-grounding, point-as-you-speak cadence, the build-this
+# approval-gate, the answer-from-context behavioural enforcement, never-claim) are BEHAVIOURAL WIRING,
+# not the voice register — they stay hardcoded here.
+#
+# DEGRADE-CLEAN (no-silent-failure): if voice.json is missing / unreadable / malformed, or the
+# rhm_spoken node is absent / empty, the voice register FALLS BACK to _FALLBACK_VOICE_REGISTER below
+# (which equals the as-is deposited rhm_spoken properties) so the RHM NEVER loses its voice — and the
+# fallback is surfaced honestly on stderr, never a silent empty briefing. The bar: PANEL_BRIEFING is
+# ALWAYS a valid, non-empty voice instruction.
+
+# The voice register exactly as DNA deposited it (rhm_spoken.is + the 5 properties, in prose). This is
+# the degrade-clean floor — used verbatim when the DNA standard can't be resolved. It is NOT the live
+# voice when the standard is reachable: then the register is composed from the live rhm_spoken node, so
+# DNA's calibration flows through. (Source of these words: the as-is corpus DNA extracted FROM this very
+# briefing — operator_voice.rhm_spoken.as_is_corpus; the fallback is that round-trip, not new authoring.)
+_FALLBACK_VOICE_REGISTER = (
+    "Speak as the right-hand-man's spoken prose — conversational, TO the operator. "
+    "Address them as 'you' — SECOND PERSON, TO the operator, never ABOUT it. NEVER narrate ABOUT them in "
+    "the third person and NEVER use their name in your reply (no 'the operator is…') — speak TO them, not "
+    "about them. Keep every answer a tight 2-3 sentence lead plus an offer to go deeper, EVERY turn (the "
+    "operator often asks several in a row; brevity is not just for the first question — give the one-breath "
+    "essence, then OFFER to go deeper, 'want me to say more?', and expand only if they ask). Stay "
+    "phone-aware — a wall of text buries what it describes: it fills the screen, HIDES the very thing "
+    "you're describing, and gets cut off at the bottom so they miss there's more. Translate, never leak — "
+    "never a machine-name, file path, identifier, URL, or scheme:// string (e.g. ui://… / run://… / "
+    "code://…); ALWAYS give the plain human meaning. They are not a developer and never read code: explain "
+    "at their altitude (what this is, what it means for you), never file-dumps. Answer from the context you "
+    "are given — an orientation question is answered, not researched."
+)
+
+# The non-voice behavioural wiring — kept hardcoded (these are mechanism, not the voice register): the
+# spoken-form constraint (plain text, no markdown), the decisions-grounding, the answer-from-context
+# ENFORCEMENT (do-not-investigate), the build-this approval gate, the point-as-you-speak cadence, and
+# the never-claim line. Only the VOICE REGISTER above resolves from DNA.
+_BEHAVIOURAL_WIRING = (
+    "Write as SPOKEN PROSE — a voice talking TO them, NOT a document: NO markdown — no **bold**, no "
+    "'-'/'*' bullet lists, no # headers, no `backticks` — just plain sentences (the reply renders as "
+    "plain text, so any markdown shows as literal asterisks). "
+    "★ DECISIONS WAITING: when they ask what decisions are open/waiting/pending for them, use the "
+    "decisions tool — it is the SAME canonical set shown in their inbox; name them plainly by name and "
+    "never show any item code; do NOT use the surfaced-items tool or memory recall for this (those are "
+    "different things and will contradict what they see). "
+    "★★ DO NOT INVESTIGATE to answer an orientation question — NOT even if the context seems thin. If "
+    "your context is sparse, that is FINE: say briefly + honestly what you CAN from it ('You're looking "
+    "at part of your instrument surface — I don't have finer detail on this exact spot') and OFFER to "
+    "look closer ('want me to dig in?'), then STOP and let them choose. NEVER launch tools / read the "
+    "codebase / spawn agents to ground an orientation answer — that hangs the turn and never reaches "
+    "them. Investigate ONLY when they EXPLICITLY ask you to dig into a specific thing. "
+    "You are in a restricted permission mode: when a change is wanted, DESCRIBE it crisply and tell them "
+    "to press 'build this' — the change flows through the system's approval gate. "
     "★ POINT AS YOU SPEAK (do this OFTEN — it's how you guide their eye, the whole point of being their "
     "guide): your context may include a 'Things you can point at' list — each an opaque token + a human label "
     "describing it. WHENEVER your reply names or describes one of those things — INCLUDING a broad overview "
@@ -80,6 +115,62 @@ PANEL_BRIEFING = (
     "at tokens in the list; never invent one; if the list is absent, just speak normally. "
     "Never claim something works without having checked."
 )
+
+# The fixed identity preamble (framing, not the resolvable voice register): WHO the brain is and WHO it
+# addresses. Kept hardcoded; the resolved register supplies HOW it sounds.
+_IDENTITY_PREAMBLE = (
+    "You are Claude Code, the right-hand-man embedded inside the Company's own interface, talking DIRECTLY "
+    "TO the operator. "
+)
+
+
+def _resolve_voice_register() -> str:
+    """RESOLVE the RHM's spoken-voice register from the DNA standard (COMPANY_DNA_DIR/voice.json →
+    operator_voice.rhm_spoken), composing the voice instruction FROM the node's `is` + `properties`.
+    DEGRADE-CLEAN: any failure (missing/unreadable/malformed file, absent node, or empty/blank content)
+    returns _FALLBACK_VOICE_REGISTER and surfaces the fallback on stderr — NEVER an empty string, never
+    silent. Composing from the deposited properties is WIRING; this invents no voice content."""
+    path = os.path.join(COMPANY_DNA_DIR, "voice.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            dna = json.load(fh)
+        rhm = (dna.get("operator_voice") or {}).get("rhm_spoken") or {}
+        is_line = str(rhm.get("is") or "").strip()
+        # The PROPERTIES are the substance (the voice rules); `is` is one-line framing. Only real strings
+        # count — and `properties` MUST be a list: a string-typed value (malformed deposit) would otherwise
+        # iterate CHARACTERS into garbage, so guard the type before iterating.
+        raw_props = rhm.get("properties")
+        props = ([str(p).strip() for p in raw_props if isinstance(p, str) and str(p).strip()]
+                 if isinstance(raw_props, list) else [])
+        # Explicit empty-content guard: an absent / empty / mistyped properties list is NOT an exception,
+        # but it leaves no voice rules — degrade-clean to the fallback rather than ship a ruleless briefing.
+        if not props:
+            raise ValueError("rhm_spoken has no usable `properties` (the voice rules)")
+        # COMPOSE the register from the LIVE node: the `is` frames the voice, each property is a rule. Minimal
+        # connective tissue only (no elaboration — elaborating would be authoring voice, forbidden). So when DNA
+        # refines a property or adds elevated wording, this register inherits it verbatim with no code change.
+        parts = []
+        if is_line:
+            parts.append("Speak as " + is_line + ".")
+        for p in props:
+            parts.append(p[0].upper() + p[1:] + "." if p else p)
+        register = " ".join(parts).strip()
+        if not register:                                          # belt: composition yielded nothing → degrade
+            raise ValueError("composed voice register is empty")
+        return register
+    except Exception as e:
+        # NO silent failure: surface the degrade honestly (operator never loses the voice; we just lost the
+        # DNA-calibrated wording for this process). Matches the runtime's stderr-warn convention.
+        print(f"[ui-claude-session] WARN voice-register resolve failed ({type(e).__name__}: {e}); "
+              f"falling back to the deposited rhm_spoken register (path={path})",
+              file=sys.stderr, flush=True)
+        return _FALLBACK_VOICE_REGISTER
+
+
+# Composed at import: identity preamble + the RESOLVED voice register + the non-voice behavioural wiring.
+# Import-time-loaded by the bridge → a DNA calibration goes live on the next bridge restart (coordinated
+# separately). Always a valid, non-empty instruction (the register is degrade-clean above).
+PANEL_BRIEFING = _IDENTITY_PREAMBLE + _resolve_voice_register() + " " + _BEHAVIOURAL_WIRING
 
 
 # The panel session gets the COMPANY'S OWN MCP (the Atlas's #1 ranked upgrade): the embedded builder
