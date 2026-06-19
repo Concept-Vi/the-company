@@ -40,12 +40,16 @@ DECISION = {
     "legibility": {
         "name": "Turn on save-back to the design library",
         "is": "Reversible · your latest answer wins",
+        # C5 GROUNDED explain (recollection, e93aa85): drawn from common memory — recall_for_decision
+        # surfaced the real situation (the design library is a read-only synced copy; the save-back gap was
+        # documented + left waiting), not invented. fork's live-gen explain leg MAY override this from the
+        # recall bundle (resolved-not-stored per C5); until then this grounded text carries the C1 render.
         "why": (
-            "The company gets its own key to the shared design library — its own, not yours or anyone's — so "
-            "it can save finished and changed designs back on its own. It only ever writes its own entries, "
-            "never touches anyone else's, and you can revoke that key anytime. Or stay read-only: it reads the "
-            "library to build from, but saving stays a separate, deliberate step. No rush — not choosing "
-            "changes nothing: it stays read-only and pending, decide whenever."
+            "Today the shared design library is a read-only copy the company builds from: it can read every "
+            "design but can't write back, so saving finished work has been a separate, deliberate step (a "
+            "known, documented gap). This decides whether to close that gap — give the company its own write "
+            "key, scoped to only its own entries and revocable anytime, so it saves designs back on its own — "
+            "or keep the read-only posture for now. Not choosing changes nothing: it stays read-only and pending."
         ),
     },
 }
