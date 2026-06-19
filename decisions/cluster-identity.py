@@ -9,9 +9,7 @@ READ — explicitly Tim's call, override-friendly. Resolves decision://global/cl
 DECISION = {
     "id": "cluster-identity",
     "meaning": (
-        "A 'cluster' is a group of related things the company finds. Is a cluster something you NAME once "
-        "and return to — a fixed, saved grouping — or a LIVE grouping that recomputes as things change, "
-        "or both?"
+        "Is a cluster a name you save and return to, a live grouping that recomputes, or both?"
     ),
     "options": [
         {
@@ -43,10 +41,11 @@ DECISION = {
     "explanation_source": "code://build-prep/the-one-application/UNION-DIVERGENCE-LEDGER.md",
     "legibility": {
         "name": "What a cluster is",
-        "is": "a decision to make",
+        "is": "Reversible · your latest answer wins",
         "why": (
-            "It decides whether a group of related things is a fixed name you return to, a live grouping "
-            "that recomputes, or both — how the company holds the groupings it finds."
+            "A cluster is a group of related things the company finds. A fixed saved name you return to, a "
+            "live grouping that recomputes as things change, or both — this is how the company holds the "
+            "groupings it finds."
         ),
     },
 }

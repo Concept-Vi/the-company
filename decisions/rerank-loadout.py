@@ -21,13 +21,7 @@ the card is FRAMED so that Tim PICKING option 2 IS the consult-satisfied authori
 DECISION = {
     "id": "rerank-loadout",
     "meaning": (
-        "When the Company explains a decision to you, it gathers related context from its memory and "
-        "orders it by how relevant each piece is. Right now it uses ROUGH similarity to order it. There "
-        "is a sharper step that re-sorts that context so the most relevant comes first — but that step is "
-        "slow on the current setup (it froze the decision surface), so it's switched OFF for the live "
-        "explanation. How should the Company bring the sharper ordering back: leave it off and keep rough "
-        "similarity, give the sharper step the fast processor so it's near-instant again, add a lighter "
-        "quick version beside it, or sharpen only the top few / quietly in the background?"
+        "How should the company restore the sharper sorting of a decision's context?"
     ),
     "options": [
         {
@@ -72,10 +66,13 @@ DECISION = {
     "explanation_source": "board://item-a3844c46",
     "legibility": {
         "name": "The sharpness of the context behind a decision",
-        "is": "a decision to make",
+        "is": "Reversible · your latest answer wins",
         "why": (
-            "It decides whether — and how — the Company restores the sharper re-sorting of the context it "
-            "uses to explain each decision, now that the precise step is switched off to keep decisions fast."
+            "When the company explains a decision, it gathers related context from memory and orders it by "
+            "relevance. The sharper re-sort is switched off (too slow on the current setup — it froze the "
+            "surface), so rough similarity orders it now. Leave it off, give the sharper step the fast "
+            "processor (near-instant again), add a lighter quick version beside it, or sharpen only the top "
+            "few / quietly in the background."
         ),
     },
 }

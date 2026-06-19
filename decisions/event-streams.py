@@ -9,10 +9,7 @@ lean is the RHM's READ — explicitly Tim's call, override-friendly. Resolves de
 DECISION = {
     "id": "event-streams",
     "meaning": (
-        "The company's highest-volume live data — the running history log, and the marks, notes, and pins "
-        "people leave — should each one of those become a first-class thing you can point AT directly "
-        "(refer to, recall, or decide on any single one), stay as references only (pointed at indirectly, "
-        "by time or source), or a mix?"
+        "Make every event, mark, and note individually addressable — or hold them in bulk?"
     ),
     "options": [
         {
@@ -45,10 +42,12 @@ DECISION = {
     "explanation_source": "code://build-prep/the-one-application/UNION-DIVERGENCE-LEDGER.md",
     "legibility": {
         "name": "How the live streams are held",
-        "is": "a decision to make",
+        "is": "Reversible · your latest answer wins",
         "why": (
-            "It decides whether each event, mark, and note can be pointed at directly, stays bulk data, or "
-            "a mix — how the company's highest-volume live data is addressed."
+            "The company's highest-volume live data — the running history log, and the marks, notes, and "
+            "pins people leave. Each one first-class (point at, recall, or decide on any single one), "
+            "references-only (pointed at by time or source), or a mix — the significant ones first-class, "
+            "the bulk by reference."
         ),
     },
 }

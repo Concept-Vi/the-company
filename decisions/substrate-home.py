@@ -16,14 +16,7 @@ decisions (they NAME the address-model this spine uses) — render-order is FRAM
 DECISION = {
     "id": "substrate-home",
     "meaning": (
-        "The company's pieces — the design factory, its memory, the design library, the record of "
-        "decisions, the live channels between sessions — have each grown their own way of storing things, "
-        "and lately they've started landing on the same backend almost by accident. Should the company "
-        "adopt ONE shared way of addressing everything — a single 'where each thing lives and how it "
-        "connects to everything else' spine that every piece plugs into, while each piece KEEPS its own "
-        "engine and way of working — or keep them on separate foundations for now? (The things already "
-        "piled onto that shared backend were never actually used — they're a sketch of the idea, to be "
-        "read for what they were reaching for and rebuilt toward, not preserved as-is.)"
+        "One shared spine for everything the company stores — or keep each piece on its own?"
     ),
     "options": [
         {
@@ -62,10 +55,13 @@ DECISION = {
     "explanation_source": "code://build-prep/coverage-mechanism/SUBSTRATE-HOME-CONVERGENCE-MAP.md",
     "legibility": {
         "name": "Adopt one shared spine for the company's foundation",
-        "is": "a decision to make",
+        "is": "Reversible · your latest answer wins",
         "why": (
-            "It decides whether the company's pieces share one way of addressing everything (each keeping "
-            "its own engine) so the whole can be seen and steered as one — or stay on separate foundations."
+            "The pieces — the design factory, its memory, the design library, the record of decisions, the "
+            "live channels — each grew their own way of storing things, and lately drift onto one backend by "
+            "accident. One shared way to address everything (each piece keeping its own engine) lets the "
+            "whole be seen and steered as one. What's already piled on that backend was a sketch — read it "
+            "for what it reached for and rebuild toward it, don't preserve it as-is."
         ),
     },
 }

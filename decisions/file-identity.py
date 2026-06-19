@@ -9,10 +9,7 @@ decision://global/file-identity; STATE from the latest decision_take mark (pendi
 DECISION = {
     "id": "file-identity",
     "meaning": (
-        "When the company saves something, is the saved file 'the same thing' as the content written in "
-        "it — or its own separate thing that points at the content? It matters when two saved things hold "
-        "identical content: are they one thing, or two things that happen to match? And when content "
-        "changes: is it a new thing, or the same thing changed?"
+        "Is a saved file the same thing as its content — or its own thing that points at it?"
     ),
     "options": [
         {
@@ -47,10 +44,11 @@ DECISION = {
     "explanation_source": "code://build-prep/the-one-application/UNION-DIVERGENCE-LEDGER.md",
     "legibility": {
         "name": "How a saved file's identity works",
-        "is": "a decision to make",
+        "is": "Reversible · your latest answer wins",
         "why": (
-            "It decides whether identical content is one thing or two, and whether changing content makes "
-            "a new thing or the same thing changed — the foundation for how the company recognises things."
+            "It matters when two saved things hold identical content — one thing, or two that happen to "
+            "match? And when content changes — a new thing, or the same thing changed? This is the "
+            "foundation for how the company recognises things."
         ),
     },
 }

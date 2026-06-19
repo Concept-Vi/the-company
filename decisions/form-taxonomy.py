@@ -10,11 +10,7 @@ outputs, not a guess). ★ The evidence→author card is a SECOND step, built wh
 DECISION = {
     "id": "form-taxonomy",
     "meaning": (
-        "What are the REAL kinds of things in the company's content? Right now the kinds (decision, log, "
-        "registry, prose) are a prior AI's guess, used to route how deeply each thing gets processed. "
-        "Should the company look at EVERYTHING first — an open, full-coverage pass that describes what's "
-        "actually there — and let the real kinds emerge so you author the true set, keep the current "
-        "guess for now, or refine the guess as coverage arrives?"
+        "Discover the company's real content-kinds from an open pass — or keep the current guess?"
     ),
     "options": [
         {
@@ -48,10 +44,12 @@ DECISION = {
     "explanation_source": "code://build-prep/the-one-application/UNION-DIVERGENCE-LEDGER.md",
     "legibility": {
         "name": "The real kinds of things in the content",
-        "is": "a decision to make",
+        "is": "Reversible · your latest answer wins",
         "why": (
-            "It decides whether the company discovers its real content-kinds from an open coverage pass "
-            "(and you author them) or keeps a prior guess — the basis for how deeply each thing is processed."
+            "Today's kinds — decision, log, registry, prose — are a prior AI's guess, used to route how "
+            "deeply each thing gets processed. Look at everything first with an open, full-coverage pass "
+            "and let the real kinds emerge (you author the true set), keep the guess for now, or refine it "
+            "as coverage arrives."
         ),
     },
 }
