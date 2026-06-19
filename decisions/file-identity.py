@@ -9,7 +9,8 @@ decision://global/file-identity; STATE from the latest decision_take mark (pendi
 DECISION = {
     "id": "file-identity",
     "meaning": (
-        "Is a saved file the same thing as its content — or its own thing that points at it?"
+        "Is a saved file the same thing as the content in it, or its own thing that points at "
+        "content? — it decides whether two files with identical content are one thing or two."
     ),
     "options": [
         {

@@ -21,7 +21,8 @@ the card is FRAMED so that Tim PICKING option 2 IS the consult-satisfied authori
 DECISION = {
     "id": "rerank-loadout",
     "meaning": (
-        "How should the company restore the sharper sorting of a decision's context?"
+        "The sharper sort of a decision's supporting context is switched off (it froze the surface, "
+        "too slow), so context is ordered only roughly now — how should it be restored?"
     ),
     "options": [
         {

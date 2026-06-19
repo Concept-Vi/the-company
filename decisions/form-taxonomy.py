@@ -10,7 +10,8 @@ outputs, not a guess). ★ The evidence→author card is a SECOND step, built wh
 DECISION = {
     "id": "form-taxonomy",
     "meaning": (
-        "Discover the company's real content-kinds from an open pass — or keep the current guess?"
+        "The kinds the company sorts content into — and uses to decide how deeply to process each — "
+        "are a prior guess. Should it discover the real ones from what's actually there?"
     ),
     "options": [
         {

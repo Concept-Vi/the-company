@@ -9,7 +9,8 @@ lean is the RHM's READ — explicitly Tim's call, override-friendly. Resolves de
 DECISION = {
     "id": "event-streams",
     "meaning": (
-        "Make every event, mark, and note individually addressable — or hold them in bulk?"
+        "The company's highest-volume live data — the running log, and the marks, notes, and pins "
+        "people leave — how directly should you be able to point at any single one?"
     ),
     "options": [
         {

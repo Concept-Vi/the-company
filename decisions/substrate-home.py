@@ -16,7 +16,8 @@ decisions (they NAME the address-model this spine uses) — render-order is FRAM
 DECISION = {
     "id": "substrate-home",
     "meaning": (
-        "One shared spine for everything the company stores — or keep each piece on its own?"
+        "The company's pieces each store things their own way, now drifting onto one backend by "
+        "accident — should they share one way to address everything, each keeping its own engine?"
     ),
     "options": [
         {

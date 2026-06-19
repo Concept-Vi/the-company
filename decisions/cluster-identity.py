@@ -9,7 +9,8 @@ READ — explicitly Tim's call, override-friendly. Resolves decision://global/cl
 DECISION = {
     "id": "cluster-identity",
     "meaning": (
-        "Is a cluster a name you save and return to, a live grouping that recomputes, or both?"
+        "A cluster is a group of related things the company finds — is it a fixed name you save and "
+        "return to, or a live grouping that recomputes as things change?"
     ),
     "options": [
         {
