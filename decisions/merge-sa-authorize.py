@@ -13,7 +13,10 @@ pipeline's REGISTER step writes finished designs back into the library).
 
 DECISION = {
     "id": "merge-sa-authorize",
-    "meaning": "Give the company its own key to save designs back — or stay read-only?",
+    "meaning": (
+        "The company can read the shared design library to build from, but can't save into it — should it "
+        "get its own key to write finished designs back on its own, or stay read-only?"
+    ),
     "options": [
         {
             "label": "Give it save-back access",
