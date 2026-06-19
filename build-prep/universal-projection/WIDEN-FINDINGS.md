@@ -302,3 +302,33 @@ impossible = not-an-arrow; visibility=legality = the same claim in the type-face
 **collapse into one law**: name⊥extension generalises to every axis incl TIME (continuous-free ⊥ discrete-registered),
 and absence = declared ⊖ occupancy, with the continuous half being exactly the open-world input the absence-engine
 consumes. Tim's net-new weld: **folder = distinct-absence on the type-slot.**
+
+---
+
+## CROSS-LANE — the resolver's AXIS-KIND distinction IS this lens's continuous⊥discrete law
+*(2026-06-19, fork. Surfaced when the lead folded composition's axis-kind into the resolver contract; banking the
+connection here for when fork's resolver-lane activates — the axis-kind is not a pragmatic convenience, it has a
+formal floor in Tim's theorem.)*
+
+composition's resolver-contract refinement: **CONTINUOUS axes** (size/detail/warmth) resolve by **DERIVATION**
+(value computed from the root — kills breakpoints); **DISCRETE axes** (medium/voice/viewer/mode/type/posture) resolve
+by **REGISTRY-SELECTION** (row-lookup) — both "resolve never hand-build," mechanism differs by kind, the contract
+carries the kind; the category-error guard = *voice ≠ a continuous function of width.*
+
+**This IS the invariant-law lens's name⊥extension law (A4 + S-name1/S-name2):**
+- **continuous axis → derivation** = the **NAME / circle half** = the **open / free / unregistered** slot (any legal
+  value, computed continuously). 
+- **discrete axis → registry-selection** = the **EXTENSION / square half** = the **registered, closed-vocabulary**
+  slot (a row from the frame's registry). 
+- So the axis-kind the contract must carry is **continuous ⟺ open-world ⟺ derived** vs **discrete ⟺ closed-world ⟺
+  registry-selected** — the same predicate (S-name2). The category-error guard ("voice ≠ f(width)") is exactly *"a
+  discrete/registered axis is not a continuous/derived one"* — a type-error in the name⊥extension sense, not a style
+  rule.
+- **Where absence lives:** A5's `absence = declared-slot ⊖ occupancy` applies to the **discrete/registry axes** (a
+  registry has declared rows; an unselected/empty row is a legible distinct-absence). Continuous/derived axes don't
+  carry "absence" the same way — they always compute *a* value. So absence-as-signal is a property of the
+  registry-selection half of the resolver, precisely.
+
+→ The resolver's `resolve(invariant, coordinate)` is two co-present mechanisms by axis-kind (derive | select),
+which is the geometry's circle⊥square running as the resolver's two limbs. (Tim adjudicates the root AXIS SET;
+the axis-KIND mechanism is law-grounded and solid now.)
