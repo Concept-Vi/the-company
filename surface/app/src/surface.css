@@ -249,6 +249,17 @@
 .inbox-retry { border: 1px solid var(--hairline); background: var(--ground-primary); color: var(--ink-primary);
   border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); font-size: var(--t-xs); cursor: pointer; margin-left: var(--s-2); }
 .inbox-retry:hover { background: var(--ground-secondary); }
+/* the richer decision-item preview: the real question (clamped) + a footer of suggestion + reversibility chip */
+/* the question is the second tier (below the bold title, above the meta-lines) — it's what the operator must
+   understand, so it reads a step larger than the suggestion + reversibility chip beneath it. */
+.inbox-row-meaning { font-size: var(--t-sm); color: var(--ink-dim); line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.inbox-row-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); }
+.inbox-row-revers { font-size: var(--t-xs); color: var(--ink-dim); background: var(--ground-secondary);
+  border-radius: var(--r-pill); padding: var(--s-1) var(--s-2); line-height: 1.25; white-space: nowrap; }
+/* the A4 seam's honest fallback row — an item whose view isn't ready stays visible, never silently dropped */
+.inbox-row--unready { cursor: default; }
+.inbox-row--unready:hover { border-color: var(--hairline); box-shadow: none; transform: none; }
 
 /* ---- THE TOOL FACE (the pilot palette) — entry + modal + the op-conditional form engine -------------
    Mirrors the inbox pattern (one modal idiom, not a fork) on DNA tokens only. The entry is a quiet pill at the
