@@ -17,20 +17,20 @@
 
 **Step 1 of 4 — file-identity · "How a saved file's identity works"**
 - Bridge: "Start with the smallest unit — what a single saved thing IS."
-- Question (existing): "Is a saved file the same thing as its content — or its own thing that points at it?"
-- (options + why unchanged — already telegraphic.)
+- Question (re-baselined, situated): "Is a saved file the same thing as the content in it, or its own thing that points at content? — it decides whether two files with identical content are one thing or two."
+- (options + why unchanged — they carry the real trade-offs.)
 
 **Step 2 of 4 — cluster-identity · "What a cluster is"**
 - Bridge: "Now a group of things — how the company holds a set it finds."
-- Question: "Is a cluster a name you save and return to, a live grouping that recomputes, or both?"
+- Question: "A cluster is a group of related things the company finds — is it a fixed name you save and return to, or a live grouping that recomputes as things change?"
 
 **Step 3 of 4 — event-streams · "How the live streams are held"**
 - Bridge: "Then the live flow — the high-volume stream of events, marks, and notes."
-- Question: "Make every event, mark, and note individually addressable — or hold them in bulk?"
+- Question: "The company's highest-volume live data — the running log, and the marks, notes, and pins people leave — how directly should you be able to point at any single one?"
 
 **Step 4 of 4 — form-taxonomy · "The real kinds of things"**
 - Bridge: "Finally the kinds — how the company names what all of this IS."
-- Question: "Discover the company's real content-kinds from an open pass — or keep the current guess?"
+- Question: "The kinds the company sorts content into — and uses to decide how deeply to process each — are a prior guess. Should it discover the real ones from what's actually there?"
 
 ## NOTES FOR THE CONTRACT (composition)
 - The `is` line ("Reversible · your latest answer wins") applies per-step too — each step is its own reversible take; the flow records 4 takes (one per step), not one.
@@ -39,4 +39,4 @@
 - Ordering rationale (confirm or correct): identity (a thing) → grouping (sets of things) → streams (the live flow) → kinds (the taxonomy across all). It builds smallest→broadest, which reads as a natural foundation walk.
 
 ## STATUS
-Connective copy DRAFTED + paste-ready. Awaiting composition's flow-archetype step-contract → then I place this into it (the words don't change; only where they bind). The single-card copy (merge-sa, rerank-loadout) + the 4 children's telegraphic questions/options/why are already committed and stand.
+Connective copy DRAFTED + paste-ready. Awaiting composition's flow-archetype step-contract → then I place this into it (the words don't change; only where they bind). The single-card copy (merge-sa, rerank-loadout) + the 4 children's questions/options/why are committed and stand — questions now RE-BASELINED to situated (6f4b977; legibility-primary, not slogans), options carry real trade-offs (the 2-line clamp is DNA's render fix, not thin copy).
