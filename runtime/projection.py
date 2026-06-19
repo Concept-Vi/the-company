@@ -19,6 +19,7 @@ import hashlib
 import importlib.util
 import math
 import os
+import re
 from datetime import datetime, timezone
 
 TAU = 2 * math.pi
@@ -95,6 +96,57 @@ def _kind_meaning(kind: str, meta: dict = _KIND_META):
     `meta` selects which registry (kinds default; node-types for Connections)."""
     m = meta.get(kind)
     return m.get("is") if isinstance(m, dict) else None
+
+
+# the stored event `summary` is a MACHINE LOG line (the brain reads it raw from events.jsonl): emit-sites compose
+# strings like "review session 1780591459-1 started — … mode=walkthrough", "voice.load · 84409ms",
+# "build-intent surfaced (decision_build, scope=['nodes/'])", "RHM config → model=…:latest, base_url=http://…".
+# Those are machine tokens / raw addresses / internal ids — the operator (Tim) must NEVER see them (operator-law,
+# his #1 rule). A surface regex-STRIP was offline-tested and MANGLES them (orphaned `base_url=`, the `:latest`
+# id survives) → the clean fix is HERE, at the data layer, registry-driven.
+#
+# For the overwhelming majority of kinds the summary carries NO per-instance human content — it is pure machine
+# log. Their human meaning ALREADY rides on the point as `kind_meaning` (the declared "what this kind is", from
+# KIND_META) and renders above the summary. So for those kinds the operator-facing summary is EMPTY (the meaning
+# is not lost — `kind_meaning` carries it; an empty summary just stops duplicating/leaking it as a machine line).
+#
+# A SMALL set of kinds DO carry genuine operator-written / spoken content baked into the composed string after a
+# machine prefix (verified emit-sites in runtime/suite.py): `chat` ("you: <text>"), `annotation`
+# ("comment at <addr>: <text>"), `trial.turn` ("[<character>] <text>"). For those we KEEP the human tail — strip
+# only the machine prefix — and address-guard it (operator-law wins even here: a residual `scheme://addr` is
+# dropped). The raw machine summary stays untouched in the event store FOR THE BRAIN; this translates only what
+# the operator SEES, the same boundary contract as Disclosure.humanizeCtx on context-item text.
+_PROVENANCE_ADDR = re.compile(r"\b[a-z][\w-]*://\S+", re.I)   # any machine address token (ui://…, run://…, code://…)
+
+
+def _human_summary(kind: str, summary) -> str:
+    """The OPERATOR-facing summary for a projection point: the genuine human content carried in the event
+    summary, or "" when the summary is pure machine log (the meaning then lives in `kind_meaning`). Never leaks
+    machine tokens; never mangles (it does not strip-edit a machine line — it either extracts the human tail of a
+    known human-content kind or returns empty). The brain still reads the raw `summary` from the event store."""
+    s = str(summary or "").strip()
+    if not s:
+        return ""
+
+    def _guard(tail: str) -> str:
+        # operator-law guard on the kept human tail: drop any machine address the human text might carry, tidy
+        # whitespace, trim dangling separators a drop can leave. (If a tail were ONLY an address it goes empty —
+        # never re-leaked: operator-law over a blank crumb, same rule as humanizeCtx.)
+        t = _PROVENANCE_ADDR.sub("", tail)
+        t = re.sub(r"\s{2,}", " ", t)
+        return t.strip(" :—–-·|").strip()
+
+    if kind == "chat":                                   # "you: <text>"  (emit: suite.py "you: {message}")
+        m = re.match(r"^you:\s*(.*)$", s, re.S)
+        return _guard(m.group(1)) if m else ""
+    if kind == "annotation":                             # "comment at <addr>: <text>" (emit: suite.py)
+        m = re.match(r"^comment at\s+\S+:\s*(.*)$", s, re.S)
+        return _guard(m.group(1)) if m else ""
+    if kind == "trial.turn":                             # "[<character>] <text>"  (emit: suite.py _emit_durable)
+        m = re.match(r"^\[[^\]]*\]\s*(.*)$", s, re.S)
+        return _guard(m.group(1)) if m else ""
+    # every other kind is a machine-log line → the operator sees nothing here; `kind_meaning` carries the meaning.
+    return ""
 
 
 class BindingRegistry:
@@ -906,7 +958,11 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
             "theta": round(theta, 5), "r": round(r, 5), "depth": depth,
             "cell": {"i": gi, "j": gj, "d": gd},   # the dyadic structural coordinate (the square half)
             "address": e.get("address") or e.get("source_address") or "",
-            "summary": str(e.get("summary") or "")[:140], "ts": e.get("ts"),
+            # OPERATOR-facing summary (operator-law): the genuine human content only, NEVER the raw machine log.
+            # Machine-log kinds → "" (the meaning rides on kind_meaning above); human-content kinds (chat /
+            # annotation / trial.turn) → the human tail, address-guarded. The brain still reads e["summary"] raw
+            # from the event store — this translates only what the operator SEES (translate-at-the-boundary).
+            "summary": _human_summary(kind, e.get("summary"))[:140], "ts": e.get("ts"),
             "phases": {k: round(v, 4) for k, v in phases.items()},
             # the EMBEDDABLE key (the source the per-space vector is keyed by) — present only when the event
             # carries one, so a meaning-field can re-centre on the ITEM (not its run:// record address).
