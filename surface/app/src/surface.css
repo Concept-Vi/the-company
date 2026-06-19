@@ -420,7 +420,11 @@
   font-size: var(--t-md); line-height: 1; min-width: 40px; min-height: 40px; border-radius: var(--r-chrome);
   transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); }
 .settings-gear:hover { background: var(--ground-secondary); color: var(--ink-dim); }
-.settings-panel { position: absolute; top: calc(100% + var(--s-1)); right: 0; z-index: 41;
+/* VIEWPORT-anchored (fixed, right-hugging, max-width capped) so it can never clip the left edge on a phone where
+   the gear sits mid-header (the absolute right:0 anchor overflowed left at 390). `top` is set inline from the
+   gear's measured bottom (Settings.tsx) so it still drops just below the gear. */
+.settings-panel { position: fixed; right: var(--s-2); z-index: 41; margin-top: var(--s-1);
+  max-width: calc(100vw - var(--s-2) * 2);
   background: var(--ground-accent); box-shadow: var(--elev-3); border-radius: var(--r-card);
   padding: var(--s-3); display: flex; flex-direction: column; gap: var(--s-2); min-width: 220px; }
 .settings-title { font-size: var(--t-xs); color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; }
