@@ -57,17 +57,28 @@ export async function loadDecisions() {
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
     const data = await r.json()
     const raw: Array<Record<string, unknown>> = Array.isArray(data) ? data : data.decisions || data.items || []
+    // CARRY FORWARD already-known enrichment by id: a reload (reopen, or a gallery:rerender) must NOT drop the
+    // meaning/reversibility we already have, or every open would paint names-only then GROW as enrich() patches
+    // back — a shrink-then-grow layout shift on the live surface. Merging by id means a reopen shows the known
+    // enriched rows immediately (no shift); enrich() below still refreshes in case a record changed.
+    const known = new Map(state.pending.map((p) => [p.id, p]))
     // keep only the ones still WAITING on the operator (a decided one drops off the stack) + map to the typed item.
     const pending: StackItem[] = raw
       .filter((d) => (String(d.state ?? 'pending')) === 'pending')
-      .map((d) => ({
-        id: String(d.id),
-        address: String(d.address),
-        type: 'decision-sequence' as const, // the only landed type; A4 will declare the rest on the record
-        name: String(d.name ?? ''),
-        state: d.state as string | undefined,
-        recommended_label: d.recommended_label as string | undefined,
-      }))
+      .map((d) => {
+        const id = String(d.id)
+        const prev = known.get(id)
+        return {
+          id,
+          address: String(d.address),
+          type: 'decision-sequence' as const, // the only landed type; A4 will declare the rest on the record
+          name: String(d.name ?? ''),
+          state: d.state as string | undefined,
+          recommended_label: d.recommended_label as string | undefined,
+          meaning: prev?.meaning, // carried forward (undefined on a genuine first-load) → enrich() fills it
+          reversibility: prev?.reversibility,
+        }
+      })
     if (seq !== loadSeq) return // a newer load superseded this one
     set({ pending, loading: false })
     enrich(pending, seq) // fire-and-forget: patch real meaning + reversibility as each record resolves
