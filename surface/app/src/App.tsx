@@ -3,6 +3,7 @@ import { fetchProjection, fetchTerritory, type Projection, type ProjPoint, ApiEr
 import { SourcePanel, readTerritoryContent, territoryRefCount, territoryNotes, type SourceView } from './source/SourcePanel'
 import { installAddressCapture, installPointerBridge, subscribeLocus, getLocus, clearNotice } from './lib/address'
 import { installPointables } from './lib/pointables'
+import { isVerifyMode } from './lib/verifyMode'
 import type { MotionFeel } from './tokens/motion'
 import { Desktop } from './layouts/Desktop'
 import { Portrait } from './layouts/Portrait'
@@ -315,6 +316,17 @@ export function App() {
         // (POST /api/territory/write → suite.mark at the canonical address → the decision:// resolver composes
         // state=decided from the latest decision_take mark; + gallery:rerender for the card; fail-loud on error).
         // value = the chosen option LABEL (= decided_value). territory_write reads `type` (not mark_type), so map it.
+        // VERIFICATION GUARD (lib/verifyMode): a verification DRIVE of the real surface must NOT persist a
+        // real decision_take — it's source=operator, indistinguishable from Tim's, and an automated drive has
+        // twice written ghost takes (cluster-identity 2026-06-18 + the post-retract burst 03:20 2026-06-19).
+        // When ?verify=1, SUPPRESS the persist and announce it LOUDLY (the standing banner in App's render +
+        // this per-take Notice). Default (Tim's no-param URL) = real write, always. The console.debug also
+        // answers the "one click → how many takes?" question without persisting (count the lines per click).
+        if (isVerifyMode()) {
+          console.debug('[verify] decision_take SUPPRESSED', { aim, value: d.payload.value })
+          setNotice(`Verification mode — your take “${String(d.payload.value)}” was NOT saved (verification can’t contaminate real decisions).`)
+          return
+        }
         const core = (window as unknown as { forkBrainCore?: { writeDirections?: (items: unknown[]) => unknown } }).forkBrainCore
         const item: Record<string, unknown> = { element_id: aim, type: 'decision_take', value: d.payload.value }
         if (d.payload.by != null) item.by = d.payload.by
@@ -485,6 +497,14 @@ export function App() {
   const layout = ff === 'portrait' ? <Portrait s={state} /> : ff === 'landscape' ? <Landscape s={state} /> : <Desktop s={state} />
   return (
     <>
+      {/* VERIFICATION MODE banner (lib/verifyMode) — LOUD + PERSISTENT so a verifier can never forget takes
+          aren't being saved (no-silent-failure). Tim's canonical URL has no ?verify param → this never shows
+          for him. pointer-events:none so it never blocks driving the surface during verification. */}
+      {isVerifyMode() && (
+        <div className="verify-banner" role="status" aria-live="polite">
+          Verification mode — your takes are <strong>not</strong> being saved
+        </div>
+      )}
       {layout}
       <GalleryMount open={galleryOpen} onOpenChange={setGalleryOpen} />
       {/* THE DECISIONS INBOX — the in-surface "decisions waiting" entry (CTA when pending + the list); a tapped row
