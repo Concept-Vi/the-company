@@ -120,7 +120,31 @@
   // ── THE ROUTE-BACK: batch directions by element_id, POST /api/territory/write, emit gallery:rerender ──
   // items: [{element_id, type, annotation_type, text?|reaction?|score?, ...}]. Groups per element so a burst
   // on one element writes together. Fail-loud: a write failure emits gallery:write-error (never silent).
+  // VERIFICATION GUARD (mirror App.tsx / lib/verifyMode — the standing rule, projection's broadcast): an
+  // automated/agent verification DRIVE of the REAL surface must NOT persist. projection's guard covers the
+  // decision TAKE (App onVerb); THIS covers MY write path — the seam they flagged: the generic annotations
+  // (comment/reaction/favour) ride gallery:direction → HOOK 2 → here, AND the V's direct() → here. So
+  // writeDirections is the ONE chokepoint. When ?verify is on the URL, SUPPRESS the POST + announce LOUDLY
+  // (no-silent: a console warn + a per-element gallery:write-suppressed event; the App banner already shows).
+  // SAME detection as isVerifyMode (URL has 'verify'). Default (no param) = real writes, always — Tim's
+  // canonical URL is param-free. Detection is wrapped so it can NEVER break a real write (fall through on error).
+  function _verifyMode() {
+    try {
+      return typeof window !== 'undefined' && !!window.location &&
+        new URLSearchParams(window.location.search).has('verify');
+    } catch (e) { return false; }
+  }
   function writeDirections(items) {
+    if (_verifyMode()) {
+      try { console.warn('[fork-brain-core] verification mode (?verify) — route-back write SUPPRESSED, nothing persisted'); } catch (e) {}
+      (items || []).forEach((it) => {
+        const eid = it && it.element_id;
+        if (eid) window.dispatchEvent(new CustomEvent('gallery:write-suppressed',
+          { detail: { element_id: eid, reason: 'verification mode (?verify) — not saved' } }));
+      });
+      return Promise.resolve((items || []).map((it) => ({ ok: false, suppressed: true,
+        element_id: it && it.element_id, reason: 'verification mode — not saved' })));
+    }
     const byElem = {};
     (items || []).forEach((it) => {
       const eid = it && it.element_id;
