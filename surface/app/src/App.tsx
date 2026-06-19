@@ -299,7 +299,7 @@ export function App() {
           // a thing IS selected but it's an activity event with no record to reveal — be honest, not "tap a dot first".
           setNotice(`“${selected.kind_name || 'That'}” is something the Company did — an activity event with no saved record to open yet.`)
         } else {
-          setNotice('“Source” reveals where a thing comes from — tap a dot first, then point the V at it.')
+          setNotice('“See the record” reveals where a thing comes from — tap a dot first, then point the V at it.')
         }
       } else if (d.verb === 'drive' || d.verb === 'generate') {
         // drive's actions await Tim's verb-PLACEMENT steer (composition is escalating verb-bar-on-face vs the

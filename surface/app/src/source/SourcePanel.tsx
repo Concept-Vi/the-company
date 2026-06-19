@@ -88,7 +88,7 @@ export function SourcePanel({ source, onClose }: { source: SourceView | null; on
   return (
     <>
       <div className="src-scrim" onClick={onClose} />
-      <aside className="v-source" role="dialog" aria-label="Source" aria-modal="false">
+      <aside className="v-source" role="dialog" aria-label="The full record" aria-modal="false">
         <button className="v-source-close" type="button" aria-label="Close" onClick={onClose}>
           ×
         </button>
