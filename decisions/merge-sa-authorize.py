@@ -13,25 +13,21 @@ pipeline's REGISTER step writes finished designs back into the library).
 
 DECISION = {
     "id": "merge-sa-authorize",
-    "meaning": (
-        "Should the Company get its own private way to save designs back into the shared design library — "
-        "so finished and changed designs are written back automatically — or stay read-only for now, where it "
-        "can use the library but can't save anything into it yet?"
-    ),
+    "meaning": "Give the company its own key to save designs back — or stay read-only?",
     "options": [
         {
             "label": "Give it save-back access",
             "implication": (
-                "The Company gets its own private sign-in to the design library and can save designs back on "
-                "its own. It only ever touches its own entries — never anyone else's — and you can switch the "
-                "sign-in off again at any time."
+                "The company gets its own key to the shared design library — its own, not yours or anyone's — "
+                "and can save finished designs back on its own. It only ever writes its own entries, never "
+                "touches anyone else's, and you can revoke that key anytime."
             ),
             "recommended": True,
         },
         {
             "label": "Stay read-only for now",
             "implication": (
-                "The Company keeps reading the shared library to build from it, but can't save anything back "
+                "The company keeps reading the shared library to build from it, but can't save anything back "
                 "yet. Saving stays a separate, deliberate step until you decide to turn it on."
             ),
         },
@@ -40,10 +36,13 @@ DECISION = {
     "explanation_source": "board://item-c0a2d591",
     "legibility": {
         "name": "Turn on save-back to the design library",
-        "is": "a decision to make",
+        "is": "Reversible · your latest answer wins",
         "why": (
-            "It decides whether the Company can write finished designs back into the shared library on its own, "
-            "or stays read-only until you say otherwise."
+            "The company gets its own key to the shared design library — its own, not yours or anyone's — so "
+            "it can save finished and changed designs back on its own. It only ever writes its own entries, "
+            "never touches anyone else's, and you can revoke that key anytime. Or stay read-only: it reads the "
+            "library to build from, but saving stays a separate, deliberate step. No rush — not choosing "
+            "changes nothing: it stays read-only and pending, decide whenever."
         ),
     },
 }
