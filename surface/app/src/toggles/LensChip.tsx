@@ -31,7 +31,10 @@ export function LensChip({
         aria-expanded={open}
       >
         <span className="lenschip-label display">{shortLabel(proj.binding.label)}</span>
-        <span className="lenschip-count">{proj.count}</span>
+        {/* the live count of things on the map — give the bare number HUMAN meaning (operator-law: a raw "600" reads
+            as a mystery to a stranger, fresh-eyes flag). title+aria-label so it's explicable on hover + to a screen
+            reader; whether the VISIBLE number wants a unit suffix is DNA's chip-aesthetic call (flagged). */}
+        <span className="lenschip-count" title={`${proj.count} things on the map`} aria-label={`${proj.count} things on the map`}>{proj.count}</span>
         <span className="lenschip-caret" aria-hidden>{open ? '▾' : '▸'}</span>
       </button>
       <AnimatePresence>
