@@ -33,8 +33,8 @@ DECISION = {
             "implication": (
                 "You can name a cluster AND it recomputes underneath: the name stays stable, the contents "
                 "stay current — the same shape as how a file resolves to live content. The detail to "
-                "settle: the rule for when the named handle and the live result diverge. (The RHM's "
-                "read — your call, easily changed.)"
+                "settle: the rule for when the named handle and the live result diverge. (My read "
+                "— your call, easily changed.)"
             ),
             "recommended": True,
         },

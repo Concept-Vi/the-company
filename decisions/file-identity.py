@@ -37,8 +37,8 @@ DECISION = {
                 "A file has its own identity AND points at content that can be shared underneath — the "
                 "most expressive, and the same 'a stable thing resolving to live content' shape the "
                 "company's foundational thinking already uses. The remaining detail to settle: is the "
-                "shared-content layer one identity, or two kinds of reference? (The RHM leans here, in "
-                "the with-derivation frame — your call.)"
+                "shared-content layer one identity, or two kinds of reference? (My lean here — "
+                "your call.)"
             ),
             "recommended": True,
         },

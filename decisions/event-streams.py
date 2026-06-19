@@ -36,7 +36,7 @@ DECISION = {
             "implication": (
                 "Decisions, marks, and notes become directly pointable; the raw high-volume log stays "
                 "reference-only. Balances power where it's used against weight for the bulk. The detail to "
-                "settle: the rule for which stream is which. (The RHM's read — your call.)"
+                "settle: the rule for which stream is which. (My read — your call.)"
             ),
             "recommended": True,
         },
