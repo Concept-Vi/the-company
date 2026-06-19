@@ -37,7 +37,7 @@ DECISION = {
             "label": "Give the sharper step the fast processor",
             "implication": (
                 "The sharper re-sorting moves onto the graphics card and becomes near-instant — the precise "
-                "ordering comes back for every decision, and everywhere else the Company uses it. Choosing "
+                "ordering comes back for every decision, and everywhere else the company uses it. Choosing "
                 "this turns on a tool that uses the graphics card's memory, so picking it is YOU authorizing "
                 "that load. (My read: the clean full restore — but whether the graphics card has room "
                 "alongside everything else running is your call.)"
