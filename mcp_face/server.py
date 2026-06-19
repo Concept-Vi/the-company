@@ -99,7 +99,13 @@ def get_results(graph: str) -> dict:
 @mcp.tool()
 def list_surfaced(sid: str = "", status: Literal["", "inbox", "presented", "responded", "resolved", "requeue", "implemented"] = "", unresolved_only: bool = False,
                   limit: int = 40, detail: Literal["concise", "detailed"] = "concise") -> dict:
-    """Decisions the system surfaced for the operator (each carries a default + resolution).
+    """The SURFACED-ACTION / build-approval inbox — items the system surfaced for the operator to resolve
+    (a build/role/flow dispatch, a review; each carries a default + resolution).
+
+    ★ NOT the operator's strategic 'decisions waiting' inbox: a question like "what decisions are waiting
+    for me?" is answered by the `decisions` tool (the canonical decision-cards the inbox pill renders), NOT
+    this — this is the self-growth/approval queue (different items, s-coded ids). Use `decisions` for that;
+    use this for the surfaced build/review/role approvals.
 
     SCOPED: the default is CONCISE rows
     ({id, action, title, status, resolved}) newest-first, capped by `limit`. Narrow with
