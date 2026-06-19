@@ -3,8 +3,8 @@
 *Per-lens findings from the widen pass. All CANDIDATE (Tim judges; `W_t ⊊ T_T`). Conventional grounding =
 OFFERINGS, not impositions. This is the durable record the v2 synthesis draws from.*
 
-**Lens status (2026-06-19):** AXES ✅ · INSTRUMENT ✅ · INVARIANT-LAW ✅ · GEOMETRY ⛔ cut off by session limit
-(re-run) · META ⛔ cut off (re-run). Limit resets 1am Brisbane. 3 of 5 in; the 2 cut = formal-math + novelty.
+**Lens status:** AXES ✅ · INSTRUMENT ✅ · INVARIANT-LAW ✅ · GEOMETRY ✅ (filled 2026-06-20 from visual-dna, below) ·
+META ⛔ still cut (the honest-novelty read — re-run or fold). 4 of 5 in. Next move = CONVERGE to the ONE base.
 
 ---
 
@@ -332,3 +332,82 @@ carries the kind; the category-error guard = *voice ≠ a continuous function of
 → The resolver's `resolve(invariant, coordinate)` is two co-present mechanisms by axis-kind (derive | select),
 which is the geometry's circle⊥square running as the resolver's two limbs. (Tim adjudicates the root AXIS SET;
 the axis-KIND mechanism is law-grounded and solid now.)
+
+---
+
+## LENS 1 — GEOMETRY ✅ (filled 2026-06-20 from `visual-dna` Theory; the thinnest pillar, now richest)
+
+### The FULL formal theorem package (visual-dna `Theory/Untitled 7.md` — "Tim Geldard's full-turn reciprocal-power theorem package")
+The map carried fragments; this is the whole derivation with theorem numbers + exact constants:
+- Strict branch `n(k)=τ^(−1/(k−1))`; core invariant `log_τ(n)·(1−k)=1` (Thm 2.1); reciprocal duality `(n,k)↦(1/n,2−k)`
+  about mirror-line k=1 (Thm 3.1).
+- ★ **The winding-indexed modular equation `x^d − τx = mτ`** — m = winding number (m=0 strict, m=−1 one-turn-behind);
+  phase-lock form `e^{i(1/n)^d}=e^{iτ/n}`. THIS is the generating equation behind the map's "winding-count" idea.
+- ★ **The square-gate exact hinge** (Thm 10.1): negative-winding real solutions exist iff `τ ≥ d^d·q^(d−1)/(d−1)^(d−1)`;
+  thresholds T₂=4, T₃=27/4=6.75; **`4 < 2π < 6.75` is THE hinge** that opens the square (d=2) and closes the cube —
+  **d=2 is the UNIQUE positive-real negative-winding integer power.** "Cube misses by 0.467" = `27/4 − 2π ≈ 0.46681`,
+  DERIVED. → the map's "cube = navigation body, never a 3-D math claim" is now PROVEN, with a citation.
+- ★ **The slot/socket Vieta roots ORIGINATE here:** the square's hidden one-turn pair `n± = (1 ± √(1−4/τ))/2`,
+  with `n₋+n₊=1, n₋·n₊=1/τ` — shown to BE the d=2, m=−1 modular solutions (not a separate fact).
+- Branch-point **(d−1)-gon** radius `A_d=(d−1)/d·(τ/d)^(1/(d−1))` in the complex m-plane; **monodromy group = S_d**
+  (full root-braiding, Thm 17.2) — the map's root-shells = the m=0 case; this is the winding-plane polygon.
+- The k=1 "repair": strict forbids k=1, but modular equality makes it an infinite negative-winding ladder; real-
+  exponent window `1<k<2.8295…` → **only k=2 (the square) sits inside the one-turn window.**
+
+### The square+circle as RELATIONAL form (visual-dna `Untitled 9.md` — the "parametric box")
+- The box = **centre + square + circle + depth-structure + unity rule** = "the first operational manifestation of
+  **four-point relativity**." square = boundary-from-outside; circle = reach-from-centre ("boundedness and radial
+  reach as two faces of local unity"). centre = "the local point from which a system becomes relatively defined."
+- "**Unity is not the biggest thing — unity is the local condition of completeness**": every root is part-from-outside
+  AND whole-from-inside (`U_p ≡ 1` from inside). = the map's "everything is a variable / relative centre," geometric.
+- ★ **Four-point relativity's four points are held OPEN** (corners / side-contacts / quadrants / structural-roles;
+  strongest candidate = {relative point, perceptual boundary, projected reach, traversable depth}). This is a NAMED
+  open seam in Tim's own framing that the four-root work (S1–S5) never referenced — **the four ROOTS may be the four
+  POINTS of the box.** (New seam to fold.)
+
+### The DNA grammar's ORIGIN (map was thin here)
+- "**DNA**" literally defined (`universal-mechanics-of-relativistic-coherence.md` L137): *"the DNA is the closest
+  analogue to the mental model at the application level — the root scope that everything resolves from, existing as a
+  structured superposition of possible implementations."* → DNA = the cascade root / the superposition the render
+  collapses from. Source of "Visual DNA."
+- Colour is **derived difference**: *"warmth is not in the colour; it is in the difference between the colour and the
+  observer's expectations… the same hex is warm relative to a cool palette, cool relative to a warm one."* = the map's
+  relational colour-cascade, at its conceptual root. The whole architecture "grew from a colour-picker — a seed
+  crystal" (the most Tim-anchored origin-FACT in the folder).
+
+### "Rendering as consequence" is NATIVE to visual-dna (map had it only from The Engine)
+*"The screen is not a separate design output; it is a consequence."* "rendering is not transformation but
+**projection** — valid only if it can lift back" (`π: base→V`, `Selection(v)=π⁻¹(v)` → "why a click is mathematically
+meaningful"). Multiple coexisting reads of one substrate = why Obsidian. Predates + grounds "the visual is the
+operation, not decoration."
+
+### Grid mechanics (from a `grid.html` Tim built) — the address geometry
+parametric address = **radial self-division `r_m(U)=U/2^m`** (m=1 = the outer inscribed circle); thickness
+`τ_d=τ/2^d` ("consequential of the rule, not chosen"); "a chain of relative self-division operations — nothing
+manually placed." **Past-zero facets** (mirror/anti-line/colour-shift; the zero point = **distinct-absence**) = the
+absence-as-signal law's geometric birthplace. **Hard/round-edge = point/wave = structural/semantic at every scale**;
+type-allocation = wave-function collapse; "the tokens are the reasoning happening."
+
+### ★ THE LINEAGE (reorders the picture): `visual-dna` came FIRST; the formal vault is its re-clothing
+visual-dna and relative-difference are **sibling co-projections of ONE pre-existing mental model** (Tim: "the model
+held by the user already exists in fully formed structure; articulation is externalisation" — neither vault is the
+root, the model is). BUT at the artifact level there's a document-lineage: 4 files share exact names across both
+vaults (cognitive-entanglement, operational-determination-face, universal-mechanics-of-relativistic-coherence,
+universal-processing-cycle); the **visual copies carry EARLIER authoring** (March/2026-04-03 frontmatter; Theory
+mtimes 05-02) vs the formal copies (05-08+). The seven verbs appear in `Untitled 9` §1 as "the FRD in operational
+terms." → the formal/FRD vault (the map's spine) is the **mathematical clothing of what visual-dna articulated first
+in generative-design clothing.** (Precedence rests on the colour-picker origin-story + The Engine dated 05-13 + the
+earlier visual frontmatter — NOT raw mtime, which is a sync artifact.)
+
+### ★ PROVENANCE HONESTY (load-bearing): Theory is AI-PROJECTED, not Tim-verbatim
+The Theory folder is almost entirely AI-articulation attributed to Tim (`Untitled 7` = GPT-5.5 Pro; `Untitled 9` =
+a Claude projection-pass quoting an already-AI-projected shard). **There is essentially no confirmed Tim-verbatim
+prose here** — the most Tim-anchored item is the colour-picker origin-fact. So the map's "Tim's voice, verbatim"
+want is NOT satisfiable from Theory; **verbatim Tim lives UPSTREAM in the pre-projection raw shards/sessions**
+(candidate: `visual-dna/References/cognitive-entanglement-raw-input-01.md`, 79 inbound). This sharpens the
+recollection gap: most captured theorem text is AI-projection-of-Tim, one+ layer removed.
+
+### BOUNDARY (what this pass did NOT cover): UNREAD high-geometry Theory files — cognitive-entanglement.md (66 hits,
+3rd-densest), Untitled 6/2/8 (cube/winding · BRR-extensions · the parametric-address-face). The DNA-grammar RULE
+TABLES (size/colour/shape) live in visual-dna `Architecture`/`Build`/`_system` (out of bound). Verbatim Tim = the
+raw pre-projection shards. These are the named next-pass targets IF the convergence shows a gap.
