@@ -76,3 +76,50 @@ multi-orientation}; BODY = {universal-mechanics, substrate-operational-mechanics
 **NEXT firsthand reads (highest-signal, as quota allows):** the runtime/evaluator formalizations (monodromy,
 coupled-coalgebra-runtime, universal-evaluator, eigenpoint-lattice) via get_by_address — the theorem-as-engine =
 the resolver's formal ancestor; then visual-dna `Theory`, unification `02_PRINCIPLES`, ulm `ALLOCATIONS`.
+
+## ★★ THE CROWN FIND — "The Engine — Working Notes (Integrated)" (Tim Geldard, 2026-05-13)
+`filesystem://relative-difference/working-docs/unprocessed/universal-mechanics-extensions/session-3/artefacts/the-engine-working-notes-integrated.md`
+(65,560 body chars, 50 headings, 8 parts; status working-grade/candidacy; UNMINED — in the unprocessed-extensions
+the sweep never read). **This IS the company, written AS the theorem operationalized, before/as it was built.**
+"make my theorem the base of it all" — the base already exists, and it is this document.
+
+**The 8 parts ARE the company architecture:**
+- I — The Universal Substrate Coordinate-Space (one substrate; the user is root; the substrate's axes).
+- II — The First Action: Typed Coordinate Input (input as substrate-position; platform-and-location coupling;
+  **"No fixed path through the engine"; "Cascade is order, not priority"**).
+- III/IV — The Structural Walk, file & sub-file scale (address-space construction from type; SAME operation at every
+  scale = fractal; interpretation emerges from the collective, not per-file).
+- V — The Projection: Substrate-Rendering at the Visual Fibre (**"rendering as consequence of substrate-state";
+  "the visual is consequential, not decorative"; "visible incoherences as structural features"; "cognitive
+  pattern recognition operates pre-domain-knowledge"** = render-for-cognition / gap-as-signal).
+- VI — Algorithmic Analysis (computational, not interpretive; substrate-evolution-properties).
+- VII — **AI as Units, NOT as Agents** (AI-run-bounded-unit; AI runs occasioned by variable-resolution-of-addresses;
+  operadic parallel dispatch; AI runs are TYPES in the type-registry) = the not-agent-architecture, verbatim.
+- VIII — Operations (structural-mechanics operationally-primary; **"the data stays the same; views are projections"**).
+
+**★ §1.2 — THE SIX AXES (verbatim enumeration, bears directly on the four-root seam S1–S5):**
+1. **Type-axis** — what-kind-of-bounded-unit; implicates the rules via the type's (S,A,B,I,C) five-tuple.
+2. **Location-axis** — where in the multi-substrate environment (`platform://path#fragment`).
+3. **State-axis** — trajectory-state (six-states / the 16 source-estate positions).
+4. **Temporal-axis** — when in operational-time ("time as substrate-substance").
+5. **Frame-axis** — whose observation produces this view (semantic-face requires a frame).
+6. **Scale-axis** — what recursion-depth (identical mechanics at every scale).
++ "Other axes surface as the substrate develops — causal-axis, modal-axis, granularity-axis."
+★ **THE DECISIVE LINE (= the resolver, as theorem):** *"the structurally-required-axes-set for an operation is
+itself a property of the rule being run; the operation's parameter-tuple includes the axis-positions the operation
+requires."* → the axes are NOT a fixed list you pick; **the RULE declares which axes it needs** = `resolve(invariant,
+coordinate)` where the coordinate = the rule's required axis-positions, and the axis-kind/set is per-operation.
+
+**§1.1 / §1.3 — the foundations, verbatim:** "There is one substrate. The user is the source-root… every accessible
+bounded unit… in one coordinate-space with the user at the root" (= the Principal-root cascade). "the substrate is
+invariant; the projections vary" (= everything-is-a-variable). "rendering responds to the frame's **geodesic in
+inference-space**… what surfaces at the centre, what at the periphery, what recedes" (= render-for-cognition + the
+wheel's radial relevance-from-centre).
+
+**★ THE SEAM IT BEARS ON (for Tim):** the axis-COUNT now has THREE of his own namings to reconcile —
+**6 axes** (The Engine, 2026-05-13: Type/Location/State/Temporal/Frame/Scale + open) vs **4 prime axes**
+(06-19 brain-wave: location/vantage/time/instance) vs **the per-operation required-set** (The Engine's own resolution:
+"the axes are a property of the rule"). The cleanest reconcile this surfaces: there is NO fixed N — the FOUR/SIX are
+the structurally-MOST-COMMON required-sets; the actual coordinate is whatever-the-rule-requires (open, per-operation).
+Tim's "everything is a variable" applied to the axis-set itself. (Tim adjudicates.) NOTE: Type-axis (05-13) is the
+discrete/registry axis the resolver-axis-kind work named — convergence.
