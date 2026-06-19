@@ -232,14 +232,28 @@ def _search_semantic(conn: sqlite3.Connection, q: str, fetch: int) -> list[dict]
         pool = json.loads(out.read_text(encoding="utf-8"))
     cands = []
     for item in pool.get("candidates", []):
-        addr = (item.get("metadata") or {}).get("address")
-        if not addr:
-            continue
-        row = conn.execute(
-            "SELECT c.chunk_address, c.anchor, c.heading_path, c.text, a.rel_path, a.frontmatter "
-            "FROM chunks c JOIN addresses a ON a.id = c.address_id WHERE c.chunk_address = ?",
-            (addr,)).fetchone()
-        if row is None:                       # index moved under the chroma snapshot — honest skip,
+        # Resolve the candidate back to its chunk row. The bridge emits `chunk_id` (== chunks.id) per
+        # candidate — the DIRECT, unambiguous key. The earlier path looked up `metadata.address` against
+        # `chunk_address`, but metadata.address is the FILE address (filesystem://…/x.md), not the
+        # chunk_address — so EVERY lookup missed and all candidates were silently dropped (0 results). That
+        # dead path was masked by the chroma hnsw crash (semantic never returned a working pool to parse);
+        # the 2026-06-20 rebuild surfaced it. Prefer chunk_id → c.id; fall back to chunk_address for any
+        # candidate that lacks the id (honest skip only if neither resolves).
+        cid = item.get("chunk_id")
+        row = None
+        if cid is not None:
+            row = conn.execute(
+                "SELECT c.chunk_address, c.anchor, c.heading_path, c.text, a.rel_path, a.frontmatter "
+                "FROM chunks c JOIN addresses a ON a.id = c.address_id WHERE c.id = ?",
+                (cid,)).fetchone()
+        if row is None:
+            addr = (item.get("metadata") or {}).get("address")
+            if addr:
+                row = conn.execute(
+                    "SELECT c.chunk_address, c.anchor, c.heading_path, c.text, a.rel_path, a.frontmatter "
+                    "FROM chunks c JOIN addresses a ON a.id = c.address_id WHERE c.chunk_address = ?",
+                    (addr,)).fetchone()
+        if row is None:                       # neither id nor chunk_address resolved — honest skip,
             continue                          # the chunk no longer exists to hand anyone
         dist = item.get("distance")
         cos = (1.0 - dist) if isinstance(dist, (int, float)) else 0.0
