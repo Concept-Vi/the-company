@@ -37,6 +37,10 @@ export type ToolDescriptor = {
   opParams?: Record<string, string[]> // op value → the params it actually uses (the op-conditional form)
   opLabels?: Record<string, string> // op value → its HUMAN name on the selector pill (never the raw verb)
   enumLabels?: Record<string, Record<string, string>> // param → (enum value → HUMAN option label)
+  // a param whose options come from a LIVE registry endpoint (the agreed form_meta convention, fork+lead): the URL's
+  // response (object → its keys, or an array) becomes the param's enum at load → a friendly dropdown, registry-true,
+  // no special-casing. e.g. corpus space ← /api/layers. Resolved by resolveEnumSources(); degrade-clean if absent.
+  enumSources?: Record<string, string> // param → source URL
   labels?: Record<string, { label: string; help?: string }> // param → human label + help
 }
 
@@ -56,7 +60,7 @@ const CORPUS_SEED: ToolDescriptor = {
     properties: {
       op: { type: 'string', enum: ['query', 'list', 'find', 'read', 'neighbours'], default: 'query' },
       text: { type: 'string' },
-      space: { type: 'string' },
+      space: { type: 'string', default: 'history' }, // a preferred default; enum injected from /api/layers (enumSources)
       k: { type: 'integer', default: 8 },
       detail: { type: 'string', enum: ['concise', 'detailed'], default: 'concise' },
       rerank: { type: 'boolean', default: false },
@@ -82,6 +86,9 @@ const CORPUS_SEED: ToolDescriptor = {
     read: ['address'],
     neighbours: ['address'],
   },
+  // "Where to look" options come from the LIVE embeddable spaces (registry-true) — the generic enum-source convention
+  // (was a special-case; now any param can declare one). The keys of /api/layers become the dropdown options.
+  enumSources: { space: '/api/layers' },
   // each op's HUMAN name on the selector (never the raw verb) — so a stranger can tell them apart (query vs find)
   // and "neighbours" isn't opaque. The raw value is still what's sent; only the label is humanised.
   opLabels: {
@@ -142,42 +149,44 @@ function set(patch: Partial<TState>) {
   subs.forEach((f) => f())
 }
 
+// Resolve any param that declares an enumSource: fetch the URL → its keys (object) or items (array) become the
+// param's enum (a friendly dropdown), preserving a valid preferred default. The GENERIC form of the old corpus-space
+// special-case (registry-is-truth, no per-tool code). Degrade-clean: a dead/absent source → the param is left as-is.
+async function resolveEnumSources(tool: ToolDescriptor): Promise<ToolDescriptor> {
+  if (!tool.enumSources) return tool
+  const props: Record<string, JSONSchemaProp> = { ...tool.inputSchema.properties }
+  for (const [param, url] of Object.entries(tool.enumSources)) {
+    if (!props[param]) continue
+    try {
+      const r = await fetch(url)
+      if (!r.ok) continue
+      const data = await r.json()
+      const opts = (Array.isArray(data) ? data : Object.keys(data)).filter(Boolean).map(String)
+      if (!opts.length) continue
+      const pref = props[param].default
+      props[param] = { ...props[param], enum: opts, default: pref && opts.includes(String(pref)) ? pref : opts[0] }
+    } catch {
+      /* source unavailable → leave the param as a free-text input (graceful) */
+    }
+  }
+  return { ...tool, inputSchema: { ...tool.inputSchema, properties: props } }
+}
+
 export async function loadTools() {
   set({ loading: true, error: null })
   try {
     const r = await fetch('/api/tools')
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
     const data = await r.json()
-    const list: ToolDescriptor[] = Array.isArray(data) ? data : data.tools || data.items || []
-    if (!list.length) throw new Error('empty')
+    const raw: ToolDescriptor[] = Array.isArray(data) ? data : data.tools || data.items || []
+    if (!raw.length) throw new Error('empty')
+    const list = await Promise.all(raw.map(resolveEnumSources)) // any tool may declare enum-source params
     set({ tools: list, scaffold: false, loading: false })
   } catch {
-    // /api/tools (fork's gap 2) isn't live yet → fall back to the prove-on-one SEED so the form is verifiable now.
-    // HONEST (no silent empty): `scaffold:true` lets the panel say it's showing the pilot tool while the full list
-    // is wired up. NOT an error state — it's the sanctioned parallel scaffold.
-    // ENRICH "Where to look" with the REAL embeddable spaces (/api/layers keys, registry-true) so it's a friendly
-    // dropdown of real options, not blind text. Degrade-clean: spaces unavailable → space stays a free-text input.
-    let seed = CORPUS_SEED
-    try {
-      const lr = await fetch('/api/layers')
-      if (lr.ok) {
-        const spaces = Object.keys(await lr.json()).filter(Boolean)
-        if (spaces.length) {
-          seed = {
-            ...CORPUS_SEED,
-            inputSchema: {
-              ...CORPUS_SEED.inputSchema,
-              properties: {
-                ...CORPUS_SEED.inputSchema.properties,
-                space: { type: 'string', enum: spaces, default: spaces.includes('history') ? 'history' : spaces[0] },
-              },
-            },
-          }
-        }
-      }
-    } catch {
-      /* spaces unavailable → "Where to look" stays a free-text input (graceful) */
-    }
+    // /api/tools (fork's gap 2) isn't live yet → the prove-on-one SEED, its enum-source params resolved generically.
+    // HONEST (no silent empty): `scaffold:true` lets the panel say it's showing the pilot tool while the full list is
+    // wired up. NOT an error — the sanctioned parallel scaffold.
+    const seed = await resolveEnumSources(CORPUS_SEED)
     set({ tools: [seed], scaffold: true, loading: false })
   }
 }
