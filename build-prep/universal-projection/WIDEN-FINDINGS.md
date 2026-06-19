@@ -3,8 +3,8 @@
 *Per-lens findings from the widen pass. All CANDIDATE (Tim judges; `W_t ⊊ T_T`). Conventional grounding =
 OFFERINGS, not impositions. This is the durable record the v2 synthesis draws from.*
 
-**Lens status (2026-06-19):** AXES ✅ full · INSTRUMENT ✅ full · GEOMETRY ⛔ cut off by session limit (re-run) ·
-META ⛔ cut off (re-run) · INVARIANT-LAW ⏳ pending. Limit resets 1am Brisbane.
+**Lens status (2026-06-19):** AXES ✅ · INSTRUMENT ✅ · INVARIANT-LAW ✅ · GEOMETRY ⛔ cut off by session limit
+(re-run) · META ⛔ cut off (re-run). Limit resets 1am Brisbane. 3 of 5 in; the 2 cut = formal-math + novelty.
 
 ---
 
@@ -196,3 +196,109 @@ tokens}.json; gallery/archetype.js (renderArchetype).
 lens-pairs), with the cartesian→polar winding-handoff as the one genuinely-new construction; the only decision
 truly yours is HOW the body becomes 3-D (project-it / orbit-the-SVG / build-it-solid) — under all three, nothing is
 hardcoded and the geometry stays the theorem.
+
+---
+
+## LENS 3 — THE INVARIANT LAW ✅ (deepest lens; the law re-grounded categorically)
+
+### A1 — the CASCADE is ONE morphism read two ways (decontextualisation is impossible *because it would be not-an-arrow*)
+BRR §9.5–§9.7 is sharper than the map: `addr(c)=(p₀…pₙ)` is literally **the unique morphism Root→c** in the
+containment category (objects = bounded units, morphisms = composed embeddings). Addressing PRODUCES the arrow;
+resolution TRAVERSES it; they are **inverse arrows**, not two procedures. Decontextualisation is impossible because
+**a morphism cannot exist without its domain** — `pᵢ` is a position *in* `Aᵢ`, reachable only through `(p₀…pᵢ₋₁)`;
+ancestry is the **composability condition** of the arrow, not metadata. Two truncation branches: (i) isolated
+coordinate, no prefix → **not-an-arrow / type-error / invalid**; (ii) short-but-prefixed → a valid morphism to an
+intermediate frame, merely **ambiguous → contextually completable** ("the third one"). → law-level justification for
+**fail-loud on un-rooted units**: a node with no ancestral path is not missing a field, it is **not a legal position
+in the space**.
+
+### A2 — visibility = legality is the SAME claim in the type-face (CWA is DERIVED, not assumed)
+Type-registry-per-scale = **authority-is-fractal** (BRR §11.3, proj-obsidian §14.3, type-registry-notes §1 — stated
+three times). The new join: **registration = bringing a type into the addressable lattice; reference = building the
+morphism to it.** So "visibility=legality" is NOT a separate rule — it is A1's truncation→invalidity in the type-face:
+an unregistered type has **no domain-object to be an arrow from → cannot be referenced → invisible because
+unaddressable, unaddressable because un-rooted.** The closed-world assumption (unregistered = doesn't exist) is
+*derived* from the morphism law.
+
+### A3 — operationally-fractal, NOT geometrically-fractal ("form-similar, not self-similar")
+Substrate-scale = recursive depth in the containment graph (no privileged level; start-point "observational not
+structural"), distinct from magnitude-scale. The recursion is **form-similar** (every node a polygon with the
+(S,A,B,I,C) schema-form) but NOT self-similar (n varies with content — not Mandelbrot). → Tim's "what changes at each
+scale is the rules not the content," read from the law side: **operations invariant ⊗ schema-vocabulary variable.**
+You cannot tell which scale you're at by the operations (identical everywhere); only by the content/vocabulary.
+
+### A4 — ★ FILLING THE CONTINUOUS-NAME GAP (Tim's net-new weld, confirmed absent from the canon)
+The body HAS the discrete extension/type-slot (folder = positive schema; file = content-of-its-type) + the slot/socket
+Vieta pair. The body does NOT have (structural search confirms "filename/name-as-slot" absent from canon): the
+**folder defined NEGATIVELY by its distinct ABSENCE of an extension**, nor the **continuous NAME as a slot**. Tim's
+06-19 supplies the missing half and welds two laws the canon kept apart — the precise dual:
+
+| | NAME (continuous slot) | EXTENSION (discrete slot) |
+|---|---|---|
+| domain | any legal string — **open / free / unregistered** | the frame's **registered type-vocabulary** (closed) |
+| file | its name | `.md`/`.png` — its type |
+| folder | its name | **distinct-absence** — extension-rule present, expressing zero |
+| reads as | DENOTATION (what it's called) | SORT (what kind it is) |
+| seed-geometry | the **circle** half (felt, continuous) | the **square** half (discrete, addressable) |
+
+A folder is therefore the unit whose **type-slot is filled by distinct-absence** = six-states §13 (distinct absence:
+"structurally present, expressing zero") applied to the file/folder type-slot. "The space where files do not" =
+negative space on the type-axis. **This weld — folder = distinct-absence on the type-slot — is nowhere in the formal
+body; it is Tim's net-new connection of the unit/edge duality to the absence law.**
+
+### A5 — ★ HOW ABSENCE IS COMPUTED (the absence algebra)
+six-states §13.3: structural-presence (rule declared) × quantitative-magnitude (content present) are **independent** →
+four conditions: (1) present×present = filled; (2) **present×absent = distinct-absence / proto-state** (address set,
+content empty — the folder, the open seam, the skeleton); (3) absent×present = content-without-address (inverse-proto);
+(4) absent×absent = **absence simpliciter** (no rule, no content — invisible by construction / CWA). **Only (2) is
+computable/legible.** **Absence = (declared slot) ⊖ (occupancy)** — registry minus presence, evaluated *against the
+registry, never against the void.* The 5-step carrier (§15.2): positive structure bounds the empty position → types it
+→ a reader reads the bounding → produces fitting content. **You read the hole by its rim** (figure-ground).
+Distinct-absence is scale-invariant (rule→sentence→section→artifact→corpus→identity). **Filtering surfaces *declared*
+absences; clustering surfaces *undeclared-but-pressured* absences** (the deep-holes / gap-pressure = CONVERGENCE-OBJECT
+derivation-4 "types born at deep holes"). The gate's act = promoting simpliciter→distinct by **declaring a slot**.
+
+### A6 — ★ "everything is a variable" = the law being agnostic to its content (the through-line)
+Every verified law is **a relationship that survives total content-substitution**: cascade (prefix-composability over
+variable coordinates) · authority-is-fractal (schema-governs-contents over variable vocabularies) · form-similar
+fractality (operation-invariance over variable schemas) · name⊥extension (free-slot ⊥ registered-slot over variable
+strings) · absence-as-signal (declared ⊖ occupied over variable occupancy). So "everything is a variable" is the
+**meta-statement of why they are LAWS** — each is the invariant relationship left when content ranges over everything.
+That is what makes the instrument agnostic, and what makes **hardcoding *illegal*** (freezing a variable replaces a law
+with one of its instances — the recurring "first-binding" error).
+
+### NEW SEAMS
+- **S-name1 — does name⊥extension generalise to EVERY axis? YES, robustly — even the privileged TIME axis splits**:
+  a discrete-registered slot (the prime-factored scale-rung — sec/min/hour: 60=2²·3·5, 24=2³·3, 7=7; the divisor-
+  lattice prime-coordinate) ⊥ a continuous-free slot (the instant *within* the rung). The held fork (don't collapse):
+  is the duality *WITHIN each axis* (every axis = discrete-name + continuous-value) or *BETWEEN two coordinate systems
+  each axis projects into* (whole square vs whole circle)? May be one thing at two scales. (Lane caveat: this is "does
+  the duality hold for time," NOT S1–S5 "which are the four roots.")
+- **S-name2 — is "continuous" the SAME predicate as "open/unregistered-vocabulary"?** If yes:
+  **continuous ⟺ open-world ⟺ free-slot** and **discrete ⟺ closed-world ⟺ registered-slot** → the name⊥extension law
+  and the absence-engine are **ONE law** (the continuous half IS the open-world input the absence-engine consumes).
+- **S-absence1 — the three un-worked combinations** (esp. inverse-proto = absent×present = an orphan embedding =
+  THE-SEED's "circle-without-square").
+- **S-absence2 — is the gate's "declare a slot" a THIRD operation beside address/resolve?** It *grows the category*
+  (new objects/arrows) rather than traversing it — the law spine may need a "lattice-growth" op beside the inverse pair.
+- **S-cascade1 — partial/broken/contextual addresses** (BRR §9.7 explicitly DEFERS these; the instrument's real
+  resolver behaviour is an unbuilt formal seam).
+
+### Conventional offerings (labelled): ultrametric/p-adic (cascade — closeness = shared-prefix); sheaves & locality
+(type-registry — caveat: their base is fixed, the substrate's is variable); **closed-world assumption** (absence-
+simpliciter's invisibility — direct); negative-space/figure-ground (absence-as-signal); **name-vs-type = denotation-vs-
+sort** (the folder/file split made into storage); tries/prefix-trees (the cascade, engineer-facing);
+filesystems/namespaces/paths (the law IS the filesystem, not a metaphor over it); subobject-classifier/type-of-types +
+universes U₀⊂U₁ (the schema-form as universal ancestor / type-of-type recursion).
+
+### Read: UNIFICATION-MAP.md; brain/{SEED-SCALE-PRIMES-SEPARATOR(+Appx A),THE-SEED-geometric-substrate,CONVERGENCE-
+OBJECT}; substrate bounded-recursive-relativity (§6.1 law spine, §9.5 address-def + claims 5-5-A/B/C, §9.7 resolve-def
++ territory-5-7, §10.3, §11.3, §12.1), six-states-of-unity (§12.2,§13.1–13.3,§15.1–15.3), universal-mechanics-
+projected-into-obsidian (§14.3,§15.3,§22.1–22.8), type-registry-working-notes (§1,§2,§3,§9,§13). Crash-insurance copy
+at `_facet-invariant-law-deepening.md`.
+
+**Headline:** the cascade deepened from "no-truncation rule" to **address-as-categorical-morphism** (decontextualisation
+impossible = not-an-arrow; visibility=legality = the same claim in the type-face; CWA derived). The two push-questions
+**collapse into one law**: name⊥extension generalises to every axis incl TIME (continuous-free ⊥ discrete-registered),
+and absence = declared ⊖ occupancy, with the continuous half being exactly the open-world input the absence-engine
+consumes. Tim's net-new weld: **folder = distinct-absence on the type-slot.**
