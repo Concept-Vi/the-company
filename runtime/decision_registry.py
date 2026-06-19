@@ -175,14 +175,21 @@ def compose_state(row: dict, marks: list) -> dict:
     decided_by / decided_at from the mark's `by` / `ts`. Unit-testable without a store. The returned dict is the
     RESOLVED VIEW (the row's fields + state/decided_value/decided_by/decided_at) — NOT a stored row (the stored
     decision schema is the DEFINITION only; state is never authored). `marks` are already keyed to the canonical
-    address by the caller (store.marks_for(decision_address(...))) — this fold only selects the take type."""
-    takes = [m for m in (marks or [])
-             if isinstance(m, dict) and m.get("mark_type") == "decision_take"]
+    address by the caller (store.marks_for(decision_address(...))) — this fold selects the take/retract events.
+
+    RETRACT (the operator-undo / 'Change' primitive + the safe append-only way to neutralise a mistaken/test
+    take without deleting the audit trail): a `decision_retract` mark appended AFTER a take (newer ts) wins →
+    pending; a later take re-decides. The LATEST decision EVENT by ts decides; no events ⇒ pending."""
+    events = [m for m in (marks or []) if isinstance(m, dict)
+              and m.get("mark_type") in ("decision_take", "decision_retract")]
     resolved = dict(row) if isinstance(row, dict) else {"row": row}
-    if not takes:
+    if not events:
         resolved.update(state="pending", decided_value=None, decided_by=None, decided_at=None)
         return resolved
-    latest = max(takes, key=lambda m: str(m.get("ts") or ""))
+    latest = max(events, key=lambda m: str(m.get("ts") or ""))
+    if latest.get("mark_type") == "decision_retract":               # the most recent action un-decided it → pending
+        resolved.update(state="pending", decided_value=None, decided_by=None, decided_at=None)
+        return resolved
     resolved.update(state="decided", decided_value=latest.get("value"),
                     decided_by=latest.get("by"), decided_at=latest.get("ts"))
     return resolved
