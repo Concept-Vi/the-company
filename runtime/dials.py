@@ -26,7 +26,8 @@ class DialRegistry:
     def __init__(self):
         self._rows: dict = {}
 
-    def discover(self, dirs=("dials",)) -> "DialRegistry":
+    def discover(self, dirs=(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dials"),)) -> "DialRegistry":
+        # ^ REPO-ROOT-anchored, not cwd — a relative default returned [] SILENTLY when cwd≠root (no-silent-failure). 2026-06-21.
         self._rows = {}
         for d in dirs:
             if not os.path.isdir(d):

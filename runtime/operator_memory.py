@@ -37,7 +37,10 @@ class OperatorMemoryRegistry:
     def __init__(self):
         self._rows: dict = {}
 
-    def discover(self, dirs=("operator_memory",)) -> "OperatorMemoryRegistry":
+    def discover(self, dirs=(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "operator_memory"),)) -> "OperatorMemoryRegistry":
+        # ^ dir anchored to the REPO ROOT, not cwd: the old relative default ("operator_memory") returned []
+        #   SILENTLY when cwd≠root → the fabric was rule-BLIND on the operator rules (a no-silent-failure
+        #   violation, + a likely feeder of the confirming-bias epidemic). 2026-06-21.
         self._rows = {}
         for d in dirs:
             if not os.path.isdir(d):

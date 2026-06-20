@@ -25,7 +25,8 @@ class CheckRegistry:
     def __init__(self):
         self._checks: dict = {}
 
-    def discover(self, dirs=("checks",)) -> "CheckRegistry":
+    def discover(self, dirs=(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "checks"),)) -> "CheckRegistry":
+        # ^ REPO-ROOT-anchored, not cwd — a relative default returned [] SILENTLY when cwd≠root (no-silent-failure). 2026-06-21.
         self._checks = {}
         for d in dirs:
             if not os.path.isdir(d):

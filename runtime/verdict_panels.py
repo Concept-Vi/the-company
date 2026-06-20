@@ -34,7 +34,8 @@ class PanelRegistry:
     def __init__(self):
         self._panels: dict = {}
 
-    def discover(self, dirs=("verdict_panels",)) -> "PanelRegistry":
+    def discover(self, dirs=(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "verdict_panels"),)) -> "PanelRegistry":
+        # ^ REPO-ROOT-anchored, not cwd — a relative default returned [] SILENTLY when cwd≠root (no-silent-failure). 2026-06-21.
         self._panels = {}
         for d in dirs:
             if not os.path.isdir(d):
