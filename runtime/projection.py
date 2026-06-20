@@ -157,7 +157,14 @@ class BindingRegistry:
     def __init__(self):
         self._rows: dict = {}
 
-    def discover(self, dirs=("bindings",)) -> "BindingRegistry":
+    def discover(self, dirs=None) -> "BindingRegistry":
+        # The bindings dir DEFAULT is anchored to repo-root via __file__ — NOT cwd-relative. A relative
+        # default silently returns [] when the process cwd isn't the repo root (the MCP server runs from a
+        # different cwd than the bridge) → the lenses vanish with no error (same silent-empty class fork
+        # fixed in e14a9a8). The bridge already passes an absolute path explicitly; this makes the no-arg
+        # DEFAULT safe from ANY cwd too (the Suite/decision_registry/NodeRegistry idiom). Explicit dirs honored.
+        if dirs is None:
+            dirs = (os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bindings"),)
         rows = {}
         for d in dirs:
             if not os.path.isdir(d):
