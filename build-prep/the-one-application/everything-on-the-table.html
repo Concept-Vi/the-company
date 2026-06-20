@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Company — Everything On The Table</title>
+<style>
+  :root{
+    --bg:#0a0c12; --bg2:#0e1119; --ink:#e8ebf2; --dim:#9aa3b5; --faint:#5b6478;
+    --line:#1c2230; --card:#11151f; --card2:#141926;
+    --gold:#d9b066; --glow:#6f8cff; --teal:#5fd0c5; --rose:#e08a9b; --you:#f0d28a;
+    --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+     radial-gradient(1200px 700px at 50% -10%, #16203a 0%, rgba(22,32,58,0) 60%),
+     radial-gradient(900px 500px at 85% 20%, #1a1530 0%, rgba(26,21,48,0) 55%),
+     var(--bg);
+     color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:34px 20px 80px}
+  header.top{text-align:center;padding:14px 10px 30px}
+  .kick{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:clamp(26px,4.4vw,40px);margin:.32em 0 .18em;font-weight:680;letter-spacing:-.01em}
+  .thesis{color:var(--dim);font-size:clamp(14px,1.9vw,16.5px);max-width:760px;margin:0 auto}
+  .thesis b{color:var(--you);font-weight:600}
+  .pilotbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:22px auto 6px;max-width:820px}
+  .pchip{font-family:var(--mono);font-size:12px;color:var(--ink);background:linear-gradient(180deg,#1a2236,#141a28);
+     border:1px solid #2a3550;border-radius:999px;padding:8px 14px}
+  .pchip span{color:var(--gold)}
+  .flow{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--faint);
+     font-family:var(--mono);font-size:11px;letter-spacing:.12em;margin:26px 0 8px}
+  .flow .ln{height:1px;width:42px;background:linear-gradient(90deg,transparent,var(--faint))}
+  .flow .ln.r{background:linear-gradient(90deg,var(--faint),transparent)}
+
+  .layer{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--bg2),#0b0e16);
+     margin:14px 0;padding:16px 16px 18px;position:relative;overflow:hidden}
+  .layer::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,#2a3550)}
+  .lhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:2px 2px 14px}
+  .lnum{font-family:var(--mono);font-size:12px;color:var(--accent,#6f8cff);opacity:.9}
+  .lname{font-size:16.5px;font-weight:650;letter-spacing:.01em}
+  .less{color:var(--dim);font-size:13.5px}
+  .less b{color:var(--ink);font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:10px}
+  .card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid #1e2434;border-radius:11px;
+     padding:12px 13px 13px}
+  .ctitle{font-size:14px;font-weight:620;margin:0 0 5px;letter-spacing:.005em}
+  .prim{font-family:var(--mono);font-size:11px;color:var(--teal);margin:0 0 8px;word-break:break-word;opacity:.92}
+  .serves{font-size:12.5px;color:var(--dim);margin:0}
+  .serves b{color:var(--you);font-weight:600}
+  .built{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+     color:#7fce9b;border:1px solid #2a4636;background:#12241a;border-radius:5px;padding:1px 6px;margin-left:7px;vertical-align:middle}
+  .partial{color:var(--gold);border-color:#4a3d22;background:#241d10}
+  .foot{margin-top:30px;border-top:1px solid var(--line);padding-top:18px;color:var(--dim);font-size:13.5px}
+  .foot h3{color:var(--ink);font-size:15px;margin:0 0 8px}
+  .foot b{color:var(--you)}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--faint);margin-top:12px;font-family:var(--mono)}
+  .legend span b{color:#7fce9b}
+  @media(max-width:520px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="kick">The Company · the board</div>
+    <h1>Everything on the table</h1>
+    <p class="thesis">You're the <b>pilot</b>. The right-hand-man is the <b>generative engine</b> that flies. The interface is <b>space</b> — you fly through it. And everything below — the tools, the UI, the RHM, even <b>you</b> — is a <b>projection from one substrate</b>. Almost all of these organs are already built; the unification is to <b>compose + project + pilot</b> them, not build them again.</p>
+    <div class="pilotbar">
+      <div class="pchip"><span>cockpit</span> · first-person — you ARE the engine</div>
+      <div class="pchip"><span>chase</span> · third-person — follow + look around</div>
+      <div class="pchip"><span>orbital</span> · overview — top-down map</div>
+      <div class="pchip"><span>pilot ⇄ autopilot</span> · the stability dial</div>
+    </div>
+  </header>
+
+  <div class="flow"><span class="ln"></span> you pilot at the top &nbsp;·&nbsp; the substrate is the space below <span class="ln r"></span></div>
+
+  <!-- 1 SURFACE -->
+  <section class="layer" style="--accent:#f0d28a">
+    <div class="lhead"><span class="lnum">01</span><span class="lname">The surface — where you fly</span>
+      <span class="less">One projection. <b>The data itself shows on screen.</b> Translated for you AND for the RHM — because you're both projections.</span></div>
+    <div class="grid">
+      <div class="card"><p class="ctitle">The instrument<span class="built">live</span></p><p class="prim">/api/territory · the radial map</p><p class="serves">The navigable space — every happening as a point, KIND by slice, recency by radius. <b>This is the "space" you fly through.</b></p></div>
+      <div class="card"><p class="ctitle">The right-hand-man / the V<span class="built">live</span></p><p class="prim">chat · run_turn · the V overlay</p><p class="serves">The engine's voice + guide. <b>It proposes where to go; you commit the move.</b></p></div>
+      <div class="card"><p class="ctitle">The decision surface<span class="built partial">building</span></p><p class="prim">decision:// · renderArchetype</p><p class="serves">Where it surfaces a call and you decide-in-place. The first proof of the composed view.</p></div>
+      <div class="card"><p class="ctitle">The DNA / gallery<span class="built">live</span></p><p class="prim">dna/ · lyRender · renderPiece</p><p class="serves"><b>Change in one place → propagates everywhere.</b> The UI is dynamic, never hardcoded — built from this.</p></div>
+    </div>
+  </section>
+
+  <!-- 2 MODES + DIALS -->
+  <section class="layer" style="--accent:#e08a9b">
+    <div class="lhead"><span class="lnum">02</span><span class="lname">Modes &amp; dials — how much you steer</span>
+      <span class="less">The same modes; what it's doing changes. <b>Pilot is mode #1.</b> More later — not all at once.</span></div>
+    <div class="grid">
+      <div class="card"><p class="ctitle">Stability dial<span class="built">live</span></p><p class="prim">dials(op=set, dial=stability)</p><p class="serves">"How much the surface may move on its own." <b>This IS pilot ⇄ autopilot</b> — already a primitive.</p></div>
+      <div class="card"><p class="ctitle">Anticipation dial<span class="built">live</span></p><p class="prim">dials(op=set, dial=anticipation)</p><p class="serves">How far ahead the engine thinks before it asks you. Tunes how much it proposes.</p></div>
+      <div class="card"><p class="ctitle">Perspective<span class="built partial">to build</span></p><p class="prim">cockpit · chase · orbital</p><p class="serves">The camera over the one space — first / third / top-down. A view, not a different system.</p></div>
+      <div class="card"><p class="ctitle">The modes system<span class="built partial">to formalize</span></p><p class="prim">a modes/ registry (like roles/)</p><p class="serves">Pilot = mode-row-zero. New modes = new rows, zero new screen-code.</p></div>
+    </div>
+  </section>
+
+  <!-- 3 COMMANDER -->
+  <section class="layer" style="--accent:#6f8cff">
+    <div class="lhead"><span class="lnum">03</span><span class="lname">The commander — the fleet it runs</span>
+      <span class="less">The RHM is also the <b>commander</b>. Pilot the commander, or let it run. Same modes; bigger thing being moved.</span></div>
+    <div class="grid">
+      <div class="card"><p class="ctitle">Conducted channels<span class="built">live</span></p><p class="prim">channel_act(mode=conducted, coordinator)</p><p class="serves"><b>A coordinator works the members</b> — this is already the commander pattern.</p></div>
+      <div class="card"><p class="ctitle">The live fabric<span class="built">live</span></p><p class="prim">cc_channel · sessions · session_post</p><p class="serves">The sessions message each other live. The body the commander directs.</p></div>
+      <div class="card"><p class="ctitle">The clone fleet<span class="built">live</span></p><p class="prim">cc_clone (anthropic / ollama)</p><p class="serves">Past selves + cheap local clones — extra hands the commander can field.</p></div>
+      <div class="card"><p class="ctitle">Routines<span class="built">live</span></p><p class="prim">routines(op=fire) · cc_board</p><p class="serves">Repeatable tasks it drives by spawning real sessions. Standing orders.</p></div>
+    </div>
+  </section>
+
+  <!-- 4 COGNITION -->
+  <section class="layer" style="--accent:#5fd0c5">
+    <div class="lhead"><span class="lnum">04</span><span class="lname">Cognition — the engine's labor</span>
+      <span class="less">The moves you choose from. Every one is a verb in the palette — <b>what "choosing its tool call" means.</b></span></div>
+    <div class="grid">
+      <div class="card"><p class="ctitle">Roles<span class="built">live</span></p><p class="prim">run_role · create(kind=role)</p><p class="serves">One model + prompt + output-shape = a unit of thinking. The atom.</p></div>
+      <div class="card"><p class="ctitle">Cascades &amp; flows<span class="built">live</span></p><p class="prim">run_cascade · flows(op=run)</p><p class="serves">Chains — each step's output threads to the next. The grounded production lines.</p></div>
+      <div class="card"><p class="ctitle">The panel / jury<span class="built">live</span></p><p class="prim">panel(op=run) — N lens-seats, quorum</p><p class="serves"><b>The judgment layer</b> — diverse lenses catch different failures. Big-model judging, already built.</p></div>
+      <div class="card"><p class="ctitle">Minds<span class="built">live</span></p><p class="prim">mind:// · create(kind=mind)</p><p class="serves">A composable brain — extractor+judge composed as a row. The small-cover→big-judge unit.</p></div>
+    </div>
+  </section>
+
+  <!-- 5 MODELS -->
+  <section class="layer" style="--accent:#b79bff">
+    <div class="lhead"><span class="lnum">05</span><span class="lname">Models &amp; resolution — the muscle</span>
+      <span class="less">The concurrent small models, the embeddings, the GPU loadout — <b>configure what's resident.</b></span></div>
+    <div class="grid">
+      <div class="card"><p class="ctitle">Model select<span class="built">live</span></p><p class="prim">models_for_role(role / requires)</p><p class="serves">Which models fit a role's needs — 4B extractor vs cloud judge resolved by capability.</p></div>
+      <div class="card"><p class="ctitle">Embedding layers<span class="built">live</span></p><p class="prim">layers() — {space:{layer:dim}}</p><p class="serves">Multi-layer embeddings + meaning-zoom (MRL resolution). The "levels of detail."</p></div>
+      <div class="card"><p class="ctitle">GPU loadout<span class="built">live</span></p><p class="prim">run_role(ensure=True) · ensure_resident</p><p class="serves"><b>Switch what's loaded</b> — gated load + largest-first evict. The loadout you mentioned.</p></div>
+      <div class="card"><p class="ctitle">Generation policies<span class="built">live</span></p><p class="prim">create(kind=generation_policy)</p><p class="serves">Per-regime decoding (repetition ladders, etc.) — how a role is allowed to generate.</p></div>
+    </div>
+  </section>
+
+  <!-- 6 MEMORY -->
+  <section class="layer" style="--accent:#5fd0c5">
+    <div class="lhead"><span class="lnum">06</span><span class="lname">Memory &amp; relations — the coverage</span>
+      <span class="less">What the small models cover; the graph of relations; recollection; your transcripts + projects.</span></div>
+    <div class="grid">
+      <div class="card"><p class="ctitle">The corpus<span class="built">live</span></p><p class="prim">corpus(space=history/principles/…)</p><p class="serves">Durable embedded records across spaces — ask-the-codebase, ask-the-past.</p></div>
+      <div class="card"><p class="ctitle">Recollection<span class="built partial">building</span></p><p class="prim">session_recall · the recall stream</p><p class="serves">Self-serve recall across sessions — every transcript, decisions, open loops.</p></div>
+      <div class="card"><p class="ctitle">The inversion-finder<span class="built">live</span></p><p class="prim">find_relations(near_space, far_space)</p><p class="serves"><b>Same principle, different subject</b> — cross-space relations. The graph query.</p></div>
+      <div class="card"><p class="ctitle">Transcripts &amp; projects<span class="built partial">to ingest</span></p><p class="prim">~8 vaults · all sessions · the FRD</p><p class="serves">The full record — to be covered + addressed so it's all in the one space.</p></div>
+    </div>
+  </section>
+
+  <!-- 7 SUBSTRATE -->
+  <section class="layer" style="--accent:#d9b066">
+    <div class="lhead"><span class="lnum">07</span><span class="lname">The one address space — the ground you fly over</span>
+      <span class="less"><b>Everything is an addressed, typed node.</b> A finding is just a type. That's why one mechanism can touch all of it.</span></div>
+    <div class="grid">
+      <div class="card"><p class="ctitle">The resolver<span class="built">live</span></p><p class="prim">resolve_address · inspect_address</p><p class="serves">run:// cas:// skill:// context:// decision:// board:// channel:// clone:// mind:// — one read path.</p></div>
+      <div class="card"><p class="ctitle">Self-description<span class="built">live</span></p><p class="prim">cognition_info · capabilities</p><p class="serves"><b>The company describes itself</b> — roles, spaces, verbs, chains. THIS is the pilot's palette.</p></div>
+      <div class="card"><p class="ctitle">Author anything<span class="built">live</span></p><p class="prim">create(kind=role/space/mark/…)</p><p class="serves">Every registry is a row you drop in — change is data, never code. Everything-is-a-variable.</p></div>
+      <div class="card"><p class="ctitle">The floor<span class="built">live</span></p><p class="prim">the surfaced gate · approvals stay yours</p><p class="serves">Tools compute; they never resolve/approve/dispatch. <b>You're always the pilot.</b></p></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <h3>The unification, in one line</h3>
+    <p>The organs already exist. The collective is: <b>one address space</b> (everything typed) · <b>small models cover it</b> (breadth) · <b>the RHM reasons + proposes</b> (depth) · <b>you pilot</b> from the projected palette (judgment + direction) · <b>one projected surface</b> makes all of it a single space you fly through. The RHM is the engine and the commander; the dials are pilot⇄autopilot; the modes are views and postures over the one thing.</p>
+    <div class="legend">
+      <span><b>live</b> — built &amp; running</span>
+      <span style="color:var(--gold)"><b style="color:var(--gold)">building / to&nbsp;build</b> — exists partly or is the next move</span>
+    </div>
+    <p style="margin-top:14px;color:var(--faint);font-size:12px">First pass — the ORGAN layer (the MCP tool surface, read live). The deeper board (every role/space/model/transcript enumerated) comes from the company mapping itself via the coverage mechanism — that's the next depth.</p>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Invariant Application — one definition, resolved against a coordinate</title>
+<style>
+  :root{
+    --bg:#080a10;--bg2:#0e1119;--ink:#e8ebf2;--dim:#9aa3b5;--faint:#5b6478;
+    --line:#1c2230;--card:#11151f;--card2:#141926;
+    --gold:#d9b066;--teal:#5fd0c5;--you:#f0d28a;--glow:#7d97ff;--rose:#e08a9b;--violet:#b79bff;--green:#7fce9b;
+    --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+     radial-gradient(1300px 800px at 50% -8%, #16213e 0%, rgba(22,33,62,0) 62%),
+     radial-gradient(900px 560px at 12% 50%, #1a1530 0%, rgba(26,21,48,0) 55%),
+     radial-gradient(900px 560px at 90% 60%, #102826 0%, rgba(16,40,38,0) 55%), var(--bg);
+     color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:34px 20px 80px}
+  header.top{text-align:center;padding:12px 8px 10px}
+  .kick{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:clamp(25px,4.4vw,40px);margin:.3em 0 .14em;font-weight:680;letter-spacing:-.012em}
+  .lede{color:var(--dim);font-size:clamp(14px,2vw,16.5px);max-width:760px;margin:0 auto}
+  .lede b{color:var(--you);font-weight:600}
+
+  .invariant{margin:24px auto 6px;max-width:820px;border:1px solid #2a3550;border-radius:16px;
+     background:linear-gradient(180deg,#13192a,#0c1019);padding:20px 22px;text-align:center}
+  .invariant .eq{font-family:var(--mono);font-size:clamp(13px,2.2vw,16px);color:var(--ink);line-height:1.7}
+  .invariant .eq b{color:var(--you)} .invariant .eq i{color:var(--teal);font-style:normal} .invariant .eq u{color:var(--gold);text-decoration:none}
+  .invariant .note{color:var(--dim);font-size:13px;margin-top:11px}
+
+  /* the wheel — axes as orthogonal spokes, NO order, NO number one */
+  .wheel-sec{margin:30px 0 6px}
+  .wheel-lab{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);text-align:center;margin-bottom:6px}
+  .wheel-note{text-align:center;color:var(--faint);font-size:12.5px;margin-bottom:16px}
+  .wheel-note b{color:var(--dim)}
+  .axes{display:grid;gap:11px;grid-template-columns:repeat(auto-fill,minmax(232px,1fr))}
+  .axis{border:1px solid #1e2434;border-radius:13px;background:linear-gradient(180deg,var(--card2),var(--card));padding:13px 14px;position:relative}
+  .axis::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--ac)}
+  .axis .q{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ac);margin:0 0 3px}
+  .axis .nm{font-size:15px;font-weight:640;margin:0 0 6px}
+  .axis .vals{font-size:12.5px;color:var(--dim);margin:0}
+  .axis .vals b{color:var(--ink);font-weight:600}
+  .axis.ex{border-color:#4a3d22}
+  .axis .extag{position:absolute;top:11px;right:12px;font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);border:1px solid #4a3d22;background:#241d10;border-radius:5px;padding:1px 6px}
+
+  h2.sec{font-size:13px;font-family:var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin:34px 4px 12px;border-bottom:1px solid var(--line);padding-bottom:8px}
+
+  .four{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .prim{border:1px solid #232b3d;border-radius:13px;padding:14px 15px;background:linear-gradient(180deg,#121826,#0d111a)}
+  .prim .role{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin:0 0 5px}
+  .prim h3{margin:0 0 5px;font-size:15.5px}
+  .prim p{margin:0;font-size:13px;color:var(--dim)}
+  .prim.verb{border-color:#3a4a6a;background:linear-gradient(180deg,#141d33,#0e1320)}
+  .prim.verb .role{color:var(--gold)}
+
+  .teeth{border:1px solid #2a3550;border-radius:15px;background:linear-gradient(180deg,#101728,#0b0e17);padding:18px 20px;margin:8px 0}
+  .teeth h3{margin:0 0 10px;font-size:16px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .was,.now{border-radius:11px;padding:12px 13px}
+  .was{background:#1a1216;border:1px solid #3a2630}
+  .now{background:#121f1a;border:1px solid #244634}
+  .was h4,.now h4{margin:0 0 5px;font-size:11px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase}
+  .was h4{color:var(--rose)} .now h4{color:var(--green)}
+  .was p,.now p{margin:0;font-size:13px;color:var(--dim)}
+  .now p b{color:var(--ink)}
+
+  .absorb{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:4px}
+  .ab{border:1px solid #1e2434;border-radius:11px;padding:11px 13px;background:var(--card)}
+  .ab .t{font-size:13.5px;font-weight:620;color:var(--ink);margin:0 0 3px}
+  .ab .d{font-size:12.5px;color:var(--dim);margin:0}
+  .ab .d b{color:var(--teal)}
+
+  .foot{margin-top:30px;border-top:1px solid var(--line);padding-top:16px;color:var(--faint);font-size:12.5px}
+  .foot b{color:var(--dim)}
+  @media(max-width:560px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="kick">The Company · the spine</div>
+    <h1>The invariant application</h1>
+    <p class="lede">There is <b>one application</b>. You never build a variant — not per device, not per viewer, not per mode. You write the invariant <b>once</b>, and it <b>resolves itself</b> against a coordinate. Everything you ever see is that one invariant, projected to where you are.</p>
+  </header>
+
+  <div class="invariant">
+    <div class="eq"><b>one invariant definition</b> &nbsp;×&nbsp; <u>a context coordinate</u> &nbsp;—through→&nbsp; <i>the rules-resolver</i> &nbsp;=&nbsp; the concrete surface, here, now</div>
+    <p class="note">"Designed simultaneously" isn't extra work — portrait · landscape · desktop · native · spoken are just the resolver run at different points on one axis. Define once; the variants compute themselves.</p>
+  </div>
+
+  <div class="wheel-sec">
+    <div class="wheel-lab">the coordinate · its axes</div>
+    <p class="wheel-note">Orthogonal, like the axes of a space — <b>no order, no primary, nothing is number one.</b> A surface is resolved against ALL of them at once (a point located by its full coordinate), never one-then-the-next. "Device" is the one you named — it's a spoke, not the hub.</p>
+    <div class="axes">
+      <div class="axis ex" style="--ac:var(--gold)"><span class="extag">your example</span><p class="q">where · in what substance</p><p class="nm">Device / medium</p><p class="vals"><b>native-mobile · desktop · portrait · landscape</b> — and voice (the same thing resolved to speech, not pixels)</p></div>
+      <div class="axis" style="--ac:var(--glow)"><p class="q">who is looking</p><p class="nm">Viewer / principal</p><p class="vals"><b>you · the right-hand-man · a client</b> — both projections; each gets it translated for them</p></div>
+      <div class="axis" style="--ac:var(--rose)"><p class="q">how it behaves</p><p class="nm">Mode</p><p class="vals"><b>pilot · autopilot</b> (the stability dial) · the modes to come</p></div>
+      <div class="axis" style="--ac:var(--teal)"><p class="q">the camera</p><p class="nm">Perspective</p><p class="vals"><b>cockpit · chase · orbital</b> — one space, where you stand to see it</p></div>
+      <div class="axis" style="--ac:var(--violet)"><p class="q">what it is</p><p class="nm">Type</p><p class="vals"><b>decision-card · tool-card · graph</b> — the archetype. (The "content" compositionality we just settled = this axis.)</p></div>
+      <div class="axis" style="--ac:var(--green)"><p class="q">why · what you're doing</p><p class="nm">Intent / activity</p><p class="vals"><b>deciding · exploring · composing · reviewing</b></p></div>
+      <div class="axis" style="--ac:#9bb0d0"><p class="q">how close</p><p class="nm">Resolution / detail</p><p class="vals"><b>the same thing zoomed</b> — the embedding grain, the levels-of-detail (the coverage thread)</p></div>
+      <div class="axis" style="--ac:#c98f6a"><p class="q">when · which phase</p><p class="nm">State / time</p><p class="vals"><b>live vs frozen</b> (the scrubber) · pending vs decided</p></div>
+      <div class="axis" style="--ac:#d96a7a"><p class="q">what's allowed here</p><p class="nm">Posture / permission</p><p class="vals"><b>safe · locked · hazard</b> — the gate decides what even renders for this context</p></div>
+      <div class="axis" style="--ac:#7a86b8"><p class="q">the mood</p><p class="nm">Register / theme</p><p class="vals"><b>the dark observatory</b> · others — the tonal register</p></div>
+    </div>
+  </div>
+
+  <h2 class="sec">The four primitives · three nouns and the verb that was missing</h2>
+  <div class="four">
+    <div class="prim"><p class="role">noun · values</p><h3>Tokens</h3><p>The atomic values — colour, space, weight, light. What things are made of.</p></div>
+    <div class="prim"><p class="role">noun · structure</p><h3>Types / archetypes</h3><p>The shapes — a decision-card, a tool-card. How a thing is composed.</p></div>
+    <div class="prim"><p class="role">noun · data</p><h3>Content</h3><p>The actual matter — this decision, this tool, this record.</p></div>
+    <div class="prim verb"><p class="role">verb · the resolver</p><h3>Rules-computation</h3><p>The discipline that <b>computes</b> the nouns against a coordinate and <b>allocates the surface itself</b>. The missing fourth member — the one that does the projecting. (Section C.)</p></div>
+  </div>
+
+  <h2 class="sec">The teeth · computed allocation, not breakpoints</h2>
+  <div class="teeth">
+    <h3>Your device point killed the "host stays hand-written" line</h3>
+    <div class="row">
+      <div class="was"><h4>the old line (too generous)</h4><p>Content computes (→ archetype); the host/shell stays hand-written React with <code>if mobile</code> breakpoints. Two rules.</p></div>
+      <div class="now"><h4>the invariant (your correction)</h4><p><b>Everything computes.</b> Content resolves from the type-axis; the host resolves from the device-axis; <b>neither is exempt.</b> Screen-size is the root variable → the layout is <b>derived</b>, the system <b>allocates itself</b> — no hand-placed breakpoints. One rule, two axes.</p></div>
+    </div>
+  </div>
+
+  <h2 class="sec">What this one invariant absorbs</h2>
+  <div class="absorb">
+    <div class="ab"><p class="t">The content/host decision</p><p class="d">Not two kinds of thing — <b>two axes of one resolution</b> (type + device). Dissolved.</p></div>
+    <div class="ab"><p class="t">The pilot UI</p><p class="d">Modes, perspective, viewer = <b>three more axes</b>. The pilot interface is the invariant resolved for you-piloting.</p></div>
+    <div class="ab"><p class="t">"Translated for me AND the RHM"</p><p class="d">The <b>viewer axis</b>. You and it are the same invariant resolved to two principals.</p></div>
+    <div class="ab"><p class="t">The unification, at the surface</p><p class="d">One substrate seen as one application — <b>every screen is the one thing projected</b>, never a separate build.</p></div>
+  </div>
+
+  <div class="foot">
+    <b>A candidate (offered, not asserted):</b> the axes read like the interrogatives — who · what · where · when · why · how. If that holds, the coordinate is "every question about this moment, answered," and the invariant resolves against the full answer. Real structure, or tidiness imposing? — your call. <br><br>
+    <b>Still open (where the build lives):</b> the rules-resolver — how "rules infused with tokens + types" actually computes an allocation from a coordinate (Section C). That's the buildable heart, and where this meets the small-model coverage.
+  </div>
+</div>
+</body>
+</html>

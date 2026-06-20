@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is the UI compositional? — and why it's the unification question</title>
+<style>
+  :root{
+    --bg:#0a0c12;--bg2:#0e1119;--ink:#e8ebf2;--dim:#9aa3b5;--faint:#5b6478;
+    --line:#1c2230;--card:#11151f;--card2:#141926;
+    --gold:#d9b066;--teal:#5fd0c5;--you:#f0d28a;--glow:#6f8cff;--rose:#e08a9b;--green:#7fce9b;--amber:#e0b56a;
+    --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+     radial-gradient(1300px 760px at 50% -12%, #16203a 0%, rgba(22,32,58,0) 60%),
+     radial-gradient(900px 520px at 88% 18%, #1a1530 0%, rgba(26,21,48,0) 55%), var(--bg);
+     color:var(--ink);font-family:var(--sans);line-height:1.52;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:34px 20px 80px}
+  header.top{text-align:center;padding:12px 8px 18px}
+  .kick{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:clamp(24px,4vw,38px);margin:.3em 0 .15em;font-weight:680;letter-spacing:-.01em}
+  .sub{color:var(--dim);font-size:15.5px;max-width:720px;margin:0 auto}
+  .sub b{color:var(--you);font-weight:600}
+
+  .verdict{margin:24px 0 8px;border:1px solid #2a3550;border-radius:16px;background:linear-gradient(180deg,#13192a,#0c1019);padding:20px 22px}
+  .verdict h2{margin:0 0 10px;font-size:15px;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+  .verdict .line{font-size:16px;margin:0 0 6px}
+  .verdict .line b{color:var(--you)}
+  .yn{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;border-radius:6px;padding:2px 9px;margin-right:8px;vertical-align:middle}
+  .y{color:var(--green);border:1px solid #2a4636;background:#12241a}
+  .half{color:var(--amber);border:1px solid #4a3d22;background:#241d10}
+
+  h2.sec{font-size:13px;font-family:var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin:30px 4px 12px;border-bottom:1px solid var(--line);padding-bottom:8px}
+
+  .layers{display:grid;gap:11px}
+  .lay{border:1px solid var(--line);border-radius:13px;background:linear-gradient(180deg,var(--card2),var(--card));padding:14px 16px;position:relative;overflow:hidden}
+  .lay::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac)}
+  .lay h3{margin:0 0 3px;font-size:15.5px}
+  .lay .tag{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:middle}
+  .lay p{margin:6px 0 0;font-size:13.5px;color:var(--dim)}
+  .lay p b{color:var(--ink)}
+  .lay .ev{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:7px}
+
+  .relate{border:1px solid #2a3550;border-radius:16px;background:linear-gradient(180deg,#101728,#0b0e17);padding:20px 22px;margin:8px 0}
+  .relate .big{font-size:clamp(16px,2.4vw,20px);font-weight:640;color:var(--ink);margin:0 0 12px;letter-spacing:-.01em}
+  .relate .big b{color:var(--teal)}
+  .chain{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-family:var(--mono);font-size:12.5px;color:var(--dim);margin:14px 0}
+  .chain .n{background:#141a28;border:1px solid #283248;border-radius:8px;padding:6px 11px;color:var(--ink)}
+  .chain .ar{color:var(--gold)}
+  .relate p{font-size:14px;color:var(--dim);margin:10px 0 0}
+  .relate p b{color:var(--you)}
+
+  .choice{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:6px}
+  .opt{border:1px solid #232b3d;border-radius:13px;padding:14px 15px;background:linear-gradient(180deg,#121826,#0d111a)}
+  .opt .t{font-size:14.5px;font-weight:640;margin:0 0 6px;color:var(--ink)}
+  .opt .rec{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);border:1px solid #2a4636;background:#12241a;border-radius:5px;padding:1px 6px;margin-left:6px}
+  .opt p{margin:0;font-size:13px;color:var(--dim)}
+  .foot{margin-top:28px;border-top:1px solid var(--line);padding-top:16px;color:var(--faint);font-size:12.5px}
+  .foot b{color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="kick">while you were riding · the honest answer</div>
+    <h1>Is the UI built the compositional way?</h1>
+    <p class="sub">You asked the exact right question — and it's secretly <b>the unification question</b>. I checked the real code instead of trusting the build. Here's the honest answer, the evidence, and why it's the hinge of everything.</p>
+  </header>
+
+  <div class="verdict">
+    <h2>The short answer</h2>
+    <p class="line"><span class="yn y">YES</span> in its <b>data</b> — one generic engine, fed by the registries + the live descriptor, serves all 66 tools from one place. Change the registry → it propagates.</p>
+    <p class="line"><span class="yn half">HALF</span> in its <b>render</b> — the form, list and description are bespoke React styled with DNA <b>tokens</b> (colours/spacing), but NOT drawn through the DNA <b>render system</b> (the archetypes). So a change to the design <i>language</i> would not propagate to it — you'd edit React.</p>
+    <p class="line" style="margin-top:12px;color:var(--teal)"><b>But full compositionality is provably reachable — and already on the path.</b> DNA doesn't just paint static cards; it renders AND wires <i>interactive</i> ones (the decision card's options, the V wheel). The tool face just hasn't been moved onto that yet.</p>
+  </div>
+
+  <h2 class="sec">The three layers, and where each really sits</h2>
+  <div class="layers">
+    <div class="lay" style="--ac:var(--green)">
+      <h3>The data + logic<span class="tag y">compositional ✓</span></h3>
+      <p>ONE form engine reads any tool's descriptor and renders a friendly, op-conditional form — <b>not per-tool code</b>. Labels, which-params-per-op, dropdown sources all come from the registries (tool_meta.json + enum_sources + the schema). This half is a true projection from the one place.</p>
+      <p class="ev">evidence — schemaForm.tsx: one generic <code>SchemaForm</code> consuming <code>ToolDescriptor</code>; serves all 66 · toolsStore + tool_meta.json + /api/tools</p>
+    </div>
+    <div class="lay" style="--ac:var(--amber)">
+      <h3>The render (form · list · description)<span class="tag half">tokens only — half</span></h3>
+      <p>The actual pixels are hand-written React (<code>&lt;select&gt;</code>, <code>&lt;input&gt;</code>, pill buttons) wearing DNA's tokens. Genuinely data-driven, genuinely on-token — but <b>not drawn through the archetype system</b>. So it's "uses DNA's colours," not yet "is a projection from DNA." A design-language change doesn't reach it.</p>
+      <p class="ev">evidence — schemaForm.tsx renders JSX with <code>.tf-*</code> classes; no <code>renderArchetype</code> call · the form is React, not an archetype</p>
+    </div>
+    <div class="lay" style="--ac:var(--glow)">
+      <h3>The result render<span class="tag half">designed for DNA — not built</span></h3>
+      <p>The one part <b>deliberately reserved</b> for full DNA rendering: the result will draw through a <code>tool-card</code> archetype (<code>DNA.renderArchetype</code>). The code already refuses to bespoke-render it — it holds the data and shows an honest "the clear view is being designed" rather than dumping raw output. That archetype isn't authored yet (it rides behind the decision card, same engine).</p>
+      <p class="ev">evidence — ToolsPanel.tsx:12,176 (result region = the stable container renderArchetype will write into) · no tool-card in dna/layouts.json yet</p>
+    </div>
+  </div>
+
+  <h2 class="sec">The proof that "fully compositional" is real, not aspirational</h2>
+  <div class="lay" style="--ac:var(--teal)">
+    <h3>DNA already renders <i>interactive</i> surfaces — and binds their actions</h3>
+    <p>The decision card isn't static: <code>renderArchetype</code> draws it AND wires each option's click to the take (<code>archetype.take</code> → <code>decide()</code>). The V wheel (<code>bindVee</code>), the wayfinder, the projection drill — all <b>rendered and wired through DNA</b>, not React. So an interactive surface CAN be a true projection. The tool form is just a richer interaction (live inputs) that was built in React for speed — it can move onto the same mechanism.</p>
+    <p class="ev">evidence — archetype.js:363-380 (option onclick → decide / skip / retry) · unit-view.js bindVee/bindProjectionDrill · the take is a generic archetype field</p>
+  </div>
+
+  <h2 class="sec">Why this IS the unification question</h2>
+  <div class="relate">
+    <p class="big">"Is the UI compositional?" = <b>"Is the UI part of the one thing, or an island?"</b></p>
+    <p>If the UI is a projection from the one place, it's not a separate app bolted on — it's the <b>same substrate seen as a surface</b>, exactly as the tools are verbs through one invoke door and memory is records through one address space. If it's hardcoded, it's an island, and the unification has a hole in it where you actually look.</p>
+    <div class="chain">
+      <span class="n">one render system</span><span class="ar">→</span>
+      <span class="n">decision-card archetype</span><span class="ar">+</span>
+      <span class="n">tool-card archetype</span><span class="ar">+</span>
+      <span class="n">… every surface</span><span class="ar">=</span>
+      <span class="n" style="border-color:#3a4a6a;color:var(--you)">the pilot UI</span>
+    </div>
+    <p>One renderer, N archetypes — each a typed thing that draws + wires through the one system. That's the unification AT THE SURFACE: <b>a new screen is a new archetype (a row), not new app code.</b> The decision card was proof #1 that "any surface = an archetype." The tool card is proof #2. Once that holds, <b>the whole pilot interface is just more archetypes + the dials + the projection space</b> — the unification made operable, exactly the "all coming from one place" you described.</p>
+    <p>And it closes the loop with the rest: a compositional UI is itself <b>coverable</b> — its pieces are typed nodes, so the small-model coverage can map and reason about the interface as part of the substrate. An island can't be covered. A projection can. So compositional-UI is what lets the pilot fly over <i>everything, including the cockpit itself.</i></p>
+  </div>
+
+  <h2 class="sec">The principled line — content vs host (composition's sharpening)</h2>
+  <div class="relate" style="margin-bottom:14px">
+    <p class="big">"Fully compositional" does <b>not</b> mean "zero React." It means: <b>every CONTENT surface routes through an archetype; the HOST stays a thin React frame.</b></p>
+    <div class="choice" style="margin-top:14px">
+      <div class="opt" style="border-color:#2a4636">
+        <p class="t" style="color:var(--green)">CONTENT — must be an archetype (the law)</p>
+        <p>The typed things: a decision, a tool's <b>description + form + result</b>, a graph, a selector. These resolve through <code>renderArchetype</code>. The tool face renders its content as <b>bespoke React</b> instead — <b>that, precisely, is the gap</b> (= gap 4, the tool-card archetype + take-generalization). So the finding confirms the known path, not a new problem.</p>
+      </div>
+      <div class="opt" style="border-color:#283248">
+        <p class="t" style="color:var(--dim)">HOST — fine as React-over-tokens</p>
+        <p>The shell, the modal frame, panels, nav, the operator-surface scaffold — the <b>frame that hosts archetypes</b>, not content. Requiring archetypes here would be dogma, not value. The tool panel's modal/back/close staying React is correct.</p>
+      </div>
+    </div>
+    <p style="margin-top:14px">So the test sharpens from a vague "archetypes vs React" into a clean line: <b>is this pixel CONTENT or HOST?</b> Content rendered bespoke = fix it (→ archetype). Host = leave it. That tells you exactly what's a gap and what isn't.</p>
+  </div>
+
+  <h2 class="sec">The genuine choice for when you're back</h2>
+  <p class="sub" style="text-align:left;max-width:none;margin-bottom:12px">With the content/host line, most of the "how compositional" debate dissolves: content→archetype, host→React, settled. The tool face's <b>content</b> (description + form + result) becomes a <code>tool-card</code> archetype; its <b>host</b> (the modal) stays React. The ONE real residual tension is narrower — <b>where the live form interactivity lives</b>:</p>
+  <div class="choice">
+    <div class="opt">
+      <p class="t">Content fully on the archetype, take-bound<span class="rec">recommended</span></p>
+      <p>The tool-card archetype renders description + form + result, and the interaction (form → invoke → render result) is DNA-bound via a generalized <code>take</code> — exactly how the decision card's options are wired. The content surface is a true projection; the modal host stays React. The unification done right; proves "an interactive content surface is just an archetype" → unlocks the pilot UI.</p>
+    </div>
+    <div class="opt">
+      <p class="t">Archetype draws, React wires</p>
+      <p>DNA draws the content structure (description + form + result through the archetype); React holds only the live input state + the run call over it. Look + structure fully from-DNA; interactivity stays React. Less work, a small seam inside the content.</p>
+    </div>
+    <div class="opt">
+      <p class="t">Leave content token-styled for now</p>
+      <p>Accept the content render bespoke short-term (data from one place, render on tokens), revisit after the decision card + pilot shape settle. Fastest; the content stays a half-island until then.</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>What I did NOT do:</b> I didn't fire a rebuild — the render-compositionality call touches the whole unification (how much interface = archetypes), so it's yours to steer, not mine to unilaterally redirect the streams on. Evidence gathered, framing built, ready for the unification conversation. The decision-card prove-on-one keeps moving meanwhile on the same engine that would carry the fix.
+  </div>
+</div>
+</body>
+</html>

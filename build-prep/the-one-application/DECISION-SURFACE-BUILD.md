@@ -31,6 +31,12 @@ The surface is NOT built as a screen — it is RESOLVED from typed registry rows
 
 THE RESOLUTION CHAIN (this IS the surface): `address → type → archetype → render → RHM-explain → decide-in-surface → write-back → re-resolve`. ★ Because it's typed + resolved, the SAME mechanism resolves ANY type to ANY surface — the `decision-card` is just the FIRST type; the whole interface follows by adding type rows, zero new screen-code. That is why the decision surface is the right prove-on-one: it forces the resolution-first / type-schema / compositional discipline on real content, and proves the engine that renders everything.
 
+## ★ BUILD STATE (2026-06-18) + the two resolved calls
+- **decision:// WIRED + committed (fork 97be816):** resolves through the ONE company resolver per composition's contract; STATE composed from a `decision_take` mark (registry-is-truth, not stored); territory_prose renders human; 28-check acceptance green. Bootstrap row = `decisions/merge-sa-authorize.py` → the merge-SA call is the FIRST decision the surface renders.
+- **STORAGE (lead call): decision INSTANCES live in cc_board** (the typed-instance store: board:// addresses + lifecycle + links) — NOT .py-per-instance (bootstrap only), NOT a parallel store. Migrates to Supabase WITH the backend → one store evolving; decision:// scheme stays stable, storage resolves board→Supabase (resolution-first). The keystone generate→write writes a board item. (fork holds generate→write until composition concurs.)
+- **EXACT STRING CONTRACT (prevents silent "decided reads pending"):** mark_type = `decision_take` (UNDERSCORE, exact — composition's hyphen is informal, align it); target = canonical `decision_address` (frame explicit); value = chosen option LABEL. DNA render dict + wildcard take must match fork's contract byte-for-byte.
+- **IN FLIGHT:** DNA renders the card (same lyRender as RUNG-C, sequenced behind its reorg); wildcard wires the take; projection hosts; recollection's recall leg feeds explanation_source.
+
 ## BOOTSTRAP
 The first card may be hand-assembled/presented THIS once (the generator is what's being built); after that, live. (Per A+B: build the surface + unblock-in-parallel.) The surface build starts on existing pieces — the 5 don't gate it.
 

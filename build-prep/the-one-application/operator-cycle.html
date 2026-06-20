@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Operator Cycle — overnight criteria</title>
+<style>
+  :root{
+    --bg:#080a10;--bg2:#0e1119;--ink:#e8ebf2;--dim:#9aa3b5;--faint:#5b6478;
+    --line:#1c2230;--card:#11151f;--card2:#141926;
+    --gold:#d9b066;--teal:#5fd0c5;--you:#f0d28a;--glow:#7d97ff;--rose:#e08a9b;--violet:#b79bff;--green:#7fce9b;--amber:#e0b56a;
+    --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+     radial-gradient(1300px 800px at 50% -8%, #16213e 0%, rgba(22,33,62,0) 62%),
+     radial-gradient(900px 560px at 14% 55%, #1a1530 0%, rgba(26,21,48,0) 55%),
+     radial-gradient(900px 560px at 88% 62%, #102826 0%, rgba(16,40,38,0) 55%), var(--bg);
+     color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px 80px}
+  header.top{text-align:center;padding:10px 8px 8px}
+  .kick{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:clamp(25px,4.4vw,40px);margin:.3em 0 .14em;font-weight:680;letter-spacing:-.012em}
+  .lede{color:var(--dim);font-size:clamp(14px,2vw,16px);max-width:740px;margin:0 auto}
+  .lede b{color:var(--you);font-weight:600}
+
+  /* the cycle */
+  .cycle{margin:24px auto 8px;max-width:880px;border:1px solid #2a3550;border-radius:16px;background:linear-gradient(180deg,#13192a,#0c1019);padding:20px 20px 8px}
+  .cyc-row{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;justify-content:center}
+  .node{flex:1;min-width:150px;border:1px solid #283248;border-radius:12px;padding:12px 13px;background:#10141f}
+  .node .lab{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ac);margin:0 0 5px}
+  .node .t{font-size:13.5px;color:var(--ink);margin:0;font-weight:560}
+  .node .s{font-size:12px;color:var(--dim);margin:5px 0 0}
+  .arrowline{text-align:center;color:var(--gold);font-family:var(--mono);font-size:12px;margin:10px 0 4px;letter-spacing:.05em}
+  .repeat{text-align:center;color:var(--faint);font-family:var(--mono);font-size:11px;margin:6px 0 12px}
+
+  h2.sec{font-size:13px;font-family:var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin:32px 4px 12px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  .groups{display:grid;gap:11px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+  .grp{border:1px solid #1e2434;border-radius:13px;background:linear-gradient(180deg,var(--card2),var(--card));padding:14px 15px;position:relative}
+  .grp::before{content:"";position:absolute;left:0;top:13px;bottom:13px;width:3px;border-radius:3px;background:var(--ac)}
+  .grp .gl{font-family:var(--mono);font-size:11px;color:var(--ac);margin:0 0 2px}
+  .grp h3{margin:0 0 7px;font-size:15px;font-weight:640}
+  .grp ul{margin:0;padding-left:16px;color:var(--dim);font-size:13px;line-height:1.7}
+  .grp ul b{color:var(--ink);font-weight:600}
+  .ff{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.05em;border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle}
+  .fn{color:var(--teal);border:1px solid #244a45;background:#0f2420}
+  .fm{color:var(--gold);border:1px solid #4a3d22;background:#241d10}
+
+  .twoface{border:1px solid #2a3550;border-radius:14px;background:linear-gradient(180deg,#101728,#0b0e17);padding:16px 18px;margin:8px 0}
+  .twoface h3{margin:0 0 8px;font-size:15px}
+  .twoface p{margin:0 0 6px;font-size:13.5px;color:var(--dim)}
+  .twoface p b{color:var(--you)}
+  .twoface .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+  .twoface .fc{border-radius:10px;padding:10px 12px}
+  .twoface .fcF{background:#0f2420;border:1px solid #244a45}
+  .twoface .fcM{background:#241d10;border:1px solid #4a3d22}
+  .twoface .fc h4{margin:0 0 4px;font-size:11px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+  .twoface .fcF h4{color:var(--teal)} .twoface .fcM h4{color:var(--gold)}
+  .twoface .fc p{font-size:12.5px;color:var(--dim);margin:0}
+
+  .prio{font-family:var(--mono);font-size:12.5px;color:var(--dim);line-height:2;margin:0;padding-left:4px}
+  .prio b{color:var(--ink)}
+  .prio .now{color:var(--green)}
+  .foot{margin-top:28px;border-top:1px solid var(--line);padding-top:16px;color:var(--faint);font-size:12.5px}
+  .foot b{color:var(--dim)}
+  @media(max-width:560px){.twoface .pair{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="kick">running overnight · the criteria</div>
+    <h1>The operator cycle</h1>
+    <p class="lede">A <b>decision</b> is a channel-attached <b>sequence of cards</b> (present · explain · choose). The channel becomes your <b>stack</b>. The fabric works until it's <b>blocked on you</b>, you <b>clear the stack</b>, it resumes — and the cycle repeats. This is everything to build that, perfectly — <b>function and form</b>.</p>
+  </header>
+
+  <div class="cycle">
+    <div class="cyc-row">
+      <div class="node" style="--ac:var(--teal)"><p class="lab">produce</p><p class="t">The fabric works</p><p class="s">autonomously, on everything it can</p></div>
+      <div class="node" style="--ac:var(--violet)"><p class="lab">stack</p><p class="t">The channel fills</p><p class="s">presentations · explanations · decisions · things-to-verify, stacked for you</p></div>
+      <div class="node" style="--ac:var(--amber)"><p class="lab">block</p><p class="t">No work without you</p><p class="s">the fabric detects it can't proceed without a clear</p></div>
+    </div>
+    <div class="arrowline">▼ &nbsp; then it's your turn &nbsp; ▼</div>
+    <div class="cyc-row">
+      <div class="node" style="--ac:var(--you)"><p class="lab">clear</p><p class="t">You do stuff</p><p class="s">decide-in-surface · verify by sight + use · approve — in batches</p></div>
+      <div class="node" style="--ac:var(--green)"><p class="lab">resume</p><p class="t">The fabric unblocks</p><p class="s">your decisions flow downstream; work continues</p></div>
+    </div>
+    <div class="repeat">↻ &nbsp; the cycle repeats &nbsp; ↻</div>
+  </div>
+
+  <div class="twoface">
+    <h3>The bar on every single criterion — two-faced</h3>
+    <p>Nothing is "done" on function alone. <b>Both faces, verified by use and by sight, both viewports.</b></p>
+    <div class="pair">
+      <div class="fc fcF"><h4>Function — by use</h4><p>Real behaviour moves real state. No stub, no fake result. Drive it live and watch it work.</p></div>
+      <div class="fc fcM"><h4>Form — by sight</h4><p>Built from the design system via the resolver (no bespoke values, no hand breakpoints); a navigable visual surface, not text; at-bar by the reference + your 5.</p></div>
+    </div>
+  </div>
+
+  <h2 class="sec">The criteria — six groups</h2>
+  <div class="groups">
+    <div class="grp" style="--ac:var(--you)"><p class="gl">A · foundation</p><h3>The decision-sequence type</h3><ul><li>a decision = an ordered sequence of <b>≥1 cards</b><li>card <b>kinds</b>: present · explain · choose<li><b>attached to a channel</b> (data, not code)<li>item-type is a registry (add a kind = a row)</ul></div>
+    <div class="grp" style="--ac:var(--violet)"><p class="gl">B · the queue</p><h3>The channel-stack</h3><ul><li>the fabric <b>pushes</b> operator-items as it works<li>the stack is the surface's <b>spine</b> ("what needs you")<li>per-item clear-state (pending → cleared)<li>generalizes the "N waiting" inbox</ul></div>
+    <div class="grp" style="--ac:var(--teal)"><p class="gl">C · the render</p><h3>Every card at-bar</h3><ul><li>the keystone card (merge-sa) <b>at-bar</b> <span class="ff fm">in flight</span><li>computed across portrait/landscape/desktop<li>host + card from <b>one resolver</b> (the fractal)<li>multi-card sequence + the RHM explanation</ul></div>
+    <div class="grp" style="--ac:var(--gold)"><p class="gl">D · clearing</p><h3>How you work the stack</h3><ul><li><b>decide-in-surface</b> (the take = the write-back)<li><b>verify-in-surface</b> (by sight + use) → unblocks<li>attribution floor — no agent can forge a clear<li><b>batch</b> clearing in one sitting</ul></div>
+    <div class="grp" style="--ac:var(--green)"><p class="gl">E · the engine</p><h3>The cycle itself</h3><ul><li>needs-you work becomes a <b>stacked item</b> (never a silent stall)<li>the <b>blocked</b> detector fires<li><b>resume</b> on your clear → downstream flows<li>≥2 full cycles, end-to-end, by use</ul></div>
+    <div class="grp" style="--ac:var(--rose)"><p class="gl">F · integrity</p><h3>Held across everything</h3><ul><li>all <b>generated through the system</b> (no stubs)<li>the design system is the source (one-change-propagates)<li>no ghost takes · no silent failure<li>the loop can map + judge <b>itself</b></ul></div>
+  </div>
+
+  <h2 class="sec">Order of attack (foundations first)</h2>
+  <p class="prio">
+    <span class="now">1 · the keystone card at-bar (merge-sa) — proof #1, in flight</span><br>
+    2 · the decision-sequence type + card-kinds + item registry<br>
+    3 · channel-attachment + the stack as the surface spine<br>
+    4 · the multi-card sequence + the RHM explanation leg<br>
+    5 · decide-in-surface + the attribution floor + batch clearing<br>
+    6 · the cycle engine (produce → block → resume → repeat)<br>
+    7 · the device-axis + whole-screen fractal (the resolver proof)<br>
+    8 · verify-in-surface + per-item clear-state<br>
+    9 · product-face + integrity (held throughout)
+  </p>
+
+  <div class="foot">
+    <b>Done</b> = two full operator-cycles run end-to-end on the live surface, by use AND by sight, both viewports: the fabric works → stacks a multi-card decision + a verify-request on a channel → goes blocked with a legible at-bar stack → you clear (decide + verify, attributed) → it resumes → stacks again → repeat. Nothing reaches you until at-bar by our own comparison. <br><br>Full truth-table: OPERATOR-CYCLE-CRITERIA.md · the resolver it rides: the-invariant-application.
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Gallery Coverage Map — all-examples critical comparison (Tim's ask)
+*Tim asked: has there been comparison against ALL the other examples, not just the decision-card versions? This is that pass. STATUS: 1/3 complete (slice C, 23 of 69, rendered+viewed+reconciled); the other 2/3 (slices A+B = 46) blocked — agents died on the session limit, the re-run died on the WEEKLY agent limit (resets Jun 22 1am Brisbane). The remaining 2/3 will be covered by lead directly (chrome-devtools in the main session, no agent limit) or by projection's elevation-verify rounds. No silent sampling — what's covered is reconciled, what's not is named.*
+
+## ★ THE HEADLINE FINDING (from slice C, 23 examples, all rendered+viewed)
+This NUANCES Tim's "every other screen/flow example is already below the minimum" — and the nuance matters:
+- **Many specimens are AT/ABOVE the bar** (10 of 23 in slice C judged bar-setters): var-2-nested, gen3-shapes, gen3-chrome, app-flow, app-scr-ledger, scr-ledger, scr-compose, gen4-strip, gen4-motif — AND ★ **decision-sys-responsive [8] is a GENERATED bar-setter** = hard proof the decision-card RENDERER can hit the bar.
+- **The DECISION CARDS Tim saw ARE below-min** — but the cause is CONTENT/VOICE (the question field is a wall of text: substrate-home renders a 14-line memo, event-streams a 6-line paragraph), NOT the renderer. Fed disciplined content → [8] is at-bar; fed raw prose → the wall. So Tim's frustration is RIGHT about the decision cards, and the fix is the voice/content work already underway (recollection's telegraphic rewrite + the compression pass), NOT a renderer rebuild.
+
+## ★★ CALIBRATION RESOLVED (2026-06-19) — the agent SELF-CAUGHT its miscalibration; Tim was right
+On re-look, the coverage agent OWNED that it had judged the decision cards against the WEAKEST CLUSTER (each other) instead of the real bar (scr-home / gen3-shapes / app-flow). Corrected verdict: **ALL decision cards are BELOW-MIN** — `decision-sys-responsive [8]` is NOT a bar-setter, it's "the same flat failure with tidier copy." So the calibration tension below resolves to option (b): the agent's bar WAS below Tim's. Tim's "every decision card is below minimum" = VINDICATED. The corrected bar = scr-home/gen3-shapes/app-flow (genuine craft: zones, iconography, layered token surfaces, ordinal ramp, spatial language).
+- **The same failure on EVERY decision card** (which is itself the indictment): flat blocks of text, no zones/sub-zoning, no iconography/infographic (just a radio circle + a chip), tokens unused (flat near-white, ad-hoc spacing), no spatial subtlety, ALL IDENTICAL (one flat template stamped for every decision = not composing). 
+- ★ **CATEGORY ERROR (architectural, not styling):** many decisions are MULTI-STEP and should render as FLOWS, not single flat cards — and good flow references already exist (app-flow, app-scr-ledger, app-flow-fused). Forcing every decision into one card is wrong at the architecture level.
+- **Corrected systemic gap:** the decision archetype is the system's WEAKEST output AND it ships (`destined: live-surface`) AND it's disconnected from the design language the rest of the corpus embodies — the generator emits one flat text-only single-card shape and reaches for none of the zones/iconography/tokens/spatial/flow the rest of the gallery proves it can do. (The mechanism deep-dive — which zones/hooks exist-but-unwired — is in flight: agent ab9d4ce, "do C".)
+
+## ★ THE CALIBRATION TENSION (RESOLVED above — kept for the record)
+The agent rated ~10/23 as "bar-setters." Tim believes "every other example is already below the minimum." Two readings, and which is true GATES the whole self-improvement loop:
+- (a) The system is closer to the bar than it felt (many specimens genuinely at-bar) → the work is narrow (decision-card content/voice + craft-lift).
+- (b) The agent's BAR IS BELOW TIM'S → the external reference is miscalibrated, and the "compare-to-the-reference-not-Tim" loop is optimizing to the WRONG target.
+★ Resolving this needs ONE calibration from Tim: point at 1-2 examples the agent called "bar-setter" (e.g. scr-ledger, scr-compose) and confirm "yes that's my bar" OR "no, that's still below it." That single calibration sets the reference correctly so the loop self-improves to TIM's standard, not the agent's. Until then, treat the agent's "bar-setter" tags as provisional.
+
+## SYSTEM GAPS (slice C — what the generative system can't yet produce)
+1. ★ **Voice/content not enforced on the live decision path** (the #1 finding) — the renderer emits the decision record's question verbatim; disciplined content → at-bar, raw prose → wall. Fix = recollection's telegraphic rewrite (done) + the compression pass (composition/fork, pending) so future records can't ship walls. These are `destined: live-surface` — they ship.
+2. **No real image/material generation** — image-cards render as empty gradient placeholders; the warm/immersive pole (var-3-softlight) is a CSS stand-in for an image the system can't generate.
+3. **Generic chips + banned vocabulary** — keyword pills use the generic-chip anti-pattern + words voice.json bans ("Seamless"/"Universal").
+4. **Frame-fit / one-screen budget not enforced** — fixed `.screen` (844px, overflow:hidden, pinned CTA) CLIPS long content (unit-face-explained's 5th row clipped); `.screen.ar` grows but long questions push the recommended option below the fold. Content-length-vs-device-budget is unguarded for live-surface pieces.
+5. **Slide dead-space rhythm uneven** — some specimens leave large empty zones; var-2-nested proves the system CAN fill evenly, so the discipline isn't applied uniformly.
+
+## SLICE C RECONCILIATION (no silent skip)
+23 examples (index%3==2 of 69) = 23 assessed (all rendered+viewed) = 20 live-craft verdicts + 3 stale-triaged (test-C-warm-immersive superseded by var-3-softlight; decision-two-paths v2 + v5 = hand-stubbed look-refs superseded by the generated [8]). 0 silently skipped. (One unchecked dimension flagged: phone-reflow of the no-canvas slide specimens, viewed only at 1280.)
+
+## REMAINING (the other 2/3 — slices A+B, 46 examples)
+NOT yet covered (agent weekly-limit till Jun 22). Path: lead renders+compares them directly via chrome-devtools in the main session (no agent limit), incrementally, OR projection's elevation-verify rounds cover the decision-surface subset against the references. Tracked here so it's not silently dropped — Tim's "all examples" ask is 1/3 answered, 2/3 owed.

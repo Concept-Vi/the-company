@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Company MCP Tools — the complete surface</title>
+<style>
+  :root{
+    --bg:#0a0c12;--bg2:#0e1119;--ink:#e8ebf2;--dim:#9aa3b5;--faint:#5b6478;
+    --line:#1c2230;--card:#11151f;--card2:#141926;
+    --gold:#d9b066;--teal:#5fd0c5;--you:#f0d28a;--glow:#6f8cff;
+    --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+     radial-gradient(1200px 700px at 50% -10%, #16203a 0%, rgba(22,32,58,0) 60%),
+     radial-gradient(900px 500px at 85% 12%, #1a1530 0%, rgba(26,21,48,0) 55%), var(--bg);
+     color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1100px;margin:0 auto;padding:34px 20px 80px}
+  header.top{text-align:center;padding:10px 8px 22px}
+  .kick{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:clamp(24px,4vw,36px);margin:.3em 0 .15em;font-weight:680;letter-spacing:-.01em}
+  .sub{color:var(--dim);font-size:15px;max-width:680px;margin:0 auto}
+  .sub b{color:var(--you);font-weight:600}
+  .count{font-family:var(--mono);font-size:12px;color:var(--gold);margin-top:10px}
+  nav{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:22px auto 6px;max-width:880px}
+  nav a{font-family:var(--mono);font-size:11.5px;color:var(--dim);text-decoration:none;border:1px solid #232b3d;
+     background:#10141f;border-radius:999px;padding:5px 11px}
+  nav a:hover{color:var(--ink);border-color:#37425e}
+  section.cl{border:1px solid var(--line);border-radius:15px;background:linear-gradient(180deg,var(--bg2),#0b0e16);
+     margin:14px 0;padding:16px 18px 14px;scroll-margin-top:14px;position:relative;overflow:hidden}
+  section.cl::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,#2a3550)}
+  .clh{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;margin:0 0 4px}
+  .cln{font-family:var(--mono);font-size:12px;color:var(--accent,#6f8cff)}
+  .clt{font-size:16px;font-weight:650}
+  .clp{color:var(--dim);font-size:13px;margin:0 0 13px}
+  .tool{display:grid;grid-template-columns:172px 1fr;gap:14px;padding:8px 4px;border-top:1px solid #161b27}
+  .tool:first-of-type{border-top:0}
+  .tn{font-family:var(--mono);font-size:13px;color:var(--teal);font-weight:600;word-break:break-word;padding-top:1px}
+  .td{font-size:13.5px;color:var(--ink);margin:0}
+  .td .ops{color:var(--faint);font-family:var(--mono);font-size:11px}
+  .foot{margin-top:30px;border-top:1px solid var(--line);padding-top:18px;color:var(--dim);font-size:13px}
+  .foot h3{color:var(--ink);font-size:15px;margin:0 0 8px}
+  .foot b{color:var(--you)}
+  .traps{font-family:var(--mono);font-size:11.5px;color:var(--faint);line-height:1.9;margin-top:6px}
+  .traps b{color:var(--teal)}
+  @media(max-width:560px){.tool{grid-template-columns:1fr;gap:2px}.tn{padding-top:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="kick">The Company · the tool surface</div>
+    <h1>Every MCP tool, in plain meaning</h1>
+    <p class="sub">These are the <b>moves</b> — and the deep point: they are the right-hand-man's tools <b>and</b> yours, the same projected verb-space. This is the palette you pilot from.</p>
+    <div class="count">64 tools · 10 families · read live from the real schemas</div>
+    <nav>
+      <a href="#know">Knowing what exists</a>
+      <a href="#think">Thinking</a>
+      <a href="#models">Models &amp; embeddings</a>
+      <a href="#memory">Memory &amp; recall</a>
+      <a href="#fabric">The live fabric</a>
+      <a href="#graph">The graph &amp; building</a>
+      <a href="#read">Addresses, state &amp; events</a>
+      <a href="#marks">Marks</a>
+      <a href="#gov">Governance &amp; the gate</a>
+      <a href="#rhm">Right-hand-man &amp; surface</a>
+    </nav>
+  </header>
+
+  <section class="cl" id="know" style="--accent:#d9b066">
+    <div class="clh"><span class="cln">01</span><span class="clt">Knowing what exists</span></div>
+    <p class="clp">The Company's self-description — so you compose from what's real instead of inventing it.</p>
+    <div class="tool"><div class="tn">capabilities</div><p class="td">The Company's own "what exists" map: every model, building-block, RHM verb, panel and runnable chain it can compose from. <span class="ops">(no-arg overview → drill into a section)</span></p></div>
+    <div class="tool"><div class="tn">capability</div><p class="td">A <em>different</em> registry: what the live Claude Code platform itself exposes — its commands, flags, built-in tools, settings, safety postures — discovered from the running program.</p></div>
+    <div class="tool"><div class="tn">cognition_info</div><p class="td">The one place to learn "what can I compose with": thinking-roles, rules, lenses, annotation types. Scope it to one role/section so you don't pull the firehose.</p></div>
+    <div class="tool"><div class="tn">cognition_inputs</div><p class="td">What a given role is allowed to read as input (the utterance, prior outputs, context, skills) and what its model can do.</p></div>
+    <div class="tool"><div class="tn">field_types</div><p class="td">The small fixed list of data types an output field of a new role may be (text, number, true/false, lists).</p></div>
+    <div class="tool"><div class="tn">list_skills_contexts</div><p class="td">The reusable instruction-sets ("skills") and reusable info-blobs ("contexts") a role can be pointed at.</p></div>
+    <div class="tool"><div class="tn">object_info</div><p class="td">The full library of graph building-block types — their inputs, outputs, and how they render — for assembling compositions.</p></div>
+  </section>
+
+  <section class="cl" id="think" style="--accent:#5fd0c5">
+    <div class="clh"><span class="cln">02</span><span class="clt">Thinking — roles, chains &amp; panels</span></div>
+    <p class="clp">Where it actually thinks: fire one specialist, fan over many, join results, run a saved recipe, or convene a jury.</p>
+    <div class="tool"><div class="tn">run_role</div><p class="td">Fire ONE thinking-specialist over an input → its checked, structured answer (or in embed mode, text → a meaning-vector).</p></div>
+    <div class="tool"><div class="tn">run_items</div><p class="td">Run one specialist across MANY inputs at once — the "do this to all of these" fan-out.</p></div>
+    <div class="tool"><div class="tn">run_reduce</div><p class="td">Join many results into one — by synthesizing with a role, a fixed rule, or clustering "which are the same."</p></div>
+    <div class="tool"><div class="tn">run_draft</div><p class="td">Fire a ONE-OFF throwaway specialist, defined inline, without registering it — keeps the registry clean for quick jobs.</p></div>
+    <div class="tool"><div class="tn">run_draft_items</div><p class="td">The same throwaway specialist, fanned over many inputs at once.</p></div>
+    <div class="tool"><div class="tn">flows</div><p class="td">Run a proven, hand-built production line — a multi-step chain in one call, grounding baked in. <span class="ops">(list / describe / run / propose)</span></p></div>
+    <div class="tool"><div class="tn">save_cascade</div><p class="td">Save a proven multi-step pipeline as a named, re-runnable recipe.</p></div>
+    <div class="tool"><div class="tn">list_cascades</div><p class="td">List the saved recipes, each showing its full steps so you can read what it does before running.</p></div>
+    <div class="tool"><div class="tn">run_cascade</div><p class="td">Run a saved recipe end-to-end; each step's output feeds the next automatically.</p></div>
+    <div class="tool"><div class="tn">reduce_rule_names</div><p class="td">Lists the named fixed join-rules that <span class="ops">run_reduce</span> accepts (e.g. tally-by-field).</p></div>
+    <div class="tool"><div class="tn">panel</div><p class="td">Judge something through a DIVERSE JURY — several lenses each give a verdict, with a quorum, so different flaws get caught. <span class="ops">(list / describe / run)</span></p></div>
+    <div class="tool"><div class="tn">preview_turn</div><p class="td">Run a full staged "turn" of the system's thinking as a dry run — see what would happen without recording it.</p></div>
+    <div class="tool"><div class="tn">runs</div><p class="td">Discover past thinking-runs, newest first, so you can feed an earlier output into a new run or re-run it. <span class="ops">(list / find)</span></p></div>
+  </section>
+
+  <section class="cl" id="models" style="--accent:#b79bff">
+    <div class="clh"><span class="cln">03</span><span class="clt">Models &amp; embeddings</span></div>
+    <p class="clp">Which models fit which job, and the multi-layer meaning-vectors it embeds with.</p>
+    <div class="tool"><div class="tn">models_for_role</div><p class="td">Which models are capable of a given role's job — matches the role's requirements to the models that provide them (4B extractor vs cloud judge).</p></div>
+    <div class="tool"><div class="tn">layers</div><p class="td">Self-description of its meaning-vectors: which embedding layers each searchable space carries and at what detail, so you pick the right one.</p></div>
+  </section>
+
+  <section class="cl" id="memory" style="--accent:#5fd0c5">
+    <div class="clh"><span class="cln">04</span><span class="clt">Memory &amp; recall</span></div>
+    <p class="clp">Durable memory of itself — feed things in, ask questions, find hidden cross-connections — plus recall of past sessions.</p>
+    <div class="tool"><div class="tn">corpus</div><p class="td">Search &amp; read the Company's durable memory: a plain-English question → the nearest records; list, filter, read one, or get neighbours. <span class="ops">(query / list / find / read / neighbours)</span></p></div>
+    <div class="tool"><div class="tn">ingest</div><p class="td">Feed files into that memory so you can later ask questions about them — "make the codebase answerable."</p></div>
+    <div class="tool"><div class="tn">find_relations</div><p class="td">The cross-connection finder: items that share a PRINCIPLE but differ in TOPIC — "same idea, different subject."</p></div>
+    <div class="tool"><div class="tn">session_recall</div><p class="td">Recall what was said/decided in a session by MEANING — decisions, open threads, what happened while away, drift. <span class="ops">(find / decisions / open_loops / catch_up / timeline / directives / drift)</span></p></div>
+  </section>
+
+  <section class="cl" id="fabric" style="--accent:#6f8cff">
+    <div class="clh"><span class="cln">05</span><span class="clt">The live fabric</span></div>
+    <p class="clp">The mesh that lets sessions find, message and coordinate — including reaching past selves and giving them a voice.</p>
+    <div class="tool"><div class="tn">sessions</div><p class="td">READ the fleet of every Claude Code session this machine has run: list, describe one, read its mailbox.</p></div>
+    <div class="tool"><div class="tn">session_post</div><p class="td">SEND to another session — deliver into a live one, wake a closed one, or consult a forked copy. The one write of the session mesh.</p></div>
+    <div class="tool"><div class="tn">channels</div><p class="td">READ the fabric's structure: named groups, momentary gatherings, who-talked-to-whom, what they worked out.</p></div>
+    <div class="tool"><div class="tn">channel_act</div><p class="td">ACT on the fabric: create a channel/gathering, add/remove members, set who coordinates, post messages that fan out. The one write.</p></div>
+    <div class="tool"><div class="tn">cc_channel</div><p class="td">Combined door for messaging live sessions AND managing channels — list, send, broadcast, read mail, create/archive, add/remove.</p></div>
+    <div class="tool"><div class="tn">cc_clone</div><p class="td">Clone a session AS IT WAS at a past moment and talk to that past self — onboard, bring current, or stand it up as a participant. <span class="ops">(clone / msg / onboard / …)</span></p></div>
+    <div class="tool"><div class="tn">cc_attachments</div><p class="td">Bind things — sessions, docs, recalls, board items — to a channel as a registry of attachments. <span class="ops">(attach / detach / list / manifest)</span></p></div>
+    <div class="tool"><div class="tn">cc_voice</div><p class="td">Give text a spoken VOICE through the resident text-to-speech engine — list engines or render text to audio. <span class="ops">(engines / speak)</span></p></div>
+    <div class="tool"><div class="tn">context</div><p class="td">Live context-window control on a running session: read its usage, or compact it to free room while preserving memory. <span class="ops">(read / compact)</span></p></div>
+    <div class="tool"><div class="tn">cc_gate</div><p class="td">Pause, abort, or rewind a session at a specific step — an observer that can gate/resume/abort/rewind the live mechanism.</p></div>
+    <div class="tool"><div class="tn">routines</div><p class="td">Schedule &amp; fire named repeatable tasks — spawn a real session, inject a prompt, capture the result. <span class="ops">(list / get / fire)</span></p></div>
+  </section>
+
+  <section class="cl" id="graph" style="--accent:#e08a9b">
+    <div class="clh"><span class="cln">06</span><span class="clt">The graph &amp; building things</span></div>
+    <p class="clp">Assembling and running composition graphs (canvases), and proposing new building-blocks or registry entries.</p>
+    <div class="tool"><div class="tn">list_graphs</div><p class="td">List all the composition graphs (canvases) that exist.</p></div>
+    <div class="tool"><div class="tn">node</div><p class="td">Work with a single node on a graph: add, delete, or PROPOSE a brand-new building-block type for approval. <span class="ops">(create / delete / propose / apply)</span></p></div>
+    <div class="tool"><div class="tn">connect</div><p class="td">Wire one node's output port into another node's input port.</p></div>
+    <div class="tool"><div class="tn">set_config</div><p class="td">Update a node's settings on a graph.</p></div>
+    <div class="tool"><div class="tn">run_graph</div><p class="td">Run a graph; tells you which nodes actually ran vs which were reused from cache.</p></div>
+    <div class="tool"><div class="tn">list_by_type</div><p class="td">Ask the type-graph which building-block types can PRODUCE a given kind of output.</p></div>
+    <div class="tool"><div class="tn">create</div><p class="td">Author a brand-new declarative registry entry directly &amp; live — role, skill, context, lens, annotation-type, mind — correctness-checked, no approval needed for these declarative kinds.</p></div>
+  </section>
+
+  <section class="cl" id="read" style="--accent:#7fae9b">
+    <div class="clh"><span class="cln">07</span><span class="clt">Reading addresses, state &amp; events</span></div>
+    <p class="clp">Reading back what a graph or a past run produced, and the system's own activity trail.</p>
+    <div class="tool"><div class="tn">get_state</div><p class="td">The current state of a graph — nodes, statuses, outputs, addresses.</p></div>
+    <div class="tool"><div class="tn">get_results</div><p class="td">The output of each node in a graph.</p></div>
+    <div class="tool"><div class="tn">now</div><p class="td">A live "right now" snapshot of a graph — node counts, pending approvals, who's present, the last thing that happened.</p></div>
+    <div class="tool"><div class="tn">inspect_address</div><p class="td">Read back any addressed content — a past run's output, a stored blob, a skill's instructions — by its address.</p></div>
+    <div class="tool"><div class="tn">get_events</div><p class="td">The recent activity trail — latest actions (run, create, connect, grow, approve), newest first.</p></div>
+  </section>
+
+  <section class="cl" id="marks" style="--accent:#c9a24a">
+    <div class="clh"><span class="cln">08</span><span class="clt">Marks &amp; annotations</span></div>
+    <p class="clp">The annotation layer — leaving and reading typed notes on claims and spans (write and read split, by design).</p>
+    <div class="tool"><div class="tn">mark</div><p class="td">WRITE a typed annotation onto a claim or span — flag it, score it, attach the evidence-why — using a registered annotation type.</p></div>
+    <div class="tool"><div class="tn">marks</div><p class="td">READ the annotations back: every mark on one target, every mark of one type, or older coherence findings at an address. <span class="ops">(by target / type / findings)</span></p></div>
+  </section>
+
+  <section class="cl" id="gov" style="--accent:#cf7d6a">
+    <div class="clh"><span class="cln">09</span><span class="clt">Governance &amp; the operator gate</span></div>
+    <p class="clp">The line between what it may do on its own and what it must surface for you.</p>
+    <div class="tool"><div class="tn">list_surfaced</div><p class="td">The decisions the system has surfaced FOR you to approve, each with a default and status — the operator's queue.</p></div>
+    <div class="tool"><div class="tn">propose_role</div><p class="td">Propose a NEW thinking-role that gets SURFACED for your approval, rather than applied directly.</p></div>
+    <div class="tool"><div class="tn">edit_role</div><p class="td">Re-propose changes to an existing role — surfaced, never self-applied (protected roles refuse).</p></div>
+    <div class="tool"><div class="tn">delete_role</div><p class="td">Request removal of a role — surfaced for your approval (protected roles refuse).</p></div>
+    <div class="tool"><div class="tn">rule</div><p class="td">Work with a role's deterministic "when X → route to Y" rules: validate, dry-run on samples, or attach/detach (re-proposes the role).</p></div>
+    <div class="tool"><div class="tn">operator</div><p class="td">READ the system's memory of YOU — the confirmed rules for working with you, each carrying your verbatim words as evidence; read before preparing anything you'll see. <span class="ops">(rules / describe / proposed)</span></p></div>
+    <div class="tool"><div class="tn">self_change_log</div><p class="td">The audit ledger of the system's own self-edits — each self-applied commit, what it changed, whether it was a revert — for rollback &amp; audit.</p></div>
+  </section>
+
+  <section class="cl" id="rhm" style="--accent:#f0d28a">
+    <div class="clh"><span class="cln">10</span><span class="clt">The right-hand-man, capture &amp; surface</span></div>
+    <p class="clp">The coherent voice of the Company, the chief-of-staff inbox, your character dials, the projection instrument, and capturing thinking into memory.</p>
+    <div class="tool"><div class="tn">chat</div><p class="td">Converse with the right-hand-man — the single coherent voice of the Company about itself; answers from live ground truth, suggests actions but performs none that skip your gate.</p></div>
+    <div class="tool"><div class="tn">inbox</div><p class="td">The chief-of-staff inbox, triaged into lanes: live things needing attention, things already resolved for you, batched items.</p></div>
+    <div class="tool"><div class="tn">dials</div><p class="td">Your adjustable CHARACTER dials — ongoing traits like how far ahead it thinks and <b style="color:var(--you)">how much the surface may move on its own</b> (pilot ⇄ autopilot). <span class="ops">(list / describe / set)</span></p></div>
+    <div class="tool"><div class="tn">project</div><p class="td">The PROJECTION INSTRUMENT (not a work-project): the radial lens-wheel that resolves a chosen lens — meaning-distance, the lean between two poles, where new types are born — into points. The same engine the visual surface uses.</p></div>
+    <div class="tool"><div class="tn">capture</div><p class="td">Persist thinking-output into durable memory: run one specialist over many items and SAVE each result as a permanent, addressed, searchable record.</p></div>
+  </section>
+
+  <div class="foot">
+    <h3>Name-traps, disambiguated</h3>
+    <p class="traps">
+      <b>capability</b> = the Claude-Code platform · <b>capabilities</b> = the Company's own registry<br>
+      <b>project</b> = the projection wheel (not a work-project) · <b>context</b> = live context-window ops<br>
+      <b>capture</b> = persist to memory · <b>ingest</b> = feed files in · <b>corpus</b> = ask memory<br>
+      <b>mark</b> = write a note · <b>marks</b> = read notes back<br>
+      <b>flows</b> = code production-lines · <b>cascades</b> = declarative saved recipes<br>
+      <b>inbox</b> = chief-of-staff triage (distinct from a session's mailbox via <b>sessions</b>)
+    </p>
+    <p style="margin-top:14px;color:var(--faint);font-size:12px">This is the TOOL surface — the verbs. The deeper board (every role, space, model, transcript and project enumerated) is the next pass: the company mapping itself.</p>
+  </div>
+</div>
+</body>
+</html>

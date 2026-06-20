@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pilot Mode — the ideas board</title>
+<style>
+  :root{
+    --bg:#0a0c12;--bg2:#0e1119;--ink:#e8ebf2;--dim:#9aa3b5;--faint:#5b6478;
+    --line:#1c2230;--card:#11151f;--card2:#141926;
+    --gold:#d9b066;--teal:#5fd0c5;--you:#f0d28a;--glow:#6f8cff;--rose:#e08a9b;--violet:#b79bff;
+    --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+     radial-gradient(1300px 760px at 50% -12%, #16203a 0%, rgba(22,32,58,0) 60%),
+     radial-gradient(900px 520px at 12% 30%, #1a1530 0%, rgba(26,21,48,0) 55%),
+     radial-gradient(800px 500px at 90% 70%, #102826 0%, rgba(16,40,38,0) 55%), var(--bg);
+     color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:34px 20px 80px}
+  header.top{text-align:center;padding:14px 8px 8px}
+  .kick{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:clamp(26px,4.6vw,42px);margin:.3em 0 .12em;font-weight:680;letter-spacing:-.01em}
+  .lede{color:var(--dim);font-size:clamp(14px,2vw,17px);max-width:740px;margin:0 auto}
+  .lede b{color:var(--you);font-weight:600}
+
+  .hero{margin:26px 0 8px;border:1px solid #2a3550;border-radius:18px;
+     background:linear-gradient(180deg,#13192a,#0c1019);padding:22px 22px 20px;text-align:center;position:relative;overflow:hidden}
+  .hero .eq{font-family:var(--mono);font-size:clamp(13px,2.1vw,16px);color:var(--ink);letter-spacing:.01em}
+  .hero .eq b{color:var(--you)} .hero .eq i{color:var(--teal);font-style:normal} .hero .eq u{color:var(--gold);text-decoration:none}
+  .hero .sm{color:var(--dim);font-size:13.5px;margin-top:10px}
+
+  h2.sec{font-size:13px;font-family:var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--faint);
+     margin:32px 4px 12px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  .grid{display:grid;gap:11px}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid #1e2434;border-radius:13px;padding:14px 15px 15px;position:relative}
+  .card .ic{font-size:18px;margin-bottom:6px;display:block}
+  .ctitle{font-size:15px;font-weight:640;margin:0 0 6px}
+  .cbody{font-size:13.5px;color:var(--dim);margin:0}
+  .cbody b{color:var(--ink);font-weight:600}
+  .tag{position:absolute;top:12px;right:13px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+     border-radius:5px;padding:2px 7px}
+  .built{color:#7fce9b;border:1px solid #2a4636;background:#12241a}
+  .next{color:var(--gold);border:1px solid #4a3d22;background:#241d10}
+  .idea{color:var(--violet);border:1px solid #36305a;background:#191430}
+
+  .modes{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .mode{border:1px solid #232b3d;border-radius:13px;padding:14px 15px;background:linear-gradient(180deg,#121826,#0d111a)}
+  .mode h3{margin:0 0 4px;font-size:15.5px}
+  .mode .role{font-family:var(--mono);font-size:11px;color:var(--teal);margin-bottom:8px}
+  .mode p{margin:0;font-size:13px;color:var(--dim)}
+  .dialwrap{margin-top:6px}
+  .dial{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11.5px;color:var(--faint);margin:4px 0}
+  .track{flex:1;height:6px;border-radius:99px;background:linear-gradient(90deg,var(--you),#2a3550);position:relative}
+  .knob{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--ink);border:2px solid var(--you)}
+
+  .persp{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .open{border:1px dashed #36305a;border-radius:13px;padding:13px 15px;background:#0e0c1a}
+  .open h3{margin:0 0 8px;font-size:14px;color:var(--violet)}
+  .open ul{margin:0;padding-left:18px;color:var(--dim);font-size:13px;line-height:1.85}
+  .open li b{color:var(--ink)}
+  .foot{margin-top:30px;border-top:1px solid var(--line);padding-top:16px;color:var(--faint);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="kick">The Company · ideas board</div>
+    <h1>Pilot mode &amp; the modes to come</h1>
+    <p class="lede">A living board for the way you'll <b>occupy the right-hand-man</b> — the shape of it, what's already a primitive, and the open questions. Add to it; it grows.</p>
+  </header>
+
+  <div class="hero">
+    <div class="eq">You are the <b>pilot</b> &nbsp;·&nbsp; the right-hand-man is the <i>generative engine</i> &nbsp;·&nbsp; the interface is <u>space</u> &nbsp;·&nbsp; what you do is <b>fly through it</b></div>
+    <div class="sm">It still does all the generation, thinking and reasoning, and it proposes where to go next — but you choose the move. It proposes; you dispose; it flies the frame you chose; it proposes again.</div>
+  </div>
+
+  <h2 class="sec">The modes · pilot is #1</h2>
+  <div class="modes">
+    <div class="mode"><h3>Pilot <span class="tag next" style="position:static;margin-left:4px">first to build</span></h3><div class="role">you steer · it proposes &amp; asks</div><p>You choose its tool calls, its path, the context it carries. It tells you where it wants to go and asks you things as it flies. You commit each move.</p></div>
+    <div class="mode"><h3>Autopilot</h3><div class="role">let it run</div><p>Hand it the wheel — it chooses and flies on its own. The same engine; you've just turned the dial all the way over.</p>
+      <div class="dialwrap">
+        <div class="dial">pilot <span class="track"><span class="knob" style="left:14%"></span></span> autopilot</div>
+        <div class="dial" style="color:#5b6478">↑ the <b style="color:var(--teal)">stability</b> dial — already built</div>
+      </div>
+    </div>
+    <div class="mode"><h3>…and others <span class="tag idea" style="position:static;margin-left:4px">to imagine</span></h3><div class="role">the registry grows</div><p>Modes are rows you add — review, explore, compose, teach, command… Same frame, different posture. Not all from the get-go; pilot first.</p></div>
+  </div>
+
+  <h2 class="sec">Perspective · the camera over the one space</h2>
+  <div class="persp">
+    <div class="card"><span class="ic">🛩️</span><p class="ctitle">Cockpit</p><p class="cbody">First-person — <b>you ARE the engine</b>, looking out through it as it flies.</p></div>
+    <div class="card"><span class="ic">🛰️</span><p class="ctitle">Chase</p><p class="cbody">Third-person — you <b>follow it</b>, look around it, move with it, but you're not at the controls.</p></div>
+    <div class="card"><span class="ic">🗺️</span><p class="ctitle">Orbital</p><p class="cbody">Overview / top-down — the <b>strategic map</b>, the whole space at a glance.</p></div>
+  </div>
+
+  <h2 class="sec">What it commands · same modes, bigger thing</h2>
+  <div class="grid g3">
+    <div class="card"><span class="tag built">built</span><span class="ic">🎚️</span><p class="ctitle">The right-hand-man is also the commander</p><p class="cbody">It directs the fleet — sessions, channels, clones. <b>Pilot the commander, or let it run.</b> Conducted-mode channels (a coordinator works the members) are already the pattern.</p></div>
+    <div class="card"><span class="tag built">built</span><span class="ic">🌀</span><p class="ctitle">You and it are both projections</p><p class="cbody">The interface is translated for <b>both</b> of you, because you're both projections of the one substrate. You both have tools; you both act on the same space.</p></div>
+    <div class="card"><span class="tag built">principle</span><span class="ic">✶</span><p class="ctitle">The data itself is the screen</p><p class="cbody">Dynamic, never hardcoded — a projection built from the DNA, so a change in one place <b>propagates everywhere</b>.</p></div>
+  </div>
+
+  <h2 class="sec">Already a primitive · not to invent</h2>
+  <div class="grid g3">
+    <div class="card"><span class="tag built">built</span><p class="ctitle">stability dial</p><p class="cbody">"How much the surface may move on its own." <b>This IS pilot ⇄ autopilot.</b></p></div>
+    <div class="card"><span class="tag built">built</span><p class="ctitle">anticipation dial</p><p class="cbody">How far ahead it thinks before it asks you — tunes how much it proposes.</p></div>
+    <div class="card"><span class="tag built">built</span><p class="ctitle">the projection instrument</p><p class="cbody">The radial lens-wheel that resolves meaning into points — <b>the space itself</b>, already running.</p></div>
+    <div class="card"><span class="tag built">built</span><p class="ctitle">the verb palette</p><p class="cbody">64 tools = the moves you pick from. The same tools are the engine's AND yours.</p></div>
+  </div>
+
+  <h2 class="sec">Open — to think about together</h2>
+  <div class="grid g3">
+    <div class="open"><h3>The pilot interaction</h3><ul>
+      <li>How does <b>choosing its tool call</b> feel? The palette appears, you pick — then what?</li>
+      <li>How does it <b>"ask you things as it goes"</b> — inline, a prompt, a fork in the path?</li>
+      <li>How do you <b>redirect</b> mid-flight without breaking its thread?</li>
+    </ul></div>
+    <div class="open"><h3>Space &amp; movement</h3><ul>
+      <li>What ARE the coordinates — meaning-distance? the address space? both?</li>
+      <li>How does <b>perspective-switching</b> work — a gesture, a key, a dial?</li>
+      <li>What does "flying" look like — a path through points, a camera move?</li>
+    </ul></div>
+    <div class="open"><h3>The cognition under it</h3><ul>
+      <li>How do the <b>small models' coverage</b> feed what it proposes?</li>
+      <li>When does the <b>panel/jury</b> show its verdicts to you?</li>
+      <li>Where do <b>you</b> sit as the judge — above the auto-judge, or instead of it?</li>
+    </ul></div>
+  </div>
+
+  <div class="foot">A living board — the pilot vision as it stands after the unification talk. The interactive tool face (the palette, for real) is being grounded for build; this board is where its modes and movement get designed before they're built.</div>
+</div>
+</body>
+</html>
