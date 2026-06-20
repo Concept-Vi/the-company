@@ -59,3 +59,29 @@ Build `think` first as the template; the rest follow its shape. Verify each agai
 runtime/cognition.py + fabric/transport.py (the cognition lane) → coordinating with the lead (tool-atlas may be
 on the same files; avoid the concurrent-commit race) BEFORE the hot-path edit. Not deferral — sequencing a
 shared-file edit; the diagnosis + this map + the plan are done now.
+
+## THE RESOLUTION-MECHANISM ANSWER (lead/Tim flag 2026-06-20 — "make prompt+schema resolve(coordinate), at grain")
+**Q: can a role's prompt + output_schema RESOLVE against a coordinate today, or swap-only? → SWAP-ONLY (evidence).**
+- `run_role` uses `role.prompt_template` + `role.output_schema` DIRECTLY (static per role; cognition.py:330 +
+  the json/schema path). Its params are base_url/model/timeout/max_tokens/temperature/store/ensure/ensure_evict/
+  policy/meta — **NO prompt/schema per-call param.** Varying them = author/SWAP a role (create_role/propose_role
+  builds one programmatically — still swap, NOT coordinate-resolution). Only `inputs` resolve per-turn.
+- The `resolve(invariant, coordinate)` primitive itself does NOT exist yet — it is the KEYSTONE being built
+  (RESOLVER-BUILD.md:7,37). What EXISTS to REUSE (don't fork): `runtime/context_variables.py`
+  `ContextVariable.resolve(ctx)→value` (the per-turn variable-resolution; `inputs`/input_addresses already
+  resolve this way) + projection `BindingRegistry`/`_resolve_sectors`.
+
+**SMALLEST PATH (rides the spine, not parallel):** make `prompt` + `output_schema` **RESOLVED SLOTS** — the exact
+`_resolve_axis(slot, source)` pattern pre-scouted for the instrument (RESOLVER-BUILD.md:92). prompt+schema JOIN
+`input_addresses` as resolved-from-coordinate variables, reusing `context_variables.resolve`. The **GRAIN axis**
+(Tim's "variable granularity") = the schema is a RICH SUPERSET (recollection's stored asset) + the resolver
+PROJECTS the subset for the requested grain (coarse `{about}` ↔ fine `{about,touches,entities,claims,relations}`)
+= the MRL/resolution axis already named in RESOLVER-BUILD.md:17. `resolve(grain)→schema-subset`; one stored asset
+serves ANY future determine at ANY grain (so the 35,904-chunk bake is done ONCE on the superset).
+
+**CONVERGENCE (schema-FIRST — do NOT bake the extract until this converges):**
+- recollection → the RICH grain-scalable schema (the superset asset).
+- composition → make `prompt` / `output_schema` resolvable VARIABLE TYPES in the resolver contract (the spine).
+- fork → the resolution MECHANISM: wire run_role to resolve prompt+schema from the coordinate (reuse
+  context_variables.resolve), + the grain-projection of the schema. This is `resolve(invariant, coordinate)` at
+  the COGNITION scale — same shape as the instrument's `_resolve_axis`, one altitude over. Render-independent.
