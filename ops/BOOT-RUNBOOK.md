@@ -118,9 +118,12 @@ Live agent sessions all die on reboot and do NOT auto-relaunch. Two paths:
    if continuity of specific prior members matters tonight.
 4. **Minor cleanups (non-blocking):** `company-embed-pplx.service` `[Install]` is `WantedBy=default.target`
    (inconsistent with siblings — inert while disabled) · a dangling `openclaw-node.service` symlink in
-   `default.target.wants/` · the interim transcript chroma index corrupted today
-   (`~/.cache/company/substrate-claude-sessions/chroma.corrupt-backup-20260620`) — throwaway, the reindex job
-   rebuilds it.
+   `default.target.wants/` · the interim transcript chroma index was corrupted
+   **+ REBUILT CLEAN today** (35,904 vectors, verified by use — recollection; old corrupt copy →
+   `~/.cache/company/substrate-claude-sessions/chroma.corrupt-backup-20260620`). It SURVIVES the reboot on disk →
+   recall returns the moment embed-pplx binds (`company up @xsession-brain`), **NO reindex needed** (don't run the
+   hours-long reindex — the index is healthy). The real post-reboot recall risk is the embedder LOAD-HANG flap
+   (GAP fbfc1d2): a fresh boot should clear the wedge; the recall watchdog is the durable fix.
 
 *Key files: `ops/cli/app.py` · `ops/services.json` · `ops/STARTUP.md` · `runtime/session_supervisor.py` ·
 `channels/claude-fabric.sh` · `channels/channel.mcp.json` · `~/.bashrc:246` · `~/.config/systemd/user/`.*
