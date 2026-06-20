@@ -1582,3 +1582,23 @@ fork flagged (t-1781967044) the residual instance of the cwd-relative-`discover(
 ★ FIXED (606603c): anchored the `discover()` default to repo-root via `__file__` (fork's e14a9a8 idiom / Suite·decision_registry·NodeRegistry pattern); explicit `dirs=` still honored. VERIFIED: cwd=/tmp → 9 REAL lenses (by_cascade·by_lens·by_node_type·by_nucleation·by_separator·grouped·raw·semantic·time-of-day); explicit-path + live /api/projection unaffected (regression-guarded). Restart-gating: projection.py is bridge-imported → live-pending-restart for the bridge, but the bridge was never affected (absolute registry) → no urgency; activates per each process's lifecycle.
 
 This is the critical-comparison law applied to a PEER's bug report: didn't trust it (falsify-first), didn't dismiss it (real), fixed the CLASS not just the instance, reported live-vs-latent honestly. [[feedback-falsify-first-read-whole-unit]] + [[feedback-critical-comparison-default-to-wrong]].
+
+---
+
+## FIRE — overnight mandate: TOOL-FACE beat (consume fork's form_meta + swap the RUN door) — input+run LIVE, result-view held; + 3 self-corrections
+
+Tim's overnight mandate (g-1781969960): NOTHING gated on him; decide technical calls; run render-independent to completion; blockers→channel. Took the tool-face (FACE-3, projection half) — my next un-gated beat. Advisor: proceed + build + verify-by-use + keep the claim honest (input-live ≠ result-view-live).
+
+★ 3 SELF-CORRECTIONS along the way (critical-comparison / falsify-first, default-to-wrong — the law working on my OWN + an agent's claims, BY LOOKING):
+- /api/tools/invoke contract is **{name, args}** NOT {tool, args} (the fanout agent's suggested contract was wrong).
+- form_meta is populated **1/66 (corpus ONLY)**, server-side nested snake_case ({human_name/human_description/op_labels/op_params/param_labels/enum_sources}). My LAST-fire correction ("form_meta null 0/66, needs a 66-tool authoring slog") was ITSELF confirming-biased — I checked the wrong keys (surface-side opField vs server form_meta.*). The REAL gap: the surface didn't CONSUME fork's form_meta.
+- the invoke envelope is **{ok, tool, posture, result}** — hits at result.ranked NOT data.ranked (caught PRE-WIRE per the advisor; wiring to data.ranked would've silently shown 0).
+
+★ BUILT (90bcedc, render-independent, tsc clean):
+- `toolsStore.applyFormMeta` — the CONSUMPTION ADAPTER (server nested form_meta → surface ToolDescriptor shape; SEPARABLE from the renderer per the advisor — schemaForm may move onto DNA's engine later; opField INFERRED as the enum param matching op_labels keys; un-enriched tools degrade clean to a plain schema form).
+- `ToolsPanel` RUN-door — generic POST /api/tools/invoke {name, args}; reads the result envelope; fail-loud on {ok:false}/error; POSTURE-gated (non-safe → honest 'gated', never a UI-fired write pre-#1b); result HELD for DNA's tool-card (count when list, else honest "done, view being designed").
+★ VERIFIED BY-USE (390, ?verify=1, default-to-wrong): corpus → "Company memory" + op-selector ("Ask a question/Browse all/Filter to some/Open one/Find related") + op-conditional human param labels ("Your question/Which memory/How many results/Sharper ranking/How much detail") — was a RAW-PARAM WALL last fire. Run → /api/tools/invoke → "Found 8 things — the clear view of each is being designed."
+★ HONEST CLAIM (advisor-insisted, NOT "the tool-face works"): the legible INPUT form + the invoke door are LIVE for corpus; the RESULT VIEW is held for DNA's tool-card (keystone-gated).
+★ RESIDUAL → fork (the form_meta CONTENT track; my adapter auto-lights-up each tool fork populates): 65/66 form_meta null (raw-but-functional degrade) · corpus content gaps by-use: "Op" field label (param_labels omits op), raw space keys ("Which memory" — no enum_labels), detail free-text (no enum) · add explicit op_field to the contract · the `now` tool is GENUINELY BROKEN (invoke → missing 'graph' arg).
+
+STILL GATED: C1 keystone (DNA → the tool-card RESULT render) · FACE-1 rendered surfaces (fork READ-API) · resolver host. NEXT un-gated: more parallelizable host units (FACE-1 nav-prep · address-surfacing via locus).
