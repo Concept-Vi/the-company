@@ -34,6 +34,12 @@ company up @xsession-brain        # embed-pplx :8007 + rerank-jina :8008 + chat-
 # 3 — (optional) arm the scheduled jobs:
 company up jobs                   # transcript exporter + sessions reindex timers
 
+# 3b — TIM'S PHONE SURFACES (the tailscale phone path — NOT company units, do NOT auto-start; see Flag 2).
+#      tailscale serve persists across reboot (/ → :8090 gallery, :8443 → :5174 operator surface), so once
+#      both servers are up the phone URLs work. Both are needed for the live keystone verify + Tim's phone.
+/home/tim/repos/counterpart/design/engine/serve.sh &     # gallery  :8090 (counterpart server/server.py)
+( cd /home/tim/company/surface/app && npm run dev & )     # operator surface :5174 (company surface/app vite; predev re-syncs DNA's gallery)
+
 # 4 — launch the LEAD (the `claude` alias auto-attaches the fabric channel):
 cd /home/tim/company && claude
 
@@ -108,11 +114,13 @@ Live agent sessions all die on reboot and do NOT auto-relaunch. Two paths:
 ## ★ FLAGS / DECISIONS FOR TIM (carried by the lead)
 1. **Stale doc:** `ops/WINDOWS-BOOT.md` claims linger auto-pulls the whole stack on boot — FALSE per live state
    (`company.target` disabled + not wanted). `ops/STARTUP.md` is correct. (Cleanup: fix/retire WINDOWS-BOOT.md.)
-2. **Phone surface — needs a Tim decision.** `tailscale serve` currently proxies `/ → :8090` (gallery) and
-   `:8443 → :5174` (review surface), both from the separate `counterpart` repo, which does NOT auto-start. So
-   after reboot the phone URLs are DOWN until `counterpart/design/engine/serve.sh` is run (gated via
-   `routines/launch-surfaces.py`). **Q for Tim:** is the phone path the counterpart surfaces (then add that
-   serve.sh to the sequence) or the company canvas (then `tailscale serve` needs re-pointing to :5173)?
+2. **Phone surface — RESOLVED (2026-06-20, verified by live tailscale mapping).** The phone path IS the
+   review surfaces, now in the boot sequence (step 3b): `tailscale serve` (persists across reboot) maps
+   `/ → :8090` (the DNA **gallery**, counterpart `server/server.py`, started by `counterpart/design/engine/serve.sh`)
+   and `:8443 → :5174` (the **operator surface**, which is the COMPANY repo's `surface/app` vite — NOT
+   counterpart; corrects the earlier note). Neither auto-starts, so step 3b brings both up. `routines/launch-surfaces.py`
+   is a STATUS-reporter (gated), not an auto-launcher. (Future cleanup: wrap step 3b as `company up surfaces`
+   so it's one verb like the rest.)
 3. **No one-command fleet relaunch.** Bring-back is `claude` (lead) → lead re-spawns members; there is no
    "restore the whole prior fleet with context" command — it's per-member `--resume <id>`, ids looked up. Flag
    if continuity of specific prior members matters tonight.
