@@ -76,13 +76,20 @@ def _fine_role():
     ), output_schema=Fine)
 
 
-def load_chunks(*, projects=None, since=None, until=None, limit=None, sample_step=None):
-    """Read transcript chunks from substrate.db (read-only), filtered. project = rel_path substring match;
-    date = parsed from the chunk ANCHOR (turn date), NOT mtime. Returns [{id, text, rel_path, anchor, date}]."""
-    con = sqlite3.connect(f"file:{SUBSTRATE_DB}?mode=ro", uri=True)
-    rows = con.execute(
-        "SELECT ch.id, ch.text, a.rel_path, ch.anchor FROM chunks ch "
-        "JOIN addresses a ON a.id = ch.address_id WHERE ch.text IS NOT NULL").fetchall()
+def load_chunks(*, projects=None, since=None, until=None, limit=None, sample_step=None,
+                db=SUBSTRATE_DB, vault=None):
+    """Read chunks from a substrate.db (read-only), filtered. `db` = which substrate (claude-sessions OR the
+    overlord .state for the visual-dna vault). `vault` = restrict to one substrate vault (e.g. 'visual-dna').
+    project = leading-rel_path-segment EXACT match; date = parsed from the chunk ANCHOR (turn date), NOT mtime.
+    Returns [{id, text, rel_path, anchor, date}]."""
+    con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+    q = ("SELECT ch.id, ch.text, a.rel_path, ch.anchor FROM chunks ch "
+         "JOIN addresses a ON a.id = ch.address_id WHERE ch.text IS NOT NULL")
+    params = ()
+    if vault:
+        q += " AND a.vault = ?"
+        params = (vault,)
+    rows = con.execute(q, params).fetchall()
     con.close()
     out = []
     for cid, text, rel_path, anchor in rows:
@@ -167,6 +174,10 @@ def main():
     ap.add_argument("--coarse-max", type=int, default=220)
     ap.add_argument("--fine-max", type=int, default=600)
     ap.add_argument("--write", action="store_true", help="write records to .data/store/extractions/")
+    ap.add_argument("--db", default=SUBSTRATE_DB, help="substrate db to read (default claude-sessions; for "
+                    "visual-dna use the overlord .state db)")
+    ap.add_argument("--vault", default=None, help="restrict to one substrate vault (e.g. visual-dna)")
+    ap.add_argument("--out-name", default="full", help="output basename → extractions-<name>.jsonl")
     a = ap.parse_args()
     projects = [p.strip() for p in a.projects.split(",") if p.strip()] or None
 
@@ -180,7 +191,8 @@ def main():
 
     n = a.sample if a.sample else (None if a.all else 50)
     chunks = load_chunks(projects=projects, since=a.since, until=a.until,
-                         limit=(n if not a.all else None), sample_step=(a.sample_step if a.sample else None))
+                         limit=(n if not a.all else None), sample_step=(a.sample_step if a.sample else None),
+                         db=a.db, vault=a.vault)
     print(f"loaded {len(chunks)} chunks  (projects={projects} since={a.since} until={a.until})")
     if not chunks:
         print("no chunks after filter — check the filter (note: date is from anchor, not mtime).")
@@ -194,7 +206,7 @@ def main():
     # a mid-run crash keeps every completed batch + lets us resume from the last chunk_id written).
     if a.all:
         os.makedirs(OUT_DIR, exist_ok=True)
-        path = os.path.join(OUT_DIR, "extractions-full.jsonl")
+        path = os.path.join(OUT_DIR, f"extractions-{a.out_name}.jsonl")
         done_ids = set()
         if os.path.exists(path):                              # RESUME: skip chunks already written
             for line in open(path):
