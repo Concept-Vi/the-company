@@ -23,15 +23,9 @@ DECISION = {
         {
             "label": "One shared spine — each piece keeps its own engine",
             "implication": (
-                "Every piece KEEPS how it works — the factory keeps its own registry, parts, and "
-                "animation engine; the memory keeps its own recall; nothing gets flattened or dissolved. "
-                "What they SHARE is one model for where their things live and how they connect, on one "
-                "backend. Then the company can see, navigate, and decide ACROSS everything as one whole — "
-                "which is exactly what this interface needs. They're already the same shape at different "
-                "grains, so it's a natural join, not a forced merge. The old pile gets read for its intent "
-                "and rebuilt toward, not migrated. (This needs you to name the shared model — your five "
-                "held foundation choices: what a file's identity is, who a channel member is, what a "
-                "cluster is, how the live streams are addressed, and the real kinds of things.)"
+                "Every piece keeps its own engine — the factory its parts, the memory its recall, nothing "
+                "flattened. What they share is one model for where things live and how they connect, so the "
+                "company can see and decide across everything as one whole. A natural join, not a forced merge."
             ),
             "recommended": True,
         },
