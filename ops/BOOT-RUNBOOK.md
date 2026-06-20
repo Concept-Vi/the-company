@@ -44,6 +44,13 @@ company up @xsession-brain        # embed-pplx :8007 + rerank-jina :8008 + chat-
 #        step 2 (@xsession-brain loads it) OR a cognition-default-to-cloud change (OPEN — lead/Tim design call).
 #      ⟹ concurrent CLOUD models at boot need only: ollama (auto) + a fresh MCP. Default-model cognition also
 #        needs the 4b (step 2). This is the "so it doesn't happen again" startup requirement.
+#      ★ SECOND-LAYER GAP (found 2026-06-20 verifying the fix; routing now reaches the model — refused→reaches):
+#        cloud models return EMPTY content to the role engine's STRUCTURED-OUTPUT request — reasoning models
+#        (deepseek-flash) answer only in the reasoning trace; instruct models (kimi) returned empty. So clean
+#        structured EXTRACTION (run_role with an output-schema) does NOT yet work on cloud. RELIABLE concurrent
+#        extraction therefore needs the LOCAL no-think/json models (chat-2b/4b — a GPU load, step 2) OR a fix to
+#        the cloud structured-output handling (the role engine's JSON/response_format request vs ollama-cloud).
+#        OPEN — flagged to lead; the routing gap itself is FIXED + verified.
 
 # 3 — (optional) arm the scheduled jobs:
 company up jobs                   # transcript exporter + sessions reindex timers
