@@ -24,7 +24,17 @@ Ran the tighter determine (3,346 candidate extractions vs the broad pass). It su
 ★ BUT critical-comparison (default-to-wrong) on the determine's OWN output: the single-REDUCE CONFABULATES — it smooths scattered extractions into a coherent-sounding "design" with invented specifics ("corporate organ metaphors", "architectural manifestos") that overstate what was actually discussed as one thread. So this determine is a useful MAP TO THE SOURCE extractions, NOT verbatim recall — don't treat the synthesis as ground truth.
 ★ THE RELIABILITY FIX (the determine-as-tool's next step): the REDUCE needs NO-FICTION CLAIM-GROUNDING — cite the source extraction (and its chunk) per claim, validate each against the raw source (the SAME no-fiction-judge pattern the corpus mining already uses — the mine_exchange judge that validates an extract against its raw exchange). Without it, the reduce produces plausible-but-confabulated design. So: determine = the cheap candidate-filter (reliable, reads real extractions) + a GROUNDED reduce (cite-per-claim) — not a free-synthesis reduce. This is the gap to close before the determine becomes a trusted tool/skill.
 
+## ★ GROUNDED DETERMINE — BUILT + PROVEN (the reliability fix; ops/dragnet_determine.py, ef74471)
+The no-fiction reduce is done (lead-endorsed, 4c57c01). Instead of free-synthesis (which confabulated), the model
+CLUSTERS the real extraction claims BY INDEX (groups + theme-labels only, never generates claim text) → every
+output claim is a VERBATIM real extraction with its chunk_id provenance. A no-fiction check verifies every
+returned index is valid. PROVEN by-use (structured-outputs topic): NO-FICTION=True, 6 coherent themes (MCP
+capabilities · API endpoints · exclusions · architecture principles · safety · operational), 48/50 real claims
+grouped + chunk-traced. ★ Confabulation is now STRUCTURALLY impossible — the model can't invent claim text, only
+group existing-by-number. So the determine is a TRUSTED tool: reliable candidate-filter + no-fiction grounded cluster.
+
 ## NEXT
-- The grounded (no-fiction, cite-per-claim) reduce — the reliability fix above — before the determine is a trusted tool.
+- Wire the determine as an MCP tool / skill (gap-surface, theorem-mine) + into the RHM/face query path — the asset
+  + the trusted determine are ready to be a queryable surface.
 - The determine stage wants to become a tool/skill (`gap-surface` + `theorem-mine` / a determine verb over the extraction layer) + wired so the RHM/face queries the asset.
 - The extraction layer is the reusable asset for ANY future question (extract-once/query-many) — both session + visual-dna now queryable by determine.
