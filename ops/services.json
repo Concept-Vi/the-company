@@ -557,6 +557,10 @@
       "group": "models",
       "title": "LiteLLM proxy (OpenAI-compat gateway, :4100) — for the fabric's OWN cognition",
       "port": 4100,
+      "manage": {
+        "type": "manual",
+        "run": "~/company/fabric/serve_litellm.sh"
+      },
       "serve": "~/company/fabric/serve_litellm.sh",
       "note": "The CURRENT clean proxy (litellm 1.83.7, .litellm-venv, fabric/litellm.config.yaml) — LOAD-BEARING for fabric cognition (fabric/config.py LITELLM_PROXY, OpenAI-format → ollama). Launched MANUALLY by fabric/serve_litellm.sh (no systemd unit). Corrected 2026-06-16: dropped the dangling 'litellm-proxy.service' manage ref (that was the STALE ~/claude-gateway proxy on :4000, now removed). ★ Claude Code does NOT use this — CC runs on company/ollama models via OLLAMA-NATIVE :11434 (ollama launch claude / the supervisor _provider_env), not this OpenAI proxy. board://item-4aa4f952.",
       "health": "/health"
@@ -620,6 +624,10 @@
       "group": "models",
       "title": "jina-reranker-v3 listwise reranker (CPU endpoint)",
       "port": 8008,
+      "manage": {
+        "type": "manual",
+        "run": "~/company/ops/serve_rerank.sh"
+      },
       "serve": "~/company/ops/serve_rerank.sh",
       "vram_mb": 0,
       "note": "CPU endpoint (CUDA_VISIBLE_DEVICES=\"\" — 0 VRAM, no GPU contention with the loadout). Surfaces ops/rerank.py:Reranker(jina-v3) as POST /rerank {query, candidates|texts:[str|dict], top_n?} -> {ranking:[{item,text,rerank_score,orig_rank,rank},...]} sorted desc; GET /health. Runs from ~/vllm-env (torch 2.11+transformers 5.9 already present — NO new install; checked per Tim 2026-06-14 'install after checking'). The rerank stage for cross-session semantic recall (runtime/session_recall.py) — bridge-free, served like embed-pplx :8007. Loads in ~5s; weights jinaai/jina-reranker-v3 in HF cache."
