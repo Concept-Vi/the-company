@@ -175,7 +175,18 @@ def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb="_
                 (f" — no item is embedded in {_scope} at this layer (emb={emb!r}); try another space or "
                  "check the embedder is up (:8007).")
         return {"ranked": [], "note": (f"the vector index is EMPTY ({_scope}){_hint} No addresses to rank.")}
-    return {"ranked": ranked, "note": f"ranked {len(ranked)} of {len(corpus)} indexed addresses by cosine ({_scope})"}
+    note = f"ranked {len(ranked)} of {len(corpus)} indexed addresses by cosine ({_scope})"
+    # WEAK-MATCH honest note (no-silent-failures): cosine ALWAYS returns top-k, so an off-topic query gets
+    # confident-looking hits. Calibrated by-use 2026-06-21 (in-corpus top1 0.35-0.46 · off-corpus 0.21-0.33):
+    # the gap is real but NARROW, so this SURFACES low confidence — it does NOT filter (a hard floor on a 0.027
+    # gap would false-reject borderline-real queries; the DECISIVE relevance gate is rerank, not raw cosine —
+    # ties to the rerank-loadout decision). top1 < 0.33 ⇒ flag "weak/possibly off-topic, no strong match".
+    _WEAK = 0.33
+    top = ranked[0].get("score") if (ranked and isinstance(ranked[0], dict)) else None
+    if isinstance(top, (int, float)) and top < _WEAK:
+        note += (f" — ★ WEAK top match (cosine {top:.3f} < {_WEAK}): likely no strong match / possibly off-topic. "
+                 "Cosine returns top-k regardless; treat as low-confidence (rerank is the decisive gate).")
+    return {"ranked": ranked, "note": note}
 
 
 def index_staleness(store, corpus, *, model=None, space=None) -> dict:
