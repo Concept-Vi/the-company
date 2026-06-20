@@ -33,8 +33,12 @@ capabilities · API endpoints · exclusions · architecture principles · safety
 grouped + chunk-traced. ★ Confabulation is now STRUCTURALLY impossible — the model can't invent claim text, only
 group existing-by-number. So the determine is a TRUSTED tool: reliable candidate-filter + no-fiction grounded cluster.
 
-## NEXT
-- Wire the determine as an MCP tool / skill (gap-surface, theorem-mine) + into the RHM/face query path — the asset
-  + the trusted determine are ready to be a queryable surface.
+## DETERMINE-AS-MCP-TOOL — DONE (d873572): corpus(op='determine', text, asset) → grounded chunk-traced themes, no_fiction by construction. runtime/recall_determine.py = the engine (CLI + face share). The operable recall-before-build surface.
+
+## PRECISION FINDING + FIX (proven): the determine's candidate-FILTER is keyword-based → topically BLUNT
+The no-fiction GROUNDING is solved; the candidate-FILTER isn't. On "visual variables resolve by context" the keyword filter surfaced ROOT-STRUCTURE claims (homonym/word-match ≠ concept-match). ★ PROVEN FIX (by-use, no commitment): a SEMANTIC filter (embed topic + extraction texts, rank by cosine) surfaces the RIGHT claims — "blocks resolve values by walking up their CONTEXT chain" (0.410), "architecture-canonical applies at pixel/component/view SCALES" (0.401), "identical primitives distinguished only by [context]" (0.391) — i.e. it hard-grounds Tim's context-resolution design-law, where keyword couldn't.
+
+## NEXT (proven + scoped): EMBED THE EXTRACTION LAYER
+Register an embeddable space + embed the 29,425 extractions (embed_corpus_to_spaces) → (a) the determine candidate-filter becomes SEMANTIC (precise, fixes the bluntness + unlocks the Visual-DNA verbatim hard-grounding) AND (b) the dragnet asset folds into the existing corpus(op='query') path (one recall surface). A ~29k embed on :8007 (announce/sequence like the bake). Render-independent.
 - The determine stage wants to become a tool/skill (`gap-surface` + `theorem-mine` / a determine verb over the extraction layer) + wired so the RHM/face queries the asset.
 - The extraction layer is the reusable asset for ANY future question (extract-once/query-many) — both session + visual-dna now queryable by determine.
