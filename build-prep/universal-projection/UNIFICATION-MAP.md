@@ -19,8 +19,8 @@ material itself is. The strongest single statement here, "The Engine," carries i
 throughout*. Tim's own spine holds: **nothing is full or right; the convergence between fragments is the
 signal, never any single fragment.** So:
 
-- Every **reconcile** below — the cube as a navigation body, the four roots as the four points of the box,
-  the axis-set being itself a variable, the state·scale·frame collapse — is tagged **(candidate — Tim
+- Every **reconcile** below — the four roots as the four points of the box, the axis-set being itself a variable
+  (now Tim-CONFIRMED, §0.5), the state·scale·frame collapse — is tagged **(candidate — Tim
   adjudicates)**. These are offerings, not rulings. The reconcile is the most seductive place to overclaim;
   it is explicitly held open.
 - Tim is the **only judge**. Every seam in §5 is his to ratify, reframe, or reject.
@@ -38,6 +38,39 @@ from it wherever it leans on the projected corpus. (This corrects v1, which wron
 pre-projection shards (candidate: `visual-dna/References/cognitive-entanglement-raw-input-01.md`, 79 inbound);
 and the `tims_verbatim` / `tim-direct` catalogue inside the `relative-difference` substrate vault. Full landscape
 in [[THEOREM-SOURCES]].
+
+---
+
+## 0.5 — TIM-CONFIRMED STRUCTURE (2026-06-20) — the firmest layer; read this first
+
+Tim confirmed a three-way separation that earlier drafts blurred (he confirmed it directly; still his to keep
+refining, but this supersedes the candidate framings below where they conflict):
+
+1. **The coordinate axes are a SWAPPABLE LOADOUT, not a fixed four.** "I should be able to change them." The
+   axis-set is itself a variable (= The Engine's §1.2 "the required-axis-set is a property of the rule"). Do NOT
+   pin "the four." Frame is NOT a member — see (3). Time enters the family (it "fills the place of frame"); the
+   4th is unsettled ("might be position, but it still doesn't feel right"). The instrument must let Tim swap
+   which axes are loaded.
+2. **TYPE is not a coordinate axis — type is `n`, INSIDE the equation.** Type = the polygon that forms at each
+   depth = the prime that `n` is divided by (primes = irreducible types; their multiples = composite types) =
+   "the declarative rules of that bounded universe" = "what makes a thing a thing relative to other things." So
+   type is more fundamental than an axis: it is the rule-structure at each point, woven into `2π/n`, not a
+   direction you travel. (This relocates The Engine's listed "Type-axis" and supersedes S6's framing.)
+3. **INSTANCE is the relativity itself; FRAME dissolves into it.** Instance is "the point of definition" — a
+   thing referenced + a thing referencing + the relative frame for that to happen. Frame is part of instance,
+   not a separate axis. So instance is NOT merely "the content the coordinates locate" — it is the relativity
+   event. (Connects to visual-dna's "centre = the local point from which a system becomes relatively defined.")
+
+So three distinct things, cleanly separated: **the coordinate space (swappable axes) · the rules at each point
+(type = `n` = the polygon/primes) · the point of definition (instance = the relativity, frame within it).**
+
+★ **CUBE-ERROR CORRECTION (provenance lesson).** An earlier draft claimed "the cube FAILS the equation by
+`27/4 − 2π ≈ 0.467`, so it can only be a navigation shell." **That was wrong.** It came from an AI-PROJECTED
+theorem package (visual-dna `Theory/Untitled 7`, a GPT-5.5 pass), NOT Tim's verbatim — and was relayed as
+"proven." Tim (2026-06-20): *"the cube does not fail the equation, your understanding of it does… the same
+operations, the same object, it works differently depending on the variables."* The cube is the one object at
+k=3 — a different regime of the same object, not a failure. **The bedrock is Tim's actual math; the AI-projected
+packages contain errors and are NOT authoritative.** (See the corrected §2.3 geometry + §2.4 instrument.)
 
 ---
 
@@ -103,8 +136,14 @@ Four pillars stand under the spine: the **axes**, the **invariant law**, the **g
 
 ### 2.1 — THE AXES: four / six / N, and the reconcile
 
+★ **Read §0.5 first — Tim-CONFIRMED 2026-06-20 supersedes parts of this section:** the axis-set is a SWAPPABLE
+LOADOUT (confirmed, not just candidate); **TYPE is NOT one of the axes** (it is `n`, inside the equation — the
+polygon/primes/rules of each depth); **FRAME is NOT one of the axes** (it dissolves into instance = the
+relativity). So the rivalry below is now read through: don't pin the four; time is in the family; the 4th is
+unsettled (position?); type + frame are *removed* from the axis question entirely (relocated, §0.5).
+
 Tim has named the root axes more than six ways across sessions and vaults. The list does not converge to one
-naming — and **that non-convergence is itself the finding**, because of the pivot in §1.
+naming — and **that non-convergence is itself the finding** (because the axis-set is a variable, §0.5).
 
 The strongest stable agreement across all the namings: **TIME** maps cleanly everywhere (the one axis you
 cannot pick — the involuntary index). **VANTAGE ≈ FRAME ≈ ORIENTATION** is the next-strongest join. After that
@@ -176,16 +215,20 @@ established here.)**
   common landscape."* The forbidden mirror-line is **k=1** (no strict solution — the first prohibition).
 - **The winding-indexed modular equation `x^d − τx = mτ`** (m = winding number; m=0 strict, m=−1 one-turn-
   behind). This is the generating equation behind the "winding-count" idea — the formal engine the seed sits in.
-- **★ The square-gate hinge** `4 < 2π < 27/4`. Among integer dimensions, **only d=2 (the square) satisfies the
-  negative-winding lock**; the **cube (d=3) provably FAILS, missing by `27/4 − 2π ≈ 0.46681`** — derived, with
-  a citation, not asserted. d=2 is the unique positive-real negative-winding integer power.
-- **★★ The cube = a NAVIGATION BODY, not a 3-D math claim (candidate — Tim adjudicates).** Because the cube
-  provably misses the lock, the cube is **never a claim that 3-D satisfies the equation**. The candidate
-  reconcile: the cube is the **navigation body whose every FACE is the working 2-D seed** (the d=2 that locks);
-  the third dimension is **vantage** — which face you see is where you measure from. This keeps the math
-  2-D-per-face *and* realises Tim's orbiting cube. It is his own *"polygon = viewpoint: from the centre a
-  circle, from the corner a square, indistinguishable to the observer."* (Candidate; the math is now grounded,
-  the reconcile is still Tim's to ratify.)
+- **The square-gate hinge** `4 < 2π < 27/4`. Among integer dimensions, **d=2 (the square) has a special
+  property — it is the integer dimension that satisfies the negative-winding lock**. ★ CORRECTION (Tim
+  2026-06-20): the AI-projected package read this as "the cube (d=3) FAILS by `27/4 − 2π ≈ 0.467`." **That
+  framing is wrong** — d=2's special property does NOT mean other dimensions "fail." Per Tim: *"the cube does
+  not fail the equation… the same operations, the same object, it works differently depending on the
+  variables."* d=2 and d=3 are **the SAME object at different k** — different regimes, not lock-vs-fail. The
+  square's uniqueness for the m=−1 winding is one true property; it is not a verdict on the cube. (Verify the
+  actual dimension-by-k behaviour in TIM'S formal math, not the projected package — see §6 bedrock note.)
+- **★★ The cube is the object at k=3 — and the instrument must render the object ACROSS the dimension variable
+  (Tim 2026-06-20).** Not "a navigation shell because it failed." The instrument renders the one object at any
+  k: drop k → 3-D cube → 2-D square+circle plane → 1-D line/point; show circle alone, square alone, or both;
+  *"the same operations, the same object, it works differently depending on the variables."* The dimension is a
+  live variable of one object — this is the heart of the engine requirement (§2.4). "Polygon = viewpoint" still
+  holds as one facet (what you see depends where you stand), but it is NOT a downgrade of the cube to 2-D.
 - **The slot/socket = the square's hidden one-turn roots.** The square's hidden one-turn pair
   `n± = (1 ± √(1 − 4/τ))/2`, with `n₋ + n₊ = 1` and `n₋·n₊ = 1/τ` — shown to BE the d=2, m=−1 modular
   solutions (not a separate fact). The full root-braiding is the monodromy group **S_d**. This is composition's
