@@ -60,7 +60,17 @@ runtime/cognition.py + fabric/transport.py (the cognition lane) → coordinating
 on the same files; avoid the concurrent-commit race) BEFORE the hot-path edit. Not deferral — sequencing a
 shared-file edit; the diagnosis + this map + the plan are done now.
 
-## THE THINK-BUILD SPEC (locked 2026-06-21 — read the transport; additive; build = next focused effort)
+## ★ THINK — BUILT + VERIFIED (f9305d7, 2026-06-21) for ollama (cloud + ollama-local)
+The `think` param is wired run_role → cognition → the new `ollama_native_transport` (routes ollama-served models
+to the native /api/chat that HONOURS think; /v1 ignores it). VERIFIED by-use (default-to-wrong, token-drop through
+the real transport): **think=False → 2 out-tokens + clean content "command"; think=True → 400 tokens, finish=length,
+EMPTY** (the bug reproduced). A 200× collapse + correctness restored → cheap cloud concurrent cognition now works.
+Additive (think=None byte-identical; bake-resume safe). committed≠live: live on the next MCP/session reload.
+REMAINING (the table's other gaps, NOT yet built): vLLM-local enable_thinking via chat_template_kwargs (post-bake,
+needs a free vLLM model to verify — currently an honest no-op on HF-path models); per-call schema/prompt/output-
+location overrides; tools wiring; the budget-retry net. The think TEMPLATE is now the shape the rest follow.
+
+## THE THINK-BUILD SPEC (locked 2026-06-21 — read the transport; additive; ★ THE OLLAMA HALF IS NOW BUILT, above)
 *Transport read in full (fabric/transport.py): `openai_transport` builds /v1 requests via an allowlist
 (`_SAMPLING_KEYS`) + `_apply_response_format` + `_fill_meta` (finish_reason/usage out-param). NO think handling.
 The think mechanism is provider-split (PROVEN by-use):*
