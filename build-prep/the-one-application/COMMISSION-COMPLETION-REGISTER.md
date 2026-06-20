@@ -24,6 +24,11 @@
 - [ ] Axes-are-registries (adding an axis = a row). FRACTAL (app⊃card⊃slot⊃token). It's the whole COMPANY resolved against context, not just UI.
 - [ ] Built by UNIFYING the seeds (dials + the rule tool + project/the instrument + relative tokens) — not from scratch.
 
+### ★ STRAND: the generative DESIGN LANGUAGE (form-as-data — the form engine)  ·  owner: DNA
+*Tim → DNA directive (2026-06-20, surfaced via the channel loop-prep — was NOT in the register). The strand UNDER the resolver that makes "intelligently designed, not text-dumped" REAL. The resolve() verb computes WHICH surface; THIS is the LANGUAGE it composes from.*
+- [ ] Build the FULL source (review/ingest, 160 imgs) into the GENERATIVE DNA system — extract the design language INTO THE FACES as MACHINE-READABLE data the models GENERATE AGAINST (not a prose doc). Today: a POC from a thin slice. (coverage running: w7bnhfafd → review/ingest/_extracted/)
+- [ ] Built INTO the engine: computed TYPE · derived/bonded PADDING · components→compositions · device resolved NATIVELY · text generated to a BUDGET. Open-ceiling — "the company gets built into this." Every face (FACE 0–4) renders through this language.
+
 ## FACE 0 — the atomic-composition engine (the keystone)  ·  board: DECISION-CARD-HOST-CONTRACT.md
 - [~] The decision-card archetype renders at-bar through renderArchetype — **GATE-ZERO, in round-4 grind, NOT yet at-bar by lead's pixel-honest sight** (merge-sa). Everything below inherits this engine; nothing downstream is real until it passes.
 - [ ] The renderer is archetype-COMPLETE (today 6 of 22 slot_types; molecules/slot_bindings unconsumed) — every face = a record through the one wire, no bespoke React.
