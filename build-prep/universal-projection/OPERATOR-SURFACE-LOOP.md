@@ -1535,3 +1535,22 @@ Tim amplified the commission (relayed by lead ch-3mpkjg3r): run loop-prep AT THE
 ★ CONVERGENCE the board surfaced: my FACE-1 host half + recollection's recall DATA + DNA's RENDER archetypes are ONE surface seen three ways (data → host → render). The three form-intents already compose (DNA's mesh/lanes/map/zones = my host's archetype dependency set = recollection's temporal-relational field) — when fork's READ-API lands, the trio builds the same surfaces together, not in parallel. (Commit note: 2774b19 snapshotted the collective board delta, incl. DNA's concurrently-appended uncommitted section — flagged to the lead.)
 
 ★ NEXT REAL BEAT (un-gated, post-bounce): the tool-face migration onto the now-live /api/tools + /api/tools/invoke (read form_meta, swap off transitional /api/corpus-query, self-verifiable in my lane). STILL GATED: C1 keystone (DNA, round-4) · the FACE-1 surfaces (fork's READ-API) · resolver host + control-density axis.
+
+---
+
+## FIRE — the CAPABILITY-USE play (Tim's "use your own tools, find uses for ALL of them") → projection's grounded section, discovered with my own tools
+
+Tim's directive (relayed lead ch-3mpkjg3r): actively USE the capabilities (company MCP tools · fanout agents · loops · dynamic workflows · skills · teams · embeddings · local models · memory) to find concrete uses for ALL of them — "use your own tools to answer, that's the point." Discovery/planning (render-independent, parallel to the keystone); the lead runs the channel-wide discovery workflow.
+
+★ DISCOVERED WITH MY OWN TOOLS (the demonstration WAS the deliverable): 2 concurrent fanout Explore agents (skills-survey ∥ tool-face-migration + parallelizable-units) · 2 `corpus` recalls (space='history' — incl. the fail-loud empty-default→spaces redirect, which itself demonstrated the honesty law) · enumerated the live `/api/tools` (66 tools). Real grounding, not abstract.
+
+★ KEY FINDINGS:
+- **The tool-face migration is MORE READY + now UN-GATED (my next real build):** `toolsStore.ts` ALREADY fetches the live `/api/tools` + `schemaForm.tsx` renders any tool generically; the ONLY transitional piece = `ToolsPanel.tsx`'s RUN door (hardcoded `corpus→/api/corpus-query`) → swap to generic `POST /api/tools/invoke {tool,args}` + drop the `CORPUS_SEED` fail-soft (fail-loud). Result-render stays DNA's tool-card (keystone-gated). The INVOKE-door swap is render-independent + self-verifiable in my lane. (Verify `/api/tools/invoke` is live first.)
+- **Single-source-of-truth (recall-grounded, exchange #24, 2026-05-31):** UI/runtime/MCP-tools all PROJECT from the ONE node-type registry → the tool-face is a PROJECTION of the registry, not a parallel list.
+- **5 parallelizable-NOW host units** (fanout-grounded, render-independent): tool-face invoke-door migration · FACE-1 host-shell nav prep (`resolve_address` consumer in App.tsx) · address-surfacing via the live `locus` layer · verb-envelope completion (drive/generate stubs + the one-bus contract) · spotlight-catalog auto-include for new surfaces.
+- **NEW skills to author for the lane:** `surface-verification-loop` · `tool-face-migration` · `multi-viewport-layout-auditor`.
+- **Honest NEVER-USED (the gold Tim's after):** authoring a Workflow · persistent Teams · running models from my session (`run_role`/`run_items`) · `panel` (diverse-lens judge) · `cc_clone`/`spin_up_points` (the FACE-1 "run a past session in a channel" rides exactly these) · `routines` · `project`-as-a-tool · multi-scale rollup embeddings.
+
+★ APPENDED + COMMITTED (185e854) the CAPABILITY-USE (projection lane) sub-section to CHANNEL-LOOP-BOARD.md (3 parts: concrete uses · parallelizable-now · never-used). Reported the headlines to the lead.
+
+★ NEXT REAL BEAT (un-gated): the tool-face INVOKE-door migration onto `/api/tools/invoke` — the discovery confirms it's a focused, self-verifiable swap (not a rebuild). STILL GATED: C1 keystone (DNA, round-4) · the FACE-1 RENDERED surfaces (fork's READ-API + DNA archetypes) · resolver host + control-density axis.
