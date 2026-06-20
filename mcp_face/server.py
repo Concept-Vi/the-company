@@ -563,6 +563,17 @@ def _fire_role_and_persist(r, utterance: str, inputs: dict, model: str, max_toke
           "ensure": ensure, "ensure_evict": ensure_evict}
     if model:
         kw["model"] = model
+        # ROUTING FIX (2026-06-20): a `model` override MUST carry its ENDPOINT, or run_role POSTs it to the
+        # default RESIDENT_BASE_URL (:8000 = the local vLLM 4b), which is DOWN unless that exact model is
+        # loaded — so ANY cloud/ollama model → ConnectionRefused (the gap Tim hit using concurrent models).
+        # Resolve base_url FROM the model: an ollama-served model (cloud ':cloud' or local ':tag' — i.e. NOT
+        # an HF-path "org/model" vLLM id) → the fabric endpoint (ollama :11434, which AUTO-STARTS at boot +
+        # proxies ollama-cloud) → concurrent CLOUD cognition works at ZERO VRAM and survives a reboot. An
+        # HF-path id keeps the resident base_url (its own vLLM service). reuse-don't-parallel: same
+        # ollama-vs-vLLM split Suite.models_at already draws (suite.py ~1422 vs ~1442).
+        if "/" not in model:
+            from fabric import config as _fcfg
+            kw["base_url"] = _fcfg.DEFAULT_BASE_URL
     if policy:
         kw["policy"] = policy          # O2 — the rep_penalty ladder regime (registry-is-truth)
     # O3 — read the completion's finish_reason (+ usage) back via run_role's `meta` OUT-PARAM (ENGINE-2's
