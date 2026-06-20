@@ -507,7 +507,8 @@ def inspect_address(address: str, turn_id: str = "") -> dict:
 @mcp.tool()
 def run_role(role: str, utterance: str = "", op: str = "generate", model: str = "",
              inputs: dict = {}, max_tokens: int = 256, temperature: float = 0.0,
-             ensure: bool = False, ensure_evict: bool = False, policy: str = "") -> dict:
+             ensure: bool = False, ensure_evict: bool = False, policy: str = "",
+             think: bool | None = None) -> dict:
     """CONFIGURE + RUN ONE role (the agent fires a role and gets its validated output).
     REUSES runtime.cognition.run_role (the SAME fire path run_swarm/dry_run_role use — never a parallel
     engine). `role` is a registered role id (or pass a draft field-set is via propose_role first).
@@ -529,6 +530,14 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
     finish_reason=length, fail-loud `degenerate-loop` when the ladder exhausts. Default "" → byte-identical
     to before (no ladder). DELEGATE: runtime.cognition.run_role's `policy=` axis.
 
+    `think` (optional): control the model's hidden reasoning, REGARDLESS OF PROVIDER (the code routes it
+    in the back). `think=False` SUPPRESSES the reasoning trace — for an ollama-served model (cloud ':cloud'
+    or local ':tag') this routes to the native endpoint that honours it (verified: 1304→43 output-tokens, a
+    30× saving on a one-word structured answer), so cheap structured/extraction work on a cloud reasoning
+    model stops getting truncated/emptied. `think=None` (default) = byte-identical to before (the model's
+    own default). (vLLM-local think-control via chat_template_kwargs is the post-verify follow — currently a
+    no-op on HF-path models, never a silent wrong-claim.)
+
     GENERATE runs PERSIST: the validated output is written to run://<turn>/<role> (the SAME put_content→
     set_ref primitives run_items uses) so the run can be inspected back by address (inspect_address) and
     fed as an input downstream. Returns {role, op, output, address, turn_id}.
@@ -537,12 +546,12 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
     r = _resolve_role(role)
     return _fire_role_and_persist(
         r, utterance, inputs, model, max_tokens, temperature, ensure, ensure_evict, policy,
-        turn_prefix="mcp")
+        think=think, turn_prefix="mcp")
 
 
 def _fire_role_and_persist(r, utterance: str, inputs: dict, model: str, max_tokens: int,
                            temperature: float, ensure: bool, ensure_evict: bool, policy: str,
-                           *, turn_prefix: str) -> dict:
+                           *, turn_prefix: str, think: bool | None = None) -> dict:
     """The SHARED single-role fire-and-persist tail of run_role / run_draft (REUSE — never copy-paste a
     second wrapper body, so the two stay byte-identical in behaviour). Given an ALREADY-RESOLVED `Role`
     (`_resolve_role` of an id for run_role, of a draft dict for run_draft — the engine path is the same
@@ -561,6 +570,8 @@ def _fire_role_and_persist(r, utterance: str, inputs: dict, model: str, max_toke
             ctx[name] = val
     kw = {"max_tokens": max_tokens, "temperature": temperature, "store": SUITE.store,
           "ensure": ensure, "ensure_evict": ensure_evict}
+    if think is not None:
+        kw["think"] = think                                    # → cognition.run_role: native /api/chat think-control for ollama models
     if model:
         kw["model"] = model
         # ROUTING FIX (2026-06-20): a `model` override MUST carry its ENDPOINT, or run_role POSTs it to the

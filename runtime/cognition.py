@@ -220,7 +220,8 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
              model: str = RESIDENT_MODEL, timeout: int = ROLE_TIMEOUT,
              max_tokens: int = 256, temperature: float = 0.0, store=None,
              ensure: bool = False, ensure_evict: bool = False,
-             policy: str | None = None, meta: dict | None = None) -> dict:
+             policy: str | None = None, meta: dict | None = None,
+             think: bool | None = None) -> dict:
     """Fire ONE request at the resident 4B for `role`, returning VALIDATED JSON (a dict).
 
     RETURN SHAPE (read this before harness-coding against it — the confusion has produced false
@@ -330,7 +331,15 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
         {"role": "system", "content": role.prompt_template},
         {"role": "user", "content": user_content},
     ]
-    t = transport.openai_transport(base_url=base_url, timeout=timeout)
+    # THINK-CONTROL routing (additive; think=None → byte-identical: the openai /v1 path, unchanged). The /v1
+    # endpoint SILENTLY IGNORES `think`; ollama's NATIVE /api/chat honours it (verified by-use: 1304→43 tokens).
+    # So for an ollama-served model (no HF "/" path) with a think value, route to the native transport. vLLM
+    # models stay on /v1 — their enable_thinking (chat_template_kwargs) is the post-verify follow (not wired
+    # here yet), so think is honestly a no-op on vLLM for now, never a silent wrong-claim.
+    if think is not None and "/" not in model:
+        t = transport.ollama_native_transport(base_url=base_url, timeout=timeout)
+    else:
+        t = transport.openai_transport(base_url=base_url, timeout=timeout)
     if policy is None:
         # DEFAULT path — BYTE-IDENTICAL to before for a meta=None caller (ONE complete() call, the same
         # return). Every current caller (run_swarm/dry_run_role/run_cascade/the MCP run_role) passes no
@@ -339,6 +348,8 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
         # rides `**opts` straight through; the body only reads response_format + temperature/max_tokens/
         # top_p, so a stray `meta` key can't pollute the request. OUT-PARAM only — NEVER in the return.
         _complete_kw = {} if meta is None else {"meta": meta}
+        if think is not None:
+            _complete_kw["think"] = think                      # → the transport (native: body.think; vLLM: no-op for now)
         validated = client.complete(
             t, msgs, model=model, schema=role.output_schema, json=True,
             temperature=temperature, max_tokens=max_tokens, **_complete_kw,
@@ -352,11 +363,13 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
     pol_temp = pol.temperature if pol.temperature is not None else temperature
     while True:
         meta: dict = {}                                        # the O3 transport out-param (finish_reason)
+        _think_kw = {"think": think} if think is not None else {}
         validated = client.complete(
             t, msgs, model=model, schema=role.output_schema, json=True,
             temperature=pol_temp, max_tokens=max_tokens,
             repetition_penalty=rung,                           # FROM the registry ladder — never a constant
             meta=meta,                                         # read finish_reason back to drive escalation
+            **_think_kw,
         )
         if meta.get("finish_reason") != "length":
             # clean finish (or an honest None the transport passed through) — accept this draw.

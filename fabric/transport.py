@@ -174,6 +174,59 @@ def openai_tools_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "oll
     return transport
 
 
+def ollama_native_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeout: int = DEFAULT_TIMEOUT):
+    """NATIVE ollama /api/chat transport — the ONE path that honours THINK-CONTROL. The OpenAI /v1 path
+    SILENTLY IGNORES `think` (verified: a reasoning model still reasoned, content empty); ollama's native
+    `/api/chat` honours `"think": false` → the hidden reasoning trace is suppressed (VERIFIED by-use: 1304→43
+    output-tokens on kimi-k2.6:cloud, a 30× collapse). A SIBLING of openai_transport — the /v1 string-callers
+    are untouched; this is used by run_role ONLY when a `think` value is set on an ollama-served model.
+
+    `base_url` is the OpenAI base (…/v1) → the native endpoint is <host>/api/chat. ollama sampling rides
+    `options` (`num_predict` = max_tokens). `format` (ollama structured output) is set from json_schema/schema
+    when present — BUT cloud reasoning models honour it INCONSISTENTLY (verified — may return prose), so the
+    caller's schema validate/retry (client.complete) stays the guarantee, and clean structured EXTRACTION
+    belongs on a LOCAL vLLM model via /v1, not this path. Contract: (model, messages, **opts) -> content_str.
+    NO Gemini (FIRST)."""
+    def transport(model: str, messages: list, **opts) -> str:
+        forbid_gemini(model)                                   # hard constraint, fail loud, FIRST
+        host = base_url.rstrip("/")
+        if host.endswith("/v1"):
+            host = host[:-3].rstrip("/")                       # …/v1 → the native host root
+        body = {"model": model, "messages": messages, "stream": False}
+        if "think" in opts:
+            body["think"] = bool(opts["think"])                # the whole point — /v1 can't carry this
+        options = {}
+        if "temperature" in opts:
+            options["temperature"] = opts["temperature"]
+        if "max_tokens" in opts:
+            options["num_predict"] = opts["max_tokens"]        # ollama's max-output knob
+        if options:
+            body["options"] = options
+        # structured output (best-effort; cloud-inconsistent — validate/retry is the guarantee, not this)
+        if opts.get("json_schema") is not None:
+            js = opts["json_schema"]
+            body["format"] = js.get("schema", js) if isinstance(js, dict) else js
+        elif opts.get("schema") is not None or opts.get("json"):
+            body["format"] = "json"
+        req = urllib.request.Request(
+            host + "/api/chat",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"},
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            data = json.loads(r.read())
+        # native shape: {message:{role,content,thinking?}, eval_count, prompt_eval_count, done_reason}
+        meta = opts.get("meta")
+        if meta is not None:                                   # O3 out-param, native field names mapped
+            meta["finish_reason"] = data.get("done_reason")
+            ec, pc = data.get("eval_count"), data.get("prompt_eval_count")
+            if ec is not None:
+                meta["usage"] = {"completion_tokens": ec, "prompt_tokens": pc,
+                                 "total_tokens": (ec or 0) + (pc or 0)}
+        return (data.get("message") or {}).get("content", "")
+    return transport
+
+
 def model_supports_tools(model: str, base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama",
                          timeout: int = 8, endpoint: str = "ollama") -> bool:
     """Endpoint-aware, FAIL-LOUD tool-capability detection (rule 4 — no silent assume-capable).
