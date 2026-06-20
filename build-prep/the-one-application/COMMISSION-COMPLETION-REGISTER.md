@@ -7,7 +7,7 @@
 
 ## THE FRAME (the laws the whole run obeys)
 - **ONE system, many faces.** Every face is a PROJECTION of the one Company resolved against context — never a parallel app. The resolver/invariant is the spine ([[project-invariant-application]], RESOLVER-BUILD.md).
-- **Function AND form.** "Technical success is only ever half; my use of it is the whole of a half." No criterion is done on function alone — both faces, by use + by sight, across the device axis.
+- **Function AND form — and FORM is the hard, neglected half.** "Technical success is only ever half; my use of it is the whole of a half." ★ Tim 2026-06-20, explicit: form is "the most undeveloped part, and the least intuitive for you [AI] to do." It must be IN THE DNA, INTELLIGENTLY DESIGNED — NOT dumping everything into text on a page. So form gets the MOST rigor precisely because it's where AI defaults to failing: DNA leads design; every face element is a composed, navigable, designed surface; a text-wall is an automatic FAIL. No criterion is done on function alone — both faces, by use + by sight, across the device axis.
 - **Scope EXPANDS on discovery.** "The purpose of a development methodology is to identify; your finding of things is half the intention." Every gap found becomes scope. This register GROWS — the §EXPANSION log is a feature.
 - **Build BEYOND what was specified.** Build every feature/function we can think of — even ones Tim won't use — so he can then connect Claude Design and make it his way. "I can't do that if it isn't already built."
 - **Don't stop until intuitively + fully operable.** The end-state = Tim can operationally, intuitively use ALL parts without feeling limited or that any part is incomplete.
@@ -29,13 +29,20 @@
 - [ ] The renderer is archetype-COMPLETE (today 6 of 22 slot_types; molecules/slot_bindings unconsumed) — every face = a record through the one wire, no bespoke React.
 - [ ] PROVE-ONE: one decision, composed, on the LIVE surface, across the device axis BY THE RESOLVER (the foundational example of the theorem).
 
-## FACE 1 — the channel / supervisor interface ("THE FACE")  ·  boards: OPERATOR-CYCLE-CRITERIA.md, THE-FACE-ANCHOR.md
+## FACE 1 — the Claude Code integration face / channel + supervisor interface ("THE FACE")  ·  boards: OPERATOR-CYCLE-CRITERIA.md, THE-FACE-ANCHOR.md
+*★ THE WHOLE POINT (Tim 2026-06-20): "I'm still just communicating with you guys through the CLI." The face REPLACES the CLI as how Tim works with the fabric. He must be able to FULLY LEAVE — everything below from the face, none of it from a terminal.*
 - [ ] Multiple CHANNELS; each a navigable surface (not a menu-wall) — chat-interface base/inspiration, DNA tokens + look.
-- [ ] In a channel: CHAT THE SUPERVISOR, or DRILL INTO an individual session.
+- [ ] In a channel: CHAT the fabric / the supervisor, or DRILL INTO an individual session.
+- [ ] ★ EMBEDDED CLI built INTO the face — the Claude-Code interaction lives in the interface, not an external terminal.
+- [ ] ★ TRANSCRIPT HISTORY: visualise AND search ALL of it (over the recall/embedding substrate — the 35,904-chunk index).
+- [ ] ★ SESSIONS: search · navigate · find · VIEW them · and RUN them in channels (the supervisor's wake/consult/spawn surfaced as in-channel actions).
+- [ ] ★ SEE THE BOARD from the face (the corpus/registries/decision board — visible + navigable, rendered, not raw).
+- [ ] ★ THE ADDRESS SYSTEM surfaced (resolve_address: every thing addressable, context+tools per address — the substrate Tim named).
 - [ ] TIMELINES + LANES + visuals (the compaction timeline; the fleet as lanes).
-- [ ] The SUPERVISOR surfaced in the UI: wake (self-heal a closed member w/ context) · consult (fork / past-self) · timeline · lifecycle (cap/watchdog/no-orphan). Live chat already works (channel).
+- [ ] The SUPERVISOR surfaced: wake (self-heal a closed member w/ context) · consult (fork / past-self) · timeline · lifecycle (cap/watchdog/no-orphan).
+- [ ] ★ ARCHITECTURAL — the SUPERVISOR is a LOADABLE BRAIN for the RHM (not just a service: a mind the RHM composes; ties the mind-registry / R13 composable-mind + [[project-collective-cognition]]). Design this relationship, don't bolt it on.
 - [ ] Built on the atomic composition / token SLOT+SOCKET system — "done right from the start" so it accretes.
-- [ ] Backend: the bridge READ-API (channels/sessions/timeline/stream) — render-independent, in flight (fork).
+- [ ] Backend: the bridge READ-API (channels/sessions/timeline/stream/transcript-search/board) — render-independent, in flight (fork).
 - [ ] Reads files-about-the-face for inspiration (V-SURFACE-MAP, RHM-BRAIN-DISCUSSION); uses recollection tools.
 
 ## FACE 2 — the decision system, FULLY done  ·  board: OPERATOR-CYCLE-CRITERIA.md §A
