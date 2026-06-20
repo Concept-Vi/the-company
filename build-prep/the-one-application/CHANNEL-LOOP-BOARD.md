@@ -16,8 +16,40 @@ Append to YOUR section below. Four parts:
 
 ---
 
-## §SYNTHESIS (lead — rolls up the collective into the register)
-*(filled as contributions land — the deduped collective criteria + the capability map + the new scope that flows into COMMISSION-COMPLETION-REGISTER.md)*
+## §SYNTHESIS (lead — the collective rolled up; 4/4 contributions in)
+
+### TWO HEADLINES (both surfaced independently by multiple lanes)
+1. ★ **THE ENGINES ARE BUILT AND RUNNING — they have no FACE.** Confirmed in ALL FOUR lanes: recall (search/recall/drift/self-id/multi-scale — tools, never a view) · render (renderArchetype carries every archetype, only decision-card built; organisms/almanac/typed-geometry/dials exist unwired) · backend (session_supervisor/channel/resolve_address/`/api/tools`-66 — agent tools, never surfaced) · host (locus/verb-envelope/spotlight/?verify=1/chrome-devtools — built, ready). ⟹ **The commission is MAJORITY surfacing, not engine-building.** A huge de-risk + the literal answer to Tim's "what can you do with the company that hasn't been used."
+2. ★ **FACE-1 is ONE surface, four contributors composing — not four parallel builds.** recollection's DATA → fork's READ-API → projection's HOST → DNA's RENDER. The form-intents already interlock (DNA's mesh/lanes/map/zones = projection's archetype dependency set = recollection's temporal-relational field). ⟹ when fork's READ-API lands, the four build the SAME surfaces TOGETHER. The build unit is the SURFACE, not the lane.
+
+### THE UNIFIED-SURFACE CRITERIA (each surface = the 4-lane stack; build per-surface)
+*data (recollection) → route (fork) → host (projection) → render (DNA), one craft language, device-axis resolved, function AND form.*
+- **channel-view** — the live fabric mesh · roster+events (fork) → host mount (projection) → graph/hub mesh, typed-geometry nodes, warmth=liveness (DNA).
+- **session-drill + EMBEDDED CLI** — catch_up/decisions/open_loops/drift (recollection) + run-in-channel (fork supervisor) → host (projection) → session-card sibling + terminal-in-the-material (DNA).
+- **transcript-viz + search** — session_search semantic over 35,904 chunks (recollection) → search route (fork) → host (projection) → temporal-relational field + constellation-of-matches (DNA).
+- **timeline / lanes** — compaction timeline + drift (recollection/fork) → route → host → lane organism, ordinal-warmth marks (DNA).
+- **board-view** — board+register as data (fork) → host → the almanac renderer on board JSON, spatial zones not markdown (DNA).
+- **address-view** — resolve_address over every scheme (fork) + locus capture (projection) → typed-geometry + line-verb edges (DNA).
+- **tool-face** — `/api/tools` 66 behind the gate (fork) → schemaForm/tool-card consumer (projection) → tool-card archetype + human description (DNA). [door migration render-independent NOW; rendered face after keystone.]
+- **decision-surface (FACE-0 keystone)** — the proven precedent the above generalize from; round-4 grind; gates the rendered breadth.
+- **supervisor-as-loadable-BRAIN for the RHM** — fork architects the mind against projection's EXISTING `forkVBrain.attach` seam; DNA+projection surface the V overlay. (Not a service bolt-on — a swappable cognition.)
+
+### NEW SCOPE → REGISTER (the gather's payload — folded into COMMISSION-COMPLETION-REGISTER.md)
+- ★ **THE THEOREM AS THE BASE** (fork) — "make my theorem the base of it all"; the resolver IS the theorem; "everything is a variable" = the resolver law. The spine UNDER the resolver. (UNIFICATION-MAP.md)
+- ★ **THE CUBE INSTRUMENT** (fork) — the theorem as a live multi-dimensional object (3D↔2D↔1D, circle/square/both) on Tim's ACTUAL math, NEW 3D engine (react-three-fiber; UE5/Omniverse rejected = video not live object). A face element. GATED on Tim bridging "dimension"↔"k".
+- ★ **AXES ARE A SWAPPABLE LOADOUT** (fork) — "I should be able to change them"; type is `n` not an axis. A build requirement for the instrument AND the resolver.
+- ★ **CONTROL-DENSITY / EXPERTISE = an explicit resolver AXIS** (projection) — novice→plain, pilot→full knob-row; not a hardcoded advanced panel. → §THE SPINE coordinate.
+- ★ **TWO-TIER FORM BAR** (projection) — floor (cold-stranger legibility) vs FIDELITY (DNA-language elegance); floor-pass ≠ done. + **"does it feel great" = a TIM-JUDGED bar, never agent-green.** → form law + end-bar.
+- ★ **GAP-SURFACING-TO-CHANNEL as a first-class MECHANISM** (recollection) — the substrate auto-posts found gaps to the board; not ad-hoc GAP notes.
+- ★ **"USE THE MODELS" = a standing acceptance bar** (recollection) — prove the pipeline end-to-end; never hand-author around the models.
+- ★ **CONCURRENT FAN-OUT recall/theorem MINE** (recollection+fork) — extraction (small models) vs judgment (central); "always more to the theorem"; bedrock upstream of the captured corpus.
+- ★ **per-slot CONTENT BUDGETS · slide-CONTAINS-interface · the self-propelling adversarial loop (critique vs the SOURCE)** (DNA) — part of the generative-design-language strand.
+- ★ **past-session CONSULT** as a recall-powered face action · **the V swap-seam** preserved (projection/recollection).
+
+### BUILD IMPLICATION
+Surfacing-first (the engines run) → build PER-SURFACE (the 4-lane stack co-builds each) → keystone still gates the RENDERED breadth → the theorem/cube/instrument is its own strand gated on Tim's "dimension↔k" bridge. The fabric can do FAR more than has been used; the face is largely giving the running company a designed body.
+
+---
 
 ---
 
@@ -172,6 +204,32 @@ Render-for-cognition (Tim: "his brain is the algorithm" — visual/spatial/tempo
 - **Session card = the decision-card archetype's sibling** — identity + catch_up + decisions + open_loops + drift, composed (zones/plates), the same design language as the decision face (one grammar, per DNA).
 - **Self-id / lineage = a small persistent "you are here"** in the member's frame (which session, its thread, its drift) — quiet, not a panel.
 - DNA leads all of the above; I supply the data shape + the meaning, DNA composes the form.
+
+#### CAPABILITY-USE (recollection lane) — *grounded; I exercised these live this round (Tim: "use your own tools — that's the point")*
+
+**1 · CONCRETE USES (per capability, real in my lane):**
+- **company MCP tools + tool-CHAINS:** `session_search`→`session_recall`→`session_post` (find a past moment by meaning → drill its catch_up/decisions/loops → WAKE/CONSULT that session). VERIFIED live: session_search "the embedder went down and recall broke" → returned session 7c2c1b74 (the chain works). · `recall_for_decision`→`mark` (ground a decision + record which memory grounded it). · `corpus query`→`corpus neighbours`→`find_relations(near_space,far_space)` (recall-under-a-unit + cross-space relations).
+- **OWN fanout agents (Task/Agent):** the CONCURRENT MINE — fan a cheap sub-agent per corpus SPACE (history/principles/worldview/topics/repo) or per THEOREM VAULT (the 5 unmined vaults, #65) → each extracts in parallel → I judge/dedup centrally. This is the extraction-vs-judgment split made real; works NOW (subagents are GPU-independent). I've used fanout for code-scouting; never for a recall mine.
+- **Loops:** (a) recall-health watchdog loop (the embed-pplx flap self-heal); (b) drift-detector loop (each live member checked vs its commission, auto-flag); (c) corpus-ingest beat (new transcripts → embedded as they land).
+- **Dynamic WORKFLOWS:** author the mine as a Workflow `pipeline(units, extract→judge→embed)` — deterministic fan-out with a barrier only at dedup. The canonical shape for #65 + the "always-more-to-the-theorem" concurrent mine. (NEVER-RUN by me — see §3.)
+- **Skills:** HAVE + apply — `session-recall` (built, mine), `context-continuity`, `context-discovery`, `agent-boot-sequence`, `ci-pattern-miner`, `loop-prep`. NEW to author: a **`gap-surface`** skill (the gap→channel mechanism Tim wants as first-class) + a **`theorem-mine`** skill (the #65 fan-out recipe).
+- **EMBEDDING/recall:** my substrate — session_search (35,904 chunks) · corpus over the spaces · recall_for_decision. The recall face IS this, surfaced.
+- **LOCAL concurrent models (extraction-vs-judgment):** cloud fleet (kimi/deepseek from Claude Code, cheap, GPU-free) = the EXTRACTION layer that works NOW; chat-4b/small-pair = local extraction WHEN the loadout brings them (HONEST: all chat models are DOWN right now — only embed-pplx+rerank resident; the local-model fan needs the @xsession-brain loadout, not my unilateral GPU call). Central judgment = the lead/a strong model.
+- **MEMORY:** corpus (meaning) · self-id seed_self (sessions recall themselves — re-proven this reboot) · drift (divergence detection).
+
+**2 · PARALLELIZABLE NOW (render-independent, no keystone gate):**
+- The #65 theorem mine — fan-out across the 5 vaults / corpus spaces CONCURRENTLY (each a sub-agent or cloud-model extract) → embed into the chosen space. (Gated only on the space+curate decision, not on render.)
+- Recall-health watchdog + drift-detector loops — pure backend, run now.
+- corpus enrichment: embed the channel/board/marks (more-can-be-embedded) — concurrent with everything.
+- find_relations / multi-scale verification (see §3) — independent diagnostics.
+
+**3 · NEVER-USED (honest — the gold):**
+- **Dynamic WORKFLOWS** — I've used Task/Agent fanout but never authored/run a `Workflow` (the deterministic pipeline orchestrator). The #65 mine is the obvious first one.
+- **MULTI-SCALE ROLLUP embeddings (scale_*_k4…k64)** — VERIFIED THIS ROUND they're present-but-not-queryable: `query_corpus(space='scale_history_k8')` → "index EMPTY"; population is uneven (history has k4/k16/k64, NOT k8). So this "zoomable memory" capability exists as files but needs wiring before it's real — a concrete gap, not a ready feature.
+- **`find_relations`** — exists but is CROSS-SPACE (needs near_space+far_space); I'd been mis-calling it. Under-used: e.g. relate `history`↔`principles` to surface "what past work embodies which principle."
+- **persistent TEAMS** (multi-agent message-passing) — never; the mine could be a standing extractor-team + judge.
+- **session_post WAKE/CONSULT a CLOSED/forked session** — I've messaged LIVE sessions, never woken a closed one with its recalled context (the "past-session consult" face action).
+- **run_cascade / run_graph** (graph/cascade execution on local models) from my lane — never.
 
 ### composition — type/registry lane  [NOT PRESENT — spawn for its slice, or it self-contributes when it joins]
 *(append: the item-TYPE registry; decision-sequence type; channel-attachment-as-data; how new types accrete)*
