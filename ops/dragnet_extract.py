@@ -88,7 +88,11 @@ def load_chunks(*, projects=None, since=None, until=None, limit=None, sample_ste
     for cid, text, rel_path, anchor in rows:
         if not text or len(text) < 40:
             continue
-        if projects and not any(p.lower() in (rel_path or "").lower() for p in projects):
+        # match the LEADING PATH SEGMENT (the project dir) EXACTLY against the include list — NOT
+        # substring-anywhere (which would let "-home-tim" swallow every -home-tim-* dir incl. EXCLUDEs
+        # like -home-tim-repos-project-vi / -home-tim-vi-chat). The lead's exact-match-not-substring flag.
+        seg = (rel_path or "").split("/")[0]
+        if projects and seg not in projects:
             continue
         d = None
         m = _ANCHOR_DATE.search(anchor or "")
@@ -185,16 +189,48 @@ def main():
     from store.fs_store import FsStore
     from fabric import config as fcfg
     store = FsStore(fcfg.STORE_DIR)
+
+    # FULL bake: BATCHED + APPENDED incrementally (crash-safe — a ~2h run can't write only at the end;
+    # a mid-run crash keeps every completed batch + lets us resume from the last chunk_id written).
+    if a.all:
+        os.makedirs(OUT_DIR, exist_ok=True)
+        path = os.path.join(OUT_DIR, "extractions-full.jsonl")
+        done_ids = set()
+        if os.path.exists(path):                              # RESUME: skip chunks already written
+            for line in open(path):
+                try: done_ids.add(json.loads(line)["chunk_id"])
+                except Exception: pass
+            if done_ids:
+                print(f"RESUME: {len(done_ids)} chunks already extracted → skipping them")
+        todo = [c for c in chunks if c["id"] not in done_ids]
+        BATCH = 500
+        agg = {"n": 0, "coarse_ok": 0, "coarse_failed": 0, "gated_to_fine": 0, "fine_ok": 0}
+        t0 = time.time()
+        with open(path, "a") as f:
+            for bi in range(0, len(todo), BATCH):
+                batch = todo[bi:bi + BATCH]
+                recs, st = run_extract(batch, store=store, coarse_max=a.coarse_max, fine_max=a.fine_max,
+                                       label=f"full-{bi}")
+                for r in recs:
+                    f.write(json.dumps(r) + "\n")
+                f.flush()
+                for k in agg: agg[k] += st.get(k, 0)
+                el = time.time() - t0
+                print(f"  batch {bi}-{bi+len(batch)}: +{len(recs)} recs (fine {st['fine_ok']}) | "
+                      f"total {agg['coarse_ok']}/{len(todo)} | {el/60:.1f}min elapsed", flush=True)
+        print(f"\nBAKE COMPLETE: {agg} → {path} ({(time.time()-t0)/60:.1f}min)")
+        return 0
+
+    # sample / --write path (proof)
     records, stats = run_extract(chunks, store=store, coarse_max=a.coarse_max, fine_max=a.fine_max,
-                                 label=("full" if a.all else "sample"))
+                                 label="sample")
     print("STATS:", json.dumps(stats, indent=2))
     grains = {"coarse": sum(1 for r in records if r["grain"] == "coarse"),
               "fine": sum(1 for r in records if r["grain"] == "fine")}
     print("grain distribution:", grains, f"(gate kept {grains['fine']}/{len(records)} at fine)")
-
-    if a.write or a.all:
+    if a.write:
         os.makedirs(OUT_DIR, exist_ok=True)
-        path = os.path.join(OUT_DIR, ("extractions-full.jsonl" if a.all else "extractions-sample.jsonl"))
+        path = os.path.join(OUT_DIR, "extractions-sample.jsonl")
         with open(path, "w") as f:
             for r in records:
                 f.write(json.dumps(r) + "\n")
