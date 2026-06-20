@@ -1602,3 +1602,19 @@ Tim's overnight mandate (g-1781969960): NOTHING gated on him; decide technical c
 ★ RESIDUAL → fork (the form_meta CONTENT track; my adapter auto-lights-up each tool fork populates): 65/66 form_meta null (raw-but-functional degrade) · corpus content gaps by-use: "Op" field label (param_labels omits op), raw space keys ("Which memory" — no enum_labels), detail free-text (no enum) · add explicit op_field to the contract · the `now` tool is GENUINELY BROKEN (invoke → missing 'graph' arg).
 
 STILL GATED: C1 keystone (DNA → the tool-card RESULT render) · FACE-1 rendered surfaces (fork READ-API) · resolver host. NEXT un-gated: more parallelizable host units (FACE-1 nav-prep · address-surfacing via locus).
+
+---
+
+## FIRE — host-allocation GENERAL plumbing: device-coordinate root + computed modal allocation → landscape keystone top-clip FIXED; killed the width-@media
+
+Lead (g-1781998304, refined t-1781999215, "drive — don't wait"): the GENERAL host-allocation wiring — device-coordinate root + consume fork's resolve(device-coordinate)→{slot:allocation} (8bb4b07 runtime/resolver.py) + KILL the @media scaffolding. The merge-sa-card zones wait for DNA's rework (don't allocate about-to-change zones). Keystone is at-bar desktop+portrait; LANDSCAPE clipped Option B.
+
+★ DIAGNOSED + MEASURED BY-USE (critical-comparison, not blind): at 844×390 the card (1023px single-col) is bounded+scrollable (frame top 16 bottom 374, scrollHeight 1023/clientHeight 343 — Option B reachable by scroll, NOT hard-cut). The real failure: the wide-but-SHORT landscape phone got the ROOMY CENTRED modal because the compact full-bleed was gated on @media(max-width:480) = WIDTH-only → 844-wide never matched → claim-header clipped at top (centering + top chrome), options buried far below a long scroll in a 343px window. Width-only @media = the bug class.
+
+★ BUILT (b7e658e, render-independent, tsc clean, GENERAL/composition-agnostic — the modal FRAME, NOT merge-sa zones):
+- App.tsx: the DEVICE-COORDINATE ROOT — `body[data-ff]` published from classify(w,h) (the host half of resolve(device-coordinate)→allocation; fork's resolve() feeds a richer coordinate later — the 4th-primitive seam).
+- surface.css: COMPUTED modal allocation by `body[data-ff]` — KILLED @media(max-width:480); portrait → full-bleed edge-to-edge + top-radius (preserved); landscape → reclaim vertical padding + TOP-ALIGN (safe center) so the header never clips above; frame uses the full available height + scrolls.
+★ VERIFIED BY-USE (default-to-wrong, 3 viewports): LANDSCAPE 844×390 → top-clip FIXED (header at top-4 reachable, frame 94% of height, top-aligned, Option B reachable) · PORTRAIT 500×844 → full-width edge-to-edge + top-radius, at-bar PRESERVED (data-ff portrait == old @media path) · DESKTOP 1440×900 → centred ~405 card, at-bar PRESERVED. No regression to the at-bar keystone.
+★ HONEST (not "landscape closed"): the top-clip + cramped padding are FIXED; the card is still tall single-col (1023px) → landscape is still scroll-heavy. Fitting-without-scroll = the WIDTH-using 2-column card re-allocation = DNA's .ar-responsive grammar (her rework; flagged, NOT touched per "don't allocate about-to-change zones").
+
+NEXT (no idle): consume fork's resolve() (8bb4b07) as the ALLOCATOR SEAM — investigate the surface→resolve() path (an /api route, or call server-side + deliver the allocation?) + wire {slot:allocation} so the device-coordinate root feeds fork's resolver, not just CSS. Flagged the lead: if no bridge route for resolve() exists, that's a fork contract item. Remaining @media: 415 (reduced-motion, legit) · 598-610 (DNA's .ar-responsive bridge) · 563 (desktop disclosure cap — fold into the allocator).
