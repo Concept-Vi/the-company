@@ -82,6 +82,11 @@ RULE_OPS: dict[str, str] = {
     "add":    "numeric addition of two sub-expressions.",
     "sub":    "numeric subtraction of two sub-expressions.",
     "mul":    "numeric multiplication of two sub-expressions.",
+    "div":    "numeric division arg[0]/arg[1] (fail-loud on divide-by-zero — never a silent inf/NaN).",
+    "min":    "the smaller of two sub-expressions.",
+    "max":    "the larger of two sub-expressions.",
+    "clamp":  "constrain arg[0] to [arg[1], arg[2]] (= max(lo, min(x, hi))) — the layout-allocation primitive: "
+              "an axis-derived dimension held within available space (relationship, not a breakpoint).",
     # --- membership ---
     "in":     "membership: arg[0] is a member of arg[1] (a resolved list/str/collection).",
     "contains": "membership (reversed): arg[0] (a collection) contains arg[1].",
@@ -97,7 +102,7 @@ _ARITY = {
     "field": None, "lit": None,            # leaves: validated by their own shape, not args
     "not": 1,
     "eq": 2, "ne": 2, "lt": 2, "le": 2, "gt": 2, "ge": 2,
-    "add": 2, "sub": 2, "mul": 2,
+    "add": 2, "sub": 2, "mul": 2, "div": 2, "min": 2, "max": 2, "clamp": 3,
     "in": 2, "contains": 2,
     "and": -1, "or": -1,                   # -1 = variadic (>=1)
 }
@@ -284,6 +289,18 @@ def evaluate(node: Any, resolved: dict, *, _validated: bool = False) -> Any:
         return ev(args[0]) - ev(args[1])
     if op == "mul":
         return ev(args[0]) * ev(args[1])
+    if op == "div":
+        num, den = ev(args[0]), ev(args[1])
+        if den == 0:
+            raise RuleError("rule eval: div by zero — fail loud (never a silent inf/NaN).")
+        return num / den
+    if op == "min":
+        return min(ev(args[0]), ev(args[1]))
+    if op == "max":
+        return max(ev(args[0]), ev(args[1]))
+    if op == "clamp":
+        x, lo, hi = ev(args[0]), ev(args[1]), ev(args[2])
+        return max(lo, min(x, hi))                          # the layout-allocation primitive
     if op == "in":
         return ev(args[0]) in ev(args[1])
     if op == "contains":
@@ -420,8 +437,8 @@ def _render_ast(node: Any) -> str:
         return repr(node["value"])
     args = node.get("args", [])
     infix = {"and": " AND ", "or": " OR ", "eq": " == ", "ne": " != ", "lt": " < ", "le": " <= ",
-             "gt": " > ", "ge": " >= ", "add": " + ", "sub": " - ", "mul": " * ", "in": " in ",
-             "contains": " contains "}
+             "gt": " > ", "ge": " >= ", "add": " + ", "sub": " - ", "mul": " * ", "div": " / ", "in": " in ",
+             "contains": " contains "}                       # min/max/clamp render via the f"{op}(…)" fallback (safe, no KeyError)
     if op == "not":
         return f"NOT {_render_ast(args[0])}"
     if op in infix:

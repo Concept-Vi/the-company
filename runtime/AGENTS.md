@@ -276,7 +276,7 @@ stay reflected HERE, mirroring `edge_kinds_acceptance` → `contracts/AGENTS.md`
   - leaves: `field` (dot-path read of a resolved value) · `lit` (a static literal).
   - boolean: `and` · `or` · `not`.
   - comparison: `eq` · `ne` · `lt` · `le` · `gt` · `ge`.
-  - arithmetic: `add` · `sub` · `mul`.
+  - arithmetic: `add` · `sub` · `mul` · `div` (fail-loud on /0) · `min` · `max` · `clamp` (constrain x to [lo,hi] — the layout-allocation primitive the resolver uses; a dimension held within available space is a relationship, not a breakpoint).
   - membership: `in` · `contains`.
 - **`DESTINATION_KINDS`** — the five destinations a rule routes to (C3.2 · DECISIONS Batch 3 Q4).
   **CRITICAL LAW:** none of these is — and none may ever be — `resolve`/`approve`/`dispatch`
