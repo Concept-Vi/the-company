@@ -180,15 +180,57 @@ async function resolveEnumSources(tool: ToolDescriptor): Promise<ToolDescriptor>
   return { ...tool, inputSchema: { ...tool.inputSchema, properties: props } }
 }
 
+// MAP fork's server-side form_meta onto the surface's ToolDescriptor shape. fork's /api/tools carries the
+// descriptor-enrichment as a NESTED, snake_case `form_meta` ({human_name, human_description, op_labels,
+// op_params, param_labels, enum_sources}); the surface's friendly-form layer wants it FLAT (title, opLabels,
+// opParams, labels, enumSources, opField). This is the CONSUMPTION ADAPTER — deliberately SEPARABLE from the
+// form RENDERER (schemaForm may later move onto DNA's archetype engine; the consumption stays). A tool with NO
+// form_meta degrades clean: the bare schema (title/name) renders a plain form, never a crash. (Verified live:
+// form_meta is populated for `corpus` only; the other 65 are null → fork's content track, see the flag.)
+// opField (the op-discriminator FIELD) isn't named in form_meta yet → INFERRED as the enum param whose values
+// are exactly the op_labels/op_params keys (works for corpus → `op`); flagged to fork to add an explicit op_field.
+function applyFormMeta(d: Record<string, unknown>): ToolDescriptor {
+  const sch = (d.inputSchema || d.input_schema || { properties: {} }) as ToolDescriptor['inputSchema']
+  const t: ToolDescriptor = {
+    name: String(d.name),
+    description: String(d.description || ''),
+    inputSchema: { ...sch, properties: sch.properties || {} },
+    posture: d.posture as string | undefined,
+  }
+  const fm = d.form_meta as Record<string, any> | null | undefined
+  if (!fm || typeof fm !== 'object') return t // un-enriched tool → plain schema form (graceful, never a crash)
+  if (fm.human_name) t.title = String(fm.human_name)
+  if (fm.human_description) t.description = String(fm.human_description)
+  if (fm.op_labels && typeof fm.op_labels === 'object') t.opLabels = fm.op_labels
+  if (fm.op_params && typeof fm.op_params === 'object') t.opParams = fm.op_params
+  if (fm.op_required && typeof fm.op_required === 'object') t.opRequired = fm.op_required
+  if (fm.enum_sources && typeof fm.enum_sources === 'object') t.enumSources = fm.enum_sources
+  if (fm.enum_labels && typeof fm.enum_labels === 'object') t.enumLabels = fm.enum_labels
+  if (fm.param_labels && typeof fm.param_labels === 'object') {
+    t.labels = {}
+    for (const [p, label] of Object.entries(fm.param_labels)) t.labels[p] = { label: String(label) }
+  }
+  const opKeys = new Set([...Object.keys(fm.op_labels || {}), ...Object.keys(fm.op_params || {})])
+  if (opKeys.size) {
+    const props = t.inputSchema.properties
+    t.opField = Object.keys(props).find((p) => {
+      const en = props[p]?.enum
+      return Array.isArray(en) && en.length > 0 && en.every((v) => opKeys.has(String(v)))
+    })
+  }
+  return t
+}
+
 export async function loadTools() {
   set({ loading: true, error: null })
   try {
     const r = await fetch('/api/tools')
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
     const data = await r.json()
-    const raw: ToolDescriptor[] = Array.isArray(data) ? data : data.tools || data.items || []
-    if (!raw.length) throw new Error('empty')
-    const list = await Promise.all(raw.map(resolveEnumSources)) // any tool may declare enum-source params
+    const rawList: Array<Record<string, unknown>> = Array.isArray(data) ? data : data.tools || data.items || []
+    if (!rawList.length) throw new Error('empty')
+    // map fork's server form_meta → the surface shape (applyFormMeta), THEN resolve any enum-source params.
+    const list = await Promise.all(rawList.map((d) => resolveEnumSources(applyFormMeta(d))))
     set({ tools: list, scaffold: false, loading: false })
   } catch {
     // /api/tools (fork's gap 2) isn't live yet → the prove-on-one SEED, its enum-source params resolved generically.

@@ -32,7 +32,7 @@ type RunState =
   | { phase: 'idle' }
   | { phase: 'running' }
   | { phase: 'done'; count: number; hits: unknown[] } // hits HELD for DNA's tool-card render (gap 4); we show a human status
-  | { phase: 'pending' } // an op/tool whose invoke isn't wired transitionally yet (honest, not faked)
+  | { phase: 'gated' } // a non-safe-posture tool: the SERVER enforces the gate (#1b); the UI doesn't fire a write unbuilt
   | { phase: 'error'; message: string }
 
 export function ToolsPanel() {
@@ -61,29 +61,43 @@ export function ToolsPanel() {
     setRun({ phase: 'idle' })
   }, [selected]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // RUN. Transitional invoke (lead-sanctioned: build the loop against the EXISTING endpoint now, swap onto fork's
-  // generic /api/tools/invoke when it lands). The prove-on-one — corpus op=query — maps to /api/corpus-query (the
-  // semantic door; resolved by-use: /api/cognition/corpus GET is records-list, NOT op=query). READ posture = no
-  // gate. The RESULT CONTENT render stays DNA's tool-card archetype (gap 4) — we hold the hits + show a HUMAN
-  // run-status (count), never raw JSON, never a bespoke content render (from-DNA law).
+  // RUN — the GENERIC invoke door (fork's /api/tools/invoke, now LIVE; replaces the transitional corpus-only path).
+  // POST {name, args} → the envelope {ok, tool, posture, result | error}; the tool's own output rides under `result`.
+  // The RESULT CONTENT render stays DNA's tool-card archetype (gap 4) — we HOLD the result + show a HUMAN run-status
+  // (a count when it's a list), never raw JSON, never a bespoke content render (from-DNA law). POSTURE: the SERVER
+  // enforces the gate fail-closed; the UI additionally won't FIRE a non-safe (mutating/consent) tool without the
+  // operator-token gate (#1b, not built) → it shows an honest 'gated', never a silent write. Verified live: corpus
+  // op=query → result.ranked real hits.
   const doRun = async () => {
     if (!tool) return
-    const op = tool.opField ? String(values[tool.opField] ?? '') : ''
-    if (tool.name !== 'corpus' || op !== 'query') {
-      setRun({ phase: 'pending' }) // other ops/tools ride fork's generic invoke door (not wired transitionally)
+    if (tool.posture && tool.posture !== 'safe') {
+      setRun({ phase: 'gated' }) // needs the operator-token gate (#1b) — don't fire a write from the UI unbuilt
       return
     }
     setRun({ phase: 'running' })
     try {
-      const p = new URLSearchParams()
-      p.set('text', String(values.text ?? ''))
-      if (values.space) p.set('space', String(values.space))
-      if (values.k) p.set('k', String(values.k))
-      const r = await fetch(`/api/corpus-query?${p.toString()}`)
-      if (!r.ok) throw new Error(`HTTP ${r.status}`)
-      const data = await r.json()
-      const hits: unknown[] = Array.isArray(data.hits) ? data.hits : []
-      setRun({ phase: 'done', count: hits.length, hits })
+      const r = await fetch('/api/tools/invoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: tool.name, args: values }),
+      })
+      const data = await r.json().catch(() => null)
+      // fail loud (human): a transport error, or the engine's honest {ok:false}/{error} (e.g. a genuinely broken tool).
+      if (!r.ok || !data || data.ok === false || data.error) {
+        setRun({ phase: 'error', message: 'That didn’t run just now — try again in a moment.' })
+        return
+      }
+      // the tool's output rides under `result`; HOLD it for DNA's tool-card (gap 4). Count when it's a list
+      // (ranked/hits/results/items); else count=-1 → an honest "it ran, the view is being designed".
+      const out = (data.result ?? {}) as Record<string, unknown>
+      const list =
+        (Array.isArray(out.ranked) && (out.ranked as unknown[])) ||
+        (Array.isArray(out.hits) && (out.hits as unknown[])) ||
+        (Array.isArray(out.results) && (out.results as unknown[])) ||
+        (Array.isArray(out.items) && (out.items as unknown[])) ||
+        (Array.isArray(data.result) && (data.result as unknown[])) ||
+        null
+      setRun({ phase: 'done', count: list ? list.length : -1, hits: list || [out] })
     } catch {
       setRun({ phase: 'error', message: 'That didn’t run just now — try again in a moment.' })
     }
@@ -190,9 +204,14 @@ export function ToolsPanel() {
                       Nothing matched — try another question, or a different area to look in.
                     </p>
                   )}
-                  {run.phase === 'pending' && (
+                  {run.phase === 'done' && run.count < 0 && (
+                    <p className="tools-result-status">
+                      Done. The clear view of what came back is being designed — it’ll show right here next.
+                    </p>
+                  )}
+                  {run.phase === 'gated' && (
                     <p className="tools-result-pending">
-                      Running this one connects next — it’ll come through the same door once that’s wired in.
+                      This one makes a change, so it needs your sign-off — that’s coming with the approval step.
                     </p>
                   )}
                   {run.phase === 'error' && <p className="tools-result-error">{run.message}</p>}
