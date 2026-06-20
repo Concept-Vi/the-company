@@ -2166,6 +2166,27 @@ class H(BaseHTTPRequestHandler):
         # sockets — GET (incl. the stream) still keeps alive.
         self.close_connection = True
         try:
+            if self.path == "/api/resolve":               # THE RESOLVER door (4th-primitive seam) — pure computation
+                # resolve(invariant, coordinate) → {slot: value}. The HTTP door so the SURFACE can compute its
+                # own allocation from a coordinate (screen-size as root → derived layout, NO @media breakpoints).
+                # POST {invariant:{slot:relationship-AST|select|literal}, coordinate:{axis:value}}. runtime.resolver
+                # is PURE (a thin shell over rules.evaluate) → NO gate (read-only computation, like /api/projection;
+                # the floor: emits no resolve-address/approve/dispatch despite the route name). Fail-loud: a
+                # malformed invariant/coordinate → ResolverError → 400 (the teaching error), never a silent skip.
+                from runtime import resolver as _resolver
+                b = self._body()
+                inv, coord = b.get("invariant"), b.get("coordinate")
+                if not isinstance(inv, dict) or not isinstance(coord, dict):
+                    self._send(400, json.dumps({"ok": False, "error": "/api/resolve needs JSON {invariant:{…}, coordinate:{…}} (both objects)"}))
+                    return
+                try:
+                    out = _resolver.resolve(inv, coord)
+                except (_resolver.ResolverError, Exception) as e:
+                    # a malformed slot / bad relationship / div-by-zero → the teaching error (fail loud, never a silent bad allocation)
+                    self._send(400, json.dumps({"ok": False, "error": f"{type(e).__name__}: {e}", "teaching": True}))
+                    return
+                self._send(200, json.dumps({"ok": True, "resolved": out}))
+                return
             if self.path == "/api/stt":                   # raw audio bytes in → transcript out
                 # The ear is chosen by the SELECTED provider (rhm_config().stt — the config slot the
                 # suite lane added, mirroring the brain-model slot), NOT a literal default. This closes
