@@ -41,11 +41,45 @@ def topic_regex(topic_text: str):
     return re.compile("|".join(re.escape(w) for w in dict.fromkeys(words)), re.I)
 
 
-def collect_claims(recs, topic_rx, *, max_claims=60):
-    """Filter candidates by topic, collect their REAL claims (chunk-traced). Returns (cands, claims)."""
-    cands = [r for r in recs if topic_rx.search(_blob(r))]
-    cands.sort(key=lambda r: (r.get("grain") == "fine",
-                              len(r.get("claims", []) or []) + len(r.get("relations", []) or [])), reverse=True)
+def semantic_candidates(topic_text, recs, asset, *, suite=None, k=60):
+    """SEMANTIC candidate-filter (the precision fix, proven 2026-06-21): query the embedded 'extractions'
+    space for `topic_text` → the meaning-nearest extractions (NOT keyword-match, which catches homonyms).
+    Maps the space hits (extraction://<asset>/<chunk_id>) back to the records by chunk_id. Returns the
+    ranked candidate records, or None if the space is empty/unavailable (caller falls back to keyword)."""
+    try:
+        from store.fs_store import FsStore
+        from fabric import config as fcfg
+        from runtime.suite import Suite
+        from runtime.registry import NodeRegistry
+        import os as _os
+        if suite is None:
+            suite = Suite(FsStore(fcfg.STORE_DIR), NodeRegistry().discover([_os.path.join(fcfg.REPO_ROOT if hasattr(fcfg, "REPO_ROOT") else _os.getcwd(), "nodes")]))
+        out = suite.query_corpus(topic_text, space="extractions", k=k)
+        ranked = out.get("ranked", [])
+        if not ranked:
+            return None
+        by_chunk = {}
+        for r in recs:
+            by_chunk[str(r.get("chunk_id"))] = r
+        cands = []
+        for h in ranked:
+            sid = h.get("id") or ""
+            cid = sid.rsplit("/", 1)[-1] if "/" in sid else None
+            rec = by_chunk.get(cid)
+            if rec is not None:
+                cands.append(rec)
+        return cands or None
+    except Exception:
+        return None
+
+
+def collect_claims(recs, topic_rx, *, max_claims=60, cands=None):
+    """Collect REAL claims (chunk-traced) from candidates. `cands` may be pre-filtered (semantic); else
+    keyword-filter by `topic_rx`. Returns (cands, claims)."""
+    if cands is None:
+        cands = [r for r in recs if topic_rx.search(_blob(r))]
+        cands.sort(key=lambda r: (r.get("grain") == "fine",
+                                  len(r.get("claims", []) or []) + len(r.get("relations", []) or [])), reverse=True)
     claims = []
     for r in cands:
         src = (r.get("claims") or []) + (r.get("relations") or [])
@@ -82,7 +116,11 @@ def determine(topic_text: str, *, asset: str = "full", store=None, max_claims: i
     from runtime import cognition as cog
 
     recs = [json.loads(l) for l in open(path)]
-    cands, claims = collect_claims(recs, topic_regex(topic_text), max_claims=max_claims)
+    # SEMANTIC candidate-filter first (precision — concept-match over the embedded 'extractions' space);
+    # fall back to keyword if the space isn't populated yet (the embed-extraction-layer may be mid-bake).
+    sem = semantic_candidates(topic_text, recs, asset, suite=None, k=max_claims)
+    _filter = "semantic" if sem is not None else "keyword"
+    cands, claims = collect_claims(recs, topic_regex(topic_text), max_claims=max_claims, cands=sem)
     if not claims:
         return {"topic": topic_text, "asset": asset, "n_candidates": len(cands), "n_claims": 0,
                 "themes": [], "no_fiction": True,
@@ -116,8 +154,8 @@ def determine(topic_text: str, *, asset: str = "full", store=None, max_claims: i
                 bad.append(i)
         if real:
             themes_out.append({"theme": th.get("theme", ""), "claims": real})
-    return {"topic": topic_text, "asset": asset, "n_candidates": len(cands), "n_claims": len(claims),
+    return {"topic": topic_text, "asset": asset, "filter": _filter, "n_candidates": len(cands), "n_claims": len(claims),
             "claims_grouped": len(used), "themes": themes_out, "no_fiction": (len(bad) == 0),
-            "note": ("GROUNDED: every claim is a verbatim extraction, chunk-traced (model grouped by index, "
+            "note": (f"GROUNDED ({_filter}-filtered): every claim is a verbatim extraction, chunk-traced (model grouped by index, "
                      "invented nothing). The candidate-filter is the recall-first cut; rerank is the decisive "
                      "relevance gate when enacted." + (f" ⚠ {len(bad)} invalid indices dropped." if bad else ""))}
