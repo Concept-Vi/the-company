@@ -60,6 +60,38 @@ runtime/cognition.py + fabric/transport.py (the cognition lane) → coordinating
 on the same files; avoid the concurrent-commit race) BEFORE the hot-path edit. Not deferral — sequencing a
 shared-file edit; the diagnosis + this map + the plan are done now.
 
+## THE THINK-BUILD SPEC (locked 2026-06-21 — read the transport; additive; build = next focused effort)
+*Transport read in full (fabric/transport.py): `openai_transport` builds /v1 requests via an allowlist
+(`_SAMPLING_KEYS`) + `_apply_response_format` + `_fill_meta` (finish_reason/usage out-param). NO think handling.
+The think mechanism is provider-split (PROVEN by-use):*
+- **vLLM (local, /v1):** think-control = body `chat_template_kwargs:{"enable_thinking":<bool>}` (rides the existing
+  /v1 path — additive, one branch in openai_transport). Works WITH response_format (vLLM does both). [unverified:
+  no local model free — bake owns chat-4b; verify when a vLLM chat model is resident.]
+- **ollama (cloud / ollama-local):** think-control = NATIVE `/api/chat` with top-level `"think":<bool>` — /v1
+  SILENTLY IGNORES it. PROVEN: think:false 1304→43 tokens (kimi). Needs a new `ollama_native_transport`
+  (base_url .../v1 → .../api/chat; response = message.content, eval_count for meta).
+- ★ **HONEST PROVIDER-LIMITATION (default-to-wrong finding, do NOT paper over):** on the CLOUD native endpoint,
+  `format` (structured) was INCONSISTENT (kimi returned prose, not JSON). So **think-off + structured-output
+  TOGETHER is NOT cleanly achievable on a cloud reasoning model** — /v1 gives structured-not-think, native gives
+  think-not-structured. **LOCAL vLLM models give BOTH** (response_format + enable_thinking on /v1) → confirms the
+  design intent: structured EXTRACTION = local no-think models; cloud = big-ctx non-structured agents. The think
+  param's clean wins: cheap cloud NON-structured generation (native think:false) + local vLLM structured+no-think.
+
+### THE BUILD (additive, default think=None = byte-identical → recollection's bake-resume safe):
+1. `fabric/transport.py`: add `ollama_native_transport(base_url)` (POST /api/chat, "think"+"format", return
+   message.content, eval_count→meta); in `openai_transport` add `chat_template_kwargs.enable_thinking` when
+   `opts["think"]` present (vLLM path).
+2. `runtime/cognition.run_role`: add `think: bool|None=None` param; route — ollama model + think-control → native
+   transport; else /v1 (+enable_thinking for vLLM). Default None = current path untouched.
+3. `mcp_face/server.py run_role`: add `think` param, thread it.
+4. **Budget-retry NET** (the correctness piece, verifiable-now on cloud): on finish_reason=length with empty/
+   unparseable structured content, retry at escalated max_tokens (reuse the meta/finish_reason seam + the
+   policy-ladder shape). PROVEN need: /v1 response_format max_tokens 256→empty(length), 600→clean JSON(462 tok).
+   This is the SAFETY NET (advisor: necessary, not the headline) — for when reasoning is genuinely wanted.
+VERIFY each by REAL behaviour (default-to-wrong): think = the token-DROP (1304→43 class); budget-retry = the
+empty→clean transition; never "output appeared". (recollection GO'd the hot-path edit as non-interfering; lead
+race-clear; keep run_items' default additive for bake-resume safety.)
+
 ## THE RESOLUTION-MECHANISM ANSWER (lead/Tim flag 2026-06-20 — "make prompt+schema resolve(coordinate), at grain")
 **Q: can a role's prompt + output_schema RESOLVE against a coordinate today, or swap-only? → SWAP-ONLY (evidence).**
 - `run_role` uses `role.prompt_template` + `role.output_schema` DIRECTLY (static per role; cognition.py:330 +
