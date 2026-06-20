@@ -31,6 +31,20 @@ company up @xsession-brain        # embed-pplx :8007 + rerank-jina :8008 + chat-
 #   → this is what restores the embed engine (the precondition for the concurrent theorem-mine).
 #   alternatives: @wake (phone-PWA brain/ear/voice) · @xsession (fabric+voice, no 4b)
 
+# 2c — ★ THE COGNITION CHAT PATH (concurrent models via the MCP — run_role/run_items/cascades on local+cloud).
+#      ADDED 2026-06-20 after a live gap: post-reboot the chat path was DEAD (local chat models not resident +
+#      litellm :4100 not started) so the company couldn't run ANY concurrent model. What makes it work:
+#      • ollama :11434 AUTO-STARTS at boot (system unit) + serves cloud (':cloud') + ollama-local (':tag') models
+#        = the ZERO-VRAM concurrent path. The run_role routing fix (c1e00ba) sends ollama/cloud models there.
+#      • ★ the routing fix goes LIVE only after the company MCP SERVER reloads (it caches the old code) — a fresh
+#        `claude` session (step 4) reloads it. So: do step 4 to pick up the fix before relying on concurrent models.
+#      • OPTIONAL proxy: litellm :4100 — `bash fabric/serve_litellm.sh` (zero-VRAM, the "intended" endpoint; NOT
+#        required, ollama-direct works). Consider adding to company-up if the proxy path is preferred.
+#      • DEFAULT-model cognition (run_items/cascades with NO model override) uses the local 4b (:8000) → needs
+#        step 2 (@xsession-brain loads it) OR a cognition-default-to-cloud change (OPEN — lead/Tim design call).
+#      ⟹ concurrent CLOUD models at boot need only: ollama (auto) + a fresh MCP. Default-model cognition also
+#        needs the 4b (step 2). This is the "so it doesn't happen again" startup requirement.
+
 # 3 — (optional) arm the scheduled jobs:
 company up jobs                   # transcript exporter + sessions reindex timers
 
