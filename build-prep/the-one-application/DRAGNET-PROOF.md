@@ -21,5 +21,15 @@ The dragnet's never-miss property is **PROMPT-SENSITIVE**. My v1 prompt said *"j
 3. SELF-REFERENTIAL first run (Tim): dragnet the session history to RECOVER the discussed design depth (structured-outputs / allocation / what-prompts / feeding) — the pattern proves itself by recovering its own design.
 4. Author the `theorem-mine` / `dragnet` skill (the recipe) + wire as a Workflow (my first real one — pipeline: dragnet-MAP → reduce-survivors).
 
+## ★ THE RELIABLE + GENERALIZABLE RECIPE (Tim 2026-06-20: "continue till it works useful, reliable, generalizable" — got it)
+Critical-comparison vs a keyword ground-truth exposed the real reliability flaw + the fix:
+- **The flaw:** a BINARY-relates worker (even with a neutral prompt) has a local-4b **NO-LEAN** → it's conservative → it MISSES borderline-relevant content (vs keyword ground-truth: 21 keyword-hits not flagged; most were keyword-false-positives the dragnet rightly rejected, BUT the NO-lean is real + defeats never-miss). A filtering worker can miss.
+- **THE FIX (Tim's design, proven):** split MAP into EXTRACT (worker) + DETERMINE (central):
+  - **WORKER = neutral EXTRACTION** — `{about: phrase, touches: [topic tags]}`. NO topic, NO relevance call, NO "judge strictly", NO aggregate prior. The worker DESCRIBES, never filters — so it CANNOT miss (Tim: "they shouldn't have that kind of context"). Local, free, ~7 chunks/s.
+  - **DETERMINE = central** — reads the cheap extractions (not the full chunks) to decide relevance to the topic (Tim: "output that gets looked at to then determine"). Consistent because it's one judge over uniform extractions.
+  - RESULT: misses 21→8 (residual = keyword-false-positives, e.g. "wait for D2", "discovery-first stance" — not real design content); caught 45 vs keyword's 25 (20 semantic catches keyword missed). Never-miss restored.
+- **★ THE GENERALIZABILITY WIN:** the worker extraction carries NO topic → EXTRACT THE CORPUS ONCE, DETERMINE FOR ANY TOPIC against the stored extractions. Dragnet-once, query-many — not re-reading the corpus per question. The extraction layer is a reusable asset (embed/store it → every future question is a cheap central determination over it).
+- map-reduce final shape: **EXTRACT (worker, neutral, once)** → **DETERMINE (central, per-topic)** → **REDUCE (synthesize survivors)**. Verified useful (topic-1: 39 accurate survivors + correct synthesis), reliable (misses closed via extract-not-filter), generalizable (extract-once/query-many, topic-agnostic worker).
+
 ## STATUS
-Engine PROVEN small (mechanically + correctness), the critical prompt-bias finding captured. NOT scaled yet (per the directive: prove small first — done). Render-independent; keystone-first holds. Ready to coordinate fork + run the self-referential mine on the neutral prompt.
+Engine PROVEN + the RELIABLE/GENERALIZABLE recipe figured out by-use (extract→determine→reduce; the worker NEVER filters → never-miss; extract-once/query-many). ~18/s binary, ~7/s extract; full 35,904 ≈ 30-85min, feasible overnight ("wasteful is the feature"). NOT yet run at full scale. Render-independent; keystone-first holds. NEXT: store the extraction layer (the reusable asset) + the self-referential run (dragnet-extract the session history → determine "structured-outputs/allocation/feeding design depth" → recover it). Coordinate fork on full-scale run_items.
