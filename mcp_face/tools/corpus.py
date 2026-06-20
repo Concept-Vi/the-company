@@ -13,10 +13,10 @@ from typing import Literal
 
 def register(mcp, suite):
     @mcp.tool()
-    def corpus(op: Literal["query", "list", "find", "read", "neighbours"], project: str = "", kind: str = "", projection: str = "",
+    def corpus(op: Literal["query", "list", "find", "read", "neighbours", "determine"], project: str = "", kind: str = "", projection: str = "",
                source_address: str = "", address: str = "", text: str = "", space: str = "",
                k: int = 8, rerank: bool = False, top_n: int = 0, emb: str = "pplx", min_score: float = 0.0,
-               detail: str = "concise", limit: int = 50) -> dict:
+               detail: str = "concise", limit: int = 50, asset: str = "full") -> dict:
         """Read the corpus — the engine's durable, embedded, addressed records (the repo-exocortex's
         'ask the codebase', + every capture pass's output). Pick `op`:
 
@@ -40,6 +40,14 @@ def register(mcp, suite):
                         HONESTY: for an INGESTED FILE the record is a capture DIGEST (a model's one-paragraph
                         summary + metadata), NOT the file's raw text — the corpus stores digests of sources.
                         The source itself lives at the code:// path on disk (outside this face).
+          op="determine" — ASK THE DRAGNET EXTRACTION LAYER a topic → GROUNDED themes of REAL, chunk-traced
+                        claims (the full-coverage recall surface). `text` (required) = the topic; `asset`
+                        ('full'=session history, 'visual-dna'=the Visual-DNA vault). Reads the extract-once
+                        asset (29k+ meaning-extractions), filters candidates, and the model CLUSTERS the real
+                        claims BY INDEX (theme-labels only — NEVER generates claim text), so every returned
+                        claim is a VERBATIM extraction with its chunk_id (no-fiction by construction; the
+                        envelope carries no_fiction=true). Distinct from op='query' (cosine top-k over the
+                        embedded corpus): determine is full-coverage + grounded-synthesis over the dragnet layer.
           op="neighbours" — the NEIGHBOUR NODE-FIELD: given a unit's `address` (a code:// source id, e.g.
                         a projection:select detail.source), the units AROUND it in `space`, ranked by
                         meaning. Returns {unit, space, emb, neighbours: [{source, score}, ...]}. Each
@@ -51,11 +59,12 @@ def register(mcp, suite):
 
         `detail`: "concise" (default) returns high-signal fields only {source_address, projection, seq,
         address}; "detailed" returns the full records. `limit` (default 50) caps list/find. Read-only."""
-        OPS = ("query", "list", "find", "read", "neighbours")
+        OPS = ("query", "list", "find", "read", "neighbours", "determine")
         if op not in OPS:
             return {"error": f"corpus: unknown op {op!r}. Valid: {list(OPS)} — "
                     "query=ask (text+space) · list=all (project) · find=filter · read=one (address) · "
-                    "neighbours=the node-field around a unit (address+space)."}
+                    "neighbours=the node-field around a unit (address+space) · "
+                    "determine=GROUNDED themes over the dragnet extraction layer (text+asset)."}
 
         def _shape(rows):
             rows = list(rows)[:limit]
@@ -98,6 +107,14 @@ def register(mcp, suite):
                 out["ranked"] = enriched
             out["note"] = (out.get("note") or "") + " · every hit id is corpus(op='read', address=<id>)-able"
             return out
+        if op == "determine":
+            if not text:
+                return {"error": "corpus(op='determine') needs `text` (the topic to determine). Optional: "
+                        "`asset` ('full'=session history [default], 'visual-dna'=the Visual-DNA vault), `k`/limit "
+                        "→ max claims considered."}
+            from runtime import recall_determine as _rd
+            return {"op": op, **_rd.determine(text, asset=(asset or "full"), store=suite.store,
+                                              max_claims=(limit if limit and limit <= 120 else 60))}
         if op == "neighbours":
             if not address:
                 return {"error": "corpus(op='neighbours') needs `address` — a unit's code:// source id "
