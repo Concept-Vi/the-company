@@ -1554,3 +1554,19 @@ Tim's directive (relayed lead ch-3mpkjg3r): actively USE the capabilities (compa
 ★ APPENDED + COMMITTED (185e854) the CAPABILITY-USE (projection lane) sub-section to CHANNEL-LOOP-BOARD.md (3 parts: concrete uses · parallelizable-now · never-used). Reported the headlines to the lead.
 
 ★ NEXT REAL BEAT (un-gated): the tool-face INVOKE-door migration onto `/api/tools/invoke` — the discovery confirms it's a focused, self-verifiable swap (not a rebuild). STILL GATED: C1 keystone (DNA, round-4) · the FACE-1 RENDERED surfaces (fork's READ-API + DNA archetypes) · resolver host + control-density axis.
+
+---
+
+## FIRE — CRITICAL-COMPARISON law (Tim's "default to WRONG") → caught + corrected my OWN falsely-green tool-face finding
+
+Tim's standing verification law (relayed lead): verification DEFAULTS to "this is WRONG — find why"; a green finding is SUSPECT until evidenced AGAINST THE SOURCE/live-behaviour (not the docstring/assumption); re-do what came back falsely-green; confirming-bias is the failure mode. I turned it on my OWN recent greens.
+
+★ CAUGHT + CORRECTED (the previous fire's falsely-green): "the tool-face migration is MORE READY than I knew / a focused RUN-door swap = my next beat." I'd trusted a fanout agent's report + the /api/tools 200, and NEVER verified the live RENDER vs operator-law. Re-verified 3 ways, all vs the source:
+- DATA (curl /api/tools): 66 tools, inputSchema 66/66, but **form_meta NULL, opField 0/66, human labels 0/66** — the friendly-form-meta lives ONLY in projection's CORPUS_SEED; the live tools carry none.
+- CODE (schemaForm.tsx:15): no authored label → `prop.title||name`; no opField → NO op-conditional filtering → ALL params render at once.
+- ★ BY-SIGHT (drove the live Tools panel @390; screenshot toolface-raw-render.png): cc_channel renders a WALL of raw machine knobs — "Topic·Frm·Limit·Channel·Handle·Purpose·Coordinator·Include Archived" ("Frm" = the literal `frm` param, operator-opaque); the LIST also leaks title-cased machine names ("Cc Channel"/"Cc Board") + raw docstrings.
+⟹ CORRECTED: the RUN-door swap (corpus→/api/tools/invoke) is focused + mine, but it only makes tools RUNNABLE — rendering the 66 tools LEGIBLY (operator-law) needs the per-tool FORM-META layer (opField/opLabels/human labels + descriptions), which /api/tools returns null. CROSS-LANE: fork's /api/tools must CARRY form_meta (the enrichment contract toolsStore already flags) · projection drafts/consumes it · DNA renders the result-card. The tool-face is GATED on form-meta, NOT a focused swap. Corrected the lead (g-1781960567) + the board CAPABILITY-USE section.
+
+★ CONFIRMED (the law cuts both ways): the operator-law SUMMARY-LEAK "0 leaky" — I'd measured it vs my OWN regex (suspect). Re-verified by EYEBALL of the actual /api/projection summaries: 600 points → 599 empty + 1 clean human phrase ("live-spine verification ping"), ZERO machine leaks. That green STANDS, now evidenced vs the source, not my pattern.
+
+★ NEXT REAL BEAT (revised, HONEST — not "nearly done"): the un-gated piece I can do = the RUN-door swap onto /api/tools/invoke (makes tools runnable, self-verifiable) — but pair it with STARTING the FORM-META layer (draft human labels/op-structure for the high-value tools, like CORPUS_SEED but per-tool) AND flag fork to carry form_meta on /api/tools. The legible tool-face is a real multi-part build, NOT a swap. LAW INTERNALIZED ([[feedback-critical-comparison-default-to-wrong]]): default-to-wrong, evidence vs the source, re-do falsely-green — it caught a finding of mine that "came back right." STILL GATED: C1 keystone (DNA) · FACE-1 surfaces (fork READ-API) · resolver host + control-density axis.
