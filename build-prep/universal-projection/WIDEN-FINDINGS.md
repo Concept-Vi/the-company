@@ -305,6 +305,46 @@ consumes. Tim's net-new weld: **folder = distinct-absence on the type-slot.**
 
 ---
 
+## MATH-INVESTIGATION (2026-06-20) — Tim's ACTUAL math on the dimension variable (Tim-UNCONFIRMED; pending his bridge)
+*Provenance-disciplined sweep of Tim's real math (after the cube error), arithmetic independently re-verified.
+Tiers: T1 = Tim verbatim · T2 = formal (Tim-originated, AI-amplified) · T3 = AI-projection (NOT authoritative).
+These are INVESTIGATION FINDINGS, not Tim-confirmed fact — recorded defensively so the cube-class error is not
+re-made. Tim must bridge the open seam below before any dimensional build.*
+
+- **THE CUBE IS VALID — provably (T1+T2 agree).** The seed `2π/n=(1/n)^k` (x=1/n, τ=2π) is one operation
+  `x^k − τx = mτ`. The cube (d=3) has real solutions at every winding (strict m=0: `n=±1/√τ`; a positive
+  solution for every m>0). The ONLY "miss" is the single **m=−1 negative-winding gate**, which opens iff
+  `4 < 2π < 27/4` — true only for d=2 (the square). The "0.467" = `27/4 − 2π` = the cube's distance from THAT
+  ONE GATE, **not from the equation.** "Cube fails the equation" is in NEITHER projection package (Untitled 7
+  says "misses the m=−1 gate"; Untitled 9 is silent) — it was a DOWNSTREAM COMPRESSION that dropped the
+  winding-index qualifier. Tim exactly right: the cube does not fail; the inherited understanding did.
+- **★ "k = the dimension" is itself an AI GLOSS, not Tim's verbatim (T1).** Tim never binds "dimension" to k.
+  His verbatim treats k as recursive DEPTH ("zoom by n, k times") and the whole thing as an instrument of free
+  variables. The AI layers even disagree (SEED-SCALE §1: k=dimension; function-of-relative-definition §3.14.1:
+  n="dimension axis", k="exponent axis"). Do NOT build on "k = topological/spatial dimension" as bedrock.
+- **★★ THE DEEPER TRAP (the cube error one level up):** the mapping **integer-k → spatial-dimension →
+  solid-shape** (k=1→line, k=2→2-D square, k=3→3-D solid cube) is NOT in Tim's math — it is AI inference at
+  every step. In the formal math the exponent d gives a **(d−1)-gon root-shell**: exponent 2 → a POINT,
+  exponent 3 → 2 points, a geometric SQUARE appears at exponent **5**. So "square" in *square-gate* (exponent 2)
+  ≠ "square" in Tim's *2-D box* (a shape). Reading "k=3 = the 3-D cube solid" is the exact substitution that
+  manufactured the phantom cube AND its phantom failure. ★ Flag and do NOT repeat.
+- **Tim's bedrock geometry stays 2-D as k varies (T1):** the square (Cartesian/structure) + inscribed circle
+  (polar/meaning) about one centre; they coincide only on the axes; the duality is **viewpoint** (centre→circle,
+  corner→square; "indistinguishable from the observer"), NOT a third spatial axis. k there = recursive depth.
+- **Dimension-DROPPING (3D→2D→1D as a solid morphing) is NOT written (T2):** the math gives continuous
+  EXPONENT-continuation on a number line (the m=−1 real window `1 < k < 2.8295…`; as k→1⁺ infinitely many
+  windings open; k=1 = the forbidden mirror line). "One solid morphing through spatial dimensions" is inference
+  beyond what's written — the "beyond just what is written" zone Tim named.
+
+★ **THE OPEN SEAM Tim must bridge (the Barrier):** how does the DIMENSION the instrument drops through (3D/2D/1D)
+relate to **k** (written = recursive depth)? Candidates put to Tim 2026-06-20: (1) same knob (k IS the
+dimension); (2) two knobs (spatial d separate from recursive k); (3) dimension is a STANDPOINT on the one object
+(viewpoint-duality applied to dimension — fork's instinct, held as a guess not a finding). Build waits on his
+bridge — this is the precise spot the last error lived. Engine (react-three-fiber) does NOT wait (renders one
+parametric object from live variables at whatever the dimension variable resolves to).
+
+---
+
 ## CROSS-LANE — the resolver's AXIS-KIND distinction IS this lens's continuous⊥discrete law
 *(2026-06-19, fork. Surfaced when the lead folded composition's axis-kind into the resolver contract; banking the
 connection here for when fork's resolver-lane activates — the axis-kind is not a pragmatic convenience, it has a
