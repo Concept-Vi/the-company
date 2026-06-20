@@ -146,7 +146,34 @@ check("D7 the prose names the suggested option + the open state",
 check("D7 NO raw address / scheme leak in the operator prose (operator-law)",
       "://" not in prose and "decision_take" not in prose and BID not in prose)
 
+# ── D8 — the decision_retract TWIN (the symmetric un-decide write-path; fork's lane 2026-06-20) ──────
+# The un-decide had NO legitimate write-path: decision_retract was (a) not a registered mark_type (suite.mark
+# refuses it) + (b) not in DIRECTION_MARK_TYPES (the route-back whitelist) — so compose_state could READ a
+# retract but nothing could legitimately WRITE one. The twin gives it decision_take's exact path/gate.
+print("\n[D8] decision_retract — decision_take's symmetric twin (the legit un-decide write-path)")
+check("D8 'decision_retract' IS a registered mark-type (the gate suite.mark checks — what refused it before)",
+      "decision_retract" in mreg)
+check("D8 'decision_retract' (hyphen-form NOT) — registered under the exact underscore id",
+      "decision-retract" not in mreg)
+check("D8 'decision_retract' is in territory's route-back set (writable via territory_write, like decision_take)",
+      "decision_retract" in DIRECTION_MARK_TYPES)
+# the write→compose round-trip: take → decided; a LATER retract → pending (the un-decide); a still-later take re-decides
+rstore = FsStore(tempfile.mkdtemp(prefix="dec-r-"))
+rcanon = decision_address(parse_decision_address(A_BARE))
+rstore.append_mark({"target": rcanon, "mark_type": "decision_take", "value": "Give it save-back access",
+                    "by": "operator", "ts": "2026-06-20T01:00:00+00:00"})
+check("D8 after a take → decided", resolve_address(rstore, A_GLOB).get("state") == "decided")
+rstore.append_mark({"target": rcanon, "mark_type": "decision_retract", "value": "", "by": "operator",
+                    "ts": "2026-06-20T02:00:00+00:00"})
+r_ret = resolve_address(rstore, A_GLOB)
+check("D8 a LATER decision_retract un-decides it → pending (decided_value cleared)",
+      r_ret.get("state") == "pending" and r_ret.get("decided_value") is None)
+rstore.append_mark({"target": rcanon, "mark_type": "decision_take", "value": "Stay read-only for now",
+                    "ts": "2026-06-20T03:00:00+00:00"})
+check("D8 a still-later take RE-decides (latest decision EVENT by ts wins — take or retract)",
+      resolve_address(rstore, A_GLOB).get("decided_value") == "Stay read-only for now")
+
 print(f"\n{'ALL PASS' if ok else 'FAILURES PRESENT'} — {PASS} checks passed — the decision:// resolver: "
       "scheme+grammar+canonical normalizer, file-discovered registry, decision_take mark-type, resolve→row+state, "
-      "the adversarial one-key normalization, fail-loud, and a human (no-leak) render.")
+      "the adversarial one-key normalization, fail-loud, a human (no-leak) render, and the decision_retract twin.")
 sys.exit(0 if ok else 1)

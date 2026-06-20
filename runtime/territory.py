@@ -500,7 +500,11 @@ def territory_label(address, *, suite=None, store=None, max_len: int = 80) -> st
 # element_id:<canonical decision://global/<id>>}; territory_write routes it generically (suite.mark) and the
 # decision:// resolver composes the decided state from it. The take's `value` MUST be the option LABEL (the
 # decided_value); the target MUST be the CANONICAL decision address (contracts.address.decision_address).
-DIRECTION_MARK_TYPES = ("comment", "reaction", "favour", "decision_take")
+# decision_retract added 2026-06-20 (fork): decision_take's symmetric TWIN — the operator's UN-DECIDE (decided→
+# pending). SAME route-back/write-path/gate; value empty (optional note); the LATEST decision EVENT by ts wins
+# (compose_state folds take|retract). Gives the un-decide a LEGITIMATE gated write (the gate refused it before,
+# unregistered) — never a raw ungated store-append (the contamination pattern). Inherits the same #1b floor.
+DIRECTION_MARK_TYPES = ("comment", "reaction", "favour", "decision_take", "decision_retract")
 
 
 def territory_write(element_id, item, *, suite):
