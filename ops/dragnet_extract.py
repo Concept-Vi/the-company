@@ -117,13 +117,24 @@ def load_chunks(*, projects=None, since=None, until=None, limit=None, sample_ste
     return out
 
 
+def _safe_item(text):
+    """Guard a chunk's text so run_items treats it as a LITERAL, never an address. run_items classifies a
+    unit as an address if it STARTS WITH a registered scheme (run://, cas://, …) — and a few transcript
+    chunks literally BEGIN with a scheme example (doc chunks showing 'run://<domain>/...'), which sent them
+    to resolve_address → fatal fail-loud (crashed the 2026-06-21 bake at 10,998/18,858). A leading space
+    defeats the scheme-classification (invisible inside the prompt's 'Content:\\n{utterance}'). Only the
+    ~6/18,858 scheme-starting chunks are touched; the rest are byte-identical."""
+    from contracts.address import scheme as _sch
+    return (" " + text) if (isinstance(text, str) and _sch(text) is not None) else text
+
+
 def run_extract(chunks, *, store, coarse_max=220, fine_max=600, label="sample"):
     """The STEPPED cascade over `chunks`. Stage1 coarse all → gate → stage2 fine on gated. Returns
     (records, stats). records = the superset shape (coarse always; fine merged when the gate fired)."""
     from runtime import cognition as cog
     t0 = time.time()
-    # STAGE 1 — coarse, every chunk
-    c_res = cog.run_items(_coarse_role(), [c["text"] for c in chunks], store,
+    # STAGE 1 — coarse, every chunk (texts guarded → run_items treats them as literals, not addresses)
+    c_res = cog.run_items(_coarse_role(), [_safe_item(c["text"]) for c in chunks], store,
                            turn_id=f"dragnet-coarse-{label}", max_tokens=coarse_max)
     t_coarse = time.time() - t0
     coarse = {}
@@ -136,7 +147,7 @@ def run_extract(chunks, *, store, coarse_max=220, fine_max=600, label="sample"):
     t1 = time.time()
     fine = {}
     if gated:
-        f_res = cog.run_items(_fine_role(), [chunks[i]["text"] for i in gated], store,
+        f_res = cog.run_items(_fine_role(), [_safe_item(chunks[i]["text"]) for i in gated], store,
                               turn_id=f"dragnet-fine-{label}", max_tokens=fine_max)
         for pos, i in enumerate(gated):
             v = f_res.resolved.get(pos)
