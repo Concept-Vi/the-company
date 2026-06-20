@@ -98,6 +98,12 @@ export type NucParams = { types_space: string; space: string; rung: number }
 
 export function App() {
   const ff = useFormFactor()
+  // THE DEVICE-COORDINATE SEAM (the host-resolver's interim): publish the COMPUTED form-factor (from classify's
+  // innerWidth/innerHeight) onto the DOM so the modal/overlay allocation RESOLVES from screen-size — NOT a width
+  // @media (which missed the wide-but-SHORT landscape phone: 844×390 never matched max-width:480). This is the
+  // host half of resolve(device-coordinate)→allocation; fork's resolve() primitive feeds a richer coordinate here
+  // when it lands (the 4th-primitive seam). Set on mount + every ff change, before any modal opens.
+  useEffect(() => { document.body.dataset.ff = ff }, [ff])
   const [proj, setProj] = useState<Projection | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)

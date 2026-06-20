@@ -663,7 +663,18 @@ body.gallery-modal-open .strata,
 body.gallery-modal-open .rail,
 body.gallery-modal-open .legend,
 body.gallery-modal-open .scrubber { visibility: hidden; }
-@media (max-width: 480px) {
-  .gallery-overlay { padding: calc(var(--safe-t) + var(--s-2)) 0 0 0; }
-  .gallery-frame { width: 100%; max-height: 100%; border-radius: var(--r-card) var(--r-card) 0 0; }
-}
+/* COMPUTED device allocation — driven by body[data-ff] (set from classify(w,h) in App), NOT a width @media. The
+   old @media (max-width:480) only matched NARROW viewports, so the wide-but-SHORT landscape phone (844×390) never
+   got the phone treatment: it kept the roomy centred modal and the card's claim-title header clipped under the top
+   chrome while the options sat far below a long scroll. Resolving from the computed form-factor covers BOTH phones.
+   (Host half of resolve(device-coordinate)→allocation — the 4th-primitive seam; fork's resolve() feeds it later.) */
+/* PORTRAIT phone (narrow+tall): the 390 card fills the width edge-to-edge; height scrolls. (Was the @media block.) */
+body[data-ff="portrait"] .gallery-overlay { padding: calc(var(--safe-t) + var(--s-2)) 0 0 0; }
+body[data-ff="portrait"] .gallery-frame { width: 100%; max-height: 100%; border-radius: var(--r-card) var(--r-card) 0 0; }
+/* LANDSCAPE phone (wide+SHORT, e.g. 844×390): RE-ALLOCATE BY AVAILABLE HEIGHT — reclaim the vertical padding so the
+   frame uses (almost) the full short height, and TOP-ALIGN (safe center) so the claim-title header is never pushed
+   above the viewport / under the top chrome; the frame scrolls any residual, every option reachable. The card keeps
+   its natural ~390 width (centred) — the deeper width-USING re-allocation (2-column at landscape, to halve the
+   height so it fits without a long scroll) is DNA's .ar-responsive card grammar, flagged to her. */
+body[data-ff="landscape"] .gallery-overlay { align-items: safe center; padding: calc(var(--safe-t) + var(--s-1)) var(--s-3) var(--s-1); }
+body[data-ff="landscape"] .gallery-frame { max-height: 100%; }
