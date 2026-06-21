@@ -22,7 +22,13 @@ from __future__ import annotations
 # the spaces a decision's context can come from, broadest-meaning first. common_knowledge = comprehended
 # project/design content; principles/worldview/topics = the why-layer; history = prior discussion; repo =
 # the code it touches. Registry-is-truth: this list is the embeddable set (cognition_info().spaces).
-DEFAULT_DECISION_SPACES = ("common_knowledge", "principles", "worldview", "topics", "history", "repo")
+DEFAULT_DECISION_SPACES = ("extractions", "common_knowledge", "principles", "worldview", "topics", "history", "repo")
+# 'extractions' (the 44k dragnet meaning-extraction layer: session+visual-dna+theorem) ADDED 2026-06-21 —
+# the grounding-flip, ungated now FACE-0 is at-bar (held earlier to not shift grounding under the keystone
+# render). ADDITIVE: recall_for_decision pools+reranks across spaces, best-wins; the extractions score HIGHER
+# (verified 0.507 vs history 0.416 — denser meaning) so decisions ground on the richer layer (incl. the
+# theorem = the company grounding decisions on its OWN BASE). _attach_digest_text resolves extraction:// text
+# (the enabler built earlier) so they render MEANING, not bare addresses. Rides the next bounce.
 
 
 def prior_decisions_about(suite, topic_text: str, *, k: int = 6, rerank: bool = True) -> list[dict]:
@@ -266,6 +272,156 @@ def recall_for_decision(suite, decision_text: str, *, address: str | None = None
     if notes:
         result["note"] = " · ".join(notes)
     return result
+
+
+def _rerank_claims(query: str, claims: list[dict], *, top_n: int = 12,
+                   url: str = "http://localhost:8008/rerank", timeout: int = 60) -> list[dict]:
+    """Order raw claim strings by jina-v3 relevance to `query` (the decision) — the cross-encoder reads
+    query+claim TOGETHER, so it catches the homonym noise a diffuse cosine/candidate set lets through (e.g.
+    a decision that says 'the INSTRUMENT drops through dimensions' pulling instrument-DISCIPLINE claims). The
+    claims are raw strings with no CAS digest, so this hits the :8008 reranker transport directly (inline
+    text) rather than corpus_rerank.rerank_hits (which is for addressed hits). Keyed by INDEX (chunk_id is
+    not unique — one chunk yields many claims). Degrade-clean: any reranker error → claims unchanged."""
+    import json as _json, urllib.request as _u
+    items = [c for c in claims if isinstance(c.get("claim"), str) and c["claim"].strip()]
+    if len(items) < 2:
+        return claims
+    try:
+        cands = [{"address": str(i), "text": c["claim"], "cosine": None} for i, c in enumerate(items)]
+        body = _json.dumps({"query": query, "candidates": cands, "top_n": top_n}).encode()
+        req = _u.Request(url, data=body, headers={"Content-Type": "application/json"})
+        resp = _json.loads(_u.urlopen(req, timeout=timeout).read())
+        by_idx = {str(i): c for i, c in enumerate(items)}
+        ordered, seen = [], set()
+        for r in resp.get("ranking", []):
+            it = r.get("item")
+            idx = it.get("address") if isinstance(it, dict) else None
+            c = by_idx.get(idx)
+            if c is not None and idx not in seen:
+                ordered.append({**c, "rerank_score": r.get("rerank_score")})
+                seen.add(idx)
+        for i, c in enumerate(items):                              # append any the reranker didn't return (top_n cap)
+            if str(i) not in seen:
+                ordered.append(c)
+        return ordered or claims
+    except Exception:
+        return claims                                             # reranker down → determine order (honest, not a crash)
+
+
+def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = True,
+                          include_prior_decisions: bool = True) -> dict:
+    """The co-owned EXPLAIN-WIRE grounding — recollection's half of projection's explain call-site.
+
+    projection's RHM runs the decision-explanation; the three halves MEET here:
+        ctx    = explanation_grounding(suite, decision)            # ← THIS: the CONTENT (recollection)
+        policy = explanation_policy_for(decision)                  # fork's seam: the SAMPLING regime
+        run_role(explain_role, ctx, policy=policy,                 # the FRAMING via the subtype prompt_slot
+                 coordinate={'subtype': decision['subtype']})
+
+    `decision` — the decision RECORD (a dict carrying `meaning`/`text`/`decision` + optional `subtype` and
+    `address`/`explanation_source`), OR a bare decision-text string. Composes the SAME recall_for_decision
+    bundle territory's hot-path memory leg uses, but FULL-RERANK by default: this is the DEDICATED explanation
+    turn, NOT the 3s hot-path resolve, so it affords the jina precision pass territory.py reserves for "the
+    unbounded paths" (territory.py:264). The grounding is the CONTENT the explanation draws FROM — Tim's own
+    math/relationships for a theorem-fork · the security/risk + the condition for an authorize · the prior
+    decisions + the why — now drawing the 44k extraction layer (the grounding-flip) alongside the corpus.
+    fork's policy picks HOW the model samples it; the prompt_slot picks the FRAMING; THIS supplies the WHAT.
+
+    Returns {decision, subtype, context, prior_decisions?, neighbours?, block, note}:
+      • context — [{source, space, score, rerank_score?, text}] (chunk-traced, meaning-resolved, no id-leak)
+      • block   — ONE ready-to-fold operator-legible MEANING string (context + priors), so projection drops a
+                  single ctx field, no second render. MEANING only (recall already attached clean digest text).
+      • subtype — echoed through (the coordinate projection passes to run_role) for convenience.
+    No-fiction (every item is a real corpus/extraction record), read-only, degrade-clean (a down embedder →
+    a thinner bundle + an honest note, never a raise — the explanation still runs)."""
+    if isinstance(decision, dict):
+        text = (decision.get("meaning") or decision.get("text") or decision.get("decision")
+                or decision.get("question") or "")
+        subtype = decision.get("subtype")
+        cand = decision.get("address") or decision.get("explanation_source")
+        subj = cand if (isinstance(cand, str) and cand.startswith("code://")) else None
+    else:
+        text = decision if isinstance(decision, str) else ""
+        subtype, subj = None, None
+    if not (isinstance(text, str) and text.strip()):
+        raise ValueError("explanation_grounding: decision must carry text "
+                         "(meaning/text/decision/question) or be a non-empty string.")
+
+    bundle = recall_for_decision(suite, text, address=subj, rerank=rerank, top_n=top_n,
+                                 include_prior_decisions=include_prior_decisions)
+
+    # PROVENANCE per context item (operator-law + the never-assert guard): WHICH grounding is Tim's OWN
+    # framework vs comprehended knowledge. The theorem extraction layer (extraction://theorem/…) is extracted
+    # from Tim's own maths docs; other extractions are prior sessions/design; corpus spaces are AI-comprehended.
+    ctx = bundle.get("context", [])
+    for c in ctx:
+        src = c.get("source") or ""
+        c["provenance"] = ("your own framework" if src.startswith("extraction://theorem/")
+                           else "prior sessions & design" if src.startswith("extraction://")
+                           else "comprehended project knowledge")
+
+    # THEOREM-FORK: "ground in Tim's maths, never assert" (the lead's law, 2026-06-21). The NO-FICTION
+    # determine over the THEOREM asset returns ONLY Tim's real, chunk-traced theorem claims — the model
+    # groups them BY INDEX and CANNOT invent claim text — so the explanation grounds in his ACTUAL
+    # mathematics; the caveat forbids asserting anything beyond as his. A STRUCTURAL guard (recollection's
+    # no-fiction machinery), not a prompt plea — AI-projected gloss can't masquerade as Tim's theorem.
+    caveat = None
+    theorem_claims: list[dict] = []
+    if subtype == "theorem-fork":
+        try:
+            from runtime import recall_determine as _rd
+            det = _rd.determine(text, asset="theorem", suite=suite, max_claims=40)
+            _seen_cl = set()
+            for th in det.get("themes", []):
+                for cl in th.get("claims", []):
+                    c = cl.get("claim")
+                    if isinstance(c, str) and c.strip() and c.strip().lower() not in _seen_cl:
+                        _seen_cl.add(c.strip().lower())            # dedup the near-identical preserve/cancel pairs
+                        theorem_claims.append({"claim": c.strip(), "chunk_id": cl.get("chunk_id"),
+                                               "theme": th.get("theme", "")})
+            # ORDER by relevance to the decision (the cross-encoder catches homonym noise the determine's
+            # candidate-filter let through) → the framework block LEADS with Tim's most on-topic maths.
+            theorem_claims = _rerank_claims(text, theorem_claims, top_n=12)
+        except Exception:
+            pass
+        caveat = ("GROUND ONLY in Tim's own framework (the verbatim, chunk-traced mathematics/relationships "
+                  "below). State his maths as his; anything NOT present there is YOUR projection — flag it "
+                  "explicitly as uncertain / AI-projected, and NEVER assert a gloss as his. When unsure, say so.")
+
+    # render ONE operator-legible meaning block, so projection folds a SINGLE ctx field. recall already
+    # attached each context item's clean digest text (operator-law: meaning, never a source-id/jargon leak).
+    # theorem-fork LEADS with Tim's verbatim framework (the never-assert anchor) before the surrounding
+    # context; other subtypes use the clean reranked context. This formats recollection's OWN bundle — NOT a
+    # second territory_prose (that renders the full multi-leg operator card; this is the narrower explain ctx).
+    lines: list[str] = []
+    if theorem_claims:
+        lines.append("YOUR FRAMEWORK (verbatim, chunk-traced — ground here, state as yours):")
+        for tc in theorem_claims[:12]:
+            lines.append(f"  • {tc['claim']}")
+        lines.append("")
+        lines.append("Surrounding context (comprehended — flag anything beyond your framework as projection):")
+        for c in ctx:
+            t = c.get("text")
+            if isinstance(t, str) and t.strip():
+                lines.append(f"  - {t.strip()}")
+    else:
+        for c in ctx:
+            t = c.get("text")
+            if isinstance(t, str) and t.strip():
+                lines.append(f"- {t.strip()}")
+    pri = bundle.get("prior_decisions") or []
+    if pri:
+        _attach_digest_text(suite.store, pri)
+        for pd in pri:
+            t = pd.get("text")
+            if isinstance(t, str) and t.strip():
+                lines.append(f"- (you've weighed this before) {t.strip()}")
+    block = "\n".join(lines)
+
+    return {"decision": text, "subtype": subtype, "context": ctx,
+            "prior_decisions": pri, "neighbours": bundle.get("neighbours", []),
+            "theorem_claims": theorem_claims, "caveat": caveat,
+            "block": block, "note": bundle.get("note", "")}
 
 
 if __name__ == "__main__":
