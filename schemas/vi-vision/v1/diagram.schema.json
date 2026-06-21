@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/diagram.schema.json",
+
+  "title": "Vi Vision Diagram Archetype (render-type)",
+  "description": "The DIAGRAM archetype — an instance of archetype.schema.json (render_kind='diagram'): a structured AUTHORED relational picture (flow · sequence · hierarchy). Tim's 'diagrams'. The RELATIONAL family (like graph) but AUTHORED relations — the relations are declared/composed, NOT resolved from the substrate (that's graph).\n\nWHAT IT RENDERS: nodes + AUTHORED edges as a flow/sequence/hierarchy. Grounded in REAL usage — flows (the decision-flow present→explain→choose as a picture), sequences, org/structure diagrams, the pipeline stages, a process map. DNA renders; the resolver places.\n\nTHE EDGE BINDING (same as graph, LOCKED w/ DNA 2026-06-21): `edges` is an EXPLICIT slot — a field 'edges' (array of {from,to,kind?}) OR 'resolve:relations' host-resolved to that array before render. The renderer always receives resolved edges; never resolves from node data itself. (graph = resolved-from-substrate relations; diagram = authored relations; SAME binding shape.)\n\nMostly READ (a diagram shows structure); an optional take navigates/drills a node.\n\nLAWS (inherited from archetype.schema): operator-legibility · DNA-token-built · resolver-placed · navigable-not-text · native dual-device.",
+
+  "allOf": [
+    { "$ref": "archetype.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "render_kind": { "const": "diagram", "description": "Must be 'diagram'." },
+        "slot_map": {
+          "type": "object",
+          "required": ["nodes", "edges"],
+          "properties": {
+            "nodes": { "type": "string", "description": "The NODE source — the authored elements (each with legibility name/is)." },
+            "edges": { "type": "string", "description": "The AUTHORED-EDGE source (LOCKED w/ DNA): an explicit slot — field 'edges' (array of {from,to,kind?}) OR 'resolve:relations' host-resolved to that array before render. The authored relations (flow/sequence/hierarchy links)." },
+            "flow": { "type": "string", "description": "Optional: the flow/direction/ordering source (for a sequence or directed flow)." }
+          }
+        }
+      }
+    }
+  ]
+}

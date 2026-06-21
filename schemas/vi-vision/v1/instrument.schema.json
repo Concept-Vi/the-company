@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/instrument.schema.json",
+
+  "title": "Vi Vision Instrument Archetype (render-type)",
+  "description": "The INSTRUMENT archetype — an instance of archetype.schema.json (render_kind='instrument'): a LIVE reading + STEERING surface. Tim's 'instruments'. It READS a value live and STEERS it (drive = re-resolve) — a control surface, not a static display.\n\nWHAT IT RENDERS: a live READING (the current state/value, bound to a live ref so it reflects changes) + CONTROLS (dials/knobs/the verb-fan) the operator drives. Grounded in REAL usage — the V (state→colour treatment · the 6-verb fan · tap=engage; the FIRST instrument), gauges/dials, the mode-as-colour cascade (drive a dial → the whole UI re-resolves). DNA renders; the resolver places; the V/brain binds its live state here (the V-as-brain-face: state_link → live brain status).\n\nTHE TAKE: drive → re-resolve. from_slot='controls' (the operator drives a dial/verb); writes/re-resolves the steered value (the mode-cascade, a setting) — GATED where consequential (the floor: brain proposes → operator approves → gated wire). A read-only instrument (no take) is a gauge.\n\nLAWS (inherited from archetype.schema): operator-legibility (controls labelled by MEANING, touch-visible — phone has no hover) · DNA-token-built (state→colour via DNA tokens) · resolver-placed · navigable-not-text · native dual-device.",
+
+  "allOf": [
+    { "$ref": "archetype.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "render_kind": { "const": "instrument", "description": "Must be 'instrument'." },
+        "slot_map": {
+          "type": "object",
+          "required": ["reading", "controls"],
+          "properties": {
+            "reading": { "type": "string", "description": "The LIVE reading source — a live ref ('live:<x>' / 'resolve:state') the instrument displays + reflects as it changes (e.g. the brain's processing state for the V)." },
+            "controls": { "type": "string", "description": "The CONTROLS source — the dials/knobs/verb-fan the operator drives (each labelled by meaning). Driving steers/re-resolves." },
+            "state": { "type": "string", "description": "Optional: a discrete state source (idle/thinking/error/…) the instrument treats (e.g. the V's 6-state colour)." }
+          }
+        }
+      }
+    }
+  ]
+}

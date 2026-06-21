@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/selector.schema.json",
+
+  "title": "Vi Vision Selector Archetype (render-type)",
+  "description": "The SELECTOR archetype — an instance of archetype.schema.json (render_kind='selector'): renders a CHOICE among options/modes/things and DRIVES the chosen value. Tim's 'selectors'.\n\nWHAT IT RENDERS: a set of choices (each with legibility name/is — meaning, never a machine-name) + the CURRENT selection, as a navigable pick surface (not a raw dropdown). Picking writes/sets the value (the take). Grounded in REAL usage — the mode-selector (pilot/inspect/dev), tool-picking (FACE-3 — choose a tool to run), option-choosing, any 'pick one (or some)' surface. DNA renders (lyRender); the keystone hosts; the resolver places it across the device axis.\n\nTHE TAKE: select → set-value. from_slot='options' (the operator acts on the choices); writes the chosen value (a set/select mark or a bound variable). A read-only selector (no take) is a legend/key.\n\nLAWS (inherited from archetype.schema): operator-legibility (the choices read as MEANING + their implication, never bare ids — touch-visible) · DNA-token-built · resolver-placed · navigable-not-text · native dual-device.",
+
+  "allOf": [
+    { "$ref": "archetype.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "render_kind": { "const": "selector", "description": "Must be 'selector'." },
+        "slot_map": {
+          "type": "object",
+          "required": ["options", "current"],
+          "properties": {
+            "options": { "type": "string", "description": "The CHOICES source — a field/resolve giving the selectable things (each carrying legibility name/is + an implication, so the choice reads as meaning)." },
+            "current": { "type": "string", "description": "The CURRENT selection source — a field-path or 'resolve:state' (the selected value, so the surface shows what's chosen)." },
+            "groups": { "type": "string", "description": "Optional: a grouping source (choices clustered by a dimension) — derived, never hardcoded group names." }
+          }
+        }
+      }
+    }
+  ]
+}

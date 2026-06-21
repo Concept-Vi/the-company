@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/spatial-material.schema.json",
+
+  "title": "Vi Vision Spatial-Material Archetype (render-type)",
+  "description": "The SPATIAL-MATERIAL archetype — an instance of archetype.schema.json (render_kind='spatial-material'): an interactive visual/spatial SUBSTANCE — the 'material weight / has-substance' register of Tim's design language. Tim's 'interactive visual and spatial materials'.\n\nWHAT IT RENDERS: a material surface that carries craft substance (animation · glow · effect · palette · depth/frost/hatch) and REVEALS interactively (expand/coil/uncoil). Grounded in REAL usage — the socket-materials (animation/glow/effect/palette carried by any asset — already a built runtime; this archetype formalizes its contract), the radial/connection reveals (the emerging sub-surface), DNA's ARTEFACT ORGANISM family (sourcePanelVisual, artifactCluster — the synthetic↔real hybrid; the design-library objects/stacks/grids — built 2026-06-21). DNA renders (the artefact organisms + the socket-materials); the resolver places; DNA.motion resolves the reveal timing.\n\nTHE TAKE: reveal/expand → open the substance (the connection-model emerge/collapse). from_slot='materials'. A read-only spatial-material is decoration-with-substance (still token-built, never empty decoration).\n\nLAWS (inherited from archetype.schema): operator-legibility · DNA-token-built (the material IS DNA tokens — colour/surface/depth/frost/hatch/ink) · resolver-placed · navigable-not-text · native dual-device.",
+
+  "allOf": [
+    { "$ref": "archetype.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "render_kind": { "const": "spatial-material", "description": "Must be 'spatial-material'." },
+        "slot_map": {
+          "type": "object",
+          "required": ["materials"],
+          "properties": {
+            "materials": { "type": "string", "description": "The SUBSTANCE source — the material(s) the surface carries (the socket-materials: animation/glow/effect/palette; or a DNA artefact organism). DNA tokens, never bespoke values." },
+            "reveals": { "type": "string", "description": "Optional: the interactive REVEAL source — what the substance expands/uncoils to (the emerging sub-surface; connection-model bindings)." },
+            "asset": { "type": "string", "description": "Optional: a real asset source for the hybrid (synthetic placeholder ↔ real asset in the same frame — DNA's sourcePanelVisual/artifactCluster hybrid seam)." }
+          }
+        }
+      }
+    }
+  ]
+}
