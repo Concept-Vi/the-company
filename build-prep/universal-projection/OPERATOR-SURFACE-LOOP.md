@@ -1754,3 +1754,21 @@ The lead's milestone gate (g-1782029251/560): verify the open→CARD path by-use
 EXPLAIN finding (the open seam): "Ask about this" works but calls the GENERIC /api/claude/turn (the BUILDER side-panel turn), NOT recollection's grounded explain_role/explanation_grounding. For a trade-off it answers well from on-screen context; for a THEOREM-FORK it SELF-CAVEATED correctly ("I'm reading that off the decision in front of me, not your actual theorem — so I won't claim it as proven; let me into the maths…") — so explain_role grounding is an UPGRADE (structural caveat + real corpus recall), not a critical hole. The frontend wire (the open seam) = redirect RightHand's unit-ask from /api/claude/turn to the grounded explain path. The deep explain is slow (~30s, "explain deep-7").
 
 COMMITTED: the gallery-frame fix + friction log + this entry. NEXT: clone channel-view (DNA shipped channelGraph 35aa95c — breadth surface #1; full-width centered graph body per DNA's note, NOT the decision-card frame) + explain_role wire.
+
+---
+
+## FIRE — ★ CHANNEL-VIEW LIVE (breadth surface #1) — the fabric as a graph, verified both viewports
+
+DNA shipped channelGraph + the 'channel-view' archetype (35aa95c); I re-synced the gallery (the running dev server predated it — same committed-not-synced pattern as face-adapters.js before) → cloned the SessionDrill template into ChannelView. channel-view is the WHOLE fabric as ONE graph (not a list→drill), so it's simpler than the session-drill.
+- Store: channels/channelStore.ts — loads /api/channels {ok,channels:[{id,kind,name,posts,coordinator,promoted_to,members{}}]}, fail-loud.
+- Surface: channels/ChannelView.tsx — sibling overlay (opens on `channels:open`), mounts DNA's render via the contract (channelGraph(raw) → {nodes,edges,hub}; hubNetwork(nodes) → SVG; renderArchetype('channel-view', rec, {visualDevice}) — the shape slot returns opts.visualDevice). Degrade-clean.
+- CSS: channels/channels.css — wider panel (760), full-width centered graph body.
+- Wired into App.tsx (sibling overlay after SessionDrill).
+
+★ TWO by-use frictions found+fixed in the clone (friction #14, #15):
+- channelGraph's edges loop assumes members is an ARRAY but /api/channels serves an OBJECT → host-normalized members→Object.keys() at the call site (+ flagged DNA to accept the object shape).
+- by-sight: the graph was 0×0 at 1440 (the .ar-responsive desktop 2-col grid collapsed the graph slot — DNA's exact "graph cuts under 2-col" warning) + dead-space at 390 (the .screen 844 fixed height). FIXED in channels.css (hold single-column + content-height + sized SVG, mirroring the gallery-frame override). Verified BOTH viewports: 1440 centered+sized, 390 large + no dead-space.
+
+VERIFIED by-use+by-sight: the fabric graph renders the live channels (octagon hub + r-line build / session-fabric build / r4-search-result-gathering spokes) at 390 + 1440. (Also observed: the queue auto-updated 14→15 as a new owner==tim decision landed — the registry-true filter working dynamically.)
+
+NEXT: redirect RightHand's unit-ask ("Ask about this") from the generic /api/claude/turn to fork's grounded explain_role (8748423, live) — the explain UPGRADE. Then board-view/timeline as DNA ships boardRecord/timelineRecord.

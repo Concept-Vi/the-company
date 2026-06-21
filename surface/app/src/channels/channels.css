@@ -1,0 +1,46 @@
+/* THE CHANNEL-VIEW SURFACE (FACE-1 breadth #1) — a sibling-overlay modal (mirrors the sessions/inbox overlay
+   pattern). DNA's fabric GRAPH carries its own styling (rendered into .channels-graph); this only FRAMES it. A
+   GRAPH body wants FULL-WIDTH CENTERED (DNA's note: it right-shifts/cuts under the decision-card 2-col layout) —
+   so the panel is wider than the session/decision modals and the graph body centers its content. Tokens only — no
+   bespoke values. (DNA owns the elegant chrome elevation as a follow; this is the functional host frame.) */
+.channels-overlay {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: safe center; justify-content: center;
+  padding: calc(var(--safe-t) + var(--s-3)) var(--s-3) calc(var(--safe-b) + var(--s-3));
+  opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 200ms ease, visibility 200ms ease;
+}
+.channels-overlay--open { opacity: 1; visibility: visible; pointer-events: auto; }
+.channels-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink-primary) 48%, transparent); }
+.channels-panel {
+  position: relative; width: 100%; max-width: 760px; max-height: 100%; display: flex; flex-direction: column;
+  background: var(--ground-accent); border-radius: var(--r-card); box-shadow: var(--elev-4); overflow: hidden;
+}
+.channels-head {
+  flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-2);
+  padding: var(--s-4) var(--s-4) var(--s-3); border-bottom: 1px solid var(--hairline);
+}
+.channels-title { margin: 0; font-size: var(--t-base); color: var(--ink-primary); }
+.channels-sub { margin: var(--s-1) 0 0; font-size: var(--t-sm); color: var(--ink-dim); line-height: var(--lh-body); }
+.channels-close { background: none; border: none; cursor: pointer; color: var(--ink-dim); font-size: 15px; line-height: 1; min-width: 44px; min-height: 44px; }
+.channels-body {
+  flex: 1 1 auto; min-height: 0; overflow: auto; padding: var(--s-4);
+  padding-bottom: calc(var(--s-4) + var(--safe-b)); display: flex; flex-direction: column; align-items: center;
+}
+.channels-msg { font-size: var(--t-sm); color: var(--ink-dim); text-align: center; padding: var(--s-5) var(--s-4); margin: 0; }
+.channels-msg--error { color: var(--pig-strain); }
+.channels-msg--quiet { color: var(--ink-faint); }
+.channels-retry { font-size: var(--t-sm); color: var(--ink-primary); background: var(--ground-secondary); border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); cursor: pointer; margin-left: var(--s-2); }
+/* the graph mount: full-width, centered; DNA's SVG scales within. */
+.channels-graph { width: 100%; max-width: 100%; display: flex; justify-content: center; }
+/* ── HOLD DNA's card FULL-WIDTH SINGLE-COLUMN + content-height (a GRAPH body must NOT inherit the .ar-responsive
+   desktop 2-COL grid — DNA's note: the graph right-shifts/cuts under 2-col, verified by use: at 1440 the 2-col
+   collapsed the graph SVG to 0×0). Mirrors the gallery-frame host override (surface.css). Also un-fix the .screen's
+   844 device-height (it left dead space above the graph at 390) → size to content. ─────────────────────────── */
+.channels-graph .screen.ar { height: auto; max-height: none; overflow: visible; }
+.channels-graph .screen.ar.ar-responsive {
+  display: flex; flex-direction: column; grid-template-columns: none; grid-template-rows: none; gap: 0;
+}
+.channels-graph .ar-responsive .ar-zone-head,
+.channels-graph .ar-responsive .ar-zone-body,
+.channels-graph .ar-responsive .ar-zone-foot { grid-column: auto; grid-row: auto; }
+/* the network SVG: a definite width (DNA's hubNetwork is 600×440) so it sizes at every viewport, capped responsive. */
+.channels-graph svg { width: 600px; max-width: 100%; height: auto; }

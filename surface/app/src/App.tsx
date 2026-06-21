@@ -11,6 +11,7 @@ import { Landscape } from './layouts/Landscape'
 import { GalleryMount } from './gallery/GalleryMount'
 import { resolveAndApplyModal } from './lib/resolveAllocation'
 import { SessionDrill } from './sessions/SessionDrill'
+import { ChannelView } from './channels/ChannelView'
 import { RightHand } from './rhm/RightHand'
 import { DecisionsInbox } from './decisions/DecisionsInbox'
 import { ToolsBar } from './tools/ToolsBar'
@@ -539,6 +540,11 @@ export function App() {
           (/api/session-recall). Opens on `sessions:open`. Sibling overlay, all form factors. The template the rest of
           the FACE-1 breadth (channel-view/board-view/timeline) follows: data→route→host→DNA-render. */}
       <SessionDrill />
+      {/* THE CHANNEL-VIEW SURFACE (FACE-1 breadth #1) — the live fabric as a GRAPH (channels as weighted hub-spokes,
+          /api/channels → DNA's channelGraph + hubNetwork + the 'channel-view' archetype). Opens on `channels:open`.
+          Sibling overlay, full-width centered graph body. The first breadth surface cloned from the SessionDrill
+          template (data→route→host→DNA-render); boardRecord/timelineRecord follow as DNA ships each adapter. */}
+      <ChannelView />
       {/* THE TOOL FACE — the pilot palette (Tim 2026-06-19): the entry (ToolsBar) + the modal (ToolsPanel) where an
           operator picks a tool, sets it up in plain words via the op-conditional form, and runs it. Root siblings,
           all form factors. FRONT HALF live (list + description + form); Run/result are pending seams (fork's invoke
