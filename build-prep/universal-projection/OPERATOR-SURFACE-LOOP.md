@@ -1664,3 +1664,18 @@ Lead drive-sweep (g-1782016043): pull render-independent FACE-1 host-prep (the r
 ⟹ The four FACE-1 host seams (mount·emit·point·resolve) are READY → when fork's read-API + DNA's archetypes + the keystone-lock land, FACE-1 surfaces ASSEMBLE onto them fast.
 
 NEXT render-independent: the FACE-1 host-nav-prep CONTRACT (the mount+emit+point+resolve pattern for DNA/fork to build FACE-1 surfaces against). The resolve-OVERRIDE (verify-on-bounce) + the stack-type derive (fork's type-in-feed) stay on their deps.
+
+---
+
+## FIRE — FACE-1 host-nav CONTRACT written → render-independent breadth DRAINED, at the clean BLOCKED-STATE
+
+Lead (g-1782016431): the fabric has done essentially ALL the render-independent breadth; what's left is gated on Tim's 2 decisions (design-direction + connector) + the keystone-lock + the bounce — "finish your last items, then hold clean." My last render-independent item:
+★ WROTE build-prep/the-one-application/FACE-1-HOST-NAV-CONTRACT.md — the mount/emit/point/resolve/device pattern a FACE-1 surface follows, over the four host seams built+verified this session (sibling-overlay MOUNT · gallery:verb EMIT bus · spotlight auto-include POINT · /api/territory RESOLVE-to-human · device-coordinate allocation). FACE-1 assembles MECHANICALLY onto the host (zero per-surface host change) when fork read-API + DNA archetypes + keystone-lock land.
+
+★ AT THE LEGITIMATE BLOCKED-STATE (honest — not idle-failure; the operator-cycle's BLOCKED state reached). The HELD queue, each on a named gate (no busywork):
+- resolve-OVERRIDE live-verify → the coordinated BOUNCE (running rules.py stale-cached; degrade-clean holds).
+- all-viewport resolve-extend + SHELL 3-module kill → AFTER the landscape resolve-override verifies on the bounce.
+- StackItemType derive → fork's type-in-feed (registry /api route already exposed).
+- FACE-1 renders → keystone-lock + DNA archetypes + fork read-API.
+- tool-face result-render → DNA's tool-card (keystone) · the 65 tools' form_meta → fork's content track.
+HOLDING CLEAN for Tim's direction + the bounce. The host is ready for all of it; pick up the instant any gate clears (the bounce-verify is first). SESSION BUILDS (mine): channel-stack B · tool-face mapping+RUN-door · binding-discover fix · device-coordinate root + modal allocation (landscape top-clip) · resolve-consume · spotlight auto-include · the host-input/FACE-1-host-nav contracts — all verified-by-use + committed to main.
