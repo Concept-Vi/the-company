@@ -111,6 +111,28 @@ def decision_registry():
     return DecisionRegistry().discover([_DECISIONS_DIR])
 
 
+_DECISION_SUBTYPES_DIR = os.path.join(os.path.dirname(_ROLES_DIR), "decision_subtypes")
+
+
+def explanation_policy_for(decision) -> str | None:
+    """THE POLICY-WIRE seam (R-subtype): resolve a decision → its explanation generation-policy id, via the
+    decision.subtype → decision_subtypes row → explanation_policy chain. The explain-owner (the RHM/recall
+    path that generates a decision's explanation) calls this + passes it to run_role(policy=…) — AND passes
+    coordinate={'subtype': <subtype>} so the explain-role's prompt_slot resolves the FRAMING (risk vs math
+    vs neutral-axes vs technical) — the policy sets the SAMPLING regime, the prompt_slot the framing.
+
+    `decision` = a decision record dict (carries `subtype`) OR a bare subtype-id string. Returns the
+    generation_policies id, or None (no subtype / unknown subtype) → run_role(policy=None) = the default
+    regime (fail-soft, never raises: a missing/typo'd subtype must not break an explanation)."""
+    sub = decision.get("subtype") if isinstance(decision, dict) else decision
+    if not sub:
+        return None
+    from runtime.decision_subtypes import DecisionSubtypeRegistry   # lazy (composition's registry; decoupled)
+    reg = DecisionSubtypeRegistry().discover([_DECISION_SUBTYPES_DIR])
+    row = reg.get(sub) if hasattr(reg, "get") else None
+    return getattr(row, "explanation_policy", None) if row is not None else None
+
+
 # O2 — the GENERATION-POLICY registry (file-discovered, `generation_policies/*.py`). `run_role` reads
 # the SELECTED policy's repetition_penalty LADDER from HERE (registry-is-truth — the rep_penalty is DATA,
 # NOTHING static), never a hardcoded constant. Discovered fresh each call (mirrors role_registry()), so a
