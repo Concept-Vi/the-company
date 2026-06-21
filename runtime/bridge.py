@@ -1401,7 +1401,15 @@ class H(BaseHTTPRequestHandler):
                 if not _sid:
                     self._send(400, json.dumps({"ok": False, "error": "/api/timeline needs ?session=<session-id>"}))
                 else:
-                    self._send(200, json.dumps(SUITE.agent_session_timeline(_sid)))
+                    # by-use friction (Tim's drive-in-tandem): a live-registered session has NO jsonl_path until
+                    # the importer backfills it → agent_session_timeline raises a teaching ValueError. That's an
+                    # honest "no timeline YET" (an empty-state), NOT a malformed request — so return 200 with the
+                    # reason (the host renders a clean empty-state, never a scary 400/500). No-silent-failure: the
+                    # reason is surfaced. A genuinely-bad request is only the missing-param 400 above.
+                    try:
+                        self._send(200, json.dumps({"ok": True, "timeline": SUITE.agent_session_timeline(_sid)}))
+                    except ValueError as _tl_e:
+                        self._send(200, json.dumps({"ok": True, "timeline": None, "reason": str(_tl_e)}))
             elif path == "/api/board":                     # FACE-1: the noticeboard items as DATA (not markdown)
                 # cc_board.list_items — the board rows; optional ?type= ?state= ?source= filters. The host
                 # renders them as spatial zones (DNA's board-map), never a text-wall.
