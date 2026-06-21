@@ -197,8 +197,10 @@ def compose_state(row: dict, marks: list) -> dict:
 
 def decision_inbox(registry, store) -> list:
     """The decisions INBOX list (the operator's see-all-pending entry, beyond the deep-link): one
-    {id, address, name, state, recommended_label} per discovered decision. registry-is-truth — the discovered
-    set. state = the FAST mark-composed state (compose_state — NOT the recall-grounded resolve; the inbox only
+    {id, type, address, name, state, recommended_label} per discovered decision. registry-is-truth — the
+    discovered set. `type` = the STACK-ITEM-TYPE ("decision-sequence") so the host DERIVES its StackItemType from
+    the feed (registry-is-truth; projection's union-derive dep — the stack envelope is {id,type,address,name,
+    state}). state = the FAST mark-composed state (compose_state — NOT the recall-grounded resolve; the inbox only
     needs open-vs-decided, so this stays GPU-free + fast: marks_for + the fold, no recall/embed). name =
     legibility.name (operator-law: never the raw id — humanise the id as the floor). address = the CANONICAL
     decision://global/<id> (file-discovered registry decisions are global; the take writes + the resolver reads
@@ -215,7 +217,7 @@ def decision_inbox(registry, store) -> list:
         name = (leg.get("name") or "").strip() or did.replace("-", " ").replace("_", " ").strip() or did
         rec = next((o.get("label") for o in (row.get("options") or [])
                     if isinstance(o, dict) and o.get("recommended") and o.get("label")), None)
-        out.append({"id": did, "address": addr, "name": name,
+        out.append({"id": did, "type": "decision-sequence", "address": addr, "name": name,
                     "state": st.get("state"), "recommended_label": rec})
     return out
 
