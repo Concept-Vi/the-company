@@ -426,29 +426,33 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
     # theorem-fork LEADS with Tim's verbatim framework (the never-assert anchor) before the surrounding
     # context; other subtypes use the clean reranked context. This formats recollection's OWN bundle — NOT a
     # second territory_prose (that renders the full multi-leg operator card; this is the narrower explain ctx).
+    # ★ THEOREM-FORK = FRAMEWORK-ONLY block (the never-assert law made structural; co-verified by-use
+    # 2026-06-21 with fork's explain_role). The law is "ground ONLY in his WRITTEN MATHEMATICS" — so a
+    # theorem-fork explanation grounds in the chunk-traced theorem claims ALONE. The comprehended surrounding
+    # context (history/repo/project chatter) and prior decisions are NOT his maths, and the co-verify proved
+    # they DRIFT the small model: on the dimension-meaning (cube-error) decision, one '[history] expanded
+    # multi-embedding' context item pulled the whole explanation off onto embedding-models; framework-only made
+    # it correctly explain his dimension=recursion-axis theorem. So for theorem-fork: framework claims only.
+    # (The full `context`/`prior_decisions` still ride the RETURN for transparency/other consumers — just not
+    # the explain BLOCK.) Other subtypes: the clean reranked comprehended context + priors (their grounding IS
+    # the project context — no never-assert restriction).
     lines: list[str] = []
+    pri = bundle.get("prior_decisions") or []
     if theorem_claims:
-        lines.append("YOUR FRAMEWORK (verbatim, chunk-traced — ground here, state as yours):")
+        lines.append("YOUR FRAMEWORK (verbatim, chunk-traced from your written mathematics — ground ONLY here, state as yours):")
         for tc in theorem_claims[:12]:
             lines.append(f"  • {tc['claim']}")
-        lines.append("")
-        lines.append("Surrounding context (comprehended — flag anything beyond your framework as projection):")
-        for c in ctx:
-            t = c.get("text")
-            if isinstance(t, str) and t.strip():
-                lines.append(f"  - {t.strip()}")
     else:
         for c in ctx:
             t = c.get("text")
             if isinstance(t, str) and t.strip():
                 lines.append(f"- {t.strip()}")
-    pri = bundle.get("prior_decisions") or []
-    if pri:
-        _attach_digest_text(suite.store, pri)
-        for pd in pri:
-            t = pd.get("text")
-            if isinstance(t, str) and t.strip():
-                lines.append(f"- (you've weighed this before) {t.strip()}")
+        if pri:
+            _attach_digest_text(suite.store, pri)
+            for pd in pri:
+                t = pd.get("text")
+                if isinstance(t, str) and t.strip():
+                    lines.append(f"- (you've weighed this before) {t.strip()}")
     block = "\n".join(lines)
 
     return {"decision": text, "subtype": subtype, "context": ctx,
