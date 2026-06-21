@@ -54,6 +54,12 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
   - **`screen_reader`** — the at-altitude screen-comprehension: reads the `MOCKUP UNDER REVIEW` block (the
     `mockup://` focus injection, cognition's A) → a plain-language "what this screen is + what you can do" for
     the non-developer operator. Walkthrough-cast only (the review faculty; not `listening`). `op:generate`.
+- **`explain_role`** — the **decision EXPLAIN role** (the explain-wire's model leg, 2026-06-21): when Tim opens
+  a decision card, generates the operator-facing explanation. Composes THREE built halves — recollection's
+  grounding `block`+`caveat` (its `input_addresses` → the user msg), fork's `explanation_policy_for(decision)`
+  (the sampling regime, `policy=`), and its OWN `prompt_slot` (the §5 per-subtype FRAMING, resolved by
+  `coordinate={subtype}`). ★ theorem-fork framing = the NEVER-ASSERT law (ground only in Tim's maths, flag
+  projection — the cube-error made structural). `op:generate`; fired by projection's RHM at the explain seam.
 - **`verify_jury`** — the canonical **jury** (C2.4): `draws:3` + a pure majority-vote `verdict_rule`. In no
   cast (fired explicitly via `run_jury`). **⚠ E4 caveat:** N draws on ONE model are correlated (variance,
   not independent error) — a correctness-jury that matters needs model diversity; the verdict_rule shape
