@@ -127,7 +127,22 @@ def _model_answer(question: str, aim: str | None, *, suite, graph_id: str = "cod
     from runtime.cc_clone import pick_ollama_model_for_context
     from fabric.config import OLLAMA_DIRECT
     brain_model, why = pick_ollama_model_for_context(_BRAIN_CTX_ESTIMATE)
-    res = suite.chat(question, graph_id, focus=({"address": aim} if aim else None),
+    # AIM-GROUNDING (Tim's V core value): when the V is aimed at something, FOLD that thing's territory into
+    # the turn (territory_prose — the SAME [Operator context] block the streaming /api/claude/turn path folds)
+    # so the grounded mind answers ABOUT the aimed card, not from general state ("I cannot see a specific
+    # decision card" was the gap). suite.chat's `focus` alone did not inject it. Fail-soft: territory_prose
+    # never raises; a thin/empty territory just omits the block (the answer still fires — the floor).
+    asked = question
+    if aim:
+        try:
+            from runtime.territory import territory_prose
+            terr = territory_prose(aim, suite=suite)
+            if terr and terr.strip():
+                asked = ("[What you're looking at]\n" + terr.strip()
+                         + "\n\n[The operator's question]\n" + question)
+        except Exception:
+            pass
+    res = suite.chat(asked, graph_id, focus=({"address": aim} if aim else None),
                      model=brain_model, base_url=OLLAMA_DIRECT)
     # suite.chat's answer rides under `reply` (the epilogue shape); `text`/`answer` are tolerated fallbacks
     # (prologue off/refusal shapes). The old `res.get("text")` was always None for the normal shape — masked
