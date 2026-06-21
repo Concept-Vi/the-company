@@ -521,6 +521,17 @@ def territory_write(element_id, item, *, suite):
     target = element_id or item.get("element_id")
     if not target:
         raise ValueError("territory_write: no element_id/target sub-address — fail loud (nothing to write at).")
+    # HOLE-1 (wildcard, lead-authorized + fork-greenlit 2026-06-21): a decision take/retract MUST land +
+    # signal on the CANONICAL decision address — else the mark lands at a non-canonical string the
+    # decision:// resolver never sees (decided silently reads pending) AND decision_decided_signal emits a
+    # non-canonical address a gated_on lane never matches. Canonicalize ONCE here (single-source:
+    # contracts.address, never reimplemented), so BOTH suite.mark(target,…) and decision_decided_signal(…,
+    # target,…) below use the canonical form (line :502's stated requirement). Idempotent on already-
+    # canonical input (the happy path is unchanged); fail-loud on a malformed decision address
+    # (parse_decision_address raises) — a visible refusal, not a silent miss. retract is the symmetric twin.
+    if mark_type in ("decision_take", "decision_retract"):
+        from contracts.address import decision_address, parse_decision_address
+        target = decision_address(parse_decision_address(target))
     fields = {k: v for k, v in item.items() if k not in ("type", "element_id", "id")}
     # canonical `value` per type, matching the mark_type's value_shape (comment=free→text · reaction=label
     # →reaction · favour=score→score) — so render reads a mark's value uniformly (the marks-layer convention).
