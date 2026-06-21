@@ -236,6 +236,37 @@ def _attach_digest_text(store, context: list[dict], *, max_chars: int = 600) -> 
     return context
 
 
+def _provenance_text(suite, explanation_source, *, max_chars: int = 900) -> str:
+    """Resolve a decision's `explanation_source` → its decision-SPECIFIC ORIGIN content — the genuine
+    provenance the gather recorded (the board idea / gap-note / Tim's actual words / the design ledger the
+    decision was GATHERED FROM). THE TRUE-L1 grounding (lead 2026-06-21): this is content about THIS choice
+    ([[gap-pressure]] + [[introspective-data-building]] — the decision arose from the fabric's own operation),
+    so it grounds the explanation in COMPANY MEMORY + adds what's NOT on the card — vs the topic-cluster
+    nearest-neighbour bleed. board:// → resolve_address (title + body); code:// → read the source file (not
+    content-resolvable via the dispatcher yet). '' if absent/unresolvable (degrade-clean → decision-content-only)."""
+    if not (isinstance(explanation_source, str) and explanation_source.strip()):
+        return ""
+    es = explanation_source.strip()
+    try:
+        if es.startswith("board://"):
+            from runtime import cognition as _cog
+            r = _cog.resolve_address(suite.store, es)
+            if isinstance(r, dict):
+                parts = [r.get("title", ""), r.get("body", "")]
+                return ". ".join(p for p in parts if isinstance(p, str) and p.strip()).strip()[:max_chars]
+        elif es.startswith("code://"):
+            import os as _os
+            p = es[len("code://"):]
+            if not _os.path.isabs(p):
+                p = _os.path.join(_os.getcwd(), p)
+            if _os.path.exists(p) and _os.path.isfile(p):
+                with open(p, encoding="utf-8") as fh:
+                    return fh.read().strip()[:max_chars]
+    except Exception:
+        pass
+    return ""
+
+
 def recall_for_decision(suite, decision_text: str, *, address: str | None = None,
                         spaces: tuple | list | None = None, k_per_space: int = 4,
                         rerank: bool = True, top_n: int = 10,
@@ -431,10 +462,11 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
         subj = cand if (isinstance(cand, str) and cand.startswith("code://")) else None
         _options = decision.get("options") if isinstance(decision.get("options"), list) else []
         _leg = decision.get("legibility") if isinstance(decision.get("legibility"), dict) else {}
+        _es = decision.get("explanation_source")
     else:
         text = decision if isinstance(decision, str) else ""
         subtype, subj = None, None
-        _options, _leg = [], {}
+        _options, _leg, _es = [], {}, None
     if not (isinstance(text, str) and text.strip()):
         raise ValueError("explanation_grounding: decision must carry text "
                          "(meaning/text/decision/question) or be a non-empty string.")
@@ -533,6 +565,17 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
                     lines.append(f"  • {o['label']}{_imp}")
         if _leg.get("why"):
             lines.append(f"WHY IT MATTERS: {_leg['why']}")
+        # ★ GENUINE PROVENANCE (the TRUE-L1 grounding, lead 2026-06-21): resolve the decision's
+        # explanation_source → the decision-SPECIFIC ORIGIN it was GATHERED FROM (Tim's own words / the board
+        # idea / the gap-pressure / the design ledger). This is the company-MEMORY grounding — about THIS
+        # choice, adds what's NOT on the card (the discriminating check) — vs the topic-cluster bleed. Absent ⇒
+        # decision-content-only (the banked bleed-fix; honest, on-topic, not grounded-in-memory — flagged).
+        _prov = _provenance_text(suite, _es)
+        if _prov:
+            lines.append("")
+            lines.append("WHERE THIS CAME FROM (your own words / the pressure that raised it — company memory, "
+                         "ground the 'why it matters' in this):")
+            lines.append(f"  {_prov}")
         # SECONDARY corpus — only items ABOVE the relevance floor (drop the bled neighbours). rerank=False ⇒
         # no scores ⇒ no corpus admitted (decision-content-only — the safe on-topic default).
         rel = [c for c in ctx if isinstance(c.get("text"), str) and c["text"].strip()
