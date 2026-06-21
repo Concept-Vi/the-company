@@ -10,6 +10,7 @@ import { Portrait } from './layouts/Portrait'
 import { Landscape } from './layouts/Landscape'
 import { GalleryMount } from './gallery/GalleryMount'
 import { resolveAndApplyModal } from './lib/resolveAllocation'
+import { SessionDrill } from './sessions/SessionDrill'
 import { RightHand } from './rhm/RightHand'
 import { DecisionsInbox } from './decisions/DecisionsInbox'
 import { ToolsBar } from './tools/ToolsBar'
@@ -533,6 +534,11 @@ export function App() {
       {/* THE DECISIONS INBOX — the in-surface "decisions waiting" entry (CTA when pending + the list); a tapped row
           opens through the same decision host (decision:open → GalleryMount). Sibling overlay, all form factors. */}
       <DecisionsInbox />
+      {/* THE SESSION-DRILL SURFACE (FACE-1, the supervisor face) — the first of the CC-integration faces: list the
+          Company's sessions (/api/sessions) → drill one → DNA's session-card on its live record + the recall lenses
+          (/api/session-recall). Opens on `sessions:open`. Sibling overlay, all form factors. The template the rest of
+          the FACE-1 breadth (channel-view/board-view/timeline) follows: data→route→host→DNA-render. */}
+      <SessionDrill />
       {/* THE TOOL FACE — the pilot palette (Tim 2026-06-19): the entry (ToolsBar) + the modal (ToolsPanel) where an
           operator picks a tool, sets it up in plain words via the op-conditional form, and runs it. Root siblings,
           all form factors. FRONT HALF live (list + description + form); Run/result are pending seams (fork's invoke

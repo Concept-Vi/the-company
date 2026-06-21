@@ -1,0 +1,42 @@
+/* THE SESSION-DRILL SURFACE (FACE-1) — a sibling-overlay modal (mirrors the inbox/tools overlay pattern). DNA's
+   session-card carries its OWN styling (rendered into .sessions-card); this only FRAMES the list + the recall
+   lenses. Tokens only — no bespoke values. (DNA owns the elegant chrome elevation as a follow; this is the
+   functional host frame for the first FACE-1 surface.) */
+.sessions-overlay {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: safe center; justify-content: center;
+  padding: calc(var(--safe-t) + var(--s-3)) var(--s-3) calc(var(--safe-b) + var(--s-3));
+  opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 200ms ease, visibility 200ms ease;
+}
+.sessions-overlay--open { opacity: 1; visibility: visible; pointer-events: auto; }
+.sessions-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink-primary) 48%, transparent); }
+.sessions-panel {
+  position: relative; width: 100%; max-width: 560px; max-height: 100%; display: flex; flex-direction: column;
+  background: var(--ground-accent); border-radius: var(--r-card); box-shadow: var(--elev-4); overflow: hidden;
+}
+.sessions-head {
+  flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-2);
+  padding: var(--s-4) var(--s-4) var(--s-3); border-bottom: 1px solid var(--hairline);
+}
+.sessions-title { margin: 0; font-size: var(--t-base); color: var(--ink-primary); }
+.sessions-sub { margin: var(--s-1) 0 0; font-size: var(--t-sm); color: var(--ink-dim); line-height: var(--lh-body); }
+.sessions-back { font-size: var(--t-sm); color: var(--ink-primary); background: none; border: none; cursor: pointer; padding: var(--s-1) 0; min-height: 44px; }
+.sessions-close { background: none; border: none; cursor: pointer; color: var(--ink-dim); font-size: 15px; line-height: 1; min-width: 44px; min-height: 44px; }
+.sessions-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: var(--s-3) var(--s-4) calc(var(--s-4) + var(--safe-b)); }
+.sessions-msg { font-size: var(--t-sm); color: var(--ink-dim); padding: var(--s-3) 0; }
+.sessions-msg--error { color: var(--ink-primary); }
+.sessions-msg--quiet { color: var(--ink-faint); }
+.sessions-retry { font-size: var(--t-sm); color: var(--ink-primary); background: var(--ground-secondary); border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); cursor: pointer; margin-left: var(--s-2); }
+.sessions-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s-2); }
+.sessions-row {
+  width: 100%; text-align: left; background: var(--ground-secondary); border: 1px solid var(--hairline);
+  border-radius: var(--r-card); padding: var(--s-3); cursor: pointer; display: flex; flex-direction: column; gap: var(--s-1); min-height: 44px;
+}
+.sessions-row:hover { background: var(--ground-primary); }
+.sessions-row-name { font-size: var(--t-base); color: var(--ink-primary); }
+.sessions-row-meta { font-size: var(--t-sm); color: var(--ink-dim); }
+.sessions-detail { display: flex; flex-direction: column; gap: var(--s-4); }
+.sessions-card { display: block; }
+.sessions-lens { display: flex; flex-direction: column; gap: var(--s-3); }
+.sessions-lens-h { margin: 0 0 var(--s-1); font-size: var(--t-sm); color: var(--ink-dim); }
+.sessions-lens-sec ul { margin: 0; padding-left: var(--s-4); display: flex; flex-direction: column; gap: var(--s-1); }
+.sessions-lens-sec li { font-size: var(--t-sm); color: var(--ink-primary); line-height: var(--lh-body); }
