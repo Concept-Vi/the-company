@@ -36,7 +36,9 @@ def register(mcp, suite):
                         cross-layer fusion.
           op="list"   — list records, newest-first; narrow with `project`.
           op="find"   — filter records by `project` / `kind` / `projection` / `source_address`.
-          op="read"   — fetch ONE record by its `address` (a run:// from list/find, or a code:// source id).
+          op="read"   — fetch ONE record by its `address` (a run:// from list/find, a code:// source id, OR
+                        an extraction://<asset>/<chunk_id> from op='query'/'determine' over the 'extractions'
+                        space — reads the dragnet extraction layer's full record: about/summary/claims/…).
                         HONESTY: for an INGESTED FILE the record is a capture DIGEST (a model's one-paragraph
                         summary + metadata), NOT the file's raw text — the corpus stores digests of sources.
                         The source itself lives at the code:// path on disk (outside this face).
@@ -139,6 +141,18 @@ def register(mcp, suite):
             # P8 — ONE file, ONE id regardless of path SPELLING: a code:// address carrying an absolute
             # path under the repo (or a './' prefix) normalizes to the canonical repo-relative id before
             # lookup (the eval: every spelling variant read as 'not ingested' for the same file).
+            # extraction://<asset>/<chunk_id> — the dragnet extraction layer's READ path (fork's by-use seam:
+            # these are op='query'-able but were not op='read'-able). Resolve from the extraction jsonl so the
+            # WHOLE fabric reads a chunk's content (about/summary/claims/…), not just ranks it.
+            if address.startswith("extraction://"):
+                from runtime import recall_determine as _rd
+                rec = _rd.read_extraction(address)
+                if rec is not None:
+                    return {"op": op, "address": address, "record": rec}
+                return {"op": op, "address": address, "record": None,
+                        "error": f"no extraction record for {address!r} — expected extraction://<asset>/<chunk_id> "
+                        "(asset = 'full' session history | 'visual-dna'). Rank them via corpus(op='query', "
+                        "space='extractions') or corpus(op='determine')."}
             if address.startswith("code://"):
                 import os as _os
                 p = address[len("code://"):]

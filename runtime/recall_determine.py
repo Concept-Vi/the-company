@@ -31,6 +31,33 @@ def _blob(r):
                      " ".join(r.get("claims", []) or []), " ".join(r.get("relations", []) or [])])
 
 
+_READ_CACHE: dict = {}
+
+
+def read_extraction(source_address: str) -> dict | None:
+    """Read ONE extraction record by its `extraction://<asset>/<chunk_id>` id — the asset's READ path so the
+    WHOLE fabric (not just the embedding session) can read a chunk's content, not only RANK it (fork's by-use
+    seam 2026-06-21: extraction:// was op='query'-able but not op='read'-able). Returns the full superset
+    record (about/kind/touches/summary/entities/claims/relations + chunk_id) or None. Cached per asset."""
+    if not isinstance(source_address, str) or not source_address.startswith("extraction://"):
+        return None
+    asset, _, cid = source_address[len("extraction://"):].partition("/")
+    if not asset or not cid:
+        return None
+    if asset not in _READ_CACHE:
+        path = asset_path(asset)
+        idx = {}
+        if os.path.exists(path):
+            for line in open(path):
+                try:
+                    r = json.loads(line)
+                    idx[str(r.get("chunk_id"))] = r
+                except Exception:
+                    continue
+        _READ_CACHE[asset] = idx
+    return _READ_CACHE[asset].get(str(cid))
+
+
 def topic_regex(topic_text: str):
     """Build a candidate-filter regex from a natural-language topic — the salient keywords OR'd. (The
     filter is the cheap recall-first cut over the stored extraction fields; the model never sees the
