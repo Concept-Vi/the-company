@@ -110,6 +110,16 @@ VERIFY each by REAL behaviour (default-to-wrong): think = the token-DROP (1304�
 empty→clean transition; never "output appeared". (recollection GO'd the hot-path edit as non-interfering; lead
 race-clear; keep run_items' default additive for bake-resume safety.)
 
+## ★★ RESOLVED-SLOTS §5 — BUILT + VERIFIED (881fb9f, 2026-06-21) — the prompt half
+To composition's LOCKED RESOLVER-CONTRACT.md §5: a role's prompt upgrades static-per-role → resolve(coordinate).
+Additive `prompt_slot` field (roles.py) = a resolve_slot value; run_role gains `coordinate`; the system prompt
+RESOLVES from prompt_slot via resolver.resolve_slot against the turn coordinate (grain·viewer·mode·subtype·
+register). Threaded run_role→cognition→MCP. VERIFIED by-use through the REAL run_role path: ONE role → 3 prompts
+across 3 coordinates (tim→architect/client→client/stranger→default); static role + no-coordinate byte-identical;
+roles_acceptance 30/30 + rules_acceptance 64/64. output_schema stays literal-superset (§5 common case);
+schema-select-between-classes + the {{}} template wrapper are the contract's FLAGGED-FOLLOWS (grain projection is
+READ-SIDE, recollection's). committed≠live: MCP coordinate param live on the MCP reload.
+
 ## ★ RESOLVED-SLOTS — CONTRACT SETTLED + RECALL-GROUNDED (2026-06-21; build is read-side, post-bake)
 **composition's contract answer (cc lead):** grain resolves on the READ side, NOT extraction. **EXTRACT-ONCE
 (rich superset) + DETERMINE-MANY (project the grain on read).** Applying prompt/schema-resolution at EXTRACTION
