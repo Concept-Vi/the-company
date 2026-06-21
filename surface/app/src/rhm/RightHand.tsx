@@ -44,7 +44,7 @@ const STARTERS = ['What am I looking at?', 'What can I do here?', 'Where can I g
 
 type Pos = { x: number; y: number } | null
 type Drag = { id: number; ox: number; oy: number; sx: number; sy: number; moved: boolean }
-type Brain = { ask: (p?: string) => unknown; groundedAsk: (p?: string) => unknown; direct: (i: unknown) => Promise<unknown[]>; aimChanged: () => void; destroy: () => void }
+type Brain = { ask: (p?: string) => unknown; groundedAsk: (p?: string) => unknown; postToChannel: (channel: string, message: string) => Promise<unknown>; direct: (i: unknown) => Promise<unknown[]>; aimChanged: () => void; destroy: () => void }
 
 const POS_KEY = 'rhm.handle.pos'
 // FIRST-CONTACT GREETING — the RHM is "the always-present guide… the teacher that walks the operator through
@@ -62,6 +62,15 @@ export function RightHand({ binding }: { binding?: string }) {
   const [tourStep, setTourStep] = useState<number | null>(null) // the guided walk: 0/1/2 = stepping ①②③; null = not touring
   const [tourAnswering, setTourAnswering] = useState(false) // true while the current step's answer is still streaming
   const [panelOpen, setPanelOpen] = useState(false) // the brain (Ask) panel
+  // ── THE OPEN V-POST (L4-post, Tim's fully-ungated bar 2026-06-22) — the trigger+picker+composer; forkVBrain.
+  // postToChannel does the post + self-renders the transparency line (the L2 split). Collapsed by default (the
+  // panel's primary job is Ask); a small "Post to a channel" toggle reveals it. Operator-law: the picker shows
+  // human channel NAMES (never the id); fork resolves the name server-side. NO gate/token (fully open per Tim).
+  const [postOpen, setPostOpen] = useState(false) // the post composer revealed
+  const [postChannels, setPostChannels] = useState<string[]>([]) // human channel NAMES from /api/channels (never ids)
+  const [postChannel, setPostChannel] = useState('') // the picked NAME (passed straight to postToChannel; fork resolves)
+  const [postMsg, setPostMsg] = useState('') // the message to post
+  const [posting, setPosting] = useState(false) // in-flight guard (one post per click)
   const [noteOpen, setNoteOpen] = useState(false) // the Note (annotate) composer
   const [noteText, setNoteText] = useState('')
   const [noteStatus, setNoteStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
@@ -127,6 +136,47 @@ export function RightHand({ binding }: { binding?: string }) {
   useEffect(() => {
     if (!panelOpen) setTourStep(null)
   }, [panelOpen])
+
+  // ── LOAD CHANNEL NAMES for the post-picker (when the composer opens) — human NAMES only (operator-law); fork
+  // resolves the name → channel server-side, so projection never touches the id. Filter the internal __test__
+  // scaffolding names (the __name__ convention = not operator-facing channels). Degrade-clean (empty on error).
+  useEffect(() => {
+    if (!postOpen || postChannels.length) return
+    let alive = true
+    ;(async () => {
+      try {
+        const d = await (await fetch('/api/channels')).json()
+        const chans: Array<{ name?: string }> = d.channels || d.items || (Array.isArray(d) ? d : [])
+        const names = chans
+          .map((c) => String(c.name || '').trim())
+          .filter((n) => n && !/^__.*__$/.test(n)) // drop internal __test__ scaffolding names — operator sees real ones
+        if (alive) {
+          setPostChannels(names)
+          if (names.length && !postChannel) setPostChannel(names[0]) // default to the first (most-active first from the feed)
+        }
+      } catch {
+        /* degrade-clean: no names → the composer shows an honest empty-picker state */
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [postOpen, postChannels.length, postChannel])
+
+  // POST — the open V-post (fully ungated per Tim). Pass the picked NAME straight to forkVBrain.postToChannel; fork
+  // resolves it + self-renders the transparency line ("V posted to #<name>: <text>") into the brain panel's reply
+  // slot (the L2 split — the panel DOM is fork's; this owns the trigger). Fail-soft; one post per click.
+  const onPost = useCallback(() => {
+    const name = postChannel.trim()
+    const msg = postMsg.trim()
+    if (!name || !msg || posting) return
+    setPosting(true)
+    Promise.resolve(brainRef.current?.postToChannel(name, msg))
+      .then(() => {
+        setPostMsg('') // clear the message on send; the transparency line (fork's reply slot) shows what went out
+      })
+      .finally(() => setPosting(false))
+  }, [postChannel, postMsg, posting])
 
   // keep the surface-default aim carrying the LIVE view (which projection binding is up) so the brain grounds
   // "what am I looking at?" on the real on-screen view. When the V is currently AT the surface default (nothing
@@ -570,6 +620,50 @@ export function RightHand({ binding }: { binding?: string }) {
             ))}
           </div>
         )}
+        {/* THE OPEN V-POST composer (L4-post, Tim's fully-ungated bar) — collapsed behind a toggle so it never
+            clutters the Ask flow. Reveals a channel-NAME picker (human names only, operator-law) + a message +
+            Post → forkVBrain.postToChannel(name, msg); fork resolves the name + self-renders the transparency line
+            in the reply slot below. NO gate/token (fully open per Tim). Sits above fork's appended .v-brain. */}
+        <div className="v-post" data-open={postOpen}>
+          <button className="v-post-toggle" type="button" onClick={() => setPostOpen((o) => !o)} aria-expanded={postOpen}>
+            {postOpen ? '▾ Post to a channel' : '▸ Post to a channel'}
+          </button>
+          {postOpen && (
+            <div className="v-post-body" role="group" aria-label="Post to a channel">
+              {postChannels.length > 0 ? (
+                <select
+                  className="v-post-channel"
+                  value={postChannel}
+                  onChange={(e) => setPostChannel(e.target.value)}
+                  aria-label="Which channel"
+                >
+                  {postChannels.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="v-post-empty">No channels to post to right now.</p>
+              )}
+              <textarea
+                className="v-post-msg"
+                value={postMsg}
+                onChange={(e) => setPostMsg(e.target.value)}
+                placeholder="What to post…"
+                rows={2}
+              />
+              <button
+                className="v-post-send"
+                type="button"
+                onClick={onPost}
+                disabled={!postChannel || !postMsg.trim() || posting}
+              >
+                {posting ? 'Posting…' : 'Post'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* THE NOTE COMPOSER — the WIRED 'Note' verb. Leave a note ABOUT the current aim; it routes back through

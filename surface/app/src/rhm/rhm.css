@@ -435,6 +435,33 @@
   overflow: auto;
 }
 .v-brain-reply:empty { display: none; }
+
+/* THE OPEN V-POST composer (L4-post) — collapsed toggle + reveal; tokens only, matches the panel's chrome. */
+.v-post { margin-top: var(--s-2); border-top: 1px solid var(--hairline); padding-top: var(--s-2); }
+.v-post-toggle {
+  width: 100%; text-align: left; font-size: var(--t-xs); color: var(--ink-dim);
+  background: none; border: none; cursor: pointer; padding: var(--s-1) 0; min-height: 36px;
+}
+.v-post-toggle:hover { color: var(--ink-primary); }
+.v-post-toggle:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }
+.v-post-body { display: flex; flex-direction: column; gap: var(--s-2); margin-top: var(--s-1); }
+.v-post-channel {
+  font-size: var(--t-sm); color: var(--ink-primary); background: var(--ground-primary);
+  border: 1px solid var(--hairline); border-radius: var(--r-chrome); padding: var(--s-1) var(--s-2); min-height: 40px;
+}
+.v-post-empty { font-size: var(--t-sm); color: var(--ink-faint); margin: 0; }
+.v-post-msg {
+  font-size: var(--t-sm); color: var(--ink-primary); background: var(--ground-primary);
+  border: 1px solid var(--hairline); border-radius: var(--r-chrome); padding: var(--s-2);
+  line-height: var(--lh-body); resize: vertical; min-height: 44px; font-family: inherit;
+}
+.v-post-send {
+  align-self: flex-start; font-size: var(--t-sm); color: var(--ink-primary); background: var(--ground-accent);
+  border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: var(--s-1) var(--s-4); cursor: pointer; min-height: 40px;
+}
+.v-post-send:hover:not(:disabled) { background: var(--ground-primary); border-color: var(--ink-dim); }
+.v-post-send:disabled { opacity: 0.5; cursor: default; }
+.v-post-send:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }
 .v-brain-input {
   width: 100%;
   box-sizing: border-box;
