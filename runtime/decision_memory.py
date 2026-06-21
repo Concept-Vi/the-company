@@ -36,6 +36,22 @@ DEFAULT_DECISION_SPACES = ("common_knowledge", "principles", "worldview", "topic
 # render MEANING. The ~10s extractions query is a follow-on speed target (a fast index for the 44k space).
 EXPLAIN_DECISION_SPACES = DEFAULT_DECISION_SPACES + ("extractions",)
 
+# ── the never-assert law's canonical text (recollection owns it — single-source, two renderings) ──────────
+# THE LAW (lead 2026-06-21): a theorem-fork decision's explanation grounds in Tim's OWN written maths and
+# FLAGS AI-projection — never asserts a gloss as his theorem (the cube-error proved the AI errs here). It is
+# DOUBLE-surfaced so Tim can't miss it: (1) IN-CARD by DNA via the theorem-fork subtype's `ai_uncertainty_caveat`
+# required-element — THEOREM_FORK_CAVEAT_OPERATOR below (operator-facing, second-person, Tim-altitude); (2)
+# IN the explanation by explain_role via explanation_grounding(...).caveat (model-facing directive). BOTH derive
+# from this one law so they can't drift. recollection supplies the text; composition's theorem-fork row declares
+# the element; DNA renders it.
+THEOREM_FORK_CAVEAT_OPERATOR = (
+    "Grounded in your own framework — not asserted beyond it. This is built only from your written "
+    "mathematics (traceable to your notes); wherever it would go past what you've actually stated, that step "
+    "is flagged as the AI's projection, never claimed as your theorem."
+)
+# a one-line banner variant for tight in-card space (DNA picks by available room):
+THEOREM_FORK_CAVEAT_BANNER = "⚠ Grounded in your maths — anything beyond is flagged as the AI's projection, not asserted as yours."
+
 
 def prior_decisions_about(suite, topic_text: str, *, k: int = 6, rerank: bool = True) -> list[dict]:
     """"Decisions made about X resurfacing" (the lead's step-6 framing) — surface PRIOR decision-content

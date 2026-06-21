@@ -127,9 +127,34 @@ A constellation archetype is inherently relational; `/api/transcript-search` giv
   when DNA wants the relational web (the constellation's lines). Flag me and I'll confirm the exact call-shape
   for whichever node type you wire.
 
+## RESOLVED (was "open to DNA" — decided here so DNA isn't blocked; request changes if the archetype needs them)
+**1. The constellation NODE SCHEMA (proposed, concrete).** Every node — session (raw) or claim (grounded) —
+normalizes to ONE shape so the archetype renders both:
+```jsonc
+{
+  "id":        "session://… | extraction://<asset>/<chunk_id>",  // stable, drill-in round-trippable
+  "label":     "human meaning",     // title/name (session) | claim text (claim) — NEVER a raw id (operator-law)
+  "kind":      "session | claim | theme",  // node type (theme = a grounded cluster center)
+  "weight":    Number,              // session: hits_in_session · claim: 1 (or theme: #claims) — node SIZE
+  "brightness": 0..1,               // session: score · claim: rerank/cosine — relevance → glow/position
+  "status":    "supervised-live|closed|… | null",  // session live-state (color); null for claims
+  "meaning":   "snippet | claim",   // the hover/expand text
+  "coordinate": { … } | null,       // session: point{anchor,turn,speaker,ts} · claim: {chunk_id} — drill target
+  "action":    "deliver|wake|queue | null",  // session live affordance; null for claims (read-only)
+  "parent":    "theme:<i> | null"   // claims link to their theme cluster (grounded mode's 2-level structure)
+}
+```
+Edges: see the EDGES section (`corpus(op='neighbours')`) — optional relational lines per node.
+
+**2. One toggled constellation, NOT two surfaces (proposed).** Render ONE constellation with a MODE TOGGLE:
+`raw` lens = session nodes ("which conversations"), `grounded` lens = theme→claim nodes ("what was said").
+Same query, same surface, two layers the operator flips between — not two separate views. (Reason: the two
+modes answer complementary questions about the SAME query; a toggle keeps it one coherent operable surface,
+matches the operator-cycle's single-surface intent. DNA: if the archetype favors a split, say so — easy adapt.)
+
 ## STATUS
 - Route LIVE + verified by-use (raw + grounded, the >60s determine timeout gone, ~13s warm). recollection's
   data half of transcript-viz is GO — DNA writes `DNA.faceRecord.transcriptRecord` + the constellation
   archetype → projection clones the SessionDrill host → the surface lights.
-- Open to DNA: the exact constellation node schema (I'll adapt the faceRecord to it) + whether to render
-  both modes as one toggled constellation or two.
+- Node schema + lens decision RESOLVED above. I adapt the faceRecord to whatever the archetype's final node
+  shape needs — flag me and I'll confirm the mapping for your exact schema.
