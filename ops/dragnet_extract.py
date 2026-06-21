@@ -77,7 +77,7 @@ def _fine_role():
 
 
 def load_chunks(*, projects=None, since=None, until=None, limit=None, sample_step=None,
-                db=SUBSTRATE_DB, vault=None):
+                db=SUBSTRATE_DB, vault=None, path_prefix=None):
     """Read chunks from a substrate.db (read-only), filtered. `db` = which substrate (claude-sessions OR the
     overlord .state for the visual-dna vault). `vault` = restrict to one substrate vault (e.g. 'visual-dna').
     project = leading-rel_path-segment EXACT match; date = parsed from the chunk ANCHOR (turn date), NOT mtime.
@@ -100,6 +100,12 @@ def load_chunks(*, projects=None, since=None, until=None, limit=None, sample_ste
         # like -home-tim-repos-project-vi / -home-tim-vi-chat). The lead's exact-match-not-substring flag.
         seg = (rel_path or "").split("/")[0]
         if projects and seg not in projects:
+            continue
+        # DEEPER path-prefix filter (additive — for when the leading segment is too coarse: e.g. 'working-docs'
+        # spans both universal-mechanics-main [Tim's articulated cube/dimensional MATH] and unprocessed). Any
+        # of `path_prefix` matching the rel_path START includes the chunk. The 2026-06-21 theorem-rebake scopes
+        # to working-docs/universal-mechanics-main (where cube/perpendicular/dimension actually live).
+        if path_prefix and not any((rel_path or "").startswith(p) for p in path_prefix):
             continue
         d = None
         m = _ANCHOR_DATE.search(anchor or "")
@@ -188,9 +194,12 @@ def main():
     ap.add_argument("--db", default=SUBSTRATE_DB, help="substrate db to read (default claude-sessions; for "
                     "visual-dna use the overlord .state db)")
     ap.add_argument("--vault", default=None, help="restrict to one substrate vault (e.g. visual-dna)")
+    ap.add_argument("--path-prefix", default="", help="comma-sep rel_path PREFIXES to include (deeper than "
+                    "--projects' leading-segment match; e.g. working-docs/universal-mechanics-main)")
     ap.add_argument("--out-name", default="full", help="output basename → extractions-<name>.jsonl")
     a = ap.parse_args()
     projects = [p.strip() for p in a.projects.split(",") if p.strip()] or None
+    path_prefix = [p.strip() for p in a.path_prefix.split(",") if p.strip()] or None
 
     if a.all and not a.confirm:
         print("FULL BAKE is GATED. Before --all --confirm, these must be TRUE:\n"
@@ -203,8 +212,8 @@ def main():
     n = a.sample if a.sample else (None if a.all else 50)
     chunks = load_chunks(projects=projects, since=a.since, until=a.until,
                          limit=(n if not a.all else None), sample_step=(a.sample_step if a.sample else None),
-                         db=a.db, vault=a.vault)
-    print(f"loaded {len(chunks)} chunks  (projects={projects} since={a.since} until={a.until})")
+                         db=a.db, vault=a.vault, path_prefix=path_prefix)
+    print(f"loaded {len(chunks)} chunks  (projects={projects} path_prefix={path_prefix} since={a.since} until={a.until})")
     if not chunks:
         print("no chunks after filter — check the filter (note: date is from anchor, not mtime).")
         return 1
