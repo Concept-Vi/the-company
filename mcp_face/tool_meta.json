@@ -1,7 +1,14 @@
 {
   "_schema": "tool-meta-registry-v1",
   "_note": "The HUMAN layer for the MCP tool face (gap 7). One row per tool, keyed by tool name. Source of truth for the friendly presentation; /api/tools RESOLVES + JOINS this onto the machine descriptor (name/inputSchema/posture from the FastMCP registry) → one descriptor the surface reads. Authored content (NOT in bridge code, NOT a client merge); seeded by lead from the inventory translations, refined draft->steer by lead/Tim. Degrade-clean: a tool absent here → form_meta=null (the surface still renders from the schema). human_description = the pleasant plain-English meaning (never the raw agent docstring). op_labels = op->friendly verb. op_params = op->ordered VISIBLE params (expert knobs hidden). param_labels = param->human label. enum_sources = param->live registry URL whose response (object keys / array) populates that param's dropdown (registry-is-truth, no per-tool code; degrade-clean to free-text if the source is dead).",
-  "_fields": ["human_name", "human_description", "op_labels", "op_params", "param_labels", "enum_sources"],
+  "_fields": [
+    "human_name",
+    "human_description",
+    "op_labels",
+    "op_params",
+    "param_labels",
+    "enum_sources"
+  ],
   "tools": {
     "corpus": {
       "human_name": "Company memory",
@@ -15,12 +22,37 @@
         "determine": "Gather themes on a topic"
       },
       "op_params": {
-        "query": ["text", "space", "k", "rerank", "detail"],
-        "list": ["project", "limit"],
-        "find": ["project", "kind", "projection", "source_address"],
-        "read": ["address", "detail"],
-        "neighbours": ["address", "space", "k"],
-        "determine": ["text", "asset", "limit"]
+        "query": [
+          "text",
+          "space",
+          "k",
+          "rerank",
+          "detail"
+        ],
+        "list": [
+          "project",
+          "limit"
+        ],
+        "find": [
+          "project",
+          "kind",
+          "projection",
+          "source_address"
+        ],
+        "read": [
+          "address",
+          "detail"
+        ],
+        "neighbours": [
+          "address",
+          "space",
+          "k"
+        ],
+        "determine": [
+          "text",
+          "asset",
+          "limit"
+        ]
       },
       "param_labels": {
         "text": "Your question",
@@ -60,9 +92,21 @@
         "snapshot": "Full snapshot"
       },
       "op_params": {
-        "list": ["kind", "posture", "limit"],
-        "get": ["id", "kind", "name"],
-        "search": ["query", "kind", "limit"],
+        "list": [
+          "kind",
+          "posture",
+          "limit"
+        ],
+        "get": [
+          "id",
+          "kind",
+          "name"
+        ],
+        "search": [
+          "query",
+          "kind",
+          "limit"
+        ],
         "describe": [],
         "snapshot": []
       },
@@ -108,8 +152,14 @@
       },
       "op_params": {
         "list": [],
-        "describe": ["dial"],
-        "set": ["dial", "value", "overrides"]
+        "describe": [
+          "dial"
+        ],
+        "set": [
+          "dial",
+          "value",
+          "overrides"
+        ]
       },
       "param_labels": {
         "dial": "Which dial",
@@ -127,8 +177,14 @@
       },
       "op_params": {
         "list": [],
-        "describe": ["panel"],
-        "run": ["panel", "utterance", "element"]
+        "describe": [
+          "panel"
+        ],
+        "run": [
+          "panel",
+          "utterance",
+          "element"
+        ]
       },
       "param_labels": {
         "panel": "Which panel",
@@ -159,9 +215,21 @@
         "findings": "Review findings on a record"
       },
       "op_params": {
-        "target": ["target", "detail", "limit"],
-        "type": ["mark_type", "detail", "limit"],
-        "findings": ["address", "detail", "limit"]
+        "target": [
+          "target",
+          "detail",
+          "limit"
+        ],
+        "type": [
+          "mark_type",
+          "detail",
+          "limit"
+        ],
+        "findings": [
+          "address",
+          "detail",
+          "limit"
+        ]
       },
       "param_labels": {
         "target": "What you're looking at",
@@ -181,7 +249,9 @@
       },
       "op_params": {
         "rules": [],
-        "describe": ["rule"],
+        "describe": [
+          "rule"
+        ],
         "proposed": []
       },
       "param_labels": {
@@ -248,14 +318,37 @@
         "drift": "Where it drifted"
       },
       "op_params": {
-        "find": ["session", "q", "k"],
-        "decisions": ["session", "q", "k"],
-        "open_loops": ["session", "k"],
-        "catch_up": ["session", "since"],
-        "timeline": ["session", "q"],
-        "directives": ["session"],
-        "spin_up_points": ["session"],
-        "drift": ["session"]
+        "find": [
+          "session",
+          "q",
+          "k"
+        ],
+        "decisions": [
+          "session",
+          "q",
+          "k"
+        ],
+        "open_loops": [
+          "session",
+          "k"
+        ],
+        "catch_up": [
+          "session",
+          "since"
+        ],
+        "timeline": [
+          "session",
+          "q"
+        ],
+        "directives": [
+          "session"
+        ],
+        "spin_up_points": [
+          "session"
+        ],
+        "drift": [
+          "session"
+        ]
       },
       "param_labels": {
         "session": "Which session",
@@ -328,12 +421,35 @@
         "timeline": "A session's life over time"
       },
       "op_params": {
-        "list": ["state", "cwd", "q", "limit"],
-        "describe": ["session", "detail"],
-        "inbox": ["session", "thread", "since", "limit"],
-        "watch": ["session", "since"],
-        "search": ["q", "mode", "state", "limit"],
-        "timeline": ["session"]
+        "list": [
+          "state",
+          "cwd",
+          "q",
+          "limit"
+        ],
+        "describe": [
+          "session",
+          "detail"
+        ],
+        "inbox": [
+          "session",
+          "thread",
+          "since",
+          "limit"
+        ],
+        "watch": [
+          "session",
+          "since"
+        ],
+        "search": [
+          "q",
+          "mode",
+          "state",
+          "limit"
+        ],
+        "timeline": [
+          "session"
+        ]
       },
       "param_labels": {
         "session": "Which session",
@@ -357,10 +473,25 @@
         "edges": "A session's connections"
       },
       "op_params": {
-        "list": ["kind", "status", "q", "limit"],
-        "describe": ["channel", "probe_supervisor"],
-        "history": ["channel", "since", "limit"],
-        "edges": ["session", "limit"]
+        "list": [
+          "kind",
+          "status",
+          "q",
+          "limit"
+        ],
+        "describe": [
+          "channel",
+          "probe_supervisor"
+        ],
+        "history": [
+          "channel",
+          "since",
+          "limit"
+        ],
+        "edges": [
+          "session",
+          "limit"
+        ]
       },
       "param_labels": {
         "channel": "Which group",
@@ -461,8 +592,17 @@
         "find": "Find a role's runs"
       },
       "op_params": {
-        "list": ["run_kind", "run_op", "limit"],
-        "find": ["role", "run_kind", "run_op", "limit"]
+        "list": [
+          "run_kind",
+          "run_op",
+          "limit"
+        ],
+        "find": [
+          "role",
+          "run_kind",
+          "run_op",
+          "limit"
+        ]
       },
       "param_labels": {
         "role": "Which role",
@@ -489,8 +629,13 @@
         "compact": "Compress and continue"
       },
       "op_params": {
-        "read": ["session"],
-        "compact": ["session", "focus"]
+        "read": [
+          "session"
+        ],
+        "compact": [
+          "session",
+          "focus"
+        ]
       },
       "param_labels": {
         "session": "Which session",
@@ -507,8 +652,12 @@
       },
       "op_params": {
         "list": [],
-        "get": ["id"],
-        "fire": ["id"]
+        "get": [
+          "id"
+        ],
+        "fire": [
+          "id"
+        ]
       },
       "param_labels": {
         "id": "Which task"
@@ -525,9 +674,16 @@
       },
       "op_params": {
         "list": [],
-        "describe": ["flow"],
-        "run": ["flow", "params"],
-        "propose": ["spec"]
+        "describe": [
+          "flow"
+        ],
+        "run": [
+          "flow",
+          "params"
+        ],
+        "propose": [
+          "spec"
+        ]
       },
       "param_labels": {
         "flow": "Which line",
@@ -582,10 +738,29 @@
         "types": "What you can post"
       },
       "op_params": {
-        "file": ["type", "title", "body", "author_session", "channel", "links"],
-        "list": ["type", "state", "source", "author_session"],
-        "get": ["item"],
-        "transition": ["item", "to_state", "by", "note"],
+        "file": [
+          "type",
+          "title",
+          "body",
+          "author_session",
+          "channel",
+          "links"
+        ],
+        "list": [
+          "type",
+          "state",
+          "source",
+          "author_session"
+        ],
+        "get": [
+          "item"
+        ],
+        "transition": [
+          "item",
+          "to_state",
+          "by",
+          "note"
+        ],
         "types": []
       },
       "param_labels": {
@@ -619,14 +794,40 @@
       },
       "op_params": {
         "list": [],
-        "send": ["to", "message", "thread", "topic"],
-        "broadcast": ["to", "message", "topic"],
-        "mail": ["thread", "limit"],
-        "create_channel": ["name", "purpose", "coordinator"],
-        "list_channels": ["include_archived"],
-        "add_member": ["channel", "handle"],
-        "remove_member": ["channel", "handle"],
-        "archive_channel": ["channel"]
+        "send": [
+          "to",
+          "message",
+          "thread",
+          "topic"
+        ],
+        "broadcast": [
+          "to",
+          "message",
+          "topic"
+        ],
+        "mail": [
+          "thread",
+          "limit"
+        ],
+        "create_channel": [
+          "name",
+          "purpose",
+          "coordinator"
+        ],
+        "list_channels": [
+          "include_archived"
+        ],
+        "add_member": [
+          "channel",
+          "handle"
+        ],
+        "remove_member": [
+          "channel",
+          "handle"
+        ],
+        "archive_channel": [
+          "channel"
+        ]
       },
       "param_labels": {
         "to": "Send to",
@@ -651,7 +852,10 @@
       },
       "op_params": {
         "engines": [],
-        "speak": ["text", "voice"]
+        "speak": [
+          "text",
+          "voice"
+        ]
       },
       "param_labels": {
         "text": "What to say",
@@ -669,10 +873,21 @@
         "types": "What you can attach"
       },
       "op_params": {
-        "attach": ["channel", "attachment_type", "target"],
-        "detach": ["attachment"],
-        "list": ["channel", "attachment_type"],
-        "manifest": ["channel"],
+        "attach": [
+          "channel",
+          "attachment_type",
+          "target"
+        ],
+        "detach": [
+          "attachment"
+        ],
+        "list": [
+          "channel",
+          "attachment_type"
+        ],
+        "manifest": [
+          "channel"
+        ],
         "types": []
       },
       "param_labels": {
@@ -746,9 +961,19 @@
         "cluster": "Group the alike ones"
       },
       "op_params": {
-        "role": ["addresses", "role", "max_tokens"],
-        "rule": ["addresses", "reduce_rule"],
-        "cluster": ["addresses", "cluster_threshold"]
+        "role": [
+          "addresses",
+          "role",
+          "max_tokens"
+        ],
+        "rule": [
+          "addresses",
+          "reduce_rule"
+        ],
+        "cluster": [
+          "addresses",
+          "cluster_threshold"
+        ]
       },
       "param_labels": {
         "addresses": "The answers to combine",
@@ -807,14 +1032,31 @@
         "ai_tic": "An AI tell"
       },
       "op_params": {
-        "role": ["spec", "model"],
-        "skill": ["spec"],
-        "context": ["spec"],
-        "projection": ["spec"],
-        "mark_type": ["spec"],
-        "generation_policy": ["spec"],
-        "relation_type": ["spec"],
-        "ai_tic": ["spec"]
+        "role": [
+          "spec",
+          "model"
+        ],
+        "skill": [
+          "spec"
+        ],
+        "context": [
+          "spec"
+        ],
+        "projection": [
+          "spec"
+        ],
+        "mark_type": [
+          "spec"
+        ],
+        "generation_policy": [
+          "spec"
+        ],
+        "relation_type": [
+          "spec"
+        ],
+        "ai_tic": [
+          "spec"
+        ]
       },
       "param_labels": {
         "spec": "The new piece",
@@ -859,10 +1101,23 @@
         "detach": "Remove from a step"
       },
       "op_params": {
-        "validate": ["ast", "destination"],
-        "dry_run": ["ast", "sample_resolved", "destination"],
-        "attach": ["role_id", "rule"],
-        "detach": ["role_id", "rule_id"]
+        "validate": [
+          "ast",
+          "destination"
+        ],
+        "dry_run": [
+          "ast",
+          "sample_resolved",
+          "destination"
+        ],
+        "attach": [
+          "role_id",
+          "rule"
+        ],
+        "detach": [
+          "role_id",
+          "rule_id"
+        ]
       },
       "param_labels": {
         "ast": "The condition",
@@ -872,6 +1127,42 @@
         "rule": "The rule",
         "rule_id": "Which rule"
       }
+    },
+    "node": {
+      "human_name": "Add or edit a building-block",
+      "human_description": "A structural piece on the canvas (a node). Managed through the canvas itself, not run from the tool list."
+    },
+    "connect": {
+      "human_name": "Link two building-blocks",
+      "human_description": "Wires one piece to another (a connection on the canvas). Managed through the canvas, not run from the tool list."
+    },
+    "set_config": {
+      "human_name": "Change a system setting",
+      "human_description": "Adjusts how the system is configured. A protected change — made through its own settings flow, not run from the tool list."
+    },
+    "run_graph": {
+      "human_name": "Run a whole flow",
+      "human_description": "Executes a multi-step flow end to end. A protected action — started from the flow itself, not run from the tool list."
+    },
+    "cc_clone": {
+      "human_name": "Start a working session",
+      "human_description": "Spins up a new AI working session. Started by the coordinator, not run from the tool list."
+    },
+    "cc_gate": {
+      "human_name": "Pause a step for your approval",
+      "human_description": "Holds a step until you clear it. Managed through the approval flow, not run from the tool list."
+    },
+    "session_post": {
+      "human_name": "Message another session",
+      "human_description": "Sends a message into another working session. Handled through the channel, not run from the tool list."
+    },
+    "self_change_log": {
+      "human_name": "The system's record of its own changes",
+      "human_description": "The log of what the system changed about itself. A record you read, not an action you run."
+    },
+    "channel_act": {
+      "human_name": "Act on the channel",
+      "human_description": "A protected action on the cross-session channel. Handled through the channel flow, not run from the tool list."
     }
   }
 }
