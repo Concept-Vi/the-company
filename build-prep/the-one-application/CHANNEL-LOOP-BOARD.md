@@ -357,3 +357,31 @@ Render-for-cognition (Tim: "his brain is the algorithm" — visual/spatial/tempo
 5. **VERIFY BY USE AND BY SIGHT, PER CRITERION** — never green a criterion on "no error"; render the WHOLE SCREEN (chrome-devtools 390+1440). "Does it feel great" is a TIM-JUDGED bar — flag, never agent-green.
 6. **GAP-SURFACE-TO-CHANNEL** — anything found broken/ungrounded gets posted to the board as first-class scope (gaps=scope, §EXPANSION), never parked.
 7. **FLAG THE EMBEDDER STATE** — declare auto-mode (semantic vs lexical) in the build log so a silent fall-back to lexical recall is visible; surface model-loads to Tim, never auto-start (consult-before-model-loads).
+
+---
+
+## §POPCORN / KERNELS — the outside-perspective primitive (Tim 2026-06-21, a folding-in, not a diversion)
+
+**The gap it fills.** The fabric + Tim share a blind spot from two sides: Tim holds the foundational mechanics + principles but cannot pre-specify the use / UX / purpose / look-and-feel / direction (he can't hand it over); and the fabric SELF-CONFIRMS — agrees things are good/done/complete/connected on partial information (the confirmation-bias that is the fabric's single greatest weakness in the channel). Neither self-sources genuine new direction; neither reliably attacks its own claims.
+
+**The primitive.** A KERNEL is an OUTSIDE perspective injected into the fabric to surface what the consensus can't see — structurally outside (no stake in the consensus, no preconception to satisfy), CURATED TO THIS INSTANCE (an engineered perspective for this specific scenario/project/capabilities, never a generic "user/UI/UX" template). Two valences of one primitive:
+- GENERATIVE — generates ideas/takes/designs from a perspective, UN-CONSTRAINED: given the full spread (the project · the capabilities · a channel record) + the gap ("the mechanics exist; nothing of the use/UI/UX/experience/look is designed") + open generativity — NOT a specific instruction (a specific ask imports Tim's/the-fabric's preconceptions and defeats the purpose). → heaps of un-preconceived takes on what could be built from what's there.
+- ADVERSARIAL — attacks the consensus's claims: reads channel history/content, hunts evidence a thing is NOT done/complete/connected as claimed, injects the counter-evidence. The STANDING structural fix for the confirmation-bias (default-to-wrong / the neutral-refuter as a fabric role, not ad-hoc). [[feedback-critical-comparison-default-to-wrong]]
+- (+ ~infinite other perspectives — the primitive is general.)
+
+**The cycle (feedback, elevatable).** A `kernel` is a new channel ITEM-TYPE alongside `decisions`: kernel generates/attacks → the fabric GROUNDS it (recall/check the takes vs what exists — the fabric's strength) → feedback → a better next attempt → the strong ones ELEVATE to Tim → his taste → same loop → the direction crystallizes outside-in. How the direction Tim can't give + the fabric can't self-source gets sourced.
+
+**Substrate (composable, registry-driven — all variables).** BOTH tiers: LOCAL 4B fleet (≤32 concurrent, free, fast) = BREADTH (many perspectives, the full-file dragnet); Claude Code (fresh sessions, curated prompt) = grounded DEPTH. Composes on parts MOSTLY WRITTEN-NOT-WIRED: `panel` (diverse-lens judge) · `roles`/`run_role`/`run_items` (local perspectives) · fresh-Claude-Code via the channel · run_items→reduce (the dragnet). The work is largely FINDING WHAT ISN'T DONE + wiring it; perspective/prompt/input-spread/substrate/threshold are registry fields.
+
+**The certain-landscape dragnet (full-coverage-recall as a build primitive — [[project-full-coverage-recall]]).** Before designing/building: fan the 4B over EVERY file in the company, each read individually with a FORMALISED prompt (authored for the kernels — not Tim's words, not generic) → structured "how does this relate to <build-intent>?" → a table → a threshold drops the definitely-irrelevant → the remainder → a NEXT LAYER (same/larger models, fewer items, against the project) → a TOTAL CERTAIN LANDSCAPE (everything relevant, nothing missed; design KNOWING, not guessing). MAP=4B-per-file, REDUCE=layered. (Surfaces the company-directory DRIFT too — they must merge to ONE.)
+
+**Why it folds into the loop (not a diversion).** Popcorn is a new item-type ON the operator-cycle/channel-system already being built (the decision-surface generalizes to any card-type; the item-type registry; the feedback→elevate-to-Tim loop). The face/operator-cycle work IS popcorn's substrate — a kernel card stacks, gets feedback, elevates, like a decision. The ADVERSARIAL kernel is the confirmation-bias fix for the fabric building the company (incl. popcorn — recursive). A direction "for a while," now formalised + foldable.
+
+**CRITERIA (channel-loop):**
+- A `kernel`(popcorn) item-type in the channel system, alongside `decisions` — composable (perspective·input-spread·prompt·substrate·threshold = registry fields) + the feedback→elevate cycle.
+- BOTH valences buildable: generative (un-constrained, curated-perspective) + adversarial (claim-attacking / confirmation-bias refutation) + the general primitive.
+- Both substrates: local-4B-fleet (breadth ≤32) + Claude Code (grounded depth).
+- The certain-landscape dragnet (full-file → relate? → layered → total landscape) buildable, grounding design/build.
+- The UN-CONSTRAINING method enforced (no preconception-importing instruction; full spread + the gap + open generativity).
+- FORM: kernel outputs render as cards/takes on the operator surface (never text-walls); feedback + elevation are operator gestures.
+- The company directories merge to ONE (the drift the dragnet surfaces).
