@@ -1201,12 +1201,17 @@ def cog_run_role(role, *, utterance="", model="", inputs=None,
     r = _cog_resolve_role(role)
     op = getattr(r, "op", "generate")                            # the op rides the ROLE (mcp_face parity)
     turn_id = _cog_turn_id("fe-")
+    from contracts.address import scheme as _addr_scheme
     ctx = {"utterance": utterance}
     for name, val in dict(inputs or {}).items():
         # an address-VALUED input is RESOLVED via the engine resolver (input-address intent); else literal.
-        # Mirrors mcp_face/server.py:run_role exactly (the "://" probe → resolve_address, which itself
-        # fail-louds on an unresolvable/unknown scheme — the engine owns the scheme contract, not the glue).
-        if isinstance(val, str) and "://" in val:
+        # PROBE = "val STARTS WITH a registered scheme" (contracts.address.scheme), NOT "'://' in val": a
+        # grounding block legitimately EMBEDS scheme-strings in its prose (file://·cas://·decision://·code://·
+        # cluster:// from a decision's provenance), and the loose "://"-anywhere probe mis-resolved the whole
+        # block as an address → resolve_address parsed "THE DECISION…" as the scheme → ValueError, breaking the
+        # explain for 4 cards (caught by recollection's route-sweep 2026-06-21; the same ://-classification trap
+        # the dragnet's _safe_item guards). scheme() is None for prose-with-embedded-:// → literal (correct).
+        if isinstance(val, str) and _addr_scheme(val) is not None:
             ctx[name] = _cog.resolve_address(SUITE.store, val, turn_id=turn_id)
         else:
             ctx[name] = val

@@ -566,9 +566,15 @@ def _fire_role_and_persist(r, utterance: str, inputs: dict, model: str, max_toke
     (computation) — emits NO resolve/approve/dispatch."""
     turn_id = turn_prefix + "-" + _time.strftime("%Y%m%d-%H%M%S") + f"-{int(_time.monotonic()*1000) % 100000}"
     # resolve any address-valued declared inputs through the engine resolver (input-address intent).
+    # PROBE = "val STARTS WITH a registered scheme" (contracts.address.scheme), NOT "'://' in val": a prose
+    # input (e.g. a grounding block embedding file://·decision://·code:// scheme-strings from a decision's
+    # provenance) must stay LITERAL — the loose "://"-anywhere probe mis-resolved it as an address →
+    # resolve_address parsed the leading prose as the scheme → ValueError (the ://-classification trap caught
+    # via the bridge's cog_run_role 2026-06-21; mirrored here for face-parity). scheme() is None for prose.
+    from contracts.address import scheme as _addr_scheme
     ctx = {"utterance": utterance}
     for name, val in dict(inputs or {}).items():
-        if isinstance(val, str) and "://" in val:
+        if isinstance(val, str) and _addr_scheme(val) is not None:
             ctx[name] = _cog.resolve_address(SUITE.store, val, turn_id=turn_id)
         else:
             ctx[name] = val
