@@ -236,6 +236,30 @@ def _attach_digest_text(store, context: list[dict], *, max_chars: int = 600) -> 
     return context
 
 
+def _clean_provenance(t: str) -> str:
+    """OPERATOR-LAW altitude-clean for a provenance excerpt (form-nit, lead 2026-06-21): the raw section
+    carries doc-STRUCTURE markers + code-symbols Tim shouldn't read — the section-id marker ('**F3 · CONNECTOR
+    #1b full-access FLIP** — `Tim-direction`'), markdown bold/backticks, heading/bullet prefixes — which the
+    model echoed into the grounding_note ('F3·CONNECTOR', 'decision_build=AUTO'). Strip the FORMATTING + the
+    leading id-marker so the MEANING rides (the body: WHAT/OPTIONS/the framing), never the symbols. The CONTENT
+    stays verbatim (HOLE-2 holds — this de-formats, it doesn't paraphrase)."""
+    import re as _re2
+    if not isinstance(t, str) or not t.strip():
+        return ""
+    lines = t.splitlines()
+    # drop a leading section-marker header that is its OWN line (gather/MAP: '**F3 · …** — `tag`', '## ★ …')
+    if lines and _re2.match(r"^\s*(#{1,6}\s|(\d+\.\s+)?\*\*[^*\n]{0,60}\*\*\s*(—\s*`[^`]*`)?\s*$)", lines[0]):
+        lines = lines[1:]
+    t = "\n".join(lines)
+    # inline marker on a content line (ledger bullet '1. **ID1 — file://…:** is a saved file…'): drop just the
+    # bold id-marker, keep the content after it.
+    t = _re2.sub(r"^\s*(\d+\.\s+)?\*\*[^*\n]*\*\*\s*[:—-]?\s*", "", t, count=1)
+    t = t.replace("**", "").replace("`", "")                  # strip residual bold/code formatting
+    t = _re2.sub(r"^\s*#{1,6}\s*★?\s*", "", t, flags=_re2.M)   # strip heading prefixes
+    t = _re2.sub(r"^\s*-\s+", "", t, flags=_re2.M)             # strip markdown bullet dashes (keep the WHAT:/OPTIONS: meaning)
+    return "\n".join(ln.rstrip() for ln in t.splitlines() if ln.strip()).strip()
+
+
 def _provenance_text(suite, explanation_source, *, max_chars: int = 900) -> str:
     """Resolve a decision's `explanation_source` → its decision-SPECIFIC ORIGIN content — the genuine
     provenance the gather recorded (the board idea / gap-note / Tim's actual words / the design ledger the
@@ -255,7 +279,7 @@ def _provenance_text(suite, explanation_source, *, max_chars: int = 900) -> str:
             r = _cog.resolve_address(suite.store, es)
             if isinstance(r, dict):
                 parts = [r.get("title", ""), r.get("body", "")]
-                return ". ".join(p for p in parts if isinstance(p, str) and p.strip()).strip()[:max_chars]
+                return _clean_provenance(". ".join(p for p in parts if isinstance(p, str) and p.strip()))[:max_chars]
         elif es.startswith("code://"):
             import os as _os, re as _re
             rest = es[len("code://"):]
@@ -305,7 +329,7 @@ def _provenance_text(suite, explanation_source, *, max_chars: int = 900) -> str:
                 if marker_rx.match(ln):                        # next section begins → stop
                     break
                 out.append(ln)
-            return "\n".join(out).strip()[:max_chars]
+            return _clean_provenance("\n".join(out))[:max_chars]  # altitude-clean: drop the id-marker + code-symbols
     except Exception:
         pass
     return ""
