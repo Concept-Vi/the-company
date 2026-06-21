@@ -12,8 +12,10 @@ STACK_ITEM_TYPE = {
     #   identity.* = the /api/territory ENRICH record (resolved per-address) · feed.* = the stack-feed ROW.
     "row_fields": {
         "meaning": "identity.meaning",                  # the actual question, human words (enrich)
-        "recommended_label": "feed.recommended_label",  # the Suggested answer — the host reads it off the FEED row
-                                                        # (/api/decisions emits d.recommended_label); confirmed w/ projection
+        "recommended_label": "identity.recommended_label",  # the Suggested answer — a DERIVED field on the decision
+                                                            # RECORD (fork adds it: the recommended option's label).
+                                                            # Resolution-first: the suggested is a property of the
+                                                            # decision, so it lives on resolve_address(), not only the feed.
         "reversibility": "identity.legibility.is",      # e.g. "Reversible · your latest answer wins" (enrich)
     },
     "unsettled_state": "pending",   # shows while pending; LEAVES the queue when decided (compose_state)
