@@ -1401,15 +1401,31 @@ class H(BaseHTTPRequestHandler):
                 # to op=decision.decided — no parallel signal store. ?since=<seq> (default 0 = all), newest-last.
                 q = parse_qs(urlparse(self.path).query)
                 _since = int((q.get("since") or ["0"])[0])
-                # EXCLUDE __dunder__ decision ids — test/internal markers, NEVER a real decision (real ids are
-                # kebab-case file stems: cube-3d, build-consent-posture). Keeps the CONSUMABLE signal clean of
-                # by-use verify artifacts (a phantom signal matches no gated work + would mislead a resume).
+                # REGISTRY-IS-TRUTH GUARD: a decision.decided EVENT alone is NOT proof a decision is decided —
+                # the authoritative state is the decision_take MARK (compose_state). So surface a signal ONLY if
+                # the decision CURRENTLY resolves to `decided`. This (a) drops any event-only phantom (a verify
+                # emit, or a decide later RETRACTED → pending) that would mislead a resume into over-gating Tim
+                # (his minimize-gating law), and (b) keeps the consumable honest to its name. Also excludes
+                # __dunder__ ids (test/internal — never a real kebab-case decision). Cache per decision (read,
+                # not hot path). REUSE-DON'T-PARALLEL: a thin projection over events_since + compose_state.
+                from runtime.cognition import decision_registry as _dreg
+                from runtime.decision_registry import compose_state as _compose
+                _reg = _dreg()
+                _decided: dict = {}
+                def _is_decided(_did, _addr):
+                    if _did in _decided:
+                        return _decided[_did]
+                    _row = _reg.get(_did)
+                    ok = bool(_row) and _compose(_row, SUITE.marks_for(_addr)).get("state") == "decided"
+                    _decided[_did] = ok
+                    return ok
                 _sigs = [{"decision_id": e.get("decision_id"), "address": e.get("address"),
                           "chosen_option": e.get("chosen_option"), "by": e.get("by"),
                           "seq": e.get("seq"), "ts": e.get("ts") or e.get("at")}
                          for e in SUITE.events_since(_since)
                          if e.get("kind") == "op.run" and e.get("op") == "decision.decided"
-                         and not str(e.get("decision_id") or "").startswith("__")]
+                         and not str(e.get("decision_id") or "").startswith("__")
+                         and _is_decided(e.get("decision_id"), e.get("address"))]
                 self._send(200, json.dumps({"ok": True, "signals": _sigs, "count": len(_sigs)}))
             elif path == "/api/stack-item-types":          # FACE-2: the channel-stack item-type VOCABULARY (registry-is-truth)
                 # composition's StackItemTypeRegistry as_records() over HTTP, so projection's host derives its
