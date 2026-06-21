@@ -54,10 +54,27 @@ AUDIT_LOCK = threading.Lock()
 # per-resource locks would let reads go concurrent, but local dev doesn't need that).
 DISPATCH_LOCK = threading.Lock()
 
-# Scopes (lead ruling: tight; operator scope NEVER remote)
+# Scopes (lead ruling: tight; operator scope NEVER remote — EXCEPT genuine-Tim, see below)
 SCOPE_READ = "company:design:read"        # safe tools only
 SCOPE_WRITE = "company:design:write"      # safe + design tools
-OPERATOR_SCOPE = "company:operator:*"    # NEVER issued remotely
+OPERATOR_SCOPE = "company:operator:*"    # NEVER issued remotely (the client-connector axis)
+
+# ★ OPERATOR FULL-ACCESS (Tim's directive 2026-06-21: "I give full authority with the connector …
+# they should have all access … get it all done so I can use it and connect it"). The connector's
+# AUTHENTICATED-REMOTE OPERATOR is Tim: a JWKS-validated Supabase JWT whose `sub` == his account →
+# FULL ACCESS to ALL 66 tools, incl. the explicitly_denied/locked/hazard verbs the per-client
+# connector can never touch. The SECURITY BOUNDARY IS THE IDENTITY: this scope is issued ONLY when
+# the cryptographically-verified `sub` matches OPERATOR_USER_ID (verify-unspoofable). It extends
+# Tim's LOCAL operator rights to his remote self — same person, same access. Everyone else stays on
+# the tight read/write posture-filter. Override the account id via OPERATOR_USER_ID.
+SCOPE_OPERATOR_FULL = "company:operator:full"   # issued ONLY to sub == OPERATOR_USER_ID
+OPERATOR_USER_ID = os.environ.get("OPERATOR_USER_ID", "ebe5f9c7-4d66-4717-835f-afc96088facb")  # Tim (…615)
+
+# ★ PUBLIC-INSTANCE HARDENING (advisor security catch): when this instance is Funnel-exposed to the
+# public internet, REMOTE_PUBLIC=1 DISABLES the local dev-token bypass entirely — otherwise a static
+# COMPANY_REMOTE_DEV_TOKEN would be a JWT-bypass reachable from the internet (Funnel forwards to
+# 127.0.0.1, so the server cannot tell external from local by address). Public ⇒ JWT-only, no exceptions.
+REMOTE_PUBLIC = os.environ.get("REMOTE_PUBLIC", "") not in ("", "0", "false", "False")
 
 
 def _load_exposure() -> dict:
@@ -242,6 +259,13 @@ def _validate_supabase_jwt(tok: str) -> tuple[bool, str, str, str]:
     subject = str(claims.get("sub", ""))
     if not subject:
         return False, "", "", "token has no subject (sub)"
+    # ★ OPERATOR FULL-ACCESS — IDENTITY OVERRIDES SCOPE. Tim's account gets SCOPE_OPERATOR_FULL
+    # the instant his cryptographically-verified `sub` matches, BEFORE the connector-scope gate (his
+    # normal Supabase token carries no `company:design:*` scope claim, so without this it would
+    # fail-closed at the scope check — advisor catch). This is the single, unspoofable grant point:
+    # only a JWKS-valid token whose sub == OPERATOR_USER_ID reaches it.
+    if subject == OPERATOR_USER_ID:
+        return True, subject, SCOPE_OPERATOR_FULL, "supabase-jwt-operator"
     scope = _scope_from_claims(claims)
     if scope not in (SCOPE_READ, SCOPE_WRITE):
         return False, subject, "", (f"no connector scope (need {SCOPE_READ!r} or "
@@ -267,7 +291,13 @@ def _validate_auth(headers) -> tuple[bool, str, str, str]:
     if not auth.startswith("Bearer "):
         return False, "", "", "missing Bearer token (zero pre-auth leak: 401 first)."
     tok = auth[len("Bearer "):].strip()
+    # ★ DEV-TOKEN BYPASS — LOCAL-ONLY, HARD-DISABLED when public (advisor security catch). On a
+    # Funnel-exposed instance (REMOTE_PUBLIC=1) the static dev token is a JWT-bypass reachable from
+    # the internet, so it is refused entirely: public ⇒ JWT-only. Only on a non-public (local/tailnet)
+    # instance does the dev token grant SCOPE_WRITE.
     if DEV_TOKEN and tok == DEV_TOKEN:
+        if REMOTE_PUBLIC:
+            return False, "", "", "dev-token bypass is disabled on the public instance (JWT-only)."
         return True, "dev-local", SCOPE_WRITE, "local dev token"
     return _validate_supabase_jwt(tok)
 
@@ -288,9 +318,19 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         # zero pre-auth leak: only the OAuth well-known metadata is served unauthed
         if self.path == "/.well-known/oauth-protected-resource":
+            # The PUBLIC resource URL the connector apps see (the Funnel HTTPS origin), + the REAL
+            # Supabase authorization server (so MCP clients run OAuth against Supabase Auth — the
+            # same AS the proven Claude Design connector uses). PUBLIC_RESOURCE_URL = the Funnel
+            # origin (e.g. https://workstation001.tailXX'.ts.net); PUBLIC_AS_URL = the Supabase
+            # auth base (…supabase.co/auth/v1), derived from SUPABASE_JWKS_URL when not set.
+            res_base = os.environ.get("PUBLIC_RESOURCE_URL", "").rstrip("/") \
+                or f"http://127.0.0.1:{self.server.server_address[1]}"
+            as_url = os.environ.get("PUBLIC_AS_URL", "").rstrip("/")
+            if not as_url and SUPABASE_JWKS_URL:
+                as_url = SUPABASE_JWKS_URL.split("/.well-known/")[0]   # …/auth/v1
             meta = {
-                "resource": f"http://127.0.0.1:{self.server.server_address[1]}/mcp",
-                "authorization_servers": ["supabase-auth-local"],  # TODO: real AS URL
+                "resource": f"{res_base}/mcp",
+                "authorization_servers": [as_url] if as_url else [],
                 "bearer_methods_supported": ["header"],
             }
             self._json(200, meta)
@@ -353,33 +393,52 @@ class Handler(BaseHTTPRequestHandler):
             self._send(202, b"")
             return
         if method == "tools/list":
-            # ONLY allow-listed tools are visible (fail-closed at discovery too)
-            tools = [{"name": n, "description": e.get("note", ""),
-                      "inputSchema": {"type": "object"}}
-                     for n, e in EXPOSED.items()
-                     if e.get("remote_posture") in ("safe", "design")]
+            if scope == SCOPE_OPERATOR_FULL:
+                # ★ OPERATOR (Tim) — ALL tools visible (his remote self has his full local surface).
+                # Pull the live tool manager (every @mcp.tool def), with real schemas where present.
+                tools = []
+                for n, tool_obj in sorted(_TOOL_MANAGER._tools.items()):
+                    schema = getattr(tool_obj, "parameters", None) or {"type": "object"}
+                    tools.append({"name": n,
+                                  "description": getattr(tool_obj, "description", "") or "",
+                                  "inputSchema": schema})
+            else:
+                # everyone else: ONLY allow-listed safe/design tools (fail-closed at discovery too)
+                tools = [{"name": n, "description": e.get("note", ""),
+                          "inputSchema": {"type": "object"}}
+                         for n, e in EXPOSED.items()
+                         if e.get("remote_posture") in ("safe", "design")]
             self._json(200, {"jsonrpc": "2.0", "id": rid, "result": {"tools": tools}})
             return
         if method == "tools/call":
             tool = params.get("name", "")
             args = params.get("arguments", {}) or {}
-            allowed, posture_reason = _is_allowed(tool, args)
-            if not allowed:
-                _audit(call_id, tool, args, subj, scope, "DENY", posture_reason)
-                self._json(200, {"jsonrpc": "2.0", "id": rid,
-                                 "result": {"content": [{"type": "text",
-                                 "text": f"REFUSED: {posture_reason}"}],
-                                 "isError": True}})
-                return
-            posture = posture_reason  # _is_allowed returns posture string on success
-            if not _scope_allows(posture, scope):
-                _audit(call_id, tool, args, subj, scope, "DENY",
-                       f"scope {scope!r} insufficient for posture {posture!r}")
-                self._json(200, {"jsonrpc": "2.0", "id": rid,
-                                 "result": {"content": [{"type": "text",
-                                 "text": f"REFUSED: scope {scope!r} insufficient"}],
-                                 "isError": True}})
-                return
+            if scope == SCOPE_OPERATOR_FULL:
+                # ★ OPERATOR (Tim) — FULL access: the posture/scope filters are BYPASSED so every
+                # tool incl. the explicitly_denied/locked/hazard verbs is runnable (his remote self =
+                # his local rights). The MANDATORY AUDIT is NOT bypassed (it is the safety record;
+                # git-revert + Tim controlling per-app tool visibility are the recovery). The only
+                # gate left is registry-drift (tool not dispatchable) + the tool's own teaching
+                # errors, below. posture is recorded as 'operator-full' for the audit trail.
+                posture = "operator-full"
+            else:
+                allowed, posture_reason = _is_allowed(tool, args)
+                if not allowed:
+                    _audit(call_id, tool, args, subj, scope, "DENY", posture_reason)
+                    self._json(200, {"jsonrpc": "2.0", "id": rid,
+                                     "result": {"content": [{"type": "text",
+                                     "text": f"REFUSED: {posture_reason}"}],
+                                     "isError": True}})
+                    return
+                posture = posture_reason  # _is_allowed returns posture string on success
+                if not _scope_allows(posture, scope):
+                    _audit(call_id, tool, args, subj, scope, "DENY",
+                           f"scope {scope!r} insufficient for posture {posture!r}")
+                    self._json(200, {"jsonrpc": "2.0", "id": rid,
+                                     "result": {"content": [{"type": "text",
+                                     "text": f"REFUSED: scope {scope!r} insufficient"}],
+                                     "isError": True}})
+                    return
             # DISPATCH (oracle-confirmed reuse): the posture+scope gates have ALREADY
             # passed ABOVE — the Suite method is only reached for an allowed tool+op.
             # Dispatch through the stdio face's registered tool fn (inherit its
