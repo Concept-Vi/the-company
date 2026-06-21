@@ -39,6 +39,11 @@
          2026-06-19) the decision card draws through this; unit-view.js's renderDecisionGallery calls it at runtime.
          MUST be present or decision:// renders empty. Loaded after unit-view.js (it may use DNA.* helpers). -->
     <script src="/gallery/archetype.js"></script>
+    <!-- DNA's composed decision slide: DNA.decisionSlide + DNA.decisionDevice. unit-view.js's renderDecisionGallery
+         gates the renderExplained composition (which carries the L1 grounded-explain .dc-explain region) on
+         `typeof DNA.decisionSlide === "function"` — MUST be present or decisions fall back to the bare card (no
+         telling, no grounded explanation). Was missing from the manifest (found by-use, the L1-SHOW close). -->
+    <script src="/gallery/decision-render.js"></script>
     <!-- DNA's FACE-1 record adapters (DNA.faceRecord.sessionRecord etc., dd96150) — map a raw /api/sessions row →
          the session-card archetype's record. Extends window.DNA (after surface.js seeds it). Required for the
          FACE-1 session-card mount (the first fully-live FACE-1 surface). Synced via sync-gallery (FILES). -->

@@ -58,7 +58,13 @@ function resolveDna(file) {
 // ★ face-adapters.js (DNA dd96150): DNA.faceRecord.sessionRecord(raw) maps a raw /api/sessions row → the
 // session-card archetype's record (the FACE-1 raw-data→archetype-record adapters). Was MISSING from this manifest
 // (found by-use: the session-card drop-in needs it but it never synced → DNA.faceRecord undefined) — added.
-const FILES = ['surface.js', 'organisms.js', 'unit-view.js', 'archetype.js', 'face-adapters.js', 'phone.css']
+// ★ decision-render.js (DNA): defines DNA.decisionSlide + DNA.decisionDevice — the COMPOSED decision slide
+// (renderExplained(card, decisionSlide(...))) + the visual device. Was MISSING from this manifest (found by-use, the
+// L1-SHOW close: unit-view.js:164 only calls renderExplained — which carries the grounded-explain region — when
+// `typeof DNA.decisionSlide === "function"`; with decisionSlide undefined the render FELL BACK to the bare card →
+// renderExplained NEVER ran → neither the slide-telling NOR the L1 .dc-explain region ever showed. One missing file
+// blocked the whole composed-slide + grounded walk-through. MUST load before the first decision render.
+const FILES = ['surface.js', 'organisms.js', 'unit-view.js', 'archetype.js', 'decision-render.js', 'face-adapters.js', 'phone.css']
 
 const resolved = FILES.map((f) => ({ f, src: resolveDna(f) }))
 const missing = resolved.filter((r) => !r.src)
