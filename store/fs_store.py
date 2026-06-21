@@ -23,6 +23,12 @@ from typing import Any
 
 from contracts.address import Provenance
 
+# X12-MATRIX warm threshold: warm_vector_cache pre-builds the per-space cosine matrix only for spaces with at
+# least this many vectors (the build/RAM is worth it — e.g. the 67k extractions space's ~30s cold-build moved
+# off the first query). Smaller spaces build their matrix lazily on first query_index (cheap). Pure-numpy warm
+# (no chat-4b) — the contention-safe trim, distinct from the dropped cluster-step prewarm.
+_MATRIX_WARM_MIN = 5000
+
 
 class _CrossProcessLock:
     """A RE-ENTRANT lock that serializes a critical section across BOTH threads (in one
@@ -1076,10 +1082,22 @@ class FsStore:
         decision resolves UNGROUNDED once (verified 2026-06-18: cold first-resolve 3.08s→timeout; after warm
         1.84s→grounded). Idempotent + cheap when already warm (revalidate-only).
 
-        (X12-MATRIX: the per-space cosine matrices build LAZILY on first query_index — keyed on _vec_version,
-        cheap for small spaces; the big 67k extractions matrix is pre-built by prewarm_theorem_explains at
-        startup as a determine side-effect, so the theorem cold-first is covered without an all-spaces warm.)"""
-        return len(self._vector_records())
+        X12-MATRIX warm (lead 2026-06-21, the SEPARABLE trim): ALSO pre-build the per-(space,emb) cosine
+        matrices for the LARGE named spaces. This is PURE NUMPY (np.asarray over the vectors) — NO chat-4b /
+        cluster-step (that was prewarm_theorem_explains, dropped for the contention-spiral). So it trims the
+        cold-first matrix-rebuild (~30s on the 67k extractions space, measured) WITHOUT re-introducing the
+        bounce-contention = best-of-both. Only spaces above _MATRIX_WARM_MIN (the build/RAM-worth-it ones; the
+        tiny spaces stay lazy — cheap). Best-effort; never blocks startup."""
+        recs = self._vector_records()
+        try:
+            from collections import Counter
+            counts = Counter((rec.get("space"), rec.get("emb")) for rec in recs if rec.get("space") is not None)
+            for (sp, em), n in counts.items():
+                if n >= _MATRIX_WARM_MIN:
+                    self.space_matrix(sp, em)                 # NUMPY build + cache (no chat-4b) — moves the ~30s off the first-open
+        except Exception:
+            pass                                              # warm is best-effort — never block startup
+        return len(recs)
 
     def index_addresses(self, space=None) -> list[str]:
         """Every address currently in the vector index, sorted. Reads the entries (the `address` field is
