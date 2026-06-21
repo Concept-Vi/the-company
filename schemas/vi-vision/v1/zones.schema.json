@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/zones.schema.json",
+
+  "title": "Vi Vision Zones Archetype (render-type)",
+  "description": "The ZONES archetype — an instance of archetype.schema.json (render_kind='zones'): renders a structured thing's SECTIONS as navigable spatial REGIONS (the almanac renderer pointed at JSON — NOT markdown, NOT a text-wall). A FACE-1 surface archetype.\n\nWHAT IT RENDERS: the sections of an addressed structure as spatial zones + a navigable index. Grounded in REAL usage — board-view (the loop board / COMMISSION-COMPLETION-REGISTER: criteria · capability · mentioned · form-intent as zones + the register items as an index), any structured doc/registry made spatial. Bound to the now-LIVE /api/board (32 items serving). DNA renders (the almanac/zones renderer); the resolver places (wide = a zone grid; narrow = a stacked accordion of zones).\n\nMostly READ (zones show structure); an optional take navigates/opens a zone or an index item.\n\nLAWS (inherited from archetype.schema): operator-legibility (each zone titled by MEANING, items human-named, never raw json keys) · DNA-token-built · resolver-placed (grid↔accordion) · navigable-not-text (the anti-markdown-wall archetype) · native dual-device.",
+
+  "allOf": [
+    { "$ref": "archetype.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "render_kind": { "const": "zones", "description": "Must be 'zones'." },
+        "slot_map": {
+          "type": "object",
+          "required": ["zones"],
+          "properties": {
+            "zones": { "type": "string", "description": "The SECTIONS source — the structure's sections rendered as spatial regions (each with a human title + its content). e.g. the board's sections." },
+            "index": { "type": "string", "description": "Optional: a navigable INDEX source — the items as a navigable list/grid (e.g. the register items)." }
+          }
+        }
+      }
+    }
+  ]
+}

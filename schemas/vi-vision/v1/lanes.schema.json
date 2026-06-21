@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/lanes.schema.json",
+
+  "title": "Vi Vision Lanes Archetype (render-type)",
+  "description": "The LANES archetype — an instance of archetype.schema.json (render_kind='lanes'): renders TIME × ENTITY as horizontal lanes with event marks (NOT a log). A FACE-1 surface archetype.\n\nWHAT IT RENDERS: a lane per entity (e.g. a session) + event marks along a time axis + a now-marker. Grounded in REAL usage — the timeline (a lane per session · compaction/event marks · drift fork-points · ordinal-warmth by recency/kind), the fleet-as-lanes. Bound to the now-LIVE /api/timeline (fork's FINAL shape: 200 + timeline:null + a reason for an honest empty-state, NOT a 400; 400 only if ?session is missing) — so the lanes archetype renders an HONEST empty-state, never an error, when there's no timeline yet. DNA renders (the lane organism); the resolver places (wide = full lanes; narrow = active lanes + a collapse).\n\nMostly READ; an optional take opens a mark/lane (→ the session-card).\n\nLAWS (inherited from archetype.schema): operator-legibility (lanes labelled by the entity's human name; marks read their kind by meaning/warmth) · DNA-token-built (ordinal warmth) · resolver-placed · navigable-not-text · native dual-device · honest empty-state (no-silent-failure / no-error-on-empty).",
+
+  "allOf": [
+    { "$ref": "archetype.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "render_kind": { "const": "lanes", "description": "Must be 'lanes'." },
+        "slot_map": {
+          "type": "object",
+          "required": ["lanes", "marks"],
+          "properties": {
+            "lanes": { "type": "string", "description": "The LANE source — an entity per lane (e.g. a session; each with its human name)." },
+            "marks": { "type": "string", "description": "The EVENT-MARK source — events along time per lane (each with its kind + recency → ordinal warmth). Honest empty-state when none (the /api/timeline null+reason shape)." },
+            "axis": { "type": "string", "description": "Optional: the TIME-AXIS source (the time scale)." },
+            "now": { "type": "string", "description": "Optional: the now-marker source." }
+          }
+        }
+      }
+    }
+  ]
+}
