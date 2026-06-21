@@ -96,11 +96,29 @@ def _fleet_answer(question: str, *, suite) -> dict:
                     "suggestion": "Waking or consulting a session is a gated action — surface it for the "
                                   "operator/lead to run; the mind proposes, it does not spawn.",
                     "note": "floor: brain proposes, never dispatches (autonomous-spawn-lead-only)."}
-    # L4: read RECENT channel traffic as CONTEXT (the safe read-tool) — so the brain SEES what the fabric
-    # has said, not just counts. The structured channel_context rides for the frontend (forkVBrain, L2);
-    # the answer prose notes its presence. READ-ONLY (the post half stays propose-gated).
+    # L4 ANSWER-DEPTH: when there's recent traffic, the V DISCUSSES what the sessions actually SAID — fold the
+    # real messages into a grounded model turn (the brain reads the traffic + answers the operator's question),
+    # not a deterministic count ("3 messages available" was counting, not discussing). Fail-soft: no traffic or
+    # a down model → the count-summary below (the fleet answer ALWAYS returns). channel_context still rides for
+    # the frontend; READ-ONLY (the post half stays propose-gated until the supervised-post path lands).
     ctx = recent_channel_context(suite, limit=12)
     if ctx["n"]:
+        _traffic = "\n".join(
+            f"- {m.get('from') or '?'}: {(m.get('message') or '').strip()[:300]}"
+            for m in ctx["recent"] if (m.get("message") or "").strip())
+        if _traffic:
+            _folded = ("[Recent fabric channel traffic — what the sessions have been saying]\n" + _traffic
+                       + "\n\n[The operator's question about the fabric]\n"
+                       + (question or "What's happening across the fabric right now?"))
+            try:
+                _md = _model_answer(_folded, None, suite=suite)
+                if _md.get("answer"):
+                    return {"source": "fleet", "answer": _md["answer"], "discussed": True,
+                            "fleet": {"channels": n_ch, "live_sessions": n_live},
+                            "channel_context": ctx["recent"], "proposal": proposal,
+                            "brain_model": _md.get("brain_model")}
+            except Exception:
+                pass                                          # fail-soft → the deterministic count-summary
         answer += (f" Recent channel traffic: {ctx['n']} message{'s' if ctx['n'] != 1 else ''} "
                    f"available as context.")
     return {"source": "fleet", "answer": answer,
