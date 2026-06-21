@@ -1401,11 +1401,15 @@ class H(BaseHTTPRequestHandler):
                 # to op=decision.decided — no parallel signal store. ?since=<seq> (default 0 = all), newest-last.
                 q = parse_qs(urlparse(self.path).query)
                 _since = int((q.get("since") or ["0"])[0])
+                # EXCLUDE __dunder__ decision ids — test/internal markers, NEVER a real decision (real ids are
+                # kebab-case file stems: cube-3d, build-consent-posture). Keeps the CONSUMABLE signal clean of
+                # by-use verify artifacts (a phantom signal matches no gated work + would mislead a resume).
                 _sigs = [{"decision_id": e.get("decision_id"), "address": e.get("address"),
                           "chosen_option": e.get("chosen_option"), "by": e.get("by"),
                           "seq": e.get("seq"), "ts": e.get("ts") or e.get("at")}
                          for e in SUITE.events_since(_since)
-                         if e.get("kind") == "op.run" and e.get("op") == "decision.decided"]
+                         if e.get("kind") == "op.run" and e.get("op") == "decision.decided"
+                         and not str(e.get("decision_id") or "").startswith("__")]
                 self._send(200, json.dumps({"ok": True, "signals": _sigs, "count": len(_sigs)}))
             elif path == "/api/stack-item-types":          # FACE-2: the channel-stack item-type VOCABULARY (registry-is-truth)
                 # composition's StackItemTypeRegistry as_records() over HTTP, so projection's host derives its
