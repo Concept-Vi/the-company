@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/decision-card.schema.json",
+
+  "title": "Vi Vision Decision-Card Archetype (render-type)",
+  "description": "The DECISION-CARD archetype — a RENDER-TYPE that declares HOW a `decision` resolves to a visual surface. It is the FIRST archetype; the shape generalises (any type -> any surface by adding an archetype row, zero new screen-code).\n\nDesign intent (resolution-first):\n- An archetype is DATA, not markup. The renderer reads a decision's fields THROUGH this slot_map and paints the named render_kind; it NEVER hand-places fields. Change the map -> the surface re-resolves, no code edit.\n- slot_map binds a render SLOT (a region of the rendered card/slide) to a SOURCE on the resolved decision. A source is either a field path on the decision (e.g. 'meaning', 'options', 'legibility.name') OR a resolve directive 'resolve:<x>' for values that are resolved live, not stored: 'resolve:explanation_source' (RHM explains), 'resolve:state' / 'resolve:decided_value' (composed from the decision_take mark, registry-is-truth).\n- legibility_fields names which legibility fields carry the MEANING the card leads with (name + is) — meaning-words before any glyph (operator-legibility law).\n- the take is the interactive write: selecting an option writes a `decision_take` mark on the decision's address (the decide-in-surface step). The render owns presentation; wildcard owns the write; this archetype only DECLARES the binding.\n\nRelationships:\n- archetype_of -> the type it renders (decision.schema.json).\n- Rendered by DNA's renderer (RUNG-C archetype fill) through legibility.js meaning-fields.\n- render_kind=slide ties into the decision/story/sequence surface.\n\n★ THE HEAD HAS ONE HERO (fix, against the bar 2026-06-19): the QUESTION (meaning) is the SINGLE hero; `name` is a quiet KICKER/eyebrow (NOT heading-weight — two heading-weight slots = the two-hero defect + a tall empty band); `is` is a calm what-kind line (e.g. 'reversible · latest-wins', never the boilerplate 'a decision to make'). ★ THE SLOT KEYS MUST MATCH THE DNA LAYOUT'S REAL SLOT IDS (the renderer fills by those ids — mismatched keys render a half-blank card); align to dna/layouts.json#decision-card. Example slot_map: { question: 'meaning' (the HERO), kicker: 'legibility.name' (quiet eyebrow), kind: 'legibility.is' (calm what-kind line), explanation: 'resolve:explanation_source', options: 'options', state: 'resolve:state', decided: 'resolve:decided_value' }. (The generic legibility law leads with name+is for IDENTIFYING a thing; the decision-card WEIGHTS the question as hero + name as kicker — both present, decision-appropriate emphasis.) ★ THE COMPOSED CO-VISIBLE VIEW (Tim's live verdict 2026-06-19 — the contract-emphasis DNA's shell is measured against; fixes 1+2): the card is ONE co-visible view, NEVER a vertical scroll-stack. Layout = TOP: the telegraphic question (hero) · LEFT: the shape/visual device (constellation/ordinal — a CO-EQUAL carrier, NOT optional:true) · RIGHT: the explanation slide ABOVE the options. THE CHECKLIST (composition validates DNA's rendered shell against this): (a) visual/shape = the DATA-BOUND DEVICE (decision.device — bars/matrix/hub/duo/taxonomy) encoding the decision's REAL trade-off data (decision.dimensions × option.dimensions), a co-equal carrier, not optional/sidecar — and NEVER decoration: a device with no real data MUST NOT render (the decoration ban → fall back to legibility-first); (b) the explanation slide = a co-equal part of the view (present, not absent); (c) options CO-VISIBLE with the question — NEVER focal-below-fold / scroll-to-reach. ★ HARD GATE: at 390 (Tim's phone) the decision AND its options are visible together without scrolling — ★ VERIFIED IN THE OPERATOR MODAL (projection's real decide-surface, :8443), NOT only the gallery shell (different hosts/overrides; a shell that passes in the gallery can still scroll in the modal). The gate is a JOINT pass — DNA's zoned co-visible shell + projection's FIT-FIRST host-frame (drop size-to-content-scroll + the single-column override) together; verified in the modal where Tim actually decides. The decision + its shape + its slide-telling + its options are ONE composed view.",
+
+  "type": "object",
+  "required": ["id", "archetype_of", "render_kind", "slot_map"],
+  "additionalProperties": false,
+
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable archetype id. Convention: archetype.<name> (e.g. 'archetype.decision-card')."
+    },
+    "archetype_of": {
+      "type": "string",
+      "description": "The TYPE this archetype renders. For the decision-card: 'decision'.",
+      "const": "decision"
+    },
+    "render_kind": {
+      "type": "string",
+      "description": "The surface form the renderer paints. 'slide' for the decision-card (decisions render as slides in a sequence). Open vocab; the renderer maps kind -> layout.",
+      "default": "slide"
+    },
+    "slot_map": {
+      "type": "object",
+      "description": "Render SLOT -> SOURCE bindings. Key = a slot name the renderer knows; value = a decision field path ('meaning', 'options', 'legibility.name', 'address') OR a resolve directive ('resolve:explanation_source', 'resolve:state', 'resolve:decided_value'). The renderer fills each slot from its source; never hand-placed.",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "description": "A decision field path, or 'resolve:<x>' for a live-resolved value."
+      }
+    },
+    "legibility_fields": {
+      "type": "array",
+      "description": "Which legibility fields the card leads with as MEANING (before any glyph). Default ['name','is'].",
+      "items": { "type": "string" },
+      "default": ["name", "is"]
+    },
+    "card_kinds": {
+      "type": "object",
+      "description": "★ THE CARD-KINDS within ONE decision (the operator-cycle's card-sequence parts — THIN: present · explain · choose). A decision's content groups into these three ROLES; each maps to a SET of slot_map slot keys. ★ THE RESOLVER decides whether the kinds render CO-VISIBLE (one composed view, kinds as zones) or SEQUENCED (stepped cards) against the device/complexity coordinate — NOT a stored variant (the invariant = the three kinds; co-visible-vs-stepped COMPUTES, the resolver frame). ★ FOR merge-sa (the keystone, the at-bar gate): CO-VISIBLE — the kinds ARE the zones of the composed view (present=top+left, explain=right-above, choose=options co-visible); the HARD GATE (decision+options visible together at 390, no scroll) HOLDS — stepping away to a separate choose card would reintroduce 'can't see decision + options together', so merge-sa does NOT step. SEQUENCED rendering is for a multi-DECISION FLOW (decision.steps — sequence of CHILD decisions, already shipped) or a future richer coordinate, the resolver's call. NOTE the distinction: decision.steps = a sequence of MULTIPLE decisions (a flow); card_kinds = the parts of ONE decision. THIN: only these three kinds, grouping the EXISTING composed-view slots — not a new type system. ★ MUST MATCH DNA's C1 render zones (coordinate before diverging — the fan-out guard).",
+      "additionalProperties": false,
+      "properties": {
+        "present": {
+          "type": "array",
+          "description": "WHAT'S BEING DECIDED — the slots that show the thing: the question (hero) + kicker + kind + the shape/device. Default ['question','kicker','kind','shape'].",
+          "items": { "type": "string" },
+          "default": ["question", "kicker", "kind", "shape"]
+        },
+        "explain": {
+          "type": "array",
+          "description": "THE RHM'S GROUNDED EXPLANATION — the slide (resolve:explanation_source). Default ['explanation'].",
+          "items": { "type": "string" },
+          "default": ["explanation"]
+        },
+        "choose": {
+          "type": "array",
+          "description": "THE DECIDE-IN-SURFACE — the options + the take + the resolved state. Default ['options','state','decided'].",
+          "items": { "type": "string" },
+          "default": ["options", "state", "decided"]
+        }
+      }
+    },
+    "take": {
+      "type": "object",
+      "description": "The interactive write binding (decide-in-surface). Declares which slot is the take and what mark it writes; the render presents it, wildcard performs the write.",
+      "additionalProperties": false,
+      "properties": {
+        "from_slot": {
+          "type": "string",
+          "description": "The slot the operator acts on to decide (e.g. 'options').",
+          "default": "options"
+        },
+        "writes": {
+          "type": "string",
+          "description": "The mark_type the take appends on the decision's address (registry-is-truth).",
+          "default": "decision_take"
+        }
+      },
+      "default": { "from_slot": "options", "writes": "decision_take" }
+    }
+  }
+}

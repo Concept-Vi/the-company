@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/option.schema.json",
+
+  "title": "Vi Vision Decision Option",
+  "description": "One CHOICE within a decision (decision.schema.json options[]).\n\nDesign intent:\n- An option is HUMAN-first: label is the choice in Tim's terms; implication says what choosing it entails, so the decision can be made on MEANING, not machine values.\n- recommended marks the agent/RHM's suggested choice (the operator still decides; a recommendation is not a resolve).\n- Options are DATA the decision-card archetype renders; the take records WHICH option's value was chosen (as a decision_take mark on the decision's address).\n\nRelationships:\n- Embedded in decision.options[].\n- The chosen option becomes the decision's decided_value (resolved from the take mark, registry-is-truth).",
+
+  "type": "object",
+  "required": ["label"],
+  "additionalProperties": false,
+
+  "properties": {
+    "label": {
+      "type": "string",
+      "description": "The choice in HUMAN terms (Tim's words) — what picking this means. The decided_value the take records."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional fuller explanation of the choice. RENDERS AS PROSE (a readable body line) — NOT inside the mono chip (against the bar 2026-06-19: description jammed into the implication chip is the weakest pixel on every card)."
+    },
+    "implication": {
+      "type": "string",
+      "description": "What choosing this option entails / its consequence — so the decision is made on meaning, not a bare label. RENDERS AS THE TERSE MONO CHIP (implication only; keep it telegraphic — a fragment, not a sentence). The chip is reserved for this; description goes to prose."
+    },
+    "recommended": {
+      "type": "boolean",
+      "description": "Whether this is the recommended choice (the RHM's suggestion; the operator still decides). Default false.",
+      "default": false
+    },
+    "dimensions": {
+      "type": "object",
+      "description": "★ DATA-BOUND DEVICE signal (re-baseline 2026-06-19): this option's VALUES on the decision's named trade-off axes (decision.dimensions) — the REAL signal a visual device ENCODES (a bar's height, a matrix cell, a duo position). Keyed by the dimension id (must match a key in decision.dimensions). A device renders THESE values, NEVER hardcoded heights — a device with no real dimension values is decoration and MUST NOT ship (Tim: 'a stupid bar chart with no meaning'). Optional: present only when the decision has genuine multi-dimensional trade-offs (a simple yes/no carries none → no device). SUBORDINATE TO LEGIBILITY: the option's label/description/implication stay present + legible regardless of the device — the device never clamps or hides them.",
+      "additionalProperties": {
+        "type": ["number", "string"],
+        "description": "The option's value on this dimension — a 0..1 magnitude the device scales, OR a short human level label. REAL, per-option; never a hardcoded render value."
+      }
+    }
+  }
+}

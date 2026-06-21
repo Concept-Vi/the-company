@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/legibility.schema.json",
+
+  "title": "Vi Vision Legibility (meaning-fields)",
+  "description": "The LEGIBILITY meaning-fields — how Tim (a non-developer who reads by MEANING) sees what a thing IS, resolved from the thing's own row, never from a machine name.\n\nThe operator-legibility law (THE_FACTORY.md):\n- name = THIS thing's human name (never a jargon title, never a glyph, never a filename leaf).\n- is   = what KIND of thing it is, in plain words ('a note saved', 'a role's voice').\n- Every surface renders the SAME name + is (one voice across the gallery face, the inspector, the centre chip). Meaning-words LEAD; glyphs are decoration after, never instead.\n- name resolves PER-INSTANCE: declared name -> a derived human name (humanise the leaf: strip extension, de-snake/camel, title-case) -> the raw leaf only as last-resort floor.\n\nDesign intent:\n- This is a REUSABLE field-set carried on any addressable type (a decision, a component, a corpus unit). It is the shape RUNG-C renders through and the shape the decision-card reads its labels from.\n- name + is are REQUIRED on every type that carries legibility (validateLegibility fails loud at birth if missing); fills + why are optional enrichment.\n\nRelationships:\n- runtime/legibility.js (SEED_LEGIBILITY_FIELDS, resolveLegibility) is the resolver; this schema is its contract.\n- Referenced by decision.schema.json (and intended for every addressable type).",
+
+  "type": "object",
+  "required": ["name", "is"],
+  "additionalProperties": false,
+
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "THIS thing's HUMAN name — what Tim calls it. Never a machine id, jargon title, or glyph. Rendered as the anchor wherever the thing is referenced."
+    },
+    "is": {
+      "type": "string",
+      "description": "What KIND of thing it is, in plain words (the 'what is this' one-liner). Distinct from name: name = which one, is = what kind. Never the anchor."
+    },
+    "fills": {
+      "type": "string",
+      "description": "Optional. What fills it / what it accepts (its kind or accepts), in plain words."
+    },
+    "why": {
+      "type": "string",
+      "description": "Optional. Why you'd look at it / what it's for."
+    }
+  }
+}

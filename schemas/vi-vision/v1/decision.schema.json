@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/decision.schema.json",
+
+  "title": "Vi Vision Decision",
+  "description": "A DECISION is an addressed, typed thing the system needs an owner (Tim) to decide ON — the first content type of the resolution-first decision-surface, and the RECONCILE vessel of the Face Pipeline (a flagged ambiguity becomes a decision the right-hand-man walks through WITH Tim, then writes back).\n\nDesign intent (resolution-first):\n- A decision is RESOLVED, never hand-rendered. The chain: address -> type -> archetype (decision-card) -> render -> RHM-explain -> decide-in-surface -> write-back -> re-resolve. The SAME mechanism resolves any type to any surface; decision is just the first.\n- The row carried here is the PENDING DEFINITION only. STATE (pending|decided) and decided_value / decided_by / decided_at are NOT authored fields — they RESOLVE from a `decision_take` mark on the decision's address (registry-is-truth: the take IS the artifact). A resolver COMPOSES the resolved state; nothing mutates this row.\n- meaning is HUMAN (Tim's terms), never a machine name (legibility law).\n- explanation is RESOLVED live through the RHM from explanation_source (territory_prose -> brain), not stored prose.\n\nRelationships:\n- Addressed as decision://<frame>/<id> (frame = global | project/<id> | user/<id> | session/<id>; bare decision://<id> = global) — mirrors vi-vision://, resolved by the one company resolver (fork's decision:// branch).\n- options[] are `option` (option.schema.json).\n- legibility carries the meaning-fields (legibility.schema.json) so every surface reads MEANING off the row.\n- Rendered via the `decision-card` archetype (decision-card.schema.json), render_kind=slide.\n- The take (wildcard) appends a `decision_take` mark via territory_write -> the resolver composes decided state.",
+
+  "type": "object",
+  "required": ["id", "meaning", "options"],
+  "additionalProperties": false,
+
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable id; MUST be addressable as decision://<frame>/<id>. The leaf id (e.g. 'merge-sa-authorize')."
+    },
+    "address": {
+      "type": "string",
+      "description": "The addressed thing this decision decides ON (any vi address: vi-vision:// asset, run://, a board item, etc.). Optional — a decision may stand alone."
+    },
+    "meaning": {
+      "type": "string",
+      "description": "The decision itself in HUMAN terms (Tim's words) — the question to decide. Never a machine name."
+    },
+    "options": {
+      "type": "array",
+      "description": "The choices. Each is an option (option.schema.json).",
+      "items": { "$ref": "option.schema.json" },
+      "minItems": 1
+    },
+    "explanation_source": {
+      "type": "string",
+      "description": "An address that GROUNDS the RHM's live explanation OF THIS DECISION. The RHM walks the DECISION itself (its meaning + options + state) grounded BY this source — it does NOT narrate the source alone. So the resolve aims at the decision (territory_prose gives meaning+options+state) with explanation_source dereferenced for grounding. Resolved LIVE (render-triggered async via run_turn; placeholder -> streams -> fills), not stored here; supports the interactive follow-up (run_turn --resume continues the same session) so Tim can go through it WITH the RHM."
+    },
+    "scope": {
+      "type": "string",
+      "description": "Cascade scope; denormalised (also rides the address frame). Defaults to global.",
+      "enum": ["global", "project", "user", "session"],
+      "default": "global"
+    },
+    "channel": {
+      "type": "string",
+      "description": "★ CHANNEL-ATTACHMENT as DATA (FACE-2): the channel address this decision is attached to — the operator-STACK it appears in ('created against a channel -> appears in that channel's stack; resolving the channel yields its ordered items incl. this decision'). Optional (absent = unattached / a global decision not yet placed on a stack). REGISTRY-TRUE: the channel->items RESOLUTION is fork's per-channel stack-feed filtering by this field (composition declares the shape; fork resolves). A decision attaches to ONE home channel; multi-channel placement (if ever needed) becomes an edge, NOT a list on the row — flagged, not built."
+    },
+    "legibility": {
+      "$ref": "legibility.schema.json",
+      "description": "The meaning-fields (name/is/fills/why) so every surface reads MEANING off the row, not a machine id."
+    },
+    "dimensions": {
+      "type": "object",
+      "description": "★ THE TRADE-OFF AXES (re-baseline 2026-06-19: a visual device must ENCODE the decision's ACTUAL trade-off data, never decoration — Tim: 'a stupid bar chart with no meaning'). The NAMED axes the options are weighed on (effort · reversibility · blast-radius · …), each with a HUMAN label + meaning so the device + its legend read as MEANING, not machine ids. Options carry their per-axis VALUES in option.dimensions (keyed by these ids). PRESENT → the decision has real multi-dimensional signal a device can encode; ABSENT → NO device (legibility-first: the question + options + explanation carry it — never a fake chart). recollection authors the labels/meanings legibly.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": { "type": "string", "description": "The axis in HUMAN terms (e.g. 'How reversible', 'Blast radius') — never a machine id." },
+          "meaning": { "type": "string", "description": "What the axis MEANS / what high-vs-low signifies — so the device's legend is legible." }
+        },
+        "required": ["label"]
+      }
+    },
+    "device": {
+      "type": "object",
+      "description": "★ THE DATA-BOUND VISUAL DEVICE (re-baseline 2026-06-19) — the decision's 'shape' (the LEFT co-equal slot of the decision-card; it replaces the prose-explanation in that space — prose moves to the slide/below — legibility-PRESERVING co-visibility, NOT clamping). ★ HARD RULE (the decoration ban): a device MUST encode the decision's REAL data (its dimensions × options) — every `encodes` channel binds a DATA-PATH into this decision's OWN fields, NEVER a literal/hardcoded value. A device whose encode-paths don't resolve to real data MUST NOT render → fall back to legibility-first (prose + options). A device that doesn't carry real signal is decoration and does not ship. The device VISUAL is DNA's render (the device vocabulary — bars · matrix · hub · duo · taxonomy — is DNA's; meet-at-the-contract like slot names); THIS specifies the DATA-BINDING. SUBORDINATE TO LEGIBILITY: never hides/clamps the option meanings. Optional (present only with real `dimensions`).",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The device id (DNA's render vocabulary: bars · matrix · hub · duo · taxonomy · …). Open string, confirmed with DNA (meet-at-contract). The decision's subtype may suggest the fitting type (trade-off → matrix/bars; prioritize → ranked; relation → hub/taxonomy)."
+        },
+        "encodes": {
+          "type": "object",
+          "description": "The DATA-BINDING: each visual CHANNEL of the device → a DATA-PATH into THIS decision's REAL fields. Every path MUST resolve to real decision data (e.g. series:'options', axis:'dimensions', value:'option.dimensions[<axis>]', or a hierarchy field) — a channel bound to a literal/constant is the decoration-ban violation. DNA binds the device's channels to these real values.",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "description": "A data-path into the decision's real fields (options / dimensions / option.dimensions[<id>] / a hierarchy field). NEVER a hardcoded value."
+          }
+        }
+      },
+      "required": ["type", "encodes"]
+    },
+    "steps": {
+      "type": "array",
+      "description": "★ FLOW PARENT role (the category-error fix, Tim's live verdict 2026-06-19: a multi-step decision is a FLOW, not 5 flat cards). When present, THIS decision is a SEQUENCED FOUNDATION FLOW; `steps` is the ORDERED list of child decision addresses (e.g. substrate-home → [file-identity, cluster-identity, event-streams, form-taxonomy]). PRESENT → renders through the FLOW archetype (render_kind='sequence' — a co-visible step-progression where EACH step is a composed co-visible decision-view, refs app-flow/app-flow-fused). ABSENT → a single decision-card (render_kind='slide') (e.g. merge-sa, rerank-loadout). `steps` IS the per-decision flow-vs-card discriminator. Per-step TAKE = each child's EXISTING decision_take on the CHILD's address (4 reused takes SEQUENCED, NO new flow-level take). The children are REUSED, flow-agnostic decision rows (their own question/options/why); the per-step `bridge`/`step_index` live on the CHILD (the step role, below).",
+      "items": { "type": "string", "description": "A child decision address (decision://<frame>/<id>), in flow order." }
+    },
+    "flow_intro": {
+      "type": "string",
+      "description": "FLOW PARENT role: the flow's framing line — frames the walk (e.g. substrate-home: 'decide the company's one foundation, in 4 steps'). Recollection-authored. Present only on a flow parent (a decision with `steps`)."
+    },
+    "step_index": {
+      "type": "integer",
+      "description": "FLOW STEP role: this decision's 0-based position in its parent flow. Present only on a child that is a step of a flow."
+    },
+    "bridge": {
+      "type": "string",
+      "description": "FLOW STEP role: a telegraphic connecting line (recollection-authored) — how this step follows the prior / what it sets up; the flow's narrative seam. Present only on a child that is a step of a flow. (NOTE: lives on the child for the prove-on-one where children are flow-specific; if a child is later reused across flows, the bridge/index move to the parent's steps entries — flagged, not blocking.)"
+    }
+  }
+}

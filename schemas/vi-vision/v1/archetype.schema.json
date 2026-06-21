@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/archetype.schema.json",
+
+  "title": "Vi Vision Archetype (render-type)",
+  "description": "An ARCHETYPE is a RENDER-TYPE: it declares HOW a typed thing resolves to a visual/interactive SURFACE. It is the general parent of the operator interface's component-types — Tim's 'custom component types' (graph · diagram · selector · instrument · spatial-material), plus the decision-card (the first, concrete archetype: see decision-card.schema.json, which is an instance of THIS shape with archetype_of='decision').\n\nWHY (the resolution-first interface, Tim 2026-06-18 — the interface is FIRST, his hook):\n- The operator interface is a COMPOSITION OF ARCHETYPES, each rendered by ONE mechanism: a typed row -> its archetype -> the renderer fills the archetype's slots FROM the resolved data -> a surface. Adding a kind = a type row + an archetype row, ZERO new screen-code. This is the same keystone dispatch (definition.component names a leaf primitive) lifted one level: definition.archetype names a SURFACE-shaper.\n- An archetype is DATA, not markup. The renderer reads fields THROUGH slot_map; it NEVER hand-places fields. Change the map -> the surface re-resolves, no code edit.\n- DNA RENDERS the archetype (lyRender), composition OWNS the archetype TYPE + the dispatch, the keystone hosts it, the fork mocks the LOOK, Tim reacts. Local-first; resolves the same whether the store is local or the unified substrate.\n\nLAWS every archetype's RENDER obeys (the operator-legibility law — what Tim SEES):\n- NEVER looks like a developer wrote it / would read it (no machine-names, jargon, filenames, raw ids).\n- LEADS with legibility meaning-fields (name=human anchor, is=what-kind), words before glyphs, touch-visible.\n- navigable/spatial, not a text-wall; native desktop+phone BOTH orientations; DNA-token-built; resolution-first.\n\nDISPATCH: a definition names its archetype via an `archetype` field (the archetype id). The keystone resolves the archetype renderer by a LOUD-lookup registry (exact -> family -> bare -> UNDECLARED-loud; never a silent blank) — same law as the session-event render-declaration registry. render_kind keys the host LIFECYCLE (slide=single | sequence=multi-step), not the archetype itself.",
+
+  "type": "object",
+  "required": ["id", "archetype_of", "render_kind", "slot_map"],
+  "additionalProperties": false,
+
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable archetype id. Convention: archetype.<name> (e.g. archetype.decision-card, archetype.graph, archetype.selector, archetype.instrument)."
+    },
+    "archetype_of": {
+      "type": "string",
+      "description": "The TYPE this archetype renders (e.g. 'decision', 'graph', a component type, or any addressed type). One archetype renders one type-kind to one surface form."
+    },
+    "render_kind": {
+      "type": "string",
+      "description": "The surface FORM the renderer paints + the host lifecycle key. Open vocab — the catalog kinds: slide · graph · diagram · selector · instrument · spatial-material. 'slide' = single-step. 'sequence' = a SELF-CONTAINED FLOW render — the RENDER owns the step-progression (next/prev · transitions · 'step N of M' · each step = a composed-view) (decided 2026-06-19, Option A). The HOST stays VARIANT-AGNOSTIC: it hosts a sequence the same as a slide (open · HOLD-across-the-walk · close) + dispatches per-step takes through its existing take-dispatch (each step's own decision_take) — NO per-kind host walk-driver. (build-concrete-first: the stepping lives in the render, one-renderer-owns-its-content; extract a GENERIC host walk-driver only IF a 2nd, different sequence-kind later needs a shared stepper.) The renderer maps kind -> layout; the host keys its lifecycle off this (slide vs hold-across-the-walk), NOT off the archetype's domain."
+    },
+    "slot_map": {
+      "type": "object",
+      "description": "Render SLOT -> SOURCE bindings. Key = a slot name the renderer knows (the renderer owns the slot names); value = a field path on the resolved row ('meaning', 'options', 'legibility.name', 'nodes', 'edges') OR a resolve directive ('resolve:explanation_source' = RHM-explained, 'resolve:state' = mark-composed, 'resolve:<x>' = any live-resolved value). The renderer fills each slot from its source; never hand-placed. My sources (fixed by the type), the renderer's slot names.",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "description": "A field path on the resolved row, or 'resolve:<x>' for a live-resolved value."
+      }
+    },
+    "legibility_fields": {
+      "type": "array",
+      "description": "Which legibility fields (legibility.schema.json) the surface LEADS with as meaning (before any glyph). Default ['name','is'].",
+      "items": { "type": "string" },
+      "default": ["name", "is"]
+    },
+    "take": {
+      "type": "object",
+      "description": "OPTIONAL interactive WRITE binding (decide/act-in-surface). Declares which slot the operator acts on and what it writes; the render presents it, the take-owner (e.g. wildcard) performs the write (registry-is-truth). Absent = a read-only archetype.",
+      "additionalProperties": false,
+      "properties": {
+        "from_slot": {
+          "type": "string",
+          "description": "The slot the operator acts on (e.g. 'options' for a decision, 'nodes' for a graph selection)."
+        },
+        "writes": {
+          "type": "string",
+          "description": "The mark_type / record the take appends on the row's address (e.g. 'decision_take')."
+        }
+      }
+    },
+    "language": {
+      "type": "object",
+      "description": "★ ELEGANCE AS A TYPE PROPERTY (Tim 2026-06-18: the elegant finish is in his DNA LANGUAGE — tokens·grammar·layouts·motion·voice·canon — RESOLVED THROUGH, never hand-markup). The renderer (renderArchetype) resolves the finish for EVERY archetype by drawing on the ACTIVE DNA language BY DEFAULT — so elegance is INHERITED by construction (elevate the language once → every surface carries it; absent here = full default inherit). This field is for an archetype to REFERENCE a SPECIFIC DNA language element where its type needs one (a particular layout/voice/grammar). Each value is an ADDRESS/ID into the corresponding DNA rule-book (the exact addressing scheme is DNA's — met at the contract, like slot_map's sources). Elegance resolves like tokens: addressable, reusable, never bespoke. Keys mirror the DNA rule-books. ★ FAIL-LOUD (not silent — against the bar 2026-06-19): a declared language.* ref that does NOT resolve to a real DNA rule-book element must FAIL LOUD (a surfaced gap), NEVER silently fall back to inherit-default (a silent fallback makes every delegation un-checkable — the resolver can't tell 'inherit on purpose' from 'broken ref'). The addressing scheme will be typed (a $ref/pattern/registry to the DNA rule-books) once DNA confirms its addressing — locked at the contract so a finish-ref VALIDATES.",
+      "additionalProperties": false,
+      "properties": {
+        "grammar": { "type": "string", "description": "Address/id of a DNA grammar element (spatial/typographic/compositional language) this archetype resolves its finish through. Absent = inherit the active DNA grammar." },
+        "layout":  { "type": "string", "description": "Address/id of a DNA layout (proportion/rhythm/hierarchy — how elements sit + breathe). Absent = inherit the active DNA layout." },
+        "voice":   { "type": "string", "description": "Address/id of a DNA voice element (the elegant phrasing standard — how the surface SPEAKS). Absent = inherit the active DNA voice." },
+        "motion":  { "type": "string", "description": "Address/id of a DNA motion element (carried as-is this pass — lower priority; do not reopen). Absent = inherit." },
+        "tokens":  { "type": "string", "description": "Address/id of a DNA token set (material craft — colour/surface/depth/frost/hatch/ink). Absent = inherit the active DNA tokens." }
+      }
+    }
+  }
+}
