@@ -182,5 +182,7 @@
     ));
   }
 
-  window.forkBrainCore = { talk, writeDirections, sessions: _sessions, CLAUDE_TURN, TERRITORY_WRITE };
+  // stripMd EXPORTED (was internal): so groundedAsk (fork-v-brain.js, blocking render) strips markdown the
+  // SAME way talk() does (one strip fn, single-source) — the operator never sees raw **/#/` (operator-law).
+  window.forkBrainCore = { talk, writeDirections, sessions: _sessions, CLAUDE_TURN, TERRITORY_WRITE, stripMd: _stripMd };
 })();

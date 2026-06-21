@@ -102,7 +102,7 @@
       })
         .then((r) => r.json())
         .then((d) => {
-          replyEl.textContent = (d && d.answer) ? String(d.answer)
+          replyEl.textContent = (d && d.answer) ? core.stripMd(String(d.answer))   // strip raw **/#/` (operator-law) — SAME fn as talk()
             : (d && d.error) ? '(the brain could not answer just now)'
             : '(no answer)';                              // never a blank middle — a clear note on empty/fail
           return d;
