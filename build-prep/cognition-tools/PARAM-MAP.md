@@ -66,9 +66,17 @@ to the native /api/chat that HONOURS think; /v1 ignores it). VERIFIED by-use (de
 the real transport): **think=False → 2 out-tokens + clean content "command"; think=True → 400 tokens, finish=length,
 EMPTY** (the bug reproduced). A 200× collapse + correctness restored → cheap cloud concurrent cognition now works.
 Additive (think=None byte-identical; bake-resume safe). committed≠live: live on the next MCP/session reload.
+★ BUDGET-RETRY NET — BUILT + VERIFIED (757942e, 2026-06-21). The structured-output safety net in client.complete:
+on a failure that is ALSO finish_reason=length, doubles max_tokens (cap 4096) next attempt instead of burning
+retries → cloud reasoning models that truncate the structured answer now RECOVER. Additive (non-truncating =
+byte-identical; only the already-failing length path changes). Verified by-use (recovers 256→512→1024; byte-
+identical otherwise; non-length failures don't escalate) + all 5 fabric suites green (no regression).
+
 REMAINING (the table's other gaps, NOT yet built): vLLM-local enable_thinking via chat_template_kwargs (post-bake,
 needs a free vLLM model to verify — currently an honest no-op on HF-path models); per-call schema/prompt/output-
-location overrides; tools wiring; the budget-retry net. The think TEMPLATE is now the shape the rest follow.
+location overrides + prompt/schema-as-RESOLVED-VARIABLES (gated on composition's resolver-contract — absent; the
+mechanism is mine, the contract is composition's, do NOT build blind); tools wiring. The think TEMPLATE + the
+budget-retry are the shape the rest follow.
 
 ## THE THINK-BUILD SPEC (locked 2026-06-21 — read the transport; additive; ★ THE OLLAMA HALF IS NOW BUILT, above)
 *Transport read in full (fabric/transport.py): `openai_transport` builds /v1 requests via an allowlist
