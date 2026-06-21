@@ -1692,3 +1692,17 @@ Lead (g-1782017508→g-1782017710): form-hold LIFTED, keystone-lock now SOFT →
 Coordination: conveyed the FACE-1 pipeline ask via the lead-hub thread (the shared channel DNA reads); DNA surfaces organisms to projection (directed). The post-reboot fabric has no proactive send-to-handle (profile/reply/announce) — the lead is the hub.
 
 NEXT (pipeline): render each FACE-1 surface against DNA's organism as it lands (host-shell + data-store to fork's committed shape, degrade-clean). FIRST on the bounce verify — the list: landscape resolve-override + summary-leak + tool-face + FACE-1 surfaces' real data, all at once. Held-on-bounce: resolve-override · all-viewport extend + SHELL-kill · stack-derive (also needs fork's type-in-feed).
+
+---
+
+## FIRE — ★ THE BOUNCE LANDED → bounce-verify DONE (first, as committed); resolve-override LIVE + a regression caught+fixed by-use
+
+Lead (g-1782021791): the staged wave is LIVE (bridge pid→77562) — /api/resolve · /api/tools(form_meta) · FACE-1 read-API (sessions/channels/board/transcript-search) all serving; the committed-not-live drag is gone. "Build the FACE-1 surfaces against REAL data, pipelined." I ran my committed bounce-verify FIRST (critical-comparison / verify-on-bounce):
+- ✅ resolve-OVERRIDE LIVE: /api/resolve resolves my MODAL invariant (pad_top 7.8 · pad_x 12 · frame_max_h 334) → the landscape modal allocation is RESOLVER-DRIVEN end-to-end (4th-primitive seam, live). ★ CAUGHT+FIXED a regression by-use the instant it went live (66dd791): my select cases were lit()-wrapped → pad_x → an AST object → "[object Object]" broke the landscape padding shorthand → 0px. Fix: raw select cases (resolve_slot returns cases[key] AS-IS, not re-evaluated) + an apply-guard (non-primitive → degrade-clean, never write a broken CSS value). Re-verified: 7.8px/12px, no regression, card renders. ★ THE VERIFY-ON-BOUNCE DISCIPLINE PAID OFF — degrade-clean masked the bug pre-bounce; live use exposed it (I'd tested a raw-case curl ≠ my lit-wrapped shipped code — the classic confirming-bias gap, caught by default-to-wrong on the live surface).
+- ✅ FACE-1 read routes serve REAL data: channels 3 · board 32 · sessions 200. The 404 drag GONE → build against real data now.
+- ✅ summary-leak 0/600 (kept closed).
+- ✅ card renders fine (decision:ready fires 3.1s, scrollHeight 1023 — my resolve-consume + decision:ready changes did NOT regress it; dogfooded decision:ready to await it).
+- tool-face form_meta still 1/66 (fork's harvest in-flight; not my gate).
+Friction-log #1 (committed-not-live): THIS wave cleared by the bounce; underlying no-hot-reload friction remains (fork assessing fast-reload).
+
+NEXT (building now, pipelined): the FACE-1 host surfaces against the live routes — session-drill (/api/sessions) first (DNA's session-card = easy-first) → channel-view (/api/channels) → board-view (/api/board); mount DNA's organisms as they surface. Host seams + nav-contract + resolve-override all live + ready. Remaining held: all-viewport resolve-extend + SHELL 3-module kill (now the resolve-override's verified, this is unblocked — sequence it) · stack-derive (fork's type-in-feed).
