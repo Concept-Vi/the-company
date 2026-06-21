@@ -1679,3 +1679,16 @@ Lead (g-1782016431): the fabric has done essentially ALL the render-independent 
 - FACE-1 renders → keystone-lock + DNA archetypes + fork read-API.
 - tool-face result-render → DNA's tool-card (keystone) · the 65 tools' form_meta → fork's content track.
 HOLDING CLEAN for Tim's direction + the bounce. The host is ready for all of it; pick up the instant any gate clears (the bounce-verify is first). SESSION BUILDS (mine): channel-stack B · tool-face mapping+RUN-door · binding-discover fix · device-coordinate root + modal allocation (landscape top-clip) · resolve-consume · spotlight auto-include · the host-input/FACE-1-host-nav contracts — all verified-by-use + committed to main.
+
+---
+
+## FIRE — keystone-lock SOFTENED → FACE-1 renders unblocked (but double-gated); the whole FACE-1+resolver+derive wave is BOUNCE-gated (confirmed)
+
+Lead (g-1782017508→g-1782017710): form-hold LIFTED, keystone-lock now SOFT → FACE-1 renders no longer lock-blocked; sequenced behind DNA's organisms (#2) + archetypes (#5). My steer: coordinate with DNA on which organisms land first → soft-prep now, hard-render as each lands; host seams + read-API "ready". 
+
+★ CRITICAL-COMPARISON finding (checked live, raw — don't assume "ready"): fork's FACE-1 read routes /api/sessions·channels·board (+timeline·transcript-search) ALL return {} HTTP 404 on the running bridge (pid 11626) — COMMITTED-NOT-LIVE, same as /api/resolve + /api/stack-item-types. The running bridge predates fork's read-API + resolver + registry-expose commits ⟹ the WHOLE FACE-1 wave (surface DATA) + resolve-override + stack-derive are ALL bounce-gated for live data/verify. So the BOUNCE is the single unblock for the entire wave (reported to the lead for bounce-timing: call it once DNA's organisms + my host-shells are soft-prepped → the bounce lights up all live data + resolve + derive at once = the coherent checkpoint).
+
+★ FACE-1 IS DOUBLE-GATED for hard-render+verify: (a) DNA's organisms (render — in-flight, #2; DNA surfaces each shape to projection as it lands) + (b) fork's read-API LIVE (data — bounce-gated, 404 now). SOFT-PREP (render-independent) = build the FACE-1 host-shells + data-stores against fork's COMMITTED read-shape + DNA's organism shape, degrade-clean (404→honest loading/empty), as DNA surfaces each organism → pipeline, not serialize. NOT building blind against 404s + no-organism-yet at the marathon tail (critical-comparison: unverifiable-live scaffolding rushed = the error pattern).
+Coordination: conveyed the FACE-1 pipeline ask via the lead-hub thread (the shared channel DNA reads); DNA surfaces organisms to projection (directed). The post-reboot fabric has no proactive send-to-handle (profile/reply/announce) — the lead is the hub.
+
+NEXT (pipeline): render each FACE-1 surface against DNA's organism as it lands (host-shell + data-store to fork's committed shape, degrade-clean). FIRST on the bounce verify — the list: landscape resolve-override + summary-leak + tool-face + FACE-1 surfaces' real data, all at once. Held-on-bounce: resolve-override · all-viewport extend + SHELL-kill · stack-derive (also needs fork's type-in-feed).
