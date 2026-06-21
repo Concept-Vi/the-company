@@ -44,7 +44,7 @@ const STARTERS = ['What am I looking at?', 'What can I do here?', 'Where can I g
 
 type Pos = { x: number; y: number } | null
 type Drag = { id: number; ox: number; oy: number; sx: number; sy: number; moved: boolean }
-type Brain = { ask: (p?: string) => unknown; direct: (i: unknown) => Promise<unknown[]>; aimChanged: () => void; destroy: () => void }
+type Brain = { ask: (p?: string) => unknown; groundedAsk: (p?: string) => unknown; direct: (i: unknown) => Promise<unknown[]>; aimChanged: () => void; destroy: () => void }
 
 const POS_KEY = 'rhm.handle.pos'
 // FIRST-CONTACT GREETING — the RHM is "the always-present guide… the teacher that walks the operator through
@@ -198,7 +198,7 @@ export function RightHand({ binding }: { binding?: string }) {
     setTourStep(step)
     setTourAnswering(true)
     try {
-      Promise.resolve(brainRef.current?.ask(STARTERS[step])).finally(() => setTourAnswering(false))
+      Promise.resolve(brainRef.current?.groundedAsk(STARTERS[step])).finally(() => setTourAnswering(false))
     } catch {
       setTourAnswering(false)
     }
@@ -559,7 +559,7 @@ export function RightHand({ binding }: { binding?: string }) {
                 type="button"
                 onClick={() => {
                   try {
-                    brainRef.current?.ask(q)
+                    brainRef.current?.groundedAsk(q)
                   } catch {
                     /* brain not mounted — the starter is a no-op rather than a crash (fail-soft, like the panel) */
                   }
