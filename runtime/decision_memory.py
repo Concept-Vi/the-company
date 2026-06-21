@@ -46,6 +46,49 @@ EXPLAIN_DECISION_SPACES = DEFAULT_DECISION_SPACES + ("extractions",)
 # "grounded in the decision itself," NEVER a confident bled neighbour (no-silent-failures).
 _CTX_FLOOR = 0.5
 
+# THE THEOREM-FORK determine CACHE (2026-06-21, reconcile): the matrix-index fixed the candidate-filter, but the
+# determine's CLUSTER-STEP (run_items on chat-4b) still QUEUES under GPU contention (5.8s idle → ~22s contended)
+# → the ~26s-live theorem-fork explain. The 2 theorem-forks (cube-3d, dimension-meaning) are STABLE decisions
+# over a STABLE asset → their theorem_claims are deterministic-enough to CACHE → skip the cluster-step on
+# repeat-opens (removes them from the chat-4b contention). KEYED on (decision_text, asset-SIZE) so a (re)bake of
+# extractions-theorem.jsonl (size change) AUTO-INVALIDATES — no staleness. In-process (clears on a bridge
+# restart → re-warms; prewarm_theorem_explains() pre-fills it at startup so the cold-first isn't a >35s).
+_THEOREM_CLAIMS_CACHE: dict = {}
+
+
+def prewarm_theorem_explains(suite) -> int:
+    """WARM-ON-STARTUP (lead 2026-06-21): pre-compute the theorem-fork decisions' grounding (the determine +
+    cluster-step + rerank) so the FIRST theorem-fork open after a (re)start isn't a cold >35s. Iterates the
+    decision registry for subtype='theorem-fork', runs explanation_grounding for each → populates
+    _THEOREM_CLAIMS_CACHE (+ builds the extractions matrix as a side-effect). Best-effort, never raises. Called
+    from the bridge's startup warm daemon (alongside warm_vector_cache). Returns the count warmed."""
+    n = 0
+    try:
+        from runtime.cognition import decision_registry as _dreg
+        reg = _dreg()
+        for did in list(reg):
+            row = reg.get(did)
+            if isinstance(row, dict) and row.get("subtype") == "theorem-fork":
+                try:
+                    explanation_grounding(suite, row, rerank=False, top_n=6)  # populates the cache
+                    n += 1
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    return n
+
+
+def _theorem_asset_size() -> int:
+    """Size of the theorem extraction asset — the cache-version (changes on a rebake → auto-invalidate)."""
+    import os as _os
+    p = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+                      ".data", "store", "extractions", "extractions-theorem.jsonl")
+    try:
+        return _os.path.getsize(p)
+    except OSError:
+        return -1
+
 # ── the never-assert law's canonical text (recollection owns it — single-source, two renderings) ──────────
 # THE LAW (lead 2026-06-21): a theorem-fork decision's explanation grounds in Tim's OWN written maths and
 # FLAGS AI-projection — never asserts a gloss as his theorem (the cube-error proved the AI errs here). It is
@@ -577,22 +620,29 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
     caveat = None
     theorem_claims: list[dict] = []
     if subtype == "theorem-fork":
-        try:
-            from runtime import recall_determine as _rd
-            det = _rd.determine(text, asset="theorem", suite=suite, max_claims=40)
-            _seen_cl = set()
-            for th in det.get("themes", []):
-                for cl in th.get("claims", []):
-                    c = cl.get("claim")
-                    if isinstance(c, str) and c.strip() and c.strip().lower() not in _seen_cl:
-                        _seen_cl.add(c.strip().lower())            # dedup the near-identical preserve/cancel pairs
-                        theorem_claims.append({"claim": c.strip(), "chunk_id": cl.get("chunk_id"),
-                                               "theme": th.get("theme", "")})
-            # ORDER by relevance to the decision (the cross-encoder catches homonym noise the determine's
-            # candidate-filter let through) → the framework block LEADS with Tim's most on-topic maths.
-            theorem_claims = _rerank_claims(text, theorem_claims, top_n=12)
-        except Exception:
-            pass
+        _ckey = (text, _theorem_asset_size())                  # (decision, asset-version) → auto-invalidate on rebake
+        _cached = _THEOREM_CLAIMS_CACHE.get(_ckey)
+        if _cached is not None:
+            theorem_claims = list(_cached)                     # CACHE HIT → skip the cluster-step (the contention residual)
+        else:
+            try:
+                from runtime import recall_determine as _rd
+                det = _rd.determine(text, asset="theorem", suite=suite, max_claims=40)
+                _seen_cl = set()
+                for th in det.get("themes", []):
+                    for cl in th.get("claims", []):
+                        c = cl.get("claim")
+                        if isinstance(c, str) and c.strip() and c.strip().lower() not in _seen_cl:
+                            _seen_cl.add(c.strip().lower())        # dedup the near-identical preserve/cancel pairs
+                            theorem_claims.append({"claim": c.strip(), "chunk_id": cl.get("chunk_id"),
+                                                   "theme": th.get("theme", "")})
+                # ORDER by relevance to the decision (the cross-encoder catches homonym noise the determine's
+                # candidate-filter let through) → the framework block LEADS with Tim's most on-topic maths.
+                theorem_claims = _rerank_claims(text, theorem_claims, top_n=12)
+                if theorem_claims:
+                    _THEOREM_CLAIMS_CACHE[_ckey] = list(theorem_claims)  # cache the determine+rerank result
+            except Exception:
+                pass
         caveat = ("GROUND ONLY in the framework statements below — these are the SYSTEM'S EXTRACTIONS of Tim's "
                   "written mathematics (traceable to his notes, faithful compressions — NOT his literal words). "
                   "So: attribute the IDEAS to him, but do not present the wording as his exact quote, and frame "

@@ -1074,7 +1074,11 @@ class FsStore:
         startup so the FIRST semantic query after a (re)start — e.g. a decision-open, whose memory leg has a
         3s budget — is already warm; otherwise its cold full-parse (~1.5s) pushes the leg over budget and the
         decision resolves UNGROUNDED once (verified 2026-06-18: cold first-resolve 3.08s→timeout; after warm
-        1.84s→grounded). Idempotent + cheap when already warm (revalidate-only)."""
+        1.84s→grounded). Idempotent + cheap when already warm (revalidate-only).
+
+        (X12-MATRIX: the per-space cosine matrices build LAZILY on first query_index — keyed on _vec_version,
+        cheap for small spaces; the big 67k extractions matrix is pre-built by prewarm_theorem_explains at
+        startup as a determine side-effect, so the theorem cold-first is covered without an all-spaces warm.)"""
         return len(self._vector_records())
 
     def index_addresses(self, space=None) -> list[str]:

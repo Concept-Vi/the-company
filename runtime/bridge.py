@@ -459,7 +459,12 @@ SUITE = Suite(FsStore(fcfg.STORE_DIR),
 # UNGROUNDED once. Daemon thread → never blocks boot; failure-isolated → never breaks startup.
 def _warm_vector_cache():
     try:
-        SUITE.store.warm_vector_cache()
+        SUITE.store.warm_vector_cache()          # _vec_records + the per-space cosine matrices (X12-MATRIX)
+    except Exception:
+        pass
+    try:                                          # pre-compute the theorem-fork grounding so the first theorem
+        from runtime.decision_memory import prewarm_theorem_explains  # open after a (re)start isn't a cold >35s
+        prewarm_theorem_explains(SUITE)
     except Exception:
         pass
 import threading as _x12_thr   # threading is imported locally elsewhere in this module, not at top level
