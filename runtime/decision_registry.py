@@ -243,7 +243,7 @@ def decision_inbox(registry, store, subtype_registry=None) -> list:
                     if isinstance(o, dict) and o.get("recommended") and o.get("label")), None)
         sub = row.get("subtype")
         owner = row.get("owner")                      # an explicit row override wins (rare)
-        ai_caveat = None
+        element_texts: dict = {}                       # server-side element texts recollection owns, for this subtype
         req_elements = None
         if sub and subtype_registry is not None:
             # RESOLVE owner from the subtype (the no-drift source) — duck-typed: .get(sub).owner
@@ -252,20 +252,22 @@ def decision_inbox(registry, store, subtype_registry=None) -> list:
                 if srow is not None:
                     if owner is None:
                         owner = getattr(srow, "owner", None)
-                    # RESOLVE required_elements from the subtype (no-drift, same pattern as owner/caveat) —
-                    # the element-KEYS DNA renders per card-kind (authorize→action/condition/gate ·
-                    # theorem-fork→conceptual_options/grounding_source/ai_uncertainty_caveat · …). Registry-
-                    # driven: a new subtype declares its own required_elements once → the feed carries them.
+                    # RESOLVE required_elements from the subtype (no-drift, same pattern as owner) — the
+                    # element-KEYS DNA renders per card-kind (authorize→action/condition/gate · theorem-fork→
+                    # conceptual_options/grounding_source/ai_uncertainty_caveat · …). Registry-driven: a new
+                    # subtype declares its own required_elements once → the feed carries them.
                     req_elements = list(getattr(srow, "required_elements", None) or []) or None
-                    # SINGLE-SOURCE CAVEAT (the never-assert law's in-card text): if THIS subtype's
-                    # required_elements declares `ai_uncertainty_caveat` (today: theorem-fork), carry the
-                    # canonical operator text from recollection's decision_memory so DNA renders the SAME
-                    # words the explanation grounds by (no drift, no hardcoded JS copy, no hardcoded subtype
-                    # name — registry-driven: any future subtype that declares the element gets it). The text
-                    # is static per-subtype (the law, not per-decision) so this is GPU-free + recall-free.
-                    if "ai_uncertainty_caveat" in (getattr(srow, "required_elements", None) or []):
-                        from runtime.decision_memory import THEOREM_FORK_CAVEAT_OPERATOR
-                        ai_caveat = THEOREM_FORK_CAVEAT_OPERATOR
+                    # SINGLE-SOURCE ELEMENT TEXTS (the never-assert law's in-card surfaces — the caveat + the
+                    # grounding-source): for each required_element recollection owns the text for (decision_memory.
+                    # SERVER_SIDE_ELEMENT_TEXTS — today ai_uncertainty_caveat + grounding_source, both theorem-fork),
+                    # carry the canonical text so DNA renders the SAME words the explanation grounds by — no drift,
+                    # no hardcoded JS copy, no hardcoded element/subtype name HERE (registry-driven: the subtype
+                    # declares the element, recollection owns the text, the feed wires them). Static per-subtype
+                    # (the law, not per-decision) → GPU-free + recall-free (the feed must stay cheap).
+                    from runtime.decision_memory import SERVER_SIDE_ELEMENT_TEXTS
+                    for _el in (req_elements or []):
+                        if _el in SERVER_SIDE_ELEMENT_TEXTS:
+                            element_texts[_el] = SERVER_SIDE_ELEMENT_TEXTS[_el]
             except Exception:
                 owner = owner                         # fail-soft: a bad subtype never breaks the inbox read
         rowout = {"id": did, "type": "decision-sequence", "subtype": sub,
@@ -273,8 +275,7 @@ def decision_inbox(registry, store, subtype_registry=None) -> list:
                   "name": name, "state": st.get("state"), "recommended_label": rec}
         if req_elements:                               # the per-subtype element-keys DNA renders (absent if untyped)
             rowout["required_elements"] = req_elements
-        if ai_caveat:                                  # only theorem-fork-kind rows carry it (absent elsewhere)
-            rowout["ai_uncertainty_caveat"] = ai_caveat
+        rowout.update(element_texts)                   # the server-side element texts (caveat + grounding_source; theorem-fork only)
         out.append(rowout)
     return out
 

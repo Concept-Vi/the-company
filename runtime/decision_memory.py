@@ -52,6 +52,29 @@ THEOREM_FORK_CAVEAT_OPERATOR = (
 # a one-line banner variant for tight in-card space (DNA picks by available room):
 THEOREM_FORK_CAVEAT_BANNER = "⚠ Grounded in your maths — anything beyond is flagged as the AI's projection, not asserted as yours."
 
+# THE GROUNDING-SOURCE element (theorem-fork's required_element `grounding_source`) — the WHERE of the
+# grounding (provenance/trust), recollection's single-source like the caveat. Names the source AS Tim's own
+# theorem work, at his altitude (operator-law: no machine paths). The theorem extraction layer traces to his
+# universal-mechanics vault (math-verification + notes + universal-substrate-system = his Structural Completion
+# theorem). Static per-subtype (cheap — the FEED can't run the ~13s determine); the per-decision SPECIFIC traced
+# sources (which notes exactly) live in the explanation (the source-pointer follow-on). Was resolving EMPTY on
+# cube-3d + dimension-meaning (the same silent-gap class the caveat exposure closed).
+THEOREM_FORK_GROUNDING_SOURCE = (
+    "Your own written mathematics — the theorem of structural completion you've developed in your notes. "
+    "This card is built only from there; the explanation traces to the specific parts of your work."
+)
+
+# THE SERVER-SIDE ELEMENT TEXTS recollection owns — keyed by the decision_subtypes `required_element` name →
+# the operator-facing text DNA renders in-card. The feed builder (decision_registry.decision_inbox) attaches
+# these for any subtype declaring the element, so the IN-CARD surfacing + the explanation derive from ONE
+# place (single-source, no drift, no hardcoded element name in the feed — registry-driven). recollection owns
+# the never-assert law's surfaces (the caveat + the grounding-source); a future element recollection owns is
+# added here once and auto-attaches.
+SERVER_SIDE_ELEMENT_TEXTS = {
+    "ai_uncertainty_caveat": THEOREM_FORK_CAVEAT_OPERATOR,
+    "grounding_source": THEOREM_FORK_GROUNDING_SOURCE,
+}
+
 
 def prior_decisions_about(suite, topic_text: str, *, k: int = 6, rerank: bool = True) -> list[dict]:
     """"Decisions made about X resurfacing" (the lead's step-6 framing) — surface PRIOR decision-content
