@@ -47,6 +47,7 @@ DECISION = {
         },
     ],
     "scope": "global",
+    "subtype": "trade-off",  # multi-option foundation direction (owner=tim) — was UNTAGGED → silently absent from the queue despite being its own declared FRAME-FIRST keystone. Tagged in-class with substrate-spine.
     "explanation_source": "code://build-prep/coverage-mechanism/SUBSTRATE-HOME-CONVERGENCE-MAP.md",
     "legibility": {
         "name": "Adopt one shared spine for the company's foundation",

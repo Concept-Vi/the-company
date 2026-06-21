@@ -40,6 +40,7 @@ DECISION = {
         },
     ],
     "scope": "global",
+    "subtype": "trade-off",  # multi-option address-model direction (owner=tim) — was UNTAGGED → absent from the queue despite being a declared held-substrate decision meant to render after substrate-home.
     "explanation_source": "code://build-prep/the-one-application/UNION-DIVERGENCE-LEDGER.md",
     "legibility": {
         "name": "How the live streams are held",

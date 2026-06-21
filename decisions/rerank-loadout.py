@@ -64,6 +64,7 @@ DECISION = {
         },
     ],
     "scope": "global",
+    "subtype": "trade-off",  # 4-option capability/loadout direction (owner=tim) — was UNTAGGED → absent from the queue despite being "the 7th card, on the decision surface itself." NOTE: option-2 carries an embedded load-authorization (picking it IS the consult-satisfied authorize) — trade-off fits the n-panel direction shape; flag if a capability/authorize-hybrid subtype is later wanted.
     "explanation_source": "board://item-a3844c46",
     "legibility": {
         "name": "The sharpness of the context behind a decision",
