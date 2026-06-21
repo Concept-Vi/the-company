@@ -1487,6 +1487,32 @@ class H(BaseHTTPRequestHandler):
                     self._send(200, json.dumps({"ok": True, "op": _op, "session": _sess, **out}))
                 except (ValueError, FileNotFoundError) as _sr_e:
                     self._send(400, json.dumps({"ok": False, "op": _op, "error": str(_sr_e)}))
+            elif path == "/api/channel-history":           # FACE-1 embedded-CLI: ONE channel's message exchange
+                # session_channels.channel_history — the readable channel exchange (posts + thread traffic), so the
+                # embedded-CLI face shows the live channel conversation. ?channel=<id> required (400 if absent);
+                # ?since= ?limit=. READ-only (the floor). Fail-loud on an unknown channel → 400 teaching.
+                _cid = q.get("channel") or q.get("cid")
+                if not _cid:
+                    self._send(400, json.dumps({"ok": False, "error": "/api/channel-history needs ?channel=<channel-id>"}))
+                else:
+                    from runtime import session_channels as _sc
+                    try:
+                        _since = int(q.get("since", -1)) if str(q.get("since", "-1")).lstrip("-").isdigit() else -1
+                        _lim = int(q.get("limit", 50)) if str(q.get("limit", "")).isdigit() else 50
+                        self._send(200, json.dumps({"ok": True, **_sc.channel_history(SUITE.store, _cid, since=_since, limit=_lim)}))
+                    except (ValueError, KeyError) as _ch_e:
+                        self._send(400, json.dumps({"ok": False, "error": str(_ch_e)}))
+            elif path == "/api/session-describe":          # FACE-1 embedded-CLI: ONE session in full (row + record + mail summary)
+                # SUITE.get_agent_session(sid) — the joined registry row + durable record. ?session=<sid> required;
+                # fail-loud on unknown (never a fabricated session). READ-only (the floor).
+                _dsid = q.get("session") or q.get("sid")
+                if not _dsid:
+                    self._send(400, json.dumps({"ok": False, "error": "/api/session-describe needs ?session=<session-id>"}))
+                else:
+                    try:
+                        self._send(200, json.dumps({"ok": True, "session": SUITE.get_agent_session(_dsid)}))
+                    except (ValueError, KeyError) as _ds_e:
+                        self._send(400, json.dumps({"ok": False, "error": str(_ds_e)}))
             elif path == "/api/types":
                 self._send(200, json.dumps(sorted(SUITE.list_types())))
             elif path == "/api/layers":                    # the multi-layer model's self-description: {space:[embedder layer,…]}
@@ -2295,6 +2321,26 @@ class H(BaseHTTPRequestHandler):
                 else:
                     out = _brain.ask(_ques, suite=SUITE, aim=b.get("aim"), graph_id=b.get("graph_id") or "codebase")
                     self._send(200, json.dumps({"ok": True, **out}))
+            elif self.path == "/api/run-in-channel/propose": # EMBEDDED-CLI action layer — PROPOSE a session/channel action
+                # The embedded-CLI's "run in channel" face: wake/consult a session · post to a channel. These are
+                # GATED (spawn=lead-only autonomous-spawn-lead-only; session_post/channel_act=explicitly_denied→403).
+                # ★ THE FLOOR: this endpoint does NOT execute them — it returns a structured PROPOSAL (the action +
+                # that it's operator/lead-gated + how it'd run) for the operator to fire through the gated path. The
+                # face SHOWS what could run; the human runs it. POST {action:wake|consult|post, target?, message?}.
+                b = self._body()
+                _act = b.get("action") or ""
+                _GATED = {"wake": "supervisor wake — spawn is lead-only (autonomous-spawn-lead-only)",
+                          "consult": "supervisor consult — spawns a session, lead-only",
+                          "post": "channel post — session_post/channel_act are explicitly_denied on the invoke door (403); routed through the dedicated channel path"}
+                if _act not in _GATED:
+                    self._send(400, json.dumps({"ok": False, "error": f"action must be one of {sorted(_GATED)}; got {_act!r}"}))
+                else:
+                    # a PROPOSAL, never an execution (the floor): the surface renders it; the operator/lead fires it.
+                    self._send(200, json.dumps({"ok": True, "proposal": {
+                        "action": _act, "target": b.get("target"), "message": b.get("message"),
+                        "is_gated": True, "gate": _GATED[_act], "executed": False,
+                        "note": "PROPOSAL only — the embedded-CLI surfaces this; the operator/lead runs it through "
+                                "the gated path. The face proposes, it does not spawn/post (the floor)."}}))
             elif self.path == "/api/resolve":               # THE RESOLVER door (4th-primitive seam) — pure computation
                 # resolve(invariant, coordinate) → {slot: value}. The HTTP door so the SURFACE can compute its
                 # own allocation from a coordinate (screen-size as root → derived layout, NO @media breakpoints).
