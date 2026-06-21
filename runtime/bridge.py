@@ -2402,8 +2402,24 @@ class H(BaseHTTPRequestHandler):
                         _inputs["caveat"] = _g["caveat"]
                     _coord = {"subtype": _g["subtype"]} if _g.get("subtype") else None
                     _model = b.get("model") or SUITE.rhm_config().get("model") or ""   # the operator's REAL brain by default
-                    _out = cog_run_role("explain_role", inputs=_inputs, policy=_pol, coordinate=_coord,
-                                        model=_model, max_tokens=int(b.get("max_tokens") or 512))
+                    # MIN max_tokens floor (1024): ExplainOut is 3 prose fields — too tight a budget truncates the
+                    # structured JSON mid-emit. Default 1024; honour a larger caller value, floor a smaller one.
+                    _mt = max(int(b.get("max_tokens") or 1024), 768)
+                    try:
+                        _out = cog_run_role("explain_role", inputs=_inputs, policy=_pol, coordinate=_coord,
+                                            model=_model, max_tokens=_mt)
+                    except Exception as _ex:
+                        # FAIL-SOFT (the model-layer-must-fail-soft pass): a truncated/unparseable structured
+                        # output (budget exhausted) or a model error DEGRADES to a clean 200 — the GROUNDING + wire
+                        # are intact, only the model's prose failed. Surface the real cause (no silent swallow);
+                        # the operator/projection retries or raises the budget. NOT a hard 400/500.
+                        self._send(200, json.dumps({"ok": False, "degraded": True,
+                            "subtype": _g.get("subtype"), "policy": _pol, "model": _model,
+                            "grounding_provenance": _g.get("note"),
+                            "error": f"explanation generation failed: {type(_ex).__name__}: {str(_ex)[:200]}",
+                            "note": "the grounding + wire are intact; the model's structured output failed "
+                                    "(often a tight token budget). Retry or raise max_tokens."}))
+                        return
                     # `grounding_provenance` = the GROUNDING BUNDLE's note (how the context was assembled —
                     # e.g. "rough similarity; sharper re-sort is itself a pending decision"). DISTINCT from the
                     # model's own `explanation.grounding_note` (how the EXPLANATION is grounded). Renamed from a

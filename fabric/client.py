@@ -8,6 +8,7 @@ lessons made into tested logic — non-empty + JSON-repair + schema-validate + r
 from __future__ import annotations
 import json
 import random
+import re
 import time
 from typing import Any, Callable, Type
 
@@ -33,12 +34,22 @@ def _retry_sleep(sleep: Callable, attempt: int, retries: int) -> None:
 
 
 def _balance_json(s: str) -> str:
-    """Best-effort repair of truncated JSON: strip code fences, balance brackets."""
+    """Best-effort repair of TRUNCATED JSON (a model whose output budget ran out mid-emit), so a tight/
+    exhausted max_tokens DEGRADES into a parseable partial object instead of a hard JSONDecodeError. Strips
+    code fences, closes an unterminated string, drops a dangling trailing key/comma/colon, balances brackets.
+    A strict superset of the old behaviour — VALID json is returned byte-identical (no salvage applies)."""
     s = s.strip()
     if s.startswith("```"):
         s = s.strip("`")
         if "{" in s:
             s = s[s.find("{"):]
+    # close an unterminated string: an ODD count of unescaped double-quotes means the last string is open.
+    if (len(re.findall(r'(?<!\\)"', s)) % 2) == 1:
+        s = s + '"'
+    # drop a half-written final "key" / "key": (no value yet), then any bare trailing comma/colon — so
+    # balancing yields valid JSON ({…} not {…,}). Order matters: key-fragment first, then dangling punct.
+    s = re.sub(r',\s*"[^"]*"\s*:?\s*$', '', s)
+    s = re.sub(r'[,:]\s*$', '', s)
     opens = s.count("{") - s.count("}")
     obrk = s.count("[") - s.count("]")
     return s + ("]" * max(0, obrk)) + ("}" * max(0, opens))
