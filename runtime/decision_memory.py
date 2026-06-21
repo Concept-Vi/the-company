@@ -61,7 +61,7 @@ THEOREM_FORK_CAVEAT_BANNER = "⚠ Grounded in your maths — anything beyond is 
 # cube-3d + dimension-meaning (the same silent-gap class the caveat exposure closed).
 THEOREM_FORK_GROUNDING_SOURCE = (
     "Your own written mathematics — the theorem of structural completion you've developed in your notes. "
-    "This card is built only from there; the explanation traces to the specific parts of your work."
+    "This card is built only from there: faithful extractions of your work, traceable back to your notes."
 )
 
 # THE SERVER-SIDE ELEMENT TEXTS recollection owns — keyed by the decision_subtypes `required_element` name →
