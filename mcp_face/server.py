@@ -212,9 +212,12 @@ def get_events(limit: int = 60) -> list:
 
 
 @mcp.tool()
-def now(graph: str) -> dict:
-    """The now-view + presence snapshot for `graph` — node counts, pending approvals, presence, last event."""
-    return SUITE.now(graph)
+def now(graph: str = "codebase") -> dict:
+    """The now-view + presence snapshot for `graph` — node counts, pending approvals, presence, last event.
+    `graph` defaults to the primary graph ('codebase') so the tool is INVOKABLE WITHOUT ARGS (the by-use
+    friction: invoking `now` with no graph errored 'missing graph' — a tool should work as you'd intuitively
+    expect; the bridge's own /api reads already default graph_id→'codebase')."""
+    return SUITE.now(graph or "codebase")
 
 
 @mcp.tool()

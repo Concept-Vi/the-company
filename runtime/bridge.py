@@ -2930,7 +2930,7 @@ class H(BaseHTTPRequestHandler):
                 # not fully wired yet — the slot is DESIGNED IN here (accepted + threaded + the
                 # consequential branch ready) so write-tools inherit it without a gate rewrite. See TODO.
                 b = self._body()
-                name = b.get("name") or ""
+                name = b.get("name") or b.get("tool") or ""   # accept `tool` as an alias for `name` (by-use friction: callers reach for {tool})
                 args = b.get("args") or b.get("arguments") or {}
                 confirm = bool(b.get("confirm"))
                 operator_token = self.headers.get("X-Operator-Session", "")   # the unified-floor attribution slot
