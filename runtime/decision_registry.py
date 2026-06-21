@@ -183,6 +183,15 @@ def compose_state(row: dict, marks: list) -> dict:
     events = [m for m in (marks or []) if isinstance(m, dict)
               and m.get("mark_type") in ("decision_take", "decision_retract")]
     resolved = dict(row) if isinstance(row, dict) else {"row": row}
+    # DERIVED `recommended_label` (the recommended option's label) — added to the RESOLVED VIEW so the
+    # decision /api/territory record (identity = resolve_address → compose_state) carries it FLAT, which is
+    # what projection's host row_fields read (`identity.recommended_label`). Same derivation decision_inbox
+    # uses (single logic, registry-is-truth: it's row.options-derived, not authored). Present in every return
+    # path (it's static, not state-dependent). A row without options/recommended → None (honest absent).
+    if isinstance(row, dict):
+        resolved["recommended_label"] = next(
+            (o.get("label") for o in (row.get("options") or [])
+             if isinstance(o, dict) and o.get("recommended") and o.get("label")), None)
     if not events:
         resolved.update(state="pending", decided_value=None, decided_by=None, decided_at=None)
         return resolved
