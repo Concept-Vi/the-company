@@ -82,18 +82,33 @@ export async function loadSessions() {
   }
 }
 
-// THE LENS ROUTE SEAM — fork owns the per-session lens route (recollection's session_recall ops over HTTP). Until
-// it lands, loadLens degrades clean (routeReady:false → the session-card shows the LIST identity + an honest
-// "lenses coming" state, never a fabricated lens). When fork lands the route, set LENS_ROUTE + this works.
-const LENS_ROUTE: string | null = null // e.g. (id, op) => `/api/session-recall?session=${id}&op=${op}` — pending fork
+// THE LENS ROUTE — fork's per-session lens route (3c173be, confirmed by the lead, aligned to recollection's
+// session_lens spec): /api/session-recall?session=&op=<catch_up|open_loops|directives|decisions|drift|timeline|find>.
+// Committed; goes LIVE on the checkpoint bounce → degrade-clean until then (a 404 → that lens stays empty, never a
+// fabricated one). The single edit-point is now filled (was the pending seam).
+const LENS_ROUTE = (id: string, op: string) => `/api/session-recall?session=${encodeURIComponent(id)}&op=${op}`
 
 export async function loadLens(sessionId: string) {
-  set({ lens: { loading: true, routeReady: !!LENS_ROUTE } })
-  if (!LENS_ROUTE) {
-    set({ lens: { loading: false, routeReady: false } }) // degrade clean: route not built yet (fork)
-    return
+  set({ lens: { loading: true, routeReady: true } })
+  // fetch the 3 core lenses CONCURRENTLY (recollection's shapes: catch_up/directives → {items}, open_loops → {open}).
+  // Each degrades clean per-op (route-not-live/404/empty → that lens empty; never blocks, never fabricates). With a
+  // short timeout so a slow lens can't hang the card (the tool-face lesson).
+  const fetchOp = async (op: string): Promise<LensItem[]> => {
+    try {
+      const ctrl = new AbortController()
+      const to = setTimeout(() => ctrl.abort(), 4000)
+      const r = await fetch(LENS_ROUTE(sessionId, op), { signal: ctrl.signal }).finally(() => clearTimeout(to))
+      if (!r.ok) return []
+      const d = await r.json()
+      const arr = d.items || d.open || []
+      return Array.isArray(arr) ? (arr as LensItem[]) : []
+    } catch {
+      return []
+    }
   }
-  // (when LENS_ROUTE lands: fetch catch_up/open_loops/directives per recollection's shape, hold them, fail-loud)
+  const [catch_up, open_loops, directives] = await Promise.all([fetchOp('catch_up'), fetchOp('open_loops'), fetchOp('directives')])
+  if (state.selected !== sessionId) return // a fast re-select superseded this → don't clobber
+  set({ lens: { catch_up, open_loops, directives, loading: false, routeReady: true } })
 }
 
 export function openSessions() {
