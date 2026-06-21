@@ -280,6 +280,26 @@ def decision_inbox(registry, store, subtype_registry=None) -> list:
     return out
 
 
+def decision_decided_signal(suite, address: str, chosen_option, *, by=None) -> dict:
+    """L3 — the decide→SIGNAL half of the operator-cycle's "Tim clears → resume" wire. Called by
+    territory_write the instant a `decision_take` mark lands (the decide chokepoint), it emits the
+    `decision.decided` SIGNAL as a first-class event {decision_id, address, chosen_option, by}. That
+    signal is what the work GATED on this decision consumes to RESUME with the chosen option — v1: the
+    lead/lanes read it (SUITE.get_events / the decided-signals read) and un-pause; v2: a blocked-on
+    registry matches `gated_on: decision://…` and auto-resumes.
+
+    THE FLOOR (autonomous-spawn-lead-only): this is a RECORD emit only (emit_run_record, exactly like
+    every role-run) — it does NOT post to a live channel, wake, or dispatch a session. The brain records
+    + proposes; the human/lead fires the actual resume. So the signal is floor-clean by construction.
+    Returns the signal dict (territory_write attaches it to the mark record)."""
+    did = address.rsplit("/", 1)[-1] if isinstance(address, str) and "/" in address else address
+    signal = {"decision_id": did, "address": address, "chosen_option": chosen_option}
+    if by:
+        signal["by"] = by
+    suite.emit_run_record("decision.decided", 0, **signal)   # floor-clean record emit (fail-loud, like every emit)
+    return signal
+
+
 class DecisionRegistry:
     """The file-discovered DECISION registry — mirrors `runtime/lifter_registry.py:LifterRegistry` /
     `runtime/mark_types.py:MarkTypeRegistry` (the ONE registry mechanism; not a fork). Dict-like

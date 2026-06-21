@@ -532,7 +532,21 @@ def territory_write(element_id, item, *, suite):
         elif mark_type == "favour" and fields.get("score") is not None:
             fields["value"] = fields["score"]
     fields.setdefault("source", "operator")
-    return suite.mark(target, mark_type, **fields)
+    rec = suite.mark(target, mark_type, **fields)
+    # L3 (the decide→SIGNAL→resume wire): a decision_take IS the operator deciding — emit the
+    # decision.decided SIGNAL so the work gated on this decision can RESUME with the chosen option.
+    # ONLY on decision_take (comment/reaction/favour are not decides; decision_retract is the twin
+    # decided→pending — a re-pend, not a decided-signal). Floor-clean (a record emit, not a post/spawn).
+    # Surface a signal failure on the record (no-silent-failures) WITHOUT failing the decide — the mark
+    # already landed (the decided state is correct); only the resume-signal would be missing.
+    if mark_type == "decision_take":
+        try:
+            from runtime.decision_registry import decision_decided_signal
+            rec["decided_signal"] = decision_decided_signal(
+                suite, target, fields.get("value"), by=fields.get("by"))
+        except Exception as e:
+            rec["decided_signal_error"] = f"{type(e).__name__}: {e}"
+    return rec
 
 
 def territory_directions_at(address, *, suite):

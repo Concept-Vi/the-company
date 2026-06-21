@@ -126,6 +126,7 @@ BRIDGE_ROUTES = (
     "/api/routines", "/api/transcript-search", "/api/session-recall", "/api/channel-history",
     "/api/session-describe", "/api/stack-item-types",
     "/api/brain/ask", "/api/run-in-channel/propose", "/api/decision/explain",
+    "/api/decision/decided-signals",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
@@ -1392,6 +1393,20 @@ class H(BaseHTTPRequestHandler):
                 from runtime.decision_subtypes import DecisionSubtypeRegistry as _DSTReg
                 _subreg = _DSTReg().discover([os.path.join(ROOT, "decision_subtypes")])
                 self._send(200, json.dumps(_dinbox(_dreg(), SUITE.store, subtype_registry=_subreg)))
+            elif path == "/api/decision/decided-signals":  # L3 read-half: the decide→SIGNAL→resume wire's consumable signal
+                # The `decision.decided` signals territory_write emits when the operator decides — what the
+                # work GATED on a decision consumes to RESUME with the chosen option (v1: the lead/lanes read
+                # this + un-pause; v2: a blocked-on registry matches gated_on:decision://… + auto-resumes).
+                # REUSE-DON'T-PARALLEL: a thin projection over the existing event log (events_since), filtered
+                # to op=decision.decided — no parallel signal store. ?since=<seq> (default 0 = all), newest-last.
+                q = parse_qs(urlparse(self.path).query)
+                _since = int((q.get("since") or ["0"])[0])
+                _sigs = [{"decision_id": e.get("decision_id"), "address": e.get("address"),
+                          "chosen_option": e.get("chosen_option"), "by": e.get("by"),
+                          "seq": e.get("seq"), "ts": e.get("ts") or e.get("at")}
+                         for e in SUITE.events_since(_since)
+                         if e.get("kind") == "op.run" and e.get("op") == "decision.decided"]
+                self._send(200, json.dumps({"ok": True, "signals": _sigs, "count": len(_sigs)}))
             elif path == "/api/stack-item-types":          # FACE-2: the channel-stack item-type VOCABULARY (registry-is-truth)
                 # composition's StackItemTypeRegistry as_records() over HTTP, so projection's host derives its
                 # StackItemType union from the registry (adding a type = a row, ZERO host change) instead of a
@@ -2369,9 +2384,13 @@ class H(BaseHTTPRequestHandler):
                     _model = b.get("model") or SUITE.rhm_config().get("model") or ""   # the operator's REAL brain by default
                     _out = cog_run_role("explain_role", inputs=_inputs, policy=_pol, coordinate=_coord,
                                         model=_model, max_tokens=int(b.get("max_tokens") or 512))
+                    # `grounding_provenance` = the GROUNDING BUNDLE's note (how the context was assembled —
+                    # e.g. "rough similarity; sharper re-sort is itself a pending decision"). DISTINCT from the
+                    # model's own `explanation.grounding_note` (how the EXPLANATION is grounded). Renamed from a
+                    # top-level `grounding_note` that collided with the nested one (projection's contract-flag).
                     self._send(200, json.dumps({"ok": True, "subtype": _g.get("subtype"), "policy": _pol,
                                                 "model": _model, "explanation": _out["output"],
-                                                "grounding_note": _g.get("note"), "address": _out["address"]}))
+                                                "grounding_provenance": _g.get("note"), "address": _out["address"]}))
             elif self.path == "/api/run-in-channel/propose": # EMBEDDED-CLI action layer — PROPOSE a session/channel action
                 # The embedded-CLI's "run in channel" face: wake/consult a session · post to a channel. These are
                 # GATED (spawn=lead-only autonomous-spawn-lead-only; session_post/channel_act=explicitly_denied→403).
