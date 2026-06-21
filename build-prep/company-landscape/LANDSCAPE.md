@@ -62,6 +62,21 @@ Scale (real, not skeleton): ~130 API routes · 66+ MCP tools · 16 node types ·
 - **ops:** litellm :4100 down post-reboot (cloud-models path down); BOOT/WINDOWS-BOOT docs claim auto-start that's FALSE (company.target disabled); **main branch 1339 commits ahead of origin** (huge uncommitted set).
 - **Worktree staleness risks:** concurrent-cognition (~/company-cognition), episodic-memory (~/episodic-memory) — may not be current main.
 
+### CODE-LEVEL DRIFT (found in the deep sweeps — additional anti-confirmation payload)
+- **NAME COLLISION: `projection.py` (the instrument) vs `projections.py` (the corpus LENS registry)** — and `tests/projections_acceptance.py` tests the WRONG one. A real trap for anyone editing either.
+- **`channel://` and `cluster://` are USED but NOT in the SCHEMES tuple** (contracts/address.py) — addresses that resolve by luck, not by contract.
+- **`_CORPUS_REGISTRIES` 3-way drift** — 6 rows actual / tests assert 4 / create.py `_DRIFT_HOME` missing `mind`.
+- **2,793 UNREACHABLE vectors** in vectors.bge-backup-20260615/ (+ the recall layer is 43,991 vectors, DONE+TRUSTED per DRAGNET-RESULTS.md).
+- **`lifter_registry.py` rename (2026-06-18)** — old `from runtime.lifters import…` is silently broken if any caller still uses it.
+- **`vi_vision.py` duplicate principal/JWT code** — two parallel copies until the supabase_principal.py migration runs.
+- **form_meta 1/66** — 65 tools still render as raw machine-knob walls (the tool-face content track).
+
+### BUILD-PREP NAVIGATION (461 files — which prep areas are LIVE vs SUPERSEDED)
+- **LIVE / freshest:** the-one-application/ (MORNING-STACK · COMMISSION-COMPLETION-REGISTER · THE-FACE-ANCHOR · RESOLVER-BUILD · TOOL-FRICTION-LOG · POPCORN-BUILD) · universal-projection/ (OPERATOR-SURFACE-LOOP = the living spec) · cognition-self-improvement/ (SYSTEM-GAPS · MCP-DESIGN-PRINCIPLE) · unify-laws/ (four root axes) · company-landscape/ (this sweep).
+- **SUPERSEDED:** instrument-surface/ (→ universal-projection) · coordination/ (→ channel system) · cognition-engine/ (→ concurrent-cognition) · episodic-memory-adaptation/ (→ dragnet recall, per [[feedback-no-episodic-memory]] — but BEAT1's forms/lifters R9 gap-fix is still relevant).
+- **UNCERTAIN/INCOMPLETE:** concurrent-cognition/ (BUILD-READY but merge-to-main uncertain — swarm fires listening/voice only) · self-serve-core/ (missing Implementation Guide) · trigger-system/ (design COMPLETE, build NOT started — the biggest pending build; its crux: recognisers are Python callables the create() gate refuses → move to RULE_OPS data).
+- **AUTHORITATIVE CORRECTIONS (read these, not just the triad):** concurrent-cognition/review/R1-FOLD.md + R2-FOLD.md.
+
 ## SYSTEMIC GATE-3 FEED (what the dragnet systematizes for the backfill)
 The grounding backfill (explanation_source) now has its concrete list from the registries sweep: **MISSING on 16/24** — build-consent-posture, card-visuals-source, connector-full-access, control-density, core-shape, cube-3d, dimension-meaning, figure-gold-value, line-language, lock-card-look, opacity-meaning, real-v-symbol, reconnect-tools, steer-visual-direction, substrate-spine, visual-fidelity. (control-density + steer-visual-direction origins already found by projection's fallback; the rest are the systematic backlog.)
 
