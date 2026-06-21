@@ -2281,7 +2281,21 @@ class H(BaseHTTPRequestHandler):
         # sockets — GET (incl. the stream) still keeps alive.
         self.close_connection = True
         try:
-            if self.path == "/api/resolve":               # THE RESOLVER door (4th-primitive seam) — pure computation
+            if self.path == "/api/brain/ask":             # SUPERVISOR-AS-BRAIN backend (the RHM mind, source-router)
+                # The cognition behind window.forkVBrain (the frontend DOM module — projection/DNA's lane). POST
+                # {question, aim?, graph_id?} → brain_router.ask routes to a SOURCE (fleet/recall/model) + composes.
+                # The FLOOR: a READ + a model-run + a PROPOSE — the 'fleet' source SEES the fabric + may SURFACE a
+                # gated action as a proposal, NEVER spawns/wakes (autonomous-spawn-lead-only). Fail-soft: a source
+                # error degrades to the model (the mind always answers). NOT a consequential-write door (no gate).
+                from runtime import brain_router as _brain
+                b = self._body()
+                _ques = b.get("question") or b.get("q") or ""
+                if not _ques:
+                    self._send(400, json.dumps({"ok": False, "error": "/api/brain/ask needs {question} (+ optional aim, graph_id)"}))
+                else:
+                    out = _brain.ask(_ques, suite=SUITE, aim=b.get("aim"), graph_id=b.get("graph_id") or "codebase")
+                    self._send(200, json.dumps({"ok": True, **out}))
+            elif self.path == "/api/resolve":               # THE RESOLVER door (4th-primitive seam) — pure computation
                 # resolve(invariant, coordinate) → {slot: value}. The HTTP door so the SURFACE can compute its
                 # own allocation from a coordinate (screen-size as root → derived layout, NO @media breakpoints).
                 # POST {invariant:{slot:relationship-AST|select|literal}, coordinate:{axis:value}}. runtime.resolver

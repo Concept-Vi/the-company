@@ -1,0 +1,120 @@
+"""runtime/brain_router.py — the SUPERVISOR-AS-LOADABLE-BRAIN, backend half (the RHM mind as a source-router).
+
+THE ARCHITECTURE (build-prep/the-one-application/SUPERVISOR-AS-BRAIN.md): the RHM's mind is no longer a single
+model — it RESOLVES which cognition-SOURCE answers a question, and the supervisor's fleet-sight is one source.
+This module is the BACKEND half: given (question, aim), pick a source by the question's shape, compose the answer.
+The FRONTEND half is `window.forkVBrain` (a DOM module mounted by surface/.../RightHand.tsx — projection/DNA's
+lane: turn/stream/write into the panel); it calls this backend via /api/brain/ask. The DOM object is NOT built
+here (not fork's lane); the COGNITION behind it is.
+
+★ IT IS THE RESOLVER, ONE ALTITUDE UP (the spine, not a new pattern): the source-selection is a DISCRETE
+resolve_slot select (question-shape → source) — runtime.resolver, the SAME primitive a surface uses to pick an
+allocation by device-coordinate. Each source then composes EXISTING, ALREADY-BUILT parts (reuse-don't-parallel):
+  • 'fleet'   → the SUPERVISOR source: the live roster + session list (session_channels.fold_channels +
+                Suite.list_agent_sessions — the read-routes built this session). READ+PROPOSE: it can SEE the
+                fabric and SURFACE "I could wake/consult session X" — it NEVER spawns/wakes (that's gated,
+                lead-only: autonomous-spawn-lead-only). The mind reaches the gated verb, never fires it.
+  • 'recall'  → grounded memory (the recall path — left as a declared hook here; recollection owns the backend,
+                the route is /api/transcript-search / recall_for_decision — composed by the caller, not duplicated).
+  • 'model'   → the default conversational mind: Suite.chat (today's whole RHM mind; stays the default/fallback).
+
+THE FLOOR: this is a READ + a model-run + a PROPOSE. It emits NO resolve_address/approve/dispatch/spawn. A
+'fleet' answer that implies an action returns it as a PROPOSAL (an explain string + a suggested gated-action the
+operator/lead fires), never an executed one.
+
+FAIL-SOFT: an unroutable question → 'model' (the safe default); a down source → degrade to 'model' with a note,
+never a crash (the brain must always answer something). Pure-ish: the model/recall legs do IO, but routing is
+deterministic given the question.
+"""
+from __future__ import annotations
+
+import re
+from typing import Any
+
+# The source-selection is data: a keyword→source map the resolver selects over. NOT hardcoded branching —
+# it's a declared routing table (axes-are-registries: a new source = a row). Conservative + explainable.
+_FLEET_HINTS = ("fleet", "session", "sessions", "channel", "channels", "who is", "what is running",
+                "what's running", "wake", "consult", "supervisor", "agent", "lane", "what are you all",
+                "drift", "roster")
+_RECALL_HINTS = ("remember", "recall", "what did we decide", "what was decided", "history", "past",
+                 "earlier", "transcript", "what happened", "memory")
+
+
+def route_source(question: str) -> str:
+    """DETERMINISTIC source pick from the question's shape → 'fleet' | 'recall' | 'model'. The discrete
+    select (resolver's axis-kind): a fleet/supervisor question → 'fleet'; a memory question → 'recall';
+    else the default conversational 'model'. Lowercased substring match (conservative; ties → fleet>recall>model
+    by specificity of the fabric-state question). This is the registry-data the resolver would select over —
+    inline here as the v1 table (a source = a hint-row; extend without engine change)."""
+    q = (question or "").lower()
+    if any(h in q for h in _FLEET_HINTS):
+        return "fleet"
+    if any(h in q for h in _RECALL_HINTS):
+        return "recall"
+    return "model"
+
+
+def _fleet_answer(question: str, *, suite) -> dict:
+    """The SUPERVISOR source — compose the LIVE fabric-state from the already-built reads (fold_channels +
+    list_agent_sessions). READ + PROPOSE only: it describes the fleet and may SURFACE a gated action as a
+    proposal; it NEVER spawns/wakes (the floor). Returns {source, answer, fleet, proposal?}."""
+    from runtime.session_channels import fold_channels
+    channels = list(fold_channels(suite.store).values())
+    sessions = suite.list_agent_sessions(limit=50)
+    rows = sessions.get("sessions", sessions) if isinstance(sessions, dict) else sessions
+    live = [s for s in rows if isinstance(s, dict) and "live" in str(s.get("state", "")).lower()]
+    n_ch, n_live = len(channels), len(live)
+    # a plain-meaning summary (operator-law: human, never machine ids in the answer prose)
+    answer = (f"The fabric has {n_ch} channel{'s' if n_ch != 1 else ''} and {n_live} live "
+              f"session{'s' if n_live != 1 else ''} right now.")
+    # PROPOSE (never fire): if the question asks to wake/consult, surface it as a suggested gated action.
+    proposal = None
+    if re.search(r"\b(wake|consult|run|resume)\b", (question or "").lower()):
+        proposal = {"kind": "supervisor_action", "is_gated": True,
+                    "suggestion": "Waking or consulting a session is a gated action — surface it for the "
+                                  "operator/lead to run; the mind proposes, it does not spawn.",
+                    "note": "floor: brain proposes, never dispatches (autonomous-spawn-lead-only)."}
+    return {"source": "fleet", "answer": answer,
+            "fleet": {"channels": n_ch, "live_sessions": n_live}, "proposal": proposal}
+
+
+def _model_answer(question: str, aim: str | None, *, suite, graph_id: str = "codebase") -> dict:
+    """The default conversational source — Suite.chat (today's whole RHM mind). The fallback for any
+    non-fleet/non-recall question + the degrade target. Returns {source, answer, raw}."""
+    res = suite.chat(question, graph_id, focus=({"address": aim} if aim else None))
+    text = res.get("text") if isinstance(res, dict) else str(res)
+    return {"source": "model", "answer": text, "raw": res}
+
+
+def ask(question: str, *, suite, aim: str | None = None, graph_id: str = "codebase") -> dict:
+    """THE BRAIN — resolve the source, compose the answer. The backend /api/brain/ask calls this; the
+    frontend forkVBrain renders it. FAIL-SOFT: a down/erroring source degrades to 'model' with a note
+    (the mind always answers). Returns {source, answer, ...} (+ routed_from on a degrade).
+
+    `recall` source: a DECLARED HOOK — recollection owns the recall backend (the route is
+    /api/transcript-search / recall_for_decision). v1 routes a recall question to the model (which is
+    itself grounded via Suite.chat's tool-calling), and FLAGS recall as the richer source to wire. So no
+    duplication of recollection's lane; the seam is named, not faked."""
+    src = route_source(question)
+    try:
+        if src == "fleet":
+            return _fleet_answer(question, suite=suite)
+        if src == "recall":
+            # recollection's lane: the grounded-recall source. v1 = the model (tool-calling-grounded) + a
+            # named seam to wire recollection's search/determine as a first-class source. No fake recall.
+            out = _model_answer(question, aim, suite=suite, graph_id=graph_id)
+            out["recall_seam"] = ("a richer 'recall' source (recollection's session_search/recall_for_decision) "
+                                  "can compose here — v1 answers via the tool-grounded model.")
+            return out
+        return _model_answer(question, aim, suite=suite, graph_id=graph_id)
+    except Exception as e:                       # fail-soft: any source error → the model default, never a crash
+        if src != "model":
+            try:
+                out = _model_answer(question, aim, suite=suite, graph_id=graph_id)
+                out["routed_from"] = src
+                out["degrade_note"] = f"{src} source errored ({type(e).__name__}); answered via the model."
+                return out
+            except Exception as e2:
+                return {"source": "error", "answer": None,
+                        "error": f"both {src} and model failed: {e!r} / {e2!r}"}
+        return {"source": "error", "answer": None, "error": f"model source failed: {e!r}"}
