@@ -54,6 +54,28 @@ def route_source(question: str) -> str:
     return "model"
 
 
+def recent_channel_context(suite, *, channel: str | None = None, limit: int = 12) -> dict:
+    """L4 — the brain's channel-READ tool (the SAFE half). Reads RECENT channel traffic as CONTEXT so the
+    brain (/api/brain/ask) can answer GROUNDED in what the fabric has actually said — not just channel/session
+    COUNTS. REUSE-DON'T-PARALLEL: composes session_channels.channel_events_since + the body-resolve (the same
+    read /api/channel-history serves), no parallel reader. `channel` scopes to one channel (bare or chan://);
+    None = across all channels. `limit` = the most-recent N posts.
+
+    THE FLOOR: READ-ONLY. This tool NEVER posts — the channel-POST half stays PROPOSE-gated (the brain reads +
+    proposes a gated action; the operator/lead fires it; autonomous-spawn-lead-only). Returns
+    {recent:[{channel, from, message, ts, seq}], n} oldest→newest (newest last)."""
+    from runtime.session_channels import channel_events_since
+    evs = [e for e in channel_events_since(suite.store, -1, channel=channel)
+           if e.get("kind") == "channel.posted"]
+    recent = evs[-limit:] if (limit and limit > 0) else evs
+    out = []
+    for e in recent:
+        body = suite.store.get_content(e["cas"]) if e.get("cas") else None
+        out.append({"channel": e.get("channel"), "from": e.get("from"),
+                    "message": body, "ts": e.get("ts"), "seq": e.get("seq")})
+    return {"recent": out, "n": len(out)}
+
+
 def _fleet_answer(question: str, *, suite) -> dict:
     """The SUPERVISOR source — compose the LIVE fabric-state from the already-built reads (fold_channels +
     list_agent_sessions). READ + PROPOSE only: it describes the fleet and may SURFACE a gated action as a
@@ -74,8 +96,16 @@ def _fleet_answer(question: str, *, suite) -> dict:
                     "suggestion": "Waking or consulting a session is a gated action — surface it for the "
                                   "operator/lead to run; the mind proposes, it does not spawn.",
                     "note": "floor: brain proposes, never dispatches (autonomous-spawn-lead-only)."}
+    # L4: read RECENT channel traffic as CONTEXT (the safe read-tool) — so the brain SEES what the fabric
+    # has said, not just counts. The structured channel_context rides for the frontend (forkVBrain, L2);
+    # the answer prose notes its presence. READ-ONLY (the post half stays propose-gated).
+    ctx = recent_channel_context(suite, limit=12)
+    if ctx["n"]:
+        answer += (f" Recent channel traffic: {ctx['n']} message{'s' if ctx['n'] != 1 else ''} "
+                   f"available as context.")
     return {"source": "fleet", "answer": answer,
-            "fleet": {"channels": n_ch, "live_sessions": n_live}, "proposal": proposal}
+            "fleet": {"channels": n_ch, "live_sessions": n_live},
+            "channel_context": ctx["recent"], "proposal": proposal}
 
 
 def _model_answer(question: str, aim: str | None, *, suite, graph_id: str = "codebase") -> dict:
