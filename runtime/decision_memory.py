@@ -520,8 +520,15 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
     # 7-space recall bundle for theorem-fork — computing it then throwing it away wasted ~6-12s of the
     # explain-turn wall-clock (the 7-space query incl. the slow extractions space + prior_decisions). Other
     # subtypes need the comprehended bundle (it IS their grounding).
+    # SKIP the full 7-space recall when its context won't reach the block: (a) theorem-fork = FRAMEWORK-ONLY
+    # (the determine, below) discards comprehended context; (b) ANY subtype at rerank=False — the corpus
+    # context is admitted to the block ONLY above _CTX_FLOOR, which needs rerank scores, so rerank=False (the
+    # LIVE-route default) gates ALL corpus out → the block is decision-content + provenance only. Computing the
+    # 7-space recall (incl. the now-23k+ extractions space) then gating it out was the wasted work behind the
+    # slow live explains (caught by the verify-sweep timeout 2026-06-21). recall fires ONLY when rerank=True
+    # (the deep refine turn, where the gated corpus is actually used).
     _is_theorem_fork = (subtype == "theorem-fork")
-    if _is_theorem_fork:
+    if _is_theorem_fork or not rerank:
         bundle = {"context": [], "note": ""}
     else:
         bundle = recall_for_decision(suite, text, address=subj, spaces=EXPLAIN_DECISION_SPACES,
