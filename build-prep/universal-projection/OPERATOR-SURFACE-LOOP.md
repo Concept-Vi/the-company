@@ -1723,3 +1723,17 @@ Lead (g-1782025958): composition landed the registry-true `owner` field (authori
 FLAGGED to the lead (the reconcile, surfaced not buried): (a) the BOUNCE is needed to make `owner` live on the feed → then the registry-true path takes over + I delete the fallback; (b) confirm the 24 records actually CARRY owner VALUES (not just the field accepted) — else post-bounce the owner-path still finds nothing and the fallback would keep carrying it. Until both: the 14 hold via fallback, no regression.
 
 NEXT: on the bounce → verify owner live+populated → delete the transition fallback (pure owner=='tim'). Still pipelined/gated: clone SessionDrill per breadth surface as DNA ships each {faceRecord adapter + archetype}; decision-explain wire (forkVBrain→/api/brain/ask); embedded-CLI host.
+
+---
+
+## FIRE — ★ owner LIVE (bounce g-1782026782) → fallback DELETED (pure registry-true) + 2 by-use bugs found+fixed in the queue
+
+THE BOUNCE landed (lead g-1782026782): owner RESOLVED registry-true on /api/decisions (subtype → decision_subtypes[subtype].owner, server-side) + explain-wire (explanation_grounding) + grounding-flip live. ★ VERIFIED BY USE against the source: /api/decisions → 200 ×3, `owner` key present, distribution {tim:14, None:10}, pending owner==tim = **14**. So:
+- ✅ DELETED the transition-fallback → the filter is now PURE `owner==='tim'` (no hardcoded subtype-set; a new subtype declares its own side → never edit the filter again). tsc clean. Verified live: 14 selected, the one untyped None-owner pending row excluded.
+
+DOGFOODED the live surface (390) per the friction-is-the-gap-sensor methodology (Tim direct) → TWO real by-use bugs found, traced, FIXED, verified IN their failure case (friction-log #10, #11):
+- ★ **Error banner contradicted visible data.** A routine bounce 500'd /api/decisions mid-refresh → my store painted the red "Couldn't load" OVER the 14 good cards. FIXED: split `error` (cold-load failure → fail loud) from `refreshError` (refresh failed but last-good list stands → keep the cards + a SUBTLE honest "showing your last loaded list" note). ★ VERIFIED IN THE LIVE FAILURE: the open-reload's /api/decisions genuinely failed → the 14 stayed intact+enriched, the quiet note showed at the bottom — not the red banner. (no-silent-failures honored: surfaced, not swallowed; just not contradicting.)
+- ★ **Meaning flickered on fast-open.** Opening while the mount-enrich was in flight discarded it (the enrich seq-abort was over-conservative). FIXED: enrich now merges BY ID into current pending (safe regardless of load token) → in-flight enrichment lands on the rows on screen. Verified: meaning fills fully, no regression.
+- FLAGGED fork (friction #12): /api/decisions 500s intermittently under the surface's concurrent fan-out (threaded http.server + the new per-row owner-resolve) — my surface degrades clean now; backend robustness is fork's.
+
+COMMITTED: the above (explicit pathspecs). NEXT BEAT (the milestone, lead g-1782027045): DNA's n-panel renders (122c9dc, binary-5 + n-panel, overlap fixed) → MOUNT the 14 as live DNA decision-cards (same drop-in pattern as session-card) = the operator-cycle's FIRST REAL RUN COMPLETE. Investigate DNA's render entry (renderExplained? decisionRecord adapter?) before building — no blind scaffolding. Then wire explain_role (the explain-wire frontend half: ctx.block + ctx.caveat + coordinate={subtype}, rerank=False). Breadth surfaces still DNA-gated (only sessionRecord shipped; channelRecord next).

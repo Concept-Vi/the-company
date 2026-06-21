@@ -15,7 +15,7 @@ import { useDecisions, closeDecisionsList, loadDecisions, type StackItem } from 
 // "channel" or "stack"), marked for Tim's later steer. Only FINAL copy ratification is gated on him; mechanism +
 // flow are built now.
 export function DecisionsInbox() {
-  const { pending, loading, error, open } = useDecisions()
+  const { pending, loading, error, refreshError, open } = useDecisions()
 
   // close on Esc while open
   useEffect(() => {
@@ -66,6 +66,16 @@ export function DecisionsInbox() {
                 <li key={item.id}>{renderStackItem(item, pick)}</li>
               ))}
             </ul>
+          )}
+          {/* a REFRESH failed but the list above is still valid (last-good): an honest, non-alarming note —
+              NOT the red "couldn't load" banner (that would contradict the cards the operator can see). */}
+          {refreshError && pending.length > 0 && (
+            <p className="inbox-msg inbox-msg--quiet">
+              Showing your last loaded list — couldn’t refresh just now.{' '}
+              <button className="inbox-retry" onClick={loadDecisions}>
+                Try again
+              </button>
+            </p>
           )}
         </div>
       </div>

@@ -246,6 +246,7 @@
 .inbox-row-go { font-size: var(--t-xl); color: var(--ink-faint); flex: none; line-height: 1; }
 .inbox-msg { font-size: var(--t-sm); color: var(--ink-dim); text-align: center; padding: var(--s-5) var(--s-4); margin: 0; }
 .inbox-msg--error { color: var(--pig-strain); }
+.inbox-msg--quiet { color: var(--ink-faint); padding: var(--s-2) var(--s-4); } /* a refresh failed but the list stands — subtle, non-alarming */
 .inbox-retry { border: 1px solid var(--hairline); background: var(--ground-primary); color: var(--ink-primary);
   border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); font-size: var(--t-xs); cursor: pointer; margin-left: var(--s-2); }
 .inbox-retry:hover { background: var(--ground-secondary); }

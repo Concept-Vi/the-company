@@ -39,31 +39,22 @@ export type StackItem = {
   owner?: string // the REGISTRY-TRUE side: 'tim' | 'fabric' — whose call this is (composition's field; the filter keys on it)
 }
 
-// ★ THE TIM-FACING FILTER — REGISTRY-TRUE (lead g-1782025958; composition's `owner` field, commit 23a77a9):
-// the decision declares its OWN side via `owner` ('tim' | 'fabric'). The operator stack is owner=='tim' — a NEW
-// subtype declares its own side, so this filter NEVER needs editing again. (DECISION_FIELDS now carries `owner`;
-// the feed exposes row.get("owner") at runtime/decision_registry.py:238.)
-//
-// TRANSITION FALLBACK — DELETE once `owner` is live + populated on the feed (then `isTimFacing` is just
-// `owner==='tim'`). EVIDENCE this is still needed: the RUNNING bridge (pid up 16:59:41) PREDATES composition's
-// owner commits (17:11 / 17:14), so the live /api/decisions row has NO `owner` key yet — a pure owner==='tim'
-// filter would EMPTY his queue until the bounce. Until `owner` arrives on the feed, fall back to the gather's
-// subtypes so the 14 hold (no live regression). This fallback governs ONLY the owner-absent window: the instant
-// the bridge bounces and serves owner, the registry-true path takes over with zero edit. Flagged to the lead:
-// bounce → confirm the 24 records carry owner values → this block comes out.
-const TIM_FACING_SUBTYPES = new Set(['authorize', 'trade-off', 'theorem-fork']) // TRANSITION FALLBACK ONLY
-
-// is this decision Tim's to make? registry-true via `owner`; degrades to the gather's subtypes while owner is
-// absent from the feed (pre-bounce). owner present → trust it absolutely (a 'fabric' row is NOT his, even if subtyped).
+// ★ THE TIM-FACING FILTER — REGISTRY-TRUE: the decision declares its OWN side via `owner` ('tim' | 'fabric'),
+// resolved server-side from its subtype (decision_subtypes[subtype].owner) and exposed on /api/decisions. The
+// operator stack is owner==='tim' — HIS decisions, not the fabric's settles / legacy rows. A NEW subtype declares
+// its own side, so this filter NEVER needs editing again — no hardcoded subtype-set. (The transition fallback was
+// removed once owner went live on the feed, bounce g-1782026782 — verified by use: owner=='tim' ×14, the 'fabric'
+// and legacy/untyped rows correctly excluded.)
 function isTimFacing(d: Record<string, unknown>): boolean {
-  const owner = String(d.owner ?? '')
-  if (owner) return owner === 'tim' // REGISTRY-TRUE path (owner is on the feed): the record declares its side
-  return TIM_FACING_SUBTYPES.has(String(d.subtype ?? '')) // transition: owner not yet served → key on subtype
+  return String(d.owner ?? '') === 'tim'
 }
 
-type DState = { pending: StackItem[]; loading: boolean; error: string | null; open: boolean }
+// `error` = a COLD-LOAD failure (nothing to show — fail loud). `refreshError` = a REFRESH failed but we still hold
+// a valid last-good list (e.g. a transient 500 during a routine bridge bounce) → keep the list, flag subtly, never
+// contradict the cards with a "couldn't load" banner. The two are mutually exclusive by construction (see the catch).
+type DState = { pending: StackItem[]; loading: boolean; error: string | null; refreshError: boolean; open: boolean }
 
-let state: DState = { pending: [], loading: false, error: null, open: false }
+let state: DState = { pending: [], loading: false, error: null, refreshError: false, open: false }
 const subs = new Set<() => void>()
 let started = false
 let loadSeq = 0 // monotonic load token — a stale list/enrichment never clobbers a newer load
@@ -75,7 +66,7 @@ function set(patch: Partial<DState>) {
 
 export async function loadDecisions() {
   const seq = ++loadSeq
-  set({ loading: true, error: null })
+  set({ loading: true, error: null, refreshError: false })
   try {
     const r = await fetch('/api/decisions')
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
@@ -108,17 +99,26 @@ export async function loadDecisions() {
       })
     if (seq !== loadSeq) return // a newer load superseded this one
     set({ pending, loading: false })
-    enrich(pending, seq) // fire-and-forget: patch real meaning + reversibility as each record resolves
+    enrich(pending) // fire-and-forget: patch real meaning + reversibility as each record resolves
   } catch {
     if (seq !== loadSeq) return
-    set({ error: 'Couldn’t load what needs you just now.', loading: false })
+    // A failed refresh must NOT contradict good data already on screen. Cold-load failure (nothing to show yet) →
+    // the hard error (fail loud, with retry). Refresh failure WITH items present (e.g. a transient 500 while the
+    // bridge bounces — routine) → keep the last-good queue + a SUBTLE honest flag; never paint "couldn't load" over
+    // valid cards. (Found by use: a routine bounce 500'd /api/decisions mid-refresh → the red banner sat over the 14.)
+    if (state.pending.length === 0) set({ error: 'Couldn’t load what needs you just now.', loading: false })
+    else set({ refreshError: true, loading: false })
   }
 }
 
 // ENRICH each item from its OWN registry record (/api/territory) — the real question + reversibility — so the stack
 // is a legible preview. Soft-degrade per item: a record that won't load just stays a name + suggestion (never blocks
-// the row, never a fake value). Guarded by the load token so a superseded enrichment can't clobber a newer load.
-async function enrich(items: StackItem[], seq: number) {
+// the row, never a fake value). NO load-token abort here: a meaning patch is keyed BY ID and merged into whatever is
+// CURRENTLY in state.pending (an id that's no longer shown is a harmless no-op) — so it is safe to apply regardless of
+// which load fetched it. (Found by use: with the old hard seq-abort, opening the list WHILE the mount-load's enrich
+// was still in flight discarded that enrichment — the open's reload bumped loadSeq — so meaning FLICKERED in a beat
+// later instead of showing immediately. Merge-by-id makes the in-flight enrichment still land on the rows on screen.)
+async function enrich(items: StackItem[]) {
   const results = await Promise.allSettled(
     items.map(async (it) => {
       const r = await fetch(`/api/territory?address=${encodeURIComponent(it.address)}`)
@@ -129,7 +129,6 @@ async function enrich(items: StackItem[], seq: number) {
       return { id: it.id, meaning: idn.meaning as string | undefined, reversibility: leg.is as string | undefined }
     }),
   )
-  if (seq !== loadSeq) return // superseded; don't clobber a newer load
   const patch = new Map<string, { meaning?: string; reversibility?: string }>()
   for (const res of results) if (res.status === 'fulfilled') patch.set(res.value.id, res.value)
   if (patch.size === 0) return
