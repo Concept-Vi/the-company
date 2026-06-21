@@ -26,6 +26,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "trade-off",
+    "explanation_source": "code://build-prep/the-one-application/DECISION-GATHER.md#D1",  # provenance: gather §D1 SYNTHETIC RICHNESS CEILING (verbatim-verified, section-anchored)
     "legibility": {
         "name": "How real should the visuals get — drawn, or generated?",
         "is": "The visual fidelity bar — your eye",

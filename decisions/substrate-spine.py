@@ -30,6 +30,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "trade-off",
+    "explanation_source": "code://build-prep/the-one-application/DECISION-GATHER.md#C1",  # provenance: gather §C1 SUBSTRATE-HOME (#75), substrate-spine's twin origin (verbatim-verified, section-anchored)
     "legibility": {
         "name": "One shared spine for everything the company stores — or keep each piece on its own?",
         "is": "The company's foundation — a big, shaping call",
