@@ -33,6 +33,7 @@ DECISION = {
         },
     ],
     "scope": "global",
+    "subtype": "trade-off",  # design-language law, owner=tim ("genuinely your call"). card_variant may want opacity-sample previews — DNA render refinement (follow).
     "legibility": {
         "name": "Does faded-ness mean 'not yet'",
         "is": "Reversible · decides if opacity carries meaning",

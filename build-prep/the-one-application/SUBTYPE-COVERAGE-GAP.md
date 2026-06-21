@@ -2,7 +2,16 @@
 
 **Found:** 2026-06-21 (composition), while verifying the theorem-fork `ai_uncertainty_caveat` change.
 **Severity:** CRITICAL — real pending decisions Tim must make were invisible on the LIVE operator surface.
-**Status:** 3 fixed (tagged), 7 pending DNA owner-confirm, 1 schema gate proposed (coordinated).
+**Status:** CLOSED — all 24 rows tagged (queue 14 → 24), schema gate landed (subtype now required, all 24
+validate, no C5 break), authoring contract written. One residual: theorem-fork `grounding_source` (below).
+
+> **Correction (after reading all 10, not just filenames):** the first pass labeled 7 rows "visual" and
+> deferred their owner to DNA. Reading them overturned that — only 4 are design-language; 3
+> (`form-taxonomy`, `file-identity`, `cluster-identity`) are **held-substrate** decisions in
+> substrate-home's frame, never DNA's. And all 7 self-declare **owner=tim** in their own docstrings
+> ("your call" / "an OPEN conflict for Tim" / "genuinely Tim's"), so none carried a DNA-owned *owner*
+> question — DNA's only stake is the *card_variant* (a render refinement). Lesson: classify by reading the
+> row, never by the filename (the exact trap `event-streams` had already sprung).
 
 ## The defect
 
@@ -36,21 +45,42 @@ the decision surface exists to prevent: a decision Tim needs to make, dropped wi
 These three are in-class with `substrate-spine` (already `trade-off`), unambiguously Tim's, and tagging
 is purely additive (cannot affect the 14 already showing). Tim's queue is now **17**.
 
-**Visual-identity calls — PENDING (owner is DNA's lane to confirm: Tim's taste vs DNA-settled):**
-`cluster-identity` · `core-shape` · `figure-gold-value` · `file-identity` · `form-taxonomy` ·
-`line-language` · `opacity-meaning`. Most are visual-DIRECTION choices ("look is Tim's") → likely
-`trade-off`/owner=tim; some may be DNA-settled tokens → `cross-lane`/owner=fabric. DNA confirms the
-owner + variant per row; composition adds/confirms the subtype.
+**The other 7 — all now TAGGED `trade-off`/owner=tim (queue 17 → 24):**
+- *Held-substrate (NOT visual — substrate-home's frame):* `form-taxonomy` (content-kind taxonomy),
+  `file-identity` + `cluster-identity` (address-model identity). In-class with `event-streams`.
+- *Design-language (DNA-raised, but owner=tim by their own docstrings):* `core-shape`,
+  `figure-gold-value`, `line-language`, `opacity-meaning`. **DNA's remaining stake is the card_variant
+  only** — these 4 may want a design-specific render (gold swatches, shape/line/opacity previews) rather
+  than text n-panel. That's a render refinement (a follow), NOT an owner question and NOT blocking.
 
-## Root-cause fix (coordinated — NOT a unilateral schema mutation)
+## Root-cause fix (coordinated — done)
 
-1. **Tag all 10** (3 done; 7 with DNA). Must precede #2 or #2 invalidates them (the C5-class break).
-2. **Make `subtype` required** in `decision.schema.json` once all rows carry it — so no future row can
-   be authored without the discriminator and silently vanish. Sequence with the lead (other lanes
-   author rows against this contract; the gate must land with the tagging, not before).
-3. **Propagate the rule**: any lane authoring a `decisions/*.py` row MUST set `subtype` (document in
-   `decisions/AGENTS.md` / the decision-row authoring contract). The gap exists because the subtype
-   contract is composition's and wasn't surfaced to the lanes that author rows.
+1. **Tag all 10** — DONE. All 24 rows now carry a subtype; all owner=tim in the current set.
+2. **Make `subtype` required** in `decision.schema.json` — DONE (tag-then-require: all 24 tagged first,
+   then `required` gained `subtype`; re-validated all 24 PASS → no C5-class break). Rides the lead's
+   next bounce alongside the tags.
+3. **Propagate the rule** — DONE. `decisions/AGENTS.md` now states every row MUST set subtype, with the
+   why. Any lane authoring a row against the live gate must include subtype (fail-loud otherwise).
+
+## Residuals (flagged, not composition's to close alone)
+
+- **`decided` ≠ `pending` for the 4 design-language rows** (core-shape→octagon · figure-gold→#B29135 ·
+  line-language→context-dependent · opacity→multi-use): these are DECIDED. State resolves from a
+  `decision_take` mark, NOT the row — so they need their decided marks written (DNA's split) BEFORE the
+  bounce, else the subtype-tag resolves them as PENDING and resurfaces settled calls. (Couldn't
+  self-verify the marks: the `marks` tool currently fails loud on an unrelated `explain_role` role-schema
+  error — `prompt_slot` not in the C2.1 field set — flagged to fork.)
+- **theorem-fork `grounding_source` has no source** on `cube-3d` + `dimension-meaning` (both set no
+  `explanation_source`; the only named recollection constant is the caveat). When fork resolves
+  required_elements onto the feed, `grounding_source` resolves to NOTHING on the 2 cards projection
+  verifies by-sight — the same silent-gap class. Needs recollection to supply a theorem-fork grounding
+  (same server-side pattern as the caveat) OR a real `explanation_source` set on both rows.
+- **`form-taxonomy` stays `trade-off`, NOT `theorem-fork`** (the lead asked): theorem-fork is a fork in
+  TIM'S MATHS (his bedrock); form-taxonomy is a coverage/discovery direction over CONTENT kinds — its
+  AI-guess nature is honestly in the option text already, and theorem-fork's caveat ("grounded in Tim's
+  maths") would mis-apply. Note: the "this rests on an AI inference" caveat-need is GENERAL (not maths-
+  specific) — if wanted for form-taxonomy, that's a row-level caveat flag, a separate enhancement, not
+  stretching theorem-fork.
 
 ## Why this matters to the work in flight
 

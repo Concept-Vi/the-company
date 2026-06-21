@@ -32,6 +32,7 @@ DECISION = {
         },
     ],
     "scope": "global",
+    "subtype": "trade-off",  # design-language identity fork, owner=tim ("your call", no recommended). card_variant may want a shape-preview treatment — DNA render refinement (follow, NOT an owner question).
     "legibility": {
         "name": "Which shape is the company's core",
         "is": "Reversible · anchors the whole shape language",

@@ -34,6 +34,7 @@ DECISION = {
         },
     ],
     "scope": "global",
+    "subtype": "trade-off",  # design-language identity fork, owner=tim (an OPEN conflict for Tim). card_variant may want gold-swatch previews — DNA render refinement (follow).
     "legibility": {
         "name": "Which gold is the company's",
         "is": "Reversible · sets the top note of the whole palette",

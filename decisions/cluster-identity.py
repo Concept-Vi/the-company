@@ -39,6 +39,7 @@ DECISION = {
         },
     ],
     "scope": "global",
+    "subtype": "trade-off",  # held-substrate (address-model identity), owner=tim — one of substrate-home's 5 held-substrate decisions; NOT visual.
     "explanation_source": "code://build-prep/the-one-application/UNION-DIVERGENCE-LEDGER.md",
     "legibility": {
         "name": "What a cluster is",

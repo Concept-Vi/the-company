@@ -42,6 +42,7 @@ DECISION = {
         },
     ],
     "scope": "global",
+    "subtype": "trade-off",  # held-substrate (content-kind taxonomy), owner=tim — NOT visual (mislabel corrected); in-class with event-streams / substrate-home's held-substrate frame.
     "explanation_source": "code://build-prep/the-one-application/UNION-DIVERGENCE-LEDGER.md",
     "legibility": {
         "name": "The real kinds of things in the content",

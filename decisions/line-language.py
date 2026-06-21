@@ -34,6 +34,7 @@ DECISION = {
         },
     ],
     "scope": "global",
+    "subtype": "trade-off",  # design-language law, owner=tim (DNA leans 'one fixed', Tim decides). card_variant may want line-sample previews — DNA render refinement (follow).
     "legibility": {
         "name": "One line-language, or context-dependent",
         "is": "Reversible · sets how every diagram reads",
