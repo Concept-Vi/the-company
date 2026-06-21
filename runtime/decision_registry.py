@@ -244,6 +244,7 @@ def decision_inbox(registry, store, subtype_registry=None) -> list:
         sub = row.get("subtype")
         owner = row.get("owner")                      # an explicit row override wins (rare)
         ai_caveat = None
+        req_elements = None
         if sub and subtype_registry is not None:
             # RESOLVE owner from the subtype (the no-drift source) — duck-typed: .get(sub).owner
             try:
@@ -251,6 +252,11 @@ def decision_inbox(registry, store, subtype_registry=None) -> list:
                 if srow is not None:
                     if owner is None:
                         owner = getattr(srow, "owner", None)
+                    # RESOLVE required_elements from the subtype (no-drift, same pattern as owner/caveat) —
+                    # the element-KEYS DNA renders per card-kind (authorize→action/condition/gate ·
+                    # theorem-fork→conceptual_options/grounding_source/ai_uncertainty_caveat · …). Registry-
+                    # driven: a new subtype declares its own required_elements once → the feed carries them.
+                    req_elements = list(getattr(srow, "required_elements", None) or []) or None
                     # SINGLE-SOURCE CAVEAT (the never-assert law's in-card text): if THIS subtype's
                     # required_elements declares `ai_uncertainty_caveat` (today: theorem-fork), carry the
                     # canonical operator text from recollection's decision_memory so DNA renders the SAME
@@ -265,6 +271,8 @@ def decision_inbox(registry, store, subtype_registry=None) -> list:
         rowout = {"id": did, "type": "decision-sequence", "subtype": sub,
                   "owner": owner, "address": addr,
                   "name": name, "state": st.get("state"), "recommended_label": rec}
+        if req_elements:                               # the per-subtype element-keys DNA renders (absent if untyped)
+            rowout["required_elements"] = req_elements
         if ai_caveat:                                  # only theorem-fork-kind rows carry it (absent elsewhere)
             rowout["ai_uncertainty_caveat"] = ai_caveat
         out.append(rowout)
