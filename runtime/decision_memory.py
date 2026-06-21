@@ -103,6 +103,40 @@ def _clean_meaning(rec: dict, *, max_chars: int = 600) -> str:
     return ""
 
 
+_EXTRACTION_CACHE: dict = {}
+
+
+def _extraction_text(source: str, *, max_chars: int = 600) -> str:
+    """Surface MEANING for an `extraction://<asset>/<chunk_id>` context item — the dragnet extraction layer
+    (about + summary + claims), so the 'extractions' grounding space (when added to the decision spaces)
+    renders real meaning, not a bare address. Reads the extraction jsonl (cached per asset). The ENABLER for
+    grounding decisions on the extraction layer; inert until 'extractions' is in the grounding spaces."""
+    import os as _os, json as _json
+    if not source.startswith("extraction://"):
+        return ""
+    rest = source[len("extraction://"):]
+    asset, _, cid = rest.partition("/")
+    if not asset or not cid:
+        return ""
+    if asset not in _EXTRACTION_CACHE:
+        path = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+                             ".data", "store", "extractions", f"extractions-{asset}.jsonl")
+        idx = {}
+        if _os.path.exists(path):
+            for line in open(path):
+                try:
+                    r = _json.loads(line)
+                    idx[str(r.get("chunk_id"))] = r
+                except Exception:
+                    continue
+        _EXTRACTION_CACHE[asset] = idx
+    r = _EXTRACTION_CACHE[asset].get(str(cid))
+    if not r:
+        return ""
+    parts = [r.get("about", ""), r.get("summary", "")] + (r.get("claims") or [])[:3]
+    return ". ".join(p for p in parts if p).strip()[:max_chars]
+
+
 def _attach_digest_text(store, context: list[dict], *, max_chars: int = 600) -> list[dict]:
     """Surface each context item's DIGEST MEANING in-place, so a consumer (fork's RHM / territory_prose)
     renders the grounding WITHOUT a second fetch — and renders MEANING, never the source id or raw JSON
@@ -123,7 +157,13 @@ def _attach_digest_text(store, context: list[dict], *, max_chars: int = 600) -> 
             if sa in wanted and sa not in latest:
                 latest[sa] = row
         for c in context:
-            row = latest.get(c.get("source"))
+            src = c.get("source") or ""
+            if src.startswith("extraction://"):                 # the dragnet extraction layer (own resolver)
+                t = _extraction_text(src, max_chars=max_chars)
+                if t:
+                    c["text"] = t
+                continue
+            row = latest.get(src)
             if not row:
                 continue
             rec = _corpus.read_record(store, row["address"])
