@@ -24,11 +24,26 @@ HOST invariants (projection authors TO this; grounded in live CSS):
 - SHELL: `shell_stack = select device.orient {portrait:'column', landscape:'row'}` (+ rail when wide) · `rail_w = clamp(mul(field device.w, 0.3), 220, 300)` · center/wheel sizes continuous on device.w/h.
 CARD invariant (composition authors; §4).
 
-## §4 · THE CARD-SEAM (one mechanism, host + card)
-The decision-card's zone allocation (present/explain/choose — `card_kinds`) resolves on the SAME coordinate via the SAME `resolve()`. CO-VISIBLE-vs-STEPPED is a RESOLVED slot, not a stored variant:
-- `card_layout = select <coordinate> {…}` → `'co-visible'` at roomy coordinates; `'stepped'` ONLY if a tight coordinate forces it. (The grouping is `card_kinds`; the resolver picks the rendering.)
-- ★ THE merge-sa KEYSTONE GATE, made concrete: "merge-sa co-visible at 390" = the 390-coordinate resolves `card_layout → co-visible`. The gate is a resolver assertion.
-- The card ZONE values (the specific dimensions per kind) are composition's to author — but PENDING DNA's merge-sa zone rework (lead); author the SEAM (card_layout resolves) now, pin the zone numbers after her rework lands.
+## §4 · THE CARD INVARIANT (one mechanism, host + card) — co-authored with DNA's verified two-panel
+The decision-card's layout is an allocation-invariant resolved on the SAME coordinate via the SAME `resolve()`
+(exactly like §3's host invariants). CO-VISIBLE-vs-STEPPED is a RESOLVED slot, never a stored variant. Concrete
+shape — composition owns `card_layout` + the kind↔panel binding; DNA owns the panel GEOMETRY (its VERIFIED
+two-panel zones); co-author, like §3 is projection's:
+- `card_layout` — the rendering the resolver picks: `'co-visible'` (the VERIFIED two-panel structure) vs
+  `'stepped'` (a future tight coordinate / complex decision). For the decision-card now:
+  `{select:<fit-coordinate>, cases:{…}, default:'co-visible'}` — resolves co-visible at the verified coordinates;
+  stepped reserved. ★ merge-sa KEYSTONE GATE = the 390-coordinate resolves `card_layout → co-visible` (a
+  resolver assertion, not a hand-case).
+- `kind_panel` — the card_kinds↔PANEL binding (COMPOSITION): which panel each kind renders into in the verified
+  two-panel co-visible structure — e.g. `{present→A, explain→B, choose→B}` (exact mapping = DNA's verified
+  two-panel; confirm). present = question(hero)+shape · explain = the slide · choose = options+take.
+- PANEL ALLOCATIONS (DNA's lane, like §3's host slots): each panel's w/h as resolved slots on the coordinate
+  (continuous derivations + the orient select); the CONSTANTS = DNA's VERIFIED two-panel geometry. Composition
+  references them as slots; DNA authors/confirms the numbers. The STRUCTURE is verified so the seam is authored
+  NOW; the constants drop in on the merge-sa zone-lock — no reshape (clamp-bounds, not a re-layout).
+- SUBORDINATE TO LEGIBILITY + the gate: the resolved `card_layout` MUST keep decision+options co-visible at the
+  gate coordinate (390); a `stepped` resolution only where co-visible genuinely can't fit. (decision-card.schema
+  `card_kinds` is the grouping; THIS is its resolution.)
 
 ## §5 · PROMPT + SCHEMA AS RESOLVED VARIABLES (fork's resolved-slots — the gate)
 Resolved at RUN/READ time (NOT baked). ★ Co-shaped with fork against roles.py: a role today = `prompt_template:str|None` + `output_schema:type[BaseModel]|None` (a Pydantic CLASS — used for client-validate AND the json_schema guided-decode), static in the decl. The upgrade lets both BE resolve_slot values, resolved against the turn coordinate:
