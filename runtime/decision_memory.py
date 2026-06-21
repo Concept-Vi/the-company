@@ -308,9 +308,16 @@ def _rerank_claims(query: str, claims: list[dict], *, top_n: int = 12,
         return claims                                             # reranker down → determine order (honest, not a crash)
 
 
-def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = True,
+def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = False,
                           include_prior_decisions: bool = True) -> dict:
     """The co-owned EXPLAIN-WIRE grounding — recollection's half of projection's explain call-site.
+
+    ★ THIS IS THE AUTHORITATIVE explain-turn ctx — NOT territory_prose. territory's memory leg auto-grounds
+    the decision-CARD RESOLVE (recall_for_decision, the fast 3s cosine bundle); it carries NO theorem_claims,
+    NO caveat, NO claim-rerank. The never-assert THEOREM-FORK LAW + the framework-led grounding live ONLY
+    here. The dedicated explain turn (run_role(explain_role, …)) MUST draw ctx from explanation_grounding, or
+    a theorem-fork explanation silently won't flag AI-projection. (Don't push the law down into
+    recall_for_decision — the ~13s theorem determine would blow territory's 3s card-resolve budget.)
 
     projection's RHM runs the decision-explanation; the three halves MEET here:
         ctx    = explanation_grounding(suite, decision)            # ← THIS: the CONTENT (recollection)
@@ -319,15 +326,18 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Tru
                  coordinate={'subtype': decision['subtype']})
 
     `decision` — the decision RECORD (a dict carrying `meaning`/`text`/`decision` + optional `subtype` and
-    `address`/`explanation_source`), OR a bare decision-text string. Composes the SAME recall_for_decision
-    bundle territory's hot-path memory leg uses, but FULL-RERANK by default: this is the DEDICATED explanation
-    turn, NOT the 3s hot-path resolve, so it affords the jina precision pass territory.py reserves for "the
-    unbounded paths" (territory.py:264). The grounding is the CONTENT the explanation draws FROM — Tim's own
-    math/relationships for a theorem-fork · the security/risk + the condition for an authorize · the prior
-    decisions + the why — now drawing the 44k extraction layer (the grounding-flip) alongside the corpus.
-    fork's policy picks HOW the model samples it; the prompt_slot picks the FRAMING; THIS supplies the WHAT.
+    `address`/`explanation_source`), OR a bare decision-text string. Composes the recall_for_decision bundle
+    over the now-extraction-enriched spaces. `rerank` DEFAULTS FALSE (responsive ~5-18s for the first-run UX
+    the lead is driving — the extraction layer already leads the cosine sort, verified); pass rerank=True for
+    the deep jina cross-space precision pass (~57s — a background/refine turn, NOT the interactive first hit).
+    NOTE: rerank governs only the CROSS-SPACE context order; the theorem-fork law (the no-fiction theorem
+    determine + the per-claim rerank that orders the FRAMEWORK block) fires INDEPENDENTLY of this flag, so a
+    theorem-fork explanation is correctly framework-led even at the fast default. The grounding is the CONTENT
+    the explanation draws FROM — Tim's own math/relationships for a theorem-fork · the security/risk + the
+    condition for an authorize · the prior decisions + the why. fork's policy picks HOW the model samples it;
+    the prompt_slot picks the FRAMING; THIS supplies the WHAT.
 
-    Returns {decision, subtype, context, prior_decisions?, neighbours?, block, note}:
+    Returns {decision, subtype, context, prior_decisions?, neighbours?, theorem_claims, caveat, block, note}:
       • context — [{source, space, score, rerank_score?, text}] (chunk-traced, meaning-resolved, no id-leak)
       • block   — ONE ready-to-fold operator-legible MEANING string (context + priors), so projection drops a
                   single ctx field, no second render. MEANING only (recall already attached clean digest text).
