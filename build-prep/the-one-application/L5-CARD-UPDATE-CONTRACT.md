@@ -136,3 +136,49 @@ the DEFINITION, exactly as compose_state applies it to STATE; no parallel mechan
   surface-mint (the be-responsible guard) so Tim's live decides never break.
 - **POSTURE = Tim's** (authorize, owner=tim): `decisions/card-refine-posture.py`, grounded in THIS doc — Tim
   decides whether the RHM may refine cards + the propose-then-accept floor, THROUGH the surface itself.
+
+---
+
+## POST-DECISION — Tim decided YES + broadened to "whatever on screen" (composition, 2026-06-22, advisor-checked)
+
+Tim decided the posture-card **YES, through the surface**, and broadened it: *"I want the assistant to update
+whatever is on screen,"* not just decision-cards. The generalization + the CORRECTED accept-shape:
+
+### The mechanism generalizes via the ADDRESS (the one mechanism, target loosened)
+Everything on screen is resolved from an ADDRESS via an archetype. So `decision_update`'s target loosens from
+`decision://<id>` to ANY (authored) address — composes onto that thing's stored definition → re-renders. Same
+mark/accept/compose pattern; only the target widens.
+
+### ★ SCOPE SPLIT — authored content (updatable) vs live-resolved views (OUT of scope) [the genuine scope-Q]
+"Whatever on screen" is NOT uniform: half is **authored-stored definition** (decision-cards, text → a mark
+composes onto the stored def — the mechanism works); half is a **live projection of real data** (the
+channel-graph reflects actual channel state, the board reflects real items → "updating" it either means nothing
+OR means editing the underlying SOURCE data — a DIFFERENT, bigger contract). ⟹ **L5 = the AUTHORED-content half.**
+Live-resolved-view editing (graph/board → edit-source) is OUT of L5 — a separate decision. (This split is the
+real scope-question for the lead/Tim, sharper than "card vs whatever-on-screen.")
+
+### The accept STAYS #1b-floored — #1b IS the light/transparent floor (do NOT loosen on an inference)
+Tim's decision is a CAPABILITY yes, NOT a security-posture statement — so the accept-floor is NOT loosened on
+inference (the false-green discipline). And loosening isn't needed: **#1b is ALREADY the light, transparent
+floor** — minted invisibly on the operator-surface, Tim never sees an auth step (the lead's own runaway/safety
+analysis). "Light confirm" and "#1b-floored" are NOT in tension — keep #1b: it gives transparent-to-Tim AND
+runaway-safe at once. PLUS **re-open double-covers** the decide-content (an options-edit re-opens → Tim
+re-decides → the AI cannot change what he decided under him).
+★ Dropping #1b is a **TIM security-decision**, not a composition/fork/lead inference: a background/runaway agent
+emitting an "accept" is EXACTLY what the token blocks; a bare UI-tap without the token re-opens that
+runaway-auto-accept hole. Default = keep #1b-transparent; escalate the drop ONLY if Tim means it.
+
+### v1 = the card policy + the address-loosened mechanism; DERIVE per-archetype (don't build ahead)
+The card is the one proven, building instance. Each archetype adds its update-policy (updatable whitelist +
+accept-stakes) WHEN it actually gets an update flow — derived from the real case, never invented up front (the
+subtype discipline). The per-archetype policy-RESOLUTION (update-policy resolves against the content-type
+coordinate — the 4th primitive) is the right architecture, kept as a DESIGN NOTE; v1 builds only the card policy.
+
+### Co-draft asks for fork (corrected)
+1. **Accept:** keep #1b (it IS the light/transparent floor). Confirm dropping it re-opens the runaway-auto-accept
+   hole (a background agent's accept is what the token blocks). If "fully open" = drop-#1b → a Tim
+   security-decision to ESCALATE, not infer.
+2. **Mechanism:** target-loosen `decision_update` from `decision://` to any AUTHORED address; compose onto the
+   authored definition; re-render.
+3. **Scope:** confirm L5 = authored content; live-resolved-view editing (graph/board = edit-source) is OUT (a
+   separate, bigger contract).
