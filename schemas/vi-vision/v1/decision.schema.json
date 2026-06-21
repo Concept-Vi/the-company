@@ -42,6 +42,10 @@
       "type": "string",
       "description": "★ CHANNEL-ATTACHMENT as DATA (FACE-2): the channel address this decision is attached to — the operator-STACK it appears in ('created against a channel -> appears in that channel's stack; resolving the channel yields its ordered items incl. this decision'). Optional (absent = unattached / a global decision not yet placed on a stack). REGISTRY-TRUE: the channel->items RESOLUTION is fork's per-channel stack-feed filtering by this field (composition declares the shape; fork resolves). A decision attaches to ONE home channel; multi-channel placement (if ever needed) becomes an edge, NOT a list on the row — flagged, not built."
     },
+    "subtype": {
+      "type": "string",
+      "description": "★ THE SUBTYPE (FACE-2 — the decision FORMED right): a decision_subtypes id (authorize · trade-off · theorem-fork · cross-lane · …) — the KIND that resolves HOW this decision becomes content: the card_variant (DNA renders the elements/layout) + the explanation_policy (the RHM's explain REGIME — fork's generation_policies) + required_elements (the gate). ONE knob → both halves. DERIVED from the real decision-set (the decision_subtypes registry, file-discovered; a new-shape decision adds a row), never invented. Optional (absent → the default decision-card co-visible view + the neutral explain). Resolves: decision.subtype → decision_subtypes[subtype] → {card_variant, explanation_policy, required_elements}."
+    },
     "legibility": {
       "$ref": "legibility.schema.json",
       "description": "The meaning-fields (name/is/fills/why) so every surface reads MEANING off the row, not a machine id."
