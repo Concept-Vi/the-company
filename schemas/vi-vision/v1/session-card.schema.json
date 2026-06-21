@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/session-card.schema.json",
+
+  "title": "Vi Vision Session-Card Archetype (render-type)",
+  "description": "The SESSION-CARD archetype — an instance of archetype.schema.json (render_kind='unit'): the FACE-1 unit/detail surface for one session, a SIBLING of the decision-card (same grammar). The FIRST FACE-1 render proof (the easy-first — composition's proof-gate with DNA). Renders one session as a composed unit: who it is + what it's doing + its recall + actions.\n\nWHAT IT RENDERS (grounded in DNA's FACE-1-ARCHETYPES skeleton + the now-LIVE routes): header (lane-shape + handle + state) · current focus (what it's doing now) · the RECALL strip (catch_up · decisions · open_loops · drift) · a transcript-thread entry · actions (run-in-channel / consult). Same engine as the decision-card (renderArchetype + slot_map); DNA renders (the unit composition); the host opens it (a channel-mesh node → this card); the resolver places it (desktop = detail + recall side-by-side; mobile = stacked).\n\nLIVE DATA SOURCES (the routes bounced live 2026-06-21): the session identity/state from /api/sessions (fork); the recall strip from session_recall (recollection — catch_up/decisions/open_loops/drift; recollection supplies the shape); the run/consult verbs from the supervisor (fork). The slot_map binds to these — composition's PROOF-GATE: confirm the slot_map binds clean when DNA renders (every source resolves to real live data, no fabrication).\n\nTHE TAKE: actions → run-in-channel / consult (the supervisor's wake/consult/spawn surfaced as in-card actions) — GATED where consequential (the floor).\n\nLAWS (inherited from archetype.schema): operator-legibility (the handle is a HUMAN name via legibility, never a raw session-id; the lane reads as a shape+meaning) · DNA-token-built · resolver-placed (desktop/mobile) · navigable-not-text · native dual-device.",
+
+  "allOf": [
+    { "$ref": "archetype.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "archetype_of": { "const": "session", "description": "Renders a 'session'." },
+        "render_kind": { "const": "unit", "description": "Must be 'unit' (the detail-of-one-thing surface; decision-card's sibling form)." },
+        "slot_map": {
+          "type": "object",
+          "required": ["header", "focus", "recall"],
+          "properties": {
+            "header": { "type": "string", "description": "The header source — legibility.name (the HUMAN handle, never a raw id) + the lane (legibility.is → typed-geometry shape)." },
+            "kind": { "type": "string", "description": "Optional: the lane/what-kind source — legibility.is." },
+            "state": { "type": "string", "description": "Optional: the session state source — a field/path from /api/sessions (live)." },
+            "focus": { "type": "string", "description": "The current-focus source — what the session is doing now (from /api/sessions, live)." },
+            "recall": { "type": "string", "description": "The RECALL-strip source — 'resolve:recall' (session_recall: catch_up/decisions/open_loops/drift; recollection's shape)." },
+            "transcript": { "type": "string", "description": "Optional: a transcript-thread entry source — 'resolve:transcript' (over /api/transcript-search, live)." },
+            "actions": { "type": "string", "description": "The actions source — run-in-channel / consult (the supervisor verbs); the take acts on these." }
+          }
+        }
+      }
+    }
+  ]
+}
