@@ -3,6 +3,7 @@ import { fetchProjection, fetchTerritory, type Projection, type ProjPoint, ApiEr
 import { SourcePanel, readTerritoryContent, territoryRefCount, territoryNotes, type SourceView } from './source/SourcePanel'
 import { installAddressCapture, installPointerBridge, subscribeLocus, getLocus, clearNotice } from './lib/address'
 import { installPointables } from './lib/pointables'
+import { installOperatorSession } from './lib/operatorSession'
 import { isVerifyMode } from './lib/verifyMode'
 import type { MotionFeel } from './tokens/motion'
 import { Desktop } from './layouts/Desktop'
@@ -203,6 +204,8 @@ export function App() {
   const [source, setSource] = useState<SourceView | null>(null)
 
   useEffect(() => {
+    installOperatorSession() // #1b: auto-mint + attach the X-Operator-Session token (invisible to Tim) so fork's
+    // server-side floor can validate consequential ops; inert while the mint endpoint is pending (degrade-clean).
     installAddressCapture()
     installPointerBridge() // the non-click spotlight trigger — lets the RHM/brain point at the thing it discusses
     installPointables() // window.surfacePointables() — the surface-sourced catalog the brain's spotlight resolves through
