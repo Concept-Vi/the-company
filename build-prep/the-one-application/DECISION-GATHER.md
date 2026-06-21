@@ -45,3 +45,41 @@
 
 ---
 <!-- other lanes: append your section below (## <lane> — open decisions) -->
+
+## fork (ch-8djrpmsl) — open decisions
+
+**F1 · THE 4TH ROOT / what "dimension" IS** — `Tim-direction (theorem)`
+- WHAT: the instrument must drop through dimensions (3D↔2D↔1D); but Tim's written math treats k as recursive DEPTH + "dimension" = the AXES, not spatial 3D/2D/1D. So: what IS the "dimension" the instrument drops through?
+- OPTIONS: (a) same knob — k IS the dimension · (b) two knobs — spatial-d separate from depth-k · (c) dimension is a STANDPOINT on the one object (viewpoint-duality applied to dimension). + the 4th coordinate root itself: type/state/instance/influence (Tim's own namings split). [grounded: EXPLORATION-dimension-bridge.md — the "constant"-reading is DEAD; this is the live seam]
+- OWNER: Tim (his theorem; the bedrock is his — the AI-projections err, proved by the cube-error correction).
+- BLOCKS: the CUBE INSTRUMENT build (its dimensional behaviour — the heart) · the resolved-axis-set.
+
+**F2 · THE CUBE 3-D FORK** — `Tim-direction (theorem)`
+- WHAT: how the cube becomes 3-D in the instrument.
+- OPTIONS: (a) render it as its 2-D projection-from-each-vantage (projection-IS-the-math; the lean) · (b) orbit the existing wheel in CSS-3D (real orbit, zero rebuild) · (c) true 3-D (new WebGL layer). Engine = react-three-fiber (web-native, phone-reachable; UE5/Omniverse rejected = video-stream not live).
+- OWNER: Tim (his instrument; F1 likely settles this shape).
+- BLOCKS: the instrument render-substrate choice.
+
+**F3 · CONNECTOR #1b full-access FLIP** — `Tim-direction (security)`
+- WHAT: enable full remote tool-access gated by authenticated-identity (proof-of-Tim = OAuth principal + the #1b operator-token); everyone else deny-by-default.
+- OPTIONS: (a) verify-unspoofable-then-enable (build the identity gate, prove non-Tim/replay/peer all fail, Tim flips full) · (b) hold.
+- OWNER: Tim-DIRECT (security/credential = his word, not peer-relay; "so long as it is secure"). The connector server is built+verified+committed; the FLIP is his.
+- BLOCKS: the operator's full remote tool-face (locked/hazard tools via the connector).
+
+**F4 · MODEL-SOURCE / `_CORPUS_REGISTRIES` mind row (R13 follow)** — `fabric-call (fork+lead)`
+- WHAT: whether to add a model-kind / corpus-source mind row to the (complete, green) R13 composable-mind substrate — the recall-as-a-source for the supervisor-as-brain.
+- OPTIONS: (a) R13 complete as-is, this is a follow that pairs with the supervisor-brain build · (b) in-scope now (then: what it binds + what running it means — needs run_composition extension for a non-role leg).
+- OWNER: fabric (lead scopes; fork builds). [fork's lean: (a) — a follow, not a now-piece]
+- BLOCKS: nothing urgent (the supervisor-as-brain arch is specced; the substrate's ready).
+
+**F5 · vLLM enable_thinking (think-fix local half)** — `fabric-call`
+- WHAT: wire vLLM-local think-control (chat_template_kwargs.enable_thinking) — the ollama/cloud half is built+verified (200× token-drop); the local half is an honest no-op until wired+verified.
+- OPTIONS: (a) wire when a free vLLM model is available to verify the token-drop · (b) leave — cloud think + local no-think-models already cover structured extraction.
+- OWNER: fabric (gated on a free vLLM model = lead's loadout call).
+- BLOCKS: think-control on local vLLM specifically (cloud think + the budget-retry net already cover the structured-output gap).
+
+**F6 · prompt-TEMPLATE wrapper + SCHEMA-select (resolved-slots §5 follows)** — `fabric-call (fork+composition)`
+- WHAT: the resolved-slots flagged-follows — the {{name}} prompt-template-interpolation wrapper + output_schema select-between-classes.
+- OPTIONS: (a) build when a real consumer needs continuous prompt-composition / per-coordinate schema (select + literal-superset cover v1) · (b) build ahead.
+- OWNER: fabric (fork builds on a real need; composition's contract carries them as flagged-follows).
+- BLOCKS: nothing now (the v1 select-path is built+verified; these are the continuous-composition extension).
