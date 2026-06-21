@@ -149,6 +149,12 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
       }
       setTitle(d.address || '', 'decision')
       onOpenChange(true)
+      // ★ DRIVER-FACING READY SIGNAL (TOOL-FRICTION-LOG #8, found by-use: a driver/the RHM dispatched decision:open
+      // then had to POLL/guess when the card was interactive — repeatedly caught mid-load at ~88px). The host now
+      // emits `decision:ready {address}` the instant DNA's card content has rendered + the loading state cleared, so
+      // a driver awaits ONE signal instead of racing the async resolve. (decision:rendered is DNA→host internal;
+      // decision:ready is host→drivers — the clean contract.) Tandem-methodology: a by-use friction, driven to a fix.
+      window.dispatchEvent(new CustomEvent('decision:ready', { detail: { address: d.address || '' } }))
     }
     const onSelect = (e: Event) => {
       const d = (e as CustomEvent).detail
