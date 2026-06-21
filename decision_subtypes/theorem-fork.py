@@ -8,7 +8,7 @@ DECISION_SUBTYPE = {
     "explanation_policy": "policy.theorem-grounding",   # fork: explain the math/relationships grounded in his
                                                         # written thinking; FLAG where AI-projections err (don't assert)
     "owner": "tim",                                     # Tim's queue — the bedrock is his
-    "required_elements": ["conceptual_options", "theoretical_implication", "grounding_source"],
+    "required_elements": ["conceptual_options", "theoretical_implication", "grounding_source", "ai_uncertainty_caveat"],
     "desc": "A conceptual fork in Tim's theorem/math — the options as deep CONCEPTUAL alternatives + their "
             "theoretical implication + the grounding-doc ref; explained grounded in his written thinking (the "
             "bedrock is HIS — flag AI-projection uncertainty, never assert). Covers: the 4th-root · the cube-3D fork.",
