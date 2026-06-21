@@ -38,9 +38,12 @@ two-panel zones); co-author, like §3 is projection's:
   two-panel co-visible structure — e.g. `{present→A, explain→B, choose→B}` (exact mapping = DNA's verified
   two-panel; confirm). present = question(hero)+shape · explain = the slide · choose = options+take.
 - PANEL ALLOCATIONS (DNA's lane, like §3's host slots): each panel's w/h as resolved slots on the coordinate
-  (continuous derivations + the orient select); the CONSTANTS = DNA's VERIFIED two-panel geometry. Composition
-  references them as slots; DNA authors/confirms the numbers. The STRUCTURE is verified so the seam is authored
-  NOW; the constants drop in on the merge-sa zone-lock — no reshape (clamp-bounds, not a re-layout).
+  (continuous derivations + the orient select). ★ SOURCED — DNA grammar #1 (87fa59e): the constants are
+  dna/tokens.json LAYOUT-TOKENS (panel ratios · zone splits · outer-margin clamp ~4.8vw · padding≈gutter ·
+  density modes · artefact-complexity-by-area), referenced by TOKEN-NAME (stable across DNA's tuning), NOT
+  hardcoded numbers. DNA flagged these "ready to move into the device-axis resolver" → when she does, the §3
+  host + §4 card slots reference these tokens (co-scope the token-name→slot mapping). The STRUCTURE is authored
+  NOW; the token VALUES ride DNA's grammar→resolver move + the merge-sa lock — no reshape (token-refs, not raw numbers).
 - SUBORDINATE TO LEGIBILITY + the gate: the resolved `card_layout` MUST keep decision+options co-visible at the
   gate coordinate (390); a `stepped` resolution only where co-visible genuinely can't fit. (decision-card.schema
   `card_kinds` is the grouping; THIS is its resolution.)
