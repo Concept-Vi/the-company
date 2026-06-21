@@ -23,6 +23,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "trade-off",
+    "explanation_source": "code://build-prep/the-one-application/DECISION-GATHER.md#P1",  # provenance: gather §P1 (verbatim-verified, section-anchored)
     "legibility": {
         "name": "When the expert controls show up",
         "is": "How the surface adapts to who's using it",

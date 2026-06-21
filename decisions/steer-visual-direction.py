@@ -20,6 +20,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "trade-off",
+    "explanation_source": "code://build-prep/the-one-application/DECISION-GATHER.md#L3",  # provenance: gather §L3 (verbatim-verified, section-anchored)
     "legibility": {
         "name": "How you steer the visual direction",
         "is": "Your eye — ongoing",

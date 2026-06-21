@@ -35,6 +35,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "trade-off",  # design-language identity fork, owner=tim (an OPEN conflict for Tim). card_variant may want gold-swatch previews — DNA render refinement (follow).
+    "explanation_source": "code:///home/tim/repos/counterpart/design/review/ingest/_extracted/_faces/_DECIDED.json#decisions.figure-gold-value",  # provenance: the decided design value (verbatim-verified, JSON-key anchored)
     "legibility": {
         "name": "Which gold is the company's",
         "is": "Reversible · sets the top note of the whole palette",

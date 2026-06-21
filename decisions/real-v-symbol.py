@@ -21,6 +21,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "trade-off",
+    "explanation_source": "code://build-prep/the-one-application/DECISION-GATHER.md#P2",  # provenance: gather §P2 (verbatim-verified, section-anchored)
     "legibility": {
         "name": "Put the real V in for the right-hand-man",
         "is": "Your symbol — a swap when ready",

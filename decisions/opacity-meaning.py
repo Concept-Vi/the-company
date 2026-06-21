@@ -34,6 +34,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "trade-off",  # design-language law, owner=tim ("genuinely your call"). card_variant may want opacity-sample previews — DNA render refinement (follow).
+    "explanation_source": "code:///home/tim/repos/counterpart/design/review/ingest/_extracted/_faces/_DECIDED.json#decisions.opacity-meaning",  # provenance: the decided design value (verbatim-verified, JSON-key anchored)
     "legibility": {
         "name": "Does faded-ness mean 'not yet'",
         "is": "Reversible · decides if opacity carries meaning",

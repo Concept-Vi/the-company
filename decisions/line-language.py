@@ -35,6 +35,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "trade-off",  # design-language law, owner=tim (DNA leans 'one fixed', Tim decides). card_variant may want line-sample previews — DNA render refinement (follow).
+    "explanation_source": "code:///home/tim/repos/counterpart/design/review/ingest/_extracted/_faces/_DECIDED.json#decisions.line-language",  # provenance: the decided design value (verbatim-verified, JSON-key anchored)
     "legibility": {
         "name": "One line-language, or context-dependent",
         "is": "Reversible · sets how every diagram reads",

@@ -23,6 +23,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "trade-off",
+    "explanation_source": "code://build-prep/the-one-application/DECISION-GATHER.md#D2",  # provenance: gather §D2 (verbatim-verified, section-anchored)
     "legibility": {
         "name": "Hand-made card visuals, or the reusable family?",
         "is": "A look choice — don't lose the approved card",
