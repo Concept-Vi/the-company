@@ -221,7 +221,7 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
              max_tokens: int = 256, temperature: float = 0.0, store=None,
              ensure: bool = False, ensure_evict: bool = False,
              policy: str | None = None, meta: dict | None = None,
-             think: bool | None = None) -> dict:
+             think: bool | None = None, coordinate: dict | None = None) -> dict:
     """Fire ONE request at the resident 4B for `role`, returning VALIDATED JSON (a dict).
 
     RETURN SHAPE (read this before harness-coding against it — the confusion has produced false
@@ -327,8 +327,20 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
                    if a == "utterance" or a in _supplied_extra(role, ctx, store)]
         user_content = "\n".join(
             f"{name}: {_resolve_input_value(name, ctx, store)}" for name in compose)
+    # RESOLVED-SLOTS (§5): the system prompt RESOLVES from `prompt_slot` against the turn `coordinate`
+    # (a resolve_slot value: literal | {select,cases} | relationship-AST) — so one role's prompt computes
+    # per coordinate (grain·viewer·mode·subtype·register) instead of static-per-role. ADDITIVE + byte-
+    # identical when absent: no prompt_slot OR no coordinate ⇒ the static prompt_template, unchanged.
+    # (output_schema stays the literal superset class — §5's common case; schema-select + the {{}} template
+    # wrapper are the contract's flagged-follows, not built here. Reuse: resolver.resolve_slot, no new engine.)
+    _pslot = getattr(role, "prompt_slot", None)
+    if _pslot is not None and coordinate is not None:
+        from runtime.resolver import resolve_slot as _resolve_slot
+        system_prompt = _resolve_slot(_pslot, coordinate)
+    else:
+        system_prompt = role.prompt_template
     msgs = [
-        {"role": "system", "content": role.prompt_template},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_content},
     ]
     # THINK-CONTROL routing (additive; think=None → byte-identical: the openai /v1 path, unchanged). The /v1

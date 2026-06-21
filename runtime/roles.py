@@ -69,7 +69,7 @@ from pydantic import BaseModel
 # C2.2) — `model_binding` is the G2 nested capability-query shape, these are the flat fields resolve_role
 # consumes today. Both are valid role-schema fields (consumed by a real consumer — never a silent typo).
 ROLE_FIELDS = (
-    "id", "label", "description", "prompt_template", "output_schema", "input_addresses", "op",
+    "id", "label", "description", "prompt_template", "prompt_slot", "output_schema", "input_addresses", "op",
     "trigger", "model_binding", "mode_scope", "rules", "render_hint", "draws", "verdict_rule",
     "knobs", "thinking", "output", "tools", "context",
     # legacy flat binding fields (resolve_role/roles() consume these directly — judge byte-identical):
@@ -87,6 +87,9 @@ class Role:
     id: str
     spec: dict                                   # the declared dict, verbatim (the dict-view consumers read)
     prompt_template: str | None = None
+    prompt_slot: dict | str | None = None        # RESOLVED-SLOTS (§5): a resolve_slot value (literal | {select…} |
+                                                 # relationship-AST) resolved against the turn coordinate → the
+                                                 # system prompt. Absent ⇒ static prompt_template (byte-identical).
     output_schema: type[BaseModel] | None = None
     mode_scope: frozenset = field(default_factory=frozenset)
     draws: int = 1
@@ -163,6 +166,15 @@ def _build_role(name: str, decl: dict) -> Role:
         raise TypeError(
             f"role {rid!r}: output_schema must be a Pydantic BaseModel subclass (validated/retried "
             f"by complete()), got {osch!r} — fail loud (never a silent un-validated role output).")
+    # RESOLVED-SLOTS (§5, additive): prompt_slot — if declared, a resolve_slot value (a literal str, a
+    # select dict {select,cases,default?}, or a relationship-AST {op,args}); run_role resolves it against
+    # the turn coordinate → the system prompt. Light role-time check (must be dict|str); resolve_slot does
+    # the deep fail-loud at resolve-time. Absent ⇒ static prompt_template (byte-identical for every role).
+    pslot = decl.get("prompt_slot")
+    if pslot is not None and not isinstance(pslot, (dict, str)):
+        raise TypeError(
+            f"role {rid!r}: prompt_slot must be a resolve_slot value (a str literal, a {{select,cases}} dict, "
+            f"or an {{op,args}} relationship-AST), got {type(pslot).__name__} — fail loud.")
     draws = decl.get("draws", 1)
     if not isinstance(draws, int) or draws < 1:
         raise ValueError(f"role {rid!r}: draws must be an int >= 1, got {draws!r} — fail loud.")
@@ -189,7 +201,7 @@ def _build_role(name: str, decl: dict) -> Role:
             f"deterministic function over the draws — quorum/vote; L2, never a model call). Fail loud.")
     ms = decl.get("mode_scope") or ()
     return Role(
-        id=rid, spec=dict(decl), prompt_template=decl.get("prompt_template"),
+        id=rid, spec=dict(decl), prompt_template=decl.get("prompt_template"), prompt_slot=pslot,
         output_schema=osch, mode_scope=frozenset(ms), draws=int(draws), op=op,
     )
 

@@ -508,7 +508,7 @@ def inspect_address(address: str, turn_id: str = "") -> dict:
 def run_role(role: str, utterance: str = "", op: str = "generate", model: str = "",
              inputs: dict = {}, max_tokens: int = 256, temperature: float = 0.0,
              ensure: bool = False, ensure_evict: bool = False, policy: str = "",
-             think: bool | None = None) -> dict:
+             think: bool | None = None, coordinate: dict | None = None) -> dict:
     """CONFIGURE + RUN ONE role (the agent fires a role and gets its validated output).
     REUSES runtime.cognition.run_role (the SAME fire path run_swarm/dry_run_role use — never a parallel
     engine). `role` is a registered role id (or pass a draft field-set is via propose_role first).
@@ -546,12 +546,13 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
     r = _resolve_role(role)
     return _fire_role_and_persist(
         r, utterance, inputs, model, max_tokens, temperature, ensure, ensure_evict, policy,
-        think=think, turn_prefix="mcp")
+        think=think, coordinate=coordinate, turn_prefix="mcp")
 
 
 def _fire_role_and_persist(r, utterance: str, inputs: dict, model: str, max_tokens: int,
                            temperature: float, ensure: bool, ensure_evict: bool, policy: str,
-                           *, turn_prefix: str, think: bool | None = None) -> dict:
+                           *, turn_prefix: str, think: bool | None = None,
+                           coordinate: dict | None = None) -> dict:
     """The SHARED single-role fire-and-persist tail of run_role / run_draft (REUSE — never copy-paste a
     second wrapper body, so the two stay byte-identical in behaviour). Given an ALREADY-RESOLVED `Role`
     (`_resolve_role` of an id for run_role, of a draft dict for run_draft — the engine path is the same
@@ -572,6 +573,8 @@ def _fire_role_and_persist(r, utterance: str, inputs: dict, model: str, max_toke
           "ensure": ensure, "ensure_evict": ensure_evict}
     if think is not None:
         kw["think"] = think                                    # → cognition.run_role: native /api/chat think-control for ollama models
+    if coordinate is not None:
+        kw["coordinate"] = coordinate                          # → §5 resolved-slots: the prompt resolves from prompt_slot against this
     if model:
         kw["model"] = model
         # ROUTING FIX (2026-06-20): a `model` override MUST carry its ENDPOINT, or run_role POSTs it to the
