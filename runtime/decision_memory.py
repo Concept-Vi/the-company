@@ -22,13 +22,19 @@ from __future__ import annotations
 # the spaces a decision's context can come from, broadest-meaning first. common_knowledge = comprehended
 # project/design content; principles/worldview/topics = the why-layer; history = prior discussion; repo =
 # the code it touches. Registry-is-truth: this list is the embeddable set (cognition_info().spaces).
-DEFAULT_DECISION_SPACES = ("extractions", "common_knowledge", "principles", "worldview", "topics", "history", "repo")
-# 'extractions' (the 44k dragnet meaning-extraction layer: session+visual-dna+theorem) ADDED 2026-06-21 —
-# the grounding-flip, ungated now FACE-0 is at-bar (held earlier to not shift grounding under the keystone
-# render). ADDITIVE: recall_for_decision pools+reranks across spaces, best-wins; the extractions score HIGHER
-# (verified 0.507 vs history 0.416 — denser meaning) so decisions ground on the richer layer (incl. the
-# theorem = the company grounding decisions on its OWN BASE). _attach_digest_text resolves extraction:// text
-# (the enabler built earlier) so they render MEANING, not bare addresses. Rides the next bounce.
+DEFAULT_DECISION_SPACES = ("common_knowledge", "principles", "worldview", "topics", "history", "repo")
+# the HOT-PATH card-resolve spaces — fast (each 0.3-0.6s, the whole set well under territory's 3s memory-leg
+# budget). NO 'extractions' here: the dragnet space is 44k vectors and its query is ~10s warm (measured
+# 2026-06-21) — adding it to the hot-path BLEW the 3s budget → every decision card resolved UNGROUNDED
+# (the memory leg timed out, degrade-clean). The grounding-flip caught its own regression by-use.
+#
+# EXPLAIN_DECISION_SPACES = the hot-6 PLUS the 44k extraction layer (session+visual-dna+theorem). The rich
+# extraction grounding belongs in the DEDICATED explain turn (explanation_grounding), which has the time the
+# 3s card-resolve can't spare — and that IS where the flip's value lands (the RHM's explanation grounds in
+# the richer layer incl. the theorem = the company grounding decisions on its OWN base; the card-resolve
+# point-summary only needs fast decidable context). _attach_digest_text resolves extraction:// text so they
+# render MEANING. The ~10s extractions query is a follow-on speed target (a fast index for the 44k space).
+EXPLAIN_DECISION_SPACES = DEFAULT_DECISION_SPACES + ("extractions",)
 
 
 def prior_decisions_about(suite, topic_text: str, *, k: int = 6, rerank: bool = True) -> list[dict]:
@@ -357,7 +363,8 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
         raise ValueError("explanation_grounding: decision must carry text "
                          "(meaning/text/decision/question) or be a non-empty string.")
 
-    bundle = recall_for_decision(suite, text, address=subj, rerank=rerank, top_n=top_n,
+    bundle = recall_for_decision(suite, text, address=subj, spaces=EXPLAIN_DECISION_SPACES,
+                                 rerank=rerank, top_n=top_n,
                                  include_prior_decisions=include_prior_decisions)
 
     # PROVENANCE per context item (operator-law + the never-assert guard): WHICH grounding is Tim's OWN
