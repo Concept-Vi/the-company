@@ -1446,10 +1446,47 @@ class H(BaseHTTPRequestHandler):
                     _asset = q.get("asset")
                     if _asset:                              # the grounded extraction layer (meaning-extractions)
                         from runtime import recall_determine as _rd
-                        self._send(200, json.dumps({"ok": True, **_rd.determine(_q, asset=_asset, store=SUITE.store)}))
+                        # WARM-SUITE seam (pairs recollection's a0605fc): pass the bridge's RESIDENT suite, NOT
+                        # just store — determine reuses the warm Suite (NodeRegistry + 44k-vector cache already
+                        # built) → ~11s instead of a >60s cold per-call rebuild. The by-use perf fix.
+                        self._send(200, json.dumps({"ok": True, **_rd.determine(_q, asset=_asset, suite=SUITE)}))
                     else:                                   # raw transcript-history search (semantic→lexical degrade)
                         from runtime import session_search as _ss
                         self._send(200, json.dumps({"ok": True, **_ss.search_sessions(SUITE, _q, k=_k, mode=q.get("mode", "auto"))}))
+            elif path == "/api/session-recall":            # FACE-1: per-session LENS (projection's session-drill)
+                # recollection's lane (runtime.session_lens), wired to a bridge GET — REUSE the MCP tool's
+                # _resolve + INDEX_DIR (don't reimplement), mirror its dispatch. ?session=<id|self|.jsonl> &
+                # op=<catch_up|open_loops|directives|decisions|drift|timeline|find> & q= & since= & k=. The
+                # SCAN ops (catch_up/open_loops/directives) are fast; the EMBED ops (find/decisions/timeline/
+                # drift) cold-load the per-session index (first call slow — the route timeout tolerates it).
+                # Fail-loud: missing op/session, or an embed-op missing its required q → a teaching error.
+                from mcp_face.tools.session_recall import _resolve as _sr_resolve, INDEX_DIR as _SR_IDX
+                from runtime import session_lens as _L
+                _op = q.get("op") or "catch_up"
+                _sess = q.get("session") or "self"
+                _rq, _since = q.get("q") or "", q.get("since") or ""
+                _rk = int(q.get("k", 8)) if str(q.get("k", "")).isdigit() else 8
+                try:
+                    _jl = _sr_resolve(_sess)
+                    if _op == "catch_up":
+                        out = _L.catch_up(_jl, since=_since or None, k=max(_rk, 20))
+                    elif _op == "open_loops":
+                        out = _L.open_loops(_jl, k=max(_rk, 25))
+                    elif _op == "directives":
+                        out = _L.directives(_jl)
+                    elif _op == "drift":
+                        out = _L.drift(_jl, index_dir=_SR_IDX, k=max(_rk, 15))
+                    elif _op in ("decisions", "find", "timeline"):
+                        if not _rq:
+                            raise ValueError(f"op={_op!r} needs ?q=<topic> (it searches by meaning).")
+                        out = (_L.decisions(_jl, _rq, k=_rk, index_dir=_SR_IDX) if _op == "decisions"
+                               else _L.timeline(_jl, _rq, index_dir=_SR_IDX) if _op == "timeline"
+                               else _L.find(_jl, _rq, k=_rk, index_dir=_SR_IDX))
+                    else:
+                        raise ValueError(f"unknown op {_op!r} — one of catch_up·open_loops·directives·decisions·drift·timeline·find.")
+                    self._send(200, json.dumps({"ok": True, "op": _op, "session": _sess, **out}))
+                except (ValueError, FileNotFoundError) as _sr_e:
+                    self._send(400, json.dumps({"ok": False, "op": _op, "error": str(_sr_e)}))
             elif path == "/api/types":
                 self._send(200, json.dumps(sorted(SUITE.list_types())))
             elif path == "/api/layers":                    # the multi-layer model's self-description: {space:[embedder layer,…]}
