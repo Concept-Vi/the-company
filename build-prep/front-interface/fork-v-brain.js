@@ -23,10 +23,11 @@
  *     placeholder,    // optional — input placeholder text
  *   }) → { ask(prompt), groundedAsk(prompt), direct(item), aimChanged(), destroy() }
  *
- * TWO brain paths (single-source — both live HERE, no parallel projection-side caller):
- *   • ask(prompt)        → STREAMING turn via forkBrainCore /api/claude/turn (the panel Claude Code brain).
+ * TWO brain paths (single-source — both live HERE, both SELF-RENDER into .v-brain-reply, no parallel caller):
+ *   • ask(prompt)        → STREAMING turn via forkBrainCore /api/claude/turn (the real-Claude-Code path).
  *   • groundedAsk(prompt)→ BLOCKING grounded answer via /api/brain/ask (the role-resolved mind: kimi, ~5s).
- *                          Returns {ok,source,answer}; projection's host renders (placeholder → answer).
+ *                          SELF-RENDERS (placeholder → answer) AND returns {ok,source,answer}. The V's send
+ *                          button + Enter fire groundedAsk (the grounded mind is the default ask).
  *
  * VERIFICATION-STATE: shape-correct + logic-traced; reuses the verified core. On-surface use-verification
  * (mount in the V, drive on the phone at 390px first) is projection's per THE BAR. No green-paint.
@@ -81,24 +82,35 @@
 
     // groundedAsk: the BLOCKING grounded-mind answer (L2) — POST /api/brain/ask, the {ok,source,answer}
     // shape (the ROLE-RESOLVED brain: kimi via the local ollama host, ~5s). DISTINCT from ask()'s STREAMING
-    // /api/claude/turn turn. Reads the live aim (answers about whatever the V is pointed at). Returns the
-    // parsed response; the PANEL RENDER (a "thinking…" placeholder → the grounded answer) is projection's
-    // host (it calls this + renders) — single-source: the call-shape lives HERE, the render is projection's
-    // lane. NO streaming variant (the placeholder covers the ~5s; streaming is future UX-polish, not the bar).
+    // /api/claude/turn turn. SELF-RENDERS into forkVBrain's OWN .v-brain-reply slot (the panel DOM is THIS
+    // module's — mirror ask; the render belongs HERE, single-source). A "thinking…" placeholder covers the
+    // ~5s, then the grounded answer (or a clear note — NEVER a blank middle, the by-sight bar). ALSO returns
+    // the parsed response (so a caller can chain). The aim is OPTIONAL — the mind answers general Qs too.
     function groundedAsk(prompt) {
       const q = (prompt != null ? prompt : inputEl.value).trim();
       if (!q) return Promise.resolve(null);
       let addr;
       try { addr = getAimAddress(); } catch (e) { addr = null; }
+      inputEl.value = '';
       const body = { question: q };
-      if (addr) body.aim = addr;                          // answer GROUNDED at the current aim (brain_router routes it)
+      if (addr) body.aim = addr;                          // grounds at the current aim when one is set (brain_router routes it)
+      replyEl.textContent = '…';                          // SELF-RENDER: the "thinking…" placeholder (covers the blocking ~5s)
       return fetch('/api/brain/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
         .then((r) => r.json())
-        .catch((e) => ({ ok: false, source: 'error', answer: null, error: String(e) }));  // fail-soft (the floor)
+        .then((d) => {
+          replyEl.textContent = (d && d.answer) ? String(d.answer)
+            : (d && d.error) ? '(the brain could not answer just now)'
+            : '(no answer)';                              // never a blank middle — a clear note on empty/fail
+          return d;
+        })
+        .catch((e) => {                                   // fail-soft (the floor): a clear note + the error shape
+          replyEl.textContent = '(could not reach the brain)';
+          return { ok: false, source: 'error', answer: null, error: String(e) };
+        });
     }
 
     // direct: route a direction (comment/reaction/favour) back at the CURRENT aim → suite.mark → re-render.
@@ -109,9 +121,12 @@
       return core.writeDirections([Object.assign({ element_id: addr, annotation_type: 'direction' }, item)]);
     }
 
-    sendEl.addEventListener('click', () => ask());
+    // The V's primary "ask" affordance fires the GROUNDED MIND (groundedAsk → kimi), not the generic
+    // streaming turn — so Tim asking the V gets the grounded answer (the L2 intent). ask() stays exported
+    // for a future streaming/agent entry (the real-Claude-Code path), but the default button is grounded.
+    sendEl.addEventListener('click', () => groundedAsk());
     inputEl.addEventListener('keydown', (e) => {            // Enter sends; Shift+Enter newlines
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); groundedAsk(); }
     });
 
     function destroy() { if (root && root.parentNode) root.parentNode.removeChild(root); }
