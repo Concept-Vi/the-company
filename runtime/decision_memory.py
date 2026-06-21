@@ -267,6 +267,21 @@ def _provenance_text(suite, explanation_source, *, max_chars: int = 900) -> str:
                 txt = fh.read()
             if not anchor:
                 return txt.strip()[:max_chars]                # whole file (single-topic doc)
+            # JSON-PATH anchor (a .json source keyed per-decision, e.g. DNA's _DECIDED.json#decisions.core-shape):
+            # navigate the dotted key-path → return ONLY that decision's subtree (per-decision-scoped, no sibling
+            # bleed across a multi-decision JSON). HOLE-2-safe: a missing key ⇒ '' (never the whole file).
+            if p.endswith(".json"):
+                import json as _json
+                try:
+                    node = _json.loads(txt)
+                    for seg in anchor.split("."):
+                        if isinstance(node, dict) and seg in node:
+                            node = node[seg]
+                        else:
+                            return ""                          # key not found → honest none, no bleed
+                    return _json.dumps(node, ensure_ascii=False).strip()[:max_chars]
+                except Exception:
+                    return ""
             # SECTION-SCOPED (HOLE-2-safe for a multi-item doc): extract ONLY the anchor's section — from its
             # marker line (a markdown heading `#…` OR a bold section-marker `**<id> · …**`, the DECISION-GATHER
             # convention) until the NEXT same-or-higher marker. Anchor not found ⇒ '' (NEVER fall back to the
