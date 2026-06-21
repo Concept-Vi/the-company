@@ -23,6 +23,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "authorize",
+    "explanation_source": "code://build-prep/the-one-application/DECISION-GATHER.md#L2",  # provenance: gather §L2 (verbatim-verified by recollection, section-anchored)
     "legibility": {
         "name": "Reconnect to switch on the waiting tools",
         "is": "A one-time action — only you can do it",

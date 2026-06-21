@@ -28,6 +28,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "authorize",
+    "explanation_source": "code://build-prep/the-one-application/DECISION-GATHER.md#F3",  # provenance: gather §F3 (verbatim-verified by recollection, section-anchored — no multi-item bleed)
     "legibility": {
         "name": "Full access from outside once it's proven you",
         "is": "Security — reversible, you set the bar",

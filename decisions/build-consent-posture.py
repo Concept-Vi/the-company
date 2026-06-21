@@ -22,6 +22,7 @@ DECISION = {
     ],
     "scope": "global",
     "subtype": "authorize",
+    "explanation_source": "code://build-prep/the-one-application/DECISION-GATHER.md#R-corpus-2",  # provenance: gather §R-corpus-2 (verbatim-verified by recollection, section-anchored)
     "legibility": {
         "name": "Build freely, or check with you first each time",
         "is": "How the company works — reversible",
