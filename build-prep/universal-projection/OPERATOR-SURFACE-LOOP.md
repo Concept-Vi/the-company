@@ -1737,3 +1737,20 @@ DOGFOODED the live surface (390) per the friction-is-the-gap-sensor methodology 
 - FLAGGED fork (friction #12): /api/decisions 500s intermittently under the surface's concurrent fan-out (threaded http.server + the new per-row owner-resolve) — my surface degrades clean now; backend robustness is fork's.
 
 COMMITTED: the above (explicit pathspecs). NEXT BEAT (the milestone, lead g-1782027045): DNA's n-panel renders (122c9dc, binary-5 + n-panel, overlap fixed) → MOUNT the 14 as live DNA decision-cards (same drop-in pattern as session-card) = the operator-cycle's FIRST REAL RUN COMPLETE. Investigate DNA's render entry (renderExplained? decisionRecord adapter?) before building — no blind scaffolding. Then wire explain_role (the explain-wire frontend half: ctx.block + ctx.caveat + coordinate={subtype}, rerank=False). Breadth surfaces still DNA-gated (only sessionRecord shipped; channelRecord next).
+
+---
+
+## FIRE — ★ THE FIRST REAL RUN VERIFIED (open→card, all 3 subtypes, BOTH viewports) + a desktop FORM bug found+fixed by-sight
+
+The lead's milestone gate (g-1782029251/560): verify the open→CARD path by-use+by-sight (queue row → renderExplained binary/n-panel). I dogfooded ALL THREE decision subtypes (advisor steer: tap, don't assume; the render path already exists — decision:open → GalleryMount → unit-view's DNA.renderExplained, live):
+- ✅ **n-panel trade-off (390)** — "Bring in Claude Design": renders, both options + descriptions + RECOMMENDED badge + Choose CTAs + "Ask about this".
+- ✅ **theorem-fork (390)** — "What dimension…": renders 3-option n-panel, ★ NO RECOMMENDED badge (the never-assert law at the option level — correct differentiation vs the trade-off's badge). The in-card AI-uncertainty CAVEAT is NOT yet rendered → fork resolves required_elements onto the feed (recollection's THEOREM_FORK_CAVEAT_OPERATOR) → DNA renders it (lead g-1782029560 — fork+DNA's lane, rides the next bounce; I flagged it accurately).
+- ✅ **binary authorize (1440)** — "Full access from outside": renders centered modal, RECOMMENDED on the recommended option.
+
+★ THE OPEN→CARD PATH = THE FIRST REAL RUN, and it's LIVE: Tim's registry-true 14-queue → tap → DNA's real designed card with his actual options. NOT a new mount (the lead's "mount like SessionDrill" is already delivered by the existing queue→tap→card master-detail — 14 full cards stacked would be a worse composition; the advisor + the by-sight confirmed this).
+
+★ DESKTOP FORM BUG found+FIXED by-sight (friction #13): at 1440 the a11y tree listed the binary card but the SCREENSHOT showed only the map — `.gallery-frame` collapsed to width 0 (shrink-to-fit gave the .ar-responsive card no intrinsic width → overflow:auto clipped it). Fixed: explicit `width:390px` on the base frame (portrait's width:100% still overrides). Verified BOTH viewports (1440 visible, 390 unchanged). The whole-screen-verification law caught what the a11y tree hid — the tool-face-overclaim pattern, avoided.
+
+EXPLAIN finding (the open seam): "Ask about this" works but calls the GENERIC /api/claude/turn (the BUILDER side-panel turn), NOT recollection's grounded explain_role/explanation_grounding. For a trade-off it answers well from on-screen context; for a THEOREM-FORK it SELF-CAVEATED correctly ("I'm reading that off the decision in front of me, not your actual theorem — so I won't claim it as proven; let me into the maths…") — so explain_role grounding is an UPGRADE (structural caveat + real corpus recall), not a critical hole. The frontend wire (the open seam) = redirect RightHand's unit-ask from /api/claude/turn to the grounded explain path. The deep explain is slow (~30s, "explain deep-7").
+
+COMMITTED: the gallery-frame fix + friction log + this entry. NEXT: clone channel-view (DNA shipped channelGraph 35aa95c — breadth surface #1; full-width centered graph body per DNA's note, NOT the decision-card frame) + explain_role wire.
