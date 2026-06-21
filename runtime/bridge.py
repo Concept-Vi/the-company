@@ -1382,6 +1382,32 @@ class H(BaseHTTPRequestHandler):
                 from runtime.stack_item_types import StackItemTypeRegistry as _SITReg
                 _sit = _SITReg().discover([os.path.join(ROOT, "stack_item_types")])
                 self._send(200, json.dumps({"ok": True, "types": _sit.as_records()}))
+            elif path == "/api/channels":                  # FACE-1 read-API: the live fabric ROSTER (channel registry)
+                # fold_channels — the channel/gathering rows from the leaf (READ-time fold; no parallel store).
+                # Raw rows; the HOST translates to human meaning (operator-law lives at the render layer, as for
+                # /api/sessions + /api/decisions). The floor: a read — no resolve/dispatch.
+                from runtime.session_channels import fold_channels as _fold
+                self._send(200, json.dumps({"ok": True, "channels": list(_fold(SUITE.store).values())}))
+            elif path == "/api/sessions":                  # FACE-1: the agent-session FLEET (F1.2 registry list)
+                # SUITE.list_agent_sessions — every known CC session, newest-activity first. Optional filters
+                # ride the query (?state= ?cwd= ?limit=). Already a projection over agent_sessions/ + the log.
+                _lim = int(q.get("limit", 200)) if str(q.get("limit", "")).isdigit() else 200
+                self._send(200, json.dumps(SUITE.list_agent_sessions(
+                    state=q.get("state") or None, cwd=q.get("cwd") or None, q=q.get("q") or None, limit=_lim)))
+            elif path == "/api/timeline":                  # FACE-1: ONE session's POINT-IN-TIME compaction timeline
+                # SUITE.agent_session_timeline(sid) — needs ?session=<sid> (fail-loud if absent; never a
+                # fabricated empty timeline). The life/compaction boundaries the host renders as lanes.
+                _sid = q.get("session") or q.get("sid")
+                if not _sid:
+                    self._send(400, json.dumps({"ok": False, "error": "/api/timeline needs ?session=<session-id>"}))
+                else:
+                    self._send(200, json.dumps(SUITE.agent_session_timeline(_sid)))
+            elif path == "/api/board":                     # FACE-1: the noticeboard items as DATA (not markdown)
+                # cc_board.list_items — the board rows; optional ?type= ?state= ?source= filters. The host
+                # renders them as spatial zones (DNA's board-map), never a text-wall.
+                from runtime import cc_board as _ccb
+                self._send(200, json.dumps({"ok": True, "items": _ccb.list_items(
+                    type=q.get("type") or None, state=q.get("state") or None, source=q.get("source") or None)}))
             elif path == "/api/types":
                 self._send(200, json.dumps(sorted(SUITE.list_types())))
             elif path == "/api/layers":                    # the multi-layer model's self-description: {space:[embedder layer,…]}
