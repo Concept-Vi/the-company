@@ -379,9 +379,18 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
         raise ValueError("explanation_grounding: decision must carry text "
                          "(meaning/text/decision/question) or be a non-empty string.")
 
-    bundle = recall_for_decision(suite, text, address=subj, spaces=EXPLAIN_DECISION_SPACES,
-                                 rerank=rerank, top_n=top_n,
-                                 include_prior_decisions=include_prior_decisions)
+    # theorem-fork grounds in the FRAMEWORK-ONLY block (the determine over the theorem asset, below) — its
+    # block DISCARDS the comprehended recall_for_decision context (it drifts; co-verified). So SKIP the full
+    # 7-space recall bundle for theorem-fork — computing it then throwing it away wasted ~6-12s of the
+    # explain-turn wall-clock (the 7-space query incl. the slow extractions space + prior_decisions). Other
+    # subtypes need the comprehended bundle (it IS their grounding).
+    _is_theorem_fork = (subtype == "theorem-fork")
+    if _is_theorem_fork:
+        bundle = {"context": [], "note": ""}
+    else:
+        bundle = recall_for_decision(suite, text, address=subj, spaces=EXPLAIN_DECISION_SPACES,
+                                     rerank=rerank, top_n=top_n,
+                                     include_prior_decisions=include_prior_decisions)
 
     # PROVENANCE per context item (operator-law + the never-assert guard): WHICH grounding is Tim's OWN
     # framework vs comprehended knowledge. The theorem extraction layer (extraction://theorem/…) is extracted
@@ -417,9 +426,12 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
             theorem_claims = _rerank_claims(text, theorem_claims, top_n=12)
         except Exception:
             pass
-        caveat = ("GROUND ONLY in Tim's own framework (the verbatim, chunk-traced mathematics/relationships "
-                  "below). State his maths as his; anything NOT present there is YOUR projection — flag it "
-                  "explicitly as uncertain / AI-projected, and NEVER assert a gloss as his. When unsure, say so.")
+        caveat = ("GROUND ONLY in the framework statements below — these are the SYSTEM'S EXTRACTIONS of Tim's "
+                  "written mathematics (traceable to his notes, faithful compressions — NOT his literal words). "
+                  "So: attribute the IDEAS to him, but do not present the wording as his exact quote, and frame "
+                  "them as 'your framework, as the system reads it.' Anything NOT in these statements is YOUR "
+                  "projection — flag it explicitly as AI-inference, NEVER assert a gloss as his theorem. When "
+                  "unsure, say so. (The cube-error proved the AI misreads here — under-claim, never over-claim.)")
 
     # render ONE operator-legible meaning block, so projection folds a SINGLE ctx field. recall already
     # attached each context item's clean digest text (operator-law: meaning, never a source-id/jargon leak).
@@ -439,7 +451,9 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
     lines: list[str] = []
     pri = bundle.get("prior_decisions") or []
     if theorem_claims:
-        lines.append("YOUR FRAMEWORK (verbatim, chunk-traced from your written mathematics — ground ONLY here, state as yours):")
+        lines.append("YOUR FRAMEWORK — the system's faithful EXTRACTIONS of your written mathematics (traceable "
+                     "to your notes; compressions, not your literal words). Ground ONLY here; attribute the ideas "
+                     "to you, but don't quote them as your exact wording, and flag anything beyond as the AI's reading:")
         for tc in theorem_claims[:12]:
             lines.append(f"  • {tc['claim']}")
     else:
