@@ -289,8 +289,11 @@ def _provenance_text(suite, explanation_source, *, max_chars: int = 900) -> str:
             # edits (unlike a line range).
             lines = txt.splitlines()
             _a = _re.escape(anchor)
-            start_rx = _re.compile(r"^\s*(#{1,6}\s.*%s|\*\*%s[\s·)]).*" % (_a, _a), _re.IGNORECASE)
-            marker_rx = _re.compile(r"^\s*(#{1,6}\s|\*\*\S)")  # a section-start line (heading or bold marker)
+            # a section START = a markdown heading containing the anchor, OR a bold section-marker `**<id>…`
+            # (DECISION-GATHER `**F3 ·`), OR a NUMBERED-bold list item `N. **<id> —` (the ledger's
+            # `1. **ID1 —` per-decision bullets). The boundary = the next such marker.
+            start_rx = _re.compile(r"^\s*(#{1,6}\s.*%s|(\d+\.\s+)?\*\*\s*%s[\s·)\-:]).*" % (_a, _a), _re.IGNORECASE)
+            marker_rx = _re.compile(r"^\s*(#{1,6}\s|(\d+\.\s+)?\*\*\S)")  # heading · bold-marker · numbered-bold bullet
             start = next((i for i, ln in enumerate(lines) if start_rx.match(ln)), None)
             if start is None:
                 return ""                                     # anchor not found → honest no-grounding, no bleed
