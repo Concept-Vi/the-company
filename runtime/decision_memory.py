@@ -242,8 +242,10 @@ def _provenance_text(suite, explanation_source, *, max_chars: int = 900) -> str:
     decision was GATHERED FROM). THE TRUE-L1 grounding (lead 2026-06-21): this is content about THIS choice
     ([[gap-pressure]] + [[introspective-data-building]] — the decision arose from the fabric's own operation),
     so it grounds the explanation in COMPANY MEMORY + adds what's NOT on the card — vs the topic-cluster
-    nearest-neighbour bleed. board:// → resolve_address (title + body); code:// → read the source file (not
-    content-resolvable via the dispatcher yet). '' if absent/unresolvable (degrade-clean → decision-content-only)."""
+    nearest-neighbour bleed. board:// → resolve_address (title + body); code:// → read the source file, OR a
+    SINGLE SECTION via a `#<anchor>` fragment (code://<path>#<section-id> — PER-DECISION-scoped so a MULTI-item
+    doc like DECISION-GATHER.md doesn't bleed its other items into the grounding; the clean pointer for a
+    multi-item source). '' if absent/unresolvable (degrade-clean → decision-content-only)."""
     if not (isinstance(explanation_source, str) and explanation_source.strip()):
         return ""
     es = explanation_source.strip()
@@ -255,13 +257,34 @@ def _provenance_text(suite, explanation_source, *, max_chars: int = 900) -> str:
                 parts = [r.get("title", ""), r.get("body", "")]
                 return ". ".join(p for p in parts if isinstance(p, str) and p.strip()).strip()[:max_chars]
         elif es.startswith("code://"):
-            import os as _os
-            p = es[len("code://"):]
-            if not _os.path.isabs(p):
-                p = _os.path.join(_os.getcwd(), p)
-            if _os.path.exists(p) and _os.path.isfile(p):
-                with open(p, encoding="utf-8") as fh:
-                    return fh.read().strip()[:max_chars]
+            import os as _os, re as _re
+            rest = es[len("code://"):]
+            path, _, anchor = rest.partition("#")             # code://<path>#<section-id> (anchor optional)
+            p = path if _os.path.isabs(path) else _os.path.join(_os.getcwd(), path)
+            if not (_os.path.exists(p) and _os.path.isfile(p)):
+                return ""
+            with open(p, encoding="utf-8") as fh:
+                txt = fh.read()
+            if not anchor:
+                return txt.strip()[:max_chars]                # whole file (single-topic doc)
+            # SECTION-SCOPED (HOLE-2-safe for a multi-item doc): extract ONLY the anchor's section — from its
+            # marker line (a markdown heading `#…` OR a bold section-marker `**<id> · …**`, the DECISION-GATHER
+            # convention) until the NEXT same-or-higher marker. Anchor not found ⇒ '' (NEVER fall back to the
+            # whole multi-item file — that's the bleed-class we're scoping AWAY). The id-marker is stable across
+            # edits (unlike a line range).
+            lines = txt.splitlines()
+            _a = _re.escape(anchor)
+            start_rx = _re.compile(r"^\s*(#{1,6}\s.*%s|\*\*%s[\s·)]).*" % (_a, _a), _re.IGNORECASE)
+            marker_rx = _re.compile(r"^\s*(#{1,6}\s|\*\*\S)")  # a section-start line (heading or bold marker)
+            start = next((i for i, ln in enumerate(lines) if start_rx.match(ln)), None)
+            if start is None:
+                return ""                                     # anchor not found → honest no-grounding, no bleed
+            out = [lines[start]]
+            for ln in lines[start + 1:]:
+                if marker_rx.match(ln):                        # next section begins → stop
+                    break
+                out.append(ln)
+            return "\n".join(out).strip()[:max_chars]
     except Exception:
         pass
     return ""
