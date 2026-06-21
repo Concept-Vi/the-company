@@ -21,7 +21,12 @@
  *     getAimLabel,    // optional — () => string : a HUMAN label for the aim ("the Heart map", "this control");
  *                     //            NEVER the raw address. Falls back to a generic "this".
  *     placeholder,    // optional — input placeholder text
- *   }) → { ask(prompt), direct(item), aimChanged(), destroy() }
+ *   }) → { ask(prompt), groundedAsk(prompt), direct(item), aimChanged(), destroy() }
+ *
+ * TWO brain paths (single-source — both live HERE, no parallel projection-side caller):
+ *   • ask(prompt)        → STREAMING turn via forkBrainCore /api/claude/turn (the panel Claude Code brain).
+ *   • groundedAsk(prompt)→ BLOCKING grounded answer via /api/brain/ask (the role-resolved mind: kimi, ~5s).
+ *                          Returns {ok,source,answer}; projection's host renders (placeholder → answer).
  *
  * VERIFICATION-STATE: shape-correct + logic-traced; reuses the verified core. On-surface use-verification
  * (mount in the V, drive on the phone at 390px first) is projection's per THE BAR. No green-paint.
@@ -74,6 +79,28 @@
       return core.talk(replyEl, addr, q);
     }
 
+    // groundedAsk: the BLOCKING grounded-mind answer (L2) — POST /api/brain/ask, the {ok,source,answer}
+    // shape (the ROLE-RESOLVED brain: kimi via the local ollama host, ~5s). DISTINCT from ask()'s STREAMING
+    // /api/claude/turn turn. Reads the live aim (answers about whatever the V is pointed at). Returns the
+    // parsed response; the PANEL RENDER (a "thinking…" placeholder → the grounded answer) is projection's
+    // host (it calls this + renders) — single-source: the call-shape lives HERE, the render is projection's
+    // lane. NO streaming variant (the placeholder covers the ~5s; streaming is future UX-polish, not the bar).
+    function groundedAsk(prompt) {
+      const q = (prompt != null ? prompt : inputEl.value).trim();
+      if (!q) return Promise.resolve(null);
+      let addr;
+      try { addr = getAimAddress(); } catch (e) { addr = null; }
+      const body = { question: q };
+      if (addr) body.aim = addr;                          // answer GROUNDED at the current aim (brain_router routes it)
+      return fetch('/api/brain/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+        .then((r) => r.json())
+        .catch((e) => ({ ok: false, source: 'error', answer: null, error: String(e) }));  // fail-soft (the floor)
+    }
+
     // direct: route a direction (comment/reaction/favour) back at the CURRENT aim → suite.mark → re-render.
     function direct(item) {
       let addr;
@@ -89,7 +116,7 @@
 
     function destroy() { if (root && root.parentNode) root.parentNode.removeChild(root); }
 
-    return { ask, direct, aimChanged, destroy };
+    return { ask, groundedAsk, direct, aimChanged, destroy };
   }
 
   window.forkVBrain = { attach };
