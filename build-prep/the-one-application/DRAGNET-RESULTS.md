@@ -48,7 +48,18 @@ is DONE (where the keyword filter surfaced root-structure noise). CONVERGENCE: t
 cosine-queryable via corpus(op='query', space='extractions') — ONE recall surface (dragnet asset + embedding
 recall unified). The grounded determine is precise AND trusted.
 
-## (superseded — done above) EMBED THE EXTRACTION LAYER
+## ★ THEOREM-INTO-RECALL — DONE + VERIFIED: the company recalls its OWN BASE
+Tim's foundational theorem is now in recall. CURATED (default-to-wrong: relative-difference is 31,363 chunks
+but ~half is dev-noise/working-docs — sampled + excluded): baked the theorem folders = 14,592 extractions
+(math-verification 8,540 formal theorem + universal-mechanics notes 5,475 + universal-substrate-system 577
+Tim-verbatim), 0-failed. Embedded into the 'extractions' space → 43,991 total vectors (session 18,857 +
+visual-dna 10,568 + theorem 14,592 — the full recall layer). VERIFIED by-use: determine('universal structural
+completion mechanics / the invariant / the resolver') → filter=semantic, no_fiction=True, returns Tim's
+ACTUAL theorem claims, chunk-traced: "Universal Structural Completion Mechanics" · "Invariant mechanics
+operate on addressable spaces" · "structural completion works in any addressable space with a determination
+function" · "Epistemological reduction to arithmetic" · "not building a system for one specific purpose."
+⟹ the company recalls its own foundational base — query/determine/read-able, source-traced, alongside session
++ design. The recall-before-build surface now spans history · design-DNA · the theorem.
 Register an embeddable space + embed the 29,425 extractions (embed_corpus_to_spaces) → (a) the determine candidate-filter becomes SEMANTIC (precise, fixes the bluntness + unlocks the Visual-DNA verbatim hard-grounding) AND (b) the dragnet asset folds into the existing corpus(op='query') path (one recall surface). A ~29k embed on :8007 (announce/sequence like the bake). Render-independent.
 - The determine stage wants to become a tool/skill (`gap-surface` + `theorem-mine` / a determine verb over the extraction layer) + wired so the RHM/face queries the asset.
 - The extraction layer is the reusable asset for ANY future question (extract-once/query-many) — both session + visual-dna now queryable by determine.
