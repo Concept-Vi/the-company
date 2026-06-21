@@ -1706,3 +1706,20 @@ Lead (g-1782021791): the staged wave is LIVE (bridge pid→77562) — /api/resol
 Friction-log #1 (committed-not-live): THIS wave cleared by the bounce; underlying no-hot-reload friction remains (fork assessing fast-reload).
 
 NEXT (building now, pipelined): the FACE-1 host surfaces against the live routes — session-drill (/api/sessions) first (DNA's session-card = easy-first) → channel-view (/api/channels) → board-view (/api/board); mount DNA's organisms as they surface. Host seams + nav-contract + resolve-override all live + ready. Remaining held: all-viewport resolve-extend + SHELL 3-module kill (now the resolve-override's verified, this is unblocked — sequence it) · stack-derive (fork's type-in-feed).
+
+---
+
+## FIRE — ★ TIM-FACING FILTER repointed REGISTRY-TRUE (owner=='tim') + C5 confirmed clean
+
+Lead (g-1782025958): composition landed the registry-true `owner` field (authorize/trade-off/theorem-fork=tim · cross-lane=fabric); two asks to projection — (1) repoint the operator-stack filter off the hardcoded subtype-set onto `owner=='tim'` (a new subtype declares its own side → no filter edit ever); (2) C5-close: confirm where the operator-inbox loads the decision-schema.
+
+★ CRITICAL-COMPARISON reconcile (lead said "owner landed" — checked the RUNNING bridge raw): `owner` IS committed (DECISION_FIELDS + feed exposes row.get("owner") @ decision_registry.py:238; commits 32d68c5 17:11 · 23a77a9 17:14) BUT the running bridge (pid 88609, up 16:59:41) PREDATES both → the live /api/decisions row has NO `owner` key (`['address','id','name','recommended_label','state','subtype','type']`). owner = committed-not-bounced. A pure owner=='tim' filter would EMPTY his queue (0 rows) until the bounce = a live regression I can't verify-by-use.
+
+→ SHIPPED (2 commits below): owner=='tim' as the REGISTRY-TRUE PRIMARY (isTimFacing: owner present → trust it absolutely; a 'fabric' row is NOT his even if subtyped), with a clearly-marked TRANSITION FALLBACK to the subtype-set that governs ONLY the owner-absent window. Bounce-safe NOW; converges to pure registry-true the instant owner is served — the fallback is flagged for deletion (2-line cleanup) post-bounce. Added `owner` to StackItem (carried for legibility, registry-is-truth).
+- ✅ tsc clean · verify-by-use on the LIVE feed: filter selects exactly the 14 (via fallback, owner key absent confirmed) — no regression; excludes only the one untagged `None` row ("The real kinds of things in the content").
+
+★ C5 CONFIRM to the lead: projection's operator-inbox loads NO decision-schema file — it fetches ONLY /api/decisions (line 64) + /api/territory (line 107), fork's endpoints. ZERO schema/vi-vision/layouts.json dependency in decisions/. Canonical-clean ⟹ composition can REMOVE the island FACE-2 copies without touching my surface (the no-bandaid root close, my side confirmed).
+
+FLAGGED to the lead (the reconcile, surfaced not buried): (a) the BOUNCE is needed to make `owner` live on the feed → then the registry-true path takes over + I delete the fallback; (b) confirm the 24 records actually CARRY owner VALUES (not just the field accepted) — else post-bounce the owner-path still finds nothing and the fallback would keep carrying it. Until both: the 14 hold via fallback, no regression.
+
+NEXT: on the bounce → verify owner live+populated → delete the transition fallback (pure owner=='tim'). Still pipelined/gated: clone SessionDrill per breadth surface as DNA ships each {faceRecord adapter + archetype}; decision-explain wire (forkVBrain→/api/brain/ask); embedded-CLI host.

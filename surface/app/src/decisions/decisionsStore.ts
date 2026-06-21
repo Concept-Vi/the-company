@@ -35,15 +35,31 @@ export type StackItem = {
   // soft to name + suggestion. Every shown field is a REAL field off the record (registry-is-truth, no fabrication).
   meaning?: string // identity.meaning — the actual question, in human words
   reversibility?: string // identity.legibility.is — e.g. "Reversible · your latest answer wins"
-  subtype?: string // the decision's kind (authorize/trade-off/theorem-fork) — the Tim-facing filter keys on it
+  subtype?: string // the decision's kind (authorize/trade-off/theorem-fork) — the transition fallback keys on it
+  owner?: string // the REGISTRY-TRUE side: 'tim' | 'fabric' — whose call this is (composition's field; the filter keys on it)
 }
 
-// ★ THE TIM-FACING FILTER (lead g-1782025250): the operator stack is TIM'S decisions, not the fabric's settles.
-// Composition's gather authored the 14 Tim-facing decisions WITH these subtypes; the legacy/pre-gather rows carry
-// NO subtype, and cross-lane fabric-calls aren't his — so the queue shows ONLY subtyped Tim-facing decisions.
-// (Named per the gather + the lead; ideally a registry `subtype.tim_facing` flag would drive it — flagged to
-// composition. An untagged-pending decision is excluded here but FLAGGED to composition, never silently dropped.)
-const TIM_FACING_SUBTYPES = new Set(['authorize', 'trade-off', 'theorem-fork'])
+// ★ THE TIM-FACING FILTER — REGISTRY-TRUE (lead g-1782025958; composition's `owner` field, commit 23a77a9):
+// the decision declares its OWN side via `owner` ('tim' | 'fabric'). The operator stack is owner=='tim' — a NEW
+// subtype declares its own side, so this filter NEVER needs editing again. (DECISION_FIELDS now carries `owner`;
+// the feed exposes row.get("owner") at runtime/decision_registry.py:238.)
+//
+// TRANSITION FALLBACK — DELETE once `owner` is live + populated on the feed (then `isTimFacing` is just
+// `owner==='tim'`). EVIDENCE this is still needed: the RUNNING bridge (pid up 16:59:41) PREDATES composition's
+// owner commits (17:11 / 17:14), so the live /api/decisions row has NO `owner` key yet — a pure owner==='tim'
+// filter would EMPTY his queue until the bounce. Until `owner` arrives on the feed, fall back to the gather's
+// subtypes so the 14 hold (no live regression). This fallback governs ONLY the owner-absent window: the instant
+// the bridge bounces and serves owner, the registry-true path takes over with zero edit. Flagged to the lead:
+// bounce → confirm the 24 records carry owner values → this block comes out.
+const TIM_FACING_SUBTYPES = new Set(['authorize', 'trade-off', 'theorem-fork']) // TRANSITION FALLBACK ONLY
+
+// is this decision Tim's to make? registry-true via `owner`; degrades to the gather's subtypes while owner is
+// absent from the feed (pre-bounce). owner present → trust it absolutely (a 'fabric' row is NOT his, even if subtyped).
+function isTimFacing(d: Record<string, unknown>): boolean {
+  const owner = String(d.owner ?? '')
+  if (owner) return owner === 'tim' // REGISTRY-TRUE path (owner is on the feed): the record declares its side
+  return TIM_FACING_SUBTYPES.has(String(d.subtype ?? '')) // transition: owner not yet served → key on subtype
+}
 
 type DState = { pending: StackItem[]; loading: boolean; error: string | null; open: boolean }
 
@@ -72,8 +88,8 @@ export async function loadDecisions() {
     const known = new Map(state.pending.map((p) => [p.id, p]))
     // keep only the ones still WAITING on the operator (a decided one drops off the stack) + map to the typed item.
     const pending: StackItem[] = raw
-      // pending AND Tim-facing (subtyped) — his queue holds his decisions, not the fabric's settles / legacy rows.
-      .filter((d) => String(d.state ?? 'pending') === 'pending' && TIM_FACING_SUBTYPES.has(String(d.subtype ?? '')))
+      // pending AND Tim-facing — his queue holds HIS decisions (owner=='tim'), not the fabric's settles / legacy rows.
+      .filter((d) => String(d.state ?? 'pending') === 'pending' && isTimFacing(d))
       .map((d) => {
         const id = String(d.id)
         const prev = known.get(id)
@@ -84,6 +100,7 @@ export async function loadDecisions() {
           name: String(d.name ?? ''),
           state: d.state as string | undefined,
           subtype: d.subtype as string | undefined,
+          owner: d.owner as string | undefined, // registry-true side, carried for legibility (registry-is-truth)
           recommended_label: d.recommended_label as string | undefined,
           meaning: prev?.meaning, // carried forward (undefined on a genuine first-load) → enrich() fills it
           reversibility: prev?.reversibility,
