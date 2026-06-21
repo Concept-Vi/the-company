@@ -182,3 +182,31 @@ the sharpest cracks to attack against his ACTUAL math:
    breaking "perpendicular projection = clean +1 dimension"? + does **"centre = other side of corner"** hold
    against his coincidence/forbidden geometry (centre-on-axis, corners-forbidden) or contradict it?
 Returns fold in below. NOT promoted to the base — his words are bedrock, the synthesis is candidacy-to-test.
+
+### REFUTATION PASS 1 (2026-06-21) — VERDICT: SURVIVES-as-candidacy · UNDERSPECIFIED (not refuted; the load-bearing parts are formally grounded, the recursion⇔SPATIAL-dimension bridge is unwritten). All against his ACTUAL math.
+- ★ **The d=5-square "refutation" DISSOLVED — a category trap, correctly NOT reported as a kill.** There are TWO
+  squares in TWO spaces: (1) the SPATIAL BOX (centre/axes/inscribed-circle/corners — what his synthesis is about)
+  and (2) the d=5 root-shell 4-gon in the COMPLEX n-PLANE (solution-values; Thm 3.5.1, verbatim: the nonzero
+  solutions of τ/n=(1/n)^d form a regular (d−1)-gon, d=5→4-gon). Reading "square at d=5 ⟹ depth-2≠square ⟹
+  refuted" would import the solution-space cascade as the spatial render = the EXACT cube-error substitution.
+  The root-shell can neither confirm nor refute the spatial claim — wrong space. The headline does NOT break here.
+- ★ **GROUNDED in his own formal math (T2 — survives strongly):** "SELF-DIVISION OF UNITY" is literal — Cross-
+  Scale Winding §14, the square case (d=2, m=−1): `n₋+n₊=1, n₋·n₊=1/τ` = "unity divides into two complementary
+  parts whose product is 1/τ." His 2026-06-21 phrase IS his own algebra. "CENTRE = the other side of each corner"
+  = the reciprocal-duality / double-cover (inside-face/outside-face; the m=−1 Vieta pair) — formally attested.
+  And recursion-IS-also-the-type-registry-rung = his explicit §15 ("geometric face = operational face = one
+  model"; nested polygons at depths m=1..5 with child-local orientation) — a both/and BY DESIGN, not a conflation.
+- ★ **THE REAL CRACK (the honest finding — silence, not contradiction):** the bridge recursion ⇔ *SPATIAL*
+  dimension, and "each split = a clean PERPENDICULAR axis → +1 dimension," are **NOT WRITTEN in his formal math.**
+  His written recursion is **FRACTAL-FILL** — recursive bisection / self-similarity / Hausdorff `dim_H=log N/log S`
+  giving NON-INTEGER dimensions (1.585, 1.262), IFS attractors — NOT perpendicular-Euclidean-axis-stacking. And
+  "depth-3 = the cube" revives the integer-k→spatial→solid reading his OWN 2026-06-20 sweep flagged as
+  AI-inference ("flag and do NOT repeat"). So the synthesis is a genuine EXTENSION beyond his written formalism —
+  consistent with it, NOT contradicted by it, but NOT grounded in it. The silence is the finding (= exactly why
+  he asked it tested). ★ BUILD-RELEVANT: his recursion being fractal-fill (non-integer Hausdorff) suggests the
+  instrument's dimension-knob may be CONTINUOUS/fractal (a real number), not integer 1/2/3 steps — which fits
+  "project is the math" + the continuous one-turn window 1<k<2.8295 (Untitled-7). An extension to put to Tim.
+- Provenance: T1 = the synthesis + "k=recursive-depth"/"dimension=the axes" (his verbatim); T2 = the formal vault
+  (n₋+n₊=1; Hausdorff recursion; §15 one-object; Thm 3.5.1 root-shell). Verdict rests on T1+T2, never T3.
+- ⚠ PASS 1 is ONE adversarial perspective + it returned SURVIVES (the suspect-kind verdict). PASS 2 launched
+  (independent skeptic, the geometric + projection-is-math angle) — default-to-wrong on the survival.
