@@ -36,6 +36,7 @@ DECISION = {
         },
     ],
     "scope": "global",
+    "subtype": "authorize",
     "explanation_source": "board://item-c0a2d591",
     "legibility": {
         "name": "Turn on save-back to the design library",
