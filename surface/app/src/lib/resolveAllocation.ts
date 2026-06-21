@@ -28,7 +28,9 @@ const select = (path: string, cases: Record<string, unknown>, def?: unknown) =>
 const CHROME_PX = 56
 export const MODAL_INVARIANT: Record<string, unknown> = {
   pad_top: clamp(mul(field('device.h'), lit(0.02)), lit(4), lit(16)),
-  pad_x: select('device.orient', { portrait: lit(0), landscape: lit(12) }, lit(12)),
+  // ★ select CASES are RAW results — resolve_slot returns cases[key] AS-IS (NOT re-evaluated). A lit() AST here
+  //   would be returned as the {op,value} OBJECT, not the number (caught by-use on the bounce → "[object Object]").
+  pad_x: select('device.orient', { portrait: 0, landscape: 12 }, 12),
   frame_max_h: sub(field('device.h'), lit(CHROME_PX)),
 }
 
@@ -77,8 +79,12 @@ export async function resolveAndApplyModal(): Promise<void> {
   const root = document.documentElement.style
   for (const [slot, cssVar] of Object.entries(SLOT_VAR)) {
     const v = resolved ? resolved[slot] : undefined
-    if (v === undefined || v === null) {
-      root.removeProperty(cssVar) // unset → the var()'s data-ff fallback governs (degrade-clean)
+    // GUARD (fail-safe, found by-use on the bounce): only write a PRIMITIVE. A non-number/string resolved value
+    // (e.g. a malformed slot that returned an AST object) must NEVER become "[object Object]" in CSS — that breaks
+    // the whole shorthand → 0 (a regression). Skip it → the var()'s data-ff fallback governs (degrade-clean, never
+    // regress). Defense-in-depth alongside fixing the slot itself.
+    if (v === undefined || v === null || (typeof v !== 'number' && typeof v !== 'string')) {
+      root.removeProperty(cssVar)
       continue
     }
     root.setProperty(cssVar, PX_SLOTS.has(slot) && typeof v === 'number' ? `${v}px` : String(v))
