@@ -6,6 +6,7 @@ DECISION_SUBTYPE = {
     "id": "cross-lane",
     "card_variant": "n-panel",                              # the technical options (2-3) — n-panel handles 2 as degenerate
     "explanation_policy": "policy.technical-recommendation", # fork: the technical trade-off + the recommended option + why
+    "owner": "fabric",                                       # the STREAMS settle it — filtered OUT of Tim's operator-stack
     "required_elements": ["options", "lane_impact", "recommendation"],
     "desc": "A cross-lane technical choice the streams settle — the options + the LANE-IMPACT (who it affects) + "
             "the LEAN/recommendation; explained as the technical trade-off + the rec + why. Covers: translator-"

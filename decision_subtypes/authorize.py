@@ -6,6 +6,7 @@ DECISION_SUBTYPE = {
     "id": "authorize",
     "card_variant": "binary",                       # DNA's two-panel (built) — approve | hold, side-by-side
     "explanation_policy": "policy.risk-grounding",  # fork: explain the security/risk + what-could-go-wrong + the condition
+    "owner": "tim",                                 # Tim's queue — the operator-stack surfaces these to him
     "required_elements": ["action", "option_implication", "security_condition", "gate"],
     "desc": "Approve/hold a consequential action (often security) — each side's implication + the 'so long as "
             "it's secure' CONDITION + the gate. Covers: merge-SA-write authorize · connector full-access flip.",

@@ -36,7 +36,7 @@ import os
 from dataclasses import dataclass
 
 
-DECISION_SUBTYPE_FIELDS = ("id", "card_variant", "explanation_policy", "required_elements", "desc")
+DECISION_SUBTYPE_FIELDS = ("id", "card_variant", "explanation_policy", "required_elements", "owner", "desc")
 REQUIRED_FIELDS = ("id", "card_variant", "explanation_policy")
 
 
@@ -52,6 +52,11 @@ class DecisionSubtype:
     @property
     def required_elements(self) -> list:
         return list(self.spec.get("required_elements") or [])
+
+    @property
+    def owner(self):
+        """'tim' (Tim's queue — the operator-stack filters to these) | 'fabric' (the streams settle it)."""
+        return self.spec.get("owner")
 
     @property
     def desc(self):
@@ -88,6 +93,9 @@ def _build_decision_subtype(name: str, decl: dict) -> DecisionSubtype:
     re = decl.get("required_elements")
     if re is not None and (not isinstance(re, list) or not all(isinstance(x, str) for x in re)):
         raise ValueError(f"decision-subtype {sid!r}: `required_elements` (when present) must be a list of strings. Fail loud.")
+    ow = decl.get("owner")
+    if ow is not None and ow not in ("tim", "fabric"):
+        raise ValueError(f"decision-subtype {sid!r}: `owner` (when present) must be 'tim' (Tim's queue) or 'fabric' (streams settle). Got {ow!r}. Fail loud.")
     return DecisionSubtype(id=sid, card_variant=cv, explanation_policy=ep, spec=dict(decl))
 
 

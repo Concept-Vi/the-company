@@ -7,6 +7,7 @@ DECISION_SUBTYPE = {
     "card_variant": "n-panel",                          # the conceptual alternatives side-by-side (DNA's n-panel)
     "explanation_policy": "policy.theorem-grounding",   # fork: explain the math/relationships grounded in his
                                                         # written thinking; FLAG where AI-projections err (don't assert)
+    "owner": "tim",                                     # Tim's queue — the bedrock is his
     "required_elements": ["conceptual_options", "theoretical_implication", "grounding_source"],
     "desc": "A conceptual fork in Tim's theorem/math — the options as deep CONCEPTUAL alternatives + their "
             "theoretical implication + the grounding-doc ref; explained grounded in his written thinking (the "

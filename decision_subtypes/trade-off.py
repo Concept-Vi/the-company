@@ -6,6 +6,7 @@ DECISION_SUBTYPE = {
     "id": "trade-off",
     "card_variant": "n-panel",                          # DNA's 3+-option layout — the directions side-by-side
     "explanation_policy": "policy.trade-off-neutral",   # fork: lay out the axes NEUTRALLY + a recommendation (no prejudging)
+    "owner": "tim",                                     # Tim's queue
     "required_elements": ["options", "trade_off_axes", "unblocks"],
     "desc": "A multi-option direction/architecture choice — 3+ options as DIRECTIONS, their trade-off axes, and "
             "what each UNBLOCKS / its blast-radius; axes laid out neutrally + a rec. Covers: substrate-home(#75) · "
