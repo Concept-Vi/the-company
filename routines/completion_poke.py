@@ -14,7 +14,7 @@ Schedule: the systemd-timer arm (cadence below) — durable recurrence, company.
 from __future__ import annotations
 
 ROUTINE = {
-    "id": "completion-poke",
+    "id": "completion_poke",
     "label": "Completion-refuter — poke holes in 'done' claims",
     "description": (
         "Standing adversarial check on the fabric's completion claims. Reads the channel history + the "
@@ -51,7 +51,7 @@ ROUTINE = {
     ),
     "cwd": "/home/tim/company",
     "permission_mode": "default",        # reads + channel-posts; no dangerous writes
-    "cadence": "0,30 * * * *",            # every 30 min (the systemd-timer arm reads this); + fire-on-demand
+    "cadence": "every:1800",              # every 30 min (the systemd-timer arm reads this grammar); + fire-on-demand
     "repeats": True,
     "max_turns": 12,                      # read claims + criteria + poke + verify-live + post
     "trigger": (
