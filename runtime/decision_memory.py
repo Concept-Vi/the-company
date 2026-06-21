@@ -293,7 +293,10 @@ def _provenance_text(suite, explanation_source, *, max_chars: int = 900) -> str:
             # (DECISION-GATHER `**F3 ·`), OR a NUMBERED-bold list item `N. **<id> —` (the ledger's
             # `1. **ID1 —` per-decision bullets). The boundary = the next such marker.
             start_rx = _re.compile(r"^\s*(#{1,6}\s.*%s|(\d+\.\s+)?\*\*\s*%s[\s·)\-:]).*" % (_a, _a), _re.IGNORECASE)
-            marker_rx = _re.compile(r"^\s*(#{1,6}\s|(\d+\.\s+)?\*\*\S)")  # heading · bold-marker · numbered-bold bullet
+            # a BOUNDARY = a heading, OR a SECTION-marker bold (`**<id> ·…` / `N. **<id> —…` — bold + a section
+            # separator ·/— within the first chars) — NOT arbitrary `**bold emphasis**` in a section's body
+            # (that truncated a section to just its heading, e.g. the MAP's `**ONE Supabase…**` body line).
+            marker_rx = _re.compile(r"^\s*(#{1,6}\s|(\d+\.\s+)?\*\*[^*\n]{0,40}[·—])")
             start = next((i for i, ln in enumerate(lines) if start_rx.match(ln)), None)
             if start is None:
                 return ""                                     # anchor not found → honest no-grounding, no bleed
