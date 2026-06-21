@@ -326,7 +326,7 @@ def _provenance_text(suite, explanation_source, *, max_chars: int = 900) -> str:
             with open(p, encoding="utf-8") as fh:
                 txt = fh.read()
             if not anchor:
-                return txt.strip()[:max_chars]                # whole file (single-topic doc)
+                return _clean_provenance(txt)[:max_chars]     # whole file (single-topic doc) — altitude-clean too
             # JSON-PATH anchor (a .json source keyed per-decision, e.g. DNA's _DECIDED.json#decisions.core-shape):
             # navigate the dotted key-path → return ONLY that decision's subtree (per-decision-scoped, no sibling
             # bleed across a multi-decision JSON). HOLE-2-safe: a missing key ⇒ '' (never the whole file).
@@ -669,6 +669,7 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
     # the project context — no never-assert restriction).
     lines: list[str] = []
     pri = bundle.get("prior_decisions") or []
+    _prov = ""                                                 # bound for the grounding_provenance note below (set in the else-branch)
     if theorem_claims:
         lines.append("YOUR FRAMEWORK — the system's faithful EXTRACTIONS of your written mathematics (traceable "
                      "to your notes; compressions, not your literal words). Ground ONLY here; attribute the ideas "
@@ -718,10 +719,27 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
                 lines.append(f"  - {c['text'].strip()}")
     block = "\n".join(lines)
 
+    # grounding_provenance NOTE — describe HOW this is grounded (the operator-facing transparency line the route
+    # surfaces as `grounding_provenance`). Fixes the empty-note 7c40c00 left for ALL pointered cards (caught by
+    # composition's default-to-wrong 2026-06-21): the skip-recall path zeroed bundle.note (which had described the
+    # now-UNUSED corpus retrieval) — but the grounding is intact + BETTER (decision-own-content + genuine
+    # provenance / theorem framework), so the note must DESCRIBE THAT, not be empty. Keep the recall note when the
+    # recall actually ran (rerank=True, corpus admitted).
+    if bundle.get("note"):
+        _note = bundle["note"]                                 # recall ran (rerank=True) — its assembly note stands
+    elif theorem_claims:
+        _note = ("Grounded in your written mathematics — the chunk-traced framework statements behind the card "
+                 "(the system's faithful extractions of your notes, not corpus chatter).")
+    elif _prov:
+        _note = ("Grounded in this decision's own framing (what it is + the options) and its recorded origin "
+                 "(the source it was raised from).")
+    else:
+        _note = "Grounded in this decision's own stated framing (what it is + the options)."
+
     return {"decision": text, "subtype": subtype, "context": ctx,
             "prior_decisions": pri, "neighbours": bundle.get("neighbours", []),
             "theorem_claims": theorem_claims, "caveat": caveat,
-            "block": block, "note": bundle.get("note", "")}
+            "block": block, "note": _note}
 
 
 if __name__ == "__main__":
