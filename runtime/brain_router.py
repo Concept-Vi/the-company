@@ -108,12 +108,32 @@ def _fleet_answer(question: str, *, suite) -> dict:
             "channel_context": ctx["recent"], "proposal": proposal}
 
 
+# The brain's typical interactive-Q&A context magnitude (system persona + grounded context + history +
+# tools) — measured ~12K, headroom to ~16K. Feeds the TIM-RULE context-size pick: well under kimi's 256K
+# window → kimi (never the 1M deepseek-flash unless a turn's context truly exceeds 256K). A precise
+# per-turn estimate is a follow-on; the rule lands on kimi for any normal interactive turn.
+_BRAIN_CTX_ESTIMATE = 16000
+
+
 def _model_answer(question: str, aim: str | None, *, suite, graph_id: str = "codebase") -> dict:
-    """The default conversational source — Suite.chat (today's whole RHM mind). The fallback for any
-    non-fleet/non-recall question + the degrade target. Returns {source, answer, raw}."""
-    res = suite.chat(question, graph_id, focus=({"address": aim} if aim else None))
-    text = res.get("text") if isinstance(res, dict) else str(res)
-    return {"source": "model", "answer": text, "raw": res}
+    """The conversational source — Suite.chat (the grounded RHM mind). THE BRAIN IS A ROLE THAT RESOLVES
+    TO A MODEL (Tim 2026-06-21 direct): the model is the TIM-RULE context-size pick
+    (cc_clone.pick_ollama_model_for_context — kimi default, the cheap 1M deepseek-flash when ctx>kimi, NEVER
+    -pro unless explicit), NOT a hardcoded DEFAULT_BRAIN (the anti-pattern). A ~12-16K interactive grounded
+    turn resolves to KIMI (fits its 256K window), hit via the LOCAL ollama host (OLLAMA_DIRECT :11434 —
+    proven tool-calling). Resolved, not pinned ⇒ swappable per the mode-loadout-registry (the native-model-
+    layer's first real instance: the brain = one row in the role→model resolution). The fallback for any
+    non-fleet/non-recall question + the degrade target. Returns {source, answer, raw, brain_model, brain_pick}."""
+    from runtime.cc_clone import pick_ollama_model_for_context
+    from fabric.config import OLLAMA_DIRECT
+    brain_model, why = pick_ollama_model_for_context(_BRAIN_CTX_ESTIMATE)
+    res = suite.chat(question, graph_id, focus=({"address": aim} if aim else None),
+                     model=brain_model, base_url=OLLAMA_DIRECT)
+    # suite.chat's answer rides under `reply` (the epilogue shape); `text`/`answer` are tolerated fallbacks
+    # (prologue off/refusal shapes). The old `res.get("text")` was always None for the normal shape — masked
+    # only because the mis-pointed 4B 400'd before returning; the kimi pick surfaced it (fixed here).
+    text = (res.get("reply") or res.get("text") or res.get("answer")) if isinstance(res, dict) else str(res)
+    return {"source": "model", "answer": text, "raw": res, "brain_model": brain_model, "brain_pick": why}
 
 
 def ask(question: str, *, suite, aim: str | None = None, graph_id: str = "codebase") -> dict:

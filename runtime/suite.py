@@ -6458,7 +6458,8 @@ class Suite:
                 "model": cfg["model"], "thread_id": _tid,
                 "history": self.store.chats_in_thread(_tid) if _tid else self.store.chat_history(40)}
 
-    def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
+    def chat(self, message: str, graph_id: str, focus: dict | None = None,
+             *, model: str | None = None, base_url: str | None = None) -> dict:
         """Grounded conversation with the operator via NATIVE TOOL-CALLING. Answers from compact
         ground truth; never confabulates system facts. It ACTS only through the governed verbs offered
         as native function-tools for this mode×context — and the dispatcher's whitelist still REFUSES
@@ -6467,9 +6468,17 @@ class Suite:
 
         G4 REFACTOR: chat() is now prologue → ONE part-core (is_final=True) → epilogue — the SAME shared
         core chat_parts() runs N times. The contract + the three return shapes are byte-identical to the
-        pre-refactor chat() (the rhm_* guard suites are the gate). chat() does NOT stage (one part)."""
+        pre-refactor chat() (the rhm_* guard suites are the gate). chat() does NOT stage (one part).
+
+        `model`/`base_url` (additive; default None ⇒ BYTE-IDENTICAL — the rhm_* guards pass): a PER-CALL
+        brain-model override. The brain is a ROLE that RESOLVES to a model (Tim 2026-06-21) — brain_router
+        passes the TIM-RULE context-size pick (kimi for ~12K interactive Q&A, via the local ollama host)
+        instead of the fixed rhm_config brain. Overrides only model+base_url in a cfg COPY; persona/mode/
+        timeout are untouched. The tool-support gate (_model_supports_tools) still applies to the override."""
         mode = self.get_mode()
         cfg = self.rhm_config()
+        if model or base_url:                                  # per-call override → a cfg copy (cfg untouched)
+            cfg = {**cfg, **({"model": model} if model else {}), **({"base_url": base_url} if base_url else {})}
         early = self._chat_prologue(message, mode, cfg)        # ONCE: off (4-key) / refusal (5-key)
         if early is not None:
             return early
