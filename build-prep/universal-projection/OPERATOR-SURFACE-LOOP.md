@@ -1651,3 +1651,16 @@ Lead (g-1782012261): composition LOCKED RESOLVER-CONTRACT.md → my resolve-cons
 ★ FLAGS: (1) composition — §3 MODAL pad_x select-on-orient conflates desktop with landscape-phone; needs a size dimension when desktop consumes resolve (not now — desktop stays base). (2) the derive — recheck /api/stack-item-types shape + needs type-in-feed (fork).
 
 NEXT: verify the landscape resolve-OVERRIDE LIVE on the bounce → THEN extend the consume to portrait/desktop + the SHELL invariant (kill the 3 hand-modules). Don't extend on an unverified resolve-path (critical-comparison). The stack-type derive when fork lands type-in-feed.
+
+---
+
+## FIRE — FACE-1 HOST-PREP: spotlight-catalog auto-include built + the four host seams assessed READY (render-independent)
+
+Lead drive-sweep (g-1782016043): pull render-independent FACE-1 host-prep (the renders wait on the keystone-lock; the host seams don't). Assessed the seams by READING them (not assuming ready):
+- POINT (spotlight-catalog) — REAL GAP found: surfacePointables() filtered a HARDCODED 10-control CATALOG → FACE-1 affordances wouldn't be pointable without a catalog edit. ★ FIXED (7e88861): auto-discover any element declaring [data-ui-ref]+[data-point-label] alongside the curated list; OPAQUE per-call token (`auto-N`, NEVER a ui:// to the brain — operator-law/address-free-brain); VERIFIED BY-USE (test FACE-1 element auto-included {token:auto-0,label}; curated unchanged; no token leaks an address; leaves the catalog on DOM-removal). FACE-1 surfaces spotlightable for free.
+- EMIT (gallery:verb) — READY: a catch-all bus (specific handlers + honest-Notice fallback for unhandled verbs); FACE-1 surfaces emit on it with ZERO host change.
+- RESOLVE (address-surfacing) — READY: the host already resolves any address → HUMAN context via /api/territory (the see-the-record path); operator-law-clean (never a raw ui://). "Address-surfaced" = resolve-to-human, already wired (clarified the operator-law read with the lead).
+- MOUNT (sibling-overlay) — READY: GalleryMount/DecisionsInbox/ToolsPanel pattern; a FACE-1 surface mounts the same way.
+⟹ The four FACE-1 host seams (mount·emit·point·resolve) are READY → when fork's read-API + DNA's archetypes + the keystone-lock land, FACE-1 surfaces ASSEMBLE onto them fast.
+
+NEXT render-independent: the FACE-1 host-nav-prep CONTRACT (the mount+emit+point+resolve pattern for DNA/fork to build FACE-1 surfaces against). The resolve-OVERRIDE (verify-on-bounce) + the stack-type derive (fork's type-in-feed) stay on their deps.
