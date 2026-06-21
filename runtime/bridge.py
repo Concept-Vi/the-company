@@ -1372,6 +1372,16 @@ class H(BaseHTTPRequestHandler):
                 from runtime.cognition import decision_registry as _dreg
                 from runtime.decision_registry import decision_inbox as _dinbox
                 self._send(200, json.dumps(_dinbox(_dreg(), SUITE.store)))
+            elif path == "/api/stack-item-types":          # FACE-2: the channel-stack item-type VOCABULARY (registry-is-truth)
+                # composition's StackItemTypeRegistry as_records() over HTTP, so projection's host derives its
+                # StackItemType union from the registry (adding a type = a row, ZERO host change) instead of a
+                # hardcoded enum. READ-only registry read (the floor — no resolve/dispatch). ROOT-anchored dir
+                # (not cwd — the rule-blind-registry lesson). The decision-sequence row projection's host
+                # consumes is one of these; the others (presentation/explanation/verify-request) are declared
+                # vocabulary the host fail-louds/soft-degrades until their renderers + feeds land.
+                from runtime.stack_item_types import StackItemTypeRegistry as _SITReg
+                _sit = _SITReg().discover([os.path.join(ROOT, "stack_item_types")])
+                self._send(200, json.dumps({"ok": True, "types": _sit.as_records()}))
             elif path == "/api/types":
                 self._send(200, json.dumps(sorted(SUITE.list_types())))
             elif path == "/api/layers":                    # the multi-layer model's self-description: {space:[embedder layer,…]}
