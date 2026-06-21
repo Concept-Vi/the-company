@@ -8,11 +8,14 @@
 // has ALWAYS been fed by DNA's leg.why STUB (unit-view.js:145: `name==='explanation_source' ? (leg.why || raw)`),
 // never the grounded route — route ✓ + slot ✓ looked wired, the connector wasn't built. This is that connector.
 //
-// GATED — GROUNDED_EXPLAIN_ENABLED is OFF until ALL three hold: (a) DNA opens the resolve-override seam, (b) the
-// explanation_source backfill bounce lands (grounding goes level-3, per-card), (c) projection verifies per-card
-// grounding by-sight (the 13). While OFF: GalleryMount supplies NO resolve override → DNA falls back to its stub →
-// ZERO behavior change (safe to ship inert). Flip to true post-bounce after the by-sight pass; theorem-fork only
-// after the theorem rebake. A 'fabric'/wrong-grounded card must never be shown — verify before flipping.
+// GATED — held OFF pending DNA's RENDER side (by-sight finding at the flip): all 3 backend/seam pieces are built
+// (fork route ✓ + DNA resolve-override seam 84dd35d ✓ + this injection ✓) AND grounding is complete across the queue
+// (backfill + theorem rebake). BUT flipping ON + verifying by-sight showed the grounded explanation DOES NOT RENDER:
+// the composed decision card DROPS the explanation slot (archetype.js:178 `if composed && role==='explanation'`), and
+// the visible explanation is the SLIDE-TELLING (DNA.decisionSlide, unit-view.js:165) which is called WITHOUT the
+// resolve override — so my fetch fires but lands in a dropped slot. The show-gap is DNA's render (route the grounded
+// resolve to decisionSlide's telling, OR render the explain slot in the composed card). Held OFF until then (no
+// pointless fetches, no false-live). FLIP true + re-verify the show the instant DNA's render renders it.
 export const GROUNDED_EXPLAIN_ENABLED = false
 
 // POST /api/decision/explain {id} → the grounded explanation composed for the card's explain (prose voice-card) slot.
