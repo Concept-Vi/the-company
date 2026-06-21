@@ -24,9 +24,10 @@ variant-knowledge (STACK-ITEM-HOST-CONTRACT.md).
   - id              — required; MUST equal the module name (addressable by file — fail-loud otherwise).
   - label           — optional; the human kind-name (defaults to id).
   - desc            — optional; operator-facing one-liner (human meaning).
-  - row_fields      — optional; {field_name: record_source_path} — the per-type row fields + WHERE each
-                      comes from on the item's /api/territory record (STACK-ITEM-HOST-CONTRACT §2).
-                      Every value is a dot-path into the record; absent → the row degrades to `name`.
+  - row_fields      — optional; {field_name: source_path} — the per-type row fields + WHERE each comes
+                      from. The value is a dot-path PREFIXED by its source-DOMAIN (STACK-ITEM-HOST-CONTRACT
+                      §2, "record vs feed"): `identity.*` = the /api/territory ENRICH record (resolved
+                      per-address) · `feed.*` = the stack-feed ROW. Absent → the row degrades to `name`.
   - unsettled_state — optional; the `state` value that KEEPS the item in the queue (it LEAVES when state
                       != this). Default 'pending' (STACK-ITEM-HOST-CONTRACT §1's settled-predicate).
   - open_verb       — optional; {event: <str>, payload: [<field>, ...]} — the typed open-event a tap

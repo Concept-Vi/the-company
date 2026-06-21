@@ -8,12 +8,13 @@ STACK_ITEM_TYPE = {
     "label": "Decision",
     "desc": "A decision to make — presented, explained by the right-hand-man, and decided in-surface; "
             "your latest answer wins (reversible).",
+    # row_fields: field -> SOURCE, prefixed by source-DOMAIN (STACK-ITEM-HOST-CONTRACT §2, "record vs feed"):
+    #   identity.* = the /api/territory ENRICH record (resolved per-address) · feed.* = the stack-feed ROW.
     "row_fields": {
-        # field -> dot-path on the item's /api/territory record (the decision:// identity).
-        "meaning": "identity.meaning",                       # the actual question, human words
-        "recommended_label": "identity.recommended_label",   # the Suggested answer (recommended option's label)
-                                                             # — projection/fork confirm the exact path if it differs
-        "reversibility": "identity.legibility.is",           # e.g. "Reversible · your latest answer wins"
+        "meaning": "identity.meaning",                  # the actual question, human words (enrich)
+        "recommended_label": "feed.recommended_label",  # the Suggested answer — the host reads it off the FEED row
+                                                        # (/api/decisions emits d.recommended_label); confirmed w/ projection
+        "reversibility": "identity.legibility.is",      # e.g. "Reversible · your latest answer wins" (enrich)
     },
     "unsettled_state": "pending",   # shows while pending; LEAVES the queue when decided (compose_state)
     "open_verb": {"event": "decision:open", "payload": ["address", "id", "fromInbox"]},
