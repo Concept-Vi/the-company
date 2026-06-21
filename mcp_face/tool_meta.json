@@ -1,0 +1,877 @@
+{
+  "_schema": "tool-meta-registry-v1",
+  "_note": "The HUMAN layer for the MCP tool face (gap 7). One row per tool, keyed by tool name. Source of truth for the friendly presentation; /api/tools RESOLVES + JOINS this onto the machine descriptor (name/inputSchema/posture from the FastMCP registry) → one descriptor the surface reads. Authored content (NOT in bridge code, NOT a client merge); seeded by lead from the inventory translations, refined draft->steer by lead/Tim. Degrade-clean: a tool absent here → form_meta=null (the surface still renders from the schema). human_description = the pleasant plain-English meaning (never the raw agent docstring). op_labels = op->friendly verb. op_params = op->ordered VISIBLE params (expert knobs hidden). param_labels = param->human label. enum_sources = param->live registry URL whose response (object keys / array) populates that param's dropdown (registry-is-truth, no per-tool code; degrade-clean to free-text if the source is dead).",
+  "_fields": ["human_name", "human_description", "op_labels", "op_params", "param_labels", "enum_sources"],
+  "tools": {
+    "corpus": {
+      "human_name": "Company memory",
+      "human_description": "Search and read the Company's durable memory. Ask it a plain-English question and get back the records nearest in meaning — or browse everything, filter to some, open one, find related ones, or pull together grounded themes on a topic.",
+      "op_labels": {
+        "query": "Ask a question",
+        "list": "Browse all",
+        "find": "Filter to some",
+        "read": "Open one",
+        "neighbours": "Find related",
+        "determine": "Gather themes on a topic"
+      },
+      "op_params": {
+        "query": ["text", "space", "k", "rerank", "detail"],
+        "list": ["project", "limit"],
+        "find": ["project", "kind", "projection", "source_address"],
+        "read": ["address", "detail"],
+        "neighbours": ["address", "space", "k"],
+        "determine": ["text", "asset", "limit"]
+      },
+      "param_labels": {
+        "text": "Your question",
+        "space": "Which memory",
+        "k": "How many results",
+        "rerank": "Sharper ranking",
+        "detail": "How much detail",
+        "project": "Project",
+        "limit": "How many",
+        "kind": "Kind",
+        "projection": "View",
+        "source_address": "From source",
+        "address": "The record",
+        "asset": "Which library"
+      },
+      "enum_sources": {
+        "space": "/api/layers"
+      }
+    },
+    "capabilities": {
+      "human_name": "What the Company can do",
+      "human_description": "The honest catalogue of everything the Company actually has — the models it can think with, the kinds of things it can build, the ready-made chains it can run, and the list of real features. Start here to see what's possible instead of guessing. View an overview, then open one area in full.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "section": "Which area"
+      }
+    },
+    "capability": {
+      "human_name": "Claude Code abilities",
+      "human_description": "A read-only catalogue of what the live Claude Code tool itself exposes — its commands, options, built-in tools, and settings — each tagged with how safe it is to use. Browse it, look one up, or search for something by name.",
+      "op_labels": {
+        "list": "Browse all",
+        "get": "Look one up",
+        "search": "Search",
+        "describe": "Health summary",
+        "snapshot": "Full snapshot"
+      },
+      "op_params": {
+        "list": ["kind", "posture", "limit"],
+        "get": ["id", "kind", "name"],
+        "search": ["query", "kind", "limit"],
+        "describe": [],
+        "snapshot": []
+      },
+      "param_labels": {
+        "kind": "Kind",
+        "posture": "Safety level",
+        "limit": "How many",
+        "id": "The ability",
+        "name": "Name",
+        "query": "Search words"
+      }
+    },
+    "now": {
+      "human_name": "What's happening now",
+      "human_description": "A live snapshot of the Company right now — how many pieces are in play, what's waiting for approval, who's present, and the most recent thing that happened. A quick glance at the current state.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "graph": "Which workspace"
+      }
+    },
+    "inbox": {
+      "human_name": "Your chief-of-staff inbox",
+      "human_description": "Everything the Company has set aside for you, sorted into lanes: things that genuinely need you now, things it has already handled on your behalf, and things batched up for later. The triaged view of what's on your plate.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {}
+    },
+    "decisions": {
+      "human_name": "Decisions waiting for you",
+      "human_description": "The decisions that are open and waiting for you to make a call — named in plain words, each with the option the Company recommends. The same set shown in your 'decisions waiting' inbox, so it always matches what you see on screen.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {}
+    },
+    "dials": {
+      "human_name": "Character dials",
+      "human_description": "The Company's adjustable personality settings — knobs you turn rather than decisions you make. Things like how far ahead it thinks for you, and how freely the screen is allowed to rearrange itself. List the dials, read one in detail, or turn one.",
+      "op_labels": {
+        "list": "Show all dials",
+        "describe": "Explain one dial",
+        "set": "Turn a dial"
+      },
+      "op_params": {
+        "list": [],
+        "describe": ["dial"],
+        "set": ["dial", "value", "overrides"]
+      },
+      "param_labels": {
+        "dial": "Which dial",
+        "value": "Setting",
+        "overrides": "Situation-based settings"
+      }
+    },
+    "panel": {
+      "human_name": "Review panel",
+      "human_description": "Put something in front of a panel of different reviewers, each looking for a different kind of flaw, and get back a combined verdict with every dissent named. Use it to check whether a piece of work holds up. See the available panels, read one, or run it.",
+      "op_labels": {
+        "list": "Show panels",
+        "describe": "Explain a panel",
+        "run": "Run a review"
+      },
+      "op_params": {
+        "list": [],
+        "describe": ["panel"],
+        "run": ["panel", "utterance", "element"]
+      },
+      "param_labels": {
+        "panel": "Which panel",
+        "utterance": "What to review",
+        "element": "Extra context"
+      }
+    },
+    "mark": {
+      "human_name": "Add a note on a claim",
+      "human_description": "Place a typed note on a specific claim or passage — for example flagging it, rating your confidence, or recording the evidence behind it. The notes build up over time so you can always see why something was judged the way it was.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "target": "What you're noting",
+        "mark_type": "Kind of note",
+        "value": "The note",
+        "confidence": "How sure",
+        "source_pass": "Left by",
+        "evidence": "Why"
+      }
+    },
+    "marks": {
+      "human_name": "Notes and findings",
+      "human_description": "Read the notes that earlier review passes left behind — every note on one claim, every note of a given kind across the whole memory, or the older review findings recorded against a record. The read side of the notes you place with 'Add a note on a claim'.",
+      "op_labels": {
+        "target": "Notes on one thing",
+        "type": "All notes of a kind",
+        "findings": "Review findings on a record"
+      },
+      "op_params": {
+        "target": ["target", "detail", "limit"],
+        "type": ["mark_type", "detail", "limit"],
+        "findings": ["address", "detail", "limit"]
+      },
+      "param_labels": {
+        "target": "What you're looking at",
+        "mark_type": "Kind of note",
+        "address": "The record",
+        "detail": "How much detail",
+        "limit": "How many"
+      }
+    },
+    "operator": {
+      "human_name": "What the Company knows about working with you",
+      "human_description": "The Company's standing memory of how to work with you — the rules it has learned from your own corrections, each kept alongside your exact words. Read these before it prepares anything you'll see. List the confirmed rules, read one in full, or see ones still awaiting your confirmation.",
+      "op_labels": {
+        "rules": "Confirmed rules",
+        "describe": "Read one rule",
+        "proposed": "Awaiting your okay"
+      },
+      "op_params": {
+        "rules": [],
+        "describe": ["rule"],
+        "proposed": []
+      },
+      "param_labels": {
+        "rule": "Which rule"
+      }
+    },
+    "layers": {
+      "human_name": "Memory layers",
+      "human_description": "A self-description of the Company's memory: which areas of memory exist and what depth of detail each one carries. Useful for choosing which memory to search and how finely to zoom into it.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {}
+    },
+    "project": {
+      "human_name": "The instrument",
+      "human_description": "The Company's radial map — the same wheel-and-field view you steer on screen, here as something you can drive directly. Choose a lens (meaning, the lean between two poles, where new things are being born) and watch the items lay themselves out around a centre. Leave the lens blank to see which lenses are available.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "binding": "Lens",
+        "space": "Which memory",
+        "emb": "Detail layer",
+        "dim": "Meaning zoom",
+        "rung": "Scale (items vs themes)",
+        "center": "Centre it on",
+        "at": "Point in time",
+        "types_space": "Type library",
+        "pole_a": "First pole",
+        "pole_b": "Second pole",
+        "limit": "How many points"
+      },
+      "enum_sources": {
+        "space": "/api/layers"
+      }
+    },
+    "find_relations": {
+      "human_name": "Same idea, different subject",
+      "human_description": "Find the things that share a principle with a given item but diverge in topic — the cross-over connections the discovery loop is built to surface. You point at an item, name the memory that holds the shared principle and the memory that holds the differing topic, and it returns the matches.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "item": "Starting item",
+        "near_space": "Shared-principle memory",
+        "far_space": "Differing-topic memory",
+        "k": "How many to scan",
+        "min_score": "Closeness cutoff"
+      },
+      "enum_sources": {
+        "near_space": "/api/layers",
+        "far_space": "/api/layers"
+      }
+    },
+    "session_recall": {
+      "human_name": "Recall a conversation",
+      "human_description": "Search a past or present working session by meaning rather than keyword — recover what was said, what was decided, what's still unresolved, what happened while you were away, or when a topic came up. It can also catch up on a long session and spot where it has drifted from its earlier self.",
+      "op_labels": {
+        "find": "Search by meaning",
+        "decisions": "What was decided",
+        "open_loops": "Unresolved threads",
+        "catch_up": "What happened while away",
+        "timeline": "When a topic came up",
+        "directives": "Everything you asked for",
+        "spin_up_points": "Good points to revisit",
+        "drift": "Where it drifted"
+      },
+      "op_params": {
+        "find": ["session", "q", "k"],
+        "decisions": ["session", "q", "k"],
+        "open_loops": ["session", "k"],
+        "catch_up": ["session", "since"],
+        "timeline": ["session", "q"],
+        "directives": ["session"],
+        "spin_up_points": ["session"],
+        "drift": ["session"]
+      },
+      "param_labels": {
+        "session": "Which session",
+        "q": "Topic or question",
+        "since": "Since when",
+        "k": "How many results"
+      }
+    },
+    "cognition_info": {
+      "human_name": "Thinking building-blocks",
+      "human_description": "A look at the parts the Company composes its thinking from — the reasoning roles, the rules, the views of memory, the kinds of notes, and more. The place to learn what you have to work with. See an overview, open one area, or read one reasoning role in full.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "section": "Which area",
+        "role": "Which role",
+        "detail": "How much detail"
+      }
+    },
+    "cognition_inputs": {
+      "human_name": "What a role can read",
+      "human_description": "Shows what information a given reasoning role is allowed to draw on — the question it's answering, earlier results it can reuse, and the reusable instructions and context it can pull in — plus what the underlying model supports. Useful when wiring up a piece of thinking.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "role": "Which role",
+        "model": "Which model"
+      }
+    },
+    "field_types": {
+      "human_name": "Allowed answer types",
+      "human_description": "The fixed list of value types an answer field can be — text, whole number, decimal, yes/no, lists of those. Used when shaping what a new reasoning role should produce.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {}
+    },
+    "list_skills_contexts": {
+      "human_name": "Reusable instructions and context",
+      "human_description": "The library of reusable pieces a reasoning role can be pointed at — skills (sets of instructions) and contexts (reusable background material) — each with its name and a short description.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {}
+    },
+    "object_info": {
+      "human_name": "Building-block library",
+      "human_description": "The full library of the Company's building-block types — what each one takes in, what it produces, and how it appears — for understanding and assembling its workspaces.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {}
+    },
+    "models_for_role": {
+      "human_name": "Which models fit",
+      "human_description": "Tells you which AI models are capable of a given job — either by naming a reasoning role and letting it look up that role's needs, or by stating the abilities you need directly. Returns the models that qualify.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "role": "Which role",
+        "requires": "Abilities needed"
+      }
+    },
+    "sessions": {
+      "human_name": "Working sessions",
+      "human_description": "A read-only view of every Claude Code working session this machine has run — the live ones and the finished ones — with their mailboxes and the live activity between them. Browse the fleet, open one in detail, read a session's mailbox, follow live activity, search across transcripts, or trace a session's life over time.",
+      "op_labels": {
+        "list": "Browse the fleet",
+        "describe": "Open one session",
+        "inbox": "A session's mailbox",
+        "watch": "Follow live activity",
+        "search": "Search transcripts",
+        "timeline": "A session's life over time"
+      },
+      "op_params": {
+        "list": ["state", "cwd", "q", "limit"],
+        "describe": ["session", "detail"],
+        "inbox": ["session", "thread", "since", "limit"],
+        "watch": ["session", "since"],
+        "search": ["q", "mode", "state", "limit"],
+        "timeline": ["session"]
+      },
+      "param_labels": {
+        "session": "Which session",
+        "state": "Status",
+        "cwd": "Folder",
+        "q": "Search words",
+        "since": "Since",
+        "thread": "Conversation",
+        "limit": "How many",
+        "detail": "How much detail",
+        "mode": "Search style"
+      }
+    },
+    "channels": {
+      "human_name": "Cross-session groups",
+      "human_description": "A read-only view of how working sessions are grouped and connected — the named groups, the momentary gatherings, who has talked to whom, and what they worked out. Browse the groups, open one, read a group's exchange, or trace a session's connections.",
+      "op_labels": {
+        "list": "Browse groups",
+        "describe": "Open a group",
+        "history": "A group's exchange",
+        "edges": "A session's connections"
+      },
+      "op_params": {
+        "list": ["kind", "status", "q", "limit"],
+        "describe": ["channel", "probe_supervisor"],
+        "history": ["channel", "since", "limit"],
+        "edges": ["session", "limit"]
+      },
+      "param_labels": {
+        "channel": "Which group",
+        "session": "Which session",
+        "kind": "Group kind",
+        "status": "Status",
+        "q": "Search words",
+        "since": "Since",
+        "limit": "How many",
+        "probe_supervisor": "Check who's live"
+      }
+    },
+    "get_state": {
+      "human_name": "Workspace state",
+      "human_description": "The current state of one workspace — every piece in it, whether each has run, what it produced, and where its results live.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "graph": "Which workspace"
+      }
+    },
+    "get_results": {
+      "human_name": "Workspace results",
+      "human_description": "The output each piece of a workspace produced — the results, gathered in one place.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "graph": "Which workspace"
+      }
+    },
+    "inspect_address": {
+      "human_name": "Open a stored result",
+      "human_description": "Open and read back any stored result or piece of content by its reference — a past run's output, a saved block of content, a reusable skill, or a context. Returns what's stored there, or says clearly if nothing is.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "address": "The reference",
+        "turn_id": "From which run"
+      }
+    },
+    "get_events": {
+      "human_name": "Recent activity",
+      "human_description": "The trail of recent things the Company did — runs, new pieces, connections, growth steps, approvals — most recent first.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "limit": "How many"
+      }
+    },
+    "list_surfaced": {
+      "human_name": "Approvals queue",
+      "human_description": "The queue of build-and-approval items the Company has raised for you to resolve — a build to dispatch, a role to add, a review to sign off — each with a suggested default. This is the self-growth queue, separate from your strategic 'decisions waiting'. Browse it, open one item, narrow by status, or see only the live escalations.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "sid": "Which item",
+        "status": "Status",
+        "unresolved_only": "Only unresolved",
+        "limit": "How many",
+        "detail": "How much detail"
+      }
+    },
+    "reduce_rule_names": {
+      "human_name": "Ways to combine results",
+      "human_description": "The named, predictable ways the Company can fold many results into one without involving a model — for example taking a majority vote or joining text. The list to pick from when combining a batch of outputs.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {}
+    },
+    "list_cascades": {
+      "human_name": "Saved pipelines",
+      "human_description": "The saved, re-runnable multi-step pipelines — proven recipes the Company can replay without rebuilding them. Each row shows the steps so you can read what a pipeline does before running it.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {}
+    },
+    "list_graphs": {
+      "human_name": "Workspaces",
+      "human_description": "The list of all workspaces (canvases) the Company holds.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {}
+    },
+    "list_by_type": {
+      "human_name": "What can produce this",
+      "human_description": "Given a kind of output, lists which building-block types are able to produce it — a quick way to find the right piece when assembling a workspace.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "output_type": "Kind of output"
+      }
+    },
+    "runs": {
+      "human_name": "Past runs",
+      "human_description": "A searchable index of past thinking runs — what ran, when, and where each one's output is kept — so you can find an earlier result, reuse it, or run it again. Browse all of them newest-first, or narrow to the runs of one role.",
+      "op_labels": {
+        "list": "Browse all runs",
+        "find": "Find a role's runs"
+      },
+      "op_params": {
+        "list": ["run_kind", "run_op", "limit"],
+        "find": ["role", "run_kind", "run_op", "limit"]
+      },
+      "param_labels": {
+        "role": "Which role",
+        "run_kind": "Run kind",
+        "run_op": "Operation",
+        "limit": "How many"
+      }
+    },
+    "preview_turn": {
+      "human_name": "Preview a turn",
+      "human_description": "Run a full conversational turn as a dry run — the reasoning fires and the routing happens, but nothing is saved to history. A safe way to see what the Company would say and do before committing to it.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "utterance": "What you'd say",
+        "mode": "Mode"
+      }
+    },
+    "context": {
+      "human_name": "A session's working memory",
+      "human_description": "Look at how full a live working session's memory is, or have it compress and continue with a summary so it can keep going without losing the thread. Compressing is the consequential action.",
+      "op_labels": {
+        "read": "Check how full",
+        "compact": "Compress and continue"
+      },
+      "op_params": {
+        "read": ["session"],
+        "compact": ["session", "focus"]
+      },
+      "param_labels": {
+        "session": "Which session",
+        "focus": "Keep focus on"
+      }
+    },
+    "routines": {
+      "human_name": "Scheduled tasks",
+      "human_description": "The Company's named, repeatable tasks — work it can run for you on its own by launching a real session, handing it the task, and capturing the result. List them, read one, or run one now. Running one is the consequential action.",
+      "op_labels": {
+        "list": "Show tasks",
+        "get": "Read one",
+        "fire": "Run now"
+      },
+      "op_params": {
+        "list": [],
+        "get": ["id"],
+        "fire": ["id"]
+      },
+      "param_labels": {
+        "id": "Which task"
+      }
+    },
+    "flows": {
+      "human_name": "Production lines",
+      "human_description": "The proven, ready-made multi-step chains — production lines the Company runs in one go, with the grounding and fact-checking built in. Use one of these instead of stitching the steps together yourself. List them, read one in detail, or run it.",
+      "op_labels": {
+        "list": "Show production lines",
+        "describe": "Explain one",
+        "run": "Run it",
+        "propose": "Suggest a new one"
+      },
+      "op_params": {
+        "list": [],
+        "describe": ["flow"],
+        "run": ["flow", "params"],
+        "propose": ["spec"]
+      },
+      "param_labels": {
+        "flow": "Which line",
+        "params": "Settings",
+        "spec": "The new line"
+      }
+    },
+    "ingest": {
+      "human_name": "Feed files into memory",
+      "human_description": "Pull files into the Company's searchable memory so it can answer questions about them — point it at folders or specific files and it walks, digests, and stores them. Handles large jobs in batches; just run it again to finish.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "roots": "Folders to read",
+        "paths": "Specific files",
+        "project": "Project",
+        "space": "Which memory",
+        "max_files": "Batch size",
+        "force": "Re-read existing"
+      },
+      "enum_sources": {
+        "space": "/api/layers"
+      }
+    },
+    "chat": {
+      "human_name": "Talk to the Company",
+      "human_description": "Have a conversation with the Company's right-hand-man — its single coherent voice about itself. It answers from what's actually true right now and suggests actions, but never quietly does anything that should pass by you first.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "message": "Your message",
+        "graph": "About which workspace"
+      }
+    },
+    "point": {
+      "human_name": "Point at something on screen",
+      "human_description": "As the Company talks you through the screen, it spotlights the thing it's naming so your eye goes where its words go. It points only at things the screen has offered as pointable.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "token": "Thing to spotlight"
+      }
+    },
+    "cc_board": {
+      "human_name": "Company noticeboard",
+      "human_description": "The shared noticeboard where anyone can post typed items about the Company itself — a request, an issue, a tip, a guide, an idea — and move them along their lifecycle as they get picked up and handled. File an item, browse what's posted, open one, move it forward, or see the kinds you can file.",
+      "op_labels": {
+        "file": "Post an item",
+        "list": "Browse posts",
+        "get": "Open one",
+        "transition": "Move it forward",
+        "types": "What you can post"
+      },
+      "op_params": {
+        "file": ["type", "title", "body", "author_session", "channel", "links"],
+        "list": ["type", "state", "source", "author_session"],
+        "get": ["item"],
+        "transition": ["item", "to_state", "by", "note"],
+        "types": []
+      },
+      "param_labels": {
+        "type": "Kind",
+        "title": "Title",
+        "body": "Details",
+        "author_session": "Posted by",
+        "source": "Source",
+        "channel": "Group",
+        "links": "Linked to",
+        "item": "Which item",
+        "state": "Status",
+        "to_state": "Move to",
+        "by": "Moved by",
+        "note": "Note"
+      }
+    },
+    "cc_channel": {
+      "human_name": "Message live sessions",
+      "human_description": "Send a message straight into another live working session's conversation and get the reply pushed back — no waiting around — and manage the named groups sessions belong to. Discover live sessions, send to one, broadcast to many at once, read the message log, or create and manage groups.",
+      "op_labels": {
+        "list": "Find live sessions",
+        "send": "Send to one",
+        "broadcast": "Send to many",
+        "mail": "Read the log",
+        "create_channel": "Create a group",
+        "list_channels": "List groups",
+        "add_member": "Add a member",
+        "remove_member": "Remove a member",
+        "archive_channel": "Archive a group"
+      },
+      "op_params": {
+        "list": [],
+        "send": ["to", "message", "thread", "topic"],
+        "broadcast": ["to", "message", "topic"],
+        "mail": ["thread", "limit"],
+        "create_channel": ["name", "purpose", "coordinator"],
+        "list_channels": ["include_archived"],
+        "add_member": ["channel", "handle"],
+        "remove_member": ["channel", "handle"],
+        "archive_channel": ["channel"]
+      },
+      "param_labels": {
+        "to": "Send to",
+        "message": "Message",
+        "thread": "Conversation",
+        "topic": "Topic",
+        "channel": "Which group",
+        "name": "Group name",
+        "purpose": "Purpose",
+        "coordinator": "Coordinator",
+        "handle": "Which session",
+        "include_archived": "Include archived",
+        "limit": "How many"
+      }
+    },
+    "cc_voice": {
+      "human_name": "Give text a voice",
+      "human_description": "Turn text into spoken audio using the Company's resident voice engine — the building block for voiced conversation. See which voice engines are available and which is running, or have a piece of text spoken aloud.",
+      "op_labels": {
+        "engines": "Available voices",
+        "speak": "Speak text"
+      },
+      "op_params": {
+        "engines": [],
+        "speak": ["text", "voice"]
+      },
+      "param_labels": {
+        "text": "What to say",
+        "voice": "Which voice"
+      }
+    },
+    "cc_attachments": {
+      "human_name": "Attach things to a group",
+      "human_description": "Bind things — a noticeboard item, a session, a document, a memory scope — to a group so they travel together. Attach one, remove one, list what's attached, see a group's full manifest, or see the kinds of things you can attach.",
+      "op_labels": {
+        "attach": "Attach something",
+        "detach": "Remove an attachment",
+        "list": "List attachments",
+        "manifest": "A group's manifest",
+        "types": "What you can attach"
+      },
+      "op_params": {
+        "attach": ["channel", "attachment_type", "target"],
+        "detach": ["attachment"],
+        "list": ["channel", "attachment_type"],
+        "manifest": ["channel"],
+        "types": []
+      },
+      "param_labels": {
+        "channel": "Which group",
+        "attachment_type": "Kind",
+        "target": "What to attach",
+        "attachment": "Which attachment"
+      }
+    },
+    "run_role": {
+      "human_name": "Run one reasoning step",
+      "human_description": "Fire a single named reasoning step over some input and get back its checked answer. Choose whether it produces a structured answer or a meaning-vector, point it at extra inputs, and pick the model to think with. The answer is saved so you can open it again or feed it into the next step.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "role": "Which step",
+        "utterance": "The input",
+        "op": "Produce",
+        "model": "Think with",
+        "inputs": "Extra inputs",
+        "max_tokens": "Answer length limit",
+        "temperature": "Creativity",
+        "policy": "Repetition guard",
+        "think": "Show reasoning"
+      }
+    },
+    "run_draft": {
+      "human_name": "Run a throwaway step",
+      "human_description": "Fire a one-off reasoning step you describe inline, just once, without saving it as a permanent step. The quick way to try a bounded classify-or-extract without cluttering the library. The answer is kept so you can open it or feed it onward.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "draft_role": "The step to try",
+        "utterance": "The input",
+        "model": "Think with",
+        "inputs": "Extra inputs",
+        "max_tokens": "Answer length limit",
+        "temperature": "Creativity"
+      }
+    },
+    "run_items": {
+      "human_name": "Run a step over many items",
+      "human_description": "Run one reasoning step across a whole list of inputs at once — the same step applied to each item. Each answer is saved separately so you can open or reuse any of them. The way to process a batch in one go.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "role": "Which step",
+        "items": "The list of inputs",
+        "max_tokens": "Answer length limit",
+        "temperature": "Creativity"
+      }
+    },
+    "run_draft_items": {
+      "human_name": "Run a throwaway step over many items",
+      "human_description": "Run a one-off reasoning step you describe inline across a whole list of inputs at once, without saving the step permanently. The way to process a batch with a quick, bounded step you only need this once.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "draft_role": "The step to try",
+        "items": "The list of inputs",
+        "max_tokens": "Answer length limit",
+        "temperature": "Creativity"
+      }
+    },
+    "run_reduce": {
+      "human_name": "Combine many answers into one",
+      "human_description": "Take a set of earlier answers and fold them into a single result — by having a reasoning step synthesise them, by a predictable rule like a majority vote, or by grouping the ones that mean the same thing. The way to bring a batch of results to one conclusion.",
+      "op_labels": {
+        "role": "Synthesise with a step",
+        "rule": "Combine by a rule",
+        "cluster": "Group the alike ones"
+      },
+      "op_params": {
+        "role": ["addresses", "role", "max_tokens"],
+        "rule": ["addresses", "reduce_rule"],
+        "cluster": ["addresses", "cluster_threshold"]
+      },
+      "param_labels": {
+        "addresses": "The answers to combine",
+        "role": "Which step",
+        "reduce_rule": "Which rule",
+        "cluster_threshold": "How alike",
+        "max_tokens": "Answer length limit"
+      }
+    },
+    "run_cascade": {
+      "human_name": "Run a saved pipeline",
+      "human_description": "Run a saved multi-step pipeline from start to finish — each step's output flows into the next, and every step is recorded so you can trace it. The way to replay a proven recipe in one call.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "name": "Which pipeline",
+        "inputs": "Starting input",
+        "max_tokens": "Answer length limit"
+      }
+    },
+    "save_cascade": {
+      "human_name": "Save a pipeline",
+      "human_description": "Save a proven multi-step chain as a re-runnable pipeline so it can be replayed later without rebuilding it. You describe the steps and how each feeds the next; a malformed pipeline is refused rather than half-saved.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "decl": "The pipeline"
+      }
+    },
+    "capture": {
+      "human_name": "Describe many things into memory",
+      "human_description": "Run a describing step across a batch of items and save each result as a durable, searchable memory record, tagged with the project, session, and round it belongs to. The way to produce descriptions at scale and keep them, so they can be searched and related afterwards.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "role": "Describing step",
+        "units": "The items",
+        "project": "Project",
+        "session": "Session",
+        "round": "Round",
+        "projection": "Tag with view",
+        "max_tokens": "Answer length limit"
+      }
+    },
+    "create": {
+      "human_name": "Add a new building-block",
+      "human_description": "Author a new reusable piece for the Company and add it live — a reasoning step, a reusable instruction set, a block of context, a view of memory, a kind of note, and more. A malformed piece is refused rather than saved, and the right notes are updated automatically.",
+      "op_labels": {
+        "role": "A reasoning step",
+        "skill": "An instruction set",
+        "context": "A block of context",
+        "projection": "A view of memory",
+        "mark_type": "A kind of note",
+        "generation_policy": "A generation policy",
+        "relation_type": "A kind of relation",
+        "ai_tic": "An AI tell"
+      },
+      "op_params": {
+        "role": ["spec", "model"],
+        "skill": ["spec"],
+        "context": ["spec"],
+        "projection": ["spec"],
+        "mark_type": ["spec"],
+        "generation_policy": ["spec"],
+        "relation_type": ["spec"],
+        "ai_tic": ["spec"]
+      },
+      "param_labels": {
+        "spec": "The new piece",
+        "model": "Think with"
+      }
+    },
+    "propose_role": {
+      "human_name": "Suggest a reasoning step",
+      "human_description": "Draft a new reasoning step and put it forward for your approval rather than adding it straight away — it's prepared and checked, then waits for you to say yes. Use this when you want a step added only with sign-off.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "spec": "The suggested step"
+      }
+    },
+    "edit_role": {
+      "human_name": "Suggest a change to a reasoning step",
+      "human_description": "Draft a replacement for an existing reasoning step and put it forward for your approval — it's prepared and checked, then waits for your sign-off. Protected steps can't be changed.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "role_id": "Which step",
+        "spec": "The suggested change"
+      }
+    },
+    "delete_role": {
+      "human_name": "Suggest removing a reasoning step",
+      "human_description": "Put forward a request to remove a reasoning step, for your approval — it waits for your sign-off rather than removing anything itself. Protected steps can't be removed.",
+      "op_labels": {},
+      "op_params": {},
+      "param_labels": {
+        "role_id": "Which step"
+      }
+    },
+    "rule": {
+      "human_name": "Routing rules for a step",
+      "human_description": "Work with the 'when this is true, send the result there' rules that fire after a reasoning step runs. Check a rule, test how it would decide on sample inputs, or add or remove one from a step. Adding or removing is put forward for your approval rather than applied straight away.",
+      "op_labels": {
+        "validate": "Check a rule",
+        "dry_run": "Test on sample inputs",
+        "attach": "Add to a step",
+        "detach": "Remove from a step"
+      },
+      "op_params": {
+        "validate": ["ast", "destination"],
+        "dry_run": ["ast", "sample_resolved", "destination"],
+        "attach": ["role_id", "rule"],
+        "detach": ["role_id", "rule_id"]
+      },
+      "param_labels": {
+        "ast": "The condition",
+        "destination": "Send result to",
+        "sample_resolved": "Sample inputs",
+        "role_id": "Which step",
+        "rule": "The rule",
+        "rule_id": "Which rule"
+      }
+    }
+  }
+}
