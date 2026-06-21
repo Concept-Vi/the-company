@@ -110,6 +110,47 @@ VERIFY each by REAL behaviour (default-to-wrong): think = the token-DROP (1304�
 empty→clean transition; never "output appeared". (recollection GO'd the hot-path edit as non-interfering; lead
 race-clear; keep run_items' default additive for bake-resume safety.)
 
+## ★ RESOLVED-SLOTS — CONTRACT SETTLED + RECALL-GROUNDED (2026-06-21; build is read-side, post-bake)
+**composition's contract answer (cc lead):** grain resolves on the READ side, NOT extraction. **EXTRACT-ONCE
+(rich superset) + DETERMINE-MANY (project the grain on read).** Applying prompt/schema-resolution at EXTRACTION
+would mean varying-grain passes = multiple bakes (fights extract-once). So grain = a DISCRETE axis →
+**fork's EXISTING `resolve_slot` select-slot** (`{select:'resolution', cases:{coarse:[fields], fine:[fields]}}`)
+— reuse the primitive, NO new mechanism. ✓ VERIFIED by-use (2026-06-21): the select-slot returns field-LISTS
+cleanly (coarse→['about'], fine→['about','touches','entities','claims','relations']; unknown→default), and the
+determine read-path projects the stored superset to the grain's fields. composition's claim about my primitive
+is TRUE. fork's prompt-resolution rides the SAME read-side grain axis. SEQUENCING: build the grain-projection +
+prompt-resolution READ-SIDE, AFTER the bake (it does NOT gate the bake).
+
+**★ THE SCHEMA-vs-PROMPT ASYMMETRY (fork's co-shape against roles.py, 2026-06-21 — the real design crux):**
+A role declares `prompt_template: str` + `output_schema: type[BaseModel]` (a CLASS — used for BOTH client-side
+validate AND the json_schema guided-decode). So the two upgrade differently:
+- **prompt_template** → a resolve_slot value: literal | select(by discrete axis) | TEMPLATE ({{name}} sub-slots,
+  interpolated — the ONE maybe-new wrapper). VOTE: select for v1 (covers grain/viewer/mode/subtype); template a
+  flagged-follow for continuous prompt-composition.
+- **output_schema** → does NOT become a field-list select (a field-list isn't a Pydantic class). The clean
+  reconciliation (preserves extract-once): **output_schema STAYS the rich SUPERSET class**; the **grain
+  field-set projection happens on the RESULT, READ-SIDE** (the determine path projects fields from the validated
+  superset output) — NOT on output_schema. output_schema-resolution is then just: literal-superset (common) |
+  select-between-pre-declared-CLASSES (genuinely-different schema per coordinate) | dynamic-build (heavier,
+  later). So the grain select-slot lives on the determine/read side (recollection's lane), output_schema mostly
+  stays static-superset — extract-once intact.
+NET: run_role's prompt_template/output_schema upgrade STATIC-per-role → resolve_slot(coordinate) at run-time
+(axes = grain·viewer·mode·subtype·register). fork wires run_role/roles.py when composition locks the contract doc.
+
+**RECALL-BEFORE-BUILD grounding (recollection ran the live extraction asset on the resolver design — Tim's
+"use the company's own memory"; 29,406 records, semantic; recall serving the build):**
+- ★ "Resolution logic needs improvement to enable types of resolution with **COUNTS and LOCATIONS**" [full/91037]
+  — beyond value-derivation + select, the resolver should resolve a COUNT (how-many) and a LOCATION (where/which
+  address). A future resolver capability to fold in (not built — flagged for the resolved-slots build).
+- ★ "A variable-resolution system needs a **FIXED ORIGIN** to function coherently" [full/80624] — a design
+  constraint: the coordinate needs an anchored origin (matches the cascade's root / A1 morphism-from-Root).
+- "The **address is the universal primitive** — one scheme: persist · load · house-config · trigger" [85476];
+  "**Variable resolution is the TRIGGER for phase execution**" [85476] (= resolve→work, my resolve(coordinate)
+  shape); runtime form = "**blackboard architecture**" [85476]. The resolver IS the address-primitive's compute.
+- ★ READ-PATH SEAM (flagged to recollection): `extraction://` ids are op='query'-able but NOT op='read'-able via
+  the corpus tool version I have (only their `op='determine'` reads them) — the extraction-asset read path isn't
+  wired to the generic corpus read. A real gap (recollection's lane).
+
 ## THE RESOLUTION-MECHANISM ANSWER (lead/Tim flag 2026-06-20 — "make prompt+schema resolve(coordinate), at grain")
 **Q: can a role's prompt + output_schema RESOLVE against a coordinate today, or swap-only? → SWAP-ONLY (evidence).**
 - `run_role` uses `role.prompt_template` + `role.output_schema` DIRECTLY (static per role; cognition.py:330 +
