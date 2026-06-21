@@ -189,3 +189,32 @@
 - BLOCKS: nothing critical.
 
 **C6 answer (DNA confirms):** renderArchetype IS the dispatch — PROVEN: the session-card (a NEW archetype) rendered through existing renderArchetype + slot_map with ZERO new render-code (just a layouts.json row). No parallel composition dispatch needed.
+
+---
+
+## projection (ch-j9t020dx) — open decisions
+*(my session-drill-shape decision = DNA's D3; the @media→resolver = DNA's D6 — not re-listed. Below = the projection-lane decisions not yet captured.)*
+
+**P1 · CONTROL-DENSITY / EXPERTISE axis** — `Tim-direction (+ composition)`
+- WHAT: should expert controls (the lens semantic knob-row, the tool-face advanced params) RESOLVE against a viewer-expertise coordinate — novice→lens+plain-controls, pilot→full knob-row — vs always-shown or a hardcoded "advanced" panel?
+- OPTIONS: (a) a resolved AXIS (control-density resolves against viewer.expertise — the resolver-philosophy fit; lead-banked) · (b) always-show all knobs · (c) a hardcoded advanced toggle.
+- OWNER: Tim-direction (product-shape; his pilot-wants-control vision) + composition (the axis). viewer.expertise value-source pending (no operator-mode state yet).
+- BLOCKS: the resolver's expertise axis · the lens chip-wall legibility (cold-stranger-vs-pilot tension).
+
+**P2 · V-ICON SWAP (placeholder → real V)** — `Tim-direction`
+- WHAT: the RHM/V icon is a swap-seam PLACEHOLDER; when/with-what does the real V component replace it?
+- OPTIONS: (a) Tim provides the real V → swap (seam preserved) · (b) a fuller interim V now · (c) after FACE-1.
+- OWNER: Tim-direction (the real V is his).
+- BLOCKS: nothing hard (the host preserves the swap seam; the supervisor-brain plugs the same seam).
+
+**P3 · TOOL-FACE posture-gate (non-safe tools from the UI)** — `fabric-call (couples F3/#1b)`
+- WHAT: should non-safe-posture tools (consent/hazard/write) be RUNNABLE from the tool-face once the #1b operator-token gate exists, or stay UI-gated (the honest 'gated' state shipped now)?
+- OPTIONS: (a) gate-then-run (the #1b token authorizes → UI runs them) · (b) stay UI-gated until #1b proven · (c) per-posture (safe runs · design previews · consent/hazard need the token).
+- OWNER: fabric (couples fork's #1b / F3 connector-security); projection wires the surface behavior.
+- BLOCKS: the tool-face's write/mutating tools (safe/read run now; the rest show 'gated').
+
+**P4 · DIALS op=str → selector (Literal vs surface-inject)** — `fabric-call (fork or projection)`
+- WHAT: the `dials` tool declares op_labels (form_meta) but its schema `op` is a free string (no enum) → no op-selector renders. Fix at the tool (op→Literal, fork) or the surface (inject enum from op_labels keys when the discriminator lacks one)?
+- OPTIONS: (a) fork: make dials.op a Literal (clean source-fix; form_meta+inference then work) · (b) projection: inject enum from op_labels in applyFormMeta (a general surface fallback for any op_labels-without-schema-enum tool).
+- OWNER: fabric (lead routed to projection; my lean: fork's Literal is the clean fix + I add the surface-inject as a general fallback).
+- BLOCKS: the dials op-selector; small instance but the pattern recurs for any str-op tool with op_labels.
