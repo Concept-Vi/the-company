@@ -3053,7 +3053,22 @@ class Suite:
             if t not in _seen_targets:
                 _seen_targets.add(t)
                 _targets.append(t)
-        show_targets_s = ", ".join(_targets) or "(none)"
+        # COMPACT to the system-prompt budget (rhm_grounding/rhm_acceptance assert the context stays small):
+        # the UI_REGISTRY is ~512 ui:// regions (~12.6K chars) — dumping ALL of them blew _chat_context to ~5x
+        # its budget, the ROOT of the 4B-overflow (voice/staged chat 400'd on the 4096 window; the model-swap
+        # would have MASKED it). The brain needs the named CHROME regions to ground `show` + that more exist +
+        # node-ids work (the verb resolves a bare handle leniently). Keep chrome/ (the operator-facing screen
+        # areas, ~26) + a count of the rest; 512 raw ui:// addresses are machine-names the brain should never
+        # enumerate at the operator anyway (operator-law).
+        # Keep the named CHROME regions (the operator-facing screen areas — full `show` grounding) + a count of
+        # the rest. NOT a budget-trim (Tim 2026-06-22: "do not trim when there are other options" — the budget
+        # is 16k+ and the brain runs on a big-context model): this drops only the 486 REDUNDANT raw node/canvas
+        # ui:// addresses (machine-names the operator never sees — operator-law) that "any node-id is a valid
+        # target" already covers. The chrome regions ARE the meaningful grounding; the node ones resolve leniently.
+        _chrome_t = [t for t in _targets if t.startswith("ui://chrome/")]
+        _rest_t = len(_targets) - len(_chrome_t)
+        show_targets_s = (", ".join(_chrome_t) or "(none)") + (
+            f" (+ {_rest_t} more node/canvas regions; any node-id is a valid target)" if _rest_t else "")
 
         ctx = (
             "LIVE SYSTEM STATE (ground truth — answer only from this):\n"
@@ -6298,9 +6313,28 @@ class Suite:
         # FAIL LOUD on exhaustion (FabricError propagates, no fallback). S5 — the brain's runtime knobs.
         _bk = cfg.get("brain_knobs") or {}
         _bkargs = {k: _bk[k] for k in ("temperature", "max_tokens", "top_p") if k in _bk and _bk[k] is not None}
+        # CONTEXT-SIZE BRAIN RESOLVE (Tim 2026-06-22: "do not trim when there are other options"): the rich
+        # grounded context legitimately exceeds the resident 4B's 4096 window — so RESOLVE THE MODEL TO THE
+        # CONTEXT, never starve the context to the small model. The SAME TIM-RULE pick brain_router uses: fits
+        # the resident window → keep the 4B (its local-fast win for a small turn); overflows → step to kimi
+        # (256K, via the local ollama host). Gated to when the configured brain IS the small resident (:8000) —
+        # a caller's explicit big-context model (e.g. brain_router's kimi override) is left untouched. Fail-soft.
+        _eff_model, _eff_base = cfg["model"], cfg["base_url"]
+        try:
+            if _eff_base and "127.0.0.1:8000" in _eff_base:        # the small-window resident 4B is configured
+                from runtime.cognition import model_context_window
+                from runtime.cc_clone import pick_ollama_model_for_context
+                from fabric import config as _fc
+                _est = sum(len(str(m.get("content") or "")) for m in msgs) // 4 + 256   # chars→tok + tools/overhead
+                if _est > model_context_window(service_id="chat-4b") * 0.9:
+                    _pm, _ = pick_ollama_model_for_context(_est)
+                    if _pm and _pm != cfg["model"]:
+                        _eff_model, _eff_base = _pm, _fc.OLLAMA_DIRECT
+        except Exception:
+            pass                                                   # fail-soft: any resolve error → the configured model
         msg = client.complete_with_tools(
-            transport.openai_tools_transport(base_url=cfg["base_url"], timeout=cfg["timeout"]),
-            msgs, model=cfg["model"], tools=tools, tool_choice="auto", timeout=cfg["timeout"], **_bkargs)
+            transport.openai_tools_transport(base_url=_eff_base, timeout=cfg["timeout"]),
+            msgs, model=_eff_model, tools=tools, tool_choice="auto", timeout=cfg["timeout"], **_bkargs)
         reply = msg.get("content") or ""                      # may be empty (the model called a tool)
 
         outcomes = []

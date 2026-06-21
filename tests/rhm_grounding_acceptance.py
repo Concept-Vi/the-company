@@ -73,8 +73,12 @@ try:
     check("still names the graph + node-types", g in ctx and "uppercase" in ctx)
     check("still does NOT dump the codebase source", "AGENTS.md" not in ctx)
 
-    # --- stays within the system-prompt budget (compact: counts + short names + ~3-word glosses) ---
-    check(f"stays within the system-prompt budget (len={len(ctx)} < 4000)", len(ctx) < 4000)
+    # --- stays within the system-prompt budget (Tim 2026-06-22: "4000 is never enough context — 16k min
+    # really — do not trim when there are other options"). The OLD 4000 forced trimming legitimate ground
+    # truth; the budget is 16k (the brain runs on a big-context model — kimi 256K — for the rich context, not
+    # starved to the resident 4B). Still GUARDS against the raw-dump bloat class (the 512-ui://-address dump
+    # that hit ~19.6k is capped to the named chrome regions). ---
+    check(f"stays within the system-prompt budget (len={len(ctx)} < 16000)", len(ctx) < 16000)
 
     # --- FAIL-LOUD-LEGIBLE degradation: if the embed endpoint is DOWN, context renders a legible
     #     marker (NOT a silent omission and NOT a crash — rule 4). Simulate by making models_at raise.

@@ -53,7 +53,9 @@ try:
     check("context names the graph", g in ctx)
     check("context carries the live node count (ground truth)", "2" in ctx)
     check("context lists available node-types", "uppercase" in ctx and "constant" in ctx)
-    check("context does NOT dump the codebase source", "AGENTS.md" not in ctx and len(ctx) < 4000)
+    # budget raised 4000→16000 (Tim 2026-06-22: "16k min really — do not trim when there are other options");
+    # still guards the no-codebase-dump invariant + the raw-ui://-dump bloat class (now capped to chrome regions).
+    check("context does NOT dump the codebase source", "AGENTS.md" not in ctx and len(ctx) < 16000)
 
     print(f"\nALL {PASS} CHECKS PASS — RHM substrate: grounded context + persistent chat log")
 finally:
