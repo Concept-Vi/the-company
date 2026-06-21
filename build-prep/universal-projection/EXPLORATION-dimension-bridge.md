@@ -210,3 +210,37 @@ Returns fold in below. NOT promoted to the base — his words are bedrock, the s
   (n₋+n₊=1; Hausdorff recursion; §15 one-object; Thm 3.5.1 root-shell). Verdict rests on T1+T2, never T3.
 - ⚠ PASS 1 is ONE adversarial perspective + it returned SURVIVES (the suspect-kind verdict). PASS 2 launched
   (independent skeptic, the geometric + projection-is-math angle) — default-to-wrong on the survival.
+
+### REFUTATION PASS 2 (2026-06-21, independent skeptic, disjoint angle) — VERDICT: SURVIVES-as-candidacy + 2 cracks Pass 1 MISSED (incl. one in fork's reflection to Tim — corrected here).
+★ **Two disjoint disproof angles BOTH land SURVIVES** = strongest signal it's a CONSISTENT UNWRITTEN EXTENSION of
+his formalism, not a contradiction. But Pass 2 found two real cracks:
+- ★ **F2 ("project is the math") — CONCLUSION holds, JUSTIFICATION re-imports the cube-gloss.** His formal
+  "projection" = `π:R_U→V` valid only if it LIFTS BACK + ANAMORPHIC ("same substrate-position projects different
+  shapes from different viewing-dimensions, NO privileged real shape") + FORMAT-INDEPENDENT ("same whether SVG/
+  Canvas/ASCII/audio"). So F2's BUILD conclusion is RIGHT (no privileged 2D ⇒ no 3D engine forced; render at any
+  dimension/format) — but its stated REASON ("depth-3→3D cube→2D screen") smuggles back the spatial-cube reading
+  his own 2026-06-20 sweep flagged as AI-gloss. ⟹ RE-JUSTIFY F2 on format-independence/anamorphic + nesting; DROP
+  the "3D cube projected to 2D" phrasing. (Build-load-bearing → Tim's eye.)
+- ★ **RETRACT Pass-1's "centre=other-side-of-corner" grounding.** Pass 1 grounded it in the (n,k) reciprocal
+  duality (#3) — but that lives in SOLUTION space, not spatial centre↔corner geometry; cross-identifying them is
+  a soft cousin of the cube-error (the exact move Pass 1 caught for the two-squares, then committed one notch
+  quieter). The CLEAN grounding is spatial nesting (#1: centre of a depth-k cell = a corner at depth k+1,
+  verified arithmetic) — but #1 is a RESTATEMENT of "recursion = a depth shift" ⇒ CIRCULAR (a nesting tautology,
+  not independent evidence FOR recursion=dimension). And #2 (the forbidden √2-corner = "grow the box / new
+  dimension") makes centre (most-real, on-axis) and corner (maximal incommensurability, off every circle)
+  dimensional OPPOSITES — a tension, not support.
+- ★ **"circle+square = one higher-D object" is an OVER-READ** (fork over-credited this to Tim too). His written
+  geometry (geometric-substrate 40-44): "TWO coordinate systems over ONE space, sharing the origin" — two
+  co-present STANDPOINTS on ONE 2-D plane, NOT one 3-D solid whose projection is both. The genuine two-faces
+  (n₋+n₊=1, inside/outside) are DIMENSION-NEUTRAL — can't supply a +1 SPATIAL dimension.
+- projection-as-math vs rendering-as-consequence: CONSISTENT (the same claim — render is consequential, not chosen).
+★ **CONSOLIDATED (both passes): SURVIVES-as-candidacy — a consistent EXTENSION, not a contradiction.** GROUNDED:
+"self-division of unity" (n₋+n₊=1) — the one solid anchor. UNWRITTEN-EXTENSION (consistent, his math silent):
+recursion⇔SPATIAL-dimension + perpendicular-axis-per-split (his recursion is nesting/fractal-fill/non-integer
+Hausdorff; his "dimension" = the axes; "depth-3=cube" is the flagged gloss). OVER-READ (drop/hold): "one higher-D
+object", "centre=corner as independent evidence". ★ THE CLEANEST you-shaped form after the cracks: ONE object,
+rendered ANAMORPHICALLY (no privileged shape, format-independent → no 3D engine forced), at a CONTINUOUS
+(fractal, non-integer) dimensional parameter — "project is the math" in HIS lift-back sense. The
+integer-perpendicular-axis-stacking + "higher-D solid" framings are the parts to drop or hold as unproven.
+(Infra note: substrate semantic defaults to the vi-context-design vault; the theorem is in relative-difference —
+re-query explicitly.) NOT promoted to base; Tim's words bedrock; F2 conclusion safe-to-build, F2 reason needs his eye.
