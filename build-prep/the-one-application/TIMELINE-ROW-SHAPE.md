@@ -7,7 +7,24 @@
 
 This maps cleanly to the **lanes archetype** (`schemas/vi-vision/v1/lanes.schema.json`: "TIME × ENTITY as horizontal lanes with event marks"): the ENTITY is the session, the LANE is its life-arc, the MARKS are the compaction boundaries, the AXIS is time (ts).
 
-⚠️ **SCOPE QUESTION for DNA/lead before the build:** if the FACE-1 "timeline" breadth surface was meant as a **global** decision/activity timeline (all decisions/events across the fabric over time), the landed `/api/timeline` is NOT that source — it's per-session-compaction. Two clean options: (a) the timeline surface IS the per-session life-timeline (lanes over one session — drill from a session-card), build to the shape below; (b) a global activity timeline is intended → needs a DIFFERENT/new endpoint (the projection/events stream already serves global activity; /api/timeline does not). Flagging so DNA doesn't build the wrong scope. The shape below is the LANDED (per-session) contract, ready to build against for option (a).
+⚠️ **SCOPE — RESOLVED-PENDING-TIM (lead g-1782064062, lean=GLOBAL; flagged for Tim's commission-intent confirm, non-urgent, nothing blocks).** Both interpretations are fully specced below so DNA's fresh-build is clean whichever Tim confirms. DON'T build the render until (a) Tim confirms scope AND (b) DNA's fresh.
+
+### INTERPRETATION A — GLOBAL activity/decision timeline  ← LEAD'S LEAN (likely the operator-surface "timeline")
+The TEMPORAL counterpart to channel-view's SPATIAL: what's happened across the fabric over time — decisions made, work landed, messages, runs. What an operator navigates a timeline FOR. **SOURCE = the events stream, NOT /api/timeline.**
+```
+GET /api/events            → SUITE.events(60) → a flat list, newest-first:
+  [{ seq:<int>, ts:"<ISO-8601>", kind:"<chat|op.run|decision|…>", summary:"<human one-line>",
+     address:"<vi:// addr>", op?:"cognition.run_role", duration_ms?:<int>, run_op?, turn_id? }]
+GET /api/stream?since=<seq> → the SSE live version (the surface ALREADY consumes this for the live map)
+```
+- **Lanes** = by `kind` (chat · op.run · decision · …) — the kind registry (kinds/raw.py) gives each kind its human name. **Marks** = events at their `ts`, labelled by `summary` (already human, operator-law-clean). **Axis** = time. This is the SAME data the radial map plots, laid on a horizontal time×kind lane-grid instead of the wheel — a different lens on the live activity, no new backend (events/stream already serve it).
+- **No importer prerequisite** (unlike per-session) — /api/events is live now, populated (verified: chat/op.run events streaming).
+- DNA builds: a `timelineRecord(events)` adapter (group by kind → lanes; events → marks) + the lanes archetype + a lanes organism. projection clones the host over /api/events (or rides the existing /api/stream the App already holds).
+
+### INTERPRETATION B — PER-SESSION life/compaction timeline  (the LANDED /api/timeline; likely too dev-diagnostic for a top-level surface)
+One session's internal life-arc (compaction boundaries + life-segments) — a DEV-DIAGNOSTIC, narrow/technical. Could be a DRILL from a session-card (not a top-level breadth surface). The landed `/api/timeline?session=<id>` shape is below. (Needs the importer-backfill prerequisite — see EMPTY-STATE.)
+
+⟹ If Tim confirms GLOBAL → DNA builds against /api/events (Interpretation A); the per-session shape below is then a session-card DRILL detail, not the timeline surface. If PER-SESSION → the /api/timeline shape below is the contract. Lead's lean + the framing are in this doc; Tim's call decides.
 
 ## THE ENDPOINT
 ```
