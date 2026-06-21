@@ -43,7 +43,26 @@ let _installed = false
 export function installPointables() {
   if (_installed) return
   _installed = true
-  // return ONLY the targets currently in the DOM — the catalog reflects what's actually pointable right now.
-  ;(window as unknown as { surfacePointables: () => Pointable[] }).surfacePointables = () =>
-    CATALOG.filter((p) => document.querySelector(`[data-ui-ref="${cssEscape(p.address)}"]`))
+  ;(window as unknown as { surfacePointables: () => Pointable[] }).surfacePointables = () => {
+    // (1) the CURATED catalog (the map controls), filtered to what's actually in the DOM right now.
+    const curated = CATALOG.filter((p) => document.querySelector(`[data-ui-ref="${cssEscape(p.address)}"]`))
+    // (2) AUTO-INCLUDE (FACE-1 host-prep): any element that declares its OWN pointability inline —
+    //     [data-ui-ref] (its address) + [data-point-label] (its human role) — is auto-discovered, so a NEW surface
+    //     (FACE-1: a session card, a channel-mesh node, a board zone) becomes spotlightable WITHOUT a catalog edit.
+    //     The owning surface declares the human label AT the element (registry-is-truth at the source). The token is
+    //     OPAQUE + per-call (`auto-N`) — NEVER the ui:// address (the brain must never receive a parseable address;
+    //     operator-law / the address-free-brain contract). fork-brain-core maps token→address from THIS same list,
+    //     so per-call uniqueness suffices. A curated entry wins on a duplicate address (its hand-tuned label).
+    const seen = new Set(curated.map((p) => p.address))
+    const auto: Pointable[] = []
+    let i = 0
+    document.querySelectorAll('[data-ui-ref][data-point-label]').forEach((el) => {
+      const address = el.getAttribute('data-ui-ref') || ''
+      const label = el.getAttribute('data-point-label') || ''
+      if (!address || !label || seen.has(address)) return
+      seen.add(address)
+      auto.push({ token: `auto-${i++}`, address, label }) // opaque token — never a ui:// reaches the brain
+    })
+    return [...curated, ...auto]
+  }
 }
