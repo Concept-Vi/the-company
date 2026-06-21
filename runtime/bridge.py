@@ -2490,7 +2490,17 @@ class H(BaseHTTPRequestHandler):
                 # transparency-render ("V posted to #<channel>: <text>"). Fail-loud on empty message / unknown channel.
                 from runtime import session_channels as _sc
                 b = self._body()
-                _cid = b.get("channel") or b.get("cid")
+                _chan_in = b.get("channel") or b.get("cid")
+                # NAME-RESOLVE (operator-law: the surface sends a human NAME, never a raw handle — fork owns the
+                # addressing). Match {channel} against the channel registry's `name` (case-insensitive); a bare id
+                # / channel:// handle passes through (get_channel resolves it). So projection passes names only.
+                _cid = _chan_in
+                if _chan_in:
+                    _rows = _sc.fold_channels(SUITE.store)
+                    if _chan_in not in _rows:
+                        _cid = next((rid for rid, r in _rows.items()
+                                     if str(r.get("name") or "").strip().lower() == str(_chan_in).strip().lower()),
+                                    _chan_in)
                 _msg = (b.get("message") or b.get("text") or "").strip()
                 if not _cid or not _msg:
                     self._send(400, json.dumps({"ok": False, "error": "/api/channel/post needs {channel, message}"}))

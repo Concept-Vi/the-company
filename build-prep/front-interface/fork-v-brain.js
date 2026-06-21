@@ -21,7 +21,7 @@
  *     getAimLabel,    // optional — () => string : a HUMAN label for the aim ("the Heart map", "this control");
  *                     //            NEVER the raw address. Falls back to a generic "this".
  *     placeholder,    // optional — input placeholder text
- *   }) → { ask(prompt), groundedAsk(prompt), direct(item), aimChanged(), destroy() }
+ *   }) → { ask(prompt), groundedAsk(prompt), postToChannel(channel,message), direct(item), aimChanged(), destroy() }
  *
  * TWO brain paths (single-source — both live HERE, both SELF-RENDER into .v-brain-reply, no parallel caller):
  *   • ask(prompt)        → STREAMING turn via forkBrainCore /api/claude/turn (the real-Claude-Code path).
@@ -113,6 +113,33 @@
         });
     }
 
+    // postToChannel: the OPEN V-post (Tim's fully-ungated bar) — POST /api/channel/post {channel (a human
+    // NAME — the backend resolves it; operator-law: names only), message} → the V posts as the V/RHM-author.
+    // SELF-RENDERS the transparency line ("V posted to #<name>: …") into THIS module's .v-brain-reply slot
+    // (the panel DOM is ours — mirror groundedAsk, single-source). projection's host owns the TRIGGER (the
+    // "post" verb + the name-picker); this owns the call + the panel render. NO gate/token (per Tim).
+    function postToChannel(channel, message) {
+      const ch = (channel || '').trim();
+      const msg = (message != null ? message : inputEl.value).trim();
+      if (!ch || !msg) return Promise.resolve(null);
+      replyEl.textContent = 'Posting to #' + ch + '…';      // self-render: the in-flight transparency
+      return fetch('/api/channel/post', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channel: ch, message: msg }),
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          replyEl.textContent = (d && d.ok)
+            ? 'V posted to #' + ch + ': ' + core.stripMd(msg)   // transparency: what went out, attributed, clean
+            : '(could not post' + (d && d.error ? ' — ' + d.error : '') + ')';
+          return d;
+        })
+        .catch((e) => {                                    // fail-soft (the floor): a clear note + the error shape
+          replyEl.textContent = '(could not reach the channel)';
+          return { ok: false, error: String(e) };
+        });
+    }
+
     // direct: route a direction (comment/reaction/favour) back at the CURRENT aim → suite.mark → re-render.
     function direct(item) {
       let addr;
@@ -131,7 +158,7 @@
 
     function destroy() { if (root && root.parentNode) root.parentNode.removeChild(root); }
 
-    return { ask, groundedAsk, direct, aimChanged, destroy };
+    return { ask, groundedAsk, postToChannel, direct, aimChanged, destroy };
   }
 
   window.forkVBrain = { attach };
