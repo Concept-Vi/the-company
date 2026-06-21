@@ -127,7 +127,7 @@ class _Clustering(BaseModel):
     themes: List[dict]   # [{theme, claim_indices}] — model groups BY INDEX, never writes claims
 
 
-def determine(topic_text: str, *, asset: str = "full", store=None, max_claims: int = 60) -> dict:
+def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, max_claims: int = 60) -> dict:
     """The grounded determine: filter the extraction asset by `topic_text` → collect real claims → model
     clusters BY INDEX → reconstruct real chunk-traced claims per theme + the NO-FICTION check. Returns
     {topic, asset, n_candidates, n_claims, themes:[{theme, claims:[{claim, chunk_id, kind}]}], no_fiction}."""
@@ -135,6 +135,8 @@ def determine(topic_text: str, *, asset: str = "full", store=None, max_claims: i
     if not os.path.exists(path):
         return {"error": f"no extraction asset '{asset}' at {path} — the dragnet hasn't baked it yet. "
                 "Assets: 'full' (session history), 'visual-dna' (the Visual-DNA vault)."}
+    if store is None:
+        store = getattr(suite, "store", None)            # prefer the warm suite's store (no cold rebuild)
     if store is None:
         from store.fs_store import FsStore
         from fabric import config as fcfg
@@ -145,7 +147,10 @@ def determine(topic_text: str, *, asset: str = "full", store=None, max_claims: i
     recs = [json.loads(l) for l in open(path)]
     # SEMANTIC candidate-filter first (precision — concept-match over the embedded 'extractions' space);
     # fall back to keyword if the space isn't populated yet (the embed-extraction-layer may be mid-bake).
-    sem = semantic_candidates(topic_text, recs, asset, suite=None, k=max_claims)
+    # reuse a WARM suite when the caller passes one (the bridge's resident suite) — else semantic_candidates
+    # cold-constructs (NodeRegistry.discover + warm_vector_cache over 44k vectors) PER CALL = the >60s HTTP
+    # timeout fork+I hit on the /api/transcript-search determine route. store→suite if only store given.
+    sem = semantic_candidates(topic_text, recs, asset, suite=suite, k=max_claims)
     _filter = "semantic" if sem is not None else "keyword"
     cands, claims = collect_claims(recs, topic_regex(topic_text), max_claims=max_claims, cands=sem)
     if not claims:
