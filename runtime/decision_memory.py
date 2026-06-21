@@ -60,8 +60,11 @@ def prewarm_theorem_explains(suite) -> int:
     """WARM-ON-STARTUP (lead 2026-06-21): pre-compute the theorem-fork decisions' grounding (the determine +
     cluster-step + rerank) so the FIRST theorem-fork open after a (re)start isn't a cold >35s. Iterates the
     decision registry for subtype='theorem-fork', runs explanation_grounding for each → populates
-    _THEOREM_CLAIMS_CACHE (+ builds the extractions matrix as a side-effect). Best-effort, never raises. Called
-    from the bridge's startup warm daemon (alongside warm_vector_cache). Returns the count warmed."""
+    _THEOREM_CLAIMS_CACHE (+ builds the extractions matrix as a side-effect). Best-effort, never raises. Returns
+    the count warmed. ★ NOT WIRED at present (lead 2026-06-21, LAZY-ONLY): wiring it into the bridge startup
+    daemon raced the post-bounce by-sight on a just-bounced chat-4b (the contention this session diagnosed); the
+    per-decision cache gives the repeat-instant win without that bounce-cost, and DNA's honest-placeholder covers
+    the cold-first. KEPT available — re-wire (one line in bridge._warm_vector_cache) if warm-on-startup is wanted."""
     n = 0
     try:
         from runtime.cognition import decision_registry as _dreg
@@ -78,16 +81,6 @@ def prewarm_theorem_explains(suite) -> int:
         pass
     return n
 
-
-def _theorem_asset_size() -> int:
-    """Size of the theorem extraction asset — the cache-version (changes on a rebake → auto-invalidate)."""
-    import os as _os
-    p = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
-                      ".data", "store", "extractions", "extractions-theorem.jsonl")
-    try:
-        return _os.path.getsize(p)
-    except OSError:
-        return -1
 
 # ── the never-assert law's canonical text (recollection owns it — single-source, two renderings) ──────────
 # THE LAW (lead 2026-06-21): a theorem-fork decision's explanation grounds in Tim's OWN written maths and
@@ -620,7 +613,16 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
     caveat = None
     theorem_claims: list[dict] = []
     if subtype == "theorem-fork":
-        _ckey = (text, _theorem_asset_size())                  # (decision, asset-version) → auto-invalidate on rebake
+        # (decision, _vec_version) — AIRTIGHT invalidation (lead 2026-06-21): _vec_version bumps in
+        # _vector_records on ANY vector change (a re-bake OR a re-embed — closes the asset-size edge where a
+        # re-embed-without-rebake kept the byte-size). Refresh first so the version reflects the live vectors
+        # (the scandir is cheap + revalidate-only; the determine would call it anyway on a miss).
+        try:
+            suite.store._vector_records()                      # refresh → _vec_version current
+            _ver = suite.store._vec_version
+        except Exception:
+            _ver = -1
+        _ckey = (text, _ver)
         _cached = _THEOREM_CLAIMS_CACHE.get(_ckey)
         if _cached is not None:
             theorem_claims = list(_cached)                     # CACHE HIT → skip the cluster-step (the contention residual)

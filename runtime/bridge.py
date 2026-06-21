@@ -459,14 +459,14 @@ SUITE = Suite(FsStore(fcfg.STORE_DIR),
 # UNGROUNDED once. Daemon thread → never blocks boot; failure-isolated → never breaks startup.
 def _warm_vector_cache():
     try:
-        SUITE.store.warm_vector_cache()          # _vec_records + the per-space cosine matrices (X12-MATRIX)
+        SUITE.store.warm_vector_cache()          # _vec_records (+ matrices build lazily on first query_index)
     except Exception:
         pass
-    try:                                          # pre-compute the theorem-fork grounding so the first theorem
-        from runtime.decision_memory import prewarm_theorem_explains  # open after a (re)start isn't a cold >35s
-        prewarm_theorem_explains(SUITE)
-    except Exception:
-        pass
+    # NOTE: theorem-fork prewarm is intentionally NOT wired (lead 2026-06-21, LAZY-ONLY): the prewarm's ~60s
+    # background cluster-load raced the post-bounce by-sight on a just-bounced chat-4b (the contention this
+    # very session diagnosed). The per-decision cache (_THEOREM_CLAIMS_CACHE) gives the repeat-instant win
+    # WITHOUT that bounce-cost; the cold-first (~8-26s) is covered by DNA's honest-placeholder. (recollection.
+    # prewarm_theorem_explains stays available if a future call wants warm-on-startup back — one line here.)
 import threading as _x12_thr   # threading is imported locally elsewhere in this module, not at top level
 _x12_thr.Thread(target=_warm_vector_cache, daemon=True, name="x12-warm").start()
 DEMO = "codebase"
