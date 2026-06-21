@@ -78,8 +78,30 @@ def complete(transport: Callable, messages: list, model: str,
     if schema is not None and "json_schema" not in opts and hasattr(schema, "model_json_schema"):
         opts["json_schema"] = {"name": getattr(schema, "__name__", "schema"),
                                "schema": schema.model_json_schema()}
+    # BUDGET-RETRY (the structured-output safety net — Tim's "make it work regardless of provider"): a
+    # REASONING model spends its token budget on the hidden trace, then `finish_reason=length` TRUNCATES the
+    # structured answer → empty/unparseable → today this burns all retries into a FabricError (the cloud-
+    # structured-output gap). So when an attempt is BOTH a failure AND finish_reason=="length", DOUBLE
+    # max_tokens for the next attempt (capped) instead of re-failing at the same ceiling. ADDITIVE +
+    # behaviour-preserving: a NON-truncating call never has finish_reason=="length" → never escalates →
+    # byte-identical; ONLY the already-failing length-truncation path changes (and only to recover). Composes
+    # with the O2 policy-ladder (that loop reads finish_reason AFTER complete() returns, per-rung — a recovery
+    # here just means its rung succeeded). Needs to READ finish_reason → ensure a `meta` rides opts (the
+    # caller's if given, else an internal one; meta is an out-param, never enters the request body — allowlist).
+    _budget = opts.get("max_tokens")
+    _BUDGET_CAP = 4096
+    _caller_meta = opts.get("meta")
     last: FabricError | None = None
     for attempt in range(retries):
+        _m = _caller_meta if _caller_meta is not None else {}
+        opts["meta"] = _m                                        # read finish_reason back this attempt (out-param)
+
+        def _escalate_if_truncated():                            # bump the budget ONLY on a length-truncation
+            nonlocal _budget
+            if _m.get("finish_reason") == "length" and _budget and _budget < _BUDGET_CAP:
+                _budget = min(_budget * 2, _BUDGET_CAP)
+                opts["max_tokens"] = _budget                     # next attempt gets headroom (the net)
+
         try:
             content = transport(model, messages, **opts)
         except Exception as e:                                   # transport/network/backoff
@@ -88,6 +110,7 @@ def complete(transport: Callable, messages: list, model: str,
 
         if not content or not str(content).strip():              # empty (kimi/glm lesson)
             last = FabricError("empty content from model")
+            _escalate_if_truncated()                             # ← length-truncation → more budget next attempt
             _retry_sleep(sleep, attempt, retries); continue
 
         if schema is None:
@@ -97,11 +120,13 @@ def complete(transport: Callable, messages: list, model: str,
             data = _parse(content)                               # parse (+ repair)
         except Exception as e:
             last = FabricError(f"unparseable JSON: {e!r}")
+            _escalate_if_truncated()                             # ← truncated mid-JSON → more budget next attempt
             _retry_sleep(sleep, attempt, retries); continue
         try:
             return schema.model_validate(data)                   # validate
         except Exception as e:
             last = FabricError(f"schema validation failed: {e!r}")
+            _escalate_if_truncated()                             # ← truncated → incomplete object → more budget
             _retry_sleep(sleep, attempt, retries); continue
 
     raise last or FabricError("no attempts made")
