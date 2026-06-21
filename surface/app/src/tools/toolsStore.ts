@@ -166,7 +166,11 @@ async function resolveEnumSources(tool: ToolDescriptor): Promise<ToolDescriptor>
   for (const [param, url] of Object.entries(tool.enumSources)) {
     if (!props[param]) continue
     try {
-      const r = await fetch(url)
+      // TIMEOUT (friction-fix, by-use): a SLOW/hanging enum-source must never block — /api/layers ~1.2s × 5 tools
+      // hung the tool LIST on "Looking…" for 6s+. Abort at 1.5s → the param degrades clean to free-text.
+      const ctrl = new AbortController()
+      const to = setTimeout(() => ctrl.abort(), 1500)
+      const r = await fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(to))
       if (!r.ok) continue
       const data = await r.json()
       const opts = (Array.isArray(data) ? data : Object.keys(data)).filter(Boolean).map(String)
@@ -221,7 +225,9 @@ function applyFormMeta(d: Record<string, unknown>): ToolDescriptor {
   return t
 }
 
+let toolsSeq = 0 // monotonic load token — a stale background enum-resolve never clobbers a newer load
 export async function loadTools() {
+  const seq = ++toolsSeq
   set({ loading: true, error: null })
   try {
     const r = await fetch('/api/tools')
@@ -229,15 +235,19 @@ export async function loadTools() {
     const data = await r.json()
     const rawList: Array<Record<string, unknown>> = Array.isArray(data) ? data : data.tools || data.items || []
     if (!rawList.length) throw new Error('empty')
-    // map fork's server form_meta → the surface shape (applyFormMeta), THEN resolve any enum-source params.
-    const list = await Promise.all(rawList.map((d) => resolveEnumSources(applyFormMeta(d))))
-    set({ tools: list, scaffold: false, loading: false })
+    if (seq !== toolsSeq) return
+    // ★ RENDER THE LIST IMMEDIATELY from form_meta (applyFormMeta is SYNC — names/labels/op-structure all present).
+    // Do NOT block the panel on N enum-source fetches: a slow source (/api/layers ~1.2s) hung "Looking…" for 6s+
+    // once 57 tools carried form_meta (regression caught by-use post-bounce). Only the enum DROPDOWN options need
+    // the fetch → resolve them in the BACKGROUND (each timeout'd, degrade-clean to free-text) + patch the list.
+    const mapped = rawList.map(applyFormMeta)
+    set({ tools: mapped, scaffold: false, loading: false })
+    Promise.all(mapped.map(resolveEnumSources)).then((enriched) => { if (seq === toolsSeq) set({ tools: enriched }) })
   } catch {
-    // /api/tools (fork's gap 2) isn't live yet → the prove-on-one SEED, its enum-source params resolved generically.
-    // HONEST (no silent empty): `scaffold:true` lets the panel say it's showing the pilot tool while the full list is
-    // wired up. NOT an error — the sanctioned parallel scaffold.
+    // /api/tools failed → the prove-on-one SEED (honest: scaffold:true says it's the pilot tool). NOT an error.
+    if (seq !== toolsSeq) return
     const seed = await resolveEnumSources(CORPUS_SEED)
-    set({ tools: [seed], scaffold: true, loading: false })
+    if (seq === toolsSeq) set({ tools: [seed], scaffold: true, loading: false })
   }
 }
 
