@@ -13,6 +13,7 @@ import { GalleryMount } from './gallery/GalleryMount'
 import { resolveAndApplyModal } from './lib/resolveAllocation'
 import { SessionDrill } from './sessions/SessionDrill'
 import { ChannelView } from './channels/ChannelView'
+import { BoardView } from './board/BoardView'
 import { RightHand } from './rhm/RightHand'
 import { DecisionsInbox } from './decisions/DecisionsInbox'
 import { ToolsBar } from './tools/ToolsBar'
@@ -548,6 +549,10 @@ export function App() {
           Sibling overlay, full-width centered graph body. The first breadth surface cloned from the SessionDrill
           template (data→route→host→DNA-render); boardRecord/timelineRecord follow as DNA ships each adapter. */}
       <ChannelView />
+      {/* THE BOARD-VIEW SURFACE (FACE-1 breadth #2) — the fabric Noticeboard as grouped sections (/api/board → DNA's
+          boardRecord + boardGroups + the 'board-view' archetype). Opens on `board:open`. Sibling overlay, scrollable
+          full-width list. Cloned from the ChannelView template (data→route→host→DNA-render). */}
+      <BoardView />
       {/* THE TOOL FACE — the pilot palette (Tim 2026-06-19): the entry (ToolsBar) + the modal (ToolsPanel) where an
           operator picks a tool, sets it up in plain words via the op-conditional form, and runs it. Root siblings,
           all form factors. FRONT HALF live (list + description + form); Run/result are pending seams (fork's invoke

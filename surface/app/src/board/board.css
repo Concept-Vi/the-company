@@ -1,0 +1,43 @@
+/* THE BOARD-VIEW SURFACE (FACE-1 breadth #2) — a sibling-overlay modal (mirrors the channels/sessions overlay
+   pattern). DNA's grouped board (boardGroups) carries its own styling (rendered into .board-groups); this only
+   FRAMES it. Unlike the channel GRAPH (centered, sized), the board is a grouped LIST that runs long → the body
+   SCROLLS and the groups are FULL-WIDTH (not centered). Tokens only — no bespoke values. */
+.board-overlay {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: safe center; justify-content: center;
+  padding: calc(var(--safe-t) + var(--s-3)) var(--s-3) calc(var(--safe-b) + var(--s-3));
+  opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 200ms ease, visibility 200ms ease;
+}
+.board-overlay--open { opacity: 1; visibility: visible; pointer-events: auto; }
+.board-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink-primary) 48%, transparent); }
+.board-panel {
+  position: relative; width: 100%; max-width: 760px; max-height: 100%; display: flex; flex-direction: column;
+  background: var(--ground-accent); border-radius: var(--r-card); box-shadow: var(--elev-4); overflow: hidden;
+}
+.board-head {
+  flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-2);
+  padding: var(--s-4) var(--s-4) var(--s-3); border-bottom: 1px solid var(--hairline);
+}
+.board-title { margin: 0; font-size: var(--t-base); color: var(--ink-primary); }
+.board-sub { margin: var(--s-1) 0 0; font-size: var(--t-sm); color: var(--ink-dim); line-height: var(--lh-body); }
+.board-close { background: none; border: none; cursor: pointer; color: var(--ink-dim); font-size: 15px; line-height: 1; min-width: 44px; min-height: 44px; }
+.board-body {
+  flex: 1 1 auto; min-height: 0; overflow: auto; padding: var(--s-4);
+  padding-bottom: calc(var(--s-4) + var(--safe-b));
+}
+.board-msg { font-size: var(--t-sm); color: var(--ink-dim); text-align: center; padding: var(--s-5) var(--s-4); margin: 0; }
+.board-msg--error { color: var(--pig-strain); }
+.board-msg--quiet { color: var(--ink-faint); }
+.board-retry { font-size: var(--t-sm); color: var(--ink-primary); background: var(--ground-secondary); border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); cursor: pointer; margin-left: var(--s-2); }
+/* the grouped board mount: full-width; DNA's sections scroll within the body. */
+.board-groups { width: 100%; max-width: 100%; }
+.board-groups svg { max-width: 100%; height: auto; }
+/* ── HOLD DNA's card FULL-WIDTH SINGLE-COLUMN (a grouped-LIST body must NOT inherit the .ar-responsive desktop
+   2-COL grid — same trap as the channel graph; verified by use there). Mirrors the gallery-frame / channels host
+   override. Un-fix the .screen device-height so the board sizes to content + the body scrolls. ─────────────── */
+.board-groups .screen.ar { height: auto; max-height: none; overflow: visible; }
+.board-groups .screen.ar.ar-responsive {
+  display: flex; flex-direction: column; grid-template-columns: none; grid-template-rows: none; gap: 0;
+}
+.board-groups .ar-responsive .ar-zone-head,
+.board-groups .ar-responsive .ar-zone-body,
+.board-groups .ar-responsive .ar-zone-foot { grid-column: auto; grid-row: auto; }
