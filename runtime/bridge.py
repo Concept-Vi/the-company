@@ -1423,6 +1423,25 @@ class H(BaseHTTPRequestHandler):
                 from runtime.routines import routine_registry as _rreg
                 _rr = _rreg()
                 self._send(200, json.dumps({"ok": True, "routines": [dict(_rr.get(rid).spec) for rid in _rr.ids()]}))
+            elif path == "/api/transcript-search":         # FACE-1: search ALL transcript history by MEANING (recollection's backend)
+                # The 5th read-route — recollection's lane (their session_search / extraction backend), wired to a
+                # bridge GET to their EXACT call-shape (?q= required; ?k= ?asset?). RUNTIME fns are live NOW (direct
+                # import — NOT MCP-gated, so this works pre-bounce). ?asset OMITTED → raw transcript search
+                # (session_search.search_sessions, semantic→lexical degrade on embedder-down, honest); ?asset SET
+                # ('full'|'visual-dna'|'theorem') → the grounded chunk-traced extraction layer (recall_determine.
+                # determine, no-fiction). The floor: a read. Fail-loud: no ?q → 400.
+                _q = q.get("q") or q.get("text")
+                if not _q:
+                    self._send(400, json.dumps({"ok": False, "error": "/api/transcript-search needs ?q=<query> (+ optional ?k= ?asset=)"}))
+                else:
+                    _k = int(q.get("k", 8)) if str(q.get("k", "")).isdigit() else 8
+                    _asset = q.get("asset")
+                    if _asset:                              # the grounded extraction layer (meaning-extractions)
+                        from runtime import recall_determine as _rd
+                        self._send(200, json.dumps({"ok": True, **_rd.determine(_q, asset=_asset, store=SUITE.store)}))
+                    else:                                   # raw transcript-history search (semantic→lexical degrade)
+                        from runtime import session_search as _ss
+                        self._send(200, json.dumps({"ok": True, **_ss.search_sessions(SUITE, _q, k=_k, mode=q.get("mode", "auto"))}))
             elif path == "/api/types":
                 self._send(200, json.dumps(sorted(SUITE.list_types())))
             elif path == "/api/layers":                    # the multi-layer model's self-description: {space:[embedder layer,…]}
