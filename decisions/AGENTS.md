@@ -50,3 +50,24 @@ with composition if it's not obvious.
 "vi-vision SA / RLS / Supabase / cosine / VRAM"; say "the design library", "the fast processor"). `legibility`
 is `{name: the card's title, is: the reversibility/stakes line, why: the grounded one-paragraph context}`.
 State (pending/decided) is NOT stored here — it resolves from the latest `decision_take` mark on the address.
+
+## Set `explanation_source` to the REAL source you gathered it FROM (the grounding provenance)
+
+`explanation_source` is the decision's **traceable provenance pointer** — the grounding RHM traces THROUGH it
+to the real content (recollection's genuine-provenance mechanism). When you author/gather a decision (the
+Face-Pipeline gather, or by hand), **record the real source it was gathered FROM** into `explanation_source`:
+an ADDRESS — `board://…` · `code://…` · `channel-thread://…` · a corpus addr — where the decision's specific
+content appears. New decisions are then **born traceable** (no later backfill).
+
+★ THE HOLE-2 GUARD: it must be a POINTER traced through to REAL content, **never a re-stated prose claim** of
+the origin (that grounds a claim in a claim). And a **wrong-origin pointer is WORSE than none** — set it ONLY
+if the source VERBATIM-contains the decision's specific content; if you can't verify that, leave it ABSENT
+(the on-topic fallback grounds honestly). Theorem-forks point at Tim's real maths source (recollection's domain).
+
+**Level-3 vs Level-4 (the honest bar):** pointing at the captured fabric artifact (the board item / gap-note
+filed during real operation, whose content is verbatim the fact) = **Level 3**, the grounding bar — label it
+honestly "grounded in the captured origin," NEVER "Tim's verbatim words." **Going-forward Level-4 readiness:**
+when the gather/capture files that artifact, ALSO record its own **raw source-link** (the channel-msg /
+transcript it came from — the board item's `source`/`channel`/`thread`/`links` fields), so grounding can later
+trace the extra hop to Tim's raw utterance. New captures born traceable-to-raw — but DON'T retrofit old ones
+via session-search (drift-prone bleed); Level 4 is a forward deepening, not a backfill.
