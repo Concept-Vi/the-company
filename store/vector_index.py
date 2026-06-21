@@ -140,7 +140,7 @@ def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None,
     return {"embedded": len(to_embed), "skipped": skipped, "degraded": False}
 
 
-def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb="__default__"):
+def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb="__default__", records=None):
     """QUERY the persisted index: given a query VECTOR, return the top-K nearest ADDRESSES, REUSING the
     existing `nodes/retrieve` node (the cosine is NOT reimplemented; its _cosine raises ValueError on a
     dim mismatch → the query dim guard is FAIL-LOUD by reuse — never a wrong-but-plausible cosine).
@@ -162,7 +162,7 @@ def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb="_
     from fabric import config as fcfg
     emb = fcfg.resolve_emb_layer(emb)                      # omit-emb callers (query_corpus/consult) -> pplx; explicit None -> bge. Read layer == write layer.
     from nodes import retrieve                              # the existing cosine-ranking node — reused, not reimplemented
-    corpus = store.index_corpus(space=space, emb=emb)       # [{id: <item>, vector}] at the embedder LAYER (emb=None=BGE/bare default)
+    corpus = store.index_corpus(space=space, emb=emb, records=records)  # [{id,vector}] at the embedder LAYER; `records` = a pre-fetched _vector_records() snapshot (scandir-once for multi-space callers — additive, default unchanged)
     ranked = retrieve.run({"query": query_vector, "corpus": corpus}, {"k": k})
     if not with_note:
         return ranked

@@ -1083,7 +1083,7 @@ class FsStore:
                 out.append(rec["address"])
         return sorted(out)
 
-    def index_corpus(self, space=None, emb=None) -> list[dict]:
+    def index_corpus(self, space=None, emb=None, records=None) -> list[dict]:
         """The index as a corpus list `[{id: <item>, vector: [...]}]` — the EXACT shape nodes/retrieve.run
         consumes (id + vector), so the QUERY path feeds it straight in with NO reshaping and NO reimplemented
         cosine. Empty index → [] (query then returns empty + an honest note).
@@ -1097,9 +1097,19 @@ class FsStore:
         own `address` (it IS its own source).
 
         Reads via the cached _vector_records() (X12-FAST) — the SAME per-record filter as before, byte-
-        identical results; only the file-read is cached/incremental now."""
+        identical results; only the file-read is cached/incremental now.
+
+        `records` (additive, default None — BYTE-IDENTICAL when absent): a PRE-FETCHED _vector_records()
+        SNAPSHOT to filter, instead of fetching it here. THE SCANDIR-ONCE seam (2026-06-21): a MULTI-SPACE
+        caller (recall_for_decision queries 6-7 spaces for ONE decision) would otherwise re-scandir+stat the
+        whole vectors/ dir (~0.29s @ 49,853 files) per space = the bulk of the decision card-resolve memory
+        leg's 3s-budget overrun once the 44k extraction layer grew the store. Fetching the snapshot ONCE and
+        passing it to each per-space call collapses 6-7 scandirs to one. CORRECTNESS: the 6-7 queries of one
+        recall are ONE logical read — a single consistent snapshot is MORE correct than 6 mid-write views; and
+        each recall fetches a FRESH snapshot (no cross-call staleness — unlike a dir-mtime cache, which is
+        UNSAFE on WSL ext4: create/delete don't bump dir mtime, proved by falsify-first 2026-06-21)."""
         out = []
-        for rec in self._vector_records():
+        for rec in (records if records is not None else self._vector_records()):
             if space is self.ALL_SPACES:
                 out.append({"id": rec["address"], "vector": rec["vector"]})
             elif rec.get("space") == space and rec.get("emb") == emb:

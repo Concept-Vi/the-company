@@ -247,17 +247,41 @@ def recall_for_decision(suite, decision_text: str, *, address: str | None = None
     spaces = tuple(spaces) if spaces else DEFAULT_DECISION_SPACES
     notes = []
     pooled: list[dict] = []
+    # SCANDIR-ONCE + EMBED-ONCE (2026-06-21, lead-GO'd): the N space-queries of ONE decision are ONE logical
+    # read. query_corpus(text, space) per space EMBEDS the text (a :8007 round-trip) AND fetches the whole
+    # vector-index snapshot (scandir+stat 49,853 files ≈ 0.29s) PER SPACE — N× redundant. Once the 44k
+    # extraction layer grew the store, the 6-space recall hit ~3.25s and the card-resolve memory leg (3s
+    # budget) timed out → cards resolved UNGROUNDED. FIX: embed the text ONCE (reuse query_corpus's own
+    # _embed_consult_query) + fetch the snapshot ONCE, then query each space against the shared qvec+snapshot
+    # via query_index(records=). BYTE-IDENTICAL ranking (same embed, same emb-layer default, same cosine —
+    # query_corpus IS embed+query_index). CORRECTNESS: one consistent snapshot across the N spaces is MORE
+    # correct than N mid-write views; a FRESH snapshot per recall = no cross-call staleness (dir-mtime caching
+    # is UNSAFE on WSL — proved). DEGRADE-CLEAN: embed-down → qvec None → fall back to per-space query_corpus
+    # (its own down-warning holds); the pooled shape is identical either way.
+    from store import vector_index as _vx
+    try:
+        qvec = suite._embed_consult_query(decision_text)
+    except Exception:
+        qvec = None
+    try:
+        records = suite.store._vector_records() if qvec is not None else None  # ONE snapshot, shared across spaces
+    except Exception:
+        records = None
     for sp in spaces:
         try:
-            out = suite.query_corpus(decision_text, space=sp, k=k_per_space)
+            if qvec is not None:
+                ranked = _vx.query_index(suite.store, qvec, space=sp, k=k_per_space, records=records)
+            else:
+                ranked = suite.query_corpus(decision_text, space=sp, k=k_per_space).get("ranked", [])
         except Exception as e:                                   # a space may be unembedded/down — honest, not fatal
             notes.append(f"{sp}: {type(e).__name__}")
             continue
-        for h in out.get("ranked", []):
+        if not ranked:
+            notes.append(f"{sp}: empty")
+            continue
+        for h in ranked:
             pooled.append({"source": h.get("id") or h.get("address"), "space": sp,
                            "score": round(h.get("score", 0.0), 4)})
-        if out.get("note") and not out.get("ranked"):
-            notes.append(f"{sp}: empty")
 
     # rerank the POOLED cross-space context against the decision (precision over the union of spaces) —
     # reuse the committed stage; it fetches each hit's CAS digest text (fail-loud on a blank).
