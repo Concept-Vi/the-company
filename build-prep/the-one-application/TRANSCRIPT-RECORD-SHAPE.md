@@ -116,6 +116,17 @@ archetype's exact node schema — this is the semantic mapping, not the field na
   was said" (claims). The transcript-viz surface can offer both lenses over the same query (a toggle / two
   layers of the same constellation).
 
+## EDGES — for a TRUE constellation (relational, not just a positioned node-set)
+A constellation archetype is inherently relational; `/api/transcript-search` gives the NODES, but the EDGES
+(which sessions/claims relate to which) come from a second recall call DNA can layer in:
+- `corpus(op='neighbours', address=<id>, space='extractions', k=N)` → the node-field AROUND any unit, ranked by
+  meaning: `{neighbours: [{source, score}, …]}`. Each `source` is itself drillable. So per node, neighbours =
+  its edges. `address` = a grounded claim's `extraction://<asset>/<chunk_id>` (grounded mode) or a session
+  chunk's `point.chunk_address` (raw mode). `rerank=true`+`text` adds the precision pass.
+- This is OPTIONAL — a flat positioned node-field (stars by score) renders without edges. Add neighbours only
+  when DNA wants the relational web (the constellation's lines). Flag me and I'll confirm the exact call-shape
+  for whichever node type you wire.
+
 ## STATUS
 - Route LIVE + verified by-use (raw + grounded, the >60s determine timeout gone, ~13s warm). recollection's
   data half of transcript-viz is GO — DNA writes `DNA.faceRecord.transcriptRecord` + the constellation
