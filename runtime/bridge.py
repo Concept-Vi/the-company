@@ -128,6 +128,7 @@ BRIDGE_ROUTES = (
     "/api/brain/ask", "/api/run-in-channel/propose", "/api/decision/explain",
     "/api/decision/decided-signals",
     "/api/operator-session", "/api/channel/post",
+    "/api/decision/update", "/api/decision/update/accept",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
@@ -2482,6 +2483,49 @@ class H(BaseHTTPRequestHandler):
                     self._send(200, json.dumps({"ok": True, "subtype": _g.get("subtype"), "policy": _pol,
                                                 "model": _model, "explanation": _out["output"],
                                                 "grounding_provenance": _g.get("note"), "address": _out["address"]}))
+            elif self.path == "/api/decision/update":      # L5: the RHM PROPOSES a card refinement (INERT until accepted)
+                # Writes a decision_update mark {field, value, by=rhm} on the canonical address — Model A: the
+                # proposal is shown, only an operator accept applies it (so the propose itself is floor-clean
+                # read+propose, no gate). Whitelist-enforced (content fields only — never the structural identity).
+                from contracts.address import decision_address as _daddr
+                from runtime.decision_registry import DECISION_UPDATE_WHITELIST as _WL
+                b = self._body()
+                _did = b.get("id") or b.get("decision_id")
+                _field = b.get("field")
+                if not _did or _field not in _WL:
+                    self._send(400, json.dumps({"ok": False,
+                        "error": "/api/decision/update needs {id, field, value} with field in " + str(list(_WL))}))
+                else:
+                    _addr = _daddr({"id": _did})
+                    _rec = SUITE.mark(_addr, "decision_update", value={"field": _field, "value": b.get("value")},
+                                      by="rhm", rationale=(b.get("rationale") or ""))
+                    self._send(200, json.dumps({"ok": True,
+                        "proposed": {"ts": _rec.get("ts"), "field": _field, "address": _addr}}))
+            elif self.path == "/api/decision/update/accept":  # L5: the operator APPLIES an RHM update (#1b-TRANSPARENT)
+                # SCOPED #1b (composition+lead): the accept requires a genuine operator-session token (transparent
+                # — the surface mints+sends it; a runaway/background agent has none → blocked). Runaway-SAFETY,
+                # NOT full decide-gating-A (held/free per Tim). 401 if absent/invalid. On apply: write the accept,
+                # then Hole-1 re-validate — an accepted OPTIONS-touching update on a DECIDED card re-opens it (write
+                # decision_retract so Tim re-decides against the new options).
+                _tok = self.headers.get("X-Operator-Session", "")
+                if not _is_genuine_operator(_tok):
+                    self._send(401, json.dumps({"ok": False, "error": "the update-accept needs a genuine operator session"}))
+                else:
+                    from contracts.address import decision_address as _daddr
+                    from runtime.cognition import decision_registry as _dreg
+                    from runtime.decision_registry import compose_definition as _compdef
+                    b = self._body()
+                    _did = b.get("id") or b.get("decision_id"); _ts = b.get("ts")
+                    if not _did or not _ts:
+                        self._send(400, json.dumps({"ok": False, "error": "/api/decision/update/accept needs {id, ts}"}))
+                    else:
+                        _addr = _daddr({"id": _did})
+                        SUITE.mark(_addr, "decision_update_accept", value=str(_ts), by="operator")
+                        _defn, _reopened = _compdef(_dreg().get(_did), SUITE.marks_for(_addr))
+                        if _reopened:                       # Hole-1: an accepted options-change invalidated the prior choice
+                            SUITE.mark(_addr, "decision_retract", value="", by="operator",
+                                       note="re-opened: an accepted options change invalidated the prior choice")
+                        self._send(200, json.dumps({"ok": True, "applied": str(_ts), "reopened": _reopened}))
             elif self.path == "/api/channel/post":         # THE OPEN V-POST (Tim 2026-06-22: "posting shouldn't be
                 # gated, fully ungated" — his informed bar, lead-accepted). The V posts to a channel DIRECTLY: NO
                 # token, NO supervised/autonomous discriminator, NO propose-step — just post_to_channel. (The

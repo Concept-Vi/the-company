@@ -1122,7 +1122,13 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
                 f"resolve_address: decision {addr!r} needs a store to compose its take-state (the take lives in "
                 f"marks). Fail loud — never report a guessed/silent decision state.")
         marks = store.marks_for(canonical)                # keyed by the CANONICAL address (the ONE mark target)
-        return _compose_state(row, marks)
+        # L5: fold ACCEPTED RHM updates onto the row → the effective DEFINITION, THEN compose STATE on it (so
+        # the resolved card reflects accepted refinements everywhere — inbox/explain/territory/render flow
+        # through here). A reopened options-change re-reads as pending via the decision_retract the accept-route
+        # wrote (compose_state sees it), so no separate handling needed here.
+        from runtime.decision_registry import compose_definition as _compose_definition
+        _defn, _ = _compose_definition(row, marks)
+        return _compose_state(_defn, marks)
     if sch is not None:
         # a REGISTERED scheme (blob/vec/ui/code/exchange) with no content-resolver wired into this
         # dispatcher yet (exchange:// is register-but-defer — recollection's capture/recall lane owns it).

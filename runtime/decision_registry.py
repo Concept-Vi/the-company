@@ -274,6 +274,7 @@ def decision_inbox(registry, store, subtype_registry=None) -> list:
             continue
         addr = f"decision://global/{did}"
         marks = store.marks_for(addr) if (store is not None and hasattr(store, "marks_for")) else []
+        row, _ = compose_definition(row, marks)        # L5: fold ACCEPTED RHM updates → name/options reflect the refinement
         st = compose_state(row, marks)
         leg = row.get("legibility") if isinstance(row.get("legibility"), dict) else {}
         name = (leg.get("name") or "").strip() or did.replace("-", " ").replace("_", " ").strip() or did
