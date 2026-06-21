@@ -1371,7 +1371,12 @@ class H(BaseHTTPRequestHandler):
                 # FAST mark-composed state (decision_registry.decision_inbox — GPU-free, no recall/embed). registry-is-truth.
                 from runtime.cognition import decision_registry as _dreg
                 from runtime.decision_registry import decision_inbox as _dinbox
-                self._send(200, json.dumps(_dinbox(_dreg(), SUITE.store)))
+                # owner RESOLVES from the subtype (no-drift design): pass the subtype registry so the feed
+                # carries owner for every decision (decision.subtype → decision_subtypes[subtype].owner) —
+                # no per-row authoring. ROOT-anchored discover (the rule-blind-registry lesson).
+                from runtime.decision_subtypes import DecisionSubtypeRegistry as _DSTReg
+                _subreg = _DSTReg().discover([os.path.join(ROOT, "decision_subtypes")])
+                self._send(200, json.dumps(_dinbox(_dreg(), SUITE.store, subtype_registry=_subreg)))
             elif path == "/api/stack-item-types":          # FACE-2: the channel-stack item-type VOCABULARY (registry-is-truth)
                 # composition's StackItemTypeRegistry as_records() over HTTP, so projection's host derives its
                 # StackItemType union from the registry (adding a type = a row, ZERO host change) instead of a

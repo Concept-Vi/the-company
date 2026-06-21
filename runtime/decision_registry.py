@@ -212,16 +212,23 @@ def compose_state(row: dict, marks: list) -> dict:
     return resolved
 
 
-def decision_inbox(registry, store) -> list:
+def decision_inbox(registry, store, subtype_registry=None) -> list:
     """The decisions INBOX list (the operator's see-all-pending entry, beyond the deep-link): one
-    {id, type, address, name, state, recommended_label} per discovered decision. registry-is-truth — the
-    discovered set. `type` = the STACK-ITEM-TYPE ("decision-sequence") so the host DERIVES its StackItemType from
-    the feed (registry-is-truth; projection's union-derive dep — the stack envelope is {id,type,address,name,
-    state}). state = the FAST mark-composed state (compose_state — NOT the recall-grounded resolve; the inbox only
-    needs open-vs-decided, so this stays GPU-free + fast: marks_for + the fold, no recall/embed). name =
-    legibility.name (operator-law: never the raw id — humanise the id as the floor). address = the CANONICAL
-    decision://global/<id> (file-discovered registry decisions are global; the take writes + the resolver reads
-    marks off this same canonical). recommended_label = the recommended option's label (a hint; optional)."""
+    {id, type, subtype, owner, address, name, state, recommended_label} per discovered decision. registry-is-
+    truth — the discovered set. `type` = the STACK-ITEM-TYPE ("decision-sequence") so the host DERIVES its
+    StackItemType from the feed (the stack envelope is {id,type,address,name,state}). state = the FAST
+    mark-composed state (compose_state — GPU-free: marks_for + the fold, no recall/embed). name =
+    legibility.name (operator-law: never the raw id). address = the CANONICAL decision://global/<id>.
+    recommended_label = the recommended option's label (a hint; optional).
+
+    ★ owner RESOLVES from the SUBTYPE (the no-drift design, lead 2026-06-21): owner is a SUBTYPE property
+    (decision_subtypes[subtype].owner: authorize/trade-off/theorem-fork=tim · cross-lane=fabric), NOT per-row
+    authored. owner = the row's own `owner` if declared (override), ELSE resolved via `subtype_registry` from
+    its subtype → so the feed always carries owner for every decision with no per-row authoring + no drift (a
+    new subtype declares its own side once). `subtype_registry` is OPTIONAL + DUCK-TYPED (the caller passes
+    DecisionSubtypeRegistry — decision_registry stays DECOUPLED, no hard import); absent ⇒ owner = the row's
+    declared owner or None (the projection filter still works on the explicit field). Projection filters Tim's
+    queue by owner=='tim'."""
     out = []
     for did in sorted(registry):
         row = registry.get(did)
@@ -234,8 +241,17 @@ def decision_inbox(registry, store) -> list:
         name = (leg.get("name") or "").strip() or did.replace("-", " ").replace("_", " ").strip() or did
         rec = next((o.get("label") for o in (row.get("options") or [])
                     if isinstance(o, dict) and o.get("recommended") and o.get("label")), None)
-        out.append({"id": did, "type": "decision-sequence", "subtype": row.get("subtype"),
-                    "owner": row.get("owner"), "address": addr,
+        sub = row.get("subtype")
+        owner = row.get("owner")                      # an explicit row override wins (rare)
+        if owner is None and sub and subtype_registry is not None:
+            # RESOLVE owner from the subtype (the no-drift source) — duck-typed: .get(sub).owner
+            try:
+                srow = subtype_registry.get(sub) if hasattr(subtype_registry, "get") else None
+                owner = getattr(srow, "owner", None) if srow is not None else None
+            except Exception:
+                owner = None                          # fail-soft: a bad subtype never breaks the inbox read
+        out.append({"id": did, "type": "decision-sequence", "subtype": sub,
+                    "owner": owner, "address": addr,
                     "name": name, "state": st.get("state"), "recommended_label": rec})
     return out
 
