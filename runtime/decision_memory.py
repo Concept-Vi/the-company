@@ -36,6 +36,16 @@ DEFAULT_DECISION_SPACES = ("common_knowledge", "principles", "worldview", "topic
 # render MEANING. The ~10s extractions query is a follow-on speed target (a fast index for the 44k space).
 EXPLAIN_DECISION_SPACES = DEFAULT_DECISION_SPACES + ("extractions",)
 
+# THE PER-DECISION-BLEED FLOOR (lead 2026-06-21, proven on adopt-claude-design): recall_for_decision retrieves
+# the topic-CLUSTER (decisions sharing vocabulary — "design", etc.), so a card whose own grounding is weak/
+# unindexed DRIFTS to a louder NEIGHBOUR (adopt-claude-design got the mockup-studio decision's chunks; ~half
+# the 13 authorize/trade-off mismatched). The fix is two-fold: (1) ANCHOR the block in the decision's OWN
+# declared content (meaning+options+legibility — always on-topic, decision-specific); (2) admit corpus context
+# only above this cross-encoder RELEVANCE floor (a bled neighbour scores below it; e.g. adopt's top adjacent
+# decision reranked 0.43 < 0.5). Below the floor (or rerank not run) ⇒ decision-content-only — a clean
+# "grounded in the decision itself," NEVER a confident bled neighbour (no-silent-failures).
+_CTX_FLOOR = 0.5
+
 # ── the never-assert law's canonical text (recollection owns it — single-source, two renderings) ──────────
 # THE LAW (lead 2026-06-21): a theorem-fork decision's explanation grounds in Tim's OWN written maths and
 # FLAGS AI-projection — never asserts a gloss as his theorem (the cube-error proved the AI errs here). It is
@@ -419,9 +429,12 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
         subtype = decision.get("subtype")
         cand = decision.get("address") or decision.get("explanation_source")
         subj = cand if (isinstance(cand, str) and cand.startswith("code://")) else None
+        _options = decision.get("options") if isinstance(decision.get("options"), list) else []
+        _leg = decision.get("legibility") if isinstance(decision.get("legibility"), dict) else {}
     else:
         text = decision if isinstance(decision, str) else ""
         subtype, subj = None, None
+        _options, _leg = [], {}
     if not (isinstance(text, str) and text.strip()):
         raise ValueError("explanation_grounding: decision must carry text "
                          "(meaning/text/decision/question) or be a non-empty string.")
@@ -504,16 +517,35 @@ def explanation_grounding(suite, decision, *, top_n: int = 8, rerank: bool = Fal
         for tc in theorem_claims[:12]:
             lines.append(f"  • {tc['claim']}")
     else:
-        for c in ctx:
-            t = c.get("text")
-            if isinstance(t, str) and t.strip():
-                lines.append(f"- {t.strip()}")
+        # ANCHOR on the decision's OWN declared content FIRST — the decision-SPECIFIC ground truth (authored,
+        # always on-topic). This kills the per-decision bleed: the explanation grounds in THIS decision, not a
+        # louder vocabulary-neighbour the broad corpus retrieval drifts to. Corpus rides as clearly-SECONDARY
+        # background, RELEVANCE-GATED (>= _CTX_FLOOR) so a bled neighbour is dropped — a clean "no extra
+        # context" beats a confident wrong one.
+        lines.append(f"THE DECISION (what is being decided): {text}")
+        if _leg.get("is"):
+            lines.append(f"WHAT IT IS: {_leg['is']}")
+        if _options:
+            lines.append("THE OPTIONS:")
+            for o in _options:
+                if isinstance(o, dict) and o.get("label"):
+                    _imp = f" — {o['implication']}" if o.get("implication") else ""
+                    lines.append(f"  • {o['label']}{_imp}")
+        if _leg.get("why"):
+            lines.append(f"WHY IT MATTERS: {_leg['why']}")
+        # SECONDARY corpus — only items ABOVE the relevance floor (drop the bled neighbours). rerank=False ⇒
+        # no scores ⇒ no corpus admitted (decision-content-only — the safe on-topic default).
+        rel = [c for c in ctx if isinstance(c.get("text"), str) and c["text"].strip()
+               and isinstance(c.get("rerank_score"), (int, float)) and c["rerank_score"] >= _CTX_FLOOR]
         if pri:
             _attach_digest_text(suite.store, pri)
-            for pd in pri:
-                t = pd.get("text")
-                if isinstance(t, str) and t.strip():
-                    lines.append(f"- (you've weighed this before) {t.strip()}")
+            rel += [pd for pd in pri if isinstance(pd.get("text"), str) and pd["text"].strip()
+                    and isinstance(pd.get("rerank_score"), (int, float)) and pd["rerank_score"] >= _CTX_FLOOR]
+        if rel:
+            lines.append("")
+            lines.append("RELATED BACKGROUND (secondary — ground in THE DECISION above; these may touch adjacent topics):")
+            for c in rel:
+                lines.append(f"  - {c['text'].strip()}")
     block = "\n".join(lines)
 
     return {"decision": text, "subtype": subtype, "context": ctx,
