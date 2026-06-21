@@ -143,6 +143,13 @@ class FsStore:
         # a removed file → dropped), and re-reads ONLY changed/new files. _safe-filename -> ((mtime_ns,size), rec).
         self._vec_cache: dict = {}
         self._vec_cache_lock = threading.Lock()    # held ONLY during the refresh (scandir+stat+parse-changed)
+        # X12-MATRIX (2026-06-21): a per-(space,emb) numpy MATRIX cache for the cosine fast-path. index_corpus
+        # rebuilt [{id,vector}] + retrieve re-did np.asarray PER query — ~6s+ on the 67k extractions space (the
+        # determine's candidate-filter dominant cost). The matrix (n×dim + parallel ids) is built ONCE per
+        # space, keyed on `_vec_version` (bumped in _vector_records on ANY change) → NO staleness, auto-fresh on
+        # a (re)bake. query_index uses it (M@q) → ~0.1s. Benefits EVERY extractions/space query (root+broad).
+        self._vec_version = 0
+        self._space_matrix_cache: dict = {}        # (space, emb) -> (version, ids:list, M:np.ndarray)
 
     def _safe_lock_name(self, key: str) -> str:
         """A filename-safe lockfile name for an arbitrary key (graph id, claim key). Reuses the
@@ -1030,6 +1037,7 @@ class FsStore:
                 return []
             seen = set()
             out = []
+            changed = False                                  # any new/changed/evicted entry this scan → bump version
             for entry in scan:
                 name = entry.name
                 if not name.endswith(".json"):
@@ -1051,10 +1059,14 @@ class FsStore:
                         cache.pop(name, None)               # torn/unreadable → skip + forget (retry next call)
                         continue
                     cache[name] = (sig, rec)               # NEW/CHANGED — parse once, remember
+                    changed = True
                 out.append(rec)
             if len(cache) != len(seen):                     # evict entries whose file vanished
                 for gone in [n for n in cache if n not in seen]:
                     cache.pop(gone, None)
+                changed = True
+            if changed:                                      # X12-MATRIX: invalidate the per-space matrix cache
+                self._vec_version += 1                       # (built lazily, signature-keyed on this version)
             return out
 
     def warm_vector_cache(self) -> int:
@@ -1121,6 +1133,46 @@ class FsStore:
                 _id = rec.get("source") if space is not None else rec["address"]
                 out.append({"id": _id if _id is not None else rec["address"], "vector": rec["vector"]})
         return out
+
+    def space_matrix(self, space, emb):
+        """X12-MATRIX: the per-(space,emb) cosine MATRIX (ids, M:np.ndarray) — query_index's fast-path. Built
+        ONCE from _vector_records using the SAME (space,emb) filter + id logic as index_corpus (→ the SAME
+        ranked ids, so the matmul ranking is IDENTICAL to index_corpus→retrieve), cached keyed on `_vec_version`
+        (bumped on ANY vector change → NO staleness, auto-fresh on a (re)bake). Returns:
+          • (ids, M)  — ids parallel to M's rows; do `(M @ q)/(|rows|·|q|)` for cosine.
+          • ([], None) — the space is empty (honest; caller returns empty).
+          • None       — numpy absent, the DEFAULT/ALL space (not a perf target), or a RAGGED-dim space (a dim
+                         mismatch must hit index_corpus→retrieve's FAIL-LOUD path, never a silent matrix).
+        Only NAMED spaces are matrixed (the perf target = the big named spaces, e.g. the 67k extractions)."""
+        if space is None or space is self.ALL_SPACES:
+            return None
+        try:
+            import numpy as _np
+        except Exception:
+            return None
+        recs = self._vector_records()                        # refresh (+ may bump _vec_version)
+        ver = self._vec_version
+        key = (space, emb)
+        cached = self._space_matrix_cache.get(key)
+        if cached is not None and cached[0] == ver:
+            return (cached[1], cached[2])
+        ids, vecs = [], []
+        for rec in recs:
+            if rec.get("space") == space and rec.get("emb") == emb:
+                _id = rec.get("source") if rec.get("source") is not None else rec.get("address")
+                v = rec.get("vector")
+                if _id is not None and v:
+                    ids.append(_id)
+                    vecs.append(v)
+        if not ids:
+            self._space_matrix_cache[key] = (ver, [], None)
+            return ([], None)
+        dim0 = len(vecs[0])
+        if any(len(v) != dim0 for v in vecs):                # ragged → let index_corpus→retrieve fail loud
+            return None
+        M = _np.asarray(vecs, dtype=_np.float64)
+        self._space_matrix_cache[key] = (ver, ids, M)
+        return (ids, M)
 
     def layers_by_space(self) -> dict:
         """Which embedder LAYERS each content/registry space carries: {space: [emb_tag, ...]} (the default/BGE

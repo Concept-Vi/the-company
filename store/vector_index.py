@@ -161,13 +161,42 @@ def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb="_
     """
     from fabric import config as fcfg
     emb = fcfg.resolve_emb_layer(emb)                      # omit-emb callers (query_corpus/consult) -> pplx; explicit None -> bge. Read layer == write layer.
-    from nodes import retrieve                              # the existing cosine-ranking node — reused, not reimplemented
-    corpus = store.index_corpus(space=space, emb=emb, records=records)  # [{id,vector}] at the embedder LAYER; `records` = a pre-fetched _vector_records() snapshot (scandir-once for multi-space callers — additive, default unchanged)
-    ranked = retrieve.run({"query": query_vector, "corpus": corpus}, {"k": k})
+    # X12-MATRIX fast-path: a cached per-space numpy matrix → cosine via ONE matmul (no per-query [{id,vector}]
+    # rebuild + np.asarray over 67k×2560 — the determine/extractions-query dominant cost). RANKING-IDENTICAL to
+    # index_corpus→nodes.retrieve (same ids, same float64 cosine, same stable-descending sort). Skipped when a
+    # `records` snapshot is passed (the scandir-once path — keep its semantics), or DEFAULT/ALL space (mtx=None
+    # → the safe path below). FALLS BACK to retrieve on any edge (dim-mismatch / zero-vector) so retrieve's
+    # FAIL-LOUD contract is preserved — never a silent wrong-but-fast cosine.
+    mtx = store.space_matrix(space, emb) if (records is None) else None
+    ranked = None
+    _total = None                                          # the index size in scope (for the with_note count) — set by whichever path runs
+    if mtx is not None:
+        _ids, _M = mtx
+        _total = len(_ids)
+        if not _ids or _M is None:
+            ranked = []                                    # honest-empty space
+        else:
+            try:
+                import numpy as _np
+                _q = _np.asarray(query_vector, dtype=_np.float64)
+                if _q.ndim == 1 and _M.shape[1] == _q.shape[0]:
+                    _qn = float(_np.linalg.norm(_q)); _mn = _np.linalg.norm(_M, axis=1)
+                    if _qn != 0.0 and not bool((_mn == 0).any()):
+                        _sc = (_M @ _q) / (_mn * _qn)
+                        _kk = min(int(k), len(_ids))
+                        _ord = _np.argsort(-_sc, kind="stable")[:_kk]
+                        ranked = [{"id": _ids[i], "score": float(_sc[i])} for i in _ord]
+            except Exception:
+                ranked = None                              # any trouble → the safe path below (fail-loud preserved)
+    if ranked is None:                                     # default/ALL space · records-path · matrix-edge → the reuse path
+        from nodes import retrieve                          # the existing cosine-ranking node — reused, not reimplemented
+        corpus = store.index_corpus(space=space, emb=emb, records=records)  # [{id,vector}] at the embedder LAYER
+        _total = len(corpus)
+        ranked = retrieve.run({"query": query_vector, "corpus": corpus}, {"k": k})
     if not with_note:
         return ranked
     _scope = "default space" if space is None else (f"space '{space}'" if space is not store.ALL_SPACES else "all spaces")
-    if not corpus:
+    if not _total:
         _hint = (" — the DEFAULT/unspaced index holds almost nothing; the durable records live in SPACES: "
                  "pass space='history' (cross-session discussion records) · 'common_knowledge' (comprehended "
                  "content) · 'principles'/'worldview'/'topics' · 'repo' (the codebase). e.g. "
@@ -175,7 +204,7 @@ def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb="_
                 (f" — no item is embedded in {_scope} at this layer (emb={emb!r}); try another space or "
                  "check the embedder is up (:8007).")
         return {"ranked": [], "note": (f"the vector index is EMPTY ({_scope}){_hint} No addresses to rank.")}
-    note = f"ranked {len(ranked)} of {len(corpus)} indexed addresses by cosine ({_scope})"
+    note = f"ranked {len(ranked)} of {_total} indexed addresses by cosine ({_scope})"
     # WEAK-MATCH honest note (no-silent-failures): cosine ALWAYS returns top-k, so an off-topic query gets
     # confident-looking hits. Calibrated by-use 2026-06-21 (in-corpus top1 0.35-0.46 · off-corpus 0.21-0.33):
     # the gap is real but NARROW, so this SURFACES low confidence — it does NOT filter (a hard floor on a 0.027
