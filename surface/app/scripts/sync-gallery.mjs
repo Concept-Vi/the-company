@@ -55,7 +55,10 @@ function resolveDna(file) {
 // MUST carry it or the elegance stays DORMANT (the "elegance unlock" the lead confirmed REQUIRED, GENERATIVE-FLOOR-
 // SPEC.md projection team-ask). ⚠️ surface.js does a HARD `global.DNA = {…}` (overwrite, no `||{}` guard), so it
 // MUST load FIRST in index.html — before organisms/unit-view/archetype (which extend DNA) — or it wipes them.
-const FILES = ['surface.js', 'organisms.js', 'unit-view.js', 'archetype.js', 'phone.css']
+// ★ face-adapters.js (DNA dd96150): DNA.faceRecord.sessionRecord(raw) maps a raw /api/sessions row → the
+// session-card archetype's record (the FACE-1 raw-data→archetype-record adapters). Was MISSING from this manifest
+// (found by-use: the session-card drop-in needs it but it never synced → DNA.faceRecord undefined) — added.
+const FILES = ['surface.js', 'organisms.js', 'unit-view.js', 'archetype.js', 'face-adapters.js', 'phone.css']
 
 const resolved = FILES.map((f) => ({ f, src: resolveDna(f) }))
 const missing = resolved.filter((r) => !r.src)
