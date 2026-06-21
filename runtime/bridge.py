@@ -115,6 +115,17 @@ BRIDGE_ROUTES = (
     # (Session Fabric R1.4): they hand-wrapped what a real Claude Code session does natively
     # (settings/hooks/mcp/git/scheduling via its own CLI). The fabric drives REAL sessions instead —
     # surface, don't rebuild. See build-prep "Session Fabric — Operational Requirements.md" §R1.4.
+    # FACE-1 read-API + the cognition POST doors — dispatched since this lane built them, but MISSING from
+    # this single-source table until the drift-gate caught it (the gate working as designed, both directions
+    # — same catch as the registry/proposals + chat/stream entries above). Registered here so capabilities()
+    # .api_verbs (the /api/ projection of this table) SEES them. All FACE-1 reads + 3 model-run/propose POSTs
+    # (brain/ask = the supervisor-brain source-router; run-in-channel/propose = the propose-only action face;
+    # decision/explain = the grounded walk-through compose) — all floor-clean: read + model-run + propose,
+    # NO consequential surface-write, no gate.
+    "/api/channels", "/api/sessions", "/api/timeline", "/api/board", "/api/cascades", "/api/flows",
+    "/api/routines", "/api/transcript-search", "/api/session-recall", "/api/channel-history",
+    "/api/session-describe", "/api/stack-item-types",
+    "/api/brain/ask", "/api/run-in-channel/propose", "/api/decision/explain",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
@@ -1175,13 +1186,17 @@ def _cog_turn_id(prefix):
 
 
 def cog_run_role(role, *, utterance="", model="", inputs=None,
-                 max_tokens=256, temperature=0.0, ensure=False, ensure_evict=False):
+                 max_tokens=256, temperature=0.0, ensure=False, ensure_evict=False,
+                 policy=None, coordinate=None):
     """Fire ONE role and persist+index its output. Mirror of mcp_face/server.py:run_role (same engine
     `_cog.run_role`, same persist to run://<turn>/<role>, same `cognition.run_role` op.run emit). The
     OPERATION is the ROLE's own `op` (NOT a caller kwarg — the engine dispatches on `role.op`, exactly as
     the MCP face does): a generate-role → validated structured output; an embed-role (op='embed', e.g. the
     'embed' role) → a {vector,dim,model} via the local embedder (down embedder FAILS LOUD unless
-    ensure=True requests the gated #50 load). Returns {role, op, output, address, turn_id}."""
+    ensure=True requests the gated #50 load). `policy`/`coordinate` thread straight through to
+    `_cog.run_role` (the §5 seams — the per-subtype SAMPLING regime + the prompt_slot FRAMING coordinate);
+    both default None ⇒ run_role's own defaults ⇒ BYTE-IDENTICAL for every existing utterance-only caller.
+    Returns {role, op, output, address, turn_id}."""
     r = _cog_resolve_role(role)
     op = getattr(r, "op", "generate")                            # the op rides the ROLE (mcp_face parity)
     turn_id = _cog_turn_id("fe-")
@@ -1195,7 +1210,7 @@ def cog_run_role(role, *, utterance="", model="", inputs=None,
         else:
             ctx[name] = val
     kw = {"max_tokens": max_tokens, "temperature": temperature, "store": SUITE.store,
-          "ensure": ensure, "ensure_evict": ensure_evict}
+          "ensure": ensure, "ensure_evict": ensure_evict, "policy": policy, "coordinate": coordinate}
     if model:
         kw["model"] = model
     _t0 = time.monotonic()
@@ -2326,6 +2341,37 @@ class H(BaseHTTPRequestHandler):
                 else:
                     out = _brain.ask(_ques, suite=SUITE, aim=b.get("aim"), graph_id=b.get("graph_id") or "codebase")
                     self._send(200, json.dumps({"ok": True, **out}))
+            elif self.path == "/api/decision/explain":    # THE GROUNDED WALK-THROUGH (Link 1) — compose decision→explanation
+                # The operator opens a decision card + asks "what is this / why does it matter". This composes the
+                # THREE built halves into ONE grounded, at-altitude explanation (operator-law: no machine names):
+                #   • CONTENT  — recollection's explanation_grounding(SUITE, decision) → {block, caveat}: no-fiction,
+                #                chunk-traced from Tim's OWN corpus/maths (theorem-forks carry the never-assert caveat).
+                #   • POLICY   — explanation_policy_for(decision): the per-subtype SAMPLING regime (generation_policies).
+                #   • FRAMING  — explain_role's prompt_slot resolved by coordinate={subtype} (risk vs trade-off vs maths).
+                # THE FLOOR: a READ + a model-run (cog_run_role persists+indexes the run; NO surface-data write, no gate).
+                # Model DEFAULTS to the LIVE rhm brain (rhm_config.model) — overridable {model} for a cheaper/verify run.
+                from runtime.decision_memory import explanation_grounding as _eground
+                from runtime.cognition import explanation_policy_for as _epolicy, decision_registry as _dreg
+                b = self._body()
+                _did = b.get("id") or b.get("decision_id")
+                _dec = _dreg().get(_did) if _did else b.get("decision")   # the RECORD (registry-is-truth) or a literal record/text
+                if not _dec:
+                    self._send(404 if _did else 400, json.dumps({"ok": False,
+                        "error": (f"unknown decision {_did!r}" if _did
+                                  else "/api/decision/explain needs {id} (a decision id) or {decision} (a record/text)")}))
+                else:
+                    _g = _eground(SUITE, _dec)                            # recollection's grounding: {block, caveat, subtype, note}
+                    _pol = _epolicy(_dec)                                 # fork: the per-subtype sampling regime (or None)
+                    _inputs = {"block": _g.get("block") or ""}            # block ALWAYS rides; caveat ONLY when present (else "caveat: None")
+                    if _g.get("caveat"):
+                        _inputs["caveat"] = _g["caveat"]
+                    _coord = {"subtype": _g["subtype"]} if _g.get("subtype") else None
+                    _model = b.get("model") or SUITE.rhm_config().get("model") or ""   # the operator's REAL brain by default
+                    _out = cog_run_role("explain_role", inputs=_inputs, policy=_pol, coordinate=_coord,
+                                        model=_model, max_tokens=int(b.get("max_tokens") or 512))
+                    self._send(200, json.dumps({"ok": True, "subtype": _g.get("subtype"), "policy": _pol,
+                                                "model": _model, "explanation": _out["output"],
+                                                "grounding_note": _g.get("note"), "address": _out["address"]}))
             elif self.path == "/api/run-in-channel/propose": # EMBEDDED-CLI action layer — PROPOSE a session/channel action
                 # The embedded-CLI's "run in channel" face: wake/consult a session · post to a channel. These are
                 # GATED (spawn=lead-only autonomous-spawn-lead-only; session_post/channel_act=explicitly_denied→403).
