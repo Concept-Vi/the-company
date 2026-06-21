@@ -13,12 +13,13 @@ status: living
 
 **Guarantees (the row schema — `item_types/<id>.py` declares `ITEM_TYPE = {...}`):** required `id` (== filename, fail-loud otherwise), `initial` (∈ states), `states` (non-empty list of str), `transitions` ({from_state: [allowed to_state, …]}; every key + target ∈ states). Optional `label`, `desc`. A malformed entry (bad id / id≠filename / unknown field / initial∉states / transition to/from unknown state) FAILS LOUD at discovery — never a silent skip. Validated by `runtime/item_types.py:_build_item_type`.
 
-**The item-types (the live set — the drift home; `tests/cc_board_acceptance.py` asserts all five present + per-type lifecycles distinct):**
+**The item-types (the live set — the drift home; `tests/cc_board_acceptance.py` asserts the core types present + per-type lifecycles distinct):**
 - **request** — an ask to add/change the Company/MCP/CLI/a channel. open → picked-up → building → done / declined.
 - **issue** — a bug/wrong-behaviour report (supersedes the legacy hand-kept SYSTEM-GAPS.md ledger). open → triaged → fixing → resolved / wontfix.
 - **tip** — a discovered better way. posted (evergreen) ⇄ archived.
 - **guide** — a how-to / living doc, updated in place. living ⇄ archived.
 - **idea** — a seed/thought; may be promoted to a request (via a `promoted_from` edge). captured → discussing → promoted / dropped.
+- **signal** — a fabric SIGNAL a lane consumes to ACT (first instance: `decision.decided` — the operator decided an addressed decision; work GATED on it can RESUME with the chosen option). The shared-tree, floor-clean half of the operator-cycle's resume wire ([[cross-session-via-shared-tree]]; the live-MCP channel post stays gated) — posted by `decision_registry.decision_decided_signal`, linked `attached_to` the decision:// address. raised → consumed / superseded.
 
 **Where new things go:** a new story-type = a new file `item_types/<id>.py` declaring `ITEM_TYPE`. Update THIS file's live-set when you add one.
 

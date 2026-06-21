@@ -280,23 +280,44 @@ def decision_inbox(registry, store, subtype_registry=None) -> list:
     return out
 
 
-def decision_decided_signal(suite, address: str, chosen_option, *, by=None) -> dict:
+def decision_decided_signal(suite, address: str, chosen_option, *, by=None, board=True, board_dir=None) -> dict:
     """L3 — the decide→SIGNAL half of the operator-cycle's "Tim clears → resume" wire. Called by
-    territory_write the instant a `decision_take` mark lands (the decide chokepoint), it emits the
-    `decision.decided` SIGNAL as a first-class event {decision_id, address, chosen_option, by}. That
-    signal is what the work GATED on this decision consumes to RESUME with the chosen option — v1: the
-    lead/lanes read it (SUITE.get_events / the decided-signals read) and un-pause; v2: a blocked-on
-    registry matches `gated_on: decision://…` and auto-resumes.
+    territory_write the instant a `decision_take` mark lands (the decide chokepoint), it posts the
+    `decision.decided` SIGNAL TWO floor-clean ways so the work GATED on this decision can RESUME with the
+    chosen option:
+      • the EVENT — emit_run_record("decision.decided", {decision_id, address, chosen_option, by}); queryable
+        via /api/decision/decided-signals (the read half).
+      • the NOTICEBOARD — a board `signal` item (file_item) so lanes SEE the decide on the shared-tree board
+        WITHOUT polling the event log ([[cross-session-via-shared-tree]] — the lead's #4). Linked attached_to
+        the decision:// address (the accumulation-point the decided VALUE lives on — both-plus-others: value-
+        on-address always + a lane's optional gated_on riding on top).
 
-    THE FLOOR (autonomous-spawn-lead-only): this is a RECORD emit only (emit_run_record, exactly like
-    every role-run) — it does NOT post to a live channel, wake, or dispatch a session. The brain records
-    + proposes; the human/lead fires the actual resume. So the signal is floor-clean by construction.
+    THE FLOOR (autonomous-spawn-lead-only): BOTH are RECORD/file writes only — NOT a live-MCP channel_act
+    post, a wake, or a dispatch. The brain records here; the lane/operator fires the actual resume. So the
+    signal is floor-clean by construction. The EVENT is the core (fail-loud); the board notice is visibility
+    (a failure is SURFACED on the return as board_error, never swallowed, and never breaks the event/decide).
+    `board=False` skips the notice (event-only); `board_dir` targets a non-default board (tests → temp dir).
     Returns the signal dict (territory_write attaches it to the mark record)."""
     did = address.rsplit("/", 1)[-1] if isinstance(address, str) and "/" in address else address
     signal = {"decision_id": did, "address": address, "chosen_option": chosen_option}
     if by:
         signal["by"] = by
-    suite.emit_run_record("decision.decided", 0, **signal)   # floor-clean record emit (fail-loud, like every emit)
+    suite.emit_run_record("decision.decided", 0, **signal)   # CORE: floor-clean record emit (fail-loud, like every emit)
+    if board:
+        try:
+            from runtime import cc_board as _ccb
+            item = _ccb.file_item(
+                "signal",
+                title=f"Decided: {did} → {chosen_option}",
+                body=(f"The operator decided **{did}** — chosen option: **{chosen_option}**. "
+                      f"Work gated on `{address}` can RESUME with this option. "
+                      f"(decision.decided signal — the resume itself is the lane's/operator's gated step.)"),
+                author_session=(by or "operator"),
+                links=[{"kind": "attached_to", "target": address}],
+                board_dir=board_dir)
+            signal["board_item"] = item.get("id")
+        except Exception as e:                               # VISIBILITY is best-effort: surface, never swallow,
+            signal["board_error"] = f"{type(e).__name__}: {e}"   # never break the event/decide (already landed)
     return signal
 
 
