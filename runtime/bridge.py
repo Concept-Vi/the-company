@@ -1408,6 +1408,21 @@ class H(BaseHTTPRequestHandler):
                 from runtime import cc_board as _ccb
                 self._send(200, json.dumps({"ok": True, "items": _ccb.list_items(
                     type=q.get("type") or None, state=q.get("state") or None, source=q.get("source") or None)}))
+            elif path == "/api/cascades":                  # FACE-4 pilot: the saved CASCADES (re-runnable pipelines)
+                # SUITE.list_cascades — each full decl row + the derived inputs_hint (registry-is-truth). The
+                # browser-reachable view of the runnable chains (atlas ROOT-CAUSE-4: chains were unreachable).
+                self._send(200, json.dumps({"ok": True, "cascades": SUITE.list_cascades()}))
+            elif path == "/api/flows":                     # FACE-4 pilot: the registered FLOWS (multi-primitive production lines)
+                # FlowRegistry.rows() — the flow decls (id/label/params/…); ROOT-anchored discover. A flow is
+                # code, so this is the READ-only catalog (running one is a separate gated POST, not here).
+                from runtime.flows import FlowRegistry as _FlowReg
+                self._send(200, json.dumps({"ok": True, "flows": _FlowReg().discover().rows()}))
+            elif path == "/api/routines":                  # FACE-4 pilot: the scheduled ROUTINES (cron-cadence agents)
+                # routine_registry — each routine's decl spec (prompt/cwd/model/permission_mode/cadence). READ
+                # catalog (arming/running a routine is the scheduler's gated path, not this read).
+                from runtime.routines import routine_registry as _rreg
+                _rr = _rreg()
+                self._send(200, json.dumps({"ok": True, "routines": [dict(_rr.get(rid).spec) for rid in _rr.ids()]}))
             elif path == "/api/types":
                 self._send(200, json.dumps(sorted(SUITE.list_types())))
             elif path == "/api/layers":                    # the multi-layer model's self-description: {space:[embedder layer,…]}
