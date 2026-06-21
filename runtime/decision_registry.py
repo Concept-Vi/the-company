@@ -243,16 +243,31 @@ def decision_inbox(registry, store, subtype_registry=None) -> list:
                     if isinstance(o, dict) and o.get("recommended") and o.get("label")), None)
         sub = row.get("subtype")
         owner = row.get("owner")                      # an explicit row override wins (rare)
-        if owner is None and sub and subtype_registry is not None:
+        ai_caveat = None
+        if sub and subtype_registry is not None:
             # RESOLVE owner from the subtype (the no-drift source) — duck-typed: .get(sub).owner
             try:
                 srow = subtype_registry.get(sub) if hasattr(subtype_registry, "get") else None
-                owner = getattr(srow, "owner", None) if srow is not None else None
+                if srow is not None:
+                    if owner is None:
+                        owner = getattr(srow, "owner", None)
+                    # SINGLE-SOURCE CAVEAT (the never-assert law's in-card text): if THIS subtype's
+                    # required_elements declares `ai_uncertainty_caveat` (today: theorem-fork), carry the
+                    # canonical operator text from recollection's decision_memory so DNA renders the SAME
+                    # words the explanation grounds by (no drift, no hardcoded JS copy, no hardcoded subtype
+                    # name — registry-driven: any future subtype that declares the element gets it). The text
+                    # is static per-subtype (the law, not per-decision) so this is GPU-free + recall-free.
+                    if "ai_uncertainty_caveat" in (getattr(srow, "required_elements", None) or []):
+                        from runtime.decision_memory import THEOREM_FORK_CAVEAT_OPERATOR
+                        ai_caveat = THEOREM_FORK_CAVEAT_OPERATOR
             except Exception:
-                owner = None                          # fail-soft: a bad subtype never breaks the inbox read
-        out.append({"id": did, "type": "decision-sequence", "subtype": sub,
-                    "owner": owner, "address": addr,
-                    "name": name, "state": st.get("state"), "recommended_label": rec})
+                owner = owner                         # fail-soft: a bad subtype never breaks the inbox read
+        rowout = {"id": did, "type": "decision-sequence", "subtype": sub,
+                  "owner": owner, "address": addr,
+                  "name": name, "state": st.get("state"), "recommended_label": rec}
+        if ai_caveat:                                  # only theorem-fork-kind rows carry it (absent elsewhere)
+            rowout["ai_uncertainty_caveat"] = ai_caveat
+        out.append(rowout)
     return out
 
 
