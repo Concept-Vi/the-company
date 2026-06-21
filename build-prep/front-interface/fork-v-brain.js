@@ -118,6 +118,18 @@
     // SELF-RENDERS the transparency line ("V posted to #<name>: …") into THIS module's .v-brain-reply slot
     // (the panel DOM is ours — mirror groundedAsk, single-source). projection's host owns the TRIGGER (the
     // "post" verb + the name-picker); this owns the call + the panel render. NO gate/token (per Tim).
+    // Translate a raw post error → HUMAN meaning (operator-law: Tim NEVER sees code/handles on a failure —
+    // the raw "post_to_channel: channel://ch-5 is 'archived'…" must not reach him). Keyword-mapped from
+    // post_to_channel's fail-loud messages; a clean fallback otherwise.
+    function _humanPostError(err) {
+      const e = String(err || '').toLowerCase();
+      if (e.indexOf('archived') >= 0 || e.indexOf('active') >= 0 || e.indexOf('read-only') >= 0) return 'that channel is closed';
+      if (e.indexOf('member') >= 0 || e.indexOf('dead letter') >= 0) return 'that channel has no one in it yet';
+      if (e.indexOf('no channel') >= 0 || e.indexOf('unknown') >= 0 || e.indexOf('not found') >= 0) return 'I couldn’t find that channel';
+      if (e.indexOf('empty') >= 0) return 'there was nothing to post';
+      return 'something went wrong';
+    }
+
     function postToChannel(channel, message) {
       const ch = (channel || '').trim();
       const msg = (message != null ? message : inputEl.value).trim();
@@ -131,7 +143,7 @@
         .then((d) => {
           replyEl.textContent = (d && d.ok)
             ? 'V posted to #' + ch + ': ' + core.stripMd(msg)   // transparency: what went out, attributed, clean
-            : '(could not post' + (d && d.error ? ' — ' + d.error : '') + ')';
+            : 'Couldn’t post to #' + ch + ' — ' + _humanPostError(d && d.error) + '.';  // HUMAN, never raw code (operator-law)
           return d;
         })
         .catch((e) => {                                    // fail-soft (the floor): a clear note + the error shape
