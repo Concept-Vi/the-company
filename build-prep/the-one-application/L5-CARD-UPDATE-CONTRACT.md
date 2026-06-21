@@ -168,6 +168,11 @@ re-decides → the AI cannot change what he decided under him).
 emitting an "accept" is EXACTLY what the token blocks; a bare UI-tap without the token re-opens that
 runaway-auto-accept hole. Default = keep #1b-transparent; escalate the drop ONLY if Tim means it.
 
+**SCOPED slice (lead-accepted 2026-06-22):** the #1b check is wired to the **L5 accept-route ONLY** — NOT full
+decide-gating-A (which stays HELD/free per Tim). The dormant surface-mint (558e4a8) becomes load-bearing for the
+update-accept alone. So: transparent-#1b on the update-accept; decide-writes (decision_take) stay free until A
+is separately flipped on Tim's bar.
+
 ### v1 = the card policy + the address-loosened mechanism; DERIVE per-archetype (don't build ahead)
 The card is the one proven, building instance. Each archetype adds its update-policy (updatable whitelist +
 accept-stakes) WHEN it actually gets an update flow — derived from the real case, never invented up front (the
