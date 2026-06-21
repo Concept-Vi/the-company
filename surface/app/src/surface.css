@@ -676,5 +676,8 @@ body[data-ff="portrait"] .gallery-frame { width: 100%; max-height: 100%; border-
    above the viewport / under the top chrome; the frame scrolls any residual, every option reachable. The card keeps
    its natural ~390 width (centred) — the deeper width-USING re-allocation (2-column at landscape, to halve the
    height so it fits without a long scroll) is DNA's .ar-responsive card grammar, flagged to her. */
-body[data-ff="landscape"] .gallery-overlay { align-items: safe center; padding: calc(var(--safe-t) + var(--s-1)) var(--s-3) var(--s-1); }
-body[data-ff="landscape"] .gallery-frame { max-height: 100%; }
+/* The landscape modal allocation CONSUMES fork's resolved values when live (--res-modal-* set by the host
+   resolve-consume, lib/resolveAllocation.ts) and DEGRADES CLEAN to these data-ff fallbacks while /api/resolve is
+   committed-not-live — so the resolved px WIN over the fallback on the bounce, zero change before it (contract §6). */
+body[data-ff="landscape"] .gallery-overlay { align-items: safe center; padding: var(--res-modal-pad-top, calc(var(--safe-t) + var(--s-1))) var(--res-modal-pad-x, var(--s-3)) var(--s-1); }
+body[data-ff="landscape"] .gallery-frame { max-height: var(--res-modal-frame-max-h, 100%); }

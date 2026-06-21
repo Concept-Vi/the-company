@@ -9,6 +9,7 @@ import { Desktop } from './layouts/Desktop'
 import { Portrait } from './layouts/Portrait'
 import { Landscape } from './layouts/Landscape'
 import { GalleryMount } from './gallery/GalleryMount'
+import { resolveAndApplyModal } from './lib/resolveAllocation'
 import { RightHand } from './rhm/RightHand'
 import { DecisionsInbox } from './decisions/DecisionsInbox'
 import { ToolsBar } from './tools/ToolsBar'
@@ -104,6 +105,20 @@ export function App() {
   // host half of resolve(device-coordinate)→allocation; fork's resolve() primitive feeds a richer coordinate here
   // when it lands (the 4th-primitive seam). Set on mount + every ff change, before any modal opens.
   useEffect(() => { document.body.dataset.ff = ff }, [ff])
+  // THE RESOLVE-CONSUME (RESOLVER-CONTRACT.md §7, projection's lane): compute the device-coordinate from screen-size
+  // → ask fork's resolve() (/api/resolve) for the MODAL allocation → apply as CSS vars. DEGRADE-CLEAN: /api/resolve
+  // is committed-not-live (the running rules.py is cached-stale) → it leaves the vars unset → the body[data-ff] CSS
+  // holds (no change). Lights up + the resolved px WIN over the data-ff fallbacks on the lead's batched bounce.
+  useEffect(() => {
+    resolveAndApplyModal()
+    const on = () => resolveAndApplyModal()
+    window.addEventListener('resize', on)
+    window.addEventListener('orientationchange', on)
+    return () => {
+      window.removeEventListener('resize', on)
+      window.removeEventListener('orientationchange', on)
+    }
+  }, [])
   const [proj, setProj] = useState<Projection | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
