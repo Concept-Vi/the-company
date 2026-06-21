@@ -212,6 +212,44 @@ def compose_state(row: dict, marks: list) -> dict:
     return resolved
 
 
+# L5 — the content fields an RHM `decision_update` MAY refine (Hole-2's whitelist; ONE source for the fold +
+# the writer). CONTENT only — NEVER subtype/id/address/scope (the structural blast-radius: moving the owner/
+# frame/identity closes the whole queue). The fold ignores a non-whitelisted field (defense-in-depth).
+DECISION_UPDATE_WHITELIST = ("meaning", "options", "legibility", "dimensions", "device")
+
+
+def compose_definition(row, marks):
+    """L5 — PURE: fold the ACCEPTED `decision_update` marks onto the decision ROW → the effective card
+    DEFINITION (registry-is-truth on the DEFINITION, beside compose_state's STATE fold; the row never mutates).
+    An update composes ONLY if a `decision_update_accept` names its `ts` AND no `decision_update_reject` does
+    (MODEL A: the RHM proposes, the operator applies — light, A/#1b held). Per-field latest-accepted-by-ts;
+    a non-whitelisted field is ignored. Returns (definition, reopened):
+      • definition — the row dict with the accepted updates overlaid (the resolved view; not a stored mutation).
+      • reopened   — True iff an accepted OPTIONS-touching update hit a DECIDED card (Hole-1: a stale
+                     decided_value orphans when the options change → the caller MUST re-open it, i.e. write a
+                     decision_retract so Tim re-decides against the new options). state-fold + definition-fold
+                     are COUPLED here BY DESIGN — compose_state never re-validates decided_value, so this is
+                     where the orphan is caught."""
+    base = dict(row) if isinstance(row, dict) else {"row": row}
+    ms = [m for m in (marks or []) if isinstance(m, dict)]
+    accepts = {str(m.get("value")) for m in ms if m.get("mark_type") == "decision_update_accept"}
+    rejects = {str(m.get("value")) for m in ms if m.get("mark_type") == "decision_update_reject"}
+    accepted = [m for m in ms if m.get("mark_type") == "decision_update"
+                and str(m.get("ts")) in accepts and str(m.get("ts")) not in rejects]
+    by_field: dict = {}
+    for u in sorted(accepted, key=lambda m: str(m.get("ts") or "")):     # latest-accepted-by-ts per field
+        v = u.get("value") if isinstance(u.get("value"), dict) else {}
+        if v.get("field") in DECISION_UPDATE_WHITELIST:
+            by_field[v["field"]] = v.get("value")
+    for field, val in by_field.items():
+        base[field] = val
+    reopened = False
+    if "options" in by_field:                                            # Hole-1: options changed on a decided card
+        _st = compose_state(row, ms)
+        reopened = isinstance(_st, dict) and _st.get("state") == "decided"
+    return base, reopened
+
+
 def decision_inbox(registry, store, subtype_registry=None) -> list:
     """The decisions INBOX list (the operator's see-all-pending entry, beyond the deep-link): one
     {id, type, subtype, owner, address, name, state, recommended_label} per discovered decision. registry-is-
