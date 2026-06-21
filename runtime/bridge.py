@@ -127,7 +127,7 @@ BRIDGE_ROUTES = (
     "/api/session-describe", "/api/stack-item-types",
     "/api/brain/ask", "/api/run-in-channel/propose", "/api/decision/explain",
     "/api/decision/decided-signals",
-    "/api/operator-session",
+    "/api/operator-session", "/api/channel/post",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
@@ -2482,6 +2482,31 @@ class H(BaseHTTPRequestHandler):
                     self._send(200, json.dumps({"ok": True, "subtype": _g.get("subtype"), "policy": _pol,
                                                 "model": _model, "explanation": _out["output"],
                                                 "grounding_provenance": _g.get("note"), "address": _out["address"]}))
+            elif self.path == "/api/channel/post":         # THE OPEN V-POST (Tim 2026-06-22: "posting shouldn't be
+                # gated, fully ungated" — his informed bar, lead-accepted). The V posts to a channel DIRECTLY: NO
+                # token, NO supervised/autonomous discriminator, NO propose-step — just post_to_channel. (The
+                # supervised-post-discriminator design is moot; the runaway-brake is OFF per Tim's informed call,
+                # fully reversible.) Attributed V/RHM-author (from=rhm); returns the posted event + fan for the
+                # transparency-render ("V posted to #<channel>: <text>"). Fail-loud on empty message / unknown channel.
+                from runtime import session_channels as _sc
+                b = self._body()
+                _cid = b.get("channel") or b.get("cid")
+                _msg = (b.get("message") or b.get("text") or "").strip()
+                if not _cid or not _msg:
+                    self._send(400, json.dumps({"ok": False, "error": "/api/channel/post needs {channel, message}"}))
+                else:
+                    try:
+                        _ev = _sc.post_to_channel(SUITE.store, _cid, _msg, (b.get("from") or "rhm"),
+                                                  registry=getattr(SUITE, "get_agent_session", None),
+                                                  thread=b.get("thread") or None)
+                        # the real post_to_channel shape: `posted` IS the event seq (the cursor); there is no
+                        # top-level ts. Return {ok, seq, thread, channel} + the full event (fan/what_happens) for
+                        # projection's transparency-render ("V posted to #<channel>: <text>").
+                        self._send(200, json.dumps({"ok": True, "seq": _ev.get("posted"),
+                                                    "thread": _ev.get("thread"), "channel": _ev.get("channel") or _cid,
+                                                    "posted": _ev}))
+                    except (ValueError, KeyError) as _pe:                 # empty/unknown channel/inactive → teaching 400
+                        self._send(400, json.dumps({"ok": False, "error": str(_pe)}))
             elif self.path == "/api/run-in-channel/propose": # EMBEDDED-CLI action layer — PROPOSE a session/channel action
                 # The embedded-CLI's "run in channel" face: wake/consult a session · post to a channel. These are
                 # GATED (spawn=lead-only autonomous-spawn-lead-only; session_post/channel_act=explicitly_denied→403).
