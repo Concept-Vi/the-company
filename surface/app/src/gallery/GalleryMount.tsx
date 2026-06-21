@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { openDecisionsList } from '../decisions/decisionsStore'
+import { makeGroundedResolve } from '../lib/groundedExplain'
 
 // THE DOM-MOUNT SEAM (front-interface FIRST SLICE — the lead/DNA/fork converged ask, 2026-06-16).
 //
@@ -26,7 +27,12 @@ declare global {
   interface Window {
     DNA?: {
       bindProjectionDrill?: (opts: { container: HTMLElement; source?: string | null }) => void
-      renderGallery?: (address: string, opts?: { container?: HTMLElement; source?: string | null }) => Promise<HTMLElement>
+      // resolve: the host-supplied resolve-override DNA's renderGallery threads to `resolve:<key>` slots (the seam
+      // DNA opens for the grounded walk-through). May return a Promise (async → DNA shows "…" + streams in).
+      renderGallery?: (
+        address: string,
+        opts?: { container?: HTMLElement; source?: string | null; resolve?: (name: string) => Promise<string> | string | undefined },
+      ) => Promise<HTMLElement>
     }
   }
 }
@@ -209,7 +215,12 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
       if (container?.querySelector(`[data-decision-address="${cssAddr}"]`)) { setDlState(''); return }
       if (!inFlight && container && window.DNA?.renderGallery) {
         inFlight = true
-        window.DNA.renderGallery(addr, { container }).catch(() => { inFlight = false /* rejected → allow a retry */ })
+        // GROUNDED WALK-THROUGH (L1, projection's half): supply the resolve-override so DNA's explain slot resolves
+        // from /api/decision/explain instead of its leg.why stub. GATED — makeGroundedResolve returns undefined while
+        // GROUNDED_EXPLAIN_ENABLED is off (+ DNA's seam not yet open), so we pass {container} only = no behavior change.
+        const groundedResolve = makeGroundedResolve(addr)
+        const renderOpts = groundedResolve ? { container, resolve: groundedResolve } : { container }
+        window.DNA.renderGallery(addr, renderOpts).catch(() => { inFlight = false /* rejected → allow a retry */ })
       }
       if (tries++ < 80) setTimeout(tick, 250)
       // after the window we stop RE-attempting, but the in-flight render (slow resolve) still resolves later +
