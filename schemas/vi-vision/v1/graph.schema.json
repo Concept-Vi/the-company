@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vi-vision://global/schemas/v1/graph.schema.json",
+
+  "title": "Vi Vision Graph Archetype (render-type)",
+  "description": "The GRAPH archetype — an instance of archetype.schema.json (render_kind='graph'): renders ADDRESSED NODES + TYPED EDGES as a navigable spatial graph (NOT a list). The 2nd catalog archetype after the decision-card; the RELATIONAL family's exemplar (the edge-binding the scalar archetypes never needed).\n\nWHAT IT RENDERS: a set of addressed things as NODES + the typed relations between them as EDGES (line-verbs). Grounded in REAL usage — channel-mesh (sessions=nodes, who-feeds-whom=edges), transcript-viz (moments=nodes, threads/clusters=edges), the substrate graph (addressed things + typed relations), address-view (the resolver's addresses as typed geometry). Same engine as the decision-card (renderArchetype + a slot_map), DNA renders (lyRender), zero bespoke per-graph code.\n\n★ THE EDGE BINDING (the relational contract): `edges` binds the relations BETWEEN node-records — a slot_map source that is EITHER a field-path ('edges' on the resolved row) OR a 'resolve:relations' directive (the substrate's TYPED edges via find_relations/crossings — read-only, reuses territory_for's relations leg). The exact mechanism (a slot DNA's renderArchetype reads vs renderArchetype resolving relations from the node data itself) is DNA's renderArchetype's call — co-shape; the contract supports both.\n\n★ THE NODE-GRAPH LAYOUT FAMILY (resolver-placed): the graph's layout (radial · cluster · tree · mesh) is a DATA definition resolved by the device-axis resolver (RESOLVER-CONTRACT §3/§4) — relationships-not-cases (the layout re-lays-out by available area), never hand-breakpoints. coil/uncoil = choreography-as-data; motion = DNA.motion resolved. The layout is declared via the resolver, NOT hardcoded here.\n\n★ NODE TYPED-GEOMETRY (operator-legibility): a node's SHAPE reads its KIND (render lane = one shape, recall = another) from the node's legibility/type — meaning by sight, never a machine-name. liveness/state = ordinal warmth (DNA tokens). Leads with legibility (name/is), words before glyphs, touch-visible.\n\nLAWS (inherited from archetype.schema): operator-legibility · DNA-token-built · resolver-placed · navigable-not-text · native dual-device · the loud-lookup dispatch.",
+
+  "allOf": [
+    { "$ref": "archetype.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "archetype_of": {
+          "description": "The node-TYPE this graph renders (e.g. 'channel-fabric', 'transcript-cluster', 'substrate'). One graph archetype renders one node-kind's graph."
+        },
+        "render_kind": {
+          "const": "graph",
+          "description": "Must be 'graph' (keys DNA's graph renderer + the node-graph layout family)."
+        },
+        "slot_map": {
+          "type": "object",
+          "required": ["nodes", "edges"],
+          "properties": {
+            "nodes": {
+              "type": "string",
+              "description": "The NODE-SET source — a field-path ('nodes') OR a resolve directive ('resolve:sessions'): the addressed things rendered as nodes. Each node carries its address (open/navigate target) + legibility (name/is → typed-geometry + label)."
+            },
+            "edges": {
+              "type": "string",
+              "description": "The TYPED-EDGE source — a field-path ('edges') OR 'resolve:relations' (the substrate's typed edges via find_relations/crossings, read-only). The relations BETWEEN nodes (line-verbs). DNA's renderArchetype's call which mechanism; contract supports both."
+            }
+          }
+        }
+      }
+    }
+  ]
+}
