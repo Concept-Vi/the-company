@@ -127,6 +127,7 @@ BRIDGE_ROUTES = (
     "/api/session-describe", "/api/stack-item-types",
     "/api/brain/ask", "/api/run-in-channel/propose", "/api/decision/explain",
     "/api/decision/decided-signals",
+    "/api/operator-session",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
@@ -470,6 +471,43 @@ def _warm_vector_cache():
 import threading as _x12_thr   # threading is imported locally elsewhere in this module, not at top level
 _x12_thr.Thread(target=_warm_vector_cache, daemon=True, name="x12-warm").start()
 DEMO = "codebase"
+
+
+# =================================================================================================
+# #1b OPERATOR-SESSION TOKEN (the unified-floor attribution primitive) — INERT SCAFFOLD (2026-06-22).
+# ---------------------------------------------------------------------------------------------------
+# The operator surface auto-mints a token on load (GET /api/operator-session) + attaches it as
+# X-Operator-Session; consequential ops + the supervised-post validate it. WHAT THIS IS — PRECISELY (per the
+# advisor, refusing the false "un-spoofable" claim): on localhost, same-user, there is NO hard cryptographic
+# boundary — :8770 has no transport auth (any local process can curl it, verified), and a same-user process
+# can read files/env/memory. So a token CANNOT stop a DELIBERATE same-user process. What it RELIABLY does is
+# gate ACCIDENTAL/RUNAWAY autonomous posting: a well-behaved background/spawned agent on the MCP face never
+# minted a surface token → cannot post by accident. That is a SAFETY (runaway-prevention) boundary, NOT an
+# adversary-proof SECURITY one. Whether "secure" (Tim) means runaway-prevention or adversary-proof is a
+# lead/Tim bar-call (the latter is not closable here) — surfaced; this scaffold serves the former.
+#
+# ENFORCEMENT IS FLAG-GATED OFF until projection's surface auto-mint is LIVE + the bar is set: flipping it on
+# before the surface mints would 401 Tim's live decides (decision_take runs FREE today). The flips (A:
+# decision_take/accept enforcement · B: supervised-post going live) are SECURITY-RELEVANT and coordinated —
+# building this commits NO behavior.
+import secrets as _secrets
+_OPERATOR_TOKENS: set = set()                                  # server-minted tokens (this process)
+_OPERATOR_TOKEN_ENFORCE = os.environ.get("COMPANY_OPERATOR_TOKEN_ENFORCE", "") == "1"   # A: decision-write gate (OFF)
+_SUPERVISED_POST_ENABLED = os.environ.get("COMPANY_SUPERVISED_POST", "") == "1"         # B: V-posts-when-live (OFF)
+
+
+def _mint_operator_token() -> str:
+    """Mint a per-process operator-session token (the surface auto-mints one on load). NOT adversary-proof
+    (see the header) — it gates runaway/accidental posting, the safety boundary."""
+    t = _secrets.token_urlsafe(24)
+    _OPERATOR_TOKENS.add(t)
+    return t
+
+
+def _is_genuine_operator(token: str) -> bool:
+    """TRUE iff `token` is a token THIS process minted (the surface holds it; a background MCP-face agent
+    never minted one). The runaway-prevention check — see the header on what it does/doesn't guarantee."""
+    return bool(token) and token in _OPERATOR_TOKENS
 
 
 # =================================================================================================
@@ -1608,6 +1646,13 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.events(60)))
             elif path == "/api/now":
                 self._send(200, json.dumps(SUITE.now(gid)))
+            elif path == "/api/operator-session":          # #1b: the operator surface auto-mints a session token
+                # on load + attaches it as X-Operator-Session on consequential ops + the supervised-post. SAFETY
+                # boundary (runaway-prevention), NOT adversary-proof on localhost (see the _mint header). INERT:
+                # enforcement (A: decision-write gate · B: supervised-post live) is flag-gated OFF until the
+                # surface-mint is live + the bar is set — minting a token here changes NO behavior yet.
+                self._send(200, json.dumps({"ok": True, "operator_session": _mint_operator_token(),
+                                            "enforced": _OPERATOR_TOKEN_ENFORCE, "supervised_post": _SUPERVISED_POST_ENABLED}))
             elif path == "/api/greeting":                  # S2: caught-up-in-one-glance (Tim's arrival face)
                 q = parse_qs(urlparse(self.path).query)
                 self._send(200, json.dumps(SUITE.greeting(since=(q.get("since") or [None])[0])))
