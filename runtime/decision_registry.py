@@ -49,11 +49,15 @@ from dataclasses import dataclass
 
 
 # The DECISION schema field names a row MAY declare. id+meaning+options required; rest optional.
-DECISION_FIELDS = ("id", "address", "meaning", "options", "explanation_source", "scope", "legibility", "subtype")
+DECISION_FIELDS = ("id", "address", "meaning", "options", "explanation_source", "scope", "legibility", "subtype", "owner")
 # `subtype` (optional) = a decision_subtypes id (authorize·trade-off·theorem-fork·cross-lane) → the render
 # reads its card_variant + the explain reads its explanation_policy (the generation regime) via this. A light
 # declared field: decision_registry stays DECOUPLED from the subtype registry (no fail-loud-on-unknown coupling);
 # render/explain resolve it against decision_subtypes. Absent ⇒ the host's default (binary) render.
+# `owner` (optional) = "tim" | "fabric" — whose call this decision is (composition's registry-true field landed
+# 2026-06-21: authorize/trade-off/theorem-fork=tim, cross-lane=fabric). Added to DECISION_FIELDS so a row MAY
+# declare it without the unknown-field gate fail-louding (write+read agree with the canonical schema). The
+# operator-stack filters Tim's queue by owner=='tim' (a new subtype declares its own side — no filter edit ever).
 DECISION_REQUIRED = ("id", "meaning", "options")
 DECISION_SCOPES = ("global", "project", "user", "session")
 OPTION_FIELDS = ("label", "description", "implication", "recommended")
@@ -230,7 +234,8 @@ def decision_inbox(registry, store) -> list:
         name = (leg.get("name") or "").strip() or did.replace("-", " ").replace("_", " ").strip() or did
         rec = next((o.get("label") for o in (row.get("options") or [])
                     if isinstance(o, dict) and o.get("recommended") and o.get("label")), None)
-        out.append({"id": did, "type": "decision-sequence", "subtype": row.get("subtype"), "address": addr,
+        out.append({"id": did, "type": "decision-sequence", "subtype": row.get("subtype"),
+                    "owner": row.get("owner"), "address": addr,
                     "name": name, "state": st.get("state"), "recommended_label": rec})
     return out
 
