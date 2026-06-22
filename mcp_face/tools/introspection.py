@@ -41,6 +41,8 @@ from __future__ import annotations
 
 from typing import Literal, Optional
 
+from mcp.types import ToolAnnotations    # posture="safe" → remote.py:_tool_posture reads it (registry-native)
+
 # EXPORTED closed op-set (CONTRACT-FORMAT §9.2). The mcp_face/AGENTS.md constitution states:
 # consolidated tool modules EXPORT a closed OPS constant so the contract corpus can extract it.
 OPS = ("list", "get", "search", "describe", "snapshot")
@@ -100,7 +102,8 @@ def register(mcp, suite):
     """Register the `capability` tool on the MCP server. Called by mcp_face/server.py's pkgutil
     discovery loop — no server.py edit required (S5 / the file-drop contract)."""
 
-    @mcp.tool()
+    # READ-ONLY across every op (list/get/search/describe/snapshot — all read the in-memory registry). Client-safe.
+    @mcp.tool(annotations=ToolAnnotations(posture="safe"))
     def capability(
         op: Literal["list", "get", "search", "describe", "snapshot"],
         id: str = "",

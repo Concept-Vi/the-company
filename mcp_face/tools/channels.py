@@ -37,10 +37,15 @@ ACTIONS = ("create", "gather", "add", "remove", "status", "post", "mode",
            "promote", "disperse", "archive")
 
 
-def _to_sdk_annotations(ann: CompanyToolAnnotations, title: str) -> SDKToolAnnotations:
+def _to_sdk_annotations(ann: CompanyToolAnnotations, title: str,
+                        posture: str = "") -> SDKToolAnnotations:
+    # `posture` (optional): the REMOTE-GATEWAY security tag remote.py:_tool_posture reads. posture="safe"
+    # exposes a READ tool to the authenticated non-operator (client) tier. Rides verbatim (extra='allow').
+    # Omitted ⇒ operator-only (fail-closed) — the write tool (channel_act) stays untagged.
+    extra = {"posture": posture} if posture else {}
     return SDKToolAnnotations(
         title=title, readOnlyHint=ann.readonly, destructiveHint=ann.destructive,
-        idempotentHint=ann.idempotent, openWorldHint=False)
+        idempotentHint=ann.idempotent, openWorldHint=False, **extra)
 
 
 def _registry(suite):
@@ -79,9 +84,11 @@ def _members_arg(members) -> list[dict]:
 
 def register(mcp, suite):
     # ── the consolidated READ ─────────────────────────────────────────────────────────────────
+    # READ-ONLY across every op (list/describe/history/edges — "PURE READ; writes are channel_act").
+    # posture="safe" exposes it to the client tier; the write tool channel_act stays untagged (operator-only).
     @mcp.tool(annotations=_to_sdk_annotations(
         CompanyToolAnnotations(readonly=True, destructive=False, idempotent=True),
-        "Session fabric — channels/gatherings/edges (read)"))
+        "Session fabric — channels/gatherings/edges (read)", posture="safe"))
     def channels(op: Literal["list", "describe", "history", "edges"], channel: str = "",
                  session: str = "", kind: str = "", status: str = "", q: str = "",
                  since: int = -1, limit: int = 50, probe_supervisor: bool = True) -> dict:

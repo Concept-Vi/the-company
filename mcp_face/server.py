@@ -13,6 +13,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mcp.server.fastmcp import FastMCP          # the SDK (site-packages)
+from mcp.types import ToolAnnotations           # carries the remote `posture` tag (extra='allow') the
+#                                                 remote gateway reads via _tool_posture (registry-native).
 from store.fs_store import FsStore
 from runtime.registry import NodeRegistry
 from runtime.suite import Suite
@@ -66,6 +68,22 @@ SUITE = _LazySuite()                                # cheap; constructs no Suite
 mcp = FastMCP("company")
 
 
+# --- REMOTE POSTURE TAG (registry-native security classification) --------------------------------
+# The remote MCP gateway (mcp_face/remote.py) gates the non-operator tier by a tool's OWN declared
+# `posture`: a tool tagged "safe" is the read-only/low-harm subset an authenticated NON-Tim user may
+# call; everything UNTAGGED stays operator-only (fail-closed — _tool_posture() returns "" ⇒ TIER_CLIENT
+# gets nothing). The posture is a PROPERTY OF THE TOOL, declared inline at its definition (NOT a parallel
+# allow-list file — the deleted remote_exposure.json is exactly what this replaces). It rides on the
+# tool's FastMCP `annotations` (mcp.types.ToolAnnotations has model_config extra='allow', so `posture`
+# is carried verbatim) — which is precisely the branch remote.py:_tool_posture() reads:
+#     getattr(annotations, "posture", None).
+# To declare a NEW tool safe: decorate it `@mcp.tool(annotations=SAFE)`. ONLY genuinely read-only / clearly
+# low-harm tools (queries · reads · lists · describes · recall) are tagged — never a tool that writes,
+# mutates, deletes, spawns/wakes sessions or clones, changes config, runs graphs/cascades, posts to
+# channels, or self-modifies. When unsure: leave it untagged (operator-only is the safe default).
+SAFE = ToolAnnotations(posture="safe")
+
+
 def build_mcp(suite=None):
     """THE SHARED-LAYER FACTORY. Return the FastMCP server (`mcp`) whose `_tool_manager` exposes all 66
     tools — bound, via the module `SUITE` proxy, to `suite` (the caller's own Suite, e.g. the bridge's)
@@ -101,19 +119,19 @@ for _m in _pkgutil.iter_modules(_tools_pkg.__path__):
 # triple-coverage with object_info). Node-types: capabilities() for the ids, object_info() for the library.
 
 
-@mcp.tool()
+@mcp.tool(annotations=SAFE)               # READ-ONLY — node-type library projection (client-safe)
 def object_info() -> dict:
     """The full node-type library (ports · render-set · config) for rendering/composition."""
     return SUITE.object_info()
 
 
-@mcp.tool()
+@mcp.tool(annotations=SAFE)               # READ-ONLY — type-graph query (client-safe)
 def list_by_type(output_type: str) -> list:
     """Type-graph query: which node-types PRODUCE a given port-type."""
     return SUITE.list_by_type(output_type)
 
 
-@mcp.tool()
+@mcp.tool(annotations=SAFE)               # READ-ONLY — lists graphs (client-safe)
 def list_graphs() -> list:
     """List all graphs (canvases) in the substrate."""
     return SUITE.list_graphs()
@@ -233,7 +251,7 @@ def inbox() -> dict:
     return SUITE.inbox_lanes()
 
 
-@mcp.tool()
+@mcp.tool(annotations=SAFE)               # READ-ONLY — the 'what exists' registry projection (client-safe)
 def capabilities(section: str = "") -> dict:
     """The source of truth for WHAT EXISTS — models, node-types, RHM verbs, panels, api verbs, AND the
     runnable CHAINS (flows + saved cascades). Author from these; never invent. If you need something
@@ -357,7 +375,7 @@ def _resolve_role(role_id_or_fields):
 
 
 # --- INSPECT (read-only) -------------------------------------------------------------------------
-@mcp.tool()
+@mcp.tool(annotations=SAFE)               # READ-ONLY — cognition registry inspector (client-safe)
 def cognition_info(section: str = "", role: str = "", detail: str = "concise") -> dict:
     """INSPECT the cognition registries — the ONE place to learn 'what can I compose with' (roles ·
     rules · projections/spaces · mark_types · casts · rule_ops · destination_kinds · activation
@@ -437,7 +455,7 @@ def cognition_info(section: str = "", role: str = "", detail: str = "concise") -
     return overview
 
 
-@mcp.tool()
+@mcp.tool(annotations=SAFE)               # READ-ONLY — model-fit lookup (client-safe)
 def models_for_role(requires: str = "", role: str = "") -> dict:
     """INSPECT (the MODEL select): which models fit. Pass EITHER:
       role="<id>"     — a registered role; its declared requirements (spec.model_binding.requires)
@@ -455,7 +473,7 @@ def models_for_role(requires: str = "", role: str = "") -> dict:
     return SUITE.models_for_role(requires)
 
 
-@mcp.tool()
+@mcp.tool(annotations=SAFE)               # READ-ONLY — input-wiring inspector (client-safe)
 def cognition_inputs(role: str = "", model: str = "") -> dict:
     """INSPECT (the INPUT-WIRING select): the addresses a role/rule can READ — the utterance, the
     roles' run://<turn>/<role> outputs, the context variables, skills/contexts/schemes — plus which
@@ -466,7 +484,7 @@ def cognition_inputs(role: str = "", model: str = "") -> dict:
     return SUITE.available_inputs(model=(model or None), role=(role or None))
 
 
-@mcp.tool()
+@mcp.tool(annotations=SAFE)               # READ-ONLY — output-field-type registry (client-safe)
 def field_types() -> dict:
     """INSPECT (the OUTPUT-FIELD-TYPE select): the closed output_schema field-type registry
     (str·int·float·bool·list[str]·list[int]). REUSES Suite.field_types (the /api/cognition/field_types
@@ -474,7 +492,7 @@ def field_types() -> dict:
     return SUITE.field_types()
 
 
-@mcp.tool()
+@mcp.tool(annotations=SAFE)               # READ-ONLY — skill:// + context:// registry read (client-safe)
 def list_skills_contexts() -> dict:
     """INSPECT the skill:// + context:// registries — the addressable, file-discovered units a role's
     input can be set to (a skill = reusable instructions, a context = a reusable blob). REUSES
@@ -772,7 +790,7 @@ def run_reduce(addresses: list, mode: Literal["role", "rule", "cluster"], role: 
             "skipped": res.skipped, "wall_s": res.wall_s, "detail": res.detail}
 
 
-@mcp.tool()
+@mcp.tool(annotations=SAFE)               # READ-ONLY — named reduce-rule inspector (client-safe)
 def reduce_rule_names() -> dict:
     """INSPECT the named deterministic reduce-rules `run_reduce(mode='rule')` accepts — PROJECTED from the
     single-source _REDUCE_RULES dict (the B-fix: derive, never a hardcoded second list; PART 4.4). A
@@ -816,7 +834,7 @@ def save_cascade(decl: dict) -> dict:
     return SUITE.save_cascade(dict(decl))
 
 
-@mcp.tool()
+@mcp.tool(annotations=SAFE)               # READ-ONLY — lists saved cascades (client-safe)
 def list_cascades() -> dict:
     """LIST the saved cascades (the discoverable re-runnable pipelines — registry-is-truth). Each row
     is the full decl (name·steps·output_schema) so an agent reads the steps/ops/models BEFORE run_cascade.

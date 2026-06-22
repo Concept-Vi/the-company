@@ -68,13 +68,20 @@ def _fabric_concurrency() -> int:
     return int(os.environ.get("COMPANY_FABRIC_CONCURRENCY", "3"))
 
 
-def _to_sdk_annotations(ann: CompanyToolAnnotations, title: str) -> SDKToolAnnotations:
+def _to_sdk_annotations(ann: CompanyToolAnnotations, title: str,
+                        posture: str = "") -> SDKToolAnnotations:
     """contracts.ToolAnnotations → SDK hints (the F10.1 wiring — first honest instance). The contracts
     model's own gate (readonly∧destructive raises) bites BEFORE registration, so an incoherent
-    annotation can never reach a client."""
+    annotation can never reach a client.
+
+    `posture` (optional) is the REMOTE-GATEWAY security tag the remote MCP (mcp_face/remote.py) reads via
+    _tool_posture(): pass posture="safe" on a READ tool to expose it to the authenticated non-operator
+    (client) tier. SDKToolAnnotations has model_config extra='allow', so it rides verbatim. Omitted ⇒ no
+    posture ⇒ operator-only (fail-closed) — the write tool (session_post) stays untagged."""
+    extra = {"posture": posture} if posture else {}
     return SDKToolAnnotations(
         title=title, readOnlyHint=ann.readonly, destructiveHint=ann.destructive,
-        idempotentHint=ann.idempotent, openWorldHint=False)
+        idempotentHint=ann.idempotent, openWorldHint=False, **extra)
 
 
 def _sid(ref: str, param: str) -> str:
@@ -104,9 +111,10 @@ def _registry_guard(suite, what: str):
 
 def register(mcp, suite):
     # ── the consolidated READ ─────────────────────────────────────────────────────────────────────
+    # READ-ONLY across every op ("pure — no writes, ever"); posture="safe" exposes it to the client tier.
     @mcp.tool(annotations=_to_sdk_annotations(
         CompanyToolAnnotations(readonly=True, destructive=False, idempotent=True),
-        "Session fabric — read (registry · mailbox · live events)"))
+        "Session fabric — read (registry · mailbox · live events)", posture="safe"))
     def sessions(op: Literal["list", "inbox", "watch", "describe", "search", "timeline"], session: str = "",
                  q: str = "", state: str = "", cwd: str = "", since: int = -1,
                  thread: str = "", verb: str = "", limit: int = 50,
