@@ -1772,3 +1772,27 @@ DNA shipped channelGraph + the 'channel-view' archetype (35aa95c); I re-synced t
 VERIFIED by-use+by-sight: the fabric graph renders the live channels (octagon hub + r-line build / session-fabric build / r4-search-result-gathering spokes) at 390 + 1440. (Also observed: the queue auto-updated 14→15 as a new owner==tim decision landed — the registry-true filter working dynamically.)
 
 NEXT: redirect RightHand's unit-ask ("Ask about this") from the generic /api/claude/turn to fork's grounded explain_role (8748423, live) — the explain UPGRADE. Then board-view/timeline as DNA ships boardRecord/timelineRecord.
+
+---
+
+> ⚠️ LOG-BEHIND NOTE (honest): this doc fell behind during the breadth sprint. Between channel-view (above) and the entry below, these ALSO landed (git is the source of truth — `git log --oneline surface/app/`): board-view (BoardView, breadth #2), the SurfaceNav rail (the orphan-screens fix — Tim's "how do I access them?"), the L4 channel-post composer, the L5 update-propose/accept wire (#1b operator-session interceptor), the landscape dragnet. Not backfilled here entry-by-entry to avoid from-memory inaccuracy; the commits + COMMISSION-COMPLETION-REGISTER carry them.
+
+## FIRE — ★ TRANSCRIPT-VIZ LIVE (breadth surface #3) + L1 grounded-explain VERIFIED-streaming & durable-ized
+
+Two clean deliverables, both committed (disjoint code, direct explicit-path per the lead's interim rule; commit-queue drainer went live mid-fire — shared docs now enqueue, disjoint code stays direct).
+
+**(1) transcript-viz — the corpus searched by MEANING as a constellation (commit 5211961).** The whole transcript corpus (35,904 chunks · 1,051 sessions) as a query-driven sibling-overlay. Cloned the ChannelView template exactly (the now-proven data→route→host→DNA-render pattern):
+- transcript/transcriptStore.ts — query-driven (opening shows a search prompt; a query loads). Holds the FULL /api/transcript-search envelope (the adapter reads q + mode_used + semantic.available, not just rows). seq-guarded, fail-loud.
+- transcript/TranscriptView.tsx — overlay (opens on `transcript:open`) + the SEARCH ROW (the one element the other breadth surfaces don't have) + the constellation render effect: transcriptRecord(envelope) → constellation(rec,{w:600,h:440}) → renderArchetype('transcript-viz', rec, {visualDevice}). Honest empty/loading/no-match/degrade states (no blank panel).
+- transcript/transcript.css — host frame mirrored from channels.css (tokens only) + the search input/button.
+- SurfaceNav: the 6th tile (History). App.tsx: mount.
+- ★ CONTRACT VERIFIED LIVE BEFORE BUILDING (advisor's catch — the route's backend session_search reads a sqlite/chroma index, a DIFFERENT backend than the numpy VEC_PATH my memory referenced): curl'd /api/transcript-search?q=decision → ok:true, mode_used:semantic, index{chunks:35904,embedded:35904,files:1051}, real results with every field the adapter reads. The route SERVES (not the committed-not-live trap).
+- ★ FORM bug found+fixed by-sight: at 1440 the constellation was a tiny 162px island in the 760px panel — DNA's `.screen.ar` is a FIXED 390px PHONE-FRAME (phone.css:98). FIXED in transcript.css: `.transcript-graph .screen.ar { width:100%; max-width:640px }` → 412px at desktop, still fills at 390. (The 2-col-collapse guard from channel-view carried over correctly.) Verified BOTH viewports: 390 (342px svg, real labels), 1440 (412px svg, "Which conversations" constellation).
+
+**(2) L1 grounded-explain — flipped ON + structured payload, VERIFIED streaming (commit 6016ecc).** Found the flip (GROUNDED_EXPLAIN_ENABLED false→true + the ExplainPayload structured object) STRANDED uncommitted in the running tree. Adopted per incomplete-work-in-scope — but verify-before-claiming first (don't commit a user-facing flag flip on the record alone).
+- ★ THE META-LESSON, twice: my first two live reads showed the card STUCK on the "Working through your maths — a deep grounded pass (~30s)…" placeholder. Both were MEASUREMENT CONTAMINATION — (a) competing probe fetches queued 2-3 concurrent ~30s theorem-fork GPU runs; (b) a bridge BOUNCE severed the in-flight fetch mid-observation. Distrusted the measurement as hard as the claim.
+- ★ CLEAN test (warm the route first → await → THEN open the card, no concurrency): warm served in 2.2s; the .dc-explain region SWAPPED placeholder → grounded content. By-SIGHT at 1440: "What this is" paragraph (Tim's real multi-axis projection theorem), the "Why this matters —" line, the honest grounding note ("…flagged as AI-inference"). The n-panel branch's wire(nview) (archetype.js:377) drives the swap; the route returns {what_this_is, why_it_matters, grounding_note}; mechanism end-to-end confirmed.
+
+CLEAN: my surface lane has no stranded work (public/gallery/ is intentionally gitignored — DNA-synced fresh on build).
+
+NEXT (lead g-1782118408 — STALE-PICTURE CORRECTION: the bridge READ-API channels/sessions/timeline/stream/transcript-search/board + chain routes are ALREADY LIVE; FACE-1 is NOT route-blocked; drive the OTHER surfaces, not just transcript-viz): the next breadth surface — TIMELINE (global /api/events as a temporal lane — TIMELINE-ROW-SHAPE.md) or SESSIONS-search (a roster/search, distinct from the per-session SessionDrill) or the ADDRESS system surfaced. Scout DNA's adapter/archetype readiness for each (timelineRecord? a timeline archetype?) before building — if a shape's missing it's a tweak to name to DNA, not a blocker.
