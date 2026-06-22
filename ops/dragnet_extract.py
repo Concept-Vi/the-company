@@ -57,7 +57,9 @@ class Fine(BaseModel):
 #                   (line / opacity / colour-role / shape — composition registers these as resolution axis-rows).
 class Design(BaseModel):
     resolves_into: List[str]    # match-key lookup: the design element(s)/component(s)/token(s) this maps to
-    resolution: List[str]       # context-points it resolves against (line / opacity / colour-role / shape)
+    resolution: List[str]       # DIM-KEYED context-points: each "<dim>:<context> -> <value>", dim ∈
+                                # {line, opacity, colour_role, shape} — composition's axes/design.py parses
+                                # the list per-dimension. NOT a flat tag-list (the resolver must read it back).
 
 _DEEPEN_KINDS = {"decision", "spec", "discussion"}            # the step-gate: these continue to fine
 
@@ -87,15 +89,21 @@ def _fine_role():
 
 
 def _design_role():
-    # visual-dna ONLY — extracts DNA's 2 design fields (criteria 2+5). Draft prompt from DNA's named
-    # semantics; the design-domain wording is DNA-validatable on the (repeatable, bounded) re-bake.
+    # visual-dna ONLY — extracts DNA's 2 design fields (criteria 2+5). `resolution` is DIMENSION-KEYED
+    # (composition's catch + DNA's named format 2026-06-22): each entry EXACTLY "<dim>:<context> → <value>"
+    # with <dim> ∈ {line, opacity, colour_role, shape} (the axes/design.py dims) so the resolver reads it
+    # back per-dimension — NOT a flat ambiguous tag-list. <value> = the design token/treatment it resolves to.
     from runtime.roles import Role
     return Role(id="dragnet_design", spec={}, prompt_template=(
         "Extract the DESIGN BINDING of this visual/design content (describe only what it specifies).\n"
         "Content:\n{utterance}\n\n"
-        "Return ONLY JSON: {\"resolves_into\": [\"the design element/component/token this maps to — the "
-        "match keys for lookup\"], \"resolution\": [\"the context-points this resolves against — e.g. line, "
-        "opacity, colour-role, shape\"]}"
+        "Return ONLY JSON with two fields:\n"
+        "  \"resolves_into\": [\"the design element/component/token this maps to — match keys for lookup\"],\n"
+        "  \"resolution\": [\"DIMENSION-KEYED context-points. Each entry EXACTLY in the form "
+        "'<dim>:<context> -> <value>' where <dim> is one of line|opacity|colour_role|shape, <context> is the "
+        "design situation it applies in, and <value> is the design token/treatment it resolves to. "
+        "Examples: 'shape:core -> octagon', 'colour_role:recommended -> gold', 'line:emphasis -> solid', "
+        "'opacity:less-realised -> 0.5'. Omit a dim if the content does not bind it.\"]}"
     ), output_schema=Design)
 
 
