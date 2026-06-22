@@ -250,6 +250,38 @@ def compose_definition(row, marks):
     return base, reopened
 
 
+def pending_decision_updates(marks) -> list:
+    """L5 — PURE: the RHM `decision_update` proposals AWAITING the operator — proposed, NOT yet accepted or
+    rejected — LATEST per field. `compose_definition` folds the ACCEPTED ones; THIS is its pending twin (the
+    accept route needs each proposal's `ts`, and this is the only read that surfaces it — without it a proposal
+    lands invisible and the propose→accept loop can't close). LATEST-per-field (dedupe-on-read) so a verb that
+    fires more than once per card does NOT flood the operator's queue with near-identical proposals — the
+    surface shows ONE pending proposal per field (the newest by ts); older un-accepted ones stay in the audit
+    log, just not surfaced. Returns [{ts, field, value, rationale, by}] sorted by ts (the render order)."""
+    ms = [m for m in (marks or []) if isinstance(m, dict)]
+    actioned = {str(m.get("value")) for m in ms
+                if m.get("mark_type") in ("decision_update_accept", "decision_update_reject")}
+    # The LATEST proposal per field (max ts) — a newer proposal SUPERSEDES an older one for the same field,
+    # so only the newest ever surfaces (no flood, no resurfacing). A field is PENDING iff its LATEST proposal
+    # is itself un-actioned: if Tim accepted/rejected the latest, the field is settled and older un-actioned
+    # proposals do NOT pop back (the accept/reject is on the newest he saw; the rest are stale-by-supersession).
+    latest: dict = {}
+    for m in sorted([m for m in ms if m.get("mark_type") == "decision_update"],
+                    key=lambda m: str(m.get("ts") or "")):                # ascending → the last write per field = max ts
+        v = m.get("value") if isinstance(m.get("value"), dict) else {}
+        if v.get("field") in DECISION_UPDATE_WHITELIST:
+            latest[v["field"]] = m
+    out = []
+    for field, m in latest.items():
+        ts = str(m.get("ts") or "")
+        if ts in actioned:                                               # the latest proposal was accepted/rejected → settled
+            continue
+        v = m.get("value") if isinstance(m.get("value"), dict) else {}
+        out.append({"ts": ts, "field": field, "value": v.get("value"),
+                    "rationale": m.get("rationale") or "", "by": m.get("by") or "rhm"})
+    return sorted(out, key=lambda r: r["ts"])
+
+
 def decision_inbox(registry, store, subtype_registry=None) -> list:
     """The decisions INBOX list (the operator's see-all-pending entry, beyond the deep-link): one
     {id, type, subtype, owner, address, name, state, recommended_label} per discovered decision. registry-is-

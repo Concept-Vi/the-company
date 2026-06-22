@@ -128,7 +128,7 @@ BRIDGE_ROUTES = (
     "/api/brain/ask", "/api/run-in-channel/propose", "/api/decision/explain",
     "/api/decision/decided-signals",
     "/api/operator-session", "/api/channel/post",
-    "/api/decision/update", "/api/decision/update/accept",
+    "/api/decision/update", "/api/decision/update/accept", "/api/decision/propose", "/api/decision/proposals",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
@@ -1250,7 +1250,7 @@ def _cog_turn_id(prefix):
     return prefix + time.strftime("%Y%m%d-%H%M%S") + f"-{int(time.monotonic()*1000) % 100000}"
 
 
-def cog_run_role(role, *, utterance="", model="", inputs=None,
+def cog_run_role(role, *, utterance="", model="", base_url="", inputs=None,
                  max_tokens=256, temperature=0.0, ensure=False, ensure_evict=False,
                  policy=None, coordinate=None):
     """Fire ONE role and persist+index its output. Mirror of mcp_face/server.py:run_role (same engine
@@ -1283,6 +1283,10 @@ def cog_run_role(role, *, utterance="", model="", inputs=None,
           "ensure": ensure, "ensure_evict": ensure_evict, "policy": policy, "coordinate": coordinate}
     if model:
         kw["model"] = model
+    if base_url:                                                 # ADDITIVE: a role's resolved base_url (e.g. the
+        kw["base_url"] = base_url                                # ollama :11434 for a :cloud model so think is
+                                                                 # honoured). Absent ⇒ RESIDENT_BASE_URL — byte-
+                                                                 # identical for every existing caller.
     _t0 = time.monotonic()
     out = _cog.run_role(r, ctx, **kw)
     _ms = int((time.monotonic() - _t0) * 1000)
@@ -2546,6 +2550,78 @@ class H(BaseHTTPRequestHandler):
                             SUITE.mark(_addr, "decision_retract", value="", by="operator",
                                        note="re-opened: an accepted options change invalidated the prior choice")
                         self._send(200, json.dumps({"ok": True, "applied": str(_ts), "reopened": _reopened}))
+            elif self.path == "/api/decision/propose":     # L5 PROPOSE-VERB: the RHM autonomously PROPOSES a card refinement
+                # The decided card-refine-posture ("let it propose refinements — you accept each"): the RHM reads
+                # the EFFECTIVE card, DECIDES (think-on) whether a sharper meaning would help, and if so writes an
+                # INERT decision_update (by=rhm) → lands in Tim's accept queue. PROPOSE-only: never auto-applied,
+                # content-only (field=meaning, in the whitelist). On-demand trigger (the surface asks per card) —
+                # NOT auto-chained to explain (that would flood the queue). Idempotent: skips a write identical to
+                # the latest pending meaning-proposal. The FLOOR: a read + a model-run + an INERT mark (no resolve/
+                # dispatch, no surface-data mutation — the proposal only composes onto the card on Tim's accept).
+                from contracts.address import decision_address as _daddr
+                from runtime.cognition import decision_registry as _dreg
+                from runtime.decision_registry import compose_definition as _compdef, pending_decision_updates as _pend
+                b = self._body()
+                _did = b.get("id") or b.get("decision_id")
+                _row = _dreg().get(_did) if _did else None
+                if not _row:
+                    self._send(404 if _did else 400, json.dumps({"ok": False,
+                        "error": (f"unknown decision {_did!r}" if _did else "/api/decision/propose needs {id}")}))
+                else:
+                    _addr = _daddr({"id": _did})
+                    _defn, _ = _compdef(_row, SUITE.marks_for(_addr))     # the EFFECTIVE card (accepted refinements folded)
+                    _opts = _defn.get("options") or []
+                    _leg = _defn.get("legibility") if isinstance(_defn.get("legibility"), dict) else {}
+                    _card = ("meaning: " + str(_defn.get("meaning") or "") + "\noptions:\n"
+                             + "\n".join(f"  - {o.get('label','')}: {o.get('implication','')}"
+                                         for o in _opts if isinstance(o, dict))
+                             + "\nname: " + str(_leg.get("name") or "") + "\nwhy: " + str(_leg.get("why") or ""))
+                    # fire on the ROLE's OWN resolved binding (kimi @ ollama — think-ON actually reasons), NOT the
+                    # resident 4B: cog_run_role with no model uses RESIDENT_MODEL, and resolve_role reads TOP-LEVEL
+                    # default_model (suite.py) → kimi-k2.6:cloud (TIM-RULE: never DEFAULT_BRAIN=-pro).
+                    _eff = SUITE.resolve_role("refine_decision")
+                    try:
+                        # think-ON reasoning role → 16k budget (a 256 default truncates the reasoning+JSON instantly).
+                        _out = cog_run_role("refine_decision", inputs={"card": _card},
+                                            model=_eff.get("model") or "", base_url=_eff.get("base_url") or "",
+                                            max_tokens=16000)
+                    except Exception as _ex:
+                        self._send(200, json.dumps({"ok": False, "degraded": True,
+                            "error": f"refine proposal failed: {type(_ex).__name__}: {str(_ex)[:200]}",
+                            "note": "the card + accept-wire are intact; the model's structured proposal failed "
+                                    "(often a tight token budget). Retry."}))
+                        return
+                    _p = _out.get("output") or {}
+                    _val = (_p.get("value") or "").strip()
+                    if not _p.get("should_refine") or not _val:
+                        self._send(200, json.dumps({"ok": True, "proposed": False, "rationale": _p.get("rationale", ""),
+                            "note": "the assistant judged the card already reads clearly — no refinement proposed."}))
+                        return
+                    _existing = [u for u in _pend(SUITE.marks_for(_addr)) if u.get("field") == "meaning"]
+                    if _existing and str(_existing[-1].get("value") or "").strip() == _val:
+                        self._send(200, json.dumps({"ok": True, "proposed": False, "duplicate": True,
+                            "ts": _existing[-1].get("ts"),
+                            "note": "this refinement is already proposed and awaiting your accept."}))
+                        return
+                    _rec = SUITE.mark(_addr, "decision_update", value={"field": "meaning", "value": _val},
+                                      by="rhm", rationale=(_p.get("rationale") or ""))
+                    self._send(200, json.dumps({"ok": True, "proposed": True, "proposal": {
+                        "ts": _rec.get("ts"), "field": "meaning", "value": _val,
+                        "rationale": _p.get("rationale", ""), "address": _addr}}))
+            elif self.path == "/api/decision/proposals":   # L5: the PENDING RHM proposals awaiting the operator (accept-queue read)
+                # The pending twin of the decided-state read — lists the un-accepted/un-rejected decision_update
+                # proposals (LATEST per field) with the `ts` the accept route needs. The surfacing the loop
+                # requires (a proposal Tim can't see can't be accepted). FE RENDER is projection/DNA's lane.
+                from contracts.address import decision_address as _daddr
+                from runtime.decision_registry import pending_decision_updates as _pend
+                b = self._body()
+                _did = b.get("id") or b.get("decision_id")
+                if not _did:
+                    self._send(400, json.dumps({"ok": False, "error": "/api/decision/proposals needs {id}"}))
+                else:
+                    _addr = _daddr({"id": _did})
+                    self._send(200, json.dumps({"ok": True, "id": _did, "address": _addr,
+                                                "proposals": _pend(SUITE.marks_for(_addr))}))
             elif self.path == "/api/channel/post":         # THE OPEN V-POST (Tim 2026-06-22: "posting shouldn't be
                 # gated, fully ungated" — his informed bar, lead-accepted). The V posts to a channel DIRECTLY: NO
                 # token, NO supervised/autonomous discriminator, NO propose-step — just post_to_channel. (The

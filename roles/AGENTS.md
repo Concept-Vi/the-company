@@ -71,6 +71,13 @@ every undeclared role is byte-identical). Absent slot ⇒ the static field ⇒ b
   (the sampling regime, `policy=`), and its OWN `prompt_slot` (the §5 per-subtype FRAMING, resolved by
   `coordinate={subtype}`). ★ theorem-fork framing = the NEVER-ASSERT law (ground only in Tim's maths, flag
   projection — the cube-error made structural). `op:generate`; fired by projection's RHM at the explain seam.
+- **`refine_decision`** — the **decision REFINE role** (the L5 propose-side, 2026-06-22): given a decision
+  card's current content (its `card` input), the RHM DECIDES whether a sharper MEANING would genuinely help Tim
+  and, if so, PROPOSES it. Per the DECIDED `card-refine-posture` (authorize→tim, "let it propose refinements —
+  you accept each"): the propose verb (`/api/decision/propose`) writes an INERT `decision_update` mark (by=rhm)
+  that waits for Tim's accept — NEVER auto-applied, content-only (never the structural routing fields). A
+  DETERMINE role → `thinking:True` (reasons before emitting); kimi-bound (ollama-served, so think is honoured).
+  v1 refines `meaning`; options/legibility/visuals are follow-ons on the same verb. `op:generate`.
 - **`verify_jury`** — the canonical **jury** (C2.4): `draws:3` + a pure majority-vote `verdict_rule`. In no
   cast (fired explicitly via `run_jury`). **⚠ E4 caveat:** N draws on ONE model are correlated (variance,
   not independent error) — a correctness-jury that matters needs model diversity; the verdict_rule shape
