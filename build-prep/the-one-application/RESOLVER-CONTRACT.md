@@ -64,3 +64,40 @@ Resolved at RUN/READ time (NOT baked). ★ Co-shaped with fork against roles.py:
 - **projection** — the HOST consume-logic (compute coordinate `{device:{w,h,orient}}` → POST /api/resolve `{invariant, coordinate}` → apply `{resolved}` as CSS vars; degrade-clean) + the MODAL + SHELL invariants authored to §3.
 - **fork** — the `resolve_slot` engine (built) + the resolved-slots role-side (§5) against roles.py; confirm the prompt-template wrapper want/skip.
 - **DNA** — the card's zone VALUES feed the CARD invariant (§4); renders the resolved allocation.
+
+## §8 · THE EXTRACTION RESOLVER-VARIABLE (recollection's dragnet — the lock, 2026-06-22)
+
+**Q (lead): can a prompt/schema be a resolvable variable? → YES.** Not a new schema-TYPE — a prompt/schema is a
+resolver variable via `resolve_slot` (§5): a role's `prompt_template` + `output_schema` upgrade static-per-role →
+`resolve(coordinate)`. §5 + `axes/resolution.py` already contract it; this §8 LOCKS it for recollection's
+extraction/dragnet.
+
+**THE SPINE (one-invariant-never-variants):** the invariant is the EXTRACTION SUPERSET — the full relational
+field-structure `{about, touches, entities, claims, relations}` + their relationships. The grain is an
+ORDINAL-DEPTH axis (`axes/resolution.py`: `resolution.grain` coarse|medium|fine) whose field-sets **NEST**:
+`{about} ⊂ {about,touches} ⊂ … ⊂ {about,touches,entities,claims,relations}`. So the resolve **projects the
+field-set at the grain** — a depth over the ONE superset, NOT N hardcoded coarse/fine schemas
+(relationships-not-cases). The nesting IS the relationship; the grain is where you read the superset's depth.
+
+**★ THE OPEN CALL — WHERE the grain-projection applies (recollection's, by corpus-cost):**
+- **READ-SIDE** (the current `axes/resolution.py` stance + §5): extract the SUPERSET (fine) ONCE; the
+  determine/recall projects the grain on the RESULT (extract-once / determine-many, *never re-extract*). All
+  data preserved + instant grain-projection. Cost = the full fine extraction over the WHOLE corpus.
+- **EXTRACTION-SIDE** (the dragnet-cost variant): resolve the EXTRACTION schema by grain — coarse `{about}`
+  broadly + cheap over the corpus, fine-deep on-demand for the chunks that matter (a bounded deeper pass for the
+  promoted). Cost-scaled for a WIDE dragnet (most chunks never need the fine fields).
+- ⟹ Both are valid resolves of (superset-invariant, grain-coordinate); the difference is WHERE (read-time vs
+  extraction-time) + the extract-once-vs-cost tradeoff. **Lean:** read-side for a fully-relevant set (you extract
+  fine anyway); extraction-side (coarse-broad + fine-deep) for the dragnet's economics (cast wide shallow, deep
+  on hits). recollection's corpus-cost picks. IF extraction-side → `axes/resolution.py`'s "never re-extract"
+  softens to "the grain resolves the projection — read-side default; extraction-side for cost-sensitive dragnets."
+
+**THE SCHEMA-SLOT (fork, §5's wrinkle):** `output_schema` is a Pydantic CLASS — grain is NOT a field-list select
+AT `output_schema`. Read-side → `output_schema` = the superset literal (extract-once) + project on the result.
+Extraction-side → `output_schema` = a `select` between PRE-DECLARED grain-classes (coarse `{about}`-class · fine
+superset-class), discrete. fork wires `run_role` to resolve `prompt_template` + `output_schema` through
+`resolve_slot` once recollection picks.
+
+**LANES (this contract):** composition — §8 + the superset-invariant shape + the grain-axis. recollection — picks
+read-side vs extraction-side (corpus-cost) + owns the determine/projection. fork — wires `resolve_slot` on the
+role's prompt+schema once locked.
