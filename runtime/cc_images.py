@@ -29,13 +29,13 @@ import yaml
 
 from lifters.frontmatter import _extract as _fm_extract
 from store.fs_store import _atomic_write_fsync, FsStore
-from contracts.address import parse_image_address, image_address
+from contracts.address import parse_image_address, image_address, versioned_address
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES_DIR = os.path.join(REPO, "channel-memory", "images")
 
 FRONTMATTER_KEYS = ("id", "address", "channel", "path", "blob", "mime", "name", "w", "h",
-                    "source", "author_session", "created", "links")
+                    "source", "author_session", "created", "updated", "version", "versions", "links")
 
 _MIME_EXT = {
     "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp",
@@ -119,21 +119,37 @@ def save_image(store, data: bytes, *, channel: str, path: str, mime: str = "", n
         raise ImageError(f"save_image expects image bytes, got {type(data).__name__}.")
     if not author_session:
         raise ImageError("save_image needs `author_session` (provenance).")
-    addr = image_address(channel, path)                      # FAIL-LOUD if channel/path missing (no flat dump)
+    addr = image_address(channel, path)                      # the BASE address (FAIL-LOUD if channel/path missing)
     parsed = parse_image_address(addr)
     data = bytes(data)
     mime = _sniff_mime(data, mime)
     blob = store.put_blob(data)
     os.makedirs(IMAGES_DIR, exist_ok=True)
+    ts = _now()
+    p = _file_for(addr)
+    # VERSION AXIS: re-saving an existing address APPENDS a new version (never overwrites history); the bare
+    # address resolves to the latest. Each version pins its own blob/mime/dims/author (content-addressed →
+    # immutable). image://<ch>/<path>@v<n> addresses a specific version.
+    versions = []
+    if os.path.exists(p):
+        with open(p, encoding="utf-8") as f:
+            prior, _ = _split_frontmatter(f.read())
+        versions = list(prior.get("versions") or [])
+    vnum = len(versions) + 1
+    ver = {"v": vnum, "blob": blob, "mime": mime, "w": int(w), "h": int(h),
+           "author_session": author_session, "alt": alt, "created": ts}
+    versions.append(ver)
     record = {
         "id": parsed["path"], "address": addr,
         "channel": parsed["channel"], "path": parsed["path"],
         "blob": blob, "mime": mime, "name": name or parsed["name"],
         "w": int(w), "h": int(h), "source": source,
-        "author_session": author_session, "created": _now(),
+        "author_session": author_session,
+        "created": versions[0].get("created", ts), "updated": ts,
+        "version": vnum, "versions": versions,        # current version number + the full append-only history
         "links": list(links or []), "body": alt,
     }
-    _atomic_write_fsync(Path(_file_for(addr)), _render(record))
+    _atomic_write_fsync(Path(p), _render(record))
     return record
 
 
@@ -145,17 +161,37 @@ def get_image(addr_or_parts: str) -> dict:
     if not parsed["is_leaf"]:
         raise ImageError(f"{addr!r} is a channel/group PREFIX, not one image — use list_images(prefix=…) to "
                          f"browse it. get_image needs a leaf image://<channel>/<path>.")
-    p = _file_for(addr)
+    base = image_address(parsed["channel"], parsed["path"])   # the record key (version stripped)
+    p = _file_for(base)
     if not os.path.exists(p):
-        raise ImageError(f"no image at {addr!r} ({p}) — get on a missing image fails loud (never a silent empty).")
+        raise ImageError(f"no image at {base!r} ({p}) — get on a missing image fails loud (never a silent empty).")
     with open(p, encoding="utf-8") as f:
         meta, body = _split_frontmatter(f.read())
     if not meta.get("address"):
-        raise ImageError(f"image {addr!r} at {p} has no parseable frontmatter — malformed record, fail loud.")
+        raise ImageError(f"image {base!r} at {p} has no parseable frontmatter — malformed record, fail loud.")
     rec = dict(meta)
     rec["body"] = body
     rec.setdefault("links", [])
+    rec.setdefault("versions", [])
+    want = parsed["version"]
+    if want is not None:                                      # @v<n> → project that specific version's view
+        match = [v for v in rec["versions"] if v.get("v") == want]
+        if not match:
+            raise ImageError(f"no version @v{want} of {base!r} — versions present: "
+                             f"{[v.get('v') for v in rec['versions']]}. Fail loud.")
+        v = match[0]
+        rec.update({"blob": v["blob"], "mime": v.get("mime"), "w": v.get("w", 0), "h": v.get("h", 0),
+                    "version": want, "author_session": v.get("author_session"),
+                    "address": versioned_address(base, want), "body": v.get("alt", rec.get("body", ""))})
     return rec
+
+
+def list_versions(addr_or_parts: str) -> list[dict]:
+    """The version history of an image (newest version last): [{v, blob, mime, w, h, author_session, created}].
+    The version axis surfaced — for comparing/iterating generated outputs (v1 → v2 → v3)."""
+    rec = get_image(image_address(parse_image_address(_norm(addr_or_parts))["channel"],
+                                  parse_image_address(_norm(addr_or_parts))["path"]))
+    return rec.get("versions", [])
 
 
 def image_bytes(store, addr_or_parts: str) -> tuple[bytes, str]:

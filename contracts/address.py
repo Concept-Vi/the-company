@@ -335,6 +335,38 @@ def decision_address(parsed: dict) -> str:
 # (collection/sub/name) so the address is NAVIGABLE AT EACH DEPTH: image://<channel> = the channel's whole
 # image tree · image://<channel>/<collection> = that group · image://<channel>/<collection>/<name> = one
 # image. Mirrors decision://<frame>/<id> + code://<project>/<rel_path>, but the leaf is a multi-segment path.
+import re as _re
+
+# A GENERAL VERSION AXIS on addressed content (Tim 2026-06-22: "addressed content will need a version axis
+# too"). Convention: <addr>@v<n> — an ORDINAL content version (v1, v2, …). The BARE address = the latest/
+# current version. Distinct from run://'s `#run=<id>` (a run-INSTANCE pointer, not an ordinal content
+# version). This is a CROSS-SCHEME axis: it applies to ANY addressed content (images are the first instance;
+# the convention generalises to docs/decisions/any versioned attachment). split_version is the one parser.
+_VERSION_RE = _re.compile(r"@v(\d+)$")
+
+
+def split_version(addr: str) -> dict:
+    """Split a GENERAL version suffix off any address: <addr>@v<n> → {base, version}. A bare address (no
+    @v<n>) → {base: addr, version: None} = the latest/current. FAIL-LOUD on a malformed @v suffix (e.g.
+    @vfoo) — never silently treat it as part of the path."""
+    if not isinstance(addr, str):
+        raise ValueError(f"split_version: not a string ({addr!r}).")
+    m = _VERSION_RE.search(addr)
+    if m:
+        return {"base": addr[:m.start()], "version": int(m.group(1))}
+    if "@v" in addr and addr.rsplit("@v", 1)[-1] != "":   # there's an @v… that didn't match \d+ = malformed
+        bad = addr.rsplit("@v", 1)[-1]
+        if not bad.isdigit():
+            raise ValueError(f"split_version: malformed version suffix '@v{bad}' in {addr!r} — the version "
+                             f"axis is an ordinal '@v<n>' (e.g. @v2). Fail loud, never a silent path-segment.")
+    return {"base": addr, "version": None}
+
+
+def versioned_address(base: str, version: int) -> str:
+    """The canonical versioned form → <base>@v<n> (the general content-version axis)."""
+    return f"{base}@v{int(version)}"
+
+
 def parse_image_address(addr: str) -> dict:
     """image://<channel>/<path> → {channel, path, segments, name, is_leaf}. channel = first segment (the
     hierarchical root, REQUIRED); path = the remaining '/'-joined segments (may be deep, may be empty for a
@@ -343,7 +375,8 @@ def parse_image_address(addr: str) -> dict:
     (never a flat global dump)."""
     if not isinstance(addr, str) or not addr.startswith("image://"):
         raise ValueError(f"parse_image_address: not an image:// address ({addr!r}). Fail loud.")
-    rest = addr[len("image://"):].strip("/")
+    sv = split_version(addr)                              # strip the general @v<n> version axis first
+    rest = sv["base"][len("image://"):].strip("/")
     if not rest:
         raise ValueError(
             f"parse_image_address: empty image body ({addr!r}) — an image address needs at least a "
@@ -351,7 +384,7 @@ def parse_image_address(addr: str) -> dict:
     segs = [s for s in rest.split("/") if s]
     channel, tail = segs[0], segs[1:]
     return {"channel": channel, "path": "/".join(tail), "segments": tail,
-            "name": tail[-1] if tail else "", "is_leaf": bool(tail)}
+            "name": tail[-1] if tail else "", "is_leaf": bool(tail), "version": sv["version"]}
 
 
 def image_address(channel: str, path: str) -> str:

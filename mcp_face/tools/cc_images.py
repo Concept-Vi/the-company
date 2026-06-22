@@ -26,12 +26,13 @@ from __future__ import annotations
 import base64
 from typing import Literal
 
-OPS = ("add", "get", "list", "comment", "link", "comments")
+OPS = ("add", "get", "list", "versions", "comment", "note", "reply", "thread", "link", "comments")
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def cc_images(op: Literal["add", "get", "list", "comment", "link", "comments"],
+    def cc_images(op: Literal["add", "get", "list", "versions", "comment", "note", "reply", "thread",
+                              "link", "comments"],
                   image: str = "", target: str = "", channel: str = "", path: str = "",
                   data_b64: str = "", src_path: str = "", mime: str = "", name: str = "", alt: str = "",
                   body: str = "", author_session: str = "", w: int = 0, h: int = 0) -> dict:
@@ -46,6 +47,15 @@ def register(mcp, suite):
         def _serve(addr_or_id: str) -> str:
             iid = addr_or_id.split("://")[-1]
             return f"/api/image/{iid}"
+
+        def _thread(addr: str) -> list:
+            # the THREADED annotation tree on an address: top-level comments/notes (commented_on → addr),
+            # each with its nested replies (reply_to → the comment, recursive). The 'replied-to comments'.
+            def nest(item_addr):
+                return [{"comment": e["item"], "replies": nest(e["item"]["address"])}
+                        for e in cb.reverse_traverse(item_addr, "reply_to")]
+            return [{"comment": e["item"], "replies": nest(e["item"]["address"])}
+                    for e in cb.reverse_traverse(addr, "commented_on")]
 
         if op == "add":
             if not author_session:
@@ -68,10 +78,36 @@ def register(mcp, suite):
 
         if op == "get":
             if not image:
-                raise ValueError("cc_images(op='get') needs `image` (image://<id> or the id).")
+                raise ValueError("cc_images(op='get') needs `image` (image://<channel>/<path>[@v<n>]).")
             rec = ci.get_image(image)
-            comments = [e["item"] for e in cb.reverse_traverse(rec["address"], "commented_on")]
-            return {"op": "get", "image": rec, "serve_url": _serve(rec["address"]), "comments": comments}
+            return {"op": "get", "image": rec, "serve_url": _serve(rec["address"]),
+                    "versions": rec.get("versions", []), "thread": _thread(rec["address"])}
+
+        if op == "versions":
+            if not image:
+                raise ValueError("cc_images(op='versions') needs `image`.")
+            return {"op": "versions", "image": image, "versions": ci.list_versions(image)}
+
+        if op == "note":
+            if not image or not body or not author_session:
+                raise ValueError("cc_images(op='note') needs `image` (target), `body`, `author_session`.")
+            item = cb.file_item("note", (name or "Note"), body, author_session,
+                                channel=channel, links=[{"kind": "commented_on", "target": image}])
+            return {"op": "note", "note": item, "on": image}
+
+        if op == "reply":
+            # reply to a comment/note (threading). `target` = the comment/note's board://<id>.
+            if not target or not body or not author_session:
+                raise ValueError("cc_images(op='reply') needs `target` (the comment board://<id>), `body`, `author_session`.")
+            item = cb.file_item("note", (name or "Reply"), body, author_session,
+                                channel=channel, links=[{"kind": "reply_to", "target": target}])
+            return {"op": "reply", "reply": item, "to": target}
+
+        if op == "thread":
+            if not image:
+                raise ValueError("cc_images(op='thread') needs `image` (the address to read the annotation thread of).")
+            iid = image if image.startswith("image://") else f"image://{image.split('://')[-1]}"
+            return {"op": "thread", "on": iid, "thread": _thread(iid)}
 
         if op == "list":
             # NAVIGATE the tree at any depth: `channel` may be a channel ('design-source') or a deeper
