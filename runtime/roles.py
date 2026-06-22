@@ -25,9 +25,13 @@ field except `id` is OPTIONAL, and a role's FACET follows which fields are popul
                         op=embed (its can_fire), not via a prompt_template.
   - `trigger`         — descriptive today (the consuming code's actual trigger); a general
                         event→role trigger engine is downstream (G3/activation-contexts).
-  - `model_binding`   — {requires:[...], default_model, default_base_url, recommended_*, env_*}.
-                        `requires` is the C2.5 capability QUERY shape (role.requires ⊆ model.provides),
-                        NOT hand-written suitability prose. resolved against the live provider set.
+  - `model_binding`   — {requires:[...]} — the C2.5 capability QUERY shape (role.requires ⊆ model.provides),
+                        NOT hand-written suitability prose; resolved against the live provider set.
+                        ⚠ TRAP: `default_model`/`default_base_url`/`recommended_*`/`env_*` are TOP-LEVEL flat
+                        fields on the spec (see ROLE_FIELDS), NOT nested inside `model_binding`. `resolve_role`
+                        reads `spec.get("default_model")` DIRECTLY (suite.py); a `default_model` nested inside
+                        `model_binding` is SILENTLY UNREAD → the role falls through to DEFAULT_BRAIN (=-pro, the
+                        TIM-RULE anti-pattern). `judge.py` is the only correct pattern. (Caught by-use 2026-06-22.)
   - `mode_scope`      — the modes this role is part of the CAST for (e.g. {"listening"}). ABSENT ⇒
                         the role is in NO cast (e.g. the judge: config-only, fired by the voice circuit).
   - `rules`           — the declared routing/verdict rules over this role's resolved output (DATA here;

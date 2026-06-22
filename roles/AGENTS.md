@@ -42,6 +42,15 @@ fail-loud; else `output_schema`); `thinking` → `run_role`'s `think` (the CALL 
 resolves coordinate-free; default **None**, NOT False — only an EXPLICIT declaration routes think-control, so
 every undeclared role is byte-identical). Absent slot ⇒ the static field ⇒ byte-identical to a slot-free role.
 
+**⚠ BINDING TRAP (`default_model` lives TOP-LEVEL, never inside `model_binding`):** a role's model binding —
+`default_model` · `default_base_url` · `recommended_*` · `env_model`/`env_url`/`env_knobs` — are FLAT
+TOP-LEVEL fields on the `ROLE` dict (`judge.py` is the canonical pattern). `resolve_role` reads
+`spec.get("default_model")` DIRECTLY (suite.py); `model_binding` holds ONLY the C2.5 `{requires:[…]}` capability
+query. A `default_model` nested INSIDE `model_binding` is **silently unread** → the role falls through to
+`DEFAULT_BRAIN` (= `-pro`, the TIM-RULE anti-pattern). Caught by-use 2026-06-22 (explain_role + refine_decision
+both nested → both resolved to `-pro`; the fix is moving it top-level). Verify a new binding BY-USE
+(`resolve_role(id)['model']`), never by reading the file — a nested binding LOOKS right and resolves wrong.
+
 **The registry is the single source (C2.1):** `runtime/roles.py` `RoleRegistry` mirrors
 `runtime/registry.py` `NodeRegistry` (`discover`/`rediscover`/`register`); `suite.py` builds
 `ROLE_REGISTRY = {id: role.spec}` from it (so `resolve_role`/`roles()` read the SAME dict-view), and
