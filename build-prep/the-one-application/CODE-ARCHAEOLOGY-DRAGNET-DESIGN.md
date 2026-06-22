@@ -24,9 +24,19 @@ primitive too.
 
 ## 0. DENOMINATOR (measured — company repo)
 
-`git ls-files` (1526) + `--others --exclude-standard` (125) = **1,651 files.** **683 `.py` (41% — AST-parseable core)**
-· 576 `.md` · 133 `.json` · 126 JS/TS · 33 html · 12 css · 10 sh · 9 sql · 9 no-ext · rest tiny. Most files are small →
-ONE unit each; chunking is the exception.
+`git ls-files` (1526) + `--others --exclude-standard` (125) = 1,651 files in the GIT view. **683 `.py` (41%)** · 576
+`.md` · 133 `.json` · 126 JS/TS · rest tiny. Most files small → ONE unit each.
+
+**★ COVERAGE-CORRECTNESS (DNA's catch, 2026-06-22 — the denominator is the REAL FILESYSTEM TREE, not the git view):**
+git-ls-files SILENTLY OMITS git-ignored dirs — and those can hold the REAL foundation. Proven on the counterpart/design
+instance: `reference/` (104MB / 760 files — the actual ConceptV design-system CSS: colors_and_type.css, deck.css,
+workshop.css, _ds_manifest, SKILL.md) + `source/` (237MB / 174 files — brand assets + deep conceptual docs) are
+git-ignored → a git-ls-files denominator reports "643 tracked files" and DROPS the entire design system. That is
+EXACTLY the "structure exists but agents don't find it → re-derive shallow" failure this primitive exists to KILL — so a
+git/registry-filtered denominator reintroduces the very blind spot. ⟹ enumeration walks the **real filesystem tree**
+(git-ignored content dirs INCLUDED; the substrate scan's `SKIP_TOP`/registry-skip OVERRIDDEN), with an explicit
+include-list for the git-ignored dirs that carry real content (design `source/`+`reference/`), and excludes only true
+junk (binaries/caches/node_modules) with a loud per-exclusion reason. The git view is a HINT, never the coverage bar.
 
 ## 1. Engine reuse (scouted, evidence-grounded)
 
@@ -100,7 +110,7 @@ pollutes the vocabulary + fails `mark_types_acceptance`; writing them unregister
 
 ## 6. The cascade (`ops/code_archaeology.py`)
 
-1. `enumerate()` — git ls-files (+ --others --exclude-standard) = DENOMINATOR; classify readable/binary/excluded (loud reason each).
+1. `enumerate()` — walk the REAL FILESYSTEM TREE (NOT git-ls-files-only — §0 coverage-correctness): the git view UNION an explicit include-list of git-ignored content dirs (design source/+reference/), SKIP_TOP/registry-skip overridden = the DENOMINATOR; classify readable/binary/excluded (loud per-exclusion reason; exclude only true junk — binaries/caches/node_modules).
 2. STAGE 0 — PARSER (deterministic, per file): language·kind·loc·fingerprint + top_symbols·imports·declares (§2). The structural data lands in the M1 record; the field-INDEX write over it (§5) is M2 (decoupled — does not gate the coverage proof).
 3. STAGE 1 — LLM COARSE (run_items, per file): `what_it_is`. chat-4b, think=false. Merged onto the skeleton.
 4. STEP-GATE: code-bearing (parsed symbols / kind∈{module,script}) → FINE; config/doc/data/asset → coarse-only.

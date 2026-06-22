@@ -78,4 +78,11 @@ SEAMS, but PROVE on the company repo first; do NOT speculatively build cross-pro
 chunk/file granularity + protects the synthesis map from hallucinated imports). Engine reuse = SIBLING
 `ops/code_archaeology.py` reusing `cog.run_items` (lead-settled; no touch to the live `dragnet_extract.py`).
 
+**★ COVERAGE-CORRECTNESS req (DNA, 2026-06-22):** the coverage-denominator is the REAL FILESYSTEM TREE, NOT
+git-ls-files / the registry-skip. git-ignored dirs can hold the REAL foundation — proven on counterpart/design:
+`reference/` (104MB/760 files = the actual ConceptV design-system CSS) + `source/` (237MB/174 files) are git-ignored,
+so a git denominator reports "643 tracked" and DROPS the design system = the exact "structure exists but agents don't
+find it" failure this primitive kills. Enumeration overrides the substrate scan's SKIP_TOP + includes the git-ignored
+content dirs; excludes only true junk (loud per-exclusion reason). The git view is a hint, never the coverage bar.
+
 Build held for Tim's scope-confirm of THIS elevated spec + the lead's chat-4b contention clearance.

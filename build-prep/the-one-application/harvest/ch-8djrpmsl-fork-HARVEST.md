@@ -1,0 +1,51 @@
+# HARVEST — fork (the resolver / decision-wire / dragnet-spec lane)
+
+**author_session:** ch-8djrpmsl (fabric handle) / session 11e7d395-8bb9-463f-bcb3-06616da49ebb (transcript). SAME session.
+**territory:** the company centre — runtime/cognition + the decision-surface backend + the dragnet spec. **role:** the resolver-wiring leg (one mechanism resolves prompt/schema/think), the decision-surface backend (L1–L5), and the code-archaeology dragnet design.
+**bar:** every claim tagged `verified` (by-use, not self-certified) | `attempted-unverified` | `broken` | `abandoned` + WHY. No self-certify — an honest "not done" beats a poisoned "done" (the keystone was certified at-bar 5× and was empty).
+
+---
+
+## WHAT I AM (about/kind/summary)
+- **about:** the engine-side of how Tim's direction resolves + how the system reads itself. Three strands: (1) ONE resolver for a role's prompt/schema/think against the turn coordinate; (2) the decision-surface backend (the grounded explain + the decide→signal→resume + the L5 propose); (3) the code-archaeology dragnet — a coverage-complete map to kill build-from-partial-info. **kind:** perspective + built-artifacts + design + adversarial-findings.
+- **summary:** the arc (2026-06-13→22): session-fabric drift-recovery + spin-up-points → embeddings-into-the-scanner → the 4-axis invariant-resolution (theorem-as-base) → the decision-surface L1–L5 → resolve_slot → the L5 propose engine → the code-archaeology dragnet design. The discipline that earned its keep: default-to-wrong (verify live, never trust a "fixed").
+
+## CLAIMS (each tagged — by-check this harvest, not from memory)
+
+1. **resolve_slot: ONE resolver resolves a role's prompt + output-schema + think-control against the turn coordinate (mirroring prompt_slot).** `verified` — by-use: 7 unit checks (schema_slot→coarse/fine grain-class, think resolve, fail-loud), regression green (roles 30, cognition_governance 43, resolution_loop 11, rhm 8/14, bridge_routes 8/0), explain_role resolved live→kimi, refine_decision fired end-to-end on kimi. Commit 61fed90, bridge-bounced LIVE. ONE NAMED GAP: I did NOT personally fire the live /api/decision/explain think=false output — the lead reported it live. Mechanism verified; that literal route-output is lead-reported, not fork-fired.
+
+2. **L5 propose engine: the RHM proposes a card refinement (inert decision_update) → operator accept queue → Tim accepts each, never auto-applied.** `attempted-unverified` (the integrated live route) / the MODEL-LEG is `verified`. WHY: I fired refine_decision on kimi against a real card → a genuinely sharper meaning + sound rationale (model-leg verified). pending_decision_updates: 7 unit checks incl. a real semantic-bug fix (an accepted field must not resurface a stale older proposal). BUT the live /api/decision/propose + /api/decision/proposals HTTP routes were NEVER fired against the running bridge (committed≠live; they activate on the NEXT bounce). The route logic mirrors the proven explain route, but the integrated live route is NOT verified-by-use. Commit 0d9ac76. Do NOT record "L5 propose done."
+
+3. **The binding trap: default_model lives TOP-LEVEL on a role, NOT inside model_binding — a nested default_model is silently unread → falls to DEFAULT_BRAIN=-pro (the TIM-RULE anti-pattern).** `verified` — by-use: resolve_role(refine_decision)→kimi after moving default_model top-level; explain_role + refine_decision BOTH resolved to -pro BEFORE (live-confirmed). FALSE-GREEN CAUGHT: recollection's explain_role -pro fix was nested → STILL on -pro; I caught it by resolving live, not trusting the "fixed." Fixed the SOURCE comment (roles.py:28 invited the nesting) + the drift-home trap note. Commits 0d9ac76 + a2c9e84.
+
+4. **cog_run_role gained an additive base_url param** so a role fires on its OWN resolved endpoint (kimi @ ollama), not the resident 4B. `verified` — by-use (refine fired kimi @ :11434 through it); byte-identical when unset.
+
+5. **code-archaeology dragnet — a reusable build-prep PRIMITIVE (coverage-complete map run BEFORE a build).** `attempted-unverified`/design-only — DESIGN COMPLETE + advisor-checked twice; BUILD NOT STARTED. Mechanisms VERIFIED by subagent code-read (re-confirm by-use at build): space must be a registered Projection (embed_corpus_to_spaces FAILS LOUD otherwise, cognition.py:522); field-query has NO existing surface (build a sibling field-index, marks PATTERN); addressing code://<project>/<rel_path>#run=. ★ COVERAGE-CORRECTNESS (DNA caught, folded 2026-06-22): the denominator is the REAL FILESYSTEM TREE, NOT git-ls-files — git-ignored content dirs (design source/+reference/, 104MB+ of the real ConceptV design-system) would be SILENTLY OMITTED by a git denominator = the exact failure the dragnet kills. enumeration overrides SKIP_TOP + includes git-ignored content dirs. Commit b3a2a79, design doc + board://item-d1a7bf75 amended.
+
+6. **★ THE OPERATOR LOOP (L1 explain → L3 decide→signal→resume → L5 propose) has NEVER closed on a REAL Tim decision.** `attempted-unverified` — CORROBORATES wildcard (claim-6) + composition. WHY: the mechanisms are built + component-verified (L1 grounded explain, L3 the signal+resume, L5 propose), and projection verified the pending→DECIDED flip on a THROWAWAY — but Tim has made ZERO real decisions through the live surface. By the real bar (Tim's use), the loop is NOT closed. My decision-wire backend is the engine-half of that loop; it shares the same honest gap. Do NOT record "L1–L5 done."
+
+7. **Earlier-this-session work (pre-compaction):** L1 grounded-explain route · L3 decide→signal→resume · L4 brain channel-read + open V-post · L2 role-resolved brain · commit-queue drainer · #1b operator-token (inert) · the 4 root-cause bug clusters · the READ-API. `attempted-unverified` for THIS harvest — state per the prior-portion summary, NOT re-verified this turn. The transcript-extraction backbone covers the detail session-attributed.
+
+## RELATIONS (typed edges)
+- **enables:** claim-1 (resolve_slot/schema_slot) → the dragnet's coarse/fine step-gate (claim-5) + recollection's corpus bake.
+- **composes_with:** claim-2 (L5 propose) → the pre-existing accept side + decisions/card-refine-posture; claim-1 → the §5 prompt_slot resolver.
+- **derives_from:** claim-3 (binding trap) ← the false-green discipline; claim-5 (dragnet) ← Tim's "build-from-partial-info is the failure" elevation.
+- **refutes:** claim-6 → any "L1–L5 / operator-loop done" claim not verified through-to-a-real-Tim-decide.
+- **blocked_by:** claim-2 (L5 live route) → the next bridge bounce; claim-5 (dragnet build) → Tim's scope-confirm + chat-4b contention + recollection's code:// marker-keyword.
+- **same_law:** claim-3 (verify the binding live) ↔ claim-6 (verify the loop through Tim's use) ↔ the dragnet's whole reason (coverage, not search-confidence) — all "verify the actual thing, never the claim."
+
+## OPEN QUESTIONS (honest, for whoever resumes)
+- Next bounce activates fork's L5 engine + recollection's explain→kimi fix together → THEN fire /api/decision/propose + /proposals end-to-end (claim-2's gap). Until then, L5-propose is NOT live-verified.
+- The operator loop (claim-6) needs ONE real Tim decision through the live surface to close — the standing gap across fork/wildcard/composition/projection. The mechanism is ready; the Tim-use is not.
+- code-archaeology build (claim-5): held on Tim's scope-confirm + the code:// marker-keyword (proposed to recollection, awaiting lock) + chat-4b clearance. Design + M1/M2/M3 milestones ready.
+- recollection owes a by-use confirm that explain_role now resolves to kimi (their nested-binding fix, claim-3).
+
+## DEAD-ENDS / REASONING worth keeping
+- **The 4B 400 was NOT a malformed payload (the lead's hypothesis) — the chat prompt was 12,445 tokens vs the 4B's 4096 window.** Looking at the actual numbers, not theorizing, found it. Fixed via role-resolution to a big-window model. (Tim then corrected my approach: "don't use deepseek pro… role-based"; "4000 is never enough, 16k min, don't trim when there are other options" — I'd over-trimmed to fit a stale budget. Both the cap AND the resolve apply.)
+- **The granularity mismatch (dragnet):** the reused engine is chunk-native; the spec is file-native. The advisor caught that mirroring-by-analogy would produce per-chunk records that don't line up with a per-file ledger. Parser-first resolved it (whole-file structure from a parser; LLM only for prose) — and is MORE aligned with "as good as the system allows," not a shortcut.
+- **"space=X just works" was an assumption** — it FAILS LOUD unless the space is a registered Projection. Caught by verifying the mechanism (subagent code-read), not assuming the query path.
+- **The thinking=None-not-False trap:** the advisor caught that defaulting the new field to False would route EVERY run_role caller to ollama-native (a mass transport flip). None = only explicit declarations route. The discipline: a "harmless default" can be a silent system-wide change.
+- **★ The dragnet's own design had the blind-spot it exists to kill (DNA caught it):** I'd specced the coverage-denominator as `git ls-files` — clean, obvious, WRONG. git-ignored dirs hold real foundation (a 104MB design-system in `reference/`), so a git denominator silently omits them and reports false-complete coverage — the exact "structure exists but agents don't find it" failure the primitive is built to kill. The build-from-partial-info-killer was itself built from a partial (git-filtered) view of "the repo." The lesson, on itself: the discipline-guard ("don't over-build from partial info") applies to the coverage SOURCE, not just the synthesis — verify what the denominator actually contains, never trust the convenient filtered view.
+
+## PROVENANCE
+author_session = ch-8djrpmsl (fork), session 11e7d395. Commits: 61fed90 (resolve_slot), 0d9ac76 (L5 propose + binding fix + base_url), a2c9e84 (binding trap docs), b3a2a79 (dragnet design + board amendment). Board records: board://item-a7b5b202 (index) · item-81011778 (resolve_slot) · item-6de83e1f (L5) · item-f22a919e (dragnet) · item-ffe094af (landing). Design: build-prep/the-one-application/CODE-ARCHAEOLOGY-DRAGNET-DESIGN.md. Protocol: board://item-78c63045. Recollected via session_recall(session=self).
