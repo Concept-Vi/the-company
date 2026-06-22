@@ -28,6 +28,7 @@ OPERATOR-LAW: plain language at Tim's altitude — never machine names/code/raw 
 subtype) ⇒ the static prompt_template (the neutral default). Fireable; default `generate` op.
 """
 from pydantic import BaseModel
+from fabric.config import OLLAMA_DIRECT   # the ollama host (:11434) where the cloud kimi runs — NOT the :8000 vLLM
 
 
 class ExplainOut(BaseModel):
@@ -79,13 +80,15 @@ ROLE = {
     "prompt_slot": _FRAMING,                  # ★ §5: resolved per-subtype by coordinate={subtype} at run-time
     "input_addresses": ["block", "caveat"],   # recollection's grounding → the labelled USER content
     "output_schema": ExplainOut,
-    # MODEL — explicit kimi binding (lead 2026-06-22, recollection's found-by-use flag): WITHOUT this, a
-    # model-less run_role(explain_role) falls through to DEFAULT_BRAIN=deepseek-v4-pro:cloud — the named
-    # TIM-RULE anti-pattern (-pro is avoid-unless-explicit). default_model is the HARD fallback (roles.py:356)
-    # → kimi (the clone-model default, 256K window fits the ~12-16K grounded explain turn), NEVER -pro. The
-    # live bridge route passes rhm_config().model (chat-4b) explicitly, which still wins; this guards every
-    # OTHER invocation path. (Pure role-resolution via pick_ollama_model_for_context is the follow-on.)
-    "model_binding": {"requires": ["chat", "json"], "default_model": "kimi-k2.6:cloud", "default_base_url": None},
+    # MODEL — explicit kimi binding (lead 2026-06-22; fork's false-green catch). ★ default_model MUST be
+    # TOP-LEVEL on the spec: the live resolver reads spec.default_model, NOT model_binding.default_model —
+    # a NESTED default_model is silently UNREAD → falls through to DEFAULT_BRAIN=deepseek-v4-pro:cloud (the
+    # named TIM-RULE anti-pattern; -pro is avoid-unless-explicit). judge.py is the correct pattern. → kimi
+    # (clone default, 256K window fits the ~12-16K grounded explain), NEVER -pro. The live bridge route passes
+    # rhm_config().model (chat-4b) explicitly, which still wins on that path; this guards every OTHER path.
+    "default_model": "kimi-k2.7-code:cloud",   # = cc_clone.KIMI_OLLAMA_MODEL (the clone-model default); NEVER DEFAULT_BRAIN=-pro
+    "default_base_url": OLLAMA_DIRECT,          # the ollama host where the cloud kimi runs — model+endpoint must match
+    "model_binding": {"requires": ["chat", "json"], "default_model": "kimi-k2.7-code:cloud", "default_base_url": OLLAMA_DIRECT},
     "op": "generate",
     # THINK-OFF (lead-decided 2026-06-22): explain is FILL-FROM-GROUNDING — a grounded ExplainOut is composed
     # from recollection's block/caveat, zero reasoning benefit. think=false suppresses the hidden reasoning
