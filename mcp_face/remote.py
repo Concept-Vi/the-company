@@ -4,12 +4,12 @@ ARCHITECTURE (approved design: build-prep/claude-design/REMOTE-MCP-EXPOSURE-DESI
   transport + auth + posture-filter ONLY. Reuses the SAME runtime.suite.Suite the stdio
   mcp_face/server.py and the :8770 bridge use — NO second engine.
 
-TWO NON-NEGOTIABLE GUARDS (lead rulings, fail-closed §4.0):
-  1. FAIL-CLOSED / deny-by-default — a tool/op NOT explicitly allow-listed in
-     mcp_face/remote_exposure.json with remote_posture 'safe' or 'design' is REFUSED.
-     A newly added tool can never auto-leak.
-  2. MANDATORY AUDIT — every remote call is logged before execution; audit-write
-     failure ⇒ the call FAILS LOUD. No un-audited call ever succeeds.
+ACCESS (Tim 2026-06-22: one brain, no hardcoded lists):
+  The tool set IS the LIVE REGISTRY (_TOOL_MANAGER). Access is identity → posture:
+  no token → nothing (401); sub == OPERATOR → ALL tools; any other valid user →
+  posture=='safe' tools only (fail-closed: unclassified tools are operator-only).
+  MANDATORY AUDIT — every remote call is logged before execution; audit-write failure
+  ⇒ the call FAILS LOUD. No un-audited call ever succeeds.
 
 SCOPE: this is the LOCAL build (localhost/tailnet, :8772, zero public). Public deploy
 to the custom-domain Supabase Edge Function is GATED on the lead's security verify.
@@ -46,7 +46,6 @@ _face.build_mcp()
 SUITE = _face.SUITE
 _TOOL_MANAGER = _face.mcp._tool_manager
 
-EXPOSURE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "remote_exposure.json")
 DEFAULT_PORT = 8772
 AUDIT_LOCK = threading.Lock()
 # Suite has per-resource locks for writes; reads are safe. We serialize ALL dispatch
@@ -54,82 +53,54 @@ AUDIT_LOCK = threading.Lock()
 # per-resource locks would let reads go concurrent, but local dev doesn't need that).
 DISPATCH_LOCK = threading.Lock()
 
-# Scopes (lead ruling: tight; operator scope NEVER remote — EXCEPT genuine-Tim, see below)
-SCOPE_READ = "company:design:read"        # safe tools only
-SCOPE_WRITE = "company:design:write"      # safe + design tools
-OPERATOR_SCOPE = "company:operator:*"    # NEVER issued remotely (the client-connector axis)
-
-# ★ OPERATOR FULL-ACCESS (Tim's directive 2026-06-21: "I give full authority with the connector …
-# they should have all access … get it all done so I can use it and connect it"). The connector's
-# AUTHENTICATED-REMOTE OPERATOR is Tim: a JWKS-validated Supabase JWT whose `sub` == his account →
-# FULL ACCESS to ALL 66 tools, incl. the explicitly_denied/locked/hazard verbs the per-client
-# connector can never touch. The SECURITY BOUNDARY IS THE IDENTITY: this scope is issued ONLY when
-# the cryptographically-verified `sub` matches OPERATOR_USER_ID (verify-unspoofable). It extends
-# Tim's LOCAL operator rights to his remote self — same person, same access. Everyone else stays on
-# the tight read/write posture-filter. Override the account id via OPERATOR_USER_ID.
-SCOPE_OPERATOR_FULL = "company:operator:full"   # issued ONLY to sub == OPERATOR_USER_ID
+# ── ACCESS MODEL (Tim 2026-06-22: ONE brain, no hardcoded lists) ───────────────────────────
+# The tool set is the LIVE REGISTRY (_TOOL_MANAGER) — never a hand-maintained allow-list file.
+# Access is a pure IDENTITY → POSTURE filter over that one registry:
+#   • no valid Supabase token            → TIER_NONE     → nothing (401)
+#   • valid token, sub == OPERATOR        → TIER_OPERATOR → ALL tools (Tim's remote self = his full
+#                                                            local surface; identity IS the boundary)
+#   • valid token, sub != OPERATOR        → TIER_CLIENT   → only tools whose POSTURE == "safe"
+# The old remote_exposure.json (a hardcoded 23-subset) + the gateway's clients.allowed_tools (a
+# hardcoded 15-subset) are DELETED. Posture is meant to be a PROPERTY OF EACH TOOL (declared at the
+# tool's definition) — read by _tool_posture() below. Until tools carry that tag, _tool_posture
+# returns "" (unclassified) ⇒ TIER_CLIENT is FAIL-CLOSED (gets nothing): a never-tagged/new tool can
+# never leak to a non-operator. Operator is unaffected (sees the whole registry).
+TIER_NONE = ""
+TIER_OPERATOR = "operator"
+TIER_CLIENT = "client"
 OPERATOR_USER_ID = os.environ.get("OPERATOR_USER_ID", "ebe5f9c7-4d66-4717-835f-afc96088facb")  # Tim (…615)
+
+
+def _tool_posture(tool_obj) -> str:
+    """The tool's OWN declared posture (registry-native, NOT a separate list). Reads a `posture`
+    attribute / annotation on the registered tool; "" when unclassified. The single source for the
+    non-operator safe-subset — populated by tagging tools at their definition (the de-dup of the old
+    remote_exposure.json knowledge onto the tools). "" ⇒ operator-only (fail-closed)."""
+    p = getattr(tool_obj, "posture", None)
+    if not p:
+        ann = getattr(tool_obj, "annotations", None)
+        if isinstance(ann, dict):
+            p = ann.get("posture")
+        else:
+            p = getattr(ann, "posture", None)
+    return str(p) if p else ""
+
+
+def _tools_for_tier(tier: str) -> list:
+    """The (name, tool_obj) pairs visible to a tier — derived from the LIVE registry every call.
+    operator → all; client → posture=='safe' only; none → empty."""
+    items = sorted(_TOOL_MANAGER._tools.items())
+    if tier == TIER_OPERATOR:
+        return items
+    if tier == TIER_CLIENT:
+        return [(n, t) for n, t in items if _tool_posture(t) == "safe"]
+    return []
 
 # ★ PUBLIC-INSTANCE HARDENING (advisor security catch): when this instance is Funnel-exposed to the
 # public internet, REMOTE_PUBLIC=1 DISABLES the local dev-token bypass entirely — otherwise a static
 # COMPANY_REMOTE_DEV_TOKEN would be a JWT-bypass reachable from the internet (Funnel forwards to
 # 127.0.0.1, so the server cannot tell external from local by address). Public ⇒ JWT-only, no exceptions.
 REMOTE_PUBLIC = os.environ.get("REMOTE_PUBLIC", "") not in ("", "0", "false", "False")
-
-
-def _load_exposure() -> dict:
-    """Load the remote-posture allow-list. FAIL LOUD on missing/malformed (never a
-    permissive default — the registry IS the security boundary)."""
-    try:
-        with open(EXPOSURE_PATH, encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError as e:
-        raise RuntimeError(
-            f"remote_exposure.json MISSING at {EXPOSURE_PATH!r} — the allow-list is the "
-            f"security boundary; a missing registry is fail-closed, never a permissive "
-            f"empty gate.") from e
-    except (ValueError, OSError) as e:
-        raise RuntimeError(f"remote_exposure.json MALFORMED ({e}) — fail-closed.") from e
-
-
-EXPOSURE = _load_exposure()
-EXPOSED = EXPOSURE.get("tools", {})
-
-
-def _is_allowed(tool_name: str, args: dict) -> tuple[bool, str]:
-    """FAIL-CLOSED posture check. Returns (allowed, reason).
-
-    A tool NOT in EXPOSED ⇒ DENY (deny-by-default). A tool in EXPOSED but its
-    `allowed` op list is non-null and the call's op/action is not in it ⇒ DENY.
-    """
-    entry = EXPOSED.get(tool_name)
-    if entry is None:
-        return False, f"fail-closed: tool {tool_name!r} not in the remote allow-list (deny-by-default)."
-    posture = entry.get("remote_posture", "")
-    if posture not in ("safe", "design"):
-        return False, f"fail-closed: tool {tool_name!r} posture={posture!r} not remotely exposable."
-    allowed_ops = entry.get("allowed")
-    if allowed_ops is not None:
-        # the op/action lives under a conventional key; check the common ones
-        op = (args.get("op") or args.get("action") or args.get("by") or "")
-        if op and op not in allowed_ops:
-            return False, (f"fail-closed: tool {tool_name!r} op={op!r} not in allowed "
-                           f"{allowed_ops} (posture {posture}).")
-        if not op and allowed_ops:
-            # tool requires a scoped op but none supplied — deny rather than guess
-            return False, (f"fail-closed: tool {tool_name!r} requires one of ops {allowed_ops}; "
-                           f"none supplied.")
-    return True, posture
-
-
-def _scope_allows(posture: str, scope: str) -> bool:
-    """design/write tools require the write scope; safe tools accept read or write.
-    operator scope is never issued remotely but if a token somehow carries only it,
-    it does NOT grant design-write (operator:* is a different axis)."""
-    if posture == "design":
-        return scope == SCOPE_WRITE
-    # safe
-    return scope in (SCOPE_READ, SCOPE_WRITE)
 
 
 # Audit sink config. Primary = the connector_audit Postgres table (via the Supabase REST
@@ -193,8 +164,8 @@ def _preview(args: dict, n: int = 200) -> str:
 
 
 # --- AUTH: local dev token (LOCAL ONLY) + Supabase JWT validation (the real path) ----------
-# LOCAL dev: a Bearer token == COMPANY_REMOTE_DEV_TOKEN grants SCOPE_WRITE. Local/tailnet
-# ONLY — never enabled on the public endpoint (the public path requires a Supabase JWT).
+# LOCAL dev: a Bearer token == COMPANY_REMOTE_DEV_TOKEN grants the operator tier. Local/tailnet
+# ONLY — hard-disabled on the public endpoint (REMOTE_PUBLIC ⇒ Supabase JWT required).
 DEV_TOKEN = os.environ.get("COMPANY_REMOTE_DEV_TOKEN", "")
 
 # Supabase JWT config (the real OAuth path). Supabase Auth issues HS256 JWTs signed with
@@ -208,27 +179,13 @@ _JWKS_CACHE: dict = {"keys": None, "ts": 0.0}
 _JWK_CLIENT = None
 
 
-def _scope_from_claims(claims: dict) -> str:
-    """Extract the connector scope from the JWT claims. Supabase puts custom data in
-    app_metadata / user_metadata; we accept a `scope` claim, app_metadata.scope, or a
-    roles list containing the scope string. Returns "" if none recognized (→ deny,
-    fail-closed: a valid user with no connector scope gets no access)."""
-    if claims.get("scope"):
-        return str(claims["scope"])
-    am = claims.get("app_metadata") or {}
-    if isinstance(am, dict) and am.get("scope"):
-        return str(am["scope"])
-    roles = claims.get("roles") or []
-    for r in roles:
-        if isinstance(r, str) and r.startswith("company:"):
-            return r
-    return ""
-
-
 def _validate_supabase_jwt(tok: str) -> tuple[bool, str, str, str]:
-    """Validate a Supabase-issued JWT. Returns (ok, subject, scope, reason).
+    """Validate a Supabase-issued JWT. Returns (ok, subject, tier, reason).
     FAIL CLOSED on any validation gap (no secret/JWKS configured, bad signature, expired,
-    wrong audience, no recognized scope). Never a permissive default.
+    wrong audience). Never a permissive default. The TIER is identity-derived: sub ==
+    OPERATOR_USER_ID → TIER_OPERATOR (all tools); any other valid user → TIER_CLIENT
+    (posture-safe subset only). No connector-scope claim is required or consulted — identity
+    is the whole gate.
 
     Two paths: HS256 symmetric (SUPABASE_JWT_SECRET, legacy/PostgREST-style) OR
     asymmetric via JWKS (SUPABASE_JWKS_URL — Supabase GoTrue issues ES256 JWTs with a
@@ -259,18 +216,11 @@ def _validate_supabase_jwt(tok: str) -> tuple[bool, str, str, str]:
     subject = str(claims.get("sub", ""))
     if not subject:
         return False, "", "", "token has no subject (sub)"
-    # ★ OPERATOR FULL-ACCESS — IDENTITY OVERRIDES SCOPE. Tim's account gets SCOPE_OPERATOR_FULL
-    # the instant his cryptographically-verified `sub` matches, BEFORE the connector-scope gate (his
-    # normal Supabase token carries no `company:design:*` scope claim, so without this it would
-    # fail-closed at the scope check — advisor catch). This is the single, unspoofable grant point:
-    # only a JWKS-valid token whose sub == OPERATOR_USER_ID reaches it.
+    # IDENTITY IS THE GATE. A cryptographically-verified sub == OPERATOR_USER_ID → operator (all
+    # tools). Any other valid Supabase user → client (posture-safe subset). No scope claim needed.
     if subject == OPERATOR_USER_ID:
-        return True, subject, SCOPE_OPERATOR_FULL, "supabase-jwt-operator"
-    scope = _scope_from_claims(claims)
-    if scope not in (SCOPE_READ, SCOPE_WRITE):
-        return False, subject, "", (f"no connector scope (need {SCOPE_READ!r} or "
-                                    f"{SCOPE_WRITE!r}; got {scope!r}). Fail-closed.")
-    return True, subject, scope, "supabase-jwt"
+        return True, subject, TIER_OPERATOR, "supabase-jwt-operator"
+    return True, subject, TIER_CLIENT, "supabase-jwt-client"
 
 
 def _jwk_client():
@@ -294,11 +244,11 @@ def _validate_auth(headers) -> tuple[bool, str, str, str]:
     # ★ DEV-TOKEN BYPASS — LOCAL-ONLY, HARD-DISABLED when public (advisor security catch). On a
     # Funnel-exposed instance (REMOTE_PUBLIC=1) the static dev token is a JWT-bypass reachable from
     # the internet, so it is refused entirely: public ⇒ JWT-only. Only on a non-public (local/tailnet)
-    # instance does the dev token grant SCOPE_WRITE.
+    # instance does the dev token grant the operator tier.
     if DEV_TOKEN and tok == DEV_TOKEN:
         if REMOTE_PUBLIC:
             return False, "", "", "dev-token bypass is disabled on the public instance (JWT-only)."
-        return True, "dev-local", SCOPE_WRITE, "local dev token"
+        return True, "dev-local", TIER_OPERATOR, "local dev token"
     return _validate_supabase_jwt(tok)
 
 
@@ -337,10 +287,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         if self.path == "/healthz":
             self._json(200, {"ok": True, "service": "company-remote-mcp",
-                             "exposed_tools": len(EXPOSED)})
+                             "registry_tools": len(_TOOL_MANAGER._tools)})
             return
         # everything else requires auth
-        ok, subj, scope, reason = _validate_auth(self.headers)
+        ok, subj, tier, reason = _validate_auth(self.headers)
         if not ok:
             self.send_response(401)
             self.send_header("WWW-Authenticate", f'Bearer resource_metadata='
@@ -355,7 +305,7 @@ class Handler(BaseHTTPRequestHandler):
         self._json(404, {"error": "unknown path"})
 
     def do_POST(self):
-        ok, subj, scope, reason = _validate_auth(self.headers)
+        ok, subj, tier, reason = _validate_auth(self.headers)
         if not ok:
             self.send_response(401)
             self.send_header("WWW-Authenticate", f'Bearer resource_metadata='
@@ -393,63 +343,44 @@ class Handler(BaseHTTPRequestHandler):
             self._send(202, b"")
             return
         if method == "tools/list":
-            if scope == SCOPE_OPERATOR_FULL:
-                # ★ OPERATOR (Tim) — ALL tools visible (his remote self has his full local surface).
-                # Pull the live tool manager (every @mcp.tool def), with real schemas where present.
-                tools = []
-                for n, tool_obj in sorted(_TOOL_MANAGER._tools.items()):
-                    schema = getattr(tool_obj, "parameters", None) or {"type": "object"}
-                    tools.append({"name": n,
-                                  "description": getattr(tool_obj, "description", "") or "",
-                                  "inputSchema": schema})
-            else:
-                # everyone else: ONLY allow-listed safe/design tools (fail-closed at discovery too)
-                tools = [{"name": n, "description": e.get("note", ""),
-                          "inputSchema": {"type": "object"}}
-                         for n, e in EXPOSED.items()
-                         if e.get("remote_posture") in ("safe", "design")]
+            # The tool set IS the live registry, filtered by identity tier (operator → all;
+            # client → posture-safe). No hardcoded allow-list file.
+            tools = []
+            for n, tool_obj in _tools_for_tier(tier):
+                schema = getattr(tool_obj, "parameters", None) or {"type": "object"}
+                tools.append({"name": n,
+                              "description": getattr(tool_obj, "description", "") or "",
+                              "inputSchema": schema})
             self._json(200, {"jsonrpc": "2.0", "id": rid, "result": {"tools": tools}})
             return
         if method == "tools/call":
             tool = params.get("name", "")
             args = params.get("arguments", {}) or {}
-            if scope == SCOPE_OPERATOR_FULL:
-                # ★ OPERATOR (Tim) — FULL access: the posture/scope filters are BYPASSED so every
-                # tool incl. the explicitly_denied/locked/hazard verbs is runnable (his remote self =
-                # his local rights). The MANDATORY AUDIT is NOT bypassed (it is the safety record;
-                # git-revert + Tim controlling per-app tool visibility are the recovery). The only
-                # gate left is registry-drift (tool not dispatchable) + the tool's own teaching
-                # errors, below. posture is recorded as 'operator-full' for the audit trail.
-                posture = "operator-full"
-            else:
-                allowed, posture_reason = _is_allowed(tool, args)
-                if not allowed:
-                    _audit(call_id, tool, args, subj, scope, "DENY", posture_reason)
-                    self._json(200, {"jsonrpc": "2.0", "id": rid,
-                                     "result": {"content": [{"type": "text",
-                                     "text": f"REFUSED: {posture_reason}"}],
-                                     "isError": True}})
-                    return
-                posture = posture_reason  # _is_allowed returns posture string on success
-                if not _scope_allows(posture, scope):
-                    _audit(call_id, tool, args, subj, scope, "DENY",
-                           f"scope {scope!r} insufficient for posture {posture!r}")
-                    self._json(200, {"jsonrpc": "2.0", "id": rid,
-                                     "result": {"content": [{"type": "text",
-                                     "text": f"REFUSED: scope {scope!r} insufficient"}],
-                                     "isError": True}})
-                    return
-            # DISPATCH (oracle-confirmed reuse): the posture+scope gates have ALREADY
-            # passed ABOVE — the Suite method is only reached for an allowed tool+op.
-            # Dispatch through the stdio face's registered tool fn (inherit its
-            # arg-handling + teaching errors + _guard_tools). Serialized under
-            # DISPATCH_LOCK (Suite has per-resource locks; one global lock is the
-            # simple correct choice for the local dev gateway).
+            # ACCESS = identity tier over the live registry. operator → any tool; client → only
+            # posture=='safe' tools. The MANDATORY AUDIT is never bypassed (the safety record;
+            # git-revert + Tim's per-app tool visibility are the recovery). Then registry-drift +
+            # the tool's own teaching errors are the only gates left.
             tool_obj = _TOOL_MANAGER._tools.get(tool)
+            if tier == TIER_OPERATOR:
+                posture = "operator"
+            else:
+                # client tier: the tool must exist AND be tagged safe (fail-closed if unclassified)
+                if tool_obj is None or _tool_posture(tool_obj) != "safe":
+                    _audit(call_id, tool, args, subj, tier, "DENY",
+                           f"tier {tier!r}: tool {tool!r} not in the safe set (identity-gated, fail-closed)")
+                    self._json(200, {"jsonrpc": "2.0", "id": rid,
+                                     "result": {"content": [{"type": "text",
+                                     "text": f"REFUSED: {tool!r} not available to your access level"}],
+                                     "isError": True}})
+                    return
+                posture = "safe"
+            # DISPATCH: the identity gate has passed. Dispatch through the stdio face's registered
+            # tool fn (inherit its arg-handling + teaching errors + _guard_tools). Serialized under
+            # DISPATCH_LOCK.
             if tool_obj is None:
-                _audit(call_id, tool, args, subj, scope, "DENY",
-                       f"tool {tool!r} registered in allow-list but not found in the "
-                       f"face tool manager (registry drift — refuse, never guess)")
+                _audit(call_id, tool, args, subj, tier, "DENY",
+                       f"tool {tool!r} not found in the face tool manager "
+                       f"(registry drift / unknown tool — refuse, never guess)")
                 self._json(200, {"jsonrpc": "2.0", "id": rid,
                                  "result": {"content": [{"type": "text",
                                  "text": f"REFUSED: {tool!r} not dispatchable (registry drift)"}],
@@ -459,16 +390,16 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 with DISPATCH_LOCK:
                     result = fn(**args)
-                _audit(call_id, tool, args, subj, scope, "OK")
+                _audit(call_id, tool, args, subj, tier, "OK")
             except (ValueError, KeyError) as e:
                 # a TEACHING error from the tool's own contract — surface, don't audit-fail
-                _audit(call_id, tool, args, subj, scope, "TEACHING-ERROR", f"{type(e).__name__}: {e}")
+                _audit(call_id, tool, args, subj, tier, "TEACHING-ERROR", f"{type(e).__name__}: {e}")
                 self._json(200, {"jsonrpc": "2.0", "id": rid,
                                  "result": {"content": [{"type": "text",
                                  "text": f"Error: {type(e).__name__}: {e}"}], "isError": True}})
                 return
             except Exception as e:
-                _audit(call_id, tool, args, subj, scope, "DISPATCH-ERROR",
+                _audit(call_id, tool, args, subj, tier, "DISPATCH-ERROR",
                        f"{type(e).__name__}: {e}")
                 self._json(200, {"jsonrpc": "2.0", "id": rid,
                                  "result": {"content": [{"type": "text",
@@ -492,8 +423,9 @@ def main() -> None:
     H = Handler
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)  # 127.0.0.1 ONLY (law)
     sys.stderr.write(f"[remote-mcp] listening 127.0.0.1:{port} "
-                     f"(LOCAL build; {len(EXPOSED)} tools allow-listed; "
-                     f"fail-closed + mandatory-audit ON)\n")
+                     f"({len(_TOOL_MANAGER._tools)} tools in the live registry; "
+                     f"identity-gated [operator→all · client→posture-safe · none→401]; "
+                     f"mandatory-audit ON)\n")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
