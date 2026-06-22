@@ -35,7 +35,11 @@
    desktop 2-COL grid — DNA's note: the graph right-shifts/cuts under 2-col, verified by use: at 1440 the 2-col
    collapsed the graph SVG to 0×0). Mirrors the gallery-frame host override (surface.css). Also un-fix the .screen's
    844 device-height (it left dead space above the graph at 390) → size to content. ─────────────────────────── */
-.channels-graph .screen.ar { height: auto; max-height: none; overflow: visible; }
+/* WIDTH: DNA's .screen is a FIXED 390px PHONE-FRAME (phone.css:98) — same trap transcript+board hit. It pinned the
+   fabric graph to a 162px island at 1440 (the svg's width:600 below is capped by max-width:100% to the narrow slot).
+   Found by-use re-verifying the "channel-view verified both viewports" record (it was WRONG — the look caught the
+   inference). Float the frame to fill the body, capped near hubNetwork's authored 600. */
+.channels-graph .screen.ar { width: 100%; max-width: 640px; height: auto; max-height: none; overflow: visible; }
 .channels-graph .screen.ar.ar-responsive {
   display: flex; flex-direction: column; grid-template-columns: none; grid-template-rows: none; gap: 0;
 }
