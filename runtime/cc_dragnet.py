@@ -82,18 +82,25 @@ def run_dragnet(store, *, channel: str, input_dir: str, author_session: str, kin
     WHOLE tree (git-ignored INCLUDED) except `exclude` (always recorded with a reason).
 
     Two ingest seams (reuse-don't-parallel — the extractor PLUGS IN, this is the tracked-run wrapper):
-      • ingest_one(store, fp, channel, rel)->address — PER-FILE (default for kind='image').
-      • ingest_batch(store, files, channel)->{addresses, processed, failed, errors[, extra]} — BATCH-CONCURRENT
-        (fork's 32-way code_archaeology cascade plugs in here; preserves the fan + step-gate + throughput)."""
+      • ingest_one(store, fp, channel, rel)->address — PER-FILE (default for kind='image'). cc_dragnet OWNS
+        enumeration here (the image case has no separate engine).
+      • ingest_batch(store, input_dir, channel, exclude)->{addresses, processed, failed, retries, errors,
+        excluded, extra} — BATCH-CONCURRENT. The ENGINE owns enumerate+parse+cascade+coverage (its real-tree
+        walk + junk/secret/binary exclusion IS the dragnet's core competency — it's what gets git-ignored
+        source//reference IN and secrets/.crt/.key OUT each-with-reason, Tim's law). cc_dragnet wraps the
+        tracked-run framing (timing + the ONE telemetry-record + channel-attach + fail-loud invariant) around
+        the engine's returned coverage. (fork's 32-way code_archaeology cascade plugs in here.)"""
     if not channel or not input_dir or not author_session:
         raise DragnetError("run_dragnet needs `channel`, `input_dir`, and `author_session`.")
     if not os.path.isdir(input_dir):
         raise DragnetError(f"input_dir {input_dir!r} is not a directory — fail loud (never a silent empty run).")
 
-    exts = extensions or (set(_IMG_EXT) if kind == "image" else None)
-    files, excluded = _enumerate(input_dir, exts, exclude)
     started = time.time()
     started_iso = datetime.now(timezone.utc).isoformat()
+    # cc_dragnet OWNS enumeration ONLY for the per-file path; the batch ENGINE owns its own (coverage is its
+    # competency) and returns the breakdown — so we don't enumerate here when ingest_batch is set.
+    exts = extensions or (set(_IMG_EXT) if kind == "image" else None)
+    files, excluded = ([], []) if ingest_batch is not None else _enumerate(input_dir, exts, exclude)
 
     def _ingest_image(fp, rel):
         with open(fp, "rb") as f:
@@ -109,15 +116,16 @@ def run_dragnet(store, *, channel: str, input_dir: str, author_session: str, kin
     processed, failed, retried, errors, slowest = 0, 0, 0, [], 0.0
     addresses = []
     if ingest_batch is not None:
-        # BATCH-CONCURRENT seam — fork's 32-way cascade runs the whole file list at once (preserves the fan +
-        # step-gate + throughput). It returns its own processed/failed/errors; cc_dragnet wraps the TIMING +
-        # coverage + telemetry-record + channel-attach around it (the ONE tracked-run shape).
-        res = ingest_batch(store, files, channel) or {}
+        # BATCH-CONCURRENT seam — the ENGINE owns enumerate+parse+cascade+coverage over input_dir (its
+        # real-tree walk + exclusion-with-reason is the dragnet's core competency); cc_dragnet wraps the
+        # TIMING + the ONE telemetry-record + channel-attach + fail-loud invariant around its returned coverage.
+        res = ingest_batch(store, input_dir, channel, exclude) or {}
         addresses = list(res.get("addresses", []))
         processed = int(res.get("processed", len(addresses)))
         failed = int(res.get("failed", 0))
         retried = int(res.get("retries", 0))
         errors = list(res.get("errors", []))[:50]
+        excluded = list(res.get("excluded", []))      # the engine's exclusion-with-reason breakdown
         batch_extra = res.get("extra", {})
     else:
         ingest = ingest_one or (_ingest_image if kind == "image" else None)
@@ -144,7 +152,9 @@ def run_dragnet(store, *, channel: str, input_dir: str, author_session: str, kin
 
     ended = time.time()
     dur = ended - started
-    total = len(files)
+    # files_total = the ENUMERATED (non-excluded) set: per-file path knows it as len(files); batch path's
+    # engine enumerated it, so derive it as processed+failed (the engine's attempted set).
+    total = len(files) if ingest_batch is None else (processed + failed)
     denominator = total + len(excluded)
     telemetry = {
         "channel": channel, "input_dir": input_dir, "kind": kind,
