@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSessions, openSessions, closeSessions, selectSession } from './sessionDrillStore'
 import './sessions.css'
 
@@ -20,10 +20,14 @@ const dna = () => (window as unknown as { DNA?: DNAGlobal }).DNA
 export function SessionDrill() {
   const { sessions, loading, error, open, selected, lens } = useSessions()
   const cardRef = useRef<HTMLDivElement>(null)
+  // ROSTER FILTER — pure synchronous client-side view state (not a store concern: no async action reads it, unlike
+  // transcript's query). Finds a session in the registry roster by title/name/cwd/state — the 60-cap scroll alone
+  // couldn't, so as the roster grows the operator couldn't reach a session by name. Reset on each fresh open.
+  const [filter, setFilter] = useState('')
 
   // open on `sessions:open`; Esc backs out of a drill, then closes (mirrors the other overlays).
   useEffect(() => {
-    const onOpen = () => openSessions()
+    const onOpen = () => { setFilter(''); openSessions() }
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || !open) return
       if (selected) selectSession(null)
@@ -76,6 +80,17 @@ export function SessionDrill() {
 
   const drilled = selected ? sessions.find((s) => s.id === selected) : null
 
+  // the roster, filtered by the query across the HUMAN fields (title/name/cwd/state — never the id). Empty query =
+  // the full roster (unchanged behaviour). The display cap (60) applies to the MATCHES, so a filtered search reaches
+  // sessions a 60-cap scroll of the unfiltered list would have hidden.
+  const q = filter.trim().toLowerCase()
+  const shown = q
+    ? sessions.filter((s) =>
+        (s.title || s.name || '').toLowerCase().includes(q) ||
+        (s.cwd || '').toLowerCase().includes(q) ||
+        (s.state || '').toLowerCase().includes(q))
+    : sessions
+
   return (
     <div className={`sessions-overlay ${open ? 'sessions-overlay--open' : ''}`} aria-hidden={!open}>
       <div className="sessions-scrim" onClick={closeSessions} />
@@ -106,10 +121,24 @@ export function SessionDrill() {
           {/* THE LIST */}
           {!selected && !error && (
             <>
-              {loading && sessions.length === 0 && <p className="sessions-msg">Looking…</p>}
+              {/* THE FILTER — find a session by name/where/state (instant, client-side over the loaded roster). Only
+                  shown once there's a roster to filter; tokens only, mirrors the transcript search row. */}
               {sessions.length > 0 && (
+                <div className="sessions-search">
+                  <input
+                    className="sessions-input"
+                    type="search"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    placeholder="Find a session — by name, folder, or state…"
+                    aria-label="Filter the session roster"
+                  />
+                </div>
+              )}
+              {loading && sessions.length === 0 && <p className="sessions-msg">Looking…</p>}
+              {sessions.length > 0 && shown.length > 0 && (
                 <ul className="sessions-list">
-                  {sessions.slice(0, 60).map((s) => (
+                  {shown.slice(0, 60).map((s) => (
                     <li key={s.id}>
                       <button className="sessions-row" onClick={() => selectSession(s.id)}>
                         <span className="sessions-row-name">{s.title || s.name || 'Session'}</span>
@@ -121,6 +150,10 @@ export function SessionDrill() {
                     </li>
                   ))}
                 </ul>
+              )}
+              {/* honest no-match (the roster has sessions, the filter excludes them all) — never a blank body */}
+              {sessions.length > 0 && q && shown.length === 0 && (
+                <p className="sessions-msg sessions-msg--quiet">No sessions match “{filter.trim()}”.</p>
               )}
             </>
           )}
