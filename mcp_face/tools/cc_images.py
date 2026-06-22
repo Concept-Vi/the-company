@@ -74,7 +74,11 @@ def register(mcp, suite):
             return {"op": "get", "image": rec, "serve_url": _serve(rec["address"]), "comments": comments}
 
         if op == "list":
-            return {"op": "list", "images": ci.list_images(channel=channel or None)}
+            # NAVIGATE the tree at any depth: `channel` may be a channel ('design-source') or a deeper
+            # group ('design-source/capital-raise'). Returns the images under it + the group index.
+            prefix = (channel + ("/" + path if path else "")) if channel else None
+            return {"op": "list", "prefix": prefix, "images": ci.list_images(prefix=prefix),
+                    "groups": (ci.list_groups(channel) if channel and not path else None)}
 
         if op == "comment":
             if not image or not body or not author_session:
