@@ -26,7 +26,7 @@ checklist + requires --confirm).
 """
 from __future__ import annotations
 import argparse, json, os, re, sqlite3, sys, time
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -48,6 +48,16 @@ class Fine(BaseModel):
     claims: List[str]           # assertions/decisions stated
     relations: List[str]        # "X depends on Y" / "X supersedes Y"
     open_questions: List[str]   # unresolved threads ([] if none)
+
+# ── DESIGN extension (visual-dna ONLY) — the 2 additive/optional superset fields (DNA's bake-criteria 2+5,
+# lead-settled 2026-06-22). ONE schema: these are null/absent for full/theorem/transcript spaces, populated
+# ONLY for visual-dna (a separate --design stage). NOT a per-space fork — the stored record is the one superset.
+#   resolves_into — DNA criterion-2 MATCH-KEY (resolve-on NO): the design element/component/token this maps to.
+#   resolution    — DNA criterion-5 CONTEXT-RESOLUTION (resolve-on YES): the context-points it resolves against
+#                   (line / opacity / colour-role / shape — composition registers these as resolution axis-rows).
+class Design(BaseModel):
+    resolves_into: List[str]    # match-key lookup: the design element(s)/component(s)/token(s) this maps to
+    resolution: List[str]       # context-points it resolves against (line / opacity / colour-role / shape)
 
 _DEEPEN_KINDS = {"decision", "spec", "discussion"}            # the step-gate: these continue to fine
 
@@ -74,6 +84,19 @@ def _fine_role():
         "\"relations\": [\"e.g. 'X depends on Y'\"], "
         "\"open_questions\": [\"unresolved threads, [] if none\"]}"
     ), output_schema=Fine)
+
+
+def _design_role():
+    # visual-dna ONLY — extracts DNA's 2 design fields (criteria 2+5). Draft prompt from DNA's named
+    # semantics; the design-domain wording is DNA-validatable on the (repeatable, bounded) re-bake.
+    from runtime.roles import Role
+    return Role(id="dragnet_design", spec={}, prompt_template=(
+        "Extract the DESIGN BINDING of this visual/design content (describe only what it specifies).\n"
+        "Content:\n{utterance}\n\n"
+        "Return ONLY JSON: {\"resolves_into\": [\"the design element/component/token this maps to — the "
+        "match keys for lookup\"], \"resolution\": [\"the context-points this resolves against — e.g. line, "
+        "opacity, colour-role, shape\"]}"
+    ), output_schema=Design)
 
 
 def load_chunks(*, projects=None, since=None, until=None, limit=None, sample_step=None,
@@ -134,9 +157,11 @@ def _safe_item(text):
     return (" " + text) if (isinstance(text, str) and _sch(text) is not None) else text
 
 
-def run_extract(chunks, *, store, coarse_max=220, fine_max=600, label="sample"):
+def run_extract(chunks, *, store, coarse_max=220, fine_max=600, design=False, design_max=300, label="sample"):
     """The STEPPED cascade over `chunks`. Stage1 coarse all → gate → stage2 fine on gated. Returns
-    (records, stats). records = the superset shape (coarse always; fine merged when the gate fired)."""
+    (records, stats). records = the superset shape (coarse always; fine merged when the gate fired).
+    `design=True` (visual-dna ONLY) adds a DESIGN stage over every chunk → merges resolves_into + resolution
+    (the 2 additive superset fields) into each record. null/absent for the default full/theorem bake."""
     from runtime import cognition as cog
     t0 = time.time()
     # STAGE 1 — coarse, every chunk (texts guarded → run_items treats them as literals, not addresses)
@@ -160,6 +185,16 @@ def run_extract(chunks, *, store, coarse_max=220, fine_max=600, label="sample"):
             if v is not None:
                 fine[i] = v if isinstance(v, dict) else v.dict()
     t_fine = time.time() - t1
+    # STAGE 3 — DESIGN (visual-dna only): extract the 2 additive fields over EVERY chunk (design binding
+    # applies to all design content, not gated by the session step-gate). null/absent when design=False.
+    t2 = time.time()
+    dz = {}
+    if design:
+        d_res = cog.run_items(_design_role(), [_safe_item(c["text"]) for c in chunks], store,
+                              turn_id=f"dragnet-design-{label}", max_tokens=design_max)
+        for i, v in d_res.resolved.items():
+            dz[i] = v if isinstance(v, dict) else v.dict()
+    t_design = time.time() - t2
     # MERGE → the superset record per chunk
     records = []
     for i, ch in enumerate(chunks):
@@ -170,12 +205,16 @@ def run_extract(chunks, *, store, coarse_max=220, fine_max=600, label="sample"):
                "grain": "fine" if i in fine else "coarse", **cv}
         if i in fine:
             rec.update(fine[i])
+        if i in dz:                                           # the additive design fields (visual-dna)
+            rec.update(dz[i])
         records.append(rec)
     stats = {"n": len(chunks), "coarse_ok": len(coarse), "coarse_failed": len(c_res.failed),
              "gated_to_fine": len(gated), "fine_ok": len(fine),
              "t_coarse_s": round(t_coarse, 1), "t_fine_s": round(t_fine, 1),
              "throughput_coarse_per_s": round(len(coarse) / t_coarse, 1) if t_coarse else 0,
              "total_s": round(time.time() - t0, 1)}
+    if design:
+        stats["design_ok"] = len(dz); stats["t_design_s"] = round(t_design, 1)
     return records, stats
 
 
@@ -197,6 +236,8 @@ def main():
     ap.add_argument("--path-prefix", default="", help="comma-sep rel_path PREFIXES to include (deeper than "
                     "--projects' leading-segment match; e.g. working-docs/universal-mechanics-main)")
     ap.add_argument("--out-name", default="full", help="output basename → extractions-<name>.jsonl")
+    ap.add_argument("--design", action="store_true", help="visual-dna ONLY: add the DESIGN stage "
+                    "(resolves_into + resolution, the 2 additive superset fields)")
     a = ap.parse_args()
     projects = [p.strip() for p in a.projects.split(",") if p.strip()] or None
     path_prefix = [p.strip() for p in a.path_prefix.split(",") if p.strip()] or None
@@ -242,7 +283,7 @@ def main():
             for bi in range(0, len(todo), BATCH):
                 batch = todo[bi:bi + BATCH]
                 recs, st = run_extract(batch, store=store, coarse_max=a.coarse_max, fine_max=a.fine_max,
-                                       label=f"full-{bi}")
+                                       design=a.design, label=f"full-{bi}")
                 for r in recs:
                     f.write(json.dumps(r) + "\n")
                 f.flush()
@@ -255,7 +296,7 @@ def main():
 
     # sample / --write path (proof)
     records, stats = run_extract(chunks, store=store, coarse_max=a.coarse_max, fine_max=a.fine_max,
-                                 label="sample")
+                                 design=a.design, label="sample")
     print("STATS:", json.dumps(stats, indent=2))
     grains = {"coarse": sum(1 for r in records if r["grain"] == "coarse"),
               "fine": sum(1 for r in records if r["grain"] == "fine")}
