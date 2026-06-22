@@ -1,9 +1,11 @@
-// ⚠️ STATUS (2026-06-22, lead g-1782081521): DORMANT-BUT-BANKED. Tim made an informed, eyes-open call to leave
-// channel-posting FULLY UNGATED, so enforcement (A: OPERATOR_TOKEN_ENFORCE) is HELD indefinitely — NOTHING currently
-// validates this token. This file is therefore inert: it mints + attaches a header no server check consumes (zero
-// behavior cost, verified). It is KEPT (not deleted) as the built foundation if decide-gating / L5-accept is ever
-// separately wanted (the lead banked it for that); the matching server token-mint stays built-inert too. If you're
-// reading this wondering whether it's load-bearing: it is NOT, today. Re-activates only if A is ever fired.
+// ⚠️ STATUS (2026-06-22, lead g-1782084952): LOAD-BEARING for the L5 update-accept (scoped-#1b-transparent). Tim
+// greenlit "the assistant can update what's on screen" (propose-then-accept); the accept route
+// (POST /api/decision/update/accept) VALIDATES this token server-side (401 without) — so this interceptor, which
+// attaches X-Operator-Session to every consequential same-origin /api request, IS what makes the operator's accept
+// authorize. It's transparent (Tim never sees an auth step) → light-UX + runaway-safety at once (a background agent's
+// auto-accept is what the token blocks). SCOPE: load-bearing for the update-accept ONLY; full decide-gating
+// (A: OPERATOR_TOKEN_ENFORCE) stays HELD/free per Tim's posting-ungate — decision_take still runs token-free. (Was
+// "dormant" 71246d1 when A was the only consumer + held; the L5-accept consumer flipped it load-bearing.)
 //
 // THE OPERATOR-SESSION TOKEN — projection's frontend half of the #1b secure foundation (lead g-1782051943).
 // The secure shape under the supervised-post (Tim's "posting shouldn't be gated" — ungated, the secure way) + the

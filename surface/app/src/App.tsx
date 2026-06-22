@@ -362,6 +362,36 @@ export function App() {
         if (core?.writeDirections) core.writeDirections([item])
         else // defensive fallback if the brain core isn't hosted (still fail-loud at the server)
           fetch('/api/territory/write', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ element_id: aim, items: [item] }) })
+      } else if (d.verb === 'accept-update' && d.payload) {
+        // L5 — THE OPERATOR ACCEPTS AN RHM-PROPOSED card refinement (Tim greenlit "the assistant can update what's
+        // on screen", propose-then-accept). PROPOSED dispatch-contract (mirrors decision_take's gallery:verb, for
+        // DNA/wildcard to match): the card's accept-button dispatches gallery:verb{verb:'accept-update',
+        // payload:{id, ts}} where ts = the pending decision_update mark's ts (DNA surfaces both from the proposal it
+        // renders). → POST /api/decision/update/accept {id, ts}. The X-Operator-Session token rides via the
+        // operator-session interceptor (scoped-#1b-transparent — 401 without; my 558e4a8 interceptor is load-bearing
+        // for this accept route). On success → gallery:rerender so the card re-resolves with compose_definition's
+        // folded update (+ a Hole-1 re-opened card re-appears in the queue via decisionsStore's gallery:rerender
+        // reload — registry-true, automatic). VERIFY-GUARD: a verification drive must NOT apply a real update (same
+        // ghost-write discipline as the take); ?verify=1 suppresses + announces.
+        if (isVerifyMode()) {
+          console.debug('[verify] decision update-accept SUPPRESSED', { aim, ts: d.payload.ts })
+          setNotice('Verification mode — the update was NOT applied (verification can’t change real decisions).')
+          return
+        }
+        const id = (d.payload.id as string) || aim
+        const ts = d.payload.ts
+        if (!id || ts == null) return // no proposal to accept (degrade-clean; never a malformed apply)
+        fetch('/api/decision/update/accept', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ id, ts }),
+        })
+          .then((r) => r.json())
+          .then((res) => {
+            if (res && res.ok) window.dispatchEvent(new CustomEvent('gallery:rerender', { detail: { element_id: aim } }))
+            else setNotice('Couldn’t apply that update just now.') // fail-loud, never silent (the 401/error path)
+          })
+          .catch(() => setNotice('Couldn’t apply that update just now.'))
       }
       // ask + GENERIC annotate (comment/reaction/favour) are NOT routed here: ask is the V's own leg (RightHand);
       // generic annotate rides wildcard's gallery:direction alias → fork's HOOK 2 write. Only the decision TAKE
