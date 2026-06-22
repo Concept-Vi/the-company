@@ -34,7 +34,11 @@
 /* ── HOLD DNA's card FULL-WIDTH SINGLE-COLUMN (a grouped-LIST body must NOT inherit the .ar-responsive desktop
    2-COL grid — same trap as the channel graph; verified by use there). Mirrors the gallery-frame / channels host
    override. Un-fix the .screen device-height so the board sizes to content + the body scrolls. ─────────────── */
-.board-groups .screen.ar { height: auto; max-height: none; overflow: visible; }
+/* WIDTH: DNA's .screen is a FIXED 390px PHONE-FRAME (phone.css:98) — it pinned the board to a 390px column inside the
+   760px desktop panel (a narrow island in empty grid; the rows truncated when there was room — found by use at 1440),
+   defeating this file's own "groups are FULL-WIDTH" intent. Float the frame to fill the body (a LIST wants the width,
+   unlike the constellation's capped centre). Fills at 390 too (width:100% → the body width). */
+.board-groups .screen.ar { width: 100%; max-width: 100%; height: auto; max-height: none; overflow: visible; }
 .board-groups .screen.ar.ar-responsive {
   display: flex; flex-direction: column; grid-template-columns: none; grid-template-rows: none; gap: 0;
 }
