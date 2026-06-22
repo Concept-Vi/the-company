@@ -1,0 +1,40 @@
+/* THE SURFACE NAV — host positioning for DNA's navRail (its tiles are styled by DNA's phone.css .dna-nav*). The
+   HOST owns only WHERE the rail sits in the shell: a LEFT-EDGE vertical rail, mid-height — the one clear region
+   (all four corners hold existing chrome: header TL · view-toggles TR · tools BL · the V BR). The wheel's point-
+   cloud sits central, leaving the far-left edge open. z-index above the wheel, below the overlays (which open ON
+   TOP when a tile is tapped). DNA refines the rail's own look; this is the placement + the functional link. */
+.surface-nav {
+  position: fixed;
+  left: var(--s-2);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 22;
+  pointer-events: auto;
+  max-height: calc(100vh - var(--s-7));
+  overflow: auto;
+}
+@media (min-width: 1024px) {
+  .surface-nav { left: var(--s-4); }
+}
+
+/* DNA's navRail mounts into .surface-nav-dna. When it has rendered (non-empty), HIDE the fallback (no double-nav).
+   Until DNA loads, .surface-nav-dna is empty → the fallback shows → the nav ALWAYS works (degrade-clean). */
+.surface-nav-dna:not(:empty) + .surface-nav-fallback { display: none; }
+
+/* FALLBACK nav (plain labelled chips) — only visible when DNA's navRail hasn't rendered. Tokens only. */
+.surface-nav-fallback { display: flex; flex-direction: column; gap: var(--s-1); }
+.surface-nav-item {
+  font-size: var(--t-xs);
+  color: var(--ink-dim);
+  background: color-mix(in srgb, var(--ground-accent) 88%, transparent);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  padding: var(--s-1) var(--s-3);
+  min-height: 36px;
+  cursor: pointer;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  transition: background 140ms ease, color 140ms ease;
+}
+.surface-nav-item:hover { background: var(--ground-primary); color: var(--ink-primary); border-color: var(--ink-faint); }
+.surface-nav-item:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }

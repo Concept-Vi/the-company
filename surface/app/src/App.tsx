@@ -14,6 +14,7 @@ import { resolveAndApplyModal } from './lib/resolveAllocation'
 import { SessionDrill } from './sessions/SessionDrill'
 import { ChannelView } from './channels/ChannelView'
 import { BoardView } from './board/BoardView'
+import { SurfaceNav } from './nav/SurfaceNav'
 import { RightHand } from './rhm/RightHand'
 import { DecisionsInbox } from './decisions/DecisionsInbox'
 import { ToolsBar } from './tools/ToolsBar'
@@ -565,6 +566,10 @@ export function App() {
         </div>
       )}
       {layout}
+      {/* THE SURFACE NAV — the cross-cutting "link all faces" link: a persistent switcher to reach the breadth
+          surfaces (the fabric · the board · sessions) + decisions, which were built but orphan (no nav). Tim's
+          highest-value gap (he couldn't reach his own screens). DNA refines the chrome; this is the functional link. */}
+      <SurfaceNav />
       <GalleryMount open={galleryOpen} onOpenChange={setGalleryOpen} />
       {/* THE DECISIONS INBOX — the in-surface "decisions waiting" entry (CTA when pending + the list); a tapped row
           opens through the same decision host (decision:open → GalleryMount). Sibling overlay, all form factors. */}
