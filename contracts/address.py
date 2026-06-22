@@ -327,3 +327,38 @@ def decision_address(parsed: dict) -> str:
     normalization). Mirrors vi_vision's frame normalization. Pass parse_decision_address(addr)."""
     frame = parsed.get("frame") or "global"
     return f"decision://{frame}/{parsed['id']}"
+
+
+# image://<channel>/<path...> → an IMAGE in a channel. STRUCTURED + DEEP, NOT a flat global id (Tim
+# 2026-06-22: "the address space needs more structure and depth than just a dump at a global root level").
+# The CHANNEL is the hierarchical ROOT (the frame — images live IN channels); <path> is a NESTABLE path
+# (collection/sub/name) so the address is NAVIGABLE AT EACH DEPTH: image://<channel> = the channel's whole
+# image tree · image://<channel>/<collection> = that group · image://<channel>/<collection>/<name> = one
+# image. Mirrors decision://<frame>/<id> + code://<project>/<rel_path>, but the leaf is a multi-segment path.
+def parse_image_address(addr: str) -> dict:
+    """image://<channel>/<path> → {channel, path, segments, name, is_leaf}. channel = first segment (the
+    hierarchical root, REQUIRED); path = the remaining '/'-joined segments (may be deep, may be empty for a
+    channel-level/prefix address used for navigation/listing); name = the last path segment; is_leaf =
+    there is a path (a specific image) vs a prefix (a group). FAIL-LOUD on a missing channel / bare image://
+    (never a flat global dump)."""
+    if not isinstance(addr, str) or not addr.startswith("image://"):
+        raise ValueError(f"parse_image_address: not an image:// address ({addr!r}). Fail loud.")
+    rest = addr[len("image://"):].strip("/")
+    if not rest:
+        raise ValueError(
+            f"parse_image_address: empty image body ({addr!r}) — an image address needs at least a "
+            f"channel (image://<channel>/<path>), never a bare global id. Fail loud.")
+    segs = [s for s in rest.split("/") if s]
+    channel, tail = segs[0], segs[1:]
+    return {"channel": channel, "path": "/".join(tail), "segments": tail,
+            "name": tail[-1] if tail else "", "is_leaf": bool(tail)}
+
+
+def image_address(channel: str, path: str) -> str:
+    """The CANONICAL image IDENTITY → image://<channel>/<path>. channel + the in-channel hierarchical path
+    (e.g. 'deck1-2026/p-05' or 'generated/my-output'). Both required (no flat/rootless image)."""
+    if not channel or not path:
+        raise ValueError(
+            f"image_address needs both a channel and an in-channel path (got channel={channel!r}, "
+            f"path={path!r}) — images are addressed hierarchically image://<channel>/<path>, never flat.")
+    return f"image://{channel.strip('/')}/{path.strip('/')}"

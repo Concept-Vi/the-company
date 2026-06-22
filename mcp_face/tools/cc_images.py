@@ -8,10 +8,11 @@ outputs against source material) add images, attach them to a channel, comment o
 output to its source.
 
 ## Ops
-  op="add"      — STORE an image (or a GENERATED one). `data_b64` (base64 bytes) OR `path` (read a file) +
-                  `mime` (optional, sniffed/verified) + `name`/`alt`/`w`/`h`. Optional `channel` →
-                  also attaches it (channel → [images]). `author_session` REQUIRED (provenance). Returns the
-                  image record (address image://<id>) + a `serve_url`.
+  op="add"      — STORE an image (or a GENERATED one) at the HIERARCHICAL address image://<channel>/<path>.
+                  Required: `channel` + `path` (the in-channel tree location, e.g. 'deck1-2026/p-05' or
+                  'generated/my-output') + `author_session`. Bytes from `data_b64` (base64) OR `src_path`
+                  (read a file). `mime` optional (sniffed/verified). Attaches to the channel. Returns the
+                  image record (address image://<channel>/<path>) + a `serve_url`.
   op="get"      — read one image record (`image`=image://<id> or the bare id) + its serve_url + its comments.
   op="list"     — image records, newest-first; optional `channel` filter.
   op="comment"  — add a comment/feedback to an image (or any address). Required: `image` (target), `body`,
@@ -31,9 +32,9 @@ OPS = ("add", "get", "list", "comment", "link", "comments")
 def register(mcp, suite):
     @mcp.tool()
     def cc_images(op: Literal["add", "get", "list", "comment", "link", "comments"],
-                  image: str = "", target: str = "", channel: str = "", data_b64: str = "",
-                  path: str = "", mime: str = "", name: str = "", alt: str = "", body: str = "",
-                  author_session: str = "", w: int = 0, h: int = 0) -> dict:
+                  image: str = "", target: str = "", channel: str = "", path: str = "",
+                  data_b64: str = "", src_path: str = "", mime: str = "", name: str = "", alt: str = "",
+                  body: str = "", author_session: str = "", w: int = 0, h: int = 0) -> dict:
         """Images as first-class addressed fabric artifacts — store/generate-into, read, comment, cross-reference.
         See the module docstring for ops. Reuses the blob store + image:// records + cc_board edges +
         cc_attachments (no parallel machinery). image:// resolves through the ONE resolve_address seam."""
@@ -49,21 +50,21 @@ def register(mcp, suite):
         if op == "add":
             if not author_session:
                 raise ValueError("cc_images(op='add') needs `author_session` (provenance).")
+            if not channel or not path:
+                raise ValueError("cc_images(op='add') needs `channel` + `path` (the hierarchical in-channel "
+                                 "location, e.g. 'deck1-2026/p-05') — images are addressed image://<channel>/<path>.")
             if data_b64:
                 data = base64.b64decode(data_b64)
-            elif path:
-                with open(path, "rb") as f:
+            elif src_path:
+                with open(src_path, "rb") as f:
                     data = f.read()
             else:
-                raise ValueError("cc_images(op='add') needs `data_b64` (base64 bytes) or `path` (a file to read).")
-            rec = ci.save_image(store, data, mime=mime, name=name, channel=channel,
+                raise ValueError("cc_images(op='add') needs `data_b64` (base64 bytes) or `src_path` (a file to read).")
+            rec = ci.save_image(store, data, channel=channel, path=path, mime=mime, name=name,
                                 author_session=author_session, alt=alt, w=w, h=h)
-            attached = False
-            if channel:
-                ca.attach(channel, "images", rec["address"])     # the hierarchical channel→[images] bind
-                attached = True
+            ca.attach(channel, "images", rec["address"])         # the hierarchical channel→[images] bind
             return {"op": "add", "image": rec, "serve_url": _serve(rec["address"]),
-                    "attached_to_channel": channel if attached else ""}
+                    "attached_to_channel": channel}
 
         if op == "get":
             if not image:
