@@ -235,6 +235,36 @@ class FsStore:
     def exists(self, cas: str) -> bool:
         return (self.root / "objects" / self._safe(cas)).exists()
 
+    # --- immutable BINARY content (blob://) — raw bytes, NOT JSON (images/audio/any binary) ---
+    # Mirrors put_content/get_content EXACTLY (same objects/ namespace, write-once, blake2b content-address,
+    # the IsADirectoryError fail-loud guard) but stores bytes verbatim — put_content's json.dumps is
+    # binary-hostile (it would mangle/throw on image bytes). The `blob://` scheme prefix distinguishes a
+    # binary object from a `cas://` JSON object; both live in objects/ keyed by _safe(address).
+    @staticmethod
+    def _hash_blob(b: bytes) -> str:
+        return "blob://b2:" + hashlib.blake2b(b, digest_size=16).hexdigest()
+
+    def put_blob(self, data: bytes) -> str:
+        if not isinstance(data, (bytes, bytearray)):
+            raise TypeError(
+                f"put_blob expects bytes, got {type(data).__name__} — use put_content for JSON data.")
+        b = bytes(data)
+        blob = self._hash_blob(b)
+        p = self.root / "objects" / self._safe(blob)
+        if p.is_dir():
+            raise IsADirectoryError(
+                f"blob object path {p} is a directory, not a file — the binary object store is corrupt at "
+                f"this address (a stray/colliding directory). Remove it; blob objects are write-once files.")
+        if not p.exists():                      # write-once; content-addressed = immutable
+            p.write_bytes(b)
+        return blob
+
+    def get_blob(self, blob: str) -> bytes:
+        return (self.root / "objects" / self._safe(blob)).read_bytes()
+
+    def blob_exists(self, blob: str) -> bool:
+        return (self.root / "objects" / self._safe(blob)).exists()
+
     def _fsync_atomic_write(self, path: Path, data: str) -> None:
         """Compat method alias → the module-level `_atomic_write_fsync` (the one verified T-FSYNC
         crash-durable atomic-write primitive). The convergence lineage spelled this `self._fsync_atomic_write`;

@@ -62,6 +62,9 @@ BRIDGE_ROUTES = (
     # THE TOOL FACE (GAP 2): the interactive MCP tool list — list_tools() machine-truth + the resolved
     # human form_meta (mcp_face/tool_meta.json), bound to THIS bridge's Suite (GAP 1, no 2nd Suite).
     "/api/tools",
+    # IMAGES: serve an image's BYTES by id (image://<id> → its blob → Content-Type by mime). The viewable
+    # half of the image/attachment layer (cc_images); a prefix route (the id is in the path).
+    "/api/image/",
     "/api/run-stats", "/api/knobs", "/api/voice/engine-knobs", "/api/voice/paths",
     # --- POST routes ---
     "/api/stt", "/api/voice/stt-partial", "/api/tts", "/api/voice/finished-thought", "/api/voice/switch",
@@ -1397,6 +1400,18 @@ class H(BaseHTTPRequestHandler):
                 else:
                     with open(DESIGN_CSS, "rb") as f:
                         self._send(200, f.read(), "text/css; charset=utf-8")
+            elif path.startswith("/api/image/"):
+                # IMAGES: serve an image's BYTES by id. /api/image/<id> → cc_images.image_bytes (the record's
+                # blob:// → store.get_blob) → Content-Type from the record's mime. The viewable half of the
+                # image/attachment layer: cc_images stores + addresses, this serves. Missing → explicit 404
+                # (cc_images fail-loud ImageError), never a masked 400. Read-only, content-addressed bytes.
+                iid = path[len("/api/image/"):].strip("/")
+                try:
+                    from runtime import cc_images as _ci
+                    data, mime = _ci.image_bytes(SUITE.store, iid)
+                    self._send(200, data, mime)
+                except Exception:
+                    self._send(404, "{}")
             elif path.startswith("/mockups/") and path.endswith(".html"):
                 # STATIC, READ-ONLY mockup serving (the studio + every mockup it stages, same-origin). The
                 # name after /mockups/ is path-safe-resolved (bare basename only; realpath-contained). A

@@ -991,6 +991,17 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
         return resolve_run_ref(store, addr, on_missing=on_missing)        # REUSE the canonical resolver
     if sch == "cas":
         return store.get_content(addr)                                    # REUSE: cas:// IS get_content
+    if sch == "blob":
+        # Binary content (images/audio/any bytes) — blob:// IS store.get_blob, the binary sibling of cas://.
+        # Returns raw bytes (the serve route / caller decodes by mime). Was a DECLARED-but-unwired scheme
+        # (contracts/address.py) that fell through to fail-loud; now resolves through the ONE seam.
+        return store.get_blob(addr)
+    if sch == "image":
+        # image://<id> → the first-class image RECORD (runtime/cc_images: {blob, mime, name, w, h, channel,
+        # provenance}). The bytes live at the record's blob:// (resolve that for the binary). Lazy import
+        # mirrors board→get_item; fail-loud on a missing id (registry-is-truth, never a silent empty).
+        from runtime import cc_images as _ci
+        return _ci.get_image(addr[len("image://"):])
     if sch == "skill":
         # C 3b — skill://<id> → the skill's declared instructions content (file-discovered registry).
         # read() FAIL-LOUDs on an unknown id (registry-is-truth — never fabricate a missing skill).
