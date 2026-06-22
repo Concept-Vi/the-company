@@ -41,10 +41,18 @@ EXPLAIN_DECISION_SPACES = DEFAULT_DECISION_SPACES + ("extractions",)
 # unindexed DRIFTS to a louder NEIGHBOUR (adopt-claude-design got the mockup-studio decision's chunks; ~half
 # the 13 authorize/trade-off mismatched). The fix is two-fold: (1) ANCHOR the block in the decision's OWN
 # declared content (meaning+options+legibility — always on-topic, decision-specific); (2) admit corpus context
-# only above this cross-encoder RELEVANCE floor (a bled neighbour scores below it; e.g. adopt's top adjacent
-# decision reranked 0.43 < 0.5). Below the floor (or rerank not run) ⇒ decision-content-only — a clean
-# "grounded in the decision itself," NEVER a confident bled neighbour (no-silent-failures).
-_CTX_FLOOR = 0.5
+# only above this cross-encoder RELEVANCE floor. The floor's job is HONEST NO-MATCH: reject off-DOMAIN noise
+# (text with nothing to do with the company) from the secondary background — the per-decision BLEED is handled
+# separately by anchoring the block on the decision's OWN content (above), so this floor is NOT a fine
+# bled-neighbour cut, it's a noise gate. Below the floor (or rerank not run) ⇒ decision-content-only.
+# ★ CALIBRATED BY-USE 2026-06-22 to the LIVE served jina-v3 reranker (:8008, the scale corpus_rerank gates):
+# off-DOMAIN text (cooking/sports/biology) ceilings at rerank −0.15; real in-corpus context floors at −0.108
+# (median +0.03, up to +0.43 on the live recall_for_decision path) — a clean gap. So −0.13 sits in the gap:
+# admits all real signal (incl. weak secondary background), rejects off-domain noise. The OLD 0.5 was a guess
+# on a PRE-REBOOT reranker scale — on the current scale (logits ~[−0.2,+0.43]) it admitted 0% of real context
+# (verified 0/8 on adopt-claude-design), silently gating ALL corpus background out. (Sibling of the cosine
+# weak-match note _WEAK=0.33 in vector_index.py, also calibrated-by-use.)
+_CTX_FLOOR = -0.13
 
 # THE THEOREM-FORK determine CACHE (2026-06-21, reconcile): the matrix-index fixed the candidate-filter, but the
 # determine's CLUSTER-STEP (run_items on chat-4b) still QUEUES under GPU contention (5.8s idle → ~22s contended)
