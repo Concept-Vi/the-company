@@ -1,0 +1,17 @@
+[Unit]
+Description=Company remote connector — public MCP front (mcp_face/remote.py on :8772, behind the Tailscale Funnel)
+After=network.target
+PartOf=company.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+ExecStart=/home/tim/company/mcp_face/serve_remote.sh 8772
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=company-remote
+
+[Install]
+WantedBy=company.target
