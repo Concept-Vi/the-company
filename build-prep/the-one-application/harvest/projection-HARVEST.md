@@ -34,7 +34,7 @@
 
 8. **L5 propose/accept wire.** `attempted-unverified` + HELD (e3b9c84; `board://item-b000495e`). Route-level built (accept→POST /api/decision/update/accept, token→200/none→401). End-to-end visual NEVER verified (waits on a bounce + DNA's Accept-button). NOW also gated on Tim's design walk-through (the new user-facing-walks-through-Tim rule). NOTHING about L5 is verified-by-use.
 
-9. **#1b operator-session token.** `built + banked` (558e4a8; `board://item-b3b75ea7`). Server-decided supervised-vs-autonomous discriminator (never a client flag — spoofable). The interceptor mints+attaches the header (structural-verified). Enforcement (A) held indefinitely per Tim's fully-open-posting call. No live consumer → "is enforcement correct?" is genuinely untested.
+9. **#1b operator-session token.** `built + banked` (558e4a8; `board://item-b3b75ea7`). Server-decided supervised-vs-autonomous discriminator (never a client flag — spoofable). The interceptor mints+attaches the header (`verified, EARLIER fire — the ?v2 contamination-catch; NOT re-confirmed this session`). Enforcement (A) held indefinitely per Tim's fully-open-posting call. No live consumer → "is enforcement correct?" is genuinely untested.
 
 10. **The architectural spine (design laws).** `verified-as-pattern` (`board://item-b6af8629`): from-DNA law (never bespoke; blocked-not-faked when DNA hasn't shipped) · sibling-overlay seam · the one verb-bus · verify-mode (no ghost-takes) · registry-is-truth (honest degrade, never silent-empty) · server-decides-never-client-flag · the-look-beats-the-inference. These produced 4 working surfaces; whether they're canonical company-wide is a composition/Tim call.
 
