@@ -19,9 +19,10 @@ one self-registering `roles/<id>.py` per role — **exactly mirroring how node-t
 removed file un-registers on `rediscover`.
 
 **Guarantees:** a role is **one self-contained declaration** — a module-level `ROLE` dict over the C2.1
-superset schema `{id · label · description · prompt_template · output_schema · input_addresses · op · trigger
-· model_binding · mode_scope · rules · render_hint · draws · verdict_rule · knobs · …}`. Every field
-except `id` is OPTIONAL, and a role's **facet follows which fields are populated**:
+superset schema `{id · label · description · prompt_template · prompt_slot · output_schema · schema_slot ·
+thinking · input_addresses · op · trigger · model_binding · mode_scope · rules · render_hint · draws ·
+verdict_rule · knobs · …}`. Every field except `id` is OPTIONAL, and a role's **facet follows which fields
+are populated**:
 `prompt_template`+`output_schema` ⇒ a **generate** role can **fire** (`run_role`/`run_swarm`); `op:embed`
 ⇒ an **embed** role fires the vector path (no prompt/schema needed — `complete_embeddings`, local
 embedder only); `mode_scope` ⇒ it is in that mode's **cast**; `draws` ⇒ it is a **jury** (N varied draws
@@ -30,6 +31,16 @@ OPERATION as data — today's every role is `generate` (byte-identical). On drop
 self-registers (`RoleRegistry.discover` reads `roles/*.py`) and is queryable
 (`cast_for_mode`/`fireable`/`juries`) — **with no change to the cognition driver, suite, or UI.**
 Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role — L2).
+
+**RESOLVED-SLOTS (`prompt_slot` · `schema_slot` · `thinking` — ONE resolver, three params):** these three
+fields are `resolve_slot` VALUES (a literal · a `{select, cases, default?}` dict · a relationship-`{op,args}`
+AST) that `run_role` resolves against the turn **`coordinate`** (grain · viewer · mode · subtype · register),
+so the prompt, the output schema, and the think-control compute **per coordinate** instead of static-per-role.
+`prompt_slot` → the system prompt (else `prompt_template`); `schema_slot` → a PRE-DECLARED grain-class
+(coarse/fine Pydantic class — the dragnet step-gate; the resolved class is BaseModel-checked at run-time,
+fail-loud; else `output_schema`); `thinking` → `run_role`'s `think` (the CALL param wins; a literal bool
+resolves coordinate-free; default **None**, NOT False — only an EXPLICIT declaration routes think-control, so
+every undeclared role is byte-identical). Absent slot ⇒ the static field ⇒ byte-identical to a slot-free role.
 
 **The registry is the single source (C2.1):** `runtime/roles.py` `RoleRegistry` mirrors
 `runtime/registry.py` `NodeRegistry` (`discover`/`rediscover`/`register`); `suite.py` builds

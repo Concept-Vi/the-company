@@ -69,7 +69,7 @@ from pydantic import BaseModel
 # C2.2) — `model_binding` is the G2 nested capability-query shape, these are the flat fields resolve_role
 # consumes today. Both are valid role-schema fields (consumed by a real consumer — never a silent typo).
 ROLE_FIELDS = (
-    "id", "label", "description", "prompt_template", "prompt_slot", "output_schema", "input_addresses", "op",
+    "id", "label", "description", "prompt_template", "prompt_slot", "output_schema", "schema_slot", "input_addresses", "op",
     "trigger", "model_binding", "mode_scope", "rules", "render_hint", "draws", "verdict_rule",
     "knobs", "thinking", "output", "tools", "context",
     # legacy flat binding fields (resolve_role/roles() consume these directly — judge byte-identical):
@@ -91,6 +91,14 @@ class Role:
                                                  # relationship-AST) resolved against the turn coordinate → the
                                                  # system prompt. Absent ⇒ static prompt_template (byte-identical).
     output_schema: type[BaseModel] | None = None
+    schema_slot: dict | type | None = None       # RESOLVED-SLOTS: a resolve_slot value selecting a PRE-DECLARED
+                                                 # grain-class (a coarse/fine Pydantic class) per the turn
+                                                 # coordinate → the effective output schema (the dragnet's
+                                                 # step-gate). Absent ⇒ the static output_schema (byte-identical).
+    thinking: dict | bool | None = None          # per-role THINK-CONTROL (resolve_slot value: a literal bool |
+                                                 # {select,cases}) → run_role's `think`. Default None (NOT False) —
+                                                 # absent ⇒ the call param / model default, byte-identical. A
+                                                 # False default here would route EVERY caller to ollama-native.
     mode_scope: frozenset = field(default_factory=frozenset)
     draws: int = 1
     op: str = "generate"                         # the operation (C op-axis): "generate" (default) | "embed"
@@ -175,6 +183,23 @@ def _build_role(name: str, decl: dict) -> Role:
         raise TypeError(
             f"role {rid!r}: prompt_slot must be a resolve_slot value (a str literal, a {{select,cases}} dict, "
             f"or an {{op,args}} relationship-AST), got {type(pslot).__name__} — fail loud.")
+    # RESOLVED-SLOTS (additive): schema_slot — a resolve_slot value selecting a PRE-DECLARED grain-class (a
+    # {select,cases} dict whose cases are Pydantic classes, OR a degenerate literal class). run_role resolves
+    # it per coordinate → the effective output schema (the dragnet step-gate: coarse/fine). Light role-time
+    # check (dict | a class); the resolved class is BaseModel-checked at run-time in run_role (fail-loud).
+    sslot = decl.get("schema_slot")
+    if sslot is not None and not (isinstance(sslot, dict) or isinstance(sslot, type)):
+        raise TypeError(
+            f"role {rid!r}: schema_slot must be a resolve_slot value (a {{select,cases}} dict over grain-classes "
+            f"or a literal Pydantic class), got {type(sslot).__name__} — fail loud.")
+    # RESOLVED-SLOTS (additive): thinking — per-role THINK-CONTROL, a resolve_slot value (a literal bool, or a
+    # {select,cases}/AST dict resolving per coordinate). run_role reads it into its `think` (call param wins).
+    # Light check (bool | dict). Absent ⇒ None (byte-identical: the call param / model default).
+    tval = decl.get("thinking")
+    if tval is not None and not isinstance(tval, (bool, dict)):
+        raise TypeError(
+            f"role {rid!r}: thinking must be a resolve_slot value (a literal bool or a {{select,cases}} dict), "
+            f"got {type(tval).__name__} — fail loud.")
     draws = decl.get("draws", 1)
     if not isinstance(draws, int) or draws < 1:
         raise ValueError(f"role {rid!r}: draws must be an int >= 1, got {draws!r} — fail loud.")
@@ -202,7 +227,8 @@ def _build_role(name: str, decl: dict) -> Role:
     ms = decl.get("mode_scope") or ()
     return Role(
         id=rid, spec=dict(decl), prompt_template=decl.get("prompt_template"), prompt_slot=pslot,
-        output_schema=osch, mode_scope=frozenset(ms), draws=int(draws), op=op,
+        output_schema=osch, schema_slot=sslot, thinking=tval,
+        mode_scope=frozenset(ms), draws=int(draws), op=op,
     )
 
 

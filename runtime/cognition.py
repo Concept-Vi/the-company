@@ -365,12 +365,39 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_content},
     ]
-    # THINK-CONTROL routing (additive; think=None → byte-identical: the openai /v1 path, unchanged). The /v1
+    # RESOLVED-SLOTS (the SCHEMA + THINK halves, mirroring prompt_slot above — ONE resolver, three params):
+    #   • eff_schema — the OUTPUT schema RESOLVES from `schema_slot` against the coordinate, selecting a
+    #     PRE-DECLARED grain-class (the dragnet step-gate: coarse on all → fine per-chunk). The resolved class
+    #     is BaseModel-checked HERE (output_schema is checked at discovery; a run-time-resolved class isn't, so
+    #     fail loud rather than let a malformed grain-class surface as a confusing error inside complete()).
+    #     Absent (no schema_slot OR no coordinate) ⇒ the static role.output_schema — byte-identical.
+    #   • eff_think — per-role THINK-CONTROL: the CALL `think` param WINS (explicit); else the role's declared
+    #     `thinking` (a literal bool → itself even with no coordinate; a {select,cases}/AST dict → resolved per
+    #     coordinate). Absent ⇒ None — byte-identical (the /v1 path, the model's own default).
+    eff_schema = role.output_schema
+    _sslot = getattr(role, "schema_slot", None)
+    if _sslot is not None and coordinate is not None:
+        from runtime.resolver import resolve_slot as _resolve_slot
+        eff_schema = _resolve_slot(_sslot, coordinate)
+        if not (isinstance(eff_schema, type) and issubclass(eff_schema, BaseModel)):
+            raise TypeError(
+                f"run_role({getattr(role, 'id', '?')!r}): schema_slot resolved to {eff_schema!r}, not a Pydantic "
+                f"BaseModel subclass — fail loud (a grain-class must be a validated schema, never an opaque value).")
+    eff_think = think
+    if eff_think is None:
+        _tslot = getattr(role, "thinking", None)
+        if isinstance(_tslot, dict):                       # a {select,cases}/AST slot — needs the coordinate
+            if coordinate is not None:
+                from runtime.resolver import resolve_slot as _resolve_slot
+                eff_think = _resolve_slot(_tslot, coordinate)
+        elif _tslot is not None:                           # a literal bool — fixed, coordinate-independent
+            eff_think = _tslot
+    # THINK-CONTROL routing (additive; eff_think=None → byte-identical: the openai /v1 path, unchanged). The /v1
     # endpoint SILENTLY IGNORES `think`; ollama's NATIVE /api/chat honours it (verified by-use: 1304→43 tokens).
     # So for an ollama-served model (no HF "/" path) with a think value, route to the native transport. vLLM
     # models stay on /v1 — their enable_thinking (chat_template_kwargs) is the post-verify follow (not wired
     # here yet), so think is honestly a no-op on vLLM for now, never a silent wrong-claim.
-    if think is not None and "/" not in model:
+    if eff_think is not None and "/" not in model:
         t = transport.ollama_native_transport(base_url=base_url, timeout=timeout)
     else:
         t = transport.openai_transport(base_url=base_url, timeout=timeout)
@@ -382,10 +409,10 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
         # rides `**opts` straight through; the body only reads response_format + temperature/max_tokens/
         # top_p, so a stray `meta` key can't pollute the request. OUT-PARAM only — NEVER in the return.
         _complete_kw = {} if meta is None else {"meta": meta}
-        if think is not None:
-            _complete_kw["think"] = think                      # → the transport (native: body.think; vLLM: no-op for now)
+        if eff_think is not None:
+            _complete_kw["think"] = eff_think                  # → the transport (native: body.think; vLLM: no-op for now)
         validated = client.complete(
-            t, msgs, model=model, schema=role.output_schema, json=True,
+            t, msgs, model=model, schema=eff_schema, json=True,
             temperature=temperature, max_tokens=max_tokens, **_complete_kw,
         )
         return validated.model_dump()
@@ -397,9 +424,9 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
     pol_temp = pol.temperature if pol.temperature is not None else temperature
     while True:
         meta: dict = {}                                        # the O3 transport out-param (finish_reason)
-        _think_kw = {"think": think} if think is not None else {}
+        _think_kw = {"think": eff_think} if eff_think is not None else {}
         validated = client.complete(
-            t, msgs, model=model, schema=role.output_schema, json=True,
+            t, msgs, model=model, schema=eff_schema, json=True,
             temperature=pol_temp, max_tokens=max_tokens,
             repetition_penalty=rung,                           # FROM the registry ladder — never a constant
             meta=meta,                                         # read finish_reason back to drive escalation

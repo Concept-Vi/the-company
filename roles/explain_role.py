@@ -80,4 +80,10 @@ ROLE = {
     "input_addresses": ["block", "caveat"],   # recollection's grounding → the labelled USER content
     "output_schema": ExplainOut,
     "op": "generate",
+    # THINK-OFF (lead-decided 2026-06-22): explain is FILL-FROM-GROUNDING — a grounded ExplainOut is composed
+    # from recollection's block/caveat, zero reasoning benefit. think=false suppresses the hidden reasoning
+    # (on an ollama-served model: the verified 30× output-token saving + no truncation-empty); budget-retry
+    # stays the safety net. run_role reads this into its `think` (resolves to a fixed False — coordinate-
+    # independent). On a vLLM /-path model this is an honest no-op (never a silent wrong-claim).
+    "thinking": False,
 }
