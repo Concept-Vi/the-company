@@ -284,6 +284,59 @@ def code_address(project: str, rel_path: str) -> str:
     return f"code://{project}/{rel_path}"
 
 
+# ── M2 — the FIELD-INDEX (registry/type DISCOVERABILITY): a SIBLING store (the marks-layer PATTERN — append-only
+# jsonl + read-time linear scan — in its OWN namespace, NOT the shared marks.jsonl). Built from the DETERMINISTIC
+# parser fields (declares/imports/kind/language/symbol), so it's a fast no-model pass (no cc_dragnet run-telemetry
+# needed — it's an index, not an extraction). Answers the queries semantic search CAN'T: "all files declaring a
+# role" · "all projections" · "all files importing fs_store" · "all modules". The elevation's core. ──
+FIELD_INDEX = os.path.join(OUT_DIR, "field_index.jsonl")
+
+
+def build_field_index(repo: str, project: str, *, include_gitignored=()) -> dict:
+    """Enumerate + PARSE (deterministic, no model) → emit typed field-rows {target, field, value} → the sibling
+    index. field ∈ {declares, imports, kind, language, symbol}. Returns counts."""
+    files = enumerate_files(repo, include_gitignored=include_gitignored)
+    rows, n_files, by_field = [], 0, {}
+    for rec in files:
+        sk = parse_file(rec)
+        if sk is None or sk.get("_excluded"):
+            continue
+        n_files += 1
+        target = code_address(project, sk["rel_path"])
+        emit = [("kind", sk["kind"]), ("language", sk["language"])]
+        emit += [("declares", d["registry"]) for d in sk["declares"]]
+        emit += [("imports", im) for im in sk["imports"]]
+        emit += [("symbol", s["name"]) for s in sk["top_symbols"][:40]]
+        for field, value in emit:
+            if value:
+                rows.append({"target": target, "field": field, "value": value})
+                by_field[field] = by_field.get(field, 0) + 1
+    os.makedirs(OUT_DIR, exist_ok=True)
+    with open(FIELD_INDEX, "w") as f:
+        for r in rows:
+            f.write(json.dumps(r) + "\n")
+    return {"files_indexed": n_files, "rows": len(rows), "by_field": by_field, "path": FIELD_INDEX}
+
+
+def query_field_index(field: str, value: str, *, contains=False) -> list[str]:
+    """Read-time linear scan (the marks-layer pattern) → the targets matching field==value (or value-substring
+    if contains). registry-is-truth: scans the index file (no maintained secondary index — same as marks_by_type)."""
+    if not os.path.exists(FIELD_INDEX):
+        raise FileNotFoundError(f"no field index at {FIELD_INDEX} — run --field-index first")
+    out = []
+    for line in open(FIELD_INDEX):
+        try:
+            r = json.loads(line)
+        except (json.JSONDecodeError, ValueError):
+            continue
+        if r.get("field") != field:
+            continue
+        v = str(r.get("value") or "")
+        if (value.lower() in v.lower()) if contains else (v == value):
+            out.append(r["target"])
+    return sorted(set(out))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample", type=int, default=0, help="PROVE/MEASURE on N files (does NOT write the asset)")
@@ -294,7 +347,25 @@ def main():
     ap.add_argument("--include-gitignored", default="", help="comma-sep git-ignored content dirs to force-include (design source/,reference/)")
     ap.add_argument("--coarse-max", type=int, default=120)
     ap.add_argument("--fine-max", type=int, default=400)
+    ap.add_argument("--field-index", action="store_true", help="M2: build the registry-discoverability field-index (deterministic, no model)")
+    ap.add_argument("--query", default="", help="M2: query the field-index FIELD=VALUE (declares=role · imports=fs_store · kind=module); ~VALUE = substring")
     a = ap.parse_args()
+
+    if a.query:                                                   # M2 read — no Suite/model needed
+        field, _, value = a.query.partition("=")
+        contains = value.startswith("~")
+        hits = query_field_index(field.strip(), value.lstrip("~").strip(), contains=contains)
+        print(f"FIELD-QUERY [{a.query}] → {len(hits)} hits:")
+        for h in hits[:60]:
+            print(" ", h)
+        if len(hits) > 60:
+            print(f"  … +{len(hits)-60} more")
+        return 0
+    if a.field_index:                                            # M2 build — deterministic, no model
+        incl = [p.strip() for p in a.include_gitignored.split(",") if p.strip()]
+        res = build_field_index(a.repo, a.project, include_gitignored=incl)
+        print("FIELD-INDEX BUILT:", json.dumps(res, indent=2))
+        return 0
 
     if a.all and not a.confirm:
         print("FULL M1 is GATED. Run --sample N first to PROVE the pipeline, then --all --confirm.")
