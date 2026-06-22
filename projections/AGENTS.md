@@ -39,6 +39,7 @@ silent skip); a non-`PROJECTION`/`_`-file is skipped (mirroring the role/skill n
 - **`what`** — content · model · no-embed · string. A <=15-word statement of what the file IS. The seed lens.
 - **`topics`** — content · model · **embeds** · array. The subjects/areas it covers → the topics SPACE.
 - **`repo`** — content · model · **embeds** · text. What a repo file IS (purpose + concepts) → the repo SPACE (COMPOSITION ① repo-exocortex; the repo_digest role produces it). The G15 unblock — ① needs an embeddable `repo` space to ingest into.
+- **`code_archaeology`** — content · **code** · **embeds** · text. What a repo file IS — its structure (symbols/imports/declares, parser-extracted) + a neutral description → the code-archaeology dragnet's coverage-complete map SPACE (board://item-d1a7bf75; the reusable build-prep primitive; one record per file at `code://<project>/<rel_path>`).
 - **`principles`** — meaning · model · **embeds** · array. The underlying principles/intents it expresses
   (may be several) → the principle SPACE (the space M3 corroboration runs over cross-SESSION — which is
   why the corpus-record carries session/round/project lineage from the start).
