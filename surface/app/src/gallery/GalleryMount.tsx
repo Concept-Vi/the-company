@@ -28,10 +28,11 @@ declare global {
     DNA?: {
       bindProjectionDrill?: (opts: { container: HTMLElement; source?: string | null }) => void
       // resolve: the host-supplied resolve-override DNA's renderGallery threads to `resolve:<key>` slots (the seam
-      // DNA opens for the grounded walk-through). May return a Promise (async → DNA shows "…" + streams in).
+      // DNA opens for the grounded walk-through). May return a Promise of a structured payload or string (async →
+      // DNA renders "…" then streams the grounded explanation in).
       renderGallery?: (
         address: string,
-        opts?: { container?: HTMLElement; source?: string | null; resolve?: (name: string) => Promise<string> | string | undefined },
+        opts?: { container?: HTMLElement; source?: string | null; resolve?: (name: string) => Promise<unknown> | undefined },
       ) => Promise<HTMLElement>
     }
   }
