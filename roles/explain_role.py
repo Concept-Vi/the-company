@@ -79,6 +79,13 @@ ROLE = {
     "prompt_slot": _FRAMING,                  # ★ §5: resolved per-subtype by coordinate={subtype} at run-time
     "input_addresses": ["block", "caveat"],   # recollection's grounding → the labelled USER content
     "output_schema": ExplainOut,
+    # MODEL — explicit kimi binding (lead 2026-06-22, recollection's found-by-use flag): WITHOUT this, a
+    # model-less run_role(explain_role) falls through to DEFAULT_BRAIN=deepseek-v4-pro:cloud — the named
+    # TIM-RULE anti-pattern (-pro is avoid-unless-explicit). default_model is the HARD fallback (roles.py:356)
+    # → kimi (the clone-model default, 256K window fits the ~12-16K grounded explain turn), NEVER -pro. The
+    # live bridge route passes rhm_config().model (chat-4b) explicitly, which still wins; this guards every
+    # OTHER invocation path. (Pure role-resolution via pick_ollama_model_for_context is the follow-on.)
+    "model_binding": {"requires": ["chat", "json"], "default_model": "kimi-k2.6:cloud", "default_base_url": None},
     "op": "generate",
     # THINK-OFF (lead-decided 2026-06-22): explain is FILL-FROM-GROUNDING — a grounded ExplainOut is composed
     # from recollection's block/caveat, zero reasoning benefit. think=false suppresses the hidden reasoning
