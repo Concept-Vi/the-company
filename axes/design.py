@@ -13,9 +13,12 @@ its OWN coordinate (`design`), never folded into the grain axis.
 against it. decisions → axis → resolve(visual, design) → the applicable visual. (One invariant visual, never
 variants; the design-coordinate selects the treatment.)
 
-TENTATIVE: DNA owns the dimension-details (the exact set + each field's value-source on the visual-dna asset);
-composition owns the axis-ROW. Modeled as ONE axis with sub-fields (mirrors `device` = w/h/orient) — flag if DNA
-prefers 4 separate axis-rows. value_source PENDING recollection's re-bake (the `resolution` field on the 10,568).
+LOCKED (recollection 385fa4b + lead's go): the 4 dimensions (line/opacity/colour-role/shape) + the ONE-axis
+structure (mirrors `device`=w/h/orient) are confirmed. value_source = the visual-dna asset's locked `resolution`
+field (a list[str] of context-points) → the READ PARSES the list into these 4 sub-field coordinate values; it
+populates as recollection's bounded 10,568 re-bake lands. One open read-side detail (recollection/DNA): the
+context-point ENCODING (do strings carry "dim:value", or is the parse positional/tagged?) — that's the read
+map, not the axis-row. (Flag if DNA prefers 4 separate axis-rows over one.)
 """
 
 AXIS = {
@@ -27,7 +30,7 @@ AXIS = {
         "colour_role": "discrete",   # the colour's role: gold = attention/recommended (set by figure-gold-value + the palette)
         "shape": "discrete",         # typed geometry: octagon=core / hexagon=engine / … (set by the core-shape decision)
     },
-    "value_source": "pending",       # ← the visual-dna asset's design-context field, populated by recollection's re-bake of the 10,568 (DNA confirms the field + value-source)
+    "value_source": "asset",          # ← the visual-dna asset's LOCKED `resolution` field (list[str] context-points, 385fa4b); the read PARSES the list → these 4 sub-field coordinate values; populates as recollection's 10,568 re-bake lands
     "desc": "The DESIGN-LANGUAGE context a visual resolves against — line · opacity · colour-role · shape. "
             "resolve(visual, design-coordinate) → the applicable visual treatment (the spine-tie). The sub-fields' "
             "MEANINGS are set by the visual-identity decisions (line-language/opacity-meaning/core-shape/"
