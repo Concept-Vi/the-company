@@ -151,7 +151,13 @@ Live agent sessions all die on reboot and do NOT auto-relaunch. Two paths:
    **+ REBUILT CLEAN today** (35,904 vectors, verified by use — recollection; old corrupt copy →
    `~/.cache/company/substrate-claude-sessions/chroma.corrupt-backup-20260620`). It SURVIVES the reboot on disk →
    recall returns the moment embed-pplx binds (`company up @xsession-brain`), **NO reindex needed** (don't run the
-   hours-long reindex — the index is healthy). The real post-reboot recall risk is the embedder LOAD-HANG flap
+   hours-long reindex — the index is healthy).
+   ★ **Two-layer clarity** (recollection, verified by-use 2026-06-22): this 35,904-vector chroma is the
+   **substrate-mcp transcript vault-mine** (collection `vault_claude-sessions`, one vector per raw transcript
+   chunk) — it is NOT the company meaning-recall index. The **company recall** (the decision/explain grounding
+   path) is the **FsStore `extractions` space** (52,875 vectors, by-use verified) — a SEPARATE layer. Both
+   persist across reboot; don't conflate the two counts (35,904 also = the claude-sessions full-bake chunk
+   count at dragnet_extract.py:248, since the chroma is one-vector-per-chunk over the same corpus). The real post-reboot recall risk is the embedder LOAD-HANG flap
    (GAP fbfc1d2): a fresh boot should clear the wedge; the recall watchdog is the durable fix.
 
 *Key files: `ops/cli/app.py` · `ops/services.json` · `ops/STARTUP.md` · `runtime/session_supervisor.py` ·
