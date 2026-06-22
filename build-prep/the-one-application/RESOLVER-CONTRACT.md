@@ -72,25 +72,26 @@ resolver variable via `resolve_slot` (§5): a role's `prompt_template` + `output
 `resolve(coordinate)`. §5 + `axes/resolution.py` already contract it; this §8 LOCKS it for recollection's
 extraction/dragnet.
 
-**THE SPINE (one-invariant-never-variants):** the invariant is the EXTRACTION SUPERSET — the full relational
-field-structure `{about, touches, entities, claims, relations}` + their relationships. The grain is an
-ORDINAL-DEPTH axis (`axes/resolution.py`: `resolution.grain` coarse|medium|fine) whose field-sets **NEST**:
-`{about} ⊂ {about,touches} ⊂ … ⊂ {about,touches,entities,claims,relations}`. So the resolve **projects the
-field-set at the grain** — a depth over the ONE superset, NOT N hardcoded coarse/fine schemas
-(relationships-not-cases). The nesting IS the relationship; the grain is where you read the superset's depth.
+**THE SPINE (one-invariant-never-variants):** the invariant is the EXTRACTION SUPERSET — recollection's canonical
+schema (4207e75) owns the field-structure: coarse `{about, kind, touches}` ⊂ fine `+{summary, entities, claims,
+relations, open_questions}` (composition references; recollection owns the fields). The grain is an ORDINAL-DEPTH
+axis (`axes/resolution.py`: `resolution.grain`) whose field-sets **NEST** — so the resolve **projects the
+field-set at the grain**, a depth over the ONE superset, NOT N hardcoded coarse/fine schemas
+(relationships-not-cases). The nesting IS the relationship; the grain is where the superset's depth is read.
 
-**★ THE OPEN CALL — WHERE the grain-projection applies (recollection's, by corpus-cost):**
-- **READ-SIDE** (the current `axes/resolution.py` stance + §5): extract the SUPERSET (fine) ONCE; the
-  determine/recall projects the grain on the RESULT (extract-once / determine-many, *never re-extract*). All
-  data preserved + instant grain-projection. Cost = the full fine extraction over the WHOLE corpus.
-- **EXTRACTION-SIDE** (the dragnet-cost variant): resolve the EXTRACTION schema by grain — coarse `{about}`
-  broadly + cheap over the corpus, fine-deep on-demand for the chunks that matter (a bounded deeper pass for the
-  promoted). Cost-scaled for a WIDE dragnet (most chunks never need the fine fields).
-- ⟹ Both are valid resolves of (superset-invariant, grain-coordinate); the difference is WHERE (read-time vs
-  extraction-time) + the extract-once-vs-cost tradeoff. **Lean:** read-side for a fully-relevant set (you extract
-  fine anyway); extraction-side (coarse-broad + fine-deep) for the dragnet's economics (cast wide shallow, deep
-  on hits). recollection's corpus-cost picks. IF extraction-side → `axes/resolution.py`'s "never re-extract"
-  softens to "the grain resolves the projection — read-side default; extraction-side for cost-sensitive dragnets."
+**★ RESOLVED — Tim decided it** (COMMISSION §EXPANSION L99: *"coarse to fine, multi-layered, STEPPED BASED ON
+EACH OUTPUT"*): the **ADAPTIVE STEPPED cascade**. Coarse on ALL → step deeper WITHIN THE SAME PASS per chunk by
+its OWN coarse output (`kind ∈ {decision,spec,discussion}` → fine; `log` → stop at coarse). Depth decided at
+EXTRACTION-TIME, **FORWARD-ONLY** — never re-extract, no up-projection. So it is extraction-side (the depth is
+decided during extraction) AND never-re-extract (depth steps forward IN-pass, NOT a separate fine pass). This is
+the single adaptive forward-pass — NOT coarse-broad-then-a-separate-fine-pass. recollection's schema (4207e75)
+already implements it.
+- **Self-stepping resolve:** the grain-coordinate is DERIVED from the coarse output's KIND — `resolve(superset,
+  grain)` where `grain = f(coarse.kind)`. A coordinate that resolves FROM the data, then the deeper extraction
+  resolves against it (the resolver reading its own first output).
+- **ONE axis, both facets** (recollection's insight — right): the `resolution` axis serves (a) extraction-time
+  forward-stepping (depth-by-kind) AND (b) read-time multi-scale ROLLUP (projecting the stepped result) — the
+  SAME grain-axis, not two. never-re-extract holds throughout (extraction steps forward; read rolls up the result).
 
 **THE SCHEMA-SLOT (fork, §5's wrinkle):** `output_schema` is a Pydantic CLASS — grain is NOT a field-list select
 AT `output_schema`. Read-side → `output_schema` = the superset literal (extract-once) + project on the result.
