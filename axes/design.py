@@ -30,7 +30,7 @@ AXIS = {
         "colour_role": "discrete",   # the colour's role: gold = attention/recommended (set by figure-gold-value + the palette)
         "shape": "discrete",         # typed geometry: octagon=core / hexagon=engine / … (set by the core-shape decision)
     },
-    "value_source": "asset",          # ← the visual-dna asset's LOCKED `resolution` field (list[str] context-points, 385fa4b); the read PARSES the list → these 4 sub-field coordinate values; populates as recollection's 10,568 re-bake lands
+    "value_source": "asset",          # ← the visual-dna asset's LOCKED `resolution` field: a list of "<dim>:<context> -> <value>" entries where <dim> ∈ these 4 field-keys (385fa4b, dimension-keyed per the lead's call); the read SPLITS each entry on its dim-key → coordinate.design.<dim>; populates as recollection's 10,568 re-bake lands
     "desc": "The DESIGN-LANGUAGE context a visual resolves against — line · opacity · colour-role · shape. "
             "resolve(visual, design-coordinate) → the applicable visual treatment (the spine-tie). The sub-fields' "
             "MEANINGS are set by the visual-identity decisions (line-language/opacity-meaning/core-shape/"
