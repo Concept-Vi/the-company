@@ -33,10 +33,64 @@
   function reaction(addr, r)           { return { id: annId(), type: 'reaction', reaction: r,            element_id: addr }; }
   function favour(addr, score)         { return { id: annId(), type: 'favour',   score,                  element_id: addr }; }
 
-  // ── Route-OUT: hand one direction-item to fork's address-write (NOT vi-visual's submit) ──
-  // fork listens for gallery:direction → territory_for-write(item.element_id, item) → re-render.
+  // ── Route-OUT: emit the UNIFIED `gallery:verb` envelope (composition's verb contract, t-1781697011) ──
+  // One verb-discriminated event; the dispatcher routes by `verb` to the owning lane.
+  // ANNOTATE (mark_type comment|reaction|favour) is our lane; MAKE→generate is the gated keystone.
+  // detail = { verb, aim_address, payload }. verb ∈ navigate|ask|annotate|drive|open-source|generate.
+  function emitVerb(verb, aim_address, payload) {
+    window.dispatchEvent(new CustomEvent('gallery:verb', { detail: { verb, aim_address, payload: payload || {} } }));
+  }
+  // ANNOTATE route-out: an item {type:comment|reaction|favour, ...} → gallery:verb{verb:'annotate'}.
   function emitDirection(item) {
+    const mark_type = item.type;                                  // comment | reaction | favour
+    const payload = { mark_type };
+    if (item.text != null) payload.text = item.text;
+    if (item.annotation_type != null) payload.comment_type = item.annotation_type;
+    if (item.reaction != null) payload.reaction = item.reaction;
+    if (item.score != null) payload.score = item.score;
+    emitVerb('annotate', item.element_id, payload);
+    // TRANSITION ALIAS (no-break): also re-emit the legacy shape so any consumer still on
+    // gallery:direction keeps working. Drop this line once all dispatch is on gallery:verb.
     window.dispatchEvent(new CustomEvent('gallery:direction', { detail: item }));
+  }
+
+  // ── DECIDE: the TAKE on a decision-card (fork's contract, t-1781745356) ──
+  // Tim picks an option on a decision element → the decision_take mark write-back.
+  // EXACT fields (a mismatch = a decided decision silently reads pending):
+  //   mark_type = "decision_take" (underscore — exact); value = chosen option LABEL (= decided_value);
+  //   target = the CANONICAL decision address.
+  // ★ CANONICALIZATION IS SERVER-SIDE (fork's decision_address(parse_decision_address(addr)), Python).
+  //   We do NOT reimplement it in JS (a parallel canonicalizer drifts → the exact "decided reads
+  //   pending" failure the contract warns of). We emit the decision address we hold + a flag; the
+  //   take-writer canonicalizes ONCE at the write-point. is_decision_take lets the dispatcher route
+  //   to territory_write({type:'decision_take', value, element_id: decision_address(addr)}).
+  // CANONICAL-SHAPE GUARD (validation, NOT canonicalization — projection verified by-use that
+  // territory_write marks at the LITERAL element_id; a bare address silently misses → decided reads
+  // pending). We do NOT transform the address (that's fork's single-source decision_address); we
+  // VALIDATE its shape as a precondition and FAIL LOUD on a non-canonical one — turning a silent miss
+  // into a visible refusal. A shape-check may live in two places; a transform may not.
+  // Canonical = decision://<frame>/<id>, frame ∈ {global, project/<id>, user/<id>, session/<id>}.
+  function _isCanonicalDecisionAddr(addr) {
+    if (typeof addr !== 'string' || !addr.startsWith('decision://')) return false;
+    const parts = addr.slice('decision://'.length).split('/');
+    if (parts[0] === 'global')            return parts.length === 2 && !!parts[1];   // global/<id>
+    if (['project','user','session'].includes(parts[0]))
+                                          return parts.length === 3 && !!parts[2];   // scope/<sid>/<id>
+    return false;  // bare decision://<id> or malformed → NOT canonical (the silent-miss shape)
+  }
+  function decide(decisionAddress, optionLabel, by) {
+    if (!_isCanonicalDecisionAddr(decisionAddress)) {
+      // Fail LOUD, do NOT emit — a non-canonical take would silently miss the resolver.
+      const msg = '[gallery-binder] decide() refused: non-canonical decision address ' +
+        JSON.stringify(decisionAddress) + ' — expected decision://<frame>/<id> (frame global|project/<id>' +
+        '|user/<id>|session/<id>). DNA stamps data-decision canonical; pass THAT. Not canonicalizing in JS ' +
+        '(fork owns decision_address); this guard turns a silent-miss into a visible refusal.';
+      if (typeof console !== 'undefined') console.error(msg);
+      throw new Error(msg);
+    }
+    const payload = { mark_type: 'decision_take', value: optionLabel, is_decision_take: true };
+    if (by != null) payload.by = by;
+    emitVerb('annotate', decisionAddress, payload);  // annotate-lane; mark_type discriminates the take
   }
 
   // ── BIND one rendered element as a direction-target keyed by its address ──
@@ -120,7 +174,12 @@
   //   - detail.address: the unit's base address (we derive elem sub-addresses under it)
   //   - detail.source / detail.record: passed through unused here (fork keys the brain off source)
   // Back-compat fallbacks kept: detail.elements [{el,address}] (explicit) or detail.root.
-  window.addEventListener('gallery:rendered', (e) => {
+  // BOUND TO BOTH gallery:rendered (corpus drill, unit-view.js) AND decision:rendered
+  // (GalleryMount.tsx:137 — decision cards fire THIS, not gallery:rendered). Same payload shape
+  // {element|root, address, anchorableSelector?}. Without the decision:rendered binding, ANNOTATE
+  // (comment/reaction/favour) never bound on a decision card — decide() fired (direct onclick wire)
+  // but the annotate walk didn't (listening for the wrong event). One handler, both events.
+  function _onRendered(e) {
     const d = e.detail || {};
     // 1) Explicit element list (if a producer assigns sub-addresses itself).
     if (Array.isArray(d.elements)) {
@@ -132,15 +191,31 @@
     const root = d.element || d.root;
     if (!root || typeof root.querySelectorAll !== 'function') return;  // fail-quiet, no stray binds
     const base = d.address || 'gallery://unit';
-    // Anchorable = content elements (mirrors vi-visual's walker target set, minus infra).
-    const sel = 'p,h1,h2,h3,h4,h5,h6,li,blockquote,table,pre,figure,[data-anchorable]';
+    // ANCHORABLE SELECTOR — the DNA↔wildcard contract. Priority:
+    //   (1) detail.anchorableSelector — DNA DECLARES her anchorable selector in the emit
+    //       (rot-proof: she owns her markup + restyles freely; we never hardcode her classes).
+    //   (2) [data-anchorable] — DNA tags content blocks with the attr (drop-in, durable).
+    //   (3) semantic-HTML fallback (works for markdown-rendered surfaces like vi-visual).
+    // DNA's v3 renders non-semantic divs (.p-frost etc.), so (3) alone binds 0 — by-use confirmed
+    // (proj g-1781605581) — exactly the real-DOM unknown flagged at authoring (journal Entry 43).
+    const SEMANTIC = 'p,h1,h2,h3,h4,h5,h6,li,blockquote,table,pre,figure';
+    const sel = d.anchorableSelector || ('[data-anchorable],' + SEMANTIC);
     let i = 0;
+    let bound = 0;
     root.querySelectorAll(sel).forEach(el => {
       if (el.closest && el.closest('.annotation-strip,.comment-picker')) return;
       makeAnnotatable(el, base + '#' + (el.id || ('el-' + (i++))));
+      bound++;
     });
-  });
+    // Fail-LOUD on zero binds (a silent 0 is the bug projection caught — surface it, don't hide it).
+    if (bound === 0 && typeof console !== 'undefined') {
+      console.warn('[gallery-binder] 0 anchorable elements under', base,
+        '— DNA: pass detail.anchorableSelector OR tag content [data-anchorable]. Selector tried:', sel);
+    }
+  }
+  window.addEventListener('gallery:rendered', _onRendered);
+  window.addEventListener('decision:rendered', _onRendered);  // decision cards fire this (GalleryMount:137)
 
   // Expose for DNA to call directly if she prefers explicit binding over the event.
-  window.galleryBinder = { makeAnnotatable, emitDirection };
+  window.galleryBinder = { makeAnnotatable, emitDirection, emitVerb, decide };
 })();
