@@ -156,6 +156,17 @@ class FsStore:
         # a (re)bake. query_index uses it (M@q) → ~0.1s. Benefits EVERY extractions/space query (root+broad).
         self._vec_version = 0
         self._space_matrix_cache: dict = {}        # (space, emb) -> (version, ids:list, M:np.ndarray)
+        # X12-FAST/layers (2026-06-22): the multi-layer SELF-DESCRIPTION (layers_by_space + layer_dims) memo.
+        # /api/layers + /api/layer-dims are fired ~5× concurrently by the surface; each formerly re-read ALL
+        # ~58,737 vectors/*.json (1.2 GB) → under the GIL the ThreadingHTTPServer bridge serialized on those
+        # CPU-bound scans and EVERY other /api request piled up behind them (the 'no content loads' hang).
+        # The self-description changes ONLY when a (space,emb) is added/removed = a vectors-dir entry add/remove
+        # = a change to the dir's mtime. So gate on a single os.stat of the dir (microseconds): unchanged →
+        # return the memo instantly; changed → recompute from the shared _vector_records() cache. Correct
+        # cross-process (the dir mtime is filesystem-read, not an in-process counter) and registry-true.
+        self._layers_memo: dict | None = None      # {"layers": {...}, "dims": {...}}
+        self._layers_memo_mtime: int | None = None # the vectors-dir st_mtime_ns the memo was built at
+        self._layers_lock = threading.Lock()       # serializes the (rare) recompute; the stat-gate is lock-free-fast
 
     def _safe_lock_name(self, key: str) -> str:
         """A filename-safe lockfile name for an arbitrary key (graph id, claim key). Reuses the
@@ -1200,64 +1211,66 @@ class FsStore:
         """Which embedder LAYERS each content/registry space carries: {space: [emb_tag, ...]} (the default/BGE
         layer shown as 'default'; a named embedder, e.g. 'pplx', as itself). The self-description of the
         multi-layer model — a picker (the FE) OR an agent (the dual interface) reads this to choose which layer
-        to view. On-demand scan of the vectors dir (regex over the raw record text — avoids parsing the big
-        vector array; NOT in any per-request hot path). Internal `scale:*` pyramid spaces + the default/unspaced
-        space are excluded (only the lens/registry spaces a layer is chosen FOR)."""
-        import re
+        to view. Internal `scale:*` pyramid spaces + the default/unspaced space are excluded (only the lens/
+        registry spaces a layer is chosen FOR).
+
+        X12-FAST (2026-06-22): served from the mtime-gated self-description memo (_layers_self_desc) — a single
+        os.stat of the vectors dir on the hot path; recompute (from the SHARED _vector_records cache) only when
+        a (space,emb) is actually added/removed. Replaces the old private raw glob+read_text full scan that
+        re-read 1.2 GB / ~58,737 files on EVERY call and, fired concurrently by the surface, jammed the bridge
+        under the GIL (the 'no content loads' hang)."""
+        return self._layers_self_desc()["layers"]
+
+    def _layers_self_desc(self) -> dict:
+        """The mtime-gated memo behind layers_by_space() + layer_dims() (they read the SAME vectors, so ONE
+        compute serves both). Hot path = one os.stat of the vectors dir: if its mtime is unchanged since the
+        memo was built, return the memo (no scan). A vectors-dir mtime change (a (space,emb) file added/removed
+        — exactly when the self-description changes) triggers a single recompute over the shared, incrementally
+        cached _vector_records(). Returns {"layers": {space:[emb,…]}, "dims": {space:{emb:dim}}}; scale:* and
+        the default/unspaced space are excluded (only the lens/registry spaces a layer is chosen FOR)."""
         d = self.root / "vectors"
-        if not d.exists():
-            return {}
-        sp_re = re.compile(r'"space":\s*(?:"([^"]*)"|null)')
-        emb_re = re.compile(r'"emb":\s*(?:"([^"]*)"|null)')
-        out: dict[str, set] = {}
-        for p in d.glob("*.json"):
-            try:
-                txt = p.read_text()
-            except Exception:
-                continue
-            sm = sp_re.search(txt)
-            space = sm.group(1) if sm else None
-            if not space or space.startswith("scale:"):    # skip default/unspaced + internal pyramid spaces
-                continue
-            em = emb_re.search(txt)
-            out.setdefault(space, set()).add((em.group(1) if (em and em.group(1)) else "default"))
-        return {sp: sorted(layers) for sp, layers in sorted(out.items())}
+        try:
+            sig = d.stat().st_mtime_ns
+        except OSError:
+            return {"layers": {}, "dims": {}}
+        memo = self._layers_memo
+        if memo is not None and self._layers_memo_mtime == sig:   # nothing added/removed → instant
+            return memo
+        with self._layers_lock:
+            if self._layers_memo is not None and self._layers_memo_mtime == sig:  # another thread just built it
+                return self._layers_memo
+            layers: dict[str, set] = {}
+            dims: dict[str, dict] = {}
+            for rec in self._vector_records():
+                space = rec.get("space")
+                if not space or str(space).startswith("scale:"):  # skip default/unspaced + internal pyramid spaces
+                    continue
+                emb = rec.get("emb") or "default"
+                layers.setdefault(space, set()).add(emb)
+                if not dims.get(space, {}).get(emb):              # first record per (space,emb) settles the dim
+                    v = rec.get("vector")
+                    if isinstance(v, list) and v:
+                        dims.setdefault(space, {})[emb] = len(v)
+            built = {
+                "layers": {sp: sorted(es) for sp, es in sorted(layers.items())},
+                "dims": {sp: dims[sp] for sp in sorted(dims)},
+            }
+            self._layers_memo = built
+            self._layers_memo_mtime = sig
+            return built
 
     def layer_dims(self) -> dict:
         """The vector DIMENSION of every (space, embedder-layer): {space: {emb_tag: full_dim}} (e.g.
         {'repo': {'default': 1024, 'pplx': 2560}}). The RESOLUTION picker reads this to derive the MRL zoom
         ladder PER layer (powers of two ≤ the full dim) — registry-true, never a hardcoded dim. All vectors in
-        a layer share a dim (the embedder fixes it), so ONE vector per (space, emb) settles it: one pass over
-        the vectors dir, regex to group, JSON-parse only the FIRST vector of each group (bounded by the #groups,
-        not the #vectors). Same on-demand cost as layers_by_space — NOT a per-request hot path; the FE fetches
-        it once. Internal scale:* pyramid spaces + the default/unspaced space are excluded."""
-        import re, json as _json
-        d = self.root / "vectors"
-        if not d.exists():
-            return {}
-        sp_re = re.compile(r'"space":\s*(?:"([^"]*)"|null)')
-        emb_re = re.compile(r'"emb":\s*(?:"([^"]*)"|null)')
-        out: dict[str, dict] = {}
-        for p in d.glob("*.json"):
-            try:
-                txt = p.read_text()
-            except Exception:
-                continue
-            sm = sp_re.search(txt)
-            space = sm.group(1) if sm else None
-            if not space or space.startswith("scale:"):     # skip default/unspaced + internal pyramid spaces
-                continue
-            em = emb_re.search(txt)
-            emb = em.group(1) if (em and em.group(1)) else "default"
-            if out.get(space, {}).get(emb):                 # already settled this group's dim — skip the parse
-                continue
-            try:
-                v = _json.loads(txt).get("vector")
-                if isinstance(v, list) and v:
-                    out.setdefault(space, {})[emb] = len(v)
-            except Exception:
-                continue
-        return {sp: out[sp] for sp in sorted(out)}
+        a layer share a dim (the embedder fixes it), so the FIRST record per (space, emb) settles it. Internal
+        scale:* pyramid spaces + the default/unspaced space are excluded.
+
+        X12-FAST (2026-06-22): served from the same mtime-gated memo as layers_by_space (_layers_self_desc) —
+        ONE compute serves both (they read the same vectors). Replaces the old private full glob+read_text+
+        json-parse scan that re-read 1.2 GB / ~58,737 files per call and, fired concurrently by the surface,
+        jammed the whole bridge under the GIL."""
+        return self._layers_self_desc()["dims"]
 
     # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
     def surfaced_lock(self):
