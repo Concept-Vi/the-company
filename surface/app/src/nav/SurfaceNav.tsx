@@ -12,8 +12,9 @@ import './nav.css'
 // to plain labelled buttons so Tim can ALWAYS reach his screens (the unblock must never depend on the render).
 //
 // Each surface is a sibling-overlay over the instrument (the map = home); opening one shows it, closing returns to
-// the map. Decisions mirrors the count-pill's openDecisionsList (one open-path). Transcript joins the instant its
-// clone-host lands (render-ready; query-driven, the follow). The map tile returns to the instrument (dismiss overlays).
+// the map. Decisions mirrors the count-pill's openDecisionsList (one open-path). Transcript (History) is the corpus
+// searched by meaning as a constellation — query-driven, opens on `transcript:open`. The map tile returns to the
+// instrument (dismiss overlays).
 
 type Surface = { id: string; label: string; icon?: string; open: () => void }
 
@@ -24,6 +25,7 @@ const SURFACES: Surface[] = [
   { id: 'fabric', label: 'The fabric', icon: 'plug', open: () => window.dispatchEvent(new CustomEvent('channels:open')) },
   { id: 'board', label: 'The board', icon: 'plan', open: () => window.dispatchEvent(new CustomEvent('board:open')) },
   { id: 'sessions', label: 'Sessions', icon: 'chat', open: () => window.dispatchEvent(new CustomEvent('sessions:open')) },
+  { id: 'transcript', label: 'History', icon: 'history', open: () => window.dispatchEvent(new CustomEvent('transcript:open')) },
 ]
 
 type DNAGlobal = { org?: { navRail?: (o: unknown) => string } }

@@ -14,6 +14,7 @@ import { resolveAndApplyModal } from './lib/resolveAllocation'
 import { SessionDrill } from './sessions/SessionDrill'
 import { ChannelView } from './channels/ChannelView'
 import { BoardView } from './board/BoardView'
+import { TranscriptView } from './transcript/TranscriptView'
 import { SurfaceNav } from './nav/SurfaceNav'
 import { RightHand } from './rhm/RightHand'
 import { DecisionsInbox } from './decisions/DecisionsInbox'
@@ -588,6 +589,11 @@ export function App() {
           boardRecord + boardGroups + the 'board-view' archetype). Opens on `board:open`. Sibling overlay, scrollable
           full-width list. Cloned from the ChannelView template (data→route→host→DNA-render). */}
       <BoardView />
+      {/* THE TRANSCRIPT-VIZ SURFACE (FACE-1 breadth #3) — the WHOLE corpus searched BY MEANING, shown as a CONSTELLATION
+          (/api/transcript-search?q= → DNA's transcriptRecord + constellation + the 'transcript-viz' archetype). Opens on
+          `transcript:open`. Sibling overlay, query-driven (a search box → the star field). Cloned from the ChannelView
+          template (data→route→host→DNA-render). */}
+      <TranscriptView />
       {/* THE TOOL FACE — the pilot palette (Tim 2026-06-19): the entry (ToolsBar) + the modal (ToolsPanel) where an
           operator picks a tool, sets it up in plain words via the op-conditional form, and runs it. Root siblings,
           all form factors. FRONT HALF live (list + description + form); Run/result are pending seams (fork's invoke

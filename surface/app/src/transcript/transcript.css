@@ -1,0 +1,71 @@
+/* THE TRANSCRIPT-VIZ SURFACE (FACE-1 breadth) — a sibling-overlay modal (mirrors the channels/sessions/inbox
+   overlay pattern). DNA's CONSTELLATION carries its own styling (rendered into .transcript-graph); this only FRAMES
+   it + adds the ONE thing this surface needs that the others don't: a SEARCH ROW (the corpus is query-driven). A
+   graph body wants FULL-WIDTH CENTERED (same as channels — it right-shifts/cuts under the decision-card 2-col
+   layout), so the panel is wide and the body centers. Tokens only — no bespoke values. */
+.transcript-overlay {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: safe center; justify-content: center;
+  padding: calc(var(--safe-t) + var(--s-3)) var(--s-3) calc(var(--safe-b) + var(--s-3));
+  opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 200ms ease, visibility 200ms ease;
+}
+.transcript-overlay--open { opacity: 1; visibility: visible; pointer-events: auto; }
+.transcript-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink-primary) 48%, transparent); }
+.transcript-panel {
+  position: relative; width: 100%; max-width: 760px; max-height: 100%; display: flex; flex-direction: column;
+  background: var(--ground-accent); border-radius: var(--r-card); box-shadow: var(--elev-4); overflow: hidden;
+}
+.transcript-head {
+  flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-2);
+  padding: var(--s-4) var(--s-4) var(--s-3); border-bottom: 1px solid var(--hairline);
+}
+.transcript-title { margin: 0; font-size: var(--t-base); color: var(--ink-primary); }
+.transcript-sub { margin: var(--s-1) 0 0; font-size: var(--t-sm); color: var(--ink-dim); line-height: var(--lh-body); }
+.transcript-close { background: none; border: none; cursor: pointer; color: var(--ink-dim); font-size: 15px; line-height: 1; min-width: 44px; min-height: 44px; }
+
+/* THE SEARCH ROW — the distinguishing element. Input + Search button, tokens only. Sits under the head, above the
+   graph body. The input grows; the button is a pill. min-height 44 = the touch target (phone-first). */
+.transcript-search {
+  flex: 0 0 auto; display: flex; gap: var(--s-2); align-items: center;
+  padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--hairline);
+}
+.transcript-input {
+  flex: 1 1 auto; min-width: 0; min-height: 44px; font-size: var(--t-sm); color: var(--ink-primary);
+  background: var(--ground-secondary); border: 1px solid var(--hairline); border-radius: var(--r-pill);
+  padding: var(--s-2) var(--s-3); outline: none;
+}
+.transcript-input::placeholder { color: var(--ink-faint); }
+.transcript-input:focus-visible { border-color: var(--ink-dim); outline: 2px solid var(--ink-dim); outline-offset: 1px; }
+.transcript-go {
+  flex: 0 0 auto; min-height: 44px; font-size: var(--t-sm); color: var(--ground-accent); cursor: pointer;
+  background: var(--ink-primary); border: 1px solid var(--ink-primary); border-radius: var(--r-pill);
+  padding: var(--s-2) var(--s-4);
+}
+.transcript-go:disabled { opacity: 0.5; cursor: default; }
+.transcript-go:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }
+
+.transcript-body {
+  flex: 1 1 auto; min-height: 0; overflow: auto; padding: var(--s-4);
+  padding-bottom: calc(var(--s-4) + var(--safe-b)); display: flex; flex-direction: column; align-items: center;
+}
+.transcript-msg { font-size: var(--t-sm); color: var(--ink-dim); text-align: center; padding: var(--s-5) var(--s-4); margin: 0; }
+.transcript-msg--error { color: var(--pig-strain); }
+.transcript-msg--quiet { color: var(--ink-faint); }
+.transcript-retry { font-size: var(--t-sm); color: var(--ink-primary); background: var(--ground-secondary); border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); cursor: pointer; margin-left: var(--s-2); }
+
+/* the constellation mount: full-width, centered; DNA's SVG scales within. */
+.transcript-graph { width: 100%; max-width: 100%; display: flex; justify-content: center; }
+/* ── HOLD DNA's card FULL-WIDTH SINGLE-COLUMN (a GRAPH body must NOT inherit the .ar-responsive desktop 2-COL grid —
+   DNA's note + verified on channels: 2-col collapses the graph SVG to 0×0). Same host override as channels-graph.
+   WIDTH: DNA's .screen is a FIXED 390px PHONE-FRAME (phone.css:98); for a graph body that left the constellation a
+   tiny 162px island in the 760px desktop panel (verified by use at 1440). Float the frame to fill the body, capped
+   near the constellation's authored 600×440 (the SVG self-caps at max-width:600 anyway) so it's full-size at desktop
+   and still fills the panel at 390. ──────────────────────────────────────────────────────────────────────────── */
+.transcript-graph .screen.ar { width: 100%; max-width: 640px; height: auto; max-height: none; overflow: visible; }
+.transcript-graph .screen.ar.ar-responsive {
+  display: flex; flex-direction: column; grid-template-columns: none; grid-template-rows: none; gap: 0;
+}
+.transcript-graph .ar-responsive .ar-zone-head,
+.transcript-graph .ar-responsive .ar-zone-body,
+.transcript-graph .ar-responsive .ar-zone-foot { grid-column: auto; grid-row: auto; }
+/* the constellation SVG: a definite width (DNA's constellation is 600×440) so it sizes at every viewport, capped. */
+.transcript-graph svg { width: 600px; max-width: 100%; height: auto; }
