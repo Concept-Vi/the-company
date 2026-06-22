@@ -471,6 +471,26 @@ def _warm_vector_cache():
     # prewarm_theorem_explains stays available if a future call wants warm-on-startup back — one line here.)
 import threading as _x12_thr   # threading is imported locally elsewhere in this module, not at top level
 _x12_thr.Thread(target=_warm_vector_cache, daemon=True, name="x12-warm").start()
+
+
+# THE COMMIT-QUEUE DRAINER (ops/commit_queue.py) — the SINGLE always-up serializer that closes the
+# concurrent-commit race (the no-branches/commit-to-main clobber: one session's `git add -A` swept another's
+# uncommitted change). Lanes ENQUEUE shared-doc writes (ops.commit_queue.enqueue, the lock-free O_APPEND); this
+# drains them FIFO under the cross-process flock — ONE git commit at a time, never a concurrent add/commit. The
+# bridge is the canonical always-up process, so it hosts the ONE drainer (the flock makes a 2nd safe-but-
+# redundant; the persisted cursor makes a bounce crash-safe — it resumes, never reprocesses/loses). Drains every
+# ~2s; an empty queue is a cheap cursor read (no git). FAIL-SOFT: a transient drain error never kills the loop —
+# the queue's own fail-loud deadletters a bad item + writes a Notice (the queue never wedges).
+def _commit_queue_drain_loop():
+    import time as _cqt
+    from ops import commit_queue as _cq
+    while True:
+        try:
+            _cq.drain()
+        except Exception:
+            pass
+        _cqt.sleep(2.0)
+_x12_thr.Thread(target=_commit_queue_drain_loop, daemon=True, name="commit-queue-drainer").start()
 DEMO = "codebase"
 
 
