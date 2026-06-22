@@ -67,22 +67,27 @@ def _is_junk_dir(name: str, abspath: str) -> bool:
     return False
 
 
-def enumerate_files(repo: str, *, include_gitignored=()) -> list[dict]:
-    """The DENOMINATOR — the REAL filesystem tree (os.walk), TRUE-junk pruned. `include_gitignored` is an
-    explicit allow-list of git-ignored content dirs to force-include (the design source/+reference/ case —
-    empty for the company repo, where the git-ignored set is junk). Returns [{rel_path, abs_path}]."""
-    out = []
+def enumerate_files(repo: str, *, include_gitignored=()) -> tuple[list[dict], list[dict]]:
+    """The DENOMINATOR — the REAL filesystem tree (os.walk), TRUE-junk pruned. `include_gitignored` force-includes
+    git-ignored content dirs (the design source/+reference/ case — though those aren't junk-NAMED so they're kept
+    anyway). Returns (included, excluded_dirs): included=[{rel_path, abs_path}]; excluded_dirs=[{file, reason}] —
+    every pruned junk dir RECORDED with reason (Tim's law: nothing silently dropped; the dir-level coverage proof)."""
+    out, excluded_dirs = [], []
     incl = set(include_gitignored)
     for dirpath, dirnames, filenames in os.walk(repo):
         rel_dir = os.path.relpath(dirpath, repo)
-        top = (rel_dir.split(os.sep)[0]) if rel_dir != "." else ""
-        # prune junk dirs IN PLACE (os.walk honours dirnames mutation) — but never prune a force-included dir
-        dirnames[:] = [d for d in dirnames
-                       if not _is_junk_dir(d, os.path.join(dirpath, d)) or (os.path.join(rel_dir, d) in incl)]
+        kept = []
+        for d in dirnames:                                       # prune junk dirs, RECORDING each with a reason
+            if _is_junk_dir(d, os.path.join(dirpath, d)) and (os.path.join(rel_dir, d) not in incl):
+                reld = os.path.normpath(os.path.join(rel_dir, d)) if rel_dir != "." else d
+                excluded_dirs.append({"file": reld, "reason": f"excluded-dir:{d}"})
+            else:
+                kept.append(d)
+        dirnames[:] = kept                                       # os.walk honours dirnames mutation (topdown)
         for fn in filenames:
             rel = os.path.normpath(os.path.join(rel_dir, fn)) if rel_dir != "." else fn
             out.append({"rel_path": rel, "abs_path": os.path.join(dirpath, fn)})
-    return sorted(out, key=lambda r: r["rel_path"])
+    return sorted(out, key=lambda r: r["rel_path"]), excluded_dirs
 
 
 # ── STAGE 0 — the PARSER (deterministic structural facts) ──
@@ -295,7 +300,7 @@ FIELD_INDEX = os.path.join(OUT_DIR, "field_index.jsonl")
 def build_field_index(repo: str, project: str, *, include_gitignored=()) -> dict:
     """Enumerate + PARSE (deterministic, no model) → emit typed field-rows {target, field, value} → the sibling
     index. field ∈ {declares, imports, kind, language, symbol}. Returns counts."""
-    files = enumerate_files(repo, include_gitignored=include_gitignored)
+    files, _excl = enumerate_files(repo, include_gitignored=include_gitignored)
     rows, n_files, by_field = [], 0, {}
     for rec in files:
         sk = parse_file(rec)
@@ -337,6 +342,53 @@ def query_field_index(field: str, value: str, *, contains=False) -> list[str]:
     return sorted(set(out))
 
 
+def ingest_batch(store, input_dir, channel, exclude=None):
+    """The cc_dragnet INGEST_BATCH seam (lead's contract, 58ca5de) — MY engine owns enumerate+parse+cascade+
+    coverage over `input_dir`; cc_dragnet wraps timing + the ONE telemetry-record + channel-attach + the fail-loud
+    invariant (denominator == processed + failed + len(excluded)). Returns
+    {addresses, processed, failed, retries, errors, excluded, extra}. Coverage-correctness (Tim's law): the WHOLE
+    real tree IN (source/reference are not junk-NAMED → included), junk-dirs + secrets/.crt/.key + binaries OUT
+    each-with-reason (dir-level via enumerate_files + per-file via parse_file). `exclude` = the lead's declared
+    set — ADVISORY here: _is_junk_dir + parse_file already enforce a SUPERSET (venvs-by-pyvenv.cfg, secrets, bins).
+    Addresses: code://<channel>/<rel>. The records embed into the SHARED code_archaeology space (project=channel
+    keys the cross-project view)."""
+    from runtime.registry import NodeRegistry
+    from runtime.suite import Suite
+    suite = Suite(store, NodeRegistry().discover([os.path.join(REPO, "nodes")]), nodes_dir=os.path.join(REPO, "nodes"))
+    if "code_archaeology" not in [p.id for p in suite.projection_registry.embeddable()]:
+        raise RuntimeError("code_archaeology is not a registered embeddable space — cannot ingest")
+    files, excl_dirs = enumerate_files(input_dir)        # source/reference IN (not junk-named); junk-dirs recorded
+    excluded = list(excl_dirs)
+    skeletons = []
+    for rec in files:
+        sk = parse_file(rec)
+        if sk is None or sk.get("_excluded"):
+            excluded.append({"file": rec["rel_path"], "reason": (sk or {}).get("_excluded", "unreadable")})
+        else:
+            skeletons.append(sk)
+    records, stats = run_cascade(skeletons, store=store, label="m3")
+    cap_recs, addresses = [], []
+    for r in records:
+        addr = f"code://{channel}/{r['rel_path']}"
+        addresses.append(addr)
+        cap_recs.append({"source_address": addr,
+                         "output": {k: v for k, v in r.items() if k not in ("fingerprint", "text")},
+                         "projection": "code_archaeology"})
+    BATCH = 200
+    for bi in range(0, len(cap_recs), BATCH):
+        suite.capture_corpus(cap_recs[bi:bi + BATCH], project=channel, session="code-archaeology", round="m3")
+    failed_paths = stats["failed_coarse_paths"]
+    return {
+        "addresses": addresses,
+        "processed": len(records), "failed": len(failed_paths), "retries": 0,
+        "errors": [{"file": p, "error": "coarse-llm-failed"} for p in failed_paths],
+        "excluded": excluded,                            # dir-level + per-file, each-with-reason (Tim's law)
+        "extra": {"gated_to_fine": stats["gated_to_fine"], "fine_ok": stats["fine_ok"],
+                  "throughput_per_s": stats["throughput_per_s"], "t_coarse_s": stats["t_coarse_s"],
+                  "t_fine_s": stats["t_fine_s"], "included_files": len(files), "excluded_dirs": len(excl_dirs)},
+    }
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample", type=int, default=0, help="PROVE/MEASURE on N files (does NOT write the asset)")
@@ -372,8 +424,8 @@ def main():
         return 2
 
     incl = [p.strip() for p in a.include_gitignored.split(",") if p.strip()]
-    files = enumerate_files(a.repo, include_gitignored=incl)
-    print(f"DENOMINATOR (real filesystem tree, junk-pruned): {len(files)} files  (force-included gitignored: {incl or 'none'})")
+    files, excl_dirs = enumerate_files(a.repo, include_gitignored=incl)
+    print(f"DENOMINATOR: {len(files)} included files + {len(excl_dirs)} excluded junk-dirs (whole real tree, Tim's law)  (force-included gitignored: {incl or 'none'})")
     if a.sample:
         files = files[:: max(1, len(files) // a.sample)][:a.sample]
         print(f"  → sampling {len(files)} for the proof")
@@ -438,8 +490,11 @@ def main():
     for p in stats["failed_coarse_paths"]:
         ledger.append({"rel_path": p, "state": "failed", "reason": "coarse-llm-failed",
                        "record_address": None, "fingerprint": by_path.get(p, {}).get("fingerprint"), "ts": _ts()})
+    for ed in excl_dirs:                                          # dir-level prunings RECORDED (Tim's law: nothing silent)
+        ledger.append({"rel_path": ed["file"], "state": "excluded", "reason": ed["reason"],
+                       "record_address": None, "fingerprint": None, "ts": _ts()})
 
-    denominator = len(files)
+    denominator = len(files) + len(excl_dirs)
     states = {}
     for row in ledger:
         states[row["state"]] = states.get(row["state"], 0) + 1
