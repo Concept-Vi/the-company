@@ -59,7 +59,9 @@ DEFAULT_SOURCE = "claude_code"
 
 # The frontmatter keys (the structured row); `body` is the markdown AFTER the frontmatter, not a key.
 FRONTMATTER_KEYS = ("id", "address", "type", "source", "state", "title", "author_session",
-                    "channel", "thread", "links", "created", "updated", "history")
+                    "channel", "thread", "links", "order", "created", "updated", "history")
+# `order` (optional) — an ordered list of child addresses for a CONTAINER item (e.g. a document's blocks in
+# sequence). Membership is the part_of edge; SEQUENCE is this list. Written only when present (see _render).
 
 
 class BoardError(RuntimeError):
@@ -431,3 +433,87 @@ def transition(item_id: str, to_state: str, *, by: str = "", note: str = "",
     rec.setdefault("history", []).append({"from": cur, "to": to_state, "by": by, "ts": ts, "note": note})
     _write(board_dir, rec)
     return rec
+
+
+# ── edit-in-place (no-versioning: update the SAME record, append history — never a new file) ──────────────
+def edit_item(item_id: str, *, title: str | None = None, body: str | None = None, order: list | None = None,
+              add_links: list | None = None, by: str = "", note: str = "", board_dir: str | None = None) -> dict:
+    """EDIT an item IN PLACE (the no-versioning law — same address, same file, updated). Any of `title` /
+    `body` / `order` (the container's ordered child-address list) may be updated; `add_links` APPENDS typed
+    edges (validated fail-loud). Stamps `updated` + appends an `edited` history entry. Returns the record.
+    (state moves go through transition(); this is for content/structure, not lifecycle.)"""
+    rec = get_item(item_id, board_dir=board_dir)              # raises if missing
+    changed = []
+    if title is not None:
+        rec["title"] = title; changed.append("title")
+    if body is not None:
+        rec["body"] = body; changed.append("body")
+    if order is not None:
+        rec["order"] = list(order); changed.append("order")
+    if add_links:
+        rec["links"] = (rec.get("links") or []) + _validate_links(add_links); changed.append("links")
+    if not changed:
+        raise BoardError("edit_item: nothing to change — pass at least one of title/body/order/add_links. Fail loud.")
+    ts = _now()
+    rec["updated"] = ts
+    rec.setdefault("history", []).append({"from": "edit", "to": ",".join(changed), "by": by, "ts": ts,
+                                          "note": note or "edited in place"})
+    _write(board_dir, rec)
+    return rec
+
+
+# ── general ANNOTATION on ANY address (comment / reply / thread) — the runtime the cc_images tool wrapped,
+#    now first-class on the board so it works on a block://, a code:// card, a decision://, anything ─────────
+def comment(target_addr: str, body: str, author_session: str, *, title: str = "Comment",
+            channel: str = "", item_type: str = "note", board_dir: str | None = None) -> dict:
+    """COMMENT on any address: files a board item linked `commented_on` → `target_addr`. The comment is
+    itself addressed (board://<id>), so it can be replied to (threading) and commented on in turn."""
+    if not target_addr or not body or not author_session:
+        raise BoardError("comment needs `target_addr`, `body`, and `author_session`. Fail loud.")
+    return file_item(item_type, title, body, author_session, channel=channel,
+                     links=[{"kind": "commented_on", "target": target_addr}], board_dir=board_dir)
+
+
+def reply(comment_addr: str, body: str, author_session: str, *, title: str = "Reply", channel: str = "",
+          item_type: str = "note", board_dir: str | None = None) -> dict:
+    """REPLY to a comment/note (threading): files a board item linked `reply_to` → the comment's address."""
+    if not comment_addr or not body or not author_session:
+        raise BoardError("reply needs `comment_addr`, `body`, and `author_session`. Fail loud.")
+    return file_item(item_type, title, body, author_session, channel=channel,
+                     links=[{"kind": "reply_to", "target": comment_addr}], board_dir=board_dir)
+
+
+def thread(addr: str, *, board_dir: str | None = None) -> list[dict]:
+    """The THREADED annotation tree ON an address: top-level comments (commented_on → addr), each with its
+    nested replies (reply_to → the comment, recursive). The 'replied-to comments'. Reuses reverse_traverse."""
+    def nest(item_addr: str) -> list[dict]:
+        return [{"comment": e["item"], "replies": nest(e["item"]["address"])}
+                for e in reverse_traverse(item_addr, "reply_to", board_dir=board_dir)]
+    return [{"comment": e["item"], "replies": nest(e["item"]["address"])}
+            for e in reverse_traverse(addr, "commented_on", board_dir=board_dir)]
+
+
+# ── assemble a DOCUMENT for reading/review: ordered blocks, each with its comment thread ──────────────────
+def assemble_document(doc_id: str, *, board_dir: str | None = None) -> dict:
+    """READ a document as an ORDERED, ANNOTATED whole: the document record + its blocks IN SEQUENCE, each
+    block carrying its body + its threaded comments. Sequence comes from the document's `order` field;
+    if absent, falls back to the blocks that link `part_of` it, sorted by title (the title-prefix order).
+    Composes get_item + reverse_traverse(part_of) + thread() — not a parallel engine. Fail-loud on a
+    missing document; a block address in `order` that no longer resolves is reported, not silently dropped."""
+    doc = get_item(doc_id, board_dir=board_dir)              # raises if missing
+    order = list(doc.get("order") or [])
+    if not order:                                            # fallback: membership edges, title-sorted
+        contained = reverse_traverse(doc["address"], "part_of", board_dir=board_dir)
+        order = [e["item"]["address"] for e in
+                 sorted((e for e in contained), key=lambda e: e["item"].get("title", ""))]
+    blocks, missing = [], []
+    for addr in order:
+        bid = addr.split("://", 1)[-1] if "://" in addr else addr
+        try:
+            brec = get_item(bid, board_dir=board_dir)
+        except BoardError:
+            missing.append(addr); continue
+        blocks.append({"address": addr, "title": brec.get("title"), "state": brec.get("state"),
+                       "body": brec.get("body"), "thread": thread(addr, board_dir=board_dir)})
+    return {"document": doc, "blocks": blocks, "block_count": len(blocks),
+            "missing": missing, "doc_thread": thread(doc["address"], board_dir=board_dir)}

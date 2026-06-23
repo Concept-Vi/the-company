@@ -20,21 +20,32 @@ hardcoded pickup/resolve op — `transition` moves along the registry-declared l
   op="transition" — move an item along its type's lifecycle. Required: `item`, `to_state`. Optional:
                     `by`, `note`. Fail-loud if the move is not a declared legal transition.
   op="types"      — the registries (valid item-types, source-types, edge-kinds) for filing.
+  op="edit"       — edit an item IN PLACE (no-versioning). Required: `item`. Any of `title`, `body`,
+                    `order` (a container's ordered child-address list), `add_links` ([{kind,target}]).
+  op="comment"    — comment on ANY address. Required: `target` (the addr), `body`, `author_session`.
+                    Files an addressed comment linked `commented_on` → target (itself replyable).
+  op="reply"      — reply to a comment (threading). Required: `target` (the comment's board://), `body`,
+                    `author_session`. Links `reply_to` → the comment.
+  op="thread"     — the threaded annotation tree on an address. Required: `item` OR `target` (the addr).
+  op="document"   — assemble a DOCUMENT for reading: ordered blocks + each block's comment thread.
+                    Required: `item` (the document id).
 """
 from __future__ import annotations
 
 from typing import Literal
 
-OPS = ("file", "list", "get", "transition", "types")
+OPS = ("file", "list", "get", "transition", "types", "edit", "comment", "reply", "thread", "document")
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def cc_board(op: Literal["file", "list", "get", "transition", "types"],
+    def cc_board(op: Literal["file", "list", "get", "transition", "types",
+                             "edit", "comment", "reply", "thread", "document"],
                  type: str = "", title: str = "", body: str = "", author_session: str = "",
                  source: str = "", channel: str = "", thread: str = "",
                  links: list | None = None, item: str = "", to_state: str = "",
-                 by: str = "", note: str = "", state: str = "") -> dict:
+                 by: str = "", note: str = "", state: str = "",
+                 target: str = "", order: list | None = None, add_links: list | None = None) -> dict:
         """The Company NOTICEBOARD — file/list/get/transition typed items about the Company itself.
         type/source/edge-kind/state are REGISTRY REFERENCES (fail-loud). Pick `op`:
 
@@ -69,6 +80,30 @@ def register(mcp, suite):
                 if not item or not to_state:
                     raise ValueError("cc_board(op='transition') needs `item` and `to_state`.")
                 return {"op": "transition", "item": cb.transition(item, to_state, by=by, note=note)}
+            if op == "edit":
+                if not item:
+                    raise ValueError("cc_board(op='edit') needs `item` + at least one of title/body/order/add_links.")
+                return {"op": "edit", "item": cb.edit_item(item, title=title or None, body=body or None,
+                                                           order=order, add_links=add_links, by=by, note=note)}
+            if op == "comment":
+                if not target or not body or not author_session:
+                    raise ValueError("cc_board(op='comment') needs `target` (the address), `body`, `author_session`.")
+                return {"op": "comment", "item": cb.comment(target, body, author_session,
+                                                            title=title or "Comment", channel=channel)}
+            if op == "reply":
+                if not target or not body or not author_session:
+                    raise ValueError("cc_board(op='reply') needs `target` (the comment board://), `body`, `author_session`.")
+                return {"op": "reply", "item": cb.reply(target, body, author_session,
+                                                       title=title or "Reply", channel=channel)}
+            if op == "thread":
+                addr = target or (f"board://{item}" if item and not item.startswith("board://") else item)
+                if not addr:
+                    raise ValueError("cc_board(op='thread') needs `target` (or `item`) — the address to read the thread of.")
+                return {"op": "thread", "on": addr, "thread": cb.thread(addr)}
+            if op == "document":
+                if not item:
+                    raise ValueError("cc_board(op='document') needs `item` (the document id).")
+                return {"op": "document", **cb.assemble_document(item)}
         except cb.BoardError as e:
             return {"op": op, "ok": False, "error": str(e)}
         raise ValueError(f"cc_board: unknown op {op!r} — one of {OPS}.")
