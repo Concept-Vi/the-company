@@ -51,10 +51,10 @@ def md_to_html(text: str) -> str:
         st = lines[i].strip()
         if not st:
             i += 1; continue
-        if st.startswith("# "):
-            out.append(f"<h3>{_inline(st[2:])}</h3>"); i += 1; continue
-        if st.startswith("## "):
-            out.append(f"<h4>{_inline(st[3:])}</h4>"); i += 1; continue
+        mh = re.match(r"^(#{1,6})\s+(.*)$", st)
+        if mh:
+            lvl = len(mh.group(1)); tag = "h3" if lvl <= 1 else ("h4" if lvl == 2 else "h5")
+            out.append(f"<{tag}>{_inline(mh.group(2))}</{tag}>"); i += 1; continue
         if re.match(r"^-{3,}$", st):
             out.append("<hr>"); i += 1; continue
         if st.startswith("> "):
@@ -72,8 +72,10 @@ def md_to_html(text: str) -> str:
             while i < n and re.match(r"^\d+\. ", lines[i].strip()):
                 buf.append(f"<li>{_inline(re.sub(r'^\\d+\\. ', '', lines[i].strip()))}</li>"); i += 1
             out.append("<ol>" + "".join(buf) + "</ol>"); continue
-        buf = []
-        while i < n and lines[i].strip() and not re.match(r"^(#{1,3} |[-*] |\d+\. |> |-{3,}$)", lines[i].strip()):
+        buf = []; start = i
+        while i < n and lines[i].strip() and not re.match(r"^(#{1,6} |[-*] |\d+\. |> |-{3,}$)", lines[i].strip()):
+            buf.append(_inline(lines[i].strip())); i += 1
+        if i == start:                      # SAFETY: never fail to advance (no infinite loop, ever)
             buf.append(_inline(lines[i].strip())); i += 1
         out.append("<p>" + " ".join(buf) + "</p>")
     return "\n".join(out)
@@ -95,51 +97,72 @@ def _thread_html(thread: list) -> str:
     return "".join(parts)
 
 
-def list_docs() -> list:
-    docs = [i for i in cb.list_items(type="document") if i.get("channel") == CHANNEL]
-    docs.sort(key=lambda d: d.get("created", ""))
-    return docs
-
-
 def short_label(title: str) -> str:
     return (title.split("—")[0].strip() or title)[:32]
 
 
-def _docnav_html(current_id: str) -> str:
+def _build_index():
+    """ONE scan of the board → (items_by_addr, reverse_edge_map, docs). Replaces the O(blocks×files)
+    reverse_traverse-per-block that made big pages time out as the board grew."""
+    items = cb.list_items()
+    by_addr = {i.get("address"): i for i in items}
+    rev = {}
+    for i in items:
+        for ln in (i.get("links") or []):
+            rev.setdefault((ln.get("target"), ln.get("kind")), []).append(i)
+    docs = sorted([i for i in items if i.get("type") == "document" and i.get("channel") == CHANNEL],
+                  key=lambda d: d.get("created", ""))
+    return by_addr, rev, docs
+
+
+def _thread(addr, rev):
+    def nest(a):
+        return [{"comment": e, "replies": nest(e.get("address"))} for e in rev.get((a, "reply_to"), [])]
+    return [{"comment": e, "replies": nest(e.get("address"))} for e in rev.get((addr, "commented_on"), [])]
+
+
+def _docnav_html(current_id, docs):
     out = ['<div class="drawer-title">Documents</div>']
-    for d in list_docs():
+    for d in docs:
         cur = " current" if d.get("id") == current_id else ""
         out.append(f'<a class="doc-link{cur}" href="/doc/{html.escape(d["id"])}">{html.escape(d.get("title", "(untitled)"))}</a>')
     return "".join(out)
 
 
 def render_page(doc_id: str) -> str:
-    asm = cb.assemble_document(doc_id)
-    doc = asm["document"]; doc_addr = doc["address"]
+    by_addr, rev, docs = _build_index()
+    doc = by_addr.get(f"board://{doc_id}") or cb.get_item(doc_id)
+    doc_addr = doc.get("address", f"board://{doc_id}")
+    order = doc.get("order") or [d.get("address") for d in
+                                 sorted(rev.get((doc_addr, "part_of"), []), key=lambda x: x.get("title", ""))]
     blocks_html = []
-    for b in asm["blocks"]:
-        key = (b["title"].split(" · ")[0]) if " · " in b["title"] else b["title"]
-        title = b["title"].split(" · ", 1)[-1]
+    for addr in order:
+        b = by_addr.get(addr)
+        if not b:
+            continue
+        bt = b.get("title", "")
+        key = bt.split(" · ")[0] if " · " in bt else bt
+        title = bt.split(" · ", 1)[-1]
         blocks_html.append(f'''
-        <section class="block" data-addr="{html.escape(b["address"])}" data-key="{html.escape(key)}">
+        <section class="block" data-addr="{html.escape(addr)}" data-key="{html.escape(key)}">
           <div class="block-head">
             <span class="block-key">{html.escape(key)}</span>
             <span class="sec-actions">
-              <button class="sec-comment iconbtn xs" data-addr="{html.escape(b["address"])}" data-key="{html.escape(key)}" aria-label="comment on {html.escape(key)}">{IC["bubble"]}</button>
+              <button class="sec-comment iconbtn xs" data-addr="{html.escape(addr)}" data-key="{html.escape(key)}" aria-label="comment on {html.escape(key)}">{IC["bubble"]}</button>
             </span>
           </div>
           <h2 class="block-title">{_inline(title)}</h2>
-          <div class="block-body">{md_to_html(b["body"])}</div>
-          {_thread_html(b["thread"])}
+          <div class="block-body">{md_to_html(b.get("body", ""))}</div>
+          {_thread_html(_thread(addr, rev))}
         </section>''')
     return (PAGE
             .replace("{{TITLE}}", html.escape(doc.get("title", "Document")))
             .replace("{{SHORT}}", html.escape(short_label(doc.get("title", "Document"))))
             .replace("{{DOC_ADDR}}", html.escape(doc_addr))
-            .replace("{{DOC_THREAD}}", _thread_html(asm.get("doc_thread", [])))
-            .replace("{{DOCNAV}}", _docnav_html(doc_id))
+            .replace("{{DOC_THREAD}}", _thread_html(_thread(doc_addr, rev)))
+            .replace("{{DOCNAV}}", _docnav_html(doc_id, docs))
             .replace("{{BLOCKS}}", "\n".join(blocks_html))
-            .replace("{{COUNT}}", str(asm["block_count"])))
+            .replace("{{COUNT}}", str(len(blocks_html))))
 
 
 PAGE = r"""<!doctype html><html lang="en"><head>
@@ -181,10 +204,10 @@ PAGE = r"""<!doctype html><html lang="en"><head>
   /* drawer */
   #scrim{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:27;opacity:0;pointer-events:none;transition:opacity .2s}
   #scrim.open{opacity:1;pointer-events:auto}
-  #drawer{position:fixed;top:0;left:0;bottom:0;width:82%;max-width:330px;z-index:28;background:var(--paper);
-        border-right:1px solid var(--line);box-shadow:4px 0 24px rgba(0,0,0,.16);transform:translateX(-105%);
-        transition:transform .22s ease;padding:calc(18px + env(safe-area-inset-top)) 14px 18px;overflow:auto}
-  #drawer.open{transform:translateX(0)}
+  #drawer{position:fixed;top:0;left:-110%;bottom:0;width:82%;max-width:330px;z-index:28;background:var(--paper);
+        border-right:1px solid var(--line);box-shadow:4px 0 24px rgba(0,0,0,.16);
+        transition:left .22s ease;padding:calc(18px + env(safe-area-inset-top)) 14px 18px;overflow:auto;-webkit-overflow-scrolling:touch}
+  #drawer.open{left:0}
   .drawer-title{font:600 11px/1 ui-monospace,monospace;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin:6px 6px 12px}
   .doc-link{display:block;padding:12px;border-radius:10px;color:var(--ink);text-decoration:none;font-size:15px;line-height:1.35;margin-bottom:4px;border:1px solid transparent}
   .doc-link.current{background:var(--goldwash);border-color:var(--gold);font-weight:600}
@@ -267,6 +290,10 @@ PAGE = r"""<!doctype html><html lang="en"><head>
   ham.addEventListener('click',function(e){e.stopPropagation();dr(!drawer.classList.contains('open'));});
   title.addEventListener('click',function(e){e.stopPropagation();dr(!drawer.classList.contains('open'));});
   scrim.addEventListener('click',function(){dr(false);});
+  // doc-link navigation (explicit JS nav — robust on iOS regardless of anchor hit-testing)
+  document.querySelectorAll('.doc-link').forEach(function(a){
+    a.addEventListener('click',function(e){var h=a.getAttribute('href');if(h){e.preventDefault();window.location.assign(h);}});
+  });
   // tap empty bar area -> expand/collapse the "more" panel
   bar.addEventListener('click',function(e){ if(e.target===bar||e.target.classList.contains('barrow')) bar.classList.toggle('collapsed'); });
 })();
@@ -317,8 +344,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
-        self.end_headers()
-        self.wfile.write(data)
+        try:
+            self.end_headers()
+            self.wfile.write(data)
+        except (BrokenPipeError, ConnectionResetError):
+            pass  # client navigated away / gave up — not an error
 
     def _file(self, path, ctype):
         try:
@@ -342,7 +372,6 @@ class Handler(BaseHTTPRequestHandler):
         did = DEFAULT_DOC if p in ("/",) else (p[len("/doc/"):].strip("/") if p.startswith("/doc/") else None)
         if did:
             try:
-                cb.reset_registries()
                 self._send(200, render_page(did))
             except Exception as e:  # noqa: BLE001
                 self._send(500, f"<pre>{html.escape(str(e))}</pre>")
