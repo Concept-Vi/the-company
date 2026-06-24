@@ -37,6 +37,7 @@ IC = {
  "check":  '<svg viewBox="0 0 24 24" class="ic"><path d="M5 13l4 4L19 6"/></svg>',
  "send":   '<svg viewBox="0 0 24 24" class="ic"><path d="M4 11l16-7-7 16-2.6-6.4z"/></svg>',
  "img":    '<svg viewBox="0 0 24 24" class="ic"><path d="M4 5h16v14H4z"/><path d="M4 16l4.5-4.5 3 3 3.5-3.5 5 5"/><circle cx="9" cy="9" r="1.4"/></svg>',
+ "back":   '<svg viewBox="0 0 24 24" class="ic"><path d="M15 5l-7 7 7 7"/></svg>',
 }
 
 
@@ -166,7 +167,9 @@ def _thread(addr, rev):
 
 
 def _docnav_html(current_id, docs):
-    out = ['<div class="drawer-title">Documents</div>']
+    out = ['<div class="drawer-title">Conversation</div>',
+           '<a class="doc-link chat-link" href="/chat">💬 Chat with Vi</a>'.replace("💬 ", ""),
+           '<div class="drawer-title">Documents</div>']
     for d in docs:
         cur = " current" if d.get("id") == current_id else ""
         out.append(f'<a class="doc-link{cur}" href="/doc/{html.escape(d["id"])}">{html.escape(d.get("title", "(untitled)"))}</a>')
@@ -428,6 +431,88 @@ for _k, _v in IC.items():
     PAGE = PAGE.replace("__" + _k.upper() + "__", _v)
 
 
+CHAT_PAGE = r"""<!doctype html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Chat with Vi</title>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#FBF9F4">
+<link rel="apple-touch-icon" href="/icon-180.png"><link rel="manifest" href="/manifest.webmanifest">
+<style>
+  :root{--ink:#1C1A19;--paper:#FBF9F4;--muted:#7C7770;--line:#E7E2D6;--gold:#B29135;--ochre:#BD922B;--bronze:#836C52;--goldwash:#FEFCEC;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+       padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+  .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;flex:0 0 auto;background:var(--goldwash);border:1px solid var(--line);border-radius:50%;padding:0;text-decoration:none}
+  .iconbtn.send{background:var(--ink);border-color:var(--ink)} .iconbtn.send .ic{stroke:#fff}
+  .ic{width:19px;height:19px;fill:none;stroke:var(--bronze);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  #bar{position:sticky;top:0;z-index:10;background:rgba(251,249,244,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+  .barrow{display:flex;align-items:center;gap:10px;padding:7px 12px;height:50px}
+  #title{flex:1;margin:0;font-size:15.5px;font-weight:650;text-align:center}
+  main{max-width:720px;margin:0 auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  .msg{display:flex}
+  .msg-you{justify-content:flex-end} .msg-vi{justify-content:flex-start}
+  .msg-b{max-width:82%;border-radius:14px;padding:10px 13px;white-space:pre-wrap;line-height:1.5;font-size:15px}
+  .msg-you .msg-b{background:#eef5f0;border:1px solid #cfe3d6}
+  .msg-vi .msg-b{background:#fff;border:1px solid var(--line)}
+  .msg-b img{display:block;max-width:100%;border-radius:10px;margin-top:8px;border:1px solid var(--line)}
+  .msg-empty{color:var(--muted);text-align:center;margin-top:40px}
+  #composer{position:fixed;inset:auto 0 0 0;z-index:20;background:rgba(251,249,244,.97);backdrop-filter:blur(8px);
+        border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto}
+  #thumb img{max-height:120px;border-radius:10px;border:1px solid var(--line);margin-bottom:8px}
+  .crow{display:flex;align-items:flex-end;gap:9px}
+  #ctext{flex:1;font:16px/1.4 -apple-system,sans-serif;border:1px solid var(--line);border-radius:18px;padding:10px 14px;resize:none;min-height:42px;max-height:38vh}
+  #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#9a3b2b;color:#fff;padding:10px 16px;border-radius:22px;font:600 14px/1 -apple-system,sans-serif;z-index:30;display:none}
+</style></head><body>
+<header id="bar"><div class="barrow">
+  <a href="/" class="iconbtn" aria-label="back to documents">__BACK__</a>
+  <h1 id="title">Chat with Vi</h1>
+  <span style="width:38px"></span>
+</div></header>
+<main id="chat">{{MSGS}}</main>
+<div id="composer">
+  <div id="thumb"></div>
+  <input id="file" type="file" accept="image/*" style="display:none">
+  <div class="crow">
+    <button id="attach" class="iconbtn" aria-label="attach image">__IMG__</button>
+    <textarea id="ctext" rows="1" placeholder="Message Vi…"></textarea>
+    <button id="send" class="iconbtn send" aria-label="send">__SEND__</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+(function(){
+  var ctext=document.getElementById('ctext'),thumb=document.getElementById('thumb'),fileInput=document.getElementById('file'),toast=document.getElementById('toast'),pendingImg=null;
+  window.scrollTo(0,document.body.scrollHeight);
+  function err(m){toast.textContent=m;toast.style.display='block';setTimeout(function(){toast.style.display='none';},2200);}
+  function grow(){ctext.style.height='auto';ctext.style.height=Math.min(ctext.scrollHeight,window.innerHeight*0.38)+'px';}
+  ctext.addEventListener('input',grow);
+  document.getElementById('attach').addEventListener('click',function(){fileInput.click();});
+  fileInput.addEventListener('change',function(){var f=fileInput.files&&fileInput.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var u=String(r.result);pendingImg={b64:u.split(',')[1],mime:f.type||'image/jpeg'};thumb.innerHTML='<img src="'+u+'">';};r.readAsDataURL(f);});
+  function send(){var body=ctext.value.trim();if(!body&&!pendingImg){return;}
+    var payload={body:body};if(pendingImg){payload.image_b64=pendingImg.b64;payload.image_mime=pendingImg.mime;}
+    fetch('/chat-send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+     .then(function(r){return r.json();}).then(function(j){if(j.ok)location.reload();else err(j.error||'failed');})
+     .catch(function(){err('network error');});}
+  document.getElementById('send').addEventListener('click',send);
+})();
+</script></body></html>"""
+for _k, _v in IC.items():
+    CHAT_PAGE = CHAT_PAGE.replace("__" + _k.upper() + "__", _v)
+
+
+def render_chat():
+    msgs = sorted([i for i in cb.list_items(type="message") if i.get("channel") == CHANNEL],
+                  key=lambda x: x.get("created", ""))
+    rows = []
+    for m in msgs:
+        cls = "msg-you" if m.get("author_session") == AUTHOR else "msg-vi"
+        imgs = "".join(f'<img src="/img/{html.escape(l["target"].split("://",1)[-1])}">'
+                       for l in (m.get("links") or []) if l.get("kind") == "attachment")
+        rows.append(f'<div class="msg {cls}"><div class="msg-b">{html.escape(m.get("body",""))}{imgs}</div></div>')
+    return CHAT_PAGE.replace("{{MSGS}}", "".join(rows) or '<div class="msg-empty">No messages yet — say hello.</div>')
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
@@ -468,6 +553,11 @@ class Handler(BaseHTTPRequestHandler):
                    "icons": [{"src": "/icon-180.png", "sizes": "180x180", "type": "image/png"},
                              {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"}]}
             return self._send(200, json.dumps(man), "application/manifest+json")
+        if p == "/chat":
+            try:
+                return self._send(200, render_chat())
+            except Exception as e:  # noqa: BLE001
+                return self._send(500, f"<pre>{html.escape(str(e))}</pre>")
         did = DEFAULT_DOC if p in ("/",) else (p[len("/doc/"):].strip("/") if p.startswith("/doc/") else None)
         if did:
             try:
@@ -478,11 +568,22 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, "not found")
 
     def do_POST(self):
-        if self.path not in ("/comment", "/comment-edit", "/comment-delete"):
+        if self.path not in ("/comment", "/comment-edit", "/comment-delete", "/chat-send"):
             self._send(404, "not found"); return
         try:
             n = int(self.headers.get("Content-Length", 0))
             d = json.loads(self.rfile.read(n) or b"{}")
+            if self.path == "/chat-send":
+                body = (d.get("body", "") or "").strip()
+                if not body and not d.get("image_b64"):
+                    self._send(400, json.dumps({"ok": False, "error": "empty"}), "application/json"); return
+                rec = cb.file_item("message", (body[:54] or "image"), body or "(image)", AUTHOR, channel=CHANNEL)
+                if d.get("image_b64"):
+                    raw = base64.b64decode(d["image_b64"].split(",")[-1])
+                    irec = ci.save_image(STORE, raw, channel=CHANNEL, path=f"chat/{rec['id']}",
+                                         mime=d.get("image_mime", "image/jpeg"), author_session=AUTHOR)
+                    cb.edit_item(rec["id"], add_links=[{"kind": "attachment", "target": irec["address"]}])
+                self._send(200, json.dumps({"ok": True}), "application/json"); return
             if self.path == "/comment":
                 addr, scale = d.get("addr", ""), d.get("scale", "highlight")
                 quote = (d.get("quote", "") or "").strip(); body = (d.get("body", "") or "").strip()
