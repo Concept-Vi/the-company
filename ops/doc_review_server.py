@@ -81,15 +81,30 @@ def md_to_html(text: str) -> str:
     return "\n".join(out)
 
 
+def parse_comment(body: str):
+    """Split the stored envelope body into (scale, quote, text) — so the raw [scale] re: «quote» syntax is
+    NEVER shown; only the human text + a clean scale chip render."""
+    m = re.match(r'^\[([^\]]+)\](?:\s*re:\s*«(.*?)»)?\s*\n*(.*)$', body, re.S)
+    if m:
+        return m.group(1).split("·")[0].strip(), (m.group(2) or ""), (m.group(3) or "").strip()
+    return "", "", body
+
+
 def _thread_html(thread: list) -> str:
     if not thread:
         return ""
     parts = ['<div class="comments">']
     for t in thread:
-        c = t["comment"]; who = c.get("author_session", "?")
-        cls = "c-tim" if who == AUTHOR else "c-lead"
-        parts.append(f'<div class="comment {cls}"><div class="c-who">{html.escape(who)}</div>'
-                     f'<div class="c-body">{html.escape(c.get("body", ""))}</div>')
+        c = t["comment"]
+        who = "You" if c.get("author_session") == AUTHOR else "Vi"
+        cls = "c-tim" if c.get("author_session") == AUTHOR else "c-lead"
+        scale, _q, text = parse_comment(c.get("body", ""))
+        chip = f'<span class="cscale">{html.escape(scale)}</span>' if scale and scale != "whole" else ""
+        parts.append(
+            f'<div class="comment {cls}" data-id="{html.escape(c.get("id",""))}">'
+            f'<div class="c-head"><span class="c-who">{who}</span>{chip}'
+            f'<span class="c-actions"><button class="c-edit">Edit</button><button class="c-del">Delete</button></span></div>'
+            f'<div class="c-body">{html.escape(text)}</div>')
         if t.get("replies"):
             parts.append(_thread_html(t["replies"]))
         parts.append("</div>")
@@ -135,6 +150,8 @@ def render_page(doc_id: str) -> str:
     doc_addr = doc.get("address", f"board://{doc_id}")
     order = doc.get("order") or [d.get("address") for d in
                                  sorted(rev.get((doc_addr, "part_of"), []), key=lambda x: x.get("title", ""))]
+    def _count(th):
+        return sum(1 + _count(t["replies"]) for t in th)
     blocks_html = []
     for addr in order:
         b = by_addr.get(addr)
@@ -143,17 +160,20 @@ def render_page(doc_id: str) -> str:
         bt = b.get("title", "")
         key = bt.split(" · ")[0] if " · " in bt else bt
         title = bt.split(" · ", 1)[-1]
+        th = _thread(addr, rev); nc = _count(th)
+        dot = f'<button class="cmt-dot" aria-label="{nc} comments">{nc}</button>' if nc else ""
         blocks_html.append(f'''
         <section class="block" data-addr="{html.escape(addr)}" data-key="{html.escape(key)}">
           <div class="block-head">
             <span class="block-key">{html.escape(key)}</span>
             <span class="sec-actions">
+              {dot}
               <button class="sec-comment iconbtn xs" data-addr="{html.escape(addr)}" data-key="{html.escape(key)}" aria-label="comment on {html.escape(key)}">{IC["bubble"]}</button>
             </span>
           </div>
           <h2 class="block-title">{_inline(title)}</h2>
           <div class="block-body">{md_to_html(b.get("body", ""))}</div>
-          {_thread_html(_thread(addr, rev))}
+          {_thread_html(th)}
         </section>''')
     return (PAGE
             .replace("{{TITLE}}", html.escape(doc.get("title", "Document")))
@@ -230,13 +250,25 @@ PAGE = r"""<!doctype html><html lang="en"><head>
   .block-body .tap{cursor:pointer;border-radius:7px;padding:3px 7px;margin:1px -7px;transition:background .12s}
   .block-body .tap:active{background:#f1ece1}
   .block-body .tap.sel{background:#fbf1d8;box-shadow:inset 0 0 0 1.5px var(--gold)}
-  .comments{margin:12px 0 0;display:flex;flex-direction:column;gap:8px}
-  .comment{border-radius:10px;padding:10px 12px;font-size:14.5px;line-height:1.5}
+  .comments{margin:12px 0 0;display:none;flex-direction:column;gap:8px}
+  .block.show-comments > .comments, #barmore .comments{display:flex}
+  .cmt-dot{min-width:24px;height:24px;border-radius:12px;border:1px solid var(--gold);background:var(--goldwash);
+        color:var(--ochre);font:600 12px/1 ui-monospace,monospace;padding:0 7px}
+  .comment{border-radius:10px;padding:9px 12px;font-size:14.5px;line-height:1.5}
   .comment.c-tim{background:#eef5f0;border:1px solid #cfe3d6}
   .comment.c-lead{background:#eef1f7;border:1px solid #d2dbeb}
-  .comment .comments{margin-left:12px;border-left:2px solid var(--line);padding-left:10px}
-  .c-who{font:600 11px/1 ui-monospace,monospace;color:var(--muted);margin-bottom:4px}
+  .comment .comments{margin-left:12px;border-left:2px solid var(--line);padding-left:10px;display:flex}
+  .c-head{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .c-who{font:600 11px/1 ui-monospace,monospace;color:var(--muted)}
+  .cscale{font:600 9.5px/1 ui-monospace,monospace;color:var(--gold);text-transform:uppercase;letter-spacing:.05em}
+  .c-actions{margin-left:auto;display:flex;gap:12px}
+  .c-edit,.c-del{background:none;border:none;font:600 11px/1 -apple-system,sans-serif;color:var(--muted);padding:2px 2px}
+  .c-del{color:#9a3b2b}
   .c-body{white-space:pre-wrap}
+  .c-editbox{width:100%;font:15px/1.5 -apple-system,sans-serif;border:1px solid var(--line);border-radius:8px;padding:8px;min-height:58px}
+  .c-editbar{display:flex;gap:8px;margin-top:6px}
+  .c-editbar button{font:600 12px/1 -apple-system,sans-serif;border:none;border-radius:8px;padding:7px 13px}
+  .c-save{background:var(--ink);color:#fff}.c-cancel{background:#f0ece3}
   /* composer sheet */
   #sheet{position:fixed;inset:auto 0 0 0;z-index:30;background:#fff;border-top:1px solid var(--line);
         box-shadow:0 -8px 30px rgba(0,0,0,.16);padding:14px 16px calc(16px + env(safe-area-inset-bottom));
@@ -330,6 +362,26 @@ PAGE = r"""<!doctype html><html lang="en"><head>
   document.getElementById('post').addEventListener('click',function(){submit(false);});
   document.getElementById('send').addEventListener('click',function(){submit(true);});
 })();
+(function(){ // comment management: dot-toggle, edit, delete
+  function api(path,payload,done){fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();}).then(done).catch(function(){alert('network error');});}
+  document.querySelectorAll('.cmt-dot').forEach(function(d){
+    d.addEventListener('click',function(e){e.stopPropagation();var b=d.closest('.block');if(b)b.classList.toggle('show-comments');});
+  });
+  document.querySelectorAll('.c-del').forEach(function(btn){
+    btn.addEventListener('click',function(e){e.stopPropagation();var c=btn.closest('.comment');if(!c)return;if(!confirm('Delete this comment?'))return;api('/comment-delete',{id:c.dataset.id},function(j){if(j.ok)location.reload();else alert(j.error||'failed');});});
+  });
+  document.querySelectorAll('.c-edit').forEach(function(btn){
+    btn.addEventListener('click',function(e){e.stopPropagation();var c=btn.closest('.comment');if(!c)return;
+      var bodyEl=c.querySelector('.c-body');if(!bodyEl||c.querySelector('.c-editbox'))return;var cur=bodyEl.textContent;
+      var ta=document.createElement('textarea');ta.className='c-editbox';ta.value=cur;
+      var bar=document.createElement('div');bar.className='c-editbar';
+      bar.innerHTML='<button class="c-save">Save</button><button class="c-cancel">Cancel</button>';
+      bodyEl.style.display='none';bodyEl.after(bar);bodyEl.after(ta);ta.focus();
+      bar.querySelector('.c-cancel').addEventListener('click',function(){location.reload();});
+      bar.querySelector('.c-save').addEventListener('click',function(){var v=ta.value.trim();if(!v)return;api('/comment-edit',{id:c.dataset.id,body:v},function(j){if(j.ok)location.reload();else alert(j.error||'failed');});});
+    });
+  });
+})();
 </script></body></html>"""
 for _k, _v in IC.items():
     PAGE = PAGE.replace("__" + _k.upper() + "__", _v)
@@ -379,20 +431,36 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, "not found")
 
     def do_POST(self):
-        if self.path != "/comment":
+        if self.path not in ("/comment", "/comment-edit", "/comment-delete"):
             self._send(404, "not found"); return
         try:
             n = int(self.headers.get("Content-Length", 0))
             d = json.loads(self.rfile.read(n) or b"{}")
-            addr, scale = d.get("addr", ""), d.get("scale", "highlight")
-            quote = (d.get("quote", "") or "").strip(); body = (d.get("body", "") or "").strip()
-            send_now = bool(d.get("send_now"))
-            if not addr or not body:
-                self._send(400, json.dumps({"ok": False, "error": "missing addr or body"}), "application/json"); return
-            anchor = f"[{scale}{' · SEND-NOW' if send_now else ''}]" + (f' re: «{quote}»' if quote else "")
-            cb.reset_registries()
-            rec = cb.comment(addr, f"{anchor}\n\n{body}", AUTHOR, title=f"Tim · {scale}", channel=CHANNEL)
-            self._send(200, json.dumps({"ok": True, "comment": rec["address"]}), "application/json")
+            if self.path == "/comment":
+                addr, scale = d.get("addr", ""), d.get("scale", "highlight")
+                quote = (d.get("quote", "") or "").strip(); body = (d.get("body", "") or "").strip()
+                send_now = bool(d.get("send_now"))
+                if not addr or not body:
+                    self._send(400, json.dumps({"ok": False, "error": "missing addr or body"}), "application/json"); return
+                anchor = f"[{scale}{' · SEND-NOW' if send_now else ''}]" + (f' re: «{quote}»' if quote else "")
+                rec = cb.comment(addr, f"{anchor}\n\n{body}", AUTHOR, title=f"Tim · {scale}", channel=CHANNEL)
+                self._send(200, json.dumps({"ok": True, "comment": rec["address"]}), "application/json"); return
+            if self.path == "/comment-edit":
+                cid = d.get("id", ""); newtext = (d.get("body", "") or "").strip()
+                if not cid or not newtext:
+                    self._send(400, json.dumps({"ok": False, "error": "missing id or body"}), "application/json"); return
+                rec = cb.get_item(cid)
+                scale, quote, _ = parse_comment(rec.get("body", ""))
+                anchor = f"[{scale}]" + (f' re: «{quote}»' if quote else "")
+                cb.edit_item(cid, body=f"{anchor}\n\n{newtext}", by=AUTHOR, note="edit comment")
+                self._send(200, json.dumps({"ok": True}), "application/json"); return
+            if self.path == "/comment-delete":
+                cid = d.get("id", "")
+                p = os.path.join(cb.NOTICEBOARD_DIR, f"{cid}.md")
+                if cid and os.path.exists(p):
+                    os.remove(p)
+                    self._send(200, json.dumps({"ok": True}), "application/json"); return
+                self._send(400, json.dumps({"ok": False, "error": "comment not found"}), "application/json"); return
         except Exception as e:  # noqa: BLE001
             self._send(500, json.dumps({"ok": False, "error": str(e)}), "application/json")
 
