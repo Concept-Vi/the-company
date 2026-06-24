@@ -11,7 +11,7 @@ Reusable: serves any document in the channel. Bind 127.0.0.1; exposed tailnet-on
 Run: python3 ops/doc_review_server.py [--port 8781] [--author tim]
 """
 from __future__ import annotations
-import argparse, base64, html, json, os, re, sys
+import argparse, base64, html, json, os, queue, re, sys, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,6 +25,37 @@ from runtime import cc_channels as cc  # noqa: E402
 from store.fs_store import FsStore  # noqa: E402
 STORE = FsStore(os.environ["COMPANY_STORE"])
 LEAD_TARGET_FILE = os.path.join(REPO, ".data", "channels", "_chat_lead.txt")
+OPERATOR_HANDLE = "tim"
+
+# ── realtime: SSE clients + broadcast (the browser holds one connection; the server pushes — no polling) ──
+SSE_CLIENTS: list = []
+SSE_LOCK = threading.Lock()
+
+
+def broadcast(payload: dict) -> None:
+    with SSE_LOCK:
+        for q in list(SSE_CLIENTS):
+            q.put(payload)
+
+
+def _msg_payload(rec: dict) -> dict:
+    who = "You" if rec.get("author_session") == OPERATOR_HANDLE else "Vi"
+    imgs = ["/img/" + l["target"].split("://", 1)[-1]
+            for l in (rec.get("links") or []) if l.get("kind") == "attachment"]
+    return {"who": who, "body": rec.get("body", ""), "imgs": imgs}
+
+
+def register_operator(port: int) -> None:
+    """Register the APP as a pushable channel member ('tim') so the fabric can PUSH replies straight into
+    it (route_reply/send to 'tim' → POST to this server's port → SSE to the browser). The operator's
+    channel presence IS this app — the symmetric half that makes it a real two-way chat, not a drop-box."""
+    reg = {"handle": OPERATOR_HANDLE, "session_id": "", "cwd": REPO,
+           "description": "operator app (doc-review / chat surface)", "pid": os.getpid(),
+           "port": port, "transport": "channel", "started": time.strftime("%Y-%m-%dT%H:%M:%S")}
+    d = os.path.join(REPO, ".data", "channels")
+    os.makedirs(d, exist_ok=True)
+    with open(os.path.join(d, OPERATOR_HANDLE + ".json"), "w", encoding="utf-8") as f:
+        json.dump(reg, f, indent=2)
 
 CHANNEL = "dragnet-development"
 DEFAULT_DOC = "item-389c8489"
@@ -484,19 +515,29 @@ CHAT_PAGE = r"""<!doctype html><html lang="en"><head>
 <div id="toast"></div>
 <script>
 (function(){
-  var ctext=document.getElementById('ctext'),thumb=document.getElementById('thumb'),fileInput=document.getElementById('file'),toast=document.getElementById('toast'),pendingImg=null;
-  window.scrollTo(0,document.body.scrollHeight);
+  var ctext=document.getElementById('ctext'),thumb=document.getElementById('thumb'),fileInput=document.getElementById('file'),toast=document.getElementById('toast'),chat=document.getElementById('chat'),pendingImg=null;
+  function esc(s){return (s||'').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+  function atBottom(){return window.innerHeight+window.scrollY>=document.body.scrollHeight-90;}
+  function scroll(){window.scrollTo(0,document.body.scrollHeight);}
+  scroll();
+  function append(m){var stick=atBottom();var d=document.createElement('div');d.className='msg '+(m.who==='You'?'msg-you':'msg-vi');
+    var imgs=(m.imgs||[]).map(function(u){return '<img src="'+u+'">';}).join('');
+    d.innerHTML='<div class="msg-b">'+esc(m.body)+imgs+'</div>';chat.appendChild(d);if(stick)scroll();}
   function err(m){toast.textContent=m;toast.style.display='block';setTimeout(function(){toast.style.display='none';},2200);}
   function grow(){ctext.style.height='auto';ctext.style.height=Math.min(ctext.scrollHeight,window.innerHeight*0.38)+'px';}
   ctext.addEventListener('input',grow);
+  function clearImg(){pendingImg=null;thumb.innerHTML='';fileInput.value='';}
   document.getElementById('attach').addEventListener('click',function(){fileInput.click();});
   fileInput.addEventListener('change',function(){var f=fileInput.files&&fileInput.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var u=String(r.result);pendingImg={b64:u.split(',')[1],mime:f.type||'image/jpeg'};thumb.innerHTML='<img src="'+u+'">';};r.readAsDataURL(f);});
-  function send(){var body=ctext.value.trim();if(!body&&!pendingImg){return;}
+  function send(){var body=ctext.value.trim();if(!body&&!pendingImg)return;
     var payload={body:body};if(pendingImg){payload.image_b64=pendingImg.b64;payload.image_mime=pendingImg.mime;}
+    ctext.value='';grow();clearImg();
     fetch('/chat-send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-     .then(function(r){return r.json();}).then(function(j){if(j.ok)location.reload();else err(j.error||'failed');})
+     .then(function(r){return r.json();}).then(function(j){if(!j.ok)err(j.error||'failed');})
      .catch(function(){err('network error');});}
   document.getElementById('send').addEventListener('click',send);
+  // realtime inbound — hold an SSE connection; the server pushes new messages (no polling, no reload)
+  try{var es=new EventSource('/chat-stream');es.onmessage=function(e){try{append(JSON.parse(e.data));}catch(_){}};}catch(_){}
 })();
 </script></body></html>"""
 for _k, _v in IC.items():
@@ -555,6 +596,30 @@ class Handler(BaseHTTPRequestHandler):
                    "icons": [{"src": "/icon-180.png", "sizes": "180x180", "type": "image/png"},
                              {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"}]}
             return self._send(200, json.dumps(man), "application/manifest+json")
+        if p == "/chat-stream":
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "keep-alive")
+            self.end_headers()
+            q: queue.Queue = queue.Queue()
+            with SSE_LOCK:
+                SSE_CLIENTS.append(q)
+            try:
+                self.wfile.write(b": connected\n\n"); self.wfile.flush()
+                while True:
+                    try:
+                        payload = q.get(timeout=20)
+                    except queue.Empty:
+                        self.wfile.write(b": ping\n\n"); self.wfile.flush(); continue
+                    self.wfile.write(("data: " + json.dumps(payload) + "\n\n").encode()); self.wfile.flush()
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                pass
+            finally:
+                with SSE_LOCK:
+                    if q in SSE_CLIENTS:
+                        SSE_CLIENTS.remove(q)
+            return
         if p == "/chat":
             try:
                 return self._send(200, render_chat())
@@ -570,11 +635,18 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, "not found")
 
     def do_POST(self):
-        if self.path not in ("/comment", "/comment-edit", "/comment-delete", "/chat-send"):
+        if self.path not in ("/", "/comment", "/comment-edit", "/comment-delete", "/chat-send"):
             self._send(404, "not found"); return
         try:
             n = int(self.headers.get("Content-Length", 0))
             d = json.loads(self.rfile.read(n) or b"{}")
+            if self.path == "/":
+                # channel INJECT RECEIVER — the fabric pushed a reply to 'tim' (this app). Body = {content, meta}.
+                content = d.get("content", "") or ""
+                frm = (d.get("meta", {}) or {}).get("from", "Vi")
+                rec = cb.file_item("message", (content[:54] or "reply"), content, frm, channel=CHANNEL)
+                broadcast(_msg_payload(rec))
+                self._send(200, json.dumps({"ok": True}), "application/json"); return
             if self.path == "/chat-send":
                 body = (d.get("body", "") or "").strip()
                 if not body and not d.get("image_b64"):
@@ -584,7 +656,8 @@ class Handler(BaseHTTPRequestHandler):
                     raw = base64.b64decode(d["image_b64"].split(",")[-1])
                     irec = ci.save_image(STORE, raw, channel=CHANNEL, path=f"chat/{rec['id']}",
                                          mime=d.get("image_mime", "image/jpeg"), author_session=AUTHOR)
-                    cb.edit_item(rec["id"], add_links=[{"kind": "attachment", "target": irec["address"]}])
+                    rec = cb.edit_item(rec["id"], add_links=[{"kind": "attachment", "target": irec["address"]}])
+                broadcast(_msg_payload(rec))   # live-echo your own message to all open chat views
                 # inject into the lead's LIVE session via the channel transport (no polling, no sit)
                 delivered = False
                 try:
@@ -638,8 +711,9 @@ def main():
     ap.add_argument("--author", default=AUTHOR)
     args = ap.parse_args()
     AUTHOR = args.author
+    register_operator(args.port)   # register the app as a pushable channel member ('tim')
     srv = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
-    print(f"doc-review server on http://127.0.0.1:{args.port}  (channel={CHANNEL}, author={AUTHOR})", flush=True)
+    print(f"doc-review server on http://127.0.0.1:{args.port}  (channel={CHANNEL}, author={AUTHOR}, operator=tim@{args.port})", flush=True)
     srv.serve_forever()
 
 
