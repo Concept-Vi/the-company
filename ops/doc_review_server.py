@@ -26,6 +26,7 @@ from store.fs_store import FsStore  # noqa: E402
 STORE = FsStore(os.environ["COMPANY_STORE"])
 LEAD_TARGET_FILE = os.path.join(REPO, ".data", "channels", "_chat_lead.txt")
 OPERATOR_HANDLE = "tim"
+VERSION = str(int(time.time()))   # per-process build id — changes on every restart (deploy) → clients auto-reload
 
 # ── realtime: SSE clients + broadcast (the browser holds one connection; the server pushes — no polling) ──
 SSE_CLIENTS: list = []
@@ -459,6 +460,11 @@ PAGE = r"""<!doctype html><html lang="en"><head>
     });
   });
 })();
+// auto-reload the doc view when the app is redeployed (server restart -> new version on SSE reconnect)
+(function(){
+  function appVer(v){ if(window.__appver==null){window.__appver=v;return;} if(window.__appver!==v){var a=document.activeElement; if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')){a.addEventListener('blur',function(){location.reload();},{once:true});} else {location.reload();} } }
+  try{var es=new EventSource('/chat-stream');es.onmessage=function(e){var m;try{m=JSON.parse(e.data);}catch(_){return;} if(m.kind==='version')appVer(m.v);};}catch(_){}
+})();
 </script></body></html>"""
 for _k, _v in IC.items():
     PAGE = PAGE.replace("__" + _k.upper() + "__", _v)
@@ -546,8 +552,12 @@ CHAT_PAGE = r"""<!doctype html><html lang="en"><head>
   document.getElementById('send').addEventListener('click',send);
   // realtime inbound — hold an SSE connection; the server PUSHES messages + ephemeral status (no polling, no reload)
   try{var es=new EventSource('/chat-stream');es.onmessage=function(e){var m;try{m=JSON.parse(e.data);}catch(_){return;}
+      if(m.kind==='version'){appVer(m.v);return;}
       if(m.kind==='status'){showResp(m.body);return;} if(m.who==='Vi')clearResp(); append(m);};}catch(_){}
 })();
+// auto-reload when the APP is redeployed (server restart -> new version on SSE reconnect) — never mid-typing
+function appVer(v){ if(window.__appver==null){window.__appver=v;return;} if(window.__appver!==v){
+  var a=document.activeElement; if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')){a.addEventListener('blur',function(){location.reload();},{once:true});} else {location.reload();} } }
 </script></body></html>"""
 for _k, _v in IC.items():
     CHAT_PAGE = CHAT_PAGE.replace("__" + _k.upper() + "__", _v)
@@ -615,7 +625,9 @@ class Handler(BaseHTTPRequestHandler):
             with SSE_LOCK:
                 SSE_CLIENTS.append(q)
             try:
-                self.wfile.write(b": connected\n\n"); self.wfile.flush()
+                self.wfile.write(b": connected\n\n")
+                self.wfile.write(("data: " + json.dumps({"kind": "version", "v": VERSION}) + "\n\n").encode())
+                self.wfile.flush()
                 while True:
                     try:
                         payload = q.get(timeout=20)
