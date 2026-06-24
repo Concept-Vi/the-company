@@ -357,7 +357,12 @@ PAGE = r"""<!doctype html><html lang="en"><head>
   .c-img{display:block;max-width:100%;max-height:300px;border-radius:10px;border:1px solid var(--line);margin-top:8px}
   #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--tim);color:#fff;
         padding:11px 18px;border-radius:24px;font:600 14px/1 -apple-system,sans-serif;z-index:40;display:none}
+  @keyframes appfade{from{opacity:.15;transform:translateY(7px)}to{opacity:1;transform:none}}
+  .updated body{animation:appfade .5s ease both}
+  .upd-pill{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-22px);background:var(--gold);color:#fff;font:600 12px/1 -apple-system,sans-serif;padding:8px 15px;border-radius:20px;z-index:60;opacity:0;transition:opacity .28s,transform .28s;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+  .upd-pill.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style></head><body>
+<script>try{if(sessionStorage.getItem('app_updated')){sessionStorage.removeItem('app_updated');var h=document.documentElement;h.classList.add('updated');addEventListener('DOMContentLoaded',function(){var p=document.createElement('div');p.className='upd-pill';p.textContent='Updated';document.body.appendChild(p);setTimeout(function(){p.classList.add('show');},30);setTimeout(function(){p.classList.remove('show');},2300);setTimeout(function(){p.remove();h.classList.remove('updated');},2900);});}}catch(_){}</script>
 <div id="scrim"></div>
 <nav id="drawer">{{DOCNAV}}</nav>
 
@@ -463,7 +468,7 @@ PAGE = r"""<!doctype html><html lang="en"><head>
 })();
 // auto-reload the doc view when the app is redeployed (server restart -> new version on SSE reconnect)
 (function(){
-  function appVer(v){ if(window.__appver==null){window.__appver=v;return;} if(window.__appver!==v){var a=document.activeElement; if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')){a.addEventListener('blur',function(){location.reload();},{once:true});} else {location.reload();} } }
+  function appVer(v){ if(window.__appver==null){window.__appver=v;return;} if(window.__appver!==v){try{sessionStorage.setItem('app_updated','1');}catch(_){}var a=document.activeElement; if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')){a.addEventListener('blur',function(){location.reload();},{once:true});} else {location.reload();} } }
   try{var es=new EventSource('/chat-stream');es.onmessage=function(e){var m;try{m=JSON.parse(e.data);}catch(_){return;} if(m.kind==='version')appVer(m.v);};}catch(_){}
 })();
 </script></body></html>"""
@@ -510,8 +515,13 @@ CHAT_PAGE = r"""<!doctype html><html lang="en"><head>
   .iconbtn.listening{background:#9a3b2b;border-color:#9a3b2b;animation:pulse 1.1s infinite}
   .iconbtn.listening .ic{stroke:#fff}
   @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(154,59,43,.5)}50%{box-shadow:0 0 0 6px rgba(154,59,43,0)}}
+  @keyframes appfade{from{opacity:.15;transform:translateY(7px)}to{opacity:1;transform:none}}
+  .updated body{animation:appfade .5s ease both}
+  .upd-pill{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-22px);background:var(--gold);color:#fff;font:600 12px/1 -apple-system,sans-serif;padding:8px 15px;border-radius:20px;z-index:60;opacity:0;transition:opacity .28s,transform .28s;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+  .upd-pill.show{opacity:1;transform:translateX(-50%) translateY(0)}
   #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#9a3b2b;color:#fff;padding:10px 16px;border-radius:22px;font:600 14px/1 -apple-system,sans-serif;z-index:30;display:none}
 </style></head><body>
+<script>try{if(sessionStorage.getItem('app_updated')){sessionStorage.removeItem('app_updated');var h=document.documentElement;h.classList.add('updated');addEventListener('DOMContentLoaded',function(){var p=document.createElement('div');p.className='upd-pill';p.textContent='Updated';document.body.appendChild(p);setTimeout(function(){p.classList.add('show');},30);setTimeout(function(){p.classList.remove('show');},2300);setTimeout(function(){p.remove();h.classList.remove('updated');},2900);});}}catch(_){}</script>
 <header id="bar"><div class="barrow">
   <a href="/" class="iconbtn" aria-label="back to documents">__BACK__</a>
   <h1 id="title">Chat with Vi</h1>
@@ -551,13 +561,13 @@ CHAT_PAGE = r"""<!doctype html><html lang="en"><head>
     var rec=null,listening=false,base='';
     mic.addEventListener('click',function(){
       if(listening){try{rec.stop();}catch(_){}return;}
-      try{rec=new SR();}catch(_){return;}
-      rec.lang='en-US';rec.interimResults=true;rec.continuous=true;base=ctext.value;
+      try{rec=new SR();}catch(e){err('Voice not available on this browser');return;}
+      rec.lang='en-US';rec.interimResults=true;rec.continuous=false;base=ctext.value;
       rec.onstart=function(){listening=true;mic.classList.add('listening');};
       rec.onend=function(){listening=false;mic.classList.remove('listening');};
-      rec.onerror=function(){listening=false;mic.classList.remove('listening');};
+      rec.onerror=function(ev){listening=false;mic.classList.remove('listening');var x=(ev&&ev.error)||'unavailable';err(x==='not-allowed'?'Mic blocked — allow it in Settings':('Voice: '+x));};
       rec.onresult=function(e){var interim='';for(var i=e.resultIndex;i<e.results.length;i++){var t=e.results[i][0].transcript;if(e.results[i].isFinal){base=(base?base+' ':'')+t.trim();}else{interim+=t;}}ctext.value=base+(interim?((base?' ':'')+interim):'');grow();};
-      try{rec.start();}catch(_){}
+      try{rec.start();}catch(e){err('Voice could not start (iOS may not support it here)');}
     });
   })();
   var indicator=null;
@@ -576,7 +586,7 @@ CHAT_PAGE = r"""<!doctype html><html lang="en"><head>
       if(m.kind==='status'){showResp(m.body);return;} if(m.who==='Vi')clearResp(); append(m);};}catch(_){}
 })();
 // auto-reload when the APP is redeployed (server restart -> new version on SSE reconnect) — never mid-typing
-function appVer(v){ if(window.__appver==null){window.__appver=v;return;} if(window.__appver!==v){
+function appVer(v){ if(window.__appver==null){window.__appver=v;return;} if(window.__appver!==v){ try{sessionStorage.setItem('app_updated','1');}catch(_){}
   var a=document.activeElement; if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')){a.addEventListener('blur',function(){location.reload();},{once:true});} else {location.reload();} } }
 </script></body></html>"""
 for _k, _v in IC.items():
