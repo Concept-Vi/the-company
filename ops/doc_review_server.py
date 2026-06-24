@@ -11,7 +11,7 @@ Reusable: serves any document in the channel. Bind 127.0.0.1; exposed tailnet-on
 Run: python3 ops/doc_review_server.py [--port 8781] [--author tim]
 """
 from __future__ import annotations
-import argparse, html, json, os, re, sys
+import argparse, base64, html, json, os, re, sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,6 +20,9 @@ os.environ.setdefault("COMPANY_STORE", os.path.join(REPO, ".data", "store"))
 ASSETS = os.path.join(REPO, "ops", "assets")
 
 from runtime import cc_board as cb  # noqa: E402
+from runtime import cc_images as ci  # noqa: E402
+from store.fs_store import FsStore  # noqa: E402
+STORE = FsStore(os.environ["COMPANY_STORE"])
 
 CHANNEL = "dragnet-development"
 DEFAULT_DOC = "item-389c8489"
@@ -33,6 +36,7 @@ IC = {
  "x":      '<svg viewBox="0 0 24 24" class="ic"><path d="M6 6l12 12M18 6L6 18"/></svg>',
  "check":  '<svg viewBox="0 0 24 24" class="ic"><path d="M5 13l4 4L19 6"/></svg>',
  "send":   '<svg viewBox="0 0 24 24" class="ic"><path d="M4 11l16-7-7 16-2.6-6.4z"/></svg>',
+ "img":    '<svg viewBox="0 0 24 24" class="ic"><path d="M4 5h16v14H4z"/><path d="M4 16l4.5-4.5 3 3 3.5-3.5 5 5"/><circle cx="9" cy="9" r="1.4"/></svg>',
 }
 
 
@@ -62,16 +66,37 @@ def md_to_html(text: str) -> str:
             while i < n and lines[i].strip().startswith("> "):
                 buf.append(_inline(lines[i].strip()[2:])); i += 1
             out.append("<blockquote>" + "<br>".join(buf) + "</blockquote>"); continue
+        _NEXTBLOCK = r"^([-*] |\d+\. |#{1,6} |> |-{3,}$)"
         if re.match(r"^[-*] ", st):
-            buf = []
+            items = []
             while i < n and re.match(r"^[-*] ", lines[i].strip()):
-                buf.append(f"<li>{_inline(lines[i].strip()[2:])}</li>"); i += 1
-            out.append("<ul>" + "".join(buf) + "</ul>"); continue
-        if re.match(r"^\d+\. ", st):
-            buf = []
-            while i < n and re.match(r"^\d+\. ", lines[i].strip()):
-                buf.append(f"<li>{_inline(re.sub(r'^\\d+\\. ', '', lines[i].strip()))}</li>"); i += 1
-            out.append("<ol>" + "".join(buf) + "</ol>"); continue
+                text = [lines[i].strip()[2:]]; i += 1
+                while i < n and lines[i].strip() and not re.match(_NEXTBLOCK, lines[i].strip()):
+                    text.append(lines[i].strip()); i += 1            # fold continuation lines
+                items.append(" ".join(text))
+                save = i
+                while i < n and not lines[i].strip():
+                    i += 1
+                if not (i < n and re.match(r"^[-*] ", lines[i].strip())):
+                    i = save; break                                  # tolerate blank lines between items
+            out.append("<ul>" + "".join(f"<li>{_inline(t)}</li>" for t in items) + "</ul>"); continue
+        mo = re.match(r"^(\d+)\. ", st)
+        if mo:
+            start = mo.group(1); items = []
+            while i < n:
+                m = re.match(r"^(\d+)\.\s+(.*)$", lines[i].strip())
+                if not m:
+                    break
+                text = [m.group(2)]; i += 1
+                while i < n and lines[i].strip() and not re.match(_NEXTBLOCK, lines[i].strip()):
+                    text.append(lines[i].strip()); i += 1            # fold continuation lines into the item
+                items.append(" ".join(text))
+                save = i
+                while i < n and not lines[i].strip():
+                    i += 1
+                if not (i < n and re.match(r"^\d+\. ", lines[i].strip())):
+                    i = save; break                                  # keep blank-separated items in ONE list
+            out.append(f'<ol start="{start}">' + "".join(f"<li>{_inline(t)}</li>" for t in items) + "</ol>"); continue
         buf = []; start = i
         while i < n and lines[i].strip() and not re.match(r"^(#{1,6} |[-*] |\d+\. |> |-{3,}$)", lines[i].strip()):
             buf.append(_inline(lines[i].strip())); i += 1
@@ -105,6 +130,10 @@ def _thread_html(thread: list) -> str:
             f'<div class="c-head"><span class="c-who">{who}</span>{chip}'
             f'<span class="c-actions"><button class="c-edit">Edit</button><button class="c-del">Delete</button></span></div>'
             f'<div class="c-body">{html.escape(text)}</div>')
+        for ln in (c.get("links") or []):
+            if ln.get("kind") == "attachment":
+                rest = html.escape(ln.get("target", "").split("://", 1)[-1])
+                parts.append(f'<img class="c-img" src="/img/{rest}" loading="lazy">')
         if t.get("replies"):
             parts.append(_thread_html(t["replies"]))
         parts.append("</div>")
@@ -284,7 +313,10 @@ PAGE = r"""<!doctype html><html lang="en"><head>
   .cbtn.primary .iconbtn{background:#efe7d2;border-color:var(--gold)}
   .cbtn.send .iconbtn{background:var(--ink);border-color:var(--ink)} .cbtn.send .ic{stroke:#fff}
   .cbtn.send span{color:var(--ink)}
-  #cancel{margin-right:auto}
+  #attach{margin-right:auto}
+  #thumb{margin-top:10px}
+  #thumb img{max-width:100%;max-height:180px;border-radius:10px;border:1px solid var(--line)}
+  .c-img{display:block;max-width:100%;max-height:300px;border-radius:10px;border:1px solid var(--line);margin-top:8px}
   #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--tim);color:#fff;
         padding:11px 18px;border-radius:24px;font:600 14px/1 -apple-system,sans-serif;z-index:40;display:none}
 </style></head><body>
@@ -307,7 +339,10 @@ PAGE = r"""<!doctype html><html lang="en"><head>
 <div id="sheet">
   <div id="scope"></div>
   <textarea id="ctext" rows="1" placeholder="Your comment…"></textarea>
+  <div id="thumb"></div>
+  <input id="file" type="file" accept="image/*" style="display:none">
   <div class="crow">
+    <button id="attach" class="cbtn"><span class="iconbtn">__IMG__</span><span>Image</span></button>
     <button id="cancel" class="cbtn"><span class="iconbtn">__X__</span><span>Cancel</span></button>
     <button id="post" class="cbtn primary"><span class="iconbtn">__CHECK__</span><span>Save</span></button>
     <button id="send" class="cbtn send"><span class="iconbtn">__SEND__</span><span>Send now</span></button>
@@ -330,15 +365,19 @@ PAGE = r"""<!doctype html><html lang="en"><head>
   bar.addEventListener('click',function(e){ if(e.target===bar||e.target.classList.contains('barrow')) bar.classList.toggle('collapsed'); });
 })();
 (function(){ // commenting
-  var pending=null,lastSel=null;
+  var pending=null,lastSel=null,pendingImg=null;
   var sheet=document.getElementById('sheet'),scope=document.getElementById('scope'),
-      ctext=document.getElementById('ctext'),toast=document.getElementById('toast');
+      ctext=document.getElementById('ctext'),toast=document.getElementById('toast'),
+      thumb=document.getElementById('thumb'),fileInput=document.getElementById('file');
   function showToast(m,bad){toast.textContent=m;toast.style.background=bad?'#9a3b2b':'#2f6f4f';toast.style.display='block';setTimeout(function(){toast.style.display='none';},2200);}
   function clearSel(){ if(lastSel){lastSel.classList.remove('sel');lastSel=null;} }
   function grow(){ ctext.style.height='auto'; ctext.style.height=Math.min(ctext.scrollHeight,window.innerHeight*0.4)+'px'; }
   ctext.addEventListener('input',grow);
-  function openSheet(p){pending=p;scope.textContent=p.scale+' · '+(p.key||'document');ctext.value='';sheet.classList.add('open');setTimeout(function(){grow();ctext.focus();},250);}
-  function closeSheet(){sheet.classList.remove('open');pending=null;clearSel();}
+  function clearImg(){pendingImg=null;thumb.innerHTML='';fileInput.value='';}
+  document.getElementById('attach').addEventListener('click',function(){fileInput.click();});
+  fileInput.addEventListener('change',function(){var f=fileInput.files&&fileInput.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var u=String(r.result);pendingImg={b64:u.split(',')[1],mime:f.type||'image/jpeg'};thumb.innerHTML='<img src="'+u+'">';};r.readAsDataURL(f);});
+  function openSheet(p){pending=p;clearImg();scope.textContent=p.scale+' · '+(p.key||'document');ctext.value='';sheet.classList.add('open');setTimeout(function(){grow();ctext.focus();},250);}
+  function closeSheet(){sheet.classList.remove('open');pending=null;clearImg();clearSel();}
   function scaleFor(t){return t==='P'?'paragraph':t==='LI'?'point':(t==='H3'||t==='H4')?'heading':t==='BLOCKQUOTE'?'quote':'text';}
 
   document.querySelectorAll('.block-body p, .block-body li, .block-body h3, .block-body h4, .block-body blockquote').forEach(function(el){
@@ -351,11 +390,13 @@ PAGE = r"""<!doctype html><html lang="en"><head>
   document.getElementById('cancel').addEventListener('click',closeSheet);
 
   function submit(sendNow){
-    if(!pending)return; var body=ctext.value.trim(); if(!body){showToast('Write a comment first',true);return;}
-    fetch('/comment',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({addr:pending.addr,key:pending.key,scale:pending.scale,quote:pending.quote,body:body,send_now:!!sendNow})})
+    if(!pending)return; var body=ctext.value.trim();
+    if(!body && !pendingImg){showToast('Write a comment or attach an image',true);return;}
+    var payload={addr:pending.addr,key:pending.key,scale:pending.scale,quote:pending.quote,body:body||'(image)',send_now:!!sendNow};
+    if(pendingImg){payload.image_b64=pendingImg.b64;payload.image_mime=pendingImg.mime;}
+    fetch('/comment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
      .then(function(r){return r.json();}).then(function(j){
-        if(j.ok){closeSheet();showToast(sendNow?'Sent ✓':'Saved ✓');setTimeout(function(){location.reload();},650);}
+        if(j.ok){closeSheet();showToast(sendNow?'Sent':'Saved');setTimeout(function(){location.reload();},650);}
         else{showToast(j.error||'Failed',true);}
      }).catch(function(){showToast('Network error',true);});
   }
@@ -415,6 +456,12 @@ class Handler(BaseHTTPRequestHandler):
             return self._file(os.path.join(ASSETS, "dragdev-icon-180.png"), "image/png")
         if p == "/icon-512.png":
             return self._file(os.path.join(ASSETS, "dragdev-icon-512.png"), "image/png")
+        if p.startswith("/img/"):
+            try:
+                data, mime = ci.image_bytes(STORE, "image://" + p[len("/img/"):])
+                return self._send(200, data, mime or "image/jpeg")
+            except Exception:  # noqa: BLE001
+                return self._send(404, "not found")
         if p == "/manifest.webmanifest":
             man = {"name": "Vi — Review", "short_name": "Vi Review", "display": "standalone",
                    "background_color": BG, "theme_color": BG, "start_url": "/",
@@ -444,6 +491,12 @@ class Handler(BaseHTTPRequestHandler):
                     self._send(400, json.dumps({"ok": False, "error": "missing addr or body"}), "application/json"); return
                 anchor = f"[{scale}{' · SEND-NOW' if send_now else ''}]" + (f' re: «{quote}»' if quote else "")
                 rec = cb.comment(addr, f"{anchor}\n\n{body}", AUTHOR, title=f"Tim · {scale}", channel=CHANNEL)
+                img_b64 = d.get("image_b64")
+                if img_b64:
+                    raw = base64.b64decode(img_b64.split(",")[-1])
+                    irec = ci.save_image(STORE, raw, channel=CHANNEL, path=f"comment/{rec['id']}",
+                                         mime=d.get("image_mime", "image/jpeg"), author_session=AUTHOR)
+                    cb.edit_item(rec["id"], add_links=[{"kind": "attachment", "target": irec["address"]}])
                 self._send(200, json.dumps({"ok": True, "comment": rec["address"]}), "application/json"); return
             if self.path == "/comment-edit":
                 cid = d.get("id", ""); newtext = (d.get("body", "") or "").strip()
