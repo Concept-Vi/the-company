@@ -72,6 +72,7 @@ IC = {
  "send":   '<svg viewBox="0 0 24 24" class="ic"><path d="M4 11l16-7-7 16-2.6-6.4z"/></svg>',
  "img":    '<svg viewBox="0 0 24 24" class="ic"><path d="M4 5h16v14H4z"/><path d="M4 16l4.5-4.5 3 3 3.5-3.5 5 5"/><circle cx="9" cy="9" r="1.4"/></svg>',
  "back":   '<svg viewBox="0 0 24 24" class="ic"><path d="M15 5l-7 7 7 7"/></svg>',
+ "mic":    '<svg viewBox="0 0 24 24" class="ic"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
 }
 
 
@@ -506,6 +507,9 @@ CHAT_PAGE = r"""<!doctype html><html lang="en"><head>
   #thumb img{max-height:120px;border-radius:10px;border:1px solid var(--line);margin-bottom:8px}
   .crow{display:flex;align-items:flex-end;gap:9px}
   #ctext{flex:1;font:16px/1.4 -apple-system,sans-serif;border:1px solid var(--line);border-radius:18px;padding:10px 14px;resize:none;min-height:42px;max-height:38vh}
+  .iconbtn.listening{background:#9a3b2b;border-color:#9a3b2b;animation:pulse 1.1s infinite}
+  .iconbtn.listening .ic{stroke:#fff}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(154,59,43,.5)}50%{box-shadow:0 0 0 6px rgba(154,59,43,0)}}
   #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#9a3b2b;color:#fff;padding:10px 16px;border-radius:22px;font:600 14px/1 -apple-system,sans-serif;z-index:30;display:none}
 </style></head><body>
 <header id="bar"><div class="barrow">
@@ -519,6 +523,7 @@ CHAT_PAGE = r"""<!doctype html><html lang="en"><head>
   <input id="file" type="file" accept="image/*" style="display:none">
   <div class="crow">
     <button id="attach" class="iconbtn" aria-label="attach image">__IMG__</button>
+    <button id="mic" class="iconbtn" aria-label="dictate">__MIC__</button>
     <textarea id="ctext" rows="1" placeholder="Message Vi…"></textarea>
     <button id="send" class="iconbtn send" aria-label="send">__SEND__</button>
   </div>
@@ -540,6 +545,21 @@ CHAT_PAGE = r"""<!doctype html><html lang="en"><head>
   function clearImg(){pendingImg=null;thumb.innerHTML='';fileInput.value='';}
   document.getElementById('attach').addEventListener('click',function(){fileInput.click();});
   fileInput.addEventListener('change',function(){var f=fileInput.files&&fileInput.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var u=String(r.result);pendingImg={b64:u.split(',')[1],mime:f.type||'image/jpeg'};thumb.innerHTML='<img src="'+u+'">';};r.readAsDataURL(f);});
+  // microphone — browser speech recognition (web transcription; works on iOS Safari), dictates into the box
+  (function(){var mic=document.getElementById('mic');var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){mic.style.display='none';return;}
+    var rec=null,listening=false,base='';
+    mic.addEventListener('click',function(){
+      if(listening){try{rec.stop();}catch(_){}return;}
+      try{rec=new SR();}catch(_){return;}
+      rec.lang='en-US';rec.interimResults=true;rec.continuous=true;base=ctext.value;
+      rec.onstart=function(){listening=true;mic.classList.add('listening');};
+      rec.onend=function(){listening=false;mic.classList.remove('listening');};
+      rec.onerror=function(){listening=false;mic.classList.remove('listening');};
+      rec.onresult=function(e){var interim='';for(var i=e.resultIndex;i<e.results.length;i++){var t=e.results[i][0].transcript;if(e.results[i].isFinal){base=(base?base+' ':'')+t.trim();}else{interim+=t;}}ctext.value=base+(interim?((base?' ':'')+interim):'');grow();};
+      try{rec.start();}catch(_){}
+    });
+  })();
   var indicator=null;
   function showResp(t){if(!indicator){indicator=document.createElement('div');indicator.className='msg msg-vi';chat.appendChild(indicator);}indicator.innerHTML='<div class="msg-b resp-b">'+esc(t||'Vi is responding')+'<span class="dots"><i></i><i></i><i></i></span></div>';if(atBottom())scroll();}
   function clearResp(){if(indicator){indicator.remove();indicator=null;}}
