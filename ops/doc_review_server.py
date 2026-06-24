@@ -42,7 +42,7 @@ def _msg_payload(rec: dict) -> dict:
     who = "You" if rec.get("author_session") == OPERATOR_HANDLE else "Vi"
     imgs = ["/img/" + l["target"].split("://", 1)[-1]
             for l in (rec.get("links") or []) if l.get("kind") == "attachment"]
-    return {"who": who, "body": rec.get("body", ""), "imgs": imgs}
+    return {"kind": "msg", "who": who, "body": rec.get("body", ""), "imgs": imgs}
 
 
 def register_operator(port: int) -> None:
@@ -490,6 +490,11 @@ CHAT_PAGE = r"""<!doctype html><html lang="en"><head>
   .msg-vi .msg-b{background:#fff;border:1px solid var(--line)}
   .msg-b img{display:block;max-width:100%;border-radius:10px;margin-top:8px;border:1px solid var(--line)}
   .msg-empty{color:var(--muted);text-align:center;margin-top:40px}
+  .resp-b{color:var(--muted);font-style:italic}
+  .dots{display:inline-block;margin-left:6px;vertical-align:middle}
+  .dots i{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--bronze);margin:0 1.5px;animation:bl 1s infinite}
+  .dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+  @keyframes bl{0%,80%,100%{opacity:.3}40%{opacity:1}}
   #composer{position:fixed;inset:auto 0 0 0;z-index:20;background:rgba(251,249,244,.97);backdrop-filter:blur(8px);
         border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto}
   #thumb img{max-height:120px;border-radius:10px;border:1px solid var(--line);margin-bottom:8px}
@@ -529,15 +534,19 @@ CHAT_PAGE = r"""<!doctype html><html lang="en"><head>
   function clearImg(){pendingImg=null;thumb.innerHTML='';fileInput.value='';}
   document.getElementById('attach').addEventListener('click',function(){fileInput.click();});
   fileInput.addEventListener('change',function(){var f=fileInput.files&&fileInput.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var u=String(r.result);pendingImg={b64:u.split(',')[1],mime:f.type||'image/jpeg'};thumb.innerHTML='<img src="'+u+'">';};r.readAsDataURL(f);});
+  var indicator=null;
+  function showResp(t){if(!indicator){indicator=document.createElement('div');indicator.className='msg msg-vi';chat.appendChild(indicator);}indicator.innerHTML='<div class="msg-b resp-b">'+esc(t||'Vi is responding')+'<span class="dots"><i></i><i></i><i></i></span></div>';if(atBottom())scroll();}
+  function clearResp(){if(indicator){indicator.remove();indicator=null;}}
   function send(){var body=ctext.value.trim();if(!body&&!pendingImg)return;
     var payload={body:body};if(pendingImg){payload.image_b64=pendingImg.b64;payload.image_mime=pendingImg.mime;}
     ctext.value='';grow();clearImg();
     fetch('/chat-send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-     .then(function(r){return r.json();}).then(function(j){if(!j.ok)err(j.error||'failed');})
+     .then(function(r){return r.json();}).then(function(j){if(!j.ok){err(j.error||'failed');}else if(j.delivered){showResp('Vi is responding');}})
      .catch(function(){err('network error');});}
   document.getElementById('send').addEventListener('click',send);
-  // realtime inbound — hold an SSE connection; the server pushes new messages (no polling, no reload)
-  try{var es=new EventSource('/chat-stream');es.onmessage=function(e){try{append(JSON.parse(e.data));}catch(_){}};}catch(_){}
+  // realtime inbound — hold an SSE connection; the server PUSHES messages + ephemeral status (no polling, no reload)
+  try{var es=new EventSource('/chat-stream');es.onmessage=function(e){var m;try{m=JSON.parse(e.data);}catch(_){return;}
+      if(m.kind==='status'){showResp(m.body);return;} if(m.who==='Vi')clearResp(); append(m);};}catch(_){}
 })();
 </script></body></html>"""
 for _k, _v in IC.items():
@@ -641,9 +650,13 @@ class Handler(BaseHTTPRequestHandler):
             n = int(self.headers.get("Content-Length", 0))
             d = json.loads(self.rfile.read(n) or b"{}")
             if self.path == "/":
-                # channel INJECT RECEIVER — the fabric pushed a reply to 'tim' (this app). Body = {content, meta}.
+                # channel INJECT RECEIVER — the fabric pushed to 'tim' (this app). Body = {content, meta}.
+                meta = d.get("meta", {}) or {}
                 content = d.get("content", "") or ""
-                frm = (d.get("meta", {}) or {}).get("from", "Vi")
+                frm = meta.get("from", "Vi")
+                if meta.get("kind") == "status":   # ephemeral status (e.g. "reading your comments…") — not stored
+                    broadcast({"kind": "status", "who": ("You" if frm == OPERATOR_HANDLE else "Vi"), "body": content})
+                    self._send(200, json.dumps({"ok": True}), "application/json"); return
                 rec = cb.file_item("message", (content[:54] or "reply"), content, frm, channel=CHANNEL)
                 broadcast(_msg_payload(rec))
                 self._send(200, json.dumps({"ok": True}), "application/json"); return
