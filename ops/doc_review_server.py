@@ -21,8 +21,10 @@ ASSETS = os.path.join(REPO, "ops", "assets")
 
 from runtime import cc_board as cb  # noqa: E402
 from runtime import cc_images as ci  # noqa: E402
+from runtime import cc_channels as cc  # noqa: E402
 from store.fs_store import FsStore  # noqa: E402
 STORE = FsStore(os.environ["COMPANY_STORE"])
+LEAD_TARGET_FILE = os.path.join(REPO, ".data", "channels", "_chat_lead.txt")
 
 CHANNEL = "dragnet-development"
 DEFAULT_DOC = "item-389c8489"
@@ -583,7 +585,17 @@ class Handler(BaseHTTPRequestHandler):
                     irec = ci.save_image(STORE, raw, channel=CHANNEL, path=f"chat/{rec['id']}",
                                          mime=d.get("image_mime", "image/jpeg"), author_session=AUTHOR)
                     cb.edit_item(rec["id"], add_links=[{"kind": "attachment", "target": irec["address"]}])
-                self._send(200, json.dumps({"ok": True}), "application/json"); return
+                # inject into the lead's LIVE session via the channel transport (no polling, no sit)
+                delivered = False
+                try:
+                    target = open(LEAD_TARGET_FILE).read().strip() if os.path.exists(LEAD_TARGET_FILE) else ""
+                    if target:
+                        r = cc.send(target, f"[Tim — via the app chat]\n\n{body or '(image attached)'}",
+                                    frm="tim", thread="dragdev-chat")
+                        delivered = bool(r.get("ok"))
+                except Exception:  # noqa: BLE001 — message is saved regardless; delivery is best-effort
+                    delivered = False
+                self._send(200, json.dumps({"ok": True, "delivered": delivered}), "application/json"); return
             if self.path == "/comment":
                 addr, scale = d.get("addr", ""), d.get("scale", "highlight")
                 quote = (d.get("quote", "") or "").strip(); body = (d.get("body", "") or "").strip()
