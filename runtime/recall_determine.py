@@ -67,6 +67,29 @@ def read_extraction(source_address: str) -> dict | None:
     return cached[1].get(str(cid))
 
 
+def asset_freshness(asset: str, n_records: int, *, stale_after_days: float = 7.0) -> dict | None:
+    """A cheap, PURE staleness signal for the determine() envelope (unify-exercise Q6: a DECLARED computed
+    flag, never a resolver-side reindex and never auto-rebake — extract-once/query-many economics). Reports
+    the asset's bake age + record count and flags a (Notice) when older than stale_after_days. The DEEP
+    source-vs-asset comparison + (Gap) is OWNED by the freshness routine (routines/dragnet_freshness.py),
+    not this read path — determine()/resolve_address stay side-effect-free. Returns None if the asset is
+    absent."""
+    import time as _t
+    path = asset_path(asset)
+    try:
+        mtime = os.path.getmtime(path)
+    except OSError:
+        return None
+    age_days = (_t.time() - mtime) / 86400.0
+    fr = {"baked_epoch": int(mtime), "age_days": round(age_days, 1), "n_records": n_records,
+          "stale": age_days > stale_after_days}
+    if fr["stale"]:
+        fr["notice"] = (f"(Notice) extraction asset {asset!r} baked {fr['age_days']}d ago (> {stale_after_days}d) — "
+                        f"may be stale vs newer source. Rebake via the dragnet_extract flow / --confirm door. "
+                        f"The dragnet_freshness routine owns the source-vs-asset check; NO auto-rebake.")
+    return fr
+
+
 def topic_regex(topic_text: str):
     """Build a candidate-filter regex from a natural-language topic — the salient keywords OR'd. (The
     filter is the cheap recall-first cut over the stored extraction fields; the model never sees the
@@ -164,7 +187,7 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
     cands, claims = collect_claims(recs, topic_regex(topic_text), max_claims=max_claims, cands=sem)
     if not claims:
         return {"topic": topic_text, "asset": asset, "n_candidates": len(cands), "n_claims": 0,
-                "themes": [], "no_fiction": True,
+                "themes": [], "no_fiction": True, "freshness": asset_freshness(asset, len(recs)),
                 "note": "no extractions matched the topic — honest no-match (not a fabricated theme)."}
 
     numbered = "\n".join(f"{c['n']}. {c['claim'][:140]}" for c in claims)
@@ -197,6 +220,7 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
             themes_out.append({"theme": th.get("theme", ""), "claims": real})
     return {"topic": topic_text, "asset": asset, "filter": _filter, "n_candidates": len(cands), "n_claims": len(claims),
             "claims_grouped": len(used), "themes": themes_out, "no_fiction": (len(bad) == 0),
+            "freshness": asset_freshness(asset, len(recs)),
             "note": (f"GROUNDED ({_filter}-filtered): every claim is a verbatim extraction, chunk-traced (model grouped by index, "
                      "invented nothing). The candidate-filter is the recall-first cut; rerank is the decisive "
                      "relevance gate when enacted." + (f" ⚠ {len(bad)} invalid indices dropped." if bad else ""))}
