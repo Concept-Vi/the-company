@@ -36,30 +36,11 @@ OUT_DIR = os.path.join(REPO, ".data", "store", "extractions")
 _ANCHOR_DATE = re.compile(r"(\d{4})-(\d{2})-(\d{2})")          # turn-N-speaker-YYYY-MM-DD-HHMM → the conversation date
 
 
-# ── the rich SUPERSET schema (the stored asset shape) — coarse ⊂ fine ──
-class Coarse(BaseModel):
-    about: str                  # one phrase: what this content IS
-    kind: str                   # decision | spec | discussion | digest | log | reference | other
-    touches: List[str]          # topic/domain tags
-
-class Fine(BaseModel):
-    summary: str                # 1-2 sentence neutral summary
-    entities: List[str]         # named things: systems, files, concepts, people
-    claims: List[str]           # assertions/decisions stated
-    relations: List[str]        # "X depends on Y" / "X supersedes Y"
-    open_questions: List[str]   # unresolved threads ([] if none)
-
-# ── DESIGN extension (visual-dna ONLY) — the 2 additive/optional superset fields (DNA's bake-criteria 2+5,
-# lead-settled 2026-06-22). ONE schema: these are null/absent for full/theorem/transcript spaces, populated
-# ONLY for visual-dna (a separate --design stage). NOT a per-space fork — the stored record is the one superset.
-#   resolves_into — DNA criterion-2 MATCH-KEY (resolve-on NO): the design element/component/token this maps to.
-#   resolution    — DNA criterion-5 CONTEXT-RESOLUTION (resolve-on YES): the context-points it resolves against
-#                   (line / opacity / colour-role / shape — composition registers these as resolution axis-rows).
-class Design(BaseModel):
-    resolves_into: List[str]    # match-key lookup: the design element(s)/component(s)/token(s) this maps to
-    resolution: List[str]       # DIM-KEYED context-points: each "<dim>:<context> -> <value>", dim ∈
-                                # {line, opacity, colour_role, shape} — composition's axes/design.py parses
-                                # the list per-dimension. NOT a flat tag-list (the resolver must read it back).
+# ── the rich SUPERSET schema (the stored asset shape) — coarse ⊂ fine ⊂ design ──
+# unify-exercise (2026-06-26): the frozen superset moved to contracts/dragnet_schema.py (the non-authorable
+# spine) so the registry rows + the safety door share these SAME class objects. Byte-identical shapes —
+# imported here, no longer defined locally (D1 one-superset stays the single source of truth).
+from contracts.dragnet_schema import Coarse, Fine, Design, NEUTRAL_FRAGMENT
 
 _DEEPEN_KINDS = {"decision", "spec", "discussion"}            # the step-gate: these continue to fine
 
@@ -67,7 +48,7 @@ _DEEPEN_KINDS = {"decision", "spec", "discussion"}            # the step-gate: t
 def _coarse_role():
     from runtime.roles import Role
     return Role(id="dragnet_coarse", spec={}, prompt_template=(
-        "Read the content and describe it NEUTRALLY (only what it says — do not judge relevance).\n"
+        f"Read the content and {NEUTRAL_FRAGMENT}.\n"
         "Content:\n{utterance}\n\n"
         "Return ONLY JSON: {\"about\": \"what this is in one phrase\", "
         "\"kind\": \"decision|spec|discussion|digest|log|reference|other\", "

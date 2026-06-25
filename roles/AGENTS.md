@@ -173,6 +173,18 @@ both nested → both resolved to `-pro`; the fix is moving it top-level). Verify
   confidence float (verdict token + cluster nearness carry the signal). In the `drift` cast. Judges, never
   fixes — a confirmed drift becomes a MARK for review.
 
+- **`dragnet_coarse`** / **`dragnet_fine`** / **`dragnet_design`** — the **dragnet extraction family**
+  (unify-exercise 2026-06-26): the extract-once bake's stage-1 neutral coarse pass `{about,kind,touches}`,
+  its stage-2 fine deepening `{summary,entities,claims,relations,open_questions}`, and the visual-dna-only
+  design-binding pass `{resolves_into,resolution}`. Moved from in-code `_coarse_role()`/etc. into
+  file-discovered registry rows so the dragnet is configurable/composable through the same registry as every
+  other role. Their `output_schema` is the FROZEN `contracts.dragnet_schema.{Coarse,Fine,Design}` (D1 one-
+  superset, imported never authored) and the coarse prompt carries the non-authorable `NEUTRAL_FRAGMENT`
+  verbatim (D3). The `_build_role` **dragnet-family field-freeze door** enforces both (rejects a non-frozen
+  `output_schema`, forbids `schema_slot` — grain is role-identity, requires the neutral fragment), so a row
+  can SELECT a grain but never fork the locked superset or smuggle relevance into the neutral pass.
+  PROTECTED (`edit_role`/`delete_role` refuse). Guarded by the dragnet-freeze block in `roles_acceptance.py`.
+
 **Where new things go:** a new role = a new file `roles/<id>.py` declaring its `ROLE` dict (its `id`
 MUST equal the file name). Put it in a mode's cast by adding that mode to its `mode_scope`. Make it a
 jury by declaring `draws:N` + a `verdict_rule`.

@@ -9547,7 +9547,12 @@ class Suite:
     #       source-of-truth to derive from (no role-file `protected` marker exists, and that file is not this
     #       lane's to add — surfaced, not faked). They stay declared HERE, the honest single source for "the
     #       roles suite.py itself depends on by name". The full PROTECTED_ROLES is the union, built in __init__.
-    _SUITE_OWNED_PROTECTED_ROLES = ("judge", "verify_jury", "voice", "check", "connect")
+    _SUITE_OWNED_PROTECTED_ROLES = ("judge", "verify_jury", "voice", "check", "connect",
+                                    # unify-exercise (2026-06-26): the dragnet extraction family — the bake
+                                    # binds them by name; PROTECTED so edit_role/delete_role refuse (the
+                                    # _build_role field-freeze door already blocks schema/grain mutation; this
+                                    # is belt-and-suspenders against wholesale edit/delete of the rows).
+                                    "dragnet_coarse", "dragnet_fine", "dragnet_design")
 
     def _roles_dir_path(self, rid: str) -> str:
         from runtime.authoring import _safe_role_id

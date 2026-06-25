@@ -196,6 +196,37 @@ def _build_role(name: str, decl: dict) -> Role:
         raise TypeError(
             f"role {rid!r}: schema_slot must be a resolve_slot value (a {{select,cases}} dict over grain-classes "
             f"or a literal Pydantic class), got {type(sslot).__name__} — fail loud.")
+    # ── unify-exercise (2026-06-26): the DRAGNET-FAMILY field-freeze (LOAD-BEARING safety door) ──────────
+    # The dragnet's extraction roles becoming registry rows would make their schema AUTHORABLE data (osch /
+    # sslot are validated only as types above). The dragnet's safety contracts (D1 one-superset, D3 neutral
+    # coarse worker, the schema half of D4) must be frozen BY-CONSTRUCTION, not by-convention. _build_role is
+    # the SINGLE choke point all of create_role/edit_role/file-discovery funnel through (NOT build_action —
+    # the bake fires run_items directly, never build_action). So the freeze lives HERE. For a dragnet-family
+    # role id ONLY (additive — any other role is unaffected): (1) output_schema MUST be the exact frozen class
+    # from contracts.dragnet_schema (no authored shape, no superset fork → D1); (2) schema_slot is FORBIDDEN
+    # (grain is role-identity — which of the 3 frozen rows fires — never an authorable slot, reconciling the
+    # grain-axis with the freeze); (3) the coarse role's prompt MUST carry the non-authorable NEUTRAL_FRAGMENT
+    # verbatim (D3: the author may add wording but can never remove neutrality). The deep checks (effective
+    # field-set == {about,kind,touches} for coarse; fine ⊇ coarse) live in the roles acceptance test.
+    from contracts.dragnet_schema import DRAGNET_FAMILY as _DRAGNET_FAMILY, NEUTRAL_FRAGMENT as _NEUTRAL_FRAGMENT
+    if rid in _DRAGNET_FAMILY:
+        frozen = _DRAGNET_FAMILY[rid]
+        if osch is not frozen:
+            raise ValueError(
+                f"role {rid!r}: dragnet-family output_schema MUST be the frozen "
+                f"contracts.dragnet_schema.{frozen.__name__} class (got {osch!r}) — the dragnet superset is "
+                f"LOCKED (D1); a row may SELECT a grain (which role fires) but NEVER author a schema shape. "
+                f"Import the frozen class: `from contracts.dragnet_schema import {frozen.__name__}`. Fail loud.")
+        if sslot is not None:
+            raise ValueError(
+                f"role {rid!r}: dragnet-family roles may NOT declare schema_slot — grain is role-identity "
+                f"(dragnet_coarse|dragnet_fine|dragnet_design each have a frozen schema), never an authorable "
+                f"slot that could fork the locked superset. Remove schema_slot. Fail loud.")
+        if rid == "dragnet_coarse" and _NEUTRAL_FRAGMENT not in (decl.get("prompt_template") or ""):
+            raise ValueError(
+                f"role {rid!r}: the coarse role's prompt_template MUST carry the frozen D3 neutrality fragment "
+                f"verbatim ({_NEUTRAL_FRAGMENT!r}) — the neutral coarse worker is non-authorable (no relevance/"
+                f"topic judgement in stage-1). Wording may surround it but it can never be removed. Fail loud.")
     # RESOLVED-SLOTS (additive): thinking — per-role THINK-CONTROL, a resolve_slot value (a literal bool, or a
     # {select,cases}/AST dict resolving per coordinate). run_role reads it into its `think` (call param wins).
     # Light check (bool | dict). Absent ⇒ None (byte-identical: the call param / model default).
