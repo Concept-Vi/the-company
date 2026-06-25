@@ -185,8 +185,14 @@ def _supplied_extra(role: "Role", ctx: dict, store) -> list:
     ctx/store (the run_items usage, deferred). Keying on SUPPLIED (not the descriptive field) is what
     keeps recall/ground/check — which DECLARE extra inputs but are CALLED utterance-only — byte-identical."""
     extras = [a for a in _declared_inputs(role) if a != "utterance"]
+    # unify-exercise (2026-06-26): generalize run://-only → ANY registered scheme (scheme()-aware), so a
+    # declared input addressing the dragnet (extraction://) — or any spine address — composes through the
+    # ONE resolver, not just run://. Regression-safe: bare names (scheme()→None) stay on the `a in ctx`
+    # branch byte-identical; run:// still matches (scheme()→"run"); the ONLY new behaviour is a registered-
+    # scheme address now counts as a supplied addressed input (verified: no existing role declares a
+    # non-run:// scheme literal in input_addresses).
     return [a for a in extras
-            if (a in ctx) or (isinstance(a, str) and a.startswith("run://") and store is not None)]
+            if (a in ctx) or (isinstance(a, str) and _scheme(a) is not None and store is not None)]
 
 
 def _is_default_input(role: "Role", ctx: dict, store) -> bool:
@@ -206,6 +212,12 @@ def _resolve_input_value(name: str, ctx: dict, store) -> Any:
                 f"run_role: declared input {name!r} is a run:// address but no store was passed — "
                 f"cannot resolve the addressed input (fail loud, never skip a declared input).")
         return resolve_run_ref(store, name)
+    # unify-exercise (2026-06-26): any OTHER registered scheme (extraction://, board://, decision://, …)
+    # resolves through the ONE resolver (reuse-don't-parallel; run:// keeps its resolve_run_ref head→content
+    # path above, byte-identical). A scheme that needs a store but got None fail-louds inside resolve_address
+    # (never a silent skip). A bare name (scheme()→None) still reads ctx[name] (KeyError = fail loud).
+    if isinstance(name, str) and _scheme(name) is not None:
+        return resolve_address(store, name)
     return ctx[name]
 
 
