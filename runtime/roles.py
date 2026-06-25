@@ -208,7 +208,7 @@ def _build_role(name: str, decl: dict) -> Role:
     # grain-axis with the freeze); (3) the coarse role's prompt MUST carry the non-authorable NEUTRAL_FRAGMENT
     # verbatim (D3: the author may add wording but can never remove neutrality). The deep checks (effective
     # field-set == {about,kind,touches} for coarse; fine ⊇ coarse) live in the roles acceptance test.
-    from contracts.dragnet_schema import DRAGNET_FAMILY as _DRAGNET_FAMILY, NEUTRAL_FRAGMENT as _NEUTRAL_FRAGMENT
+    from contracts.dragnet_schema import DRAGNET_FAMILY as _DRAGNET_FAMILY, DRAGNET_PROMPTS as _DRAGNET_PROMPTS
     if rid in _DRAGNET_FAMILY:
         frozen = _DRAGNET_FAMILY[rid]
         if osch is not frozen:
@@ -222,11 +222,19 @@ def _build_role(name: str, decl: dict) -> Role:
                 f"role {rid!r}: dragnet-family roles may NOT declare schema_slot — grain is role-identity "
                 f"(dragnet_coarse|dragnet_fine|dragnet_design each have a frozen schema), never an authorable "
                 f"slot that could fork the locked superset. Remove schema_slot. Fail loud.")
-        if rid == "dragnet_coarse" and _NEUTRAL_FRAGMENT not in (decl.get("prompt_template") or ""):
+        # P5-hardened (2026-06-26): the prompt must EXACTLY MATCH the canonical frozen prompt — not merely
+        # CONTAIN the neutral fragment. A substring-presence check let an authored coarse row carry the
+        # fragment then negate it in trailing text ("…however, judge relevance") — the OPEN-1 negation
+        # bypass. Exact-match closes it BY-CONSTRUCTION for coarse AND fine (both neutral passes) + design:
+        # changing a dragnet prompt is now a deliberate committed edit to contracts/dragnet_schema.py (the
+        # non-authorable spine), never an authored row. Import the canonical: `from contracts.dragnet_schema
+        # import {COARSE,FINE,DESIGN}_PROMPT`.
+        if (decl.get("prompt_template") or "") != _DRAGNET_PROMPTS[rid]:
             raise ValueError(
-                f"role {rid!r}: the coarse role's prompt_template MUST carry the frozen D3 neutrality fragment "
-                f"verbatim ({_NEUTRAL_FRAGMENT!r}) — the neutral coarse worker is non-authorable (no relevance/"
-                f"topic judgement in stage-1). Wording may surround it but it can never be removed. Fail loud.")
+                f"role {rid!r}: dragnet-family prompt_template MUST be the frozen canonical prompt verbatim "
+                f"(contracts.dragnet_schema.DRAGNET_PROMPTS[{rid!r}]) — exact match, so the neutral/structural "
+                f"instruction cannot be negated by authored trailing text (D3 frozen by-construction, not by "
+                f"presence-check). Import the canonical constant; never inline-then-edit. Fail loud.")
     # RESOLVED-SLOTS (additive): thinking — per-role THINK-CONTROL, a resolve_slot value (a literal bool, or a
     # {select,cases}/AST dict resolving per coordinate). run_role reads it into its `think` (call param wins).
     # Light check (bool | dict). Absent ⇒ None (byte-identical: the call param / model default).
