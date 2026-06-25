@@ -45,47 +45,33 @@ from contracts.dragnet_schema import Coarse, Fine, Design, NEUTRAL_FRAGMENT
 _DEEPEN_KINDS = {"decision", "spec", "discussion"}            # the step-gate: these continue to fine
 
 
+# unify-exercise (2026-06-26): the bake now READS the dragnet extraction roles from the file-discovered
+# role registry (roles/dragnet_{coarse,fine,design}.py) — the registry rows are the SINGLE source, not an
+# in-code construction (closes the register-vs-decorative straddle). The rows' schemas are the FROZEN
+# contracts.dragnet_schema classes behind the _build_role field-freeze door, so configurability rides the
+# same registry as every other role while D1/D3 stay frozen. Cached (discovery is cheap, no model). A
+# missing row fail-louds (registry-is-truth: the role is PROTECTED and must exist).
+_DRAGNET_ROLE_REG = None
+
+
+def _dragnet_role(rid: str):
+    global _DRAGNET_ROLE_REG
+    if _DRAGNET_ROLE_REG is None:
+        from runtime.roles import RoleRegistry
+        _DRAGNET_ROLE_REG = RoleRegistry().discover([os.path.join(REPO, "roles")])
+    return _DRAGNET_ROLE_REG[rid]            # KeyError = fail loud (a missing protected dragnet row is a real error)
+
+
 def _coarse_role():
-    from runtime.roles import Role
-    return Role(id="dragnet_coarse", spec={}, prompt_template=(
-        f"Read the content and {NEUTRAL_FRAGMENT}.\n"
-        "Content:\n{utterance}\n\n"
-        "Return ONLY JSON: {\"about\": \"what this is in one phrase\", "
-        "\"kind\": \"decision|spec|discussion|digest|log|reference|other\", "
-        "\"touches\": [\"topic tags\"]}"
-    ), output_schema=Coarse)
+    return _dragnet_role("dragnet_coarse")
 
 
 def _fine_role():
-    from runtime.roles import Role
-    return Role(id="dragnet_fine", spec={}, prompt_template=(
-        "Extract a NEUTRAL deep representation of the content (describe only what it says).\n"
-        "Content:\n{utterance}\n\n"
-        "Return ONLY JSON: {\"summary\": \"1-2 sentence neutral summary\", "
-        "\"entities\": [\"named systems/files/concepts/people\"], "
-        "\"claims\": [\"assertions or decisions stated\"], "
-        "\"relations\": [\"e.g. 'X depends on Y'\"], "
-        "\"open_questions\": [\"unresolved threads, [] if none\"]}"
-    ), output_schema=Fine)
+    return _dragnet_role("dragnet_fine")
 
 
 def _design_role():
-    # visual-dna ONLY — extracts DNA's 2 design fields (criteria 2+5). `resolution` is DIMENSION-KEYED
-    # (composition's catch + DNA's named format 2026-06-22): each entry EXACTLY "<dim>:<context> → <value>"
-    # with <dim> ∈ {line, opacity, colour_role, shape} (the axes/design.py dims) so the resolver reads it
-    # back per-dimension — NOT a flat ambiguous tag-list. <value> = the design token/treatment it resolves to.
-    from runtime.roles import Role
-    return Role(id="dragnet_design", spec={}, prompt_template=(
-        "Extract the DESIGN BINDING of this visual/design content (describe only what it specifies).\n"
-        "Content:\n{utterance}\n\n"
-        "Return ONLY JSON with two fields:\n"
-        "  \"resolves_into\": [\"the design element/component/token this maps to — match keys for lookup\"],\n"
-        "  \"resolution\": [\"DIMENSION-KEYED context-points. Each entry EXACTLY in the form "
-        "'<dim>:<context> -> <value>' where <dim> is one of line|opacity|colour_role|shape, <context> is the "
-        "design situation it applies in, and <value> is the design token/treatment it resolves to. "
-        "Examples: 'shape:core -> octagon', 'colour_role:recommended -> gold', 'line:emphasis -> solid', "
-        "'opacity:less-realised -> 0.5'. Omit a dim if the content does not bind it.\"]}"
-    ), output_schema=Design)
+    return _dragnet_role("dragnet_design")
 
 
 def load_chunks(*, projects=None, since=None, until=None, limit=None, sample_step=None,
