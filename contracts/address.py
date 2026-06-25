@@ -141,7 +141,7 @@ additive (mirrors the vi-vision precedent); no record-shape or schema_ver change
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "clone", "mind", "exchange", "file", "project", "vi-vision", "decision", "image")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "clone", "mind", "exchange", "file", "project", "vi-vision", "decision", "image", "extraction")
 
 
 class Provenance(BaseModel):

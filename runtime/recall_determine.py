@@ -44,8 +44,16 @@ def read_extraction(source_address: str) -> dict | None:
     asset, _, cid = source_address[len("extraction://"):].partition("/")
     if not asset or not cid:
         return None
-    if asset not in _READ_CACHE:
-        path = asset_path(asset)
+    path = asset_path(asset)
+    # mtime-keyed cache: a rebake rewrites the asset jsonl, so cache on (mtime,size) and rebuild when the
+    # file changes — else a long-lived Suite would serve a stale chunk after a rebake (the resolver branch
+    # built on this read must never return a stale record; staleness here is a real error, not a hit).
+    sig = None
+    if os.path.exists(path):
+        st = os.stat(path)
+        sig = (st.st_mtime_ns, st.st_size)
+    cached = _READ_CACHE.get(asset)
+    if cached is None or cached[0] != sig:
         idx = {}
         if os.path.exists(path):
             for line in open(path):
@@ -54,8 +62,9 @@ def read_extraction(source_address: str) -> dict | None:
                     idx[str(r.get("chunk_id"))] = r
                 except Exception:
                     continue
-        _READ_CACHE[asset] = idx
-    return _READ_CACHE[asset].get(str(cid))
+        _READ_CACHE[asset] = (sig, idx)
+        cached = _READ_CACHE[asset]
+    return cached[1].get(str(cid))
 
 
 def topic_regex(topic_text: str):

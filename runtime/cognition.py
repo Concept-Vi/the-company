@@ -1167,6 +1167,28 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
         from runtime.decision_registry import compose_definition as _compose_definition
         _defn, _ = _compose_definition(row, marks)
         return _compose_state(_defn, marks)
+    if sch == "extraction":
+        # unify-exercise (2026-06-26) — the DRAGNET's extract-once asset joins the ONE addressed graph.
+        # extraction://<asset>/<chunk_id> → the full superset extraction record (about/kind/touches/summary/
+        # entities/claims/relations + chunk_id), the dragnet's READ leg. Before this, extraction:// rode a
+        # PARALLEL read path: recall_determine.read_extraction was called DIRECTLY from 3 sites (corpus tool
+        # op='read', decision_memory._extraction_text display, and the determine flow) — the one conspicuous
+        # exception to the single-resolver spine (P1 verified: NOT in SCHEMES, no branch). It now resolves
+        # HERE like board://·decision://. QUERY/ranking stays suite.query_corpus(space='extractions') — that
+        # is recall, not address resolution, and never becomes a branch. Mirrors cap:// EXACTLY: a registry-
+        # record read, RAISE on None (read_extraction returns None for unknown/missing — S3 fail-loud
+        # restored; a chunk the query just ranked but read can't find is a real staleness error, never a
+        # silent empty). LAZY import (resolver-target; keeps this dispatcher's module-load graph clean).
+        from runtime.recall_determine import read_extraction as _read_extraction   # lazy: avoids module-load coupling
+        rec = _read_extraction(addr)
+        if rec is None:
+            raise ValueError(
+                f"resolve_address: no extraction record for {addr!r} — the asset "
+                f"(.data/store/extractions/extractions-<asset>.jsonl) has no chunk with that id, or the "
+                f"address is malformed (want extraction://<asset>/<chunk_id>). registry-is-truth: the baked "
+                f"asset is the only source. Fail loud, never a silent empty (a ranked-but-unreadable chunk "
+                f"is a real staleness error — rebake the asset).")
+        return rec
     if sch is not None:
         # a REGISTERED scheme (blob/vec/ui/code/exchange) with no content-resolver wired into this
         # dispatcher yet (exchange:// is register-but-defer — recollection's capture/recall lane owns it).
