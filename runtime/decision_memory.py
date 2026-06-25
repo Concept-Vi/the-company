@@ -208,7 +208,6 @@ def _clean_meaning(rec: dict, *, max_chars: int = 600) -> str:
     return ""
 
 
-_EXTRACTION_CACHE: dict = {}
 
 
 def _extraction_text(source: str, *, max_chars: int = 600) -> str:
@@ -216,26 +215,14 @@ def _extraction_text(source: str, *, max_chars: int = 600) -> str:
     (about + summary + claims), so the 'extractions' grounding space (when added to the decision spaces)
     renders real meaning, not a bare address. Reads the extraction jsonl (cached per asset). The ENABLER for
     grounding decisions on the extraction layer; inert until 'extractions' is in the grounding spaces."""
-    import os as _os, json as _json
+    # unify-exercise (2026-06-26): route onto the canonical reader (recall_determine.read_extraction) — the
+    # SAME decoder the extraction:// resolver branch wraps — so no second decode/cache for the extraction
+    # layer survives. This is the DISPLAY path: None-tolerant (return "" on a missing chunk), NEVER raise
+    # (the resolver's read leg is the fail-loud one; surfacing meaning must degrade clean, not crash a render).
+    from runtime.recall_determine import read_extraction as _read_extraction
     if not source.startswith("extraction://"):
         return ""
-    rest = source[len("extraction://"):]
-    asset, _, cid = rest.partition("/")
-    if not asset or not cid:
-        return ""
-    if asset not in _EXTRACTION_CACHE:
-        path = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
-                             ".data", "store", "extractions", f"extractions-{asset}.jsonl")
-        idx = {}
-        if _os.path.exists(path):
-            for line in open(path):
-                try:
-                    r = _json.loads(line)
-                    idx[str(r.get("chunk_id"))] = r
-                except Exception:
-                    continue
-        _EXTRACTION_CACHE[asset] = idx
-    r = _EXTRACTION_CACHE[asset].get(str(cid))
+    r = _read_extraction(source)
     if not r:
         return ""
     parts = [r.get("about", ""), r.get("summary", "")] + (r.get("claims") or [])[:3]
