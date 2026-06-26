@@ -137,6 +137,57 @@ ok("clone_at passes model + fallback into the /spawn body (Fable-era resume fix)
    spawn_body.get("model") == "opus" and spawn_body.get("fallback") == ["sonnet", "haiku"]
    and cm.get("model") == "opus")
 
+# PROVIDER PASSTHROUGH (ollama-native company-model backend, 2026-06-16): provider flows into the /spawn
+# body so the supervisor's _provider_env points the child CC at ollama :11434. Threaded beside model.
+spawn_body_p = {}
+def _spy_body_p(path, body=None, method="POST", timeout=30):
+    if path == "/spawn":
+        spawn_body_p.update(body or {})
+        return 200, {"session": {"id": "as-p"}}
+    return 200, {"sessions": [{"id": "as-p", "state": "idle"}]}
+cc_clone._sup = _spy_body_p
+cp = cc_clone.clone_at(src, "compact:1", description="ollama clone", provider="ollama",
+                       model="kimi-k2.7-code:cloud")
+# provider threads into /spawn; the MODEL is now context-size-aware-picked (TIM RULE) — kimi for a small
+# ctx, deepseek-v4-flash for a big one. (Here the mocked materialize new_path doesn't exist → estimate-fail
+# → the safe big model; the real kimi-vs-flash split is tested directly below via _pick_ollama_model.)
+ok("clone_at passes provider into the /spawn body + model is pick-resolved (ollama)",
+   spawn_body_p.get("provider") == "ollama" and cp.get("provider") == "ollama"
+   and spawn_body_p.get("model") in (cc_clone.KIMI_OLLAMA_MODEL, cc_clone.OLLAMA_BIG_CTX_MODEL))
+
+# BYTE-IDENTICAL DEFAULT: provider omitted → NO 'provider' key in the body (the existing Anthropic path
+# is preserved exactly; the env-injection seam only fires when provider is set).
+spawn_body_np = {}
+def _spy_body_np(path, body=None, method="POST", timeout=30):
+    if path == "/spawn":
+        spawn_body_np.update(body or {})
+        return 200, {"session": {"id": "as-np"}}
+    return 200, {"sessions": [{"id": "as-np", "state": "idle"}]}
+cc_clone._sup = _spy_body_np
+cc_clone.clone_at(src, "compact:1", description="no provider")
+ok("clone_at omits the provider key when unset (byte-identical default)",
+   "provider" not in spawn_body_np)
+
+# CONTEXT-SIZE-AWARE OLLAMA MODEL PICK (TIM RULE 2026-06-16): kimi default → deepseek-v4-flash:cloud when
+# the clone's est. context > kimi's 256K window; explicit non-kimi honored; estimate-fail → safe big model.
+small = os.path.join(tmp, "small.jsonl")
+with open(small, "w") as f:
+    f.write(json.dumps({"message": {"content": [{"type": "text", "text": "hi there, short context"}]}}) + "\n")
+m, why = cc_clone._pick_ollama_model(small, None)
+ok("model-pick: small ctx → kimi default", m == cc_clone.KIMI_OLLAMA_MODEL, why)
+
+big = os.path.join(tmp, "big.jsonl")
+with open(big, "w") as f:
+    f.write(json.dumps({"message": {"content": [{"type": "text", "text": "x" * (4 * cc_clone.KIMI_MAX_CTX + 10000)}]}}) + "\n")
+m, why = cc_clone._pick_ollama_model(big, None)
+ok("model-pick: ctx > kimi window → deepseek-v4-flash:cloud (1M)", m == cc_clone.OLLAMA_BIG_CTX_MODEL, why)
+
+m, why = cc_clone._pick_ollama_model(big, "deepseek-v4-pro:cloud")
+ok("model-pick: explicit non-kimi honored (never auto-overridden, never auto -pro)", m == "deepseek-v4-pro:cloud", why)
+
+m, why = cc_clone._pick_ollama_model("/no/such/path.jsonl", None)
+ok("model-pick: estimate-fail → safe big model (deepseek-v4-flash)", m == cc_clone.OLLAMA_BIG_CTX_MODEL, why)
+
 import shutil
 shutil.rmtree(tmp, ignore_errors=True)
 

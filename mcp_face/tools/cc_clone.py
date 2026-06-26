@@ -35,11 +35,13 @@ def register(mcp, suite):
     def cc_clone(op: Literal["clone", "msg", "onboard", "list", "end", "prepare", "resolve"],
                  source: str = "", at: str = "", clone: str = "", message: str = "",
                  description: str = "", cwd: str = "", model: str = "", fallback_model: str = "",
-                 fleet: bool = False, phase: str = "full", address: str = "", timeout: float = 180) -> dict:
+                 provider: str = "", fleet: bool = False, phase: str = "full", address: str = "", timeout: float = 180) -> dict:
         """Clone a Claude Code session AS IT WAS at a past moment and talk to / onboard that past context.
 
           op="clone"   — `source` (.jsonl) + `at` ('compact:N'|'uuid:..'|'ts:..') -> live supervised clone.
                          Optional `model`/`fallback_model` to substitute an unavailable era-model (Fable→opus).
+                         Optional `provider`: '' / 'anthropic' (default) = host Anthropic account; 'ollama' =
+                         a company/ollama model via OLLAMA-NATIVE :11434 (pair with model='kimi-k2.7-code:cloud').
           op="msg"     — `clone` (handle) + `message` -> the clone's reply from its past-point context.
           op="onboard" — `clone` (one) or `fleet`=true (all live) -> reflect-before-brief onboarding;
                          `message` (optional) = the bring-current brief sent AFTER the era-reflection.
@@ -60,7 +62,8 @@ def register(mcp, suite):
                                      "('compact:N' | 'uuid:<id>' | 'ts:<iso>').")
                 fb = [m.strip() for m in fallback_model.split(",") if m.strip()] or None
                 return {"op": "clone", **cc.clone_at(source, at, description=description, cwd=cwd or None,
-                                                     model=model or None, fallback_model=fb)}
+                                                     model=model or None, fallback_model=fb,
+                                                     provider=provider or None)}
             if op == "msg":
                 if not clone or not message:
                     raise ValueError("cc_clone(op='msg') needs `clone` (handle/session) and `message`.")
