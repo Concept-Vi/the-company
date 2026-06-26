@@ -27,3 +27,23 @@ mcp_registration_debug.log
 ops/cli/telemetry.jsonl
 .adv.log
 .loop.log
+
+# Connector boundary credentials — secret, live out-of-tree (chmod 600). NEVER commit.
+.boundary.env
+*.boundary.env
+
+# local CD verify drive handle (local throwaway test creds)
+.cd-drive.sh
+*.cd-drive.sh
+.cd-drive.env
+*.cd-drive.env
+
+.cd-history.sh
+*.cd-history.sh
+
+# Tailscale Funnel / connector TLS cert + private key — secret, live out-of-tree. NEVER commit.
+# (the .key is a live EC private key; the .crt is its pair — managed on the box, not in git)
+*.ts.net.key
+*.ts.net.crt
+workstation001.tail777bc2.ts.net.key
+workstation001.tail777bc2.ts.net.crt
