@@ -1,0 +1,27 @@
+---
+id: icons/image (53)
+address: image://design-assets/icons/image (53)
+channel: design-assets
+path: icons/image (53)
+blob: blob://b2:ae3ed49e6dad3d5ca893ec55c8750168
+mime: image/png
+name: image (53)
+w: 0
+h: 0
+source: dragnet
+author_session: ch-3mpkjg3r
+created: '2026-06-22T12:26:26.477068+00:00'
+updated: '2026-06-22T12:26:26.477068+00:00'
+version: 1
+versions:
+- v: 1
+  blob: blob://b2:ae3ed49e6dad3d5ca893ec55c8750168
+  mime: image/png
+  w: 0
+  h: 0
+  author_session: ch-3mpkjg3r
+  alt: ''
+  created: '2026-06-22T12:26:26.477068+00:00'
+links: []
+---
+
