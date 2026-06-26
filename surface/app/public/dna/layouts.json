@@ -1,0 +1,945 @@
+{
+  "meta": {
+    "version": "layouts-4",
+    "note": "The LAYOUT face of the DNA — the recurring spatial forms (archetypes) the identity composes in. Each archetype = a frame (proportions referenced FROM grammar.json, never redeclared) + zones in reading order + typed slots (sockets that accept content kinds) + exactly one focal slot + a reflow policy. The sentence forms of the language: tokens are the words, grammar the rules, layouts the sentence patterns.",
+    "compositionality": "Deliberate: there is NO numeric priority. Emphasis is relational, never absolute — each frame declares ONE focal slot, valid only within that frame; reading/reflow order IS the zone/slot sequence; when frames nest (a plate is itself a frame), focality resolves nearest-scope-wins. Global ranks would couple slots to one use and break composition.",
+    "provenance": "DECK-FIRST, verified 2026-06-10: all 16 slides of '1Deck 1 Presentation.pdf' + the 4 lighter re-render screenshots read directly, cross-checked against the structural extraction of the 19 locked mockups. Evidence per archetype is tagged deck (primary) vs mockup (derived). Variants are COMPOSITIONS of archetypes, not new forms.",
+    "excluded": {
+      "var-11-calibration": "a reference sheet about the palette itself — not a reusable composition form"
+    },
+    "composition_in_the_wild": "The deck itself composes: s3 nests a TRIO of stat plates inside a split-bleed's content column; s11 = duo over a logo-wall band; s13 = stack carrying a pill row then a duo; s10 = trio over a pill band; the 'Uniquely Primed' screenshot = stack of duo + diagram band + stat foot. This is why focal/order stay frame-scoped.",
+    "dial_orthogonality": "The 4 screenshots are the SAME layouts re-rendered at a lighter warmth — layout archetypes and the warmth dial are independent axes.",
+    "layouts3_note": "layouts-3 (HARVEST-3): diagonal seams; the divider archetype; spreads (sequence-8); A4-portrait + web-scroll scale evidence — proportions held at three new scales."
+  },
+  "slot_types": {
+    "heading": {
+      "renders": "short display text — super-heading (ochre) or title (charcoal)"
+    },
+    "figure": {
+      "renders": "one large key number — the usual focal carrier (gold when focal)"
+    },
+    "label": {
+      "renders": "small caption under a figure"
+    },
+    "list": {
+      "renders": "2–4 telegraphic bullet rows with gold/bronze triangles"
+    },
+    "image": {
+      "renders": "warm material render / placeholder block"
+    },
+    "diagram": {
+      "renders": "nodes + links (hub-and-spoke, routing, network)"
+    },
+    "timeline": {
+      "renders": "month spine with stage boxes + dashed elbow connectors"
+    },
+    "stat-band": {
+      "renders": "horizontal row of small figure+label cells on a hatched ground"
+    },
+    "statrow": {
+      "renders": "raised chip holding a figure + side label, stacked or inline (deck s9/s15; var-2/9 inset boxes)"
+    },
+    "pills": {
+      "renders": "keyword pill row stepping the warm-metal axis"
+    },
+    "logo-wall": {
+      "renders": "optically equal partner-mark slots"
+    },
+    "connector": {
+      "renders": "the movement joint between frames — dashed transport line with socket+plug (deck s5), or a badge glyph with dashed drops (deck s6/s9)"
+    },
+    "arrow": {
+      "renders": "one large directional arrow bridging zones"
+    },
+    "band": {
+      "renders": "the grounding foot — ochre hatch band"
+    },
+    "table": {
+      "renders": "quiet rows, hairline rules, odd-row tint"
+    },
+    "mark": {
+      "renders": "the brand mark, small, bottom-right"
+    },
+    "plate": {
+      "container": true,
+      "internal": "plate-internal",
+      "renders": "a tinted surface that is ITSELF a frame — recursion is how the system composes"
+    },
+    "icon-strip": {
+      "renders": "a row of fine-line tool icons on a rail — often with an arrow lead-in or dashed lines converging to a plug (deck s2/s3/s4/s7)"
+    },
+    "person": {
+      "renders": "avatar + name + caption row — the bio device (deck s13/s14)"
+    },
+    "lead": {
+      "renders": "one or two telegraphic bullets as a horizontal row directly under the title (deck s7/s8)"
+    },
+    "check-list": {
+      "renders": "a list whose bullets are the PROVEN variant — gold check-boxes; things done, not claimed",
+      "evidence": "deck s9/s11 check chips; bullet glyph semantics (triangle = claim, check = done)",
+      "note": "minted types-1: molecules.slot_bindings had bound this key since registries-1 but the type was never declared — found by the first typed-edge resolution"
+    },
+    "options": {
+      "renders": "a set of decidable CHOICES — each {label, description, implication, recommended}; rendered as tappable option-buttons, the recommended one marked, one tap = the take (decide-in-surface). The gap the decision-card surfaced: the generic system had no vocabulary for choices-you-commit.",
+      "note": "minted for the decision-card archetype (the union's first composed product) — the operator decides IN the surface; the take writes back (registry-is-truth). Reusable by any archetype that offers a choice.",
+      "binds": {
+        "label": "the choice (human words)",
+        "description": "a one-line what-it-means",
+        "implication": "what it entails",
+        "recommended": "bool → flag it"
+      }
+    }
+  },
+  "archetypes": {
+    "session-card": {
+      "title": "Session card",
+      "about": "A decision-card SIBLING bound to a session record (catalog: channel-mesh nodes open this). Shows the session (title/where), what it is, its facts + state, and an open action; the shape slot carries an artefact organism (the session's surface/history). render_kind=slide; slots bind to session fields via slot_map; the host shapes summary/facts before render.",
+      "frame": "title-main-footer",
+      "render_kind": "slide",
+      "slot_map": { "where": "cwd", "name": "title", "is": "summary", "facts": "facts", "ground": "openLabel" },
+      "zones": [
+        { "id": "title", "slots": [
+          { "id": "where", "accepts": ["label"], "role": "kicker" },
+          { "id": "name", "accepts": ["heading"], "role": "title" }
+        ]},
+        { "id": "body", "slots": [
+          { "id": "is", "accepts": ["lead"], "role": "explanation" },
+          { "id": "vis", "accepts": ["image"], "role": "shape" },
+          { "id": "facts", "accepts": ["list"] }
+        ]},
+        { "id": "foot", "slots": [
+          { "id": "ground", "accepts": ["mark"] }
+        ]}
+      ]
+    },
+    "channel-view": {
+      "title": "Channel view (fabric mesh)",
+      "about": "The live fabric as a GRAPH — channels as nodes (weight←posts, warmth←recency), edges members→session-spokes · coordinator · promoted_to→lineage. render_kind=graph; the shape slot carries the network organism (v1: hubNetwork = fabric octagon hub + channel spokes weighted by posts; v2: a peer-mesh organism for the channel↔channel edges). Host shapes via DNA.faceRecord.channelGraph(rawChannels) → {nodes,edges,hub}, passes hubNetwork(nodes) as opts.visualDevice.",
+      "frame": "title-main-footer",
+      "render_kind": "graph",
+      "slot_map": { "where": "address", "name": "title" },
+      "zones": [
+        { "id": "title", "slots": [
+          { "id": "where", "accepts": ["label"], "role": "kicker" },
+          { "id": "name", "accepts": ["heading"], "role": "title" }
+        ]},
+        { "id": "body", "slots": [
+          { "id": "vis", "accepts": ["diagram"], "role": "shape" }
+        ]}
+      ]
+    },
+    "board-view": {
+      "title": "Board view",
+      "about": "The fabric board as GROUPED sections (by type, or state). render_kind=zones; the body shape slot carries DNA.org.boardGroups(boardRecord(rows).groups) — grouped cards, header+count + item rows (label←title, channel, state). Host shapes via DNA.faceRecord.boardRecord(rows,{groupBy}).",
+      "frame": "title-main-footer",
+      "render_kind": "zones",
+      "slot_map": { "where": "address", "name": "title" },
+      "zones": [
+        { "id": "title", "slots": [
+          { "id": "where", "accepts": ["label"], "role": "kicker" },
+          { "id": "name", "accepts": ["heading"], "role": "title" }
+        ]},
+        { "id": "body", "slots": [
+          { "id": "vis", "accepts": ["diagram"], "role": "shape" }
+        ]}
+      ]
+    },
+    "transcript-viz": {
+      "title": "Transcript constellation",
+      "about": "The corpus/transcript as a CONSTELLATION over a query (TRANSCRIPT-RECORD-SHAPE.md). render_kind=graph; the body shape slot carries DNA.org.constellation(transcriptRecord(apiResponse)). RAW = session star-nodes (brightness=relevance · size=match-density · colour=live-state); GROUNDED (?asset) = theme-stars + claim-satellites. Honest degrade (lexical fallback dimmed+flagged). Host shapes via DNA.faceRecord.transcriptRecord(/api/transcript-search response).",
+      "frame": "title-main-footer",
+      "render_kind": "graph",
+      "slot_map": { "where": "address", "name": "title" },
+      "zones": [
+        { "id": "title", "slots": [
+          { "id": "where", "accepts": ["label"], "role": "kicker" },
+          { "id": "name", "accepts": ["heading"], "role": "title" }
+        ]},
+        { "id": "body", "slots": [
+          { "id": "vis", "accepts": ["diagram"], "role": "shape" }
+        ]}
+      ]
+    },
+    "trio": {
+      "title": "Three plates",
+      "about": "Three siblings at near-equal lightness — told apart by hue, not darkness. The quiet workhorse.",
+      "frame": "title-main-footer",
+      "zones": [
+        {
+          "id": "title",
+          "slots": [
+            {
+              "id": "super",
+              "accepts": [
+                "heading"
+              ],
+              "optional": true
+            },
+            {
+              "id": "title",
+              "accepts": [
+                "heading"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "main",
+          "split": {
+            "ratio": [
+              1,
+              1,
+              1
+            ]
+          },
+          "slots": [
+            {
+              "id": "a",
+              "accepts": [
+                "plate"
+              ],
+              "surface": "warm"
+            },
+            {
+              "id": "b",
+              "accepts": [
+                "plate"
+              ],
+              "surface": "cool"
+            },
+            {
+              "id": "c",
+              "accepts": [
+                "plate"
+              ],
+              "surface": "nested"
+            }
+          ]
+        },
+        {
+          "id": "foot",
+          "slots": [
+            {
+              "id": "ground",
+              "accepts": [
+                "band"
+              ]
+            }
+          ]
+        }
+      ],
+      "focal": "main.a",
+      "reflow": {
+        "narrow": "stack"
+      },
+      "dials": [
+        "warmth",
+        "density"
+      ],
+      "evidence": [
+        "deck s10 (three media plates + pill band)",
+        "var-1-trizone v2",
+        "var-10-huetrio v2",
+        "var-4-rhythm v2 (figure variant + chip band)",
+        "var-6-imagecards v2 (image variant + pill band)"
+      ]
+    },
+    "duo": {
+      "title": "Two plates",
+      "about": "The comparison — before beside after. The optional joint makes the movement between them a slot, not decoration. A side may be a plate OR an open stack (deck s4/s7).",
+      "frame": "title-main-footer",
+      "zones": [
+        {
+          "id": "title",
+          "slots": [
+            {
+              "id": "title",
+              "accepts": [
+                "heading"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "main",
+          "split": {
+            "ratio": [
+              1,
+              1
+            ],
+            "joint": true
+          },
+          "slots": [
+            {
+              "id": "left",
+              "accepts": [
+                "plate",
+                "diagram",
+                "image"
+              ],
+              "surface": "cool",
+              "role": "before"
+            },
+            {
+              "id": "joint",
+              "accepts": [
+                "connector",
+                "mark"
+              ],
+              "optional": true,
+              "role": "movement"
+            },
+            {
+              "id": "right",
+              "accepts": [
+                "plate",
+                "diagram",
+                "image"
+              ],
+              "surface": "warm",
+              "role": "after"
+            }
+          ]
+        },
+        {
+          "id": "foot",
+          "slots": [
+            {
+              "id": "ground",
+              "accepts": [
+                "band"
+              ]
+            }
+          ]
+        }
+      ],
+      "focal": "main.right",
+      "reflow": {
+        "narrow": "stack"
+      },
+      "dials": [
+        "warmth",
+        "density"
+      ],
+      "evidence": [
+        "deck s5 (the dashed plug between the two media blocks — verbatim)",
+        "deck s11 (checklist plates + logo-wall band)",
+        "deck s15 (statrow plates)",
+        "deck s6 (image grids joined by a centre badge)",
+        "deck s4 (plate beside open stack)",
+        "var-15-currentsolution v2 (with joint)",
+        "var-9-truetone v2",
+        "var-2-nested v2",
+        "var-8-market v2",
+        "test-B-balanced-explanatory v2",
+        "var-7-comparison v2 (= duo over a logo-wall band)"
+      ]
+    },
+    "split-bleed": {
+      "title": "Weighted split, full-bleed",
+      "about": "A full-bleed zone carrying one big visual, beside a calm text column. The off-balance ratio weights one side without obvious asymmetry — the deck drifts 42/58–46/54, the same form.",
+      "frame": "split-hero-text",
+      "axis": "x",
+      "zones": [
+        {
+          "id": "zone",
+          "slots": [
+            {
+              "id": "visual",
+              "accepts": [
+                "diagram",
+                "timeline",
+                "image"
+              ]
+            }
+          ],
+          "surface": "warm",
+          "bleed": true
+        },
+        {
+          "id": "content",
+          "slots": [
+            {
+              "id": "super",
+              "accepts": [
+                "heading"
+              ],
+              "optional": true
+            },
+            {
+              "id": "title",
+              "accepts": [
+                "heading"
+              ]
+            },
+            {
+              "id": "points",
+              "accepts": [
+                "list",
+                "statrow",
+                "icon-strip"
+              ]
+            },
+            {
+              "id": "bridge",
+              "accepts": [
+                "arrow"
+              ],
+              "optional": true,
+              "role": "movement"
+            }
+          ]
+        }
+      ],
+      "focal": "zone.visual",
+      "reflow": {
+        "narrow": "stack"
+      },
+      "dials": [
+        "warmth",
+        "density"
+      ],
+      "evidence": [
+        "deck s2 (network field | title+bullets+icon-strip+consequence plate, ~45/55)",
+        "deck s3 (collage field | bullets + a nested TRIO of stat plates)",
+        "deck s12 (timeline cascade | title + stat groups, 42/58)",
+        "var-16-fullbleed v2 (46/54)",
+        "var-12-splitzone v2 (42/58)"
+      ],
+      "nests": "deck s3 nests a TRIO of stat plates inside the content column — frames inside frames, nearest-scope-wins"
+    },
+    "field": {
+      "title": "One field",
+      "about": "Title over a single full-width field — the whole canvas given to one diagram or table. One thing, said large.",
+      "frame": "title-main-footer",
+      "zones": [
+        {
+          "id": "title",
+          "slots": [
+            {
+              "id": "super",
+              "accepts": [
+                "heading"
+              ],
+              "optional": true
+            },
+            {
+              "id": "title",
+              "accepts": [
+                "heading"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "main",
+          "slots": [
+            {
+              "id": "field",
+              "accepts": [
+                "diagram",
+                "table",
+                "timeline"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "foot",
+          "slots": [
+            {
+              "id": "ground",
+              "accepts": [
+                "band"
+              ]
+            }
+          ]
+        }
+      ],
+      "focal": "main.field",
+      "reflow": {
+        "narrow": "stack"
+      },
+      "dials": [
+        "warmth",
+        "density"
+      ],
+      "evidence": [
+        "MOCKUP-ONLY: var-14-routingtree v2 — promotes deck s7's half-column routing device to a full canvas; no deck slide uses this form. A legitimate widening, kept — but it is the system's invention, not the source's."
+      ]
+    },
+    "grid": {
+      "title": "Grouped grid",
+      "about": "Density kept calm: many items gathered into tonal groups on a grid; a cell may span to hold a table. Read by tone, not by line.",
+      "frame": "title-main-footer",
+      "zones": [
+        {
+          "id": "title",
+          "slots": [
+            {
+              "id": "super",
+              "accepts": [
+                "heading"
+              ],
+              "optional": true
+            },
+            {
+              "id": "title",
+              "accepts": [
+                "heading"
+              ]
+            },
+            {
+              "id": "lead",
+              "accepts": [
+                "lead"
+              ],
+              "optional": true
+            }
+          ]
+        },
+        {
+          "id": "main",
+          "split": {
+            "ratio": [
+              1,
+              1,
+              1
+            ],
+            "rows": 2,
+            "span": {
+              "slot": "wide",
+              "cols": 2
+            }
+          },
+          "slots": [
+            {
+              "id": "a",
+              "accepts": [
+                "plate"
+              ],
+              "surface": "warm"
+            },
+            {
+              "id": "b",
+              "accepts": [
+                "plate"
+              ],
+              "surface": "cool"
+            },
+            {
+              "id": "c",
+              "accepts": [
+                "plate"
+              ],
+              "surface": "nested"
+            },
+            {
+              "id": "wide",
+              "accepts": [
+                "table"
+              ],
+              "surface": "cool"
+            },
+            {
+              "id": "d",
+              "accepts": [
+                "plate"
+              ],
+              "surface": "warm"
+            }
+          ]
+        },
+        {
+          "id": "foot",
+          "slots": [
+            {
+              "id": "ground",
+              "accepts": [
+                "band"
+              ]
+            }
+          ]
+        }
+      ],
+      "focal": "main.a",
+      "reflow": {
+        "narrow": "stack"
+      },
+      "dials": [
+        "warmth",
+        "density"
+      ],
+      "evidence": [
+        "deck s8 (3×2 media grid under a title + lead row)",
+        "var-5-cooldense v2 (tonal-group variant, one spanning table)",
+        "test-A-cool-precise v2 (2×2 stat grid + table)"
+      ]
+    },
+    "stack": {
+      "title": "Banded stack",
+      "about": "A vertical sequence of full-width bands, each a different content kind — the page reads as movements in a piece. Bands may hold a stat-band, a pill row, full-width plates, or a whole nested duo (deck s13/s14).",
+      "bands": [
+        {
+          "id": "title",
+          "share": 0.1
+        },
+        {
+          "id": "intro",
+          "share": 0.08
+        },
+        {
+          "id": "band",
+          "share": 0.12
+        },
+        {
+          "id": "main",
+          "share": 0.6
+        },
+        {
+          "id": "foot",
+          "share": 0.1
+        }
+      ],
+      "zones": [
+        {
+          "id": "title",
+          "slots": [
+            {
+              "id": "title",
+              "accepts": [
+                "heading"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "intro",
+          "slots": [
+            {
+              "id": "intro",
+              "accepts": [
+                "statrow",
+                "pills",
+                "list",
+                "icon-strip"
+              ],
+              "optional": true
+            }
+          ]
+        },
+        {
+          "id": "band",
+          "slots": [
+            {
+              "id": "stats",
+              "accepts": [
+                "stat-band"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "main",
+          "split": {
+            "ratio": [
+              1,
+              1,
+              1
+            ]
+          },
+          "slots": [
+            {
+              "id": "left",
+              "accepts": [
+                "plate"
+              ],
+              "surface": "warm"
+            },
+            {
+              "id": "center",
+              "accepts": [
+                "diagram",
+                "image"
+              ]
+            },
+            {
+              "id": "right",
+              "accepts": [
+                "plate"
+              ],
+              "surface": "cool"
+            }
+          ]
+        },
+        {
+          "id": "foot",
+          "slots": [
+            {
+              "id": "ground",
+              "accepts": [
+                "band"
+              ]
+            }
+          ]
+        }
+      ],
+      "focal": "band.stats",
+      "reflow": {
+        "narrow": "stack"
+      },
+      "dials": [
+        "warmth",
+        "density"
+      ],
+      "evidence": [
+        "deck s9 (chips | stat-band | two engine plates + centre geometry | foot)",
+        "deck s13 (pill row | duo of partner plates with person rows)",
+        "deck s14 (two full-width plates: bio band + terms band)",
+        "screenshot 'Uniquely Primed' (duo | diagram band | stat foot)",
+        "var-13-statband v2"
+      ]
+    },
+    "immersive": {
+      "title": "Immersive field",
+      "about": "No zones at all — a full-bleed warm RENDER as the ground (the CSS light pool is a stand-in), with a few floating slots whose positions vary per instance: the cover floats its title right, the contact page floats its card top-left. The warm pole; composition by placement, not bands.",
+      "zones": [
+        {
+          "id": "ground",
+          "slots": [
+            {
+              "id": "light",
+              "accepts": [
+                "image"
+              ]
+            }
+          ],
+          "bleed": true
+        },
+        {
+          "id": "float",
+          "loose": true,
+          "slots": [
+            {
+              "id": "brand",
+              "accepts": [
+                "heading"
+              ],
+              "at": "top-left"
+            },
+            {
+              "id": "mission",
+              "accepts": [
+                "heading"
+              ],
+              "at": "center-left"
+            },
+            {
+              "id": "info",
+              "accepts": [
+                "plate"
+              ],
+              "at": "top-right",
+              "optional": true
+            },
+            {
+              "id": "menu",
+              "accepts": [
+                "pills"
+              ],
+              "at": "bottom-left",
+              "optional": true
+            },
+            {
+              "id": "mark",
+              "accepts": [
+                "mark"
+              ],
+              "at": "bottom-right"
+            }
+          ]
+        }
+      ],
+      "focal": "float.mission",
+      "reflow": {
+        "narrow": "stack"
+      },
+      "dials": [
+        "warmth"
+      ],
+      "evidence": [
+        "deck s1 (cover — brand+title float right, menu pill bottom-left, gold hatch baseline)",
+        "deck s16 (contact — frosted info card top-left)",
+        "var-3-softlight v2",
+        "test-C-warm-immersive v2"
+      ]
+    },
+    "plate-internal": {
+      "title": "Inside a plate",
+      "about": "The recursive frame: every plate is itself a composition — heading, media, bullets. The same zone/slot mechanism at every scale is what makes the system compose.",
+      "scope": "plate",
+      "frame": "plate-internal",
+      "zones": [
+        {
+          "id": "heading",
+          "slots": [
+            {
+              "id": "head",
+              "accepts": [
+                "heading"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "media",
+          "slots": [
+            {
+              "id": "media",
+              "accepts": [
+                "figure",
+                "image",
+                "diagram",
+                "statrow"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "bullets",
+          "slots": [
+            {
+              "id": "points",
+              "accepts": [
+                "list"
+              ]
+            }
+          ]
+        }
+      ],
+      "focal": "media.media",
+      "reflow": {
+        "narrow": "none"
+      },
+      "dials": [
+        "density"
+      ],
+      "evidence": [
+        "deck s5 columns (heading → media → bullets, exactly)",
+        "deck s10 columns (media → bullets)",
+        "measured sub-zoning across var-1/2/9/15 (grammar.json proportion.archetypes.plate-internal)"
+      ]
+    },
+    "decision-card": {
+      "id": "decision-card",
+      "title": "Decision card",
+      "about": "A decision rendered as a screen: the QUESTION is the SINGLE hero (the thing being decided, in meaning-words), a calm what-kind line beneath it, the RHM's EXPLANATION (what this is / why) on a layered plate, an optional SHAPE visual (the decision's own infographic — the device that carries its semantic load), and the OPTIONS (the decidable choices, recommended marked) as the ordinal ledger at thumb reach. The DECIDED state once taken. The first archetype of the operator interface; the take writes back. Lands native in BOTH orientations (portrait stack · landscape/desktop question+shape-left / options-right) — the wide left column carries the supporting shape so a desktop isn't a stretched phone. NOTE: the legibility.name is NOT a second hero here — it is the slide-title / index handle (rendered by renderExplained), kept off the card head so the question is the one hero (kills the two-hero band).",
+      "frame": "title-main-footer",
+      "zones": [
+        {
+          "id": "head",
+          "slots": [
+            {
+              "id": "question",
+              "accepts": [
+                "heading"
+              ],
+              "role": "question"
+            },
+            {
+              "id": "is",
+              "accepts": [
+                "label"
+              ],
+              "role": "what-kind",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "id": "visual",
+          "surface": "nested",
+          "slots": [
+            {
+              "id": "shape",
+              "accepts": [
+                "diagram",
+                "timeline",
+                "table",
+                "image"
+              ],
+              "role": "shape",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "slots": [
+            {
+              "id": "explain",
+              "accepts": [
+                "lead"
+              ],
+              "surface": "cool",
+              "role": "explanation",
+              "optional": true
+            },
+            {
+              "id": "options",
+              "accepts": [
+                "options"
+              ],
+              "surface": "page",
+              "role": "decide",
+              "focal": true
+            }
+          ]
+        },
+        {
+          "id": "foot",
+          "slots": [
+            {
+              "id": "state",
+              "accepts": [
+                "label"
+              ],
+              "role": "decided",
+              "optional": true
+            }
+          ]
+        }
+      ],
+      "focal": "body.options",
+      "reflow": {
+        "narrow": "stack",
+        "wide": "question-left-options-right"
+      },
+      "dials": [
+        "warmth"
+      ],
+      "take": {
+        "from_slot": "options",
+        "writes": "decision_take"
+      },
+      "evidence": [
+        "the union's first composed product (Tim 2026-06-18); composition decision-card.schema.json 23524ad; the 5 hand-built explorations (pieces/decision-card) folded to look-reference"
+      ],
+      "slot_map": {
+        "name": "legibility.name",
+        "is": "legibility.is",
+        "question": "meaning",
+        "explain": "resolve:explanation_source",
+        "options": "options",
+        "state": "resolve:state"
+      },
+      "kicker": "Decision"
+    }
+  },
+  "corpus_additions": {
+    "diagonal_seam": "zone boundaries MAY SLANT (~10°): pitch-deck p2 (tangle vs text panel); company-info p2 slanted parallelogram image frames; capital-raise p5 'Short/Long Term' slanted region frames. A seam property, not a new archetype.",
+    "divider": "NEW ARCHETYPE: the divider — full-bleed immersive ground + a single word ('Appendix') — the chapter boundary at the full tier.",
+    "scale_evidence": "A4 portrait (vt-architects), landscape brochure (vt-res/gatehouse), web scroll (landing) — same proportions, archetypes recognizable at every scale; the scale-free claim survives its first multi-scale test.",
+    "evidence": "corpus-direct (HARVEST-3, 2026-06-12)"
+  }
+}

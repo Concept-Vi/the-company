@@ -1,0 +1,763 @@
+{
+  "meta": {
+    "version": "grammar-10",
+    "what": "The GENERATIVE GRAMMAR of the Design DNA — rules and ratios, not hardcoded values. Every length, size, proportion, alignment and colour is DERIVED from a base + a ratio + the dials + the role/context. Nothing here is a fixed pixel that couldn't be re-derived.",
+    "principle": "A value has no inherent identity; it is defined by its relations. (Tim's relativistic-coherence principle, applied to design: a 90px margin is not 'ninety' — it is 'eleven base-units'; a surface is not '#FEFCF7' — it is 'high-lightness, near-zero-chroma, hue=warmth(dial)'.)",
+    "provenance": "ratios derived from the pixel-sampled / measured values in dna/tokens.json + the locked v2 mockups. Each carries Observed (literal measured) vs Inferred (ratio deduced) tags. grammar-2 folds in crystallized rules from dna/substrate-rule-harvest.md (Tim's prior thinking, AI-harvested from the substrate) — kept only the structural/relational rules that fit this look; aesthetics + engine-mechanics excluded.",
+    "consumes": "dna/tokens.json (the sampled anchors). Emits concrete values via dna/resolve.mjs.",
+    "grammar3_note": "grammar-3 adds the page-level rules harvested DIRECTLY from the deck (dna/DECK-HARVEST-2.md, 2026-06-10): shape semantics, movement line-verbs, ordinal colouring, foreign-hue quarantine, chrome modes, texture placement, content atoms, motion attachment + 4 invariants. Deck-level (multi-page) rules live in dna/sequence.json, not here.",
+    "grammar4_note": "grammar-4 (expansions-1): ordinal guards (ramp monotonicity is BUILD-ENFORCED in factory/build.mjs; max-n chunking), invariant 'checker' classification (predicate | model | build — 'model' marks the first lints that need an AI judge), still-stands-alone motion invariant, bullet speech-act lint.",
+    "grammar5_note": "grammar-5: THE STORY-TREE LAW. Every artifact is a tree; the tree is complete at every cut (depth-freedom) AND every fragment is self-contained (entry-freedom). Relations ADD, they never CARRY — chains, conjunctions, connectors and motion enrich a reading but nothing depends on them (the motion end-frame rule is this law's special case). Any (node, depth) selection is a valid artifact.",
+    "grammar6_note": "grammar-6: PROVISION (the abundance laws). Diagnosis 2026-06-10: pieces generated from the rules came out at '80%' — frames/voice/colour right, substance thin — because the rules encoded the deck's DISCIPLINE (restraints) but not its GENEROSITY (provision). These laws state what a page must PROVIDE. The organism layer (dna/organisms.json + dna/icons.json + surface/runtime/organisms.js) is their material.",
+    "grammar10_note": "grammar-10 (HARVEST-3): gold-density as register dial; quarantine's two strategies + two carve-outs; ordinal-axis-as-time; emphasis channels; two new invariants (one-starred-chip, gold-affirmation)."
+  },
+  "base": {
+    "unit": 8,
+    "reference_frame": [
+      1600,
+      900
+    ],
+    "_rule": "Every length is unit × a step or a ratio. The reference_frame is the frame these were measured in — it is NOT a fixed canvas; proportions are fractions, so they hold at any frame size.",
+    "_class": "Observed (unit=8 in tokens.json)"
+  },
+  "signature_ratio": {
+    "value": 1.5,
+    "name": "the fifth",
+    "_rule": "1.5 recurs as the system's structural interval — it generates the radius steps AND the display-type steps. One interval, reused (universal composition).",
+    "_class": "Inferred — see scales.radius and scales.type.display derivations",
+    "tunable_range": [
+      1.25,
+      1.618
+    ],
+    "_tunable": "The ratio is itself a knob, not a constant. 1.5 is the anchor (the measured look); register/density slide it within [1.25 dense/precise … 1.618 editorial/immersive]. Tighter ratio = denser hierarchy; wider = more dramatic scale contrast. (harvest: modular scale with one tunable ratio.)"
+  },
+  "commensurability": {
+    "_rule": "Type and space are NOT two independent number sets — they share one root. A single base size (~16) sets body leading via line-height (×1.5 → ~24), and the spacing unit is that leading ÷ a small integer (24 ÷ 3 = 8). So the 8-grid and the type rhythm are commensurate multiples/divisors of one base, never magic numbers.",
+    "chain": "base ~16  ──×1.5──>  leading ~24  ──÷3──>  unit 8",
+    "_class": "Inferred (harvest crown-jewel: single-base commensurability) — reconciles base.unit=8 with the type scale under one source",
+    "_note": "this is why the unit and the type ramp feel related rather than arbitrarily chosen."
+  },
+  "scales": {
+    "space": {
+      "rule": "unit × step",
+      "unit": 8,
+      "steps": {
+        "compact": 3,
+        "snug": 4,
+        "standard": 5,
+        "spacious": 7,
+        "margin": 11
+      },
+      "emits": {
+        "compact": 24,
+        "snug": 32,
+        "standard": 40,
+        "spacious": 56,
+        "margin": 88
+      },
+      "measured": {
+        "pad_compact": 24,
+        "zone_gap": 34,
+        "pad_standard": 40,
+        "pad_spacious": 54,
+        "margin": 90
+      },
+      "_class": "Observed multiples-of-8 + Inferred step integers; emits match measured within ≤2px",
+      "_note": "spacing is never a raw number — it is a count of base-units. Steps trend {3,4,5,7,11} (an odd/near-prime climb), not linear.",
+      "vocabulary": {
+        "_what": "THE EXTENSIBLE ADDRESS SPINE (rule-core R1b machinery, Tim unparked 2026-06-13). 'steps' above are the NAMED semantic subset the resolver exposes (resolve.mjs reads steps[name]); 'counts' here is the COMPLETE set of unit-counts that generate the --dna-space-{count} CSS addresses the chrome uses and lint-space polices. One rule (unit × count), one source: add a count here → build-surface.mjs emits its address → lint-space polices it. No other edit.",
+        "rule": "unit × count → px ; address = --dna-space-{count}",
+        "counts": [0.375, 0.5, 0.625, 0.75, 0.875, 1, 1.125, 1.25, 1.375, 1.5, 1.625, 1.75, 1.875, 2, 2.125, 2.25, 2.375, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.75, 6.5, 6.75, 7, 7.5, 8, 8.75, 9, 9.25, 10, 10.5, 10.75, 11, 11.25, 12, 13.75, 15, 16.25],
+        "ingest_provision": {
+          "_what": "WHERE the source ingest (or Tim) writes the canonical FINE words. Tim: 'the ingest needs the machinery to be written into.' The deck's true fine spacing — fractional counts the chrome currently drifts across — is ADMITTED by adding the count(s) here; addresses + lint follow from the single edit.",
+          "status": "AWAITING canonical words (source ingest, or Tim's blessing of the proposal). The spine holds only the in-use integer counts, so generation is pixel-identical until words are admitted.",
+          "candidate_fine_counts": [0.5, 0.75, 1.5, 2.5],
+          "candidate_note": "PROPOSAL, NOT admitted. 0.5→4px (half-unit), 0.75→6px, 1.5→12px (the signature-ratio interval; already radius-md), 2.5→20px. Admitting them lets the off-scale chrome literals (R1 ledger ≈635) be addressed and snapped. The naming + the fractional-address convention are the open decision — see docs/campaigns/rule-core. DO NOT auto-admit: the canonical words are the ingest's / Tim's to set."
+        },
+        "_class": "machinery (R1b) — the extensible spine; 'steps' are its named aliases; the canonical fine words are ingest-derived"
+      },
+      "bonds": {
+        "_what": "THE MISSING RULE made explicit (R1b end-to-end; Tim 2026-06-13: 'the proportions are DNA; the dials just adjust whatever the rules are, and the rules come from the DNA'). A gap's size is NOT a chosen number — it DERIVES from the STRENGTH of the bond between the two things it separates. This is grammar's own law (meta_principles.meaning_as_difference + space_allocation: 'the interval IS the relationship signal; space is proportional to the strength of the grouping boundary'), finally stated as a resolvable mapping: bond → a unit-count. The live engine (surface/runtime/surface.js DNA.space) resolves px = unit × count(bond) × density(dial) × tier. The engine holds NO values; load a different DNA and the same engine resolves ITS bonds. The 'sibling : section = 1:4' that earlier floated free is now HERE, as loadable data.",
+        "rule": "px = unit × count(bond) × density × tier",
+        "axis": "bond STRENGTH is orthogonal to composition.relations (nesting/connection/override = relation TYPE — a nesting can be tight or loose). This ladder is the strength axis the space law names.",
+        "levels": {
+          "fused":     { "count": 0.5, "is": "within one atom — value+unit, icon+label; the tightest bond" },
+          "kin":       { "count": 1,   "is": "within a component — title→subtitle, a label and its field" },
+          "grouped":   { "count": 2,   "is": "siblings in a set — rows in a list, chips in a row" },
+          "sectioned": { "count": 3,   "is": "group to group within a zone — plate to plate (= the 'compact' step)" },
+          "zoned":     { "count": 5,   "is": "zone to zone — the major divisions (= the 'standard' step)" },
+          "framed":    { "count": 11,  "is": "the outer margin — content to canvas edge (= the 'margin' step)" }
+        },
+        "_seed_note": "SEEDED + FLAGGED for Tim — these counts are DATA, not code, and yours to tune. The ladder {0.5,1,2,3,5,11} is monotonic (tighter bond → smaller gap) and grounded: {3,5,11} REUSE existing step counts (compact/standard/margin — not a parallel set), {0.5,1,2} are the fine counts the chrome actually needs (unifies with vocabulary.ingest_provision.candidate_fine_counts). Retune any count → every gap that names that bond re-resolves live. Add/rename a bond → it's a new loadable word, no code change.",
+        "_class": "the relationship→count RULE (R1b end-to-end); values are DNA, loadable, Tim-tunable; resolved live by DNA.space"
+      }
+    },
+    "radius": {
+      "rule": "unit × signature_ratio^n",
+      "unit": 8,
+      "ratio": 1.5,
+      "n": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "emits": [
+        8,
+        12,
+        18,
+        27
+      ],
+      "measured": [
+        8,
+        12,
+        18,
+        26
+      ],
+      "_class": "Inferred ×1.5 geometric; matches measured within ≤1px — CLEAN",
+      "_note": "the corner softness is a geometric progression, not arbitrary steps.",
+      "addresses": { "sm": 0, "md": 1, "lg": 2, "xl": 3 },
+      "_addresses_note": "name → exponent n (radius = unit × ratioⁿ). The single source for the --dna-radius-{name} addresses build-surface emits; extensible (add a name→n).",
+      "harvested": [3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 16, 20, 22, 24, 28, 30, 32],
+      "_harvested_note": "the chrome's off-ramp radii (rollout sr-2, 'use whatever the hardcoded values are'). build-surface emits --dna-radius-{px}:{px}px for each — the harvested mirror, pixel-preserving; Phase-3 tuning reconciles these to the ratio scale (sm/md/lg/xl). 999 stays the exempt pill idiom."
+    },
+    "type": {
+      "display": {
+        "rule": "pivot × signature_ratio^n",
+        "pivot": 18,
+        "ratio": 1.5,
+        "n": [
+          0,
+          1,
+          2
+        ],
+        "emits": [
+          18,
+          27,
+          40.5
+        ],
+        "measured": {
+          "heading_section": 18,
+          "title_md": 28,
+          "title_lg": 40
+        },
+        "_class": "Inferred ×1.5 from an 18 pivot; matches measured within ≤1px — CLEAN",
+        "addresses": { "head": 0, "title": 1, "display": 2 },
+        "_addresses_note": "name → exponent n (size = pivot × ratioⁿ). The single source for the --dna-type-{name} display addresses build-surface emits; extensible."
+      },
+      "text": {
+        "rule": "reading-set — perceptual sizes clustered at the reading scale, NOT on the display ramp",
+        "values": {
+          "body": 15,
+          "label": 14,
+          "micro": 11
+        },
+        "_class": "Observed; deliberately off-ramp (reading comfort overrides the geometric scale below ~16px)"
+      },
+      "harvested": [6.5, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11.5, 12, 12.5, 13, 13.5, 14.5, 15.5, 16, 16.5, 17, 19, 20, 21, 22, 23, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 52, 54, 58, 60, 64, 120, 128],
+      "_harvested_note": "the chrome's off-ramp font-sizes (rollout sr-2, 'use whatever the hardcoded values are'), incl. sub-pixel sizes. build-surface emits --dna-type-{name}:{px}px where name = px with '.'→'_' (e.g. 9.5 → --dna-type-9_5). The harvested mirror, pixel-preserving; Phase-3 tuning reconciles these to the reading-set + display ramp."
+    }
+  },
+  "proportion": {
+    "rule": "Zones are FRACTIONS of the cross-axis that sum to ~1 (the remainder is inter-zone gap). Because they are fractions, they hold at any frame size — this is the core 'nothing hardcoded' move for layout.",
+    "archetypes": {
+      "title-main-footer": {
+        "parts": [
+          0.14,
+          0.72,
+          0.1
+        ],
+        "gap_remainder": 0.04,
+        "_note": "single-line title. Two-line (superhead+title) title grows the title band to ~0.20 and shrinks main — the look wins over the tidy fraction."
+      },
+      "split-balanced": {
+        "parts": [
+          0.5,
+          0.5
+        ]
+      },
+      "split-weighted": {
+        "parts": [
+          0.46,
+          0.54
+        ],
+        "_note": "the off-balance split — weights one side without obvious asymmetry"
+      },
+      "split-hero-text": {
+        "parts": [
+          0.46,
+          0.54
+        ],
+        "_note": "full-bleed zone | text column (var-16)"
+      },
+      "plate-internal": {
+        "heading": 0.1,
+        "media": 0.55,
+        "bullets": 0.35,
+        "_note": "sub-zoning inside a plate"
+      }
+    },
+    "text_column": {
+      "rule": "a text column's width derives from the optimal reading measure (45–75 characters), NOT from an equal grid division — the measure sets the column, the grid follows",
+      "_class": "Observed (harvest)"
+    },
+    "space_allocation": {
+      "rule": "whitespace is structural, not leftover (Ma): the space around an element is proportional to its importance and to the strength of its grouping boundary. Space replaces dividers; the interval IS the relationship signal. Outer margin is a first-class frame, sized from the same scale.",
+      "_class": "Observed (harvest)"
+    },
+    "_class": "Observed measured from deck + v2 mockups",
+    "_provenance": "title 14 / main 72 / footer 10 also confirmed by the visual-factory template record"
+  },
+  "composition": {
+    "rule": "There are exactly THREE ways one element relates to another — every layout relation is one of these, never ad-hoc coupling.",
+    "relations": {
+      "nesting": "containment — a child sits inside a parent and inherits its context (the plate inside the zone, the figure inside the plate)",
+      "connection": "lateral — one element's output becomes another's context; this is the MOVEMENT layer (arrow / dashed transport / plug / hub between zones)",
+      "override": "contextual reframing — a scope changes resolution for everything beneath it without changing the elements themselves (a register or warmth shift over a subtree)"
+    },
+    "hierarchy": {
+      "by_extreme_scale": {
+        "rule": "drive hierarchy with FEW elements at EXTREME scale ratios (one dominant ≈ 4–8× supporting), not many at moderate steps — one big figure + one small label reads instantly",
+        "_class": "Observed (harvest)"
+      },
+      "dense_shifts_to_weight": {
+        "rule": "in dense/precise contexts, hierarchy shifts from SIZE contrast to WEIGHT contrast — adjacent levels differ by a small size step but a clear weight step",
+        "_class": "Observed (harvest); ties to the density dial"
+      },
+      "orthogonal_encoding": {
+        "rule": "no single property double-encodes a level — if size already sets it, weight/colour do not also. Priority: size > weight > colour/opacity. Each visual dimension carries one distinct meaning.",
+        "_class": "Observed (harvest)"
+      }
+    },
+    "_class": "Observed (harvest: three composition mechanisms; generalises my movement-connectors into the 'connection' relation)"
+  },
+  "resolution": {
+    "rule": "How any value is resolved when several scopes could define it: walk UP the scope chain and take the FIRST definition found — nearest scope wins. No specificity, no cascade ordering, no priority maths. The DNA root supplies defaults; anything closer overrides for everything beneath it. A generator never reads a fixed value — it resolves one by proximity.",
+    "scope_chain": [
+      "global / DNA-root",
+      "project",
+      "scope / context (incl. viewport, register)",
+      "task / instance"
+    ],
+    "context_is_a_scope": {
+      "rule": "responsiveness/context is NOT imperative branching (no isMobile flags) — the environment (frame size, register, modality) is itself a scope that supplies overrides; descendants re-resolve through the same nearest-wins walk",
+      "_class": "Inferred (harvest)"
+    },
+    "_class": "Observed (harvest: the single governing resolution rule; matches the visual-factory cascade global→project→user→runtime, first-found)",
+    "_note": "this is the operational core that makes 'nothing hardcoded' real — and it is exactly what the consuming factory already implements."
+  },
+  "meta_principles": {
+    "_what": "The roots beneath the rules — why the grammar takes the shape it does. (Tim's relativistic-coherence theory, recurring across the substrate.)",
+    "relativistic_identity": {
+      "rule": "Nothing has a fixed value; what anything IS emerges from where it sits, what flows through it, and what scope resolves around it. The generative root of the whole grammar — the formal statement of 'nothing hardcoded'.",
+      "_class": "Observed (harvest, stated repeatedly)"
+    },
+    "meaning_as_difference": {
+      "rule": "A value's significance is the DELTA between it and its inherited context — influence scales with difference. An override equal to the parent has zero meaning. This is the single root beneath TWO of the colour relations: tonal zoning works BECAUSE the surface deltas are tiny (low influence → below attention), and gold punctuation works BECAUSE its delta from the restrained field is large (high influence). Express values as offsets from context; treat 'same as inherited' as a no-op.",
+      "_class": "Observed (harvest) — unifies signal-economy + equal-lightness-zoning under one principle"
+    },
+    "identity_from_boundaries": {
+      "rule": "A thing is distinct because a boundary separates it from its surroundings; an element gets meaning from what contains it. Move it to a different container and what it IS changes, without its own properties changing. Position-in-hierarchy is a first-class determinant of appearance.",
+      "_class": "Observed (harvest)"
+    },
+    "scale_invariance": {
+      "rule": "The same relative-measurement rule applies at every scale — between properties within an element, between elements, and between element and whole. A proportion rule defined once holds recursively from pixel to component to full layout.",
+      "_class": "Observed (harvest); already realised in scale_tiers"
+    },
+    "dna_as_root": {
+      "rule": "The DNA constrains WITHOUT prescribing — it narrows the possibility space without collapsing it. Every concrete output is ONE valid collapse; the dials navigate the space. Specify the CLASS of acceptable forms (ratios, constraints, boundary conditions), never one fixed instance. This is the formal justification for 'it should widen' — the identity is a space, not a point.",
+      "_class": "Observed (harvest) — the theory behind the dials and the widening directive"
+    },
+    "any_part_is_a_whole": "any part is a whole — every node states its subtree completely at its own resolution; every fragment stands alone when extracted; reading depth is resolution; relations add, never carry",
+    "the_two_halves": "every meaningful output is specific values in two halves resolving into one thing: the CALCULABLE half (addresses, counts, sizes, colours, registers — derivable by rule, 'no value typed in') and the AUTHORED half (the claims, the words, the cut, the route — the resolver's input, never its output). The boundary between them MOVES with the reader: what the reader already holds can be addressed, what they lack must be inlined. (Tim, 2026-06-11; see dna/SPACES.md)"
+  },
+  "_engine_layer_note": "Some harvested rules are ENGINE mechanics, not identity grammar — the reactive cascade (topological regeneration, stale-hashing), registry unification (UI-units ≡ node-types), typed connectors, multi-dimensional placement. These belong to the consuming factory (vi-visual-dev), which already implements them, NOT to this DNA. Recorded here as a pointer so the boundary stays clean; see dna/substrate-rule-harvest.md for detail.",
+  "alignment": {
+    "rule": "Alignment is ROLE × LAYOUT-ARCHETYPE, never an absolute coordinate. The same element aligns differently depending on the composition it sits in.",
+    "by_role": {
+      "title": {
+        "symmetric": "center",
+        "split": "edge-left",
+        "_note": "centered for single-focus/stat/credible; left-edge-anchored in split/asymmetric layouts (var-12, var-16)"
+      },
+      "section_superhead": {
+        "any": "center"
+      },
+      "plate_heading": {
+        "any": "center"
+      },
+      "figure": {
+        "any": "center-in-plate"
+      },
+      "bullet": {
+        "any": "edge-left",
+        "marker": "at text left edge"
+      },
+      "mark": {
+        "any": "optical",
+        "_note": "the V mark is inset from the bottom-right corner by a margin-step, placed optically not mathematically"
+      }
+    },
+    "_class": "Inferred from the locked v2 mockups — this dimension was previously un-tokenised (the real gap)"
+  },
+  "color": {
+    "rule": "A colour is not a hex — it is a position on (lightness, chroma, hue) chosen by ROLE and AREA. Two relations govern everything:",
+    "relations": {
+      "equal_lightness_zoning": {
+        "rule": "surfaces share near-constant high lightness; they differ only by hue/chroma. Tonal zones read by hue-shift, NOT by darkness.",
+        "surface_lightness": "~0.98–0.99",
+        "surface_chroma_max": 0.012,
+        "_class": "Observed principle (pixel-sampled: warm/cool surfaces differ by hue at equal lightness)"
+      },
+      "signal_economy": {
+        "rule": "chroma is inversely proportional to area. Big area → ~0 chroma (a surface). Tiny area → high chroma (gold punctuation). Therefore gold can never be a fill — filling a large area with high chroma violates the relation.",
+        "_class": "Observed principle ('bigger area → lower intensity')"
+      },
+      "accent_ramp": {
+        "rule": "the accent family is a SINGLE warm-metal hue; role selects a position on its (lightness↓, chroma) ramp.",
+        "order": [
+          "gold = figures/active marks",
+          "ochre = section super-heading",
+          "bronze = plate authority",
+          "bronze-line = structure/icons/diagram",
+          "charcoal = titles/hierarchy"
+        ],
+        "_class": "Observed roles + Inferred single-hue-ramp structure"
+      },
+      "ordinal_axis": {
+        "rule": "a COLLECTION steps the warm-metal axis in order — position in the sequence = position on the axis (gold→ochre→bronze→charcoal); brightness maps to attention/proximity",
+        "evidence": "deck s10/s13 pill rows; s7 role-circles; s2 mesh fading gold-centre→bronze-periphery",
+        "guards": {
+          "monotonic_lightness": "the ramp must darken monotonically — luminance order is what makes a series READ as a series; enforced at build time (factory/build.mjs throws)",
+          "max_n": "ordinal colouring holds to ~7 items; beyond that, CHUNK into groups first (the grid archetype exists for this)"
+        }
+      },
+      "foreign_hue_quarantine": {
+        "rule": "non-axis hues may appear ONLY inside partner-evidence slots (logo-wall, person logos) — foreign colour enters as evidence, never as design",
+        "evidence": "deck s11/s13 (NVIDIA green, Google colours, Oracle red); semantic.success green only on money-flow arrows (screenshot)"
+      },
+      "chrome_modes": {
+        "rule": "two chrome modes keyed to the ground: on IMAGERY — dark-glass controls + frosted white cards; on PAPER — outlined light controls. This is also the document-surface vs product-surface line.",
+        "evidence": "deck s1/s16 (charcoal MENU pill, frosted info card) vs s2–s15 (outlined pills)"
+      }
+    },
+    "warmth_dial": {
+      "rule": "warmth ∈ [0,100] interpolates surfaces in OKLCH between cool and warm anchors at constant lightness (perceptual lerp, never sRGB).",
+      "anchors": "dna/tokens.json → warmth_anchors.{cool,warm}",
+      "_class": "Observed anchors; OKLCH interpolation = Inferred best practice (confirmed wanted by the visual-factory)"
+    }
+  },
+  "texture": {
+    "blueprint": {
+      "rule": "ghosted architectural plan-linework, corner-zoned (~top 30%), opacity 0.04–0.06",
+      "_class": "Observed"
+    },
+    "hatch": {
+      "rule": "−45° drafted hairline, pitch = unit ± 1 (8–10px), opacity by ground: 0.25–0.35 over warm, 0.40–0.50 over near-white",
+      "_class": "Observed; pitch ties to the base unit"
+    },
+    "_principle": "texture is a thin drafted signature, corner-zoned, never tiled over content"
+  },
+  "dials": {
+    "_targets_note": "RC-C (2026-06-14): each dial DECLARES what it modifies, by ROLE/family — not a hand-list. The engine reads targets.modifies (DNA.dialsFor) and applies the dial; it names no dial. A new token of a targeted family falls under the dial with no edit; a new dial enters by declaring its target. Dial POSITION is a knob; the transform (by) is the mechanism.",
+    "warmth": {
+      "type": "continuous",
+      "range": [
+        0,
+        100
+      ],
+      "default": 50,
+      "drives": "color.warmth_dial",
+      "targets": { "modifies": "surface-colour", "by": "interpolate cool↔warm anchors at constant lightness", "_consumed_by": "DNA.surfaces / injectVars" }
+    },
+    "density": {
+      "type": "named",
+      "rule": "density multiplies the space scale — rich tightens WARM elements (more info, never noise); spacious loosens.",
+      "multipliers": {
+        "spacious": 1.25,
+        "standard": 1.0,
+        "rich": 0.8
+      },
+      "_class": "Inferred (substrate: 'rich raises info, never noise')",
+      "targets": { "modifies": "spacing", "by": "multiply", "_consumed_by": "DNA.dialsFor → space / injectSpace (reads this, no hardcoded dial name)" }
+    },
+    "register": {
+      "type": "named",
+      "values": [
+        "immersive",
+        "tension",
+        "explanatory",
+        "credible",
+        "precise"
+      ],
+      "_note": "selects archetype eligibility + alignment defaults",
+      "targets": { "modifies": "archetype-eligibility", "by": "select" }
+    },
+    "modality": {
+      "type": "named",
+      "values": [
+        "layout",
+        "image",
+        "copy"
+      ],
+      "targets": { "modifies": "mode", "by": "select" }
+    },
+    "polarity": {
+      "type": "named",
+      "values": [ "light", "dark" ],
+      "default": "light",
+      "targets": { "modifies": "surface-colour", "by": "invert lightness (signed axis on luminosity; magnitude preserved — |ΔL| unchanged, sign flipped)" },
+      "provenance": "Tim, Packet 01 Block I (un-deferred 2026-06-14: 'A and b'): 'inverting a scalar on an axis, direction being one'. PREDICTED-FROM-PRINCIPLE — repo-grep found no built artifact (the connectors' gather(in/out) is the law arriving early); Tim's words are the provenance.",
+      "_slice": "LUMINOSITY only (dark surfaces derive from light by lightness inversion, DNA.invertL). The HEART — depth inverting (shadow→glow, out→in) + the signed-axis generalization (what else carries hidden sign) — is deeper theory to develop WITH Tim (Packet 01 Block I). Held as a DIAL, decoupled from depth (Tim: 'this isn't a mode, it's a dial'); candidate 5th axis + hidden 6th (sign vs magnitude) — unconverged."
+    }
+  },
+  "scale_tiers": {
+    "rule": "Each tier re-bases the unit; ratios and proportions are unchanged, so the identity holds from poster to component. base_unit(tier) = unit × tier_factor.",
+    "tiers": {
+      "poster": 2.0,
+      "slide": 1.0,
+      "page": 0.875,
+      "section": 0.75,
+      "card": 0.625,
+      "component": 0.5
+    },
+    "reference_tier": "slide",
+    "_class": "Inferred — multi-scale by unit re-basing; proportions are scale-free by construction"
+  },
+  "invariants": [
+    {
+      "id": "accent-axis-only",
+      "applies_to": "any colour",
+      "predicate": "hue ∈ warm-metal family OR chroma≈0 (surface/ink) OR small-semantic-mark",
+      "message": "accent only on the warm-metal axis",
+      "checker": "predicate"
+    },
+    {
+      "id": "gold-never-fill",
+      "applies_to": "any element with gold",
+      "predicate": "gold_area_fraction < 0.02",
+      "message": "gold is punctuation, not a fill (signal economy)",
+      "checker": "predicate"
+    },
+    {
+      "id": "equal-lightness-surfaces",
+      "applies_to": "surfaces",
+      "predicate": "max_lightness_delta_between_surfaces < 0.03",
+      "message": "tonal zoning by hue at equal lightness, not by darkness",
+      "checker": "predicate"
+    },
+    {
+      "id": "title-charcoal",
+      "applies_to": "title",
+      "predicate": "color == accent.charcoal",
+      "message": "titles are charcoal, never pure black",
+      "checker": "predicate"
+    },
+    {
+      "id": "title-no-terminal-period",
+      "applies_to": "title",
+      "predicate": "!title.text.endsWith('.')",
+      "message": "titles never end in a period",
+      "checker": "predicate"
+    },
+    {
+      "id": "one-focal-point",
+      "applies_to": "composition",
+      "predicate": "count(high-chroma-or-largest-figure) == 1",
+      "message": "one clear focal point, generous space",
+      "checker": "predicate"
+    },
+    {
+      "id": "space-is-unit-multiple",
+      "applies_to": "any spacing",
+      "predicate": "value % base_unit ∈ {0, ±2}",
+      "message": "spacing derives from the base unit, not arbitrary px",
+      "checker": "predicate"
+    },
+    {
+      "id": "hatch-closure",
+      "applies_to": "any page",
+      "predicate": "page bottom edge carries the gold diagonal hatch ground line (paper AND imagery)",
+      "message": "every page closes with the hatch baseline",
+      "checker": "predicate"
+    },
+    {
+      "id": "movement-crosses-seams",
+      "applies_to": "zone boundaries",
+      "predicate": "elements overlapping a zone boundary ∈ movement layer (connector|badge|plug|arrow)",
+      "message": "only movement may cross a seam",
+      "checker": "predicate"
+    },
+    {
+      "id": "foreign-hue-quarantine",
+      "applies_to": "any colour outside the warm-metal axis & semantic marks",
+      "predicate": "parent slot ∈ {logo-wall, partner-evidence}",
+      "message": "foreign colour enters as evidence, never as design",
+      "checker": "predicate"
+    },
+    {
+      "id": "core-mark-rarity",
+      "applies_to": "faceted shapes",
+      "predicate": "count(octagon) ≤ 1 per page; facet-degree inversely proportional to frequency",
+      "message": "shape rarity mirrors gold rarity",
+      "checker": "predicate"
+    },
+    {
+      "id": "axis-ramp-monotonic",
+      "applies_to": "color.axis_ramp",
+      "predicate": "OKLCH lightness strictly decreasing across stops",
+      "message": "the ordinal ramp must darken monotonically",
+      "checker": "build"
+    },
+    {
+      "id": "ordinal-max-n",
+      "applies_to": "ordinally-coloured collections",
+      "predicate": "n ≤ 7, else chunked into groups",
+      "message": "ordinal colour blurs past ~7 — chunk first",
+      "checker": "predicate"
+    },
+    {
+      "id": "still-stands-alone",
+      "applies_to": "any animation",
+      "predicate": "the final frame satisfies all page invariants without the motion",
+      "message": "print/PDF collapse motion — the end frame must stand alone",
+      "checker": "predicate"
+    },
+    {
+      "id": "bullet-speech-act",
+      "applies_to": "bullet molecules",
+      "predicate": "glyph matches statement kind: triangle=claim, checkbox=completed fact",
+      "message": "a claim may not wear a checkbox",
+      "checker": "model"
+    },
+    {
+      "id": "cut-complete",
+      "applies_to": "any horizontal cut (titles-only, headings-only, focal-only)",
+      "predicate": "the cut reads as a complete telling at its own resolution",
+      "message": "every cut is complete — skimming is reading, not skipping",
+      "checker": "model"
+    },
+    {
+      "id": "row-complete-under-any-root",
+      "applies_to": "any bounded unit taken as root, any rank beneath it",
+      "predicate": "the same-rank items, read in written order, form a complete telling of the root at their grain",
+      "message": "every row is a story, under every root — deck titles chain, page zone-headings chain, zone labels chain",
+      "checker": "model",
+      "status": "derived-from-principle (2026-06-11, Tim) — generalizes title_chain and cut-complete strata to every root; verified only at deck root / title rank so far. See sequence.reading_axes."
+    },
+    {
+      "id": "purpose-recorded",
+      "applies_to": "every brief / artifact record (generation_ladder seed stage)",
+      "predicate": "the record carries subject_region + reader + occasion + purpose (dna/reader.json brief_schema)",
+      "message": "no purpose recorded, no judgment possible — 'good' is fit to a purpose, never absolute",
+      "checker": "predicate",
+      "status": "derived-from-principle (2026-06-11, Tim: \"'good' as an outcome is only relative to the specific purpose that specific thing was for\")"
+    },
+    {
+      "id": "no-teleport",
+      "applies_to": "any change between two views (movement, transition, or state — motion.json registers_of_change)",
+      "predicate": "the change is animated as its register with shared anchors carrying orientation; a hard cut with no shared anchor is a violation unless it is a deliberate bookend",
+      "message": "nothing teleports — the canvas is a place and changes are journeys on it",
+      "checker": "model",
+      "status": "tours-direct + Tim Geldard's direction (2026-06-11): 'meant to feel like movement, not teleporting — not a reload'"
+    },
+    {
+      "id": "change-budget",
+      "applies_to": "every hop (slide→slide, screen→screen, state→state)",
+      "predicate": "the landing view shares enough with the origin to re-orient AND differs enough to progress — neither a wasted hop nor a disorienting one",
+      "message": "budget the change: enough sameness to know where you are, enough difference to have gone somewhere",
+      "checker": "model",
+      "status": "tours-direct (Tim Geldard's virtual tours: point density follows rate-of-change of the view, not distance)"
+    },
+    {
+      "id": "siblings-agree",
+      "applies_to": "artifacts sharing a subject (dna/subject.json siblings)",
+      "predicate": "no contradiction across siblings — a figure stated in one equals the same figure in all; a coined term means one thing everywhere; claims agree",
+      "message": "siblings must not contradict — a contradiction between the company deck and the product deck is a credibility wound",
+      "checker": "model",
+      "status": "derived-from-principle (2026-06-11) — the first CROSS-ARTIFACT invariant; testable the moment two siblings exist in the system"
+    },
+    {
+      "id": "fragment-self-contained",
+      "applies_to": "any extracted node + its subtree (a slide, a plate, a couplet)",
+      "predicate": "the fragment is a complete self-contained story without its siblings or ancestors",
+      "message": "any part is a whole — fragments travel",
+      "checker": "model"
+    },
+    {
+      "id": "chain-additive",
+      "applies_to": "all chain devices (title conjunctions, connectors, motion, motif recurrence)",
+      "predicate": "removing the chain device loses momentum but never sense",
+      "message": "relations add, never carry",
+      "checker": "model"
+    },
+    {
+      "id": "zone-anchored",
+      "applies_to": "argue/show/prove pages",
+      "predicate": "≥1 tonal surface (zone or band) reaches the canvas edge",
+      "message": "compose with zones, not floating cards",
+      "checker": "predicate"
+    },
+    {
+      "id": "diagram-atmosphere",
+      "applies_to": "any diagram organism",
+      "predicate": "carries ambient + primary + detail layers",
+      "message": "a diagram is a world, not a legend",
+      "checker": "model"
+    },
+    {
+      "id": "evidence-density-prove",
+      "applies_to": "prove-register pages",
+      "predicate": "count(distinct figures) ≥ 4",
+      "message": "evidence arrives dense — one star, several supporting",
+      "checker": "predicate"
+    },
+    {
+      "id": "nesting-exercised",
+      "applies_to": "credible/prove plates",
+      "predicate": "≥1 inset level inside the plate (statrow, nested box, chip)",
+      "message": "exercise the recursion — plates contain",
+      "checker": "predicate"
+    },
+    {
+      "id": "one-starred-chip",
+      "applies_to": "chip rows / value chips",
+      "predicate": "at most one chip in a row carries the gold star (the focal value)",
+      "message": "one star per row — signal economy on chips",
+      "checker": "predicate",
+      "status": "corpus-direct (HARVEST-3, 2026-06-12) — 15p p6,p7 (Accessible★ alone among four)"
+    },
+    {
+      "id": "gold-affirmation",
+      "applies_to": "comparison matrices / check-cross grids",
+      "predicate": "affirmation checks are GOLD (brand), negation crosses muted red; status-success (sage) is reserved for live state, never for comparative affirmation",
+      "message": "in comparisons the brand affirms in gold — sage is for status, not victory",
+      "checker": "predicate",
+      "status": "corpus-direct (HARVEST-3, 2026-06-12) — vt-arch p2; landing p2,p3"
+    }
+  ],
+  "shape": {
+    "rule": "shape carries entity TYPE; the more faceted the shape, the rarer it must be (signal economy in geometry)",
+    "semantics": {
+      "octagon": {
+        "means": "the core itself",
+        "rarity": "at most once per page — usually once per DECK",
+        "evidence": "deck s4 (the V hub, the deck's only octagon)"
+      },
+      "hexagon": {
+        "means": "an engine / named subsystem",
+        "evidence": "deck s6/s9 (Property Wizard badge)"
+      },
+      "diamond": {
+        "means": "an engine / named subsystem",
+        "evidence": "deck s6/s9 (Vi badge)"
+      },
+      "circle": {
+        "means": "people, roles, nodes, avatars — always",
+        "evidence": "deck s2 mesh, s4 ring, s7 roles, s13 portraits"
+      },
+      "rounded-rect": {
+        "means": "content: plates, chips, stages",
+        "radius": "from radius scale (unit × ratio^n)",
+        "evidence": "everywhere"
+      }
+    }
+  },
+  "movement": {
+    "rule": "dashed = in motion; solid hairline = structure. Dashed lines conjugate into three verbs.",
+    "verbs": {
+      "transport": {
+        "form": "dashed line, socket→plug terminals",
+        "evidence": "deck s5 (the plug between the two panels)"
+      },
+      "gather": {
+        "form": "dashed brackets converging to a single point",
+        "evidence": "deck s6 (under the grids → centre icon)"
+      },
+      "descend": {
+        "form": "dashed drop-lines from a row down to a plug/icon",
+        "evidence": "deck s4/s7/s9"
+      }
+    },
+    "arrowheads": {
+      "rule": "two-tone — bronze shaft, gold head: direction emphasised only at the terminal",
+      "evidence": "deck s12 elbows; var-14"
+    },
+    "seam_law": "only movement-layer elements (connectors, badges, plugs) may sit ON or cross a zone boundary — nothing else breaks the frame",
+    "evidence_seam": "deck s6/s9 — engine badges overlap both columns; var-13's -30px engine overlap"
+  },
+  "texture_placement": {
+    "blueprint": "underlay appears only NEAR TITLES (top corners), never under content — texture zones are role-bound",
+    "hatch": "the gold diagonal hatch is the page's closing ground line — every page, including over imagery",
+    "evidence": "deck s2–s15 corners; hatch on all 16 slides incl. the renders"
+  },
+  "atoms": {
+    "stat_couplet": {
+      "form": "gold figure LEFT, grey label RIGHT; units ride in the gold ('$430B+', '9.4 hrs/wk', '91x')",
+      "rule": "value precedes meaning, always",
+      "evidence": "deck s2/s9/s12/s14/s15"
+    },
+    "bullet_semantics": {
+      "triangle": "claims / features",
+      "checkbox": "things done / proven",
+      "rule": "the glyph declares the statement's kind",
+      "evidence": "deck s11 (checks) vs s2–s8 (triangles)"
+    },
+    "person_row": {
+      "form": "round photo + gold name + grey role caption",
+      "evidence": "deck s13/s14"
+    },
+    "coined_term": {
+      "form": "quotes + italic emphasis on first major use",
+      "evidence": "deck s5 — Our Solution: \"Virtual Hubs\""
+    },
+    "raised_chip": {
+      "form": "embossed white box holding a key figure, soft bottom shadow, side label",
+      "evidence": "deck s9/s15"
+    }
+  },
+  "motion": {
+    "rule": "motion attaches ONLY to movement-layer elements and media slots (diagram/image) — chrome never moves; the things that move are the things that MEAN movement",
+    "tokens": "durations in tokens.json motion_ms (path_draw 480ms anticipates dashed-line drawing)",
+    "evidence": "deck GIF placeholders sit exactly on diagram/media slots: s4, s5, s7 + screenshot"
+  },
+  "provision": {
+    "rule": "restraint shapes the page; PROVISION fills it — both are the identity. A page that honours every restraint but provides nothing reads as 80% of the source.",
+    "zones_not_plates": {
+      "rule": "compose by DIVIDING THE CANVAS INTO SURFACES — full-bleed tonal zones and edge-to-edge bands — not by floating cards on a void; plates live INSIDE zones",
+      "default": "argue/show lead with a full-bleed zone; prove leads with bands; precise may stay open paper",
+      "evidence": "deck s2 (left 45% tinted zone, edge to edge), s5 (two large panels ~75% of canvas), s12/s16 (full-height zones) vs gen3-v1's floating cards"
+    },
+    "diagram_atmosphere": {
+      "rule": "a diagram is a WORLD with three layers — ambient (the weather: a fading mesh, faint texture), primary (the argument: nodes + movement), detail (the grounding: labels, small strips) — a primary layer alone is a legend, not a world",
+      "evidence": "deck s2: person-mesh (ambient) + 5-circle core w/ crossing arrows (primary) + ~40 file-format strip (detail)"
+    },
+    "evidence_density": {
+      "rule": "evidence arrives DENSE: a prove page carries ≥4 distinct figures (one star + supporting); an argue page names its stakes in numbers",
+      "evidence": "deck s9 carries eight figures; s2's consequences box carries four"
+    },
+    "nesting_depth": {
+      "rule": "exercise the recursion: page → zone → plate → INSET → chip; credible/prove plates carry at least one inset level (statrow boxes, nested panels)",
+      "evidence": "deck s9 embossed boxes inside plates; s2 consequences panel inside the right zone; grammar's plate-internal was already encoded but unexercised"
+    },
+    "controlled_density": {
+      "rule": "the controlled-density device: MANY small quiet entries compressed into ONE calm box — density raised, noise not (the tension register's tool, but available everywhere)",
+      "evidence": "deck s2 file-extension strip (~40 entries), s2 consequences box, s3 stat trio"
+    },
+    "fill": {
+      "rule": "zones get FILLED — a void is not calm, it is absence; G3 ('kill the void') applies at the content scale, not just the page scale",
+      "evidence": "the v2 audit of generation 1–2 killed page voids; gen3-v1 reintroduced them inside plates and rows"
+    },
+    "iconography": {
+      "rule": "fine-line icons are a TEXTURE CHANNEL, not decoration — strips on rails, marks in plates, anchors in diagrams; a page with zero icons has a silent channel",
+      "evidence": "the 9-icon strip appears on four deck slides; small icons live in plates and boxes throughout"
+    }
+  },
+  "rules_corpus": {
+    "gold_density_register": "gold density RIDES THE REGISTER dial: marketing collateral runs gold-rich (gold section headlines, gold actives everywhere); investor decks run austere (gold = figures + focal only). Not a broken rarity law — a dial. [product corpus vs deck corpus]",
+    "quarantine_strategies": "TWO ways to handle foreign marks: (1) true hues confined to logo/partner strips; (2) RE-SKIN functional foreign marks into the axis (bronze social icons, company-info p12). Plus two carve-outs: evidence screenshots keep their hues (content, not design — 17p p3 collage); role_hues are a sanctioned product family (tokens.color.role_hues).",
+    "ordinal_axis_as_time": "the metal axis encodes TEMPORAL DISTANCE: gold = now/near, bronze = later/far (15p p13 gold 3–18mo vs bronze 18–48mo frames; capital-raise p8 ramp-gradient time axes; charts use the ramp: pie p15 pitch-deck).",
+    "emphasis_channels": "four inline emphasis channels, in descending frequency: bold (key terms), italic (coined/captions/asides), gold (figures inline in sentences — numbers-are-sentences), underline (RARE — once in the corpus: 'Australia', pitch-deck p12).",
+    "evidence": "corpus-direct (HARVEST-3, 2026-06-12)"
+  }
+}
