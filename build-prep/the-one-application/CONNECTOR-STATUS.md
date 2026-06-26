@@ -47,7 +47,7 @@ Currently running (nohup, localhost-verified). **TODO (durability):** make it a 
 ## Funnel
 - Configured: `tailscale funnel --bg --yes --https=10000 8772` (public :10000 → local :8772). Status: `AllowFunnel:true`, listening.
 - Tim ENABLED Funnel on the tailnet (the one admin-console step only he could do).
-- Cert provisioned (`tailscale cert workstation001.tail777bc2.ts.net`).
+- Cert provisioned (`tailscale cert workstation001.tail777bc2.ts.net`). The Funnel/`tailscale serve` uses Tailscale's OWN internal cert store — no code reads a cert file. The manual `tailscale cert` EXPORT (the `.crt`/`.key` pair) lives OUT OF THE REPO at `~/.config/company/certs/` (key chmod 600), NOT in the repo root — do not run `tailscale cert` from `/home/tim/company` (it drops the secret key into the working tree; it's gitignored, but it belongs out-of-tree).
 - ⚠️ **OPEN: external routing not yet live** — TLS handshake hangs at Tailscale's funnel edge (`43.245.48.235:10000`). Likely propagation (funnel just enabled) or a `:10000` quirk. **Next step if still down: move the funnel to `:443`** (the standard port; currently held by the company-UI serve — would need a path-mount or port reshuffle).
 
 ## The connector URL (to hand Tim once external routing is live)
