@@ -385,3 +385,18 @@ Render-for-cognition (Tim: "his brain is the algorithm" — visual/spatial/tempo
 - The UN-CONSTRAINING method enforced (no preconception-importing instruction; full spread + the gap + open generativity).
 - FORM: kernel outputs render as cards/takes on the operator surface (never text-walls); feedback + elevation are operator gestures.
 - The company directories merge to ONE (the drift the dragnet surfaces).
+
+---
+
+## §FUTURE-CONVERGENCE-DRAGNET — project-spaces · Keepers · supabase builds · vi-visual→DNA migration (Tim 2026-06-21, PINNED for the future, NOT now)
+
+**Pinned:** `board://item-83b8283c` (a `request`, state open, channel-attached). Tim: *"pin it to a board or something, for the future… you don't need to do this now."* Park it as a channel-loop job; ride the dragnet rails when scheduled (after the operator-loop closure / on Tim's schedule). NOT on the current critical path.
+
+**What it maps** — a temporal + address-space + convergence MAP of the project-spaces / Keepers / supabase / vi-visual ecosystem (Tim's words preserved):
+1. **project-spaces** — everything (structure, data) in supabase.
+2. **Keepers + their builds** — in supabase.
+3. **time-periods + address-space position** — when each was built/active, WHERE it sits in the project address space.
+4. **the convergence** — "at some point the vi-visual-dev, the project-spaces, the vi-visual systems in supabase — merged together." How/when they merged into one.
+5. **DNA's slides + archetypes replacing wildcard's local vi-visual code** — the slides + archetypes being made in the DNA stuff (counterpart/design) that REPLACE the local vi-visual code (wildcard's project); the migration.
+
+**Substrate:** the existing dragnet rails (ops/dragnet_extract.py coarse→gate→fine + run_items/run_reduce + the landscape-dragnet pattern in build-prep/company-landscape/), fanned over BOTH supabase (project-spaces/Keepers/builds, time-periods) AND the codebase (vi-visual-dev · counterpart/design · wildcard's vi-visual). A SPECIFIC dragnet (this ecosystem's history+convergence), distinct from the popcorn certain-landscape (whole-company) — same machinery.

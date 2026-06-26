@@ -173,15 +173,82 @@ The surface an agent calls. Must be usable by ME + other Claude Code agents (MCP
 **D2 — progressive disclosure: HANDLES-FIRST + optional return-override.** Default returns compact handles (id + one-line gist + the P4 typed verdicts: relevant/current/confidence), a few hundred tokens; the agent expands only what it wants. A **return-format override** parameter (on the parametric core) lets a caller change what comes back (full content / the arc / raw). Raw always one hop down — where P6's lazy tool_results live. Makes the memory cheap enough to use CONSTANTLY (the point).
 
 **D3 — surfaces: ALL THREE.** MCP tools (the axis-addressed tools over the Company MCP — for me + any CC agent, the primitive surface) · recollection's **skill** (wraps the common "recall what's relevant" flow) · the **sub-agent** (the active loop from P4/P8 for deep pool/arc jobs). All obey the grounded default: easy path = judged + provenance-carrying; raw drill-down = a deliberate extra hop.
-### P8 — Agent skill
-_pending_
-### P9 — Modality
-_pending_
-### P10 — Capture
-_pending_
+### P8 — Proactive memory / injection / the active arm — DECIDED (2026-06-13)
+The part that flips "barely used" → load-bearing; Pillar 1's delivery. Today Tim has to ASK — the asking IS the friction.
+
+**D1 — both; proactive is a SECOND LAYER.** On-demand (P7 tools) = layer 1. **Proactive injection = layer 2**, sequenced separately (needs extra design); for Claude Code = **hooks** (SessionStart → floor injection; UserPromptSubmit → in-session injection). Yes to proactive, built as its own layer on top of the tools.
+
+**D2 — wave-timing (Tim's recommendation, minus one):**
+- **Floor at session start = THE KEYSTONE.** Every agent in every session starts already holding Tim's active principles + the standing state of this project = the persistent codebook = Pillar 1 delivered automatically. The fix for "every session resets and I re-explain myself."
+- **In-session, on-the-moment** injection (dense/conceptual moment → inject that thread's deep context, timed to need).
+- **DROPPED — pre-compaction snapshot** (Tim): redundant. The best pre-compaction info is already captured IN recollection, so re-inflation after compaction = just query the memory. The memory IS the continuity-across-compaction; no special snapshot.
+
+**D3 — relevance without noise: the SAME machine, mode-gated.** Proactive injection = a query the agent didn't type → classify(P3) → gather(P3) → judge(P4); only judged high-confidence / clearly-relevant handles injected (verdicts attached); conservative by default (floor + clearly-on-thread, never speculative dumps); **mode-gated** (heavier in directed/co, lighter in background); learns from `tim_correction` (a correction = wrong/missing context was present → policy improves — the introspective loop, convergence der.7).
+
+**D4 — deep sub-agent confirmed (+ skills).** The active loop (gather→judge→follow-up→assemble) from P4 = the **deep arm**, run as a sub-agent so it doesn't burn the main context. Three arms: P7 tools = shallow/precise · proactive injection = ambient · sub-agent = deep. **recollection also gets its own skills** wrapping these flows (Tim: "should also get skills") — consistent with §0.
+### P9 — Modality — DECIDED (2026-06-14)
+First-class content-kinds (mostly settled in P2/P6; one real decision — image handling):
+- **Text** — default.
+- **Code** — code lens (nomic-code + ColGrep, P2) + code→conversation link (P6).
+- **Images (screenshots/mockups) — BOTH** (Tim): visual fingerprint (VL lens, P2) AND text/layout extraction (layout-detector + OCR). Reason: Tim's visual material is text-bearing (UI labels, code-in-screenshots, diagram annotations) — "find the screenshot where that error showed" is a text question about an image.
+- **Documents / structured files** (PDFs, decks — the company-data era) — layout-detect → chunk → context-aware embed (pplx-context lens, P2).
+- **Voice / audio** — transcribe → text; spoken words become a normal unit (meaning is in the words; raw audio not retained unless a need arises). Capture mechanics → P10.
+Modality set confirmed complete.
+### P10 — Capture — DECIDED (2026-06-14)
+The front door; nothing downstream works on what's not caught. Capture decides the memory's blind spots — fatal for both pillars. (Convergence: triangulation/continuity only work if the substrate catches everything — that's where sessions converge.)
+
+**D1 — coverage: TOTAL, sidechains included, open to non-CC.**
+- **★ Agent sidechains captured (NON-NEGOTIABLE):** the sub-agent fan-out is where most of Tim's actual work happens; the existing lanes (Supabase sync, CI) SKIP sidechains — catastrophic for Tim specifically (he works almost entirely through agents). recollection MUST capture them. Pillar 2 ("know what was built") is impossible without them.
+- All sessions, all projects, total (not just recent/active).
+- Open edge: built so non-Claude-Code sources plug in (voice→STT, other tools, exports — the lobe-importer proves the pattern). Immediate target = Claude Code (where Tim's history + main work live).
+
+**D2 — timing: BACKFILL + LIVE.** One-time post-hoc backfill to bootstrap from all existing history (the episodic-memory archive already holds ~13,270 convs = a head-start) + live/streaming capture ongoing (Stop/tool hooks) so the memory is current WITHIN a session — required for P8 proactive injection + intra-session recall.
+
+**D3 — lanes: UNIFY.** Collapse the 3 overlapping ingestion paths (episodic SessionStart hook · Tim's SessionEnd→Supabase sync · lobe-importer) into ONE capture path — pluggable by source-type, registry-driven (sources declared, not coded). One clean front door. ("make each thing work, never route around" + one continuous process.)
+
+---
+**✓ QUESTION SEQUENCE COMPLETE — §0 + P1–P10 all decided (2026-06-13/14). The complete assembled design is below.**
 
 ---
 
-## IMPLEMENTATION PLAN
-*(assembled from the decisions once all sections are decided — sequencing, dependencies, model bindings, verification)*
-_pending_
+## THE COMPLETE DESIGN — recollection, assembled (2026-06-14)
+
+> The full best version, integrated. The per-section DECISIONS LOG above is the working record; this is the one coherent system. Governed by `~/company/build-prep/brain/CONVERGENCE-OBJECT.md` (the laws) and the two pillars. Build-order is **Tim's to set** — the dependency graph below informs it, it does not dictate it.
+
+### Foundation (the why)
+**Two pillars:** (1) identity continuity — agents already understand what Tim means, never re-explain; (2) cross-project omniscience — knows everything built, when, every scale (concept↔structure↔code), pools concepts across all time, does broad cross-project work. **The conversation store is the single primary source; all else is regenerable projection.** Convergence laws: information lives at structural∩semantic convergence (resistance = deviation); classification = positioning = addressing; registry-is-truth; no hardcoding (everything grown).
+
+### The data model
+- **Atoms** = events (message / tool_call / result) on a timeline — raw bedrock, nothing lost.
+- **Units** = a typed REGISTRY of multi-scale units (principle/concept statements · turn-context work units · conversation/session/project/intent-constellation rollups · …), each carrying addresses UP (unit ∈ session ∈ project, free from cwd) and ACROSS (to topic/concept/artefact). Units are traversals over atoms+links, computed per the query's axis — not one fixed unit.
+- **Links** (provenance graph) = mechanical skeleton (containment + crossings, exact/free) + semantic enrichment (cause-edges, cross-project concept links, typed + confidence-graded, high-stakes judged). **Identity = the connected graph; one continuous linking process.**
+- **Fingerprints** = multi-coordinate; each unit has many semantic positions: steerable-dense (by question-shape, Qwen3-Embedding), sparse (exact terms, bge-m3), code (nomic-code + ColGrep), visual (VL pair), context-aware (pplx-context); compression (pplx-0.6b) + CPU bulk (Granite) + 8B deep-pass. **Steering vocabulary MINED from the corpus** (not dev defaults). Models = swappable registry slots; everyday lenses co-reside in ~15.5 GB, 8B solo.
+
+### The pipeline (the flow)
+1. **CAPTURE (P10)** — total: all CC sessions **incl. agent sidechains**, all projects, open to non-CC sources; backfill (bootstrap from the ~13k existing archive) + live streaming; one unified pluggable capture path.
+2. **DISTILL (P5)** — 3 layers (summary · structured extraction · rollups), all grown/non-hardcoded; triggers = backfill + live + deep-pass + **interactive (directed/co modes)**; principles → candidate staging → **powerful-model ratification with Tim** (the powerful-model seat can be me-via-MCP or in-app).
+3. **PLACE/EMBED (P2)** — the multi-lens fingerprinting above.
+4. **LINK (P6)** — build the provenance graph; tool_results kept LAZY (keyed, fetched on demand, not distilled).
+5. **GATHER (P3)** — decompose Tim's input → threads → registry-typed classification at ~120 concurrency (Classification Law: 1 axis / 2 extremes / 3–5 even bins / progressive chains) → typed lookups by block-type → two modes: top-k + gather-all-and-aggregate (pooling across time).
+6. **JUDGE (P4)** — the judgment layer: proofreader (CPU, always) → set-reader (shortlist) → jury (4B, wakes on ambiguity, rule-driven, routed on question+result); an OPEN REGISTRY of judgments (junk-kill · supersession-on-time-axis · set-curation · visual · +more); the jury is a general machine (also "what should the agent ask?", directions, …); typed self-explaining verdicts (multiple per result).
+7. **RECALL — three arms:** shallow/precise = **P7 axis-addressed MCP tools** (parametric core, registry-driven, handles-first + override) · ambient = **P8 proactive injection** (hooks; floor-at-session-start = the keystone; in-session on the moment; same gather→judge machine, mode-gated, learns from `tim_correction`) · deep = the **P4/P8 sub-agent** (looping gather→judge→follow-up→assemble).
+8. **HEALTH (cross-cutting)** — the temperature scan (per-unit resistance = structural↔semantic distance) + the annealing/consolidation dream-phase (lowers corpus resistance: re-place drifted, split/merge categories, fold duplicates).
+
+### Surfaces & base
+MCP tools + recollection's own skills + the sub-agent + hooks — usable by Tim's agents (me + other CC sessions), not just internal. Base = **clone-as-sibling plugin "recollection"** (own data dir/skills/sub-agents, same MCP tool names), standalone now, absorbable into the Company later; own data dir survives plugin updates.
+
+### Build dependency graph (informs Tim's build-order; does NOT set it)
+- **Capture (P10)** is the root — and there's a head-start: episodic-memory's ~13k-conv archive is already captured, so backfill has material on day one.
+- **Data model (P1) + first embedding lens (P2)** = the substrate everything sits on.
+- **Distill (P5)** needs capture + embed. **Link (P6)** needs capture (mechanical ~free from existing tool_calls) + distill (semantic).
+- **Gather (P3) + Judge (P4)** need embed + links. **Recall arms** need gather+judge; **proactive (P8 layer-2)** is explicitly sequenced after the on-demand layer.
+- A dependency-valid PHASING (a natural order, not a mandate): **A** clone base + unified capture + backfill + unit/address model + first lens → **B** distillation + provenance links + steering-mining → **C** gather + judge + P7 tools (first usable recall) → **D** sub-agent + proactive hooks + skills → **cross** dream-phase once there's volume.
+
+### Build-time directives (Tim, standing)
+- Before building ANY embedding/semantic work: send **subagents through memory + previous transcripts FIRST** — recover prior decisions, don't start fresh ("we've already talked about it a lot").
+- **bge-m3 has ZERO priority** — one config of the loadout, NOT a ranked winner; no ranking exists. Use the full lens-set frame; embedder/loadout stays open.
+- Retrieval must be usable by **me + other Claude Code agents** (MCP/skill), not just internal.
+- No hardcoding anywhere (registry-driven); no versioning (update in place); commit to main, no branches.
+
+### Next step (Tim's call)
+Design is complete. Natural path to building: turn this into loop-prep (Completion Criteria + Implementation Guide; the Research Synthesis already exists across this folder + CONVERGENCE-OBJECT.md) → run the build loop. **Build-order / how-to-build is Tim's to set.**

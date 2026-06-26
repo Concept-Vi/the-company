@@ -155,7 +155,8 @@ Five readers traced the code (`reads/1`–`5`). The headline: **almost the entir
 - **D1 (store):** extend the Resolver Protocol with a **Postgres + pgvector backend**; one store-of-record, two namespaces (raw bedrock ‖ generated content). Schema carries over. *The one big build.*
 - **D2 (fate of substrate-mcp):** **harvest the machinery, retire the Chroma island, re-embed fresh.** Don't keep it running. (Its corpus is dormant generated content — regenerable.)
 - **D3 (raw volume):** all 75k exchanges become bedrock (no-MVP) — but **storage-backend-gated** and re-embed is an evicting phase, so this *sequences after D1*.
-- **D4 (embedder):** unify on **bge-m3 / 1024-dim now** (already shared), `qwen3-8B` as a later registry swap; the re-embed migration is mandatory regardless.
+> ⚠️ **SUPERSEDED 2026-06-13 by Tim's embedder directive:** bge-m3 is ONE unranked loadout config, NOT the default — there is no ranking yet; the embedder choice is OPEN (DEC-3). Resolve via the lens-set frame in [[project-recollection-design]], never default to bge. The line below is the pre-directive position, kept for provenance.
+- **D4 (embedder):** ~~unify on bge-m3 / 1024-dim now~~ (SUPERSEDED — see above); the re-embed migration is mandatory regardless of which embedder wins.
 - **D5 (memoirs):** still the external reference for **true consolidation + RRF-hybrid + PII** — exactly the net-new pieces substrate-mcp doesn't actually provide.
 
 ### New decisions the reads surfaced

@@ -62,6 +62,15 @@ BUILD: code imports/exports lifter · forms global/project/user scoping · optio
 
 NOTE: the current forms taxonomy (decision/log/prose/registry) is Tim's PLACEHOLDER ([[FORMS-ARE-PLACEHOLDER]]) — forms come FROM the coverage, defined to his principles AFTER we see what's there; don't lock them.
 
+## ★ MODEL-TIER ROUTING (grounded in the company's OWN SEM-research, Tim 2026-06-17 "use it all")
+Extraction-vs-judgment, empirically validated (build-prep/coherence/SEM-1/2/3 + SEMANTIC-LAYER):
+- **4B SWARM (resident :8000, ~32 concurrent) = the EXTRACTION/census tier.** Per-file digests + structural tagging + form/lifter recognition = bounded + schema'd + per-unit = its proven sweet spot. ★ Use json-SCHEMA structured output (not prompt-only) — the reliability key. It is a HIGH-RECALL PRE-FILTER, NOT an adjudicator; it can't do open cross-repo discovery.
+- **JUDGMENT/CONFIRM tier (cloud kimi/deepseek, or local nemotron-30B) = confirms the swarm's output.** "Schema+jury reduce noise but can't guarantee truth → a stronger-model confirmation is the necessary keystone." The synthesis/judge steps run here.
+- **EMBEDDINGS (pplx :8007) + RERANKER (jina :8008, CPU/0-VRAM)** = recall/neighbour/coverage-marker — already on, free precision.
+- **OLLAMA CLOUD (kimi/deepseek-flash)** = off-card mid tier + clones + build-brain (deepseek-flash for >256K).
+- ★ #71 (model-routing) is the MECHANISM that makes this automatic (resolve_model: extractor→4B, judge/synth→cloud) — the census routes through it.
+- RESOURCE LAW: resident 4B + pplx-embed + CPU-reranker + cloud = FREE (no VRAM load). Loading nemotron / bge / jina-v4 / qwen3-8B contends for the card → CONSULT TIM before loading (or use cloud for judgment, no load).
+
 ## DECISIONS FOR TIM (the OKs)
 1. Green-light the FULL COVERAGE compute run (Phase 1 across the swarm/tiers) — real compute.
 2. Make this coverage→design→panel pipeline the STANDARD pre-build ritual (the executable form of scan-before-build)?

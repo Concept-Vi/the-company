@@ -1,0 +1,21 @@
+# store/vector_index.py:171 — fix the misleading empty-default-space note (the trap the lead hit).
+# query_index returns this note when the queried index is empty. The OLD note blames the retired :8001
+# + says "fall back" — misleading: the records EXIST, just in SPACES, not the default/unspaced index.
+# Proposed by recollection (ch-83e2cque); apply at store/vector_index.py in the `if not corpus:` branch.
+
+--- OLD (store/vector_index.py:170-174) ---
+    if not corpus:
+        return {"ranked": [], "note": (f"the vector index is EMPTY ({_scope}) — it may have been built "
+                                       "while the embedder :8001 was down, or no item is embedded in this "
+                                       "space; no addresses to rank, the caller should fall back "
+                                       "(e.g. keyword/consult). Live population is the :8001-up follow-up.")}
+
+--- NEW ---
+    if not corpus:
+        _hint = (" — the DEFAULT/unspaced index holds almost nothing; the durable records live in SPACES: "
+                 "pass space='history' (cross-session discussion records) · 'common_knowledge' (comprehended "
+                 "content) · 'principles'/'worldview'/'topics' · 'repo' (the codebase). e.g. "
+                 "corpus(op='query', space='history', text=…).") if space is None else \
+                (f" — no item is embedded in {_scope} at this layer (emb={emb!r}); try another space or "
+                 "check the embedder is up (:8007).")
+        return {"ranked": [], "note": (f"the vector index is EMPTY ({_scope}){_hint} No addresses to rank.")}
