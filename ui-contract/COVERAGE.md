@@ -196,7 +196,7 @@ into two reasons — held apart, never conflated (CONTRACT-FORMAT §4.2). The ma
 | CC-20 | Cost Mgmt & Usage Tracking | BACKEND-GAP | cost-usage.md | supervisor DISCARDS result-event cost/usage (code-cited _turn_done) — clean adoption path |
 | CC-21 | Scheduled Tasks & Routines | BACKEND-GAP | routines.md | no cron/schedule/routine company face; cloud routines are Anthropic-resident |
 | CC-22 | Dynamic Workflows & Task Coordination | BACKEND-GAP | workflows.md | no /goal·/loop·channels company face (the LIVE parallel primitive is CC-09.2 consult-fan) |
-| CC-24 | Authentication & Account Mgmt | COVERED (building) | auth.md | CC-24.1 read = building (redacted method); CC-24.2/.3/.4 (relogin/logout/setup-token) = building — REOPENED consent-gated R3 host-config acts (Tim's sole-operator steer); proxying a DIFFERENT user's cred stays out (usage policy) |
+| CC-24 | Authentication & Account Mgmt | PLANNED | auth.md | VERIFIED 2026-06-13 (no auth tool in mcp_face, no /api/auth bridge route): NO real endpoint exists — auth.md itself says `status: planned` (GAP: no auth-status endpoint). The wrapper that once made it 'building' was removed (R1.4). The redacted-read + host-config acts are PLANNED (native via driving a real session); the 'building' claim here was stale + internally inconsistent with this file's own summary row. |
 | CC-26 | Terminal Config & Output Styling | BACKEND-GAP | output-style.md | no presentation-config writer; native /config output-style + /statusline |
 | CC-27 | Extensibility & Customization Patterns | BACKEND-GAP | extensibility-patterns.md | the chooser routing-table; no company face for the customization mechanisms |
 | CC-30 | CI/CD Integrations | BACKEND-GAP | ci.md | no CI scaffolding face; native GitHub Action / GitLab job, CI `claude -p` buildable but un-packaged |
@@ -211,7 +211,7 @@ into two reasons — held apart, never conflated (CONTRACT-FORMAT §4.2). The ma
 
 **8 of the 24 planned-only classes (CC-01·02·04·28·29·31·32·34) are ENTIRELY out-of-local-scope** —
 host/org boundaries, NOT buildable backend gaps. They are mapped-and-navigable (each routes to its
-native path with a reason), not work to schedule. CC-24 is now COVERED-building: the redacted read AND
+native path with a reason), not work to schedule. CC-24 is PLANNED (verified 2026-06-13: no real endpoint; auth.md=planned; the prior 'COVERED-building' was stale): the redacted read AND
 the operator's own credential acts (relogin/logout/setup-token) are reopened consent-gated R3 ops;
 only proxying a DIFFERENT user's credential remains out (usage policy). The remaining planned-only-or-
 mixed classes carry buildable company-backend gaps — this is the real F2–F8→backend build list. (NOTE:

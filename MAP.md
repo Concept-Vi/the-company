@@ -76,7 +76,7 @@ flowchart TD
 - **RHM verbs**: run, propose, build, consult, show, panel, extend, configure, load_voice, unload_voice, request_change
 - **modes**: listening, text-only, background, focus, walkthrough, watch-and-react, decide-for-me, off
 - **panels**: settings
-- **models** (from the fabric registry): qwen3-embedding:0.6b, bge-m3:latest, qwen3.5-9b-q8:latest, qwen3.6-35b-a3b-iq3s:latest, minimax-m3:cloud, gemma4-26b-a4b-q3km:latest, qwen3.6-27b-q3km:latest, nomic-embed-text:latest, gemma4:31b-cloud, nemotron-3-super:cloud, deepseek-v4-flash:cloud, deepseek-v4-pro:cloud, kimi-k2.6:cloud, glm-5.1:cloud, glm-5:cloud, qwen3.5:397b-cloud, kimi-k2.5:cloud
+- **models** (from the fabric registry): kimi-k2.7-code:cloud, qwen3-embedding:0.6b, bge-m3:latest, qwen3.5-9b-q8:latest, qwen3.6-35b-a3b-iq3s:latest, minimax-m3:cloud, gemma4-26b-a4b-q3km:latest, qwen3.6-27b-q3km:latest, nomic-embed-text:latest, gemma4:31b-cloud, nemotron-3-super:cloud, deepseek-v4-flash:cloud, deepseek-v4-pro:cloud, kimi-k2.6:cloud, glm-5.1:cloud, glm-5:cloud, qwen3.5:397b-cloud, kimi-k2.5:cloud
 <!--REGISTRY:END-->
 
 ## The Suite is the brain (runtime/suite.py) — one object, two faces (UI bridge + MCP)
