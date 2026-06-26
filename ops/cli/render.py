@@ -1,6 +1,6 @@
 """render — the human/AI-readable views (status, health). stdlib-only."""
 from registry import ceiling_mb, shared_ports
-from systemd import verdict, port_open
+from systemd import verdict, port_open, _ping_url
 from gpu import committed_mb, read_gpu, budget_vram, is_gpu_service
 
 
@@ -33,6 +33,10 @@ def status(reg):
 def health(reg):
     out = []
     for k, v in reg["services"].items():
+        if v["manage"]["type"] == "hosted":   # off-box — liveness is the remote health URL, not a local port
+            url = v["manage"].get("health_url", "")
+            out.append(f"  {'✓' if _ping_url(url) else '✗'} {k:<15} (hosted)")
+            continue
         if not v.get("port"):
             continue
         out.append(f"  {'✓' if port_open(v['port']) else '✗'} {k:<15} :{v['port']}")

@@ -642,6 +642,18 @@
       "serve": "~/company/ops/serve_rerank.sh",
       "vram_mb": 0,
       "note": "CPU endpoint (CUDA_VISIBLE_DEVICES=\"\" \u2014 0 VRAM, no GPU contention with the loadout). Surfaces ops/rerank.py:Reranker(jina-v3) as POST /rerank {query, candidates|texts:[str|dict], top_n?} -> {ranking:[{item,text,rerank_score,orig_rank,rank},...]} sorted desc; GET /health. Runs from ~/vllm-env (torch 2.11+transformers 5.9 already present \u2014 NO new install; checked per Tim 2026-06-14 'install after checking'). The rerank stage for cross-session semantic recall (runtime/session_recall.py) \u2014 bridge-free, served like embed-pplx :8007. Loads in ~5s; weights jinaai/jina-reranker-v3 in HF cache."
+    },
+    "remote-gateway": {
+      "group": "reach",
+      "title": "Connector gateway \u2014 stable cloud OAuth door (Supabase edge fn) forwarding ALL apps \u2192 Funnel \u2192 :8772 remote connector",
+      "manage": {
+        "type": "hosted",
+        "health_url": "https://gctunhsuwpaxeatwlmuv.supabase.co/functions/v1/claude-design-gateway/healthz",
+        "deploy": "supabase functions deploy claude-design-gateway --project-ref gctunhsuwpaxeatwlmuv",
+        "logs": "supabase functions logs claude-design-gateway --project-ref gctunhsuwpaxeatwlmuv"
+      },
+      "note": "thin OAuth forwarder \u2014 no tool logic, no access decision; the public door for ALL apps (name claude-design is a misnomer)",
+      "autostart": false
     }
   }
 }
