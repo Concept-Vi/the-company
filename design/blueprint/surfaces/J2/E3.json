@@ -16,11 +16,14 @@
     "J2"
   ],
   "cross_journeys": [],
-  "addresses": [],
+  "addresses": [
+    "ui://inspector/model-field/default-brain"
+  ],
   "build_to": {
-    "components": [],
+    "components": [
+      "inspector"
+    ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
-  },
-  "address_gap": "view E3 represents ['MOD-embed'] but no registered ui:// address joins by feature-id"
+  }
 }

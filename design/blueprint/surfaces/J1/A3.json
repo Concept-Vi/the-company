@@ -19,12 +19,21 @@
   ],
   "cross_journeys": [],
   "addresses": [
+    "ui://canvas/foot",
+    "ui://canvas/force",
+    "ui://canvas/node/inspect",
+    "ui://canvas/status",
     "ui://inspector",
     "ui://inspector/act",
+    "ui://inspector/act/force",
+    "ui://inspector/config",
+    "ui://inspector/palette",
+    "ui://inspector/top_p",
     "ui://toolbar/reload"
   ],
   "build_to": {
     "components": [
+      "canvas",
       "inspector",
       "toolbar"
     ],

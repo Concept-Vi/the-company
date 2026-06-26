@@ -17,10 +17,16 @@
   "cross_journeys": [],
   "addresses": [
     "ui://settings",
+    "ui://settings/analytic",
     "ui://settings/brain",
+    "ui://settings/brain-persona",
     "ui://settings/close",
     "ui://settings/composition",
-    "ui://settings/roles"
+    "ui://settings/resource-meter",
+    "ui://settings/rhm",
+    "ui://settings/rhm-config",
+    "ui://settings/roles",
+    "ui://settings/swap"
   ],
   "build_to": {
     "components": [

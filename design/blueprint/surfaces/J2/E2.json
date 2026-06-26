@@ -16,11 +16,18 @@
     "J2"
   ],
   "cross_journeys": [],
-  "addresses": [],
+  "addresses": [
+    "ui://canvas/node/join",
+    "ui://inspector/model-field/default-brain",
+    "ui://workshop/ports"
+  ],
   "build_to": {
-    "components": [],
+    "components": [
+      "canvas",
+      "inspector",
+      "workshop"
+    ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
-  },
-  "address_gap": "view E2 represents ['MOD-embed', 'NODE-ports'] but no registered ui:// address joins by feature-id"
+  }
 }

@@ -17,7 +17,12 @@
   "journeys": [],
   "cross_journeys": [],
   "addresses": [
-    "ui://activity"
+    "ui://activity",
+    "ui://activity/audit",
+    "ui://activity/audit-window",
+    "ui://activity/evt-now",
+    "ui://activity/heartbeat",
+    "ui://activity/status"
   ],
   "build_to": {
     "components": [

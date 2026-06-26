@@ -17,12 +17,17 @@
   ],
   "cross_journeys": [],
   "addresses": [
+    "ui://canvas/node/inspect",
     "ui://inspector",
+    "ui://inspector/config",
     "ui://inspector/model-field",
+    "ui://inspector/palette",
+    "ui://inspector/top_p",
     "ui://models"
   ],
   "build_to": {
     "components": [
+      "canvas",
       "inspector",
       "models"
     ],

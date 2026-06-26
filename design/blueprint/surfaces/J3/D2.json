@@ -18,10 +18,15 @@
   ],
   "cross_journeys": [],
   "addresses": [
+    "ui://activity/replay/comment",
+    "ui://board/build-review",
+    "ui://inbox/build-result",
     "ui://inbox/build-review"
   ],
   "build_to": {
     "components": [
+      "activity",
+      "board",
       "inbox"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

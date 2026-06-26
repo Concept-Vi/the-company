@@ -15,11 +15,14 @@
     "J3"
   ],
   "cross_journeys": [],
-  "addresses": [],
+  "addresses": [
+    "ui://inbox/build-review/lifecycle-states"
+  ],
   "build_to": {
-    "components": [],
+    "components": [
+      "inbox"
+    ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
-  },
-  "address_gap": "view D6 represents ['WIRE-states'] but no registered ui:// address joins by feature-id"
+  }
 }

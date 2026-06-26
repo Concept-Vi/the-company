@@ -16,11 +16,17 @@
     "J6"
   ],
   "cross_journeys": [],
-  "addresses": [],
+  "addresses": [
+    "ui://board/idea-capture",
+    "ui://inbox/decision-focus",
+    "ui://inbox/idea"
+  ],
   "build_to": {
-    "components": [],
+    "components": [
+      "board",
+      "inbox"
+    ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
-  },
-  "address_gap": "view D4 represents ['INB-idea'] but no registered ui:// address joins by feature-id"
+  }
 }

@@ -19,14 +19,29 @@
   "journeys": [],
   "cross_journeys": [],
   "addresses": [
+    "ui://activity/lineage",
+    "ui://activity/verdict",
+    "ui://board/approve",
+    "ui://canvas/foot",
     "ui://canvas/node",
+    "ui://canvas/node/join",
+    "ui://canvas/status",
+    "ui://canvas/zoomhint",
+    "ui://chat/node-palette",
+    "ui://rail/palette/node-kinds",
     "ui://toolbar/fit",
-    "ui://toolbar/reload"
+    "ui://toolbar/reload",
+    "ui://workshop/ports"
   ],
   "build_to": {
     "components": [
+      "activity",
+      "board",
       "canvas",
-      "toolbar"
+      "chat",
+      "rail",
+      "toolbar",
+      "workshop"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"

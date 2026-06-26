@@ -15,10 +15,12 @@
   "journeys": [],
   "cross_journeys": [],
   "addresses": [
+    "ui://canvas/layers",
     "ui://toolbar/layers"
   ],
   "build_to": {
     "components": [
+      "canvas",
       "toolbar"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

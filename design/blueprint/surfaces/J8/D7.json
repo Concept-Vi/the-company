@@ -16,10 +16,14 @@
   ],
   "cross_journeys": [],
   "addresses": [
-    "ui://workshop/self-changes"
+    "ui://board/revert",
+    "ui://workshop/revert",
+    "ui://workshop/self-changes",
+    "ui://workshop/self-changes/sm-revert"
   ],
   "build_to": {
     "components": [
+      "board",
       "workshop"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

@@ -19,6 +19,8 @@
   "addresses": [
     "ui://activity/replay",
     "ui://inbox/coa",
+    "ui://inbox/coa/replay",
+    "ui://inbox/replay",
     "ui://inspector/history"
   ],
   "build_to": {

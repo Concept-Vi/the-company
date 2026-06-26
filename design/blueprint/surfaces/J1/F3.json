@@ -20,11 +20,14 @@
   "cross_journeys": [],
   "addresses": [
     "ui://canvas/node",
-    "ui://rail/palette"
+    "ui://chat/node-palette",
+    "ui://rail/palette",
+    "ui://rail/palette/node-kinds"
   ],
   "build_to": {
     "components": [
       "canvas",
+      "chat",
       "rail"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

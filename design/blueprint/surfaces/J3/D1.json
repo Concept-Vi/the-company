@@ -17,12 +17,19 @@
   ],
   "cross_journeys": [],
   "addresses": [
+    "ui://canvas/node/new-panel/wiring",
+    "ui://canvas/wire",
+    "ui://chat/wire",
     "ui://inbox/build-intent",
+    "ui://inbox/build-review/wire",
     "ui://inbox/context-bundle",
-    "ui://inbox/context-pin"
+    "ui://inbox/context-pin",
+    "ui://inbox/wire"
   ],
   "build_to": {
     "components": [
+      "canvas",
+      "chat",
       "inbox"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

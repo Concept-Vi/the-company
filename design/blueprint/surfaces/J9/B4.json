@@ -17,12 +17,19 @@
   ],
   "cross_journeys": [],
   "addresses": [
+    "ui://chat/mode",
     "ui://settings/modes",
     "ui://studio/rhm",
-    "ui://toolbar/presence"
+    "ui://toolbar/presence",
+    "ui://toolbar/presence/deep-work",
+    "ui://toolbar/presence/dial",
+    "ui://toolbar/presence/no-self-approve",
+    "ui://toolbar/presence/presence-dial",
+    "ui://toolbar/presence/watch-and-react"
   ],
   "build_to": {
     "components": [
+      "chat",
       "settings",
       "studio",
       "toolbar"

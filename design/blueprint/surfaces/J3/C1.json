@@ -24,12 +24,19 @@
   ],
   "addresses": [
     "ui://activity",
-    "ui://inbox"
+    "ui://activity/evt-now",
+    "ui://activity/heartbeat",
+    "ui://activity/status",
+    "ui://inbox",
+    "ui://inspector/inbox",
+    "ui://settings/inbox"
   ],
   "build_to": {
     "components": [
       "activity",
-      "inbox"
+      "inbox",
+      "inspector",
+      "settings"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"

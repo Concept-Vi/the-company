@@ -19,12 +19,24 @@
   ],
   "cross_journeys": [],
   "addresses": [
+    "ui://canvas/force",
+    "ui://canvas/rhm",
+    "ui://canvas/verbs",
+    "ui://chat/ptt",
+    "ui://chat/reply",
     "ui://inspector/act",
-    "ui://inspector/surface"
+    "ui://inspector/act/force",
+    "ui://inspector/surface",
+    "ui://scenario-player/ptt",
+    "ui://tabbar/inbox"
   ],
   "build_to": {
     "components": [
-      "inspector"
+      "canvas",
+      "chat",
+      "inspector",
+      "scenario-player",
+      "tabbar"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"

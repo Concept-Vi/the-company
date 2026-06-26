@@ -20,9 +20,14 @@
   "cross_journeys": [],
   "addresses": [
     "ui://activity",
+    "ui://activity/evt-now",
+    "ui://activity/heartbeat",
+    "ui://activity/status",
     "ui://canvas",
+    "ui://canvas/empty-stage",
     "ui://rail/palette",
     "ui://tabbar",
+    "ui://tabbar/canvas",
     "ui://toolbar/delete",
     "ui://toolbar/wire"
   ],

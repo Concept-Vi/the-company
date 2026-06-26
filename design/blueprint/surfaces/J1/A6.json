@@ -17,12 +17,24 @@
   ],
   "cross_journeys": [],
   "addresses": [
+    "ui://board/question",
+    "ui://canvas/ask-workshop",
+    "ui://canvas/force",
+    "ui://canvas/memo-gate",
+    "ui://chat/memo-gate",
     "ui://inspector/act",
-    "ui://inspector/freshness"
+    "ui://inspector/act/force",
+    "ui://inspector/eng-memo",
+    "ui://inspector/freshness",
+    "ui://run/demo/ask/memo-gate"
   ],
   "build_to": {
     "components": [
-      "inspector"
+      "board",
+      "canvas",
+      "chat",
+      "inspector",
+      "run"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"

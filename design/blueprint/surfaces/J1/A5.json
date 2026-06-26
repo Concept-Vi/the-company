@@ -23,14 +23,38 @@
     "J7"
   ],
   "addresses": [
+    "ui://activity/run",
+    "ui://board/question",
+    "ui://canvas/ask-workshop",
+    "ui://canvas/foot",
+    "ui://canvas/memo-gate",
+    "ui://canvas/run",
+    "ui://canvas/status",
+    "ui://chat/memo-gate",
+    "ui://chat/run",
+    "ui://chrome/run",
+    "ui://inbox/run",
+    "ui://inspector/eng-memo",
     "ui://inspector/freshness",
+    "ui://run/demo/ask/memo-gate",
+    "ui://settings/run",
+    "ui://tabbar/run",
     "ui://toolbar",
     "ui://toolbar/reload",
     "ui://toolbar/run"
   ],
   "build_to": {
     "components": [
+      "activity",
+      "board",
+      "canvas",
+      "chat",
+      "chrome",
+      "inbox",
       "inspector",
+      "run",
+      "settings",
+      "tabbar",
       "toolbar"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

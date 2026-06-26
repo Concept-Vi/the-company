@@ -20,12 +20,17 @@
   "addresses": [
     "ui://grow",
     "ui://grow/dispatch",
-    "ui://inspector/build"
+    "ui://grow/extend",
+    "ui://inspector/build",
+    "ui://palette/model_of_tim",
+    "ui://workshop/sentiment-node"
   ],
   "build_to": {
     "components": [
       "grow",
-      "inspector"
+      "inspector",
+      "palette",
+      "workshop"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"

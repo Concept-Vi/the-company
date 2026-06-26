@@ -14,6 +14,7 @@
   "journeys": [],
   "cross_journeys": [],
   "addresses": [
+    "ui://canvas/palette",
     "ui://canvas/portal-window",
     "ui://inspector/versions",
     "ui://toolbar/portal"

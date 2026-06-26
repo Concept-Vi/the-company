@@ -17,11 +17,18 @@
     "J4"
   ],
   "cross_journeys": [],
-  "addresses": [],
+  "addresses": [
+    "ui://board/decide",
+    "ui://chat/approve",
+    "ui://toolbar/presence/decide-for-me"
+  ],
   "build_to": {
-    "components": [],
+    "components": [
+      "board",
+      "chat",
+      "toolbar"
+    ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
-  },
-  "address_gap": "view B7 represents ['RHM-decide', 'GOV-tiers'] but no registered ui:// address joins by feature-id"
+  }
 }

@@ -15,12 +15,17 @@
   "journeys": [],
   "cross_journeys": [],
   "addresses": [
+    "ui://activity/audit",
+    "ui://activity/audit-window",
     "ui://activity/replay",
+    "ui://inbox/coa/replay",
+    "ui://inbox/replay",
     "ui://inspector/history"
   ],
   "build_to": {
     "components": [
       "activity",
+      "inbox",
       "inspector"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

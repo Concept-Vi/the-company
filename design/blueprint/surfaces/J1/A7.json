@@ -20,11 +20,17 @@
   "cross_journeys": [
     "J2"
   ],
-  "addresses": [],
+  "addresses": [
+    "ui://canvas/drag",
+    "ui://canvas/node/join",
+    "ui://workshop/ports"
+  ],
   "build_to": {
-    "components": [],
+    "components": [
+      "canvas",
+      "workshop"
+    ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
-  },
-  "address_gap": "view A7 represents ['CAN-drag', 'NODE-ports'] but no registered ui:// address joins by feature-id"
+  }
 }

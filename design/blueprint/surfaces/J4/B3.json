@@ -20,6 +20,8 @@
   ],
   "cross_journeys": [],
   "addresses": [
+    "ui://activity/walkthrough",
+    "ui://chat/walk",
     "ui://inbox/walk",
     "ui://inspector/help",
     "ui://toolbar/guide",
@@ -27,10 +29,13 @@
     "ui://toolbar/teach",
     "ui://walkthrough",
     "ui://walkthrough/next",
-    "ui://walkthrough/show-again"
+    "ui://walkthrough/show-again",
+    "ui://walkthrough/verdict/next"
   ],
   "build_to": {
     "components": [
+      "activity",
+      "chat",
       "inbox",
       "inspector",
       "toolbar",

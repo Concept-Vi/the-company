@@ -21,13 +21,20 @@
     "J7"
   ],
   "addresses": [
+    "ui://activity/replay/comment",
+    "ui://board/build-review",
     "ui://grow/reject",
+    "ui://inbox/build-result",
     "ui://inbox/build-review",
+    "ui://inbox/resolve",
     "ui://walkthrough/reason",
-    "ui://walkthrough/verdict"
+    "ui://walkthrough/verdict",
+    "ui://walkthrough/verdict/approve"
   ],
   "build_to": {
     "components": [
+      "activity",
+      "board",
       "grow",
       "inbox",
       "walkthrough"

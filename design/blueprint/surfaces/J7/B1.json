@@ -19,21 +19,37 @@
   ],
   "cross_journeys": [],
   "addresses": [
+    "ui://address-help/chat-at-address",
+    "ui://canvas/rhm",
+    "ui://canvas/verbs",
     "ui://chat",
     "ui://chat/input",
     "ui://chat/minimize",
     "ui://chat/new-conversation",
+    "ui://chat/ptt",
+    "ui://chat/reply",
+    "ui://chat/rhm",
     "ui://chat/send",
     "ui://chat/threads",
+    "ui://scenario-player/ptt",
     "ui://settings",
+    "ui://settings/analytic",
     "ui://settings/brain",
+    "ui://settings/brain-persona",
     "ui://settings/close",
     "ui://settings/composition",
-    "ui://settings/roles"
+    "ui://settings/resource-meter",
+    "ui://settings/rhm",
+    "ui://settings/rhm-config",
+    "ui://settings/roles",
+    "ui://settings/swap"
   ],
   "build_to": {
     "components": [
+      "address-help",
+      "canvas",
       "chat",
+      "scenario-player",
       "settings"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
