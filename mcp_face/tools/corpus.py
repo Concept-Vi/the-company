@@ -45,14 +45,16 @@ def register(mcp, suite):
                         HONESTY: for an INGESTED FILE the record is a capture DIGEST (a model's one-paragraph
                         summary + metadata), NOT the file's raw text — the corpus stores digests of sources.
                         The source itself lives at the code:// path on disk (outside this face).
-          op="determine" — ASK THE DRAGNET EXTRACTION LAYER a topic → GROUNDED themes of REAL, chunk-traced
+          op="determine" — ASK THE DRAGNET EXTRACTION LAYER a topic → GROUNDED themes of REAL, source-traced
                         claims (the full-coverage recall surface). `text` (required) = the topic; `asset`
-                        ('full'=session history, 'visual-dna'=the Visual-DNA vault). Reads the extract-once
-                        asset (29k+ meaning-extractions), filters candidates, and the model CLUSTERS the real
-                        claims BY INDEX (theme-labels only — NEVER generates claim text), so every returned
-                        claim is a VERBATIM extraction with its chunk_id (no-fiction by construction; the
-                        envelope carries no_fiction=true). Distinct from op='query' (cosine top-k over the
-                        embedded corpus): determine is full-coverage + grounded-synthesis over the dragnet layer.
+                        ('full'=session history, 'visual-dna'=the Visual-DNA vault). Pipeline: embed-search the
+                        extract-once asset for candidates → re-score them with the served jina-v3 reranker
+                        (the relevance pass) → the model CLUSTERS the real claims BY INDEX (theme-labels only —
+                        NEVER generates claim text). Every returned claim is a VERBATIM extraction carrying its
+                        FULL provenance — chunk_id + rel_path (source file) + anchor (position) + rerank_score —
+                        so it traces to where it came from, not just a chunk number (no-fiction by construction;
+                        envelope carries no_fiction=true + a rerank note). Distinct from op='query' (cosine
+                        top-k): determine is full-coverage grounded-synthesis over the dragnet layer.
           op="neighbours" — the NEIGHBOUR NODE-FIELD: given a unit's `address` (a code:// source id, e.g.
                         a projection:select detail.source), the units AROUND it in `space`, ranked by
                         meaning. Returns {unit, space, emb, neighbours: [{source, score}, ...]}. Each
@@ -118,7 +120,11 @@ def register(mcp, suite):
                         "`asset` ('full'=session history [default], 'visual-dna'=the Visual-DNA vault), `k`/limit "
                         "→ max claims considered."}
             from runtime import recall_determine as _rd
-            return {"op": op, **_rd.determine(text, asset=(asset or "full"), store=suite.store,
+            # WARM-PATH FIX (2026-06-27): pass the resident `suite` through, not just its store. Without it,
+            # determine's semantic step found `suite is None` and COLD-CONSTRUCTED a fresh Suite (re-discover
+            # + re-warm the vector cache) on EVERY call — the >60s rebuild/timeout. The MCP face already holds
+            # the warm resident suite (register(mcp, suite)); forwarding it reuses the loaded cache.
+            return {"op": op, **_rd.determine(text, asset=(asset or "full"), store=suite.store, suite=suite,
                                               max_claims=(limit if limit and limit <= 120 else 60))}
         if op == "neighbours":
             if not address:
