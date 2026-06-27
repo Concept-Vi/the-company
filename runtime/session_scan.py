@@ -42,7 +42,7 @@ def _encode_cwd(cwd: str) -> str:
     return cwd.replace("/", "-").replace(".", "-")
 
 
-SELF_MARKER_DIR = os.path.join(os.path.expanduser("~"), ".recollection", "self")
+SELF_MARKER_DIR = os.path.join(os.environ.get("RECOLLECTION_CONFIG_DIR") or os.path.expanduser("~/company/.recollection"), "self")
 
 
 def _claude_ancestor_pid(pid: int | None = None) -> int | None:
@@ -77,7 +77,7 @@ def _claude_ancestor_pid(pid: int | None = None) -> int | None:
 
 def _self_marker(proj: str) -> dict | None:
     """#69 — the SessionStart-hook self-marker read: resolve THIS session via its claude-ancestor PID.
-    The hook (a child of claude) writes ~/.recollection/self/<claude-pid>.json = {session_id, ...}; the
+    The hook (a child of claude) writes ~/company/.recollection/self/<claude-pid>.json = {session_id, ...}; the
     resolver (also a child of the same claude) walks to that PID + reads it. Returns the marker dict IF
     its session_id has a transcript in `proj` (the cwd cross-check — belt+braces against a stale/wrong-cwd
     marker), else None (degrade-clean — falls through to the newest-mtime/ambiguous path)."""

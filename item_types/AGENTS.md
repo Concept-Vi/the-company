@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: item_types
 aliases: ["item_types — constitution"]
 tags: [company, constitution, item-types, board, noticeboard, registry]

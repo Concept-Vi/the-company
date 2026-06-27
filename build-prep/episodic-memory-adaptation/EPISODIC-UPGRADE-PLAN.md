@@ -98,7 +98,7 @@ These are answered by traversing links + filtering on scale/time axes — the ad
 **★ Steering vocabulary = MINED from Tim's corpus + refined by use** (NOT a fixed dev ontology). The swarm extracts his recurring concepts/principles/framings → the steering instructions ("represent this for the principle being expressed / the concept being defined / a correction / what was built & in which project" + his concept-axes: altitude, gap-pressure, relational-systems, the Company…). Improves from retrieval performance + his corrections. Shares the concept registry with `model_of_tim`. (This is the "you'd need to work that out" piece — a living registry, the standing open refinement.)
 **All roles confirmed to belong; build-order deferred to Tim.**
 ### P3 — Retrieval/Gather — DECIDED (designed by Tim's convergence transmission, 2026-06-12)
-**Primary sources:** `~/foundation/exchanges/20-the-convergence-object.md` (verbatim) · `~/company/build-prep/brain/CONVERGENCE-OBJECT.md` (canonical doctrine: the two laws, the barrier protocol, the ten derivations).
+**Primary sources:** `~/company/foundation/exchanges/20-the-convergence-object.md` (verbatim) · `~/company/build-prep/brain/CONVERGENCE-OBJECT.md` (canonical doctrine: the two laws, the barrier protocol, the ten derivations).
 
 **The querier is the AGENT, not Tim** — gather triggers from Tim's rich input (or an agent's working need), never a search box. The pipeline:
 - **Pass 0 — structural, programmatic, free:** size, timestamps, session depth, channel/dictation flags. *Measure structurally first because it's free.*

@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: platforms
 aliases: ["platforms — constitution"]
 tags: [company, constitution, platforms, mirror-registry, level-2, data-only]

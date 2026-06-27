@@ -28,7 +28,7 @@ All in `~/company/build-prep/brain/` unless noted:
    confirmed. READ IT — it advances your addressing design.
 
 3. **CONVERGENCE-OBJECT.md** — the BIG one. A parallel session regenerated a NEW dense transmission Tim
-   sent today (source: `~/foundation/exchanges/20-the-convergence-object.md`, ~112KB) into a doctrine:
+   sent today (source: `~/company/foundation/exchanges/20-the-convergence-object.md`, ~112KB) into a doctrine:
    - **Convergence Law**: every unit has a structural position AND a semantic position; real information
      = where they coincide; their distance = **resistance** = wasted compute forever until repaired.
      "Laws are not constraints; laws are resistance-removal — paid once, dividending forever."

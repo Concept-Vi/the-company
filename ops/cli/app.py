@@ -166,6 +166,10 @@ def main():
         sys.path.insert(0, repo)
         from runtime import coherence_detect as _cd
         print(_cd.format_scan(_cd.scan(repo)))
+        # the terrain-ledger drift detector — declared INTO the same substrate (same finding model),
+        # surfaced in the same read (orienteering/ path-existence gate + positive-only orbit-coverage).
+        from runtime import orienteering_drift as _od
+        print("\n" + _od.format_scan(_od.scan(repo)))
         return
     if cmd == "models":
         print(models.inventory()); return

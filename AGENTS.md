@@ -1,10 +1,11 @@
 ---
 type: constitution
+register: prescriptive
 module: root
 aliases: ["Company — read first", "AGENTS", "Company Constitution"]
 tags: [company, constitution, root, orientation]
 governs: []
-relates-to: ["[[Company Map]]", "[[Company State]]", "[[Vault Conventions]]"]
+relates-to: ["[[Company Map]]", "[[Company State]]", "[[Vault Conventions]]", "[[Orienteering Index]]"]
 status: living
 ---
 
@@ -56,3 +57,9 @@ Every operation that runs **constrained against a declared registry is also a se
 **Every folder** has an `AGENTS.md` (its **constitution**): what it is · what it must guarantee · where new things go · how to extend · its seam · what would violate it. **Read a folder's constitution before editing it.** `MAP.md` is the loadable map of the whole thing.
 
 This repo is **also an Obsidian vault** — the same markdown is a navigable knowledge graph (frontmatter + `[[wikilinks]]` + a folder-note per folder). The full convention is [[Vault Conventions]]; the vault home is [[Company Map]]. When you add or change a folder, decorate its constitution to that convention as part of the change — the knowledge face is not optional documentation, it is how the next agent (and the operator) navigates.
+
+## orienteering/ — the terrain ledger (what's the Company, and where it physically lives)
+The Company is **not just this folder** — its running engines, recall index, certs, service units, and a tail of scattered work/data live **outside** `~/company` (wired in by systemd). `orienteering/` is the **descriptive ledger** of all of it: one note per thing, with `relation` (company · external · connected · candidate · resource), `kind`, `state`, absolute `path`, dates, coverage, and `[[connects_to]]` relations. Start at **[[Orienteering Index]]** (`orienteering/INDEX.md`) — it is the map of where everything is and what it connects to.
+- **Before** you touch anything *outside* `~/company` (a venv, a scattered folder, a connected tool, the recall index), **check its entry** — it tells you what it is, its wiring, and whether it's live/dormant/moving.
+- **When** a new thing appears in the Company's orbit, or a path moves/dies (e.g. a migration), **add or update its entry** — same clause of rule 9 as the rest of the self-description. (`foundation` moving in from `~/foundation` on 2026-06-26 is the worked example.) **A drift detector now enforces this** — `runtime/orienteering_drift.py`, declared into the coherence substrate: the EXACT path-existence gate (`tests/orienteering_drift_acceptance.py`, rides `company suites`) fails loud if any entry's `path` vanishes; the positive-only orbit-coverage surfaces uncatalogued home-dir things against `orienteering/_orbit-dispositions.json` (the declared out-of-orbit registry). Both show in `company coherence`.
+- The schema lives in `orienteering/AGENTS.md` (the folder-note) + `docs/vault-conventions.md`; read it before editing entries. **The ledger is a *map, not a blueprint*** — its layout is provisional and must not be copied as "how the Company should be structured."

@@ -1,5 +1,6 @@
 ---
 type: concept
+register: prescriptive
 module: docs
 aliases: ["Concepts and Principles", "principles", "the why"]
 tags: [company, concept, principles, foundation]

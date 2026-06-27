@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: contexts
 aliases: ["contexts — constitution"]
 tags: [company, constitution, contexts, registry, addresses, cognition]

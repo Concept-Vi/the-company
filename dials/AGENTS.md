@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: dials
 aliases: ["dials — constitution"]
 tags: [company, constitution, dials, registry, cognition]

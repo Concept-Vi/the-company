@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: nodes
 aliases: ["nodes — constitution"]
 tags: [company, constitution, nodes, node-library]

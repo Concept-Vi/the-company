@@ -1,6 +1,6 @@
 # THE CONVERGENCE OBJECT — duality, resistance, and the laws of placement
 
-> **What this is.** The canonical regeneration of the dense transmission Tim sent 2026-06-12 mid-way through the recollection design sequence, plus the two amplification passes run on it. Primary source (verbatim, all beats): `~/foundation/exchanges/20-the-convergence-object.md` — beat 8 holds Tim's transmission transcription-repaired. This doc is the *doctrine layer*: integrated, update-in-place, no versioning.
+> **What this is.** The canonical regeneration of the dense transmission Tim sent 2026-06-12 mid-way through the recollection design sequence, plus the two amplification passes run on it. Primary source (verbatim, all beats): `~/company/foundation/exchanges/20-the-convergence-object.md` — beat 8 holds Tim's transmission transcription-repaired. This doc is the *doctrine layer*: integrated, update-in-place, no versioning.
 >
 > **Status discipline.** Sections marked **[TIM]** are his object, regenerated faithfully. Sections marked **[GEN]** are my generations run *from* the object (the second amplification) — fit-tested by him only where noted. Per his instruction, the application of this object is independent of context or content.
 >

@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: voice/engines
 aliases: ["voice/engines — constitution"]
 tags: [company, constitution, voice, engines]

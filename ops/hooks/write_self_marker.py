@@ -3,7 +3,7 @@
 
 Called by the SessionStart hook (cc_registry_freshness_check.sh), failure-isolated. Reads the hook's
 stdin JSON (Claude Code passes {session_id, transcript_path, cwd, hook_event_name, ...}) and writes
-~/.recollection/self/<claude-pid>.json = {session_id, transcript_path, cwd, ts}, keyed by the
+~/company/.recollection/self/<claude-pid>.json = {session_id, transcript_path, cwd, ts}, keyed by the
 CLAUDE-ANCESTOR PID (session-unique, cwd-independent — the cwd alone collides across co-located
 sessions). resolve_own_session (runtime/session_scan.py) reads this by walking to its own claude
 ancestor → the unambiguous self-id for a top-level session with no COMPANY_SESSION_ID env.
@@ -29,7 +29,7 @@ def main() -> int:
             from runtime.session_scan import _claude_ancestor_pid, SELF_MARKER_DIR
             cp = _claude_ancestor_pid()
         except Exception:
-            cp, SELF_MARKER_DIR = None, os.path.join(os.path.expanduser("~"), ".recollection", "self")
+            cp, SELF_MARKER_DIR = None, os.path.join(os.environ.get("RECOLLECTION_CONFIG_DIR") or os.path.expanduser("~/company/.recollection"), "self")
         if cp is None:
             return 0                                   # no claude ancestor (orphan / odd launch) → no marker
         os.makedirs(SELF_MARKER_DIR, exist_ok=True)

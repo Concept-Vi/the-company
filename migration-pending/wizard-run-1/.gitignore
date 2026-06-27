@@ -1,0 +1,9 @@
+# heavy data preserved on disk for mining, not committed (Stage-2 will digest it)
+*.jsonl
+*.db
+*.db.*
+*.log
+__pycache__/
+agg_*.txt
+clean_*.txt
+_seq_*

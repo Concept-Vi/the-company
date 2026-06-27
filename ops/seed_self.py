@@ -13,7 +13,7 @@ THE RELIABLE FIX (run from INSIDE the session — the only place that knows its 
   • SELF-ID by NONCE: pass --phrase "<a string ONLY this session has emitted this run>"; this script
     greps ~/.claude/projects/*/*.jsonl for it → the SOLE containing transcript is THIS session (zero
     inference; immune to cwd-collision + mtime-race). OR pass --sid <id> if you already know it.
-  • SEED: write ~/.recollection/self/<claude-ancestor-pid>.json (the marker resolve_own_session reads by
+  • SEED: write ~/company/.recollection/self/<claude-ancestor-pid>.json (the marker resolve_own_session reads by
     claude_pid). claude_pid is STABLE across compaction, so the marker keeps resolving. Own-dir write
     only — NO shared-registration mutation (safe). With --fold-registration <handle>, also folds
     {claude_pid, session_id} into THIS session's OWN fabric registration (additive; preserves fields).
@@ -30,7 +30,7 @@ from __future__ import annotations
 import argparse, glob, json, os, sys, time
 
 PROJECTS_DIR = os.path.expanduser("~/.claude/projects")
-MARKER_DIR = os.path.expanduser("~/.recollection/self")
+MARKER_DIR = os.path.join(os.environ.get("RECOLLECTION_CONFIG_DIR") or os.path.expanduser("~/company/.recollection"), "self")
 
 
 def _claude_ancestor_pid() -> int | None:

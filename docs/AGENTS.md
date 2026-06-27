@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: docs
 aliases: ["docs — constitution"]
 tags: [company, constitution, docs, meta]

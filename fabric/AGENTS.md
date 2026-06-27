@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: fabric
 aliases: ["fabric — constitution"]
 tags: [company, constitution, fabric, models]

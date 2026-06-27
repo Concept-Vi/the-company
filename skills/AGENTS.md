@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: skills
 aliases: ["skills — constitution"]
 tags: [company, constitution, skills, registry, addresses, cognition]

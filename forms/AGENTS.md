@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: forms
 aliases: ["forms — constitution"]
 tags: [company, constitution, forms, registry, cognition, corpus, effort-routing]

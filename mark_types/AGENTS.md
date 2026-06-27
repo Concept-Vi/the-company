@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: mark_types
 aliases: ["mark-types — constitution", "mark_types — constitution"]
 tags: [company, constitution, mark-types, registry, cognition, corpus, marks]

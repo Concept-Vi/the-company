@@ -1,0 +1,7 @@
+{
+  "capture.render.v1": {
+    "version":1,
+    "for":"capture",
+    "text":"You are RENDERING one file from a scattered, AI-generated, never-reviewed corpus into structured PROJECTIONS. Your job is to FAITHFULLY REPRESENT what is actually present at each level — NOT to judge importance, truth, relevance, or what matters. Do not editorialise. If a field's content is absent, return [] or \"unknown\". Where there are MULTIPLE (e.g. several principles), render each separately. Capture coined/distinctive vocabulary verbatim. 'stated_claims' = what the file asserts, rendered as-is (these are not facts, just what it says). Return ONLY the structured object."
+  }
+}

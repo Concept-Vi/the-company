@@ -1,0 +1,280 @@
+
+### C0  (n=49)  area=[('content-workbench', 49)]  domain=[('ui-surface', 49)]  kind=[('design-spec', 48), ('process-meta', 1)]
+   content-workbench/vi-workbench/surfaces/capture-recipes/S-11-questions-panel.recipe.md
+   content-workbench/vi-workbench/surfaces/capture-recipes/S-10-settings-panel.recipe.md
+   content-workbench/vi-workbench/surfaces/capture-recipes/S-03-content-panel.recipe.md
+   content-workbench/vi-workbench/surfaces/capture-recipes/S-27-help-panel-thread-list.recipe.md
+   content-workbench/vi-workbench/surfaces/capture-recipes/S-31-help-panel-input.recipe.md
+
+### C1  (n=288)  area=[('Visual-DNA-Vault', 288)]  domain=[('ui-surface', 288)]  kind=[('notes', 288)]
+   Visual-DNA-Vault/notes/gaps/(Gap) 2026-05-26T03-36-48-REACTIVE_UPDATE_TIMEOUT.md
+   Visual-DNA-Vault/notes/gaps/(Gap) 2026-05-26T03-23-58-REACTIVE_UPDATE_TIMEOUT.md
+   Visual-DNA-Vault/notes/gaps/(Gap) 2026-05-26T03-41-20-REACTIVE_UPDATE_TIMEOUT.md
+   Visual-DNA-Vault/notes/gaps/(Gap) 2026-05-26T03-48-22-REACTIVE_UPDATE_TIMEOUT.md
+   Visual-DNA-Vault/notes/gaps/(Gap) 2026-05-26T03-01-12-REACTIVE_UPDATE_TIMEOUT.md
+
+### C2  (n=83)  area=[('content-workbench', 63), ('Visual-DNA-Vault', 17)]  domain=[('ui-surface', 25), ('agent-identity', 16), ('voice-audio', 15)]  kind=[('notes', 51), ('design-spec', 11), ('build-status', 6)]
+   content-workbench/Implementation_Guide_Phase_2.md
+   content-workbench/SoT_Gap_Analysis.md
+   content-workbench/Workflow_Proof_Bundles.md
+   Visual-DNA-Vault/Product/quality-pass-round2-findings.md
+   content-workbench/UCR_Research_Synthesis.md
+
+### C3  (n=53)  area=[('Visual-DNA-Vault', 46), ('packages', 5)]  domain=[('agent-identity', 38), ('workspace-infra', 6), ('ui-surface', 4)]  kind=[('design-spec', 27), ('notes', 15), ('intent-vision', 6)]
+   Visual-DNA-Vault/_system/agent-memory/vi-strategy.md
+   Visual-DNA-Vault/_system/agent-memory/vi-process.md
+   Visual-DNA-Vault/_system/agent-memory/vi.md
+   Visual-DNA-Vault/_system/agent-memory/vi-identity.md
+   Visual-DNA-Vault/outbox/round_00/vi-identity-and-becoming.md
+
+### C4  (n=43)  area=[('content-workbench', 38), ('Visual-DNA-Vault', 5)]  domain=[('agent-identity', 26), ('knowledge-corpus', 9), ('business-gtm', 4)]  kind=[('notes', 25), ('design-spec', 14), ('intent-vision', 3)]
+   Visual-DNA-Vault/Build/structural-verification-mechanism.md
+   Visual-DNA-Vault/Build/structural-completion-mechanism.md
+   content-workbench/Structural_Verification_Mechanism.md
+   content-workbench/structural-completion-mechanism.md
+   content-workbench/math-verification/agents/agent-5-final-assessment.md
+
+### C5  (n=56)  area=[('packages', 56)]  domain=[('agent-identity', 41), ('other', 7), ('business-gtm', 6)]  kind=[('notes', 55), ('design-spec', 1)]
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/status/keeper-R7-dispatch-2026-05-21T13-30-00Z.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/status/keeper-T-R6.2-sub-2-dispatch-2026-05-21T22-00-00Z.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/status/keeper-R7-synthesis-dispatch-2026-05-21T14-00-00Z.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/status/keeper-no-op-2026-05-21T09-55-00Z.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/status/keeper-T-6-dispatch-2026-05-21T23-45-00Z.md
+
+### C6  (n=43)  area=[('Visual-DNA-Vault', 20), ('content-workbench', 9)]  domain=[('agent-identity', 25), ('business-gtm', 11), ('other', 6)]  kind=[('design-spec', 18), ('notes', 16), ('glossary-ref', 7)]
+   content-workbench/math-verification/vault/inbox/00_project_brief.md
+   content-workbench/vault/inbox/00_project_brief.md
+   content-workbench/vi-workbench/inbox/00_project_brief.md
+   Corpus-Extraction-Vault/inbox/00_project_brief.md
+   packages/elevenlabs-mcp/vault/inbox/00_project_brief.md
+
+### C7  (n=78)  area=[('packages', 51), ('content-workbench', 24)]  domain=[('ui-surface', 60), ('other', 10), ('business-gtm', 2)]  kind=[('design-spec', 43), ('notes', 25), ('architecture', 6)]
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/claude-design-pack/sources/apple-hig.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/claude-design-pack/sources/figma-ui-patterns.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/08-references/50-sources-index.md
+   content-workbench/vi-workbench/design/_index.md
+   content-workbench/vi-workbench/design/visual-criteria.md
+
+### C8  (n=27)  area=[('Visual-DNA-Vault', 22), ('.cursor', 3)]  domain=[('agent-identity', 18), ('business-gtm', 3), ('workspace-infra', 2)]  kind=[('design-spec', 13), ('notes', 6), ('process-meta', 5)]
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/COMPLETION_CRITERIA.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/RESEARCH_SYNTHESIS.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/IMPLEMENTATION_GUIDE.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/00_README.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/CLAUDE.md
+
+### C9  (n=46)  area=[('content-workbench', 46)]  domain=[('ui-surface', 46)]  kind=[('design-spec', 46)]
+   content-workbench/vi-workbench/surfaces/questions-panel.md
+   content-workbench/vi-workbench/surfaces/content-panel-review-mode.md
+   content-workbench/vi-workbench/surfaces/content-panel-document-view.md
+   content-workbench/vi-workbench/surfaces/chat-panel-header.md
+   content-workbench/vi-workbench/surfaces/help-panel-input.md
+
+### C10  (n=68)  area=[('Visual-DNA-Vault', 56), ('packages', 10)]  domain=[('ui-surface', 18), ('agent-identity', 18), ('workspace-infra', 15)]  kind=[('design-spec', 42), ('notes', 15), ('intent-vision', 7)]
+   Visual-DNA-Vault/Augmented-Canvas-System/README.md
+   Visual-DNA-Vault/outbox/round_00/descriptions/augmented-canvas-system.md
+   Visual-DNA-Vault/Augmented-Canvas-System/application/application-identity-and-surface.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/02_SYSTEM_CONVERGENCE_MAP.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/mechanics-of-reality/03_DOMAIN_TRIANGULATION_MAP.md
+
+### C11  (n=22)  area=[('packages', 22)]  domain=[('agent-identity', 10), ('voice-audio', 6), ('mcp-tools', 3)]  kind=[('design-spec', 20), ('intent-vision', 1), ('notes', 1)]
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/skill-skeletons/agent-test-harness.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/skill-skeletons/batch-launch-control.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/skill-skeletons/voice-selection-preview.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/skill-skeletons/integration-secrets.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/elevenlabs-skills-specification.md
+
+### C12  (n=39)  area=[('Visual-DNA-Vault', 38), ('packages', 1)]  domain=[('other', 16), ('agent-identity', 10), ('workspace-infra', 6)]  kind=[('notes', 23), ('design-spec', 11), ('decision-record', 2)]
+   Visual-DNA-Vault/_system/processes.md
+   Visual-DNA-Vault/notes/decisions/README.md
+   Visual-DNA-Vault/_system/skills/vault-tour.md
+   Visual-DNA-Vault/_system/skills/cross-project-intelligence.md
+   Visual-DNA-Vault/notes/findings/README.md
+
+### C13  (n=10)  area=[('packages', 5), ('content-workbench', 3)]  domain=[('secrets-payment', 3), ('mcp-tools', 3), ('agent-identity', 1)]  kind=[('config-data', 4), ('notes', 3), ('design-spec', 2)]
+   packages/elevenlabs-mcp/docs/SECRETS.md
+   packages/elevenlabs-mcp/README.md
+   content-workbench/docs/SECRETS.md
+   content-workbench/docs/elevenlabs-mcp-package-touchpoints.md
+   packages/elevenlabs-mcp/docs/mcp-config.md
+
+### C14  (n=60)  area=[('content-workbench', 30), ('Visual-DNA-Vault', 24)]  domain=[('agent-identity', 24), ('workspace-infra', 18), ('knowledge-corpus', 7)]  kind=[('notes', 27), ('design-spec', 25), ('process-meta', 4)]
+   content-workbench/vi-workbench/requirements/unified-architecture-build.md
+   Visual-DNA-Vault/notes/tasks/(Task) vault-themes-patterns.md
+   content-workbench/vi-workbench/VAULT-PROTOCOL.md
+   content-workbench/team-context-unified-build.md
+   packages/elevenlabs-mcp/vault/notes/tasks/(Task) vault-deep-explore.md
+
+### C15  (n=65)  area=[('Visual-DNA-Vault', 37), ('content-workbench', 11)]  domain=[('agent-identity', 39), ('other', 15), ('business-gtm', 3)]  kind=[('notes', 33), ('design-spec', 26), ('intent-vision', 3)]
+   Visual-DNA-Vault/Proto/Cognitive_Entanglement.md
+   Visual_DNA/Vault/Cognitive_Entanglement.md
+   Visual-DNA-Vault/Theory/cognitive-entanglement.md
+   Visual_DNA/Vault/cognitive_entanglement_surfaces.md
+   Visual-DNA-Vault/Proto/cognitive_entanglement_surfaces.md
+
+### C16  (n=37)  area=[('packages', 30), ('Visual-DNA-Vault', 4)]  domain=[('voice-audio', 21), ('agent-identity', 9), ('business-gtm', 3)]  kind=[('design-spec', 14), ('research', 14), ('notes', 8)]
+   Visual-DNA-Vault/ElevenLabs-Wizard/sales-campaign-companion-expanded.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/sales-campaign-companion-expanded.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/research-briefs/00-RESEARCH-PLAN.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/research-outputs/01-elevenlabs-skills-agents-ecosystem.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/sales-campaign-technical-companion.md
+
+### C17  (n=25)  area=[('Visual-DNA-Vault', 25)]  domain=[('voice-audio', 12), ('agent-identity', 5), ('ui-surface', 3)]  kind=[('design-spec', 13), ('notes', 7), ('intent-vision', 4)]
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/platform-integrations/17_AGENTS_DOMAIN.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/platform-integrations/elevenlabs-openclaw-execution-program.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/platform-integrations/elevenlabs-mcp-tool-inventory.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/platform-integrations/elevenlabs-agui-component-map.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/platform-integrations/elevenlabs-obsidian-product-spec.md
+
+### C18  (n=60)  area=[('Visual-DNA-Vault', 39), ('Visual_DNA', 16)]  domain=[('agent-identity', 26), ('ui-surface', 9), ('workspace-infra', 8)]  kind=[('design-spec', 27), ('notes', 16), ('architecture', 8)]
+   Visual-DNA-Vault/Meta/rules-governance.md
+   Visual-DNA-Vault/Meta/product-inventory.md
+   Visual-DNA-Vault/Proto/RULES.md
+   Visual_DNA/Vault/RULES.md
+   Visual-DNA-Vault/Product/visual-dna-project-document.md
+
+### C19  (n=42)  area=[('packages', 40), ('content-workbench', 2)]  domain=[('agent-identity', 22), ('ui-surface', 12), ('other', 4)]  kind=[('design-spec', 28), ('notes', 11), ('intent-vision', 2)]
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/claude-design-pack/SEQUENCE_PACK_for_claude_design.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/claude-design-pack/_INDEX_for_claude_design.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/_MOC.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/claude-design-pack/BRIEF_PACK_for_claude_design.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/00-framing/meta-system-as-first-rendering.md
+
+### C20  (n=28)  area=[('content-workbench', 25), ('Visual-DNA-Vault', 3)]  domain=[('ui-surface', 14), ('workspace-infra', 9), ('agent-identity', 3)]  kind=[('design-spec', 23), ('notes', 4), ('schema-migration', 1)]
+   content-workbench/vi-workbench/features/snapshots.md
+   content-workbench/vi-workbench/features/export.md
+   content-workbench/vi-workbench/features/project.md
+   content-workbench/vi-workbench/features/auth.md
+   content-workbench/vi-workbench/features/history.md
+
+### C21  (n=50)  area=[('Visual-DNA-Vault', 42), ('content-workbench', 4)]  domain=[('agent-identity', 20), ('ui-surface', 12), ('workspace-infra', 7)]  kind=[('design-spec', 23), ('notes', 12), ('code', 4)]
+   Visual-DNA-Vault/_system/note-templates.md
+   Visual-DNA-Vault/_system/step-kinds.md
+   Visual-DNA-Vault/_system/task-kinds.md
+   Visual-DNA-Vault/_system/save-locations.md
+   Visual-DNA-Vault/_system/variables.md
+
+### C22  (n=26)  area=[('packages', 26)]  domain=[('agent-identity', 18), ('voice-audio', 4), ('compliance-consent', 3)]  kind=[('notes', 12), ('design-spec', 11), ('test', 3)]
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/rounds/R1/composition-test.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/rounds/R1/round-R1.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/rounds/R3/composition-test.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/rounds/R3/round-R3.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/composition-tests/T-5-2026-05-21.md
+
+### C23  (n=55)  area=[('content-workbench', 27), ('Visual-DNA-Vault', 21)]  domain=[('ui-surface', 15), ('agent-identity', 15), ('business-gtm', 10)]  kind=[('design-spec', 31), ('notes', 12), ('process-meta', 6)]
+   content-workbench/math-verification/vault/applications/content-workbench/description.md
+   Visual-DNA-Vault/outbox/round_00/descriptions/content-workbench.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/vi-sync-design-context/10-content-workbench-source-of-truth.md
+   Visual-DNA-Vault/Build/content-workbench-source-of-truth.md
+   content-workbench/Content_Workbench_File_Level_Implementation_Build_Plan.md
+
+### C24  (n=34)  area=[('Visual-DNA-Vault', 34)]  domain=[('ui-surface', 31), ('agent-identity', 2), ('voice-audio', 1)]  kind=[('design-spec', 23), ('notes', 7), ('process-meta', 4)]
+   Visual-DNA-Vault/Build/traversals/L4-question-flows.md
+   Visual-DNA-Vault/Build/traversals/L0-BATCH-TYPE.md
+   Visual-DNA-Vault/Build/traversals/L4-content-hierarchy.md
+   Visual-DNA-Vault/Build/traversals/L4-voice-session-ui.md
+   Visual-DNA-Vault/Build/traversals/L1-BATCH-CHAT.md
+
+### C25  (n=81)  area=[('packages', 67), ('content-workbench', 14)]  domain=[('agent-identity', 62), ('ui-surface', 7), ('business-gtm', 5)]  kind=[('design-spec', 34), ('notes', 26), ('decision-record', 19)]
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/06-direction-cards/DC-R8-11-starting-point.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/rounds/R8/synthesis.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/06-direction-cards/DC-R8-10-voice-classification-mechanism.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/06-direction-cards/DC-CD-1-augmented-canvas-vs-vi-sync-framing.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/06-direction-cards/DC-R8-4-presentation-prefs-storage.md
+
+### C26  (n=14)  area=[('content-workbench', 6), ('Corpus-Extraction-Vault', 2)]  domain=[('agent-identity', 8), ('other', 3), ('workspace-infra', 2)]  kind=[('intent-vision', 8), ('design-spec', 3), ('notes', 3)]
+   content-workbench/math-verification/vault/inbox/03_vault_agent_round_01.md
+   content-workbench/vault/inbox/03_vault_agent_round_01.md
+   Corpus-Extraction-Vault/inbox/03_vault_agent_round_01.md
+   content-workbench/vi-workbench/inbox/03_vault_agent_round_01.md
+   Visual-DNA-Vault/inbox/03_vault_agent_round_01.md
+
+### C27  (n=46)  area=[('Visual-DNA-Vault', 37), ('packages', 8)]  domain=[('agent-identity', 22), ('ui-surface', 17), ('knowledge-corpus', 3)]  kind=[('design-spec', 22), ('notes', 15), ('research', 4)]
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/system-maps/wizard-engine/00_DESIGN_OVERVIEW.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/05-build/persistence/meta-system-wizard-template.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/wizard-of-wizards/DESIGN_BRIEF.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/system-maps/wizard-engine/06_CONTEXT_ADAPTATION.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/system-maps/wizard-engine/09_DEEPER_SYSTEMS_DISCOVERY.md
+
+### C28  (n=63)  area=[('content-workbench', 59), ('packages', 4)]  domain=[('agent-identity', 34), ('knowledge-corpus', 18), ('other', 10)]  kind=[('design-spec', 39), ('notes', 24)]
+   content-workbench/math-verification/vault/mechanism/structural-constraints.md
+   content-workbench/math-verification/vault/mechanism/completeness-quality-boundary.md
+   content-workbench/math-verification/vault/structures/boundary-proof.md
+   content-workbench/math-verification/vault/mechanism/determination-functions.md
+   content-workbench/math-verification/vault/structures/addressability-grades.md
+
+### C29  (n=18)  area=[('content-workbench', 13), ('Visual-DNA-Vault', 3)]  domain=[('ui-surface', 18)]  kind=[('design-spec', 12), ('notes', 3), ('architecture', 2)]
+   content-workbench/vi-workbench/design/tokens/_index.md
+   content-workbench/vi-workbench/design/tokens/color.md
+   content-workbench/vi-workbench/design/tokens/typography.md
+   content-workbench/vi-workbench/design/tokens/density.md
+   content-workbench/vi-workbench/features/design-system.md
+
+### C30  (n=36)  area=[('content-workbench', 26), ('packages', 9)]  domain=[('agent-identity', 20), ('knowledge-corpus', 11), ('other', 3)]  kind=[('notes', 19), ('design-spec', 10), ('intent-vision', 3)]
+   content-workbench/math-verification/vault/rounds/round-7/round-7.md
+   content-workbench/math-verification/vault/rounds/round-4/round-4.md
+   content-workbench/math-verification/vault/rounds/round-5/round-5.md
+   content-workbench/math-verification/vault/rounds/round-10/round-10.md
+   content-workbench/math-verification/vault/_system/process/round-methodology-observations.md
+
+### C31  (n=38)  area=[('packages', 36), ('content-workbench', 2)]  domain=[('agent-identity', 18), ('ui-surface', 9), ('workspace-infra', 4)]  kind=[('design-spec', 25), ('notes', 7), ('intent-vision', 2)]
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/elevenlabs-hub-deep-dive-scenarios-skills-ui-expansion.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/elevenlabs-capability-to-hub-domain-mapping.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/hub-integration-candidates-and-stub-index.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/hub-blocked-state-mediation-matrix-draft.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/hub-embedded-browser-and-agent-tools-candidate.md
+
+### C32  (n=55)  area=[('packages', 55)]  domain=[('agent-identity', 38), ('workspace-infra', 8), ('business-gtm', 4)]  kind=[('notes', 38), ('design-spec', 11), ('intent-vision', 3)]
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/status/R6-applier-2026-05-21T12-00-00Z.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/rounds/R6-sub-2/round-R6-sub-2.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/status/R7-applier-2026-05-21T18-00-00Z.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/rounds/R7-sub-2/verification.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/rounds/R7/synthesis.md
+
+### C33  (n=27)  area=[('Visual-DNA-Vault', 27)]  domain=[('knowledge-corpus', 12), ('agent-identity', 12), ('workspace-infra', 2)]  kind=[('design-spec', 14), ('notes', 10), ('intent-vision', 2)]
+   Visual-DNA-Vault/notes/tasks/(Task) event skill - (Decision).md
+   Visual-DNA-Vault/notes/tasks/(Task) event skill - (Finding).md
+   Visual-DNA-Vault/notes/tasks/(Task) event skill - (Feedback).md
+   Visual-DNA-Vault/notes/tasks/(Task) event skill - (Sequence) Template.md
+   Visual-DNA-Vault/notes/tasks/(Task) event skill - (Observation).md
+
+### C34  (n=39)  area=[('content-workbench', 15), ('Visual-DNA-Vault', 15)]  domain=[('agent-identity', 19), ('ui-surface', 14), ('voice-audio', 4)]  kind=[('design-spec', 19), ('notes', 8), ('architecture', 7)]
+   content-workbench/vi-workbench/features/help-agent.md
+   Visual-DNA-Vault/Build/help-agent-requirements.md
+   Visual-DNA-Vault/outbox/round_00/descriptions/help-agent.md
+   Visual-DNA-Vault/Build/help-agent-architecture.md
+   Visual-DNA-Vault/Build/help-agent-implementation-guide.md
+
+### C35  (n=50)  area=[('packages', 25), ('Visual-DNA-Vault', 9)]  domain=[('voice-audio', 18), ('knowledge-corpus', 17), ('agent-identity', 9)]  kind=[('notes', 18), ('design-spec', 15), ('research', 10)]
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/elevenlabs-mcp-operational-guide.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/elevenlabs-platform-mcp-rag-supabase-agent-guided-delivery-landscape.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/elevenlabs-mcp-gaps-and-build.md
+   Visual-DNA-Vault/ElevenLabs-Wizard/elevenlabs-platform-mcp-rag-supabase-agent-guided-delivery-landscape.md
+   Visual-DNA-Vault/ElevenLabs-Wizard/elevenlabs-mcp-operational-guide.md
+
+### C36  (n=67)  area=[('content-workbench', 61), ('Visual-DNA-Vault', 5)]  domain=[('agent-identity', 47), ('ui-surface', 13), ('voice-audio', 4)]  kind=[('design-spec', 61), ('code', 4), ('notes', 1)]
+   content-workbench/vi-workbench/features/annotation-system.md
+   content-workbench/vi-workbench/extension-points/new-task-type.md
+   content-workbench/vi-workbench/features/extension-patterns.md
+   content-workbench/vi-workbench/features/tasks.md
+   content-workbench/vault/features/tasks.md
+
+### C37  (n=32)  area=[('Visual-DNA-Vault', 26), ('packages', 4)]  domain=[('agent-identity', 13), ('workspace-infra', 6), ('knowledge-corpus', 6)]  kind=[('design-spec', 14), ('notes', 9), ('research', 3)]
+   .cursor/plans/block_composition_parallel_reading_allocations.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/supabase-research/BATCH_PLAN.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/system-maps/supabase-public-content-composition-system-map.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/system-maps/batch-mapping/BATCH_ALLOCATIONS.md
+   Visual-DNA-Vault/Seed-Kernals-For-Extraction/working-ignore-folder/convergence-loop-core/system-maps/supabase-public-vi-visual-universal-system-map.md
+
+### C38  (n=33)  area=[('Visual-DNA-Vault', 33)]  domain=[('agent-identity', 30), ('knowledge-corpus', 2), ('voice-audio', 1)]  kind=[('design-spec', 28), ('intent-vision', 5)]
+   Visual-DNA-Vault/_system/skills/step-query.md
+   Visual-DNA-Vault/_system/skills/step-decide.md
+   Visual-DNA-Vault/_system/skills/step-wait.md
+   Visual-DNA-Vault/_system/skills/step-branch.md
+   Visual-DNA-Vault/_system/skills/step-remember.md
+
+### C39  (n=44)  area=[('packages', 39), ('content-workbench', 3)]  domain=[('agent-identity', 14), ('voice-audio', 11), ('compliance-consent', 6)]  kind=[('design-spec', 19), ('notes', 17), ('audit-report', 4)]
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/03-substrate-audit/channel-architecture-live.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/03-substrate-audit/vi-sync.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/rounds/R10/audits/R10-C-channel-architecture.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/rounds/R9/audits/R9-A-vi-sync.md
+   packages/elevenlabs-mcp/vault/ElevenLabs-Wizard/_discovery/03-substrate-audit/_MOC.md

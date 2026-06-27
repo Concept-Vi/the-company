@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: source_types
 aliases: ["source_types — constitution"]
 tags: [company, constitution, source-types, board, noticeboard, registry, provenance]

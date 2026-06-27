@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: mode_detection_rules
 aliases: ["mode_detection_rules — constitution"]
 tags: [company, constitution, mode_detection_rules, registry, cognition, activation]

@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: canvas
 aliases: ["canvas — constitution"]
 tags: [company, constitution, canvas, frontend]

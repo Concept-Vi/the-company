@@ -21,7 +21,7 @@ note + empty field — never a fabricated/zero-vector nearest. (This is the .md-
 the lead's paths/roots key-normalization + the dedupe land — DNA renders only resolved neighbours.)
 
 PROVEN (verify-by-use, ch-83e2cque): the EXACT unit the FACE rendered live —
-code:///home/tim/recollection/src/distill/harness.ts → its field: index.ts 0.75 · distill.test.ts 0.68
+code:///home/tim/company/recollection/src/distill/harness.ts → its field: index.ts 0.75 · distill.test.ts 0.68
 · distill-cli.ts 0.66 · unit-types.ts 0.62 · extractor.ts 0.55 · recall-cli.ts 0.55 = the whole distill
 module, semantically clustered.
 """
@@ -80,9 +80,9 @@ if __name__ == "__main__":
     from runtime.registry import NodeRegistry
     from store.fs_store import FsStore
     s = Suite(FsStore(".data/store"), NodeRegistry().discover(["nodes"]), nodes_dir="nodes")
-    out = neighbours(s.store, "code:///home/tim/recollection/src/distill/harness.ts",
+    out = neighbours(s.store, "code:///home/tim/company/recollection/src/distill/harness.ts",
                      space="common_knowledge", k=7)
     print(json.dumps(out, indent=2))
     # the .md-pending honest-empty case
-    md = neighbours(s.store, "code:///home/tim/recollection/README.md", space="common_knowledge", k=5)
+    md = neighbours(s.store, "code:///home/tim/company/recollection/README.md", space="common_knowledge", k=5)
     print("\n.md (absolute key, pending dedupe):", md.get("note", "")[:80])

@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: panels
 aliases: ["panels — constitution"]
 tags: [company, constitution, panels, self-mod]

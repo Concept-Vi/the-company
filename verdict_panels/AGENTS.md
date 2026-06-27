@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: verdict_panels
 aliases: ["verdict-panels — constitution", "verdict_panels — constitution"]
 tags: [company, constitution, verdict-panels, registry, cognition]

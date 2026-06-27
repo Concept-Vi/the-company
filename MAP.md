@@ -1,10 +1,11 @@
 ---
 type: map
+register: descriptive
 module: root
 aliases: ["Company Map", "Map of the Company", "MAP"]
 tags: [company, map, moc, knowledge-space]
 governs: []
-relates-to: ["[[Company — read first]]", "[[Company State]]", "[[Vault Conventions]]"]
+relates-to: ["[[Company — read first]]", "[[Company State]]", "[[Vault Conventions]]", "[[Orienteering Index]]"]
 status: living
 ---
 
@@ -65,6 +66,7 @@ flowchart TD
 | `introspection/` | the platform-agnostic Mirror-Registry engine (DISCOVER→CLASSIFY→PROJECT→REFRESH over a `PlatformEntry` + the 5 closed rules) + the instance-#1 CLI adapters — Level-1, ZERO platform-name literals (the lift, F-FIX-10). **+ the two Level-2 registries (LANE-REGISTRIES):** `registry.py` = `CapabilityRegistry` (the binary-discovered capability-leaf table behind a CACHED singleton — `set_capability_registry`/`capability_registry()`, a NEW pattern justified by expensive discovery, F-FIX-1); `platforms.py` = `PlatformRegistry` (a standalone importlib copy loading `platforms/*.py` `PLATFORM` rows via `model_validate`, deriving transport_invariants at load) | [[introspection — constitution]] | Mirror-Registry System |
 | `platforms/` | the Level-2 platform table as DATA — one `PLATFORM = {...}` row per external platform (`claude_code.py` = INSTANCE #1, Spec §7); DATA-ONLY, the legitimate home for platform-name strings the engine must never carry | [[platforms — constitution]] | Mirror-Registry System |
 | `docs/` | meta-docs about the repo-as-knowledge-space | [[docs — constitution]] | — |
+| `orienteering/` | the **terrain ledger** — what the Company is + where it physically lives (incl. the engines/data/config that run *outside* this folder) | [[orienteering — constitution]] (index: [[Orienteering Index]]) | — |
 | `ops/` | the service **command center** — see + run the runtime (`company` console + `services.json`); first of more | [[ops — constitution]] | — |
 | `ui-contract/` | the UI Contract corpus (the build's second product): purpose-free resource entries + transports/tasks/atlas a UI-building AI consumes INSTEAD of this repo's code — format frozen in `ui-contract/CONTRACT-FORMAT.md`; F1 slice carried, statuses honest (building/planned, nothing live until the driving harness flips it) | (README.md is its constitution) | F1.5/F9 |
 

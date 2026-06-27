@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: generation_policies
 aliases: ["generation-policies — constitution", "generation_policies — constitution"]
 tags: [company, constitution, generation-policies, registry, cognition, corpus]

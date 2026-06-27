@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: contracts
 aliases: ["contracts — constitution"]
 tags: [company, constitution, contracts, spine]

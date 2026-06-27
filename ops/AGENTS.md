@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: ops
 aliases: ["ops — constitution"]
 tags: [company, constitution, ops, command-center]

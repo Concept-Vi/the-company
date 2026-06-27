@@ -1,0 +1,8 @@
+{
+  "markdown": [
+    {"name": "frontmatter", "method": "yaml_frontmatter", "desc": "--- yaml --- block at top"},
+    {"name": "wikilinks",   "method": "regex", "pattern": "\\[\\[([^\\]|#]+)", "desc": "[[target]] relation edges"},
+    {"name": "fenced",      "method": "fenced_blocks", "desc": "``` blocks, kind from lang tag or sniff (json/sql/ts/...)"},
+    {"name": "tables",      "method": "md_tables", "desc": "| ... | markdown tables as rows"}
+  ]
+}

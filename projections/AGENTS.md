@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: projections
 aliases: ["projections — constitution"]
 tags: [company, constitution, projections, registry, cognition, corpus]

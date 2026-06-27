@@ -1,5 +1,6 @@
 ---
 type: state
+register: descriptive
 module: root
 aliases: ["Company State", "STATE"]
 tags: [company, state, status]

@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: tests
 aliases: ["tests — constitution"]
 tags: [company, constitution, tests, proofs]

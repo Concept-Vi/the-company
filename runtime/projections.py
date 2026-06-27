@@ -33,7 +33,7 @@ question — but extracting it now, for 6 not-yet-designed schemas, would be spe
 NEWMOD pass, surfaced not built. roles/skills already each carry their own copy — one more here is the
 established precedent, not new debt.)*
 
-## The projection schema (from ~/wizard-run-1/registries/projections.json — the mined prototype)
+## The projection schema (from ~/company/migration-pending/wizard-run-1/registries/projections.json — an earlier prototype)
 Each `projections/<id>.py` declares a module-level `PROJECTION` dict — a registry ROW:
   - `id`          — required; MUST equal the module name (addressable by file, like a role/node-type —
                     fail-loud otherwise). The lens name.

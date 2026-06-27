@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: lifters
 aliases: ["lifters — constitution"]
 tags: [company, constitution, lifters, registry, cognition, corpus]

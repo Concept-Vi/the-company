@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: ai_tics
 aliases: ["ai-tics — constitution", "ai_tics — constitution"]
 tags: [company, constitution, ai-tics, registry, cognition, corpus, fingerprint]

@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: operator_memory
 aliases: ["operator-memory — constitution", "operator_memory — constitution"]
 tags: [company, constitution, operator-memory, registry, cognition]

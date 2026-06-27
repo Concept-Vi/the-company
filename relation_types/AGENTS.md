@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: relation_types
 aliases: ["relation-types — constitution", "relation_types — constitution"]
 tags: [company, constitution, relation-types, registry, cognition, corpus]

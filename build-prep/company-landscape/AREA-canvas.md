@@ -135,7 +135,7 @@ Every node module exposes module-level declarations:
 | `embed` | process | no | Text → Vector. BGE-M3 @ :8001, 1024-dim. Enforces dim contract. |
 | `gate` | process | no | Branches: `value` → `pass` or `fail` based on `verdict`. Selective emission (only the taken port is written). |
 | `join` | process | no | Fan-in. Concatenates sorted inputs with separator. |
-| `model_of_tim` | content | **yes** | Reads `~/foundation/system/principles.md`. Fails loud if missing. |
+| `model_of_tim` | content | **yes** | Reads `~/company/foundation/system/principles.md`. Fails loud if missing. |
 | `portal` | content | n/a | RESOLVE='reference'. Scheduler skips it. Live window onto another address. run() always raises. |
 | `retrieve` | process | no | query Vector + corpus → top-K by cosine. numpy fast-path (~100x), Python fallback. Dim mismatch fails loud. |
 | `rhm_mode` | content | no | The presence dial as a node. 8 modes enum. Also carries `voice_enabled` toggle. |

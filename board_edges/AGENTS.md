@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: board_edges
 aliases: ["board_edges — constitution"]
 tags: [company, constitution, board-edges, relation-types, board, noticeboard, registry]

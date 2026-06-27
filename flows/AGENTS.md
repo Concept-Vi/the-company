@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: flows
 aliases: ["flows — constitution"]
 tags: [company, constitution, flows, registry, cognition]

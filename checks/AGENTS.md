@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: checks
 aliases: ["checks — constitution"]
 tags: [company, constitution, checks, registry, cognition]

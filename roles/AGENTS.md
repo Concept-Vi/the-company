@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: roles
 aliases: ["roles — constitution"]
 tags: [company, constitution, roles, cognition, role-registry]

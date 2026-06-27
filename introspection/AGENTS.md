@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: introspection
 aliases: ["introspection — constitution"]
 tags: [company, constitution, introspection, mirror-registry, platform-agnostic]

@@ -1,0 +1,164 @@
+{
+  "projections": [
+    {
+      "name": "format",
+      "level": "structural",
+      "produced_by": "code",
+      "embeds": false,
+      "stage": "legibility"
+    },
+    {
+      "name": "lineage",
+      "level": "structural",
+      "produced_by": "code",
+      "embeds": false,
+      "stage": "legibility"
+    },
+    {
+      "name": "links",
+      "level": "relational",
+      "produced_by": "code",
+      "embeds": false,
+      "stage": "legibility"
+    },
+    {
+      "name": "what",
+      "level": "content",
+      "produced_by": "model",
+      "embeds": false,
+      "field": "string",
+      "desc": "<=15-word what this file IS",
+      "stage": "legibility"
+    },
+    {
+      "name": "topics",
+      "level": "content",
+      "produced_by": "model",
+      "embeds": true,
+      "field": "array",
+      "desc": "subjects/areas it covers",
+      "stage": "legibility"
+    },
+    {
+      "name": "entities_vocab",
+      "level": "content",
+      "produced_by": "model",
+      "embeds": true,
+      "field": "array",
+      "desc": "named things + distinctive/coined terms it uses (verbatim where coined)",
+      "stage": "legibility"
+    },
+    {
+      "name": "principles",
+      "level": "meaning",
+      "produced_by": "model",
+      "embeds": true,
+      "field": "array",
+      "desc": "underlying principles/intents it expresses (MAY be several; render each)",
+      "stage": "legibility"
+    },
+    {
+      "name": "reaches",
+      "level": "meaning",
+      "produced_by": "model",
+      "embeds": true,
+      "field": "array",
+      "desc": "what it grasps toward / aspires to",
+      "stage": "legibility"
+    },
+    {
+      "name": "worldview",
+      "level": "meaning",
+      "produced_by": "model",
+      "embeds": true,
+      "field": "array",
+      "desc": "stances/values it ASSUMES (often unstated)",
+      "stage": "legibility"
+    },
+    {
+      "name": "claimed_status",
+      "level": "epistemic",
+      "produced_by": "model",
+      "embeds": false,
+      "field": "enum",
+      "enum": [
+        "decided",
+        "draft",
+        "aspirational",
+        "stub",
+        "unknown"
+      ],
+      "desc": "the file's OWN claimed state (render its claim, do not judge truth)",
+      "stage": "legibility"
+    },
+    {
+      "name": "internal_contradictions",
+      "level": "epistemic",
+      "produced_by": "model",
+      "embeds": false,
+      "field": "array",
+      "desc": "places it breaks its own logic/claims",
+      "stage": "legibility"
+    },
+    {
+      "name": "completeness",
+      "level": "epistemic",
+      "produced_by": "model",
+      "embeds": false,
+      "field": "enum",
+      "enum": [
+        "fragment",
+        "whole",
+        "meta",
+        "unknown"
+      ],
+      "desc": "is it a fragment-of-something-bigger, a whole, or meta",
+      "stage": "legibility"
+    },
+    {
+      "name": "stated_claims",
+      "level": "epistemic",
+      "produced_by": "model",
+      "embeds": false,
+      "field": "array",
+      "desc": "specific decisions/schemas/components AS STATED (rendered verbatim-ish; NOT judged)",
+      "stage": "deep"
+    },
+    {
+      "name": "open_questions",
+      "level": "generative",
+      "produced_by": "model",
+      "embeds": false,
+      "field": "array",
+      "desc": "what it flags as unresolved",
+      "stage": "legibility"
+    },
+    {
+      "name": "decisions_needed",
+      "level": "generative",
+      "produced_by": "model",
+      "embeds": false,
+      "field": "array",
+      "desc": "what it says needs a human/Tim call",
+      "stage": "legibility"
+    },
+    {
+      "name": "framing",
+      "level": "texture",
+      "produced_by": "model",
+      "embeds": false,
+      "field": "string",
+      "desc": "the angle/voice/how it's put (preserve, do not normalise)",
+      "stage": "legibility"
+    },
+    {
+      "name": "audience_use",
+      "level": "functional",
+      "produced_by": "model",
+      "embeds": false,
+      "field": "string",
+      "desc": "who/what it's for (operator|agent|end-user|self-note|unknown)",
+      "stage": "legibility"
+    }
+  ]
+}

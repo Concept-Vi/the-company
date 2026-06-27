@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: mcp_face
 aliases: ["mcp_face — constitution"]
 tags: [company, constitution, mcp_face, agent-face]

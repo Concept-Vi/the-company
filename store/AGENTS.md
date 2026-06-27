@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: store
 aliases: ["store — constitution"]
 tags: [company, constitution, store]

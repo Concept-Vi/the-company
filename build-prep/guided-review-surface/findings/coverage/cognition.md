@@ -19,7 +19,7 @@ extension system:
 **nodes/** — 15 node-type modules (C2 declarations). Three kinds:
 - **process** — pure transforms (`uppercase`, `titlecase`, `wordcount`, `join`, `pair`, `gate`) and
   AI workhorses (`llm`, `ask`, `embed`, `retrieve`, `similarity`)
-- **content** — `constant`, `codebase`, `portal`, `model_of_tim` (VOLATILE — reads ~/foundation),
+- **content** — `constant`, `codebase`, `portal`, `model_of_tim` (VOLATILE — reads ~/company/foundation),
   `rhm_mode` (VOLATILE — the presence dial AS a node, with `voice_enabled` toggle)
 - Each self-registers on drop-in; no change to runtime, UI, or tools
 
@@ -65,7 +65,7 @@ as any other turn.
 
 ### 1.3 · `model_of_tim` node — the explicit RHM grounding source
 
-**Observed (nodes/model_of_tim.py:1-29):** reads `~/foundation/system/principles.md` at run time
+**Observed (nodes/model_of_tim.py:1-29):** reads `~/company/foundation/system/principles.md` at run time
 (VOLATILE — never memo-cached). This is the canonical explicit model of Tim — "Tim's own statements
 of how the Company holds itself." The RHM reasons FROM this. It is a node in the composition graph;
 during a guided walk where the RHM narrates AT-ALTITUDE "what this IS", it is drawing on the
