@@ -299,14 +299,15 @@ def op_stop(*_a) -> str:
 
 def op_panel(*_a) -> str:
     """The control panel — every member with its stop controls (the text 'buttons')."""
-    lines = ["🎛 Control panel — tap a command:"]
+    lines = ["🎛 Control panel.  TAP a reaction on any member's message:  🛑 = stop (teardown)  ·  ⏸ = pause (interrupt).",
+             "Or use commands:"]
     for m in roster():
         lb = m["label"]
         if lb == "fork":
-            lines.append(f"  {lb}: (that's the lead session — not stoppable from here)")
+            lines.append(f"  {lb}: (the lead session — not stoppable from here)")
         else:
-            lines.append(f"  {lb}:   ⏸ /interrupt {lb}    ⏹ /teardown {lb}")
-    lines.append("  ALL:   ⏹ /stop  (interrupt everyone)   ·   /members   ·   /help")
+            lines.append(f"  {lb}:   ⏸ /interrupt {lb}    🛑 /teardown {lb}")
+    lines.append("  ALL:   /stop  (interrupt everyone)   ·   /members   ·   /help")
     return "\n".join(lines)
 
 
@@ -413,6 +414,36 @@ def _start_op_server():
     print(f"  op-server on 127.0.0.1:{OP_PORT}", flush=True)
 
 
+# ---------------- reaction "buttons": tap an emoji on a member's message → control it ----------------
+# Channels have no action-buttons (chat-only), but they DO have native emoji reactions that emit over the
+# socket (message:reaction:add). So a reaction IS the button: 🛑/❌ on a member's message tears it down,
+# ⏸/✋ interrupts its current turn. Cross-device (works on the phone), native, no front-end fork.
+_TEARDOWN_EMOJI = ("🛑", "❌", "⛔", "octagonal_sign", "no_entry", "cross_mark", "stop")
+_INTERRUPT_EMOJI = ("⏸", "⏸️", "✋", "🤚", "pause_button", "double_vertical_bar", "raised_hand")
+
+
+def _label_for_webhook_id(wid: str) -> "str | None":
+    for lb, wh in _state.get("webhooks", {}).items():
+        if wh.get("id") == wid:
+            return lb
+    return None
+
+
+def handle_reaction(msg: dict, reactor: dict) -> None:
+    emoji = (msg.get("name") or "")
+    wid = ((msg.get("meta") or {}).get("webhook") or {}).get("id")
+    label = _label_for_webhook_id(wid) if wid else None
+    if not label or not _member(label):
+        return
+    e = emoji.lower()
+    if any(t in e for t in _TEARDOWN_EMOJI) or emoji in _TEARDOWN_EMOJI:
+        print(f"  reaction {emoji} on {label} → TEARDOWN", flush=True)
+        post_as("operator", f"🛑 (reaction on {label}) — " + dispatch("teardown", [label]))
+    elif any(t in e for t in _INTERRUPT_EMOJI) or emoji in _INTERRUPT_EMOJI:
+        print(f"  reaction {emoji} on {label} → INTERRUPT", flush=True)
+        post_as("operator", f"⏸ (reaction on {label}) — " + dispatch("interrupt", [label]))
+
+
 # ---------------- daemon ----------------
 def main():
     global _state, _token
@@ -439,6 +470,9 @@ def main():
             if (data or {}).get("channel_id") != OWUI_CHANNEL:
                 return
             d = (data.get("data") or {})
+            if d.get("type") == "message:reaction:add":        # a tapped emoji = a control button
+                handle_reaction(d.get("data") or {}, data.get("user") or {})
+                return
             if d.get("type") != "message":
                 return
             m = d.get("data") or {}
