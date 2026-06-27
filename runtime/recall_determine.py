@@ -27,10 +27,12 @@ _STOP = {"the", "a", "an", "of", "to", "and", "or", "in", "on", "for", "is", "ar
 RERANK_URL = os.environ.get("RERANK_URL", "http://127.0.0.1:8008/rerank")
 RERANK_TIMEOUT = float(os.environ.get("RERANK_TIMEOUT", "30"))
 RERANK_TRUNC = int(os.environ.get("DETERMINE_RERANK_TRUNC", "600"))
-# Cap candidates sent to the CPU reranker — it's the dominant cost (~0.37s/pair on CPU, profiled), scaling
-# linearly with count. The embedder already ranked by meaning, so reranking the top POOL suffices (mirrors
-# session_recall's pool cap). Env-configurable. Raising it trades latency for a slightly deeper rerank set.
-RERANK_POOL = int(os.environ.get("DETERMINE_RERANK_POOL", "12"))
+# Cap candidates sent to the reranker. The old default of 12 was for the CPU reranker (~0.37s/pair, the
+# dominant cost). Since the reranker moved to GPU (2026-06-28) the cost collapsed — measured warm: pool 12
+# =0.07s, 30=0.15s, 60=0.34s — so reranking the FULL semantic pool (k=max_claims=60) costs only ~+0.27s
+# against a ~4.5s determine, and recall improves (real matches were observed as deep as the 14th candidate,
+# previously discarded by the 12-cap). Default now matches the semantic pool size; env-configurable.
+RERANK_POOL = int(os.environ.get("DETERMINE_RERANK_POOL", "60"))
 
 # Cache the loaded asset notes, keyed by the file's (mtime,size) — determine re-read the whole jsonl (~19k
 # records, ~0.6s) on EVERY call; the cache skips that reload while staying fresh (a rebake changes the sig).
