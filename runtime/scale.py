@@ -238,11 +238,19 @@ def build_scale_pyramid(store, *, space: str, rungs: list | None = None, linkage
 
     FAIL LOUD: an empty/absent space, or a space too thin to coarsen (default_rungs → []), RAISES — never a
     silent empty pyramid. Returns {space, rungs:[...], n_units, built, skipped}.
-    """
+
+    SCALE: above _WARD_MAX_UNITS the O(n²) ward dendrogram is infeasible → DELEGATE to the kmeans-hybrid
+    (build_scale_pyramid_kmeans) which is identical in output shape + nesting (recollection 2026-06-27, the
+    harvested rollup-scalability gap — extractions 51k / common_knowledge). linkage='ward' explicit still
+    forces the dendrogram path (a caller that KNOWS the space is small + wants exact ward can demand it)."""
     from store import vector_index as vx
 
     corpus = store.index_corpus(space=space, emb=emb)   # [{id: <unit source address>, vector}] at the embedder LAYER
     n = len(corpus)
+    # SCALABLE DELEGATION: a large space can't be warded whole → the kmeans-hybrid (same structure/nesting).
+    # Only when the caller didn't pin a specific non-default linkage (ward is the default → eligible to scale).
+    if n > _WARD_MAX_UNITS and linkage == "ward":
+        return build_scale_pyramid_kmeans(store, space=space, rungs=rungs, force=force, emb=emb)
     if n == 0:
         raise ValueError(
             f"scale.build_scale_pyramid: space {space!r} has NO unit vectors — cannot build a pyramid over "
@@ -306,6 +314,113 @@ def build_scale_pyramid(store, *, space: str, rungs: list | None = None, linkage
                "rungs": sorted(rung_records, key=lambda r: r["k"]), "unit_space": space}
     store.save_scale_pyramid(space, pyramid, emb)
     return {"space": space, "rungs": rungs, "n_units": n, "built": built, "skipped": skipped,
+            "pyramid_rungs": [{"k": r["k"], "clusters": len(r["clusters"])} for r in rung_records]}
+
+
+# Above this unit count, the O(n²) ward dendrogram is infeasible (its own docstring: "never agglomerate the
+# whole corpus blindly") → build_scale_pyramid delegates to the SCALABLE kmeans-hybrid path. The 51,600
+# extractions space + common_knowledge are the spaces that need it (recollection 2026-06-27, the harvested
+# rollup-scalability gap). Below it, ward over all units stays (its nesting is exact + cheap at small n).
+_WARD_MAX_UNITS = 4000
+
+
+def build_scale_pyramid_kmeans(store, *, space: str, rungs: list | None = None, force: bool = False,
+                               emb: str | None = None) -> dict:
+    """SCALABLE multi-scale pyramid for a LARGE space (the kmeans-hybrid — recollection 2026-06-27). Ward is
+    O(n²) mem / O(n³) time → infeasible over 50k+ units. Instead:
+      1. MiniBatchKMeans the FINEST rung (max K) over all n units → the base clustering (sklearn, minibatch =
+         designed for exactly this scale).
+      2. WARD-agglomerate the ~K FINE CENTROIDS up to the coarse rungs (reuse `agglomerate` — now O(K²) on the
+         centroids, not O(n²) on units). A coarse cluster's members = the EXACT UNION of the fine clusters that
+         fold into it → the nesting invariant (coarse ⊃ fine) holds BY CONSTRUCTION, the same property the
+         single-dendrogram ward path guarantees.
+    Persists the IDENTICAL structure as build_scale_pyramid (cluster://<space>/k<K>/<label> centroids as
+    queryable `scale:<space>:k<K>` vectors + the pyramid sidecar) — a drop-in for any rung_points/resolve_at_rung
+    reader. Incremental (member-hash skip). PURE READ of the embedder (centroids are means of on-disk vectors)."""
+    import numpy as _np
+    from sklearn.cluster import MiniBatchKMeans
+
+    corpus = store.index_corpus(space=space, emb=emb)
+    n = len(corpus)
+    if n == 0:
+        raise ValueError(f"scale.build_scale_pyramid_kmeans: space {space!r} has NO unit vectors.")
+    if rungs is None:
+        rungs = default_rungs(n)
+    rungs = sorted({int(k) for k in (rungs or []) if 1 < int(k) < n}, reverse=True)
+    if not rungs:
+        raise ValueError(f"scale.build_scale_pyramid_kmeans: space {space!r} ({n} units) too thin to coarsen.")
+
+    ids = [c["id"] for c in corpus]
+    nv = [_norm(c["vector"]) for c in corpus]                     # unit-normalized → cosine == euclidean on the sphere
+    dim = len(nv[0])
+    model = (store.get_vector(store.space_address(ids[0], space, emb)) or {}).get("model")
+
+    finest = rungs[0]
+    X = _np.asarray(nv, dtype=_np.float32)
+    km = MiniBatchKMeans(n_clusters=finest, random_state=0, batch_size=4096,
+                         n_init=3, max_iter=100).fit(X)
+    labels = km.labels_.tolist()
+
+    # FINE rung — kmeans clusters, in stable order (by smallest member index → reproducible labels)
+    fine_groups = clusters_of(labels)                            # {km_label: [unit_idx, ...]}
+    fine = []                                                    # ordered [(source, [unit_idxs], centroid_vec)]
+    for label, (_kl, idxs) in enumerate(sorted(fine_groups.items(), key=lambda kv: min(kv[1]))):
+        fine.append((f"cluster://{space}/k{finest}/{label}", idxs, centroid(nv, idxs)))
+
+    built = skipped = 0
+    rung_records: list = []
+
+    def _persist_rung(k, clusters):
+        """clusters = ordered [(source, [unit_idxs], centroid_vec, children_finer|None)] → persist + record."""
+        nonlocal built, skipped
+        recs = []
+        for label, (src, idxs, cvec, child) in enumerate(clusters):
+            member_srcs = [ids[i] for i in idxs]
+            exemplar = max(idxs, key=lambda i: _cos(nv[i], cvec))
+            store_key = store.space_address(src, f"scale:{space}:k{k}", emb)
+            h = _member_hash(store, member_srcs)
+            prior = store.get_vector(store_key)
+            if force or prior is None or prior.get("content_hash") != h:
+                store.put_vector(store_key, cvec, h, dim=dim, model=model,
+                                 space=f"scale:{space}:k{k}", source=src, emb=emb)
+                built += 1
+            else:
+                skipped += 1
+            recs.append({"label": label, "source": src, "size": len(idxs), "exemplar": ids[exemplar],
+                         "members": member_srcs, **({"children_finer": child} if child is not None else {})})
+        rung_records.append({"k": k, "space": f"scale:{space}:k{k}", "clusters": recs})
+
+    # COARSER rungs — ward the FINE CENTROIDS (O(K²)), cut at each coarse rung; a coarse cluster's units =
+    # union of its fine clusters' units (nesting exact). Build COARSEST→FINEST among the coarse set so each
+    # records the finer clusters folding into it; the FINE rung itself is persisted last (children=None).
+    coarse_rungs = [k for k in rungs if k != finest]
+    if coarse_rungs:
+        fine_centroids = [fc[2] for fc in fine]
+        _nv2, cuts2 = agglomerate(fine_centroids, linkage="ward")
+        # map each fine-cluster position → its coarse-cluster source, rung by rung (descending K) for children
+        prev_assign = {p: fine[p][0] for p in range(len(fine))}   # finest rung: a fine pos maps to its own source
+        for k in coarse_rungs:                                    # descending (rungs sorted desc; finest excluded)
+            part = cut(cuts2, k)                                  # label per FINE-cluster position
+            groups = clusters_of(part)                           # {coarse_label: [fine_position, ...]}
+            clusters = []
+            assign = {}
+            for label, (_cl, fpos) in enumerate(sorted(groups.items(), key=lambda kv: min(kv[1]))):
+                src = f"cluster://{space}/k{k}/{label}"
+                unit_idxs = sorted(i for p in fpos for i in fine[p][1])    # UNION of the fine clusters' units
+                cvec = centroid(nv, unit_idxs)
+                child = sorted({prev_assign[p] for p in fpos})            # finer clusters folding in
+                clusters.append((src, unit_idxs, cvec, child))
+                for p in fpos:
+                    assign[p] = src
+            _persist_rung(k, clusters)
+            prev_assign = assign
+    # the FINE rung (persisted after, so the coarse children_finer above point at THIS rung's sources)
+    _persist_rung(finest, [(src, idxs, cvec, None) for (src, idxs, cvec) in fine])
+
+    pyramid = {"space": space, "linkage": "kmeans+ward", "n_units": n, "dim": dim,
+               "rungs": sorted(rung_records, key=lambda r: r["k"]), "unit_space": space}
+    store.save_scale_pyramid(space, pyramid, emb)
+    return {"space": space, "rungs": rungs, "n_units": n, "built": built, "skipped": skipped, "method": "kmeans+ward",
             "pyramid_rungs": [{"k": r["k"], "clusters": len(r["clusters"])} for r in rung_records]}
 
 
