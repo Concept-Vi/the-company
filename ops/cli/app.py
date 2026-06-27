@@ -114,13 +114,21 @@ def _act(reg, action, keys, force=False, evict=False, wait=False):
                 print(f"    Free space first (`company down <service>`), re-run with --evict to "
                       f"auto-make-room, or --force to override.")
                 sys.exit(2)
-    free_before = (gpu.read_gpu() or {}).get("free", 0) if wait else 0
     word = {"up": "start", "down": "stop", "restart": "restart"}[action]
+    # MEASURED-RESTART FIX (2026-06-28): on a restart the old instance is still resident here, so a
+    # free_before snapshot would count it — and free_after (old freed, new loaded) ends up HIGHER,
+    # making the load-delta read ~0. Tear the service down FIRST when we're going to measure, so
+    # free_before reflects the card WITHOUT it. (`up` of a not-running service is already correct.)
+    if wait and action == "restart":
+        for k in keys:
+            gpu.teardown(svcs[k])
+        time.sleep(2)                              # let VRAM actually release before the snapshot
+    free_before = (gpu.read_gpu() or {}).get("free", 0) if wait else 0
     for k in keys:
         if action == "down":
             ok, msg = gpu.teardown(svcs[k])        # orphan-safe (cgroup for units; pgroup for manual)
         else:
-            ok, msg = systemd.control(svcs[k], word)
+            ok, msg = systemd.control(svcs[k], word)   # restart on an already-stopped unit just starts it
         print(f"  {'✓' if ok else '✗'} {word} {k}" + ("" if ok else f"  [{msg}]"))
     if wait and action in ("up", "restart"):
         _wait_and_record(reg, keys, free_before)

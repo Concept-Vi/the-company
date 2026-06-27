@@ -47,6 +47,20 @@ def budget_vram(reg, key):
 budget_of = budget_vram
 
 
+def _vram_source(reg, key):
+    """Where a per-service VRAM figure came from — so the view is HONEST about live vs guessed
+    (per-process VRAM is unreadable on this WSL box, so the figure is never a direct measurement
+    of the process; it's one of three derivations):
+      reserved — config.gpu_util × ceiling, the slice vLLM actually pins (authoritative);
+      measured — a recorded load-delta from telemetry (the live mechanism: total-GPU jump on load);
+      est      — the static registry vram_mb (no load ever measured for it)."""
+    svc = reg["services"][key]
+    c = svc.get("config")
+    if c and c.get("gpu_util"):
+        return "reserved"
+    return "measured" if learned_vram(key) else "est"
+
+
 def _is_running(svc):
     """True if the service is up. Use the PER-UNIT signal for managed services —
     NOT the port — because model services share ports (chat-* all :8000, the two
@@ -104,7 +118,7 @@ def format_state(reg):
     if running:
         lines.append("  holding the card:")
         for k, mb in sorted(running, key=lambda x: -x[1]):
-            lines.append(f"    • {k:<15} ~{mb/1000:.1f} GB")
+            lines.append(f"    • {k:<15} ~{mb/1000:.1f} GB  ({_vram_source(reg, k)})")
     else:
         lines.append("  holding the card: nothing (GPU is clear)")
     return "\n".join(lines)
