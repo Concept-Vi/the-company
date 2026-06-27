@@ -218,7 +218,7 @@ def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb="_
     return {"ranked": ranked, "note": note}
 
 
-def index_staleness(store, corpus, *, model=None, space=None) -> dict:
+def index_staleness(store, corpus, *, model=None, space=None, emb=None) -> dict:
     """READ-ONLY staleness check: does the persisted vector index still reflect `corpus`, WITHOUT a
     rebuild? A SIBLING of build_index/query_index — but it embeds NOTHING, touches NO network, never
     calls the :8001 embedder. It only compares content_hashes, so the caller (query_index / consult /
@@ -263,8 +263,13 @@ def index_staleness(store, corpus, *, model=None, space=None) -> dict:
 
     # 2) the persisted side — read by the SPACE-KEYED address (space=None → bare, byte-identical to before).
     #    Each corpus item address maps to the persisted key build_index wrote (store.space_address).
+    # `emb` (additive, default None = the legacy/unspaced or single-embedder key) flows into the persisted
+    # key so staleness reads the SAME entries the embed wrote: a multi-embedder space stores vectors under
+    # `…#space=<proj>#emb=<emb>` (e.g. extractions#emb=pplx), so without emb the keyed form would never match
+    # and EVERY item read as missing. (index_addresses filters by `space` only; for a single-emb space — the
+    # reality today — that set IS the emb's set. Multi-emb-per-space staleness is a follow-on.)
     indexed = set(store.index_addresses(space=space))
-    keyed = {addr: store.space_address(addr, space) for addr in corpus_hashes}
+    keyed = {addr: store.space_address(addr, space, emb) for addr in corpus_hashes}
     corpus_keys = set(keyed.values())
 
     missing = sorted(a for a, k in keyed.items() if k not in indexed)        # in corpus, never indexed
