@@ -202,6 +202,40 @@ def rerank_candidates(topic_text, cands, *, top_n=None, floor=None):
     return out, f"reranked (jina-v3 :8008): kept {len(out)}/{len(cands)}{rng}"
 
 
+# A candidate scoring above this on the GPU jina-v3 reranker is genuinely on-topic (not filler). Calibrated
+# by-use 2026-06-28: on real queries 3+ candidates clear it (a BODY of signal); on drift/nonsense at most one
+# coincidental spike clears it then the scores collapse — so DEPTH (how many strong), not the top score,
+# discriminates "the corpus covers this" from "one lucky match" (pure nonsense spiked a single 0.347).
+RELEVANCE_STRONG = float(os.environ.get("DETERMINE_RELEVANCE_STRONG", "0.15"))
+
+
+def _relevance_read(cands):
+    """Read the rerank-score DISTRIBUTION over the (deduped-by-chunk) reranked candidates → a confidence
+    signal the caller can SEE, so a confident-but-off-topic answer is no longer indistinguishable from a real
+    one (the form-and-use gap: determine returned 6 tidy themes for a topic the corpus didn't cover, with
+    no_fiction=True and no 'this may be drift' tell — the tell was only in the buried score range). Per-CHUNK,
+    not per-claim, so an 18-claim chunk doesn't dominate. Returns {top, n_strong, assessment} or None."""
+    seen, scores = set(), []
+    for c in cands or []:
+        cid = c.get("chunk_id")
+        if cid in seen:
+            continue
+        seen.add(cid)
+        s = c.get("_rerank_score")
+        if s is not None:
+            scores.append(s)
+    if not scores:
+        return None
+    n_strong = sum(1 for s in scores if s > RELEVANCE_STRONG)
+    top = max(scores)
+    assessment = ("covered" if n_strong >= 3 else "thin" if n_strong >= 1 else "likely-off-topic")
+    return {"top": round(top, 3), "n_strong": n_strong, "assessment": assessment,
+            "note": (None if assessment == "covered" else
+                     f"(Notice) low relevance — only {n_strong} candidate(s) clear {RELEVANCE_STRONG} "
+                     f"(top {round(top,3)}); the corpus may not actually cover this topic. Treat the themes as "
+                     f"adjacent, not authoritative.")}
+
+
 def collect_claims(recs, topic_rx, *, max_claims=60, cands=None):
     """Collect REAL claims (chunk-traced) from candidates. `cands` may be pre-filtered (semantic); else
     keyword-filter by `topic_rx`. Returns (cands, claims)."""
@@ -214,6 +248,13 @@ def collect_claims(recs, topic_rx, *, max_claims=60, cands=None):
         src = (r.get("claims") or []) + (r.get("relations") or [])
         if not src and r.get("about"):
             src = [r["about"]]
+        # de-fragment WITHIN a chunk: the fine pass often stores a full sentence AND its broken-out clauses as
+        # separate claims (e.g. "X discovers, runs, and classifies" + "X discovers" + "X runs" + "X classifies"),
+        # which padded "60 claims" down to ~20 real ideas and fed the grouping model near-duplicates. Drop a
+        # claim that is a substring of a longer claim from the SAME chunk (case/space-normalised) — keep the
+        # fuller statement. Cross-chunk claims are never merged (distinct provenance). Reversible: pure filter.
+        norm = [(c, " ".join(c.lower().split())) for c in src if isinstance(c, str) and c.strip()]
+        src = [c for c, n in norm if not any(n != n2 and n in n2 for _, n2 in norm)]
         for c in src:
             if isinstance(c, str) and c.strip():
                 # carry the FULL provenance, not just the chunk id: rel_path = the source file (for a
@@ -236,7 +277,8 @@ class _Clustering(BaseModel):
 
 def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, max_claims: int = 60,
               claim_trim: int | None = None, group_max_tokens: int = 4096,
-              rerank: bool = True, rerank_top: int | None = None, rerank_floor: float | None = None) -> dict:
+              rerank: bool = True, rerank_top: int | None = None, rerank_floor: float | None = None,
+              min_strong: int = 0) -> dict:
     """The grounded determine: filter the extraction asset by `topic_text` → (rerank) → collect real claims →
     model clusters BY INDEX → reconstruct real provenance-traced claims per theme + the NO-FICTION check.
 
@@ -281,10 +323,23 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
         # CPU, profiled) and the embedder already ranked by meaning, so reranking the top POOL suffices.
         sem, rerank_note = rerank_candidates(topic_text, sem[:RERANK_POOL], top_n=rerank_top, floor=rerank_floor)
         _filter = "semantic+rerank"
+    relevance = _relevance_read(sem) if (sem and rerank) else None
+    # OPT-IN honest-empty gate (default min_strong=0 = OFF, behaviour-preserving): when the caller asks for a
+    # minimum number of strongly-relevant candidates and the corpus doesn't meet it, return empty WITH the
+    # relevance read rather than a confident off-topic answer. The taste call (honest-empty vs always-return)
+    # stays the caller's — this just makes honest-empty available, surfaced not silent.
+    if min_strong and relevance and relevance["n_strong"] < min_strong:
+        return {"topic": topic_text, "asset": asset, "filter": _filter, "n_candidates": len(sem), "n_claims": 0,
+                "themes": [], "no_fiction": True, "rerank": rerank_note, "relevance": relevance,
+                "freshness": asset_freshness(asset, len(recs)),
+                "note": (f"honest-empty: min_strong={min_strong} requested but only {relevance['n_strong']} "
+                         f"candidate(s) cleared the relevance bar — the corpus does not cover this topic well "
+                         f"enough to answer (not a fabricated adjacent answer).")}
     cands, claims = collect_claims(recs, topic_regex(topic_text), max_claims=max_claims, cands=sem)
     if not claims:
         return {"topic": topic_text, "asset": asset, "filter": _filter, "n_candidates": len(cands), "n_claims": 0,
-                "themes": [], "no_fiction": True, "rerank": rerank_note, "freshness": asset_freshness(asset, len(recs)),
+                "themes": [], "no_fiction": True, "rerank": rerank_note, "relevance": relevance,
+                "freshness": asset_freshness(asset, len(recs)),
                 "note": ("no extractions matched the topic — honest no-match (not a fabricated theme)."
                          + (" [rerank floor filtered all candidates — correct empty for an off-topic query]"
                             if (rerank_note and "kept 0/" in rerank_note) else ""))}
@@ -336,7 +391,7 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
             themes_out.append({"theme": th.get("theme", ""), "claims": real})
     return {"topic": topic_text, "asset": asset, "filter": _filter, "n_candidates": len(cands), "n_claims": len(claims),
             "claims_grouped": len(used), "themes": themes_out, "no_fiction": (len(bad) == 0),
-            "rerank": rerank_note, "freshness": asset_freshness(asset, len(recs)),
+            "rerank": rerank_note, "relevance": relevance, "freshness": asset_freshness(asset, len(recs)),
             "note": (f"GROUNDED ({_filter}): every claim is a verbatim extraction, traced to its source (rel_path + anchor) "
                      "and grouped by index (invented nothing). Embedding finds candidates; the jina-v3 reranker is the "
                      "relevance gate over them." + (f" ⚠ {len(bad)} invalid indices dropped." if bad else "") + _oversize)}
