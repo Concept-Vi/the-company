@@ -494,6 +494,47 @@ def _commit_queue_drain_loop():
             pass
         _cqt.sleep(2.0)
 _x12_thr.Thread(target=_commit_queue_drain_loop, daemon=True, name="commit-queue-drainer").start()
+
+
+# THE FRESHNESS DAEMON (runtime/freshness.py) — auto-reindex the 'extractions' recall space when its source
+# asset files change (the gap recollection diagnosed + harvested: nothing auto-reindexed; manual embed only).
+# MTIME-GATED so steady-state is a cheap stat, NOT a 52k staleness scan: it reconciles ONLY after an asset
+# file is rewritten (a re-bake). reconcile_extractions = index_staleness → embed missing/changed (:8007) →
+# retract orphaned (store.remove_vector). FAIL-SOFT (a transient embed/scan error never kills the loop); a
+# reconcile that changed anything emits a durable event (no-silent). Initial delay lets the warm + recall
+# settle before any embed competes for the GPU embedder.
+def _freshness_loop():
+    import time as _ft, os as _fo
+    from runtime import freshness as _fr
+    EXT = _fo.path.join(_fo.path.dirname(_fo.path.dirname(_fo.path.abspath(__file__))), ".data", "store", "extractions")
+    ASSETS = ("full", "visual-dna", "theorem")
+    def _sig():
+        s = {}
+        for a in ASSETS:
+            p = _fo.path.join(EXT, f"extractions-{a}.jsonl")
+            try: s[a] = _fo.stat(p).st_mtime_ns
+            except OSError: s[a] = None
+        return s
+    _ft.sleep(300)                                   # let startup warm + first recalls settle
+    last = _sig()                                    # baseline: do NOT reconcile on boot (the index is already built)
+    while True:
+        try:
+            cur = _sig()
+            if cur != last:                          # an asset was re-baked → reconcile the delta
+                rep = _fr.reconcile_extractions(SUITE.store, retract_extra=True)
+                last = cur
+                if rep.get("embedded") or rep.get("retracted") or rep.get("degraded"):
+                    try:
+                        SUITE.store.append_event({"kind": "warning" if rep.get("degraded") else "info",
+                            "summary": (f"freshness: extractions reconciled — embedded {rep.get('embedded')}, "
+                                        f"retracted {rep.get('retracted')}, degraded {rep.get('degraded')}, "
+                                        f"fresh_after {rep.get('fresh_after')}")})
+                    except Exception:
+                        pass
+        except Exception:
+            pass                                     # fail-soft: never kill the loop (the queue/warm daemons' discipline)
+        _ft.sleep(600)                               # poll cadence (cheap stat; reconcile only on change)
+_x12_thr.Thread(target=_freshness_loop, daemon=True, name="freshness-reindex").start()
 DEMO = "codebase"
 
 
