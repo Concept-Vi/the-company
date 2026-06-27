@@ -13,13 +13,25 @@ THE ASSET: .data/store/extractions/extractions-<name>.jsonl (the dragnet's extra
 history = 'full', the Visual-DNA vault = 'visual-dna'). extract-once / determine-many.
 """
 from __future__ import annotations
-import json, os, re
+import json, os, re, urllib.request
 from typing import List
 from pydantic import BaseModel
 
 _EXT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".data", "store", "extractions")
 _STOP = {"the", "a", "an", "of", "to", "and", "or", "in", "on", "for", "is", "are", "how", "what", "which",
          "with", "by", "as", "at", "it", "its", "be", "this", "that", "from", "into", "about"}
+
+# Reuse the SAME served reranker the recollection recall uses (jina-v3, CPU, :8008) — reuse-don't-parallel.
+# Env-configurable (no hardcoding): the URL, the timeout, and how much of each candidate to send (the
+# decisive relevance signal sits in the lead characters, mirroring session_recall's 600-char truncation).
+RERANK_URL = os.environ.get("RERANK_URL", "http://127.0.0.1:8008/rerank")
+RERANK_TIMEOUT = float(os.environ.get("RERANK_TIMEOUT", "30"))
+RERANK_TRUNC = int(os.environ.get("DETERMINE_RERANK_TRUNC", "600"))
+# The grouping model's context window. JOTTED BEHAVIOURAL CUTOFF (Tim 2026-06-27): chat-4b is capped at
+# max_model_len 4096, so neither the output cap nor the (untrimmed) prompt can be truly "off" — the request
+# fails if prompt+output exceed this. The output cap is kept as a real cutoff under it; the prompt is
+# fit-to-context-guarded. A bigger-context grouping model would lift both. Env-configurable, not hardcoded.
+CHAT_CTX = int(os.environ.get("DETERMINE_GROUP_CTX", "4096"))
 
 
 def asset_path(name: str = "full") -> str:
@@ -132,6 +144,43 @@ def semantic_candidates(topic_text, recs, asset, *, suite=None, k=60):
         return None
 
 
+def rerank_candidates(topic_text, cands, *, top_n=None, floor=None):
+    """The SHARP relevance gate the embedding nearest-k can't give: re-score each (topic, candidate) pair
+    with the served jina-v3 reranker (reads query+candidate TOGETHER), reusing the recollection recall's
+    endpoint (reuse-don't-parallel — NOT a second reranker). This is the fix for the generic-filler problem:
+    nearest-by-meaning always returns SOMETHING, even for a nonsense query; the reranker scores true
+    relevance, so `floor` can drop the filler (and let a meaningless query correctly come back empty).
+
+    Returns (candidates, note). NO-SILENT-FAILURE: if the reranker is down it returns the candidates
+    unchanged with a DECLARED note (never a silent skip). `floor` drops candidates scoring below it (the
+    filler gate — when set, an all-filler result correctly returns []); `top_n` caps how many survive.
+    Each surviving record carries `_rerank_score` so the caller can see the separation and calibrate."""
+    if not cands:
+        return cands, "rerank skipped (no candidates)"
+    texts = [(_blob(r) or "")[:RERANK_TRUNC] for r in cands]
+    try:
+        body = json.dumps({"query": topic_text, "candidates": texts, "top_n": top_n or len(cands)}).encode()
+        req = urllib.request.Request(RERANK_URL, data=body, headers={"Content-Type": "application/json"})
+        ranking = json.loads(urllib.request.urlopen(req, timeout=RERANK_TIMEOUT).read()).get("ranking") or []
+    except Exception as e:
+        return cands, f"rerank UNAVAILABLE ({type(e).__name__}: {str(e)[:80]}) — embedding order kept (declared, not silent)"
+    if not ranking:
+        return cands, "rerank returned nothing — embedding order kept (declared)"
+    out = []
+    for o in ranking:
+        idx = (o.get("orig_rank") or 0) - 1               # endpoint is 1-indexed (mirrors session_recall)
+        if not (0 <= idx < len(cands)):
+            continue
+        score = o.get("rerank_score")
+        if floor is not None and score is not None and score < floor:
+            continue                                       # the filler gate
+        r = dict(cands[idx]); r["_rerank_score"] = score
+        out.append(r)
+    scores = [c["_rerank_score"] for c in out if c.get("_rerank_score") is not None]
+    rng = f"; score range {min(scores):.3f}..{max(scores):.3f}" if scores else ""
+    return out, f"reranked (jina-v3 :8008): kept {len(out)}/{len(cands)}{rng}"
+
+
 def collect_claims(recs, topic_rx, *, max_claims=60, cands=None):
     """Collect REAL claims (chunk-traced) from candidates. `cands` may be pre-filtered (semantic); else
     keyword-filter by `topic_rx`. Returns (cands, claims)."""
@@ -146,8 +195,13 @@ def collect_claims(recs, topic_rx, *, max_claims=60, cands=None):
             src = [r["about"]]
         for c in src:
             if isinstance(c, str) and c.strip():
+                # carry the FULL provenance, not just the chunk id: rel_path = the source file (for a
+                # transcript that's the session file; for a repo it's the repo-relative path), anchor = the
+                # position within it (e.g. turn-1-claude). So a returned claim traces to where it came from,
+                # not merely to an opaque chunk number. (+ the rerank score, if the candidate was reranked.)
                 claims.append({"n": len(claims), "claim": c.strip(), "chunk_id": r.get("chunk_id"),
-                               "kind": r.get("kind")})
+                               "kind": r.get("kind"), "rel_path": r.get("rel_path"), "anchor": r.get("anchor"),
+                               "rerank_score": r.get("_rerank_score")})
             if len(claims) >= max_claims:
                 break
         if len(claims) >= max_claims:
@@ -159,10 +213,27 @@ class _Clustering(BaseModel):
     themes: List[dict]   # [{theme, claim_indices}] — model groups BY INDEX, never writes claims
 
 
-def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, max_claims: int = 60) -> dict:
-    """The grounded determine: filter the extraction asset by `topic_text` → collect real claims → model
-    clusters BY INDEX → reconstruct real chunk-traced claims per theme + the NO-FICTION check. Returns
-    {topic, asset, n_candidates, n_claims, themes:[{theme, claims:[{claim, chunk_id, kind}]}], no_fiction}."""
+def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, max_claims: int = 60,
+              claim_trim: int | None = None, group_max_tokens: int = 1500,
+              rerank: bool = True, rerank_top: int | None = None, rerank_floor: float | None = None) -> dict:
+    """The grounded determine: filter the extraction asset by `topic_text` → (rerank) → collect real claims →
+    model clusters BY INDEX → reconstruct real provenance-traced claims per theme + the NO-FICTION check.
+
+    De-hardcoded knobs (were fixed 140/500 literals; now parameters, defaulted OFF per Tim 2026-06-27):
+      claim_trim — chars each claim is trimmed to when shown to the grouping model. None (default) = NO trim
+        (full claim text → better grouping; the old fixed 140 mis-grouped long/prefix-similar claims). The
+        RETURNED claim text was always full regardless; this only affects what the grouping model sees.
+      group_max_tokens — cap on the grouping model's output. BEHAVIOURAL CUTOFF (jotted): the grouping model
+        (chat-4b) has only a 4096-token context, so the output cap CANNOT be "off" — prompt+output must fit
+        4096 or the request fails (verified: 8192 errored). Defaulted to a generous 1500 (the grouping output
+        — labels + index lists — is tiny, so this never truncates in practice) while leaving prompt room.
+        A bigger-context grouping model would let this be lifted.
+      rerank / rerank_top / rerank_floor — the jina-v3 relevance gate over the embedding candidates (the
+        filler fix). rerank on by default; floor None = reorder only (set a floor to drop filler / let a
+        nonsense query return empty — calibrate from the surfaced score range).
+
+    Returns {topic, asset, filter, n_candidates, n_claims, themes:[{theme, claims:[{claim, chunk_id, kind,
+    rel_path, anchor, rerank_score}]}], no_fiction, rerank, freshness, note}."""
     path = asset_path(asset)
     if not os.path.exists(path):
         return {"error": f"no extraction asset '{asset}' at {path} — the dragnet hasn't baked it yet. "
@@ -184,13 +255,34 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
     # timeout fork+I hit on the /api/transcript-search determine route. store→suite if only store given.
     sem = semantic_candidates(topic_text, recs, asset, suite=suite, k=max_claims)
     _filter = "semantic" if sem is not None else "keyword"
+    rerank_note = None
+    if sem and rerank:                                    # the relevance gate over the embedding candidates
+        sem, rerank_note = rerank_candidates(topic_text, sem, top_n=rerank_top, floor=rerank_floor)
+        _filter = "semantic+rerank"
     cands, claims = collect_claims(recs, topic_regex(topic_text), max_claims=max_claims, cands=sem)
     if not claims:
-        return {"topic": topic_text, "asset": asset, "n_candidates": len(cands), "n_claims": 0,
-                "themes": [], "no_fiction": True, "freshness": asset_freshness(asset, len(recs)),
-                "note": "no extractions matched the topic — honest no-match (not a fabricated theme)."}
+        return {"topic": topic_text, "asset": asset, "filter": _filter, "n_candidates": len(cands), "n_claims": 0,
+                "themes": [], "no_fiction": True, "rerank": rerank_note, "freshness": asset_freshness(asset, len(recs)),
+                "note": ("no extractions matched the topic — honest no-match (not a fabricated theme)."
+                         + (" [rerank floor filtered all candidates — correct empty for an off-topic query]"
+                            if (rerank_note and "kept 0/" in rerank_note) else ""))}
 
-    numbered = "\n".join(f"{c['n']}. {c['claim'][:140]}" for c in claims)
+    # claim_trim defaults OFF (full claim text → best grouping; the RETURNED claim text is full either way).
+    # Fit-to-context guard: chat-4b's window is only ~CHAT_CTX tokens, so a fully-untrimmed 60-claim prompt
+    # can overflow it (the request then fails — that's behavioural, not arbitrary). If trim is off and the
+    # prompt would exceed the room left after the output cap, auto-trim each claim to fit and DECLARE it
+    # (no silent overflow, no silent failure). A bigger-context grouping model would let claims stay full.
+    def _numbered(trim):
+        return "\n".join(f"{c['n']}. {c['claim'][:trim] if trim else c['claim']}" for c in claims)
+    numbered = _numbered(claim_trim)
+    _oversize = ""
+    budget_chars = max(2000, (CHAT_CTX - group_max_tokens - 256) * 4)   # ~4 chars/token; leave output + overhead
+    if claim_trim is None and len(numbered) > budget_chars:
+        auto = max(60, budget_chars // max(1, len(claims)))
+        numbered = _numbered(auto)
+        _oversize = (f" [Notice: claim_trim off, but the {len(claims)} full claims exceeded chat-4b's "
+                     f"~{CHAT_CTX}-tok context; auto-trimmed to ~{auto} chars/claim to fit — use a bigger-"
+                     f"context grouping model to keep them full]")
     role = Role(id="recall_determine_cluster", spec={}, prompt_template=(
         "Below are NUMBERED real claims extracted from the corpus about: " + topic_text + "\n"
         "GROUP them into 3-6 themes. For each theme give a short theme label and the LIST OF CLAIM NUMBERS "
@@ -199,7 +291,7 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
     ), output_schema=_Clustering)
     # guard: never let the numbered block be address-classified (run_items :// trap)
     item = (" " + numbered) if re.match(r"\w+://", numbered) else numbered
-    res = cog.run_items(role, [item], store, turn_id="recall-determine", max_tokens=500)
+    res = cog.run_items(role, [item], store, turn_id="recall-determine", max_tokens=group_max_tokens)
     out = list(res.resolved.values())
     if not out:
         return {"topic": topic_text, "asset": asset, "n_claims": len(claims),
@@ -212,7 +304,9 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
         real = []
         for i in (th.get("claim_indices") or []):
             if isinstance(i, int) and i in valid:
-                real.append({"claim": valid[i]["claim"], "chunk_id": valid[i]["chunk_id"], "kind": valid[i]["kind"]})
+                real.append({"claim": valid[i]["claim"], "chunk_id": valid[i]["chunk_id"], "kind": valid[i]["kind"],
+                             "rel_path": valid[i].get("rel_path"), "anchor": valid[i].get("anchor"),
+                             "rerank_score": valid[i].get("rerank_score")})
                 used.add(i)
             elif isinstance(i, int):
                 bad.append(i)
@@ -220,7 +314,7 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
             themes_out.append({"theme": th.get("theme", ""), "claims": real})
     return {"topic": topic_text, "asset": asset, "filter": _filter, "n_candidates": len(cands), "n_claims": len(claims),
             "claims_grouped": len(used), "themes": themes_out, "no_fiction": (len(bad) == 0),
-            "freshness": asset_freshness(asset, len(recs)),
-            "note": (f"GROUNDED ({_filter}-filtered): every claim is a verbatim extraction, chunk-traced (model grouped by index, "
-                     "invented nothing). The candidate-filter is the recall-first cut; rerank is the decisive "
-                     "relevance gate when enacted." + (f" ⚠ {len(bad)} invalid indices dropped." if bad else ""))}
+            "rerank": rerank_note, "freshness": asset_freshness(asset, len(recs)),
+            "note": (f"GROUNDED ({_filter}): every claim is a verbatim extraction, traced to its source (rel_path + anchor) "
+                     "and grouped by index (invented nothing). Embedding finds candidates; the jina-v3 reranker is the "
+                     "relevance gate over them." + (f" ⚠ {len(bad)} invalid indices dropped." if bad else "") + _oversize)}
