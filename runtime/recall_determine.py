@@ -27,6 +27,24 @@ _STOP = {"the", "a", "an", "of", "to", "and", "or", "in", "on", "for", "is", "ar
 RERANK_URL = os.environ.get("RERANK_URL", "http://127.0.0.1:8008/rerank")
 RERANK_TIMEOUT = float(os.environ.get("RERANK_TIMEOUT", "30"))
 RERANK_TRUNC = int(os.environ.get("DETERMINE_RERANK_TRUNC", "600"))
+# Cap candidates sent to the CPU reranker — it's the dominant cost (~0.37s/pair on CPU, profiled), scaling
+# linearly with count. The embedder already ranked by meaning, so reranking the top POOL suffices (mirrors
+# session_recall's pool cap). Env-configurable. Raising it trades latency for a slightly deeper rerank set.
+RERANK_POOL = int(os.environ.get("DETERMINE_RERANK_POOL", "12"))
+
+# Cache the loaded asset notes, keyed by the file's (mtime,size) — determine re-read the whole jsonl (~19k
+# records, ~0.6s) on EVERY call; the cache skips that reload while staying fresh (a rebake changes the sig).
+_RECS_CACHE: dict = {}
+
+
+def _load_recs(asset: str) -> list:
+    path = asset_path(asset)
+    sig = (os.stat(path).st_mtime_ns, os.path.getsize(path)) if os.path.exists(path) else None
+    cached = _RECS_CACHE.get(asset)
+    if cached is None or cached[0] != sig:
+        recs = [json.loads(l) for l in open(path)] if os.path.exists(path) else []
+        _RECS_CACHE[asset] = (sig, recs)
+    return _RECS_CACHE[asset][1]
 # The grouping model's context window. The old 4096 was an inherited assumption, NOT a real limit — chat-4b's
 # ceiling is 262144 (max_model_len_ceiling). Raised the served context to 16384 (Tim 2026-06-27) by trading
 # concurrent slots for length within the same VRAM, so prompt+output have real room and full claims fit
@@ -247,7 +265,7 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
     from runtime.roles import Role
     from runtime import cognition as cog
 
-    recs = [json.loads(l) for l in open(path)]
+    recs = _load_recs(asset)                              # mtime/size-cached (skips the ~0.6s reload per call)
     # SEMANTIC candidate-filter first (precision — concept-match over the embedded 'extractions' space);
     # fall back to keyword if the space isn't populated yet (the embed-extraction-layer may be mid-bake).
     # reuse a WARM suite when the caller passes one (the bridge's resident suite) — else semantic_candidates
@@ -257,7 +275,9 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
     _filter = "semantic" if sem is not None else "keyword"
     rerank_note = None
     if sem and rerank:                                    # the relevance gate over the embedding candidates
-        sem, rerank_note = rerank_candidates(topic_text, sem, top_n=rerank_top, floor=rerank_floor)
+        # cap the reranker's INPUT to the top embedding candidates — it's the dominant cost (~0.37s/pair on
+        # CPU, profiled) and the embedder already ranked by meaning, so reranking the top POOL suffices.
+        sem, rerank_note = rerank_candidates(topic_text, sem[:RERANK_POOL], top_n=rerank_top, floor=rerank_floor)
         _filter = "semantic+rerank"
     cands, claims = collect_claims(recs, topic_regex(topic_text), max_claims=max_claims, cands=sem)
     if not claims:
