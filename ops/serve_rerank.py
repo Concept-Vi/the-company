@@ -21,13 +21,17 @@ from ops.rerank import Reranker  # noqa: E402
 
 PORT = int(os.environ.get("COMPANY_RERANK_PORT", "8008"))
 BACKEND = os.environ.get("COMPANY_RERANK_BACKEND", "jina-v3")
+# Device is env-driven (2026-06-28, Tim: put the reranker on the GPU). The launcher sets
+# COMPANY_RERANK_DEVICE=cuda; default cpu here so a bare run stays safe. The listwise rerank is
+# attention-bound, so GPU is the real latency fix (CPU was ~16s on realistic chunks).
+DEVICE = os.environ.get("COMPANY_RERANK_DEVICE", "cpu")
 _RR = None  # loaded once
 
 
 def _reranker():
     global _RR
     if _RR is None:
-        _RR = Reranker(backend=BACKEND, device="cpu").load()
+        _RR = Reranker(backend=BACKEND, device=DEVICE).load()
     return _RR
 
 
@@ -37,7 +41,7 @@ class H(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path in ("/", "/health"):
-            body = {"status": "ok", "backend": BACKEND, "device": "cpu", "loaded": _RR is not None}
+            body = {"status": "ok", "backend": BACKEND, "device": DEVICE, "loaded": _RR is not None}
             self._send(200, body)
         else:
             self._send(404, {"error": "GET /health | POST /rerank"})
