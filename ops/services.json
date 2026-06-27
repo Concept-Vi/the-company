@@ -640,8 +640,8 @@
         "unit": "company-rerank-jina.service"
       },
       "serve": "~/company/ops/serve_rerank.sh",
-      "vram_mb": 2800,
-      "note": "GPU endpoint (COMPANY_RERANK_DEVICE=cuda, 2026-06-28 Tim — listwise rerank is attention-bound, CPU was ~16s on realistic chunks; GPU warm ~0.14s). Override COMPANY_RERANK_DEVICE=cpu to pin to CPU (0 VRAM). Surfaces ops/rerank.py:Reranker(jina-v3) as POST /rerank {query, candidates|texts:[str|dict], top_n?} -> {ranking:[{item,text,rerank_score,orig_rank,rank},...]} sorted desc; GET /health. Runs from ~/vllm-env via serve_rerank.sh. ~2.8GB measured; weights jinaai/jina-reranker-v3 in HF cache. The rerank stage for cross-session semantic recall (runtime/session_recall.py) + the determine pipeline (runtime/recall_determine.py).",
+      "vram_mb": 1300,
+      "note": "GPU endpoint (COMPANY_RERANK_DEVICE=cuda, 2026-06-28 Tim — listwise rerank is attention-bound, CPU was ~16s on realistic chunks; GPU warm ~0.05s). Override COMPANY_RERANK_DEVICE=cpu to pin to CPU (0 VRAM). Surfaces ops/rerank.py:Reranker(jina-v3) as POST /rerank {query, candidates|texts:[str|dict], top_n?} -> {ranking:[{item,text,rerank_score,orig_rank,rank},...]} sorted desc; GET /health. Runs from ~/vllm-env via serve_rerank.sh. ~1.3GB (bf16 on GPU; fp32 was ~2.8GB); weights jinaai/jina-reranker-v3 in HF cache. The rerank stage for cross-session semantic recall (runtime/session_recall.py) + the determine pipeline (runtime/recall_determine.py).",
       "health": "/health"
     },
     "remote-gateway": {

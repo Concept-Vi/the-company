@@ -137,8 +137,14 @@ class Reranker:
         t0 = time.time()
         if kind == "jina_listwise":
             from transformers import AutoModel
+            # dtype follows the device (2026-06-28, Tim): on GPU use bf16 — half the VRAM (~2.8GB fp32
+            # → ~1.3GB) with near-zero quality loss (bf16 is the model's native inference precision);
+            # on CPU keep fp32 (fp16/bf16 CPU kernels are often slower/unsupported). Overridable via
+            # COMPANY_RERANK_DTYPE (float32|bfloat16|float16).
+            _dt = os.environ.get("COMPANY_RERANK_DTYPE", "bfloat16" if self.device != "cpu" else "float32")
+            _dtype = {"float32": torch.float32, "bfloat16": torch.bfloat16, "float16": torch.float16}[_dt]
             self._model = AutoModel.from_pretrained(
-                hf_id, dtype=torch.float32, trust_remote_code=trc
+                hf_id, dtype=_dtype, trust_remote_code=trc
             ).to(self.device).eval()
         elif kind == "seqcls_crossencoder":
             from transformers import (AutoTokenizer,
