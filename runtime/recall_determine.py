@@ -27,11 +27,12 @@ _STOP = {"the", "a", "an", "of", "to", "and", "or", "in", "on", "for", "is", "ar
 RERANK_URL = os.environ.get("RERANK_URL", "http://127.0.0.1:8008/rerank")
 RERANK_TIMEOUT = float(os.environ.get("RERANK_TIMEOUT", "30"))
 RERANK_TRUNC = int(os.environ.get("DETERMINE_RERANK_TRUNC", "600"))
-# The grouping model's context window. JOTTED BEHAVIOURAL CUTOFF (Tim 2026-06-27): chat-4b is capped at
-# max_model_len 4096, so neither the output cap nor the (untrimmed) prompt can be truly "off" — the request
-# fails if prompt+output exceed this. The output cap is kept as a real cutoff under it; the prompt is
-# fit-to-context-guarded. A bigger-context grouping model would lift both. Env-configurable, not hardcoded.
-CHAT_CTX = int(os.environ.get("DETERMINE_GROUP_CTX", "4096"))
+# The grouping model's context window. The old 4096 was an inherited assumption, NOT a real limit — chat-4b's
+# ceiling is 262144 (max_model_len_ceiling). Raised the served context to 16384 (Tim 2026-06-27) by trading
+# concurrent slots for length within the same VRAM, so prompt+output have real room and full claims fit
+# without auto-trim. Env-configurable; should track the chat-4b config (DETERMINE_GROUP_CTX) — and ideally
+# read the served max_model_len directly later (jotted) rather than re-encode a number here.
+CHAT_CTX = int(os.environ.get("DETERMINE_GROUP_CTX", "16384"))
 
 
 def asset_path(name: str = "full") -> str:
@@ -201,7 +202,7 @@ def collect_claims(recs, topic_rx, *, max_claims=60, cands=None):
                 # not merely to an opaque chunk number. (+ the rerank score, if the candidate was reranked.)
                 claims.append({"n": len(claims), "claim": c.strip(), "chunk_id": r.get("chunk_id"),
                                "kind": r.get("kind"), "rel_path": r.get("rel_path"), "anchor": r.get("anchor"),
-                               "rerank_score": r.get("_rerank_score")})
+                               "date": r.get("date"), "rerank_score": r.get("_rerank_score")})
             if len(claims) >= max_claims:
                 break
         if len(claims) >= max_claims:
@@ -214,7 +215,7 @@ class _Clustering(BaseModel):
 
 
 def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, max_claims: int = 60,
-              claim_trim: int | None = None, group_max_tokens: int = 1500,
+              claim_trim: int | None = None, group_max_tokens: int = 4096,
               rerank: bool = True, rerank_top: int | None = None, rerank_floor: float | None = None) -> dict:
     """The grounded determine: filter the extraction asset by `topic_text` → (rerank) → collect real claims →
     model clusters BY INDEX → reconstruct real provenance-traced claims per theme + the NO-FICTION check.
@@ -223,11 +224,10 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
       claim_trim — chars each claim is trimmed to when shown to the grouping model. None (default) = NO trim
         (full claim text → better grouping; the old fixed 140 mis-grouped long/prefix-similar claims). The
         RETURNED claim text was always full regardless; this only affects what the grouping model sees.
-      group_max_tokens — cap on the grouping model's output. BEHAVIOURAL CUTOFF (jotted): the grouping model
-        (chat-4b) has only a 4096-token context, so the output cap CANNOT be "off" — prompt+output must fit
-        4096 or the request fails (verified: 8192 errored). Defaulted to a generous 1500 (the grouping output
-        — labels + index lists — is tiny, so this never truncates in practice) while leaving prompt room.
-        A bigger-context grouping model would let this be lifted.
+      group_max_tokens — cap on the grouping model's output. The grouping model's context was raised to
+        16384 (was a falsely-assumed 4096), so this is now generous (4096) — far more than the tiny grouping
+        output (labels + index lists) ever needs, while leaving ~12k of context for the prompt. Still an int
+        because prompt+output must fit the window; lift further only if the served context is raised again.
       rerank / rerank_top / rerank_floor — the jina-v3 relevance gate over the embedding candidates (the
         filler fix). rerank on by default; floor None = reorder only (set a floor to drop filler / let a
         nonsense query return empty — calibrate from the surfaced score range).
@@ -306,7 +306,7 @@ def determine(topic_text: str, *, asset: str = "full", store=None, suite=None, m
             if isinstance(i, int) and i in valid:
                 real.append({"claim": valid[i]["claim"], "chunk_id": valid[i]["chunk_id"], "kind": valid[i]["kind"],
                              "rel_path": valid[i].get("rel_path"), "anchor": valid[i].get("anchor"),
-                             "rerank_score": valid[i].get("rerank_score")})
+                             "date": valid[i].get("date"), "rerank_score": valid[i].get("rerank_score")})
                 used.add(i)
             elif isinstance(i, int):
                 bad.append(i)
