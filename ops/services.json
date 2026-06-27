@@ -27,7 +27,7 @@
         "stt-whisper",
         "rerank-jina"
       ],
-      "note": "The cross-session CHANNEL fabric loadout (Tim gave the GPU 2026-06-14): pplx-embed-context-4b (~8.2G) for semantic session-find/transcript-search + Qwen3-TTS VoiceDesign (~4.4G, no clip — the voice for spoken cross-session conversation) + whisper.cpp STT (CPU, 0 VRAM, the ear). ~12.6G GPU co-resident, fits the 16G card with headroom. The embedder+voice pairing Tim authorized to start (swap voice engine later via the registry). + rerank-jina (CPU /8008, 0 VRAM) — the rerank stage for cross-session recall."
+      "note": "The cross-session CHANNEL fabric loadout (Tim gave the GPU 2026-06-14): pplx-embed-context-4b (~5.4G, 8-bit) for semantic session-find/transcript-search + Qwen3-TTS VoiceDesign (~4.4G, no clip — the voice for spoken cross-session conversation) + whisper.cpp STT (CPU, 0 VRAM, the ear) + rerank-jina (GPU, ~1.3G bf16 — the rerank stage for cross-session recall, moved to GPU 2026-06-28: warm ~0.05s vs ~16s CPU). ~11.1G GPU co-resident, fits the 16G card with headroom."
     },
     "instrument": {
       "services": [
@@ -43,7 +43,7 @@
         "stt-whisper",
         "rerank-jina"
       ],
-      "note": "The cross-session fabric WITH a local brain (Tim 2026-06-15: 'the 4b co with lead … a different loadout, without the voice in order to fit the 4b'). xsession minus GPU voice (tts-qwen3tts) plus the local worker chat-4b — so the lead can run composable-mind / swarm turns (R13) on the local 4B WHILE the cross-session recall embedder stays resident. VERIFIED CO-RESIDENT 2026-06-15: embed-pplx (~8.8G) + chat-4b (~4.8G) = 13.1G / 16G, ~3.3G headroom; stt-whisper (CPU ear) + rerank-jina (CPU /8008) are 0-VRAM. PRECONDITIONS that make it fit (both persisted): (1) embed envelope-capped — serve_pplx_embed.py model_max_length=8192 + batch=8 + empty_cache + expandable_segments (commit 4fad864) — without it a long transcript balloons embed to 15.5G and there is NO room for the 4b; (2) chat-4b gpu_util 0.38 / max_model_len 4096 / max_num_seqs 16 (lowered from 34 — Qwen3.5-4B is a hybrid Mamba model; at 0.38 the cache pool holds 23 Mamba blocks, so >23 seqs fails CUDA-graph capture). Add GPU voice only by raising the envelope or dropping the 4b — they don't all fit at once."
+      "note": "The cross-session fabric WITH a local brain (Tim 2026-06-15: 'the 4b co with lead … without the voice in order to fit the 4b'). xsession minus GPU voice (tts-qwen3tts) plus the local worker chat-4b — so the lead can run composable-mind / swarm turns on the local 4B WHILE the cross-session recall embedder stays resident. Footprint (2026-06-28): embed-pplx ~5.4G (8-bit) + chat-4b ~6.5G + rerank-jina ~1.3G (bf16 GPU) + stt-whisper (CPU ear) ≈ 13.2G / 16G, ~2.8G headroom. PRECONDITIONS persisted: chat-4b gpu_util 0.40 / max_model_len 16384 / max_num_seqs 4 (hybrid-Mamba: cache pool holds limited Mamba blocks). Add GPU voice only by dropping the 4b — they don't all fit at once."
     }
   },
   "groups": {
