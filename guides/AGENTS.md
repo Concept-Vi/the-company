@@ -40,10 +40,10 @@ the open no-auto-reindex concern.) A future `guide`-author re-authors on a sourc
 run-churn, and PROPOSES a diff over human-edited guides rather than clobbering them.
 
 **The guides (the live set — the drift home; `tests/guides_acceptance.py` asserts each is reflected here):**
-- **`using-skills`** — the SEED guide (the demonstrative first member). Documents the SKILL registry
+- **`using_skills`** — the SEED guide (the demonstrative first member). Documents the SKILL registry
   (`target: skill://summarize`): what a skill is, when to add one, the only steps to add one, the
   worked example, and the schema gotchas. Grounded in `skill://summarize` + `skills/AGENTS.md` +
-  `runtime/skills.py` (all real). `guide://using-skills` resolves to that how-to. Proof the registry
+  `runtime/skills.py` (all real). `guide://using_skills` resolves to that how-to. Proof the registry
   is real + usable, like `skill://summarize` was for skills.
 
 **How it resolves (the address seam):** `guide://<id>` is resolved by

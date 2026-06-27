@@ -35,7 +35,7 @@ from runtime.cognition import resolve_address                              # noq
 from runtime.guides import GuideRegistry, GuideEntry, _build_guide          # noqa: E402
 
 GUIDES = os.path.join(ROOT, "guides")
-SEED_GUIDE = "using-skills"
+SEED_GUIDE = "using_skills"
 PASS = 0
 
 
@@ -59,8 +59,8 @@ def raises(label, fn):
 check("contracts.address.SCHEMES contains 'guide' (additive — mirrors skill/context)", "guide" in SCHEMES)
 check("the additive precedent holds — skill/context/run/cas STILL in SCHEMES (nothing removed)",
       all(s in SCHEMES for s in ("skill", "context", "run", "cas")))
-check("scheme('guide://using-skills') == 'guide' (a registered scheme, not a bare name)",
-      scheme("guide://using-skills") == "guide")
+check("scheme('guide://using_skills') == 'guide' (a registered scheme, not a bare name)",
+      scheme("guide://using_skills") == "guide")
 
 # 2 · discovers like skills
 reg = GuideRegistry().discover([GUIDES])
@@ -106,10 +106,10 @@ finally:
 
 # 3 · resolve_address resolves guide://
 store = FsStore(tempfile.mkdtemp(prefix="guides-resolve-"))
-check("resolve_address('guide://using-skills') resolves to the seed guide's REAL content (no raise)",
-      resolve_address(store, "guide://using-skills") == seed.content)
+check("resolve_address('guide://using_skills') resolves to the seed guide's REAL content (no raise)",
+      resolve_address(store, "guide://using_skills") == seed.content)
 check("the guide:// path dispatches to GuideRegistry.read (identical value — one seam, no parallel)",
-      resolve_address(store, "guide://using-skills") == GuideRegistry().discover([GUIDES]).read("using-skills"))
+      resolve_address(store, "guide://using_skills") == GuideRegistry().discover([GUIDES]).read("using_skills"))
 raises("resolve_address('guide://no-such-guide') RAISES fail-loud (registry-is-truth, never fabricate)",
        lambda: resolve_address(store, "guide://no-such-guide"))
 

@@ -1,9 +1,9 @@
-"""guides/using-skills.py — the SEED guide (the demonstrative first member).
+"""guides/using_skills.py — the SEED guide (the demonstrative first member).
 
 A GUIDE is a declared, reusable NARRATIVE how-to — the prose a human/agent reads to LEARN a part of
 the system (the second face of "one entry, two faces"; the first face is the dense skill:// a role
 reads mid-task). This is the registry's first member (like skills/summarize.py was the seed skill,
-roles/judge.py the seed role): real + grounded, so `guide://using-skills` resolves to an actual,
+roles/judge.py the seed role): real + grounded, so `guide://using_skills` resolves to an actual,
 verifiable how-to.
 
 It documents the SKILL registry (target `skill://summarize`, the canonical worked example) — a
@@ -18,7 +18,7 @@ Drop a 2nd `guides/<id>.py` (a `GUIDE` dict) to add another guide — it self-re
 """
 
 GUIDE = {
-    "id": "using-skills",
+    "id": "using_skills",
     "label": "Using skills",
     "description": "How to author and use a skill in the Company — what a skill is, when to add one, how it resolves.",
     "target": "skill://summarize",
