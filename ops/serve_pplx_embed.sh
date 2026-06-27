@@ -20,6 +20,10 @@ export PATH="$CUDA_HOME/bin:$PATH"
 export PPLX_EMBED_MODEL="${PPLX_EMBED_MODEL:-perplexity-ai/pplx-embed-context-v1-4b}"
 export PPLX_EMBED_PORT="${PPLX_EMBED_PORT:-8007}"
 export PPLX_EMBED_DTYPE="${PPLX_EMBED_DTYPE:-bfloat16}"
+# 8-bit by default (2026-06-28, Tim): clean swap to bitsandbytes 8-bit weights — saves ~2.9GB,
+# verified vector-compatible with the bf16-embedded corpus (cosine 0.996, top-k overlap ~0.97 →
+# NO re-embed). Still overridable: PPLX_EMBED_8BIT=0 restores the bf16 path byte-identically.
+export PPLX_EMBED_8BIT="${PPLX_EMBED_8BIT:-1}"
 # Memory-envelope bound (2026-06-15, lead) — pairs with the model_max_length + batch caps in
 # serve_pplx_embed.py so this 4B embedder co-resides with chat-4b on the 16G card.
 # expandable_segments lets the CUDA caching allocator GIVE BACK reserved segments after a spike
@@ -30,7 +34,7 @@ export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:T
 export PPLX_EMBED_MAX_TOKENS="${PPLX_EMBED_MAX_TOKENS:-8192}"
 export PPLX_EMBED_BATCH="${PPLX_EMBED_BATCH:-8}"
 
-echo "[serve_pplx_embed] PID=$$ model=$PPLX_EMBED_MODEL port=$PPLX_EMBED_PORT dtype=$PPLX_EMBED_DTYPE alloc=$PYTORCH_CUDA_ALLOC_CONF max_tok=$PPLX_EMBED_MAX_TOKENS batch=$PPLX_EMBED_BATCH"
+echo "[serve_pplx_embed] PID=$$ model=$PPLX_EMBED_MODEL port=$PPLX_EMBED_PORT dtype=$PPLX_EMBED_DTYPE 8bit=$PPLX_EMBED_8BIT alloc=$PYTORCH_CUDA_ALLOC_CONF max_tok=$PPLX_EMBED_MAX_TOKENS batch=$PPLX_EMBED_BATCH"
 exec python "$OPS/serve_pplx_embed.py"
 
 # PPLX_REMOTE_PATCH (2026-06-12, lead): the model's remote modeling.py targets an OLDER transformers —

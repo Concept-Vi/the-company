@@ -404,7 +404,7 @@
       },
       "health": "/health",
       "serve": "~/company/ops/serve_pplx_embed.sh",
-      "vram_mb": 8200,
+      "vram_mb": 5700,
       "note": "CUSTOM server — NOT config-driven (like embed-jina-v4). Arch PPLXQwen3Model / model_type bidirectional_pplx_qwen3 is remote-code (trust_remote_code, auto_map→modeling.PPLXQwen3ContextualModel); vLLM 0.21 has no such arch (verified: absent from 356 supported archs, `vllm serve` fails at load_model) → runs ops/serve_pplx_embed.py (raw transformers) in ~/vllm-env via serve_pplx_embed.sh. OpenAI-compat POST /v1/embeddings; dim=2560; output is INT8 + UNNORMALIZED — compare via COSINE (model card). Contextual late-chunking model: flat `input` strings are embedded as single-chunk docs; optional `documents` (list[list[str]]) gives native per-chunk contextual embeddings. dtype bfloat16 (~8GB) — the card stores fp32. Interim transcript-search embedder (throwaway); ~10GB load authorized by Tim. Leave script-based.",
       "config": {
         "model": "perplexity-ai/pplx-embed-context-v1-4b",
