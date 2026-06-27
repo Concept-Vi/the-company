@@ -19,7 +19,7 @@ def register(mcp, suite):
     def corpus(op: Literal["query", "list", "find", "read", "neighbours", "determine"], project: str = "", kind: str = "", projection: str = "",
                source_address: str = "", address: str = "", text: str = "", space: str = "",
                k: int = 8, rerank: bool = False, top_n: int = 0, emb: str = "pplx", min_score: float = 0.0,
-               detail: str = "concise", limit: int = 50, asset: str = "full") -> dict:
+               detail: str = "concise", limit: int = 50, asset: str = "full", min_strong: int = 0) -> dict:
         """Read the corpus — the engine's durable, embedded, addressed records (the repo-exocortex's
         'ask the codebase', + every capture pass's output). Pick `op`:
 
@@ -53,8 +53,14 @@ def register(mcp, suite):
                         NEVER generates claim text). Every returned claim is a VERBATIM extraction carrying its
                         FULL provenance — chunk_id + rel_path (source file) + anchor (position) + rerank_score —
                         so it traces to where it came from, not just a chunk number (no-fiction by construction;
-                        envelope carries no_fiction=true + a rerank note). Distinct from op='query' (cosine
-                        top-k): determine is full-coverage grounded-synthesis over the dragnet layer.
+                        envelope carries no_fiction=true + a rerank note). ⚠ CHECK `relevance` BEFORE TRUSTING:
+                        the envelope carries relevance={top, n_strong, assessment} where assessment ∈
+                        covered|thin|likely-off-topic. no_fiction=true only means the claims are REAL text — NOT
+                        that they answer your topic; on 'likely-off-topic'/'thin' the themes are ADJACENT, not
+                        authoritative (the corpus may not cover it — e.g. it holds session transcripts, not code).
+                        Pass `min_strong` (default 0=off) to get an honest-EMPTY result instead of a confident
+                        off-topic one when fewer than that many candidates are strongly relevant. Distinct from
+                        op='query' (cosine top-k): determine is full-coverage grounded-synthesis over the dragnet layer.
           op="neighbours" — the NEIGHBOUR NODE-FIELD: given a unit's `address` (a code:// source id, e.g.
                         a projection:select detail.source), the units AROUND it in `space`, ranked by
                         meaning. Returns {unit, space, emb, neighbours: [{source, score}, ...]}. Each
@@ -125,7 +131,8 @@ def register(mcp, suite):
             # + re-warm the vector cache) on EVERY call — the >60s rebuild/timeout. The MCP face already holds
             # the warm resident suite (register(mcp, suite)); forwarding it reuses the loaded cache.
             return {"op": op, **_rd.determine(text, asset=(asset or "full"), store=suite.store, suite=suite,
-                                              max_claims=(limit if limit and limit <= 120 else 60))}
+                                              max_claims=(limit if limit and limit <= 120 else 60),
+                                              min_strong=min_strong)}
         if op == "neighbours":
             if not address:
                 return {"error": "corpus(op='neighbours') needs `address` — a unit's code:// source id "
