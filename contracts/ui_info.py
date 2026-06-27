@@ -37,7 +37,11 @@ from pydantic import BaseModel, Field
 # the UnionAddressRecord (the one per-address shape both the corpus and the live
 # UI_REGISTRY validate against). Additive — the v1 UiComponentEntry/build_ui_info
 # above are UNCHANGED; the existing `/api/ui_info` consumers keep reading them.
-SCHEMA_VER = 2
+# v3 (page-as-a-face): adds the OPTIONAL `page` field — a rendered HTML face bound
+# to an address (the strong-version artifact: a page is a field an address accumulates,
+# served live on a SEPARATE origin with a no-script CSP). Additive (rule 2): an
+# address with no page still validates; `page` is None by default. See runtime/page_face.py.
+SCHEMA_VER = 3
 
 
 class Capabilities(BaseModel):
@@ -309,6 +313,12 @@ class UnionAddressRecord(BaseModel):
     tier: str | None = None
     title: str | None = None
     howto: str | None = None
+    page: dict | None = None        # v3: a rendered HTML face bound to this address (page-as-a-face).
+                                    # Shape {source: "cas://…"|"blob://…", title?, content_type?} — the
+                                    # page CONTENT lives at the content-addressed source; this field is
+                                    # the binding. OPTIONAL/None (rule 2 — an address with no page still
+                                    # validates). Served by runtime/page_face.py on a SEPARATE origin
+                                    # under a no-script CSP (the escalation/XSS mitigation by construction).
 
     @classmethod
     def from_corpus(cls, address: str, rec: dict) -> "UnionAddressRecord":
@@ -332,6 +342,7 @@ class UnionAddressRecord(BaseModel):
             tier=rec.get("tier"),          # I4: governance action_class for COMMANDS at this address
             title=rec.get("title"),
             howto=rec.get("howto"),         # D1: the foundational affordance/how-to-use text (optional)
+            page=rec.get("page"),           # v3: the page-as-a-face binding (optional; None if absent)
         )
 
     @classmethod
