@@ -1044,6 +1044,31 @@ class FsStore:
         p = self.root / "vectors" / (self._safe(address) + ".json")
         return _j.loads(p.read_text()) if p.exists() else None
 
+    def remove_vector(self, address: str) -> bool:
+        """RETRACT one persisted vector by its storage `address` (the composed `vec://…#space=` key for a
+        spaced entry — compose via `space_address`, the SAME key put_vector stored under). Returns True if a
+        file was removed, False if none existed (honest, never a crash — idempotent retract). The next
+        `_vector_records()` scan drops it from the cache + bumps `_vec_version` automatically (file-vanished
+        eviction is already handled there), so the matrix cache / rankings refresh with NO staleness.
+
+        ★ Closes the harvested architectural gap (2026-06-22): embed was incremental-ADD-only with no way to
+        RETRACT an embedded vector, so a cleaned asset's stale vectors persisted in the live space. This is the
+        non-destructive-to-the-source retract: it removes the INDEX entry only (the source asset/CAS is
+        untouched), so a re-embed rebuilds it. Atomic at the filesystem level (a single os.unlink)."""
+        p = self.root / "vectors" / (self._safe(address) + ".json")
+        try:
+            p.unlink()
+            return True
+        except FileNotFoundError:
+            return False
+
+    def remove_vectors(self, addresses) -> int:
+        """Bulk RETRACT — remove many vectors by storage address. Returns the count actually removed (absent
+        ones are skipped, not errors). One pass; the next `_vector_records()` evicts them all + bumps the
+        version once. Use for cleaning an out-of-scope slice from a space (compose each address via
+        `space_address(source, space, emb)`)."""
+        return sum(1 for a in addresses if self.remove_vector(a))
+
     # A sentinel for "ALL spaces, no filter" — DISTINCT from space=None ("the DEFAULT/unspaced space only").
     # The default of the space= kwarg is None (default-space-only), which is exactly the pre-space behaviour
     # the live callers (consult/R2 query_index, index_staleness) depend on: a spaced entry must NOT leak into
