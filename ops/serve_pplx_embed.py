@@ -37,6 +37,24 @@ ENV:
   PPLX_EMBED_MODEL  (default perplexity-ai/pplx-embed-context-v1-4b)
   PPLX_EMBED_PORT   (default 8007)
   PPLX_EMBED_DTYPE  (default bfloat16 — fits ~8GB; the card stores fp32)
+  PPLX_EMBED_8BIT   (default unset/0 — OFF. When "1"/"true", load the model
+                     weights via bitsandbytes BitsAndBytesConfig(load_in_8bit=True)
+                     instead of the bf16 path. MEASURED saving = 2.86 GB of WEIGHT
+                     footprint (bf16 weights 8.04GB → int8 weights 5.19GB; not 4GB
+                     because bnb keeps layernorms/embeddings/outliers in fp16; this
+                     is weight footprint, not total VRAM).
+                     OPT-IN ONLY: when unset the bf16 load path below is byte-
+                     identical to the long-running production behavior. The int8
+                     OUTPUT quantization is unchanged either way; only the weight
+                     dtype differs.
+                     COMPATIBILITY (measured 2026-06-28, ops/measure_8bit_vs_bf16.py
+                     FINDINGS block): 8-bit query vectors are COMPATIBLE with the
+                     existing bf16-embedded 'extractions' corpus — mean cosine 0.996
+                     (p10 0.9955) and top-k overlap 0.965@10 / 0.975@5 vs the real
+                     packed space — so flipping this on does NOT require a re-embed;
+                     the bf16 space can be queried with 8-bit query vectors as-is.
+                     (Measured CPU-side; production runs 8-bit on CUDA, where the same
+                     LLM.int8() makes a CPU pass conservative, not optimistic.))
 
 Run:  python serve_pplx_embed.py
 Test: curl localhost:8007/v1/embeddings -d '{"input":["hello","world"]}'
@@ -87,16 +105,37 @@ class EmbeddingResponse(BaseModel):
     usage: dict
 
 
+def _truthy(v):
+    return str(v).strip().lower() in ("1", "true", "yes", "on")
+
+
 @app.on_event("startup")
 def load_model():
     dt = _DTYPES.get(DTYPE, torch.bfloat16)
-    print(f"[pplx-embed] loading {MODEL_ID} on {DEVICE} dtype={DTYPE}...", flush=True)
+    use_8bit = _truthy(os.environ.get("PPLX_EMBED_8BIT", ""))
     t0 = time.time()
-    model = AutoModel.from_pretrained(
-        MODEL_ID,
-        trust_remote_code=True,  # REQUIRED — custom PPLXQwen3ContextualModel
-        dtype=dt,
-    ).to(DEVICE)
+    if use_8bit:
+        # OPT-IN 8-bit weight load (bitsandbytes). Measured saving ~2.86GB weight
+        # footprint vs bf16 (8.04GB->5.19GB); see ops/measure_8bit_vs_bf16.py FINDINGS.
+        # NOTE: load_in_8bit places weights via device_map — do NOT call .to(DEVICE)
+        # afterward (bnb manages placement; an explicit .to() on an 8bit model errors).
+        from transformers import BitsAndBytesConfig
+        print(f"[pplx-embed] loading {MODEL_ID} in 8BIT (bitsandbytes) on {DEVICE}...", flush=True)
+        bnb_cfg = BitsAndBytesConfig(load_in_8bit=True)
+        model = AutoModel.from_pretrained(
+            MODEL_ID,
+            trust_remote_code=True,  # REQUIRED — custom PPLXQwen3ContextualModel
+            quantization_config=bnb_cfg,
+            device_map={"": DEVICE} if DEVICE == "cuda" else "cpu",
+        )
+    else:
+        # DEFAULT bf16 path — byte-identical to the long-running production behavior.
+        print(f"[pplx-embed] loading {MODEL_ID} on {DEVICE} dtype={DTYPE}...", flush=True)
+        model = AutoModel.from_pretrained(
+            MODEL_ID,
+            trust_remote_code=True,  # REQUIRED — custom PPLXQwen3ContextualModel
+            dtype=dt,
+        ).to(DEVICE)
     model.eval()
     # MEMORY ENVELOPE BOUND (2026-06-15, lead) — ROOT CAUSE of the 8→15.5G balloon:
     # the model's encode() tokenizes with truncation=True but NO max_length (modeling.py:228-231),
