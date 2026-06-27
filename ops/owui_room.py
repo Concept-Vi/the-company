@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
-"""ops/owui_room.py — THE OPERATOR ROOM: an OpenWebUI channel as a full console onto the Company fabric.
+"""ops/owui_room.py — THE OPERATOR ROOMS: OpenWebUI channels as a multi-room console onto the fabric.
 
-A human (Tim) and AI members share an OpenWebUI channel. Beyond chat, the room is an OPERATOR SURFACE:
-from inside it Tim spawns/tears-down/renames members, repersonas them, creates/lists channels, checks
-status — by SLASH-COMMAND or in NATURAL LANGUAGE. All of it runs on the supervisor + fabric + OWUI APIs.
+A human (Tim) and AI members share OpenWebUI channels. Beyond chat, each channel is an OPERATOR SURFACE:
+Tim spawns/tears-down/renames members, repersonas them, creates/lists channels, checks status — by
+SLASH-COMMAND or NATURAL LANGUAGE. MULTI-ROOM: every channel the daemon knows is its own live room with
+its own member roster; a slash command acts on the channel it was typed in. Members in a room can address
+each other by @mention and converse (visible to Tim), guarded by a circuit breaker. Tim stops/pauses any
+member by tapping a 🛑/⏸ reaction on its message (native, works on the phone).
 
-Three ways to drive, one engine:
-  1. SLASH      — Tim types `/spawn analyst <persona>`, `/members`, `/channel design`, … → the daemon
-                  parses and executes directly. The deterministic power-user substrate.
-  2. OP-ENDPOINT— the daemon runs a tiny local HTTP op-server (POST /op {op, args}). The CLI mode
-                  (`owui_room.py op <op> <args…>`) is a thin client to it. This lets an AI OPERATOR
-                  member (which has Bash) drive the same ops without holding any credentials.
-  3. NATURAL    — a spawned `operator` member interprets Tim's plain-language requests and calls the
-                  op CLI to fulfil them. So Tim just talks; the operator translates + executes.
+Drive three ways, one engine:
+  1. SLASH       — `/spawn analyst …`, `/members`, `/channel design`, `/status` … → executed on the
+                   channel it was typed in.
+  2. OP-ENDPOINT — the daemon runs a local op-server (POST /op {op, args, channel}); the CLI mode
+                   (`owui_room.py op <op> …`) is a thin client. Lets an AI operator drive ops, no creds.
+  3. NATURAL     — a spawned `operator` member maps Tim's plain words → op-CLI calls.
+  4. REACTIONS   — 🛑/❌ on a member's message tears it down; ⏸/✋ interrupts its current turn.
 
-The daemon is the SOLE executor (holds the OWUI admin token); every result is posted back into the room
-as `operator` so Tim sees what happened. Members are reached via cc_channels.push (unified transport;
-STRING-ONLY meta — null/bool break <channel> surfacing, proven 2026-06-27 + guarded at the choke point).
+The daemon is the SOLE executor (holds the OWUI token). Members are reached via cc_channels.push (unified
+transport); meta is STRING-ONLY (null/bool break <channel> surfacing — proven; guarded at the choke point).
 
 Run daemon: OWUI_PASSWORD=… .venv/bin/python ops/owui_room.py
-CLI (op):   .venv/bin/python ops/owui_room.py op members
+CLI:        .venv/bin/python ops/owui_room.py op members            (acts on HOME room)
+            .venv/bin/python ops/owui_room.py op spawn x role… --channel <cid>
 """
 from __future__ import annotations
-import json, os, sys, threading, queue, time, uuid, urllib.request, requests, socketio
+import json, os, sys, threading, queue, time, urllib.request, requests, socketio
 from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -32,7 +34,7 @@ if REPO not in sys.path:
 from runtime import cc_channels, cc_clone
 
 OWUI = os.environ.get("OWUI_BASE", "http://127.0.0.1:8081")
-OWUI_CHANNEL = os.environ.get("ROOM_OWUI_CHANNEL", "a9a338cc-ede3-4268-a43a-94857e2ad4e6")
+HOME = os.environ.get("ROOM_OWUI_CHANNEL", "a9a338cc-ede3-4268-a43a-94857e2ad4e6")   # the default/home room
 EMAIL = os.environ.get("OWUI_EMAIL", "v.i@conceptv.com.au")
 PASSWORD = os.environ.get("OWUI_PASSWORD", "")
 SUPERVISOR = os.environ.get("COMPANY_SUPERVISOR_BASE", "http://127.0.0.1:8771")
@@ -46,17 +48,29 @@ _route_q: "queue.Queue[tuple[str, str]]" = queue.Queue()
 _state: dict = {}
 _token: str = ""
 _lock = threading.RLock()
-_mm_window: "deque[float]" = deque(maxlen=64)               # member→member hop timestamps (circuit breaker)
-_mm_tripped = False
-MM_MAX, MM_WINDOW = 8, 90.0                                 # >8 member→member hops / 90s → trip the breaker
+_mm_window: "dict[str, deque]" = {}                         # per-room member→member hop timestamps
+_mm_tripped: "set[str]" = set()                             # rooms with a tripped breaker
+MM_MAX, MM_WINDOW = 8, 90.0
+_sio = None                                                 # the live socket client (set in main) — for re-join
 
 
-# ---------------- state ----------------
+# ---------------- state (rooms = {cid: {name, roster}} ; webhooks = {cid: {label: hook}}) ----------------
 def _load_state() -> dict:
     try:
-        return json.load(open(STATE))
+        s = json.load(open(STATE))
     except Exception:
-        return {}
+        s = {}
+    s.setdefault("rooms", {})
+    s.setdefault("webhooks", {})
+    # migrate a pre-multi-room (flat) state into the HOME room, once.
+    if "roster" in s and HOME not in s["rooms"]:
+        s["rooms"][HOME] = {"name": "fabric-test", "roster": s.pop("roster")}
+        if isinstance(s["webhooks"].get("fork") or s["webhooks"].get("operator"), dict) and HOME not in s["webhooks"]:
+            flat = {k: v for k, v in s["webhooks"].items() if isinstance(v, dict) and "id" in v}
+            s["webhooks"] = {HOME: flat}
+    if HOME not in s["rooms"]:
+        s["rooms"][HOME] = {"name": "home", "roster": list(DEFAULT_ROSTER)}
+    return s
 
 
 def _save_state() -> None:
@@ -65,12 +79,16 @@ def _save_state() -> None:
     os.replace(STATE + ".tmp", STATE)
 
 
-def roster() -> list:
-    return _state.setdefault("roster", list(DEFAULT_ROSTER))
+def rooms() -> dict:
+    return _state["rooms"]
 
 
-def _member(label: str) -> "dict | None":
-    return next((m for m in roster() if m["label"] == label), None)
+def roster(cid: str) -> list:
+    return _state["rooms"].setdefault(cid, {"name": cid, "roster": []})["roster"]
+
+
+def _member(cid: str, label: str) -> "dict | None":
+    return next((m for m in roster(cid) if m["label"] == label), None)
 
 
 # ---------------- OWUI ----------------
@@ -82,11 +100,11 @@ def signin() -> str:
     return r.json()["token"]
 
 
-def ensure_webhook(label: str) -> dict:
-    hooks = _state.setdefault("webhooks", {})
+def ensure_webhook(cid: str, label: str) -> dict:
+    hooks = _state["webhooks"].setdefault(cid, {})
     if label in hooks:
         return hooks[label]
-    r = requests.post(f"{OWUI}/api/v1/channels/{OWUI_CHANNEL}/webhooks/create",
+    r = requests.post(f"{OWUI}/api/v1/channels/{cid}/webhooks/create",
                       headers={"Authorization": f"Bearer {_token}"}, json={"name": label}, timeout=15)
     r.raise_for_status()
     wh = r.json()
@@ -95,19 +113,25 @@ def ensure_webhook(label: str) -> dict:
     return hooks[label]
 
 
-def webhook_url(label: str) -> str:
-    wh = ensure_webhook(label)
+def webhook_url(cid: str, label: str) -> str:
+    wh = ensure_webhook(cid, label)
     return f"{OWUI}/api/v1/channels/webhooks/{wh['id']}/{wh['token']}"
 
 
-def post_as(label: str, content: str) -> None:
-    """Post a message into the room under `label`'s identity (its webhook)."""
-    wh = ensure_webhook(label)
+def post_as(cid: str, label: str, content: str) -> None:
+    wh = ensure_webhook(cid, label)
     try:
         requests.post(f"{OWUI}/api/v1/channels/webhooks/{wh['id']}/{wh['token']}",
                       json={"content": content}, timeout=15)
     except Exception as e:
-        print(f"  post_as({label}) failed: {e}", flush=True)
+        print(f"  post_as({cid},{label}) failed: {e}", flush=True)
+
+
+def _label_for_webhook_id(cid: str, wid: str) -> "str | None":
+    for lb, wh in _state["webhooks"].get(cid, {}).items():
+        if wh.get("id") == wid:
+            return lb
+    return None
 
 
 def create_owui_channel(name: str) -> dict:
@@ -125,45 +149,10 @@ def list_owui_channels() -> list:
 
 # ---------------- supervisor ----------------
 def _sup(path: str, body: dict, timeout: float = 60) -> dict:
-    data = json.dumps(body).encode()
-    req = urllib.request.Request(SUPERVISOR + path, data=data,
+    req = urllib.request.Request(SUPERVISOR + path, data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"}, method="POST")
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.load(r)
-
-
-# ---------------- OPERATIONS (the engine — shared by slash, op-endpoint, NL) ----------------
-def op_help(*_a) -> str:
-    return ("Operator commands (slash, or just ask the operator in plain words):\n"
-            "  /members                      — list members + status\n"
-            "  /spawn <label> [persona…]     — spawn a new AI member\n"
-            "  /teardown <label>             — remove a member\n"
-            "  /rename <old> <new>           — rename a member's identity\n"
-            "  /persona <label> <text>       — re-brief a member's role\n"
-            "  /say <label> <text>           — send a message to a member\n"
-            "  /channel <name>               — create a new channel\n"
-            "  /channels                     — list channels\n"
-            "  /help                         — this")
-
-
-def op_members(*_a) -> str:
-    lines = []
-    for m in roster():
-        reg = cc_channels.find(m["handle"])
-        if reg:
-            t = reg.get("transport") or "channel"
-            status = "live"
-            if t == "supervised":
-                ss = reg.get("supervisor_session")
-                try:
-                    sj = _sup_get_state(ss)
-                    status = f"supervised/{sj}"
-                except Exception:
-                    status = "supervised"
-            lines.append(f"  • {m['label']}  [{t}]  {status}  ({m['handle']})")
-        else:
-            lines.append(f"  • {m['label']}  [offline / not registered]  ({m['handle']})")
-    return "Members:\n" + ("\n".join(lines) if lines else "  (none)")
 
 
 def _sup_get_state(supervisor_session: str) -> str:
@@ -175,243 +164,336 @@ def _sup_get_state(supervisor_session: str) -> str:
     return "absent"
 
 
-def op_spawn(label: str = "", *persona_words) -> str:
+# ---------------- OPERATIONS (room-scoped: first arg is the channel id) ----------------
+def op_help(cid, *_a) -> str:
+    return ("Operator commands (slash in this channel, or ask the operator in plain words):\n"
+            "  /members · /status · /spawn <label> [persona…] · /teardown <label> · /rename <old> <new>\n"
+            "  /persona <label> <text> · /say <label> <text> · /channel <name> · /channels\n"
+            "  /interrupt <label> · /stop · /resume · /panel · /help\n"
+            "Stop a member by tapping 🛑 on its message; ⏸ to pause. Members address each other with @name.")
+
+
+def op_members(cid, *_a) -> str:
+    lines = []
+    for m in roster(cid):
+        reg = None
+        try:
+            reg = cc_channels.find(m["handle"])
+        except Exception:
+            pass
+        if reg:
+            t = reg.get("transport") or "channel"
+            status = t
+            if t == "supervised":
+                try:
+                    status = f"supervised/{_sup_get_state(reg.get('supervisor_session'))}"
+                except Exception:
+                    status = "supervised"
+            else:
+                status = "live"
+            lines.append(f"  • {m['label']}  [{status}]  ({m['handle']})")
+        else:
+            lines.append(f"  • {m['label']}  [offline]  ({m['handle']})")
+    return f"Members in {rooms().get(cid,{}).get('name',cid)}:\n" + ("\n".join(lines) if lines else "  (none)")
+
+
+def op_spawn(cid, label: str = "", *persona_words) -> str:
     label = (label or "").strip()
     if not label:
         return "usage: /spawn <label> [persona…]"
-    if _member(label):
-        return f"member '{label}' already exists — pick another label or /teardown it first."
-    persona_brief = " ".join(persona_words).strip() or f"a sharp, concise member named {label}"
-    hook = webhook_url(label)                                  # mint identity first
+    if _member(cid, label):
+        return f"member '{label}' already here."
+    brief = " ".join(persona_words).strip() or f"a sharp, concise member named {label}"
+    hook = webhook_url(cid, label)
     persona = (
-        f"You are '{label}', an AI MEMBER of a live multi-party room (the human Tim and other AI members). "
-        f"To SPEAK in the room you run a Bash command exactly like:\n"
+        f"You are '{label}', an AI MEMBER of a live multi-party room (the human Tim + other AI members). "
+        f"To SPEAK in the room run a Bash command exactly like:\n"
         f"  curl -s -X POST '{hook}' -H 'Content-Type: application/json' -d '{{\"content\":\"<your message>\"}}'\n"
-        f"That curl is the ONLY way the room hears you — run it every time you want to say something. "
-        f"Messages from the room arrive to you as your turns. Your role: {persona_brief}. Keep posts short. "
-        f"RIGHT NOW introduce yourself to the room in one short sentence by running the curl above."
+        f"That curl is the ONLY way the room hears you — run it whenever you want to say something. To address "
+        f"another member, start your message with '@theirname'. Messages arrive to you as your turns. "
+        f"Your role: {brief}. Keep posts short. RIGHT NOW introduce yourself in one short sentence via that curl."
     )
     rec = _sup("/bridge-session", {"operator_consent": True, "name": label, "source": "owui-room",
                                    "prompt": persona}).get("session", {})
     sid = rec.get("id")
     if not sid:
-        return f"spawn failed for '{label}' — no session id returned."
+        return f"spawn '{label}' failed — no session id."
     cc_clone.register_supervised_member(handle=label, session_id=sid, supervisor_session=sid,
-                                        cwd=REPO, description=f"room member: {persona_brief[:60]}")
-    roster().append({"handle": label, "label": label})
+                                        cwd=REPO, description=f"room member: {brief[:60]}")
+    roster(cid).append({"handle": label, "label": label})
     _save_state()
-    return f"spawned '{label}' ({sid}) — registered, in the roster, introducing itself now."
+    return f"spawned '{label}' ({sid}) — in this room, introducing itself now."
 
 
-def op_teardown(label: str = "", *_a) -> str:
-    m = _member(label)
+def op_teardown(cid, label: str = "", *_a) -> str:
+    m = _member(cid, label)
     if not m:
-        return f"no member '{label}'."
-    reg = cc_channels.find(m["handle"])
+        return f"no member '{label}' here."
     msg = []
-    if reg and (reg.get("transport") == "supervised") and reg.get("supervisor_session"):
+    try:
+        reg = cc_channels.find(m["handle"])
+    except Exception:
+        reg = None
+    if reg and reg.get("transport") == "supervised" and reg.get("supervisor_session"):
         try:
-            _sup("/teardown", {"session": reg["supervisor_session"]}, timeout=20)
-            msg.append("supervisor session torn down")
+            _sup("/teardown", {"session": reg["supervisor_session"]}, timeout=20); msg.append("session torn down")
         except Exception as e:
-            msg.append(f"teardown call error: {e}")
+            msg.append(f"teardown error: {e}")
     try:
         cc_clone._deregister_member(m["handle"]); msg.append("deregistered")
     except Exception as e:
-        msg.append(f"deregister error: {e}")
-    _state["roster"] = [x for x in roster() if x["label"] != label]
+        msg.append(f"dereg error: {e}")
+    rooms()[cid]["roster"] = [x for x in roster(cid) if x["label"] != label]
     _save_state()
     return f"removed '{label}' — " + "; ".join(msg)
 
 
-def op_rename(old: str = "", new: str = "", *_a) -> str:
-    m = _member(old)
+def op_rename(cid, old: str = "", new: str = "", *_a) -> str:
+    m = _member(cid, old)
     if not m:
         return f"no member '{old}'."
-    if _member(new):
+    if _member(cid, new):
         return f"'{new}' already exists."
-    m["label"] = new                                           # webhook identity for NEW posts re-mints lazily
+    m["label"] = new
     _save_state()
-    return f"renamed '{old}' → '{new}' (new posts use the new identity; handle unchanged: {m['handle']})."
+    return f"renamed '{old}' → '{new}' (new posts use the new identity)."
 
 
-def op_persona(label: str = "", *words) -> str:
-    m = _member(label)
+def op_persona(cid, label: str = "", *words) -> str:
+    m = _member(cid, label)
     if not m:
         return f"no member '{label}'."
     text = " ".join(words).strip()
     if not text:
-        return "usage: /persona <label> <new role text>"
-    _route_q.put((m["handle"], f"[operator re-brief] From now on your role is: {text}"))
+        return "usage: /persona <label> <new role>"
+    _route_q.put((m["handle"], f"[operator re-brief] From now your role is: {text}"))
     return f"re-briefed '{label}'."
 
 
-def op_say(label: str = "", *words) -> str:
-    m = _member(label)
+def op_say(cid, label: str = "", *words) -> str:
+    m = _member(cid, label)
     if not m:
         return f"no member '{label}'."
     _route_q.put((m["handle"], " ".join(words)))
     return f"sent to '{label}'."
 
 
-def op_channel(name: str = "", *_a) -> str:
+def op_channel(cid, name: str = "", *_a) -> str:
     name = (name or "").strip()
     if not name:
         return "usage: /channel <name>"
     try:
         ch = create_owui_channel(name)
-        return f"created channel '{name}' (id {ch.get('id')}). (To make it a live room too, tell me — multi-room is next.)"
+        ncid = ch.get("id")
+        rooms()[ncid] = {"name": name, "roster": []}      # register it as a LIVE room immediately
+        ensure_webhook(ncid, "operator")
+        _save_state()
+        if _sio is not None:                               # re-join so the socket receives the new channel's events
+            try:
+                _sio.emit("join-channels", {"auth": {"token": _token}})
+            except Exception:
+                pass
+        return f"created channel '{name}' (id {ncid}) — it's a live room now; spawn members into it there."
     except Exception as e:
         return f"channel create failed: {e}"
 
 
-def op_channels(*_a) -> str:
+def op_channels(cid, *_a) -> str:
     try:
         chs = list_owui_channels()
-        return "Channels:\n" + "\n".join(f"  • {c.get('name')}  (id {c.get('id')})" for c in chs) if chs else "Channels: (none)"
+        out = []
+        for c in chs:
+            tag = " [room]" if c.get("id") in rooms() else ""
+            out.append(f"  • {c.get('name')}{tag}  (id {c.get('id')})")
+        return "Channels:\n" + "\n".join(out) if out else "Channels: (none)"
     except Exception as e:
         return f"list channels failed: {e}"
 
 
-def op_interrupt(label: str = "", *_a) -> str:
-    """Halt a member's CURRENT turn (the soft stop — supervisor /interrupt; the session survives)."""
-    m = _member(label)
+def op_interrupt(cid, label: str = "", *_a) -> str:
+    m = _member(cid, label)
     if not m:
         return f"no member '{label}'."
-    reg = cc_channels.find(m["handle"])
+    try:
+        reg = cc_channels.find(m["handle"])
+    except Exception:
+        reg = None
     if not reg or reg.get("transport") != "supervised" or not reg.get("supervisor_session"):
-        return f"'{label}' is not a supervised member — nothing to interrupt."
+        return f"'{label}' is not supervised — nothing to interrupt."
     try:
         _sup("/interrupt", {"session": reg["supervisor_session"]}, timeout=15)
-        return f"⏸ interrupted '{label}' (current turn halted; member still present)."
+        return f"⏸ interrupted '{label}' (turn halted; member present)."
     except Exception as e:
         return f"interrupt '{label}' failed: {e}"
 
 
-def op_stop(*_a) -> str:
-    """EMERGENCY BRAKE — interrupt every supervised member's current turn at once."""
+def op_stop(cid, *_a) -> str:
     hit = []
-    for m in roster():
-        reg = cc_channels.find(m["handle"])
-        if reg and reg.get("transport") == "supervised" and reg.get("supervisor_session"):
-            try:
+    for m in roster(cid):
+        try:
+            reg = cc_channels.find(m["handle"])
+            if reg and reg.get("transport") == "supervised" and reg.get("supervisor_session"):
                 _sup("/interrupt", {"session": reg["supervisor_session"]}, timeout=10); hit.append(m["label"])
-            except Exception:
-                pass
+        except Exception:
+            pass
     return f"⏹ STOP — interrupted: {', '.join(hit) if hit else '(none running)'}"
 
 
-def op_panel(*_a) -> str:
-    """The control panel — every member with its stop controls (the text 'buttons')."""
-    lines = ["🎛 Control panel.  TAP a reaction on any member's message:  🛑 = stop (teardown)  ·  ⏸ = pause (interrupt).",
-             "Or use commands:"]
-    for m in roster():
+def op_panel(cid, *_a) -> str:
+    lines = ["🎛 Control panel.  TAP a reaction on a member's message:  🛑 = stop  ·  ⏸ = pause.  Or:"]
+    for m in roster(cid):
         lb = m["label"]
-        if lb == "fork":
-            lines.append(f"  {lb}: (the lead session — not stoppable from here)")
-        else:
-            lines.append(f"  {lb}:   ⏸ /interrupt {lb}    🛑 /teardown {lb}")
-    lines.append("  ALL:   /stop  (interrupt everyone)   ·   /members   ·   /help")
+        lines.append(f"  {lb}: (lead session)" if lb == "fork" else f"  {lb}:   ⏸ /interrupt {lb}    🛑 /teardown {lb}")
+    lines.append("  ALL:  /stop  ·  /status  ·  /members  ·  /help")
     return "\n".join(lines)
 
 
-def op_status(*_a) -> str:
-    """A dashboard: members + live state, channels, and the member→member breaker."""
-    parts = [op_members(), "", op_channels()]
-    parts.append("")
-    parts.append(f"member↔member breaker: {'TRIPPED (paused) — /resume to clear' if _mm_tripped else 'ok'} "
-                 f"({len(_mm_window)} recent hops)")
-    return "\n".join(parts)
+def op_status(cid, *_a) -> str:
+    tripped = "TRIPPED — /resume to clear" if cid in _mm_tripped else "ok"
+    return "\n".join([op_members(cid), "", op_channels(cid), "",
+                      f"member↔member breaker (this room): {tripped} ({len(_mm_window.get(cid, []))} recent hops)"])
 
 
-def op_resume(*_a) -> str:
-    """Clear a tripped member→member circuit breaker."""
-    global _mm_tripped
-    _mm_tripped = False
-    _mm_window.clear()
-    return "member↔member routing resumed."
+def op_resume(cid, *_a) -> str:
+    _mm_tripped.discard(cid)
+    _mm_window.pop(cid, None)
+    return "member↔member routing resumed for this room."
 
 
-def op_spawn_operator(*_a) -> str:
-    """Spawn the NL OPERATOR member: an AI that turns Tim's plain-language requests into op-CLI calls."""
-    if _member("operator"):
-        return "operator already present."
-    hook = webhook_url("operator")
-    py = sys.executable
-    cli = os.path.join(REPO, "ops", "owui_room.py")
+def op_spawn_operator(cid, *_a) -> str:
+    if _member(cid, "operator"):
+        return "operator already here."
+    hook = webhook_url(cid, "operator")
+    py, cli = sys.executable, os.path.join(REPO, "ops", "owui_room.py")
     persona = (
         "You are 'operator', the room's OPERATOR — you turn Tim's plain-language requests into fabric "
-        "actions. You have a Bash shell. To ACT, run the op CLI (one Bash command):\n"
-        f"  {py} {cli} op <command> [args]\n"
-        "Commands: members | spawn <label> <persona words…> | teardown <label> | rename <old> <new> | "
-        "persona <label> <text> | say <label> <text> | channel <name> | channels | help.\n"
-        "Examples: Tim says 'spin up an analyst who watches the market' → run:  "
-        f"{py} {cli} op spawn analyst who watches the market\n"
-        "Tim says 'who's here?' → run:  " f"{py} {cli} op members\n"
-        "Tim says 'make a design channel' → run:  " f"{py} {cli} op channel design\n"
-        "The command's RESULT is posted into the room automatically — do NOT repeat it. If a request is "
-        "ambiguous, ask ONE short clarifying question by posting to your webhook:\n"
-        f"  curl -s -X POST '{hook}' -H 'Content-Type: application/json' -d '{{\"content\":\"…\"}}'\n"
-        "Be terse and act decisively. RIGHT NOW post a one-line greeting 'operator online — tell me what "
-        "to build' via that curl."
+        "actions. You have a Bash shell. To ACT, run (one Bash command):\n"
+        f"  {py} {cli} op <command> [args] --channel {cid}\n"
+        "Commands: members | status | spawn <label> <role…> | teardown <label> | rename <old> <new> | "
+        "persona <label> <text> | say <label> <text> | channel <name> | channels | interrupt <label> | stop | help.\n"
+        f"e.g. 'spin up an analyst' → {py} {cli} op spawn analyst market analyst --channel {cid}\n"
+        f"     'who's here?'        → {py} {cli} op members --channel {cid}\n"
+        "The command's RESULT is posted into the room automatically — do NOT repeat it. If ambiguous, ask ONE "
+        f"short question via your webhook: curl -s -X POST '{hook}' -H 'Content-Type: application/json' "
+        "-d '{\"content\":\"…\"}'. Be terse. RIGHT NOW post 'operator online — tell me what to build' via that curl."
     )
     rec = _sup("/bridge-session", {"operator_consent": True, "name": "operator", "source": "owui-room",
                                    "prompt": persona}).get("session", {})
     sid = rec.get("id")
     if not sid:
-        return "operator spawn failed — no session id."
+        return "operator spawn failed."
     cc_clone.register_supervised_member(handle="operator", session_id=sid, supervisor_session=sid,
                                         cwd=REPO, description="the room operator (NL → ops)")
-    roster().append({"handle": "operator", "label": "operator"})
+    roster(cid).append({"handle": "operator", "label": "operator"})
     _save_state()
-    return "operator spawned — talk to it in plain language (or reply to it) and it runs the ops."
+    return "operator spawned — talk to it in plain language and it runs the ops."
 
 
-OPS = {"help": op_help, "members": op_members, "spawn": op_spawn, "teardown": op_teardown,
-       "rename": op_rename, "persona": op_persona, "say": op_say, "channel": op_channel,
-       "channels": op_channels, "spawn_operator": op_spawn_operator,
-       "interrupt": op_interrupt, "stop": op_stop, "panel": op_panel,
-       "status": op_status, "resume": op_resume}
+OPS = {"help": op_help, "members": op_members, "status": op_status, "spawn": op_spawn,
+       "teardown": op_teardown, "rename": op_rename, "persona": op_persona, "say": op_say,
+       "channel": op_channel, "channels": op_channels, "interrupt": op_interrupt, "stop": op_stop,
+       "resume": op_resume, "panel": op_panel, "spawn_operator": op_spawn_operator}
 
 
-def dispatch(op: str, args: list) -> str:
+def dispatch(op: str, args: list, cid: str) -> str:
     fn = OPS.get(op)
     if not fn:
         return f"unknown op '{op}'. /help for commands."
     try:
         with _lock:
-            return fn(*args)
+            return fn(cid, *args)
     except Exception as e:
         return f"op '{op}' error: {type(e).__name__}: {e}"
 
 
-# ---------------- inbound: deliver Tim's chat to a member (string-only meta) ----------------
+# ---------------- inbound: deliver to a member (string-only meta) ----------------
 def _route_worker() -> None:
     while True:
         handle, content = _route_q.get()
-        label = next((m["label"] for m in roster() if m["handle"] == handle), handle)
-        hook = ""
-        try:
-            hook = webhook_url(label)
-        except Exception:
-            pass
-        wrapped = f"[room message — to reply, POST {{\"content\":\"...\"}} to {hook}] {content}"
-        meta = {"from": "tim", "thread": "owui-room", "to": label}     # STRING-ONLY
+        meta = {"from": "tim", "thread": "owui-room"}            # STRING-ONLY
         for attempt in range(1, 31):
             try:
-                if cc_channels.push(handle, wrapped, meta=meta, base_timeout=12).get("ok"):
-                    print(f"  → delivered to {label} try {attempt}", flush=True); break
+                if cc_channels.push(handle, content, meta=meta, base_timeout=12).get("ok"):
+                    print(f"  → delivered to {handle} try {attempt}", flush=True); break
             except cc_channels.ChannelError as e:
-                print(f"  deliver {label} err try {attempt}: {e}", flush=True)
+                print(f"  deliver {handle} err {attempt}: {e}", flush=True)
             except Exception as e:
-                print(f"  deliver {label} unexpected try {attempt}: {type(e).__name__}", flush=True)
+                print(f"  deliver {handle} unexpected {attempt}: {type(e).__name__}", flush=True)
             time.sleep(2)
         else:
-            print(f"  ✗ gave up delivering to {label}", flush=True)
+            print(f"  ✗ gave up on {handle}", flush=True)
         _route_q.task_done()
 
 
-# ---------------- op-server (thin executor for the CLI / operator member) ----------------
+def _deliver(cid: str, handle: str, label_for_reply: str, body: str) -> None:
+    """Queue a message to a member, wrapping in the reply instruction for THIS room's webhook."""
+    try:
+        hook = webhook_url(cid, label_for_reply)
+    except Exception:
+        hook = ""
+    _route_q.put((handle, f"[room message — to reply, POST {{\"content\":\"...\"}} to {hook}] {body}"))
+
+
+# ---------------- reaction buttons ----------------
+_TEARDOWN_EMOJI = ("🛑", "❌", "⛔", "octagonal_sign", "no_entry", "cross_mark", "stop")
+_INTERRUPT_EMOJI = ("⏸", "⏸️", "✋", "🤚", "pause_button", "double_vertical_bar", "raised_hand")
+
+
+def handle_reaction(cid: str, msg: dict) -> None:
+    emoji = msg.get("name") or ""
+    wid = ((msg.get("meta") or {}).get("webhook") or {}).get("id")
+    label = _label_for_webhook_id(cid, wid) if wid else None
+    if not label or not _member(cid, label):
+        return
+    e = emoji.lower()
+    if emoji in _TEARDOWN_EMOJI or any(t in e for t in _TEARDOWN_EMOJI):
+        print(f"  reaction {emoji} on {label} → TEARDOWN", flush=True)
+        post_as(cid, "operator", f"🛑 ({label}) — " + dispatch("teardown", [label], cid))
+    elif emoji in _INTERRUPT_EMOJI or any(t in e for t in _INTERRUPT_EMOJI):
+        print(f"  reaction {emoji} on {label} → INTERRUPT", flush=True)
+        post_as(cid, "operator", f"⏸ ({label}) — " + dispatch("interrupt", [label], cid))
+
+
+# ---------------- member↔member ----------------
+def handle_member_post(cid: str, m: dict) -> None:
+    wid = ((m.get("meta") or {}).get("webhook") or {}).get("id")
+    sender = _label_for_webhook_id(cid, wid) if wid else None
+    if not sender or not _member(cid, sender) or sender == "operator":
+        return
+    text = (m.get("content") or "").strip()
+    low = text.lower()
+    target = None
+    for cand in roster(cid):
+        lb = cand["label"]
+        if low.startswith((f"@{lb.lower()} ", f"@{lb.lower()},", f"{lb.lower()}:", f"{lb.lower()}, ")):
+            target = lb; break
+    if not target or target == sender or target == "operator" or not _member(cid, target):
+        return
+    if cid in _mm_tripped:
+        return
+    win = _mm_window.setdefault(cid, deque(maxlen=64))
+    now = time.time()
+    while win and now - win[0] > MM_WINDOW:
+        win.popleft()
+    if len(win) >= MM_MAX:
+        _mm_tripped.add(cid)
+        post_as(cid, "operator", f"⏸ member↔member breaker TRIPPED ({MM_MAX}/{int(MM_WINDOW)}s) — loop paused. /resume or 🛑 a member.")
+        return
+    win.append(now)
+    if text:
+        _deliver(cid, _member(cid, target)["handle"], target, f"(from {sender}) {text}")
+        print(f"  member→member [{rooms().get(cid,{}).get('name',cid)}]: {sender} → {target}", flush=True)
+
+
+# ---------------- op-server / CLI ----------------
+def _parse_channel(args: list) -> "tuple[list, str]":
+    if "--channel" in args:
+        i = args.index("--channel")
+        cid = args[i + 1] if i + 1 < len(args) else HOME
+        return args[:i] + args[i + 2:], cid
+    return args, HOME
+
+
 class _OpHandler(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
@@ -421,8 +503,10 @@ class _OpHandler(BaseHTTPRequestHandler):
             n = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(n) or b"{}")
             op = body.get("op", ""); args = body.get("args", []) or []
-            result = dispatch(op, args)
-            post_as("operator", result)                        # surface every op result in the room
+            args, cid = _parse_channel(list(args))
+            cid = body.get("channel") or cid
+            result = dispatch(op, args, cid)
+            post_as(cid, "operator", result)
             self.send_response(200); self.send_header("Content-Type", "application/json"); self.end_headers()
             self.wfile.write(json.dumps({"ok": True, "result": result}).encode())
         except Exception as e:
@@ -436,88 +520,21 @@ def _start_op_server():
     print(f"  op-server on 127.0.0.1:{OP_PORT}", flush=True)
 
 
-# ---------------- reaction "buttons": tap an emoji on a member's message → control it ----------------
-# Channels have no action-buttons (chat-only), but they DO have native emoji reactions that emit over the
-# socket (message:reaction:add). So a reaction IS the button: 🛑/❌ on a member's message tears it down,
-# ⏸/✋ interrupts its current turn. Cross-device (works on the phone), native, no front-end fork.
-_TEARDOWN_EMOJI = ("🛑", "❌", "⛔", "octagonal_sign", "no_entry", "cross_mark", "stop")
-_INTERRUPT_EMOJI = ("⏸", "⏸️", "✋", "🤚", "pause_button", "double_vertical_bar", "raised_hand")
-
-
-def _label_for_webhook_id(wid: str) -> "str | None":
-    for lb, wh in _state.get("webhooks", {}).items():
-        if wh.get("id") == wid:
-            return lb
-    return None
-
-
-def handle_reaction(msg: dict, reactor: dict) -> None:
-    emoji = (msg.get("name") or "")
-    wid = ((msg.get("meta") or {}).get("webhook") or {}).get("id")
-    label = _label_for_webhook_id(wid) if wid else None
-    if not label or not _member(label):
-        return
-    e = emoji.lower()
-    if any(t in e for t in _TEARDOWN_EMOJI) or emoji in _TEARDOWN_EMOJI:
-        print(f"  reaction {emoji} on {label} → TEARDOWN", flush=True)
-        post_as("operator", f"🛑 (reaction on {label}) — " + dispatch("teardown", [label]))
-    elif any(t in e for t in _INTERRUPT_EMOJI) or emoji in _INTERRUPT_EMOJI:
-        print(f"  reaction {emoji} on {label} → INTERRUPT", flush=True)
-        post_as("operator", f"⏸ (reaction on {label}) — " + dispatch("interrupt", [label]))
-
-
-def handle_member_post(m: dict) -> None:
-    """A MEMBER posted via its webhook (already visible in the room). If it's addressed to ANOTHER member,
-    route it so they CONVERSE — that's the room becoming a living place. Circuit-broken so two agents can't
-    runaway-loop: >MM_MAX hops within MM_WINDOW trips the breaker (paused until /resume or a 🛑)."""
-    global _mm_tripped
-    wid = ((m.get("meta") or {}).get("webhook") or {}).get("id")
-    sender = _label_for_webhook_id(wid) if wid else None
-    if not sender or not _member(sender) or sender == "operator":   # only chat members converse (not operator/system)
-        return
-    text = (m.get("content") or "").strip()
-    # webhook posts can't set reply_to_id, so members address each other by CONTENT MENTION: "@name", "name:" or "name,"
-    target = None
-    low = text.lower()
-    for cand in roster():
-        lb = cand["label"]
-        if low.startswith((f"@{lb.lower()} ", f"@{lb.lower()},", f"{lb.lower()}:", f"{lb.lower()}, ")):
-            target = lb; break
-    if not target:                                                  # fallback: a real reply (Tim-style clients)
-        rt = m.get("reply_to_message") or {}
-        target = ((rt.get("user") or {}).get("name")) or (((rt.get("meta") or {}).get("webhook") or {}).get("name"))
-    if not target or target == sender or target == "operator" or not _member(target):
-        return
-    if _mm_tripped:
-        return
-    now = time.time()
-    while _mm_window and now - _mm_window[0] > MM_WINDOW:
-        _mm_window.popleft()
-    if len(_mm_window) >= MM_MAX:
-        _mm_tripped = True
-        post_as("operator", f"⏸ member↔member breaker TRIPPED ({MM_MAX} hops/{int(MM_WINDOW)}s) — agent loop "
-                            f"paused. Type /resume to continue, or 🛑 a member.")
-        return
-    _mm_window.append(now)
-    text = (m.get("content") or "").strip()
-    if text:
-        _route_q.put((_member(target)["handle"], f"(from {sender}) {text}"))
-        print(f"  member→member: {sender} → {target}", flush=True)
-
-
 # ---------------- daemon ----------------
 def main():
     global _state, _token
     _token = signin()
     _state = _load_state()
-    roster()                                                   # ensure default seeded
-    for m in roster():
-        ensure_webhook(m["label"])
-    ensure_webhook("operator")                                 # system identity for op results
+    for cid, room in rooms().items():
+        for m in room["roster"]:
+            ensure_webhook(cid, m["label"])
+        ensure_webhook(cid, "operator")
     threading.Thread(target=_route_worker, daemon=True).start()
     _start_op_server()
 
+    global _sio
     sio = socketio.Client(reconnection=True, reconnection_attempts=0, request_timeout=20)
+    _sio = sio
 
     @sio.event
     def connect():
@@ -528,11 +545,12 @@ def main():
     @sio.on("events:channel")
     def on_channel(data):
         try:
-            if (data or {}).get("channel_id") != OWUI_CHANNEL:
+            cid = (data or {}).get("channel_id")
+            if cid not in rooms():                              # only handle channels that are registered rooms
                 return
             d = (data.get("data") or {})
-            if d.get("type") == "message:reaction:add":        # a tapped emoji = a control button
-                handle_reaction(d.get("data") or {}, data.get("user") or {})
+            if d.get("type") == "message:reaction:add":
+                handle_reaction(cid, d.get("data") or {})
                 return
             if d.get("type") != "message":
                 return
@@ -540,47 +558,47 @@ def main():
             mid = m.get("id")
             if not mid or mid in _seen:
                 return
-            if m.get("meta"):                                  # a member's own post → maybe member↔member
-                _seen.add(mid); handle_member_post(m); return
+            if m.get("meta"):                                   # a member's own post → maybe member↔member
+                _seen.add(mid); handle_member_post(cid, m); return
             text = (m.get("content") or "").strip()
             if not text:
                 _seen.add(mid); return
             _seen.add(mid)
-            if text.startswith("/"):                            # SLASH command → run op directly
+            if text.startswith("/"):                            # SLASH command, scoped to THIS channel
                 parts = text[1:].split()
                 op = parts[0] if parts else "help"
-                post_as("operator", dispatch(op, parts[1:]))
-                print(f"  slash: /{op}", flush=True); return
+                post_as(cid, "operator", dispatch(op, parts[1:], cid))
+                print(f"  slash [{rooms()[cid]['name']}]: /{op}", flush=True); return
             rt = m.get("reply_to_message") or {}
             target = ((rt.get("user") or {}).get("name")) or (((rt.get("meta") or {}).get("webhook") or {}).get("name"))
             low = text.lower()
-            wants_operator = (target == "operator") or low.startswith(("operator", "@operator", "op,", "op:"))
-            if wants_operator and _member("operator"):          # NATURAL-LANGUAGE op → the operator member
-                _route_q.put((_member("operator")["handle"], text))
-                print("  routed → operator (NL)", flush=True); return
-            if target and _member(target) and target != "operator":
-                _route_q.put((_member(target)["handle"], text))
-                print(f"  routed → {target}", flush=True)
+            wants_op = (target == "operator") or low.startswith(("operator", "@operator", "op,", "op:"))
+            if wants_op and _member(cid, "operator"):
+                _deliver(cid, _member(cid, "operator")["handle"], "operator", text)
+                print("  → operator (NL)", flush=True); return
+            if target and _member(cid, target) and target != "operator":
+                _deliver(cid, _member(cid, target)["handle"], target, text)
+                print(f"  → {target}", flush=True)
             else:
-                for mm in roster():                             # plain message → broadcast to CHAT members
+                for mm in roster(cid):
                     if mm["label"] != "operator":
-                        _route_q.put((mm["handle"], text))
-                print("  routed → broadcast", flush=True)
+                        _deliver(cid, mm["handle"], mm["label"], text)
+                print("  → broadcast", flush=True)
         except Exception as e:
             print(f"  event error: {e}", flush=True)
 
-    print(f"owui-room: channel[{OWUI_CHANNEL}] · members={[m['label'] for m in roster()]} · operator-console", flush=True)
+    names = [r["name"] for r in rooms().values()]
+    print(f"owui-rooms: {len(rooms())} room(s) {names} · op-console · home={HOME}", flush=True)
     sio.connect(OWUI, socketio_path=SIO_PATH, transports=["websocket"], auth={"token": _token})
     sio.wait()
 
 
-# ---------------- CLI (thin client to the daemon's op-server) ----------------
 def cli(argv):
     op = argv[0] if argv else "help"
-    args = argv[1:]
-    port = (_load_state() or {}).get("op_port", OP_PORT)
+    rest, cid = _parse_channel(argv[1:])
+    port = (json.load(open(STATE)) if os.path.exists(STATE) else {}).get("op_port", OP_PORT)
     req = urllib.request.Request(f"http://127.0.0.1:{port}/op",
-                                 data=json.dumps({"op": op, "args": args}).encode(),
+                                 data=json.dumps({"op": op, "args": rest, "channel": cid}).encode(),
                                  headers={"Content-Type": "application/json"}, method="POST")
     with urllib.request.urlopen(req, timeout=120) as r:
         print(json.load(r).get("result", ""))
