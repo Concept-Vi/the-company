@@ -2485,6 +2485,14 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 _did = b.get("id") or b.get("decision_id")
                 _dec = _dreg().get(_did) if _did else b.get("decision")   # the RECORD (registry-is-truth) or a literal record/text
+                # L5 RE-GROUND (recollection 2026-06-27): resolve the decision through compose_definition so a card
+                # with ACCEPTED decision_update marks grounds its UPDATED content, not the raw declared row — else a
+                # L5-updated card re-renders updated but its EXPLANATION grounds stale content. Mirrors the accept
+                # route's idiom (below). Guard the literal-record path (no id → no marks → leave _dec untouched).
+                if _did and isinstance(_dec, dict):
+                    from contracts.address import decision_address as _daddr
+                    from runtime.decision_registry import compose_definition as _compdef
+                    _dec, _ = _compdef(_dec, SUITE.marks_for(_daddr({"id": _did})))
                 if not _dec:
                     self._send(404 if _did else 400, json.dumps({"ok": False,
                         "error": (f"unknown decision {_did!r}" if _did
