@@ -23,6 +23,7 @@ CLI (op):   .venv/bin/python ops/owui_room.py op members
 """
 from __future__ import annotations
 import json, os, sys, threading, queue, time, uuid, urllib.request, requests, socketio
+from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,6 +46,9 @@ _route_q: "queue.Queue[tuple[str, str]]" = queue.Queue()
 _state: dict = {}
 _token: str = ""
 _lock = threading.RLock()
+_mm_window: "deque[float]" = deque(maxlen=64)               # member→member hop timestamps (circuit breaker)
+_mm_tripped = False
+MM_MAX, MM_WINDOW = 8, 90.0                                 # >8 member→member hops / 90s → trip the breaker
 
 
 # ---------------- state ----------------
@@ -311,6 +315,23 @@ def op_panel(*_a) -> str:
     return "\n".join(lines)
 
 
+def op_status(*_a) -> str:
+    """A dashboard: members + live state, channels, and the member→member breaker."""
+    parts = [op_members(), "", op_channels()]
+    parts.append("")
+    parts.append(f"member↔member breaker: {'TRIPPED (paused) — /resume to clear' if _mm_tripped else 'ok'} "
+                 f"({len(_mm_window)} recent hops)")
+    return "\n".join(parts)
+
+
+def op_resume(*_a) -> str:
+    """Clear a tripped member→member circuit breaker."""
+    global _mm_tripped
+    _mm_tripped = False
+    _mm_window.clear()
+    return "member↔member routing resumed."
+
+
 def op_spawn_operator(*_a) -> str:
     """Spawn the NL OPERATOR member: an AI that turns Tim's plain-language requests into op-CLI calls."""
     if _member("operator"):
@@ -349,7 +370,8 @@ def op_spawn_operator(*_a) -> str:
 OPS = {"help": op_help, "members": op_members, "spawn": op_spawn, "teardown": op_teardown,
        "rename": op_rename, "persona": op_persona, "say": op_say, "channel": op_channel,
        "channels": op_channels, "spawn_operator": op_spawn_operator,
-       "interrupt": op_interrupt, "stop": op_stop, "panel": op_panel}
+       "interrupt": op_interrupt, "stop": op_stop, "panel": op_panel,
+       "status": op_status, "resume": op_resume}
 
 
 def dispatch(op: str, args: list) -> str:
@@ -444,6 +466,45 @@ def handle_reaction(msg: dict, reactor: dict) -> None:
         post_as("operator", f"⏸ (reaction on {label}) — " + dispatch("interrupt", [label]))
 
 
+def handle_member_post(m: dict) -> None:
+    """A MEMBER posted via its webhook (already visible in the room). If it's addressed to ANOTHER member,
+    route it so they CONVERSE — that's the room becoming a living place. Circuit-broken so two agents can't
+    runaway-loop: >MM_MAX hops within MM_WINDOW trips the breaker (paused until /resume or a 🛑)."""
+    global _mm_tripped
+    wid = ((m.get("meta") or {}).get("webhook") or {}).get("id")
+    sender = _label_for_webhook_id(wid) if wid else None
+    if not sender or not _member(sender) or sender == "operator":   # only chat members converse (not operator/system)
+        return
+    text = (m.get("content") or "").strip()
+    # webhook posts can't set reply_to_id, so members address each other by CONTENT MENTION: "@name", "name:" or "name,"
+    target = None
+    low = text.lower()
+    for cand in roster():
+        lb = cand["label"]
+        if low.startswith((f"@{lb.lower()} ", f"@{lb.lower()},", f"{lb.lower()}:", f"{lb.lower()}, ")):
+            target = lb; break
+    if not target:                                                  # fallback: a real reply (Tim-style clients)
+        rt = m.get("reply_to_message") or {}
+        target = ((rt.get("user") or {}).get("name")) or (((rt.get("meta") or {}).get("webhook") or {}).get("name"))
+    if not target or target == sender or target == "operator" or not _member(target):
+        return
+    if _mm_tripped:
+        return
+    now = time.time()
+    while _mm_window and now - _mm_window[0] > MM_WINDOW:
+        _mm_window.popleft()
+    if len(_mm_window) >= MM_MAX:
+        _mm_tripped = True
+        post_as("operator", f"⏸ member↔member breaker TRIPPED ({MM_MAX} hops/{int(MM_WINDOW)}s) — agent loop "
+                            f"paused. Type /resume to continue, or 🛑 a member.")
+        return
+    _mm_window.append(now)
+    text = (m.get("content") or "").strip()
+    if text:
+        _route_q.put((_member(target)["handle"], f"(from {sender}) {text}"))
+        print(f"  member→member: {sender} → {target}", flush=True)
+
+
 # ---------------- daemon ----------------
 def main():
     global _state, _token
@@ -479,8 +540,8 @@ def main():
             mid = m.get("id")
             if not mid or mid in _seen:
                 return
-            if m.get("meta"):
-                _seen.add(mid); return
+            if m.get("meta"):                                  # a member's own post → maybe member↔member
+                _seen.add(mid); handle_member_post(m); return
             text = (m.get("content") or "").strip()
             if not text:
                 _seen.add(mid); return
