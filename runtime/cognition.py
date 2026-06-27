@@ -79,15 +79,23 @@ def role_registry() -> RoleRegistry:
 # registries the `skill://`/`context://` schemes resolve through (the FIRST real extension of the C 3/4
 # resolve_address seam). Reached EXACTLY like roles (a fresh discovered registry, reuse-don't-parallel).
 from runtime.skills import SkillRegistry, ContextRegistry  # noqa: E402  (the C 3b registries)
+from runtime.guides import GuideRegistry  # noqa: E402  (the narrative-guide face — second face of skills)
 
 _SKILLS_DIR = os.path.join(os.path.dirname(_ROLES_DIR), "skills")
 _CONTEXTS_DIR = os.path.join(os.path.dirname(_ROLES_DIR), "contexts")
+_GUIDES_DIR = os.path.join(os.path.dirname(_ROLES_DIR), "guides")
 
 
 def skill_registry() -> SkillRegistry:
     """Discover the file-based skill registry (skills/*.py) — fresh each call, so an added/removed
     skill file is picked up (mirrors role_registry()). `skill://<id>` resolves through this."""
     return SkillRegistry().discover([_SKILLS_DIR])
+
+
+def guide_registry() -> GuideRegistry:
+    """Discover the file-based guide registry (guides/*.py) — fresh each call (mirrors
+    skill_registry()). `guide://<id>` resolves through this — the narrative how-to a learner reads."""
+    return GuideRegistry().discover([_GUIDES_DIR])
 
 
 def context_registry() -> ContextRegistry:
@@ -1023,6 +1031,11 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
     if sch == "context":
         # C 3b — context://<id> → the context's declared content blob (file-discovered registry).
         return context_registry().read(addr[len("context://"):])
+    if sch == "guide":
+        # guide://<id> → the guide's declared narrative how-to (file-discovered registry). The second
+        # face of skills: skill:// is the dense instruction-unit a role reads; guide:// is the how-to a
+        # learner reads. read() FAIL-LOUDs on an unknown id (registry-is-truth — never fabricate).
+        return guide_registry().read(addr[len("guide://"):])
     if sch == "session":
         # Session Fabric F1.2 — session://<id> → the agent-session REGISTRY RECORD (durable identity:
         # the whole-record file under <store>/agent_sessions/, written by the importer backfill + the

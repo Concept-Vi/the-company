@@ -9,6 +9,7 @@ Grammar:
   code://<file-stem>/<symbol>                          a code symbol (the S3 ui://→code:// join)
   skill://<id>                                         a declared reusable unit of instructions (SkillRegistry)
   context://<id>                                       a declared reusable unit of context (ContextRegistry)
+  guide://<id>                                          a declared narrative how-to for a target (GuideRegistry)
   session://<id>                                       a Claude Code agent session (the agent-session registry)
   board://<id>                                          a Company Noticeboard item (the cc_board registry)
   clone://<source-sid>/<cut>                            a clone (forked session at a cut-point) — fleet/provenance axis (cc_clone)
@@ -141,7 +142,7 @@ additive (mirrors the vi-vision precedent); no record-shape or schema_ver change
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "clone", "mind", "exchange", "file", "project", "vi-vision", "decision", "image", "extraction")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "guide", "session", "cap", "board", "clone", "mind", "exchange", "file", "project", "vi-vision", "decision", "image", "extraction")
 
 
 class Provenance(BaseModel):
