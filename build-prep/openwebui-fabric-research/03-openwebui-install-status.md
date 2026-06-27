@@ -28,7 +28,7 @@ A **`*:8080` socket is LISTENING but DEAD** — it accepts a TCP connection then
 | **Python venv** | `/home/tim/openwebui-venv/` (binary at `bin/open-webui`, pkg at `lib/python3.11/site-packages/open_webui/`) | pip in venv | **0.8.12** | Installed, not running |
 
 Supporting evidence found on disk:
-- `/home/tim/foundation/operations/open-webui.md` + `open-webui-extras.md` — the canonical docs; describe the **Docker** install as the live one.
+- `/home/tim/company/foundation/operations/open-webui.md` + `open-webui-extras.md` — the canonical docs; describe the **Docker** install as the live one.
 - `/home/tim/backups/open-webui-volume-20260528-*.tar.gz` — two ~988 MB backups of the **Docker volume** (named `pre-0.9.5-upgrade` and `pre-tier1`), so the Docker setup was real and once carried data.
 - `/home/tim/openclaw-deploy/scripts/e2e/openwebui-docker.sh` + `openwebui-probe.mjs` — Docker-oriented deploy/probe scripts.
 - Windows-side artifacts (not this machine's server): `Open WebUI.lnk` on Desktop, `open-webui-desktop-v0.0.20-x64-setup.exe` in Downloads — the desktop client, separate concern.
