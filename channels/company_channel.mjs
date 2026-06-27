@@ -148,7 +148,14 @@ const server = http.createServer(async (rq, rs) => {
     for await (const c of rq) raw += c
     let content = raw, meta = {}
     try { const j = JSON.parse(raw); if (j && typeof j === 'object' && 'content' in j) { content = String(j.content); meta = j.meta || {} } } catch {}
-    try { await mcp.notification({ method: 'notifications/claude/channel', params: { content, meta } }); rs.writeHead(200); rs.end('ok') }
+    // CHOKE-POINT GUARD (proven 2026-06-27): the <channel> notification SILENTLY fails to surface in the
+    // recipient session if meta carries a null or boolean value (controlled test: identical message with
+    // reply_target:null + threaded:false stayed silent; string-only meta surfaced). Coerce every meta value
+    // to a string, dropping null/undefined — protects EVERY inbound caller (cc_channels.push, listeners,
+    // any poster) here at the one place all of them pass through, so a member is never lost to a bad attr.
+    const safeMeta = {}
+    if (meta && typeof meta === 'object') for (const [k, v] of Object.entries(meta)) { if (v != null) safeMeta[k] = String(v) }
+    try { await mcp.notification({ method: 'notifications/claude/channel', params: { content, meta: safeMeta } }); rs.writeHead(200); rs.end('ok') }
     catch (e) { rs.writeHead(500); rs.end('notify failed: ' + e.message) }
     return
   }
