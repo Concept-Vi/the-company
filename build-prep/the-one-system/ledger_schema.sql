@@ -1,0 +1,4 @@
+-- RETIRED / POINTER (2026-06-27). The canonical, tracked ledger schema now lives in the migrations home:
+--   build-prep/claude-design/supabase/supabase/migrations/0011_ledger.sql
+-- (applied/versioned/reproducible with the rest of the DB). This file is kept only so existing references
+-- don't dangle; do not edit it — edit the migration. Anti-duplication: one schema home, not two.

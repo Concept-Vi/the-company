@@ -1,0 +1,14 @@
+[Unit]
+Description=Company ledger incremental refresh (the-one-system structural ledger)
+Documentation=file:///home/tim/company/build-prep/the-one-system/LEDGER-SPEC.md
+After=default.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/tim/company
+ExecStart=/home/tim/company/.venv/bin/python /home/tim/company/ops/ledger_build.py --incremental
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

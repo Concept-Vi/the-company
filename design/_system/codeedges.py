@@ -1,5 +1,14 @@
 """codeedges.py — the STRUCTURAL CODE-DEPENDENCY GRAPH: symbol→symbol calls/imports
-(Convergence X10). Run:
+(Convergence X10).
+
+⚠ SUPERSEDED (2026-06-27, the-one-system): `code-edges.json` is now GENERATED FROM THE LEDGER
+(`ops/ledger_build.py --emit-legacy`) — whole-tree + resolved (4,900+ symbols vs this subset build's
+~430), the ledger being the one canonical structural store. This standalone AST build is RETIRED;
+keep it only as reference/fallback. Consumers (suite.blast_radius, refcheck, the acceptance tests)
+are unchanged — they read the same `code-edges.json`, now ledger-sourced. See
+build-prep/the-one-system/LEDGER-SPEC.md §8.
+
+Run (legacy/standalone):
     python3 codeedges.py
 Where symbols.py is the REVERSE index (a symbol → which CORPUS THINGS reference it — a
 feature-id / ui:// address) and refcheck.py is the FORWARD pass (a ref → does it still

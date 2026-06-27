@@ -1,0 +1,9 @@
+[Unit]
+Description=Periodic Company ledger incremental refresh (keeps the structural ledger from going stale)
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

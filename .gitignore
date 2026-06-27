@@ -49,3 +49,7 @@ workstation001.tail777bc2.ts.net.key
 workstation001.tail777bc2.ts.net.crt
 /recollection/
 /.recollection/
+
+# the-one-system scratch (regenerable; not source)
+build-prep/the-one-system/discovery/
+build-prep/the-one-system/fusion-scope/
