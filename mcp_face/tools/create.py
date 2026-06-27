@@ -15,6 +15,7 @@ from typing import Literal
 # kind → the drift-home a fresh entry of that kind should be reflected in (M4 self-teaching response).
 _DRIFT_HOME = {
     "role": "roles/AGENTS.md", "skill": "skills/AGENTS.md", "context": "contexts/AGENTS.md",
+    "guide": "guides/AGENTS.md",
     "projection": "projections/AGENTS.md", "mark_type": "mark_types/AGENTS.md",
     "generation_policy": "generation_policies/AGENTS.md", "relation_type": "relation_types/AGENTS.md",
     "ai_tic": "ai_tics/AGENTS.md",

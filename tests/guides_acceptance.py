@@ -134,4 +134,30 @@ for gid in reg:
     check(f"drift: discovered guide {gid!r} is reflected in guides/AGENTS.md (the drift home)",
           gid in agents)
 
+# 6 · the LIVE-AUTHORING path (render + gate) — create(kind='guide') foundation, pure (no git)
+from runtime import authoring as _auth                                      # noqa: E402
+good = {"id": "probe_authored", "content": "A probe how-to.", "target": "skill://summarize",
+        "grounded_from": ["skill://summarize"], "label": "Probe"}
+src = _auth.render_entry_source(good, kind="guide")
+check("render_entry_source(kind='guide') emits a module-level GUIDE dict", "GUIDE = {" in src)
+check("the rendered guide GATES clean (discovers in a temp dir — reuse the real GuideRegistry)",
+      _auth.gate_entry_source("probe_authored", src, kind="guide") is None)
+# the rendered source actually discovers + resolves to the declared content
+import tempfile as _tf, os as _os                                          # noqa: E402
+_d = _tf.mkdtemp(prefix="guide-render-")
+with open(_os.path.join(_d, "probe_authored.py"), "w") as f:
+    f.write(src)
+check("a rendered guide is discoverable + resolves to its content",
+      GuideRegistry().discover([_d]).read("probe_authored") == "A probe how-to.")
+# the grounding gate fires at AUTHOR time too (render refuses an ungrounded guide)
+raises("render_entry_source(kind='guide') REFUSES an empty grounded_from (author-time grounding gate)",
+       lambda: _auth.render_entry_source(
+           {"id": "x", "content": "c", "target": "skill://summarize", "grounded_from": []}, kind="guide"))
+raises("render_entry_source(kind='guide') REFUSES a missing target",
+       lambda: _auth.render_entry_source(
+           {"id": "x", "content": "c", "grounded_from": ["skill://summarize"]}, kind="guide"))
+raises("render_entry_source(kind='guide') REFUSES an unknown field",
+       lambda: _auth.render_entry_source(
+           {"id": "x", "content": "c", "target": "t", "grounded_from": ["s"], "bogus": 1}, kind="guide"))
+
 print(f"\nPASS — {PASS} checks")

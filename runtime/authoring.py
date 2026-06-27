@@ -528,8 +528,10 @@ def render_entry_source(spec: dict, *, kind: str) -> str:
     from runtime.skills import ENTRY_FIELDS
     if not isinstance(spec, dict):
         raise AuthoringError(f"{kind} spec must be a dict, got {type(spec).__name__}")
+    if kind == "guide":
+        return _render_guide_source(spec)
     if kind not in ("skill", "context"):
-        raise AuthoringError(f"render_entry_source: kind must be 'skill'|'context', got {kind!r}")
+        raise AuthoringError(f"render_entry_source: kind must be 'skill'|'context'|'guide', got {kind!r}")
     attr = "SKILL" if kind == "skill" else "CONTEXT"
     eid = _safe_entry_id(spec.get("id"), kind)
     content = spec.get("content")
@@ -557,6 +559,51 @@ def render_entry_source(spec: dict, *, kind: str) -> str:
     return src
 
 
+def _render_guide_source(spec: dict) -> str:
+    """RENDER a `guides/<id>.py` module SOURCE (the narrative-guide face). Richer schema than a
+    skill/context row: {id, content (the narrative), target (the address documented), grounded_from
+    (NON-EMPTY list — the mandatory-grounding gate), source_hash?, label?, description?}. Fail loud
+    (AuthoringError) on a bad id / missing content / missing target / EMPTY grounded_from / unknown
+    field — never write a broken or UNGROUNDED guide to the live tree."""
+    from runtime.guides import GUIDE_FIELDS
+    eid = _safe_entry_id(spec.get("id"), "guide")
+    content = spec.get("content")
+    if not isinstance(content, str) or not content:
+        raise AuthoringError(
+            f"guide {eid!r}: must declare a non-empty string `content` (the narrative guide://{eid} "
+            f"resolves TO). Got {content!r} — fail loud.")
+    target = spec.get("target")
+    if not isinstance(target, str) or not target:
+        raise AuthoringError(
+            f"guide {eid!r}: must declare a non-empty string `target` (the address this guide "
+            f"documents — a guide is ABOUT something). Got {target!r} — fail loud.")
+    grounded = spec.get("grounded_from")
+    if not isinstance(grounded, list) or not grounded or not all(isinstance(x, str) and x for x in grounded):
+        raise AuthoringError(
+            f"guide {eid!r}: must declare a NON-EMPTY list `grounded_from` of source addresses (the "
+            f"mandatory-grounding gate — a guide is authored FROM real sources or it does not exist; "
+            f"abort-on-cold). Got {grounded!r} — fail loud (never an ungrounded/invented guide).")
+    unknown = [k for k in spec if k not in GUIDE_FIELDS and k != "model"]
+    if unknown:
+        raise AuthoringError(
+            f"guide {eid!r}: unknown guide-schema field(s) {unknown} — the schema is "
+            f"{list(GUIDE_FIELDS)} (rule 8 — never an invented field). Fail loud.")
+    entry_dict: dict[str, Any] = {"id": eid, "content": content, "target": target,
+                                  "grounded_from": list(grounded)}
+    for k in ("source_hash", "label", "description"):
+        if spec.get(k) is not None:
+            entry_dict[k] = spec[k]
+    body = json.dumps(entry_dict, indent=4, ensure_ascii=False)
+    src = (
+        f'"""guides/{eid}.py — agent-authored guide (the narrative-guide face — guide://{eid}).\n'
+        f'Authored through the agent surface (create_guide / the guide-author); validated by\n'
+        f'import-in-a-temp-dir before it reached the live guides/ tree. A guide ROW: guide://{eid}\n'
+        f'resolves to its declared narrative `content` (the how-to a learner reads for {target})."""\n'
+        f"GUIDE = {body}\n"
+    )
+    return src
+
+
 def gate_entry_source(eid: str, source: str, *, kind: str) -> str | None:
     """THE GATE for a skill/context (the #1 constraint, mirroring gate_role_source): validate a
     generated entry module by DISCOVERING it in a temp dir OUTSIDE the live tree — so a bad entry NEVER
@@ -564,7 +611,8 @@ def gate_entry_source(eid: str, source: str, *, kind: str) -> str | None:
     it would not discover cleanly, else None. reuse-don't-parallel: the gate IS the real
     SkillRegistry/ContextRegistry discovery (the SAME fail-loud `_build_entry`), never a second validator."""
     from runtime.skills import SkillRegistry, ContextRegistry
-    Reg = SkillRegistry if kind == "skill" else ContextRegistry
+    from runtime.guides import GuideRegistry
+    Reg = {"skill": SkillRegistry, "context": ContextRegistry, "guide": GuideRegistry}[kind]
     d = tempfile.mkdtemp(prefix=f"{kind}-gate-")
     try:
         path = os.path.join(d, eid + ".py")
@@ -574,7 +622,7 @@ def gate_entry_source(eid: str, source: str, *, kind: str) -> str | None:
         if eid not in reg:
             return (f"{kind} {eid!r} did not register from the generated module (no {kind.upper()} dict "
                     f"discovered) — a {kind} module must declare a module-level "
-                    f"{'SKILL' if kind == 'skill' else 'CONTEXT'} dict whose id equals the file name.")
+                    f"{kind.upper()} dict whose id equals the file name.")
         return None
     except Exception as e:
         return f"{type(e).__name__}: {e}"

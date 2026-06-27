@@ -284,6 +284,7 @@ class Suite:
         # cognition._SKILLS_DIR/_CONTEXTS_DIR (the global readers — list_skills_contexts/resolve_address).
         self.skills_dir = os.path.join(os.path.dirname(self.nodes_dir), "skills")
         self.contexts_dir = os.path.join(os.path.dirname(self.nodes_dir), "contexts")
+        self.guides_dir = os.path.join(os.path.dirname(self.nodes_dir), "guides")
         # Cognition Engine K1/P1 — the FILE-DISCOVERED PROJECTION registry (the corpus-pillar lens set).
         # Discovered exactly like role_registry above (the `projections/` sibling of `nodes/`), so the
         # cognition SELECTS (cognition_info / available_inputs) PROJECT the live discovered lens set
@@ -9805,14 +9806,15 @@ class Suite:
         return {"role_id": rid, "path": path, "live": rid in self.role_registry, "source": source}
 
     def _entry_dir(self, kind: str) -> str:
-        return self.skills_dir if kind == "skill" else self.contexts_dir
+        return {"skill": self.skills_dir, "context": self.contexts_dir, "guide": self.guides_dir}[kind]
 
     def _entry_registry(self, kind: str):
         """Discover the skill/context registry over THIS Suite's dir (registry-is-truth, instance-local
         — so the live check + the create read the SAME dir the write targets; production dirs coincide
         with cognition._SKILLS_DIR/_CONTEXTS_DIR, so the global readers see it too)."""
         from runtime.skills import SkillRegistry, ContextRegistry
-        Reg = SkillRegistry if kind == "skill" else ContextRegistry
+        from runtime.guides import GuideRegistry
+        Reg = {"skill": SkillRegistry, "context": ContextRegistry, "guide": GuideRegistry}[kind]
         return Reg().discover([self._entry_dir(kind)])
 
     def _write_entry_file(self, kind: str, eid: str, source: str, commit_msg: str, *, emit_msg: str) -> str:
@@ -9861,6 +9863,25 @@ class Suite:
         path = self._write_entry_file("skill", eid, source, f"create skill '{eid}' (direct)",
                                       emit_msg=f"created skill '{eid}' DIRECTLY — now a live skill")
         return {"skill_id": eid, "path": path, "live": eid in self._entry_registry("skill")}
+
+    def create_guide(self, spec: dict) -> dict:
+        """Create a GUIDE LIVE (the narrative-guide face — guide://<id>). Renders `guides/<id>.py`
+        (id + content + target + grounded_from + source_hash?/label?/description?) → the CORRECTNESS
+        GATE (import in a temp dir; a malformed/UNGROUNDED guide refused fail-loud) → write → commit →
+        live (readable via guide://<id>). reuse-don't-parallel: the SAME gate+write+commit path as
+        create_skill, over the guide registry. The grounding gate is in render/gate (empty
+        grounded_from FAILS LOUD — a guide is true-by-construction). Returns {guide_id, path, live}."""
+        from runtime import authoring as _auth
+        if not isinstance(spec, dict):
+            raise TypeError(f"create_guide needs a dict spec, got {type(spec).__name__}")
+        eid = _auth._safe_entry_id(spec.get("id"), "guide")
+        if eid in self._entry_registry("guide"):
+            raise ValueError(f"guide {eid!r} already exists — create_guide is for a NEW guide. Fail loud. "
+                             f"(Re-authoring a guide is the guide-author's propose-diff path, not a create.)")
+        source = _auth.render_entry_source(spec, kind="guide")
+        path = self._write_entry_file("guide", eid, source, f"create guide '{eid}' (direct)",
+                                      emit_msg=f"created guide '{eid}' DIRECTLY — now a live guide")
+        return {"guide_id": eid, "path": path, "live": eid in self._entry_registry("guide")}
 
     def create_context(self, spec: dict) -> dict:
         """#56 write-half · #58 DIRECT — the agent CREATES a context LIVE, no operator approval. Mirrors
