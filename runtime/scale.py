@@ -350,38 +350,48 @@ def build_scale_pyramid_kmeans(store, *, space: str, rungs: list | None = None, 
     if not rungs:
         raise ValueError(f"scale.build_scale_pyramid_kmeans: space {space!r} ({n} units) too thin to coarsen.")
 
+    # MEMORY-NATIVE (recollection 2026-06-27 fix): build ONE numpy array + free the Python corpus immediately.
+    # The naive path held corpus(list) + nv(list) + X(numpy) = ~3× the vector data (~8GB for 51k×2560 → OOM/
+    # thrash). Here: vectors → float32 array, normalize in-place, drop the source lists; centroids/exemplars are
+    # numpy (X[idxs].mean / X[idxs]@c), never a Python list-of-lists copy.
     ids = [c["id"] for c in corpus]
-    nv = [_norm(c["vector"]) for c in corpus]                     # unit-normalized → cosine == euclidean on the sphere
-    dim = len(nv[0])
     model = (store.get_vector(store.space_address(ids[0], space, emb)) or {}).get("model")
+    X = _np.asarray([c["vector"] for c in corpus], dtype=_np.float32)
+    del corpus                                                   # free the Python dicts/lists (the heavy half)
+    dim = int(X.shape[1])
+    _nrm = _np.linalg.norm(X, axis=1, keepdims=True); _nrm[_nrm == 0] = 1.0
+    X /= _nrm                                                    # unit-normalize in place → cosine == dot
+
+    def _cen(idxs):                                              # normalized mean of member rows (numpy)
+        m = X[idxs].mean(axis=0); nn = float(_np.linalg.norm(m))
+        return m / nn if nn else m
 
     finest = rungs[0]
-    X = _np.asarray(nv, dtype=_np.float32)
     km = MiniBatchKMeans(n_clusters=finest, random_state=0, batch_size=4096,
                          n_init=3, max_iter=100).fit(X)
     labels = km.labels_.tolist()
 
     # FINE rung — kmeans clusters, in stable order (by smallest member index → reproducible labels)
     fine_groups = clusters_of(labels)                            # {km_label: [unit_idx, ...]}
-    fine = []                                                    # ordered [(source, [unit_idxs], centroid_vec)]
+    fine = []                                                    # ordered [(source, [unit_idxs], centroid_np)]
     for label, (_kl, idxs) in enumerate(sorted(fine_groups.items(), key=lambda kv: min(kv[1]))):
-        fine.append((f"cluster://{space}/k{finest}/{label}", idxs, centroid(nv, idxs)))
+        fine.append((f"cluster://{space}/k{finest}/{label}", idxs, _cen(idxs)))
 
     built = skipped = 0
     rung_records: list = []
 
     def _persist_rung(k, clusters):
-        """clusters = ordered [(source, [unit_idxs], centroid_vec, children_finer|None)] → persist + record."""
+        """clusters = ordered [(source, [unit_idxs], centroid_np, children_finer|None)] → persist + record."""
         nonlocal built, skipped
         recs = []
         for label, (src, idxs, cvec, child) in enumerate(clusters):
             member_srcs = [ids[i] for i in idxs]
-            exemplar = max(idxs, key=lambda i: _cos(nv[i], cvec))
+            exemplar = int(idxs[int((X[idxs] @ cvec).argmax())])  # member nearest the centroid (numpy)
             store_key = store.space_address(src, f"scale:{space}:k{k}", emb)
             h = _member_hash(store, member_srcs)
             prior = store.get_vector(store_key)
             if force or prior is None or prior.get("content_hash") != h:
-                store.put_vector(store_key, cvec, h, dim=dim, model=model,
+                store.put_vector(store_key, cvec.tolist(), h, dim=dim, model=model,
                                  space=f"scale:{space}:k{k}", source=src, emb=emb)
                 built += 1
             else:
@@ -395,7 +405,7 @@ def build_scale_pyramid_kmeans(store, *, space: str, rungs: list | None = None, 
     # records the finer clusters folding into it; the FINE rung itself is persisted last (children=None).
     coarse_rungs = [k for k in rungs if k != finest]
     if coarse_rungs:
-        fine_centroids = [fc[2] for fc in fine]
+        fine_centroids = [fc[2].tolist() for fc in fine]         # ~K centroids → lists for the pure-python ward
         _nv2, cuts2 = agglomerate(fine_centroids, linkage="ward")
         # map each fine-cluster position → its coarse-cluster source, rung by rung (descending K) for children
         prev_assign = {p: fine[p][0] for p in range(len(fine))}   # finest rung: a fine pos maps to its own source
@@ -407,7 +417,7 @@ def build_scale_pyramid_kmeans(store, *, space: str, rungs: list | None = None, 
             for label, (_cl, fpos) in enumerate(sorted(groups.items(), key=lambda kv: min(kv[1]))):
                 src = f"cluster://{space}/k{k}/{label}"
                 unit_idxs = sorted(i for p in fpos for i in fine[p][1])    # UNION of the fine clusters' units
-                cvec = centroid(nv, unit_idxs)
+                cvec = _cen(unit_idxs)
                 child = sorted({prev_assign[p] for p in fpos})            # finer clusters folding in
                 clusters.append((src, unit_idxs, cvec, child))
                 for p in fpos:
