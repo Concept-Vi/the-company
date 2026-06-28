@@ -94,9 +94,21 @@ check("the page port is a SEPARATE origin (not bridge 8770 / supervisor 8771)",
       pf.PAGE_PORT not in (8770, 8771))
 
 # 7 · ADDRESS VALIDATION + empty-html
-raises("attach_page REFUSES a non-ui:// address", Exception,
+raises("attach_page REFUSES a string with no scheme (not an address)", pf.PageFaceError,
        lambda: pf.attach_page(suite, "not-an-address", HTML, bindings_path=binds))
+raises("attach_page REFUSES an unknown scheme (registry-is-truth)", pf.PageFaceError,
+       lambda: pf.attach_page(suite, "bogus://x", HTML, bindings_path=binds))
 raises("attach_page REFUSES empty html (never bind an empty page)", pf.PageFaceError,
        lambda: pf.attach_page(suite, ADDR, "   ", bindings_path=binds))
+
+# 8 · A PAGE IS THE FACE OF *ANY* ADDRESSED THING (not just UI) — the generalization
+SKILL_ADDR = "skill://summarize"
+b2 = os.path.join(tempfile.mkdtemp(prefix="pf-any-"), "page_bindings.json")
+pf.attach_page(suite, SKILL_ADDR, "<!doctype html><h1>Summarize — the skill</h1>", title="Summarize", bindings_path=b2)
+st8, _h8, body8 = pf.render_page(suite, SKILL_ADDR, bindings_path=b2)
+check("a page attaches to a NON-ui address (skill://) — a page is the face of ANY addressed thing",
+      st8 == 200 and "Summarize — the skill" in body8)
+check("list_pages reports the bound address(es)",
+      any(r["address"] == SKILL_ADDR for r in pf.list_pages(suite, bindings_path=b2)))
 
 print(f"\nPASS — {PASS} checks")

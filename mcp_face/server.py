@@ -511,17 +511,51 @@ def list_skills_contexts() -> dict:
 # list_runs/find_runs → CONSOLIDATED into mcp_face/tools/runs.py (runs(op=list|find) — the #54 run index;
 # get_results/get_state/get_events STAY as distinct nouns per the don't-god-tool rule). Flat defs removed.
 @mcp.tool()
-def inspect_address(address: str, turn_id: str = "") -> dict:
-    """INSPECT a RUN OUTPUT (or any addressed content) by address — reads a PAST run's output back.
-    REUSES runtime.cognition.resolve_address (the engine's canonical read path): run:// (an upstream
-    role/unit output) · cas:// (a content blob) · skill:// (a skill's instructions) · context:// (a
-    context blob). A <turn> template materializes against `turn_id`. Fail loud on an unresolvable/
-    unknown address (never a silent empty). Read-only."""
-    val = _cog.resolve_address(SUITE.store, address, turn_id=(turn_id or None))
-    if val is _cog.BARE_NAME:
-        raise ValueError(f"inspect_address: {address!r} is a bare name (a ctx key), not an address — "
-                         f"pass a run://, cas://, skill:// or context:// address.")
-    return {"address": address, "value": val}
+def inspect_address(address: str, turn_id: str = "", op: str = "", html: str = "", title: str = "") -> dict:
+    """INSPECT or give a FACE to an address — the one door for any addressed thing. `op` selects:
+
+      op="" (default, READ) — resolve the address's content back (byte-identical to before). REUSES
+        runtime.cognition.resolve_address: run:// (an upstream output) · cas:// (a content blob) ·
+        skill:// (a skill's instructions) · context:// (a context blob) · guide:// (a narrative how-to).
+        A <turn> template materializes against `turn_id`. If the address also carries a PAGE face, the
+        binding is included as `page`. Fail loud on an unresolvable address that has no page either.
+
+      op="attach_page" — give the address a rendered HTML PAGE FACE (the strong artifact: a page is a
+        FIELD an address accumulates, served live on a separate origin under a no-script CSP). Works for
+        ANY addressed thing, not just ui:// (a skill, a run output, a UI element — anything can have a
+        visible face). Params: `html` (required, the page source — non-empty), `title` (optional). The
+        HTML is stored immutable (cas://) + bound to the address; returns the binding {address, source,
+        title, content_type}. Serve it with the page-face server (runtime/page_face.serve).
+
+      op="pages" — list every address that currently carries a page face.
+
+    REUSE-DON'T-PARALLEL: the page mechanism is runtime/page_face (attach_page/page_for/list_pages); this
+    verb is the agent door onto it, consolidated under the address noun (mirrors runs(op=...))."""
+    if op in ("", "read"):
+        from runtime import page_face as _pf
+        binding = _pf.page_for(SUITE, address)
+        try:
+            val = _cog.resolve_address(SUITE.store, address, turn_id=(turn_id or None))
+        except Exception:
+            if binding:                                   # not value-resolvable (e.g. ui://) but HAS a face
+                return {"address": address, "page": binding}
+            raise                                         # no value AND no page → fail loud (unchanged)
+        if val is _cog.BARE_NAME:
+            raise ValueError(f"inspect_address: {address!r} is a bare name (a ctx key), not an address — "
+                             f"pass a run://, cas://, skill://, context:// or guide:// address.")
+        out = {"address": address, "value": val}
+        if binding:
+            out["page"] = binding
+        return out
+    if op == "attach_page":
+        from runtime import page_face as _pf
+        if not (html and html.strip()):
+            return {"error": "inspect_address(op='attach_page') needs non-empty `html` (the page source)."}
+        return _pf.attach_page(SUITE, address, html, title=(title or None))
+    if op == "pages":
+        from runtime import page_face as _pf
+        return {"pages": _pf.list_pages(SUITE)}
+    return {"error": f"inspect_address: unknown op {op!r} (expected ''|'read'|'attach_page'|'pages')."}
 
 
 # --- CONFIGURE + RUN -----------------------------------------------------------------------------

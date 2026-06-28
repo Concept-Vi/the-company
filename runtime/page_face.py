@@ -65,6 +65,23 @@ def _scheme(src: str) -> str:
     return src.split("://", 1)[0] if isinstance(src, str) and "://" in src else ""
 
 
+def _validate_address(address: str) -> None:
+    """A page can be the face of ANY addressed thing — not just a ui:// element (Tim, 2026-06-28: the
+    interactive addressed surface + page-face are for everything else too, not only UI). So we validate
+    the address is WELL-FORMED with a KNOWN scheme (registry-is-truth, contracts.address.SCHEMES), not
+    that it is specifically ui://. A `ui://` still gets its richer shape-validation (parse_ui_address)."""
+    from contracts.address import SCHEMES
+    sch = _scheme(address)
+    if not sch:
+        raise PageFaceError(f"attach_page: {address!r} is not an address (no '<scheme>://') — fail loud.")
+    if sch not in SCHEMES:
+        raise PageFaceError(
+            f"attach_page: unknown address scheme {sch!r} in {address!r} — known schemes are {list(SCHEMES)} "
+            f"(registry-is-truth; a page is the face of an ADDRESSED thing, so its address must be real).")
+    if sch == "ui":
+        parse_ui_address(address)                          # ui:// keeps its richer grammar validation
+
+
 def _load_bindings(bindings_path: str) -> dict:
     if not os.path.exists(bindings_path):
         return {}
@@ -74,10 +91,11 @@ def _load_bindings(bindings_path: str) -> dict:
 
 def attach_page(suite, address: str, html: str, *, title: str | None = None,
                 bindings_path: str | None = None) -> dict:
-    """Bind a rendered HTML page to `address`. Stores the HTML as an immutable content-addressed object
+    """Bind a rendered HTML page to `address` (ANY addressed thing — a ui:// element, a skill://, a
+    run:// output, anything in SCHEMES). Stores the HTML as an immutable content-addressed object
     (`cas://`) and records the binding in the overlay (the address's `page` field). Returns the binding.
-    FAIL LOUD on a non-`ui://` address or empty html (never bind an empty/invalid page)."""
-    parse_ui_address(address)                              # validate the address shape (raises if bad)
+    FAIL LOUD on a malformed/unknown-scheme address or empty html (never bind an empty/invalid page)."""
+    _validate_address(address)                            # any well-formed, known-scheme address
     if not isinstance(html, str) or not html.strip():
         raise PageFaceError(f"attach_page({address!r}): html must be non-empty — never bind an empty page.")
     bindings_path = bindings_path or _DEFAULT_BINDINGS
@@ -96,6 +114,12 @@ def attach_page(suite, address: str, html: str, *, title: str | None = None,
 def page_for(suite, address: str, *, bindings_path: str | None = None) -> dict | None:
     """The page binding for an address (its `page` field), or None if it has no page."""
     return _load_bindings(bindings_path or _DEFAULT_BINDINGS).get(address)
+
+
+def list_pages(suite, *, bindings_path: str | None = None) -> list:
+    """Every address that currently carries a page face, with its binding — the page registry view."""
+    b = _load_bindings(bindings_path or _DEFAULT_BINDINGS)
+    return [{"address": a, **rec} for a, rec in sorted(b.items())]
 
 
 def _resolve_source(suite, source: str) -> str:
