@@ -141,6 +141,22 @@ no_ram = [k for k, v in reg["services"].items()
 ok("T8a no real service missing ram_mb", not no_ram, f"missing: {no_ram}")
 ok("T8b ram_headroom_mb is set in the registry", "ram_headroom_mb" in reg, "registry-is-truth, not hardcoded")
 
+# ── T9 — the ACTUATOR rides the RAM gate: ensure_resident refuses an over-RAM load ───────────────
+print("\n[T9] ensure_resident (the mode-loadout actuator) refuses an over-RAM, 0-VRAM service")
+import capabilities
+# A 0-VRAM, huge-RAM, not-running service (the granite shape): VRAM-fit passes (need 0) but RAM must catch it.
+synth3 = {"vram_ceiling_mb": reg.get("vram_ceiling_mb", 16376), "ram_headroom_mb": reg.get("ram_headroom_mb", 2048),
+          "services": {"ramhog-ear": {"group": "voice", "vram_mb": 0, "ram_mb": big,
+                                      "manage": {"type": "manual", "run": "voice/ears/fake.py"},
+                                      "port": 59994}}}
+raised = False
+try:
+    capabilities.ensure_resident("ramhog-ear", evict=False, reg=synth3, wait=False)
+except capabilities.EnsureResidentError as e:
+    raised = "SYSTEM RAM" in str(e)
+ok("T9a ensure_resident RAISES on an over-RAM 0-VRAM load (the granite shape)", raised,
+   "VRAM-fit would pass need=0; the RAM leg must catch it")
+
 # ── result ───────────────────────────────────────────────────────────────────────────────────────
 print(f"\n[RESULT] {len(PASS)} pass / {len(FAIL)} fail")
 if FAIL:

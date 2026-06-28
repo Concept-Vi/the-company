@@ -494,6 +494,21 @@ def ensure_resident(model_or_service, *, evict=False, reg=None, wait=True, timeo
             evicted.append(k)
         time.sleep(2)  # let VRAM release (matches _act's post-stop settle)
 
+    # 3b. WS-R — the SYSTEM-RAM leg (the check_fit above is VRAM-only). A CPU-resident service costs 0
+    # VRAM (stt-granite fp32 ~9 GB, the ONNX ears, whisper.cpp) so the VRAM gate passes it (need 0) —
+    # yet host-RAM overcommit is the kernel OOM-killer. gpu.ram_fit reads LIVE /proc/meminfo MemAvailable
+    # (counts ALL processes on the box, not just services), so this is the gate that makes the actuator —
+    # and therefore the mode→loadout swap that rides it (WS1 apply_loadout) — unable to OOM. Checked AFTER
+    # any VRAM eviction above (which also freed that service's RAM); ram_fit re-reads live, so it reflects
+    # the freed memory. RAM overflow is not VRAM-evictable, so this fails loud (no --evict/--force bypass).
+    ram = gpu.ram_fit(reg, [key])
+    if ram["present"] and not ram["ok"]:
+        raise EnsureResidentError(
+            f"ensure_resident: CANNOT fit {key} in SYSTEM RAM — needs ~{ram['need']/1000:.1f} GB, only "
+            f"~{ram['free']/1000:.1f} GB available (live MemAvailable − headroom). RAM overflow is "
+            f"kernel-fatal and not VRAM-evictable; free memory first (close other RAM users / "
+            f"`company down <service>`). Fail-loud — never an OOM-inducing load. evicted={evicted}.")
+
     # 4. LOAD — the SAME start path `_act` uses (systemd.control(svc, "start")). One start mechanism.
     okk, msg = systemd.control(svc, "start")
     if not okk:
