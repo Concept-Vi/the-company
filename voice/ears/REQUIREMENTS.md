@@ -83,6 +83,31 @@ export COMPANY_GRANITE_DEVICE=cuda     # or cpu
 
 ---
 
+## Lane 5 — the compact realtime ears (ONNX, 2026-06-28)
+The leanest ears: ONNX-runtime, no torch/NeMo, CPU by default (0 VRAM), for live conversation + STA.
+
+### moonshine (:2034)
+```
+python3 -m venv ~/.voice-venvs/moonshine
+~/.voice-venvs/moonshine/bin/pip install useful-moonshine-onnx   # provides moonshine_onnx
+export COMPANY_MOONSHINE_MODEL=moonshine/base    # or moonshine/tiny; v2-medium when packaged
+~/.voice-venvs/moonshine/bin/python /home/tim/company/voice/ears/moonshine.py 2034
+```
+- Model auto-downloads from HF on first run (one-time ~111 s here). <1 GB. English. Built-in IntentRecognizer.
+
+### parakeet-onnx (:2035)
+```
+python3 -m venv ~/.voice-venvs/parakeet-onnx
+~/.voice-venvs/parakeet-onnx/bin/pip install sherpa-onnx soundfile huggingface_hub
+# fetch the int8 export (xet stalls on this network → disable it):
+HF_HUB_DISABLE_XET=1 ~/.voice-venvs/parakeet-onnx/bin/python -c "from huggingface_hub import hf_hub_download; import shutil,os; d='/home/tim/company/voice/models/parakeet-tdt-v3-int8'; os.makedirs(d,exist_ok=True); [shutil.copy(hf_hub_download('csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8',f), d+'/'+f) for f in ['encoder.int8.onnx','decoder.int8.onnx','joiner.int8.onnx','tokens.txt']]"
+export COMPANY_PARAKEET_ONNX_DEVICE=cpu          # or cuda for the GPU provider
+~/.voice-venvs/parakeet-onnx/bin/python /home/tim/company/voice/ears/parakeet_onnx.py 2035
+```
+- Model dir `voice/models/parakeet-tdt-v3-int8/` (~670 MB). 25 European languages. Hotword/context biasing.
+
+---
+
 ## The boot default (today)
 `STT_DEFAULT = whispercpp` (the live, zero-install, on-machine ear on :2022). Flip to `parakeet` (env
 `COMPANY_STT=parakeet` or the `rhm_config().stt` slot via `/api/rhm-config`) only **once it is verified
