@@ -103,6 +103,10 @@ for _src, _want in _scanner_cases.items():
 # and it must NOT mis-capture the live resolver's querySelector template (no body between the quotes).
 check("scanner does NOT false-match the resolver querySelector template (no spurious ref captured)",
       _REF.findall("document.querySelector('[data-ui-ref=\"' + ref + '\"]')") == [])
+# nor the TEMPLATE-LITERAL form `[data-ui-ref="${CSS.escape(addr)}"]` — _REF captures it, but the
+# collect_refs `${` filter drops it (a runtime interpolation is not a static, registrable address).
+check("scanner drops the template-literal querySelector ref (the ${…} interpolation is not an address)",
+      [m for m in _REF.findall('`[data-ui-ref="${CSS.escape(addr)}"]`') if "${" not in m] == [])
 
 
 def collect_refs(root_dir, exts):
@@ -116,7 +120,10 @@ def collect_refs(root_dir, exts):
                 txt = open(os.path.join(dirpath, fn), encoding="utf-8").read()
             except (OSError, UnicodeDecodeError):
                 continue
-            used.update(_REF.findall(txt))
+            # skip DYNAMIC template-literal refs (e.g. data-ui-ref="${CSS.escape(addr)}" — a
+            # querySelector building a selector at runtime, NOT a static address declaration). A `${`
+            # in the capture means it's an interpolation, not a registrable address.
+            used.update(m for m in _REF.findall(txt) if "${" not in m)
     return used
 
 

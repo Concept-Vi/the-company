@@ -162,8 +162,10 @@ except ValueError as e:
 check("resolve_address('context://no-such-context') RAISES fail-loud (registry-is-truth)",
       unknown_ctx)
 
-# the still-UNBUILT schemes STILL RAISE (the seam holds for them — only skill+context graduated in C 3b).
-for sch in ("blob://b2:abc", "vec://run://x#emb=m", "ui://panel/p", "code://suite/foo"):
+# the still-UNBUILT schemes STILL RAISE (the seam holds for them). NOTE: blob:// has since GRADUATED
+# (it now resolves via store.get_blob — a missing blob raises FileNotFoundError, not the "not content-
+# resolvable yet" seam message), so it is no longer in this still-unbuilt set; vec/ui/code remain unbuilt.
+for sch in ("vec://run://x#emb=m", "ui://panel/p", "code://suite/foo"):
     raised = False
     try:
         resolve_address(store, sch)

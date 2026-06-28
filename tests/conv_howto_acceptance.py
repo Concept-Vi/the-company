@@ -67,8 +67,27 @@ def fresh_suite():
 # changes, pick any address whose corpus entry has a `howto` field — the test reads from the registry,
 # never hardcodes the text.
 SEEDED = "ui://toolbar/run"
-# A real corpus address that authors NO howto (the clean how-to-use absent leg).
-UNAUTHORED = "ui://toolbar/portal"
+# A real address with a RECORD but NO authored howto (the clean how-to-use-absent leg). DERIVED
+# dynamically, not hardcoded: the corpus reached ~100% howto coverage, so the old fixture
+# (ui://toolbar/portal) later GAINED a howto and silently broke this honest-absence check. We pick a
+# live address that currently has a record but no howto, and FAIL LOUD if none exists (the DEGRADE
+# premise would then be genuinely unsatisfiable — surfaced, never a confusing assertion).
+def _pick_unauthored():
+    s = fresh_suite()
+    for k in s.ui_info():
+        if not k.startswith("ui://"):
+            continue
+        try:
+            b = s.address_help(k)
+        except Exception:
+            continue
+        if b["legs_present"].get("what_this_is") is True and b.get("how_to_use") is None:
+            return k
+    raise SystemExit("conv_howto: no record-present/howto-absent address exists — the DEGRADE fixture "
+                     "premise is unsatisfiable (every address now has a howto); update the test.")
+
+
+UNAUTHORED = _pick_unauthored()
 
 print("D1 · how-to / affordance stratum")
 

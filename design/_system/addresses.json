@@ -6575,6 +6575,17 @@
       "represents": "STUDIO-review",
       "code": "canvas/app/src/components/StudioKit.tsx (whole screen)",
       "howto": "WHAT: pop back to the whole screen. WHAT YOU CAN DO: when you've drilled into one element of a mockup, return your comments to the whole-screen level (both levels, never either/or). HOW TO CHANGE IT: setReviewMockup(reviewMockup, baseAddr) in StudioKit."
+    },
+    "ui://tray": {
+      "region": "tray",
+      "capabilities": [
+        "pointable",
+        "openable",
+        "presentable"
+      ],
+      "represents": "mobile-tray",
+      "code": "canvas/app/src/regions/MobileTray.tsx (MobileTray)",
+      "howto": "WHAT: the mobile tray — the bottom slide-up container that holds the board's controls on a phone-sized surface (the mobile counterpart to the desktop toolbar/rails). WHAT YOU CAN DO: open the tray to reach the actions that live on the chrome when there is no room for them inline. HOW TO CHANGE IT: it lives in the tray region (MobileTray.tsx); what it holds and how it opens is a code change there."
     }
   }
 }
