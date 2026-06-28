@@ -38,6 +38,29 @@ constants, channel posts riding the EXISTING mail intents (never wake — no bro
 stampede-spawn). The fold lives beside Suite (not in it) for build-lane disjointness — an
 open seam, not a hidden one; the face is `mcp_face/tools/channels.py`.
 
+**The conversation record** (`runtime/conversations.py` — the content store the company LACKED):
+one conversation = one append-only leaf `store/conversations/<cid>.jsonl`, folded at read time into
+a BRANCHING message DAG + a `current` displayed path. This fills a verified gap (build-prep/
+openwebui-company-fusion): `agent_sessions/*.json` is metadata + a `jsonl_path` POINTER, turn events
+carry only a summary, `session_recall` reads message text straight from foreign Claude-Code
+transcripts and stores nothing, and `chat.jsonl` is a degenerate flat operator twin — so
+conversation CONTENT lived only in foreign CC files. This module is the company's own record of what
+was said. The shape is DONATED from OpenWebUI's chat DAG (parentId/childrenIds/currentId), expressed
+in company grammar: each message carries `parent_id`; the fold COMPUTES `children` (inverse of
+parent_id) and the `current` path (last-appended leaf wins, or an explicit `select` event overrides
+it). Branching is two messages sharing a `parent_id` (a regen/edit re-run) — both survive, both
+retrievable; edit/regen carry `edited_of`/`regen_of` provenance. **One record, branchable, that any
+FACE is a view onto** — the OWUI chat UI, the company chat surfaces, voice all read/write THIS
+record (OWUI contributes the SHAPE, not a second database; the half-finished OWUI ChatMessage
+migration is resolved here by keeping only the normalized append-only form). It mirrors
+`session_channels`' append/seq/fsync/fail-loud idioms but NOT its one-leaf-many-rows topology: a
+conversation is its own file, locked PER conversation; `list_conversations` is a directory scan.
+Same FLOOR as the fabric organs — never spawns, never imports the supervisor, emits no
+`agent_sessions.*` events (single-writer law C6 intact). SCOPE today = the store + shape + API only
+(correct + inert-but-usable); wiring the supervisor `_reader()` to write agent turns here, the
+OWUI/operator surfaces to write human turns, and re-pointing `session_recall`/recollection at this
+record are later increments (it touches core).
+
 **ONE channel concept, two layers — not two stores.** A channel has a STRUCTURE layer and a
 TRANSPORT layer, and they are *layers of the same channel*, not rival registries:
 - **STRUCTURE = `session_channels.py`** (here) — what a channel IS: its name, purpose, roster,
