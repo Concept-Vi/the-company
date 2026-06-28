@@ -492,20 +492,34 @@ def field_types() -> dict:
     return SUITE.field_types()
 
 
-@mcp.tool(annotations=SAFE)               # READ-ONLY — skill:// + context:// registry read (client-safe)
+@mcp.tool(annotations=SAFE)               # READ-ONLY — skill:// + context:// + guide:// registry read (client-safe)
 def list_skills_contexts() -> dict:
-    """INSPECT the skill:// + context:// registries — the addressable, file-discovered units a role's
-    input can be set to (a skill = reusable instructions, a context = a reusable blob). REUSES
-    runtime.cognition.skill_registry()/context_registry() (the SAME registries resolve_address reads via
-    skill://<id> / context://<id>). Read-only. Returns {skills:[{id,label,description}], contexts:[…]}.
+    """INSPECT the skill:// + context:// + guide:// registries — the addressable, file-discovered units a
+    role's input can be set to (a skill = reusable instructions, a context = a reusable blob, a guide = a
+    narrative how-to). REUSES runtime.cognition.skill_registry()/context_registry()/guide_registry() (the
+    SAME registries resolve_address reads via skill://<id> / context://<id> / guide://<id>). Read-only.
+    Returns {skills:[{id,label,description}], contexts:[…], guides:[{id,label,description,target,stale}]}.
 
-    CREATE: skills/contexts are authored DIRECTLY + LIVE via create(kind='skill'|'context') (
-    the skill-writing-skill, no operator approval; correctness-gated). This is READ; CREATE is those tools."""
+    CREATE: skills/contexts via create(kind='skill'|'context'); a guide via create(kind='guide') (direct)
+    or author_guide (composed from sources via a model). This is READ; those are the write doors."""
     sk = _cog.skill_registry()
     cx = _cog.context_registry()
+    gd = _cog.guide_registry()
     def _rows(reg):
         return [{"id": eid, "label": reg[eid].label, "description": reg[eid].description} for eid in reg]
-    return {"skills": _rows(sk), "contexts": _rows(cx)}
+    def _guide_rows(reg):
+        from runtime import guide_author as _ga
+        out = []
+        for eid in reg:
+            g = reg[eid]
+            try:
+                stale = _ga.is_stale(SUITE.store, g)
+            except Exception:
+                stale = None                          # cold grounding NOW — surfaced as unknown, not a crash
+            out.append({"id": eid, "label": g.label, "description": g.description,
+                        "target": g.target, "stale": stale})
+        return out
+    return {"skills": _rows(sk), "contexts": _rows(cx), "guides": _guide_rows(gd)}
 
 
 # list_runs/find_runs → CONSOLIDATED into mcp_face/tools/runs.py (runs(op=list|find) — the #54 run index;
@@ -557,6 +571,61 @@ def inspect_address(address: str, turn_id: str = "", op: str = "", html: str = "
         from runtime import page_face as _pf
         return {"pages": _pf.list_pages(SUITE)}
     return {"error": f"inspect_address: unknown op {op!r} (expected ''|'read'|'attach_page'|'pages')."}
+
+
+@mcp.tool()
+def author_guide(target: str = "", grounded_from: list = [], guide_id: str = "", label: str = "",
+                 description: str = "", op: str = "", on_existing: str = "propose") -> dict:
+    """AUTHOR a narrative how-to GUIDE for an address, composed from real sources by a model — the agent
+    door to the guide-author (runtime/guide_author.py). A guide is the human/agent-readable how-to face of
+    a system (the big sibling of address-help); it self-registers as guide://<id> + is read back by
+    inspect_address / list_skills_contexts. `op` selects:
+
+      op="" (default, AUTHOR) — compose + write a guide. `target` = the address the guide documents (e.g.
+        skill://corpus_pipeline). `grounded_from` = a NON-EMPTY list of source addresses the guide is
+        composed FROM — at least one must resolve to content (ABORT-ON-COLD: an ungrounded guide is
+        refused, never invented). `guide_id`/`label`/`description` optional (id derived from target if
+        omitted). `on_existing`: 'propose' (default — returns the new source as a diff, writes nothing, so
+        a human-edited guide is safe) or 'overwrite' (deliberate replace). The narrative is composed on the
+        guide_author role's model (cognition-is-role-resolved). Returns {action, guide_id, ...}.
+
+      op="staleness" — report each guide's freshness (stale = its sources changed since it was authored).
+        The input to the recurring practice; no model call.
+
+      op="refresh" — re-author every STALE guide (propose-mode by default — surfaces diffs, clobbers
+        nothing). This IS the practice: guides track the system as it changes. Returns the per-guide
+        actions. (Schedulable as a routine/timer for an unattended cadence.)"""
+    from runtime import guide_author as _ga
+    if op == "staleness":
+        return {"guides": _ga.staleness_report(SUITE)}
+    if op == "refresh":
+        reg = SUITE._entry_registry("guide")
+        compose = _ga.model_composer(SUITE, role="guide_author")
+        actions = []
+        for row in _ga.staleness_report(SUITE):
+            if not row.get("stale"):
+                continue
+            g = reg.get(row["guide_id"])
+            if not g:
+                continue
+            try:
+                res = _ga.author_guide(SUITE, g.target, g.grounded_from, guide_id=g.id, label=g.label,
+                                       description=g.description, compose=compose, on_existing=on_existing)
+                actions.append({"guide_id": g.id, "action": res.get("action")})
+            except Exception as e:
+                actions.append({"guide_id": g.id, "error": str(e)})
+        return {"refreshed": actions}
+    # default: author one guide
+    if not target or not grounded_from:
+        return {"error": "author_guide needs `target` (the address documented) + a non-empty "
+                "`grounded_from` list (source addresses). For the sweep use op='refresh'/'staleness'."}
+    compose = _ga.model_composer(SUITE, role="guide_author")
+    try:
+        return _ga.author_guide(SUITE, target, list(grounded_from), guide_id=(guide_id or None),
+                                label=(label or None), description=(description or None),
+                                compose=compose, on_existing=on_existing)
+    except _ga.GuideAuthorError as e:
+        return {"error": f"author_guide refused (grounding/compose gate): {e}"}
 
 
 # --- CONFIGURE + RUN -----------------------------------------------------------------------------
