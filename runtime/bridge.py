@@ -51,7 +51,7 @@ BRIDGE_ROUTES = (
     "/api/chat-models", "/api/fit", "/api/surfaced", "/api/events", "/api/now", "/api/chat",
     "/api/conversations", "/api/conversation", "/api/rhm-config", "/api/inbox", "/api/last-change",
     "/api/self-change-log", "/api/panels", "/api/capabilities", "/api/capabilities/introspection",
-    "/api/ui_info", "/api/scope",
+    "/api/ui_info", "/api/scope", "/api/pages",
     "/api/address-help", "/api/context", "/api/territory", "/api/up-translate", "/api/self-changes-at", "/api/annotations",
     "/api/presentation-pref", "/api/chats", "/api/address-history", "/api/stale-at", "/api/ref-versions",
     "/api/review/current", "/api/review/status", "/api/journey/replay", "/api/journeys", "/api/voice",
@@ -1808,6 +1808,12 @@ class H(BaseHTTPRequestHandler):
                     }))
             elif path == "/api/ui_info":                   # C1: the UI-component registry (sibling of object_info)
                 self._send(200, json.dumps(SUITE.ui_info()))
+            elif path == "/api/pages":                     # page-faces: every address that carries a viewable page
+                # the visible-surface read so the gallery can show page faces (each {address,url,title,source}).
+                # served HERE (the bridge control plane) is the LIST only — the pages themselves serve on the
+                # SEPARATE page-face origin (:8774, no-script CSP), never the control plane (the security law).
+                from runtime import page_face as _pf
+                self._send(200, json.dumps({"pages": _pf.list_pages(SUITE)}))
             elif path == "/api/registry/proposals":        # RG8: the pending registry-proposal batch (read)
                 self._send(200, json.dumps(SUITE.registry_proposals()))
             elif path == "/api/scope":                     # S3: ui://→code://→scope[] (the address→code join)
