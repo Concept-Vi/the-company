@@ -1,0 +1,54 @@
+# Operator Surface — RESEARCH SYNTHESIS (the evidence base)
+
+The findings the Criteria + Guide are built on. Ground truth from the actual code; do not edit to match the spec — edit the spec to match this. Full detail + comment trails live on the `operator-surface` board: v2 plan `item-ed91000e` (blocks S0–S15), connection map `item-5c0698ed`, parts-harvest `item-3865097a`. Cite file:line.
+
+## Round 1 — the spine (inward)
+- **ONE warm process holds the brain: the BRIDGE** (`runtime/bridge.py`, :8770, stdlib `BaseHTTPRequestHandler`). It holds the single warm `Suite` (`runtime/suite.py`) + single `FsStore` (`store/fs_store.py`) + mints/validates the operator-token vantage (`_mint_operator_token` bridge.py:564, `_is_genuine_operator` :572). `do_GET` :1416 / `do_POST` :2499 are giant if/elif chains; each `/api/*` route is a thin JSON projection of a `Suite.<method>`. The MCP face (`mcp_face/server.py`) binds the SAME Suite lazily (bridge.py:598-604) — two doors, one brain.
+- **~130–180 /api routes** already exist (the dispatcher serves more than the static `BRIDGE_ROUTES` list — trust the dispatcher). The connection map (`item-5c0698ed`) inventories them; the surface is a pure client of these.
+- **Two frontends are QUARRIES, neither canonical** (Tim: "BOTH AI-generated fronts, NOTHING canonical, both have high-quality PARTS"). They are two attempts at the SAME shape — both ride the bridge's `ui://` grammar + SSE + a fail-loud `/api` client. Harvest the better half of each (S15 / `item-3865097a`).
+- **Data/engine spine:** `cc_board.py` (items/documents/blocks/comments via `reply`/`thread`/`reply_to`+`commented_on`+`part_of` edges; flat md+frontmatter), TWO channel modules — `cc_channels.py` (file-registry, port-POST transport) vs `session_channels.py` (event-folded, what the bridge uses), `cognition.py` (`run_role/items/reduce/cascade` + emits `cognition.*`/`op.run` events), `coherence_detect.py` (`burn_down`/`open_findings`/`dispose_finding`), `recall_determine.py` (`determine`), `fs_store.py` (the durable `events.jsonl` bus + vectors + surfaced/marks stores).
+
+## Round 2 — deep reads (the harvestable parts + the doors to ride)
+**canvas/app — HARVEST (the rich substrate):**
+- THE ADDRESS SPINE (Tim's praised asset): `ui://<region>/<element>/@state` grammar + `UI_REGISTRY` (suite.py:35-54, served `/api/ui_info`) + `resolveUiTarget` keystone (useAppController.ts:1703 — ONE sink drives the view to ANY address) + `data-ui-ref` capture click-routing (`clickMode` :836, mirrors backend `route_click`) + companion address-keyed reads (`addressHelp`/`refVersions`/`annotations`/`presentationPref`/`staleAt`/`upTranslate`, api.ts).
+- SSE wiring: seq high-water dedup (:644), kind-dispatched refreshes (:646-696), gapless reconnect via Last-Event-ID (:701), fail-loud on missed refresh (:658).
+- `api.ts` (67 methods, `jr` json-or-error fail-loud normalizer :21).
+- Decision/consent components: `Inbox` (lanes-by-tone), `ProposeAffordance`, `BlastRadiusReach`, `ContextBundle`, `WireRequest`, `BuildIntentCard`; `ForagerBar`, `AddressHelp`, `CognitionView`, `MobileTray`, `kit.tsx` primitives, `registryStore` (reflects-never-owns).
+- Responsive layout engine + `fitGraph` measurement (lift the grid; DROP the tldraw shell).
+- LEAVE: the dark amber-on-black dev-console LOOK (owned by `design/design-system.css` — fixable CENTRALLY, not a canvas rewrite); tldraw-graph-as-primary-surface (WRONG operator altitude); `RegistryProposals` inline styles (FIX); dead `live_clock_widget`; sealed `LatticeView` geometry.
+
+**surface/app — HARVEST (the clean foundation):**
+- THIN-CLIENT SPINE: `lib/api.ts` (fail-loud `getJSON`, 3 failure classes, :113-162); SSE live spine (throttled pulse, PAUSE-ON-SCRUB, App.tsx:451-508); subscribe-store pattern (`boardStore.ts:33-94` + mirrors, monotonic `loadSeq` stale-guard); address layer (`lib/address.ts` — `stamp`/`parseUiAddress`/`resolveUiTarget` + the `ui:point` twin).
+- `surface.css` "FINE PAPER" token system (690 lines, semantic `--ink`/`--pig`/`--ground`/`--elev`, tabular-nums) + the 3-form-factor layout switch `classify(w,h)`→Desktop/Portrait/Landscape. **The native surface design is GOOD** (not the ugly part).
+- wheel geometry math (`lib/seed.ts`); tools-form engine (op-conditional forms, `applyFormMeta`, `resolveEnumSources`); the gallery HOST-SEAM idea (a React-untouched `<div>`).
+- FIX/LEAVE: the DNA gallery live-load (index.html:18-59 — NINE render-blocking `/gallery/*.js` + 5 CDN font families + per-open self-fetch + a 250ms×20s deep-link poll) = the "slow as balls" → bundle/lazy-load, self-host fonts, DON'T inherit DNA standalone CSS; the Wheel RENDER (600 pts × 3 framer-motion SVG layers = jank → canvas/instanced, KEEP the math); tools-invoke endpoint (GAP — don't guess); drive/generate stubs; inert resolve/token seams.
+
+**The doors to ride (bridge endpoints, verified by the corroborators):**
+- Live: `/api/stream` (bridge.py:2092, SSE over `events_since` fs_store.py:629, Last-Event-ID replay).
+- Inbox/decide: `/api/inbox` (:1779 → `inbox_lanes` suite.py:7182), `/api/decisions` (:1514 → `decision_inbox`, GPU-free), `/api/surfaced` (:1724), `/api/resolve` decision-verb (:3563 → `resolve_surfaced`, operator-channel-only), `/api/surface-review` (:3052).
+- RHM: `/api/chat/stream` (:2918 → `chat_parts` suite.py:6761, grounded brain), `/api/up-translate` (:1875 → `up_translate` suite.py:7353, `{lead,mechanism,grounded,degraded}`, abstains on empty), `/api/coa` (:3045), `/api/address-help` (:1811 → suite.py:3496); chat PERSISTENCE `/api/conversations`+`/api/conversation`+`/api/conversation/new` (:1773-1775).
+- Comments: `/api/annotate` (:3387 → `ingest_comment`, records AND emits a located-gold training turn) + READ side `/api/annotations` (:1893), `/api/chats` (:1904), `/api/address-history` (:1911).
+- Routing: `/api/channel/post` (:2695 → `post_to_channel` session_channels.py:468, fans to MANY + name→handle), `/api/channels` (:1569 roster), `/api/channel-history` (:1674).
+- Search: `/api/transcript-search` (:1618 → `determine`, REUSES the warm Suite, ~11s warm vs >60s cold), `/api/corpus-query` (:1747 → `query_index` vector_index.py:143), `/api/session-recall` (:1640).
+- Home: `/api/greeting` (:1737 → `Suite.greeting` suite.py:2076, the caught-up digest at Tim's altitude).
+- Other: `/api/board` (:1597), `/api/image/<id>` (:1444), `/api/tools` (:2062)+`/api/tools/invoke` (:3427, gated), `/api/projection` (:1740), `/api/ui_info`, `/api/operator-session` (:1730), `/api/ref-versions` (:1928 — keyed on run:// outputs, NOT board blocks).
+
+## Round 3 — the design substrate (outward, mandatory for an operator face)
+- `design/_system/tokens.json` + `emit.py` → `design/design-system.css` — the SINGLE warm-gold token spine (served `:root` CSS vars). Editing tokens.json is the central place to fix the look of BOTH frontends.
+- `design/claude-ds` is an UNMERGED ISLAND that HAS the axes the spine lacks: `tokens/theme.css:16-21` (`data-theme` dim/dark/contrast — NO light default; all dark-family) + `tokens/density.css:33-39` (`data-density` compact/comfortable/spacious). Per islands-join-mainland these axes get built INTO tokens.json/emit.py (additive merge — NOT a polarity clash, corrected).
+- Serving a built PWA FROM the bridge is NET-NEW (`/studio` is a 302 redirect to one mockup file, bridge.py:1428-1437 — no generic static mount exists). `surface/app` `/api` proxy is dev-only (vite.config.ts:17-19).
+
+## Round 4 — corroboration corrections (3 unbiased agents) + the 5 company-improvements (all code-verified)
+**Corrections (folded into the plan):** block-versioning is fully net-new (`/api/ref-versions` is run:// not blocks); `project://` needs a `resolve_address` branch in cognition.py:1010-1199, not just `_RESOLVABLE` (territory.py:45); the channel-registry unification CANNOT go first (session_supervisor.py:1640 uses `cc_channels.send` for the live injection that STAYS); `/api/stream` is an UNFILTERED firehose (per-client scoping needed); the bridge API is effectively UNAUTHENTICATED (operator-token enforce defaults OFF, bridge.py:560) — exposing it on the tailnet is a real auth item (fix: wire `/api/operator-session` into the consequential-write no-op bridge.py:3459-3470); first-query matrices build LAZILY (warm-Suite dependency); concurrency NOT VERIFIED (run `tests/concurrency_acceptance`).
+**The 5 company-improvements (universal, fold into the centre):**
+1. **Channel field on events** — `append_event` stamps only seq/ts (fs_store.py:578-619); "channel" is a read-time fold → `/api/stream` can't be server-side channel-filtered. FIX = stamp `channel` at emit (model: `append_agent_mail` fs_store.py:1394). 6 direct call-sites; ~147 `_emit` funnel through ~3 `**meta` wrappers (default-stamp trivial) BUT `cognition.*`/`op.run` have no ambient channel → sourcing the CORRECT channel needs caller context (the real work; a blanket default doesn't unlock filtering).
+2. **Dual channel registry** — unify on `session_channels` (bridge uses it); `cc_channels.is_shared` (cc_channels.py:480-486) = Supabase publish-boundary only. 12 modules import cc_channels → NOT a thin demote; do it AFTER the live-injection transport migrates.
+3. **Process-local event seq** — `append_event` RLock (fs_store.py:597, NOTE 589-596) is process-local; MERGE/single-bridge-writer dissolves the dup-seq risk — make single-writer an ENFORCED invariant.
+4. **Token axes** — build `data-theme`/`data-density` INTO tokens.json/emit.py (additive). FRONTMATTER_KEYS-style: this is universal (every emitted surface gains axes).
+5. **FRONTMATTER_KEYS closed set** — `cc_board.py:61-62`; `_render` :177 drops any unlisted key (a new field like `active` is silently lost). FIX = stop gating on a closed allowlist / drive board fields from the registry. PER-MODULE (cc_board/cc_images/cc_gate/cc_attachments each own one) — cover all or scope to board.
+
+## Implications (what this means for the build)
+- The surface is a **pure bridge client** — almost every feature is "ride an endpoint," not "build a backend." Net-new is concentrated: projects registry+resolver, `channels_for_self`, block-version model, annotate edit/delete, the inbox-source registry, the fused-surface shell itself, outbound push.
+- **Fuse, don't pick:** surface/app's thin-client spine + fine-paper tokens + layout switch (foundation) + canvas/app's address spine + SSE wiring + decision/consent components (substrate). LOOK fixed centrally in tokens.
+- **Ordering:** company-improvements + shell first; `channels_for_self`+`project` resolver before search/inbox scoping; channel-registry unification AFTER live-injection migrates; auth-before-tailnet-exposure.
+- **Form is half of done** — the design substrate (tokens + claude-ds axes) is the FORM ground; the design-critic + design-lint enforce it (see Criteria).

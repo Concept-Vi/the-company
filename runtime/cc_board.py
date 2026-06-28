@@ -173,8 +173,17 @@ def _validate_links(links) -> list[dict]:
 
 
 def _render(record: dict) -> str:
-    """The on-disk form: a `---`-fenced YAML frontmatter (the structured row) + the markdown body after."""
+    """The on-disk form: a `---`-fenced YAML frontmatter (the structured row) + the markdown body after.
+
+    Frontmatter is NOT a closed allowlist (F3): the canonical FRONTMATTER_KEYS render FIRST in their fixed
+    order (so existing items serialise byte-identically), then ANY OTHER record key is persisted too —
+    except `body`, which is the post-fence content. A new typed field (e.g. `active` for block-versions, or
+    any future registry-driven field) is therefore never silently dropped on write. Previously an unlisted
+    key was discarded here, which was real data loss for new fields."""
     fm = {k: record[k] for k in FRONTMATTER_KEYS if k in record}
+    for k, v in record.items():                      # then carry any extra field (open, not allowlisted)
+        if k not in fm and k != "body":
+            fm[k] = v
     return "---\n" + yaml.dump(fm, sort_keys=False, allow_unicode=True) + "---\n\n" + (record.get("body") or "") + "\n"
 
 
