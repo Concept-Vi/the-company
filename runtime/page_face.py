@@ -40,11 +40,26 @@ from __future__ import annotations
 
 import json
 import os
+import sys
+from urllib.parse import quote
+
+# Run-as-script support: put the repo root on the path BEFORE the contracts import, so
+# `python runtime/page_face.py` (the systemd ExecStart) works, not only `import runtime.page_face`
+# (mirrors runtime/bridge.py:17). Idempotent + harmless when imported as a module.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from contracts.ui_info import parse_ui_address
 
 # --- ports (separate-origin law — NEVER the control plane) ----------------------------------------
+PAGE_HOST = "127.0.0.1"   # local-only exposure (the same posture as the bridge/supervisor).
 PAGE_PORT = 8774          # the page-face origin. bridge=8770 (control plane), supervisor=8771 — distinct.
+
+
+def page_url(address: str, *, host: str = PAGE_HOST, port: int = PAGE_PORT) -> str:
+    """The browsable URL a bound page is served at — the thing a person/agent actually opens. Returned
+    by attach_page + list_pages + inspect_address so the page is DISCOVERABLE, not just stored (the
+    friction-found-by-use fix: attaching a page is useless if you can't find where to view it)."""
+    return f"http://{host}:{port}/page?addr={quote(address, safe='')}"
 
 # --- the no-script CSP (kills script execution + any network call FROM a page, by construction) ----
 PAGE_CSP = ("default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; font-src data:; "
@@ -108,7 +123,7 @@ def attach_page(suite, address: str, html: str, *, title: str | None = None,
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(bindings, f, indent=2, sort_keys=True)
     os.replace(tmp, bindings_path)                         # atomic
-    return {"address": address, **binding}
+    return {"address": address, "url": page_url(address), **binding}
 
 
 def page_for(suite, address: str, *, bindings_path: str | None = None) -> dict | None:
@@ -119,7 +134,7 @@ def page_for(suite, address: str, *, bindings_path: str | None = None) -> dict |
 def list_pages(suite, *, bindings_path: str | None = None) -> list:
     """Every address that currently carries a page face, with its binding — the page registry view."""
     b = _load_bindings(bindings_path or _DEFAULT_BINDINGS)
-    return [{"address": a, **rec} for a, rec in sorted(b.items())]
+    return [{"address": a, "url": page_url(a), **rec} for a, rec in sorted(b.items())]
 
 
 def _resolve_source(suite, source: str) -> str:
@@ -185,3 +200,23 @@ def serve(suite, host: str = "127.0.0.1", port: int = PAGE_PORT, *, bindings_pat
 
     httpd = ThreadingHTTPServer((host, port), _Handler)
     return httpd
+
+
+if __name__ == "__main__":
+    # The runnable page-face service (mirrors runtime/bridge.py's __main__). Builds a Suite over the
+    # shared store + node registry and serves pages on the SEPARATE page-face origin, forever.
+    # Wired as the `pages` service (ops/services.json + ops/systemd/company-pages.service) so it is
+    # `company up pages`-able — a real, known, reachable thing, not a function nobody calls.
+    import sys
+    from store.fs_store import FsStore
+    from runtime.registry import NodeRegistry
+    from runtime.suite import Suite
+
+    _port = int(sys.argv[1]) if len(sys.argv) > 1 else PAGE_PORT
+    _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    _suite = Suite(FsStore(os.path.join(_root, ".data", "store")),
+                   NodeRegistry().discover([os.path.join(_root, "nodes")]),
+                   nodes_dir=os.path.join(_root, "nodes"))
+    print(f"[page-face] serving address page-faces at http://{PAGE_HOST}:{_port}/page?addr=<address> "
+          f"(no-script CSP · separate origin)", flush=True)
+    serve(_suite, host=PAGE_HOST, port=_port).serve_forever()

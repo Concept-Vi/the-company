@@ -111,4 +111,12 @@ check("a page attaches to a NON-ui address (skill://) — a page is the face of 
 check("list_pages reports the bound address(es)",
       any(r["address"] == SKILL_ADDR for r in pf.list_pages(suite, bindings_path=b2)))
 
+# 9 · DISCOVERABILITY (friction-found-by-use): attach + list return a BROWSABLE URL, not just storage
+binding9 = pf.attach_page(suite, "ui://inbox/build-review", HTML, bindings_path=b2)
+check("attach_page returns a browsable url (you can find where to view it)",
+      binding9.get("url", "").startswith("http://") and "/page?addr=" in binding9["url"])
+check("page_url encodes the address into the served route",
+      pf.page_url("ui://inbox/build-review").endswith("/page?addr=ui%3A%2F%2Finbox%2Fbuild-review"))
+check("list_pages entries each carry their url", all("url" in r for r in pf.list_pages(suite, bindings_path=b2)))
+
 print(f"\nPASS — {PASS} checks")

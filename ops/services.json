@@ -94,6 +94,18 @@
       "health": "/api/now",
       "autostart": true
     },
+    "pages": {
+      "group": "core",
+      "title": "Page-face — serves a rendered HTML page bound to any address (separate origin, no-script CSP)",
+      "port": 8774,
+      "manage": {
+        "type": "user-unit",
+        "unit": "company-pages.service"
+      },
+      "health": "/page",
+      "autostart": false,
+      "note": "On-demand (`company up pages`). DELIBERATELY a SEPARATE ORIGIN from the bridge control plane (:8770) so a served page can never same-origin-fetch /api; every page is served under a no-script CSP. A page is the visible face of ANY addressed thing (ui://, skill://, guide://, run://…), attached via inspect_address(op='attach_page'). Auth (who may reach :8774) rides the later Supabase move; separate-origin + no-script CSP hold regardless."
+    },
     "remote": {
       "group": "core",
       "title": "Remote connector \u2014 public MCP front (Funnel\u2192:8772; identity-gated: all tools for Tim, deny-all otherwise)",

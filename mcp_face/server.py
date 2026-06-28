@@ -538,7 +538,7 @@ def inspect_address(address: str, turn_id: str = "", op: str = "", html: str = "
             val = _cog.resolve_address(SUITE.store, address, turn_id=(turn_id or None))
         except Exception:
             if binding:                                   # not value-resolvable (e.g. ui://) but HAS a face
-                return {"address": address, "page": binding}
+                return {"address": address, "page": binding, "page_url": _pf.page_url(address)}
             raise                                         # no value AND no page → fail loud (unchanged)
         if val is _cog.BARE_NAME:
             raise ValueError(f"inspect_address: {address!r} is a bare name (a ctx key), not an address — "
@@ -546,6 +546,7 @@ def inspect_address(address: str, turn_id: str = "", op: str = "", html: str = "
         out = {"address": address, "value": val}
         if binding:
             out["page"] = binding
+            out["page_url"] = _pf.page_url(address)        # the browsable link (discoverable, not just stored)
         return out
     if op == "attach_page":
         from runtime import page_face as _pf

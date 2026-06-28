@@ -1,0 +1,17 @@
+[Unit]
+Description=Company page-face — serves address page-faces (HTTP on :8774, separate origin, no-script CSP)
+After=network.target
+PartOf=company.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+ExecStart=/home/tim/company/.venv/bin/python runtime/page_face.py 8774
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=company-pages
+
+[Install]
+WantedBy=company.target
