@@ -47,6 +47,12 @@ POLICY = {
     # GC10 — a PROPOSED flow (executable production-line code) lands only on the operator's
     # approve of its SOURCE (the gate scans + tempdir-imports at propose AND apply).
     "flow_build": CONFIRM,
+    # WS1 (mode→loadout) — switching presence modes may require a model LOADOUT swap (evict + load
+    # GPU/RAM-resident services). That actuation is expensive + service-affecting, so it is CONFIRM:
+    # set_mode SURFACES the swap (never auto-actuates); apply_loadout runs it only on operator approve
+    # (read from the inbox, never a caller flag). The mode SWITCH itself is free (a config write) — only
+    # the resident-loadout change is gated. The autonomous loop raises the confirm, never self-approves.
+    "loadout_swap": CONFIRM,
 }
 # never graduate to AUTO, no matter the earned trust (D4/D7 forever-confirm)
 LOCKED = {"source_data", "external", "frozen_contract"}

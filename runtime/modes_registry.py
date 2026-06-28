@@ -29,7 +29,7 @@ import os
 # discovery-only (stripped from the decl). Required = everything a derived view reads unconditionally.
 _REQUIRED = ("label", "directive", "resolution", "consent", "grain", "shape", "stage",
              "live", "reserve_r", "per_role_ctx", "main_ctx_tokens", "brain_config")
-_OPTIONAL = ("subtypes",)
+_OPTIONAL = ("subtypes", "loadout_class")
 
 
 def _load_module(path: str):

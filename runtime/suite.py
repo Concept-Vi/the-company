@@ -2464,7 +2464,92 @@ class Suite:
         self._ensure_rhm_node()
         self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"mode": mode})   # editing a parameter (same verb)
         self._emit("mode", f"presence → {mode}", address="ui://chrome/toolbar")   # S2: presence dial lives in the toolbar
+        # WS1 (mode→loadout): if the new mode binds a `loadout_class` whose services are not all resident,
+        # SURFACE a loadout_swap confirm — NEVER auto-actuate. Switching a presence mode is free (a config
+        # write); changing the RESIDENT model loadout is expensive + service-affecting → CONFIRM (governance).
+        # The mode switch ALWAYS succeeds; the swap waits for operator approval, then apply_loadout() runs it
+        # (riding ensure_resident's WS-R RAM+VRAM gate). The autonomous loop raises this confirm, never approves.
+        self._maybe_surface_loadout_swap(mode)
         return mode
+
+    def _resolve_loadout(self, loadout_class: str):
+        """Resolve a mode's `loadout_class` → (services, missing) where missing = the loadout's services not
+        currently resident. Fail loud if loadout_class names no combo (registry-is-truth — a mode must bind a
+        REAL loadout, never a fabricated set). Lazy-imports the ops/cli registry/gpu (stdlib-only, loads in the
+        3.14 bridge) so the mode lane stays file-disjoint from the CLI and reads the ONE combos table — no
+        parallel loadout map here. Residency uses per-service is-running (a CPU ear has 0 VRAM, so it is NOT in
+        running_gpu_services — only the per-unit signal sees it)."""
+        import os as _os, sys as _sys
+        cli = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "ops", "cli")
+        if cli not in _sys.path:
+            _sys.path.insert(0, cli)
+        import registry as _reg_mod
+        import gpu as _gpu
+        reg = _reg_mod.load()
+        combos = _reg_mod.combos(reg)
+        if loadout_class not in combos:
+            raise ValueError(f"mode loadout_class {loadout_class!r} names no combo — registered loadouts: "
+                             f"{sorted(combos)} (registry-is-truth; a mode must bind a real loadout).")
+        services = list(combos[loadout_class]["services"])
+        missing = [s for s in services if not _gpu._is_running(reg["services"][s])]
+        return services, missing
+
+    def _maybe_surface_loadout_swap(self, mode: str) -> str | None:
+        """Surface a loadout_swap confirm for `mode` iff it binds a loadout_class with non-resident services
+        AND no unresolved loadout_swap for that same loadout is already pending (no inbox spam). Returns the
+        new sid, or None when nothing was surfaced. Never actuates."""
+        lc = self.mode_registry(mode).get("loadout_class")
+        if not lc:
+            return None
+        try:
+            services, missing = self._resolve_loadout(lc)
+        except ValueError as e:
+            # A mode bound to a non-existent loadout is a config error — surfaced (Notice), never silent.
+            self._emit("warning", f"mode {mode!r} loadout: {e}", address="ui://chrome/toolbar")
+            return None
+        if not missing:
+            return None
+        pending = any(d.get("action") == "loadout_swap" and d.get("resolved") is None
+                      and (d.get("payload") or {}).get("loadout_class") == lc
+                      for d in self.inbox.list())
+        if pending:
+            return None
+        return self.inbox.surface("loadout_swap", {
+            "mode": mode, "loadout_class": lc, "services": services, "missing": missing,
+            "note": (f"Mode «{mode}» wants loadout «{lc}» ({', '.join(services)}); not resident: "
+                     f"{', '.join(missing)}. Approve to load it (evicts as needed; RAM+VRAM-gated, "
+                     f"cannot OOM). Apply on approve: suite.apply_loadout(<sid>)."),
+        }, default="reject", resolved=None)
+
+    def apply_loadout(self, sid: str) -> dict:
+        """WS1 — ACTUATE a surfaced loadout_swap, on operator APPROVE only. The approval is READ from the
+        inbox (never a caller flag): the autonomous loop can RAISE the confirm (via set_mode) but can NEVER
+        self-approve it. For each service in the loadout, ensure_resident (the ONE gated actuator) makes it
+        resident — that path rides the WS-R RAM+VRAM invariant (fail-loud, evict-on-authorize), so an approved
+        swap can never OOM. Fail loud on an unknown/unapproved sid, or a service that cannot fit (the partial
+        result + error are returned/raised, never a silent half-swap)."""
+        item = self.inbox.get(sid)
+        if not item or item.get("action") != "loadout_swap":
+            raise ValueError(f"apply_loadout: {sid!r} is not a surfaced loadout_swap (fail loud).")
+        if not self.inbox.is_approved(sid):
+            raise GovernanceError(
+                f"apply_loadout: loadout_swap {sid!r} is not approved (resolved={item.get('resolved')!r}). "
+                f"The operator must approve it first — the agent/loop never self-approves a loadout swap.")
+        payload = item.get("payload") or {}
+        services = payload.get("services") or []
+        import os as _os, sys as _sys
+        cli = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "ops", "cli")
+        if cli not in _sys.path:
+            _sys.path.insert(0, cli)
+        import capabilities as _cap
+        results = []
+        for s in services:
+            res = _cap.ensure_resident(s, evict=True, wait=True)   # approved → authorize eviction; RAM+VRAM-gated
+            results.append({"service": s, "action": res.get("action"),
+                            "resident": res.get("resident"), "message": res.get("message")})
+        self._emit("mode", f"loadout «{payload.get('loadout_class')}» applied ({len(services)} services)",
+                   address="ui://chrome/toolbar")
+        return {"sid": sid, "loadout_class": payload.get("loadout_class"), "results": results}
 
     def _mode_directive(self, mode: str) -> str:
         return self.MODE_DIRECTIVES.get(mode, "")
