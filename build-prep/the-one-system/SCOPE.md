@@ -65,6 +65,24 @@ behaviour. No silent deferral, no "tests pass = done."
 - [ ] **Version-pinned capabilities** actually used (cap://<platform>@<version>/…) — refresh writes version
       stamps; verify the @version address resolves to the right snapshot.
 
+## OPEN (ledger / drift lane)
+- [x] **Interpretive sweep COMPLETE** (2026-06-28) — claude-ds 295/295, counterpart-design 859/859,
+      company 3460/3461. Verified by gate query on the live ledger (port 15432).
+- [ ] **The 1 remaining is DRIFT, not a failure** — `guides/using-skills.py` was renamed to
+      `guides/using_skills.py` at 02:15 on 2026-06-28, AFTER the structural snapshot (06-27 16:10). The
+      ledger faithfully holds the old (now-deleted) name → the interpreter can't read it; the new name is
+      absent from the ledger entirely. The gate reporting "1 remaining" is the drift detector being HONEST,
+      not a defect. Left as-is (do NOT hand-patch — that would hide real drift).
+- [ ] **★ REAL GAP found: incremental structural refresh ORPHANS the interpretive layer.** `ledger_build.py
+      --incremental` on any change writes a brand-new full snapshot run via `extract_folder` + `load_run`,
+      which does ONLY deterministic facts (ledger_build.py:13) — `what_it_does` starts NULL for every file.
+      So running it would make the new run the latest with ZERO interpretation, orphaning the whole sweep on
+      the prior run + reverting the gate to ~3461 remaining for company. **Drift reconciliation is therefore
+      currently UNSAFE to run.** FIX needed (recurse-the-mandate): `load_run`/incremental must CARRY FORWARD
+      `what_it_does` (+ model/prompt_version) for files whose source_hash is unchanged, re-interpreting only
+      changed/new files. This is the drift-reconciliation design the system needs before Stage 3. Recorded,
+      not silently deferred.
+
 ## DONE (verified — by USE where stated)
 - [x] codex registered as platform #3 (24 flags discover+classify, zero engine edits) — engine-verified.
 - [x] cap:// nested grammar + legacy alias + open kind vocab + multi-platform registry — unit-verified.
