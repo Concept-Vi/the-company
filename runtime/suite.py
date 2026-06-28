@@ -11764,6 +11764,13 @@ class Suite:
         if d.get("action") == "role_delete":
             r = self.apply_role_delete(surfaced_id)
             return {"applied": r.get("removed"), "kind": "role_delete", "commit": r.get("commit")}
+        # WS1 — a mode→loadout swap: route to apply_loadout (makes each loadout service resident via the
+        # WS-R-gated ensure_resident). apply_loadout RE-CHECKS operator approval from the inbox (never a
+        # caller flag), so reaching here without an approve raises — the actuation rides the same consent
+        # gate as every other apply. This is what makes set_mode's surfaced loadout_swap operator-APPLYable.
+        if d.get("action") == "loadout_swap":
+            r = self.apply_loadout(surfaced_id)
+            return {"applied": r.get("loadout_class"), "kind": "loadout_swap", "results": r.get("results")}
         return {"applied": self.apply_node(surfaced_id), "kind": "code_build"}
 
     # --- the self-coding subsystem (slice 15): arbitrary brain-authored extensions, BUILD-GATED ---

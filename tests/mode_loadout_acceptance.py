@@ -127,6 +127,19 @@ try:
     except ValueError as e:
         ok("T7a non-loadout_swap sid RAISES ValueError", "not a surfaced loadout_swap" in str(e), f"msg={str(e)[:120]!r}")
 
+    # ── T8 — apply_surfaced routes a loadout_swap to apply_loadout (operator-applyable, guard holds) ──
+    print("\n[T8] apply_surfaced(loadout_swap) routes to apply_loadout — unapproved still RAISES (the gate)")
+    sid2 = suite.inbox.surface("loadout_swap",
+                               {"mode": "listening", "loadout_class": "interaction",
+                                "services": ["tts-kokoro"], "missing": ["tts-kokoro"]},
+                               default="reject", resolved=None)
+    try:
+        suite.apply_surfaced(sid2)   # routes to apply_loadout; unapproved → GovernanceError (not apply_node)
+        ok("T8a apply_surfaced(unapproved loadout_swap) RAISES", False, "did not raise — routed wrong or self-approved")
+    except GovernanceError as e:
+        ok("T8a apply_surfaced routes loadout_swap → apply_loadout + the gate holds", "not approved" in str(e),
+           f"msg={str(e)[:120]!r}")
+
     print(f"\n[RESULT] {len(PASS)} pass / {len(FAIL)} fail")
     exit_code = 1 if FAIL else 0
     if FAIL:
