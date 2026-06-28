@@ -1,0 +1,20 @@
+[Unit]
+Description=Company STT ear — Moonshine (ONNX, compact realtime) on port 2034
+After=default.target
+# The leanest ear: ONNX-runtime (no torch/NeMo), <1 GB, built for low-latency live conversation.
+# Runs CPU by default (≈9x realtime on this box, ~0.3-0.5s per short turn) — no VRAM, so it co-resides
+# with the brain + embedder in the interaction loadout. Model = COMPANY_MOONSHINE_MODEL (default base).
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+EnvironmentFile=-%h/company/voice/ops/voice.env
+ExecStart=%h/.voice-venvs/moonshine/bin/python /home/tim/company/voice/ears/moonshine.py 2034
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

@@ -98,6 +98,16 @@ STT_PROVIDERS: dict[str, dict] = {
         "url": os.environ.get("COMPANY_GRANITE_URL", "http://127.0.0.1:2033"),
         "route": "/inference", "field": "file", "service": "stt-granite",
         "note": "compact top-accuracy cross-check; transformers venv (lands clean)."},
+    # The compact REALTIME ears (lane 5, added 2026-06-28) — ONNX-runtime, no torch/NeMo, sub-1-2GB,
+    # built for low-latency live conversation + Speech-To-Action. The interaction-loadout ears.
+    "moonshine": {
+        "kind": "local_http", "label": "Moonshine (ONNX, compact realtime)",
+        "url": os.environ.get("COMPANY_MOONSHINE_URL", "http://127.0.0.1:2034"),
+        "route": "/inference", "field": "file", "service": "stt-moonshine",
+        "note": "leanest ear (<1GB, ONNX, no VRAM on CPU ~9x realtime). Built for live voice: doesn't "
+                "pad short clips, so commands transcribe fast. English. Has a built-in IntentRecognizer "
+                "(semantic speech->action). The default interaction-loadout ear. Quality ~6.6% WER (base/"
+                "medium); v2-medium ≈Whisper-large is an env model swap."},
 }
 
 # back-compat aliases — selecting one of these resolves to a canonical catalog id (the id-mismatch
