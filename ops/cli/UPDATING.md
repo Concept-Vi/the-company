@@ -121,6 +121,13 @@ resolves to those services and goes through the normal resource gate (so a combo
 doesn't fit is refused/evictable like any start). Add a combo = one entry. Keep combos that
 are meant to co-reside within the 16 GB budget (sum their `gpu_util × ceiling`).
 
+**Variants (a base loadout + trial configurations).** Instead of `services`, a combo may declare
+`{"extends": "<base-combo>", "swap": {"old-svc": "new-svc"}, "add": [...], "remove": [...], "note": …}`.
+It inherits the base's resolved service list and applies the overrides. `registry.combos()` resolves
+it for both `company combos` and `up @<variant>`, and fails loud on a missing base, a `swap` source not
+in the base, an unknown service, or an `extends` cycle. Use this to trial one slot (e.g. the ear) across
+configurations of the same loadout — shipped: `interaction` (base) + `interaction-parakeet` (swaps the ear).
+
 ## Verify before claiming done
 `company` is operational truth — test every command against the real machine, not by
 reading the code. At minimum: `status`, `gpu`, `health`, `models`, a `swap` dry-check

@@ -90,6 +90,13 @@ company down @small-pair
 Add a combo = one entry under `combos` in `services.json` (see UPDATING.md). Example
 shipped: `@small-pair` = chat-2b + chat-08b co-resident (0.45 + 0.30 util, both fit).
 
+**Loadout variants (a "class with configurations").** A combo can `extends: <base>` another
+combo and override just the difference with `swap: {old-svc: new-svc}` / `add` / `remove` —
+so one base loadout has trial variants. `company combos` and `up @<variant>` both resolve to
+the final service list (fail-loud on a bad base/swap/cycle). Shipped: `@interaction` (the live
+conversation + Speech-To-Action loadout, ear=stt-moonshine) and `@interaction-parakeet` (extends
+it, swaps the ear to stt-parakeet-onnx) — same loadout, different ear, to trial each.
+
 State symbols in `status`: ▶ running · ◐ active-no-port-yet · ✖ failed · · stopped ·
 "RUNNING (unmanaged)" = up by hand, not under its unit (drift).
 

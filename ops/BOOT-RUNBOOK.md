@@ -30,6 +30,9 @@ company up session-supervisor     # :8771 — needed only if the managed clone-f
 company up @xsession-brain        # embed-pplx :8007 + rerank-jina :8008 + chat-4b :8000 + stt-whisper
 #   → this is what restores the embed engine (the precondition for the concurrent theorem-mine).
 #   alternatives: @wake (phone-PWA brain/ear/voice) · @xsession (fabric+voice, no 4b)
+#   · @interaction (live conversation + Speech-To-Action: brain + recall + Moonshine ear + voice; the
+#     lean realtime ear runs on CPU, 0 VRAM) · @interaction-parakeet (same, swaps the ear to the int8
+#     Parakeet-ONNX — accurate + 25-language + hotword biasing). These two are a loadout CLASS + variant.
 
 # 2c — ★ THE COGNITION CHAT PATH (concurrent models via the MCP — run_role/run_items/cascades on local+cloud).
 #      ADDED 2026-06-20 after a live gap: post-reboot the chat path was DEAD (local chat models not resident +
@@ -94,7 +97,9 @@ jobs`) · an `@combo` · `all`. Other verbs: `down` · `restart` · `logs SVC [-
 - chat-4b :8000 · `vllm-chat.service` · brain  ·  embed-pplx :8007 · `company-embed-pplx.service` · models  ·
   rerank-jina :8008 · manual `ops/serve_rerank.sh` (no unit) · models
 - voice: tts-kokoro :4123 · stt-whisper :2022 (`voicemode-whisper.service`) · stt-parakeet/canary/granite
-  :2031-33 · tts-chatterbox/orpheus/cosyvoice/xtts/qwen3tts :4124-28
+  :2031-33 (heavy GPU/accuracy ears) · stt-moonshine :2034 + stt-parakeet-onnx :2035 (lean ONNX realtime
+  ears, CPU/0-VRAM — the interaction loadout; Moonshine is the default ear) ·
+  tts-chatterbox/orpheus/cosyvoice/xtts/qwen3tts :4124-28
 - **ollama** :11434 · `ollama.service` (SYSTEM) · **auto-on-boot** · tailscale · `tailscaled.service` (SYSTEM) ·
   **auto-on-boot**
 - gallery :8090 + review-surface :5174 — served by the **separate `counterpart` repo**
