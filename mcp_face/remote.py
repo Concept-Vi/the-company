@@ -48,6 +48,17 @@ _TOOL_MANAGER = _face.mcp._tool_manager
 
 DEFAULT_PORT = 8772
 AUDIT_LOCK = threading.Lock()
+# ── STREAMABLE-HTTP SESSIONS (spec 2025-06-18) ───────────────────────────────────────────
+# The MCP Streamable-HTTP transport issues an `Mcp-Session-Id` on the initialize response and
+# the client echoes it on every subsequent request; a GET /mcp opens a server→client SSE
+# stream. The auth/posture/audit gate is UNCHANGED — session-id is a transport correlator, NOT
+# an auth token (auth is ALWAYS the Bearer, validated by _validate_auth on EVERY request incl.
+# the GET stream). We track issued ids in a set so we can 404 a stale/unknown id per spec, but
+# we never trust the id for access. The official SDK client (OpenWebUI's) tolerates a missing
+# id, so this is additive spec-hardening for stricter clients — the Bearer remains the boundary.
+MCP_SESSION_ID_HEADER = "Mcp-Session-Id"
+_SESSIONS: set[str] = set()
+_SESSIONS_LOCK = threading.Lock()
 # Suite has per-resource locks for writes; reads are safe. We serialize ALL dispatch
 # under one lock for the local dev gateway (simple + correct for a single client; the
 # per-resource locks would let reads go concurrent, but local dev doesn't need that).
@@ -255,15 +266,19 @@ def _validate_auth(headers) -> tuple[bool, str, str, str]:
 class Handler(BaseHTTPRequestHandler):
     server_version = "company-remote-mcp/0.1"
 
-    def _send(self, code: int, body: bytes, ctype: str = "application/json") -> None:
+    def _send(self, code: int, body: bytes, ctype: str = "application/json",
+              extra_headers: dict | None = None) -> None:
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
+        for k, v in (extra_headers or {}).items():
+            self.send_header(k, v)
         self.end_headers()
         self.wfile.write(body)
 
-    def _json(self, code: int, obj: dict) -> None:
-        self._send(code, json.dumps(obj, default=str).encode(), "application/json")
+    def _json(self, code: int, obj: dict, extra_headers: dict | None = None) -> None:
+        self._send(code, json.dumps(obj, default=str).encode(), "application/json",
+                   extra_headers=extra_headers)
 
     def do_GET(self):
         # zero pre-auth leak: only the OAuth well-known metadata is served unauthed
@@ -298,9 +313,29 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         if self.path == "/mcp":
-            # Streamable HTTP GET opens an SSE stream (server-to-client notifications).
-            # Minimal: return 405 for now (no streaming notifications yet).
-            self.send_response(405); self.end_headers()
+            # Streamable-HTTP GET opens a server→client SSE stream (the spec's notification
+            # channel). Auth ALREADY enforced above (_validate_auth ran before this branch —
+            # the Bearer is the boundary on the stream too, never the session id). We hold the
+            # connection open with periodic SSE keepalive comments so a strict client's GET
+            # raise_for_status() sees 200 + text/event-stream. This gateway emits no
+            # server-initiated notifications (capabilities.tools.listChanged == False), so the
+            # stream carries only keepalives until the client disconnects.
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache, no-store")
+            self.send_header("Connection", "keep-alive")
+            self.end_headers()
+            try:
+                # initial comment so proxies/clients flush headers immediately
+                self.wfile.write(b": connected\n\n")
+                self.wfile.flush()
+                while True:
+                    time.sleep(15)
+                    self.wfile.write(b": keepalive\n\n")
+                    self.wfile.flush()
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                # client disconnected — normal stream close
+                return
             return
         self._json(404, {"error": "unknown path"})
 
@@ -328,8 +363,15 @@ class Handler(BaseHTTPRequestHandler):
         rid = req.get("id")
         call_id = str(uuid.uuid4())
 
-        # initialize handshake — return server info + the FILTERED tool list
+        # initialize handshake — return server info + issue the Streamable-HTTP session id.
+        # The id is a TRANSPORT correlator (echoed by the client on later requests + used to
+        # open the GET SSE stream); it is NEVER the auth boundary — _validate_auth(Bearer) gates
+        # every request above. We track issued ids so a stale id can be 404'd per spec, but the
+        # gate never consults them.
         if method == "initialize":
+            sid = uuid.uuid4().hex
+            with _SESSIONS_LOCK:
+                _SESSIONS.add(sid)
             self._json(200, {
                 "jsonrpc": "2.0", "id": rid,
                 "result": {
@@ -337,7 +379,7 @@ class Handler(BaseHTTPRequestHandler):
                     "serverInfo": {"name": "company-remote-mcp", "version": "0.1.0"},
                     "capabilities": {"tools": {"listChanged": False}},
                 },
-            })
+            }, extra_headers={MCP_SESSION_ID_HEADER: sid})
             return
         if method == "notifications/initialized":
             self._send(202, b"")
@@ -414,6 +456,26 @@ class Handler(BaseHTTPRequestHandler):
         self._json(200, {"jsonrpc": "2.0", "id": rid,
                          "error": {"code": -32601, "message": f"unknown method {method!r}"}})
 
+    def do_DELETE(self):
+        # Streamable-HTTP session termination. Auth-gated like everything else; we forget the
+        # id (best-effort) and return 200. The Bearer remains the boundary; this just frees the
+        # tracked id. (The SDK client tolerates 200/204/405 here.)
+        ok, subj, tier, reason = _validate_auth(self.headers)
+        if not ok:
+            self.send_response(401)
+            self.send_header("WWW-Authenticate", f'Bearer resource_metadata='
+                             f'"http://127.0.0.1:{self.server.server_address[1]}/.well-known/oauth-protected-resource"')
+            self.end_headers()
+            return
+        if self.path != "/mcp":
+            self._json(404, {"error": "unknown path"})
+            return
+        sid = self.headers.get(MCP_SESSION_ID_HEADER, "")
+        if sid:
+            with _SESSIONS_LOCK:
+                _SESSIONS.discard(sid)
+        self._send(200, b"")
+
     def log_message(self, fmt, *a):  # quieter
         sys.stderr.write(f"[remote-mcp] {self.address_string()} {fmt % a}\n")
 
@@ -421,6 +483,11 @@ class Handler(BaseHTTPRequestHandler):
 def main() -> None:
     port = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_PORT
     H = Handler
+    # daemon_threads: held SSE GET streams must not block process shutdown.
+    # request_queue_size: each open SSE GET pins one worker thread; raise the backlog so
+    # listing/calling POSTs are never starved behind a parked stream.
+    ThreadingHTTPServer.daemon_threads = True
+    ThreadingHTTPServer.request_queue_size = 64
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)  # 127.0.0.1 ONLY (law)
     sys.stderr.write(f"[remote-mcp] listening 127.0.0.1:{port} "
                      f"({len(_TOOL_MANAGER._tools)} tools in the live registry; "
