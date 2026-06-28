@@ -20,22 +20,25 @@ from typing import Literal
 from pydantic import BaseModel
 
 
-EntryKind = Literal[
-    "flag",           # --flag / -f CLI launch arg
-    "slash_command",  # /command
-    "subcommand",     # claude <sub>  (auth, mcp, doctor, install, plugin, ...)
-    "tool",           # built-in tool (Bash, Read, ...) from system/init
-    "mcp_tool",       # mcp__<server>__<tool> with input schema
-    "setting",        # ~/.claude/settings.json field
-    "permission",     # permission string
-    "hook_event",     # PreToolUse ... WorktreeRemove
-    "sdk_event",      # system/init, result, stream_event, ...
-    "enum_value",     # a permissionMode / apiKeySource / status value
-    "mcp_server",     # an MCP server the session declares (init mcp_servers) — distinct from mcp_tool
-    "skill",          # a skill the session declares (init skills)
-    "plugin",         # a plugin the session declares (init plugins)
-    "agent",          # a subagent the session declares (init agents)
-]   # extended 2026-06-13: the live init self-declaration carries kinds the vocabulary lacked (gap-pressure on the kind registry itself — surfaced, not coerced)
+# KNOWN_KINDS — the recognised capability kinds. KEPT as a reference set for surfacing (a kind NOT in
+# here is a gap-pressure signal worth noticing), but NO LONGER a hard Literal on the field: for the
+# registry to be good for ANY added source (2026-06-28), `kind` is an open `str` — a REST API's
+# `endpoint`, a gRPC `method`, a GraphQL `query/mutation/subscription`, an MCP server's own kinds all
+# need to land without a contract edit. A novel kind is recorded + surfaced (is_known_kind() == False),
+# never coerced and never blocked. This is the gap-pressure pattern applied to the kind vocabulary itself.
+KNOWN_KINDS = (
+    "flag", "slash_command", "subcommand", "tool", "mcp_tool", "setting", "permission",
+    "hook_event", "sdk_event", "enum_value", "mcp_server", "skill", "plugin", "agent",
+    # any-source additions (recognised, not exhaustive): API/RPC/graph surfaces
+    "endpoint", "method", "query", "mutation", "subscription", "resource",
+)
+EntryKind = str  # was a closed Literal; now open for any source (KNOWN_KINDS is the reference set)
+
+
+def is_known_kind(kind: str) -> bool:
+    """True if `kind` is in the recognised vocabulary. A False is a surfaced gap (a source declared a
+    capability kind we haven't named yet), never an error — the row still stores + addresses normally."""
+    return kind in KNOWN_KINDS
 
 
 class CapabilityVerbs(BaseModel):

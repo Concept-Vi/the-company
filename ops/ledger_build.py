@@ -34,6 +34,7 @@ except Exception:
     _COMPANY_SCHEMES = ()
 
 PROJECT = "company"
+ROOT = REPO  # the scan root; override with --root to scan another repo into the SAME ledger (multi-project)
 _SCHEME_RE = re.compile(r"\b([a-z][a-z0-9+.\-]*)://")
 _TODO_RE = re.compile(r"\b(TODO|FIXME|XXX|HACK)\b")
 _STUB_RE = re.compile(r"\b(skeleton|not wired|not-wired|stub|placeholder|not implemented|unimplemented)\b", re.I)
@@ -666,6 +667,26 @@ EXTRACTORS = [
 ]
 
 
+# deep-extraction guards (production-grade): a generated/minified/oversized file is recorded as a SHALLOW
+# node (shape + reason) — NOT deep-regex'd. Reasons: (a) minified bundles are one giant line → catastrophic
+# regex backtracking; (b) they're DERIVED artifacts (rebuild from source), so deep facts belong to the source.
+_MAX_TEXT_DEEP = 800_000     # bytes — above this, deep extraction is skipped (record shape)
+_MAX_LINE_DEEP = 5_000       # chars — a max line longer than this signals minified/generated → skip deep
+
+
+def _too_big_to_deep_parse(src: str, raw: bytes) -> str | None:
+    if len(raw) > _MAX_TEXT_DEEP:
+        return f"oversized:{len(raw)//1024}KB"
+    # max line length without materializing all lines hugely: scan once
+    maxln = 0
+    for ln in src.splitlines():
+        if len(ln) > maxln:
+            maxln = len(ln)
+            if maxln > _MAX_LINE_DEEP:
+                return f"minified:max-line>{_MAX_LINE_DEEP}"
+    return None
+
+
 def extract_file(rec: dict) -> dict:
     rel, abs_path = rec["rel_path"], rec["abs_path"]
     src, raw = _read(abs_path, rel)
@@ -675,6 +696,14 @@ def extract_file(rec: dict) -> dict:
     language = _LANG_BY_EXT.get(ext, "other")
     base = {"rel_path": rel, "language": language, "ext": ext, "size_bytes": len(raw),
             "line_count": src.count("\n") + 1, "source_hash": hashlib.sha256(raw).hexdigest()}
+    big = _too_big_to_deep_parse(src, raw)
+    if big:
+        base["extractor"], base["extractor_version"] = "shallow", "shallow-v1"
+        base.update({"imports": [], "declares": [], "address_schemes_used": [], "env_vars": [],
+                     "markers": [], "symbols": [], "edges": [],
+                     "signals": {"shallow": True, "has_entry_point": False},
+                     "extra_fields": {"shallow_reason": big, "note": "generated/minified/oversized — recorded as a node, not deep-parsed (derived artifact; deep facts live in its source)"}})
+        return base
     chosen = next((s for s in EXTRACTORS if s["match"](ext, language)), None)
     if chosen:
         r = chosen["fn"](rel, src, raw)
@@ -759,7 +788,7 @@ def latest_hashes(project: str, purpose: str) -> dict | None:
 def current_hashes() -> dict:
     """{path: source_hash} over the real tree NOW. Excluded files (binary/secret/scratch) → '' to match the
     ledger's excluded entries exactly (else they'd read as perpetually 'changed')."""
-    files, _ = enumerate_files(REPO)
+    files, _ = enumerate_files(ROOT)
     h = {}
     for rec in files:
         rel = rec["rel_path"]
@@ -820,6 +849,10 @@ def resolve_edges(ex: dict) -> dict:
 EXCLUDE_PREFIXES = [
     ("build-prep/the-one-system/discovery/", "discovery-scratch"),
     (".recollection/", "recall-data-archive"),
+    # claude-ds is a SEPARATE project synced INTO ~/company/design/ — scanned as its own project
+    # `claude-ds`; exclude from the `company` project so it isn't double-counted. (Its own scan uses
+    # root=.../design/claude-ds, where these files are top-level, so this prefix won't self-exclude it.)
+    ("design/claude-ds/", "separate-project:claude-ds"),
 ]
 SCRATCH_PREFIXES = tuple(p for p, _ in EXCLUDE_PREFIXES)  # path-only alias (used by current_hashes)
 
@@ -834,7 +867,7 @@ def _exclude_reason(rel: str):
 def extract_folder(folder: str) -> dict:
     """Extract every file under `folder` (rel to repo root), or the WHOLE tree if folder=''. Plus folder
     nodes + contains edges. Returns {entries, symbols, edges, stats}. Deterministic; no DB, no model."""
-    all_files, _excl_dirs = enumerate_files(REPO)
+    all_files, _excl_dirs = enumerate_files(ROOT)
     if folder:
         in_folder = [f for f in all_files if f["rel_path"] == folder or f["rel_path"].startswith(folder.rstrip("/") + "/")]
     else:
@@ -1067,9 +1100,12 @@ def main():
                     help="diff source_hash vs the latest run; skip if unchanged, else snapshot + delta report")
     ap.add_argument("--emit-legacy", dest="emit_legacy", action="store_true",
                     help="regenerate design/_system/code-edges.json FROM the ledger (ledger = canonical source)")
+    ap.add_argument("--root", default="", help="scan a DIFFERENT repo root into the same ledger (default: this repo)")
     a = ap.parse_args()
-    global PROJECT
+    global PROJECT, ROOT
     PROJECT = a.project
+    if a.root:
+        ROOT = os.path.abspath(os.path.expanduser(a.root))
 
     if a.health:
         return 0 if health_check(a.project, a.purpose) else 1

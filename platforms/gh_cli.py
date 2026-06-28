@@ -56,6 +56,13 @@ PLATFORM = {
          "format": "commander-options-text",
          "parse_rule": "option-row",
          "floor_guard": 10},
+        # subcommand surface (pr/issue/repo/… — so "run any capability" covers gh's command tree, not just flags)
+        {"type": "cli-help",
+         "command": ["{binary}", "--help"],
+         "stderr_merge": True,
+         "format": "commander-options-text",
+         "parse_rule": "subcommand-list",
+         "floor_guard": 3},
     ],
 
     # version-source — `gh --version` → "gh version 2.74.1 (2025-06-10)"; strip the "gh version "

@@ -330,6 +330,62 @@ def decision_address(parsed: dict) -> str:
     return f"decision://{frame}/{parsed['id']}"
 
 
+# cap://<platform>[@version]/<kind>/<name> → a CAPABILITY of a registered SOURCE/PLATFORM (Mirror-Registry).
+# SOURCE-FIRST nesting (Tim 2026-06-28: "namespace/addresses should have source/platform in there" — the
+# general fix to capability-id collisions across platforms, e.g. codex AND claude both having flag/--model).
+# Mirrors image://'s structured nesting: <platform> is the hierarchical root, <version> an optional pin
+# (capabilities drift per version — the refresh/freshness machinery exists because of this), <kind>/<name>
+# the leaf. BACKWARD-COMPAT ALIAS: the legacy bare form cap://<kind>/<name> (where the first segment is a
+# KNOWN capability kind — flag/slash_command/tool/…) resolves to platform 'claude-code' (the original
+# single-platform surface), so existing cap://flag/--debug addresses keep working through the transition.
+DEFAULT_CAP_PLATFORM = "claude-code"
+
+
+def parse_cap_address(addr: str) -> dict:
+    """cap://<platform>[@version]/<kind>/<name>  (or legacy cap://<kind>/<name> → platform=claude-code).
+    Returns {platform, version, kind, name, leaf_id ('<kind>/<name>'), full_id ('<platform>/<kind>/<name>')}.
+    FAIL-LOUD on a malformed address — never a silent-pass. The ONE canonical cap parse (resolver + the
+    registry id construction both call it)."""
+    if not isinstance(addr, str) or not addr.startswith("cap://"):
+        raise ValueError(f"parse_cap_address: not a cap:// address ({addr!r}). Fail loud.")
+    rest = addr[len("cap://"):]
+    if not rest:
+        raise ValueError(f"parse_cap_address: empty cap body ({addr!r}). Fail loud.")
+    from contracts.capability_entry import KNOWN_KINDS  # local: avoid any import-order coupling on the spine
+    parts = rest.split("/")
+    head = parts[0]
+    if head in KNOWN_KINDS:
+        # LEGACY bare form: cap://<kind>/<name> — platform defaults to claude-code (the transition alias).
+        platform, version, kind, name_parts = DEFAULT_CAP_PLATFORM, None, head, parts[1:]
+    else:
+        # NESTED form: cap://<platform>[@version]/<kind>/<name>.
+        if "@" in head:
+            platform, version = head.split("@", 1)
+        else:
+            platform, version = head, None
+        if not platform:
+            raise ValueError(f"parse_cap_address: empty platform in {addr!r}. Fail loud.")
+        if len(parts) < 3 or not parts[1]:
+            raise ValueError(
+                f"parse_cap_address: nested form needs '<platform>/<kind>/<name>' in {addr!r} "
+                f"(first segment {head!r} is not a known capability kind, so it is read as a platform). "
+                f"Fail loud, never a silent-pass.")
+        kind, name_parts = parts[1], parts[2:]
+    name = "/".join(name_parts)
+    if not name:
+        raise ValueError(f"parse_cap_address: empty capability name in {addr!r}. Fail loud.")
+    return {"platform": platform, "version": version, "kind": kind, "name": name,
+            "leaf_id": f"{kind}/{name}", "full_id": f"{platform}/{kind}/{name}"}
+
+
+def cap_address(platform: str, kind: str, name: str, version: str | None = None) -> str:
+    """The CANONICAL nested capability address: cap://<platform>[@version]/<kind>/<name>. The ONE form the
+    registry keys on + the ledger stores as a node address. (Legacy bare cap://<kind>/<name> still parses
+    via the known-kind alias, but new addresses are always written source-first.)"""
+    head = f"{platform}@{version}" if version else platform
+    return f"cap://{head}/{kind}/{name}"
+
+
 # image://<channel>/<path...> → an IMAGE in a channel. STRUCTURED + DEEP, NOT a flat global id (Tim
 # 2026-06-22: "the address space needs more structure and depth than just a dump at a global root level").
 # The CHANNEL is the hierarchical ROOT (the frame — images live IN channels); <path> is a NESTABLE path

@@ -66,6 +66,27 @@ thunk is wired, so its DECLARED `transport_invariants` IS the engine-validated R
 `tests/genproof_second_platform_acceptance.py` (11/11 green). The converse (an unbuilt `rest-openapi`
 type → `MissingAdapterError` naming the missing class) is proven in the same suite.
 
+**Instance #3 — `codex_cli.py` (the OpenAI Codex CLI, id `codex-cli`, 2026-06-28):** the lift applied a
+THIRD time AND the first platform with a LIVE in-fabric consumer. A PURE-DATA row reusing the `cli-help`
+adapter with ZERO engine edits, over a THIRD tool family — `codex` is RUST/clap (instance #1 Commander.js,
+#2 Cobra). Proven by use: `codex exec --help` → **24 flag rows** through the unchanged machinery,
+classified **4 R1 LOCKED + 2 R2 HAZARD (`--dangerously-bypass-*`) + 8 R3 CONSENT + 10 R5 SAFE**; leak-grep
+0, acceptance tests green. Unlike `gh-cli` (registered-only), `codex` is actually DRIVEN: the ledger
+interpretive producer (`ops/ledger_interpret_codex.py`) resolves the binary via this row's
+`executable_locator` (`introspection.discover.resolve_executable`) and runs `codex exec` — so a consumer
+reads the registry as truth, not a hardcoded path. KNOWN GAP (recorded, not papered): clap prints flag
+descriptions on the NEXT line while the cli-help parser expects them same-line → codex flag `description`s
+come back EMPTY (classification unaffected; a `clap-options` parse_rule is the future fix). Full notes:
+`build-prep/the-one-system/REGISTRY-NOTES.md`.
+
+**The downstream consumers are now REGISTRY-DRIVEN (2026-06-28 — the 'drop a row wires everything' fix):**
+the engine generalized long ago, but three consumers still hardcoded `claude-code`; they were lifted so a
+new platform row is picked up automatically: (a) `flows/cc_registry_refresh.py` takes `platform_id=` and
+adds `run_all()` (refresh every platform with a `version_source`); (b) `ops/hooks/registry_freshness.py`
+(called by the SessionStart hook) iterates ALL platforms' stamps, not just claude's. STILL claude-only and
+scoped as the remaining piece: the `cap://` capability wiring in `Suite.__init__` discovers only
+`claude-code` (multi-platform `cap://` needs platform-namespacing + the resolver — see REGISTRY-NOTES §5/6).
+
 **Where the mechanism lives:** the four-verb engine, the rules, the adapters, the two registries, the
 cached-singleton rationale (F-FIX-1), the derive contract (F-FIX-2), and the leak invariant are all
 documented in **`introspection/AGENTS.md`** — read it before adding a platform. Adding a platform of a

@@ -104,11 +104,18 @@ def _probe_live_version(platform) -> str:
     return probe_version(platform, exe)
 
 
-def run(discover_fn=None, executable=None) -> dict:
+def run(discover_fn=None, executable=None, platform_id="claude-code") -> dict:
     """Entry point.  Loaded and called by the MCP flows tool (op='run', flow='cc_registry_refresh').
+
+    REGISTRY-DRIVEN (2026-06-28): `platform_id` selects WHICH platform to refresh (default 'claude-code'
+    for backward compatibility). Any discoverable `platforms/<id>.py` works — so codex-cli / gh-cli /
+    a future row refresh through the SAME flow with zero new code. `run_all()` below refreshes every
+    registered platform that declares a `version_source` (the freshness hook surfaces which are stale).
 
     Parameters
     ----------
+    platform_id : str
+        The PlatformRegistry id to refresh (e.g. 'claude-code', 'codex-cli', 'gh-cli').
     discover_fn : callable, optional
         Injected by tests to avoid a live binary spawn.  Signature:
         (platform, *, executable=None, version=None) -> list[CapabilityEntry].
@@ -130,13 +137,14 @@ def run(discover_fn=None, executable=None) -> dict:
     from introspection.platforms import PlatformRegistry
     from introspection import engine as _engine
 
-    # ── Resolve the PlatformEntry (instance #1 — claude-code) ─────────────────────────────────
+    # ── Resolve the PlatformEntry (registry-driven — any platforms/<id>.py row) ────────────────
     preg = PlatformRegistry().discover([os.path.join(ROOT, "platforms")])
-    if "claude-code" not in preg:
+    if platform_id not in preg:
         raise RuntimeError(
-            "cc_registry_refresh: 'claude-code' PlatformEntry not found in PlatformRegistry "
-            "(platforms/claude_code.py must be discoverable). Fail loud.")
-    platform = preg["claude-code"]
+            f"cc_registry_refresh: {platform_id!r} PlatformEntry not found in PlatformRegistry "
+            f"(platforms/{platform_id.replace('-', '_')}.py must be discoverable). Fail loud. "
+            f"Known: {sorted(preg.ids())}.")
+    platform = preg[platform_id]
     platform_id = platform.id
 
     # ── Read the stored stamp ────────────────────────────────────────────────────────────────────
@@ -205,6 +213,27 @@ def run(discover_fn=None, executable=None) -> dict:
         "surfaced_id": surfaced_id,
         "_new_entries_for_post_approval_cache": [e.model_dump() for e in new_entries],
     }
+
+
+def run_all(discover_fn=None) -> dict:
+    """REGISTRY-DRIVEN refresh of EVERY platform that declares a version_source — the 'never touch
+    again' entry point: drop a platforms/<id>.py row with a version_source and it is refreshed here
+    automatically, no edit to this flow. Returns {platform_id: result|error} per platform. Each
+    platform is independent — one failing (binary absent, etc.) does not stop the others (recorded
+    as an error entry, fail-loud-legible, never silent)."""
+    from introspection.platforms import PlatformRegistry
+    preg = PlatformRegistry().discover([os.path.join(ROOT, "platforms")])
+    out = {}
+    for pid in sorted(preg.ids()):
+        p = preg[pid]
+        if not getattr(p, "version_source", None):
+            out[pid] = {"status": "skipped", "reason": "no version_source declared"}
+            continue
+        try:
+            out[pid] = run(discover_fn=discover_fn, platform_id=pid)
+        except Exception as e:  # noqa: BLE001 — one platform's failure must not block the rest
+            out[pid] = {"status": "error", "error": f"{type(e).__name__}: {e}"}
+    return out
 
 
 def _surface_gap(action_class: str, payload: dict, default: str) -> str:

@@ -2374,10 +2374,12 @@ class Suite:
         params (reserve_r/per_role_ctx/main_ctx_tokens — the SlotBudget is COMPUTED from these), and
         the declared brain config (the mode→loadout registry, H8). Fail loud on an unknown mode (rule
         8 — never a fabricated allocation). `per-turn` is always present (the spine)."""
-        alloc = self.ACTIVATION_ALLOCATION.get(mode)
-        if alloc is None:
+        if mode not in self.MODES:
             raise ValueError(f"activation_allocation: unknown mode {mode!r} — registered: "
                              f"{sorted(self.ACTIVATION_ALLOCATION)} (fail loud, never a fabricated allocation).")
+        # WS3: read the FOLDED stack (overlays may refine an allocation axis); depth-1 == precomputed.
+        row = self.resolve_mode_stack(mode)
+        alloc = {k: row[k] for k in ("live", "reserve_r", "per_role_ctx", "main_ctx_tokens", "brain_config")}
         out = {k: (list(v) if isinstance(v, list) else v) for k, v in alloc.items()}
         if "per-turn" not in out["live"]:                  # the spine is always live (defensive)
             out["live"] = ["per-turn"] + out["live"]
@@ -2396,6 +2398,109 @@ class Suite:
                              f"{sorted(self.MODE_REGISTRY)} (fail loud, never a fabricated declaration).")
         return {k: (list(v) if isinstance(v, list) else dict(v) if isinstance(v, dict) else v)
                 for k, v in row.items()}
+
+    # ============================================================================================
+    # WS3 — MODE STACKING (base mode + overlays). An OVERLAY is a PARTIAL axis-override dict (it declares
+    # ONLY what it changes, e.g. {"resolution": {"budget": 8000}} or {"directive": "…"}), layered on the
+    # base mode. resolve_mode_stack folds base + overlays → ONE resolved row (same shape as a MODE_REGISTRY
+    # entry); every per-mode consumer (_mode_directive / grain_for / shape_for / mode_stages /
+    # activation_allocation / resolution_spec_for / set_submode) reads the FOLD, so an overlay can refine
+    # any axis. DEPTH-1 (no overlays) returns the base row VERBATIM → byte-identical to pre-WS3 (proven by
+    # the golden-master test over all 8 modes × 7 consumers vs the precomputed MODE_SPECS/PART_GRAIN/
+    # ACTIVATION_ALLOCATION/MODE_DIRECTIVES, which are KEPT as the oracle). Overlays live in the rhm node
+    # `overlays` config (a list, base→top order) — like `submode`, a node-config key, not an inspector field.
+    # set_mode CLEARS overlays (a switch is a fresh presence gesture — the flagged default).
+    # ============================================================================================
+    def _known_mode_axes(self) -> set:
+        """The whitelist of overlay-able axes = the union of every mode row's declared keys (registry-is-
+        truth, never a hardcoded list). An overlay touching an axis outside this set fails loud."""
+        axes: set = set()
+        for m in self.MODES:
+            axes |= set(self.MODE_REGISTRY[m])
+        return axes
+
+    def _mode_overlays(self) -> list:
+        """The live overlay stack — a list of PARTIAL axis-override dicts from the rhm node `overlays`
+        config (base→top order). Empty by default (depth-1 → byte-identical). A non-list config reads []."""
+        ov = self._rhm_cfg().get("overlays")
+        return list(ov) if isinstance(ov, list) else []
+
+    @staticmethod
+    def _fold_mode_row(base: dict, overlay: dict, valid_axes: set) -> dict:
+        """Layer ONE partial overlay dict onto a base row → a NEW row. `resolution`/`subtypes` dict-MERGE
+        per sub-key (an overlay refines a single key); every other declared axis REPLACES. FAIL LOUD
+        (rule 4/8) on a non-dict overlay or an overlay key outside the known axis set — a typo'd axis must
+        never silently no-op."""
+        if not isinstance(overlay, dict):
+            raise TypeError(f"mode overlay must be a dict of axis overrides, got {type(overlay).__name__}")
+        unknown = [k for k in overlay if k not in valid_axes]
+        if unknown:
+            raise ValueError(f"mode overlay declares unknown axis/axes {unknown} — known: "
+                             f"{sorted(valid_axes)} (rule 8: never silently apply a typo'd override).")
+        out = dict(base)
+        for k, v in overlay.items():
+            if k in ("resolution", "subtypes") and isinstance(v, dict) and isinstance(out.get(k), dict):
+                merged = dict(out[k]); merged.update(v); out[k] = merged
+            else:
+                out[k] = v
+        return out
+
+    def resolve_mode_stack(self, mode: str | None = None) -> dict:
+        """WS3 — fold the BASE mode + its live OVERLAYS → ONE resolved mode row (same shape as a
+        MODE_REGISTRY entry). DEPTH-1 (no overlays) returns the base row VERBATIM (mode_registry(mode)) so
+        every derived view is byte-identical to pre-WS3. Fail loud on an unknown base (mode_registry) or an
+        overlay touching an unknown axis (_fold_mode_row). mode=None → the current live mode."""
+        if mode is None:
+            mode = self.get_mode()
+        base = self.mode_registry(mode)                 # deep copy + fail-loud on unknown base
+        overlays = self._mode_overlays()
+        if not overlays:
+            return base                                 # depth-1: structurally identical to today
+        valid = self._known_mode_axes()
+        folded = base
+        for ov in overlays:
+            folded = self._fold_mode_row(folded, ov, valid)
+        return folded
+
+    def _stack_spec(self, mode: str):
+        """A ModeSpec built from the folded mode stack (R4: a ModeSpec OBJECT, not a dict, so the
+        attribute-access consumers — resolution_spec_for / set_submode — are unchanged). Depth-1 → a
+        ModeSpec VALUE-equal to MODE_SPECS[mode] (built from the identical row by the same constructor)."""
+        row = self.resolve_mode_stack(mode)
+        return ModeSpec(label=row["label"], directive=row["directive"], resolution=row["resolution"],
+                        subtypes=row.get("subtypes"), consent=row["consent"])
+
+    def get_overlays(self) -> list:
+        """The live overlay stack (WS3) — read-only view."""
+        return self._mode_overlays()
+
+    def push_overlay(self, overlay: dict) -> list:
+        """WS3 — push a partial axis-override overlay onto the live stack (validated against the registry
+        axis whitelist — fail loud on an unknown axis). Returns the new stack. Overlays layer on the
+        CURRENT mode; a mode switch clears them (set_mode)."""
+        self._fold_mode_row(self.mode_registry(self.get_mode()), overlay, self._known_mode_axes())  # validate (raises)
+        stack = self._mode_overlays() + [dict(overlay)]
+        self._ensure_rhm_node()
+        self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"overlays": stack})
+        self._emit("mode", f"overlay pushed (stack depth {len(stack)} on {self.get_mode()})",
+                   address="ui://chrome/toolbar")
+        return stack
+
+    def pop_overlay(self) -> list:
+        """WS3 — pop the topmost overlay (no-op on an empty stack). Returns the new stack."""
+        stack = self._mode_overlays()
+        if stack:
+            stack = stack[:-1]
+            self._ensure_rhm_node()
+            self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"overlays": stack})
+            self._emit("mode", f"overlay popped (stack depth {len(stack)})", address="ui://chrome/toolbar")
+        return stack
+
+    def clear_overlays(self) -> list:
+        """WS3 — clear the whole overlay stack (back to the bare base mode). Returns []."""
+        self._ensure_rhm_node()
+        self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"overlays": []})
+        return []
 
     @staticmethod
     def _mode_axes_jsonsafe(axes):
@@ -2433,13 +2538,12 @@ class Suite:
         return _act.consolidate_rollup(self, since=since, mode=mode, turn_id=turn_id, gc=gc)
 
     def shape_for(self, mode: str) -> dict:
-        """The THOUGHT_SHAPE for a mode (C4.1/G4): read the per-mode grain row → its shape. Fail loud on
-        an unknown mode (rule 8 — never default-fire a fabricated shape). Returns the shape dict (the
-        archetype + fanout/join/render_from + desc)."""
-        row = self.PART_GRAIN.get(mode)
-        if row is None:
+        """The THOUGHT_SHAPE for a mode (C4.1/G4): read the per-mode grain row → its shape. WS3: reads the
+        FOLDED stack (overlays may refine the shape); depth-1 == the precomputed PART_GRAIN shape. Fail loud
+        on an unknown mode (rule 8). Returns the shape dict (archetype + fanout/join/render_from + desc)."""
+        if mode not in self.MODES:
             raise ValueError(f"shape_for: unknown mode {mode!r} — registered modes: {sorted(self.PART_GRAIN)}")
-        sid = row["shape"]
+        sid = self.resolve_mode_stack(mode)["shape"]
         shape = self.THOUGHT_SHAPES.get(sid)
         if shape is None:
             raise ValueError(f"shape_for: mode {mode!r} names unknown shape {sid!r} — registered shapes: "
@@ -2447,16 +2551,18 @@ class Suite:
         return dict(shape)
 
     def grain_for(self, mode: str) -> str:
-        """The part GRAIN for a mode (C4.1) — line / beat / paragraph. Fail loud on an unknown mode."""
-        row = self.PART_GRAIN.get(mode)
-        if row is None:
+        """The part GRAIN for a mode (C4.1) — line / beat / paragraph. WS3: reads the FOLDED stack (depth-1
+        == precomputed PART_GRAIN). Fail loud on an unknown mode."""
+        if mode not in self.MODES:
             raise ValueError(f"grain_for: unknown mode {mode!r} — registered modes: {sorted(self.PART_GRAIN)}")
-        return row["grain"]
+        return self.resolve_mode_stack(mode)["grain"]
 
     def mode_stages(self, mode: str) -> bool:
-        """Whether `mode` STAGES a multi-part reply at all (C4.3): focus/background/off never stage."""
-        row = self.PART_GRAIN.get(mode)
-        return bool(row and row.get("stage"))
+        """Whether `mode` STAGES a multi-part reply at all (C4.3): focus/background/off never stage. WS3:
+        reads the FOLDED stack (depth-1 == precomputed); an unknown mode is False (as before)."""
+        if mode not in self.MODES:
+            return False
+        return bool(self.resolve_mode_stack(mode).get("stage"))
 
     def _rhm_cfg(self) -> dict:
         """The RHM's config node (system graph) — holds mode + model + base_url + persona."""
@@ -2480,7 +2586,10 @@ class Suite:
         if mode not in self.MODES:
             raise ValueError(f"unknown mode {mode!r} — one of {self.MODES}")
         self._ensure_rhm_node()
-        self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"mode": mode})   # editing a parameter (same verb)
+        # WS3 — a mode switch is a fresh presence gesture: set the mode AND clear any overlays from the
+        # prior mode (the flagged default; overlays are layered intentionally AFTER a switch, never carried
+        # across one). One set_config (same verb) writes both keys.
+        self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"mode": mode, "overlays": []})
         self._emit("mode", f"presence → {mode}", address="ui://chrome/toolbar")   # S2: presence dial lives in the toolbar
         # WS1 (mode→loadout): if the new mode binds a `loadout_class` whose services are not all resident,
         # SURFACE a loadout_swap confirm — NEVER auto-actuate. Switching a presence mode is free (a config
@@ -2570,7 +2679,11 @@ class Suite:
         return {"sid": sid, "loadout_class": payload.get("loadout_class"), "results": results}
 
     def _mode_directive(self, mode: str) -> str:
-        return self.MODE_DIRECTIVES.get(mode, "")
+        # WS3: reads the FOLDED stack's directive (an overlay may replace it); depth-1 == MODE_DIRECTIVES.
+        # Unknown mode → "" (preserves the prior .get(mode, "") fallback — never crashes a grounding read).
+        if mode not in self.MODES:
+            return ""
+        return self.resolve_mode_stack(mode)["directive"]
 
     # ── DIALS — adjustable character traits (Track-1; Tim: "they should be dials. I should be able
     # to adjust them, and not need to make a decision"). Definitions = dials/ registry rows; VALUES
@@ -2648,7 +2761,7 @@ class Suite:
         """Set the instance sub-type for the CURRENT mode-type. FAIL LOUD (rule 4) if the sub-type isn't
         declared on the current mode-type's spec — never a silent wrong value. None clears it (bare lens)."""
         mode = self.get_mode()
-        spec = self.MODE_SPECS.get(mode)
+        spec = self._stack_spec(mode) if mode in self.MODES else None   # WS3: folded spec (depth-1 == MODE_SPECS)
         valid = set((spec.subtypes or {})) if spec else set()
         if submode is not None and submode not in valid:
             raise ValueError(f"unknown sub-type {submode!r} for mode {mode!r} — one of {sorted(valid) or '(none declared)'}")
@@ -2675,13 +2788,16 @@ class Suite:
         with a warning (fail-loud-legible — never crash the resolver, mirroring _resolve_context_at)."""
         if mode is None:
             mode = self.get_mode()
-        spec = self.MODE_SPECS.get(mode)
-        if spec is None:
+        # WS3: the spec is built from the FOLDED stack (base + overlays); depth-1 == the precomputed
+        # MODE_SPECS[mode] (golden-master verified), so the no-overlay path is byte-identical.
+        if mode in self.MODES:
+            spec = self._stack_spec(mode)
+        else:
             # locus-bound: the mode lives on the presence dial (ui://chrome/toolbar — same locus set_mode
             # stamps), so this config-resolution warning is honestly addressed, not locus-less.
             self._emit("warning", f"resolution_spec_for: unknown mode {mode!r} — defaulting to listening lens",
                        address="ui://chrome/toolbar")
-            spec = self.MODE_SPECS["listening"]
+            spec = self._stack_spec("listening")
         base = dict(spec.resolution or {})
         out = {"strata": base.get("strata"),
                "howto_detail": base.get("howto_detail", "full"),

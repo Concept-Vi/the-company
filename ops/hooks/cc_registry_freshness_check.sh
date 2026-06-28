@@ -49,7 +49,16 @@ warn() {
     echo "REGISTRY FRESHNESS: $*"
 }
 
-# ── resolve the binary ─────────────────────────────────────────────────────────────────────────
+# ── REGISTRY-DRIVEN freshness (2026-06-28): check EVERY platforms/<id>.py that declares a
+#    version_source, not just claude-code. A python helper iterates the PlatformRegistry, so a NEW
+#    platform row is freshness-checked for free (the 'never touch again' property). If the helper can't
+#    run (python/introspection unavailable), fall back to the original claude-code-only bash check so
+#    this hook never regresses. Always exits 0 (non-blocking). ──
+if "${COMPANY_PYTHON:-python3}" "$COMPANY_ROOT/ops/hooks/registry_freshness.py" 2>/dev/null; then
+    exit 0
+fi
+
+# ── fallback: original claude-code-only check (helper unavailable) ───────────────────────────────
 if ! command -v "$CLAUDE_BIN" >/dev/null 2>&1; then
     CLAUDE_BIN="$HOME/.local/bin/claude"
 fi
@@ -58,27 +67,18 @@ if [ ! -x "$CLAUDE_BIN" ] && ! command -v claude >/dev/null 2>&1; then
     exit 0
 fi
 CLAUDE_BIN="${CLAUDE_BIN:-claude}"
-
-# ── read live version ──────────────────────────────────────────────────────────────────────────
 LIVE_VERSION="$("$CLAUDE_BIN" --version 2>/dev/null | sed 's/ (Claude Code)//' | awk '{print $1}')" || true
 if [ -z "$LIVE_VERSION" ]; then
     warn "version probe returned empty — binary may not be responding. Run cc_registry_refresh when ready."
     exit 0
 fi
-
-# ── compare against the stamp ──────────────────────────────────────────────────────────────────
 if [ ! -f "$STAMP_FILE" ]; then
     warn "stamp missing — registry has NEVER been built for this binary. Run flow cc_registry_refresh to build it."
     exit 0
 fi
-
 STAMPED_VERSION="$(tr -d '[:space:]' < "$STAMP_FILE")"
-
 if [ "$STAMPED_VERSION" != "$LIVE_VERSION" ]; then
     warn "STALE — stamp=$STAMPED_VERSION live=$LIVE_VERSION. Run flow cc_registry_refresh to refresh and surface novelty."
     exit 0
 fi
-
-# ── current — no output, clean session ────────────────────────────────────────────────────────
-# stamp == live version: registry is fresh, silent exit.
 exit 0

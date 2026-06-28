@@ -1090,14 +1090,18 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
         # introspection never imports runtime/, so the only edge is runtime→introspection, no cycle).
         # Registry-is-truth: an unknown capability RAISES — never fabricate a row (mirrors session://).
         from introspection.registry import capability_registry as _cap_reg   # lazy: avoids module-load coupling
+        # SOURCE-FIRST nested (2026-06-28): cap://<platform>[@version]/<kind>/<name> (e.g.
+        # cap://codex-cli/flag/--model). Legacy bare cap://<kind>/<name> still resolves via the
+        # registry's default-platform alias (claude-code). registry.get() accepts both — see _key().
         rest = addr[len("cap://"):]
         entry = _cap_reg().get(rest)                                          # capability_registry() RAISES if Suite init never set it
         if entry is None:
             raise ValueError(
                 f"resolve_address: unknown capability {rest!r} (address {addr!r}) — no CapabilityEntry "
-                f"row. registry-is-truth: the live binary's self-reported surface is the only source; "
-                f"list it with the capability(op='list') MCP op (ids are '<kind>/<name>', flags keep "
-                f"the '--' prefix, e.g. 'flag/--debug'). Fail loud, never fabricate a capability.")
+                f"row. registry-is-truth: a source's self-reported surface is the only truth; list it "
+                f"with capability(op='list'). Nested ids are '<platform>/<kind>/<name>' "
+                f"(cap://codex-cli/flag/--model); legacy '<kind>/<name>' resolves to claude-code. "
+                f"Fail loud, never fabricate a capability.")
         return entry
     if sch == "board":
         # Heart H1.1 — the Company NOTICEBOARD joins the ONE addressed graph. board://<id> → the board

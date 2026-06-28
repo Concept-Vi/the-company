@@ -63,13 +63,18 @@ class CliHelpDiscoverer:
 
     def parse(self, raw: str, parse_rule: str = "option-row", *, platform_id: str = "",
               version: str = "") -> list[CapabilityEntry]:
-        """Parse the raw --help text into CapabilityEntry rows, one per option row. parse_rule
-        'option-row' is the only rule today (the Commander shape). A future tool with a different
-        --help shape registers a new parse_rule + its branch - gap-surfaced, not silently mis-parsed."""
+        """Parse the raw --help text into CapabilityEntry rows. parse_rule selects the shape:
+          'option-row'      — the flag/option table (one entry per flag; the Commander/Cobra/clap shape).
+          'subcommand-list' — the 'Commands:'/'Available Commands:' section (one entry per subcommand) — so
+                              "run any capability" covers subcommands, not just flags (2026-06-28). Generic
+                              across CLI families (clap/cobra/commander all print an indented name+desc list).
+        A novel shape is a new rule + branch, gap-surfaced — never silently mis-parsed."""
+        if parse_rule == "subcommand-list":
+            return self._parse_subcommands(raw, platform_id=platform_id, version=version)
         if parse_rule != "option-row":
-            raise ValueError(f"cli-help parse: unknown parse_rule {parse_rule!r} - the built rule is "
-                             f"'option-row' (Commander option-table). A novel shape is a new rule + "
-                             f"branch, gap-surfaced. Fail loud.")
+            raise ValueError(f"cli-help parse: unknown parse_rule {parse_rule!r} - built rules are "
+                             f"'option-row' (flag table) + 'subcommand-list' (Commands section). A novel "
+                             f"shape is a new rule + branch, gap-surfaced. Fail loud.")
         entries: list[CapabilityEntry] = []
         seen: set[str] = set()
         for line in raw.splitlines():
@@ -107,6 +112,50 @@ class CliHelpDiscoverer:
                 discovered_at=version,                    # the binary version the row was parsed from
             )
             entries.append(entry)
+        return entries
+
+    # the commands-section header — colon OPTIONAL: clap 'Commands:', cobra 'CORE COMMANDS' / 'GITHUB ACTIONS
+    # COMMANDS' (no colon, may be upper), commander 'Commands:'. (re.I handles the case.)
+    _CMD_SECTION = re.compile(r"^[A-Za-z ]*commands:?\s*$", re.I)
+    # a subcommand row: indented, a name (no leading '-'), an OPTIONAL trailing colon (cobra 'auth:'),
+    # >=2 spaces, then a description.
+    _CMD_ROW = re.compile(r"^\s+([a-z][\w-]*):?\s{2,}(.*)$")
+    _ALIASES = re.compile(r"\[alias(?:es)?:\s*([^\]]+)\]")
+
+    def _parse_subcommands(self, raw: str, *, platform_id: str = "", version: str = "") -> list[CapabilityEntry]:
+        """Parse the 'Commands:' section into one CapabilityEntry per subcommand (kind='subcommand').
+        Walks rows under the section header until a dedent/blank/new-section. Captures [aliases: …]."""
+        entries: list[CapabilityEntry] = []
+        seen: set[str] = set()
+        in_section = False
+        for line in raw.splitlines():
+            if self._CMD_SECTION.match(line):
+                in_section = True
+                continue
+            if not in_section:
+                continue
+            if not line.strip():                                  # blank line ends the section
+                in_section = False
+                continue
+            if not line[:1].isspace():                            # a non-indented line = a new section
+                in_section = False
+                continue
+            m = self._CMD_ROW.match(line)
+            if not m:
+                continue
+            name, desc = m.group(1).strip(), m.group(2).strip()
+            if name in seen or name in ("help",):                 # skip the universal 'help' pseudo-command
+                continue
+            seen.add(name)
+            aliases = []
+            am = self._ALIASES.search(desc)
+            if am:
+                aliases = [a.strip() for a in am.group(1).split(",") if a.strip()]
+                desc = self._ALIASES.sub("", desc).strip()
+            entries.append(CapabilityEntry(
+                id=f"subcommand/{name}", kind="subcommand", name=name, aliases=aliases,
+                description=desc, visible=True, source="help-parse",
+                platform_id=platform_id or "", discovered_at=version))
         return entries
 
     @staticmethod

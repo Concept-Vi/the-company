@@ -57,13 +57,17 @@ class CapabilityRegistry:
     (`reg[id] -> CapabilityEntry`, `id in reg`, `.get(id)`). Built by `discover(platform)` (LEAD-only
     live spawn) or by `discover(platform, discover_fn=stub)` (no-spawn unit verification).
 
-    A single CapabilityRegistry instance holds ONE platform's rows today (Claude Code, instance #1).
-    Multi-platform leaf tables are a downstream extension (the rows already carry platform_id, so a
-    future registry can hold many) — out of this build's scope; not faked here."""
+    MULTI-PLATFORM (2026-06-28 — the downstream extension, now built): entries are keyed by the FULL
+    NESTED id `<platform_id>/<kind>/<name>` so many platforms coexist with NO collision (codex AND claude
+    both having `flag/--model` are distinct keys). `discover(platform)` MERGES a platform's rows in (it no
+    longer replaces), so a Suite can discover all registered platforms into ONE registry. `get`/`in`/`[]`
+    accept BOTH the full nested id AND the legacy leaf id `<kind>/<name>` (→ resolved against the default
+    platform `claude-code`, the transition alias) so existing `cap://flag/--debug` lookups keep working."""
 
     def __init__(self):
-        self.entries: dict[str, CapabilityEntry] = {}
-        self.platform_id: str = ""
+        self.entries: dict[str, CapabilityEntry] = {}   # keyed by FULL nested id: <platform>/<kind>/<name>
+        self.platform_id: str = ""                       # the LAST platform discovered (back-compat)
+        self.platforms: set[str] = set()                 # all platforms whose rows are held
         self.version: str = ""        # the binary version the rows were discovered from (freshness key)
 
     def discover(self, platform: PlatformEntry, *, executable: str | None = None,
@@ -83,8 +87,13 @@ class CapabilityRegistry:
             platform, executable=executable, version=version,
             discover_fn=discover_fn, novel_ids=novel_ids)
         self.platform_id = platform.id
+        self.platforms.add(platform.id)
         self.version = version if version is not None else ""
-        self.entries = {e.id: e for e in classified}
+        # MERGE (not replace) + key by the FULL nested id; stamp platform_id so attribution is never the
+        # default-guess (the any-source correctness fix — entries carry the platform they were discovered from).
+        for e in classified:
+            e.platform_id = platform.id
+            self.entries[f"{platform.id}/{e.id}"] = e
         return self
 
     def snapshot(self) -> dict:
@@ -108,11 +117,26 @@ class CapabilityRegistry:
                                            or q in (e.description or "").lower())]
 
     # --- dict-like (so it IS the capability table for the cap:// resolver + the faces) ---
+    # Keys are FULL nested ids (<platform>/<kind>/<name>). _key() resolves an incoming id to the stored
+    # key, accepting the legacy leaf id (<kind>/<name>) → default-platform alias, so old lookups still hit.
+    _DEFAULT_PLATFORM = "claude-code"
+
+    def _key(self, entry_id: str) -> str | None:
+        if entry_id in self.entries:
+            return entry_id                                   # already a full nested id
+        cand = f"{self._DEFAULT_PLATFORM}/{entry_id}"          # legacy leaf id → default platform alias
+        if cand in self.entries:
+            return cand
+        return None
+
     def __getitem__(self, entry_id: str) -> CapabilityEntry:
-        return self.entries[entry_id]
+        k = self._key(entry_id)
+        if k is None:
+            raise KeyError(entry_id)
+        return self.entries[k]
 
     def __contains__(self, entry_id: str) -> bool:
-        return entry_id in self.entries
+        return self._key(entry_id) is not None
 
     def __iter__(self):
         return iter(self.entries)
@@ -121,7 +145,8 @@ class CapabilityRegistry:
         return len(self.entries)
 
     def get(self, entry_id: str, default=None):
-        return self.entries.get(entry_id, default)
+        k = self._key(entry_id)
+        return self.entries[k] if k is not None else default
 
 
 # ── F-FIX-1 / PG-D2 — the cached module-level singleton accessor (NEW pattern; SHAPE mirrors ──────────

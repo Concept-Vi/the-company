@@ -89,6 +89,11 @@ exit_code = 1
 try:
     # Ensure the opt-in init discovery is OFF (the default) so Suite construction does NOT spawn claude.
     os.environ.pop("COMPANY_CAP_DISCOVER_AT_INIT", None)
+    # Isolate the cap-wire MECHANISM under test: turn OFF the ledger-backed auto-load (2026-06-28 — the
+    # operational default that populates cap:// from the ledger spawn-free) so T2-T6 verify the
+    # discover()/stub + fail-loud path against a controlled fixture set, not the live ledger's contents.
+    # The ledger-backed operational path is verified separately (by real resolve_address use).
+    os.environ["COMPANY_CAP_LOAD_FROM_LEDGER"] = "0"
     store = FsStore(os.path.join(store_dir, "store"))
     reg = NodeRegistry(); reg.discover([NODES])
     suite = Suite(store, reg, nodes_dir=NODES)

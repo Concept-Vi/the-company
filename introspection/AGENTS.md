@@ -183,6 +183,22 @@ built set (the §8.3 gap-surface, not a crash). Leak-grep over the 8 Level-1 fil
 engine stayed platform-agnostic through a 2nd platform). Proof test:
 `tests/genproof_second_platform_acceptance.py` (11/11 green).
 
+## C-GENPROOF extended — INSTANCE #3 `codex-cli` (2026-06-28, a THIRD tool family)
+
+The lift held a third time with **zero** Level-1 edits: `platforms/codex_cli.py` (OpenAI Codex CLI, a
+RUST/clap tool — instance #1 Commander.js, #2 Cobra, #3 clap) discovers via the unchanged `cli-help`
+adapter: `codex exec --help` → **24 flag rows** → CLASSIFY **4 LOCKED / 2 HAZARD / 8 CONSENT / 10 SAFE**
+(both `--dangerously-bypass-*` caught by R2 flag-name scope; model/sandbox/dirs/provider/image/config on
+R3 axes). Leak-grep over the 8 Level-1 files = 0 (the engine stayed agnostic through a 3rd platform).
+RECORDED ADAPTER GAP (not a blocker): clap prints descriptions on the next line, so the option-row parser
+captures the flag but an EMPTY description — a future `clap-options` parse_rule (or continuation-line join
+in `cli_help.py`) recovers it; classification is unaffected (flag-name + signal_sets driven). Codex is also
+the first platform with a LIVE fabric consumer (`ops/ledger_interpret_codex.py` resolves it via the row's
+`executable_locator`). **Downstream consumers were lifted to be registry-driven too** (2026-06-28): the
+refresh flow (`platform_id=` + `run_all()`) and the SessionStart freshness check
+(`ops/hooks/registry_freshness.py` iterates all platforms). The `cap://` capability-discovery wiring in
+`Suite.__init__` remains claude-code-only (multi-platform `cap://` needs namespacing — the named next step).
+
 ## CapabilityEntry id construction (F-FIX-14)
 
 `entry.id = f"{kind}/{name}"`. For flags, `name` **INCLUDES the `--` prefix**:
