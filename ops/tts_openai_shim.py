@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-"""ops/tts_openai_shim.py — an OpenAI-compatible /v1/audio/speech shim in front of the Company's kokoro TTS.
+"""ops/tts_openai_shim.py — OpenAI-compatible /v1/audio/speech in front of the COMPANY voice circuit.
 
-So OpenWebUI's OWN native TTS (engine="openai", base=this shim) speaks with the Company's local kokoro
-voice — connecting OWUI's built-in voice to our engine instead of a bolt-on page. OWUI POSTs the OpenAI
-shape {model, input, voice, response_format}; we translate to kokoro {text, voice, speed} and return audio.
+OpenWebUI's native TTS (engine='openai', base=this shim) speaks through the company's bridge `/api/tts`,
+which resolves the engine + voice FROM THE LOADOUT (rhm_config.tts_engine → persona → fallback) and applies
+the speakable layer. So switching voice/engine in the company makes OpenWebUI follow BY CONSTRUCTION — this
+shim holds NO engine/voice choice of its own (the earlier version hardcoded kokoro + a voice map; that
+duplication is removed). Thin adapter only: translate the OpenAI shape → the bridge, return the audio.
 """
 from __future__ import annotations
 import json, os, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-KOKORO = f"http://127.0.0.1:{os.environ.get('COMPANY_TTS_PORT','4123')}/"
+BRIDGE = os.environ.get("COMPANY_BRIDGE", "http://127.0.0.1:8770")
 PORT = int(os.environ.get("TTS_SHIM_PORT", "4200"))
-DEFAULT_VOICE = os.environ.get("COMPANY_TTS_VOICE", "af_heart")
-# OpenAI voice names → kokoro voices (so OWUI's voice picker maps to real kokoro voices)
-VOICE_MAP = {"alloy": "af_heart", "nova": "af_bella", "echo": "am_adam", "fable": "af_sky",
-             "onyx": "am_michael", "shimmer": "af_nicole"}
 
 
 class H(BaseHTTPRequestHandler):
@@ -22,34 +20,30 @@ class H(BaseHTTPRequestHandler):
         pass
 
     def do_GET(self):
-        # OWUI may probe /audio/voices and /models — answer minimally.
-        if self.path.endswith("/voices"):
-            self._send(200, json.dumps({"voices": [{"id": k, "name": k} for k in VOICE_MAP]}).encode(), "application/json")
-        elif self.path.endswith("/models"):
-            self._send(200, json.dumps({"data": [{"id": "kokoro"}]}).encode(), "application/json")
-        else:
-            self._send(200, b'{"ok":true}', "application/json")
+        # OWUI may probe /models or /voices — answer minimally; the real voice lives in the loadout.
+        body = json.dumps({"data": [{"id": "company-voice"}]}).encode()
+        self.send_response(200); self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
 
     def do_POST(self):
         try:
             n = int(self.headers.get("Content-Length", 0))
             req = json.loads(self.rfile.read(n) or b"{}")
             text = req.get("input") or req.get("text") or ""
-            voice = VOICE_MAP.get(req.get("voice", ""), req.get("voice") or DEFAULT_VOICE)
-            if voice not in VOICE_MAP.values() and not voice.startswith(("af_", "am_", "bf_", "bm_")):
-                voice = DEFAULT_VOICE
-            body = json.dumps({"text": text, "voice": voice, "speed": req.get("speed", 1.0)}).encode()
-            r = urllib.request.Request(KOKORO, data=body, headers={"Content-Type": "application/json"}, method="POST")
-            audio = urllib.request.urlopen(r, timeout=60).read()
-            self._send(200, audio, "audio/wav")
+            # Forward ONLY the text — NO engine/voice. The bridge resolves both from the live loadout, so
+            # OWUI speaks in whatever voice the company currently has selected. (Following, not choosing.)
+            r = urllib.request.Request(f"{BRIDGE}/api/tts", data=json.dumps({"text": text}).encode(),
+                                       headers={"Content-Type": "application/json"}, method="POST")
+            with urllib.request.urlopen(r, timeout=90) as resp:
+                audio = resp.read()
+            self.send_response(200); self.send_header("Content-Type", "audio/wav")
+            self.send_header("Content-Length", str(len(audio))); self.end_headers(); self.wfile.write(audio)
         except Exception as e:
-            self._send(500, json.dumps({"error": str(e)}).encode(), "application/json")
-
-    def _send(self, code, body, ctype):
-        self.send_response(code); self.send_header("Content-Type", ctype)
-        self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+            b = json.dumps({"error": str(e)}).encode()
+            self.send_response(502); self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
 
 
 if __name__ == "__main__":
-    print(f"tts-openai-shim → kokoro {KOKORO} on :{PORT}", flush=True)
+    print(f"tts-openai-shim → company bridge {BRIDGE}/api/tts (loadout-resolved) on :{PORT}", flush=True)
     ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()

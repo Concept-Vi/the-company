@@ -1,44 +1,29 @@
 #!/usr/bin/env python3
-"""ops/stt_openai_shim.py — an OpenAI-compatible /v1/audio/transcriptions shim over the Company EARS.
+"""ops/stt_openai_shim.py — OpenAI-compatible /v1/audio/transcriptions in front of the COMPANY ears.
 
-So OpenWebUI's OWN native STT (engine='openai', base=this shim) transcribes with the Company's ear
-dispatch (voice.stt → granite/whisper/…, with the browser-audio → wav16 conversion it already does)
-instead of OWUI's built-in whisper. OWUI POSTs multipart {file=<audio>}; we hand the bytes to
-voice.stt.transcribe and return the OpenAI shape {"text": ...}.
+OpenWebUI's native STT (engine='openai', base=this shim) transcribes through the company's bridge
+`/api/stt`, which resolves the EAR FROM THE LOADOUT (rhm_config.stt → active_ear). So switching the ear in
+the company makes OpenWebUI follow BY CONSTRUCTION — this shim holds NO ear choice of its own (the earlier
+version pinned a provider and had a NameError; both removed). Thin adapter: pull the audio out of OWUI's
+multipart upload, forward the bytes to the bridge, return {"text": ...}.
 """
 from __future__ import annotations
-import json, os, sys
+import json, os, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if REPO not in sys.path:
-    sys.path.insert(0, REPO)
-from voice import stt as _stt
-
+BRIDGE = os.environ.get("COMPANY_BRIDGE", "http://127.0.0.1:8770")
 PORT = int(os.environ.get("STT_SHIM_PORT", "4201"))
-# NO pinned ear — resolve the company's CURRENTLY-ACTIVE ear at call time (loadout-linked): whatever ear
-# the company has selected/running is what OWUI uses. Switch the ear in the company → OWUI follows, no change.
-FORCE_EAR = os.environ.get("ROOM_STT", "")                     # optional hard override; empty = follow company
-
-
-def _active_ear() -> "str | None":
-    if FORCE_EAR:
-        return FORCE_EAR
-    try:
-        return _stt.active_ear()                                # the company's selected/default ear
-    except Exception:
-        return None                                            # None → transcribe() picks the active default
 
 
 def _extract_file(body: bytes, ctype: str) -> bytes:
     """Minimal multipart/form-data parse: return the bytes of the part carrying a filename (the audio)."""
     if "boundary=" not in ctype:
-        return body                                            # raw body fallback
+        return body
     boundary = ("--" + ctype.split("boundary=", 1)[1].strip().strip('"')).encode()
     for part in body.split(boundary):
         head, _, data = part.partition(b"\r\n\r\n")
         if b"filename=" in head and data:
-            return data.rsplit(b"\r\n", 1)[0]                  # strip trailing CRLF before next boundary
+            return data.rsplit(b"\r\n", 1)[0]
     return body
 
 
@@ -47,24 +32,29 @@ class H(BaseHTTPRequestHandler):
         pass
 
     def do_GET(self):
-        b = json.dumps({"data": [{"id": "company-ears"}]}).encode()
+        body = json.dumps({"data": [{"id": "company-ears"}]}).encode()
         self.send_response(200); self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
+        self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
 
     def do_POST(self):
         try:
             n = int(self.headers.get("Content-Length", 0))
             audio = _extract_file(self.rfile.read(n), self.headers.get("Content-Type", ""))
-            text = (_stt.transcribe(audio, provider=PROVIDER).get("text") or "").strip()
+            # Forward the raw audio to the bridge; it picks the ear from the live loadout.
+            r = urllib.request.Request(f"{BRIDGE}/api/stt", data=audio,
+                                       headers={"Content-Type": "application/octet-stream"}, method="POST")
+            with urllib.request.urlopen(r, timeout=90) as resp:
+                d = json.loads(resp.read() or b"{}")
+            text = (d.get("text") or "").strip()
             b = json.dumps({"text": text}).encode()
             self.send_response(200); self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
         except Exception as e:
             b = json.dumps({"error": str(e)}).encode()
-            self.send_response(500); self.send_header("Content-Type", "application/json")
+            self.send_response(502); self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
 
 
 if __name__ == "__main__":
-    print(f"stt-openai-shim → company ear '{PROVIDER}' on :{PORT}", flush=True)
+    print(f"stt-openai-shim → company bridge {BRIDGE}/api/stt (loadout-resolved ear) on :{PORT}", flush=True)
     ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()
