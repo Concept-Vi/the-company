@@ -8,6 +8,9 @@ Type=simple
 WorkingDirectory=/home/tim/company
 # HF Xet backend stalls on this network — force classic HTTP for any model fetch
 Environment=HF_HUB_DISABLE_XET=1
+# Pin onnxruntime to CPU — on WSL2 the CUDA provider's GPU device-discovery hangs the synth
+# (health-ok but POST /tts never completes). kokoro is the CPU mouth anyway (no VRAM). (Foundation F1)
+Environment=ONNX_PROVIDER=CPUExecutionProvider
 ExecStart=/home/tim/company/.voice-venv/bin/python voice/tts_service.py 4123
 Restart=on-failure
 RestartSec=5
