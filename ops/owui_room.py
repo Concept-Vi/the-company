@@ -31,7 +31,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO not in sys.path:
     sys.path.insert(0, REPO)
-from runtime import cc_channels, cc_clone
+from runtime import cc_channels, cc_clone, session_channels as sc
 
 OWUI = os.environ.get("OWUI_BASE", "http://127.0.0.1:8081")
 HOME = os.environ.get("ROOM_OWUI_CHANNEL", "a9a338cc-ede3-4268-a43a-94857e2ad4e6")   # the default/home room
@@ -54,7 +54,32 @@ MM_MAX, MM_WINDOW = 8, 90.0
 _sio = None                                                 # the live socket client (set in main) — for re-join
 
 
-# ---------------- state (rooms = {cid: {name, roster}} ; webhooks = {cid: {label: hook}}) ----------------
+# ---------------- the ONE structure store (channels.jsonl — session_channels) ----------------
+# THE FOLD (channels-fusion increment 2): an OWUI channel's MEMBERSHIP is a company channel.
+# The set of member HANDLES is now owned by session_channels (the one named-channel structure
+# store, cid == the OWUI channel uuid VERBATIM — deterministic 1:1 mapping, no separate mapping
+# row). owui_room's own state shrinks: "roster" (the list of {handle,label}) is replaced by a
+# per-room handle→label MAP — because session_channels has no label slot yet (label/role as a
+# member sub-record is the LATER increment per fusion-channels.md §2.1). So:
+#   membership truth (the handle SET)  → session_channels.channel_members  (shared with the fabric)
+#   label / display identity           → owui_room state ("labels": {cid: {handle: label}})
+#   roster(cid)                        → a JOIN of the two (returns the same {handle,label} dicts)
+# cc_channels stays TRANSPORT-only (push/find) — untouched.
+_STORE = None
+
+
+def _store():
+    """The ONE store session_channels (channels.jsonl) lives on — COMPANY_STORE / FsStore.
+    Cached: a daemon-lifetime singleton (the fold reads disk every call, so it stays fresh)."""
+    global _STORE
+    if _STORE is None:
+        from store.fs_store import FsStore
+        import fabric.config as fcfg
+        _STORE = FsStore(fcfg.STORE_DIR)
+    return _STORE
+
+
+# ---------------- state (rooms = {cid: {name}} ; labels = {cid: {handle: label}} ; webhooks = {cid: {label: hook}}) ----------------
 def _load_state() -> dict:
     try:
         s = json.load(open(STATE))
@@ -62,6 +87,7 @@ def _load_state() -> dict:
         s = {}
     s.setdefault("rooms", {})
     s.setdefault("webhooks", {})
+    s.setdefault("labels", {})
     # migrate a pre-multi-room (flat) state into the HOME room, once.
     if "roster" in s and HOME not in s["rooms"]:
         s["rooms"][HOME] = {"name": "fabric-test", "roster": s.pop("roster")}
@@ -70,6 +96,14 @@ def _load_state() -> dict:
             s["webhooks"] = {HOME: flat}
     if HOME not in s["rooms"]:
         s["rooms"][HOME] = {"name": "home", "roster": list(DEFAULT_ROSTER)}
+    # FOLD migration (idempotent): lift any legacy in-state "roster" (the OLD private store) into
+    # (a) the per-room label map and (b) session_channels membership truth. Survives drift — runs
+    # every load, only fills what's missing (the old live daemon may have spawned before restart).
+    for cid, room in s["rooms"].items():
+        labels = s["labels"].setdefault(cid, {})
+        for m in room.get("roster", []):
+            labels.setdefault(m["handle"], m["label"])
+        room.pop("roster", None)                    # the list is no longer the truth — drop it
     return s
 
 
@@ -83,12 +117,58 @@ def rooms() -> dict:
     return _state["rooms"]
 
 
+def _ensure_company_channel(cid: str, name: str = "", handles: "list[str] | None" = None) -> None:
+    """Ensure a session_channels row exists for this OWUI channel (cid == OWUI uuid VERBATIM),
+    then reconcile its membership to include `handles`. Idempotent. registry=None ALWAYS — owui_room
+    handles (operator/spawned labels/ch-…) are not all in the agent-session registry; passing one
+    would fail-loud and break spawn. Fail-soft: structure-store hiccups must never break the live
+    chat path (membership then falls back to the local label map)."""
+    try:
+        try:
+            sc.get_channel(_store(), cid)
+        except ValueError:
+            sc.create_channel(_store(), name=(name or cid), cid=cid,
+                              purpose="OpenWebUI room (owui_room face)", registry=None)
+        if handles:
+            present = set(sc.channel_members(_store(), cid))
+            for h in handles:
+                if h and h not in present:
+                    sc.add_member(_store(), cid, h, registry=None)
+    except Exception as e:
+        print(f"  _ensure_company_channel({cid}) soft-fail: {type(e).__name__}: {e}", flush=True)
+
+
 def roster(cid: str) -> list:
-    return _state["rooms"].setdefault(cid, {"name": cid, "roster": []})["roster"]
+    """The room's members as {handle,label} dicts — a JOIN: handle SET from session_channels
+    (membership truth), label from the local map. Falls back to the local label map if the
+    structure store is unreachable (the live chat path must never break on a store hiccup)."""
+    labels = _state["labels"].setdefault(cid, {})
+    try:
+        handles = sc.channel_members(_store(), cid)
+    except Exception:
+        handles = list(labels.keys())               # store unreachable → local map is the fallback
+    return [{"handle": h, "label": labels.get(h, h)} for h in handles]
 
 
 def _member(cid: str, label: str) -> "dict | None":
     return next((m for m in roster(cid) if m["label"] == label), None)
+
+
+def _add_to_roster(cid: str, handle: str, label: str) -> None:
+    """Add a member: handle → session_channels (truth), label → local map. Dual-write."""
+    _state["labels"].setdefault(cid, {})[handle] = label
+    _ensure_company_channel(cid, rooms().get(cid, {}).get("name", cid), [handle])
+    _save_state()
+
+
+def _remove_from_roster(cid: str, handle: str) -> None:
+    """Remove a member: from session_channels membership + the local label map."""
+    _state["labels"].get(cid, {}).pop(handle, None)
+    try:
+        sc.remove_member(_store(), cid, handle)
+    except Exception as e:
+        print(f"  _remove_from_roster({cid},{handle}) sc soft-fail: {type(e).__name__}: {e}", flush=True)
+    _save_state()
 
 
 # ---------------- OWUI ----------------
@@ -220,8 +300,7 @@ def op_spawn(cid, label: str = "", *persona_words) -> str:
         return f"spawn '{label}' failed — no session id."
     cc_clone.register_supervised_member(handle=label, session_id=sid, supervisor_session=sid,
                                         cwd=REPO, description=f"room member: {brief[:60]}")
-    roster(cid).append({"handle": label, "label": label})
-    _save_state()
+    _add_to_roster(cid, label, label)
     return f"spawned '{label}' ({sid}) — in this room, introducing itself now."
 
 
@@ -243,8 +322,7 @@ def op_teardown(cid, label: str = "", *_a) -> str:
         cc_clone._deregister_member(m["handle"]); msg.append("deregistered")
     except Exception as e:
         msg.append(f"dereg error: {e}")
-    rooms()[cid]["roster"] = [x for x in roster(cid) if x["label"] != label]
-    _save_state()
+    _remove_from_roster(cid, m["handle"])
     return f"removed '{label}' — " + "; ".join(msg)
 
 
@@ -254,7 +332,7 @@ def op_rename(cid, old: str = "", new: str = "", *_a) -> str:
         return f"no member '{old}'."
     if _member(cid, new):
         return f"'{new}' already exists."
-    m["label"] = new
+    _state["labels"].setdefault(cid, {})[m["handle"]] = new   # relabel in the map (handle unchanged)
     _save_state()
     return f"renamed '{old}' → '{new}' (new posts use the new identity)."
 
@@ -285,7 +363,9 @@ def op_channel(cid, name: str = "", *_a) -> str:
     try:
         ch = create_owui_channel(name)
         ncid = ch.get("id")
-        rooms()[ncid] = {"name": name, "roster": []}      # register it as a LIVE room immediately
+        rooms()[ncid] = {"name": name}                    # register it as a LIVE room immediately
+        _state["labels"].setdefault(ncid, {})
+        _ensure_company_channel(ncid, name)               # mirror it as a company channel (membership truth)
         ensure_webhook(ncid, "operator")
         _save_state()
         if _sio is not None:                               # re-join so the socket receives the new channel's events
@@ -384,8 +464,7 @@ def op_spawn_operator(cid, *_a) -> str:
         return "operator spawn failed."
     cc_clone.register_supervised_member(handle="operator", session_id=sid, supervisor_session=sid,
                                         cwd=REPO, description="the room operator (NL → ops)")
-    roster(cid).append({"handle": "operator", "label": "operator"})
-    _save_state()
+    _add_to_roster(cid, "operator", "operator")
     return "operator spawned — talk to it in plain language and it runs the ops."
 
 
@@ -526,9 +605,14 @@ def main():
     _token = signin()
     _state = _load_state()
     for cid, room in rooms().items():
-        for m in room["roster"]:
+        # FOLD reconcile: ensure each room is a company channel with its known handles as members
+        # (idempotent; lifts the migrated label-map handles into session_channels membership truth).
+        handles = list(_state["labels"].get(cid, {}).keys())
+        _ensure_company_channel(cid, room.get("name", cid), handles)
+        for m in roster(cid):
             ensure_webhook(cid, m["label"])
         ensure_webhook(cid, "operator")
+    _save_state()
     threading.Thread(target=_route_worker, daemon=True).start()
     _start_op_server()
 
