@@ -164,17 +164,27 @@ def register(mcp, suite):
         # after). This makes the WHOLE Claude Code surface dynamically available through the system
         # (never a hand-written list) without paying the spawn on sessions that never read it.
         try:
-            if (reg.snapshot().get("total", 0) == 0 and suite is not None
-                    and getattr(suite, "capability_platform", None) is not None
-                    and hasattr(suite, "discover_capabilities")):
-                suite.discover_capabilities()          # mutates the installed singleton IN PLACE
+            if reg.snapshot().get("total", 0) == 0:
+                # FIRST try the LEDGER (fast, spawn-free, ALL platforms — the operational path, 2026-06-28):
+                # the cap:// nodes are already discovered + persisted, so populate from them and avoid the
+                # expensive live `claude` spawn that TIMES OUT. Only if the ledger is ALSO empty do we fall
+                # back to live binary discovery (the original LEAD path).
+                try:
+                    from ops.ledger_capabilities import load_into_registry as _load_caps
+                    _load_caps(reg)
+                except Exception:
+                    pass
+                if (reg.snapshot().get("total", 0) == 0 and suite is not None
+                        and getattr(suite, "capability_platform", None) is not None
+                        and hasattr(suite, "discover_capabilities")):
+                    suite.discover_capabilities()          # last resort: live spawn (mutates IN PLACE)
                 reg = _cap_registry(suite)
         except Exception as e:
             return {"op": op, "ok": False,
-                    "error": (f"capability registry is empty and live discovery failed: {e}. The "
-                              f"`claude` binary may be unreachable (set COMPANY_CLAUDE_BIN) — the "
-                              f"registry is binary-discovered, never hand-authored, so it stays empty "
-                              f"and fail-loud rather than inventing rows.")}
+                    "error": (f"capability registry is empty; ledger-load + live discovery both failed: {e}. "
+                              f"The `claude` binary may be unreachable (set COMPANY_CLAUDE_BIN) and the "
+                              f"ledger may be down — the registry is discovered, never hand-authored, so it "
+                              f"stays empty and fail-loud rather than inventing rows.")}
 
         # ── op="describe" — the registry health view (no entry listing needed) ────────────────
         if op == "describe":
