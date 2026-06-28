@@ -2805,14 +2805,22 @@ class Suite:
                 "brain_knobs": c.get("brain_knobs", {})}
 
     def voice_enabled(self) -> bool:
-        """Lane H — is voice on for the current presence? Reads the rhm node's `voice_enabled`
-        CONFIG (the per-mode voice toggle), defaulting to True when absent (schema-additive: an old
-        node with no field is voice-on). The conversation loop / a voice-gated path consults THIS
-        rather than assuming voice; 'off' here means the mode runs text-only even with engines up.
-        Also gated by the presence dial: mode 'off' (the RHM disabled) is never voice-on."""
-        if self.get_mode() == "off":
+        """Lane H — is voice on for the current presence? PRECEDENCE (WS2, 2026-06-28):
+          1. mode 'off' (the RHM disabled) → never voice-on (hard gate, preserved);
+          2. an EXPLICIT operator override on the rhm node (`voice_enabled` config) wins — the per-node
+             toggle the operator set by hand;
+          3. else the MODE's declared `voice` default (modes/<id>.py — text-only/off declare 'off', the
+             rest 'on'); a mode that declares none defaults 'on' (byte-identical to the pre-WS2 default).
+        'off' at any level means the mode runs text-only even with engines up. The conversation loop /
+        a voice-gated path consults THIS rather than assuming voice."""
+        mode = self.get_mode()
+        if mode == "off":
             return False
-        return str(self._rhm_cfg().get("voice_enabled", "on")).lower() != "off"
+        override = self._rhm_cfg().get("voice_enabled")          # operator's explicit per-node toggle
+        if override is not None:
+            return str(override).lower() != "off"
+        mode_voice = self.mode_registry(mode).get("voice", "on")  # the mode-declared default
+        return str(mode_voice).lower() != "off"
 
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()

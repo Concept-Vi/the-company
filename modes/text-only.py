@@ -14,4 +14,5 @@ MODE = {'order': 10,
  'reserve_r': 2,
  'per_role_ctx': 1500,
  'main_ctx_tokens': 0,
- 'brain_config': 'voice-64k'}
+ 'brain_config': 'voice-64k',
+ 'voice': 'off'}

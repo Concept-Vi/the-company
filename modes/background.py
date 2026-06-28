@@ -17,4 +17,5 @@ MODE = {'order': 20,
  'reserve_r': 2,
  'per_role_ctx': 1500,
  'main_ctx_tokens': 40000,
- 'brain_config': 'swarm-16k'}
+ 'brain_config': 'swarm-16k',
+ 'voice': 'on'}

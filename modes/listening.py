@@ -16,4 +16,5 @@ MODE = {'order': 0,
  'per_role_ctx': 1500,
  'main_ctx_tokens': 0,
  'brain_config': 'voice-64k',
- 'loadout_class': 'interaction'}
+ 'loadout_class': 'interaction',
+ 'voice': 'on'}
