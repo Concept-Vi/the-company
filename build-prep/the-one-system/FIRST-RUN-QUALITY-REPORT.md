@@ -58,6 +58,9 @@ The interpretive layer is **trustworthy** — and crucially, **kimi (74% of all 
 
 *(C looks strongest: it banks the interface-critical graph enrichment now without spending a sweep, and lets real interface needs drive the rest.)*
 
+### F8 — independent coverage audit of the deterministic layer  ★ HIGH (Tim's idea, 2026-06-29)
+The deterministic extractors fail **silently** — a missed symbol leaves no trace (F2 was an instance). Fix: a 4B **auditor-against-ground-truth** pass (the file is the answer key) — give it the file + what was extracted, ask what's missing. Aggregate → blind-spot map by language → fix extractor → cheap re-run (depends on F6). Run TWO passes while working it out — *with-contract* (conformance) and *without-contract* (discovery; its diff vs the with-pass = candidate new contract items). Store result as a tags+counts coverage signal per file. Full design + sequence: **`LEDGER-ENRICHMENT-PLAN.md`**.
+
 ## Generator-fix worklist (recurse until empty)
 - [ ] F1 — proposed_edge_kinds → edge harvester (typed, provenance-stamped, gated)
 - [ ] F2 — JS/TS AST symbol extractor (tree-sitter)
