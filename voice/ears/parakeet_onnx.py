@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from voice.ears._stt_service import serve, wav_bytes_to_float32  # noqa: E402
 
 PORT = 2035
-_REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # voice/ears/x.py -> repo root
 MODEL_DIR = os.environ.get("COMPANY_PARAKEET_ONNX_DIR",
                            os.path.join(_REPO, "voice", "models", "parakeet-tdt-v3-int8"))
 DEVICE = os.environ.get("COMPANY_PARAKEET_ONNX_DEVICE", "cpu")
