@@ -182,6 +182,37 @@ def section_a(tmp):
     check("leaf lives at agent_sessions/channels.jsonl (naming law)",
           os.path.exists(os.path.join(tmp, "agent_sessions", "channels.jsonl")))
 
+    # ── the NAMED-CHANNEL surface (the cc_channels named-store fold-in, 2026-06-29): explicit slug
+    #    id · shared flag · set_shared · channel_members flat list · handle members (registry=None) ──
+    named = sc.create_channel(s, name="design", purpose="CD ⨯ company", cid="design",
+                              shared=True, registry=None)
+    check("explicit cid is used verbatim (a slug, not a minted ch-N)", named["id"] == "design")
+    check("shared flag folds onto the row", named["shared"] is True)
+    check("a minted channel defaults to NOT shared (fail-closed)",
+          sc.create_channel(s, name="internal one", registry=None)["shared"] is False)
+    check("is_shared reads the flag (shared=True)", sc.is_shared(s, "design") is True)
+    check("is_shared fail-closed on an absent channel (never raises the publish gate)",
+          sc.is_shared(s, "no-such-channel") is False)
+    expect_teaching("explicit cid DUP fails loud (no silent overwrite — named-store contract)",
+                    lambda: sc.create_channel(s, name="design again", cid="design", registry=None),
+                    "already exists")
+    # handle members (external/client ids, NOT agent-session uuids) store verbatim with registry=None
+    sc.add_member(s, "design", "claude-design", registry=None)
+    sc.add_member(s, "design", "ch-8djrpmsl", registry=None)
+    cm = sc.channel_members(s, "design")
+    check("channel_members returns a FLAT SORTED handle list (members_of contract)",
+          isinstance(cm, list) and "claude-design" in cm and "ch-8djrpmsl" in cm
+          and cm == sorted(cm))
+    # set_shared: an INTERNAL channel promoted to SHARED (ensure_design_channel's upgrade branch)
+    sc.create_channel(s, name="was internal", cid="was-internal", shared=False, registry=None)
+    check("set_shared flips an internal channel to shared",
+          sc.set_shared(s, "was-internal", True)["shared"] is True
+          and sc.is_shared(s, "was-internal") is True)
+    check("describe-style read survives HANDLE members (member_statuses degrades, never throws)",
+          all(m["status"] in ("awake", "listening", "busy", "closed")
+              for m in sc.member_statuses(s, "design", registry=reg,
+                                          probe_supervisor=False)["members"]))
+
 
 # ── B · cross-process seq uniqueness ───────────────────────────────────────────────────────────
 _CHILD = r"""

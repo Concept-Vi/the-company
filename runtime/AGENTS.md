@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: runtime
 aliases: ["runtime — constitution"]
 tags: [company, constitution, runtime]
@@ -36,6 +37,27 @@ router vs a conducted coordinator session, recursing via `origin.parent`). One l
 constants, channel posts riding the EXISTING mail intents (never wake — no broadcast may
 stampede-spawn). The fold lives beside Suite (not in it) for build-lane disjointness — an
 open seam, not a hidden one; the face is `mcp_face/tools/channels.py`.
+
+**ONE channel concept, two layers — not two stores.** A channel has a STRUCTURE layer and a
+TRANSPORT layer, and they are *layers of the same channel*, not rival registries:
+- **STRUCTURE = `session_channels.py`** (here) — what a channel IS: its name, purpose, roster,
+  mode, `shared` flag, lifecycle. The ONE named-channel store (`channels.jsonl`). Created/read
+  through the `channels` (read) / `channel_act` (write) MCP pair, and through
+  `session_channels.create_channel(…, cid=<slug>, shared=…)` for named channels (a stable slug id;
+  ids are heterogeneous-by-history — minted `ch-N` alongside named slugs like `design`/`fabric`,
+  both resolved by `get_channel`). `is_shared`/`set_shared`/`channel_members` are the shared-edge +
+  roster reads the boundary rides.
+- **TRANSPORT = `cc_channels.py`** — reach a live member NOW: `live_sessions`/`find`/`push`/`send`/
+  `broadcast` over two transports (HTTP-to-port · supervisor `/inject`). The `cc_channel` MCP tool
+  is transport-ONLY. cc_channels holds NO channel store.
+
+These were duplicated until 2026-06-29: `cc_channels` carried a SECOND named-channel store
+(`.data/channels/_channels/<id>.json`) plus channel-MGMT ops on the `cc_channel` tool — both
+duplicating the structure layer. The cc store was folded into `session_channels` (the 14 records
+migrated to `channels.jsonl`, `shared` flag preserved) and retired; the duplicate tool ops removed.
+Consumers (`channel_boundary_run.py` shared edge · `cc_attachments.py` existence check) read
+structure from `session_channels`. Result: one channel concept, one store, one structure tool-pair
+(`channels`/`channel_act`), one transport tool (`cc_channel`).
 
 ## The corpus pillar (Cognition Engine K1/D1 · `runtime/projections.py` + `runtime/corpus.py`)
 

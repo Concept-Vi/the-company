@@ -1,6 +1,11 @@
-"""runtime/cc_channels.py — the Claude Code CHANNEL fabric core (cross-session messaging into LIVE
-sessions). This is the registry + router behind the MCP tools; it is NOT the fabric's own
-`channels`/gatherings concept (that's group membership) — this is the live-injection TRANSPORT.
+"""runtime/cc_channels.py — the channel TRANSPORT layer (cross-session messaging into LIVE sessions).
+
+ONE channel concept, TWO layers — this module is the TRANSPORT half:
+  • STRUCTURE (what a channel IS — name/purpose/roster/mode/shared/lifecycle): runtime/session_channels.py
+    (the ONE named-channel store, channels.jsonl), reached via the `channels`/`channel_act` MCP tools.
+  • TRANSPORT (reach a live member NOW — discover/push/reply-back): THIS module, the `cc_channel` MCP tool.
+This module does NOT hold a named-channel store (a second store lived here until 2026-06-29; it was folded
+into session_channels and retired — see the retirement note further down). It is the live-injection router.
 
 A session launched with the channel (channels/company_channel.mjs via --dangerously-load-development-
 channels) registers a file under .data/channels/<handle>.json: {handle, session_id, cwd, description,
@@ -18,7 +23,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import threading
 import time
 import urllib.error
@@ -29,7 +33,8 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CHAN_DIR = os.path.join(REPO, ".data", "channels")
 MAIL_LOG = os.path.join(CHAN_DIR, "_mail.jsonl")        # durable record of every channel message/reply
 THREADS = os.path.join(CHAN_DIR, "_threads.json")       # thread_id -> {originator_handle, topic, members}
-CHANNELS_DIR = os.path.join(CHAN_DIR, "_channels")      # named-channel records: <channel-id>.json
+# NOTE: the named-channel STORE (formerly .data/channels/_channels/) was folded into session_channels
+# (channels.jsonl) and RETIRED 2026-06-29 — this module is TRANSPORT only. See the retirement note below.
 
 # The supervisor base a supervised member is reached through when its registration omits the field
 # (back-compat / fork-reg-missing-field). Mirrors cc_clone.SUPERVISOR — the one default both halves cite.
@@ -421,143 +426,22 @@ def mail(thread: str = "", limit: int = 50) -> list:
     return rows[-limit:]
 
 
-# ---- the named-channel REGISTRY (channels as named managed groups) ----
-# A CHANNEL is a named, managed group: a member-set (handles) + a purpose + a coordinator. It is a
-# REGISTRY (create · list · add-member · remove-member · archive), distinct from the MEMBER
-# registrations above: a member reg (CHAN_DIR/<handle>.json) carries liveness+transport; a channel
-# record (CHANNELS_DIR/<channel-id>.json) carries membership. The two namespaces join on the handle —
-# channel_members() reads the membership list; liveness for any member comes from find()/live_sessions().
-# A member may belong to several channels at once. Fail-loud + teaching on every error (no silent no-op).
-
-def _channel_id(name: str) -> str:
-    """Slugify a channel name to its id (the record filename stem). A stable slug makes dup-name
-    detection a file-exists check and keeps ids fs-safe."""
-    slug = re.sub(r"[^a-z0-9]+", "-", (name or "").strip().lower()).strip("-")
-    if not slug:
-        raise ChannelError(f"channel name {name!r} has no usable characters — give it a real name "
-                           f"(letters/digits), e.g. 'build-coordination'.")
-    return slug
-
-
-def _channel_path(channel: str) -> str:
-    return os.path.join(CHANNELS_DIR, _channel_id(channel) + ".json")
-
-
-def _read_channel(channel: str) -> "dict | None":
-    return _read_reg(_channel_path(channel))
-
-
-def _write_channel(rec: dict) -> None:
-    os.makedirs(CHANNELS_DIR, exist_ok=True)
-    p = os.path.join(CHANNELS_DIR, rec["id"] + ".json")
-    tmp = p + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(rec, f, indent=2)
-    os.replace(tmp, p)
-
-
-def create_channel(name: str, purpose: str = "", coordinator: str = "", *, shared: bool = False) -> dict:
-    """Create a named channel (a managed group). Fails loud if a channel with this name already
-    exists (no silent overwrite). `coordinator` is an optional member handle that owns the channel.
-    `shared` (default False — fail-closed, the lead's rule): a SHARED channel is single-source on Supabase
-    (its posts publish OUT to the channel_boundary + an external client like Claude Design can participate);
-    an INTERNAL channel (shared=False) stays LOCAL + never leaves the box. The flag is the publish-hook gate:
-    only shared=true channels route a post to the Supabase boundary. Additive — every existing channel is
-    INTERNAL (no `shared` key ⇒ is_shared False)."""
-    if not (name or "").strip():
-        raise ChannelError("create_channel needs a non-empty `name`.")
-    cid = _channel_id(name)
-    if os.path.exists(_channel_path(name)):
-        raise ChannelError(f"channel {name!r} (id {cid!r}) already exists — list_channels() shows it. "
-                           f"Pick a different name, or add_member/remove_member on the existing one.")
-    rec = {"id": cid, "name": name.strip(), "purpose": purpose or "", "coordinator": coordinator or "",
-           "members": [], "status": "active", "shared": bool(shared),
-           "created": time.strftime("%Y-%m-%dT%H:%M:%S")}
-    _write_channel(rec)
-    return rec
-
-
-def is_shared(channel: str) -> bool:
-    """True iff `channel` is a SHARED channel (single-source on Supabase, publish-eligible). Fail-closed:
-    an absent channel / a record with no `shared` key ⇒ False (INTERNAL — never publishes out). The publish
-    hook's gate (a post routes to the Supabase boundary ONLY when this is True)."""
-    rec = _read_channel(channel)
-    return bool(rec and rec.get("shared"))
-
-
-def list_channels(*, include_archived: bool = False) -> list:
-    """Every channel record, newest first. Archived channels are EXCLUDED by default (set
-    include_archived=True to see them)."""
-    out = []
-    if not os.path.isdir(CHANNELS_DIR):
-        return out
-    for fn in sorted(os.listdir(CHANNELS_DIR)):
-        if not fn.endswith(".json"):
-            continue
-        rec = _read_reg(os.path.join(CHANNELS_DIR, fn))
-        if not rec:
-            continue
-        if rec.get("status") == "archived" and not include_archived:
-            continue
-        out.append(rec)
-    out.sort(key=lambda r: r.get("created", ""), reverse=True)
-    return out
-
-
-def add_member(channel: str, handle: str) -> dict:
-    """Add a member handle to a channel. Fails loud if the channel is missing or archived, or if the
-    handle is already a member (no silent no-op). Does NOT require the member to be live — membership
-    is a registry fact; liveness is resolved at push time via find()/live_sessions()."""
-    rec = _read_channel(channel)
-    if rec is None:
-        raise ChannelError(f"no channel {channel!r} — create_channel({channel!r}, ...) first, or "
-                           f"list_channels() to see the named channels.")
-    if rec.get("status") == "archived":
-        raise ChannelError(f"channel {rec['name']!r} is archived — cannot add members to an archived "
-                           f"channel. Create a fresh channel for new coordination.")
-    if not (handle or "").strip():
-        raise ChannelError("add_member needs a non-empty `handle`.")
-    handle = handle.strip()
-    if handle in rec["members"]:
-        raise ChannelError(f"{handle!r} is already a member of {rec['name']!r} — channel_members "
-                           f"({channel!r}) shows the roster.")
-    rec["members"].append(handle)
-    _write_channel(rec)
-    return rec
-
-
-def remove_member(channel: str, handle: str) -> dict:
-    """Remove a member handle from a channel. Fails loud if the channel is missing or the handle is
-    not a member (no silent no-op)."""
-    rec = _read_channel(channel)
-    if rec is None:
-        raise ChannelError(f"no channel {channel!r} — list_channels() shows the named channels.")
-    if handle not in rec["members"]:
-        raise ChannelError(f"{handle!r} is not a member of {rec['name']!r} — channel_members"
-                           f"({channel!r}) shows the current roster.")
-    rec["members"].remove(handle)
-    _write_channel(rec)
-    return rec
-
-
-def archive_channel(channel: str) -> dict:
-    """Archive a channel: mark it archived (status field — NOT a delete; the record + roster survive
-    for the record). Fails loud if the channel is missing or already archived."""
-    rec = _read_channel(channel)
-    if rec is None:
-        raise ChannelError(f"no channel {channel!r} — list_channels() shows the named channels.")
-    if rec.get("status") == "archived":
-        raise ChannelError(f"channel {rec['name']!r} is already archived.")
-    rec["status"] = "archived"
-    rec["archived"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-    _write_channel(rec)
-    return rec
-
-
-def channel_members(channel: str) -> list:
-    """The member handles of a channel (the roster — membership facts, NOT liveness). Fails loud if
-    the channel is missing. Resolve liveness per handle via find()/live_sessions()."""
-    rec = _read_channel(channel)
-    if rec is None:
-        raise ChannelError(f"no channel {channel!r} — list_channels() shows the named channels.")
-    return list(rec.get("members", []))
+# ---- the named-channel REGISTRY: RETIRED 2026-06-29 (folded into session_channels) ----
+# This module is the channel TRANSPORT layer (live-injection: live_sessions/find/push/send/broadcast/
+# mail + the two transports). It NO LONGER holds a named-channel store.
+#
+# Until 2026-06-29 cc_channels ALSO carried a SECOND named-channel store (create_channel/list_channels/
+# add_member/remove_member/archive_channel/channel_members/is_shared, backed by .data/channels/_channels/
+# <id>.json). That duplicated the channel STRUCTURE that session_channels owns (channels.jsonl). The two
+# stores were ONE channel concept split in two; the cc store was folded into session_channels — the ONE
+# named-channel store — and these functions retired. The 15 _channels/*.json records were migrated into
+# channels.jsonl (explicit slug-ids + a shared flag). One channel concept now reads cleanly:
+#   • STRUCTURE (what a channel IS — name/purpose/roster/mode/shared/lifecycle): session_channels.py,
+#     reached via the `channels`/`channel_act` MCP tools.
+#   • TRANSPORT (reach a live member NOW — push/find/reply-back): cc_channels.py (here), `cc_channel` tool.
+#
+# Consumers were repointed to session_channels:
+#   • runtime/channel_boundary_run.py — is_shared/channel_members/create_channel/set_shared (the shared edge)
+#   • runtime/cc_attachments.py       — channel existence check
+# Use runtime.session_channels.{create_channel, channel_members, is_shared, set_shared, add_member,
+# remove_member, archive_channel, fold_channels, get_channel} (each takes a `store` as its first arg).

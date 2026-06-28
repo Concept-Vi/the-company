@@ -17,7 +17,13 @@ Canonical keys (the lead aligned .boundary.env to these): COMPANY_CHANNEL_SA_EMA
 
 INJECT primitive = cc_channels.push (PUSH-only — delivers into a live session, NO local _mail.jsonl record:
 single-source, Supabase is the store). A dead member → ChannelError → on_insert logs + continues (one dead
-session never blocks the rest). members_of = cc_channels.channel_members (the channel's membership).
+session never blocks the rest). members_of = session_channels.channel_members (the channel's membership).
+
+CHANNEL STRUCTURE lives in runtime/session_channels.py — the ONE named-channel store (channels.jsonl).
+cc_channels is TRANSPORT only (push/find). This module reads STRUCTURE from session_channels (is_shared,
+channel_members, create_channel, set_shared) and reaches a member through cc_channels TRANSPORT (push).
+(Until 2026-06-29 cc_channels carried a SECOND named-channel store under .data/channels/_channels/; it was
+folded into session_channels and retired — one channel concept, one store.)
 
 VERIFY (by use, NOT offline green — fork is the named gate): `verify_my_half()` does the live my-side round-trip
 on a THROWAWAY channel (advisor's guardrail — never the real coordination channels): auth → WS connect + join
@@ -33,6 +39,13 @@ import time
 
 _DEFAULT_ENV_FILE = "build-prep/claude-design/supabase/.boundary.env"
 _REALTIME_TOPIC = "public.channel_posts"   # builder's (b): topic `realtime:public.channel_posts` (build_join_msg prepends realtime:)
+
+
+def _store():
+    """The ONE store the channel STRUCTURE (session_channels) lives on — COMPANY_STORE / FsStore."""
+    from store.fs_store import FsStore
+    import fabric.config as fcfg
+    return FsStore(fcfg.STORE_DIR)
 
 
 def load_env_file(path: str | None = None, *, repo_root: str | None = None) -> list[str]:
@@ -84,12 +97,13 @@ def make_inject():
 
 
 def make_members_of():
-    """members_of(channel_id) → the channel's member handles (push skips dead ones via the on_insert guard)."""
-    from runtime import cc_channels
+    """members_of(channel_id) → the channel's member handles (push skips dead ones via the on_insert guard).
+    Reads the ONE named-channel store (session_channels.channel_members)."""
+    from runtime import session_channels as sc
 
     def members_of(channel_id: str) -> list:
         try:
-            return cc_channels.channel_members(channel_id)
+            return sc.channel_members(_store(), channel_id)
         except Exception:                              # an unknown/absent channel → no members (clean)
             return []
     return members_of
@@ -113,23 +127,30 @@ def post_to_channel(principal, channel: str, content: str, from_session: str, *,
                     thread: str | None = None, to_session: str | None = None,
                     sender_kind: str = "session") -> dict:
     """The shared-aware POST (the publish hook): a company session posting to `channel` →
-      • SHARED (cc_channels.is_shared) → publish to Supabase channel_posts (single-source; the boundary sub
-        delivers to members + CD). Returns publish_shared_post's {ok, status, id?, error?}.
-      • INTERNAL → the existing LOCAL path (broadcast to channel_members via cc_channels.send) — UNCHANGED;
+      • SHARED (session_channels.is_shared) → publish to Supabase channel_posts (single-source; the boundary
+        sub delivers to members + CD). Returns publish_shared_post's {ok, status, id?, error?}.
+      • INTERNAL → the existing LOCAL path (broadcast to session_channels.channel_members via the
+        cc_channels.send TRANSPORT) — UNCHANGED;
         internal posts never leave the box. Returns {ok, internal:True, delivered:[...]}.
     The gate of single-source: only shared=true publishes outward (fail-closed — is_shared False ⇒ internal)."""
-    from runtime import cc_channels
+    from runtime import cc_channels, session_channels as sc
     from runtime.channel_boundary import build_post_row, publish_shared_post
-    if cc_channels.is_shared(channel):
+    store = _store()
+    if sc.is_shared(store, channel):
         row = build_post_row(channel, from_session, content, thread=thread, to_session=to_session,
                              sender_kind=sender_kind)
         res = publish_shared_post(row, principal=principal)
         if not res.get("ok"):
             _log_status("publish_failed", f"{channel}: [{res.get('status')}] {res.get('error')}")
         return res
-    # INTERNAL: the existing local broadcast (unchanged fabric) — never leaves the box.
+    # INTERNAL: the existing local broadcast (unchanged fabric) — never leaves the box. STRUCTURE
+    # (roster) read from session_channels; each member reached over cc_channels TRANSPORT (send).
     delivered = []
-    for handle in cc_channels.channel_members(channel):
+    try:
+        members = sc.channel_members(store, channel)
+    except Exception:                                  # unknown channel → no members (clean)
+        members = []
+    for handle in members:
         try:
             cc_channels.send(handle, content, frm=from_session, topic=channel)
             delivered.append(handle)
@@ -144,21 +165,28 @@ def ensure_design_channel(*, members: list | None = None) -> dict:
     handles to seat in it (the inject targets); the operator/lead adds the real participants. The per-CLIENT
     grant (clients.channels) is builder's Supabase side — this is the company-side record (membership + the
     shared flag for the publish-hook routing + members_of)."""
-    from runtime import cc_channels
-    rec = cc_channels._read_channel("design")
+    from runtime import session_channels as sc
+    store = _store()
+    try:
+        rec = sc.get_channel(store, "design")
+    except ValueError:
+        rec = None
     if not rec:
-        rec = cc_channels.create_channel("design", purpose="Claude Design ⨯ company — shared design channel",
-                                         shared=True)
+        # explicit id "design" (the slug CD + the publish-gate address by), shared=True. registry=None:
+        # member handles are external/client ids (claude-design), not agent-session uuids — the
+        # named-channel surface stores handles verbatim (member-kind extension is a later field).
+        rec = sc.create_channel(store, name="design",
+                                purpose="Claude Design ⨯ company — shared design channel",
+                                cid="design", shared=True, registry=None)
     elif not rec.get("shared"):
-        rec["shared"] = True
-        cc_channels._write_channel(rec)
+        rec = sc.set_shared(store, "design", True)
     for h in (members or []):
-        if h not in rec.get("members", []):
+        if h not in rec.get("members", {}):
             try:
-                cc_channels.add_member("design", h)
+                sc.add_member(store, "design", h, registry=None)
             except Exception:  # noqa: BLE001 — already a member / archived; idempotent
                 pass
-    return cc_channels._read_channel("design")
+    return sc.get_channel(store, "design")
 
 
 def run_boundary(*, env_file: str | None = None, block: bool = True):

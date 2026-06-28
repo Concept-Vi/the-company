@@ -73,6 +73,7 @@ CHANNEL_OPS = (
     "channel.member_status",  # {channel, session, participation}
     "channel.posted",         # {channel, from, cas, thread, mode, fan:[{session, verb, mail_seq}], coordinator?}
     "channel.mode_set",       # {channel, mode, coordinator?}
+    "channel.shared_set",     # {channel, shared}  — the shared-edge flag (publish-to-Supabase gate)
     "channel.archived",       # {channel}
     "gathering.dispersed",    # {channel}   — terminal for kind=gathering
     "gathering.promoted",     # {channel, promoted_to}  — gathering → durable channel
@@ -212,6 +213,7 @@ def _apply_channel_event(rows: dict, e: dict) -> None:
                         for m in (e.get("members") or [])},
             "origin": e.get("origin"), "created": e.get("ts"),
             "last_activity": e.get("ts"), "posts": 0, "seq": e.get("seq"),
+            "shared": bool(e.get("shared")),   # the shared-edge flag (default INTERNAL; publish-gate)
         }
         return
     row = rows.get(cid)
@@ -237,6 +239,8 @@ def _apply_channel_event(rows: dict, e: dict) -> None:
         row["mode"] = e.get("mode")
         if e.get("coordinator") is not None:
             row["coordinator"] = e.get("coordinator")
+    elif k == "channel.shared_set":
+        row["shared"] = bool(e.get("shared"))
     elif k == "channel.archived":
         row["status"] = "archived"
     elif k == "gathering.dispersed":
@@ -270,6 +274,7 @@ def _require_active(row: dict, doing: str) -> None:
 def create_channel(store, *, name: str, purpose: str = "", members: list[dict] | None = None,
                    mode: str = "direct", coordinator: str | None = None,
                    kind: str = "channel", origin: dict | None = None,
+                   cid: str | None = None, shared: bool = False,
                    registry=None) -> dict:
     """Mint a channel (R2.2) or gathering (R2.3 — same primitive, kind discriminates: universal
     composition, one relational mechanism reused). `members` = [{session, participation?}…];
@@ -278,7 +283,16 @@ def create_channel(store, *, name: str, purpose: str = "", members: list[dict] |
     where no registry exists (isolated tests). mode="conducted" requires a coordinator who IS a
     member (a conductor outside the room cannot hold its purpose). `origin` records provenance
     ({"parent": "channel://…"} for a sub-channel — the R2.5 recursion; {"promoted_from": …} is
-    stamped by promote_gathering). Returns the folded row."""
+    stamped by promote_gathering).
+
+    `cid` (optional explicit id): when None, the id is MINTED sequentially (ch-N / ga-N — the
+    fabric's own channels). When supplied (a slug, e.g. "design"/"fabric"), it is used VERBATIM —
+    this is the named-channel surface (formerly cc_channels' second store, now folded here): a
+    stable human slug, dup-detected fail-loud (an existing id refuses, no silent overwrite). Ids are
+    thus heterogeneous BY HISTORY — minted ch-N alongside migrated/named slugs; get_channel resolves
+    both (one store, mixed-id). `shared` (default False = INTERNAL): the shared-edge flag — only a
+    shared=True channel publishes posts OUT to the Supabase channel_boundary (the single-source gate).
+    Returns the folded row."""
     if not isinstance(name, str) or not name.strip():
         raise ValueError("create_channel: `name` must be non-empty — channels are work-centric "
                          "NAMED groups (the name is how the fleet view reads them).")
@@ -318,20 +332,34 @@ def create_channel(store, *, name: str, purpose: str = "", members: list[dict] |
                 f"create_channel: coordinator {coord} is not a member — the conductor holds the "
                 f"channel's purpose from INSIDE it. Add it to `members` too.")
     prefix = "ch" if kind == "channel" else "ga"
+    want = _chan_bare(cid) if cid else None      # an explicit id (a named-channel slug), used verbatim
+    if want is not None and not want:
+        raise ValueError("create_channel: explicit `cid` is empty after normalization — give a real "
+                         "slug (e.g. 'design') or pass cid=None to mint a sequential id.")
     # id mint rides the same lock as the append (seq-unique), via a created-event carrying members inline
-    # (a gathering is GRABBED in one gesture — one event, not N+1).
+    # (a gathering is GRABBED in one gesture — one event, not N+1). An explicit id is dup-detected
+    # fail-loud under the SAME lock (no silent overwrite — the named-channel store's contract).
     with store.graph_lock(LOCK_KEY + ":mint"):
         existing = fold_channels(store)
-        n = sum(1 for r in existing.values() if r["kind"] == kind)
-        cid = f"{prefix}-{n}"
-        while cid in existing:                   # archive/promote never frees an id; scan past collisions
-            n += 1
-            cid = f"{prefix}-{n}"
+        if want is not None:
+            if want in existing:
+                raise ValueError(
+                    f"create_channel: channel {want!r} already exists — it is on the channels leaf "
+                    f"(channels(op='list') / fold_channels shows it). Pick a different id, or "
+                    f"add_member/set_shared on the existing one. Fail loud, never silent overwrite.")
+            new_cid = want
+        else:
+            n = sum(1 for r in existing.values() if r["kind"] == kind)
+            new_cid = f"{prefix}-{n}"
+            while new_cid in existing:           # archive/promote never frees an id; scan past collisions
+                n += 1
+                new_cid = f"{prefix}-{n}"
         append_channel_event(store, {
-            "kind": "channel.created", "channel": cid, "channel_kind": kind,
+            "kind": "channel.created", "channel": new_cid, "channel_kind": kind,
             "name": name.strip(), "purpose": purpose or "", "mode": mode,
-            "coordinator": coord, "members": norm, "origin": origin})
-    return get_channel(store, cid)
+            "coordinator": coord, "members": norm, "origin": origin,
+            "shared": bool(shared)})
+    return get_channel(store, new_cid)
 
 
 def add_member(store, cid: str, session: str, *, participation: str = "awake",
@@ -427,6 +455,37 @@ def archive_channel(store, cid: str) -> dict:
     _require_active(row, "archive_channel")
     append_channel_event(store, {"kind": "channel.archived", "channel": row["id"]})
     return get_channel(store, cid)
+
+
+# ── the shared-edge flag + the named-channel roster read (the cc_channels-store fold-in) ─────────
+# These complete the one-store fold: cc_channels' named-store is_shared/channel_members are now thin
+# delegations to THESE (one channel concept — structure here, transport in cc_channels).
+def is_shared(store, cid: str) -> bool:
+    """True iff `cid` is a SHARED channel (publish-eligible: its posts route OUT to the Supabase
+    channel_boundary). Fail-CLOSED: an absent channel ⇒ False (INTERNAL — never publishes out). The
+    publish hook's gate (channel_boundary_run.post_to_channel routes outward ONLY when this is True)."""
+    try:
+        return bool(get_channel(store, cid).get("shared"))
+    except ValueError:
+        return False                             # absent ⇒ internal (fail-closed), never raise the gate
+
+
+def set_shared(store, cid: str, shared: bool = True) -> dict:
+    """Set the shared-edge flag on an existing channel (idempotent re-set is allowed — a flag, not a
+    member). Used by ensure_design_channel's upgrade branch (an INTERNAL channel promoted to SHARED)."""
+    row = get_channel(store, cid)
+    _require_active(row, "set_shared")
+    append_channel_event(store, {"kind": "channel.shared_set", "channel": row["id"],
+                                 "shared": bool(shared)})
+    return get_channel(store, cid)
+
+
+def channel_members(store, cid: str) -> list[str]:
+    """The member handles of a channel as a FLAT LIST (the named-channel roster — membership facts,
+    NOT liveness; resolve liveness via cc_channels.find/live_sessions). Fail-loud on an unknown
+    channel. This is the read channel_boundary_run.members_of rides: sc stores members as a
+    {sid→{participation}} dict; this returns sorted(keys) — the handle list its inject loop fans over."""
+    return sorted(get_channel(store, cid).get("members", {}).keys())
 
 
 def disperse_gathering(store, cid: str) -> dict:

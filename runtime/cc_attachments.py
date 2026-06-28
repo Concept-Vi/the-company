@@ -11,8 +11,8 @@ refinement (board://item-e523b30d), CONFIRMED by the lead:
     a VIEW computed on read — not stored. (The Heart: the manifest is a projection of the registry.)
   • `target` is an OPAQUE ref (e.g. board://<id>, session://<id>) — stored verbatim, resolved by the
     address scheme; never parsed here.
-  • channel existence is validated by IMPORTING cc_channels._read_channel READ-ONLY — file-disjoint
-    (this module never writes cc_channels' records).
+  • channel existence is validated against the ONE named-channel store (session_channels.get_channel)
+    READ-ONLY — this module never writes a channel record.
 
 Storage mirrors cc_board: id-keyed FLAT at channel-memory/channel_attachments/<id>.md (frontmatter row +
 empty body), durable via store.fs_store._atomic_write_fsync, parsed via lifters.frontmatter.
@@ -67,15 +67,20 @@ def attachment_types() -> list[str]:
     return sorted(_types_reg())
 
 
-# ── channel existence (READ-ONLY import of cc_channels — file-disjoint) ──
+# ── channel existence (READ-ONLY against the ONE named-channel store — session_channels) ──
 def _channel_exists(channel: str) -> bool:
-    """Does the named channel exist? Reads the channel record via cc_channels._read_channel READ-ONLY.
-    This module NEVER writes a channel record (file-disjoint from cc_channels.py)."""
+    """Does the named channel exist? Reads the channel row from the ONE named-channel store
+    (session_channels — channels.jsonl) READ-ONLY. This module NEVER writes a channel record.
+    (Until 2026-06-29 this read cc_channels._read_channel, a SECOND store now folded into
+    session_channels — one channel concept, one store.)"""
     try:
-        from runtime.cc_channels import _read_channel
+        from store.fs_store import FsStore
+        import fabric.config as fcfg
+        from runtime import session_channels as sc
+        sc.get_channel(FsStore(fcfg.STORE_DIR), channel)   # fail-loud on unknown
+        return True
     except Exception:
         return False
-    return _read_channel(channel) is not None
 
 
 # ── helpers (mirror cc_board) ──────────────────────────────────────────────────────────────────────────
@@ -132,7 +137,7 @@ def attach(channel: str, attachment_type: str, target: str, *,
         raise AttachmentError("attach() needs a `target` (the opaque ref to bind — e.g. board://<id>).")
     if require_channel and not _channel_exists(channel):
         raise AttachmentError(
-            f"channel {channel!r} not found (no record via cc_channels._read_channel) — create it first, "
+            f"channel {channel!r} not found (no row in the named-channel store, session_channels) — create it first, "
             f"or pass require_channel=False for a forward binding. Fail loud, never a dangling attach.")
     if not reg[attachment_type].multi:
         existing = [a for a in list_attachments(channel=channel, attachments_dir=attachments_dir)

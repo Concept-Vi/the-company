@@ -90,57 +90,19 @@ check("17 push to an unreachable port FAILS LOUD", raises(lambda: cc.send("ch-de
 
 
 # ════════════════════════════════════════════════════════════════════════════════════════════════
-# NAMED-CHANNEL REGISTRY (channels as named managed groups — create/list/add/remove/archive)
+# NAMED-CHANNEL STRUCTURE — RETIRED FROM cc_channels 2026-06-29 (folded into session_channels)
 # ════════════════════════════════════════════════════════════════════════════════════════════════
-cc.CHANNELS_DIR = os.path.join(tmp, "_channels")        # point the registry at the throwaway tmp dir
-
-c1 = cc.create_channel("Build Coordination", purpose="overnight build", coordinator="ch-live")
-check("18 create_channel returns a record with id+name+empty roster",
-      c1["id"] == "build-coordination" and c1["name"] == "Build Coordination" and c1["members"] == []
-      and c1["status"] == "active")
-check("19 create_channel persisted the record to _channels/<id>.json",
-      os.path.exists(os.path.join(cc.CHANNELS_DIR, "build-coordination.json")))
-check("20 create_channel DUP-name FAILS LOUD (no silent overwrite)",
-      raises(lambda: cc.create_channel("Build Coordination"), "already exists"))
-
-cc.create_channel("Memory Lane", purpose="recall work")
-chans = cc.list_channels()
-check("21 list_channels returns both active channels",
-      {c["id"] for c in chans} == {"build-coordination", "memory-lane"})
-
-cc.add_member("Build Coordination", "ch-live")
-cc.add_member("build-coordination", "ch-other")          # add by id too (slug-stable)
-check("22 add_member roster reflects both members",
-      cc.channel_members("Build Coordination") == ["ch-live", "ch-other"])
-check("23 add_member DUPLICATE member FAILS LOUD (no silent no-op)",
-      raises(lambda: cc.add_member("Build Coordination", "ch-live"), "already a member"))
-check("24 add_member to a MISSING channel FAILS LOUD",
-      raises(lambda: cc.add_member("no-such-channel", "ch-live"), "no channel"))
-
-# member-in-multiple-channels: ch-live joins a second channel
-cc.add_member("Memory Lane", "ch-live")
-check("25 a member can be in SEVERAL channels at once",
-      "ch-live" in cc.channel_members("Build Coordination") and "ch-live" in cc.channel_members("Memory Lane"))
-
-cc.remove_member("Build Coordination", "ch-other")
-check("26 remove_member drops the member from the roster",
-      cc.channel_members("Build Coordination") == ["ch-live"])
-check("27 remove_member of a NON-member FAILS LOUD",
-      raises(lambda: cc.remove_member("Build Coordination", "ch-other"), "not a member"))
-
-cc.archive_channel("Memory Lane")
-check("28 archive_channel flips status (NOT a delete — record survives)",
-      cc.list_channels(include_archived=True)[0].get("status") == "archived" or
-      any(c["id"] == "memory-lane" and c["status"] == "archived"
-          for c in cc.list_channels(include_archived=True)))
-check("29 archived channels are EXCLUDED from list_channels by default",
-      "memory-lane" not in {c["id"] for c in cc.list_channels()})
-check("30 archived channels are INCLUDED with include_archived=True",
-      "memory-lane" in {c["id"] for c in cc.list_channels(include_archived=True)})
-check("31 add_member to an ARCHIVED channel FAILS LOUD",
-      raises(lambda: cc.add_member("Memory Lane", "ch-x"), "archived"))
-check("32 channel_members on a MISSING channel FAILS LOUD",
-      raises(lambda: cc.channel_members("ghost"), "no channel"))
+# cc_channels is now TRANSPORT only. The named-channel STORE (create/list/add/remove/archive +
+# channel_members/is_shared) was a SECOND store duplicating session_channels' structure; it was folded
+# into the ONE store (channels.jsonl) and retired. Its behavioral contract (slug ids, dup-fail-loud,
+# flat handle roster, archive semantics, shared flag) now lives in
+# tests/agent_sessions_channels_acceptance.py against session_channels (the one store). Here we PROVE
+# the retirement is clean: cc_channels no longer exposes ANY named-store function (no second store).
+_RETIRED = ("create_channel", "list_channels", "add_member", "remove_member", "archive_channel",
+            "channel_members", "is_shared", "_read_channel", "_write_channel", "CHANNELS_DIR")
+for i, fn in enumerate(_RETIRED, start=18):
+    check(f"{i} cc_channels no longer exposes named-store '{fn}' (retired → session_channels)",
+          not hasattr(cc, fn))
 
 
 # ════════════════════════════════════════════════════════════════════════════════════════════════

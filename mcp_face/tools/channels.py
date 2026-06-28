@@ -12,6 +12,11 @@ A new need is a new `op`/`action`, never a new flat tool. Mechanism lives in
 runtime/session_channels.py (the organ); this face is thin — it binds the suite's registry lookup
 (liveness routing, member validation) and translates teaching errors outward.
 
+ONE channel concept, two layers: these tools are the STRUCTURE layer (what a channel IS — name,
+roster, mode, lifecycle; the ONE named-channel store, channels.jsonl). The TRANSPORT layer (reach a
+live member NOW — push/find/reply-back) is the separate `cc_channel` tool over runtime/cc_channels.py.
+There is no second channel store: cc_channels' former named-store was folded here and retired (2026-06-29).
+
 THE FLOOR (synthesis §6.3): nothing here spawns/resumes a session. channel_act appends to the
 channels leaf and (for action='post') fans intents onto the EXISTING mail leaf — the supervisor
 service alone acts on deliver-class intents; queue-class are pulled by their targets. A channel
