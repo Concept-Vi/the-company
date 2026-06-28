@@ -724,7 +724,7 @@
         "type": "user-unit",
         "unit": "company-stt-moonshine.service"
       },
-      "vram_mb": 900,
+      "vram_mb": 0,
       "note": "The LEANEST ear: ONNX-runtime (no torch/NeMo), <1GB, built for low-latency LIVE conversation + Speech-To-Action. Runs CPU by default (~9x realtime, ~0.3-0.5s/short-turn on this box) so it co-resides with the brain+embedder with zero VRAM cost. Doesn't pad short clips (fast on commands). English-focused. Model COMPANY_MOONSHINE_MODEL (default moonshine/base; v2-medium ~Whisper-large accuracy is a drop-in env swap). Tuning: built-in IntentRecognizer (semantic command->action), vad_threshold, max_tokens_per_second. The default interaction-loadout ear.",
       "config": {
         "model": "moonshine/base"

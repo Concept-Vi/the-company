@@ -200,25 +200,149 @@ def validate_combo_capacity(reg, services):
             "ram_need": ram_need, "ram_cap": ram_cap, "ram_present": sysram is not None}
 
 
+def _running_units(reg):
+    """[(key, unit)] for running systemd-UNIT services — the ones systemd accounts (cgroup RAM + CPU).
+    Manual/hosted services have no unit and are skipped here (their per-service usage isn't cgroup-measured)."""
+    out = []
+    for k, v in reg["services"].items():
+        m = v.get("manage", {})
+        if m.get("type", "").endswith("unit") and m.get("unit") and _is_running(v):
+            out.append((k, m["unit"]))
+    return out
+
+
+def _num_or_none(s):
+    """Parse a systemd numeric property; '[not set]' / uint64-max (accounting off) → None."""
+    try:
+        n = int(s)
+    except (TypeError, ValueError):
+        return None
+    return n if 0 <= n < (1 << 63) else None
+
+
+def _systemd_sample(units):
+    """ONE `systemctl --user show` pass over `units` → {unit: (mem_bytes|None, cpu_nsec|None)} from the
+    cgroup accounting (MemoryCurrent counts child processes too — e.g. vLLM's EngineCore — so it is the
+    TRUE per-service RAM, not just the main PID's RSS). Empty on any failure (caller falls back to est)."""
+    if not units:
+        return {}
+    try:
+        r = subprocess.run(["systemctl", "--user", "show", *units, "-p", "Id,MemoryCurrent,CPUUsageNSec"],
+                           capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return {}
+    out, cur, uid = {}, {}, None
+    for line in r.stdout.splitlines():
+        if not line.strip():
+            if uid:
+                out[uid] = (cur.get("mem"), cur.get("cpu"))
+            cur, uid = {}, None
+            continue
+        k, _, val = line.partition("=")
+        if k == "Id":
+            uid = val
+        elif k == "MemoryCurrent":
+            cur["mem"] = _num_or_none(val)
+        elif k == "CPUUsageNSec":
+            cur["cpu"] = _num_or_none(val)
+    if uid:
+        out[uid] = (cur.get("mem"), cur.get("cpu"))
+    return out
+
+
+def _proc_stat_snapshot():
+    """(total_jiffies, idle_jiffies) from /proc/stat's aggregate cpu line, or None."""
+    try:
+        with open("/proc/stat") as f:
+            v = [int(x) for x in f.readline().split()[1:]]
+        return sum(v), v[3] + (v[4] if len(v) > 4 else 0)   # idle + iowait
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def measure_now(reg, interval=0.15):
+    """ONE shared sample window → (system_cpu, {key: {ram_mb, cpu_pct}}) — ALL of it MEASURED, nothing
+    from registry files. System CPU from /proc/stat (busy% = 1 − idle-delta/total-delta) + /proc/loadavg.
+    Per-service RAM/CPU from systemd cgroup accounting (MemoryCurrent / CPUUsageNSec) sampled before+after
+    a single `interval` sleep, so the whole measured view costs one interval. cpu_pct is top-style
+    (100% = one full core; a service can exceed 100% across cores — the system line gives the core count).
+    Per-service map is empty for services systemd can't account (manual/hosted/accounting-off) — the caller
+    shows those honestly, never a guess-as-reading. The short sleep is fine: format_state is an
+    operator-command render (refuse/up/gpu/ensure), never a hot path."""
+    units = _running_units(reg)
+    unit_to_key = {u: k for k, u in units}
+    unit_list = [u for _, u in units]
+    st1 = _proc_stat_snapshot()
+    sd1 = _systemd_sample(unit_list)
+    time.sleep(interval)
+    st2 = _proc_stat_snapshot()
+    sd2 = _systemd_sample(unit_list)
+    sys_cpu = None
+    if st1 and st2 and st2[0] > st1[0]:
+        dt = st2[0] - st1[0]
+        pct = max(0.0, min(100.0, 100.0 * (1.0 - (st2[1] - st1[1]) / dt)))
+        cores = os.cpu_count() or 1
+        try:
+            with open("/proc/loadavg") as f:
+                la = f.read().split()
+            sys_cpu = {"pct": pct, "load1": float(la[0]), "load5": float(la[1]),
+                       "load15": float(la[2]), "cores": cores}
+        except (OSError, ValueError, IndexError):
+            sys_cpu = {"pct": pct, "load1": 0.0, "load5": 0.0, "load15": 0.0, "cores": cores}
+    per = {}
+    for u, key in unit_to_key.items():
+        mem2, cpu2 = sd2.get(u, (None, None))
+        _, cpu1 = sd1.get(u, (None, None))
+        rec = {}
+        if mem2 is not None:
+            rec["ram_mb"] = mem2 / 1024 / 1024
+        if cpu1 is not None and cpu2 is not None:
+            rec["cpu_pct"] = max(0.0, (cpu2 - cpu1) / 1e9 / interval * 100.0)
+        if rec:
+            per[key] = rec
+    return sys_cpu, per
+
+
 def format_state(reg):
-    """The 'what's holding the card' block — shown on refuse and on every `up`,
-    so agents always know the state without a second call."""
+    """The MEASURED resource picture — shown on refuse and on every `up`, so agents always know the real
+    state without a second call. Everything here is measured from the machine, never a registry guess
+    presented as a reading (Tim 2026-06-28): GPU from nvidia-smi, RAM from /proc/meminfo, CPU from
+    /proc/stat, per-service RAM+CPU from systemd cgroup accounting. Per-service VRAM is the one figure
+    this WSL box cannot measure live (nvidia-smi returns per-process used_memory=N/A) — so it shows the
+    telemetry-MEASURED load-delta when one exists, else 0 for a CPU-only service, else the gpu_util
+    RESERVATION (the slice vLLM actually pins — authoritative, not a guess) or the registry estimate,
+    each HONESTLY labelled."""
     gpu = read_gpu()
+    ram = read_system_ram()
+    sys_cpu, per = measure_now(reg)
     lines = []
     if gpu:
         lines.append(f"  GPU (measured): {gpu['used']/1024:.1f} GB used / "
                      f"{gpu['free']/1024:.1f} GB free / {gpu['total']/1024:.1f} GB  ({gpu['util']}% util)")
-    ram = read_system_ram()
     if ram:
         lines.append(f"  RAM (measured): {ram['used']/1024:.1f} GB used / "
                      f"{ram['available']/1024:.1f} GB available / {ram['total']/1024:.1f} GB")
-    running = running_gpu_services(reg)
+    if sys_cpu:
+        lines.append(f"  CPU (measured): {sys_cpu['pct']:.0f}% busy · load "
+                     f"{sys_cpu['load1']:.1f}/{sys_cpu['load5']:.1f}/{sys_cpu['load15']:.1f} · "
+                     f"{sys_cpu['cores']} cores")
+    running = [(k, v) for k, v in reg["services"].items() if _is_running(v)]
     if running:
-        lines.append("  holding the card:")
-        for k, mb in sorted(running, key=lambda x: -x[1]):
-            lines.append(f"    • {k:<15} ~{mb/1000:.1f} GB  ({_vram_source(reg, k)})")
+        lines.append("  resident services (measured · cgroup RAM/CPU; VRAM measured where the card allows):")
+        for k, v in sorted(running, key=lambda kv: -per.get(kv[0], {}).get("ram_mb", 0)):
+            meas = per.get(k, {})
+            if is_gpu_service(v):
+                lv = learned_vram(k)
+                vram = (f"VRAM ~{lv/1000:.1f} GB (measured)" if lv
+                        else f"VRAM ~{budget_vram(reg, k)/1000:.1f} GB ({_vram_source(reg, k)})")
+            else:
+                vram = "VRAM 0 (CPU-only)"
+            ramc = (f"RAM ~{meas['ram_mb']/1000:.1f} GB" if "ram_mb" in meas
+                    else f"RAM ~{ram_of(v)/1000:.1f} GB (est)")
+            cpuc = f"CPU {meas['cpu_pct']:.0f}%" if "cpu_pct" in meas else "CPU —"
+            lines.append(f"    • {k:<16} {vram:<30} {ramc:<14} {cpuc}")
     else:
-        lines.append("  holding the card: nothing (GPU is clear)")
+        lines.append("  resident services: none (GPU clear)")
     return "\n".join(lines)
 
 
