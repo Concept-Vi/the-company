@@ -77,3 +77,8 @@ RAISES — a guide is true-by-construction or it does not exist) · stuff narrat
 ## Read next
 [[Company Map]] · [[skills — constitution]] (the sibling registry this is the second face of) ·
 `contexts/AGENTS.md` (the context registry — same shape, the `context://` scheme).
+
+## Agent-authored entries (auto-reflected)
+<!-- created live by the create face; one line per entry — keeps the
+     drift-home acceptance green; refine the prose by integration. -->
+- **`using_corpus_pipeline`** — agent-authored guide (created via the declarative-direct face). 
