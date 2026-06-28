@@ -44,6 +44,23 @@
         "rerank-jina"
       ],
       "note": "The cross-session fabric WITH a local brain (Tim 2026-06-15: 'the 4b co with lead \u2026 without the voice in order to fit the 4b'). xsession minus GPU voice (tts-qwen3tts) plus the local worker chat-4b \u2014 so the lead can run composable-mind / swarm turns on the local 4B WHILE the cross-session recall embedder stays resident. Footprint (2026-06-28): embed-pplx ~5.4G (8-bit) + chat-4b ~6.5G + rerank-jina ~1.3G (bf16 GPU) + stt-whisper (CPU ear) \u2248 13.2G / 16G, ~2.8G headroom. PRECONDITIONS persisted: chat-4b gpu_util 0.40 / max_model_len 16384 / max_num_seqs 4 (hybrid-Mamba: cache pool holds limited Mamba blocks). Add GPU voice only by dropping the 4b \u2014 they don't all fit at once."
+    },
+    "interaction": {
+      "services": [
+        "embed-pplx",
+        "chat-4b",
+        "rerank-jina",
+        "stt-moonshine",
+        "tts-kokoro"
+      ],
+      "note": "INTERACTION loadout (class base, 2026-06-28): realtime conversation + Speech-To-Action with the local brain. Default ear = Moonshine (lean, CPU, 0 VRAM). embed-pplx+rerank for recall, chat-4b brain, tts-kokoro voice out. Swap the ear via the variants below."
+    },
+    "interaction-parakeet": {
+      "extends": "interaction",
+      "swap": {
+        "stt-moonshine": "stt-parakeet-onnx"
+      },
+      "note": "VARIANT of `interaction`: same loadout, Parakeet int8-ONNX ear instead of Moonshine (accurate + 25-language + hotword biasing). For trialling the two ears in the same configuration."
     }
   },
   "groups": {
@@ -668,6 +685,20 @@
       "note": "The LEANEST ear: ONNX-runtime (no torch/NeMo), <1GB, built for low-latency LIVE conversation + Speech-To-Action. Runs CPU by default (~9x realtime, ~0.3-0.5s/short-turn on this box) so it co-resides with the brain+embedder with zero VRAM cost. Doesn't pad short clips (fast on commands). English-focused. Model COMPANY_MOONSHINE_MODEL (default moonshine/base; v2-medium ~Whisper-large accuracy is a drop-in env swap). Tuning: built-in IntentRecognizer (semantic command->action), vad_threshold, max_tokens_per_second. The default interaction-loadout ear.",
       "config": {
         "model": "moonshine/base"
+      }
+    },
+    "stt-parakeet-onnx": {
+      "group": "voice",
+      "title": "Parakeet-TDT 0.6B v3 int8 ONNX (sherpa-onnx, lean)",
+      "port": 2035,
+      "manage": {
+        "type": "user-unit",
+        "unit": "company-stt-parakeet-onnx.service"
+      },
+      "vram_mb": 0,
+      "note": "The QUANTIZED lean Parakeet: int8 ONNX on sherpa-onnx (no NeMo). ~1-1.5GB RAM, CPU by default (int8 sweet spot, 0 VRAM) so it co-resides like Moonshine. Accurate (~6.3% WER) + 25 EUROPEAN languages w/ auto-detect. Supports HOTWORD/CONTEXT BIASING (boost UI terms/command words \u2014 the STA payoff, up to thousands of phrases). Set COMPANY_PARAKEET_ONNX_DEVICE=cuda for the GPU provider. The parakeet variant of the interaction loadout class. (Distinct from stt-parakeet, the heavy NeMo/GPU build.)",
+      "config": {
+        "model": "parakeet-tdt-v3-int8"
       }
     }
   }

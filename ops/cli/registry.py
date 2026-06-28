@@ -40,8 +40,57 @@ def serve_script(svc):
 
 
 def combos(reg):
-    """Named service-sets meant to run together (the `_doc` key is not a combo)."""
-    return {k: v for k, v in reg.get("combos", {}).items() if k != "_doc"}
+    """Named service-sets meant to run together (the `_doc` key is not a combo).
+
+    LOADOUT VARIANTS — the "class with configurations" mechanism (2026-06-28). A combo is normally a
+    bare `{services:[...], note}`. A VARIANT instead declares `extends: <base-combo>` and inherits the
+    base's resolved service list, then overrides just what differs:
+      • swap: {old-service: new-service}   — replace one slot in place (e.g. the ear)
+      • remove: [services] / add: [services]
+    so a "class" is a base loadout (e.g. `interaction`) and its variants (e.g. `interaction-parakeet`)
+    state only the difference. This resolver returns each combo with a concrete `services` list (plus a
+    `variant_of` marker), so BOTH consumers — the `combos` listing and `resolve()`'s `up @combo` — see
+    the final set with no second resolution. Fail-loud on a missing base, a swap target not in the base,
+    a service that isn't registered, or an extends-cycle (registry-is-truth: never start a fabricated set).
+    """
+    raw = {k: v for k, v in reg.get("combos", {}).items() if k != "_doc"}
+    svcs = reg.get("services", {})
+    resolved: dict = {}
+
+    def resolve_one(name, seen):
+        if name in resolved:
+            return resolved[name]
+        if name not in raw:
+            raise KeyError(f"combo {name!r} (referenced via extends) does not exist")
+        if name in seen:
+            raise ValueError(f"combo extends-cycle through {name!r}")
+        c = dict(raw[name])
+        base_name = c.get("extends")
+        if base_name:
+            base = resolve_one(base_name, seen | {name})
+            services = list(base["services"])
+            for old, new in (c.get("swap") or {}).items():
+                if old not in services:
+                    raise ValueError(f"combo {name!r}: swap source {old!r} not in base {base_name!r} ({services})")
+                services[services.index(old)] = new
+            for rm in (c.get("remove") or []):
+                if rm in services:
+                    services.remove(rm)
+            for ad in (c.get("add") or []):
+                if ad not in services:
+                    services.append(ad)
+            c["services"] = services
+            c["variant_of"] = base_name
+        # registry-is-truth guard: every service in the (possibly variant-built) set must be registered
+        for s in c.get("services", []):
+            if s not in svcs:
+                raise ValueError(f"combo {name!r}: unknown service {s!r} (not in services.json)")
+        resolved[name] = c
+        return c
+
+    for name in raw:
+        resolve_one(name, set())
+    return resolved
 
 
 def save(reg):

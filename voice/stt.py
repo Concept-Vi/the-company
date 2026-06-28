@@ -108,6 +108,14 @@ STT_PROVIDERS: dict[str, dict] = {
                 "pad short clips, so commands transcribe fast. English. Has a built-in IntentRecognizer "
                 "(semantic speech->action). The default interaction-loadout ear. Quality ~6.6% WER (base/"
                 "medium); v2-medium ≈Whisper-large is an env model swap."},
+    "parakeet-onnx": {
+        "kind": "local_http", "label": "Parakeet-TDT 0.6B v3 int8 ONNX (sherpa-onnx, lean)",
+        "url": os.environ.get("COMPANY_PARAKEET_ONNX_URL", "http://127.0.0.1:2035"),
+        "route": "/inference", "field": "file", "service": "stt-parakeet-onnx",
+        "note": "quantized lean Parakeet: int8 ONNX on sherpa-onnx (no NeMo), ~1-1.5GB, CPU by default "
+                "(0 VRAM). Accurate (~6.3% WER) + 25 European languages. Supports HOTWORD/CONTEXT BIASING "
+                "(boost UI/command vocabulary — the STA payoff). The parakeet variant of the interaction "
+                "loadout. (Distinct from `parakeet`, the heavy NeMo/GPU build.)"},
 }
 
 # back-compat aliases — selecting one of these resolves to a canonical catalog id (the id-mismatch

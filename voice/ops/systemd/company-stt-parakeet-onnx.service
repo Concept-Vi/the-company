@@ -1,0 +1,20 @@
+[Unit]
+Description=Company STT ear — Parakeet-TDT 0.6B v3 int8 ONNX (sherpa-onnx) on port 2035
+After=default.target
+# The quantized/lean Parakeet: int8 ONNX on the sherpa-onnx runtime (no NeMo). ~1-1.5GB, CPU by default
+# (int8's sweet spot, 0 VRAM) — accurate (~6.3% WER) + 25 European languages. The accurate-multilingual
+# sibling of Moonshine; the parakeet variant of the interaction loadout. Supports hotword/context biasing.
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+EnvironmentFile=-%h/company/voice/ops/voice.env
+ExecStart=%h/.voice-venvs/parakeet-onnx/bin/python /home/tim/company/voice/ears/parakeet_onnx.py 2035
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target
