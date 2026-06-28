@@ -16,6 +16,7 @@ from runtime.governance import Inbox, GovernanceError, guard, posture, AUTO
 from runtime.registry import NodeRegistry
 from runtime.roles import RoleRegistry, resolve_binding
 from runtime.projections import ProjectionRegistry
+from runtime.modes_registry import discover_modes, MODES_DIR  # WS0: modes are a file-discovered registry
 from store.fs_store import FsStore
 
 CONTENT_KINDS = ("constant", "document", "code", "file", "image", "source", "portal")
@@ -536,20 +537,36 @@ class Suite:
             self.discover_capabilities()                              # opt-in LEAD path — spawns the binary
 
     def discover_capabilities(self, *, discover_fn=None, executable: str | None = None,
-                              version: str | None = None):
-        """Populate the installed CapabilityRegistry from the live platform (LANE-CAP-WIRE / Mirror-
-        Registry). The default path spawns the `claude` binary (LEAD-only); a unit/CI caller injects
-        `discover_fn=<stub>` (+ executable/version) to populate fixture rows with NO subprocess. The
-        registry is mutated IN PLACE (the same object set_capability_registry installed at __init__), so
-        every cap:// resolution + the capabilities()['introspection'] key see the rows immediately.
-        Fail-loud on an empty/sub-floor discovery (the engine raises) — never a silent empty registry."""
-        if self.capability_platform is None:
+                              version: str | None = None, platform_id: str | None = "claude-code"):
+        """Populate the installed CapabilityRegistry from a live platform (LANE-CAP-WIRE / Mirror-Registry).
+        The registry MERGES (multi-platform, 2026-06-28), so this can be called per platform or for ALL:
+          • platform_id='claude-code' (default) — the original single-platform behaviour (back-compat).
+          • platform_id=<id> — discover one specific registered platform (e.g. 'codex-cli', 'gh-cli').
+          • platform_id=None — discover EVERY registered platform into the one registry, per-platform
+            fail-ISOLATED (a binary that won't probe is recorded, never blocks the others). This is what
+            makes cap://<platform>/… resolve for any source at runtime — 'never touch again'.
+        The default LIVE path spawns the binary (LEAD-only); inject discover_fn=<stub> for no-spawn unit
+        verification. Mutated IN PLACE so every cap:// resolution sees the rows immediately. Fail-loud on
+        an empty/sub-floor discovery for a SINGLE platform; in all-platforms mode failures are collected."""
+        reg = self._platform_registry
+        if platform_id is None:
+            results = {}
+            for pid in sorted(reg.ids()):
+                try:
+                    self.capability_registry.discover(reg.get(pid), executable=executable,
+                                                      version=version, discover_fn=discover_fn)
+                    results[pid] = "ok"
+                except Exception as e:  # noqa: BLE001 — one platform must not block the rest
+                    results[pid] = f"{type(e).__name__}: {str(e)[:120]}"
+            return results
+        platform = reg.get(platform_id) if platform_id != "claude-code" else self.capability_platform
+        if platform is None:
             raise RuntimeError(
-                "discover_capabilities: no 'claude-code' PlatformEntry in the PlatformRegistry — "
-                "platforms/claude_code.py did not load. Mirror-Registry instance #1 is the registration; "
-                "fail loud, never discover against a missing platform.")
+                f"discover_capabilities: no {platform_id!r} PlatformEntry in the PlatformRegistry — "
+                f"platforms/{platform_id.replace('-', '_')}.py did not load. Known: {sorted(reg.ids())}. "
+                f"Fail loud, never discover against a missing platform.")
         self.capability_registry.discover(
-            self.capability_platform, executable=executable, version=version, discover_fn=discover_fn)
+            platform, executable=executable, version=version, discover_fn=discover_fn)
         return self.capability_registry
 
     @staticmethod
@@ -2136,115 +2153,9 @@ class Suite:
     #     registry, H8; a swarm-heavy mode wants the higher-util swarm-brain ~16K/0.63, a voice-depth mode
     #     the 64K brain — DECLARED here, NOT swapped by this build).
     # ============================================================================================
-    MODE_REGISTRY = {
-        "listening": {
-            "label": "Listening",
-            "directive": "Conversational and present; respond fully.",
-            # SEED = today's full gather: admit every stratum, full howto, no budget override.
-            "resolution": {"strata": None, "howto_detail": "full", "budget": None},
-            "subtypes": {
-                "general": {},   # the default sub-type (no override) — identical to the mode-type lens
-                # an instance can ask for a deeper, semantically-weighted read (e.g. when co-present at a
-                # node): a sub-type is an INSTANCE PARAMETER that refines the SAME mode-type lens (§6.2).
-                "deep": {"budget": 8000},
-            },
-            "consent": "offer",
-            # thought-shape/staging half (was PART_GRAIN):
-            "grain": "beat", "shape": "linear-stream", "stage": True,
-            # activation/budget half (was ACTIVATION_ALLOCATION) — voice-depth conversational: 64K brain,
-            # shallow background activity, R reserved.
-            "live": ["per-turn", "background", "sense", "rollup"], "reserve_r": 2,
-            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
-        },
-        "text-only": {
-            "label": "Text-only",
-            "directive": "Respond in text, concisely, only to what is addressed.",
-            "resolution": {"strata": None, "howto_detail": "full", "budget": None},
-            "consent": "offer",
-            "grain": "paragraph", "shape": "linear-stream", "stage": True,
-            "live": ["per-turn", "rollup"], "reserve_r": 2,
-            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
-        },
-        "background": {
-            "label": "Background",
-            "directive": "Be minimal — surface only what genuinely needs the operator; otherwise a one-line acknowledgement.",
-            # background = low-noise: drop the chatty annotation/chat strata, keep the stable howto +
-            # presentation_pref (F1 — a learned pref is address-truth, a sibling of howto) + events.
-            "resolution": {"strata": frozenset({"howto", "presentation_pref", "event", "run"}),
-                           "howto_detail": "terse", "budget": 1500},
-            "consent": "act",
-            "grain": "line", "shape": "scatter-write", "stage": False,   # NEVER stage (C4.3) — minimal surface
-            # BACKGROUND presence mode = the swarm-heavy loadout: the higher-util swarm-brain, a deeper
-            # assumed main (the deep-main KV bind is why this mode wants the 0.63 brain).
-            "live": ["per-turn", "background", "sense", "rollup"], "reserve_r": 2,
-            "per_role_ctx": 1500, "main_ctx_tokens": 40000, "brain_config": "swarm-16k",
-        },
-        "focus": {
-            "label": "Focus",
-            "directive": "The operator is in deep work. Be extremely brief (one or two lines); do not elaborate unless asked.",
-            # focus = TIGHT ATTENTION: a small window, terse, NO how-to/affordance leg (it would flood deep work).
-            "resolution": {"strata": frozenset({"annotation", "chat", "event", "run"}), "howto_detail": "none", "budget": 800},
-            "subtypes": {
-                "default": {},
-                # a focus instance that still wants the structural run-trail but nothing chatty:
-                "structural": {"strata": frozenset({"event", "run"}), "budget": 600},
-            },
-            "consent": "act",
-            "grain": "line", "shape": "linear-stream", "stage": False,   # NEVER stage (C4.3) — deep work, one/two lines
-            "live": ["per-turn", "background"], "reserve_r": 2,
-            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
-        },
-        "walkthrough": {
-            "label": "Walkthrough",
-            "directive": "Actively guide: narrate what you are doing and direct the operator's attention step by step.",
-            # GUIDED/show-me lens (§5): the howto/affordance leg is the POINT (narrate what-this-is /
-            # what-you-can-do), full strata so the narration has the whole picture. A wider window.
-            "resolution": {"strata": None, "howto_detail": "full", "budget": 6000},
-            "subtypes": {
-                "guided": {},                       # the operator drives, the RHM narrates each step
-                "show-me": {"budget": 8000},        # the RHM drives the sequence (a richer read per step)
-            },
-            "consent": "offer",
-            "grain": "paragraph", "shape": "linear-stream", "stage": True,
-            "live": ["per-turn"], "reserve_r": 2,
-            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
-        },
-        "watch-and-react": {
-            "label": "Watch & react",
-            "directive": "Observe; comment only when relevant, and briefly.",
-            # observe lens: events + run-trail are what matters (what's HAPPENING), terse, no flood; keep
-            # the stable howto + presentation_pref (F1 — address-truth, a sibling of howto).
-            "resolution": {"strata": frozenset({"event", "run", "howto", "presentation_pref"}),
-                           "howto_detail": "terse", "budget": 1500},
-            "consent": "act",
-            "grain": "line", "shape": "linear-stream", "stage": True,
-            "live": ["per-turn", "sense"], "reserve_r": 2,
-            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
-        },
-        "decide-for-me": {
-            "label": "Decide for me",
-            "directive": "Act on what the governance posture lets you act on (the AUTO/reversible classes — propose a node, run the graph) rather than asking; surface the rest for the operator. The routing is deterministic (the action's posture decides), not a judgement call. You still cannot self-approve; anything that needs approval is surfaced.",
-            "resolution": {"strata": None, "howto_detail": "full", "budget": None},
-            "consent": "act",
-            "grain": "paragraph", "shape": "linear-stream", "stage": True,
-            "live": ["per-turn", "background", "rollup"], "reserve_r": 2,
-            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
-        },
-        # D13: 'off' carries a one-line DESCRIPTION (was empty). chat() short-circuits on mode=='off'
-        # BEFORE any directive is used, so this is purely descriptive for the surface — it does NOT
-        # re-enable the RHM. modes_acceptance asserts non-empty directives only for m != 'off'.
-        # resolution = the EMPTY lens: the RHM is asleep, nothing resolves (strata=empty set).
-        "off": {
-            "label": "Off",
-            "directive": "The right-hand-man is asleep — no conversation, no actions. Switch any other mode on the presence dial to wake it.",
-            "resolution": {"strata": frozenset(), "howto_detail": "none", "budget": 0},
-            "consent": "none",
-            "grain": "line", "shape": "linear-stream", "stage": False,   # NEVER stage (C4.3) — the dial is off
-            # off: nothing fires (the dial is off) — only the spine is nominally live (chat() short-circuits).
-            "live": ["per-turn"], "reserve_r": 2,
-            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
-        },
-    }
+    MODE_REGISTRY = discover_modes([MODES_DIR])   # WS0 2026-06-28: FILE-DISCOVERED from modes/<id>.py
+    # (was a hardcoded literal — the lone registry-is-truth violation). discover_modes returns the SAME
+    # ordered {id: decl} the literal produced (proven deep-equal); every derived view below is unchanged.
     # --- the 3 OLD NAMES, now DERIVED VIEWS of MODE_REGISTRY (no parallel tables — the join's law) ------
     # MODE_SPECS: the ModeSpec interface every resolution-half consumer + MODES/MODE_DIRECTIVES read. Each
     # ModeSpec is built from the registry entry's resolution-half fields → the SAME frozen objects as before
