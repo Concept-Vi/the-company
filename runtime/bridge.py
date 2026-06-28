@@ -91,6 +91,7 @@ BRIDGE_ROUTES = (
     # background loop behind this caller is OFF by default (COMPANY_ACTIVATION_LOOP, needs-tim); this POST
     # is the LIVE manual-drive door (firing it fires roles = computation, floor-clean by construction).
     "/api/activation/tick",
+    "/api/say",
     # S1 (overnight) — the BUILDER side-panel: one streaming turn of the embedded Claude Code session.
     # OPERATOR FACE ONLY (never on mcp_face); plan-mode by default (COMPANY_PANEL_PERMISSION).
     "/api/claude/turn",
@@ -1141,6 +1142,29 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
 # seam regardless (firing it fires roles = computation, the G9/C9.2 floor holds by construction).
 ACTIVATION_CALLER = activation_driver.ActivationCaller(suite=SUITE)
 _ACTIVATION_LOOP_THREAD = activation_driver.maybe_start_activation_loop(ACTIVATION_CALLER)
+
+
+def _maybe_speak_rhm(res):
+    """VOICE-OUT (Tim 2026-06-28: 'the right-hand-man can talk to me like that too'): when the RHM's
+    voice-out is routed to the host speakers (rhm config `voice_out` ∈ {server, both}) AND voice is enabled
+    for the current mode, SPEAK the reply server-side via the ONE serialized speaker. Default voice_out is
+    'browser' (no change — the canvas plays it); 'server'/'both' bring the RHM through the machine's own
+    speakers (the no-browser path). Best-effort: a voice failure NEVER breaks the chat reply (the text has
+    already been produced)."""
+    try:
+        reply = (res or {}).get("reply")
+        if not reply:
+            return
+        cfg = SUITE.rhm_config()
+        if str(cfg.get("voice_out") or "browser").lower() not in ("server", "both"):
+            return
+        if not SUITE.voice_enabled():                 # honour the per-mode voice gate (text-only/off → silent)
+            return
+        from voice import say as _say
+        _say.get_speaker().say(reply, engine=cfg.get("tts_engine") or _say.DEFAULT_ENGINE,
+                               voice=cfg.get("tts_voice"), who="rhm")
+    except Exception:
+        pass                                          # voice-out must never break a chat turn
 
 
 # =================================================================================================
@@ -2973,7 +2997,25 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/chat":                # right-hand-man — grounded conversation
                 b = self._body()
                 gid = b.get("graph_id", DEMO)
-                self._send(200, json.dumps(SUITE.chat(b["message"], gid, focus=b.get("focus"))))
+                res = SUITE.chat(b["message"], gid, focus=b.get("focus"))
+                _maybe_speak_rhm(res)                     # voice-out: the RHM comes through the host speakers
+                self._send(200, json.dumps(res))
+            elif self.path == "/api/say":                 # SERVER-SIDE VOICE — a member (or the RHM) speaks
+                # Tim 2026-06-28: "the boys can come through" — any fabric member speaks to Tim on the host
+                # speakers, no browser needed. {text, voice?, engine?, who?}. Enqueues on the ONE serialized
+                # speaker (voice/say.py) and returns immediately; the worker synth+plays in turn (no overlap).
+                b = self._body()
+                txt = (b.get("text") or "").strip()
+                if not txt:
+                    self._send(400, json.dumps({"ok": False, "error": "/api/say needs {text} (+ optional voice, engine, who)"}))
+                else:
+                    try:
+                        from voice import say as _say
+                        out = _say.get_speaker().say(txt, engine=b.get("engine"), voice=b.get("voice"),
+                                                     who=b.get("who"))
+                        self._send(200, json.dumps({"ok": True, **out}))
+                    except Exception as _e:               # fail loud — never a silent dropped voice line
+                        self._send(500, json.dumps({"ok": False, "error": f"{type(_e).__name__}: {_e}"}))
             elif self.path == "/api/conversation/new":    # S2: start a fresh conversation (becomes current)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.new_conversation(b.get("title", ""))))

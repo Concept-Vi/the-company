@@ -2969,6 +2969,10 @@ class Suite:
                 # voice-trial lane H: surface the per-mode voice toggle in the config the FE reads.
                 # Default 'on' so a node with no field is voice-enabled (schema-additive).
                 "voice_enabled": c.get("voice_enabled", "on"),
+                # voice-OUT routing (Tim 2026-06-28): where the RHM's spoken reply goes — 'browser' (default,
+                # the canvas plays it via Web Audio) | 'server' (the host speakers, via the serialized
+                # /api/say speaker — the RHM comes through with no browser open) | 'both'. Schema-additive.
+                "voice_out": c.get("voice_out", "browser"),
                 # the STT (ear) slot — WHICH speech-to-text provider the RHM listens through. A config
                 # slot mirroring `model` (the brain). Default = the stt lane's default ear when present
                 # (else ''); the operator swaps providers without code. Schema-additive (absent → default).
@@ -3017,7 +3021,7 @@ class Suite:
         allowed = {k: v for k, v in (updates or {}).items()
                    if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
                             "roles", "tts_engine", "tts_voice", "voice_path", "voice_input_mode", "brain_knobs",
-                            "MODE_AUTODETECT", "MODE_AUTODETECT_EXCLUDE")}
+                            "MODE_AUTODETECT", "MODE_AUTODETECT_EXCLUDE", "voice_out")}
         if "brain_knobs" in allowed:                          # S5 — temperature/max_tokens/top_p (numeric, fail-loud)
             bk = allowed["brain_knobs"]
             if not isinstance(bk, dict):

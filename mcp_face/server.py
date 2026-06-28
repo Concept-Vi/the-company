@@ -238,11 +238,47 @@ def now(graph: str = "codebase") -> dict:
     return SUITE.now(graph or "codebase")
 
 
+_BRIDGE_URL = os.environ.get("COMPANY_BRIDGE_URL", "http://127.0.0.1:8770")
+
+
+def _bridge_say(text: str, *, voice=None, engine=None, who=None) -> dict:
+    """POST the bridge's /api/say so the line is spoken on the host speakers by the ONE serialized speaker
+    (the bridge owns the audio sink; routing here keeps a single non-overlapping queue across processes).
+    Best-effort + fail-soft: the caller treats voice as an extra, never a hard dependency."""
+    import urllib.request as _u
+    body = json.dumps({"text": text, "voice": voice, "engine": engine, "who": who}).encode()
+    req = _u.Request(_BRIDGE_URL + "/api/say", data=body, headers={"Content-Type": "application/json"})
+    with _u.urlopen(req, timeout=10) as r:
+        return json.loads(r.read() or b"{}")
+
+
+@mcp.tool()
+def say(text: str, voice: str = "", who: str = "", engine: str = "") -> dict:
+    """SPEAK TO TIM OUT LOUD on the host speakers — this is how a fabric member (or the RHM) "comes through"
+    to Tim directly, no browser needed (Tim 2026-06-28). Use it when YOU (a member) want to say something
+    to him aloud — a heads-up, a result, a question. `who` is your member name (for the say-log + so he
+    knows who's speaking); `voice`/`engine` are optional (default: the Company's default voice). Lines are
+    SERIALIZED — members never talk over each other. Returns immediately ({queued, pending}); the words
+    play in turn. This is voice OUTPUT only (it does not wait for a spoken reply)."""
+    return _bridge_say(text, voice=voice or None, who=who or None, engine=engine or None)
+
+
 @mcp.tool()
 def chat(message: str, graph: str) -> dict:
     """Converse with the right-hand-man — the coherent voice of the Company about itself. Answers
     from live ground truth; suggests actions but performs none that skip the surfaced gate."""
-    return SUITE.chat(message, graph)
+    res = SUITE.chat(message, graph)
+    # VOICE-OUT: if the RHM is routed to the host speakers (rhm voice_out ∈ {server,both}) + voice on, speak
+    # the reply through the bridge's serialized speaker, so an MCP-driven RHM turn comes through too. The
+    # bridge /api/chat path has the same hook; both reach the ONE queue. Best-effort, never breaks the reply.
+    try:
+        cfg = SUITE.rhm_config()
+        if str(cfg.get("voice_out") or "browser").lower() in ("server", "both") and SUITE.voice_enabled() \
+                and (res or {}).get("reply"):
+            _bridge_say(res["reply"], voice=cfg.get("tts_voice"), engine=cfg.get("tts_engine"), who="rhm")
+    except Exception:
+        pass
+    return res
 
 
 @mcp.tool()
