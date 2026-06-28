@@ -81,16 +81,21 @@ control plane) and the bridge's missing transport auth. Page-face is safe withou
 
 ## Status (honest)
 - **Verified by execution:** `guides_acceptance` 27/27 · `guide_author_acceptance` 16/16 ·
-  `page_face_acceptance` 16/16 · `skills_contexts` 23/23 (no regression) · `cognition_governance` 43/43.
-- **Lead-verify (NOT green-painted):** (a) a live `create_guide` commit (tested via render/gate/
-  dry-run/propose; the write path is the proven `create_skill` one); (b) the guide-author's model-
-  compose on a REAL model (needs a bound author role + a live run); (c) the page-face `serve` against a
-  real browser (the pure `render_page` is fully tested).
+  `page_face_acceptance` 16/16 · `skills_contexts` 34/34 · `conv_howto` 22/22 · `ui_registry` pass ·
+  `roles_acceptance` 39/39 · `cognition_governance` 43/43.
+- **Now GREEN FOR REAL (the former lead-verify items, run live):**
+  (a) a live `create_guide` commit — `36dd56b [self-apply]`.
+  (b) the guide-author's model-compose on a REAL model — `guide://using_corpus_pipeline` (5118 chars,
+      grounded in `skill://corpus_pipeline` + `map_reduce_composition` + `patterned_visibility`),
+      composed on the live model Qwen3.5-4B at :8000 via the `guide_author` role.
+  (c) the page-face `serve` against a real HTTP request — 200 + no-script CSP + correct body, 404 loud.
+- **Three pre-existing reds — investigated + RESOLVED (commit baacd80):** `skills_contexts` blob://
+  (graduated, dropped from the unbuilt loop), `conv_howto` A2/D2 (corpus hit ~100% howto coverage →
+  fixture now derived dynamically + fails loud if unsatisfiable), `ui_registry` orphans (regex now
+  skips `${…}` dynamic refs; `ui://tray` registered in `addresses.json`).
 - **Follow-ups:** wire a `company` page-face service (systemd, separate port) + an MCP `page`/`attach`
-  verb; bind an author role and generate the first real guides — domain #1 = the DNA design system
-  once it is local (it can then be read via the filesystem, not the lead-only DesignSync tool).
-- **Pre-existing reds (NOT from this work):** `ui_registry_acceptance` orphan check + `conv_howto`
-  A2 fail with this work reverted too — flagged, not owned here.
+  verb; generate more real guides on more domains — domain #1 = the DNA design system once it is local
+  (read via the filesystem, not the lead-only DesignSync tool).
 
 ## Read next
 [[guides — constitution]] · [[skills — constitution]] · `runtime/guide_author.py` · `runtime/page_face.py`
