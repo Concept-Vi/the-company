@@ -24,10 +24,21 @@ behaviour. No silent deferral, no "tests pass = done."
 - [ ] **Discover SUBCOMMANDS too** (surfaced by the invocation work): the registry holds FLAGS, not
       subcommands (gh `pr`/`issue`, codex `exec`/`mcp`). To truly run "any capability" the discoverer should
       capture the subcommand tree, not just the flag table. Discovery enhancement → into scope.
-- [~] **Generalize the producers** — DEFERRED until the interpretive sweep COMPLETES (it is running ON
-      these producers right now; consolidating mid-sweep would risk it + add files instead of retiring
-      them). Post-sweep: collapse `ledger_interpret_codex.py` + `_ollama.py` + the Opus workflow into ONE
-      source-driven producer (platform/model = data). Honest defer, not avoidance.
+- [~] **Generalize the producers** — CODEX SIDE DONE (2026-06-28), kimi side still deferred. The codex lane
+      is now driven by the ONE `ledger_interpret_producer.py --backend codex` (the dead lane = zero risk to
+      consolidate, which is exactly what the original defer was protecting against). `ledger_interpret_codex.py`
+      remains only as the registry-binary resolver (`_resolve_codex`) the producer imports — not as a driver.
+      The KIMI side stays on `_ollama.py` until the sweep COMPLETES (it is running ON it right now; the v2
+      contract also lives there and the producer imports it). Post-sweep: retire `_ollama.py` as a driver too
+      (keep the contract home) + fold the Opus workflow in. Honest, partial, recorded.
+- [HELD] **Codex lane held — OpenAI/ChatGPT plan out of credits** (2026-06-28, Verified by `codex exec` rc=1
+      "Your workspace is out of credits. Add credits to continue."). NOT rate-limiting — permanent until a
+      human tops up. FIX shipped: the producer now CLASSIFIES terminal (credits/auth) vs transient (rate
+      limit) and raises `TerminalBackendError` → exit code 3 → the codex driver HOLDS (stops) instead of the
+      old mislabelled infinite "backoff 900s" that silently failed 120 files/pass. Verified by real use
+      (exit 3 + `{"held":true,...}`). The sweep is UNAFFECTED: the kimi lane is project-agnostic (queue spans
+      all projects) and finishes all 1066 alone, just slower. Resume codex by topping up credits + relaunching
+      `ledger_interpret_codex_drive.sh`. Surfaced to Tim as info (top-up = speed-only, non-blocking).
 - [x] **Auto code→capability deep-link (AST-precise)** — DONE + VERIFIED BY USE. `deep_link_ast` parses
       Python files for subprocess/exec calls, resolves argv[0] to a platform binary (literal or var), links
       only the flag literals in that call → `uses-capability` edges. True edge found

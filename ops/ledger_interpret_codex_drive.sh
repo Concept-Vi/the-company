@@ -19,12 +19,18 @@ for iter in $(seq 1 80); do
   BEFORE=$(remaining_of)
   echo "[codex-drive] iter $iter remaining=$BEFORE $(date -u +%H:%M:%S)" >> "$LOG"
   [ "$BEFORE" = "0" ] && { echo "[codex-drive] DONE" >> "$LOG"; break; }
-  $PY ops/ledger_interpret_codex.py --project "$PROJECT" --limit "$CHUNK" --concurrency "$CONC" >> "$LOG" 2>&1
+  # the ONE source-driven producer (backend=codex) — consolidates the codex lane (Tim 2026-06-28).
+  $PY ops/ledger_interpret_producer.py --project "$PROJECT" --backend codex --limit "$CHUNK" --concurrency "$CONC" >> "$LOG" 2>&1
+  PRC=$?
+  if [ "$PRC" = "3" ]; then
+    echo "[codex-drive] HELD: terminal backend error (out of credits / auth) — NOT retrying. Add ChatGPT/codex credits to resume; the kimi lane covers the whole sweep meanwhile. $(date -u +%H:%M:%S)" >> "$LOG"
+    break
+  fi
   $PY ops/ledger_interpret.py ingest --wave build-prep/the-one-system/interpret/wave-codex >/dev/null 2>>"$LOG"
   AFTER=$(remaining_of)
   echo "[codex-drive] iter $iter after=$AFTER" >> "$LOG"
   if [ "$AFTER" = "$BEFORE" ]; then
-    echo "[codex-drive] NO PROGRESS (likely rate-limited) → backoff ${BACKOFF}s $(date -u +%H:%M:%S)" >> "$LOG"
+    echo "[codex-drive] NO PROGRESS (transient — likely rate-limited) → backoff ${BACKOFF}s $(date -u +%H:%M:%S)" >> "$LOG"
     sleep "$BACKOFF"
   fi
 done

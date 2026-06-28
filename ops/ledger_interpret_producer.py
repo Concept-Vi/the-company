@@ -37,15 +37,38 @@ def _backend_ollama(prompt: str, model: str) -> str:
     return _call_ollama(prompt)              # uses COMPANY_INTERP_MODEL / the ollama default
 
 
+class TerminalBackendError(RuntimeError):
+    """A backend failure that RETRYING CANNOT FIX — out of credits, expired/invalid auth, revoked key — as
+    opposed to a transient rate-limit. The producer aborts the whole run LOUD on this so a driver HOLDS the
+    lane (surfaces it to a human) instead of hammering a dead account forever. (Tim 2026-06-28: the codex
+    lane mislabelled 'out of credits' as 'rate-limited' and infinite-backed-off, producing 120 silent
+    bad-json failures per pass — fail loud, distinguish permanent from transient.)"""
+
+
+# stderr/stdout signatures from the backend that mean HUMAN ACTION REQUIRED, not "wait and retry".
+_CODEX_TERMINAL = ("out of credits", "add credits", "insufficient_quota", "exceeded your current quota",
+                   "invalid api key", "incorrect api key", "unauthorized")
+
+
 def _backend_codex(prompt: str, model: str) -> str:
     import subprocess, tempfile
     from ops.ledger_interpret_codex import _resolve_codex   # registry-resolved binary (a real consumer)
     with tempfile.TemporaryDirectory() as td:
         last = os.path.join(td, "last.txt")
-        subprocess.run([_resolve_codex(), "exec", "--skip-git-repo-check", "-o", last, "-"],
-                       input=prompt + "\n\nOutput ONLY the JSON object.", capture_output=True,
-                       text=True, timeout=300, cwd=td)
-        return open(last).read() if os.path.exists(last) else ""
+        proc = subprocess.run([_resolve_codex(), "exec", "--skip-git-repo-check", "-o", last, "-"],
+                              input=prompt + "\n\nOutput ONLY the JSON object.", capture_output=True,
+                              text=True, timeout=300, cwd=td)
+        if os.path.exists(last):
+            out = open(last).read()
+            if out.strip():
+                return out
+        # No usable output — inspect what codex actually said (previously SWALLOWED → looked like bad-json).
+        diag = ((proc.stderr or "") + "\n" + (proc.stdout or "")).strip()
+        low = diag.lower()
+        if any(sig in low for sig in _CODEX_TERMINAL):
+            tail = diag.splitlines()[-1][:200] if diag else "credits/auth"
+            raise TerminalBackendError(f"codex: {tail}")
+        return ""                  # transient/unknown → empty (→ bad-json → no-progress → driver backoff)
 
 
 BACKENDS = {"ollama": _backend_ollama, "codex": _backend_codex}
@@ -67,6 +90,8 @@ def process_one(item: dict, out_dir: str, backend: str, model: str) -> tuple[str
     syms = _symbols_for(proj, path)
     try:
         resp = BACKENDS[backend](_prompt(proj, path, src, truncated, syms), model)
+    except TerminalBackendError:
+        raise                                    # human-action-required → abort the whole run (caught in main)
     except Exception as e:
         return path, False, f"{backend}:{e}"
     rec = _extract_json(resp)
@@ -118,15 +143,24 @@ def main():
     ok = fail = skip = 0; fails = []
     with ThreadPoolExecutor(max_workers=a.concurrency) as ex:
         futs = [ex.submit(process_one, it, out_dir, a.backend, a.model) for it in items]
-        for fut in as_completed(futs):
-            path, good, why = fut.result()
-            if good and why == "exists": skip += 1
-            elif good: ok += 1
-            else: fail += 1; fails.append(f"{path}: {why}")
-            if (ok+fail+skip) % 25 == 0:
-                print(f"  {ok+fail+skip}/{len(items)} ok={ok} fail={fail} skip={skip}", flush=True)
+        try:
+            for fut in as_completed(futs):
+                path, good, why = fut.result()
+                if good and why == "exists": skip += 1
+                elif good: ok += 1
+                else: fail += 1; fails.append(f"{path}: {why}")
+                if (ok+fail+skip) % 25 == 0:
+                    print(f"  {ok+fail+skip}/{len(items)} ok={ok} fail={fail} skip={skip}", flush=True)
+        except TerminalBackendError as e:
+            for f in futs:
+                f.cancel()
+            print(json.dumps({"held": True, "backend": a.backend, "reason": str(e),
+                              "note": "HUMAN ACTION REQUIRED (credits/auth) — NOT a transient rate limit. "
+                                      "The lane should HOLD (stop), not backoff-retry."}, indent=2), flush=True)
+            return 3
     print(json.dumps({"backend": a.backend, "total": len(items), "ok": ok, "fail": fail, "skip": skip,
                       "fails": fails[:15]}, indent=2))
+    return 0
 
 
 if __name__ == "__main__":
