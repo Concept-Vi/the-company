@@ -16,7 +16,18 @@ if REPO not in sys.path:
 from voice import stt as _stt
 
 PORT = int(os.environ.get("STT_SHIM_PORT", "4201"))
-PROVIDER = os.environ.get("ROOM_STT", "granite")               # the Company ear to use
+# NO pinned ear — resolve the company's CURRENTLY-ACTIVE ear at call time (loadout-linked): whatever ear
+# the company has selected/running is what OWUI uses. Switch the ear in the company → OWUI follows, no change.
+FORCE_EAR = os.environ.get("ROOM_STT", "")                     # optional hard override; empty = follow company
+
+
+def _active_ear() -> "str | None":
+    if FORCE_EAR:
+        return FORCE_EAR
+    try:
+        return _stt.active_ear()                                # the company's selected/default ear
+    except Exception:
+        return None                                            # None → transcribe() picks the active default
 
 
 def _extract_file(body: bytes, ctype: str) -> bytes:
