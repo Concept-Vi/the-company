@@ -539,8 +539,21 @@ class Suite:
         # drift detection). claude_code.py is pure data now; the binding lives in the wiring module.
         self._platform_registry = platform_registry()                 # discovers platforms/*.py (no spawn)
         self.capability_platform = self._platform_registry.get("claude-code")  # PlatformEntry (instance #1)
-        self.capability_registry = CapabilityRegistry()               # empty until discover() runs (LEAD)
+        self.capability_registry = CapabilityRegistry()
         set_capability_registry(self.capability_registry)             # the cap:// resolver reaches THIS object
+        # OPERATIONAL FIX (2026-06-28): populate the registry FROM THE LEDGER (spawn-free, ALL platforms) —
+        # the cap:// nodes are already discovered + persisted, so cap://<platform>/<kind>/<name> resolves
+        # live with NO binary spawn. Replaces the empty-until-LEAD-spawn behaviour whose live path TIMED OUT
+        # (claude's init-session discovery). Best-effort: ledger unreachable / no nodes → registry stays
+        # empty + the deferred live-discover path still applies (registry-is-truth: empty cap:// fails loud,
+        # never fabricated). Cycle-free: ops/ledger_capabilities imports contracts + psql only, not runtime.
+        self._cap_loaded_from_ledger = 0
+        if self._cfg_choice("COMPANY_CAP_LOAD_FROM_LEDGER", "1", ("0", "1")) == "1":
+            try:
+                from ops.ledger_capabilities import load_into_registry as _load_caps
+                self._cap_loaded_from_ledger = _load_caps(self.capability_registry)
+            except Exception:
+                self._cap_loaded_from_ledger = 0
         if self._cfg_choice("COMPANY_CAP_DISCOVER_AT_INIT", "0", ("0", "1")) == "1":
             self.discover_capabilities()                              # opt-in LEAD path — spawns the binary
 
@@ -1398,11 +1411,15 @@ class Suite:
         except Exception as e:
             models = None
             self._emit("warning", f"model registry unreachable ({type(e).__name__}) — "
-                       f"falling back to [{fcfg.DEFAULT_BRAIN}]; the source-of-truth list is degraded")
-        if not models:                                        # surface the degraded fallback, never silent (F6)
+                       f"the source-of-truth model list is degraded (empty); no model is fabricated "
+                       f"(no-silent-fallback). A model picker has nothing to offer until the endpoint returns.")
+        if not models:                                        # surface the degraded state, never silent (F6)
             if models is not None:
-                self._emit("warning", "model registry returned empty — falling back to the default brain")
-            models = [fcfg.DEFAULT_BRAIN]
+                self._emit("warning", "model registry returned empty — no models available "
+                           "(no fabricated fallback; cognition-is-role-resolved)")
+            # Do NOT fabricate a pinned-model list. Return [] (degraded) — the picker offers nothing, and any
+            # path that NEEDS a model fails loud via require_brain at its call-site, never a silent -pro list.
+            models = []
             degraded = True
         self._models_cache = models
         self._models_cache_at = _t.monotonic()
@@ -2936,7 +2953,11 @@ class Suite:
         from fabric import config as fcfg
         c = self._rhm_cfg()
         return {"mode": c.get("mode", self.DEFAULT_MODE),
-                "model": c.get("model") or fcfg.DEFAULT_BRAIN,
+                # rhm_config is a PURE getter read by ~50 callers for non-model fields (persona/stt/
+                # voice_path/JSON-serialize) — it must NEVER raise. Returns None when no model is
+                # configured; the LOUD failure lives at the chat chokepoint (_chat_prologue →
+                # require_brain), not here, and not as a silent -pro fallback (cognition-is-role-resolved).
+                "model": c.get("model"),
                 "base_url": c.get("base_url") or fcfg.DEFAULT_BASE_URL,
                 "persona": c.get("persona", ""),
                 # call-site timeout (D2): the interactive RHM model calls (chat reply, react) inherit
@@ -6388,6 +6409,12 @@ class Suite:
                 self.store.append_chat({"role": "assistant", "text": off, "grade": "working", "source": "twin"})
                 self._emit("chat", f"you: {message[:40]} (RHM off)", address="ui://chrome/chat")   # S2: chat organ
             return {"reply": off, "action": None, "mode": mode, "history": self.store.chat_history(40)}
+        # MODEL-RESOLVED GATE (before any model call): the RHM brain is a ROLE that RESOLVES to a model
+        # (cognition-is-role-resolved). rhm_config()["model"] is None when no model has been configured
+        # and COMPANY_BRAIN is unset — FAIL LOUD here rather than silently falling back to a pinned default
+        # (no-silent-fallback). This is the single chat chokepoint both chat() and chat_parts() run once.
+        from fabric import config as fcfg
+        fcfg.require_brain(cfg.get("model"), where="rhm:chat")
         # CAPABILITY-GATE (before any model call): the RHM acts through NATIVE tools, so the selected
         # model MUST support tool-calling. A non-tool model is a CONFIGURATION error — refuse it FAIL
         # LOUD (rule 4). The gate is an INSTANCE-METHOD CALL ON self (`self._model_supports_tools`) — the
@@ -9671,7 +9698,7 @@ class Suite:
         t = transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL, timeout=fcfg.DEFAULT_CLOUD_TIMEOUT)
         raw = _strip_fences(client.complete(
             t, [{"role": "system", "content": sys_p + "\n\n" + self._authoring_preamble()},
-                {"role": "user", "content": user_p}], model=model or fcfg.DEFAULT_BRAIN))
+                {"role": "user", "content": user_p}], model=fcfg.require_brain(model, where="suite:propose_node")))
         need = self._needs(raw)
         if need:
             return {"needs": need, "id": self._ask_operator(need, f"while building node '{name}': {spec}")}
@@ -9811,7 +9838,7 @@ class Suite:
         t = transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL, timeout=fcfg.DEFAULT_CLOUD_TIMEOUT)
         raw = _strip_fences(client.complete(
             t, [{"role": "system", "content": sys_p}, {"role": "user", "content": user_p}],
-            model=model or fcfg.DEFAULT_BRAIN))
+            model=fcfg.require_brain(model, where="suite:_draft_role_fields")))
         need = self._needs(raw)
         if need:
             return {"needs": need, "id": self._ask_operator(need, f"while drafting a role: {brief}")}
@@ -11661,7 +11688,7 @@ class Suite:
         raw = client.complete(transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL, timeout=fcfg.DEFAULT_CLOUD_TIMEOUT),
                               [{"role": "system", "content": sys_p + "\n\n" + self._authoring_preamble()},
                                {"role": "user", "content": user}],
-                              model=model or fcfg.DEFAULT_BRAIN)
+                              model=fcfg.require_brain(model, where="suite:propose_panel"))
         need = self._needs(raw)
         if need:
             return {"needs": need, "id": self._ask_operator(need, f"while building panel '{name}': {spec}")}
@@ -11758,7 +11785,7 @@ class Suite:
         code = _strip_fences(client.complete(
             transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL, timeout=fcfg.DEFAULT_CLOUD_TIMEOUT),
             [{"role": "system", "content": sys_p}, {"role": "user", "content": f"Build: {spec}"}],
-            model=model or fcfg.DEFAULT_BRAIN))
+            model=fcfg.require_brain(model, where="suite:propose_extension")))
         need = self._needs(code)
         if need:                                              # asked instead of fabricating
             return {"needs": need, "id": self._ask_operator(need, f"while building extension '{name}': {spec}")}

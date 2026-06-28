@@ -28,7 +28,7 @@ def run(inputs: dict, config: dict):
     from fabric import client, transport
     question = str(inputs.get("question", ""))
     context = str(inputs.get("context", ""))
-    model = config.get("model", fcfg.DEFAULT_BRAIN)
+    model = fcfg.require_brain(config.get("model"), where="node:ask")
     system = config.get("system", _SYSTEM)
     messages = [
         {"role": "system", "content": system},

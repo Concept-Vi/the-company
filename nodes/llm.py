@@ -35,7 +35,7 @@ CONFIG = {
 
 def run(inputs: dict, config: dict):
     from fabric import client, transport
-    model = config.get("model", fcfg.DEFAULT_BRAIN)
+    model = fcfg.require_brain(config.get("model"), where="node:llm")
     base_url = config.get("base_url", fcfg.DEFAULT_BASE_URL)
     system = config.get("system")
     messages = ([{"role": "system", "content": system}] if system else []) + \

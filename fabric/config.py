@@ -18,7 +18,18 @@ OLLAMA_DIRECT = os.environ.get("COMPANY_OLLAMA_URL", "http://localhost:11434/v1"
 DEFAULT_BASE_URL = os.environ.get("COMPANY_FABRIC_URL", OLLAMA_DIRECT)
 
 # The right-hand-man's default brain (D2): ollama-cloud, swappable.
-DEFAULT_BRAIN = os.environ.get("COMPANY_BRAIN", "deepseek-v4-pro:cloud")
+DEFAULT_BRAIN = os.environ.get("COMPANY_BRAIN")  # NO hardcoded default — resolve a model or fail loud (cognition-is-role-resolved; no-silent-fallback)
+
+
+def require_brain(model, *, where=""):
+    """Return `model` if a chat model was resolved, else FAIL LOUD. No silent fallback to a pinned model
+    (cognition-is-role-resolved; no-silent-fallback). The caller MUST resolve a model (role binding, node
+    config, or rhm_config loadout)."""
+    if model:
+        return model
+    raise RuntimeError(f"no chat model resolved{' at ' + where if where else ''} — a model must be explicitly "
+                       f"selected (role binding / node config / rhm_config loadout). Refusing to silently fall "
+                       f"back to a pinned default (cognition-is-role-resolved; no-silent-fallback).")
 
 # Embeddings have their OWN endpoint — they are NOT in litellm.config.yaml and DEFAULT_BASE_URL
 # is ollama :11434 (chat). OPERATIVE EMBEDDER (2026-06-16 switch, bge->pplx): pplx-embed-context-v1-4b
