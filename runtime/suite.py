@@ -4807,10 +4807,25 @@ class Suite:
             endpoint = "ollama"
         else:
             endpoint = "vllm"                                  # raw OpenAI-compatible vLLM (local workers)
+        # Classify WHY (not just True/False) so the chat gate can emit an HONEST message — Tim 2026-06-28:
+        # a transient endpoint blip must NOT be reflected as "the model can't tool-call / pick another model".
+        # `_last_tool_cap_reason` ∈ {capable, incapable, unreachable}; HTTPError is a URLError subclass, so
+        # catch it FIRST — a 4xx means the server RESPONDED rejecting the forced tool_choice (genuinely
+        # incapable), a 5xx/connection-refused/timeout means the endpoint is DOWN (the model is fine).
+        import urllib.error as _ue
+        import socket as _sock
         try:
             ok = bool(ftrans.model_supports_tools(model, base_url=base, endpoint=endpoint))
+            self._last_tool_cap_reason = "capable" if ok else "incapable"
+        except _ue.HTTPError as e:
+            self._last_tool_cap_reason = "incapable" if 400 <= e.code < 500 else "unreachable"
+            return False                                       # server responded (4xx) / errored (5xx); not cached
+        except (_ue.URLError, _sock.timeout, ConnectionError, TimeoutError, OSError):
+            self._last_tool_cap_reason = "unreachable"         # endpoint down — NOT a model verdict
+            return False
         except Exception:
-            return False                                       # cannot determine → False (safe), NOT cached
+            self._last_tool_cap_reason = "unreachable"         # cannot-determine → never misattribute to the model
+            return False                                       # safe refusal, NOT cached (immediate recovery)
         self._tools_cap_cache[key] = (ok, _t.monotonic())
         return ok
 
@@ -6421,10 +6436,20 @@ class Suite:
         # rhm_* tests monkeypatch `suite._model_supports_tools`; keep it an instance call or the gate goes
         # green on a forked brain. _model_supports_tools translates cannot-determine (endpoint down) → False.
         if not self._model_supports_tools(cfg["model"], cfg["base_url"]):    # 5-key refusal
-            refusal = (f"I can't act right now: the selected model '{cfg['model']}' does not report "
-                       f"native tool-calling support (or its endpoint is unreachable), and I act ONLY "
-                       f"through governed tools — I won't silently fall back to a non-acting path. "
-                       f"Select a tool-capable chat model in the RHM config.")
+            # HONEST reflection (Tim 2026-06-28): distinguish a model that GENUINELY can't tool-call (a
+            # config error → pick another model) from an endpoint that's momentarily UNREACHABLE (the model
+            # is fine → bring it up / retry). _model_supports_tools records which on _last_tool_cap_reason;
+            # a monkeypatched gate (rhm tests) doesn't set it → default to the incapable message.
+            reason = getattr(self, "_last_tool_cap_reason", "incapable")
+            if reason == "unreachable":
+                refusal = (f"I can't act right now: I can't reach the brain endpoint ({cfg['base_url']}) for "
+                           f"model '{cfg['model']}', so I can't act through my tools. This is a REACHABILITY "
+                           f"issue, not the model — it is configured and tool-capable; bring its service up "
+                           f"(`company up` the model) or retry. I won't silently fall back to a non-acting path.")
+            else:
+                refusal = (f"I can't act right now: the selected model '{cfg['model']}' does not support "
+                           f"native tool-calling, and I act ONLY through governed tools — I won't silently "
+                           f"fall back to a non-acting path. Select a tool-capable chat model in the RHM config.")
             if persist:
                 self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
                 self.store.append_chat({"role": "assistant", "text": refusal, "grade": "working", "source": "twin"})
