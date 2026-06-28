@@ -92,6 +92,10 @@ both nested → both resolved to `-pro`; the fix is moving it top-level). Verify
   cast (fired explicitly via `run_jury`). **⚠ E4 caveat:** N draws on ONE model are correlated (variance,
   not independent error) — a correctness-jury that matters needs model diversity; the verdict_rule shape
   accepts a future 2nd-model/cloud tiebreak. v1 single-model, limit documented.
+- **`guide_author`** — the **guide-author's brain role** (the narrative-guide face, 2026-06-28): composes a
+  how-to guide for a target, grounded ONLY in the supplied sources. `op:generate`, model resolved via the
+  registry (default_model None → the cfg brain; cognition-is-role-resolved, never pinned). Used by
+  `runtime/guide_author.py:model_composer`; in no mode_scope (fired explicitly, not a listening-cast member).
 - **`reduce_synth`** — the demonstrative **reduce-role** (C 2/4): the `reduce-tree` THOUGHT_SHAPE's declared
   `join` role made real — `op:generate`, takes the N map-output notes (composed by `run_reduce` into one
   `"notes"` input via the C 1/4 input-axis) → ONE merged `{summary}`. In no cast (fired explicitly via
