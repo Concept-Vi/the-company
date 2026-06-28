@@ -8,7 +8,10 @@ cd /home/tim/company
 PY=.venv/bin/python
 WAVE_FILES=${WAVE_FILES:-6}
 MAX_BATCHES=${MAX_BATCHES:-120}     # ~ files per wave = MAX_BATCHES (small batches → ~120-360 files/wave)
-CONC=${CONC:-5}
+CONC=${CONC:-10}     # kimi is a CLOUD model (kimi-k2.7-code:cloud) — bottleneck is parallel cloud requests,
+                     # not local GPU; fail≈0 at 5 → headroom. Bumped to 10 to replace lost codex throughput
+                     # (Tim 2026-06-28 "use kimi"). One lane @10 == two lanes @5 for a cloud API, but cleaner
+                     # (single ingest, no wave collision, no duplicate work).
 LOG=build-prep/the-one-system/interpret/drive.log
 echo "[drive] start $(date -u +%H:%M:%S)" >> "$LOG"
 
