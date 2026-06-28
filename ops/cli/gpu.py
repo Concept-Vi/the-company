@@ -14,7 +14,7 @@ bridge. Public API: read_gpu, budget_of, is_gpu_service, check_fit, plan_evictio
 teardown, format_state. (Named `gpu` not `resource` — `resource` shadows a stdlib module.)
 """
 import os, subprocess, signal, time
-from registry import vram_of, ceiling_mb
+from registry import vram_of, ram_of, ceiling_mb
 from systemd import port_open, is_active, control as _unit_control
 from telemetry import learned_vram
 
@@ -92,6 +92,39 @@ def read_gpu():
     return {"used": used, "free": free, "total": total, "util": util}
 
 
+# The system-RAM headroom (MB) the actuation gate keeps free — never gate down to literally 0 MemAvailable.
+# Read from the registry (registry-is-truth, not hardcoded); this default applies only if unset.
+_RAM_HEADROOM_DEFAULT_MB = 2048
+
+
+def _ram_headroom_mb(reg):
+    return reg.get("ram_headroom_mb", _RAM_HEADROOM_DEFAULT_MB)
+
+
+def read_system_ram():
+    """Measured SYSTEM RAM in MB → dict(total, available, used) or None if /proc/meminfo is unreadable.
+    The RAM analog of read_gpu(). `available` is the kernel's MemAvailable — its own estimate of how much
+    can be allocated WITHOUT swapping — which counts ALL processes on the box (Chrome, background evals,
+    anything), not just registered services. That is the truth the actuation gate must read: an OOM is
+    caused by TOTAL memory pressure, never by the Company's own services in isolation (the 2026-06-28
+    cascade was Granite + an embedder + ~44 Chrome procs — none individually over budget)."""
+    try:
+        with open("/proc/meminfo") as f:
+            mi = {}
+            for line in f:
+                k, _, rest = line.partition(":")
+                parts = rest.split()
+                if parts:
+                    mi[k.strip()] = int(parts[0])           # kB (first field)
+    except (OSError, ValueError):
+        return None
+    if "MemTotal" not in mi or "MemAvailable" not in mi:
+        return None
+    total = mi["MemTotal"] // 1024
+    avail = mi["MemAvailable"] // 1024
+    return {"total": total, "available": avail, "used": total - avail}
+
+
 def running_gpu_services(reg):
     """[(key, vram_mb)] for services that are up (port open) AND occupy the GPU."""
     out = []
@@ -106,6 +139,67 @@ def committed_mb(reg):
     return sum(mb for _, mb in running_gpu_services(reg))
 
 
+def committed_ram_mb(reg):
+    """Sum of ESTIMATED system-RAM across running services (config-time view — 'what we think we hold').
+    The actuation gate does NOT use this; it reads live MemAvailable (which also sees non-service
+    pressure). This sum is for telemetry / the 'holding memory' display only."""
+    return sum(ram_of(v) for v in reg["services"].values() if _is_running(v))
+
+
+def ram_fit(reg, to_start):
+    """The system-RAM leg of the capacity decision for starting `to_start` (service keys).
+
+    need = sum of estimated ram_mb for the NOT-yet-running services in the set (a running one already
+    holds its RAM). free = LIVE /proc/meminfo MemAvailable − headroom (read fresh, so all memory pressure
+    on the box is counted — the property that makes overcommit impossible-by-code, not just impossible
+    among Company services). Returns {ok, need, free, present}. present=False when /proc/meminfo is
+    unreadable → ok=True (don't block on an unmeasurable resource; mirrors check_fit's nvidia-smi-absent
+    fallback) but the caller is told to warn."""
+    svcs = reg["services"]
+    need = sum(ram_of(svcs[k]) for k in to_start if not _is_running(svcs[k]))
+    sysram = read_system_ram()
+    if sysram is None:
+        return {"ok": True, "need": need, "free": None, "present": False}
+    free = sysram["available"] - _ram_headroom_mb(reg)
+    return {"ok": need <= free, "need": need, "free": free, "present": True}
+
+
+def check_fit_unified(reg, to_start):
+    """The FULL capacity decision — BOTH legs: GPU VRAM (check_fit, reused byte-for-byte) AND system RAM
+    (ram_fit, live MemAvailable). Returns {vram:{ok,need,free,present}, ram:{ok,need,free,present}, ok}
+    where top-level ok = both legs ok. Non-mutating; does NOT touch check_fit or its three existing
+    callers — it COMPOSES them, so the VRAM path stays identical and this is the one call that knows about
+    both resources (used by the combo-capacity surface and any programmatic actuator)."""
+    vok, vneed, vfree, vpresent = check_fit(reg, to_start)
+    vram = {"ok": vok, "need": vneed, "free": vfree, "present": vpresent}
+    ram = ram_fit(reg, to_start)
+    return {"vram": vram, "ram": ram, "ok": vram["ok"] and ram["ok"]}
+
+
+def validate_combo_capacity(reg, services):
+    """CONFIG-TIME 'can this set EVER fit the hardware at all?' check — independent of what is running.
+    A loadout/combo whose ESTIMATED totals exceed the hardware is impossible by construction and must
+    fail LOUD when configured, not at a 3am OOM. Two ceilings:
+      • VRAM: sum of the set's budgeted VRAM  vs  the card ceiling (vram_ceiling_mb).
+      • RAM:  sum of the set's estimated ram_mb  vs  MemTotal − headroom.
+    Returns a dict the caller renders. ram_cap=None (ram_ok=True) when /proc/meminfo is unreadable —
+    config-time can't judge an unmeasurable ceiling, but the live actuation gate still will."""
+    svcs = reg["services"]
+    for k in services:
+        if k not in svcs:
+            raise KeyError(f"validate_combo_capacity: unknown service {k!r}")
+    vram_need = sum(budget_vram(reg, k) for k in services if is_gpu_service(svcs[k]))
+    vram_cap = ceiling_mb(reg)
+    ram_need = sum(ram_of(svcs[k]) for k in services)
+    sysram = read_system_ram()
+    ram_cap = (sysram["total"] - _ram_headroom_mb(reg)) if sysram else None
+    vram_ok = vram_need <= vram_cap
+    ram_ok = (ram_cap is None) or (ram_need <= ram_cap)
+    return {"ok": vram_ok and ram_ok, "vram_ok": vram_ok, "ram_ok": ram_ok,
+            "vram_need": vram_need, "vram_cap": vram_cap,
+            "ram_need": ram_need, "ram_cap": ram_cap, "ram_present": sysram is not None}
+
+
 def format_state(reg):
     """The 'what's holding the card' block — shown on refuse and on every `up`,
     so agents always know the state without a second call."""
@@ -114,6 +208,10 @@ def format_state(reg):
     if gpu:
         lines.append(f"  GPU (measured): {gpu['used']/1024:.1f} GB used / "
                      f"{gpu['free']/1024:.1f} GB free / {gpu['total']/1024:.1f} GB  ({gpu['util']}% util)")
+    ram = read_system_ram()
+    if ram:
+        lines.append(f"  RAM (measured): {ram['used']/1024:.1f} GB used / "
+                     f"{ram['available']/1024:.1f} GB available / {ram['total']/1024:.1f} GB")
     running = running_gpu_services(reg)
     if running:
         lines.append("  holding the card:")

@@ -81,7 +81,8 @@
         "unit": "company-canvas.service"
       },
       "health": "/",
-      "autostart": true
+      "autostart": true,
+      "ram_mb": 400
     },
     "bridge": {
       "group": "core",
@@ -92,11 +93,12 @@
         "unit": "company-bridge.service"
       },
       "health": "/api/now",
-      "autostart": true
+      "autostart": true,
+      "ram_mb": 500
     },
     "pages": {
       "group": "core",
-      "title": "Page-face — serves a rendered HTML page bound to any address (separate origin, no-script CSP)",
+      "title": "Page-face \u2014 serves a rendered HTML page bound to any address (separate origin, no-script CSP)",
       "port": 8774,
       "manage": {
         "type": "user-unit",
@@ -104,7 +106,8 @@
       },
       "health": "/page",
       "autostart": false,
-      "note": "On-demand (`company up pages`). DELIBERATELY a SEPARATE ORIGIN from the bridge control plane (:8770) so a served page can never same-origin-fetch /api; every page is served under a no-script CSP. A page is the visible face of ANY addressed thing (ui://, skill://, guide://, run://…), attached via inspect_address(op='attach_page'). Auth (who may reach :8774) rides the later Supabase move; separate-origin + no-script CSP hold regardless."
+      "note": "On-demand (`company up pages`). DELIBERATELY a SEPARATE ORIGIN from the bridge control plane (:8770) so a served page can never same-origin-fetch /api; every page is served under a no-script CSP. A page is the visible face of ANY addressed thing (ui://, skill://, guide://, run://\u2026), attached via inspect_address(op='attach_page'). Auth (who may reach :8774) rides the later Supabase move; separate-origin + no-script CSP hold regardless.",
+      "ram_mb": 300
     },
     "remote": {
       "group": "core",
@@ -115,7 +118,8 @@
         "unit": "company-remote.service"
       },
       "health": "/healthz",
-      "autostart": true
+      "autostart": true,
+      "ram_mb": 300
     },
     "session-supervisor": {
       "group": "core",
@@ -126,7 +130,8 @@
         "unit": "company-session-supervisor.service"
       },
       "health": "/health",
-      "note": "127.0.0.1 ONLY (exposure law, audit B3); spawns claude subprocesses ON DEMAND (idle = owns nothing); the SINGLE writer of agent_sessions.* events; consumes agent_sessions/mail.jsonl intents. Cap COMPANY_FABRIC_CONCURRENCY (default 3) \u00b7 per-turn watchdog COMPANY_FABRIC_TURN_TIMEOUT_S (default 900s) \u00b7 permission COMPANY_FABRIC_PERMISSION (default plan). Operator face: `company session`. On-demand per the no-boot-autostart law."
+      "note": "127.0.0.1 ONLY (exposure law, audit B3); spawns claude subprocesses ON DEMAND (idle = owns nothing); the SINGLE writer of agent_sessions.* events; consumes agent_sessions/mail.jsonl intents. Cap COMPANY_FABRIC_CONCURRENCY (default 3) \u00b7 per-turn watchdog COMPANY_FABRIC_TURN_TIMEOUT_S (default 900s) \u00b7 permission COMPANY_FABRIC_PERMISSION (default plan). Operator face: `company session`. On-demand per the no-boot-autostart law.",
+      "ram_mb": 300
     },
     "chat-4b": {
       "group": "brain",
@@ -164,7 +169,8 @@
           "kv_kb_per_token": 31.7,
           "measured": "2026-06-07 (256K solo: KV 8.37GiB/270482 tok)"
         }
-      }
+      },
+      "ram_mb": 2500
     },
     "tts-kokoro": {
       "group": "voice",
@@ -179,7 +185,8 @@
       "config": {
         "model": "",
         "_note": "model-id NOT located on disk (kokoro runs but its weights id is unconfirmed) \u2014 left empty; flag for verification. Not cataloged (no verified id)."
-      }
+      },
+      "ram_mb": 800
     },
     "stt-whisper": {
       "group": "voice",
@@ -193,7 +200,8 @@
       "note": "the live zero-install on-machine ear; serves the OpenAI-compat route /v1/audio/transcriptions (this build returns 404 for /inference). STT_DEFAULT=whispercpp. Registered in voice/stt.py STT_PROVIDERS.",
       "config": {
         "model": "mobiuslabsgmbh/faster-whisper-large-v3-turbo"
-      }
+      },
+      "ram_mb": 2000
     },
     "stt-parakeet": {
       "group": "voice",
@@ -214,7 +222,8 @@
       "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 VERIFIED RUNNING 2026-06-05 (load\u2192up ~30s, ~5.1 GB resident, transcribes; unload frees). Own NeMo venv (CUDA-13). Live multilingual workhorse \u2192 candidate STT_DEFAULT. See voice/ears/REQUIREMENTS.md.",
       "config": {
         "model": "nvidia/parakeet-tdt-0.6b-v3"
-      }
+      },
+      "ram_mb": 3000
     },
     "stt-canary": {
       "group": "voice",
@@ -235,7 +244,8 @@
       "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 heaviest (~10 GB resident, near-OOM); on-demand only, never co-resident with a local brain. Own NeMo venv. English-max + understanding. See voice/ears/REQUIREMENTS.md.",
       "config": {
         "model": "nvidia/canary-qwen-2.5b"
-      }
+      },
+      "ram_mb": 4000
     },
     "stt-granite": {
       "group": "voice",
@@ -256,7 +266,8 @@
       "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 own transformers venv (COMPANY_GRANITE_DEVICE=cpu dodges the GPU hazard). Compact top-accuracy cross-check. See voice/ears/REQUIREMENTS.md.",
       "config": {
         "model": "ibm-granite/granite-4.0-1b-speech"
-      }
+      },
+      "ram_mb": 9000
     },
     "tts-chatterbox": {
       "group": "voice",
@@ -277,7 +288,8 @@
       "note": "trial engine (persona Viv). Clones COMPANY_VOICE_REF. ~3.4 GB. See voice/engines/REQUIREMENTS.md.",
       "config": {
         "model": "ResembleAI/chatterbox"
-      }
+      },
+      "ram_mb": 2000
     },
     "tts-orpheus": {
       "group": "voice",
@@ -304,7 +316,8 @@
         "_engine": true,
         "_note": "engine (vLLM-backed, own unit + orpheus.py); config is the one source for gpu_util/max_model_len/model. NOT launched via serve_model.sh.",
         "coresident_brain_ctx": 65536
-      }
+      },
+      "ram_mb": 3000
     },
     "tts-cosyvoice": {
       "group": "voice",
@@ -331,7 +344,8 @@
         "_nonvllm": true,
         "_note": "CosyVoice2-0.5B own repo \u2014 fixed footprint (vram_mb, no gpu_util). voice = persona voice_description (inference_instruct2).",
         "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512"
-      }
+      },
+      "ram_mb": 2500
     },
     "tts-xtts": {
       "group": "voice",
@@ -352,7 +366,8 @@
       "note": "trial engine (persona Wren). Clones COMPANY_VOICE_REF; NON-COMMERCIAL license. ~2 GB. See voice/engines/REQUIREMENTS.md.",
       "config": {
         "model": "coqui/XTTS-v2"
-      }
+      },
+      "ram_mb": 2000
     },
     "tts-qwen3tts": {
       "group": "voice",
@@ -379,7 +394,8 @@
         "_engine": true,
         "_nonvllm": true,
         "_note": "transformers VoiceDesign \u2014 fixed footprint (vram_mb, no gpu_util). voice = persona voice_description (instruct)."
-      }
+      },
+      "ram_mb": 2500
     },
     "embed-bge": {
       "group": "models",
@@ -404,7 +420,8 @@
           "VLLM_LOGGING_LEVEL": "INFO"
         }
       },
-      "note": "config-driven via serve_model.sh (migrated from serve script 2026-06-06). Tune: `company config embed-bge <key> <value>`."
+      "note": "config-driven via serve_model.sh (migrated from serve script 2026-06-06). Tune: `company config embed-bge <key> <value>`.",
+      "ram_mb": 2000
     },
     "embed-jina-v4": {
       "group": "models",
@@ -421,7 +438,8 @@
       "config": {
         "model": "jinaai/jina-embeddings-v4",
         "_note": "config.model = JOIN/identity metadata ONLY \u2014 CUSTOM transformers server (see `serve`/`note`), NOT config-driven (vLLM lacks jina-v4 support; serve_jina_v4.py raw transformers). CORRECTED from an earlier 'confirm vLLM --runner pooling serves it' note, which contradicted the working custom server."
-      }
+      },
+      "ram_mb": 3000
     },
     "embed-pplx": {
       "group": "models",
@@ -438,7 +456,8 @@
       "config": {
         "model": "perplexity-ai/pplx-embed-context-v1-4b",
         "_note": "config.model = JOIN/identity metadata ONLY. This is a CUSTOM transformers server (see `serve`/`note`), deliberately NOT config-driven. The context-4b IS served \u2014 the live transcript-search embedder, wired + verified by the retrieval session 2026-06-12. Set here (catalog session) so capabilities_for() resolves served_by. CORRECTED from a wrong earlier value (pplx-embed-v1-0.6b + a 'launch UNVERIFIED' note) \u2014 it is the 4b and it serves."
-      }
+      },
+      "ram_mb": 3000
     },
     "embed-jina-v5": {
       "group": "models",
@@ -464,7 +483,8 @@
         "env": {
           "VLLM_USE_FLASHINFER_SAMPLER": "0"
         }
-      }
+      },
+      "ram_mb": 2000
     },
     "chat-2b": {
       "group": "models",
@@ -496,7 +516,8 @@
           "VLLM_USE_FLASHINFER_SAMPLER": "0"
         }
       },
-      "note": "config-driven via serve_model.sh; tune with `company config chat-2b gpu_util <x>`. gpu_util 0.45 \u2248 7.2 GB; co-resides with chat-08b (combo small-pair)."
+      "note": "config-driven via serve_model.sh; tune with `company config chat-2b gpu_util <x>`. gpu_util 0.45 \u2248 7.2 GB; co-resides with chat-08b (combo small-pair).",
+      "ram_mb": 2500
     },
     "chat-08b": {
       "group": "models",
@@ -528,7 +549,8 @@
           "VLLM_USE_FLASHINFER_SAMPLER": "0"
         }
       },
-      "note": "config-driven via serve_model.sh; tune with `company config chat-08b gpu_util <x>`. gpu_util 0.30 \u2248 4.9 GB reserved / ~4.0 GB measured (0.20 was too low \u2014 starved the KV cache; the slice must hold weights + KV)."
+      "note": "config-driven via serve_model.sh; tune with `company config chat-08b gpu_util <x>`. gpu_util 0.30 \u2248 4.9 GB reserved / ~4.0 GB measured (0.20 was too low \u2014 starved the KV cache; the slice must hold weights + KV).",
+      "ram_mb": 2000
     },
     "chat-nemotron": {
       "group": "models",
@@ -559,7 +581,8 @@
           "VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS": "0",
           "VLLM_USE_FLASHINFER_SAMPLER": "0"
         }
-      }
+      },
+      "ram_mb": 7000
     },
     "embed-qwen3": {
       "group": "models",
@@ -583,7 +606,8 @@
         "env": {
           "VLLM_USE_FLASHINFER_SAMPLER": "0"
         }
-      }
+      },
+      "ram_mb": 3000
     },
     "llama-swap": {
       "group": "models",
@@ -591,7 +615,8 @@
       "manage": {
         "type": "user-unit",
         "unit": "llama-swap.service"
-      }
+      },
+      "ram_mb": 200
     },
     "litellm": {
       "group": "models",
@@ -603,7 +628,8 @@
       },
       "serve": "~/company/fabric/serve_litellm.sh",
       "note": "The CURRENT clean proxy (litellm 1.83.7, .litellm-venv, fabric/litellm.config.yaml) \u2014 LOAD-BEARING for fabric cognition (fabric/config.py LITELLM_PROXY, OpenAI-format \u2192 ollama). Launched MANUALLY by fabric/serve_litellm.sh (no systemd unit). Corrected 2026-06-16: dropped the dangling 'litellm-proxy.service' manage ref (that was the STALE ~/claude-gateway proxy on :4000, now removed). \u2605 Claude Code does NOT use this \u2014 CC runs on company/ollama models via OLLAMA-NATIVE :11434 (ollama launch claude / the supervisor _provider_env), not this OpenAI proxy. board://item-4aa4f952.",
-      "health": "/health"
+      "health": "/health",
+      "ram_mb": 400
     },
     "ollama": {
       "group": "reach",
@@ -614,7 +640,8 @@
         "unit": "ollama.service"
       },
       "health": "/api/tags",
-      "note": "system-unit, kept enabled at boot (Tim's call). 0 VRAM idle; loads a model on request."
+      "note": "system-unit, kept enabled at boot (Tim's call). 0 VRAM idle; loads a model on request.",
+      "ram_mb": 0
     },
     "tailscale": {
       "group": "reach",
@@ -623,7 +650,8 @@
         "type": "system-unit",
         "unit": "tailscaled.service"
       },
-      "note": "system-unit, kept enabled at boot \u2014 the phone access path."
+      "note": "system-unit, kept enabled at boot \u2014 the phone access path.",
+      "ram_mb": 100
     },
     "pipeliner": {
       "group": "reach",
@@ -632,7 +660,8 @@
         "type": "user-unit",
         "unit": "github-runner.service"
       },
-      "note": "CI runner. On-demand as of 2026-06-06 (was boot-autostart). `company up pipeliner` when a CI run is needed; `company down pipeliner` to free it."
+      "note": "CI runner. On-demand as of 2026-06-06 (was boot-autostart). `company up pipeliner` when a CI run is needed; `company down pipeliner` to free it.",
+      "ram_mb": 300
     },
     "openclaw-gw": {
       "group": "reach",
@@ -640,7 +669,8 @@
       "manage": {
         "type": "user-unit",
         "unit": "openclaw-gateway.service"
-      }
+      },
+      "ram_mb": 200
     },
     "agent-sessions-exporter": {
       "group": "jobs",
@@ -671,7 +701,8 @@
       "serve": "~/company/ops/serve_rerank.sh",
       "vram_mb": 1300,
       "note": "GPU endpoint (COMPANY_RERANK_DEVICE=cuda, 2026-06-28 Tim \u2014 listwise rerank is attention-bound, CPU was ~16s on realistic chunks; GPU warm ~0.05s). Override COMPANY_RERANK_DEVICE=cpu to pin to CPU (0 VRAM). Surfaces ops/rerank.py:Reranker(jina-v3) as POST /rerank {query, candidates|texts:[str|dict], top_n?} -> {ranking:[{item,text,rerank_score,orig_rank,rank},...]} sorted desc; GET /health. Runs from ~/vllm-env via serve_rerank.sh. ~1.3GB (bf16 on GPU; fp32 was ~2.8GB); weights jinaai/jina-reranker-v3 in HF cache. The rerank stage for cross-session semantic recall (runtime/session_recall.py) + the determine pipeline (runtime/recall_determine.py).",
-      "health": "/health"
+      "health": "/health",
+      "ram_mb": 1500
     },
     "remote-gateway": {
       "group": "reach",
@@ -697,7 +728,8 @@
       "note": "The LEANEST ear: ONNX-runtime (no torch/NeMo), <1GB, built for low-latency LIVE conversation + Speech-To-Action. Runs CPU by default (~9x realtime, ~0.3-0.5s/short-turn on this box) so it co-resides with the brain+embedder with zero VRAM cost. Doesn't pad short clips (fast on commands). English-focused. Model COMPANY_MOONSHINE_MODEL (default moonshine/base; v2-medium ~Whisper-large accuracy is a drop-in env swap). Tuning: built-in IntentRecognizer (semantic command->action), vad_threshold, max_tokens_per_second. The default interaction-loadout ear.",
       "config": {
         "model": "moonshine/base"
-      }
+      },
+      "ram_mb": 1200
     },
     "stt-parakeet-onnx": {
       "group": "voice",
@@ -711,7 +743,9 @@
       "note": "The QUANTIZED lean Parakeet: int8 ONNX on sherpa-onnx (no NeMo). ~1-1.5GB RAM, CPU by default (int8 sweet spot, 0 VRAM) so it co-resides like Moonshine. Accurate (~6.3% WER) + 25 EUROPEAN languages w/ auto-detect. Supports HOTWORD/CONTEXT BIASING (boost UI terms/command words \u2014 the STA payoff, up to thousands of phrases). Set COMPANY_PARAKEET_ONNX_DEVICE=cuda for the GPU provider. The parakeet variant of the interaction loadout class. (Distinct from stt-parakeet, the heavy NeMo/GPU build.)",
       "config": {
         "model": "parakeet-tdt-v3-int8"
-      }
+      },
+      "ram_mb": 1500
     }
-  }
+  },
+  "ram_headroom_mb": 2048
 }

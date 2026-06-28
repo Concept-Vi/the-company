@@ -33,6 +33,16 @@ def vram_of(svc):
     return svc.get("vram_mb") or svc.get("load", {}).get("vram_mb") or 0
 
 
+def ram_of(svc):
+    """Approx SYSTEM-RAM cost (MB) of a service — top-level ram_mb, else load.ram_mb, else 0.
+    The host-memory twin of vram_of: a CPU-resident model (e.g. stt-granite fp32 ~9 GB, the ONNX ears,
+    whisper.cpp) costs system RAM and ZERO VRAM, so it is invisible to the VRAM budget — yet host-RAM
+    overcommit is what triggers the kernel OOM-killer. 0 means 'no material resident host footprint'
+    (a timer with no process, ollama idle). Estimates, like vram_mb — the live actuation gate
+    (gpu.ram_fit) reads real /proc/meminfo MemAvailable, so an imperfect estimate can't cause an OOM."""
+    return svc.get("ram_mb") or svc.get("load", {}).get("ram_mb") or 0
+
+
 def serve_script(svc):
     """Absolute path to the service's serve script (for `swap`), or None."""
     s = svc.get("serve")

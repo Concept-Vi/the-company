@@ -114,6 +114,23 @@ def _act(reg, action, keys, force=False, evict=False, wait=False):
                 print(f"    Free space first (`company down <service>`), re-run with --evict to "
                       f"auto-make-room, or --force to override.")
                 sys.exit(2)
+        # WS-R: the SYSTEM-RAM leg of the capacity invariant (the block above is the GPU/VRAM leg).
+        # ram_fit reads LIVE /proc/meminfo MemAvailable, so ALL memory pressure on the box (Chrome,
+        # background evals, anything) is counted — overcommit is impossible by code, not just impossible
+        # among Company services (the real OOM cause was non-service pressure). RAM overflow is
+        # kernel-fatal (the OOM-killer); --force does NOT override it (force is VRAM-only by design).
+        ram = gpu.ram_fit(reg, keys)
+        if not ram["present"]:
+            print("  ⚠ system RAM unreadable (/proc/meminfo) — RAM leg skipped (VRAM-only, like nvidia-smi absent).")
+        else:
+            if ram["need"]:
+                print(f"  request needs ~{ram['need']/1000:.1f} GB RAM; ~{ram['free']/1000:.1f} GB available "
+                      f"now (live MemAvailable − headroom).")
+            if not ram["ok"]:
+                print(f"  ✖ REFUSED — would exceed system RAM by ~{(ram['need']-ram['free'])/1000:.1f} GB. "
+                      f"RAM overflow is kernel-fatal; --force does NOT override it.")
+                print(f"    Free memory first (close other RAM users / `company down <service>`), then retry.")
+                sys.exit(2)
     word = {"up": "start", "down": "stop", "restart": "restart"}[action]
     # MEASURED-RESTART FIX (2026-06-28): on a restart the old instance is still resident here, so a
     # free_before snapshot would count it — and free_after (old freed, new loaded) ends up HIGHER,
@@ -210,7 +227,13 @@ def main():
             print("  no combos defined."); return
         for name, c in cs.items():
             note = f"   — {c['note']}" if c.get("note") else ""
-            print(f"  @{name:<14} {', '.join(c['services'])}{note}")
+            cap = gpu.validate_combo_capacity(reg, c["services"])
+            print(f"  @{name:<14} {', '.join(c['services'])}{'' if cap['ok'] else '   ⚠ EXCEEDS HARDWARE'}{note}")
+            if not cap["ok"]:
+                if not cap["vram_ok"]:
+                    print(f"      ⚠ VRAM ~{cap['vram_need']/1000:.1f} GB > ~{cap['vram_cap']/1000:.1f} GB card")
+                if not cap["ram_ok"]:
+                    print(f"      ⚠ RAM ~{cap['ram_need']/1000:.1f} GB > ~{cap['ram_cap']/1000:.1f} GB usable")
         return
     if cmd == "config":
         if len(args) < 2:
@@ -281,6 +304,20 @@ def main():
         except KeyError:
             sys.exit(f"unknown target {target!r}. Try a service, a group "
                      f"({'|'.join(reg['groups'])}), or `all`.")
+        # WS-R: config-time hardware-fit guard for a loadout/combo. If the SET can never fit this hardware
+        # (sum of estimates > card VRAM, or > usable system RAM) it's a capacity IMPOSSIBILITY — fail loud
+        # here, before the live gate, so configuring a too-big loadout tells you immediately (Tim's bar).
+        if cmd in ("up", "restart") and isinstance(target, str) and target.startswith("@"):
+            cap = gpu.validate_combo_capacity(reg, keys)
+            if not cap["ok"]:
+                why = []
+                if not cap["vram_ok"]:
+                    why.append(f"VRAM ~{cap['vram_need']/1000:.1f} GB > ~{cap['vram_cap']/1000:.1f} GB card")
+                if not cap["ram_ok"]:
+                    why.append(f"RAM ~{cap['ram_need']/1000:.1f} GB > ~{cap['ram_cap']/1000:.1f} GB usable")
+                sys.exit(f"  ✖ loadout {target} cannot fit this hardware: {'; '.join(why)}. "
+                         f"Edit the combo in services.json — this is a capacity impossibility, not a "
+                         f"live-state refusal (no --force/--evict can satisfy it).")
         _act(reg, cmd, keys, force="--force" in flags, evict="--evict" in flags, wait="--wait" in flags)
         return
     if cmd == "logs":
