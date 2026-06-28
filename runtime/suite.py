@@ -506,6 +506,14 @@ class Suite:
         self.MODE_AUTODETECT = (_persisted_autodetect if _persisted_autodetect in self.MODE_AUTODETECT_OPTIONS
                                 else self._cfg_choice("COMPANY_MODE_AUTODETECT",
                                                       type(self).MODE_AUTODETECT, self.MODE_AUTODETECT_OPTIONS))
+        # WS5 — the auto-detect exclude-list (same precedence as the toggle above: persisted store value →
+        # env → class default). Parsed to a frozenset of VALID mode ids; unknown ids from the env/persisted
+        # source are dropped (best-effort, never crash boot — user input is fail-loud-validated in
+        # set_rhm_config instead). Only constrains AUTO-detection; manual set_mode is never gated.
+        _persisted_exclude = self._rhm_cfg().get("mode_autodetect_exclude")
+        _raw_exclude = (_persisted_exclude if isinstance(_persisted_exclude, str)
+                        else os.environ.get("COMPANY_MODE_AUTODETECT_EXCLUDE", type(self).MODE_AUTODETECT_EXCLUDE))
+        self.MODE_AUTODETECT_EXCLUDE = frozenset(m for m in self._split_mode_list(_raw_exclude) if m in self.MODES)
 
         # Mirror-Registry LANE-CAP-WIRE — install the CapabilityRegistry so resolve_address(cap://…) can
         # reach it (introspection.registry.capability_registry() raises until set). The registry is a
@@ -1544,6 +1552,8 @@ class Suite:
                 # live resolved value + the valid options, so the surface renders + (later) sets it.
                 "MODE_AUTODETECT": self.MODE_AUTODETECT,
                 "MODE_AUTODETECT_OPTIONS": list(self.MODE_AUTODETECT_OPTIONS),
+                # WS5 — the auto-detect exclude-list (modes never auto-suggested/switched; manual still works).
+                "MODE_AUTODETECT_EXCLUDE": sorted(self.MODE_AUTODETECT_EXCLUDE),
             },
             # api_verbs — PROJECTED from bridge.BRIDGE_ROUTES (registry-is-truth, the B-fix): the /api/*
             # subset of the SINGLE-SOURCE route table, by the intrinsic path-prefix (NOT a hand-maintained
@@ -2182,6 +2192,14 @@ class Suite:
     MODE_AUTODETECT_OPTIONS = ("off", "suggest", "auto")
     MODE_AUTODETECT = "off"
 
+    # WS5 — the auto-detect EXCLUDE-LIST: mode ids the auto-detector must NEVER suggest OR switch to (it
+    # gates BOTH suggest+auto — the conservative scope). Comma/space-separated string class default
+    # ("" = none excluded, backward-compatible); __init__ resolves it to a frozenset of VALID mode ids
+    # (X17). MANUAL set_mode is NEVER gated by this — a mode on the list can always be chosen by hand; the
+    # list only constrains AUTO-detection. Runtime-settable via set_rhm_config (persisted under
+    # `mode_autodetect_exclude`, validated against MODES — fail loud). Empty by default (Tim's call).
+    MODE_AUTODETECT_EXCLUDE = ""
+
     # --- the MODEL-ROLE REGISTRY (registry-is-truth; mirrors STT_PROVIDERS / the node registry) -------
     # A ROLE is a named model-FUNCTION of the collective cognition: a specific job done by a model that
     # is NOT the conversational brain. The brain (rhm_config.model) is the primary/conscious role and
@@ -2685,6 +2703,14 @@ class Suite:
                         out[k] = sub[k]
         return out
 
+    @staticmethod
+    def _split_mode_list(raw) -> list:
+        """Split a comma/space-separated mode-list string → a clean, order-preserving list of ids (delimiters
+        normalised, empties dropped). The parse for the auto-detect exclude-list slot. A non-str → []."""
+        if not isinstance(raw, str):
+            return []
+        return [t for t in raw.replace(",", " ").split() if t]
+
     def autodetect_mode(self, candidate: str) -> dict:
         """E2-BACKEND — honour the mode AUTO-DETECT toggle (self.MODE_AUTODETECT) over a SUPPLIED candidate
         mode. The toggle (a config item, NOT hardcoded — direction §6.5) decides what auto-detection DOES:
@@ -2699,6 +2725,12 @@ class Suite:
         if candidate not in self.MODES:
             raise ValueError(f"autodetect_mode: unknown candidate {candidate!r} — one of {self.MODES} "
                              f"(rule 8: never fabricate a mode)")
+        # WS5 — the EXCLUDE-LIST gate (gates BOTH suggest+auto, the conservative scope): an excluded mode is
+        # never auto-suggested OR auto-switched. MANUAL set_mode is unaffected (this is the auto path only).
+        if candidate in self.MODE_AUTODETECT_EXCLUDE:
+            return {"toggle": self.MODE_AUTODETECT, "candidate": candidate, "applied": None,
+                    "action": "excluded",
+                    "note": f"{candidate!r} is on the auto-detect exclude-list (manual set_mode still works)"}
         toggle = self.MODE_AUTODETECT
         if toggle == "off":
             return {"toggle": toggle, "candidate": candidate, "applied": None, "action": "noop"}
@@ -2825,7 +2857,8 @@ class Suite:
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
                    if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
-                            "roles", "tts_engine", "tts_voice", "voice_path", "voice_input_mode", "brain_knobs", "MODE_AUTODETECT")}
+                            "roles", "tts_engine", "tts_voice", "voice_path", "voice_input_mode", "brain_knobs",
+                            "MODE_AUTODETECT", "MODE_AUTODETECT_EXCLUDE")}
         if "brain_knobs" in allowed:                          # S5 — temperature/max_tokens/top_p (numeric, fail-loud)
             bk = allowed["brain_knobs"]
             if not isinstance(bk, dict):
@@ -2900,6 +2933,19 @@ class Suite:
             # the new value IMMEDIATELY (this turn), without waiting for a reload. Persistence (below,
             # via set_config) carries it across a reload; __init__ re-seeds self.MODE_AUTODETECT from it.
             self.MODE_AUTODETECT = ad
+        if "MODE_AUTODETECT_EXCLUDE" in allowed:              # WS5 — the auto-detect exclude-list slot
+            # Accept a comma/space string OR a list. FAIL LOUD (rule 4/8) on any id that isn't a registered
+            # mode — never a silent wrong exclusion. Persist under the lowercase slot key (mirrors the toggle
+            # slot so _rhm_cfg/__init__ read it back); X17 re-resolve the live frozenset for THIS turn.
+            raw = allowed.pop("MODE_AUTODETECT_EXCLUDE")
+            ids = self._split_mode_list(raw) if isinstance(raw, str) else [str(m) for m in (raw or [])]
+            unknown = [m for m in ids if m not in self.MODES]
+            if unknown:
+                raise ValueError(f"MODE_AUTODETECT_EXCLUDE has unknown mode(s) {unknown} — one of "
+                                 f"{tuple(self.MODES)} (rule 8: never fabricate a mode)")
+            clean = list(dict.fromkeys(ids))                  # dedup, order-preserving
+            allowed["mode_autodetect_exclude"] = ",".join(clean)   # "" = none excluded
+            self.MODE_AUTODETECT_EXCLUDE = frozenset(clean)
         if "stt" in allowed:                                  # the ear slot — validate against voice/stt.py's
             # source of truth (never fabricate a provider id, rule 8). When the stt lane's registry has
             # shipped we validate ∈ its ids; until then (registry absent → no ids) we accept any non-empty
