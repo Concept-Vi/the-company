@@ -2209,6 +2209,15 @@ class Suite:
     MODE_AUTODETECT_OPTIONS = ("off", "suggest", "auto")
     MODE_AUTODETECT = "off"
 
+    # The brain SAMPLING family (brain_knobs) — the full vLLM/OpenAI sampling params the RHM may set, with
+    # their numeric type (int for token/k counts, float for the rest). These ride the transport allowlist
+    # (_SAMPLING_KEYS) verbatim to vLLM, so a knob set here reaches the model. The Qwen3.5 model card gives
+    # the recommended values (thinking-general: temp 1.0 / top_p 0.95 / top_k 20 / presence_penalty 1.5);
+    # all are live-settable + persisted (set_rhm_config), tunable per Tim's "keep changing things".
+    BRAIN_KNOB_TYPES = {"temperature": float, "top_p": float, "top_k": int, "min_p": float,
+                        "presence_penalty": float, "frequency_penalty": float, "repetition_penalty": float,
+                        "max_tokens": int}
+
     # WS5 — the auto-detect EXCLUDE-LIST: mode ids the auto-detector must NEVER suggest OR switch to (it
     # gates BOTH suggest+auto — the conservative scope). Comma/space-separated string class default
     # ("" = none excluded, backward-compatible); __init__ resolves it to a frozenset of VALID mode ids
@@ -3022,17 +3031,17 @@ class Suite:
                    if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
                             "roles", "tts_engine", "tts_voice", "voice_path", "voice_input_mode", "brain_knobs",
                             "MODE_AUTODETECT", "MODE_AUTODETECT_EXCLUDE", "voice_out")}
-        if "brain_knobs" in allowed:                          # S5 — temperature/max_tokens/top_p (numeric, fail-loud)
+        if "brain_knobs" in allowed:                          # S5 — the vLLM sampling family (numeric, fail-loud)
             bk = allowed["brain_knobs"]
             if not isinstance(bk, dict):
-                raise ValueError("brain_knobs must be a dict {temperature?,max_tokens?,top_p?}")
+                raise ValueError(f"brain_knobs must be a dict of {sorted(self.BRAIN_KNOB_TYPES)}")
             clean = {}
             for k, v in bk.items():
-                if k not in ("temperature", "max_tokens", "top_p"):
-                    raise ValueError(f"unknown brain knob {k!r} — one of (temperature,max_tokens,top_p)")
-                if v is not None:
+                if k not in self.BRAIN_KNOB_TYPES:            # the full Qwen3.5-spec family (temp/top_p/top_k/
+                    raise ValueError(f"unknown brain knob {k!r} — one of {sorted(self.BRAIN_KNOB_TYPES)}")
+                if v is not None:                            # min_p/presence_penalty/frequency_penalty/rep/max_tokens)
                     try:
-                        clean[k] = int(v) if k == "max_tokens" else float(v)
+                        clean[k] = self.BRAIN_KNOB_TYPES[k](v)   # int for top_k/max_tokens, float for the rest
                     except (TypeError, ValueError):
                         raise ValueError(f"brain knob {k!r} must be numeric, got {v!r}")
             existing = dict(self.rhm_config().get("brain_knobs", {})); existing.update(clean)
@@ -6557,7 +6566,7 @@ class Suite:
         # NATIVE tool-calling: complete_with_tools returns the whole message dict {content, tool_calls}.
         # FAIL LOUD on exhaustion (FabricError propagates, no fallback). S5 — the brain's runtime knobs.
         _bk = cfg.get("brain_knobs") or {}
-        _bkargs = {k: _bk[k] for k in ("temperature", "max_tokens", "top_p") if k in _bk and _bk[k] is not None}
+        _bkargs = {k: _bk[k] for k in self.BRAIN_KNOB_TYPES if k in _bk and _bk[k] is not None}
         # CONTEXT-SIZE BRAIN RESOLVE (Tim 2026-06-22: "do not trim when there are other options"): the rich
         # grounded context legitimately exceeds the resident 4B's 4096 window — so RESOLVE THE MODEL TO THE
         # CONTEXT, never starve the context to the small model. The SAME TIM-RULE pick brain_router uses: fits
