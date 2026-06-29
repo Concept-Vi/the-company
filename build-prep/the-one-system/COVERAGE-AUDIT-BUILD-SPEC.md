@@ -35,7 +35,17 @@ The coverage audit (4B as auditor-vs-ground-truth, finds what the deterministic 
 - [ ] Real sampled batch via `run_role(think=False)` over items → the blind-spot map by language/extractor.
 - [ ] A front to view it.
 
+## Outputs + flow chaining (answered 2026-06-30)
+- **Where outputs go:** `store.put_content(out)` → immutable `cas://` content + an atomic `run://<turn>/<role>` mutable pointer + an `op.run` index record (cognition.py:834). Every run is addressable (`inspect_address`), discoverable (`runs(op=list/find)`), and **feedable as another run's input** (resolved via the run:// resolver).
+- **Flow chaining USED:** the MAP outputs (two `coverage_audit` run:// addresses) → `run_reduce(mode='rule', concat)` → one joined result, instant, no model. Outputs-into-inputs proven. `run_cascade` is the saved-flow form (step output threads → next step input); `run_graph` the memoized DAG form.
+- **The full-run shape:** a saved CASCADE — map `coverage_audit` over the ledger's files (32-way) → `run_reduce` (concat / `tally-by:` for the blind-spot map by language) → persist. Plus a front.
+
+## The TWO blockers for the full sweep (must resolve first)
+- **B1 — thinking-on breaks every no-think-less tool.** `run_items` / `run_reduce(role)` / `run_draft` / `run_cascade` do NOT expose `think`; the FP8 brain defaults thinking ON → these TIME OUT (confirmed: run_draft ×2, run_reduce(reduce_synth) ×1). Only `run_role` exposes `think=False`. *Root fix options:* bake no-think into the role spec / a generation_policy so batch tools inherit it; OR add a `think` axis to run_items/run_reduce/run_cascade; OR raise the engine request timeout. Deterministic reduces (`mode='rule'`) sidestep it (no model) — use them for structured joins.
+- **B2 — input-assembly not addressable.** Each audit needs (file content + its ledger symbols); `run_items`/`cascade` fan over addresses resolved via `resolve_address`, but `code://` returns content only (not the ledger symbols). *Root fix:* enrich `resolve_address(code://)` to include the ledger's extracted symbols, OR a corpus projection that pairs each file with its symbols (cf. the existing `code_archaeology` projection + dragnet cascade).
+
 ## Root issues found (resolve at root — Tim 2026-06-30)
+0. **Concurrency is already 32** — verified live (`--max-num-seqs 32 --gpu-util 0.9`); the other session restarted the brain. My earlier "stuck at 2" was a stale `ps` read. No restart needed.
 1. **Extractor misses module-level constants/dicts** (CONFIRMED by the audit's first real finding). `parse_python` (code_archaeology.py / ledger_build.py) captures functions/classes but not `NAME = {...}` module assignments → the entire `dials/` registry (and likely role `DIAL`/`RULE` rows, config dicts) extract ZERO symbols. *Root fix:* capture module-level constant/dict assignments as symbols (kind=`constant`/`module_dict`), re-extract. This is exactly what the coverage audit exists to surface.
 2. **Registry drift** — live 4B (`chat-4b-fp8`, :8001, FP8, 64k) ≠ registered `chat-4b` (:8000, AWQ). The everyday brain is now `chat-4b-fp8` (combos.interaction migrated) — tools/harnesses must target it.
 3. **Concurrency configured-but-not-applied** — `chat-4b-fp8` config = `max_num_seqs 32, gpu_util 0.9`, but the RUNNING process is stale at `--max-num-seqs 2 --gpu-util 0.5`. Applying needs a brain RESTART; GPU is at 0.1GB free so 0.9-util needs evicting co-residents (tts-kokoro etc.). Risky to do blindly (safety-critical live brain + active other session) — coordinate.
