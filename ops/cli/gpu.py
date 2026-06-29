@@ -69,7 +69,14 @@ def auto_gpu_util(reg, key):
     if fixed is None or kv_per_tok is None or not mml:
         return None
     kv_mb = kv_per_tok * mml / 1024.0
-    need_mb = fixed + kv_mb + _vram_overhead_mb(reg)
+    # PER-SEQ fixed reservation (hybrid Mamba/SSM state + block tables), reserved at LOAD for max_num_seqs
+    # slots — MEASURED into the profile (per_seq_mb). The static overhead margin cannot cover it: at
+    # max_num_seqs=32 it is ~1.1 GiB (≈34 MiB × 32), 30× the conversational 2-slot case — the exact
+    # under-count behind the high-concurrency OOMs. A profile WITHOUT per_seq_mb (e.g. the AWQ chat-4b) →
+    # term is 0 → byte-identical to before (no regression for already-profiled models).
+    per_seq_mb = prof.get("per_seq_mb") or 0
+    max_seqs = c.get("max_num_seqs") or 1
+    need_mb = fixed + kv_mb + per_seq_mb * max_seqs + _vram_overhead_mb(reg)
     ceiling = ceiling_mb(reg)
     if ceiling <= 0:
         return None
