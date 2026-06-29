@@ -2704,14 +2704,97 @@ class Suite:
         if cli not in _sys.path:
             _sys.path.insert(0, cli)
         import capabilities as _cap
+        import registry as _reg_mod
+        reg = _reg_mod.load()
+        # Capture the brain pointer BEFORE the switch — the revert anchor if the new brain won't answer.
+        prior = {"model": self.rhm_config().get("model"), "base_url": self.rhm_config().get("base_url")}
         results = []
         for s in services:
             res = _cap.ensure_resident(s, evict=True, wait=True)   # approved → authorize eviction; RAM+VRAM-gated
             results.append({"service": s, "action": res.get("action"),
                             "resident": res.get("resident"), "message": res.get("message")})
+        # COMPLETE THE ATOMIC SWITCH — repoint the RHM brain to THIS loadout's own brain (verified by a live
+        # probe, reverting on regression). Without this the RHM stays pointed at the just-EVICTED brain = the
+        # broken-brain class the loadout-resolution design names ("hit twice"). set_rhm_config already exists +
+        # works; this is the missing WIRE, so "what is resident" and "what the RHM points at" cannot diverge.
+        repoint = self._repoint_rhm_for_loadout(services, reg, prior=prior)
         self._emit("mode", f"loadout «{payload.get('loadout_class')}» applied ({len(services)} services)",
                    address="ui://chrome/toolbar")
-        return {"sid": sid, "loadout_class": payload.get("loadout_class"), "results": results}
+        return {"sid": sid, "loadout_class": payload.get("loadout_class"), "results": results, "repoint": repoint}
+
+    def _brain_in_loadout(self, services, reg):
+        """The brain-group service(s) NAMED in this loadout's service list — registry-is-truth: the brain that
+        BELONGS to the loadout, NOT `brain_keys[0]` (the first brain in the whole registry, which would grab
+        chat-4b/the AWQ worker regardless of the loadout). A loadout normally names exactly one brain; >1 is
+        ambiguous (fail loud), 0 = a tool-only loadout (no repoint)."""
+        return [s for s in services if (reg["services"].get(s) or {}).get("group") == "brain"]
+
+    def _repoint_rhm_for_loadout(self, services, reg, *, prior=None) -> dict:
+        """Finish the atomic loadout switch: point the RHM brain at the loadout's OWN brain (model + local
+        endpoint, both from the registry), VERIFIED by a live inference probe, REVERTING the brain on
+        regression. This dissolves the broken-brain class — after a switch, 'what is resident' and 'what the
+        RHM points at' can never diverge. Fail loud if the new brain will not answer (never a silent broken
+        brain). `prior` = {model, base_url} captured BEFORE the switch — the revert anchor."""
+        import os as _os, sys as _sys
+        cli = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "ops", "cli")
+        if cli not in _sys.path:
+            _sys.path.insert(0, cli)
+        import capabilities as _cap
+        brains = self._brain_in_loadout(services, reg)
+        if not brains:
+            return {"repointed": False, "reason": "loadout names no brain (tool-only) — RHM pointer unchanged"}
+        if len(brains) > 1:
+            raise ValueError(f"loadout names >1 brain service {brains} — ambiguous which to point the RHM at "
+                             f"(fail loud; a loadout must name at most one brain).")
+        bkey = brains[0]
+        cfg = reg["services"][bkey].get("config") or {}
+        model_id = cfg.get("model")
+        endpoint = _cap._endpoint_for(reg, bkey)
+        if not model_id or not endpoint:
+            raise ValueError(f"brain service {bkey!r} has no model/port in the registry — cannot repoint (fail loud).")
+        # VERIFY BY USE — a real inference call, not a port poll. _probe_tools returns True/False when the brain
+        # ANSWERS (tool_call emitted or not), None when it is unreachable. Our brains are all tool-capable, so
+        # None here = the freshly-started brain is not actually serving → regression → revert.
+        alive = _cap._probe_tools(endpoint, model_id) is not None
+        if not alive:
+            reverted = None
+            if prior and prior.get("model"):
+                pkey = _cap.service_key_for(reg, prior["model"])   # the prior brain's service-key (may be evicted)
+                if pkey:
+                    try:
+                        _cap.ensure_resident(pkey, evict=True, wait=True)   # bring the prior brain back
+                        self.set_rhm_config({"model": prior["model"],
+                                             "base_url": prior.get("base_url") or _cap._endpoint_for(reg, pkey)})
+                        reverted = prior["model"]
+                    except Exception as _e:
+                        self._emit("warning", f"loadout switch revert FAILED for {prior['model']}: {_e}",
+                                   address="ui://chrome/toolbar")
+            self._emit("warning",
+                       f"loadout switch: brain {model_id} @ {endpoint} did not answer the verify probe — "
+                       f"{'reverted to ' + reverted if reverted else 'NO revert possible'}",
+                       address="ui://chrome/toolbar")
+            raise _cap.EnsureResidentError(
+                f"loadout switch failed: brain {model_id} @ {endpoint} did not answer the verify probe. "
+                + (f"RHM reverted to {reverted}." if reverted
+                   else "Could not revert the brain — recover with `company up @<prior loadout>`.")
+                + " Fail loud (no silent broken brain).")
+        self.set_rhm_config({"model": model_id, "base_url": endpoint})
+        return {"repointed": True, "service": bkey, "model": model_id, "base_url": endpoint}
+
+    def repoint_rhm_to_loadout(self, services) -> dict:
+        """PUBLIC repoint for the bare CLI loadout door (`company up @loadout` → bridge → here), capturing the
+        live RHM pointer as the revert anchor. ONE repoint logic, two callers: the confirm-gated apply_loadout
+        AND the CLI `company up @loadout` both land on _repoint_rhm_for_loadout (verify-by-probe + revert), so
+        EITHER door dissolves the broken-brain class — never a second, weaker repoint path. Services already
+        resident here (the CLI started them); this only repoints+verifies."""
+        import os as _os, sys as _sys
+        cli = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "ops", "cli")
+        if cli not in _sys.path:
+            _sys.path.insert(0, cli)
+        import registry as _reg_mod
+        reg = _reg_mod.load()
+        prior = {"model": self.rhm_config().get("model"), "base_url": self.rhm_config().get("base_url")}
+        return self._repoint_rhm_for_loadout(list(services or []), reg, prior=prior)
 
     def _mode_directive(self, mode: str) -> str:
         # WS3: when overlays are active, read the FOLDED stack's directive (an overlay may replace it);

@@ -85,6 +85,38 @@ def _wait_and_record(reg, keys, free_before, timeout=420):
                   f"per-service-attributable, telemetry skipped)")
 
 
+def _repoint_loadout_brain(reg, keys, brain_key):
+    """After `company up @loadout` brings a brain-carrying loadout up, ask the bridge to repoint the RHM at
+    that loadout's brain (the bridge owns the live Suite/RHM-config + the ONE verify+revert repoint logic —
+    no parallel repoint here). Bridge DOWN is handled LOUD, never silent: the RHM pointer is persisted + read
+    at the next bridge start, so a missed repoint would break the brain THEN — so we print the exact manual
+    fix instead of pretending it's done."""
+    import json as _json, urllib.request as _ur, urllib.error as _ue
+    cfg = reg["services"][brain_key].get("config") or {}
+    model, port = cfg.get("model"), cfg.get("port")
+    endpoint = f"http://127.0.0.1:{port}/v1" if port else None
+    body = _json.dumps({"services": keys}).encode()
+    req = _ur.Request("http://127.0.0.1:8770/api/loadout/repoint", data=body,
+                      headers={"Content-Type": "application/json"})
+    try:
+        out = _json.loads(_ur.urlopen(req, timeout=30).read())
+        if out.get("repointed"):
+            print(f"  ✓ RHM brain → {out.get('model')} @ {out.get('base_url')} (loadout switch complete)")
+        else:
+            print(f"  · RHM pointer unchanged ({out.get('reason', 'no brain in loadout')})")
+    except _ue.HTTPError as e:
+        # the bridge answered but the repoint FAILED (e.g. the new brain didn't pass the verify probe) — loud.
+        detail = e.read().decode(errors="replace")[:300]
+        print(f"  ✖ RHM repoint FAILED ({e.code}): {detail}")
+        print(f"    The brain may be mid-load; retry the `company up @loadout`, or set it manually once it serves:")
+        print(f"    curl -s :8770/api/rhm-config -d '{{\"model\":\"{model}\",\"base_url\":\"{endpoint}\"}}'")
+    except (_ue.URLError, OSError) as e:
+        # bridge DOWN — do NOT pretend the switch is complete. The pointer is stale until repointed.
+        print(f"  ⚠ bridge not reachable ({e}) — the RHM brain was NOT repointed.")
+        print(f"    The RHM is still pointed at the PRIOR (now-evicted) brain; fix when the bridge is up:")
+        print(f"    curl -s :8770/api/rhm-config -d '{{\"model\":\"{model}\",\"base_url\":\"{endpoint}\"}}'")
+
+
 def _act(reg, action, keys, force=False, evict=False, wait=False):
     svcs = reg["services"]
     if action in ("up", "restart"):
@@ -319,6 +351,14 @@ def main():
                          f"Edit the combo in services.json — this is a capacity impossibility, not a "
                          f"live-state refusal (no --force/--evict can satisfy it).")
         _act(reg, cmd, keys, force="--force" in flags, evict="--evict" in flags, wait="--wait" in flags)
+        # LOADOUT DOOR — after a @loadout comes up, the RHM brain must FOLLOW it (else it stays pointed at the
+        # just-evicted brain = the broken-brain class). Only for an @loadout that carries a brain (a tool-only
+        # loadout, or a bare-service start, repoints nothing). The repoint logic (verify+revert) lives in the
+        # bridge's Suite — ONE logic, two callers — so the CLI POSTs to it (the store/RHM is the bridge's).
+        if cmd in ("up", "restart") and isinstance(target, str) and target.startswith("@"):
+            brains = [k for k in keys if (reg["services"].get(k) or {}).get("group") == "brain"]
+            if brains:
+                _repoint_loadout_brain(reg, keys, brains[0])
         return
     if cmd == "logs":
         if len(args) < 2:

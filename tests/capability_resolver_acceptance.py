@@ -307,9 +307,12 @@ def main():
                           "qwen3_xml", "--reasoning-parser", "qwen3", "--trust-remote-code"],
         "chat-08b":      ["--enable-prefix-caching", "--enable-auto-tool-choice", "--tool-call-parser",
                           "qwen3_xml", "--reasoning-parser", "qwen3", "--trust-remote-code"],
+        # chat-4b-fp8 carries kv_cache_dtype:fp8 in its capability_overrides (the FP8-KV work, 40ee0fa) → the
+        # resolver injects --kv-cache-dtype fp8 (after --language-model-only, before --trust-remote-code). This
+        # is the LIVE brain's real flag list; the expectation tracks it (registry-is-truth, not a stale literal).
         "chat-4b-fp8":   ["--enable-prefix-caching", "--enable-auto-tool-choice", "--tool-call-parser",
                           "qwen3_xml", "--reasoning-parser", "qwen3", "--language-model-only",
-                          "--trust-remote-code"],
+                          "--kv-cache-dtype", "fp8", "--trust-remote-code"],
         "chat-nemotron": ["--quantization", "compressed-tensors", "--cpu-offload-gb", "6",
                           "--enforce-eager", "--trust-remote-code"],
         "embed-bge":     ["--runner", "pooling", "--trust-remote-code"],

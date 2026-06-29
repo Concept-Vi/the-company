@@ -92,6 +92,10 @@ BRIDGE_ROUTES = (
     # is the LIVE manual-drive door (firing it fires roles = computation, floor-clean by construction).
     "/api/activation/tick",
     "/api/say",
+    # LOADOUT DOOR: the bare CLI `company up @loadout` POSTs here AFTER services come up, so the RHM brain
+    # follows the loadout (one repoint logic — verify+revert — shared with apply_loadout). Dissolves the
+    # broken-brain class on BOTH switch doors (the design's part-3 actuator names `company up @loadout`).
+    "/api/loadout/repoint",
     # S1 (overnight) — the BUILDER side-panel: one streaming turn of the embedded Claude Code session.
     # OPERATOR FACE ONLY (never on mcp_face); plan-mode by default (COMPANY_PANEL_PERMISSION).
     "/api/claude/turn",
@@ -3084,6 +3088,16 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/rhm-config":          # configure model/provider + persona
                 b = self._body()
                 self._send(200, json.dumps(SUITE.set_rhm_config(b)))
+            elif self.path == "/api/loadout/repoint":     # the CLI loadout door — repoint the RHM to the loadout's brain
+                # `company up @loadout` POSTs the loadout's service list AFTER bringing it up; the RHM brain
+                # then follows the loadout (verify-by-probe + revert, the SAME wire apply_loadout uses). A
+                # tool-only loadout repoints nothing (returns repointed:false); a dead new brain reverts +
+                # raises (→ 500, fail loud). No silent broken brain.
+                b = self._body()
+                services = b.get("services") or []
+                if not isinstance(services, list):
+                    raise ValueError("/api/loadout/repoint needs a 'services' list (the loadout's service keys)")
+                self._send(200, json.dumps(SUITE.repoint_rhm_to_loadout(services)))
             elif self.path == "/api/coa":                 # decision-compiler UP — value-framing
                 b = self._body()
                 self._send(200, json.dumps(SUITE.coa(b["id"])))
