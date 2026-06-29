@@ -23,7 +23,8 @@ PGCONF = {"host": os.environ.get("COMPANY_LEDGER_PGHOST", "127.0.0.1"),
           "user": os.environ.get("COMPANY_LEDGER_PGUSER", "postgres"),
           "db": os.environ.get("COMPANY_LEDGER_PGDB", "postgres"),
           "pw": os.environ.get("COMPANY_LEDGER_PGPASSWORD", "postgres")}
-MAX_FILE_CHARS = 48000   # cap how much of a file we feed (kimi context); note truncation in output
+# NO truncation (Tim 2026-06-29): a cap makes an oversize read SILENT and STATIC. Send the WHOLE file; if it
+# exceeds the model's context the call FAILS LOUD (recorded as a fail) — visible + recoverable, never partial.
 
 
 def _symbols_for(project: str, path: str) -> list:
@@ -44,16 +45,15 @@ def _symbols_for(project: str, path: str) -> list:
     return out
 
 
-def _prompt(project: str, path: str, src: str, truncated: bool, symbols: list) -> str:
+def _prompt(project: str, path: str, src: str, symbols: list) -> str:
     symlist = "\n".join(f"  - {s['code_id']} | {s['kind']} | {s['signature'] or s['name']}" for s in symbols[:120])
     sympart = (f"\n\nThis file's DETERMINISTIC SYMBOLS (describe EACH in the symbols[] output, keyed by code_id):\n{symlist}"
                if symbols else "\n\n(No code symbols in this file — symbols[] = [].)")
-    trunc = "\n[NOTE: file truncated for length — describe what's shown.]" if truncated else ""
     return f"""You add the INTERPRETIVE layer for a ledger of code/design substrates. NEUTRAL, file-local, NO ranking.
 
 FILE: {project}/{path}
 --- BEGIN FILE ---
-{src}{trunc}
+{src}
 --- END FILE ---{sympart}
 
 Output ONE JSON object, nothing else (no markdown fence, no prose). EXACT keys:
@@ -114,12 +114,9 @@ def process_one(item: dict, out_dir: str) -> tuple[str, bool, str]:
         src = raw.decode("utf-8", errors="replace")
     except Exception as e:
         return path, False, f"read:{e}"
-    truncated = len(src) > MAX_FILE_CHARS
-    if truncated:
-        src = src[:MAX_FILE_CHARS]
     syms = _symbols_for(proj, path)
     try:
-        resp = _call_ollama(_prompt(proj, path, src, truncated, syms))
+        resp = _call_ollama(_prompt(proj, path, src, syms))
     except Exception as e:
         return path, False, f"ollama:{e}"
     rec = _extract_json(resp)

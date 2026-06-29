@@ -25,8 +25,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 # the ONE v2 contract + helpers (single home — reuse, never re-spell)
-from ops.ledger_interpret_ollama import (_prompt, _symbols_for, _extract_json, _call_ollama,
-                                         MAX_FILE_CHARS, PGCONF)
+from ops.ledger_interpret_ollama import (_prompt, _symbols_for, _extract_json, _call_ollama, PGCONF)
 
 PROJECT_ROOTS = {"company": REPO, "counterpart-design": "/home/tim/repos/counterpart/design",
                  "claude-ds": os.path.join(REPO, "design", "claude-ds")}
@@ -84,12 +83,9 @@ def process_one(item: dict, out_dir: str, backend: str, model: str) -> tuple[str
         src = raw.decode("utf-8", errors="replace")
     except Exception as e:
         return path, False, f"read:{e}"
-    truncated = len(src) > MAX_FILE_CHARS
-    if truncated:
-        src = src[:MAX_FILE_CHARS]
     syms = _symbols_for(proj, path)
     try:
-        resp = BACKENDS[backend](_prompt(proj, path, src, truncated, syms), model)
+        resp = BACKENDS[backend](_prompt(proj, path, src, syms), model)
     except TerminalBackendError:
         raise                                    # human-action-required → abort the whole run (caught in main)
     except Exception as e:

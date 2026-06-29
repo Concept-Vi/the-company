@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
-from ops.ledger_interpret_ollama import _prompt, _symbols_for, _extract_json, PGCONF, MAX_FILE_CHARS  # one contract
+from ops.ledger_interpret_ollama import _prompt, _symbols_for, _extract_json, PGCONF  # one contract
 
 
 def _resolve_codex() -> str:
@@ -62,11 +62,8 @@ def process_one(project: str, path: str) -> tuple[str, bool, str]:
         src = raw.decode("utf-8", errors="replace")
     except Exception as e:
         return path, False, f"read:{e}"
-    truncated = len(src) > MAX_FILE_CHARS
-    if truncated:
-        src = src[:MAX_FILE_CHARS]
     syms = _symbols_for(project, path)
-    prompt = _prompt(project, path, src, truncated, syms) + "\n\nOutput ONLY the JSON object."
+    prompt = _prompt(project, path, src, syms) + "\n\nOutput ONLY the JSON object."
     with tempfile.TemporaryDirectory() as td:
         last = os.path.join(td, "last.txt")
         try:
