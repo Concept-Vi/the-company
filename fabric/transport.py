@@ -88,6 +88,25 @@ def _apply_response_format(body: dict, opts: dict) -> None:
         body["response_format"] = {"type": "json_object"}      # structured-output request (existing path)
 
 
+def _apply_thinking(body: dict, opts: dict) -> None:
+    """Set body["chat_template_kwargs"]["enable_thinking"] from opts["thinking"] — the vLLM stack's
+    USE-CONTRACT for the `reasoning` capability (the capability-type's vLLM use_ref). Shared by BOTH
+    openai_transport AND openai_tools_transport, so the text path (run_role) and the tools path
+    (chat_parts) honor reasoning identically — patching only one would silently skip the RHM chat path.
+    The vLLM /v1 path carries thinking in chat_template_kwargs (the model's OWN official template gates on
+    enable_thinking — verified byte-identical to Qwen/Qwen3.5-4B); ollama_native_transport carries it as
+    body.think instead (that stack's own contract). ONE opt key — `think` — across BOTH stacks (NOT a second
+    name like `thinking`: ollama_native_transport already reads opts["think"] and cognition already emits it,
+    so a divergent key would silently bypass one path). Each stack TRANSLATES the one `think` bool to its own
+    mechanism: vLLM → chat_template_kwargs.enable_thinking (here); ollama → body.think. Absent opts["think"]
+    → no key added (byte-identical for any caller not requesting it). The DECISION to think (per role/mode,
+    ONLY iff the model declares the `reasoning` capability) is the resolver's use-gate UPSTREAM; the transport
+    only forwards. vLLM 0.21 returns the split reasoning in message.`reasoning` (NOT reasoning_content); a
+    thinking turn that returns no reasoning is drift → the caller loud-fails, never falls back."""
+    if opts.get("think") is not None:
+        body.setdefault("chat_template_kwargs", {})["enable_thinking"] = bool(opts["think"])
+
+
 def _fill_meta(opts: dict, data: dict) -> None:
     """ADDITIVE finish_reason + token-count passthrough (O3). If the caller passed a `meta={}` dict in
     opts, fill it IN PLACE from the response envelope — WITHOUT touching the transport's return type, so
@@ -128,6 +147,7 @@ def openai_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", 
         body = {"model": model, "messages": messages, "stream": False}
         _apply_response_format(body, opts)                     # json_schema branch › json_object › off
         _apply_sampling(body, opts)                            # the sampling family (temp/max_tokens/top_p/repetition_penalty/…), allowlist-gated
+        _apply_thinking(body, opts)                            # the reasoning capability's vLLM use-contract (chat_template_kwargs.enable_thinking)
         req = urllib.request.Request(
             base_url.rstrip("/") + "/chat/completions",
             data=json.dumps(body).encode(),
@@ -156,6 +176,7 @@ def openai_tools_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "oll
         body = {"model": model, "messages": messages, "stream": False}
         _apply_response_format(body, opts)                     # json_schema branch › json_object › off
         _apply_sampling(body, opts)                            # the sampling family (temp/max_tokens/top_p/repetition_penalty/…), allowlist-gated
+        _apply_thinking(body, opts)                            # the reasoning capability's vLLM use-contract (chat_template_kwargs.enable_thinking)
         tools = opts.get("tools")
         if tools:                                              # only add the tool keys when tools passed
             body["tools"] = tools
@@ -240,12 +261,18 @@ def model_supports_tools(model: str, base_url: str = DEFAULT_BASE_URL, api_key: 
       - endpoint='litellm' : the proxy's model_info / supports_function_calling field. (Proxy was
                              down at probe — implemented per the documented field; any failure or a
                              missing field RAISES, never assume-capable.)
-      - endpoint='vllm'    : a raw vLLM OpenAI endpoint has no caps field to read, so we PROBE: a tiny
-                             chat completion with a forced tool_choice. A server launched with
-                             --enable-auto-tool-choice honours it and returns a tool_call (→ True); one
-                             without tool support errors on the forced choice (→ raises, fail loud). This
-                             is an honest runtime VERIFICATION, not an assume — vLLM is supported
-                             natively (no need to route through litellm just to read a flag).
+      - endpoint='vllm'    : a raw vLLM OpenAI endpoint has no caps field to read AND the forced
+                             tool_choice probe is RETIRED (capability-resolution deliverable c, Tim
+                             2026-06-29). The forced probe was the SAME brittle mechanism that mislabelled
+                             the 4B as "can't tool-call": a forced tool_choice + --reasoning-parser
+                             false-negatives (vLLM #19051/#39056), and "disabling thinking to make the
+                             probe pass" papers over a mechanism that shouldn't exist. DECLARATION IS
+                             TRUTH — a vLLM model's tool capability is DECLARED in the catalog
+                             (model_capabilities.json / the family). _model_supports_tools reads that
+                             declaration FIRST; this helper is reached for a vLLM endpoint ONLY when the
+                             model is UNDECLARED, and an undeclared vLLM model FAILS LOUD here (raise —
+                             "declare this model"), it is NEVER coerced through a forced choice. No probe,
+                             no silent assume, no thinking-disable.
       - any other endpoint : RAISE (cannot determine).
     """
     forbid_gemini(model)                                       # hard constraint, fail loud, FIRST
@@ -287,23 +314,21 @@ def model_supports_tools(model: str, base_url: str = DEFAULT_BASE_URL, api_key: 
         )
 
     if endpoint == "vllm":
-        # No caps field on a raw vLLM endpoint → PROBE by forcing a trivial tool call. A tool-enabled
-        # vLLM (--enable-auto-tool-choice) honours the forced tool_choice and returns a tool_call;
-        # a server without tool support 400s on the forced choice → urlopen raises → fail loud (never
-        # assume-capable). A 200 that returns NO tool_calls → the model didn't actually call it → False.
-        probe_tool = {"type": "function", "function": {
-            "name": "ping", "description": "health probe",
-            "parameters": {"type": "object", "properties": {}}}}
-        body = {"model": model, "messages": [{"role": "user", "content": "ping"}],
-                "tools": [probe_tool], "tool_choice": {"type": "function", "function": {"name": "ping"}},
-                "max_tokens": 8, "stream": False}
-        req = urllib.request.Request(
-            root + "/v1/chat/completions", data=json.dumps(body).encode(),
-            headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"})
-        with urllib.request.urlopen(req, timeout=timeout) as r:   # 400/unreachable → raises → fail loud
-            data = json.loads(r.read())
-        msg = (data.get("choices") or [{}])[0].get("message", {}) or {}
-        return bool(msg.get("tool_calls"))                        # honoured the forced tool → supports tools
+        # FORCED-CHOICE PROBE RETIRED (deliverable c — Tim 2026-06-29: declaration is truth; the forced
+        # tool_choice probe is the brittle mechanism that mislabelled the 4B and conflicts with the
+        # reasoning-parser, vLLM #19051/#39056). _model_supports_tools reads the DECLARATION first and only
+        # delegates here for a vLLM model that is UNDECLARED in the catalog. An undeclared vLLM model is not
+        # coerced through a forced choice — it FAILS LOUD so the operator DECLARES it (the no-silent-assume
+        # law). This dissolves the false-incapable class by construction: a declared model can never be
+        # demoted by a flaky probe, and an undeclared one surfaces as a missing declaration, never a
+        # mislabel. (Tools still flow on the REAL chat path with tool_choice="auto", where thinking + tools
+        # coexist naturally — that path needs no probe.)
+        raise ValueError(
+            f"fabric: cannot determine tool-capability for {model!r} on a raw vLLM endpoint — the forced "
+            f"tool_choice probe is RETIRED (deliverable c). DECLARATION IS TRUTH: declare this model's tool "
+            f"capability in ops/model_capabilities.json (or via its family), then it resolves without any "
+            f"probe. FAIL LOUD, never assume-capable, never force a tool_choice (it false-negatives under "
+            f"--reasoning-parser).")
 
     raise ValueError(
         f"fabric: cannot determine tool-capability for {model!r} — unknown endpoint kind "

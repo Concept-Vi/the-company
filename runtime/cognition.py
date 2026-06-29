@@ -412,15 +412,50 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
                 eff_think = _resolve_slot(_tslot, coordinate)
         elif _tslot is not None:                           # a literal bool — fixed, coordinate-independent
             eff_think = _tslot
-    # THINK-CONTROL routing (additive; eff_think=None → byte-identical: the openai /v1 path, unchanged). The /v1
-    # endpoint SILENTLY IGNORES `think`; ollama's NATIVE /api/chat honours it (verified by-use: 1304→43 tokens).
-    # So for an ollama-served model (no HF "/" path) with a think value, route to the native transport. vLLM
-    # models stay on /v1 — their enable_thinking (chat_template_kwargs) is the post-verify follow (not wired
-    # here yet), so think is honestly a no-op on vLLM for now, never a silent wrong-claim.
-    if eff_think is not None and "/" not in model:
+    # THINK-CONTROL routing (additive; eff_think=None → byte-identical: the openai /v1 path, unchanged). Each
+    # STACK carries `think` its OWN way: ollama's NATIVE /api/chat honours body.think (verified by-use: 1304→43
+    # tokens); vLLM's /v1 carries it as chat_template_kwargs.enable_thinking (deliverable b — NOW WIRED in
+    # _apply_thinking on openai_transport / openai_tools_transport, no longer a no-op). So route by the STACK,
+    # which is the ENDPOINT (base_url), NOT a model-name heuristic. The prior `"/" not in model` test was the
+    # SAME class-error this build dissolves: a vLLM model served under a BARE name (e.g. a registry alias) has
+    # no "/", so it would have been mis-routed to ollama's /api/chat (wrong endpoint). Classify the endpoint the
+    # SAME way the tool-cap gate does (suite._model_supports_tools): ollama is :11434; the resident vLLM workers
+    # (:8000/:8001) and any other OpenAI-compatible base are the openai path. ollama-native ONLY when the base IS
+    # the ollama endpoint; everything else (vLLM) → openai_transport, which now sends enable_thinking. eff_think
+    # None → openai path either way (byte-identical).
+    from fabric import config as _fcfg
+    _base_root = (base_url or "").rstrip("/")
+    _is_ollama = ("11434" in _base_root) or (_base_root == _fcfg.DEFAULT_BASE_URL.rstrip("/"))
+    if eff_think is not None and _is_ollama:
         t = transport.ollama_native_transport(base_url=base_url, timeout=timeout)
     else:
         t = transport.openai_transport(base_url=base_url, timeout=timeout)
+    # STRUCTURED-OUTPUT use-gate (deliverable d — DECLARATION IS TRUTH, no silent downgrade). A generate role
+    # ALWAYS carries an output_schema (eff_schema) → it requests schema-constrained decode (client.complete
+    # derives response_format.json_schema from `schema=`; the resident vLLM 0.21 guided-decode honours it).
+    # The gate: request it iff the model is CAPABLE; refuse on an EXPLICIT declared-false. Tri-state, same as
+    # the tool gate: json_schema.value True → fire; False → REFUSE (FabricError) — NEVER silently fall back to
+    # bare json_object on a model that declared it can't constrain (that would be a silent downgrade, the
+    # C-law violation: the role's schema contract would be quietly unenforced at the decoder); None/undeclared
+    # → PROCEED (only an explicit false demotes — an undeclared model isn't broken by this gate, mirroring c).
+    # Both residents (AWQ + FP8) declare json_schema.value=true → no resident regression; client-side
+    # validate/retry remains the guarantee regardless (F9), this gate stops a known-incapable decode silently.
+    if eff_schema is not None:
+        try:
+            import sys as _sys
+            _ops_cli = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ops", "cli")
+            if _ops_cli not in _sys.path:
+                _sys.path.insert(0, _ops_cli)
+            import capabilities as _caps      # bare import (ops/cli, no __init__.py — the established idiom)
+            _js = _caps.capabilities_for(model).get("json_schema")
+        except Exception:
+            _js = None                         # catalog miss / read error → undeclared → proceed (safe)
+        if isinstance(_js, dict) and _js.get("value") is False:
+            raise client.FabricError(
+                f"structured-output use-gate (d): role {getattr(role, 'id', '?')!r} requires schema-constrained "
+                f"output ({eff_schema.__name__}) but model {model!r} DECLARES json_schema=false. FAIL LOUD: NOT "
+                f"silently downgraded to bare json_object (that would leave the role's schema contract unenforced "
+                f"at the decoder — the C-law no-silent-downgrade). Bind a json_schema-capable model for this role.")
     if policy is None:
         # DEFAULT path — BYTE-IDENTICAL to before for a meta=None caller (ONE complete() call, the same
         # return). Every current caller (run_swarm/dry_run_role/run_cascade/the MCP run_role) passes no
@@ -430,7 +465,8 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
         # top_p, so a stray `meta` key can't pollute the request. OUT-PARAM only — NEVER in the return.
         _complete_kw = {} if meta is None else {"meta": meta}
         if eff_think is not None:
-            _complete_kw["think"] = eff_think                  # → the transport (native: body.think; vLLM: no-op for now)
+            _complete_kw["think"] = eff_think                  # → the transport, ONE key per stack (native: body.think;
+            #                                                    vLLM: chat_template_kwargs.enable_thinking via _apply_thinking — NOW WIRED, deliverable b)
         validated = client.complete(
             t, msgs, model=model, schema=eff_schema, json=True,
             temperature=temperature, max_tokens=max_tokens, **_complete_kw,

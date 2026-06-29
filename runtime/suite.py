@@ -3006,7 +3006,15 @@ class Suite:
                 "roles": c.get("roles", {}),
                 # S5 — the brain's runtime knobs (temperature/max_tokens/top_p), set from the settings
                 # window; reach the chat call. Absent → endpoint defaults. Schema-additive.
-                "brain_knobs": c.get("brain_knobs", {})}
+                "brain_knobs": c.get("brain_knobs", {}),
+                # THINK — the reasoning capability's per-turn switch (vLLM enable_thinking). DEFAULT FALSE →
+                # snappy everyday chat (the realtime interaction brain stays fast: _apply_thinking sends
+                # enable_thinking=False, the model's own template takes the closed-<think> path, NO reasoning
+                # trace generated — reproduces today's AWQ behaviour). True → the brain reasons + the trace
+                # surfaces (message.reasoning, criterion b). False-not-None is load-bearing: None would send
+                # NO enable_thinking → the FP8 template defaults thinking ON (slow). Per-MODE auto-think
+                # (judge/act/decide ON, chat OFF) is the C4 piece, deferred; this is the floor (off + switch).
+                "think": c.get("think", False)}
 
     def voice_enabled(self) -> bool:
         """Lane H — is voice on for the current presence? PRECEDENCE (WS2, 2026-06-28):
@@ -3030,7 +3038,9 @@ class Suite:
         allowed = {k: v for k, v in (updates or {}).items()
                    if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
                             "roles", "tts_engine", "tts_voice", "voice_path", "voice_input_mode", "brain_knobs",
-                            "MODE_AUTODETECT", "MODE_AUTODETECT_EXCLUDE", "voice_out")}
+                            "MODE_AUTODETECT", "MODE_AUTODETECT_EXCLUDE", "voice_out", "think")}
+        if "think" in allowed:                                # the reasoning per-turn switch (fail-loud bool)
+            allowed["think"] = bool(allowed["think"])
         if "brain_knobs" in allowed:                          # S5 — the vLLM sampling family (numeric, fail-loud)
             bk = allowed["brain_knobs"]
             if not isinstance(bk, dict):
@@ -4788,6 +4798,70 @@ class Suite:
             })
         return tools
 
+    def _declared_cap(self, model: str, field: str) -> dict | None:
+        """The ONE declaration-read seam for the use-gates (deliverables b/c/d/e — DECLARATION IS TRUTH).
+        Returns the catalog's `{value, source, note}` dict for capability FIELD on MODEL (e.g. 'thinking',
+        'json_schema', 'vision'), or None when the model/field is undeclared (catalog miss). The three
+        gates discriminate on the SAME tri-state the (c) tool-gate uses: `.value is True` → capable (fire),
+        `.value is False` → EXPLICIT declared-false (refuse / don't-send), None or no-value → UNDECLARED
+        (proceed — only an explicit false demotes; an absent field never breaks a model that simply hasn't
+        declared it). Bare import of ops/cli/capabilities (no __init__.py — the established idiom, same as
+        _model_supports_tools / capability_providers). A read error → None (treated as undeclared, the
+        safe proceed) — the catalog's OWN fail-loud (corrupt file) surfaces at load, not here per-field."""
+        try:
+            import sys as _sys
+            _opscli = os.path.join(self._repo_root, "ops", "cli")
+            if _opscli not in _sys.path:
+                _sys.path.insert(0, _opscli)
+            import capabilities as _caps      # bare import (ops/cli has no __init__.py — the established idiom)
+            _decl = _caps.capabilities_for(model)
+            f = _decl.get(field) if isinstance(_decl, dict) else None
+            return f if isinstance(f, dict) else None
+        except Exception:
+            return None                       # undeclared / catalog miss → the safe proceed (only explicit-false demotes)
+
+    # the non-text modalities the OpenAI/vLLM multimodal message shape can carry as content-PARTS — the
+    # OPEN content-type vocabulary (design refinement #7: modalities are a first-class capability dimension).
+    # Each maps to the catalog FIELD a model declares to ACCEPT it. text needs no declaration (every brain
+    # accepts text). EXTEND = one entry here + one capability field — mirrors CONTENT_KINDS' extensibility.
+    _MODALITY_PART_FIELD = {"image_url": "vision", "image": "vision", "input_audio": "audio", "audio": "audio",
+                            "video_url": "video", "video": "video"}
+
+    def _check_modality_gate(self, content, model: str) -> None:
+        """USE-GATE for INPUT modalities (deliverable e / design refinements #7-8 — the no-silent-content law).
+        If a message carries content of modality M (an image/audio/video content-PART) but the resolved brain
+        does NOT declare it ACCEPTS M → FAIL LOUD (FabricError), surfaced — NEVER silently drop or silently send
+        (a silent drop = a wrong claim the model 'saw' the image; a silent send = a 400 the operator can't read).
+        DECLARATION IS TRUTH, same tri-state as the other gates: a modality is allowed iff the brain declares
+        that field's `.value is True`; an EXPLICIT declared-false OR an undeclared brain (no `vision`/`audio`
+        field) cannot accept it → refuse. (Unlike tools/json — where undeclared→proceed — a missing modality
+        field means the brain genuinely can't accept that content; proceeding would silently mis-send.)
+
+        HONEST SCOPE (today): the RHM message is str-only — the image-INGEST path (canvas/screen → chat) is NOT
+        built yet (design refinement #6, PARKED), so this gate's LIVE effect now is refusing-EARLY the moment an
+        image is attached, preventing a silent wrong claim before the path lands. The marker detection follows
+        the STANDARD OpenAI multimodal shape (content = a LIST of {type:...} parts) so it matches how the UI
+        WILL send images when that path is built (invent-nothing — adopt the industry shape). A plain str (today's
+        every turn) carries only text → no part → no-op → byte-identical, NO regression."""
+        if not isinstance(content, list):
+            return                                            # str (today's every turn) or None → text-only, no-op
+        for part in content:
+            if not isinstance(part, dict):
+                continue
+            ptype = part.get("type")
+            field = self._MODALITY_PART_FIELD.get(ptype)
+            if field is None:
+                continue                                      # text part (or an unknown part) → not a gated modality
+            decl = self._declared_cap(model, field)           # DECLARATION IS TRUTH
+            if not (isinstance(decl, dict) and decl.get("value") is True):
+                from fabric.client import FabricError
+                raise FabricError(
+                    f"modality use-gate (e): a {ptype!r} content-part ({field}) was attached, but model {model!r} "
+                    f"does not declare it accepts {field} (no-silent-content law — refinement #8). FAIL LOUD: "
+                    f"the content is NEITHER silently dropped (a false 'it saw the image' claim) NOR silently sent "
+                    f"(an unreadable 400). Load a {field}-capable loadout, or route the content through a declared "
+                    f"converter, then retry.")
+
     # tool-capability gate: a short-TTL cache (mirrors available_models) so the RHM doesn't re-probe
     # /api/show on every turn, while a model brought up later still becomes usable without a restart.
     _tools_cap_cache: dict = {}                               # (model, base_url) -> (bool, monotonic_stamp)
@@ -4809,6 +4883,31 @@ class Suite:
         hit = self._tools_cap_cache.get(key)
         if hit is not None and (_t.monotonic() - hit[1]) < self.TOOLS_CAP_TTL:
             return hit[0]
+        # DECLARATION IS TRUTH (capability-resolution, deliverable c — Tim 2026-06-29: "disabling thinking to
+        # get tools isn't a fix — they both work together"). The tool capability is DECLARED in the catalog
+        # (model_capabilities.json / the qwen3.5 family: --enable-auto-tool-choice + qwen3_xml parser). When a
+        # model DECLARES tools=true, that is the authority — a flaky/absent probe must NOT demote it. This
+        # DISSOLVES the false-incapable class: the forced-tool_choice probe FALSE-NEGATIVES under
+        # --reasoning-parser (vLLM #19051/#39056) → the very mechanism that mislabelled the 4B. We read the
+        # declaration FIRST; the forced probe becomes VERIFY-ONLY (below, for UNDECLARED models). A declared
+        # capability can't be made false by a probe — only an explicit declared-false refuses.
+        try:
+            import sys as _sys
+            _opscli = os.path.join(self._repo_root, "ops", "cli")
+            if _opscli not in _sys.path:
+                _sys.path.insert(0, _opscli)
+            import capabilities as _caps        # bare import (ops/cli has no __init__.py — the established idiom)
+            _decl = _caps.capabilities_for(model)
+            _t_field = _decl.get("tools") if isinstance(_decl, dict) else None
+            if isinstance(_t_field, dict) and _t_field.get("value") is True:
+                self._last_tool_cap_reason = "capable"          # DECLARED capable — authority, not probe
+                self._tools_cap_cache[key] = (True, _t.monotonic())
+                return True
+            if isinstance(_t_field, dict) and _t_field.get("value") is False:
+                self._last_tool_cap_reason = "incapable"        # DECLARED incapable — an explicit config truth
+                return False
+        except Exception:
+            pass                                                 # undeclared / catalog miss → fall through to the verify-probe
         # Classify the endpoint so the tool-cap detector probes the RIGHT way (was: everything-not-4100
         # = ollama, which mis-routed a raw vLLM endpoint to ollama's /api/show → false refusal). ollama
         # is :11434; litellm proxy :4100; a raw vLLM OpenAI server (the local model workers, :8000+) is
@@ -4836,6 +4935,14 @@ class Suite:
         except (_ue.URLError, _sock.timeout, ConnectionError, TimeoutError, OSError):
             self._last_tool_cap_reason = "unreachable"         # endpoint down — NOT a model verdict
             return False
+        except ValueError:
+            # the RETIRED forced-probe path (deliverable c): a vLLM model reached this helper ONLY because it
+            # is UNDECLARED in the catalog, and the forced tool_choice probe no longer runs — model_supports_tools
+            # RAISES ValueError ("declare this model"). This is a CONFIG/DECLARATION gap, NOT a reachability or
+            # capability verdict — surface it as `undeclared` so the chat gate's refusal points at the real fix
+            # (declare the model's tools in model_capabilities.json), never a misleading "endpoint down".
+            self._last_tool_cap_reason = "undeclared"
+            return False                                       # safe refusal, NOT cached (a later declaration fixes it)
         except Exception:
             self._last_tool_cap_reason = "unreachable"         # cannot-determine → never misattribute to the model
             return False                                       # safe refusal, NOT cached (immediate recovery)
@@ -6459,6 +6566,13 @@ class Suite:
                            f"model '{cfg['model']}', so I can't act through my tools. This is a REACHABILITY "
                            f"issue, not the model — it is configured and tool-capable; bring its service up "
                            f"(`company up` the model) or retry. I won't silently fall back to a non-acting path.")
+            elif reason == "undeclared":
+                refusal = (f"I can't act right now: model '{cfg['model']}' is served on a raw vLLM endpoint but is "
+                           f"NOT DECLARED in the capability catalog, and the forced tool-probe is retired "
+                           f"(declaration is truth). I won't coerce a forced tool_choice (it false-negatives under "
+                           f"the reasoning-parser) nor silently assume it can act. Declare this model's tool "
+                           f"capability in ops/model_capabilities.json (or via its family) — then it resolves "
+                           f"without any probe and I can act through my tools.")
             else:
                 refusal = (f"I can't act right now: the selected model '{cfg['model']}' does not support "
                            f"native tool-calling, and I act ONLY through governed tools — I won't silently "
@@ -6586,10 +6700,56 @@ class Suite:
                         _eff_model, _eff_base = _pm, _fc.OLLAMA_DIRECT
         except Exception:
             pass                                                   # fail-soft: any resolve error → the configured model
+        # MODALITY use-gate (deliverable e): if THIS turn's content carries a non-text modality the EFFECTIVE
+        # brain doesn't declare it accepts → FAIL LOUD here, before the call (no-silent-content). Checks the
+        # message AND the injected run:// value, against `_eff_model` (the brain that actually runs). Today both
+        # are str (text-only) → no-op; the gate is live the moment an image-part is attached (the path is parked).
+        self._check_modality_gate(user_content, _eff_model)
+        if inject is not None:
+            self._check_modality_gate(inject, _eff_model)
+        # REASONING use-gate (deliverable b — the vLLM thinking capability's per-request switch). DECLARATION
+        # IS TRUTH: send enable_thinking ONLY IFF the EFFECTIVE model DECLARES the `thinking` capability
+        # (catalog field — FP8 declares thinking.value=true; the no-think AWQ declares thinking.value=false).
+        # Read `_eff_model` NOT cfg["model"] — the context-size resolve above can swap the brain to kimi, and
+        # the gate must reflect the brain that ACTUALLY runs (a mismatch would send enable_thinking to a brain
+        # that didn't declare it). A reasoning-capable brain (its own template gates on enable_thinking) thinks
+        # iff THIS turn wants it: default OFF → snappy everyday chat (no trace generated, the realtime brain
+        # stays fast); ON for a turn that asks. The transport translates `think` → chat_template_kwargs.
+        # enable_thinking (_apply_thinking). On a brain that does NOT declare thinking (AWQ, an ollama model
+        # with no reasoning), we send NO `think` key → byte-identical to the no-reasoning path (NO regression):
+        # the AWQ live turn never carries enable_thinking. `_send_think` records that the key WAS sent on an
+        # actually-thinking turn, so the loud-fail below fires ONLY when a real thinking request returned nothing.
+        _think = cfg.get("think")
+        _decl_thinking = self._declared_cap(_eff_model, "thinking")
+        _model_thinks = isinstance(_decl_thinking, dict) and _decl_thinking.get("value") is True
+        _send_think = (_think is not None) and _model_thinks      # gate: only a declared-thinking brain gets the switch
+        _think_kw = {"think": bool(_think)} if _send_think else {}
         msg = client.complete_with_tools(
             transport.openai_tools_transport(base_url=_eff_base, timeout=cfg["timeout"]),
-            msgs, model=_eff_model, tools=tools, tool_choice="auto", timeout=cfg["timeout"], **_bkargs)
+            msgs, model=_eff_model, tools=tools, tool_choice="auto", timeout=cfg["timeout"], **_bkargs, **_think_kw)
         reply = msg.get("content") or ""                      # may be empty (the model called a tool)
+        # REASONING SURFACING + LOUD-FAIL (deliverable b / catch-out #8): vLLM 0.21 returns the split reasoning
+        # trace in message.`reasoning` (NOT reasoning_content — the multi-session false-"dropped" belief; reading
+        # the wrong field is what produced it). We read ONLY `reasoning` — there is NO fallback to reasoning_content
+        # and NO default (no prior version in operation to be compatible with; a missing field is DRIFT, surfaced,
+        # never hidden — rule 3). When a reasoning turn runs, carry the trace END-TO-END so the operator/agent can
+        # READ the system's actual reasoning: (1) an EVENT (the events stream — /api/events, get_events — the durable
+        # readable record, covers the voice/stream path too), (2) the part-core return → epilogue → the /api/chat
+        # result dict. LOUD-FAIL: a turn that ACTUALLY requested thinking (_send_think AND think truthy) but got
+        # back NO reasoning is drift (the field name moved, the serve lost --reasoning-parser, the template
+        # regressed) — raise FabricError so it SURFACES, never a silent snappy-looking reply masking a broken brain.
+        # The fail is gated on think-actually-SENT-true: a think-OFF turn legitimately has no reasoning (not a
+        # failure → no event, no key), and a non-declaring brain (AWQ) never sent think → never fires (no regression).
+        reasoning = msg.get("reasoning")
+        if _send_think and bool(_think) and not reasoning:
+            from fabric.client import FabricError
+            raise FabricError(
+                f"reasoning use-gate (b): model {_eff_model!r} was asked to think (enable_thinking=true) but "
+                f"returned NO `message.reasoning` — a thinking turn with no trace is drift (lost --reasoning-parser, "
+                f"a template regression, or a moved field name). FAIL LOUD, no reasoning_content fallback (rule 3).")
+        if reasoning:
+            self._emit("reasoning", f"reasoning ({len(reasoning)} chars) · {reply[:48]}",
+                       address="ui://chrome/chat")            # the system's OWN reasoning, readable in the stream
 
         outcomes = []
         proposals = []                                        # OFFER-WITH-OPTIONS: suggest-then-confirm cards (no dispatch)
@@ -6695,10 +6855,10 @@ class Suite:
                     if confirm:
                         reply = (reply + "\n\n" + confirm).strip() if reply.strip() else confirm
 
-        return {"text": reply, "outcomes": outcomes, "proposals": proposals}
+        return {"text": reply, "outcomes": outcomes, "proposals": proposals, "reasoning": reasoning}
 
     def _chat_epilogue(self, message: str, mode: str, cfg: dict, reply: str, outcomes: list,
-                       proposals: list, *, persist: bool = True) -> dict:
+                       proposals: list, *, persist: bool = True, reasoning: str | None = None) -> dict:
         """The ONCE-only epilogue both paths run AFTER the part-core(s): action_field shaping · the SINGLE
         user+assistant append · the thread bump · the SINGLE _emit('chat'). Returns the normal 7-key shape.
         For chat_parts() `reply` is the JOINED parts; `outcomes` are the final part's (tools-on-final, C4.5).
@@ -6742,9 +6902,18 @@ class Suite:
         # card; approve → /api/act). Additive + back-compat: None when the turn dispatched/spoke instead of
         # offering; the existing single-`proposal` FE consumer (useAppController r.proposal) reads it unchanged.
         proposal = proposals[0] if proposals else None
-        return {"reply": reply, "action": action_field, "proposal": proposal, "mode": mode,
-                "model": cfg["model"], "thread_id": _tid,
-                "history": self.store.chats_in_thread(_tid) if _tid else self.store.chat_history(40)}
+        # REASONING (criterion b): carry the turn's reasoning trace in the result dict so the POST /api/chat
+        # caller reads it directly. PRESENT-ONLY-WHEN-REAL: the key is added ONLY on a turn that actually
+        # reasoned (think-on, non-empty trace). A snappy think-off turn is BYTE-IDENTICAL to the prior 7-key
+        # NORMAL shape (the FE branches on the distinct 4/5/7-key shapes — an always-present 8th key would
+        # change that contract for every consumer). A reasoning turn carries the extra `reasoning` key; the
+        # events-stream emit is the other surfacing leg (covers the voice/stream path).
+        out = {"reply": reply, "action": action_field, "proposal": proposal, "mode": mode,
+               "model": cfg["model"], "thread_id": _tid,
+               "history": self.store.chats_in_thread(_tid) if _tid else self.store.chat_history(40)}
+        if reasoning:
+            out["reasoning"] = reasoning
+        return out
 
     def chat(self, message: str, graph_id: str, focus: dict | None = None,
              *, model: str | None = None, base_url: str | None = None) -> dict:
@@ -6774,7 +6943,8 @@ class Suite:
         persona_text = self._persona_text(persona)
         part = self._chat_part_core(message, graph_id, focus, mode, cfg, persona, persona_text,
                                     is_final=True)             # the ONE part (one-part path)
-        return self._chat_epilogue(message, mode, cfg, part["text"], part["outcomes"], part["proposals"])
+        return self._chat_epilogue(message, mode, cfg, part["text"], part["outcomes"], part["proposals"],
+                                   reasoning=part.get("reasoning"))
 
     # --- C4.3: the brevity bypass (a trivial turn does NOT spin the swarm) ---------------------------
     def _should_stage(self, message: str, mode: str) -> dict:
@@ -6841,7 +7011,7 @@ class Suite:
             part = self._chat_part_core(message, graph_id, focus, mode, cfg, persona, persona_text,
                                         is_final=True)
             res = self._chat_epilogue(message, mode, cfg, part["text"], part["outcomes"], part["proposals"],
-                                      persist=persist)
+                                      persist=persist, reasoning=part.get("reasoning"))
             yield {"part": 1, "text": part["text"], "final": True, "staged": False,
                    "stage_reason": decision["reason"], "result": res}
             return
@@ -6979,7 +7149,7 @@ class Suite:
         # EPILOGUE ONCE — the joined reply (one coherent voice), the SINGLE append + emit.
         joined = "\n\n".join(p for p in parts_emitted if p.strip())
         res = self._chat_epilogue(message, mode, cfg, joined, part2["outcomes"], part2["proposals"],
-                                  persist=persist)
+                                  persist=persist, reasoning=part2.get("reasoning"))
         # cognition.turn.done — the view closes the turn frame + shows the total.
         self._emit("cognition.turn.done",
                    f"turn {turn_id} done · {int((_time.monotonic() - _turn_t0) * 1000)}ms",
