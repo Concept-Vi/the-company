@@ -89,7 +89,7 @@ def _apply_response_format(body: dict, opts: dict) -> None:
 
 
 def _apply_thinking(body: dict, opts: dict) -> None:
-    """Set body["chat_template_kwargs"]["enable_thinking"] from opts["thinking"] — the vLLM stack's
+    """Set body["chat_template_kwargs"]["enable_thinking"] from opts["think"] — the vLLM stack's
     USE-CONTRACT for the `reasoning` capability (the capability-type's vLLM use_ref). Shared by BOTH
     openai_transport AND openai_tools_transport, so the text path (run_role) and the tools path
     (chat_parts) honor reasoning identically — patching only one would silently skip the RHM chat path.
