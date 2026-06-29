@@ -1,0 +1,77 @@
+{
+  "_doc": "The stack-expression registry — HOW each stack (vllm/ollama/litellm-cloud/custom-server) EXPRESSES each capability: the launch FLAG fragment (`serve`) it emits and the per-request FIELD (`use`) it sends. CAPABILITY-RESOLUTION-DESIGN-CORRECTED.md §2. registry-is-truth (AGENTS.md rule 8): this FILE is the single source; runtime/capabilities/resolver.py loads it at import (fail-loud). Adding a NEW stack = adding ONE top-level entry HERE (no code edit); teaching an existing stack a new capability = adding one capability key under it. The keys under each stack are the `serve_ref` values from capability_types.json. A `serve` value is a LIST of TEMPLATE fragments — a token may be a {placeholder} the resolver fills from the resolved family/model (e.g. {tool_parser}, {chat_template}). The resolver concatenates the serve-fragments of a model's owned capabilities IN CANONICAL ORDER (`_serve_order` in resolver.py) and appends config.extra_flags verbatim — reproducing today's hand-authored flag list. SAFE-half NOTE: this is DATA only; the SAFE-half resolver reproduces TODAY exactly — the `reasoning` capability emits the EXISTING `chat_template_nothink.jinja` (the design's swap-to-a-thinking-template is the LATER LIVE phase, NOT here). The `~`-path is emitted VERBATIM (literal `~`); serveconfig.args_for's existing expanduser applies identically at launch, so behaviour is byte-preserved. custom-server is the escape hatch: its capabilities are served by a bespoke script, NOT flag-generated — keyless/custom embedders (embed-pplx, embed-jina-v4) live here and are deliberately NOT regenerated.",
+  "vllm": {
+    "_note": "the config-driven vLLM stack (ops/serve_model.sh -> ops/cli/serveconfig.py args_for). Reproduces the live launch flags for the config-driven services (chat-4b/2b/08b, embed-bge/jina-v5/qwen3).",
+    "prefix_caching": {
+      "serve": ["--enable-prefix-caching"],
+      "use": null
+    },
+    "tools": {
+      "serve": ["--enable-auto-tool-choice", "--tool-call-parser", "{tool_parser}"],
+      "use": "send body.tools + tool_choice"
+    },
+    "reasoning": {
+      "serve": ["--chat-template", "{chat_template}"],
+      "use": "body.chat_template_kwargs.enable_thinking (LIVE-phase; SAFE half launches the existing template verbatim)"
+    },
+    "structured_output": {
+      "serve": [],
+      "use": "body.response_format={type:json_schema,...} (vLLM >=0.21 guided decode is automatic — no launch flag)"
+    },
+    "pooling": {
+      "serve": ["--runner", "pooling"],
+      "use": null
+    },
+    "embed": {
+      "serve": ["--runner", "pooling"],
+      "use": "POST /v1/embeddings"
+    },
+    "trust_remote_code": {
+      "serve": ["--trust-remote-code"],
+      "use": null
+    },
+    "kv_cache_dtype": {
+      "serve": ["--kv-cache-dtype", "{kv_cache_dtype}"],
+      "use": null
+    },
+    "speculative": {
+      "serve": ["--speculative-config", "{speculative}"],
+      "use": null
+    },
+    "vision": {
+      "serve": ["--language-model-only"],
+      "use": null,
+      "_note": "emitted only for the lm-only vision mode (text RHM skips the vision tower); a full-vision model emits nothing here."
+    },
+    "context_window": {
+      "serve": ["--max-model-len", "{max_model_len}"],
+      "use": null,
+      "_note": "context_window is a MODEL runtime param, emitted by serveconfig.args_for today from config.max_model_len BEFORE the flags[] block — NOT part of the family/stack flag generation in the SAFE half. Recorded here for completeness; serve_flags() generates the post-runtime-param flag list only."
+    }
+  },
+  "ollama": {
+    "_note": "the ollama-native stack (already wired in fabric/transport.py:ollama_native_transport). Capabilities are declared via /api/show; expression is per-request, not launch-flag.",
+    "reasoning": {
+      "serve": [],
+      "use": "body.think = <bool>"
+    },
+    "tools": {
+      "serve": [],
+      "use": "send body.tools (capability declared via /api/show)"
+    },
+    "structured_output": {
+      "serve": [],
+      "use": "body.format (loose; cloud-inconsistent -> validate/retry is the guarantee)"
+    }
+  },
+  "litellm-cloud": {
+    "_note": "the LiteLLM/cloud stack — capabilities read from model_info.supports_*; many are unknown -> declared. No launch flags (the provider runs the model).",
+    "reasoning": {"serve": [], "use": "provider-native reasoning toggle"},
+    "tools": {"serve": [], "use": "send body.tools"}
+  },
+  "custom-server": {
+    "_note": "the ESCAPE HATCH stack — capabilities served by a bespoke serve_*.sh / serve_*.py, NOT flag-generated. embed-pplx (ops/serve_pplx_embed.py) + embed-jina-v4 (serve_jina_v4.py) live here: vLLM cannot load their arch, so they are deliberately NOT regenerated. serve_flags() returns [] for a custom-server model (its launch is its own script).",
+    "embed": {"serve": [], "use": "POST /v1/embeddings (bespoke server)"},
+    "rerank": {"serve": [], "use": "POST /rerank (bespoke server, ops/serve_rerank.sh)"}
+  }
+}

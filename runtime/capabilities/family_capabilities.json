@@ -1,0 +1,31 @@
+{
+  "_doc": "The family registry — per-FAMILY default capability set + parser/profile/template choices. CAPABILITY-RESOLUTION-DESIGN-CORRECTED.md §3. registry-is-truth (AGENTS.md rule 8): this FILE is the single source; runtime/capabilities/resolver.py loads it at import (fail-loud). This KILLS the hand-repeated flags: chat-4b/chat-2b/chat-08b repeat the IDENTICAL flag list, and embed-bge/embed-jina-v5/embed-qwen3 repeat ANOTHER identical list — adding a fourth member meant copy-pasting it and risking a silently-dropped flag. Now a model declares `family: <name>` and inherits the whole set. Adding a FAMILY = adding ONE entry HERE -> all its models inherit (no code edit). A family row: `stack` (the default expression stack) · `provides` (the capability TAGS its models declare) · `capabilities` (the ORDERED list of serve_ref keys whose stack-flag-fragments serve_flags() emits — the order IS the canonical launch order, matching today's hand-authored sequence) · `serve_params` (the {placeholder} values the stack templates fill: tool_parser/chat_template/reasoning_parser/...) · `fields` (Layer-B field defaults). A per-model `capability_overrides` ⊕ on top of this (override wins) -> the model's effective set. SAFE-half NOTE: the qwen3.5 family's `reasoning` capability points at the EXISTING chat_template_nothink.jinja (reproduce-today) — the design's swap to a thinking-capable template is the LATER LIVE phase, NOT here.",
+  "qwen3.5": {
+    "_note": "the local Qwen3.5 chat workers (services.json chat-4b/chat-2b/chat-08b) — IDENTICAL hand-authored flags today: --enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_xml --chat-template ~/vllm-tests/chat_template_nothink.jinja --trust-remote-code. This family regenerates exactly that, in that order. SAFE half: chat_template stays the nothink template (reproduce-today). The capabilities list IS the canonical launch order.",
+    "stack": "vllm",
+    "provides": ["chat", "json", "tools", "fast", "no-think"],
+    "capabilities": ["prefix_caching", "tools", "reasoning", "trust_remote_code"],
+    "serve_params": {
+      "tool_parser": "qwen3_xml",
+      "reasoning_parser": "qwen3",
+      "chat_template": "~/vllm-tests/chat_template_nothink.jinja"
+    },
+    "fields": {
+      "tools": true,
+      "json_schema": true,
+      "thinking": false
+    }
+  },
+  "embed-pooling": {
+    "_note": "the vLLM pooling-runner embedders (services.json embed-bge/embed-jina-v5/embed-qwen3) — IDENTICAL hand-authored flags today: --runner pooling --trust-remote-code. This family regenerates exactly that, in that order. (custom-server embedders embed-pplx/embed-jina-v4 are NOT this family — they run bespoke scripts, see stack_capabilities.json custom-server.)",
+    "stack": "vllm",
+    "provides": ["embed"],
+    "capabilities": ["pooling", "trust_remote_code"],
+    "serve_params": {},
+    "fields": {
+      "tools": false,
+      "json_schema": false,
+      "thinking": false
+    }
+  }
+}
