@@ -1319,6 +1319,12 @@ class Suite:
             raise ValueError(
                 f"run_cascade: no saved cascade {name!r} — saved cascades are {[a['name'] for a in self.cascade_registry.all()]} "
                 f"(save one via save_cascade first; registry-is-truth, never a fabricated cascade).")
+        # LOADOUT-RESOLUTION (work declares what it requires) — if this cascade declares `requires` (a loadout
+        # it needs resident), GATE it: resolve the loadout, and if any service is missing, SURFACE a confirm
+        # (the same loadout_swap door modes use — now repoints the RHM on apply) and FAIL LOUD. An action must
+        # NOT run against the wrong loadout (that's the silent-degrade the no-silent-failure law forbids); the
+        # operator approves the swap, then re-runs. Same spine as the mode→loadout gate, lifted to the action.
+        self._gate_work_requires(f"cascade «{name}»", action.get("requires"))
         import time as _time
         from runtime import cognition as _cog
         turn_id = "cascade-" + _time.strftime("%Y%m%d-%H%M%S") + f"-{int(_time.monotonic()*1000) % 100000}"
@@ -2655,6 +2661,40 @@ class Suite:
         services = list(combos[loadout_class]["services"])
         missing = [s for s in services if not _gpu._is_running(reg["services"][s])]
         return services, missing
+
+    def _gate_work_requires(self, work_label: str, requires) -> None:
+        """LOADOUT-RESOLUTION gate for a unit of WORK (a cascade/action that declares `requires` a loadout).
+        The work layer of the same spine as the mode→loadout surface: resolve the required loadout; if it is
+        fully resident, proceed silently; if any service is MISSING, SURFACE a loadout_swap confirm (the same
+        governed door modes use — apply_loadout now repoints the RHM on approve) and FAIL LOUD so the work
+        does NOT run against the wrong loadout (the no-silent-degrade law). `requires` is a loadout_class name
+        (a combo) or falsy (no requirement → no gate). Reuses _resolve_loadout + inbox.surface unchanged."""
+        if not requires:
+            return
+        try:
+            services, missing = self._resolve_loadout(requires)
+        except ValueError as e:
+            # `requires` names no real combo — a config error in the work's declaration; loud, never silent.
+            self._emit("warning", f"{work_label} requires: {e}", address="ui://chrome/toolbar")
+            raise
+        if not missing:
+            return                                            # the required loadout is resident — proceed.
+        # surface a confirm (dedup: don't re-surface the same loadout if one is already pending), then block.
+        pending = any(d.get("action") == "loadout_swap" and d.get("resolved") is None
+                      and (d.get("payload") or {}).get("loadout_class") == requires
+                      for d in self.inbox.list())
+        sid = None
+        if not pending:
+            sid = self.inbox.surface("loadout_swap", {
+                "requires_for": work_label, "loadout_class": requires, "services": services, "missing": missing,
+                "note": (f"{work_label} requires loadout «{requires}» ({', '.join(services)}); not resident: "
+                         f"{', '.join(missing)}. Approve to load it (evicts as needed; RAM+VRAM-gated; repoints "
+                         f"the RHM), then re-run the work. Apply on approve: suite.apply_loadout(<sid>)."),
+            }, default="reject", resolved=None)
+        raise GovernanceError(
+            f"{work_label} requires loadout {requires!r} but {', '.join(missing)} is not resident. A confirm "
+            f"is surfaced ({sid or 'already pending'}) — the operator approves the loadout_swap (which loads + "
+            f"repoints), then re-runs. Fail loud: the work does NOT run against the wrong loadout (no silent degrade).")
 
     def _maybe_surface_loadout_swap(self, mode: str) -> str | None:
         """Surface a loadout_swap confirm for `mode` iff it binds a loadout_class with non-resident services

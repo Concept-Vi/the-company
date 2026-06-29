@@ -134,10 +134,22 @@ def build_action(decl: dict, *, models: set, roles: set | None = None, rule_reso
                 return {"ok": False, "error": f"shared entry {sname!r}: exactly one of "
                         "{address|text|corpus_query} (S2 — the resolve-once shared inputs; richer "
                         "staging belongs in a flow that prepares run:// addresses first)."}
+    requires = decl.get("requires")
+    if requires is not None:
+        # the loadout this action NEEDS resident to run — a single loadout_class name (a combo), matching the
+        # mode→loadout pattern (suite._resolve_loadout takes one loadout_class string). Validated here as a
+        # non-empty string; the EXISTENCE check (is it a real combo?) happens at run-time in the resolve-gate
+        # (registry-is-truth — build-time can't see the live registry, and a combo could be added later).
+        if not isinstance(requires, str) or not requires.strip():
+            return {"ok": False, "error": "requires must be a non-empty string naming the loadout_class (combo) "
+                    "this action needs resident to run (e.g. 'quality-9b'); the gate resolves it at run-time."}
+        requires = requires.strip()
     action = {"name": name, "steps": steps, "output_schema": decl.get("output_schema", {}),
               "schema_ver": decl.get("schema_ver", 1)}
     if shared is not None:
         action["shared"] = shared
+    if requires is not None:
+        action["requires"] = requires
     return {"ok": True, "action": action}
 
 
