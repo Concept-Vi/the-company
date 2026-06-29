@@ -60,6 +60,102 @@
       "no-think"
     ]
   },
+  "RedHatAI/Qwen3.5-4B-FP8-dynamic": {
+    "_note": "services.json chat-4b-fp8 (port 8001) — the FP8 RHM brain (interaction loadout, the everyday brain). Same Qwen3.5-4B family as the AWQ worker but served with its OWN thinking-capable template + --reasoning-parser qwen3 (NOT the nothink template) → thinking is a per-request switch (enable_thinking), reasoning surfaces in message.reasoning (vLLM 0.21). tools+json+thinking DECLARED true (qwen3.5 family: --enable-auto-tool-choice + qwen3_xml parser in services.json; the QWEN35 reasoning spike proved reasoning+tools COEXIST at tool_choice=auto). The forced-tool_choice probe FALSE-NEGATIVES with --reasoning-parser active (vLLM #19051/#39056) → the gate reads THIS declaration, the probe only verifies (never demotes). measured 2026-06-29.",
+    "tools": {
+      "value": true,
+      "source": "declared",
+      "note": "qwen3.5 family: services.json chat-4b-fp8 carries --enable-auto-tool-choice + --tool-call-parser qwen3_xml. The QWEN35 spike (T3') proved tool_calls populate at tool_choice=auto WITH reasoning on (coexist). DECLARED true (not probe-derived: the forced-tool_choice probe false-negatives under --reasoning-parser — the documented vLLM #19051/#39056 interaction)."
+    },
+    "json_schema": {
+      "value": true,
+      "source": "declared",
+      "note": "qwen3.5 family supports response_format guided decode on vLLM 0.21 (same as the AWQ sibling, proven there); declared on this id."
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared",
+      "note": "FP8 served with its OWN stock thinking-capable template + --reasoning-parser qwen3 (NOT nothink). enable_thinking is a per-request switch; the spike proved reasoning populates in message.reasoning. This is the reasoning brain — unlike the no-think AWQ."
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "declared",
+      "note": "services.json chat-4b-fp8 config.max_model_len_ceiling (same family ceiling as the AWQ); served at max_model_len 16384 in the interaction loadout."
+    },
+    "concurrency_knee": {
+      "value": {
+        "max_num_seqs": 2,
+        "kv_pool_tokens": 22851,
+        "kv_gib": 0.87,
+        "formula": "min(max_num_seqs - R, free_KV_tokens / per_role_ctx)",
+        "note": "measured 2026-06-29 co-resident config: gpu_util 0.5 + max_num_seqs 2 (single-user interactive RHM); KV 0.87 GiB / 22,851 tokens / 1.39x concurrency on 16K. Solo (gpu_util 0.6) gives KV 3.47 GiB / 92,698 tokens / 5.66x. The co-resident config trades KV for embedder headroom (interaction loadout)."
+      },
+      "source": "measured",
+      "note": "measured 2026-06-29 from the vLLM startup log (GPU KV cache size) at the co-resident gpu_util 0.5 / max_num_seqs 2."
+    },
+    "speed_profile": {
+      "value": {
+        "decode_tok_s": 100
+      },
+      "source": "declared",
+      "note": "approximate; same 4B class as the AWQ worker (FP8 on Ada). Re-measure under load if it matters."
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "fast",
+      "thinking"
+    ]
+  },
+  "RedHatAI/Qwen3.5-9B-FP8-dynamic": {
+    "_note": "services.json chat-9b-fp8 (port 8002) — the larger FP8 brain, the quality-9b SOLO loadout. SAME Qwen3.5 family as the 4B-FP8: served with its OWN thinking-capable template + --reasoning-parser qwen3, --enable-auto-tool-choice + --tool-call-parser qwen3_xml (the resolver emits the IDENTICAL family flag set, model-agnostic). So the capability surface is the same shape as the 4B-FP8 (tools+json+thinking DECLARED true, declaration-is-truth, the forced-tool_choice probe never demotes). VERIFIED-BY-USE 2026-06-29: a real bridge RHM turn through this id returned message.reasoning populated AND a tool fired with reasoning coexisting. gpu_util AUTO-ALLOCATED from the measured _profile (0.8434) — no static literal.",
+    "tools": {
+      "value": true,
+      "source": "declared",
+      "note": "qwen3.5 family: services.json chat-9b-fp8 carries --enable-auto-tool-choice + --tool-call-parser qwen3_xml (resolver-generated, identical to the 4B-FP8). DECLARED true (not probe-derived — the forced-tool_choice probe false-negatives under --reasoning-parser, vLLM #19051/#39056). VERIFIED-BY-USE: a tool fired on a real 9B bridge turn WITH reasoning on (coexist)."
+    },
+    "json_schema": {
+      "value": true,
+      "source": "declared",
+      "note": "qwen3.5 family supports response_format guided decode on vLLM 0.21 (same family contract as the 4B-FP8); declared on this id."
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared",
+      "note": "served with its OWN stock thinking-capable template + --reasoning-parser qwen3. enable_thinking is a per-request switch; VERIFIED-BY-USE 2026-06-29: message.reasoning populated on a real 9B bridge RHM turn (the larger reasoning brain)."
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "declared",
+      "note": "services.json chat-9b-fp8 config.max_model_len_ceiling (same qwen3.5 family ceiling); served at max_model_len 16384 in the quality-9b solo loadout."
+    },
+    "concurrency_knee": {
+      "value": {
+        "max_num_seqs": 2,
+        "kv_pool_tokens": 18970,
+        "kv_gib": 0.71,
+        "formula": "min(max_num_seqs - R, free_KV_tokens / per_role_ctx)",
+        "note": "measured 2026-06-29 SOLO at the auto-allocated gpu_util 0.8434 / max_num_seqs 2: vLLM 'GPU KV cache size 18,970 tokens' / 'Available KV cache memory 0.71 GiB' / 'Maximum concurrency for 16,384 tokens per request: 1.16x'. KV pool (18,970) exceeds max_model_len (16,384) so a full-context request is servable — the corrected vram_overhead_mb=1024 fix (the earlier 0.8121 auto-value left only 18,970-tok-worth-less and starved KV below one request)."
+      },
+      "source": "measured",
+      "note": "measured 2026-06-29 from the vLLM startup log at the auto-allocated gpu_util 0.8434 / max_num_seqs 2 (solo)."
+    },
+    "speed_profile": {
+      "value": {
+        "decode_tok_s": 55
+      },
+      "source": "declared",
+      "note": "approximate estimate (9B FP8 on Ada — roughly half the 4B class's decode rate; the verify turn felt responsive but throughput was not benchmarked). Re-measure under load if it matters."
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "quality"
+    ]
+  },
   "Qwen/Qwen3.5-2B": {
     "_note": "services.json chat-2b — a smaller local chat worker (combo small-pair). Same qwen3 chat template family: --enable-auto-tool-choice + qwen3_xml parser + chat_template_nothink.jinja (services.json) ground tools + no-think. tools 'declared' (not yet live-probed on this id — probe before binding); json declared from response_format support of the qwen chat family.",
     "tools": {

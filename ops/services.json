@@ -1,6 +1,8 @@
 {
   "_doc": "The Company's service registry — the single self-describing source of truth for what runs on this machine. The AI reads this to know the whole landscape; the `company` command (ops/company) operates it. Adding a service = adding an entry here. It's OK if some entries are imperfect (ports/units) — better than the scatter it replaces. systemd is the muscle underneath; this is the map + the console. NOTHING auto-starts at boot anymore (2026-06-06, Tim's call): every service is on-demand via `company up`. The `autostart` flag now ONLY means 'started by bare `company up` (no target)' — kept true for the surface (canvas+bridge) so `company up` brings the interactive Company up; everything else is explicit (`company up brain|voice|<svc>`). `vram_mb` is an approximate resident/reserved cost used by `company` to surface GPU budget against the 16 GB ceiling — estimates, not measured. `serve` is the script whose default model `company swap` rewrites.",
   "vram_ceiling_mb": 16376,
+  "vram_overhead_mb": 1024,
+  "_vram_overhead_doc": "The non-weight, non-KV GPU footprint vLLM reserves at load (CUDA-graph capture, activation buffers, fragmentation) — the margin in gpu.auto_gpu_util's need = weights + KV + overhead. RAISED 512 -> 1024 (2026-06-29, WF2 C5): the 512 default UNDERSIZED a near-card-filling model — the 9B-FP8 auto-allocated to 0.8121 and left only ~0.23 GiB KV (below the 0.61 GiB one 16384-ctx request needs) -> vLLM refused to start. MEASURED overhead ~900 MiB (consistent across the 0.85 and 0.8121 boots: slice - weights - usable-KV); 1024 covers it + a CUDA-graph-variance margin. Effect: 9B -> 0.8434 (serves a full request); chat-4b-AWQ (the only other AUTO model) 0.4187 -> 0.45 (harmless, has headroom). All STATIC-gpu_util models are unaffected (the live chat-4b-fp8 brain uses a static 0.5 override).",
   "combos": {
     "_doc": "Named sets of services meant to run TOGETHER. `company up @<name>` starts the set (the resource manager still checks it all fits). Add a combo = add an entry here. Extensible — a combo can mix any services (models, voice, surface).\nVARIANTS (the loadout-'class' mechanism, 2026-06-28): a combo can declare `extends: <base-combo>` to inherit the base's service list, then override just what differs — `swap: {old-svc: new-svc}`, `add: [svc]`, `remove: [svc]`. So a class is a base loadout (e.g. `interaction`) and its variants (e.g. `interaction-parakeet`) state only the difference. registry.combos() resolves this centrally (fail-loud on a missing base / a swap target not in the base / an unknown service / an extends-cycle), so both `company combos` and `up @<variant>` see the final concrete service list. Example: `interaction` (ear=stt-moonshine) and `interaction-parakeet` (extends interaction, swaps the ear to stt-parakeet-onnx) — same loadout, different ear, for trialling configurations.",
     "small-pair": {
@@ -48,12 +50,12 @@
     "interaction": {
       "services": [
         "embed-pplx",
-        "chat-4b",
+        "chat-4b-fp8",
         "rerank-jina",
         "stt-moonshine",
         "tts-kokoro"
       ],
-      "note": "INTERACTION loadout (class base, 2026-06-28): realtime conversation + Speech-To-Action with the local brain. Default ear = Moonshine (lean, CPU, 0 VRAM). embed-pplx+rerank for recall, chat-4b brain, tts-kokoro voice out. Swap the ear via the variants below."
+      "note": "INTERACTION loadout (class base, 2026-06-28; brain → chat-4b-fp8 2026-06-29 WF2 C5): realtime conversation + Speech-To-Action with the local brain. THE EVERYDAY DEFAULT brain is the FP8 (Qwen3.5-4B-FP8-dynamic, :8001 — thinking + tools, model's own template, per-request enable_thinking) — NOT the AWQ chat-4b worker (which stays a worker for swarm/composable-mind turns). The combo brain was migrated chat-4b→chat-4b-fp8 so `company up @interaction` reproduces today's live brain by construction (it previously named the AWQ, which would not). Default ear = Moonshine (lean, CPU, 0 VRAM). embed-pplx+rerank for recall, chat-4b-fp8 brain, tts-kokoro voice out. Swap the ear via the variants below."
     },
     "interaction-parakeet": {
       "extends": "interaction",
@@ -61,6 +63,12 @@
         "stt-moonshine": "stt-parakeet-onnx"
       },
       "note": "VARIANT of `interaction`: same loadout, Parakeet int8-ONNX ear instead of Moonshine (accurate + 25-language + hotword biasing). For trialling the two ears in the same configuration."
+    },
+    "quality-9b": {
+      "services": [
+        "chat-9b-fp8"
+      ],
+      "note": "QUALITY loadout (2026-06-29): the larger Qwen3.5-9B-FP8 brain SOLO. No embedder/voice — the 9B fills most of the 16GB card, so it runs alone (use `company up @quality-9b --evict` to clear the interaction loadout first). Thinking + tools (same qwen3.5 family contract as chat-4b-fp8). A brain-only RHM turn that needs recall/embedder will SURFACE that as a finding (fail-loud), not silently degrade. For the quality/judge end of the brain-loadout ladder; the interaction (4B-FP8) loadout is the everyday default."
     }
   },
   "groups": {
@@ -193,6 +201,40 @@
         "max_model_len_ceiling": 262144
       },
       "ram_mb": 2500
+    },
+    "chat-9b-fp8": {
+      "group": "brain",
+      "title": "Qwen3.5-9B-FP8 (vLLM) — the larger FP8 brain (quality-9b solo): thinking + tools, model's own template",
+      "port": 8002,
+      "manage": {
+        "type": "user-unit",
+        "unit": "vllm-chat-9b-fp8.service"
+      },
+      "health": "/v1/models",
+      "vram_mb": 11000,
+      "note": "config-driven via serve_model.sh. FP8 (RedHatAI/Qwen3.5-9B-FP8-dynamic) on Ada; same qwen3.5 family as chat-4b-fp8 -> the resolver generates the IDENTICAL flags (--enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3 --language-model-only --trust-remote-code). The SOLO quality brain (@quality-9b). vision=lm-only (text RHM — the image->brain input path is unbuilt; vision-ON would burn VRAM for a capability that cannot yet be exercised). gpu_util is AUTO-ALLOCATED from the measured _profile (no static literal — WF2 law). Port 8002 is SHARED with the dormant on-demand embed-jina-v4; the per-UNIT running check (not the port) gates co-residence and the 9B-solo loadout never co-resides with it. Tune: `company config chat-9b-fp8 <key> <value>`.",
+      "config": {
+        "model": "RedHatAI/Qwen3.5-9B-FP8-dynamic",
+        "port": 8002,
+        "max_model_len": 16384,
+        "max_num_seqs": 2,
+        "family": "qwen3.5",
+        "capability_overrides": {
+          "vision": "lm-only"
+        },
+        "_profile": {
+          "fixed_mb": 12155,
+          "kv_kb_per_token": 39.52,
+          "measured": "2026-06-29 (16384 ctx solo): vLLM 'Model loading took 11.87 GiB memory' -> fixed_mb 12155; KV/token from the clean 0.85 boot 'Available KV cache memory 0.91 GiB' = 'GPU KV cache size 24,144 tokens' -> 0.91GiB/24144 = 39.52 KB/token. OVERHEAD CORRECTION (the real fix): the measurement boots proved the registry default vram_overhead_mb=512 underestimated the 9B's non-weight/non-KV footprint (~900 MiB measured) — auto_gpu_util landed 0.8121 which left KV at only ~0.23 GiB, below the 0.61 GiB one 16384-ctx request needs, so vLLM refused to start ('estimated maximum model length 4224'). Fix = raise vram_overhead_mb to 1024 (top-level, dissolves the class for all AUTO models, not a per-model hack). auto_gpu_util = (12155 + 39.52*16384/1024 + 1024)/16376 = 0.8434 -> serves a full request. VERIFIED-BY-USE: <filled by the real bridge RHM turn below>."
+        },
+        "_migration": "NEW service via the declaration path (resolver.serve_flags from family qwen3.5 + capability_overrides.vision=lm-only — IDENTICAL flag set to chat-4b-fp8, the resolver is model-agnostic). gpu_util is AUTO-ALLOCATED from the MEASURED `_profile` above — NO static literal (WF2 law: dissolve the static-allocation class). The measurement boot used a temporary static gpu_util (0.85 starved KV at -0.72 GiB; 0.95 raced the budget gate at 14.69 GiB free vs 15.19 desired — both the starve AND over-grab faces of static allocation); the measured _profile yields 0.812 which both fits the weights+KV AND leaves margin, sized to NEED. auto_gpu_util(reg,'chat-9b-fp8') resolves from this profile; _resolved_gpu_util emits it; a static gpu_util stays only as an explicit OVERRIDE escape-hatch (absent here).",
+        "env": {
+          "VLLM_LOGGING_LEVEL": "INFO",
+          "VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS": "0"
+        },
+        "max_model_len_ceiling": 262144
+      },
+      "ram_mb": 3000
     },
     "tts-kokoro": {
       "group": "voice",
