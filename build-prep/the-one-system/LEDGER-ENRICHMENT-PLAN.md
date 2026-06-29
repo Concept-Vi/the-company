@@ -35,5 +35,14 @@ Embed every file in **text-space and code-space** (Tim's text + code embedders).
 ## Curated core vocabulary
 The 25-kind core (8 families) is in [FIRST-RUN-QUALITY-REPORT.md] / the channel table (2026-06-29). The long tail (~8,400 kinds) stays as free-text tags on edges; only the core is rendered as graph structure.
 
+## Data-artifact classifier (reproducible — applied 2026-06-29)
+Excluded from interpretation (kept as stubs for later passes). Predicate (becomes a deterministic extractor rule later):
+`ext in ('.jsonl','.ndjson')` · `path ~ 'migration-pending/wizard-run'` · `path ~ 'channel-memory/scans/'` ·
+`path ~ '\.temp/pgdelta'` · `path ~ 'catalog-local-migrations'` · `(path ~ 'design/_system/' and ext='.json'
+and NOT tokens|mechanisms|generate-config|registry-generation.cascade)`. First application matched **3,552**
+(3,468 = `.recollection/conversation-archive/*.jsonl`, pure archive data never interpreted — correctly kept out
+of the redo; only 14 real data-dump descriptions replaced, recoverable from wave scratch). The design-system
+SUBSTRATE (tokens/mechanisms/config/cascade) is KEPT. Tools: `ops/ledger_coverage_audit.py` (the audit harness).
+
 ## Sequence
 **A — truncation fix (never-truncate)** → **coverage-audit harness** (harden the structure everything stands on) → **fact + grounded edges** → **proximity layer**.
