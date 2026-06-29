@@ -246,7 +246,14 @@ def fold_conversation(store, cid: str) -> dict:
     messages: dict[str, dict] = {}
     roots: list[str] = []
     order: list[str] = []          # message_ids in append order (last = default current leaf)
-    selected: str | None = None
+    selected: str | None = None    # the last branch-selection event's message_id (informational)
+    # current leaf = the leaf set by the LATEST navigation, where BOTH a message-append (OWUI advances
+    # currentId on every new message) AND a `select` (explicit branch nav) are navigations. The event
+    # file is oldest-first, so iterating in order and overwriting current_leaf gives latest-action-wins:
+    # a select sticks only UNTIL the next append (honouring the documented "if its select is the latest
+    # navigation"). The earlier code took any prior select unconditionally, freezing current_leaf so a
+    # reply appended after a branch-nav was invisible — fixed here (verified by use).
+    current_leaf: str | None = None
     for e in events:
         k = e.get("kind")
         if k == "message":
@@ -257,8 +264,11 @@ def fold_conversation(store, cid: str) -> dict:
             node["children"] = []
             messages[mid] = node
             order.append(mid)
+            current_leaf = mid                 # a new message advances the displayed leaf (OWUI currentId)
         elif k == "select":
             selected = e.get("message_id")
+            if selected in messages:           # navigate the displayed leaf to an existing message
+                current_leaf = selected
     # invert parent_id → children (OWUI childrenIds, computed), collect roots
     for mid, node in messages.items():
         pid = node.get("parent_id")
@@ -268,8 +278,6 @@ def fold_conversation(store, cid: str) -> dict:
             messages[pid]["children"].append(mid)
         else:
             roots.append(mid)      # an orphan (parent unseen) — a root by construction, never dropped
-    # current leaf: the selected message (if its select is the latest navigation), else last-appended
-    current_leaf = selected if (selected in messages) else (order[-1] if order else None)
     current: list[str] = []
     walk = current_leaf
     guard = set()
