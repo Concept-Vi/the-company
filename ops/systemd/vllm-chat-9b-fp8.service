@@ -1,0 +1,17 @@
+[Unit]
+Description=vLLM Chat Server (Qwen3.5-9B-FP8, RedHatAI) on port 8002
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/home/tim/company/ops/serve_model.sh chat-9b-fp8
+Restart=on-failure
+RestartSec=10
+# Logs go to journalctl: journalctl --user -u vllm-chat-9b-fp8 -f
+StandardOutput=journal
+StandardError=journal
+# Generous timeout for cold-start compilation
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

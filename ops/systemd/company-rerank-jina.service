@@ -1,0 +1,15 @@
+[Unit]
+Description=jina-reranker-v3 listwise reranker (CPU, 0 VRAM) on port 8008 — the rerank stage for cross-session recall
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/home/tim/company/ops/serve_rerank.sh
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target
