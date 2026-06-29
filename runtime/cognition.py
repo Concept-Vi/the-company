@@ -260,7 +260,7 @@ def _ensure_embedder_resident(*, evict: bool = False) -> dict:
 
 def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
              model: str = RESIDENT_MODEL, timeout: int = ROLE_TIMEOUT,
-             max_tokens: int = 256, temperature: float = 0.0, store=None,
+             max_tokens: int | None = None, temperature: float | None = None, store=None,
              ensure: bool = False, ensure_evict: bool = False,
              policy: str | None = None, meta: dict | None = None,
              think: bool | None = None, coordinate: dict | None = None) -> dict:
@@ -456,20 +456,44 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
                 f"output ({eff_schema.__name__}) but model {model!r} DECLARES json_schema=false. FAIL LOUD: NOT "
                 f"silently downgraded to bare json_object (that would leave the role's schema contract unenforced "
                 f"at the decoder — the C-law no-silent-downgrade). Bind a json_schema-capable model for this role.")
+    # PER-ROLE SAMPLING (S5 at the role layer) — a role may DECLARE `knobs` (the Qwen3.5 sampling family:
+    # temperature/top_p/top_k/min_p/presence_penalty/frequency_penalty/repetition_penalty/max_tokens). run_role
+    # previously read ONLY the temperature/max_tokens kwargs, so a role's declared top_p/top_k/min_p/penalties
+    # were a SILENT NO-OP — e.g. a THINKING role wanting the Qwen3.5 thinking-mode sampling (temp 1.0 / top_p
+    # 0.95 / top_k 20) ran on whatever the caller passed. Apply them here so a role's declared sampling reaches
+    # the model. PRECEDENCE: an EXPLICITLY-passed temperature/max_tokens kwarg WINS (a jury's varied-draws
+    # temperature C2.4, a caller's budget) — the kwarg default is now None so "caller didn't set it" is
+    # distinguishable; else the role's knob; else the historical default (temperature 0.0 / max_tokens 256).
+    # BYTE-IDENTICAL when the role declares no knobs (every current run_role role) AND no temperature/max_tokens
+    # knob: _rk is empty → _eff_temp/_eff_max fall back to 0.0/256 and _knob_kw is empty. The transport forwards
+    # the whole _SAMPLING_KEYS family via _apply_sampling (transport.py:52 — NOT just temp/max/top_p; an older
+    # comment here claimed otherwise and was stale), so top_k/min_p/penalties genuinely reach vLLM.
+    # knobs live in the role's verbatim `spec` dict (roles/<id>.py declares `"knobs": {...}`), NOT a Role
+    # dataclass field — so read role.spec["knobs"] (the canonical home resolve_role reads), not getattr(role,
+    # "knobs") which would be a SILENT NO-OP. A non-Role caller (e.g. a test SimpleNamespace) may carry .knobs
+    # directly → honour that as a fallback.
+    _rk = ((getattr(role, "spec", None) or {}).get("knobs")) or getattr(role, "knobs", None) or {}
+    _eff_temp = temperature if temperature is not None else (
+        _rk["temperature"] if _rk.get("temperature") is not None else 0.0)
+    _eff_max = max_tokens if max_tokens is not None else (
+        _rk["max_tokens"] if _rk.get("max_tokens") is not None else 256)
+    # the per-request sampler knobs a role may set (rep_penalty handled per-path: the O2 ladder OWNS it).
+    _SAMP_KEYS = ("top_p", "top_k", "min_p", "presence_penalty", "frequency_penalty")
+    _knob_kw = {k: _rk[k] for k in _SAMP_KEYS if _rk.get(k) is not None}
     if policy is None:
-        # DEFAULT path — BYTE-IDENTICAL to before for a meta=None caller (ONE complete() call, the same
-        # return). Every current caller (run_swarm/dry_run_role/run_cascade/the MCP run_role) passes no
-        # meta, so `_complete_kw` carries nothing extra and the request body is untouched. O3: a caller
-        # that passes `meta={}` gets finish_reason/usage filled by the transport's _fill_meta — the value
-        # rides `**opts` straight through; the body only reads response_format + temperature/max_tokens/
-        # top_p, so a stray `meta` key can't pollute the request. OUT-PARAM only — NEVER in the return.
+        # DEFAULT path — BYTE-IDENTICAL to before for a meta=None, no-knobs caller (ONE complete() call, the
+        # same return). Every current caller (run_swarm/dry_run_role/run_cascade/the MCP run_role) passes no
+        # meta, so `_complete_kw` carries nothing extra; the body only reads response_format + the allowlisted
+        # sampling family, so a stray `meta` key can't pollute the request. OUT-PARAM only — NEVER in the return.
         _complete_kw = {} if meta is None else {"meta": meta}
         if eff_think is not None:
             _complete_kw["think"] = eff_think                  # → the transport, ONE key per stack (native: body.think;
             #                                                    vLLM: chat_template_kwargs.enable_thinking via _apply_thinking — NOW WIRED, deliverable b)
+        if _rk.get("repetition_penalty") is not None:          # no O2 ladder here → honour a role's declared rep-penalty
+            _complete_kw["repetition_penalty"] = _rk["repetition_penalty"]
         validated = client.complete(
             t, msgs, model=model, schema=eff_schema, json=True,
-            temperature=temperature, max_tokens=max_tokens, **_complete_kw,
+            temperature=_eff_temp, max_tokens=_eff_max, **_knob_kw, **_complete_kw,
         )
         return validated.model_dump()
 
@@ -477,15 +501,17 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
     # GENERATION_POLICY registry (NOTHING static). Fail-loud on an unknown id (registry-is-truth).
     pol = generation_policy_registry().policy_for(policy)
     rung = pol.default_rep_penalty                              # the first ladder rung (e.g. 1.1)
-    pol_temp = pol.temperature if pol.temperature is not None else temperature
+    pol_temp = pol.temperature if pol.temperature is not None else _eff_temp   # _eff_temp is None-safe (→0.0)
     while True:
         meta: dict = {}                                        # the O3 transport out-param (finish_reason)
         _think_kw = {"think": eff_think} if eff_think is not None else {}
         validated = client.complete(
             t, msgs, model=model, schema=eff_schema, json=True,
-            temperature=pol_temp, max_tokens=max_tokens,
-            repetition_penalty=rung,                           # FROM the registry ladder — never a constant
+            temperature=pol_temp, max_tokens=_eff_max,
+            repetition_penalty=rung,                           # FROM the registry ladder — never a constant (the
+            #                                                    ladder OWNS rep-penalty here, so _knob_kw excludes it)
             meta=meta,                                         # read finish_reason back to drive escalation
+            **_knob_kw,                                        # the role's other declared samplers (top_p/top_k/…)
             **_think_kw,
         )
         if meta.get("finish_reason") != "length":
