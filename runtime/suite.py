@@ -6812,12 +6812,24 @@ class Suite:
         # a caller's explicit big-context model (e.g. brain_router's kimi override) is left untouched. Fail-soft.
         _eff_model, _eff_base = cfg["model"], cfg["base_url"]
         try:
-            if _eff_base and "127.0.0.1:8000" in _eff_base:        # the small-window resident 4B is configured
+            # Gate to ANY LOCAL resident vLLM brain (a 127.0.0.1 worker that is NOT the ollama host) — NOT
+            # pinned to :8000: the active brain may be the FP8 on :8001, or another worker elsewhere. Resolve
+            # THE CONFIGURED BRAIN'S OWN context window from ITS service (never a hardcoded chat-4b), so the
+            # overflow→kimi step fires against whatever brain is actually loaded. A cloud/ollama brain (kimi)
+            # is already big-context → left untouched.
+            if _eff_base and "127.0.0.1" in _eff_base and ":11434" not in _eff_base:
+                import os as _os_w, sys as _sys_w
+                _cli_w = _os_w.path.join(_os_w.path.dirname(_os_w.path.dirname(_os_w.path.abspath(__file__))), "ops", "cli")
+                if _cli_w not in _sys_w.path:
+                    _sys_w.path.insert(0, _cli_w)
+                import registry as _reg_w, capabilities as _caps_w
                 from runtime.cognition import model_context_window
                 from runtime.cc_clone import pick_ollama_model_for_context
                 from fabric import config as _fc
+                _svc_key = _caps_w.service_key_for(_reg_w.load(), _eff_model)   # the CONFIGURED brain's service
+                _win = model_context_window(service_id=_svc_key or "chat-4b")   # its OWN window (fallback: chat-4b)
                 _est = sum(len(str(m.get("content") or "")) for m in msgs) // 4 + 256   # chars→tok + tools/overhead
-                if _est > model_context_window(service_id="chat-4b") * 0.9:
+                if _est > _win * 0.9:
                     _pm, _ = pick_ollama_model_for_context(_est)
                     if _pm and _pm != cfg["model"]:
                         _eff_model, _eff_base = _pm, _fc.OLLAMA_DIRECT
