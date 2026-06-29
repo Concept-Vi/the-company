@@ -44,13 +44,26 @@ def _ledger_hashes(project: str) -> dict:
     return h
 
 
+import re as _re
+# data-artifact predicate — mirrors the exclusion classifier. We DON'T read/hash these (lean: avoids hashing
+# the 45MB dump + thousands of archive files, which helped wedge Docker twice). They hash to '' like the ledger.
+_DATA_EXT = (".jsonl", ".ndjson")
+_DATA_PATH = _re.compile(r"migration-pending/wizard-run|channel-memory/scans/|\.temp/pgdelta|catalog-local-migrations"
+                         r"|build-prep/the-one-system/interpret/|build-prep/the-one-system/discovery/")
+
+
+def _is_data_artifact(rel: str) -> bool:
+    return rel.endswith(_DATA_EXT) or bool(_DATA_PATH.search(rel))
+
+
 def _current_hashes(root: str, exclude_prefixes: tuple) -> dict:
-    """{rel_path: sha256} over the tree at `root` NOW — mirrors ledger_build.current_hashes (excluded → '')."""
+    """{rel_path: sha256} over the tree at `root` NOW — mirrors ledger_build.current_hashes (excluded → '').
+    Skips reading excluded prefixes AND data artifacts (lean — never reads the big data dumps)."""
     files, _ = enumerate_files(root)
     h = {}
     for rec in files:
         rel = rec["rel_path"]
-        if any(rel.startswith(p) for p in exclude_prefixes):
+        if any(rel.startswith(p) for p in exclude_prefixes) or _is_data_artifact(rel):
             h[rel] = ""
             continue
         src, raw = _read(rec["abs_path"], rel)
@@ -64,9 +77,13 @@ def detect(project: str, purpose: str = "") -> dict:
     # company applies its scratch/data/claude-ds exclusions; the other roots have their files at top level.
     excl = tuple(p for p, _ in EXCLUDE_PREFIXES) if project == "company" else ()
     cur = _current_hashes(root, excl)
-    added = sorted(p for p in cur if p not in prev)
-    deleted = sorted(p for p in prev if p not in cur)
-    changed = sorted(p for p in cur if p in prev and cur[p] != prev[p] and cur[p] and prev[p])
+    # only report IN-SCOPE (interpretable) files — data artifacts + excluded prefixes (.recollection churn,
+    # scratch) are not re-run targets, so their constant turnover is noise, not signal.
+    def in_scope(p: str) -> bool:
+        return not _is_data_artifact(p) and not any(p.startswith(x) for x in excl)
+    added = sorted(p for p in cur if p not in prev and in_scope(p))
+    deleted = sorted(p for p in prev if p not in cur and in_scope(p))
+    changed = sorted(p for p in cur if p in prev and cur[p] != prev[p] and cur[p] and prev[p] and in_scope(p))
     unchanged = sum(1 for p in cur if p in prev and cur[p] == prev[p])
     return {"project": project, "root": root,
             "counts": {"added": len(added), "changed": len(changed), "deleted": len(deleted),
