@@ -88,6 +88,44 @@ def main():
             if th:
                 emit("in_thread", frm, f"thread://{th}", None)
 
+    # ── vault self-description relations: any frontmatter key whose values are [[alias]] links is a typed
+    # relation (the open-vocabulary convention). Resolve [[alias]] via each note's `aliases:`. ──
+    import re as _re
+    WIKI = _re.compile(r"\[\[([^\]|]+)")
+    md = [p for p in _psql(
+        "select path from ledger.entry e join ledger.latest_run r using(run_id) where r.project='company' "
+        "and e.node_type='file' and e.ext='.md' and e.path !~ 'channel-memory/'").splitlines() if p]
+    frontmatters, alias_map = {}, {}
+    for path in md:
+        try:
+            fm = _frontmatter(open(os.path.join(REPO, path), errors="replace").read())
+        except Exception:
+            fm = None
+        if not fm:
+            continue
+        frontmatters[path] = fm
+        for a in (fm.get("aliases") or []):
+            if isinstance(a, str):
+                alias_map[a.strip()] = f"code://company/{path}"
+    NON_REL = {"aliases", "tags", "contents", "coverage"}        # lists that aren't node-relations
+    vault_n = 0
+    for path, fm in frontmatters.items():
+        frm = f"code://company/{path}"
+        for key, val in fm.items():
+            if key in NON_REL:
+                continue
+            vals = val if isinstance(val, list) else [val]
+            for v in vals:
+                if not isinstance(v, str):
+                    continue
+                m = WIKI.search(v)
+                if not m:
+                    continue
+                alias = m.group(1).strip()
+                emit(key, frm, f"[[{alias}]]", alias_map.get(alias))
+                vault_n += 1
+    print(f"vault self-description relations: {vault_n} ({len(alias_map)} aliases mapped)", flush=True)
+
     print(f"emitted {len(edges)} fact-edges "
           f"({sum(1 for e in edges if e[3])} resolved to a node)", flush=True)
     by_kind = {}
