@@ -68,12 +68,14 @@ from datetime import datetime, timezone
 # _apply_channel_event — nowhere else.
 CHANNEL_OPS = (
     "channel.created",        # {channel, kind, name, purpose, mode, coordinator?, members[], origin?}
-    "channel.member_added",   # {channel, session, participation}
+    "channel.member_added",   # {channel, session, participation, member_kind?, label?}
     "channel.member_removed", # {channel, session}
     "channel.member_status",  # {channel, session, participation}
-    "channel.posted",         # {channel, from, cas, thread, mode, fan:[{session, verb, mail_seq}], coordinator?}
+    "channel.posted",         # {channel, from, cas, thread, mode, fan:[{session, verb, mail_seq}], coordinator?, reply_to?}
     "channel.mode_set",       # {channel, mode, coordinator?}
     "channel.shared_set",     # {channel, shared}  — the shared-edge flag (publish-to-Supabase gate)
+    "channel.reaction_added", # {channel, message, member, emoji}  — a reaction event on a message (fusion inc.3)
+    "channel.reaction_removed", # {channel, message, member, emoji}  — un-react (set semantics)
     "channel.archived",       # {channel}
     "gathering.dispersed",    # {channel}   — terminal for kind=gathering
     "gathering.promoted",     # {channel, promoted_to}  — gathering → durable channel
@@ -82,6 +84,12 @@ KINDS = ("channel", "gathering")
 MODES = ("direct", "conducted")                  # R2.5: router vs conductor
 PARTICIPATION = ("awake", "listening")           # the DECLARED member posture (R2.2 vocabulary);
                                                  # busy/closed are DERIVED (registry + supervisor), never stored
+# MEMBER_KINDS (fusion inc.3 — the "label slot" inc.2 deferred): a member is no longer assumed to be
+# a live agent session. A room member can be a HUMAN (the operator on the OWUI face), a LIVE-SESSION
+# (a Claude Code session reached via cc_channels inject — the original assumption), or a MODEL (an AI
+# brain that is a first-class room member, e.g. the OWUI operator/RHM model). kind discriminates HOW a
+# member is present; it is a member SUB-RECORD field (+ an optional display `label`), never a new row.
+MEMBER_KINDS = ("human", "live-session", "model")
 ROW_STATUS = ("active", "archived", "dispersed", "promoted")   # the row lifecycle (kind-dependent terminals)
 
 LEAF = "channels.jsonl"                          # beside mail.jsonl under <store>/agent_sessions/
@@ -209,11 +217,14 @@ def _apply_channel_event(rows: dict, e: dict) -> None:
             "purpose": e.get("purpose"), "mode": e.get("mode", "direct"),
             "coordinator": e.get("coordinator"), "status": "active",
             "members": {m["session"]: {"participation": m.get("participation", "awake"),
+                                       "kind": m.get("kind", "live-session"),
+                                       "label": m.get("label"),
                                        "added": e.get("ts")}
                         for m in (e.get("members") or [])},
             "origin": e.get("origin"), "created": e.get("ts"),
             "last_activity": e.get("ts"), "posts": 0, "seq": e.get("seq"),
             "shared": bool(e.get("shared")),   # the shared-edge flag (default INTERNAL; publish-gate)
+            "reactions": {},   # {message_ref → {emoji → [member, …]}} — folded from reaction events (inc.3)
         }
         return
     row = rows.get(cid)
@@ -226,6 +237,8 @@ def _apply_channel_event(rows: dict, e: dict) -> None:
     row["seq"] = e.get("seq")
     if k == "channel.member_added":
         row["members"][e["session"]] = {"participation": e.get("participation", "awake"),
+                                        "kind": e.get("member_kind", "live-session"),
+                                        "label": e.get("label"),
                                         "added": e.get("ts")}
     elif k == "channel.member_removed":
         row["members"].pop(e.get("session"), None)
@@ -235,6 +248,23 @@ def _apply_channel_event(rows: dict, e: dict) -> None:
             m["participation"] = e.get("participation")
     elif k == "channel.posted":
         row["posts"] = row.get("posts", 0) + 1
+    elif k == "channel.reaction_added":
+        # SET semantics: a (message, emoji, member) is present at most once (re-react is idempotent).
+        reacts = row.setdefault("reactions", {})
+        msg = str(e.get("message"))
+        per_emoji = reacts.setdefault(msg, {}).setdefault(e.get("emoji"), [])
+        if e.get("member") not in per_emoji:
+            per_emoji.append(e.get("member"))
+    elif k == "channel.reaction_removed":
+        reacts = row.setdefault("reactions", {})
+        msg = str(e.get("message"))
+        per_emoji = reacts.get(msg, {}).get(e.get("emoji"))
+        if per_emoji and e.get("member") in per_emoji:
+            per_emoji.remove(e.get("member"))
+            if not per_emoji:                    # last reactor of this emoji left → drop the emoji bucket
+                reacts[msg].pop(e.get("emoji"), None)
+                if not reacts[msg]:              # no emojis left on the message → drop the message bucket
+                    reacts.pop(msg, None)
     elif k == "channel.mode_set":
         row["mode"] = e.get("mode")
         if e.get("coordinator") is not None:
@@ -315,10 +345,19 @@ def create_channel(store, *, name: str, purpose: str = "", members: list[dict] |
                 f"create_channel: unknown participation {part!r} for {sid} — declared postures are "
                 f"{list(PARTICIPATION)} (awake = full participant · listening = receives, not "
                 f"worked). busy/closed are DERIVED states, never declared.")
-        if registry is not None:
+        mkind = (m.get("kind", "live-session") if isinstance(m, dict) else "live-session")
+        if mkind not in MEMBER_KINDS:
+            raise ValueError(
+                f"create_channel: unknown member kind {mkind!r} for {sid} — a member is one of "
+                f"{list(MEMBER_KINDS)} (human = a person on a face · live-session = a Claude Code "
+                f"session reached via inject · model = an AI brain that is a first-class member).")
+        mlabel = (m.get("label") if isinstance(m, dict) else None)
+        # registry validation is for LIVE-SESSION members only — a human/model member is not an
+        # agent session and must NOT be looked up (it would fail-loud on an id that isn't a session).
+        if registry is not None and mkind == "live-session":
             registry(sid)                        # fail-loud teaching error on unknown (the registry's own)
         if sid not in seen:
-            norm.append({"session": sid, "participation": part})
+            norm.append({"session": sid, "participation": part, "kind": mkind, "label": mlabel})
             seen.add(sid)
     coord = _bare(coordinator) if coordinator else None
     if mode == "conducted":
@@ -363,13 +402,21 @@ def create_channel(store, *, name: str, purpose: str = "", members: list[dict] |
 
 
 def add_member(store, cid: str, session: str, *, participation: str = "awake",
+               kind: str = "live-session", label: str | None = None,
                registry=None) -> dict:
-    """Fluid membership, the add half (R2.2). Validated against the agent-session registry when
-    supplied. Adding an existing member is refused loud (use set_member_status to change posture
-    — a silent re-add would silently reset their declared posture)."""
+    """Fluid membership, the add half (R2.2). `kind` (MEMBER_KINDS, inc.3): human | live-session |
+    model — HOW the member is present (a person on a face · a session reached via inject · an AI
+    brain). `label` is an optional display identity (the inc.2-deferred label slot). Validated
+    against the agent-session registry when supplied AND kind == 'live-session' (only a session is a
+    registry id; a human/model member is not). Adding an existing member is refused loud (use
+    set_member_status to change posture — a silent re-add would silently reset their declared
+    posture/kind)."""
     if participation not in PARTICIPATION:
         raise ValueError(f"add_member: unknown participation {participation!r} — declared postures "
                          f"are {list(PARTICIPATION)}.")
+    if kind not in MEMBER_KINDS:
+        raise ValueError(f"add_member: unknown member kind {kind!r} — a member is one of "
+                         f"{list(MEMBER_KINDS)} (human · live-session · model).")
     row = get_channel(store, cid)
     _require_active(row, "add_member")
     sid = _bare(session)
@@ -377,10 +424,11 @@ def add_member(store, cid: str, session: str, *, participation: str = "awake",
         raise ValueError(
             f"add_member: {_addr(sid)} is already a member of channel://{row['id']} — to change "
             f"its posture use set_member_status; membership is a set, not a multiset.")
-    if registry is not None:
+    if registry is not None and kind == "live-session":
         registry(sid)
     append_channel_event(store, {"kind": "channel.member_added", "channel": row["id"],
-                                 "session": sid, "participation": participation})
+                                 "session": sid, "participation": participation,
+                                 "member_kind": kind, "label": label})
     return get_channel(store, cid)
 
 
@@ -457,6 +505,59 @@ def archive_channel(store, cid: str) -> dict:
     return get_channel(store, cid)
 
 
+# ── reactions as a CHANNEL PRIMITIVE (fusion inc.3) ─────────────────────────────────────────────
+# A reaction is a {message, member, emoji} EVENT on the channel — first-class, not an ad-hoc handler
+# in the owui_room daemon. `message` is an OPAQUE STRING ref into whatever id-space the caller owns:
+# session_channels callers pass str(post_seq) (the channel.posted seq); the owui_room face passes the
+# OWUI message id. The primitive is id-agnostic — it never resolves the ref, so two faces' id-spaces
+# coexist on one store. The fold (row["reactions"]) projects {message → {emoji → [member, …]}} with SET
+# semantics. owui_room's 🛑/⏸ reaction-CONTROL records here, then acts (record-then-act, never gate-act).
+def react(store, cid: str, message: str, member: str, emoji: str) -> dict:
+    """Add a reaction (one member, one emoji, on one message ref). Idempotent (set semantics — a
+    repeat re-react is a no-op in the fold). Fail-loud on an inactive channel or empty inputs; the
+    message ref is NOT validated (id-agnostic by design — see the block comment). Returns the row."""
+    if not isinstance(message, str) or not message.strip():
+        raise ValueError("react: `message` must be a non-empty message ref (the post seq, or the "
+                         "face's own message id) — a reaction with no target is unfoldable.")
+    if not isinstance(member, str) or not member.strip():
+        raise ValueError("react: `member` is required — who reacted (a handle/session/label).")
+    if not isinstance(emoji, str) or not emoji.strip():
+        raise ValueError("react: `emoji` is required — the reaction (an emoji char or shortcode).")
+    row = get_channel(store, cid)
+    _require_active(row, "react")
+    append_channel_event(store, {"kind": "channel.reaction_added", "channel": row["id"],
+                                 "message": message.strip(), "member": member.strip(),
+                                 "emoji": emoji.strip()})
+    return get_channel(store, cid)
+
+
+def unreact(store, cid: str, message: str, member: str, emoji: str) -> dict:
+    """Remove a reaction (the un-react half — set semantics, removing an absent reaction is a fold
+    no-op, never an error: the caller's intent ['this member is no longer reacting'] is satisfied
+    either way). Fail-loud only on an inactive channel or empty inputs."""
+    if not (isinstance(message, str) and message.strip() and isinstance(member, str)
+            and member.strip() and isinstance(emoji, str) and emoji.strip()):
+        raise ValueError("unreact: `message`, `member`, `emoji` are all required.")
+    row = get_channel(store, cid)
+    _require_active(row, "unreact")
+    append_channel_event(store, {"kind": "channel.reaction_removed", "channel": row["id"],
+                                 "message": message.strip(), "member": member.strip(),
+                                 "emoji": emoji.strip()})
+    return get_channel(store, cid)
+
+
+def reactions_for(store, cid: str, message: str | None = None) -> dict:
+    """The folded reactions view: {message_ref → {emoji → [member, …]}} for the whole channel, or
+    {emoji → [member, …]} for one `message`. Fail-loud on an unknown channel; honest empty dict
+    when nothing has been reacted to."""
+    row = get_channel(store, cid)
+    reacts = row.get("reactions") or {}
+    if message is not None:
+        return {"channel": _chan_addr(row["id"]), "message": str(message),
+                "reactions": reacts.get(str(message), {})}
+    return {"channel": _chan_addr(row["id"]), "reactions": reacts}
+
+
 # ── the shared-edge flag + the named-channel roster read (the cc_channels-store fold-in) ─────────
 # These complete the one-store fold: cc_channels' named-store is_shared/channel_members are now thin
 # delegations to THESE (one channel concept — structure here, transport in cc_channels).
@@ -524,9 +625,26 @@ def promote_gathering(store, cid: str, *, name: str | None = None, purpose: str 
 
 
 # ── the post router (R2.2 message-the-channel · R2.5 direct vs conducted) ──────────────────────
+def _post_event(store, cid: str, seq: int) -> dict | None:
+    """The channel.posted event with this seq on `cid`, or None (id-agnostic lookup for reply_to
+    root-resolution). Used to collapse reply-of-reply to the root (single-level threads, OWUI-style)."""
+    for e in channel_events_since(store, -1, channel=cid):
+        if e.get("kind") == "channel.posted" and e.get("seq") == seq:
+            return e
+    return None
+
+
 def post_to_channel(store, cid: str, message: str, from_: str, *,
-                    registry=None, thread: str | None = None) -> dict:
+                    registry=None, thread: str | None = None,
+                    reply_to: int | None = None) -> dict:
     """Message the channel — the ONE write that makes a channel a live thing rather than a list.
+
+    THREADS (fusion inc.3, OWUI-style single-level): `reply_to` = the seq of the post being replied
+    to (a channel.posted seq, from a prior post's `posted` return). A reply is a normal post that ALSO
+    carries `reply_to` (the hierarchy axis — OWUI's parent_id) AND joins the parent's aggregation
+    `thread` (the conversation axis — OWUI's reply_to_id continuity) automatically. Single-level: a
+    reply to a reply collapses to the thread ROOT (no nesting — fusion §2 accepts this for v1). The
+    fold's channel_history exposes a post's replies via reply_to; reactions key on the same seq.
 
     direct (the ROUTER): fan to every member except the sender, one mail intent each on the
     existing leaf — supervised-live members get verb='deliver' (the supervisor injects); everyone
@@ -570,6 +688,22 @@ def post_to_channel(store, cid: str, message: str, from_: str, *,
         except ValueError:
             return None                          # not in the registry — honestly unknown → queue
 
+    # THREADS (inc.3): a reply (reply_to set) inherits the PARENT's aggregation thread so the reply
+    # lands in the same conversation. Single-level — if the parent is ITSELF a reply, collapse to the
+    # root (the parent's reply_to), so no nesting accrues. reply_to is validated to be a real post on
+    # THIS channel (fail-loud — a reply to a phantom post is a dangling hierarchy edge).
+    root_reply_to = None
+    if reply_to is not None:
+        parent = _post_event(store, row["id"], int(reply_to))
+        if parent is None:
+            raise ValueError(
+                f"post_to_channel: reply_to={reply_to} is not a post on channel://{row['id']} — "
+                f"reply to a real post seq (channels(op='history') lists them). No dangling replies.")
+        # single-level collapse: the hierarchy parent is the parent's OWN root if it had one, else the parent
+        root_reply_to = parent.get("reply_to") if parent.get("reply_to") is not None else int(reply_to)
+        if thread is None:                       # inherit the parent's conversation key (unless caller forced one)
+            thread = parent.get("thread")
+
     # ONE shared thread per post, PRE-minted (append_agent_mail honours caller threads) so every
     # fan record — and the conducted body's own work-instructions — carry the same aggregation key
     # from birth. Joining an existing conversation = pass `thread`.
@@ -610,9 +744,10 @@ def post_to_channel(store, cid: str, message: str, from_: str, *,
     ev = append_channel_event(store, {
         "kind": "channel.posted", "channel": row["id"], "from": from_.strip(),
         "cas": store.put_content(message), "thread": mail_thread, "mode": mode,
-        "coordinator": row.get("coordinator") if mode == "conducted" else None, "fan": fan})
+        "coordinator": row.get("coordinator") if mode == "conducted" else None, "fan": fan,
+        "reply_to": root_reply_to})
     return {"posted": ev["seq"], "channel": _chan_addr(row["id"]), "mode": mode,
-            "thread": mail_thread, "fan": fan,
+            "thread": mail_thread, "fan": fan, "reply_to": root_reply_to,
             "what_happens": ("the coordinator session receives the channel context + your message "
                              "as one intent and works the members (watch the thread)"
                              if mode == "conducted" else
@@ -651,25 +786,33 @@ def member_statuses(store, cid: str, *, registry=None, probe_supervisor: bool = 
             pass                                  # reported below as supervisor:"down" — loud in-band
     members = []
     for sid, m in row["members"].items():
+        mkind = m.get("kind", "live-session")
         live = None
-        if registry is not None:
-            try:
-                live = (registry(sid) or {}).get("state")
-            except ValueError:
-                live = None                       # unregistered — honestly unknown
-        if live == "closed":
-            status = "closed"
-        elif sup_states.get(sid) == "busy":
-            status = "busy"
+        # registry/supervisor liveness is a LIVE-SESSION property only — a human/model member is not
+        # an agent session, so its derived state is never "closed/busy"; its declared posture stands.
+        if mkind == "live-session":
+            if registry is not None:
+                try:
+                    live = (registry(sid) or {}).get("state")
+                except ValueError:
+                    live = None                   # unregistered — honestly unknown
+            if live == "closed":
+                status = "closed"
+            elif sup_states.get(sid) == "busy":
+                status = "busy"
+            else:
+                status = m["participation"]
         else:
             status = m["participation"]
-        members.append({"session": _addr(sid), "declared": m["participation"],
+        members.append({"session": _addr(sid), "kind": mkind, "label": m.get("label"),
+                        "declared": m["participation"],
                         "live_state": live, "supervisor_state": sup_states.get(sid),
                         "status": status})
     return {"channel": _chan_addr(row["id"]), "members": members,
             "supervisor": sup,
             "status_source": "declared+registry" + ("+supervisor" if sup == "up" else ""),
-            "vocabulary": {"declared": list(PARTICIPATION), "derived": ["busy", "closed"]}}
+            "vocabulary": {"declared": list(PARTICIPATION), "derived": ["busy", "closed"],
+                           "member_kinds": list(MEMBER_KINDS)}}
 
 
 # ── R2.2 — the channel's exchange (history: posts + the replies their threads gathered) ────────
@@ -677,10 +820,24 @@ def channel_history(store, cid: str, *, since: int = -1, limit: int = 50) -> dic
     """The channel's own exchange, oldest-first: every channel.posted event (body resolved) joined
     with the mail its thread gathered (replies/errors/the conducted coordinator's traffic). This
     is the readable artifact seed (R12.1: 'what did they work out?' is answerable from the
-    channel's own exchange). `since` = channel-event seq cursor; honest empty when nothing."""
+    channel's own exchange). `since` = channel-event seq cursor; honest empty when nothing.
+
+    THREADS + REACTIONS (inc.3): each post carries `reply_to` (the parent post seq it replies to,
+    None for a root post) and `replies` (the seqs of posts that reply TO it — the single-level
+    thread view) and `reactions` ({emoji → [member, …]} keyed on the post seq). A reader rebuilds
+    the OWUI-style threaded room from this one fold."""
     row = get_channel(store, cid)                 # fail-loud on unknown
-    posts = [e for e in channel_events_since(store, since, channel=row["id"])
-             if e.get("kind") == "channel.posted"][:limit]
+    all_posts = [e for e in channel_events_since(store, -1, channel=row["id"])
+                 if e.get("kind") == "channel.posted"]
+    # map parent-seq → [child-seq, …] across ALL posts (so the replies view is complete even when
+    # the window starts after the parent), and pull the folded reactions for keying per post.
+    replies_of: dict[int, list[int]] = {}
+    for e in all_posts:
+        rt = e.get("reply_to")
+        if rt is not None:
+            replies_of.setdefault(int(rt), []).append(e.get("seq"))
+    reacts = row.get("reactions") or {}
+    posts = [e for e in all_posts if e.get("seq", -1) > since][:limit]
     out = []
     for p in posts:
         body = store.get_content(p["cas"]) if p.get("cas") else None
@@ -690,11 +847,15 @@ def channel_history(store, cid: str, *, since: int = -1, limit: int = 50) -> dic
             for r in store.agent_mail_since(-1, thread=p.get("thread"))]
         out.append({"seq": p["seq"], "ts": p.get("ts"), "from": p.get("from"),
                     "mode": p.get("mode"), "message": body, "thread": p.get("thread"),
-                    "fan": p.get("fan"), "thread_traffic": thread_mail})
+                    "fan": p.get("fan"), "thread_traffic": thread_mail,
+                    "reply_to": p.get("reply_to"),
+                    "replies": replies_of.get(p.get("seq"), []),
+                    "reactions": reacts.get(str(p.get("seq")), {})})
     return {"channel": _chan_addr(row["id"]), "name": row.get("name"), "posts": out,
             "next_since": (posts[-1]["seq"] if posts else since),
             "note": "thread_traffic is the LIVE join over the mail leaf — a conducted exchange "
-                    "grows it as the coordinator works the members."}
+                    "grows it as the coordinator works the members. reply_to/replies are the "
+                    "single-level thread tree; reactions are keyed on the post seq."}
 
 
 # ── R2.4 — connection history: the edge fold (durable, recorded BY the talk itself) ────────────

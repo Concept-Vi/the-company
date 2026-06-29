@@ -55,15 +55,17 @@ _sio = None                                                 # the live socket cl
 
 
 # ---------------- the ONE structure store (channels.jsonl — session_channels) ----------------
-# THE FOLD (channels-fusion increment 2): an OWUI channel's MEMBERSHIP is a company channel.
-# The set of member HANDLES is now owned by session_channels (the one named-channel structure
-# store, cid == the OWUI channel uuid VERBATIM — deterministic 1:1 mapping, no separate mapping
-# row). owui_room's own state shrinks: "roster" (the list of {handle,label}) is replaced by a
-# per-room handle→label MAP — because session_channels has no label slot yet (label/role as a
-# member sub-record is the LATER increment per fusion-channels.md §2.1). So:
-#   membership truth (the handle SET)  → session_channels.channel_members  (shared with the fabric)
-#   label / display identity           → owui_room state ("labels": {cid: {handle: label}})
-#   roster(cid)                        → a JOIN of the two (returns the same {handle,label} dicts)
+# THE FOLD (channels-fusion increment 2 + 3): an OWUI channel's MEMBERSHIP is a company channel.
+# The set of member HANDLES is owned by session_channels (the one named-channel structure store,
+# cid == the OWUI channel uuid VERBATIM — deterministic 1:1 mapping, no separate mapping row).
+# INC.3 closed the label slot inc.2 deferred: session_channels membership now carries {kind, label}
+# on the member sub-record (kind ∈ human|live-session|model — a spawned member is a live-session,
+# the operator/RHM is a MODEL). So label/kind are written INTO sc (truth), and the local label map
+# is kept ONLY as a fast-path FALLBACK so the live chat path never depends on a store round-trip:
+#   membership truth (handle SET + kind + label)  → session_channels  (shared with the fabric)
+#   label fast-path fallback                       → owui_room state ("labels": {cid: {handle: label}})
+#   roster(cid)                                    → a JOIN (sc handles + label, fallback to local map)
+#   reactions (🛑/⏸ control + any emoji)           → sc.react primitive (record-then-act, fail-soft)
 # cc_channels stays TRANSPORT-only (push/find) — untouched.
 _STORE = None
 
@@ -154,10 +156,19 @@ def _member(cid: str, label: str) -> "dict | None":
     return next((m for m in roster(cid) if m["label"] == label), None)
 
 
-def _add_to_roster(cid: str, handle: str, label: str) -> None:
-    """Add a member: handle → session_channels (truth), label → local map. Dual-write."""
+def _add_to_roster(cid: str, handle: str, label: str, kind: str = "live-session") -> None:
+    """Add a member: handle → session_channels (truth, now WITH kind+label — fusion inc.3 member-kind),
+    label → local map (the fast-path display fallback). Dual-write, fail-soft on the sc side.
+    `kind` ∈ human|live-session|model: a spawned room member is a live-session; the operator/RHM is a
+    model (an AI brain that is a first-class member). The local label map is KEPT as the fallback —
+    membership truth migrates to sc additively, the live chat path never depends on the store."""
     _state["labels"].setdefault(cid, {})[handle] = label
-    _ensure_company_channel(cid, rooms().get(cid, {}).get("name", cid), [handle])
+    try:
+        _ensure_company_channel(cid, rooms().get(cid, {}).get("name", cid))
+        if handle not in set(sc.channel_members(_store(), cid)):
+            sc.add_member(_store(), cid, handle, kind=kind, label=label, registry=None)
+    except Exception as ex:
+        print(f"  _add_to_roster({cid},{handle}) sc soft-fail: {type(ex).__name__}: {ex}", flush=True)
     _save_state()
 
 
@@ -464,7 +475,7 @@ def op_spawn_operator(cid, *_a) -> str:
         return "operator spawn failed."
     cc_clone.register_supervised_member(handle="operator", session_id=sid, supervisor_session=sid,
                                         cwd=REPO, description="the room operator (NL → ops)")
-    _add_to_roster(cid, "operator", "operator")
+    _add_to_roster(cid, "operator", "operator", kind="model")   # the operator/RHM is a MODEL member (inc.3)
     return "operator spawned — talk to it in plain language and it runs the ops."
 
 
@@ -518,17 +529,54 @@ _TEARDOWN_EMOJI = ("🛑", "❌", "⛔", "octagonal_sign", "no_entry", "cross_ma
 _INTERRUPT_EMOJI = ("⏸", "⏸️", "✋", "🤚", "pause_button", "double_vertical_bar", "raised_hand")
 
 
+def _classify_reaction(emoji: str) -> "str | None":
+    """PURE classifier — map a reaction emoji to a control intent (teardown|interrupt|None).
+    No I/O, no store, never raises: the live operator gesture (🛑/⏸ on the phone) must resolve to an
+    action even if every other subsystem is down."""
+    e = (emoji or "").lower()
+    if emoji in _TEARDOWN_EMOJI or any(t in e for t in _TEARDOWN_EMOJI):
+        return "teardown"
+    if emoji in _INTERRUPT_EMOJI or any(t in e for t in _INTERRUPT_EMOJI):
+        return "interrupt"
+    return None
+
+
 def handle_reaction(cid: str, msg: dict) -> None:
+    """RECORD-THEN-ACT (fusion inc.3): a reaction is now RECORDED as a first-class CHANNEL PRIMITIVE
+    event on session_channels (sc.react), so the room's reactions are legible in the one fold rather
+    than living only on the socket. The control DECISION stays LOCAL (_classify_reaction over the
+    emoji tuples) BY DESIGN — making teardown depend on reading the fold would re-couple the live
+    operator gesture to a store round-trip, which the live path forbids. So: classify purely, record
+    best-effort (fail-soft), then run the supervisor action UNCONDITIONALLY — a store hiccup can NEVER
+    block Tim stopping a runaway member (the live path is sacred). The OWUI message id is the opaque
+    `message` ref (id-agnostic primitive).
+
+    NEEDS-LIVE-VERIFICATION: the OWUI reaction payload's message-id key is inferred (`id`/`message_id`)
+    — the original socket handler never extracted it. If both are absent the reaction is NOT recorded
+    (logged loud, never silent), but control still fires. Confirm the real key against a live socket
+    event and pin it here."""
     emoji = msg.get("name") or ""
     wid = ((msg.get("meta") or {}).get("webhook") or {}).get("id")
     label = _label_for_webhook_id(cid, wid) if wid else None
     if not label or not _member(cid, label):
         return
-    e = emoji.lower()
-    if emoji in _TEARDOWN_EMOJI or any(t in e for t in _TEARDOWN_EMOJI):
+    intent = _classify_reaction(emoji)            # pure — decided BEFORE any I/O
+    # RECORD (best-effort, fail-soft): land the reaction on the channel primitive. NEVER gate the
+    # control action on this succeeding. An absent msg-id is logged loud (no-silent-failure law).
+    msg_ref = str(msg.get("id") or msg.get("message_id") or "")
+    if not msg_ref:
+        print(f"  handle_reaction: reaction {emoji!r} on {label} has no message id "
+              f"(keys={sorted(msg)}) — NOT recorded to the primitive; control still fires.", flush=True)
+    else:
+        try:
+            sc.react(_store(), cid, msg_ref, label, emoji)
+        except Exception as ex:
+            print(f"  handle_reaction sc.react soft-fail: {type(ex).__name__}: {ex}", flush=True)
+    # ACT (unconditional — reads the classified intent, runs the proven supervisor control):
+    if intent == "teardown":
         print(f"  reaction {emoji} on {label} → TEARDOWN", flush=True)
         post_as(cid, "operator", f"🛑 ({label}) — " + dispatch("teardown", [label], cid))
-    elif emoji in _INTERRUPT_EMOJI or any(t in e for t in _INTERRUPT_EMOJI):
+    elif intent == "interrupt":
         print(f"  reaction {emoji} on {label} → INTERRUPT", flush=True)
         post_as(cid, "operator", f"⏸ ({label}) — " + dispatch("interrupt", [label], cid))
 

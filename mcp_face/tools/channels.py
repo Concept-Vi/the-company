@@ -39,7 +39,7 @@ from runtime import session_channels as sc
 
 OPS = ("list", "describe", "history", "edges")
 ACTIONS = ("create", "gather", "add", "remove", "status", "post", "mode",
-           "promote", "disperse", "archive")
+           "promote", "disperse", "archive", "react", "unreact")
 
 
 def _to_sdk_annotations(ann: CompanyToolAnnotations, title: str,
@@ -181,11 +181,13 @@ def register(mcp, suite):
         CompanyToolAnnotations(readonly=False, destructive=False, idempotent=False),
         "Session fabric — act on channels/gatherings (write)"))
     def channel_act(action: Literal["create", "gather", "add", "remove", "status", "post",
-                                    "mode", "promote", "disperse", "archive"],
+                                    "mode", "promote", "disperse", "archive", "react", "unreact"],
                     channel: str = "", name: str = "", purpose: str = "",
                     members: list = None, session: str = "", participation: str = "awake",
                     message: str = "", from_session: str = "", thread: str = "",
-                    mode: str = "", coordinator: str = "", parent: str = "") -> dict:
+                    mode: str = "", coordinator: str = "", parent: str = "",
+                    kind: str = "live-session", label: str = "",
+                    reply_to: int = None, emoji: str = "") -> dict:
         """ACT on the cross-session fabric's structure (the one WRITE — CQRS twin of `channels`).
         Everything is a durable store append; NOTHING here spawns or wakes a session (a channel
         post routes deliver-class intents to the supervisor for live members and queue-class for
@@ -197,7 +199,12 @@ def register(mcp, suite):
                               `parent` (channel://… — a sub-channel, the recursion).
           action="gather"   — grab a GATHERING for right-now (same args as create; momentary:
                               disperse it when done, or promote it if it proves durable).
-          action="add"      — add a member (`channel`, `session`, `participation`).
+          action="add"      — add a member (`channel`, `session`, `participation`, `kind`,
+                              `label`). `kind` ∈ human|live-session|model — HOW the member is
+                              present (a person on a face · a Claude Code session reached via
+                              inject · an AI brain that is a first-class member, e.g. the operator
+                              model). `label` is an optional display identity. A human/model member
+                              is NOT validated against the agent-session registry (only a session is).
           action="remove"   — remove a member (`channel`, `session`).
           action="status"   — declare a member's posture (`channel`, `session`,
                               `participation` ∈ awake|listening). busy/closed are DERIVED —
@@ -206,7 +213,14 @@ def register(mcp, suite):
                               direct → fans to every member (live→supervisor inject ·
                               rest→next-turn inbox pickup); conducted → ONE context-laden intent
                               to the coordinator, who works the members on the returned thread.
-                              `thread` joins an existing conversation.
+                              `thread` joins an existing conversation; `reply_to` (a prior post's
+                              seq) makes this a single-level THREAD reply (inherits the parent's
+                              conversation, collapses reply-of-reply to root — OWUI-style).
+          action="react"    — add a REACTION (`channel`, `message`=the post seq or a face's msg
+                              ref, `from_session`=who reacted, `emoji`). A channel primitive: the
+                              fold exposes reactions per message (channels(op='history')).
+          action="unreact"  — remove a reaction (same args; set semantics — removing an absent one
+                              is a no-op, never an error).
           action="mode"     — set coordination (`channel`, `mode`; conducted needs `coordinator`).
           action="promote"  — gathering → durable channel (provenance stamped both ways).
           action="disperse" — let a gathering go (terminal; history stays readable).
@@ -237,8 +251,19 @@ def register(mcp, suite):
             raise ValueError(f"channel_act: action='{action}' needs `channel` "
                              f"(channels(op='list') shows what exists).")
         if action == "add":
-            reg = _need_registry(suite, "channel_act(action='add')")
-            row = sc.add_member(store, channel, session, participation=participation, registry=reg)
+            # registry is needed to validate a live-session member; a human/model member is not a
+            # session, so the lookup is skipped inside add_member (kind-gated). Still bind it when present.
+            reg = _registry(suite) if kind != "live-session" else _need_registry(suite, "channel_act(action='add')")
+            row = sc.add_member(store, channel, session, participation=participation,
+                                kind=kind, label=label or None, registry=reg)
+        elif action in ("react", "unreact"):
+            if not from_session.strip():
+                raise ValueError(f"channel_act: action='{action}' needs `from_session` — who "
+                                 f"reacted (the reacting member's handle/session).")
+            fn = sc.react if action == "react" else sc.unreact
+            fn(store, channel, message, from_session, emoji)
+            return {"action": action, "channel": f"channel://{sc._chan_bare(channel)}",
+                    **sc.reactions_for(store, channel, message)}
         elif action == "remove":
             row = sc.remove_member(store, channel, session)
         elif action == "status":
@@ -247,7 +272,7 @@ def register(mcp, suite):
             return {"action": action,
                     **sc.post_to_channel(store, channel, message, from_session,
                                          registry=_registry(suite),
-                                         thread=thread or None)}
+                                         thread=thread or None, reply_to=reply_to)}
         elif action == "mode":
             row = sc.set_mode(store, channel, mode, coordinator=coordinator or None)
         elif action == "promote":

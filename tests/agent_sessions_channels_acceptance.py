@@ -458,9 +458,123 @@ def section_e(tmp):
                     "unknown session")
 
 
+# ── F · fusion inc.3 — threads · reactions · member-kind (donor features as primitives) ─────────
+def section_f(tmp):
+    print("F · fusion inc.3 (threads · reactions · member-kind, organ + face round-trip)")
+    s = FsStore(tmp)
+    for sid in ("s-1", "s-2"):
+        s.save_agent_session({"id": sid, "state": "unsupervised-live"})
+    reg = _registry_over(s)
+
+    # MEMBER-KIND: closed vocabulary refusal (mirrors participation), and human/model bypass the registry
+    expect_teaching("F: unknown member kind refused (closed vocab)",
+                    lambda: sc.create_channel(s, name="k", members=[{"session": "s-1", "kind": "robot"}],
+                                              registry=reg),
+                    "unknown member kind", "human")
+    ch = sc.create_channel(s, name="multi-party", members=[
+        {"session": "s-1", "kind": "live-session"},
+        {"session": "tim", "kind": "human", "label": "Tim"},
+        {"session": "operator", "kind": "model", "label": "Operator (RHM)"},
+    ], registry=reg)
+    cid = ch["id"]
+    check("F: human/model members admitted WITHOUT registry validation (not sessions)",
+          set(ch["members"]) == {"s-1", "tim", "operator"})
+    check("F: member kinds + labels folded onto the sub-record",
+          ch["members"]["tim"]["kind"] == "human" and ch["members"]["tim"]["label"] == "Tim"
+          and ch["members"]["operator"]["kind"] == "model"
+          and ch["members"]["s-1"]["kind"] == "live-session")
+    st = sc.member_statuses(s, cid, registry=reg, probe_supervisor=False)
+    kinds = {m["session"]: m["kind"] for m in st["members"]}
+    check("F: member_statuses surfaces kind; model/human never derive closed/busy",
+          kinds["session://operator"] == "model"
+          and next(m for m in st["members"] if m["session"] == "session://operator")["status"] == "awake"
+          and "model" in st["vocabulary"]["member_kinds"])
+    # add_member with an explicit kind+label (model), and default kind back-compat
+    sc.add_member(s, cid, "brain-2", kind="model", label="Analyst brain", registry=reg)
+    row = sc.get_channel(s, cid)
+    check("F: add_member carries kind+label", row["members"]["brain-2"]["kind"] == "model"
+          and row["members"]["brain-2"]["label"] == "Analyst brain")
+
+    # THREADS: a root post, then a reply_to it; reply inherits the parent's thread + is single-level
+    p1 = sc.post_to_channel(s, cid, "root question", "session://s-1", registry=reg)
+    root_seq = p1["posted"]
+    p2 = sc.post_to_channel(s, cid, "a reply", "session://tim", registry=reg, reply_to=root_seq)
+    check("F: reply carries reply_to=root and inherits the parent's thread",
+          p2["reply_to"] == root_seq and p2["thread"] == p1["thread"])
+    # reply-of-reply collapses to the ROOT (single-level)
+    p3 = sc.post_to_channel(s, cid, "reply to the reply", "session://s-1", registry=reg,
+                            reply_to=p2["posted"])
+    check("F: reply-of-reply collapses to the root (no nesting)", p3["reply_to"] == root_seq)
+    expect_teaching("F: reply to a phantom post refused (no dangling hierarchy)",
+                    lambda: sc.post_to_channel(s, cid, "x", "session://s-1", registry=reg,
+                                               reply_to=999999),
+                    "not a post", "dangling")
+    hist = sc.channel_history(s, cid)
+    root_row = next(p for p in hist["posts"] if p["seq"] == root_seq)
+    check("F: history shows the thread tree (root.replies includes both children)",
+          set(root_row["replies"]) == {p2["posted"], p3["posted"]}
+          and root_row["reply_to"] is None)
+
+    # REACTIONS: a channel primitive keyed on the post seq; set semantics; fold per message
+    sc.react(s, cid, str(root_seq), "tim", "👍")
+    sc.react(s, cid, str(root_seq), "s-1", "👍")
+    sc.react(s, cid, str(root_seq), "tim", "👍")            # idempotent re-react
+    rv = sc.reactions_for(s, cid, str(root_seq))
+    check("F: reactions fold per message with set semantics (re-react idempotent)",
+          sorted(rv["reactions"]["👍"]) == ["s-1", "tim"])
+    sc.unreact(s, cid, str(root_seq), "tim", "👍")
+    rv2 = sc.reactions_for(s, cid, str(root_seq))
+    check("F: unreact removes one member; empty emoji bucket drops",
+          rv2["reactions"]["👍"] == ["s-1"])
+    sc.unreact(s, cid, str(root_seq), "s-1", "👍")
+    check("F: last reactor gone → message bucket empties cleanly",
+          sc.reactions_for(s, cid, str(root_seq))["reactions"] == {})
+    # unreact an absent reaction is a no-op, never an error
+    sc.unreact(s, cid, str(root_seq), "nobody", "🎉")
+    check("F: unreact of an absent reaction is a no-op (set semantics)", True)
+    # reactions surface in history keyed on the seq
+    sc.react(s, cid, str(root_seq), "tim", "🔥")
+    h2 = sc.channel_history(s, cid)
+    rr = next(p for p in h2["posts"] if p["seq"] == root_seq)
+    check("F: history exposes reactions per post", rr["reactions"].get("🔥") == ["tim"])
+
+    # FACE round-trip: react/unreact through channel_act, reply_to through post, kind/label through add
+    import importlib
+    from mcp.server.fastmcp import FastMCP
+    from runtime.registry import NodeRegistry
+    from runtime.suite import Suite
+    suite = Suite(FsStore(tmp + "-face"), NodeRegistry().discover([os.path.join(ROOT, "nodes")]))
+    suite.store.save_agent_session({"id": "fs-1", "state": "unsupervised-live", "title": "fs-1"})
+    dev = FastMCP("dev-test-f")
+    mod = importlib.import_module("mcp_face.tools.channels")
+    channels, channel_act = mod.register(dev, suite)
+    c = channel_act(action="create", name="face fusion", members=[{"session": "fs-1"}])
+    fcid = c["channel"]
+    # add a model member through the face WITHOUT a registry id (kind-gated bypass)
+    channel_act(action="add", channel=fcid, session="rhm", kind="model", label="RHM")
+    desc = channels(op="describe", channel=fcid, probe_supervisor=False)
+    check("F-face: model member added via channel_act (no registry id) + kind surfaced",
+          next(m for m in desc["members"] if m["session"] == "session://rhm")["kind"] == "model")
+    fp = channel_act(action="post", channel=fcid, message="root", from_session="session://fs-1")
+    fr = channel_act(action="post", channel=fcid, message="reply", from_session="session://rhm",
+                     reply_to=fp["posted"])
+    check("F-face: reply_to through the face threads the post", fr["reply_to"] == fp["posted"])
+    react_res = channel_act(action="react", channel=fcid, message=str(fp["posted"]),
+                            from_session="rhm", emoji="✅")
+    check("F-face: react through the face folds the reaction",
+          react_res["reactions"].get("✅") == ["rhm"])
+    un = channel_act(action="unreact", channel=fcid, message=str(fp["posted"]),
+                     from_session="rhm", emoji="✅")
+    check("F-face: unreact through the face clears it", un["reactions"] == {})
+    # ACTIONS drift teeth already in E re-cover react/unreact via the Literal == ACTIONS check
+    expect_teaching("F-face: react needs from_session (who reacted)",
+                    lambda: channel_act(action="react", channel=fcid, message="0", emoji="👍"),
+                    "from_session", "reacted")
+
+
 def main():
     for name, fn in (("A", section_a), ("B", section_b), ("C", section_c),
-                     ("D", section_d), ("E", section_e)):
+                     ("D", section_d), ("E", section_e), ("F", section_f)):
         tmp = tempfile.mkdtemp(prefix=f"agent-chan-{name}-")
         fn(tmp)
     print(f"\n{CHECKS[0]} checks · {len(FAILURES)} failures")
