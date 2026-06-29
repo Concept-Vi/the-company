@@ -50,10 +50,52 @@ from contracts.address import (scheme as _scheme, parse_session_address as _pars
 from fabric import client, transport
 from fabric.vram import VramGate
 
-# --- spike constants: the resident 4B pool that is UP (task-given; NOT invented) ----------------
+# --- the resident brain SENTINEL + the live resolver -------------------------------------------
+# RESIDENT_BASE_URL/RESIDENT_MODEL are the SENTINEL meaning "the resident brain" — the bootstrap fallback
+# AND the default every brain-firing entry point (run_role/run_swarm/run_items/run_cascade/…) carries. They
+# are RESOLVED at call-time (run_role) to whatever brain is ACTUALLY loaded (active_brain) — so a stale port
+# can never be pinned: the whole cognition layer follows the live loadout, the SAME brain the RHM uses.
 RESIDENT_BASE_URL = "http://127.0.0.1:8000/v1"
 RESIDENT_MODEL = "cyankiwi/Qwen3.5-4B-AWQ-4bit"
 ROLE_TIMEOUT = 60
+
+
+def active_brain():
+    """The ACTIVE resident brain — (model, base_url) of the RUNNING local brain service. THE ONE SOURCE:
+    the brain that is actually loaded IS the active brain (registry-is-truth + the live card), so EVERYTHING
+    that fires a brain (run_role and all that ride it) resolves to the same loaded model the RHM uses — a
+    loadout switch moves which brain service runs, and this reflects it the next call (no port pinned to a
+    dead default). Falls back to the RESIDENT_* bootstrap constants when no local brain is running yet (cold
+    start / hermetic tests) — never raises (an additive resolution, not a launch gate). Prefers, among
+    several running brains, the one the RHM points at (rhm_config) so the swarm and the RHM agree; else the
+    first running brain-group service."""
+    try:
+        import sys as _s, os as _o
+        _cli = _o.path.join(_o.path.dirname(_o.path.dirname(_o.path.abspath(__file__))), "ops", "cli")
+        if _cli not in _s.path:
+            _s.path.insert(0, _cli)
+        import registry as _reg, gpu as _gpu
+        reg = _reg.load()
+        running = [(k, s) for k, s in reg["services"].items()
+                   if s.get("group") == "brain" and _gpu._is_running(s)]
+        if running:
+            # prefer the RHM's brain when it is among the running (so swarm ≡ RHM); else the first running.
+            chosen = running[0]
+            try:
+                from runtime.suite import Suite as _Suite          # lazy — only to read the live RHM pointer
+                _rhm_model = (Suite.__new__(_Suite).rhm_config() or {}).get("model")
+                for k, s in running:
+                    if (s.get("config") or {}).get("model") == _rhm_model:
+                        chosen = (k, s); break
+            except Exception:
+                pass                                              # no live RHM (test/bootstrap) → first running
+            cfg = chosen[1].get("config") or {}
+            m, p = cfg.get("model"), cfg.get("port")
+            if m and p:
+                return m, f"http://127.0.0.1:{p}/v1"
+    except Exception:
+        pass
+    return RESIDENT_MODEL, RESIDENT_BASE_URL
 
 
 # --- the ROLE notion + the spike roles are now FILE-DISCOVERED (G2 · C2.1) ----------------------
@@ -337,6 +379,21 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
     failure PROPAGATES as FabricError after retries (never a silent empty dict); a missing/unresolvable
     declared input RAISES (never a silent skip)."""
     op = getattr(role, "op", "generate")
+
+    # RESOLVE the resident-brain SENTINEL → the ACTIVE loaded brain (generate path only — the embed op below
+    # talks to the EMBEDDER endpoint, not the brain). RESIDENT_BASE_URL/RESIDENT_MODEL are the "use the
+    # resident brain" sentinel every entry point (run_role/run_swarm/run_items/run_cascade/…) defaults to and
+    # passes down here; bind them to whatever brain is ACTUALLY running NOW, so the whole cognition layer
+    # follows the live loadout — the SAME loaded brain the RHM uses, never a port pinned to a dead default
+    # (e.g. :8000 when the FP8 loadout serves the brain on :8001). An EXPLICITLY-passed base_url/model (a role
+    # binding's resolved provider, a cloud model) is NOT the sentinel → used verbatim. When the running brain
+    # IS the AWQ on :8000, this resolves back to the same value → byte-identical.
+    if op != "embed" and (base_url == RESIDENT_BASE_URL or model == RESIDENT_MODEL):
+        _active_model, _active_base = active_brain()
+        if base_url == RESIDENT_BASE_URL:
+            base_url = _active_base
+        if model == RESIDENT_MODEL:
+            model = _active_model
 
     if op == "embed":
         # The EMBED op (C op-axis) — reuse the EXISTING embed plumbing (suite.py:2980-2983 / nodes/embed.py):
