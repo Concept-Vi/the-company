@@ -330,10 +330,15 @@ def main():
         check(f"  {key} emits the expected migrated flags", tail == exp,
               detail=f"\n        tail={tail}\n        exp={exp}")
     # chat-4b's gpu_util is AUTO-ALLOCATED from its _profile (static literal removed) — never vLLM's 0.9.
+    # ~0.45 = (5838 fixed + 31.7*16384/1024 KV + 1024 overhead) / 16376 ceiling. The overhead term is the
+    # registry-global vram_overhead_mb, raised 512->1024 in C5 (2a04661) when the 9B measurement proved the
+    # real non-weight/non-KV footprint of a near-card-filling model is ~900 MiB, not 512 — so this expected
+    # value moved 0.4187->0.45 as the AUTO math corrected for ALL profiled models. The assertion still proves
+    # the class (computed from _profile, NOT a static literal, NOT vLLM's 0.9 default).
     c4 = SC.args_for("chat-4b")
     gi = c4.index("--gpu-memory-utilization")
-    check("chat-4b gpu_util is AUTO-ALLOCATED (~0.4187 from _profile, not a static literal)",
-          abs(float(c4[gi + 1]) - 0.4187) < 0.01, detail=f"gpu_util={c4[gi + 1]}")
+    check("chat-4b gpu_util is AUTO-ALLOCATED (~0.45 from _profile w/ 1024 overhead, not a static literal)",
+          abs(float(c4[gi + 1]) - 0.45) < 0.01, detail=f"gpu_util={c4[gi + 1]}")
 
     print(f"\n=== {_passed} passed, {_failed} failed ===")
     sys.exit(1 if _failed else 0)
