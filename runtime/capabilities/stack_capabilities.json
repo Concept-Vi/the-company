@@ -11,8 +11,8 @@
       "use": "send body.tools + tool_choice"
     },
     "reasoning": {
-      "serve": ["--chat-template", "{chat_template}"],
-      "use": "body.chat_template_kwargs.enable_thinking (LIVE-phase; SAFE half launches the existing template verbatim)"
+      "serve": ["--reasoning-parser", "{reasoning_parser}"],
+      "use": "body.chat_template_kwargs.enable_thinking (per-request, fabric/transport.py C3). The model's OWN stock template carries the thinking switch — vLLM loads it by default (NO --chat-template flag), so the hand-rolled chat_template_nothink.jinja is RETIRED. reasoning is SERVED by --reasoning-parser, which splits </think> into message.reasoning (the real reasoning fix, QWEN35-REASONING-SPIKE-FINDINGS.md)."
     },
     "structured_output": {
       "serve": [],
@@ -29,6 +29,21 @@
     "trust_remote_code": {
       "serve": ["--trust-remote-code"],
       "use": null
+    },
+    "quantization": {
+      "serve": ["--quantization", "{quantization}"],
+      "use": null,
+      "_note": "the vLLM --quantization method (e.g. compressed-tensors for the Nemotron AWQ MoE). The method id is filled from serve_params.quantization."
+    },
+    "cpu_offload": {
+      "serve": ["--cpu-offload-gb", "{cpu_offload_gb}"],
+      "use": null,
+      "_note": "offload N GiB of weights to CPU RAM (vLLM --cpu-offload-gb) — Nemotron-30B-A3B needs 6 to fit the Ada card. The GiB count is filled from serve_params.cpu_offload_gb."
+    },
+    "enforce_eager": {
+      "serve": ["--enforce-eager"],
+      "use": null,
+      "_note": "disable CUDA-graph capture (vLLM --enforce-eager). A serve-only switch some models require (Nemotron)."
     },
     "kv_cache_dtype": {
       "serve": ["--kv-cache-dtype", "{kv_cache_dtype}"],

@@ -25,21 +25,72 @@ _EVICT_PRIORITY = {"models": 0, "brain": 1, "voice": 2}
 
 
 def is_gpu_service(svc):
-    """Does this service occupy the GPU? (has a vram_mb estimate OR a config gpu_util)."""
-    return bool(vram_of(svc) or svc.get("config", {}).get("gpu_util"))
+    """Does this service occupy the GPU? (has a vram_mb estimate OR a config gpu_util OR a config
+    `_profile` it can auto-allocate from — a profiled model with no static gpu_util still pins VRAM)."""
+    c = svc.get("config") or {}
+    return bool(vram_of(svc) or c.get("gpu_util") or c.get("_profile"))
+
+
+# The activation/CUDA-graph/fragmentation headroom (MB) auto-allocation adds ON TOP of measured weights
+# + KV, before dividing by the ceiling. NOT a hardcoded literal: read from the registry
+# (registry-is-truth, mirrors vram_ceiling_mb / ram_headroom_mb); this default applies only if unset.
+# Rationale (build-log 01-serving §D4): bare weights+KV omits the CUDA context, activation peaks, and
+# allocator fragmentation that live INSIDE vLLM's gpu_util fraction; ~512 MB lands the computed util
+# just above the old hand-tuned literals (chat-4b: 0.419 vs the hand-tuned 0.40), so a model is never
+# starved and never over-grabs.
+_VRAM_OVERHEAD_DEFAULT_MB = 512
+
+
+def _vram_overhead_mb(reg):
+    return reg.get("vram_overhead_mb", _VRAM_OVERHEAD_DEFAULT_MB)
+
+
+def auto_gpu_util(reg, key):
+    """COMPUTE the gpu_util fraction a model NEEDS, from its MEASURED footprint — the dissolution of the
+    static-memory-allocation class (CAPABILITY-WIRING-MAP.md ⚑; build-log 01-serving §D3/D4). Returns the
+    fraction in (0,1], or None when the model has no `_profile` to size from (then a static gpu_util is the
+    explicit override, or the caller fails loud).
+
+    The card already exposes every input (no estimate, no guess):
+      weights  = config._profile.fixed_mb       (measured resident weights, KV separated out)
+      KV       = _profile.kv_kb_per_token × max_model_len / 1024  (KV for the TARGET context)
+      overhead = reg.vram_overhead_mb            (activation/CUDA-graph/fragmentation margin)
+      gpu_util = (weights + KV + overhead) / vram_ceiling_mb
+    Size each model to its NEED (never starved), taking only that slice (co-residence preserved). vLLM has
+    no '--gpu-memory-utilization auto'; the auto-ness lives HERE, in the resource manager that owns VRAM."""
+    svc = reg["services"].get(key)
+    if not svc:
+        return None
+    c = svc.get("config") or {}
+    prof = c.get("_profile") or {}
+    fixed = prof.get("fixed_mb")
+    kv_per_tok = prof.get("kv_kb_per_token")
+    mml = c.get("max_model_len")
+    if fixed is None or kv_per_tok is None or not mml:
+        return None
+    kv_mb = kv_per_tok * mml / 1024.0
+    need_mb = fixed + kv_mb + _vram_overhead_mb(reg)
+    ceiling = ceiling_mb(reg)
+    if ceiling <= 0:
+        return None
+    return min(1.0, need_mb / ceiling)
 
 
 def budget_vram(reg, key):
     """VRAM to budget for a service, in priority order:
-      1. config.gpu_util × ceiling  — for config-driven models this IS the reservation
-         vLLM takes from the card, so it's authoritative (and immune to stale telemetry
-         from a previous gpu_util);
-      2. learned (measured) telemetry — for non-config services we've actually loaded;
-      3. the registry vram_mb estimate."""
+      1. config.gpu_util × ceiling  — the EXPLICIT OVERRIDE: a hand-set static gpu_util is the slice vLLM
+         pins, authoritative (and immune to stale telemetry from a previous gpu_util);
+      2. auto_gpu_util × ceiling     — COMPUTED from the measured _profile footprint (the dissolution of
+         the static-allocation class) for a config model with a profile and NO static override;
+      3. learned (measured) telemetry — for non-config services we've actually loaded;
+      4. the registry vram_mb estimate."""
     svc = reg["services"][key]
     c = svc.get("config")
     if c and c.get("gpu_util"):
         return int(round(c["gpu_util"] * ceiling_mb(reg)))
+    auto = auto_gpu_util(reg, key)
+    if auto is not None:
+        return int(round(auto * ceiling_mb(reg)))
     return learned_vram(key) or vram_of(svc)
 
 
@@ -58,6 +109,8 @@ def _vram_source(reg, key):
     c = svc.get("config")
     if c and c.get("gpu_util"):
         return "reserved"
+    if auto_gpu_util(reg, key) is not None:
+        return "computed"          # auto-allocated from the measured _profile footprint + KV + overhead
     return "measured" if learned_vram(key) else "est"
 
 

@@ -1,38 +1,51 @@
 {
-  "_doc": "The capability-TYPE registry — one row per capability TYPE, the orthogonal index that BOTH the provides/requires TAGS (Layer A, ops/cli/capabilities.py:CAPABILITY_TAGS) and the per-model capability FIELDS (Layer B, ops/model_capabilities.json {value,source}) reference. This is the net-new primitive of the capability-resolution architecture (CAPABILITY-RESOLUTION-DESIGN-CORRECTED.md §1 Layer C). registry-is-truth (AGENTS.md rule 8): this FILE is the single source; runtime/capabilities/resolver.py loads it at import (fail-loud if missing/malformed/empty). Adding a NEW capability = adding ONE entry HERE (no code edit). DELIBERATE 3-layer vocabulary, NOT a rename: the design KEEPS `thinking` and `reasoning` as distinct tags (a rename would cascade across every role's requires + resolve_binding + the projection) — do NOT collapse them. Each row's contract: id · value_shape · layer (which of A/B it surfaces as) · declare (where stated) · serve_ref (the key the stack-expression registry looks up to emit launch flags) · use_ref (how the runtime requests it + the gate, or null = serve-only) · verify (an optional probe — VERIFICATION, never the source of the declaration) · on_unexpressible (a stack that can't express it FAILs LOUD — a surfaced Notice + a recorded Gap, never a silent drop). SAFE-half NOTE: this registry is DATA only; nothing imports it into the live launch/use path yet (that wiring is the later LIVE phase). The serve_ref values key rows in stack_capabilities.json.",
-  "reasoning": {
-    "value_shape": "bool",
-    "layer": "tag",
-    "declare": "family default + per-model override; surfaces as the `thinking`/`reasoning` provides-tags (Layer A) AND the `thinking` field (Layer B)",
-    "serve_ref": "reasoning",
-    "use_ref": "per-request enable_thinking (LIVE-phase wiring; serve-only in the SAFE half)",
-    "verify": null,
+  "_doc": "The capability-TYPE registry — one row per capability TYPE, the orthogonal index that BOTH the provides/requires TAGS (Layer A, ops/cli/capabilities.py:CAPABILITY_TAGS) and the per-model capability FIELDS (Layer B, ops/model_capabilities.json {value,source}) reference. This is the net-new primitive of the capability-resolution architecture (CAPABILITY-RESOLUTION-DESIGN-CORRECTED.md §1 Layer C). registry-is-truth (AGENTS.md rule 8): this FILE is the single source; runtime/capabilities/resolver.py loads it at import (fail-loud if missing/malformed/empty). Adding a NEW capability = adding ONE entry HERE (no code edit). DELIBERATE 3-layer vocabulary, NOT a rename: the design KEEPS `thinking` and `reasoning` as distinct tags (a rename would cascade across every role's requires + resolve_binding + the projection) — do NOT collapse them. Each row's contract: id · value_shape (bool | enum | int | profile-ref — DRIVES override-injection: a `bool` capability_override injects-when-truthy, an `enum` selects its serve fragment by value via `serve_values`) · layer (which of A/B it surfaces as) · order (the canonical LAUNCH-ORDER rank — serve_flags injects an override-supplied capability into the ordered list at this rank; the family's own `capabilities` list is already in rank order. registry-is-truth: the order lives HERE, not as a code constant) · declare (where stated) · serve_ref (the key the stack-expression registry looks up to emit launch flags) · serve_values (enum-only: maps each enum value to its serve_ref, or null = no-op/no flag — e.g. vision.full emits nothing) · use_ref (how the runtime requests it + the gate, or null = serve-only) · verify (an optional probe — VERIFICATION, never the source of the declaration) · on_unexpressible (a stack that can't express it FAILs LOUD — a surfaced Notice + a recorded Gap, never a silent drop). The serve_ref values key rows in stack_capabilities.json.",
+  "quantization": {
+    "value_shape": "enum",
+    "layer": "field",
+    "order": 5,
+    "declare": "family attribute (the vLLM --quantization method) — e.g. the nemotron family's compressed-tensors",
+    "serve_ref": "quantization",
+    "use_ref": null,
     "on_unexpressible": "fail_loud",
-    "_note": "the design keeps BOTH `thinking` and `reasoning` tags; this TYPE row indexes the family-level reasoning intent, not a rename of either tag."
+    "verify": null
   },
-  "tools": {
-    "value_shape": "bool",
-    "layer": "tag",
-    "declare": "family default + per-model override; surfaces as the `tools` provides-tag (Layer A) AND the `tools` field (Layer B)",
-    "serve_ref": "tools",
-    "use_ref": "send body.tools + tool_choice when the role wants a tool call (LIVE-phase gate)",
-    "verify": "auto tool_choice probe — a probe-false WARNS + marks source='unverified'; it NEVER overrides the declaration (verification-not-source)",
-    "on_unexpressible": "fail_loud"
+  "cpu_offload": {
+    "value_shape": "int",
+    "layer": "field",
+    "order": 6,
+    "declare": "family attribute (the vLLM --cpu-offload-gb count) — offload N GiB of weights to CPU RAM (nemotron-30B needs 6 to fit Ada)",
+    "serve_ref": "cpu_offload",
+    "use_ref": null,
+    "on_unexpressible": "fail_loud",
+    "verify": null
   },
-  "structured_output": {
+  "enforce_eager": {
     "value_shape": "bool",
     "layer": "field",
-    "declare": "the `json_schema` capability FIELD (Layer B). DELIBERATELY a field, NOT a provides-tag (capabilities.py:78-79: adding it to `provides` would diverge from the seam)",
-    "serve_ref": "structured_output",
-    "use_ref": "send body.response_format={type:json_schema,...} iff capable AND the role has a schema; on 400 fail-loud fallback (LIVE-phase)",
-    "verify": null,
-    "on_unexpressible": "fail_loud"
+    "order": 7,
+    "declare": "family attribute (the vLLM --enforce-eager switch — disable CUDA-graph capture; nemotron requires it)",
+    "serve_ref": "enforce_eager",
+    "use_ref": null,
+    "on_unexpressible": "fail_loud",
+    "verify": null
   },
-  "vision": {
-    "value_shape": "enum",
-    "layer": "tag",
-    "declare": "family default + per-model override; surfaces as the `vision` provides-tag. enum values: lm-only | full",
-    "serve_ref": "vision",
+  "prefix_caching": {
+    "value_shape": "bool",
+    "layer": "field",
+    "order": 10,
+    "declare": "family default (the vLLM --enable-prefix-caching switch)",
+    "serve_ref": "prefix_caching",
+    "use_ref": null,
+    "on_unexpressible": "fail_loud",
+    "verify": null
+  },
+  "pooling": {
+    "value_shape": "bool",
+    "layer": "field",
+    "order": 15,
+    "declare": "family default for the embed/pooling family (the vLLM --runner pooling switch)",
+    "serve_ref": "pooling",
     "use_ref": null,
     "on_unexpressible": "fail_loud",
     "verify": null
@@ -40,6 +53,7 @@
   "embeddings": {
     "value_shape": "bool",
     "layer": "tag",
+    "order": 15,
     "declare": "family default; surfaces as the `embed` provides-tag (a pooling-runner model)",
     "serve_ref": "embed",
     "use_ref": "send to the /v1/embeddings endpoint (serve-only — no per-request capability field)",
@@ -49,33 +63,63 @@
   "rerank": {
     "value_shape": "bool",
     "layer": "tag",
+    "order": 15,
     "declare": "family default; surfaces as the `rerank` provides-tag (a cross-encoder/late-interaction scorer)",
     "serve_ref": "rerank",
     "use_ref": null,
     "on_unexpressible": "fail_loud",
     "verify": null
   },
-  "context_window": {
-    "value_shape": "int",
+  "tools": {
+    "value_shape": "bool",
+    "layer": "tag",
+    "order": 20,
+    "declare": "family default + per-model override; surfaces as the `tools` provides-tag (Layer A) AND the `tools` field (Layer B)",
+    "serve_ref": "tools",
+    "use_ref": "send body.tools + tool_choice when the role wants a tool call (LIVE-phase gate)",
+    "verify": "auto tool_choice probe — a probe-false WARNS + marks source='unverified'; it NEVER overrides the declaration (verification-not-source)",
+    "on_unexpressible": "fail_loud"
+  },
+  "reasoning": {
+    "value_shape": "bool",
+    "layer": "tag",
+    "order": 30,
+    "declare": "family default + per-model override; surfaces as the `thinking`/`reasoning` provides-tags (Layer A) AND the `thinking` field (Layer B)",
+    "serve_ref": "reasoning",
+    "use_ref": "per-request enable_thinking (LIVE-phase wiring; serve-only in the SAFE half)",
+    "verify": null,
+    "on_unexpressible": "fail_loud",
+    "_note": "the design keeps BOTH `thinking` and `reasoning` tags; this TYPE row indexes the family-level reasoning intent, not a rename of either tag."
+  },
+  "structured_output": {
+    "value_shape": "bool",
     "layer": "field",
-    "declare": "model runtime params (services.json config.max_model_len), NOT the family — surfaces as the `context_ceiling` field (Layer B)",
-    "serve_ref": "context_window",
+    "order": 35,
+    "declare": "the `json_schema` capability FIELD (Layer B). DELIBERATELY a field, NOT a provides-tag (capabilities.py:78-79: adding it to `provides` would diverge from the seam)",
+    "serve_ref": "structured_output",
+    "use_ref": "send body.response_format={type:json_schema,...} iff capable AND the role has a schema; on 400 fail-loud fallback (LIVE-phase)",
+    "verify": null,
+    "on_unexpressible": "fail_loud"
+  },
+  "vision": {
+    "value_shape": "enum",
+    "layer": "tag",
+    "order": 40,
+    "declare": "family default + per-model override; surfaces as the `vision` provides-tag. enum values: lm-only | full",
+    "serve_ref": "vision",
+    "serve_values": {
+      "lm-only": "vision",
+      "full": null
+    },
     "use_ref": null,
     "on_unexpressible": "fail_loud",
-    "verify": null
-  },
-  "sampling_profile": {
-    "value_shape": "profile-ref",
-    "layer": "field",
-    "declare": "family default (a named sampling profile, e.g. qwen3.5: thinking-on 1.0/0.95/20/1.5 vs non-thinking 0.7/0.8/20/1.5)",
-    "serve_ref": "sampling_profile",
-    "use_ref": "per-request sampling knobs (LIVE-phase)",
-    "on_unexpressible": "fail_loud",
-    "verify": null
+    "verify": null,
+    "_note": "ENUM-selected serve fragment (the dissolution of BUG 2): `lm-only` selects the stack's `vision` serve_ref (→ --language-model-only, the text RHM skips the vision tower for VRAM); `full` maps to null = NO flag (the vision tower is loaded — the absence of --language-model-only IS full vision). An unknown enum value FAILS LOUD in the resolver. So a model declares `capability_overrides: {vision: 'lm-only'}` (chat-4b-fp8) and the resolver injects --language-model-only at order rank 40 (between reasoning 30 and trust_remote_code 90); a `full` model adds the tag but no flag."
   },
   "kv_cache_dtype": {
     "value_shape": "enum",
     "layer": "field",
+    "order": 45,
     "declare": "per-model override (a serve-home field) — surfaces as a Layer-B field when a model needs it",
     "serve_ref": "kv_cache_dtype",
     "use_ref": null,
@@ -85,26 +129,9 @@
   "speculative_decoding": {
     "value_shape": "profile-ref",
     "layer": "field",
+    "order": 50,
     "declare": "per-model override (a serve-home field)",
     "serve_ref": "speculative",
-    "use_ref": null,
-    "on_unexpressible": "fail_loud",
-    "verify": null
-  },
-  "pooling": {
-    "value_shape": "bool",
-    "layer": "field",
-    "declare": "family default for the embed/pooling family (the vLLM --runner pooling switch)",
-    "serve_ref": "pooling",
-    "use_ref": null,
-    "on_unexpressible": "fail_loud",
-    "verify": null
-  },
-  "prefix_caching": {
-    "value_shape": "bool",
-    "layer": "field",
-    "declare": "family default (the vLLM --enable-prefix-caching switch)",
-    "serve_ref": "prefix_caching",
     "use_ref": null,
     "on_unexpressible": "fail_loud",
     "verify": null
@@ -112,9 +139,29 @@
   "trust_remote_code": {
     "value_shape": "bool",
     "layer": "field",
+    "order": 90,
     "declare": "family attribute (the vLLM --trust-remote-code switch) — emitted LAST in the canonical serve order to match the hand-authored flag sequence",
     "serve_ref": "trust_remote_code",
     "use_ref": null,
+    "on_unexpressible": "fail_loud",
+    "verify": null
+  },
+  "context_window": {
+    "value_shape": "int",
+    "layer": "field",
+    "order": 99,
+    "declare": "model runtime params (services.json config.max_model_len), NOT the family — surfaces as the `context_ceiling` field (Layer B)",
+    "serve_ref": "context_window",
+    "use_ref": null,
+    "on_unexpressible": "fail_loud",
+    "verify": null
+  },
+  "sampling_profile": {
+    "value_shape": "profile-ref",
+    "layer": "field",
+    "declare": "family default (a named sampling profile, e.g. qwen3.5: thinking-on 1.0/0.95/20/1.5 vs non-thinking 0.7/0.8/20/1.5). No serve flag (a per-request use-knob) — no `order`.",
+    "serve_ref": "sampling_profile",
+    "use_ref": "per-request sampling knobs (LIVE-phase)",
     "on_unexpressible": "fail_loud",
     "verify": null
   }

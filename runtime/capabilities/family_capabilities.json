@@ -1,14 +1,13 @@
 {
-  "_doc": "The family registry — per-FAMILY default capability set + parser/profile/template choices. CAPABILITY-RESOLUTION-DESIGN-CORRECTED.md §3. registry-is-truth (AGENTS.md rule 8): this FILE is the single source; runtime/capabilities/resolver.py loads it at import (fail-loud). This KILLS the hand-repeated flags: chat-4b/chat-2b/chat-08b repeat the IDENTICAL flag list, and embed-bge/embed-jina-v5/embed-qwen3 repeat ANOTHER identical list — adding a fourth member meant copy-pasting it and risking a silently-dropped flag. Now a model declares `family: <name>` and inherits the whole set. Adding a FAMILY = adding ONE entry HERE -> all its models inherit (no code edit). A family row: `stack` (the default expression stack) · `provides` (the capability TAGS its models declare) · `capabilities` (the ORDERED list of serve_ref keys whose stack-flag-fragments serve_flags() emits — the order IS the canonical launch order, matching today's hand-authored sequence) · `serve_params` (the {placeholder} values the stack templates fill: tool_parser/chat_template/reasoning_parser/...) · `fields` (Layer-B field defaults). A per-model `capability_overrides` ⊕ on top of this (override wins) -> the model's effective set. SAFE-half NOTE: the qwen3.5 family's `reasoning` capability points at the EXISTING chat_template_nothink.jinja (reproduce-today) — the design's swap to a thinking-capable template is the LATER LIVE phase, NOT here.",
+  "_doc": "The family registry — per-FAMILY default capability set + parser/profile/template choices. CAPABILITY-RESOLUTION-DESIGN-CORRECTED.md §3. registry-is-truth (AGENTS.md rule 8): this FILE is the single source; runtime/capabilities/resolver.py loads it at import (fail-loud). This KILLS the hand-repeated flags: chat-4b/chat-2b/chat-08b repeat the IDENTICAL flag list, and embed-bge/embed-jina-v5/embed-qwen3 repeat ANOTHER identical list — adding a fourth member meant copy-pasting it and risking a silently-dropped flag. Now a model declares `family: <name>` and inherits the whole set. Adding a FAMILY = adding ONE entry HERE -> all its models inherit (no code edit). A family row: `stack` (the default expression stack) · `provides` (the capability TAGS its models declare) · `capabilities` (the ORDERED list of serve_ref keys whose stack-flag-fragments serve_flags() emits — the order IS the canonical launch order, matching today's hand-authored sequence) · `serve_params` (the {placeholder} values the stack templates fill: tool_parser/chat_template/reasoning_parser/...) · `fields` (Layer-B field defaults). A per-model `capability_overrides` ⊕ on top of this (override wins) -> the model's effective set. SHIPPING shape (LIVE, build-log 01-serving): the qwen3.5 family's `reasoning` capability emits `--reasoning-parser qwen3` (the real reasoning fix) and the model uses its OWN stock chat template (NO --chat-template flag); the hand-rolled chat_template_nothink.jinja is RETIRED, the per-request enable_thinking toggle lives in fabric/transport.py (C3). This is the full implementation, not the retired reproduce-today.",
   "qwen3.5": {
-    "_note": "the local Qwen3.5 chat workers (services.json chat-4b/chat-2b/chat-08b) — IDENTICAL hand-authored flags today: --enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_xml --chat-template ~/vllm-tests/chat_template_nothink.jinja --trust-remote-code. This family regenerates exactly that, in that order. SAFE half: chat_template stays the nothink template (reproduce-today). The capabilities list IS the canonical launch order.",
+    "_note": "the local Qwen3.5 chat workers (services.json chat-4b/chat-2b/chat-08b AWQ + chat-4b-fp8). SHIPPING shape (LIVE, NOT the retired reproduce-today): regenerates --enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3 --trust-remote-code, in canonical order (capability_types.json `order` ranks). The hand-rolled chat_template_nothink.jinja is RETIRED — each model uses its OWN stock thinking-capable template (NO --chat-template flag) + per-request enable_thinking (fabric/transport.py); reasoning is SERVED by --reasoning-parser qwen3 which splits </think> into message.reasoning (QWEN35-REASONING-SPIKE-FINDINGS.md). chat-4b-fp8 adds `vision: lm-only` as a per-model capability_override (→ --language-model-only, between reasoning and trust_remote_code) for VRAM; the AWQ workers do NOT (no --language-model-only). vision is NOT a family default. The capabilities list IS the canonical launch order; an enum/bool capability_override is injected at its `order` rank.",
     "stack": "vllm",
     "provides": ["chat", "json", "tools", "fast", "no-think"],
     "capabilities": ["prefix_caching", "tools", "reasoning", "trust_remote_code"],
     "serve_params": {
       "tool_parser": "qwen3_xml",
-      "reasoning_parser": "qwen3",
-      "chat_template": "~/vllm-tests/chat_template_nothink.jinja"
+      "reasoning_parser": "qwen3"
     },
     "fields": {
       "tools": true,
@@ -25,6 +24,21 @@
     "fields": {
       "tools": false,
       "json_schema": false,
+      "thinking": false
+    }
+  },
+  "nemotron": {
+    "_note": "the NVIDIA Nemotron MoE chat worker (services.json chat-nemotron — stelterlab/NVIDIA-Nemotron-3-Nano-30B-A3B-AWQ). DIFFERENT model family from qwen3.5 — its own serve contract: --quantization compressed-tensors --cpu-offload-gb 6 --enforce-eager --trust-remote-code (no tool-call-parser / no reasoning-parser today). Reproduces its current hand-authored flags BYTE-FOR-BYTE. The compressed-tensors quantization + CPU-offload + enforce-eager are this model's bespoke needs (the `ninja`/enforce-eager history lived here); declared as a minimal family so the model lights up its real serve flags without being forced onto qwen3.5.",
+    "stack": "vllm",
+    "provides": ["chat", "json"],
+    "capabilities": ["quantization", "cpu_offload", "enforce_eager", "trust_remote_code"],
+    "serve_params": {
+      "quantization": "compressed-tensors",
+      "cpu_offload_gb": 6
+    },
+    "fields": {
+      "tools": false,
+      "json_schema": true,
       "thinking": false
     }
   }

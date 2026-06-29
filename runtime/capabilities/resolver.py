@@ -144,6 +144,72 @@ def resolve_capabilities(family, overrides=None):
     fields = dict(fam.get("fields", {}))
     fields.update(ov.get("fields", {}))               # override wins per key
 
+    # --- per-model capability INJECTION via capability-type-keyed overrides (dissolves BUG 2) ----------
+    # A `capability_overrides` key that NAMES a capability-type row (e.g. `vision: 'lm-only'`) — and is
+    # NOT one of the structural keys handled above — is a per-model capability injection, driven by the
+    # capability-type's `value_shape` (registry-is-truth, not a code literal):
+    #   value_shape bool  -> inject-when-truthy (the flat stack serve fragment);
+    #   value_shape enum  -> SELECT the serve fragment by value via the row's `serve_values` map
+    #                        (a value mapping to null = a declared NO-OP, no flag emitted — e.g.
+    #                         vision.full loads the vision tower, so NO --language-model-only).
+    # An injected capability is placed into the ordered `capabilities` list at its registry `order` rank
+    # (the family's own list is already in rank order). serve_ref_overrides carries the enum-selected
+    # serve_ref so serve_flags emits the right fragment. Fail-loud on an unknown enum value or a missing
+    # value_shape — never silently drop or mis-emit a flag.
+    _STRUCTURAL = {"stack", "provides", "capabilities", "serve_params", "fields"}
+    serve_ref_overrides = {}
+    injected = []                                      # (order_rank, cap_id)
+    for key, val in ov.items():
+        if key in _STRUCTURAL:
+            continue
+        ctype = CAPABILITY_TYPES.get(key)
+        if ctype is None:
+            raise CapabilityResolutionError(
+                f"resolve_capabilities: capability_override {key!r}={val!r} names no capability-type row "
+                f"(and is not a structural key). Register it in capability_types.json before a model "
+                f"declares it (registry-is-truth, rule 8). Known capability-types: {sorted(CAPABILITY_TYPES)}.")
+        shape = ctype.get("value_shape")
+        emit_id = None
+        if shape == "bool":
+            if val:                                    # inject only when truthy; falsy = declared OFF, no flag
+                emit_id = key
+        elif shape == "enum":
+            serve_values = ctype.get("serve_values")
+            if not isinstance(serve_values, dict) or val not in serve_values:
+                raise CapabilityResolutionError(
+                    f"resolve_capabilities: enum capability_override {key!r}={val!r} is not a declared "
+                    f"value — the capability-type {key!r} must carry a `serve_values` map listing every "
+                    f"valid enum value (have: {sorted(serve_values) if isinstance(serve_values, dict) else serve_values!r}). "
+                    f"Fail-loud — refusing to guess a serve fragment for an undeclared enum value.")
+                # NOTE: serve_values[value] == null is a VALID declared NO-OP (no flag), distinct from an unknown value above.
+            mapped = serve_values[val]
+            if mapped is not None:                     # null = declared no-op (e.g. vision.full -> no flag)
+                emit_id = key
+                serve_ref_overrides[key] = mapped      # the value-selected serve_ref for serve_flags
+        else:
+            raise CapabilityResolutionError(
+                f"resolve_capabilities: capability_override {key!r} has value_shape {shape!r}, which is not "
+                f"injectable as a serve flag (only `bool` and `enum` capabilities inject via override). "
+                f"Fail-loud rather than silently ignore the declaration.")
+        if emit_id is not None and emit_id not in capabilities:
+            order_rank = ctype.get("order")
+            if order_rank is None:
+                raise CapabilityResolutionError(
+                    f"resolve_capabilities: capability-type {key!r} has no `order` rank — cannot place it "
+                    f"in the canonical launch order. Add an `order` to its capability_types.json row "
+                    f"(registry-is-truth).")
+            injected.append((order_rank, emit_id))
+    # Insert each injected capability at its order rank relative to the family-listed caps' ranks.
+    for order_rank, cap_id in sorted(injected):
+        pos = len(capabilities)
+        for i, existing in enumerate(capabilities):
+            ex_ct = CAPABILITY_TYPES.get(existing)
+            ex_rank = ex_ct.get("order") if isinstance(ex_ct, dict) else None
+            if ex_rank is not None and ex_rank > order_rank:
+                pos = i
+                break
+        capabilities.insert(pos, cap_id)
+
     return {
         "family": family,
         "stack": stack,
@@ -151,6 +217,7 @@ def resolve_capabilities(family, overrides=None):
         "capabilities": capabilities,
         "serve_params": serve_params,
         "fields": fields,
+        "serve_ref_overrides": serve_ref_overrides,
     }
 
 
@@ -210,15 +277,21 @@ def serve_flags(config):
             f"Known: {sorted(STACKS)}.")
     stack_caps = _strip_annotations(stack_caps)
     serve_params = resolved["serve_params"]
+    serve_ref_overrides = resolved.get("serve_ref_overrides", {})
 
     flags = []
-    # Map a capability id (from the family's ordered list) -> its serve_ref via the capability-type
-    # registry; a capability with no type row falls back to using its own id as the serve_ref (the
-    # family lists serve_ref keys directly, so this is identity in practice — but the type-registry
-    # lookup keeps the indirection the design specifies).
+    # Map a capability id (from the family's ordered list) -> its serve_ref. Priority:
+    #   1. an enum-selected serve_ref from resolve_capabilities (serve_ref_overrides — e.g. vision
+    #      'lm-only' selected the `vision` fragment; a different enum value could select a different one);
+    #   2. the capability-type row's default serve_ref;
+    #   3. the cap_id itself (a capability with no type row — the family lists serve_ref keys directly,
+    #      so this is identity in practice, but the indirection is kept as the design specifies).
     for cap_id in resolved["capabilities"]:
         ctype = CAPABILITY_TYPES.get(cap_id)
-        serve_ref = (ctype or {}).get("serve_ref", cap_id) if isinstance(ctype, dict) else cap_id
+        if cap_id in serve_ref_overrides:
+            serve_ref = serve_ref_overrides[cap_id]
+        else:
+            serve_ref = (ctype or {}).get("serve_ref", cap_id) if isinstance(ctype, dict) else cap_id
         expr = stack_caps.get(serve_ref)
         if expr is None:
             raise CapabilityResolutionError(

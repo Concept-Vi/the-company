@@ -34,17 +34,15 @@ from runtime.capabilities import resolver as R
 
 _SERVICES_PATH = os.path.join(_REPO, "ops", "services.json")
 
-# The would-be-migrated FAMILY for each config-driven service (the LIVE phase would add
-# `config.family` to services.json; here we declare the mapping in memory for the proof).
-# qwen3.5 = the three Qwen3.5 chat workers; embed-pooling = the three vLLM pooling embedders.
-SERVICE_FAMILY = {
-    "chat-4b": "qwen3.5",
-    "chat-2b": "qwen3.5",
-    "chat-08b": "qwen3.5",
-    "embed-bge": "embed-pooling",
-    "embed-jina-v5": "embed-pooling",
-    "embed-qwen3": "embed-pooling",
-}
+# The vLLM config-driven services that route through serve_model.sh -> serveconfig.args_for (the LIVE
+# launch path). Each is now MIGRATED in services.json (config.family declared, flags[] RETIRED). The
+# [5] section calls serveconfig.args_for(key) on EACH and asserts it emits the migrated flags WITHOUT
+# RAISING — the proof that BUG 1's loud-fail no longer fires for any migrated model (the resolver-on-
+# in-memory-declarations test does NOT prove the services.json migration; this does).
+VLLM_CONFIG_SERVICES = [
+    "chat-4b", "chat-4b-fp8", "chat-2b", "chat-08b", "chat-nemotron",
+    "embed-bge", "embed-jina-v5", "embed-qwen3",
+]
 
 _passed = 0
 _failed = 0
@@ -78,6 +76,10 @@ def main():
           detail=str(base["capabilities"]))
     check("qwen3.5 serve_params carries the qwen3_xml tool parser",
           base["serve_params"].get("tool_parser") == "qwen3_xml")
+    check("qwen3.5 serve_params carries the qwen3 reasoning parser (the real reasoning fix)",
+          base["serve_params"].get("reasoning_parser") == "qwen3")
+    check("qwen3.5 serve_params NO LONGER carries the RETIRED nothink chat_template (shipping shape)",
+          "chat_template" not in base["serve_params"])
     check("qwen3.5 fields default thinking=false (the no-think workers)",
           base["fields"].get("thinking") is False)
     # ⊕ overrides: a per-model override of a field wins; a serve_param override wins per key.
@@ -88,8 +90,8 @@ def main():
     check("override thinking=True wins over the family default", merged["fields"]["thinking"] is True)
     check("the non-overridden field json_schema is still inherited", merged["fields"].get("json_schema") is True)
     check("override tool_parser wins per key", merged["serve_params"]["tool_parser"] == "custom_parser")
-    check("the non-overridden serve_param chat_template is still inherited",
-          merged["serve_params"].get("chat_template") == "~/vllm-tests/chat_template_nothink.jinja")
+    check("the non-overridden serve_param reasoning_parser is still inherited",
+          merged["serve_params"].get("reasoning_parser") == "qwen3")
     # a wholesale capability-list override replaces the family's list
     cap_ov = R.resolve_capabilities("qwen3.5", {"capabilities": ["trust_remote_code"]})
     check("a capability_overrides.capabilities list replaces the family list",
@@ -100,18 +102,45 @@ def main():
     except R.CapabilityResolutionError:
         check("unknown family RAISES (fail-loud, no silent default)", True)
 
-    print("\n[2] serve_flags REPRODUCES the current launch flags BYTE-FOR-BYTE (services.json = ground truth)")
-    for key, family in SERVICE_FAMILY.items():
-        cfg = (svcs[key].get("config") or {})
-        expected = cfg["flags"]                      # the ground truth — read from services.json
-        migrated = {"family": family, "stack": "vllm", "extra_flags": []}
-        generated = R.serve_flags(migrated)
-        check(f"serve_flags({key}) == services.json config.flags (verbatim)",
-              generated == expected, detail=f"\n        gen={generated}\n        exp={expected}")
-    # the `~`-path is emitted VERBATIM (literal `~`), matching flags[] cleanly
-    chat = R.serve_flags({"family": "qwen3.5", "stack": "vllm"})
-    check("the chat-template path is emitted with a LITERAL ~ (matches flags[]; args_for expands at launch)",
-          "~/vllm-tests/chat_template_nothink.jinja" in chat)
+    print("\n[2] serve_flags BYTE-REFERENCE — PARTITIONED per model (build-log 01-serving §D6)")
+    # The byte-reference DIFFERS by model class (the flag-match proof must NOT conflate them):
+    #   • embedders + nemotron + chat-4b-fp8 (the LIVE brain) → MUST reproduce their CURRENT flags exactly;
+    #   • chat-4b/2b/08b (AWQ) → INTENDED CHANGE (shipping shape: nothink template dropped, --reasoning-parser
+    #     added; Tim directed this). Their reference is the qwen3.5 shipping shape (= fp8 minus vision), NOT
+    #     the old flags[]. So they are checked against the shipping shape, flagged as an intended change.
+    # services.json no longer carries flags[] for migrated services (RETIRED) — the EXACT byte-references are
+    # the literals the live services run / ran with (the prior flags[], git HEAD).
+    QWEN_SHIPPING = ["--enable-prefix-caching", "--enable-auto-tool-choice", "--tool-call-parser",
+                     "qwen3_xml", "--reasoning-parser", "qwen3", "--trust-remote-code"]
+    EMBED_REF = ["--runner", "pooling", "--trust-remote-code"]
+    NEMOTRON_REF = ["--quantization", "compressed-tensors", "--cpu-offload-gb", "6",
+                    "--enforce-eager", "--trust-remote-code"]
+    FP8_LIVE_REF = ["--enable-prefix-caching", "--enable-auto-tool-choice", "--tool-call-parser",
+                    "qwen3_xml", "--reasoning-parser", "qwen3", "--language-model-only", "--trust-remote-code"]
+
+    # SAFETY-CRITICAL: chat-4b-fp8 is the LIVE brain on :8001 — a restart MUST emit byte-identical flags.
+    fp8 = R.serve_flags({"family": "qwen3.5", "capability_overrides": {"vision": "lm-only"}})
+    check("LIVE-BRAIN chat-4b-fp8 {qwen3.5 + vision:lm-only} == its current flags BYTE-FOR-BYTE (restart-safe)",
+          fp8 == FP8_LIVE_REF, detail=f"\n        gen={fp8}\n        exp={FP8_LIVE_REF}")
+
+    # embedders MUST reproduce their current flags exactly (no intended change).
+    for key in ("embed-bge", "embed-jina-v5", "embed-qwen3"):
+        gen = R.serve_flags({"family": "embed-pooling"})
+        check(f"{key} (family embed-pooling) == current flags BYTE-FOR-BYTE",
+              gen == EMBED_REF, detail=str(gen))
+
+    # nemotron MUST reproduce its current flags exactly (its own family).
+    nem = R.serve_flags({"family": "nemotron"})
+    check("chat-nemotron (family nemotron) == current flags BYTE-FOR-BYTE", nem == NEMOTRON_REF,
+          detail=str(nem))
+
+    # chat-4b/2b/08b — INTENDED CHANGE: the shipping shape (nothink dropped + --reasoning-parser added).
+    chat = R.serve_flags({"family": "qwen3.5"})
+    check("chat-4b/2b/08b (family qwen3.5) == the SHIPPING shape (INTENDED change: nothink dropped, "
+          "--reasoning-parser qwen3 added; NOT the old flags[])", chat == QWEN_SHIPPING, detail=str(chat))
+    check("the RETIRED nothink chat_template is NOT emitted by the shipping qwen3.5 family",
+          "--chat-template" not in chat and not any("nothink" in t for t in chat))
+
     # extra_flags are appended verbatim AFTER the generated flags (the escape hatch)
     with_extra = R.serve_flags({"family": "embed-pooling", "stack": "vllm",
                                 "extra_flags": ["--some-escape-hatch", "X"]})
@@ -119,6 +148,29 @@ def main():
           with_extra[-2:] == ["--some-escape-hatch", "X"]
           and with_extra[:-2] == ["--runner", "pooling", "--trust-remote-code"],
           detail=str(with_extra))
+
+    print("\n[2b] vision capability INJECTION via enum capability_override (the BUG 2 dissolution)")
+    # vision:lm-only injects --language-model-only at order rank 40 (between reasoning 30 and trust 90).
+    lm = R.serve_flags({"family": "qwen3.5", "capability_overrides": {"vision": "lm-only"}})
+    check("vision:lm-only INJECTS --language-model-only between reasoning and trust_remote_code",
+          lm.index("--language-model-only") == lm.index("--reasoning-parser") + 2
+          and lm.index("--language-model-only") < lm.index("--trust-remote-code"), detail=str(lm))
+    # vision:full = a declared NO-OP (vision tower loaded; NO flag) — must NOT emit --language-model-only.
+    full = R.serve_flags({"family": "qwen3.5", "capability_overrides": {"vision": "full"}})
+    check("vision:full emits NO flag (declared no-op — tower loaded, no --language-model-only)",
+          "--language-model-only" not in full and full == QWEN_SHIPPING, detail=str(full))
+    # an UNKNOWN enum value fails loud (never guesses a fragment).
+    try:
+        R.serve_flags({"family": "qwen3.5", "capability_overrides": {"vision": "bogus"}})
+        check("an unknown vision enum value FAILS LOUD", False, detail="did NOT raise")
+    except R.CapabilityResolutionError:
+        check("an unknown vision enum value FAILS LOUD (never guesses a serve fragment)", True)
+    # an override key naming NO capability-type row fails loud (registry-is-truth).
+    try:
+        R.serve_flags({"family": "qwen3.5", "capability_overrides": {"made_up_cap": True}})
+        check("an override key with no capability-type row FAILS LOUD", False, detail="did NOT raise")
+    except R.CapabilityResolutionError:
+        check("an override key with no capability-type row FAILS LOUD (registry-is-truth)", True)
 
     print("\n[3] ADD-A-ROW = ONE row, NO code edit — a new FAMILY appears via reload_registries")
     # Build a temp family registry = live families + ONE net-new family. Reload FROM it.
@@ -240,6 +292,48 @@ def main():
                           "capability_overrides": {"capabilities": ["embed"]}, "extra_flags": []})
     check("a custom-server model generates NO vLLM flags (bespoke-script launch)", cust == [],
           detail=str(cust))
+
+    print("\n[5] THE REAL DELIVERABLE — serveconfig.args_for(key) over the MIGRATED services.json")
+    # Proves BUG 1 is fixed end-to-end: every vLLM config service now resolves a full launch arg list
+    # WITHOUT the loud-fail firing (it would raise SystemExit if a `family` were missing). This exercises
+    # the actual shipping path (services.json -> serveconfig.args_for -> resolver), not in-memory decls.
+    sys.path.insert(0, os.path.join(_REPO, "ops", "cli"))
+    import serveconfig as SC
+    EXPECTED_FLAGS = {
+        # the post-runtime-param flag list each migrated service must emit (the byte-references, §D6)
+        "chat-4b":       ["--enable-prefix-caching", "--enable-auto-tool-choice", "--tool-call-parser",
+                          "qwen3_xml", "--reasoning-parser", "qwen3", "--trust-remote-code"],
+        "chat-2b":       ["--enable-prefix-caching", "--enable-auto-tool-choice", "--tool-call-parser",
+                          "qwen3_xml", "--reasoning-parser", "qwen3", "--trust-remote-code"],
+        "chat-08b":      ["--enable-prefix-caching", "--enable-auto-tool-choice", "--tool-call-parser",
+                          "qwen3_xml", "--reasoning-parser", "qwen3", "--trust-remote-code"],
+        "chat-4b-fp8":   ["--enable-prefix-caching", "--enable-auto-tool-choice", "--tool-call-parser",
+                          "qwen3_xml", "--reasoning-parser", "qwen3", "--language-model-only",
+                          "--trust-remote-code"],
+        "chat-nemotron": ["--quantization", "compressed-tensors", "--cpu-offload-gb", "6",
+                          "--enforce-eager", "--trust-remote-code"],
+        "embed-bge":     ["--runner", "pooling", "--trust-remote-code"],
+        "embed-jina-v5": ["--runner", "pooling", "--trust-remote-code"],
+        "embed-qwen3":   ["--runner", "pooling", "--trust-remote-code"],
+    }
+    for key in VLLM_CONFIG_SERVICES:
+        try:
+            args = SC.args_for(key)
+        except SystemExit as e:
+            check(f"serveconfig.args_for({key}) resolves WITHOUT loud-fail (BUG 1 fixed)", False,
+                  detail=f"RAISED SystemExit: {e}")
+            continue
+        check(f"serveconfig.args_for({key}) resolves WITHOUT loud-fail (BUG 1 fixed)", True)
+        # the trailing flags (after model/port/host/gpu-util/max-model-len/max-num-seqs) == the reference
+        exp = EXPECTED_FLAGS[key]
+        tail = args[len(args) - len(exp):]
+        check(f"  {key} emits the expected migrated flags", tail == exp,
+              detail=f"\n        tail={tail}\n        exp={exp}")
+    # chat-4b's gpu_util is AUTO-ALLOCATED from its _profile (static literal removed) — never vLLM's 0.9.
+    c4 = SC.args_for("chat-4b")
+    gi = c4.index("--gpu-memory-utilization")
+    check("chat-4b gpu_util is AUTO-ALLOCATED (~0.4187 from _profile, not a static literal)",
+          abs(float(c4[gi + 1]) - 0.4187) < 0.01, detail=f"gpu_util={c4[gi + 1]}")
 
     print(f"\n=== {_passed} passed, {_failed} failed ===")
     sys.exit(1 if _failed else 0)

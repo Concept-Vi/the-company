@@ -1,14 +1,14 @@
 {
-  "_doc": "The Company's service registry \u2014 the single self-describing source of truth for what runs on this machine. The AI reads this to know the whole landscape; the `company` command (ops/company) operates it. Adding a service = adding an entry here. It's OK if some entries are imperfect (ports/units) \u2014 better than the scatter it replaces. systemd is the muscle underneath; this is the map + the console. NOTHING auto-starts at boot anymore (2026-06-06, Tim's call): every service is on-demand via `company up`. The `autostart` flag now ONLY means 'started by bare `company up` (no target)' \u2014 kept true for the surface (canvas+bridge) so `company up` brings the interactive Company up; everything else is explicit (`company up brain|voice|<svc>`). `vram_mb` is an approximate resident/reserved cost used by `company` to surface GPU budget against the 16 GB ceiling \u2014 estimates, not measured. `serve` is the script whose default model `company swap` rewrites.",
+  "_doc": "The Company's service registry — the single self-describing source of truth for what runs on this machine. The AI reads this to know the whole landscape; the `company` command (ops/company) operates it. Adding a service = adding an entry here. It's OK if some entries are imperfect (ports/units) — better than the scatter it replaces. systemd is the muscle underneath; this is the map + the console. NOTHING auto-starts at boot anymore (2026-06-06, Tim's call): every service is on-demand via `company up`. The `autostart` flag now ONLY means 'started by bare `company up` (no target)' — kept true for the surface (canvas+bridge) so `company up` brings the interactive Company up; everything else is explicit (`company up brain|voice|<svc>`). `vram_mb` is an approximate resident/reserved cost used by `company` to surface GPU budget against the 16 GB ceiling — estimates, not measured. `serve` is the script whose default model `company swap` rewrites.",
   "vram_ceiling_mb": 16376,
   "combos": {
-    "_doc": "Named sets of services meant to run TOGETHER. `company up @<name>` starts the set (the resource manager still checks it all fits). Add a combo = add an entry here. Extensible \u2014 a combo can mix any services (models, voice, surface).\nVARIANTS (the loadout-'class' mechanism, 2026-06-28): a combo can declare `extends: <base-combo>` to inherit the base's service list, then override just what differs \u2014 `swap: {old-svc: new-svc}`, `add: [svc]`, `remove: [svc]`. So a class is a base loadout (e.g. `interaction`) and its variants (e.g. `interaction-parakeet`) state only the difference. registry.combos() resolves this centrally (fail-loud on a missing base / a swap target not in the base / an unknown service / an extends-cycle), so both `company combos` and `up @<variant>` see the final concrete service list. Example: `interaction` (ear=stt-moonshine) and `interaction-parakeet` (extends interaction, swaps the ear to stt-parakeet-onnx) \u2014 same loadout, different ear, for trialling configurations.",
+    "_doc": "Named sets of services meant to run TOGETHER. `company up @<name>` starts the set (the resource manager still checks it all fits). Add a combo = add an entry here. Extensible — a combo can mix any services (models, voice, surface).\nVARIANTS (the loadout-'class' mechanism, 2026-06-28): a combo can declare `extends: <base-combo>` to inherit the base's service list, then override just what differs — `swap: {old-svc: new-svc}`, `add: [svc]`, `remove: [svc]`. So a class is a base loadout (e.g. `interaction`) and its variants (e.g. `interaction-parakeet`) state only the difference. registry.combos() resolves this centrally (fail-loud on a missing base / a swap target not in the base / an unknown service / an extends-cycle), so both `company combos` and `up @<variant>` see the final concrete service list. Example: `interaction` (ear=stt-moonshine) and `interaction-parakeet` (extends interaction, swaps the ear to stt-parakeet-onnx) — same loadout, different ear, for trialling configurations.",
     "small-pair": {
       "services": [
         "chat-2b",
         "chat-08b"
       ],
-      "note": "the 2B + 0.8B chat tiers co-resident (gpu_util 0.45 + 0.30 \u2248 12.3 GB \u2014 VERIFIED both served at once 2026-06-06, fits alongside voice)."
+      "note": "the 2B + 0.8B chat tiers co-resident (gpu_util 0.45 + 0.30 ≈ 12.3 GB — VERIFIED both served at once 2026-06-06, fits alongside voice)."
     },
     "wake": {
       "services": [
@@ -18,7 +18,7 @@
         "stt-whisper",
         "tts-kokoro"
       ],
-      "note": "the after-restart wake ritual (Tim, 2026-06-11): the surface's API + the resident brain/embedder pair + the default ear/voice \u2014 everything the phone PWA needs. ~12GB co-resident, verified together 2026-06-11. NOTE: the canvas (vite) is unmanaged \u2014 start it separately (cd canvas/app && npm run dev); making it a managed unit is a named future row."
+      "note": "the after-restart wake ritual (Tim, 2026-06-11): the surface's API + the resident brain/embedder pair + the default ear/voice — everything the phone PWA needs. ~12GB co-resident, verified together 2026-06-11. NOTE: the canvas (vite) is unmanaged — start it separately (cd canvas/app && npm run dev); making it a managed unit is a named future row."
     },
     "xsession": {
       "services": [
@@ -27,14 +27,14 @@
         "stt-whisper",
         "rerank-jina"
       ],
-      "note": "The cross-session CHANNEL fabric loadout (Tim gave the GPU 2026-06-14): pplx-embed-context-4b (~5.4G, 8-bit) for semantic session-find/transcript-search + Qwen3-TTS VoiceDesign (~4.4G, no clip \u2014 the voice for spoken cross-session conversation) + whisper.cpp STT (CPU, 0 VRAM, the ear) + rerank-jina (GPU, ~1.3G bf16 \u2014 the rerank stage for cross-session recall, moved to GPU 2026-06-28: warm ~0.05s vs ~16s CPU). ~11.1G GPU co-resident, fits the 16G card with headroom."
+      "note": "The cross-session CHANNEL fabric loadout (Tim gave the GPU 2026-06-14): pplx-embed-context-4b (~5.4G, 8-bit) for semantic session-find/transcript-search + Qwen3-TTS VoiceDesign (~4.4G, no clip — the voice for spoken cross-session conversation) + whisper.cpp STT (CPU, 0 VRAM, the ear) + rerank-jina (GPU, ~1.3G bf16 — the rerank stage for cross-session recall, moved to GPU 2026-06-28: warm ~0.05s vs ~16s CPU). ~11.1G GPU co-resident, fits the 16G card with headroom."
     },
     "instrument": {
       "services": [
         "bridge",
         "embed-pplx"
       ],
-      "note": "The INSTRUMENT surface loadout (Tim 2026-06-15: 'take the strongest, leverage everything'): the surface API (bridge :8770) + its embedder pplx-embed-context-v1-4b (~8.2G, 2560-dim, 32K ctx, context-aware/late-chunking \u2014 the strongest, replacing legacy BGE-M3). `company up @instrument` brings the surface up on pplx. Add voice (tts/stt) if the right-hand-man is co-resident. Leverage + tool-request spec: build-prep/embedder-pplx/LEVERAGE-AND-TOOL-REQUESTS.md."
+      "note": "The INSTRUMENT surface loadout (Tim 2026-06-15: 'take the strongest, leverage everything'): the surface API (bridge :8770) + its embedder pplx-embed-context-v1-4b (~8.2G, 2560-dim, 32K ctx, context-aware/late-chunking — the strongest, replacing legacy BGE-M3). `company up @instrument` brings the surface up on pplx. Add voice (tts/stt) if the right-hand-man is co-resident. Leverage + tool-request spec: build-prep/embedder-pplx/LEVERAGE-AND-TOOL-REQUESTS.md."
     },
     "xsession-brain": {
       "services": [
@@ -43,7 +43,7 @@
         "stt-whisper",
         "rerank-jina"
       ],
-      "note": "The cross-session fabric WITH a local brain (Tim 2026-06-15: 'the 4b co with lead \u2026 without the voice in order to fit the 4b'). xsession minus GPU voice (tts-qwen3tts) plus the local worker chat-4b \u2014 so the lead can run composable-mind / swarm turns on the local 4B WHILE the cross-session recall embedder stays resident. Footprint (2026-06-28): embed-pplx ~5.4G (8-bit) + chat-4b ~6.5G + rerank-jina ~1.3G (bf16 GPU) + stt-whisper (CPU ear) \u2248 13.2G / 16G, ~2.8G headroom. PRECONDITIONS persisted: chat-4b gpu_util 0.40 / max_model_len 16384 / max_num_seqs 4 (hybrid-Mamba: cache pool holds limited Mamba blocks). Add GPU voice only by dropping the 4b \u2014 they don't all fit at once."
+      "note": "The cross-session fabric WITH a local brain (Tim 2026-06-15: 'the 4b co with lead … without the voice in order to fit the 4b'). xsession minus GPU voice (tts-qwen3tts) plus the local worker chat-4b — so the lead can run composable-mind / swarm turns on the local 4B WHILE the cross-session recall embedder stays resident. Footprint (2026-06-28): embed-pplx ~5.4G (8-bit) + chat-4b ~6.5G + rerank-jina ~1.3G (bf16 GPU) + stt-whisper (CPU ear) ≈ 13.2G / 16G, ~2.8G headroom. PRECONDITIONS persisted: chat-4b gpu_util 0.40 / max_model_len 16384 / max_num_seqs 4 (hybrid-Mamba: cache pool holds limited Mamba blocks). Add GPU voice only by dropping the 4b — they don't all fit at once."
     },
     "interaction": {
       "services": [
@@ -64,12 +64,12 @@
     }
   },
   "groups": {
-    "core": "The live interactive Company \u2014 the surface + its API (the always-on heart)",
+    "core": "The live interactive Company — the surface + its API (the always-on heart)",
     "brain": "Language model(s) that answer",
     "voice": "Speech in and out",
-    "models": "On-demand models \u2014 started per task, VRAM-budgeted, usually dormant",
+    "models": "On-demand models — started per task, VRAM-budgeted, usually dormant",
     "reach": "Network + always-on system services (the body's connection to the world)",
-    "jobs": "Scheduled timers \u2014 derived-data builders (no port; \u25d0 active = timer armed, next fire on schedule)"
+    "jobs": "Scheduled timers — derived-data builders (no port; ◐ active = timer armed, next fire on schedule)"
   },
   "services": {
     "canvas": {
@@ -98,7 +98,7 @@
     },
     "pages": {
       "group": "core",
-      "title": "Page-face \u2014 serves a rendered HTML page bound to any address (separate origin, no-script CSP)",
+      "title": "Page-face — serves a rendered HTML page bound to any address (separate origin, no-script CSP)",
       "port": 8774,
       "manage": {
         "type": "user-unit",
@@ -106,12 +106,12 @@
       },
       "health": "/page",
       "autostart": false,
-      "note": "On-demand (`company up pages`). DELIBERATELY a SEPARATE ORIGIN from the bridge control plane (:8770) so a served page can never same-origin-fetch /api; every page is served under a no-script CSP. A page is the visible face of ANY addressed thing (ui://, skill://, guide://, run://\u2026), attached via inspect_address(op='attach_page'). Auth (who may reach :8774) rides the later Supabase move; separate-origin + no-script CSP hold regardless.",
+      "note": "On-demand (`company up pages`). DELIBERATELY a SEPARATE ORIGIN from the bridge control plane (:8770) so a served page can never same-origin-fetch /api; every page is served under a no-script CSP. A page is the visible face of ANY addressed thing (ui://, skill://, guide://, run://…), attached via inspect_address(op='attach_page'). Auth (who may reach :8774) rides the later Supabase move; separate-origin + no-script CSP hold regardless.",
       "ram_mb": 300
     },
     "remote": {
       "group": "core",
-      "title": "Remote connector \u2014 public MCP front (Funnel\u2192:8772; identity-gated: all tools for Tim, deny-all otherwise)",
+      "title": "Remote connector — public MCP front (Funnel→:8772; identity-gated: all tools for Tim, deny-all otherwise)",
       "port": 8772,
       "manage": {
         "type": "user-unit",
@@ -123,19 +123,19 @@
     },
     "session-supervisor": {
       "group": "core",
-      "title": "Session supervisor \u2014 owns the supervised Claude Code fleet (Session Fabric F1)",
+      "title": "Session supervisor — owns the supervised Claude Code fleet (Session Fabric F1)",
       "port": 8771,
       "manage": {
         "type": "user-unit",
         "unit": "company-session-supervisor.service"
       },
       "health": "/health",
-      "note": "127.0.0.1 ONLY (exposure law, audit B3); spawns claude subprocesses ON DEMAND (idle = owns nothing); the SINGLE writer of agent_sessions.* events; consumes agent_sessions/mail.jsonl intents. Cap COMPANY_FABRIC_CONCURRENCY (default 3) \u00b7 per-turn watchdog COMPANY_FABRIC_TURN_TIMEOUT_S (default 900s) \u00b7 permission COMPANY_FABRIC_PERMISSION (default plan). Operator face: `company session`. On-demand per the no-boot-autostart law.",
+      "note": "127.0.0.1 ONLY (exposure law, audit B3); spawns claude subprocesses ON DEMAND (idle = owns nothing); the SINGLE writer of agent_sessions.* events; consumes agent_sessions/mail.jsonl intents. Cap COMPANY_FABRIC_CONCURRENCY (default 3) · per-turn watchdog COMPANY_FABRIC_TURN_TIMEOUT_S (default 900s) · permission COMPANY_FABRIC_PERMISSION (default plan). Operator face: `company session`. On-demand per the no-boot-autostart law.",
       "ram_mb": 300
     },
     "chat-4b": {
       "group": "brain",
-      "title": "Qwen3.5-4B-AWQ (vLLM) \u2014 a local WORKER (not the RHM brain; the RHM main is a cloud model)",
+      "title": "Qwen3.5-4B-AWQ (vLLM) — a local WORKER (not the RHM brain; the RHM main is a cloud model)",
       "port": 8000,
       "manage": {
         "type": "user-unit",
@@ -147,18 +147,10 @@
       "config": {
         "model": "cyankiwi/Qwen3.5-4B-AWQ-4bit",
         "port": 8000,
-        "gpu_util": 0.4,
+        "family": "qwen3.5",
         "max_model_len": 16384,
         "max_num_seqs": 4,
-        "flags": [
-          "--enable-prefix-caching",
-          "--enable-auto-tool-choice",
-          "--tool-call-parser",
-          "qwen3_xml",
-          "--chat-template",
-          "~/vllm-tests/chat_template_nothink.jinja",
-          "--trust-remote-code"
-        ],
+        "_migration": "flags[] RETIRED -> resolver generates from family qwen3.5 (--enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3 --trust-remote-code). SHIPPING shape: dropped --chat-template nothink.jinja (uses the model's OWN stock thinking-capable template + per-request enable_thinking) + added --reasoning-parser qwen3 (the real reasoning fix). INTENDED CHANGE from the old AWQ flags (Tim: don't preserve nothink). gpu_util AUTO-ALLOCATED from _profile (no static literal): ~0.419 (5838 weights + 16384x31.7/1024 KV + 512 overhead)/16376 ceiling. OPEN: AWQ (cyankiwi) bundled-template thinking-capability UNVERIFIED (the spike verified the FP8/RedHatAI template) — verify enable_thinking works on this build before next launch.",
         "env": {
           "VLLM_LOGGING_LEVEL": "INFO",
           "VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS": "0"
@@ -169,6 +161,36 @@
           "kv_kb_per_token": 31.7,
           "measured": "2026-06-07 (256K solo: KV 8.37GiB/270482 tok)"
         }
+      },
+      "ram_mb": 2500
+    },
+    "chat-4b-fp8": {
+      "group": "brain",
+      "title": "Qwen3.5-4B-FP8 (vLLM) — the FP8 brain: thinking + tools, model's own template",
+      "port": 8001,
+      "manage": {
+        "type": "user-unit",
+        "unit": "vllm-chat-4b-fp8.service"
+      },
+      "health": "/v1/models",
+      "vram_mb": 5600,
+      "note": "config-driven via serve_model.sh. FP8 (RedHatAI) on Ada; --language-model-only (text RHM); model's OWN template (thinking-capable, per-request enable_thinking); --reasoning-parser qwen3 splits reasoning_content. The FP8 brain for the spike + C5. Tune: `company config chat-4b-fp8 <key> <value>`.",
+      "config": {
+        "model": "RedHatAI/Qwen3.5-4B-FP8-dynamic",
+        "port": 8001,
+        "gpu_util": 0.5,
+        "max_model_len": 16384,
+        "max_num_seqs": 2,
+        "family": "qwen3.5",
+        "capability_overrides": {
+          "vision": "lm-only"
+        },
+        "_migration": "flags[] RETIRED -> resolver generates from family qwen3.5 + capability_overrides.vision=lm-only. VERIFIED byte-for-byte == the prior flags[] (--enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3 --language-model-only --trust-remote-code). vision=lm-only injects --language-model-only (text RHM skips the vision tower for VRAM) at order rank 40, between reasoning and trust_remote_code. SAFETY-CRITICAL: this is the LIVE brain on :8001 — a restart must be identical; the resolver reproduces it exactly. gpu_util 0.5 KEPT as the explicit static override (no _profile yet; interim co-resident value — measure a _profile to auto-allocate).",
+        "env": {
+          "VLLM_LOGGING_LEVEL": "INFO",
+          "VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS": "0"
+        },
+        "max_model_len_ceiling": 262144
       },
       "ram_mb": 2500
     },
@@ -184,13 +206,13 @@
       "vram_mb": 900,
       "config": {
         "model": "",
-        "_note": "model-id NOT located on disk (kokoro runs but its weights id is unconfirmed) \u2014 left empty; flag for verification. Not cataloged (no verified id)."
+        "_note": "model-id NOT located on disk (kokoro runs but its weights id is unconfirmed) — left empty; flag for verification. Not cataloged (no verified id)."
       },
       "ram_mb": 800
     },
     "stt-whisper": {
       "group": "voice",
-      "title": "Whisper.cpp STT (voice in \u2014 the boot-default ear)",
+      "title": "Whisper.cpp STT (voice in — the boot-default ear)",
       "port": 2022,
       "manage": {
         "type": "user-unit",
@@ -219,7 +241,7 @@
         "port": 2031,
         "vram_mb": 5500
       },
-      "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 VERIFIED RUNNING 2026-06-05 (load\u2192up ~30s, ~5.1 GB resident, transcribes; unload frees). Own NeMo venv (CUDA-13). Live multilingual workhorse \u2192 candidate STT_DEFAULT. See voice/ears/REQUIREMENTS.md.",
+      "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear — VERIFIED RUNNING 2026-06-05 (load→up ~30s, ~5.1 GB resident, transcribes; unload frees). Own NeMo venv (CUDA-13). Live multilingual workhorse → candidate STT_DEFAULT. See voice/ears/REQUIREMENTS.md.",
       "config": {
         "model": "nvidia/parakeet-tdt-0.6b-v3"
       },
@@ -241,7 +263,7 @@
         "port": 2032,
         "vram_mb": 12000
       },
-      "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 heaviest (~10 GB resident, near-OOM); on-demand only, never co-resident with a local brain. Own NeMo venv. English-max + understanding. See voice/ears/REQUIREMENTS.md.",
+      "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear — heaviest (~10 GB resident, near-OOM); on-demand only, never co-resident with a local brain. Own NeMo venv. English-max + understanding. See voice/ears/REQUIREMENTS.md.",
       "config": {
         "model": "nvidia/canary-qwen-2.5b"
       },
@@ -263,7 +285,7 @@
         "port": 2033,
         "vram_mb": 6500
       },
-      "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 own transformers venv (COMPANY_GRANITE_DEVICE=cpu dodges the GPU hazard). Compact top-accuracy cross-check. See voice/ears/REQUIREMENTS.md.",
+      "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear — own transformers venv (COMPANY_GRANITE_DEVICE=cpu dodges the GPU hazard). Compact top-accuracy cross-check. See voice/ears/REQUIREMENTS.md.",
       "config": {
         "model": "ibm-granite/granite-4.0-1b-speech"
       },
@@ -307,7 +329,7 @@
         "port": 4125,
         "vram_mb": 10500
       },
-      "note": "trial engine (persona Pip). vLLM-backed; ~10 GB + SWAP-HOSTILE (~17min cold) \u2192 pin/pre-warm, never cold-on-demand. See voice/engines/REQUIREMENTS.md.",
+      "note": "trial engine (persona Pip). vLLM-backed; ~10 GB + SWAP-HOSTILE (~17min cold) → pin/pre-warm, never cold-on-demand. See voice/engines/REQUIREMENTS.md.",
       "config": {
         "model": "Hariprasath28/orpheus-3b-4bit-AWQ",
         "port": 4125,
@@ -342,7 +364,7 @@
         "device": "cuda:0",
         "_engine": true,
         "_nonvllm": true,
-        "_note": "CosyVoice2-0.5B own repo \u2014 fixed footprint (vram_mb, no gpu_util). voice = persona voice_description (inference_instruct2).",
+        "_note": "CosyVoice2-0.5B own repo — fixed footprint (vram_mb, no gpu_util). voice = persona voice_description (inference_instruct2).",
         "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512"
       },
       "ram_mb": 2500
@@ -385,7 +407,7 @@
         "port": 4128,
         "vram_mb": 4500
       },
-      "note": "trial engine (persona Sable). VoiceDesign from a text description \u2014 NO clip needed (the trial starter). ~4.4 GB, ~25s cold. See voice/engines/REQUIREMENTS.md.",
+      "note": "trial engine (persona Sable). VoiceDesign from a text description — NO clip needed (the trial starter). ~4.4 GB, ~25s cold. See voice/engines/REQUIREMENTS.md.",
       "config": {
         "model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
         "device": "cuda:0",
@@ -393,7 +415,7 @@
         "lang": "English",
         "_engine": true,
         "_nonvllm": true,
-        "_note": "transformers VoiceDesign \u2014 fixed footprint (vram_mb, no gpu_util). voice = persona voice_description (instruct)."
+        "_note": "transformers VoiceDesign — fixed footprint (vram_mb, no gpu_util). voice = persona voice_description (instruct)."
       },
       "ram_mb": 2500
     },
@@ -411,11 +433,8 @@
         "model": "BAAI/bge-m3",
         "port": 8001,
         "gpu_util": 0.3,
-        "flags": [
-          "--runner",
-          "pooling",
-          "--trust-remote-code"
-        ],
+        "family": "embed-pooling",
+        "_migration": "flags[] RETIRED -> resolver generates from family embed-pooling (--runner pooling --trust-remote-code). VERIFIED byte-for-byte == prior flags[]. gpu_util 0.3 KEPT as explicit static override (no _profile to auto-allocate from — measure one to dissolve).",
         "env": {
           "VLLM_LOGGING_LEVEL": "INFO"
         }
@@ -434,10 +453,10 @@
       "health": "/v1/models",
       "serve": "~/vllm-tests/serve_jina_v4.sh",
       "vram_mb": 8000,
-      "note": "CUSTOM server \u2014 NOT config-driven. vLLM lacks jina-v4 support, so it runs serve_jina_v4.py (raw transformers) in the jina-v4-env venv via serve_jina_v4.sh. Leave script-based.",
+      "note": "CUSTOM server — NOT config-driven. vLLM lacks jina-v4 support, so it runs serve_jina_v4.py (raw transformers) in the jina-v4-env venv via serve_jina_v4.sh. Leave script-based.",
       "config": {
         "model": "jinaai/jina-embeddings-v4",
-        "_note": "config.model = JOIN/identity metadata ONLY \u2014 CUSTOM transformers server (see `serve`/`note`), NOT config-driven (vLLM lacks jina-v4 support; serve_jina_v4.py raw transformers). CORRECTED from an earlier 'confirm vLLM --runner pooling serves it' note, which contradicted the working custom server."
+        "_note": "config.model = JOIN/identity metadata ONLY — CUSTOM transformers server (see `serve`/`note`), NOT config-driven (vLLM lacks jina-v4 support; serve_jina_v4.py raw transformers). CORRECTED from an earlier 'confirm vLLM --runner pooling serves it' note, which contradicted the working custom server."
       },
       "ram_mb": 3000
     },
@@ -452,10 +471,10 @@
       "health": "/health",
       "serve": "~/company/ops/serve_pplx_embed.sh",
       "vram_mb": 5700,
-      "note": "CUSTOM server \u2014 NOT config-driven (like embed-jina-v4). Arch PPLXQwen3Model / model_type bidirectional_pplx_qwen3 is remote-code (trust_remote_code, auto_map\u2192modeling.PPLXQwen3ContextualModel); vLLM 0.21 has no such arch (verified: absent from 356 supported archs, `vllm serve` fails at load_model) \u2192 runs ops/serve_pplx_embed.py (raw transformers) in ~/vllm-env via serve_pplx_embed.sh. OpenAI-compat POST /v1/embeddings; dim=2560; output is INT8 + UNNORMALIZED \u2014 compare via COSINE (model card). Contextual late-chunking model: flat `input` strings are embedded as single-chunk docs; optional `documents` (list[list[str]]) gives native per-chunk contextual embeddings. dtype bfloat16 (~8GB) \u2014 the card stores fp32. Interim transcript-search embedder (throwaway); ~10GB load authorized by Tim. Leave script-based.",
+      "note": "CUSTOM server — NOT config-driven (like embed-jina-v4). Arch PPLXQwen3Model / model_type bidirectional_pplx_qwen3 is remote-code (trust_remote_code, auto_map→modeling.PPLXQwen3ContextualModel); vLLM 0.21 has no such arch (verified: absent from 356 supported archs, `vllm serve` fails at load_model) → runs ops/serve_pplx_embed.py (raw transformers) in ~/vllm-env via serve_pplx_embed.sh. OpenAI-compat POST /v1/embeddings; dim=2560; output is INT8 + UNNORMALIZED — compare via COSINE (model card). Contextual late-chunking model: flat `input` strings are embedded as single-chunk docs; optional `documents` (list[list[str]]) gives native per-chunk contextual embeddings. dtype bfloat16 (~8GB) — the card stores fp32. Interim transcript-search embedder (throwaway); ~10GB load authorized by Tim. Leave script-based.",
       "config": {
         "model": "perplexity-ai/pplx-embed-context-v1-4b",
-        "_note": "config.model = JOIN/identity metadata ONLY. This is a CUSTOM transformers server (see `serve`/`note`), deliberately NOT config-driven. The context-4b IS served \u2014 the live transcript-search embedder, wired + verified by the retrieval session 2026-06-12. Set here (catalog session) so capabilities_for() resolves served_by. CORRECTED from a wrong earlier value (pplx-embed-v1-0.6b + a 'launch UNVERIFIED' note) \u2014 it is the 4b and it serves."
+        "_note": "config.model = JOIN/identity metadata ONLY. This is a CUSTOM transformers server (see `serve`/`note`), deliberately NOT config-driven. The context-4b IS served — the live transcript-search embedder, wired + verified by the retrieval session 2026-06-12. Set here (catalog session) so capabilities_for() resolves served_by. CORRECTED from a wrong earlier value (pplx-embed-v1-0.6b + a 'launch UNVERIFIED' note) — it is the 4b and it serves."
       },
       "ram_mb": 3000
     },
@@ -475,11 +494,8 @@
         "port": 8004,
         "gpu_util": 0.3,
         "max_model_len": 8192,
-        "flags": [
-          "--runner",
-          "pooling",
-          "--trust-remote-code"
-        ],
+        "family": "embed-pooling",
+        "_migration": "flags[] RETIRED -> resolver generates from family embed-pooling (--runner pooling --trust-remote-code). VERIFIED byte-for-byte == prior flags[]. gpu_util 0.3 KEPT as explicit static override (no _profile).",
         "env": {
           "VLLM_USE_FLASHINFER_SAMPLER": "0"
         }
@@ -501,22 +517,15 @@
         "gpu_util": 0.45,
         "max_model_len": 4096,
         "max_num_seqs": 32,
-        "flags": [
-          "--enable-prefix-caching",
-          "--enable-auto-tool-choice",
-          "--tool-call-parser",
-          "qwen3_xml",
-          "--chat-template",
-          "~/vllm-tests/chat_template_nothink.jinja",
-          "--trust-remote-code"
-        ],
+        "family": "qwen3.5",
+        "_migration": "flags[] RETIRED -> resolver generates from family qwen3.5 (--enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3 --trust-remote-code). SHIPPING shape (INTENDED CHANGE): dropped --chat-template nothink.jinja (own stock template + per-request enable_thinking) + added --reasoning-parser qwen3. gpu_util 0.45 KEPT as explicit static override (no _profile). OPEN: bundled-template thinking-capability UNVERIFIED on this build — verify before next launch.",
         "env": {
           "VLLM_LOGGING_LEVEL": "INFO",
           "VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS": "0",
           "VLLM_USE_FLASHINFER_SAMPLER": "0"
         }
       },
-      "note": "config-driven via serve_model.sh; tune with `company config chat-2b gpu_util <x>`. gpu_util 0.45 \u2248 7.2 GB; co-resides with chat-08b (combo small-pair).",
+      "note": "config-driven via serve_model.sh; tune with `company config chat-2b gpu_util <x>`. gpu_util 0.45 ≈ 7.2 GB; co-resides with chat-08b (combo small-pair).",
       "ram_mb": 2500
     },
     "chat-08b": {
@@ -534,22 +543,15 @@
         "gpu_util": 0.3,
         "max_model_len": 4096,
         "max_num_seqs": 32,
-        "flags": [
-          "--enable-prefix-caching",
-          "--enable-auto-tool-choice",
-          "--tool-call-parser",
-          "qwen3_xml",
-          "--chat-template",
-          "~/vllm-tests/chat_template_nothink.jinja",
-          "--trust-remote-code"
-        ],
+        "family": "qwen3.5",
+        "_migration": "flags[] RETIRED -> resolver generates from family qwen3.5 (--enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3 --trust-remote-code). SHIPPING shape (INTENDED CHANGE): dropped --chat-template nothink.jinja (own stock template + per-request enable_thinking) + added --reasoning-parser qwen3. gpu_util 0.3 KEPT as explicit static override (no _profile). OPEN: bundled-template thinking-capability UNVERIFIED on this build — verify before next launch.",
         "env": {
           "VLLM_LOGGING_LEVEL": "INFO",
           "VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS": "0",
           "VLLM_USE_FLASHINFER_SAMPLER": "0"
         }
       },
-      "note": "config-driven via serve_model.sh; tune with `company config chat-08b gpu_util <x>`. gpu_util 0.30 \u2248 4.9 GB reserved / ~4.0 GB measured (0.20 was too low \u2014 starved the KV cache; the slice must hold weights + KV).",
+      "note": "config-driven via serve_model.sh; tune with `company config chat-08b gpu_util <x>`. gpu_util 0.30 ≈ 4.9 GB reserved / ~4.0 GB measured (0.20 was too low — starved the KV cache; the slice must hold weights + KV).",
       "ram_mb": 2000
     },
     "chat-nemotron": {
@@ -568,14 +570,8 @@
         "gpu_util": 0.88,
         "max_model_len": 4096,
         "max_num_seqs": 8,
-        "flags": [
-          "--quantization",
-          "compressed-tensors",
-          "--cpu-offload-gb",
-          "6",
-          "--enforce-eager",
-          "--trust-remote-code"
-        ],
+        "family": "nemotron",
+        "_migration": "flags[] RETIRED -> resolver generates from family nemotron (--quantization compressed-tensors --cpu-offload-gb 6 --enforce-eager --trust-remote-code). VERIFIED byte-for-byte == prior flags[]. nemotron is its OWN family (NOT forced onto qwen3.5 — different model: MoE AWQ, no tool/reasoning parser). gpu_util 0.88 KEPT as explicit static override (no _profile).",
         "env": {
           "VLLM_LOGGING_LEVEL": "INFO",
           "VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS": "0",
@@ -598,11 +594,8 @@
         "model": "Qwen/Qwen3-Embedding-8B",
         "port": 8004,
         "gpu_util": 0.92,
-        "flags": [
-          "--runner",
-          "pooling",
-          "--trust-remote-code"
-        ],
+        "family": "embed-pooling",
+        "_migration": "flags[] RETIRED -> resolver generates from family embed-pooling (--runner pooling --trust-remote-code). VERIFIED byte-for-byte == prior flags[]. gpu_util 0.92 KEPT as explicit static override (no _profile).",
         "env": {
           "VLLM_USE_FLASHINFER_SAMPLER": "0"
         }
@@ -620,14 +613,14 @@
     },
     "litellm": {
       "group": "models",
-      "title": "LiteLLM proxy (OpenAI-compat gateway, :4100) \u2014 for the fabric's OWN cognition",
+      "title": "LiteLLM proxy (OpenAI-compat gateway, :4100) — for the fabric's OWN cognition",
       "port": 4100,
       "manage": {
         "type": "manual",
         "run": "~/company/fabric/serve_litellm.sh"
       },
       "serve": "~/company/fabric/serve_litellm.sh",
-      "note": "The CURRENT clean proxy (litellm 1.83.7, .litellm-venv, fabric/litellm.config.yaml) \u2014 LOAD-BEARING for fabric cognition (fabric/config.py LITELLM_PROXY, OpenAI-format \u2192 ollama). Launched MANUALLY by fabric/serve_litellm.sh (no systemd unit). Corrected 2026-06-16: dropped the dangling 'litellm-proxy.service' manage ref (that was the STALE ~/claude-gateway proxy on :4000, now removed). \u2605 Claude Code does NOT use this \u2014 CC runs on company/ollama models via OLLAMA-NATIVE :11434 (ollama launch claude / the supervisor _provider_env), not this OpenAI proxy. board://item-4aa4f952.",
+      "note": "The CURRENT clean proxy (litellm 1.83.7, .litellm-venv, fabric/litellm.config.yaml) — LOAD-BEARING for fabric cognition (fabric/config.py LITELLM_PROXY, OpenAI-format → ollama). Launched MANUALLY by fabric/serve_litellm.sh (no systemd unit). Corrected 2026-06-16: dropped the dangling 'litellm-proxy.service' manage ref (that was the STALE ~/claude-gateway proxy on :4000, now removed). ★ Claude Code does NOT use this — CC runs on company/ollama models via OLLAMA-NATIVE :11434 (ollama launch claude / the supervisor _provider_env), not this OpenAI proxy. board://item-4aa4f952.",
       "health": "/health",
       "ram_mb": 400
     },
@@ -650,7 +643,7 @@
         "type": "system-unit",
         "unit": "tailscaled.service"
       },
-      "note": "system-unit, kept enabled at boot \u2014 the phone access path.",
+      "note": "system-unit, kept enabled at boot — the phone access path.",
       "ram_mb": 100
     },
     "pipeliner": {
@@ -665,7 +658,7 @@
     },
     "openclaw-gw": {
       "group": "reach",
-      "title": "OpenClaw gateway (Stage 2 \u2014 usually dormant)",
+      "title": "OpenClaw gateway (Stage 2 — usually dormant)",
       "manage": {
         "type": "user-unit",
         "unit": "openclaw-gateway.service"
@@ -674,21 +667,21 @@
     },
     "agent-sessions-exporter": {
       "group": "jobs",
-      "title": "Claude session transcripts \u2192 ~/corpora/claude-sessions markdown (every 20 min)",
+      "title": "Claude session transcripts → ~/corpora/claude-sessions markdown (every 20 min)",
       "manage": {
         "type": "user-unit",
         "unit": "company-agent-sessions-exporter.timer"
       },
-      "note": "F1.4 transcript memory. Managed unit = the TIMER (`company up agent-sessions-exporter` arms it; the oneshot .service fires every 20 min). READ-ONLY on ~/.claude; filter law + redaction in ops/agent_sessions_exporter.py. Timer is WantedBy=company.target so it rises/falls with the Company (no orphan). The SECOND stage of the transcript-search circuit (export \u2192 reindex) is `claude-sessions-reindex`."
+      "note": "F1.4 transcript memory. Managed unit = the TIMER (`company up agent-sessions-exporter` arms it; the oneshot .service fires every 20 min). READ-ONLY on ~/.claude; filter law + redaction in ops/agent_sessions_exporter.py. Timer is WantedBy=company.target so it rises/falls with the Company (no orphan). The SECOND stage of the transcript-search circuit (export → reindex) is `claude-sessions-reindex`."
     },
     "claude-sessions-reindex": {
       "group": "jobs",
-      "title": "Reindex beat \u2014 substrate DELTA reindex of claude-sessions after each export (~5 min offset)",
+      "title": "Reindex beat — substrate DELTA reindex of claude-sessions after each export (~5 min offset)",
       "manage": {
         "type": "user-unit",
         "unit": "company-claude-sessions-reindex.timer"
       },
-      "note": "INTERIM transcript-search (throwaway; Tim is building the real memory system elsewhere). The SECOND beat of the circuit: Claude jsonl \u2192 [agent-sessions-exporter] \u2192 corpus markdown \u2192 [this] \u2192 searchable index. Managed unit = the TIMER (WantedBy=company.target; fires *:05/20, ~5 min after the exporter's *:00/20). The oneshot .service runs ops/claude_sessions_reindex.py in the substrate venv (obsidian-overlord/.venv). CHEAP-BY-DESIGN: compares the corpus' newest .md mtime + file count against ~/corpora/claude-sessions/.reindex_marker.json and EXITS doing nothing (no model load, no GPU) when nothing changed \u2014 the common case. When transcripts changed it runs a substrate DELTA scan (sha256 skips unchanged files) of the `claude-sessions` vault embedded by the `embed-pplx` service into an ISOLATED state dir (~/.cache/company/substrate-claude-sessions, separate from the bge-m3 substrate). FAIL LOUD: if files changed but embed-pplx is DOWN it exits non-zero and leaves the marker stale so the next fire retries (`company up embed-pplx` first, or it can self-ensure with --ensure-embedder). Search face: ops/wire_substrate_claude_sessions.py search / ops/transcript_search.py (numpy fallback)."
+      "note": "INTERIM transcript-search (throwaway; Tim is building the real memory system elsewhere). The SECOND beat of the circuit: Claude jsonl → [agent-sessions-exporter] → corpus markdown → [this] → searchable index. Managed unit = the TIMER (WantedBy=company.target; fires *:05/20, ~5 min after the exporter's *:00/20). The oneshot .service runs ops/claude_sessions_reindex.py in the substrate venv (obsidian-overlord/.venv). CHEAP-BY-DESIGN: compares the corpus' newest .md mtime + file count against ~/corpora/claude-sessions/.reindex_marker.json and EXITS doing nothing (no model load, no GPU) when nothing changed — the common case. When transcripts changed it runs a substrate DELTA scan (sha256 skips unchanged files) of the `claude-sessions` vault embedded by the `embed-pplx` service into an ISOLATED state dir (~/.cache/company/substrate-claude-sessions, separate from the bge-m3 substrate). FAIL LOUD: if files changed but embed-pplx is DOWN it exits non-zero and leaves the marker stale so the next fire retries (`company up embed-pplx` first, or it can self-ensure with --ensure-embedder). Search face: ops/wire_substrate_claude_sessions.py search / ops/transcript_search.py (numpy fallback)."
     },
     "rerank-jina": {
       "group": "models",
@@ -700,20 +693,20 @@
       },
       "serve": "~/company/ops/serve_rerank.sh",
       "vram_mb": 1300,
-      "note": "GPU endpoint (COMPANY_RERANK_DEVICE=cuda, 2026-06-28 Tim \u2014 listwise rerank is attention-bound, CPU was ~16s on realistic chunks; GPU warm ~0.05s). Override COMPANY_RERANK_DEVICE=cpu to pin to CPU (0 VRAM). Surfaces ops/rerank.py:Reranker(jina-v3) as POST /rerank {query, candidates|texts:[str|dict], top_n?} -> {ranking:[{item,text,rerank_score,orig_rank,rank},...]} sorted desc; GET /health. Runs from ~/vllm-env via serve_rerank.sh. ~1.3GB (bf16 on GPU; fp32 was ~2.8GB); weights jinaai/jina-reranker-v3 in HF cache. The rerank stage for cross-session semantic recall (runtime/session_recall.py) + the determine pipeline (runtime/recall_determine.py).",
+      "note": "GPU endpoint (COMPANY_RERANK_DEVICE=cuda, 2026-06-28 Tim — listwise rerank is attention-bound, CPU was ~16s on realistic chunks; GPU warm ~0.05s). Override COMPANY_RERANK_DEVICE=cpu to pin to CPU (0 VRAM). Surfaces ops/rerank.py:Reranker(jina-v3) as POST /rerank {query, candidates|texts:[str|dict], top_n?} -> {ranking:[{item,text,rerank_score,orig_rank,rank},...]} sorted desc; GET /health. Runs from ~/vllm-env via serve_rerank.sh. ~1.3GB (bf16 on GPU; fp32 was ~2.8GB); weights jinaai/jina-reranker-v3 in HF cache. The rerank stage for cross-session semantic recall (runtime/session_recall.py) + the determine pipeline (runtime/recall_determine.py).",
       "health": "/health",
       "ram_mb": 1500
     },
     "remote-gateway": {
       "group": "reach",
-      "title": "Connector gateway \u2014 stable cloud OAuth door (Supabase edge fn) forwarding ALL apps \u2192 Funnel \u2192 :8772 remote connector",
+      "title": "Connector gateway — stable cloud OAuth door (Supabase edge fn) forwarding ALL apps → Funnel → :8772 remote connector",
       "manage": {
         "type": "hosted",
         "health_url": "https://gctunhsuwpaxeatwlmuv.supabase.co/functions/v1/claude-design-gateway/healthz",
         "deploy": "supabase functions deploy claude-design-gateway --project-ref gctunhsuwpaxeatwlmuv",
         "logs": "supabase functions logs claude-design-gateway --project-ref gctunhsuwpaxeatwlmuv"
       },
-      "note": "thin OAuth forwarder \u2014 no tool logic, no access decision; the public door for ALL apps (name claude-design is a misnomer)",
+      "note": "thin OAuth forwarder — no tool logic, no access decision; the public door for ALL apps (name claude-design is a misnomer)",
       "autostart": false
     },
     "stt-moonshine": {
@@ -740,7 +733,7 @@
         "unit": "company-stt-parakeet-onnx.service"
       },
       "vram_mb": 0,
-      "note": "The QUANTIZED lean Parakeet: int8 ONNX on sherpa-onnx (no NeMo). ~1-1.5GB RAM, CPU by default (int8 sweet spot, 0 VRAM) so it co-resides like Moonshine. Accurate (~6.3% WER) + 25 EUROPEAN languages w/ auto-detect. Supports HOTWORD/CONTEXT BIASING (boost UI terms/command words \u2014 the STA payoff, up to thousands of phrases). Set COMPANY_PARAKEET_ONNX_DEVICE=cuda for the GPU provider. The parakeet variant of the interaction loadout class. (Distinct from stt-parakeet, the heavy NeMo/GPU build.)",
+      "note": "The QUANTIZED lean Parakeet: int8 ONNX on sherpa-onnx (no NeMo). ~1-1.5GB RAM, CPU by default (int8 sweet spot, 0 VRAM) so it co-resides like Moonshine. Accurate (~6.3% WER) + 25 EUROPEAN languages w/ auto-detect. Supports HOTWORD/CONTEXT BIASING (boost UI terms/command words — the STA payoff, up to thousands of phrases). Set COMPANY_PARAKEET_ONNX_DEVICE=cuda for the GPU provider. The parakeet variant of the interaction loadout class. (Distinct from stt-parakeet, the heavy NeMo/GPU build.)",
       "config": {
         "model": "parakeet-tdt-v3-int8"
       },
