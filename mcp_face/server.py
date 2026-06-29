@@ -696,8 +696,10 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
     or local ':tag') this routes to the native endpoint that honours it (verified: 1304→43 output-tokens, a
     30× saving on a one-word structured answer), so cheap structured/extraction work on a cloud reasoning
     model stops getting truncated/emptied. `think=None` (default) = byte-identical to before (the model's
-    own default). (vLLM-local think-control via chat_template_kwargs is the post-verify follow — currently a
-    no-op on HF-path models, never a silent wrong-claim.)
+    own default). vLLM-local think-control IS now wired + VERIFIED: the transport sends
+    chat_template_kwargs.enable_thinking, and on the resident Qwen3.5-4B-FP8 (:8001) enable_thinking:false →
+    0 reasoning / direct answer, enable_thinking:true → a full reasoning trace (the historically-fragile
+    Qwen3.5 #35574 case checked on THIS build). So `think` is a per-RUN reasoning switch for both stacks.
 
     GENERATE runs PERSIST: the validated output is written to run://<turn>/<role> (the SAME put_content→
     set_ref primitives run_items uses) so the run can be inspected back by address (inspect_address) and
