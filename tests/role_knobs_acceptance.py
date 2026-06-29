@@ -64,6 +64,11 @@ def _capture_run_role(role, **run_kwargs):
 
     urllib.request.urlopen = fake
     try:
+        # Use a NON-family model so this suite tests the per-ROLE knob layer IN ISOLATION (the per-FAMILY
+        # sampling base is a separate concern, covered by family_sampling_acceptance). On a non-family model
+        # the family base is {} → a no-knob role is byte-identical (no top_p/top_k leaked), so these checks
+        # isolate role.knobs cleanly. run_kwargs may override model (none here do).
+        run_kwargs.setdefault("model", "role-knobs-nonfamily-test")
         cognition.run_role(role, {"utterance": "hi"}, **run_kwargs)
     finally:
         urllib.request.urlopen = real

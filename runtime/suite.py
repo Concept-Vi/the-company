@@ -6847,6 +6847,23 @@ class Suite:
         _model_thinks = isinstance(_decl_thinking, dict) and _decl_thinking.get("value") is True
         _send_think = (_think is not None) and _model_thinks      # gate: only a declared-thinking brain gets the switch
         _think_kw = {"think": bool(_think)} if _send_think else {}
+        # FAMILY-DEFAULT sampling BASE (think-aware) UNDER the explicit brain_knobs (override wins): the
+        # effective brain's family supplies its recommended profile, picked by whether THIS turn thinks
+        # (_send_think + _think). Couples the think switch to the right sampling (a thinking turn samples at
+        # the thinking-spec, not the non-thinking knobs). {} for a cloud/unknown brain or no family profile →
+        # byte-identical (brain_knobs alone, as before). Resolved through the ONE model→family→profile join.
+        try:
+            import os as _os_s, sys as _sys_s
+            _cli_s = _os_s.path.join(_os_s.path.dirname(_os_s.path.dirname(_os_s.path.abspath(__file__))), "ops", "cli")
+            if _cli_s not in _sys_s.path:
+                _sys_s.path.insert(0, _cli_s)
+            import capabilities as _caps_s
+            _fam_base = _caps_s.sampling_profile_for(_eff_model, thinking=bool(_send_think and _think))
+        except Exception:
+            _fam_base = {}                                        # additive — a resolution error never blocks a chat turn
+        if _fam_base:
+            _merged = {**_fam_base, **_bkargs}                    # explicit brain_knobs override the family base
+            _bkargs = {k: _merged[k] for k in self.BRAIN_KNOB_TYPES if k in _merged and _merged[k] is not None}
         msg = client.complete_with_tools(
             transport.openai_tools_transport(base_url=_eff_base, timeout=cfg["timeout"]),
             msgs, model=_eff_model, tools=tools, tool_choice="auto", timeout=cfg["timeout"], **_bkargs, **_think_kw)

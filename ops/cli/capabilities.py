@@ -173,6 +173,29 @@ def _endpoint_for(reg, key):
     return f"http://127.0.0.1:{port}/v1" if port else None
 
 
+def family_for(reg, model_id):
+    """The model's declared `family` (services.json config.family via the model↔service JOIN), or None
+    when the model isn't locally served (a cloud/ollama model has no local family)."""
+    key = service_key_for(reg, model_id)
+    if not key:
+        return None
+    return (reg["services"][key].get("config") or {}).get("family")
+
+
+def sampling_profile_for(model_id, *, thinking=False, reg=None):
+    """The family-default SAMPLING profile for a model-id (think-aware) — the per-request BASE the chat path
+    + run_role lay UNDER the explicit per-role/per-call knobs (override wins). Resolves model→family
+    (services.json) → resolver.family_sampling (the family registry). Returns {} when the model is
+    cloud/unknown OR its family declares no `sampling` — additive, never blocks a call. ONE join, both
+    callers (suite._chat_part_core + cognition.run_role) use this — no parallel lookup."""
+    reg = reg if reg is not None else registry.load()
+    fam = family_for(reg, model_id)
+    if not fam:
+        return {}
+    from runtime.capabilities import resolver
+    return resolver.family_sampling(fam, thinking=bool(thinking))
+
+
 def _probe_tools(endpoint, model_id, timeout=20):
     """Live tool-calling probe — forced tool_choice must emit a tool_call. Returns True/False/None
     (None = endpoint unreachable, do NOT assume). Read-only USE; never raises into the caller."""

@@ -480,6 +480,35 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
     # the per-request sampler knobs a role may set (rep_penalty handled per-path: the O2 ladder OWNS it).
     _SAMP_KEYS = ("top_p", "top_k", "min_p", "presence_penalty", "frequency_penalty")
     _knob_kw = {k: _rk[k] for k in _SAMP_KEYS if _rk.get(k) is not None}
+    # FAMILY-DEFAULT sampling BASE (think-aware) — the per-request base UNDER the role's declared knobs +
+    # the caller's kwargs (override wins). Couples the `think` switch to the family's recommended sampling so
+    # a THINKING role samples at the thinking-spec (Qwen3.5 temp 1.0 / top_p 0.95 / top_k 20) instead of temp
+    # 0 (the discouraged greedy mode for Qwen3 reasoning). {} when the model is cloud/unknown or its family
+    # has no profile → byte-identical (no base). ONE model→family→profile join (capabilities.sampling_profile_for).
+    _fam_base = {}
+    try:
+        import sys as _sys2
+        _ops2 = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ops", "cli")
+        if _ops2 not in _sys2.path:
+            _sys2.path.insert(0, _ops2)
+        import capabilities as _caps2
+        _fam_base = _caps2.sampling_profile_for(model, thinking=(eff_think is True))
+    except Exception:
+        _fam_base = {}                                         # additive layer — a resolution error never blocks a fire
+    if _fam_base:
+        # SAMPLERS (top_p/top_k/min_p/presence_penalty): family base UNDER the role's declared knobs (role
+        # wins). Safe to apply ALWAYS — on a deterministic temp-0 role greedy decode ignores them; on a
+        # thinking role they are exactly the thinking-spec.
+        _knob_kw = {**{k: _fam_base[k] for k in _SAMP_KEYS if _fam_base.get(k) is not None}, **_knob_kw}
+        # TEMPERATURE: apply the family's value ONLY for a THINKING fire (where temp>0 is the whole point —
+        # Qwen3 reasoning at temp 0 is the discouraged greedy mode). A NON-thinking role KEEPS the historical
+        # temp-0 default (routing-stable swarm extraction/judgment) unless it declares its own temp — so this
+        # NEVER silently turns the deterministic swarm stochastic. Caller/role explicit temp still wins.
+        if eff_think is True and temperature is None and _rk.get("temperature") is None \
+                and _fam_base.get("temperature") is not None:
+            _eff_temp = _fam_base["temperature"]
+        if max_tokens is None and _rk.get("max_tokens") is None and _fam_base.get("max_tokens") is not None:
+            _eff_max = _fam_base["max_tokens"]
     if policy is None:
         # DEFAULT path — BYTE-IDENTICAL to before for a meta=None, no-knobs caller (ONE complete() call, the
         # same return). Every current caller (run_swarm/dry_run_role/run_cascade/the MCP run_role) passes no

@@ -105,6 +105,27 @@ def reload_registries(capability_types_path=None, stack_path=None, family_path=N
     return CAPABILITY_TYPES, STACKS, FAMILIES
 
 
+# --- USE-side · family_sampling: the per-request sampling BASE a family recommends ----------------
+def family_sampling(family, thinking=False):
+    """The family's recommended SAMPLING profile — the USE-side base layer UNDER per-role knobs +
+    per-call kwargs (override wins). `thinking` selects the family's reasoning-on (`thinking`) vs
+    reasoning-off (`default`) profile (Qwen3.5 tunes them differently). Returns the knob dict (annotation
+    keys + None values stripped), or {} when the family is unknown OR declares no `sampling`.
+
+    DELIBERATELY NON-RAISING on absence (unlike serve_flags): sampling is an ADDITIVE enhancement, not a
+    launch flag — an unknown/cloud model or a family with no profile simply falls back to the caller's
+    explicit knobs / historical defaults (the call still runs). The `sampling_profile` capability-type is
+    declared use-only (no serve order) — this is its resolver. Reads the live FAMILIES registry."""
+    fam = FAMILIES.get(family)
+    if not isinstance(fam, dict):
+        return {}
+    samp = fam.get("sampling")
+    if not isinstance(samp, dict):
+        return {}
+    profile = samp.get("thinking" if thinking else "default") or {}
+    return {k: v for k, v in _strip_annotations(profile).items() if v is not None}
+
+
 # --- C2 · resolve_capabilities: family defaults ⊕ overrides ---------------------------------------
 def resolve_capabilities(family, overrides=None):
     """resolve_capabilities — the model's EFFECTIVE capability set: the family's declared defaults,

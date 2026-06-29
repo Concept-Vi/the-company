@@ -9,6 +9,11 @@
       "tool_parser": "qwen3_xml",
       "reasoning_parser": "qwen3"
     },
+    "sampling": {
+      "_note": "The family's recommended per-request SAMPLING (the USE-side base under per-role knobs + per-call kwargs — resolver.family_sampling reads it; override wins). Qwen3.5 tunes sampling DIFFERENTLY for reasoning vs not: `thinking` = the reasoning-mode profile (higher temp for diverse traces), `default` = snappy non-thinking. presence_penalty 0 = the PRECISE/structured profile (right for an agentic tool-caller emitting JSON tool-calls — the Qwen card's general-chat pp 1.5 risks tool-format/language-mixing); top_k 20 + min_p 0 are the structural samplers. VERIFIED by use: think:true at temp 1.0/top_p 0.95/top_k 20 solved a multi-step task no-think got wrong; both got a simple trap right. Tune these here (registry-is-truth) — every qwen3.5 model inherits.",
+      "default":  {"temperature": 0.7, "top_p": 0.8,  "top_k": 20, "min_p": 0.0, "presence_penalty": 0.0},
+      "thinking": {"temperature": 1.0, "top_p": 0.95, "top_k": 20, "min_p": 0.0, "presence_penalty": 0.0}
+    },
     "fields": {
       "tools": true,
       "json_schema": true,
