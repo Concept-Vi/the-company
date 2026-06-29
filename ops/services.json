@@ -69,6 +69,13 @@
         "chat-9b-fp8"
       ],
       "note": "QUALITY loadout (2026-06-29): the larger Qwen3.5-9B-FP8 brain SOLO. No embedder/voice — the 9B fills most of the 16GB card, so it runs alone (use `company up @quality-9b --evict` to clear the interaction loadout first). Thinking + tools (same qwen3.5 family contract as chat-4b-fp8). A brain-only RHM turn that needs recall/embedder will SURFACE that as a finding (fail-loud), not silently degrade. For the quality/judge end of the brain-loadout ladder; the interaction (4B-FP8) loadout is the everyday default."
+    },
+    "interaction-fp8": {
+      "extends": "interaction",
+      "remove": [
+        "rerank-jina"
+      ],
+      "note": "VERSION loadout (WF2 2026-06-29, worked-out fit): the FP8-4B everyday that FITS the 16GB card. = interaction MINUS the resident reranker. WORKED OUT: chat-4b-fp8 (bigger than the AWQ the base interaction combo was sized for) + embed-pplx + rerank + voice is ~1GB over the card; rerank-jina is the service that tips it over, so it is ON-DEMAND here (recall loads it when needed). Brain + recall-embedder + ear + voice all resident (~14.5GB). FURTHER-TUNING (captured task): complete the kv_cache_dtype capability vocab (serve_values) + fp8 KV-cache + a measured _profile/auto-allocate on chat-4b-fp8 to shrink it enough to restore the resident reranker — marginal, may not close on 16GB."
     }
   },
   "groups": {
@@ -187,13 +194,14 @@
         "model": "RedHatAI/Qwen3.5-4B-FP8-dynamic",
         "port": 8001,
         "gpu_util": 0.5,
-        "max_model_len": 16384,
+        "max_model_len": 65536,
         "max_num_seqs": 2,
         "family": "qwen3.5",
         "capability_overrides": {
-          "vision": "lm-only"
+          "vision": "lm-only",
+          "kv_cache_dtype": "fp8"
         },
-        "_migration": "flags[] RETIRED -> resolver generates from family qwen3.5 + capability_overrides.vision=lm-only. VERIFIED byte-for-byte == the prior flags[] (--enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3 --language-model-only --trust-remote-code). vision=lm-only injects --language-model-only (text RHM skips the vision tower for VRAM) at order rank 40, between reasoning and trust_remote_code. SAFETY-CRITICAL: this is the LIVE brain on :8001 — a restart must be identical; the resolver reproduces it exactly. gpu_util 0.5 KEPT as the explicit static override (no _profile yet; interim co-resident value — measure a _profile to auto-allocate).",
+        "_migration": "flags[] RETIRED -> resolver generates from family qwen3.5 + capability_overrides.vision=lm-only. VERIFIED byte-for-byte == the prior flags[] (--enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_xml --reasoning-parser qwen3 --language-model-only --trust-remote-code). vision=lm-only injects --language-model-only (text RHM skips the vision tower for VRAM) at order rank 40, between reasoning and trust_remote_code. SAFETY-CRITICAL: this is the LIVE brain on :8001 — a restart must be identical; the resolver reproduces it exactly. gpu_util 0.5 KEPT as the explicit static override (no _profile yet; interim co-resident value — measure a _profile to auto-allocate). | WF2-fit (2026-06-29): +kv_cache_dtype fp8 (halve KV) + gpu_util 0.5->0.44 to fit the FULL interaction combo. VERIFY-BY-USE pending.",
         "env": {
           "VLLM_LOGGING_LEVEL": "INFO",
           "VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS": "0"

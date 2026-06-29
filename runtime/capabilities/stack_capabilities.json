@@ -45,8 +45,8 @@
       "use": null,
       "_note": "disable CUDA-graph capture (vLLM --enforce-eager). A serve-only switch some models require (Nemotron)."
     },
-    "kv_cache_dtype": {
-      "serve": ["--kv-cache-dtype", "{kv_cache_dtype}"],
+    "kv_cache_dtype_fp8": {
+      "serve": ["--kv-cache-dtype", "fp8"],
       "use": null
     },
     "speculative": {

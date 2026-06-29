@@ -122,9 +122,11 @@
     "order": 45,
     "declare": "per-model override (a serve-home field) — surfaces as a Layer-B field when a model needs it",
     "serve_ref": "kv_cache_dtype",
+    "serve_values": {"fp8": "kv_cache_dtype_fp8", "auto": null},
     "use_ref": null,
     "on_unexpressible": "fail_loud",
-    "verify": null
+    "verify": null,
+    "_note": "ENUM-selected serve fragment (same dissolution as `vision`): `fp8` selects the stack's literal `kv_cache_dtype_fp8` fragment (--kv-cache-dtype fp8 — 8-bit KV-cache: ~half the per-token VRAM → ~2x conversation context in the same memory, near-lossless. On Ada (RTX 4080) there is no fused fp8-attention kernel, so a small long-prompt prefill cost; decode unaffected). `auto` maps to null = NO flag (vLLM default = the model dtype, i.e. fp16/bf16 KV). Add another precision (e.g. fp8_e5m2) = one serve_values entry + one stack fragment."
   },
   "speculative_decoding": {
     "value_shape": "profile-ref",
