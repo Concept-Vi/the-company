@@ -99,13 +99,68 @@ def _tool_posture(tool_obj) -> str:
 
 def _tools_for_tier(tier: str) -> list:
     """The (name, tool_obj) pairs visible to a tier — derived from the LIVE registry every call.
-    operator → all; client → posture=='safe' only; none → empty."""
+    operator → all; client → posture=='safe' only; none → empty.
+
+    THIS REMAINS THE LIVE AUTHORITY (identity fusion: additive + behavior-preserving). The grant
+    table (runtime/grants) is wired as a PROVEN-EQUAL SHADOW alongside it (see _grant_shadow_audit /
+    _principal_for_tier) — it is consulted + its divergence is recorded, but it does NOT yet decide.
+    The posture/tier gate stays the fail-closed floor; flipping authority to grants is a later,
+    lead-reviewed one-line change once the shadow is trusted."""
     items = sorted(_TOOL_MANAGER._tools.items())
     if tier == TIER_OPERATOR:
         return items
     if tier == TIER_CLIENT:
         return [(n, t) for n, t in items if _tool_posture(t) == "safe"]
     return []
+
+
+# ── GRANT SHADOW (identity fusion — GATE-READS-GRANTS, seeded to current, behavior-preserving) ──
+# The remote gate's tier decision is the LIVE authority. The company-native grant store
+# (runtime/grants) is consulted IN PARALLEL as a shadow, seeded so its answer is IDENTICAL today.
+# Divergence is recorded (never silent), proving the binary tier == the grant-row floor, so the
+# richer model is purely additive. The shadow NEVER changes the decision this increment.
+def _principal_for_tier(tier: str, subject: str) -> tuple[str, str]:
+    """Map a remote tier + JWT subject to a (principal_type, principal_id) for the grant table.
+    operator → (viewer, OPERATOR_USER_ID); client → (viewer, '*'-resolved by the safe-grants);
+    we pass the subject as the viewer id (a client's per-tool safe grants are principal_id='*', so
+    any viewer id matches them — exactly today's 'any valid non-operator user → safe subset')."""
+    from runtime import grants as _grants
+    if tier == TIER_OPERATOR:
+        return (_grants.PT_VIEWER, _grants.OPERATOR_USER_ID)
+    return (_grants.PT_VIEWER, subject or "unknown-viewer")
+
+
+def _tool_allowed_via_grants(tool_name: str, tier: str, subject: str) -> bool | None:
+    """The grant-driven shadow answer (None if the grant store is empty/unseeded — then there is
+    nothing to compare, the shadow is silent). Read-only; degrade-clean (any error → None, never
+    affects the live decision)."""
+    try:
+        from runtime import grants as _grants
+        if not _grants.fold_grants():
+            return None                          # unseeded → no shadow yet (nothing to diverge from)
+        pt, pid = _principal_for_tier(tier, subject)
+        return _grants.tool_allowed_via_grants(tool_name, principal_type=pt, principal_id=pid)
+    except Exception:
+        return None                              # shadow must NEVER break the live gate (read-only)
+
+
+def _grant_shadow_audit(tool_name: str, tier: str, subject: str, live_allowed: bool) -> None:
+    """Compare the grant shadow against the LIVE tier decision; record any divergence to the audit
+    jsonl mirror (loud, never silent). Pure observation — does not change `live_allowed`."""
+    shadow = _tool_allowed_via_grants(tool_name, tier, subject)
+    if shadow is None or shadow == live_allowed:
+        return
+    line = json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                       "event": "GRANT_SHADOW_DIVERGENCE", "tool": tool_name, "tier": tier,
+                       "subject": subject, "live_allowed": live_allowed, "grant_allowed": shadow},
+                      default=str) + "\n"
+    try:
+        with AUDIT_LOCK:
+            with open(os.path.join(fcfg.STORE_DIR, "remote_mcp_audit.jsonl"), "a",
+                      encoding="utf-8") as f:
+                f.write(line)
+    except OSError:
+        pass
 
 # ★ PUBLIC-INSTANCE HARDENING (advisor security catch): when this instance is Funnel-exposed to the
 # public internet, REMOTE_PUBLIC=1 DISABLES the local dev-token bypass entirely — otherwise a static
@@ -403,6 +458,12 @@ class Handler(BaseHTTPRequestHandler):
             # git-revert + Tim's per-app tool visibility are the recovery). Then registry-drift +
             # the tool's own teaching errors are the only gates left.
             tool_obj = _TOOL_MANAGER._tools.get(tool)
+            # GRANT SHADOW (identity fusion): record the grant-table answer alongside the LIVE tier
+            # decision (operator → all; client → safe-only). Pure observation, seeded-to-current so it
+            # agrees; divergence is logged loud. Does NOT change the decision below (behavior-preserving).
+            _live_allowed = (tier == TIER_OPERATOR) or (
+                tool_obj is not None and _tool_posture(tool_obj) == "safe")
+            _grant_shadow_audit(tool, tier, subj, _live_allowed)
             if tier == TIER_OPERATOR:
                 posture = "operator"
             else:

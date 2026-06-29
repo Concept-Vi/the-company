@@ -2,6 +2,16 @@
 
 A ROLE is a named model-FUNCTION of the collective cognition: a specific job done by a model
 that is NOT (necessarily) the conversational brain. Roles were two HARDCODED things before G2:
+
+## ⚠ NAMING COLLISION — cognition-role (HERE) is NOT a principal/identity "role" (identity fusion D-2)
+The word "role" means two unrelated things in the company; this module owns ONE of them. A COGNITION
+role (`role://`, this registry, roles/*.py = focus/recall/ground/judge/voice) is a MODEL-EXECUTION
+unit — what brain does what job. It is NOT a PRINCIPAL/identity role (admin/user, or a permission
+bundle on a who). The identity layer (runtime/principals.py + runtime/grants.py) deliberately calls an
+identity "role" a GRANT or GROUP on a principal, NEVER a "role", precisely to avoid conflating the two:
+they share zero code. Do not "unify" cognition-roles with identity-grants — the collision is by name
+only. (Mirrored in runtime/grants.py's docstring; see build-prep/.../fusion-identity-users.md §3 D-2.)
+
   - `suite.py`'s one-entry `ROLE_REGISTRY` dict (the `judge`, config-consumed via dict access), and
   - `cognition.py`'s `SPIKE_ROLES` dict (focus/recall/ground, the fire-able spike roles).
 G2 PROMOTES both into ONE file-discovered registry — exactly mirroring how node-types self-register
