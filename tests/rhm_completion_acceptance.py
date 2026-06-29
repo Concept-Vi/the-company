@@ -305,8 +305,8 @@ try:
         ftr.list_models = _boom
         s3 = Suite(store, reg, nodes_dir=NODES)
         degraded = s3.available_models()
-        check("a down endpoint falls back fail-loud to the default brain (not a crash)",
-              degraded == [fcfg.DEFAULT_BRAIN])
+        check("a down endpoint degrades to an EMPTY list (no fabricated -pro fallback; not a crash)",
+              degraded == [])
         check("the degraded cache is NOT held — flagged degraded so the next call re-probes",
               s3._models_cache_degraded is True)
         # endpoint recovers → the very next call (degraded not pinned) re-probes + recovers

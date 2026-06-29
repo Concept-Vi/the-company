@@ -24,6 +24,10 @@ NT = {"constant": constant, "llm": llm}
 STORE = "/tmp/company-e3-int-store"
 ok = True
 
+# No hardcoded default brain on the fabric (cognition-is-role-resolved; no-silent-fallback) — a live test
+# MUST resolve a real model explicitly. Prefer COMPANY_BRAIN; else the documented clone-model default.
+TEST_MODEL = fcfg.DEFAULT_BRAIN or os.environ.get("COMPANY_BRAIN") or "kimi-k2.7-code:cloud"
+
 
 def check(label, cond):
     global ok
@@ -53,7 +57,7 @@ def main():
     # 1: guarded structured call against the real cloud brain — validates or fails loud
     ans = client.complete(
         t, [{"role": "user", "content": 'Return ONLY JSON: {"capital": "<capital of France>"}'}],
-        model=fcfg.DEFAULT_BRAIN, schema=Answer, json=True)
+        model=TEST_MODEL, schema=Answer, json=True)
     check("live structured call -> validated schema (capital=Paris)",
           isinstance(ans, Answer) and "paris" in ans.capital.lower())
 
@@ -62,7 +66,7 @@ def main():
     g = Graph(id="ai", nodes=[
         NodeInstance(id="p", type="constant",
                      config={"value": "In one word, the opposite of 'up'?"}),
-        NodeInstance(id="m", type="llm", config={"model": fcfg.DEFAULT_BRAIN}),
+        NodeInstance(id="m", type="llm", config={"model": TEST_MODEL}),
     ], edges=[Edge(from_node="p", from_port="value", to_node="m", to_port="prompt")])
     r = scheduler.run(g, store, NT)
     output = store.get_content(store.head("run://ai/m")) if store.head("run://ai/m") else None

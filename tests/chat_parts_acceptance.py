@@ -183,6 +183,28 @@ try:
           (r_norm["action"] or {}).get("did") == "run")
     check("(3) the three shapes are DISTINCT (4 != 5 != 7 keys)",
           len({len(r_off), len(r_ref), len(r_norm)}) == 3)
+    check("(3) NORMAL with NO reasoning carries NO `reasoning` key (snappy turn = byte-identical 7-key)",
+          "reasoning" not in r_norm)
+
+    # (3-REASONING) the vLLM thinking capability's SURFACING (criterion b): a turn whose brain returns a
+    # message.`reasoning` trace carries it END-TO-END in the result dict (PRESENT-ONLY-WHEN-REAL — the extra
+    # key appears iff the model reasoned). vLLM 0.21 returns the split trace in `reasoning` (NOT
+    # reasoning_content); the surfacing reads that exact field. A think-off turn (above) stays 7-key.
+    suite.set_rhm_config({"model": "minimax-m3:cloud", "mode": "listening"})
+    suite._model_supports_tools = lambda model, base_url=None: True
+    fclient.complete_with_tools = lambda *a, **k: {"role": "assistant",
+                                                   "content": "The answer is 408.",
+                                                   "reasoning": "17 times 24 = 17*24 = 408.",
+                                                   "tool_calls": []}
+    try:
+        r_think = suite.chat("what is 17 times 24?", "g")
+    finally:
+        fclient.complete_with_tools = orig
+    check("(3-REASONING) a reasoning turn carries the `reasoning` trace in the result (criterion b)",
+          r_think.get("reasoning") == "17 times 24 = 17*24 = 408.")
+    check("(3-REASONING) the reply (content) is SEPARATE from the reasoning trace",
+          r_think["reply"] == "The answer is 408." and "reasoning" in r_think
+          and r_think["reasoning"] != r_think["reply"])
 
     # ============================================================================================
     # (4) MONKEYPATCH SEAMS — INDEPENDENTLY VERIFIED. Patch self._model_supports_tools (instance attr)
@@ -251,6 +273,7 @@ try:
     suite, store = fresh_suite(tmp + "/5")
     suite.create_node("g", "constant", config={"value": "x"}, node_id="c1")
     suite.set_mode("listening")
+    suite.set_rhm_config({"model": "some-model"})   # no hardcoded default brain — chat resolves a model or fails loud
     suite._model_supports_tools = lambda model, base_url=None: True
     offered_log = []
 
@@ -276,6 +299,7 @@ try:
     # ============================================================================================
     suite, store = fresh_suite(tmp + "/6")
     suite.create_node("g", "constant", config={"value": "x"}, node_id="c1")
+    suite.set_rhm_config({"model": "some-model"})   # no hardcoded default brain — chat resolves a model or fails loud
     suite._model_supports_tools = lambda model, base_url=None: True
     fclient.complete_with_tools = lambda *a, **k: {"role": "assistant", "content": "ok", "tool_calls": []}
     try:
@@ -322,6 +346,7 @@ try:
     # a 2-part staged chat_parts() (==2 ctx calls). The warning fires inside _chat_context, once per call.
     suite2, store2 = fresh_suite(tmp + "/7b")
     suite2.create_node("g", "constant", config={"value": "x"}, node_id="c1")
+    suite2.set_rhm_config({"model": "some-model"})   # no hardcoded default brain — chat resolves a model or fails loud
     suite2._model_supports_tools = lambda model, base_url=None: True
     # force available_models to raise → _chat_context emits a 'warning' each time it is assembled.
     def _boom():

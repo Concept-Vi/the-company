@@ -33,7 +33,11 @@ try:
     suite = Suite(store, reg, nodes_dir=NODES)
 
     c = suite.rhm_config()
-    check("default model is the configured brain (not Claude)", c["model"] == fcfg.DEFAULT_BRAIN)
+    # No hardcoded default brain (cognition-is-role-resolved; no-silent-fallback). An unconfigured suite
+    # with COMPANY_BRAIN unset resolves NO model — rhm_config()["model"] is None (== fcfg.DEFAULT_BRAIN,
+    # now None). The loud failure happens at the chat chokepoint, not here in the pure getter.
+    check("no hardcoded default brain — unconfigured model is None (resolve or fail loud)",
+          c["model"] == fcfg.DEFAULT_BRAIN and fcfg.DEFAULT_BRAIN is None)
     check("default persona is empty", c["persona"] == "")
     check("default base_url is the fabric endpoint", c["base_url"] == fcfg.DEFAULT_BASE_URL)
 

@@ -19,6 +19,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GID = "first-purpose-test"
 ok = True
 
+# No hardcoded default brain on the fabric (cognition-is-role-resolved; no-silent-fallback) — a live test
+# MUST resolve a real model explicitly. Prefer COMPANY_BRAIN; else the documented clone-model default.
+TEST_MODEL = fcfg.DEFAULT_BRAIN or os.environ.get("COMPANY_BRAIN") or "kimi-k2.7-code:cloud"
+
 
 def check(label, cond):
     global ok
@@ -44,7 +48,7 @@ def main():
     suite.create_node(GID, "constant",
                       {"value": "What does the scheduler's memo gate do, and which file is it in?"},
                       node_id="q")
-    suite.create_node(GID, "ask", {"model": fcfg.DEFAULT_BRAIN}, node_id="answer")
+    suite.create_node(GID, "ask", {"model": TEST_MODEL}, node_id="answer")
     suite.connect(GID, "q", "value", "answer", "question")
     suite.connect(GID, "code", "context", "answer", "context")
 
