@@ -42,4 +42,17 @@ ROLE = {'id': 'extraction_audit',
                     "If the extraction fully and correctly captures the file's symbols, return "
                     'findings=[] and complete=true.',
     'output_schema': ExtractionAuditOut,
+    # ROOT-CAUSE FIX (Tim 2026-06-30, fully traced): greedy (temp 0) + schema-CONSTRAINED (guided JSON)
+    # decoding makes the 4-bit AWQ fall into a REPETITION LOOP on files with enumerable/repetitive
+    # structure (many similar functions, acceptance-test cases) — it re-emits the same findings until
+    # max_tokens (finish_reason=length) → invalid → retries → recorded "unresolved". NOT thinking, NOT
+    # context, NOT concurrency (all ruled out by isolation tests). A light repetition_penalty breaks the
+    # loop: VERIFIED on types-adapter.js — runaway 117s → 5s, finish=stop, 11 DISTINCT findings. 1.1 is the
+    # sweet spot (1.3 over-suppressed to 3 findings; temperature alone did not break the loop). The 1276
+    # files that passed simply lacked loop-triggering structure.
+    'knobs': {'repetition_penalty': 1.15},   # 1.1 broke most loops but a few files still looped; 1.15 clears
+    #                                          them (VERIFIED cc_voice.py: 1.1→loop, 1.15→stop, distinct findings)
+    #                                          while staying gentle enough to keep findings-rich files rich (1.3
+    #                                          over-suppressed to 3). The escalating O2 rep-penalty ladder is the
+    #                                          robust long-term shape (start gentle, escalate only on finish=length).
 }

@@ -57,7 +57,13 @@ from fabric.vram import VramGate
 # can never be pinned: the whole cognition layer follows the live loadout, the SAME brain the RHM uses.
 RESIDENT_BASE_URL = "http://127.0.0.1:8000/v1"
 RESIDENT_MODEL = "cyankiwi/Qwen3.5-4B-AWQ-4bit"
-ROLE_TIMEOUT = 60
+# per-call transport timeout (seconds) — a HANG-GUARD, not a concurrency gate. vLLM owns admission +
+# queuing + scheduling underneath; this only protects an engine worker from a genuinely dead/hung model
+# (else one stuck call blocks a slot forever). The old flat 60 was tuned for small fast role-calls and
+# SILENTLY failed heavy structured calls under load (a queued/slow-but-alive request would breach 60s and
+# get abandoned though vLLM was still serving it). Generous default; env-overridable. See C-research:
+# build-prep/the-one-system/CONCURRENCY-RESEARCH.md (the right long-term shape may be size-derived).
+ROLE_TIMEOUT = int(os.environ.get("COMPANY_ROLE_TIMEOUT", "600"))
 
 
 def active_brain():
