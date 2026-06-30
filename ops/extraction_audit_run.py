@@ -76,18 +76,19 @@ def _files(limit: int, resume: bool = True) -> list:
     return out
 
 
-# the resident AWQ serves a 16384-token context; budget the FILE content well under it (prompt + contract +
-# extraction + the schema-constrained output all share the window). ~3.7 chars/token → ~40k chars ≈ 11k tok.
-_MAX_CONTENT_CHARS = 40000
+# NO content truncation (Tim's law: a file too big for the model SHOULD fail, loudly — truncation makes the
+# skip silent AND static). The whole prompt (template + contract + extraction + the file + the 900 reserved
+# output tokens) shares the resident model's context window; when a file overruns it the model server 400s
+# (VLLMValidationError, verified 2026-06-30) and the unit comes back unresolved — _run_one RECORDS that as an
+# explicit `exceeds-context` finding (a real row), never a silent drop. Real coverage of the big files needs a
+# larger-context audit pass (serve the brain at a bigger max_model_len, solo) — the documented remainder.
 
 
-def _utterance(it: dict) -> str | None | str:
+def _utterance(it: dict) -> str | None:
     try:
         content = open(os.path.join(ROOTS.get(it["project"], REPO), it["path"]), errors="replace").read()
     except Exception:
         return None
-    if len(content) > _MAX_CONTENT_CHARS:
-        return "__OVERSIZE__"     # honest skip — recorded as oversize, NOT silently truncated (no-partial law)
     imps = ", ".join(str(i.get("target", i) if isinstance(i, dict) else i) for i in json.loads(it["imports"])) or "(none)"
     captured = it["symbols"] or "(none)"
     return (f"FILE_KIND: {it['ext'].lstrip('.')}\n"
@@ -98,24 +99,32 @@ def _utterance(it: dict) -> str | None | str:
             f"--- FILE {it['project']}/{it['path']} ---\n{content}")
 
 
+_MAX_TOKENS = 4000   # output budget: big files have MANY findings — 900 truncated the structured array.
+                     # the limits were too small (Tim 2026-06-30); sized so a fully-flagged big file's
+                     # findings + complete + kind_seen all fit (reserved against the model's context window).
+
+
 def _run_one(it: dict) -> dict | None:
     utt = _utterance(it)
     if utt is None:
         return None
-    if utt == "__OVERSIZE__":
-        return {**it, "_status": "ok", "complete": False,
-                "findings": [{"discrepancy_type": "other", "name": "", "symbol_kind": "",
-                              "location": "", "detail": "file exceeds the model context window — audit skipped; "
-                              "needs chunking (recorded, not silently passed)"}],
-                "kind_seen": "oversize", "run_addr": ""}
-    body = json.dumps({"role": "extraction_audit", "items": [utt], "max_tokens": 900}).encode()
+    body = json.dumps({"role": "extraction_audit", "items": [utt], "max_tokens": _MAX_TOKENS}).encode()
     req = urllib.request.Request(BRIDGE, data=body, headers={"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=600) as r:   # 600s: cold-JIT bursts spike per-req latency
             d = json.loads(r.read())
         res = d.get("resolved", {}).get("0")
         if not isinstance(res, dict):
-            return {**it, "_status": "bad-output"}
+            # unresolved = the model server returned nothing usable for this unit — overwhelmingly the
+            # context-window overflow (verified VLLMValidationError) on a file too big for the loadout's
+            # max_model_len. RECORD it as an explicit, queryable finding (a real row) — never a silent drop.
+            return {**it, "_status": "ok", "complete": False,
+                    "findings": [{"discrepancy_type": "other", "name": "", "symbol_kind": "",
+                                  "location": "", "detail": "UNVERIFIED: model returned no resolvable output for "
+                                  "this file — it exceeds the brain's context window at this loadout "
+                                  "(max_model_len). Coverage of this file is NOT verified; it needs a "
+                                  "larger-context audit pass (serve the brain at a bigger max_model_len, solo)."}],
+                    "kind_seen": "exceeds-context", "run_addr": d.get("addresses", {}).get("0", "")}
         return {**it, "_status": "ok", "complete": bool(res.get("complete")),
                 "findings": res.get("findings", []), "kind_seen": res.get("kind_seen", ""),
                 "run_addr": d.get("addresses", {}).get("0", "")}
