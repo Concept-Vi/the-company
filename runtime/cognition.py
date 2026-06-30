@@ -576,6 +576,19 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
             _eff_temp = _fam_base["temperature"]
         if max_tokens is None and _rk.get("max_tokens") is None and _fam_base.get("max_tokens") is not None:
             _eff_max = _fam_base["max_tokens"]
+    # SYSTEM-WIDE LOOP-BREAKER (Tim 2026-06-30, hypothesis tested + confirmed): greedy decode + GUIDED-JSON
+    # (schema-constrained, response_format=json_schema) makes this Qwen3.5-AWQ build RE-EMIT array objects
+    # until max_tokens — the grammar masks EOS so the model can't stop (Qwen card: greedy → endless
+    # repetition; vLLM #40080/#27157). The family keeps presence_penalty 0 because that's RIGHT for the
+    # TOOL-caller (pp>0 risks tool-format/language-mixing), but pp-0 is exactly what lets a SCHEMA fire loop.
+    # presence_penalty is OUTPUT-only (doesn't penalise the real identifiers an extraction role must echo —
+    # unlike repetition_penalty) and works at temp 0 (stays DETERMINISTIC — unlike raising temperature). So
+    # apply it ONLY on a schema-constrained fire (the exact loop condition; tool-calls / free-text / the chat
+    # path are untouched, preserving the family's tool guidance). VERIFIED: pp 1.0 breaks the loop (greedy
+    # baseline → finish=length/unparseable; pp 1.0 → finish=stop, distinct findings); tool-calls unaffected.
+    # A role/caller that declares its own presence_penalty still wins.
+    if eff_schema is not None and _rk.get("presence_penalty") is None:
+        _knob_kw["presence_penalty"] = 1.0          # override the family's tool-caller pp-0 for THIS schema fire
     if policy is None:
         # DEFAULT path — BYTE-IDENTICAL to before for a meta=None, no-knobs caller (ONE complete() call, the
         # same return). Every current caller (run_swarm/dry_run_role/run_cascade/the MCP run_role) passes no

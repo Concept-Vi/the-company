@@ -50,12 +50,12 @@ ROLE = {'id': 'extraction_audit',
     # loop: VERIFIED on types-adapter.js — runaway 117s → 5s, finish=stop, 11 DISTINCT findings. 1.1 is the
     # sweet spot (1.3 over-suppressed to 3 findings; temperature alone did not break the loop). The 1276
     # files that passed simply lacked loop-triggering structure.
-    # SAMPLING (research-backed, Tim 2026-06-30 — supersedes the repetition_penalty=1.15 band-aid):
-    # the loop was greedy(temp 0) + grammar-constrained decoding on a 4-bit AWQ — Qwen's OWN model card
-    # says "DO NOT use greedy decoding … endless repetitions", and the cyankiwi build is specifically
-    # reported to loop in default settings (fixed by min_p=0.2). repetition_penalty penalises prompt+output
-    # → wrong for an EXTRACTION role that must echo real identifiers (hurts input fidelity); presence_penalty
-    # is OUTPUT-only — the right tool. VERIFIED on the loopers (types-adapter.js, cc_voice.py): this combo →
-    # finish=stop, DISTINCT findings, MORE of them than the band-aid (10 vs 6).
+    # SAMPLING — this role OVERRIDES the system-wide guard. The greedy+guided-JSON loop is broken system-wide
+    # in run_role (schema fire → presence_penalty at temp 0, deterministic — ensures NO structured role loops
+    # into unusable output). But presence_penalty penalises REPEATED phrasing, and an extraction audit's
+    # findings legitimately share phrasing ("function X not captured") → it over-suppresses real findings
+    # (verified: the bare guard gave 2 findings where this gives ~10). So for COMPLETENESS this role uses a
+    # small temperature instead (escapes the loop via sampling diversity, not penalty) + a gentle pp.
+    # VERIFIED: temp 0.3 + min_p 0.2 + presence 1.5 → finish=stop, distinct + thorough findings.
     'knobs': {'temperature': 0.3, 'min_p': 0.2, 'presence_penalty': 1.5, 'repetition_penalty': 1.0},
 }
