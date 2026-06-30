@@ -1050,13 +1050,19 @@ _GLOBAL_VRAM_LOCK = threading.Lock()
 
 
 def global_vram_gate(limit: int) -> VramGate:
-    """The process-wide VramGate singleton sized to the registry knee. Created once; subsequent
-    calls return the same gate (the limit is fixed at first creation — the resident config is fixed
-    while up). This is the ONE gate every local model call passes (main stream + swarm both)."""
+    """The process-wide VramGate sized to the registry knee — the ONE gate every local model call passes
+    (main stream + swarm both). It FOLLOWS THE LIVE LOADOUT: callers pass the freshly-recomputed limit
+    (SlotBudget.from_registry().max_num_seqs) every call, and the gate is REBUILT when that limit CHANGES
+    — so a loadout swap / `company config`+restart that moves max_num_seqs propagates to the running engine
+    on the next call, with NO process restart (the same call-time-resolution discipline as active_brain;
+    fixes the stale-singleton class — a swap used to leave the gate frozen at the old, e.g. 4-wide, cap).
+    NOT rebuilt per-call: a STABLE limit returns the SAME gate (so it still caps — the advisor's flag).
+    In-flight holders of a superseded gate drain against it harmlessly; new calls get the resized one."""
     global _GLOBAL_VRAM_GATE
+    limit = max(1, limit)
     with _GLOBAL_VRAM_LOCK:
-        if _GLOBAL_VRAM_GATE is None:
-            _GLOBAL_VRAM_GATE = VramGate(limit=max(1, limit))
+        if _GLOBAL_VRAM_GATE is None or _GLOBAL_VRAM_GATE.limit != limit:
+            _GLOBAL_VRAM_GATE = VramGate(limit=limit)   # follow the live loadout (registry-is-truth)
         return _GLOBAL_VRAM_GATE
 
 

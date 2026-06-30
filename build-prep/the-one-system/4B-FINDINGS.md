@@ -67,3 +67,14 @@ AWQ reconfigured solo: `max_num_seqs 32`, `gpu_util 0.85` (was 4 / 0.45 — co-r
 - single-stream 100 tok/s; **16-conc COLD (all-different prompts) = 72 tok/s** (SLOWER than 1 stream!); **16-conc WARM (same shape) = 1477→1636 tok/s**; **32-conc WARM = 2334 tok/s** (≈ Tim's 2700 benchmark).
 - ROOT: the hybrid-Mamba/GDN Triton kernels JIT-compile **per input shape** on first touch. Cold varied shapes pay a one-time compile each → the "72 tok/s" anomaly; warm shapes run at full speed. (Same mechanism that crippled the FP8 run, where it never amortised.)
 - IMPLICATION for the audit: 1298 files of varied sizes → the pass starts slow (cold buckets) and ACCELERATES as common size-buckets warm. Net hugely faster than the FP8 path. A future optimisation: sort/bucket files by size so each bucket warms once (and/or extend vLLM warmup to cover more shapes).
+
+## F-11 — THE CLASS: process-cached model-derived state goes stale on loadout swap (root-resolved)
+**Instance found:** the audit ran only ~4-wide through the bridge despite the model proven at 32 (2334 tok/s). Cause: `_GLOBAL_VRAM_GATE` (runtime/cognition.py) is a lazy singleton "created ONCE, limit fixed at first creation." The 10h-old bridge created it when `max_num_seqs=4`; after the swap to 32 the gate stayed frozen at ~4 — capping every local call.
+
+**The class:** the engine caches MODEL-LOADOUT-DERIVED state at process startup; a `company swap`/`config`+restart changes the live model underneath the long-lived bridge/MCP process, but nothing invalidates the cache → stale until a manual restart. Members surveyed:
+- provider/base_url+model → ALREADY SOLVED: `active_brain()` resolves at call-time (registry-is-truth, follows the live loadout). (This was the earlier F-9 stale-provider instance, since fixed.)
+- minds singleton → ALREADY SOLVED: `create_mind` resets it (precedent for reset-on-mutation).
+- **`_GLOBAL_VRAM_GATE` → was the straggler. FIXED:** callers already pass the freshly-recomputed `SlotBudget.from_registry().max_num_seqs` every call; `global_vram_gate` now REBUILDS the gate when that limit CHANGES (not per-call — a stable limit returns the same gate, preserving the cap). A swap now propagates to the running engine on the next call, no restart. Mirrors active_brain's call-time discipline.
+- CapabilityRegistry singleton → capabilities/tools, not brain-loadout-derived; left (verify only if a loadout ever changes the tool surface).
+
+**Principle (reflects into ops):** model-loadout-derived process state must be resolved at call-time from the registry (registry-is-truth) OR invalidated by the swap/CLI action — never frozen at first-creation. Loadout swaps should be assumed to happen under a live engine. NOTE: the running bridge/MCP still hold OLD code until reloaded — applying this fix needs a bridge restart once (then future swaps self-track).
