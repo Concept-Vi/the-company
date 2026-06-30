@@ -60,5 +60,35 @@ Once proven on this real case, the whole sequence becomes **composable / targete
 
 ---
 
+## 9. THE INHERENT PROBLEM WITH DETERMINISTIC PASSES — and the mitigation (the deepest one)
+A deterministic extractor can only capture **what it was told to look for.** Its contract IS its blind spot: it is *constitutionally incapable* of reporting a kind of thing nobody wrote a rule for — and worse, it does so **silently** (a count with no identity, or simply nothing, looks identical to "nothing was there"). You cannot audit a deterministic pass with another deterministic pass — the second one shares the first's blind spots by construction. **A specific check only finds what you already suspect.**
+- **The mitigation:** an *open* check that reads the actual artifact with no closed expectation — the model sees the file AND what was captured, and is asked for **discrepancies of any kind**, explicitly including *"things in the file of a kind the contract doesn't cover."* That's the move that lets the instrument **find the limits of its own contract**, not just adherence to it.
+- **Why a model (not more rules):** only an open reader can surface the *unanticipated* class. The deterministic layer is precise but blind; the model layer is the eyes that see what the rules forgot. This is the real reason the two layers coexist — not "model adds meaning" but "model covers the deterministic layer's structural blindness."
+- **Generalises:** any deterministic/rule-based pass in the Company (extractors, validators, linters, registries) carries this same blindness; the dragnet pattern is the general way to audit any of them against reality.
+
+## 10. PROMPT DESIGN — what we learned writing the audit prompt
+- **State the PURPOSE, not just a checklist.** "Capture every *symbol* — every named, identifiable definition the system could reference/link to (its anchors)" + the specific list as **examples, explicitly not closed.** A bare list makes the model police adherence; the purpose + open framing makes it reason about what *should* be an anchor — so it flags kinds the contract omitted. (Tim's point: the named items are *instances* of a category; name the category.)
+- **Give the model the real contract, framed as INTENT, not as ground truth.** Show "what the extractor was *supposed* to capture" and say the intent was completeness — so it reports adherence-failures AND contract-weaknesses AND wrong captures, as distinct things. The contract is a subject of the audit, not its authority.
+- **The author's own vague description is a brief, not a spec.** Tim isn't the developer; "whatever component/function/export/hook are instances of" → I supply the terminology (symbols/anchors) and apply it. Capturing intent-from-vague-direction is part of the method.
+- **Be literal / anti-hallucination clamp:** "only report what is genuinely in the file." Pair an open question with a hard groundedness rule, or open-ness drifts into invention.
+
+## 11. OUTPUT STRUCTURE — the evolution and why
+- **Flat `list[str]` → rich typed objects.** First cut jammed each finding into a string. The lesson: **structure the output so it's queryable by the dimension you'll aggregate on.** Findings became objects with a discrete **`discrepancy_type` enum** (the four buckets: in-contract-not-extracted / in-file-not-in-contract / wrong / other) + `name`, `symbol_kind`, `location`, `detail`. Now the failure-class map is `group by discrepancy_type` — no string-parsing.
+- **An explicit PASS flag (`complete: bool`), and "clean" = empty arrays, never null.** A clean file lands a *queryable* pass (`where complete` / `where not complete` = the worklist). Don't represent "no issues" as absence — represent it as an explicit, filterable state.
+- **The discrepancy buckets ARE the discovery axis.** Making the model classify each finding into an open-then-aggregated category is *how the failure classes emerge from the data* rather than being pre-decided. The output shape is the analysis design.
+- **The structured-output mechanism already existed** (rich field types: object/list[object]/enum, guided-decoded). Lesson: the limit I "found" was a stale tool *description*, not the capability — check the registry/source before believing a constraint, and fix the single source so it can't drift (derive the doc from the registry).
+
+## 12. INPUT DESIGN — feed the audit fairly (a subtle false-positive source)
+- **Consolidate the extraction you show the model; don't expose the extractor's internal field-split.** Early false positives came from showing `symbols` AND `declares` separately — the model "helpfully" reconciled the two internal fields instead of comparing *file vs. extraction*. Show ONE consolidated "captured" list. The audit's job is file-vs-reality, not internal-consistency.
+- **Feed the extractor's own COUNTS alongside the captured items.** This let the audit say the precise thing: *"counts report n_constants=1, but the constant's identity was never persisted"* — distinguishing "detected-but-dropped" from "never seen." The metadata about the extraction is part of the evidence.
+- **Inputs are file-type dependent** (the contract + what "complete" means vary by kind), but the *check* is generic/open across all kinds — so unknown classes still surface. Type-specific expectation, type-agnostic discovery.
+
+## 13. THE EXPERIMENTAL METHOD ITSELF (how we worked, not just what we found)
+- **Observe one before scaling many.** Every step: run a single call, read the *raw* response shape, before fanning out. Caught `content:None`, the reasoning cost, the field-split false positive, the cold-JIT effect — each on one example, cheaply.
+- **A/B under identical conditions to isolate a cause.** The 9× slowness wasn't diagnosed from logs alone — it took swapping the model and running the *same* inputs. "Same everything but the one variable" is how you turn a suspicion into a root cause.
+- **Warm vs cold is a real variable for these models.** The concurrency "anomaly" (slower-than-single-stream) was cold per-shape JIT, proven by re-running the same shape warm. Measure warm AND cold; don't trust a single cold number.
+- **Distrust a number that violates the model** (Tim: "that does NOT seem right"). 30 tok/s for an 8-bit when the 4-bit does 2700 → don't accept it, find why. A result that contradicts a known baseline is a lead, not a fact.
+- **Verify by real use at each stage** — the role works end-to-end (clean / gap / clean-JS), the batch inherits no-think, the gate actually lets 32 through (checked at the model, not assumed from config). "Config says 32" ≠ "32 in flight."
+
 ## The shape in one line
 **Deterministic floor → dragnet the local models over it as objective verifiers (all of it, classes emergent) → trace classes to the generator → fix + cheap re-run → converge → generalise into a standing operation — all in-system, objective-only, tags-not-confidence, fail-loud.**
