@@ -75,33 +75,37 @@ def active_brain():
     start / hermetic tests) — never raises (an additive resolution, not a launch gate). Prefers, among
     several running brains, the one the RHM points at (rhm_config) so the swarm and the RHM agree; else the
     first running brain-group service."""
+    import sys as _s, os as _o
+    _cli = _o.path.join(_o.path.dirname(_o.path.dirname(_o.path.abspath(__file__))), "ops", "cli")
+    if _cli not in _s.path:
+        _s.path.insert(0, _cli)
     try:
-        import sys as _s, os as _o
-        _cli = _o.path.join(_o.path.dirname(_o.path.dirname(_o.path.abspath(__file__))), "ops", "cli")
-        if _cli not in _s.path:
-            _s.path.insert(0, _cli)
         import registry as _reg, gpu as _gpu
-        reg = _reg.load()
-        running = [(k, s) for k, s in reg["services"].items()
-                   if s.get("group") == "brain" and _gpu._is_running(s)]
-        if running:
-            # prefer the RHM's brain when it is among the running (so swarm ≡ RHM); else the first running.
-            chosen = running[0]
-            try:
-                from runtime.suite import Suite as _Suite          # lazy — only to read the live RHM pointer
-                _rhm_model = (Suite.__new__(_Suite).rhm_config() or {}).get("model")
-                for k, s in running:
-                    if (s.get("config") or {}).get("model") == _rhm_model:
-                        chosen = (k, s); break
-            except Exception:
-                pass                                              # no live RHM (test/bootstrap) → first running
-            cfg = chosen[1].get("config") or {}
-            m, p = cfg.get("model"), cfg.get("port")
-            if m and p:
-                return m, f"http://127.0.0.1:{p}/v1"
     except Exception:
-        pass
-    return RESIDENT_MODEL, RESIDENT_BASE_URL
+        # the ops/cli registry module isn't importable — a hermetic test / true bootstrap (no Company
+        # services layer present at all). The documented cold-start floor to RESIDENT_* is legitimate here.
+        return RESIDENT_MODEL, RESIDENT_BASE_URL
+    # a registry READ failure now FAILS LOUD (Tim 2026-06-30): registry-is-truth, and silently flooring to
+    # the RESIDENT_* bootstrap brain is the 'wrong brain used silently' class — never swallow it.
+    reg = _reg.load()
+    running = [(k, s) for k, s in reg["services"].items()
+               if s.get("group") == "brain" and _gpu._is_running(s)]
+    if running:
+        # prefer the RHM's brain when it is among the running (so swarm ≡ RHM); else the first running.
+        chosen = running[0]
+        try:
+            from runtime.suite import Suite as _Suite          # lazy — only to read the live RHM pointer
+            _rhm_model = (Suite.__new__(_Suite).rhm_config() or {}).get("model")
+            for k, s in running:
+                if (s.get("config") or {}).get("model") == _rhm_model:
+                    chosen = (k, s); break
+        except Exception:
+            pass                                              # no live RHM pointer (test/bootstrap) → first running
+        cfg = chosen[1].get("config") or {}
+        m, p = cfg.get("model"), cfg.get("port")
+        if m and p:
+            return m, f"http://127.0.0.1:{p}/v1"
+    return RESIDENT_MODEL, RESIDENT_BASE_URL                   # no brain running → cold-start bootstrap (legitimate)
 
 
 # --- the ROLE notion + the spike roles are now FILE-DISCOVERED (G2 · C2.1) ----------------------
@@ -2213,8 +2217,13 @@ def run_panel(panel: dict, ctx: dict, store, *, turn_id: str,
                                  f"(the SEAT CONTRACT) — got fields {sorted(out)}")
             results.append({"seat": sid, "grounded": g,
                             "reason": out.get("reason") or out.get("note") or ""})
-        except Exception as e:                              # a failed seat = a recorded DISSENT, never a silent pass
-            results.append({"seat": sid, "grounded": False, "error": f"{type(e).__name__}: {e}"[:200]})
+        except Exception as e:
+            # FAIL THE PANEL (Tim 2026-06-30): a seat that couldn't be CONSULTED (transport/infra failure, or
+            # a seat that broke the bool-'grounded' contract) is NOT a 'not-grounded' vote — folding it into
+            # the quorum as a dissent can FLIP a verdict on a network blip. A verdict requires every seat
+            # actually heard from; otherwise fail loud, never a fabricated/degraded quorum.
+            raise RuntimeError(f"run_panel({panel['id']!r}): seat {sid!r} failed — the panel cannot render a "
+                               f"verdict without it (no infra-failure-as-dissent): {type(e).__name__}: {e}") from e
     grounded_n = sum(1 for r in results if r["grounded"])
     verdict = grounded_n >= panel["quorum"]
     out = {"verdict": verdict, "seats": results, "grounded_seats": grounded_n,

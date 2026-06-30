@@ -37,7 +37,8 @@ def discover_platform_caps(platform):
 def _prior_caps(pid: str) -> list:
     """The platform's capability nodes from the PRIOR latest run — for CARRY-FORWARD when a flaky binary
     fails to discover this run (so claude's 390 are never erased by a 20s init-session timeout). Returns
-    [{path, node_type, kind, what_it_does, extra}]. Empty if none / DB unreachable."""
+    [{path, node_type, kind, what_it_does, extra}]. Empty ONLY when there is no prior run; a ledger
+    read failure RAISES loud (never silent-empty on a down DB — that would erase caps via carry-forward)."""
     out = []
     try:
         # the MOST RECENT run that actually HAS this platform's caps (NOT latest_run — a prior failed/partial
@@ -60,8 +61,12 @@ def _prior_caps(pid: str) -> list:
                     extra = {}
                 out.append({"path": parts[0], "node_type": "capability", "kind": parts[1],
                             "what_it_does": parts[2], "extra": extra})
-    except Exception:
-        pass
+    except Exception as e:
+        # LOUD FAIL (Tim 2026-06-30): a DB-unreachable / read error must NOT masquerade as "this platform
+        # has no prior caps" — that silent empty makes carry-forward erase a platform's real capabilities.
+        # _psql raises RuntimeError on a failed query; surface it. (A genuine no-prior-run returns [] above.)
+        raise RuntimeError(f"_prior_caps({pid!r}): ledger read failed — refusing to return empty caps "
+                           f"(carry-forward would silently erase prior capabilities): {e}") from e
     return out
 
 

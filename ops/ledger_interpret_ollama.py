@@ -155,7 +155,7 @@ def main():
             if (ok + fail + skip) % 25 == 0:
                 print(f"  {ok+fail+skip}/{len(items)}  ok={ok} fail={fail} skip={skip}", flush=True)
     print(json.dumps({"wave": a.wave, "model": MODEL, "total": len(items), "ok": ok, "fail": fail,
-                      "skip": skip, "fails": fails[:20]}, indent=2))
+                      "skip": skip, "fails": fails}, indent=2))   # ALL fails visible — no [:20] cap (Tim: failures belong in the report, never silently dropped)
 
 
 if __name__ == "__main__":

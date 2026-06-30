@@ -155,7 +155,7 @@ def main():
                                       "The lane should HOLD (stop), not backoff-retry."}, indent=2), flush=True)
             return 3
     print(json.dumps({"backend": a.backend, "total": len(items), "ok": ok, "fail": fail, "skip": skip,
-                      "fails": fails[:15]}, indent=2))
+                      "fails": fails}, indent=2))   # ALL fails visible — no [:15] cap (Tim: failures belong in the report, never silently dropped)
     return 0
 
 

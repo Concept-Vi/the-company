@@ -50,9 +50,12 @@ ROLE = {'id': 'extraction_audit',
     # loop: VERIFIED on types-adapter.js — runaway 117s → 5s, finish=stop, 11 DISTINCT findings. 1.1 is the
     # sweet spot (1.3 over-suppressed to 3 findings; temperature alone did not break the loop). The 1276
     # files that passed simply lacked loop-triggering structure.
-    'knobs': {'repetition_penalty': 1.15},   # 1.1 broke most loops but a few files still looped; 1.15 clears
-    #                                          them (VERIFIED cc_voice.py: 1.1→loop, 1.15→stop, distinct findings)
-    #                                          while staying gentle enough to keep findings-rich files rich (1.3
-    #                                          over-suppressed to 3). The escalating O2 rep-penalty ladder is the
-    #                                          robust long-term shape (start gentle, escalate only on finish=length).
+    # SAMPLING (research-backed, Tim 2026-06-30 — supersedes the repetition_penalty=1.15 band-aid):
+    # the loop was greedy(temp 0) + grammar-constrained decoding on a 4-bit AWQ — Qwen's OWN model card
+    # says "DO NOT use greedy decoding … endless repetitions", and the cyankiwi build is specifically
+    # reported to loop in default settings (fixed by min_p=0.2). repetition_penalty penalises prompt+output
+    # → wrong for an EXTRACTION role that must echo real identifiers (hurts input fidelity); presence_penalty
+    # is OUTPUT-only — the right tool. VERIFIED on the loopers (types-adapter.js, cc_voice.py): this combo →
+    # finish=stop, DISTINCT findings, MORE of them than the band-aid (10 vs 6).
+    'knobs': {'temperature': 0.3, 'min_p': 0.2, 'presence_penalty': 1.5, 'repetition_penalty': 1.0},
 }
