@@ -1,0 +1,195 @@
+<title>Ledger X-ray — the sprawl made legible</title>
+<style>
+  :root{
+    --ground:#F4F6F8; --panel:#FFFFFF; --ink:#161A21; --ink-soft:#3D454F;
+    --muted:#8B95A2; --hair:#E0E5EA; --hair-soft:#EDF0F3;
+    --signal:#1F7A6C;          /* structure / the real system */
+    --signal-soft:#D7EAE6;
+    --flag:#C0772B;            /* flagged / weak */
+    --dang:#B4452F;            /* dangling / broken */
+    --noise:#AEB7C2;           /* ingest noise */
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+       line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:780px;margin:0 auto;padding:64px 28px 96px}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;
+           color:var(--signal);margin:0 0 18px}
+  h1{font-size:40px;line-height:1.08;letter-spacing:-.02em;margin:0 0 16px;text-wrap:balance;font-weight:650}
+  .lede{font-size:18px;color:var(--ink-soft);max-width:62ch;margin:0 0 8px}
+  .lede b{color:var(--ink);font-weight:600}
+  .meta{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:20px;
+        display:flex;flex-wrap:wrap;gap:6px 22px}
+  .meta span{white-space:nowrap}
+  .meta b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+
+  section{margin-top:56px}
+  .sec-label{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;
+             color:var(--muted);margin:0 0 18px;display:flex;align-items:center;gap:12px}
+  .sec-label::after{content:"";flex:1;height:1px;background:var(--hair)}
+
+  /* hero bar */
+  .hero{background:var(--panel);border:1px solid var(--hair);border-radius:14px;padding:30px 30px 26px}
+  .hero-top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+  .hero-fig{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px;color:var(--ink-soft)}
+  .hero-fig b{font-size:15px;color:var(--ink)}
+  .big{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .bar{display:flex;height:46px;border-radius:8px;overflow:hidden;margin:18px 0 6px;border:1px solid var(--hair)}
+  .seg{position:relative}
+  .seg.code{background:var(--signal)}
+  .seg.transcripts{background:#C5CCD4}
+  .seg.scratch{background:#B7BFC9}
+  .seg.channel{background:#AAB3BE}
+  .seg.vendored{background:#9CA6B2}
+  .seg.other{background:#CDD3DA}
+  .legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px 22px;margin-top:22px}
+  .lg{display:flex;align-items:baseline;gap:9px;font-size:13.5px}
+  .sw{width:11px;height:11px;border-radius:3px;flex:none;position:relative;top:2px}
+  .lg .nm{color:var(--ink-soft)}
+  .lg .ct{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink);margin-left:auto;font-size:12.5px}
+  .lg.is-code .nm{color:var(--signal);font-weight:650}
+
+  /* findings */
+  .find{display:flex;gap:18px;padding:22px 0;border-top:1px solid var(--hair)}
+  .find:first-of-type{border-top:none}
+  .fnum{font-family:var(--mono);font-size:12px;color:var(--muted);flex:none;width:26px;padding-top:3px}
+  .fbody{flex:1;min-width:0}
+  .fhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:5px}
+  .fhead h3{font-size:17.5px;margin:0;font-weight:620;letter-spacing:-.01em}
+  .stat{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;
+        padding:2px 9px;border-radius:6px;white-space:nowrap}
+  .stat.bad{background:#F7E4DC;color:var(--dang)}
+  .stat.warn{background:#F6E8D6;color:var(--flag)}
+  .stat.ok{background:var(--signal-soft);color:var(--signal)}
+  .find p{margin:0;color:var(--ink-soft);font-size:14.5px;max-width:64ch}
+  .find p b{color:var(--ink);font-weight:600}
+
+  /* path */
+  .path{counter-reset:step;display:flex;flex-direction:column;gap:2px}
+  .step{display:flex;gap:18px;padding:18px 20px;background:var(--panel);border:1px solid var(--hair);
+        align-items:baseline}
+  .step:first-child{border-radius:12px 12px 0 0}
+  .step:last-child{border-radius:0 0 12px 12px}
+  .step+.step{border-top:none}
+  .step::before{counter-increment:step;content:counter(step);font-family:var(--mono);font-size:13px;
+                font-weight:600;color:var(--panel);background:var(--signal);width:24px;height:24px;
+                border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;
+                position:relative;top:2px}
+  .step.lead::before{background:var(--ink)}
+  .step .st-b{flex:1}
+  .step h4{margin:0 0 3px;font-size:15.5px;font-weight:620}
+  .step p{margin:0;font-size:13.5px;color:var(--ink-soft);max-width:60ch}
+  .step .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+             color:var(--signal);font-weight:600}
+  .step.lead .tag{color:var(--ink)}
+
+  .foot{margin-top:48px;padding-top:20px;border-top:1px solid var(--hair);
+        font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.7}
+  .kicker{color:var(--signal);font-weight:600}
+  @media (max-width:560px){ h1{font-size:32px} .wrap{padding:44px 20px 72px} .find{gap:12px} }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Self-model · diagnostic read · 2026-07-01</p>
+  <h1>The ledger X-ray</h1>
+  <p class="lede">We built a true, queryable self-model — and turned it on the system that made it.
+    The verdict: the structure is small and mostly sound; it's <b>buried under ~10,000 entries of
+    un-bounded ingest</b>. The mess is real, but bounded — and the way out is now concrete.</p>
+  <div class="meta">
+    <span><b>11,292</b> file entries</span>
+    <span><b>8,073</b> symbols</span>
+    <span><b>46,613</b> edges</span>
+    <span><b>487</b> capabilities</span>
+    <span><b>4</b> projects</span>
+  </div>
+
+  <section>
+    <p class="sec-label">What's actually in the self-model</p>
+    <div class="hero">
+      <div class="hero-top">
+        <div class="hero-fig"><b>1,300</b> code files &nbsp;·&nbsp; the real system</div>
+        <div class="big">only <b style="color:var(--signal)">11.5%</b> is structure — the rest is data, scratch &amp; assets</div>
+      </div>
+      <div class="bar" role="img" aria-label="1300 of 11292 entries are code; the remainder is transcripts, scratch, channel data, vendored material and assets">
+        <div class="seg code" style="width:11.5%"></div>
+        <div class="seg transcripts" style="width:31.3%"></div>
+        <div class="seg scratch" style="width:23.0%"></div>
+        <div class="seg channel" style="width:13.5%"></div>
+        <div class="seg vendored" style="width:8.2%"></div>
+        <div class="seg other" style="width:12.5%"></div>
+      </div>
+      <div class="legend">
+        <div class="lg is-code"><span class="sw" style="background:var(--signal)"></span><span class="nm">Code</span><span class="ct">1,300</span></div>
+        <div class="lg"><span class="sw" style="background:#C5CCD4"></span><span class="nm">Session transcripts</span><span class="ct">3,536</span></div>
+        <div class="lg"><span class="sw" style="background:#B7BFC9"></span><span class="nm">Our build scratch</span><span class="ct">2,598</span></div>
+        <div class="lg"><span class="sw" style="background:#AAB3BE"></span><span class="nm">Channel-memory data</span><span class="ct">1,530</span></div>
+        <div class="lg"><span class="sw" style="background:#9CA6B2"></span><span class="nm">Vendored / handoffs</span><span class="ct">930</span></div>
+        <div class="lg"><span class="sw" style="background:#CDD3DA"></span><span class="nm">Docs · assets · misc</span><span class="ct">1,386</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="sec-label">Four findings</p>
+    <div class="find">
+      <div class="fnum">01</div>
+      <div class="fbody">
+        <div class="fhead"><h3>No ingest boundary</h3><span class="stat bad">88% noise</span></div>
+        <p>The self-model swallowed everything — conversation transcripts, our own build scratch, channel data, vendored handoffs, binary assets. A self-model should index <b>structure</b>; data and scratch should be <b>linked, not entries</b>.</p>
+      </div>
+    </div>
+    <div class="find">
+      <div class="fnum">02</div>
+      <div class="fbody">
+        <div class="fhead"><h3>The extractor under-captures symbols</h3><span class="stat warn">JS/JSX 100% flagged</span></div>
+        <p>Across all 1,304 audited code files, the deterministic extractor misses symbols in nearly every one — Python 96% flagged, <b>JS/JSX 100%</b>. The front-end languages are weakest. Fixable per-language; the audit re-confirms convergence.</p>
+      </div>
+    </div>
+    <div class="find">
+      <div class="fnum">03</div>
+      <div class="fbody">
+        <div class="fhead"><h3>The wiring is mostly broken links</h3><span class="stat bad">66% dangling</span></div>
+        <p><b>30,620 of 46,613 edges</b> point at an unresolved target — mostly <span style="font-family:var(--mono);font-size:.92em">calls</span> the extractor saw but couldn't link to a definition. The graph knows a call happened, not to what. Needs a symbol-resolution pass.</p>
+      </div>
+    </div>
+    <div class="find">
+      <div class="fbody" style="margin-left:44px">
+        <div class="fhead"><h3>Code is clean; the orientation layer isn't</h3><span class="stat ok">code ✓</span></div>
+        <p>Embedding every file's description: the <b>code barely duplicates</b> (a handful of vendored copies). But the orientation layer was rebuilt every session — <b>20+ distinct <span style="font-family:var(--mono);font-size:.92em">*-MAP.md</span></b>, multiple HANDOFF/STATE docs — and the "doc duplication" (811 files) is overwhelmingly channel-memory <b>data ingested as markdown</b>. Same boundary problem, seen twice.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="sec-label">The way out — what the ledger reveals</p>
+    <div class="path">
+      <div class="step lead">
+        <div class="st-b"><span class="tag">Highest leverage</span><h4>Draw a typed ingest boundary</h4>
+          <p>Index structure — code, capabilities, real vault docs (~1,700 entries). Link data, transcripts, scratch &amp; assets instead of ingesting them. Cuts the ledger 11,292 → ~1,700 and fixes the system's own recall.</p></div>
+      </div>
+      <div class="step">
+        <div class="st-b"><span class="tag">Then</span><h4>Fix the per-language extractors</h4>
+          <p>JS/JSX first (100% flagged) → re-extract → let the coverage audit re-confirm convergence.</p></div>
+      </div>
+      <div class="step">
+        <div class="st-b"><span class="tag">Then</span><h4>Resolve the dangling edges</h4>
+          <p>A symbol-resolution pass that links calls/imports to their definitions — turn 66% broken references into real wiring.</p></div>
+      </div>
+      <div class="step">
+        <div class="st-b"><span class="tag">Then</span><h4>Consolidate the orientation layer</h4>
+          <p>One live map, AGENTS-per-folder as the constitution; archive the 20+ session MAP/HANDOFF/STATE docs out of the live self-model.</p></div>
+      </div>
+      <div class="step">
+        <div class="st-b"><span class="tag">Finally</span><h4>Re-index the corpus on clean structure</h4>
+          <p>So "ask the codebase" returns code, not planning scratch.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">
+    <span class="kicker">The throughline.</span> The ledger is the seed of the one system — and it shows unification isn't "rewrite everything." It's <b style="color:var(--ink)">draw the boundary</b>, <b style="color:var(--ink)">fix extraction &amp; resolution</b>, <b style="color:var(--ink)">consolidate the map</b>. ~1,300 distinct code files under ~10,000 entries of un-bounded ingest.<br>
+    Built with the live pplx embedder (3,627 descriptions embedded) · the ledger SQL surface · the Company <span style="color:var(--ink)">corpus</span> MCP tool. Structural counts exact; audit-model finding counts directional.
+  </p>
+</div>
