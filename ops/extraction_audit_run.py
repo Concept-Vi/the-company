@@ -115,16 +115,19 @@ def _run_one(it: dict) -> dict | None:
             d = json.loads(r.read())
         res = d.get("resolved", {}).get("0")
         if not isinstance(res, dict):
-            # unresolved = the model server returned nothing usable for this unit — overwhelmingly the
-            # context-window overflow (verified VLLMValidationError) on a file too big for the loadout's
-            # max_model_len. RECORD it as an explicit, queryable finding (a real row) — never a silent drop.
+            # unresolved = the bridge returned the turn with this unit absent from finish_order (no
+            # resolvable output). The CAUSE is not asserted here (it varies — context-window overflow on a
+            # genuinely huge file, OR KV-cache contention/preemption when driver concurrency exceeds the
+            # loadout's max-concurrency-at-this-ctx, OR a per-turn wait). RECORD it loudly as a real,
+            # queryable row (never a silent drop); diagnose + re-audit unresolved rows at safe concurrency.
             return {**it, "_status": "ok", "complete": False,
                     "findings": [{"discrepancy_type": "other", "name": "", "symbol_kind": "",
-                                  "location": "", "detail": "UNVERIFIED: model returned no resolvable output for "
-                                  "this file — it exceeds the brain's context window at this loadout "
-                                  "(max_model_len). Coverage of this file is NOT verified; it needs a "
-                                  "larger-context audit pass (serve the brain at a bigger max_model_len, solo)."}],
-                    "kind_seen": "exceeds-context", "run_addr": d.get("addresses", {}).get("0", "")}
+                                  "location": "", "detail": "UNVERIFIED: the model returned no resolvable output "
+                                  "for this file in this run (cause not determined at record-time — e.g. context "
+                                  "overflow on a huge file, or KV contention when concurrency exceeds the "
+                                  "loadout's capacity-at-this-ctx). Coverage NOT verified; re-audit at safe "
+                                  "concurrency / larger context."}],
+                    "kind_seen": "unresolved", "run_addr": d.get("addresses", {}).get("0", "")}
         return {**it, "_status": "ok", "complete": bool(res.get("complete")),
                 "findings": res.get("findings", []), "kind_seen": res.get("kind_seen", ""),
                 "run_addr": d.get("addresses", {}).get("0", "")}
