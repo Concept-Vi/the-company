@@ -26,6 +26,13 @@ The coverage audit (4B as auditor-vs-ground-truth, finds what the deterministic 
 ### The bigger rebuild (related)
 - [ ] **The interpretive sweep itself** should be the existing `interpret_file` role (+ `dragnet_*`) via the engine, not the bespoke `ledger_interpret_*` producers. The coverage audit is the smaller proof of the same "into the system" move.
 
+## Role + structured output — DONE + VERIFIED (2026-06-30)
+- **Rich output types ALREADY exist** — `runtime/authoring.py:FIELD_TYPES` has `enum`, `object` (nested sub-model), `list[object]` + a recursive renderer (the "B2 richer types" pass). My earlier "limited to 6 scalars" was the **stale `field_types` MCP tool DESCRIPTION**, not reality. No engine change needed. *(Minor root fix: update that tool's blurb to list object/list[object]/enum.)*
+- **Reusable role built: `roles/extraction_audit.py`** — proper structured output: `findings: list[object]{discrepancy_type(enum: in_contract_not_extracted | in_file_not_in_contract | wrong_in_extraction | other), name, symbol_kind, location, detail}` + `complete: bool` (the pass flag) + `kind_seen: str`. Enforced via vLLM guided `json_schema` (cognition.py:492, fail-loud if model lacks `json_schema`).
+- **VERIFIED end-to-end** (`run_role(think=False)` on anticipation.py with FULL extraction input incl. `signals` counts): returned a precise structured finding — `discrepancy_type=in_contract_not_extracted, symbol_kind="module-level constant", detail="DIAL present but not in symbols; counts says n_constants=1 → detected but identity not persisted"`. The objects validate; the four discrepancy types are queryable fields.
+- **Locked design:** inputs = `file_kind` + the real `contract` (from ledger_build) + the FULL persisted extraction (symbols+declares+imports+**signals counts**) + file content; the counts matter (they let the audit say "counted but not named"). Tuning: nudge the model to fill `name`/`location` (it put them in `detail`).
+- **Prototype `coverage_audit` (flat list[str]) superseded** — delete surfaced for approval.
+
 ## Proof-of-use-case progress (this session)
 - [x] Mechanism validated in-system (clean / gap / clean-JS cases) — schema-validated, `run://` provenance.
 - [x] **Registered as a real role** (`roles/coverage_audit.py`, output_schema `CoverageAuditOut`, reflected in roles/AGENTS.md) — the in-system, reusable form.
