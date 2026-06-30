@@ -76,11 +76,18 @@ def _files(limit: int, resume: bool = True) -> list:
     return out
 
 
-def _utterance(it: dict) -> str | None:
+# the resident AWQ serves a 16384-token context; budget the FILE content well under it (prompt + contract +
+# extraction + the schema-constrained output all share the window). ~3.7 chars/token → ~40k chars ≈ 11k tok.
+_MAX_CONTENT_CHARS = 40000
+
+
+def _utterance(it: dict) -> str | None | str:
     try:
         content = open(os.path.join(ROOTS.get(it["project"], REPO), it["path"]), errors="replace").read()
     except Exception:
         return None
+    if len(content) > _MAX_CONTENT_CHARS:
+        return "__OVERSIZE__"     # honest skip — recorded as oversize, NOT silently truncated (no-partial law)
     imps = ", ".join(str(i.get("target", i) if isinstance(i, dict) else i) for i in json.loads(it["imports"])) or "(none)"
     captured = it["symbols"] or "(none)"
     return (f"FILE_KIND: {it['ext'].lstrip('.')}\n"
@@ -95,6 +102,12 @@ def _run_one(it: dict) -> dict | None:
     utt = _utterance(it)
     if utt is None:
         return None
+    if utt == "__OVERSIZE__":
+        return {**it, "_status": "ok", "complete": False,
+                "findings": [{"discrepancy_type": "other", "name": "", "symbol_kind": "",
+                              "location": "", "detail": "file exceeds the model context window — audit skipped; "
+                              "needs chunking (recorded, not silently passed)"}],
+                "kind_seen": "oversize", "run_addr": ""}
     body = json.dumps({"role": "extraction_audit", "items": [utt], "max_tokens": 900}).encode()
     req = urllib.request.Request(BRIDGE, data=body, headers={"Content-Type": "application/json"})
     try:

@@ -47,6 +47,16 @@ Tried to raise `max_num_seqs` 2→8 via `company config` + service restart. It *
 
 **LESSON (root):** do NOT restart a healthy *resident* model to tune it on a near-full shared GPU during concurrent upgrades — the live instance is the safest state; a restart gambles the VRAM layout. Raising concurrency here genuinely requires **freeing VRAM** (evict the 6.6 GB embedder → 4B gets the card) or a bigger budget — a **loadout decision** (Tim's / coordinated with the other session), NOT a config-tune. Service left STOPPED with config restored to known-good; it will start once VRAM is available. *Action:* concurrency on a shared card = a loadout-managed resource (the `gpu.py` VRAM manager should gate it), not an ad-hoc restart.
 
+## THROUGHPUT — the FP8 brain was pathological (2026-06-30, root-caused + fixed)
+**Measured:** FP8 `chat-4b-fp8` = **11.4 tok/s** single-stream; AWQ `chat-4b` = **100 tok/s** (~9×), same card (RTX 4080 Ada), same family. AWQ also uses **4.9GB** vs FP8's 9.9GB. Tim's benchmark (AWQ 2700 tok/s @ 32-conc) is the throughput target.
+- **NOT the usual suspects** (all ruled out via the FP8 startup log): not eager (CUDA graphs captured in 5s), not FP8-unsupported (Ada has it; `CutlassFP8ScaledMMLinearKernel` selected), not the attention backend (FlashInfer).
+- **Smoking gun (inference, not fully proven but evidence-backed):** Qwen3.5 is a **hybrid Mamba/Gated-DeltaNet** model; its linear-attn/conv **Triton kernels JIT-recompile per input shape** during inference — the FP8 run logged repeated `jit_monitor` WARNINGs (`_causal_conv1d_fwd_kernel`, `_fused_post_conv_kernel`, `_zero_kv_blocks_kernel`, `apply_token_bitmask_inplace_kernel` = the guided-JSON constraint kernel). Death by a thousand JIT latency spikes on varied file shapes. The AWQ path evidently avoids it (different kernels / warm). Why FP8 specifically trips it is a deeper open question, but the FIX is the swap.
+- **FIX APPLIED:** `company up chat-4b --evict` → AWQ resident on :8000, FP8 evicted. **`think=False` VERIFIED on the AWQ build** (the config's "UNVERIFIED" note now resolved — run_role think=False returns fast + correct structured findings). The engine resolves "the resident brain" dynamically, so it followed the swap.
+- **Open for later:** FP8's pathological config (gpu_util 0.9 / 64k / 32seq — and the saner 0.35/16k/4 CRASHED) needs separate debugging if FP8 is ever wanted; not worth blocking on. The whole local-brain-at-scale premise depends on this throughput lever.
+
+## DRIVER — context overflow (2026-06-30)
+Only **3 code files exceed the 65,536-token context** (suite.py ~242k, bridge.py ~75k, _ds_bundle.js ~71k → instant reject); 3 more at 32-64k (fit, slow). 1,218 / 1,298 are <8k (normal). The driver must SKIP/CHUNK the 3 over-limit (and the timeout was a red herring — it was the slow FP8 model, now fixed). 
+
 ## Capabilities noted for later
 - **tool-calling** (`--enable-auto-tool-choice`, qwen3_xml) — available; the universal-invocation layer (`introspection/invoke.py`) could let the 4B drive registered capabilities. Not used yet.
 - **structured outputs** — the role `output_schema` IS the structured-output path (validated server-side via the engine); no need for raw `response_format`/`guided_json` when going through roles.
