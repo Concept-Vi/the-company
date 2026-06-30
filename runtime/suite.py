@@ -7067,6 +7067,26 @@ class Suite:
             out["reasoning"] = reasoning
         return out
 
+    def _chat_brain_cfg(self) -> dict:
+        """The RHM chat config with the BRAIN RESOLVED to the live loadout (registry-is-truth) — the fix
+        for the chat brain going STALE. rhm_config().model is the operator's PINNED preference; active_brain
+        returns that pinned brain WHEN IT IS RUNNING, else whatever brain IS running (and the RESIDENT_*
+        bootstrap when none is). So the chat brain FOLLOWS the live loadout exactly like run_role/the swarm —
+        a stale pin at a dead endpoint (e.g. the loadout swapped FP8→AWQ) or an UNSET pin (cold start / fresh
+        store) no longer breaks chat. This is NOT the 'silent pinned default' the chokepoint's require_brain
+        rightly refuses — it is the ACTUAL running brain; require_brain still fails loud when nothing resolves.
+        A per-call model override (chat(model=…)) still wins (applied by the caller after this)."""
+        cfg = self.rhm_config()
+        if not cfg.get("model"):            # ONLY when NO brain is pinned (cold start / fresh store): resolve to
+            try:                            # whatever is running (registry-is-truth). A SET pin is RESPECTED as-is
+                from runtime.cognition import active_brain   # — the no-silent-fallback guard holds: an explicitly-
+                m, u = active_brain()                        # configured-but-unavailable brain still refuses LOUD at
+            except Exception:                                # the chokepoint, it is not silently swapped underneath.
+                m, u = None, None
+            if m:
+                cfg = {**cfg, "model": m, "base_url": u}
+        return cfg
+
     def chat(self, message: str, graph_id: str, focus: dict | None = None,
              *, model: str | None = None, base_url: str | None = None) -> dict:
         """Grounded conversation with the operator via NATIVE TOOL-CALLING. Answers from compact
@@ -7085,7 +7105,7 @@ class Suite:
         instead of the fixed rhm_config brain. Overrides only model+base_url in a cfg COPY; persona/mode/
         timeout are untouched. The tool-support gate (_model_supports_tools) still applies to the override."""
         mode = self.get_mode()
-        cfg = self.rhm_config()
+        cfg = self._chat_brain_cfg()                           # brain follows the live loadout (registry-is-truth)
         if model or base_url:                                  # per-call override → a cfg copy (cfg untouched)
             cfg = {**cfg, **({"model": model} if model else {}), **({"base_url": base_url} if base_url else {})}
         early = self._chat_prologue(message, mode, cfg)        # ONCE: off (4-key) / refusal (5-key)
@@ -7143,7 +7163,7 @@ class Suite:
         import time as _time
         from runtime import cognition as _cog
         mode = self.get_mode()
-        cfg = self.rhm_config()
+        cfg = self._chat_brain_cfg()                           # brain follows the live loadout (registry-is-truth)
         turn_id = turn_id or "turn-" + _time.strftime("%Y%m%d-%H%M%S-") + str(int(_time.monotonic() * 1000) % 100000)
 
         early = self._chat_prologue(message, mode, cfg, persist=persist)   # ONCE: off (4-key) / refusal (5-key)

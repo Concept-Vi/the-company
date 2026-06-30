@@ -479,6 +479,15 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
                 eff_think = _resolve_slot(_tslot, coordinate)
         elif _tslot is not None:                           # a literal bool — fixed, coordinate-independent
             eff_think = _tslot
+    # GUIDED-JSON ⊥ THINKING (Tim 2026-07-01, root-caused): a SCHEMA-constrained fire (response_format=
+    # json_schema) forces valid JSON from the FIRST token — the model cannot emit the <think>…</think>
+    # reasoning tokens (illegal under the grammar), so a thinking-ON schema fire degenerates to EMPTY/invalid
+    # content ("empty content from model" — burns all retries; reproduced on clean HEAD in the staged-turn
+    # swarm). So a schema fire defaults to NO-THINK unless the role/caller EXPLICITLY asked to think. Parallels
+    # the presence_penalty loop-guard below — both protect the structured path from this model's thinking-on
+    # default. A role that must REASON should emit free-text (no output_schema) and reason there.
+    if eff_think is None and eff_schema is not None:
+        eff_think = False
     # THINK-CONTROL routing (additive; eff_think=None → byte-identical: the openai /v1 path, unchanged). Each
     # STACK carries `think` its OWN way: ollama's NATIVE /api/chat honours body.think (verified by-use: 1304→43
     # tokens); vLLM's /v1 carries it as chat_template_kwargs.enable_thinking (deliverable b — NOW WIRED in
