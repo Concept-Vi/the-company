@@ -61,3 +61,9 @@ Only **3 code files exceed the 65,536-token context** (suite.py ~242k, bridge.py
 - **tool-calling** (`--enable-auto-tool-choice`, qwen3_xml) — available; the universal-invocation layer (`introspection/invoke.py`) could let the 4B drive registered capabilities. Not used yet.
 - **structured outputs** — the role `output_schema` IS the structured-output path (validated server-side via the engine); no need for raw `response_format`/`guided_json` when going through roles.
 - **the `interpret_file` + `dragnet_*` roles already exist** — the interpretive sweep should be these roles via the engine, not the bespoke `ledger_interpret_*` producers (the biggest rebuild learning).
+
+## CONCURRENCY + the cold-JIT effect (2026-06-30, resolved)
+AWQ reconfigured solo: `max_num_seqs 32`, `gpu_util 0.85` (was 4 / 0.45 — co-resident sizing). Measured:
+- single-stream 100 tok/s; **16-conc COLD (all-different prompts) = 72 tok/s** (SLOWER than 1 stream!); **16-conc WARM (same shape) = 1477→1636 tok/s**; **32-conc WARM = 2334 tok/s** (≈ Tim's 2700 benchmark).
+- ROOT: the hybrid-Mamba/GDN Triton kernels JIT-compile **per input shape** on first touch. Cold varied shapes pay a one-time compile each → the "72 tok/s" anomaly; warm shapes run at full speed. (Same mechanism that crippled the FP8 run, where it never amortised.)
+- IMPLICATION for the audit: 1298 files of varied sizes → the pass starts slow (cold buckets) and ACCELERATES as common size-buckets warm. Net hugely faster than the FP8 path. A future optimisation: sort/bucket files by size so each bucket warms once (and/or extend vLLM warmup to cover more shapes).
