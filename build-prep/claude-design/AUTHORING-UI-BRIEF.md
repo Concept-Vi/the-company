@@ -78,7 +78,8 @@ strip — co-existing beside, never replacing, the read-only `CognitionView` (th
   `role/edit` (existing).
 - **Schema editor** (net-new sub-form inside the role form) — define the role's `output_fields`: each row is
   `name` + a **type dropdown** + an optional `description`; add/remove rows. The type dropdown is populated
-  from `GET /api/cognition/field_types` (the closed set: `str·int·float·bool·list[str]·list[int]`).
+  from `GET /api/cognition/field_types` (the live closed set — single-sourced from `runtime/authoring.py:FIELD_TYPES`
+  + aliases: the flat scalars PLUS the richer kinds `enum`/`object`/`list[object]`; read it from the endpoint, never freeze a subset).
 - **Role dry-run** — "test this role": run it (registered, or a never-saved draft field-set) on a sample
   utterance, see the validated structured output. Fully isolated — no file written, no events.
   Drives `POST /api/cognition/role/dry_run`.
@@ -159,7 +160,7 @@ strip — co-existing beside, never replacing, the read-only `CognitionView` (th
 |---|---|---|---|
 | `GET /api/cognition/models_for_role?requires=chat,json` | query `requires` (comma-sep capability tags) | `{"requires":[str],"models":[str],"providers":{provider_id:{model,base_url,provides:[str]}}}` — only models whose `provides ⊇ requires` | `bridge.py:487` → `Suite.models_for_role` |
 | `GET /api/cognition/inputs` | — | `{"utterance":"utterance","roles":[str],"role_addresses":["run://<turn>/<role>"],"context_variables":[str]}` | `bridge.py:491` → `Suite.available_inputs` |
-| `GET /api/cognition/field_types` | — | `{"<type>":{"annotation":str,"gloss":str}}` for `str·int·float·bool·list[str]·list[int]` | `bridge.py:493` → `Suite.field_types` |
+| `GET /api/cognition/field_types` | — | `{"<type>":{"kind":str,"gloss":str,"annotation"?:str,"params"?:[str]}}` for the live closed set (single-sourced from `runtime/authoring.py:FIELD_TYPES` + aliases — flat scalars PLUS `enum`/`object`/`list[object]`; read it live, not a frozen subset) | `bridge.py:493` → `Suite.field_types` |
 
 ### APPLY — rides EXISTING operator endpoints (NOT cognition-namespaced)
 | Method · Path | Request body | Response | Source |

@@ -95,7 +95,7 @@ operator approve is REFUSED (HTTP 400, `GovernanceError`).
 |---|---|---|
 | `GET /api/cognition/models_for_role?requires=chat,json` | query: `requires` (comma-sep capability tags) | `{"requires": [str], "models": [str], "providers": {provider_id: {model, base_url, provides:[str]}}}`. **The model-select** — only models whose `provides ⊇ requires`. |
 | `GET /api/cognition/inputs` | — | `{"utterance": "utterance", "roles": [str], "role_addresses": ["run://<turn>/<role>"], "context_variables": [str]}`. **The input-wiring select** (what a role/rule can read). |
-| `GET /api/cognition/field_types` | — | `{"<type>": {"annotation": str, "gloss": str}}` for str·int·float·bool·list[str]·list[int]. **The schema-editor's field-type dropdown.** |
+| `GET /api/cognition/field_types` | — | `{"<type>": {"kind": str, "gloss": str, "annotation"?: str, "params"?: [str]}}` for the **live closed set** (read it from the endpoint — single-sourced from `runtime/authoring.py:FIELD_TYPES` + aliases; the flat scalars PLUS the richer kinds `enum`/`object`/`list[object]`, never a frozen subset). **The schema-editor's field-type dropdown.** |
 
 **Verified live response examples** (curled against `:8772`):
 
@@ -187,8 +187,9 @@ operator approve is REFUSED (HTTP 400, `GovernanceError`).
   "rules": [ <RuleDecl>, ... ]          // declared routing rules attached to this role (validated)
 }
 ```
-- `type` ∈ the **closed field-type set** (`GET /api/cognition/field_types`): `str·int·float·bool·list[str]·list[int]`.
-  An unknown type fails loud at propose. A role with no `output_fields` gets a minimal `{ok: bool}` schema.
+- `type` ∈ the **closed field-type set** — read it LIVE from `GET /api/cognition/field_types` (single-sourced
+  from `runtime/authoring.py:FIELD_TYPES` + aliases; the flat scalars PLUS the richer kinds `enum`/`object`/`list[object]`,
+  never a frozen subset here). An unknown type fails loud at propose. A role with no `output_fields` gets a minimal `{ok: bool}` schema.
 - The backend renders this to a real `roles/<id>.py` module (`render_role_source`, `runtime/authoring.py`) and
   **gates it by importing it in a temp dir before any write** — a malformed role NEVER reaches the live tree.
 

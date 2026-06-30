@@ -19,8 +19,19 @@ from store.fs_store import FsStore
 from runtime.registry import NodeRegistry
 from runtime.suite import Suite
 from fabric import config as fcfg
+# registry-is-truth: the OUTPUT-FIELD-TYPE list shown in the field_types tool description is DERIVED
+# from the single-source authoring registry (the SAME dict render_role_source validates against), NOT
+# a frozen subset that drifts. A type added to FIELD_TYPES propagates into the tool's help with no
+# second edit. (FROM the static dict, not SUITE.field_types() — the SUITE proxy is unbound at import.)
+from runtime.authoring import FIELD_TYPES, FIELD_TYPE_ALIASES
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# The human-readable closed-set string, built once at import from the registry keys (+ the operator-
+# friendly aliases). e.g. "str·int·float·bool·list[str]·list[int]·enum·object·list[object] (aliases:
+# dict·list[dict])". This is what the field_types tool advertises — single-sourced from FIELD_TYPES.
+_FIELD_TYPES_HELP = "·".join(FIELD_TYPES) + (
+    f" (aliases: {'·'.join(FIELD_TYPE_ALIASES)})" if FIELD_TYPE_ALIASES else "")
 
 
 # --- THE SHARED-LAYER FACTORY (GAP 1 — the bridge binds a tool manager to its OWN Suite) ----------
@@ -520,11 +531,21 @@ def cognition_inputs(role: str = "", model: str = "") -> dict:
     return SUITE.available_inputs(model=(model or None), role=(role or None))
 
 
-@mcp.tool(annotations=SAFE)               # READ-ONLY — output-field-type registry (client-safe)
+@mcp.tool(annotations=SAFE,               # READ-ONLY — output-field-type registry (client-safe)
+          description=(                    # registry-is-truth: the type list is DERIVED from
+              # runtime.authoring.FIELD_TYPES at import (not a frozen subset that drifts) — a new
+              # type added there propagates into this help with no second edit.
+              f"INSPECT (the OUTPUT-FIELD-TYPE select): the closed output_schema field-type registry "
+              f"({_FIELD_TYPES_HELP}). REUSES Suite.field_types (the /api/cognition/field_types path). "
+              f"What types a proposed role's output fields may be — call this tool for the live set "
+              f"(each row carries its `kind` + the `params` the richer kinds need, e.g. enum→values, "
+              f"object/list[object]→fields)."))
 def field_types() -> dict:
-    """INSPECT (the OUTPUT-FIELD-TYPE select): the closed output_schema field-type registry
-    (str·int·float·bool·list[str]·list[int]). REUSES Suite.field_types (the /api/cognition/field_types
-    path). What types a proposed role's output fields may be."""
+    """INSPECT (the OUTPUT-FIELD-TYPE select): the closed output_schema field-type registry — what
+    types a proposed role's output fields may be. The CANONICAL set is whatever this tool RETURNS
+    (single-sourced from runtime.authoring.FIELD_TYPES + its aliases — never a hardcoded subset that
+    drifts); each row carries its `kind` + the `params` a richer kind needs (enum→values,
+    object/list[object]→fields). REUSES Suite.field_types (the /api/cognition/field_types path)."""
     return SUITE.field_types()
 
 
