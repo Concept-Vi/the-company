@@ -11173,7 +11173,11 @@ class Suite:
         # are out of scope (a record for a removed file goes stale — flagged, not silent).
         from store.vector_index import content_hash as _chash
         for f in files:
-            f["hash"] = _chash(f["text"])
+            # G25 staleness key = the WHOLE file, NOT the 6000-char digest slice (f["text"]). Hashing the
+            # slice left change-detection BLIND to any edit past WALK_MAX_CHARS → a tail-edited file kept an
+            # identical hash and was silently never re-ingested. Hash the full file (the digest still uses
+            # the head slice). store + compare both read f["hash"], so this stays consistent + self-corrects.
+            f["hash"] = _chash(open(f["path"], encoding="utf-8").read())
         if not force:
             have = {r.get("source_address"): r.get("source_hash")
                     for r in self.list_corpus(project=project)}
@@ -11407,7 +11411,9 @@ class Suite:
                 files.append({"path": os.path.normpath(pth), "text": t[:_corp.WALK_MAX_CHARS]})
         walked = len(files)
         for f in files:
-            f["hash"] = _chash(f["text"])
+            # staleness key = the WHOLE file, not the digest slice (same G25 fix as ingest_paths — hashing
+            # f["text"][:6000] was blind to tail edits; hash the full file so a changed file re-captures).
+            f["hash"] = _chash(open(f["path"], encoding="utf-8").read())
 
         # 4) INCREMENTAL — which (file, lens) pairs still need capture (the persisted index IS the truth) ─
         space_have = {p.id: set(self.store.index_addresses(space=p.id)) for p in lens_objs}

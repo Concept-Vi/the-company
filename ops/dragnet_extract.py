@@ -113,7 +113,7 @@ def load_chunks(*, projects=None, since=None, until=None, limit=None, sample_ste
             continue
         if until and (d is None or d > until):
             continue
-        out.append({"id": cid, "text": text[:600], "rel_path": rel_path, "anchor": anchor, "date": d})
+        out.append({"id": cid, "text": text, "rel_path": rel_path, "anchor": anchor, "date": d})  # no silent truncation — feed the whole chunk; oversize fails loud at the model (Tim's law), never a static [:600] cap
     if sample_step and sample_step > 1:
         out = out[::sample_step]
     if limit:

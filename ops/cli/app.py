@@ -85,6 +85,26 @@ def _wait_and_record(reg, keys, free_before, timeout=420):
                   f"per-service-attributable, telemetry skipped)")
 
 
+def _confirm_started(svc, k, word, window=8):
+    """LOUD-FAIL: a returncode-0 start/restart of a Type=simple unit only means systemd FORKED the
+    process — NOT that it serves (the stale-bridge no-op class: `✓ restart` printed for a service that
+    launched then died). So never claim success on the bare returncode. Briefly confirm liveness without
+    forcing a full --wait: port up → serving; unit failed → crashed (loud ✗); neither within `window`s →
+    say HONESTLY that liveness is unconfirmed (◐, not a silent ✓). A genuinely slow model → use --wait."""
+    port = svc.get("port")
+    if svc["manage"]["type"] == "manual" or not port:
+        return f"✓ {word} {k}"                               # no managed port to probe
+    t0 = time.time()
+    while time.time() - t0 < window:
+        if systemd.port_open(port) is True:
+            return f"✓ {word} {k} — serving on :{port}"
+        if systemd.is_active(svc) == "failed":
+            return f"✗ {word} {k} FAILED on startup — see `company logs {k}`"
+        time.sleep(1)
+    return (f"◐ {word} {k} launched — liveness UNCONFIRMED in {window}s (Type=simple returns on fork; "
+            f"slow model → use --wait, else check `company status`)")
+
+
 def _repoint_loadout_brain(reg, keys, brain_key):
     """After `company up @loadout` brings a brain-carrying loadout up, ask the bridge to repoint the RHM at
     that loadout's brain (the bridge owns the live Suite/RHM-config + the ONE verify+revert repoint logic —
@@ -176,9 +196,15 @@ def _act(reg, action, keys, force=False, evict=False, wait=False):
     for k in keys:
         if action == "down":
             ok, msg = gpu.teardown(svcs[k])        # orphan-safe (cgroup for units; pgroup for manual)
-        else:
-            ok, msg = systemd.control(svcs[k], word)   # restart on an already-stopped unit just starts it
-        print(f"  {'✓' if ok else '✗'} {word} {k}" + ("" if ok else f"  [{msg}]"))
+            print(f"  {'✓' if ok else '✗'} {word} {k}" + ("" if ok else f"  [{msg}]"))
+            continue
+        ok, msg = systemd.control(svcs[k], word)   # restart on an already-stopped unit just starts it
+        if not ok:
+            print(f"  ✗ {word} {k}  [{msg}]")      # systemctl itself refused (loud)
+        elif wait and vram_of(svcs[k]) and svcs[k].get("port"):
+            print(f"  ✓ {word} {k}")               # GPU service + --wait: _wait_and_record confirms liveness below
+        else:                                      # no silent ✓ on a bare fork — probe liveness (covers the CPU bridge too)
+            print(f"  {_confirm_started(svcs[k], k, word)}")
     if wait and action in ("up", "restart"):
         _wait_and_record(reg, keys, free_before)
 
@@ -321,7 +347,12 @@ def main():
             print(f"    (evicted, largest-first: {', '.join(res['evicted'])})")
         sys.exit(0)
     if cmd == "bench":
-        ok, msg = bench.run([a for a in args[1:] if not a.startswith("-")])
+        # forward args[1:] VERBATIM (kind + the bench script's own flags like --url/--model/
+        # --concurrency/--requests/--max-tokens). The old `if not a.startswith("-")` filter stripped
+        # EVERY flag, so a bench could only ever run the script defaults (:8000, the 4B-AWQ) — it
+        # could not target another endpoint/model/concurrency. bench.run() takes args[0]=kind and
+        # forwards the rest to the bench script (which does its own argparse).
+        ok, msg = bench.run(args[1:])
         if msg:
             print(msg)
         sys.exit(0 if ok else 1)

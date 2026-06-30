@@ -36,8 +36,11 @@ def run(inputs: dict, config: dict):
         for p in sorted(glob.glob(os.path.join(root, g))):
             try:
                 text = open(p, encoding="utf-8").read()
-            except Exception:
-                continue
+            except (OSError, UnicodeDecodeError) as e:
+                # fail loud — a file matched the globs but couldn't be read; silently dropping it
+                # would build the whole-repo context blob on PARTIAL input and answer as if complete
+                # (the mining-failure lesson this node's own contract names). No silent skip.
+                raise ValueError(f"codebase: cannot read {os.path.relpath(p, root)}: {e}") from e
             chunk = f"\n===== {os.path.relpath(p, root)} =====\n{text}\n"
             total += len(chunk)
             if total > max_chars:                       # fail loud, never silently truncate

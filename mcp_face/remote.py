@@ -189,19 +189,26 @@ def _audit(call_id: str, tool: str, args: dict, subject: str, scope: str,
     }
     line = json.dumps({**row, "ts": time.strftime("%Y-%m-%dT%H:%M:%S")},
                       default=str) + "\n"
-    # best-effort local mirror (never the mandatory path)
+    # local jsonl mirror — best-effort ALONGSIDE the table, but the SOLE sink when no table is configured.
+    jsonl_ok, jsonl_err = False, None
     try:
         audit_path = os.path.join(fcfg.STORE_DIR, "remote_mcp_audit.jsonl")
         with AUDIT_LOCK:
             with open(audit_path, "a", encoding="utf-8") as f:
                 f.write(line)
-    except OSError:
-        pass
+        jsonl_ok = True
+    except OSError as e:
+        jsonl_err = e
     # MANDATORY: the connector_audit table insert. Fail-loud on any failure.
     if not (SUPABASE_AUDIT_REST_URL and SUPABASE_AUDIT_KEY):
-        # no table configured → the jsonl mirror was the only sink; if IT failed too,
-        # there is no audit at all → fail loud (never an un-audited call).
-        return  # jsonl above already raised-best-effort; treat as accepted-only-if-written
+        # no table configured → the jsonl mirror was the ONLY sink. If it FAILED, there is no audit at
+        # all → fail loud (the previous code swallowed the OSError then returned, letting an UN-AUDITED
+        # call succeed — exactly what this function's contract forbids).
+        if not jsonl_ok:
+            raise RuntimeError(
+                f"AUDIT WRITE FAILED — no connector_audit table configured and the jsonl mirror write "
+                f"failed ({jsonl_err}); call refused (mandatory-audit: no un-audited call ever succeeds).")
+        return
     import urllib.request, urllib.error
     url = SUPABASE_AUDIT_REST_URL.rstrip("/") + "/connector_audit"
     body = json.dumps(row).encode()
