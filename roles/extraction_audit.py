@@ -22,6 +22,9 @@ class ExtractionAuditOut(BaseModel):
 
 
 ROLE = {'id': 'extraction_audit',
+ 'thinking': False,   # extraction-audit is a CLEAR MEASUREMENT, not reasoning — run no-think so the BATCH
+                      # path (run_items, which has no `think` arg) inherits it (cognition.py eff_think reads
+                      # role.thinking when the call passes none). Thinking-on times out the batch.
  'prompt_template': 'You verify a code extractor against the ACTUAL file. Its INTENT is to capture '
                     'every SYMBOL — every named, identifiable definition the rest of the system '
                     'could reference, link to, or navigate to (its anchors). Below you are given: '
