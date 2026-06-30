@@ -221,6 +221,7 @@ routing/verdict rule is a pure declared function — L2) · let a role emit `res
 `build-prep/concurrent-cognition/` (the G2 criteria + guide).
 
 ## Agent-authored entries (auto-reflected)
+- **`extraction_audit`** — agent-authored role (created via the declarative-direct face). 
 - **`coverage_audit`** — agent-authored role (created via the declarative-direct face). 
 - **`interpret_file`** — agent-authored role (created via the declarative-direct face). Discovery-system interpret phase: receives a file's programmatically-extracted structural observations and produces the interpretive observa
 - **`atlas_linker`** — agent-authored role (created via the declarative-direct face). Tags a Claude Code documentation page and connects it to the Atlas domain notes. Built for the Claude Code Atlas corpus enrichment fan (run_
