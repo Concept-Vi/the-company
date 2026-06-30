@@ -111,7 +111,7 @@ def _run_one(it: dict) -> dict | None:
     body = json.dumps({"role": "extraction_audit", "items": [utt], "max_tokens": 900}).encode()
     req = urllib.request.Request(BRIDGE, data=body, headers={"Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=240) as r:
+        with urllib.request.urlopen(req, timeout=600) as r:   # 600s: cold-JIT bursts spike per-req latency
             d = json.loads(r.read())
         res = d.get("resolved", {}).get("0")
         if not isinstance(res, dict):
