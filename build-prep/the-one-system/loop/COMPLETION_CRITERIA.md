@@ -6,12 +6,26 @@
 - **FUNCTION bar:** verified BY USE on REAL data — run the query/join and show real rows/results, never "the code looks right." No stubs, no partial.
 - **DATA-FACE bar** (the FORM analogue for this backend/data work — there is no UI surface here): every produced record is **addressed** (a scheme from `contracts/address.py`), **honest** (no silent truncation/skip — a limit is DETECTED + recorded, per the nomic num_ctx lesson), **queryable** (retrievable by a real query), and **navigable not a dump** (grouped/counted/related, not a flat text wall). A result is green only when BOTH faces hold.
 - **Standing laws:** everything fails loud (record or raise, never drop) · through the Company's own tools/CLI/stores, not bespoke parallel systems · no confidence floats (tags + counts) · DB is Supabase :15432 · lean on the DB (it wedged before under heavy passes — batch, don't swamp).
-- **SAFETY — unattended scope.** APPLY only additive/safe work. **DRAFT (do NOT apply)** anything that: moves the live store, changes the canonical `code://` system-wide, or touches the S3 surface — those await Glyphic + Tim. Never restart the live brain. If a criterion needs a decision you can't safely make, mark it `NEEDS-TIM` with the specific question — never guess.
+- **TIM'S DECISIONS (2026-07-02 — now AUTHORIZED, no longer draft-only):**
+  1. **Canonical `code://` = the LEDGER form** `code://<project>/<path>::<symbol>`. APPLY the reconciliation: migrate the corpus `repo` space + `resolve_scope`/S3 surface to it. (My embeddings already use it.) Do it **additive→verify→cutover** (add the new-form records/resolver path, verify, then retire the old form) — never a blind rename; enumerate what each step preserves.
+  2. **Supabase = FULL MIGRATE tonight.** APPLY: enable pgvector on :15432, create the shared vector schema, move ALL vector spaces (FsStore + recollection sqlite) onto Supabase. **SAFETY: additive→verify→cutover — copy into Supabase, verify counts + a real query match the source, and KEEP FsStore/sqlite as the source-of-truth fallback until verified; never delete the source in the same pass.**
+  3. **Descriptions = CARRY-FORWARD + DELTA.** APPLY (Group D): reuse the 3061 unchanged `what_it_does` (source_hash match from run 3f923cdb) + re-run the model on the ~341 changed/new files; then it unlocks the description-embedding space.
+- **STILL unattended-safe discipline:** never restart the live brain; batch DB work (it wedged before); everything fails loud / no silent truncation; commit per criterion; coordinate the Supabase SCHEMA specifics (multi-dim strategy) with Glyphic via the thread but PROCEED with best judgment (full-migrate is authorized) — only mark `NEEDS-TIM` for a NEW decision not covered above, never guess on those.
 - **Commit protocol:** commit per criterion as it goes green (on `main`, the repo's commit law + co-author trailer). Track everything.
 - **Verify by:** `PGPASSWORD=postgres psql -h 127.0.0.1 -p 15432 ...` for the ledger; `ops/build_embeddings.py --query` for spaces; `.venv/bin/python` (not vllm-env) for repo code; `/home/tim/vllm-env/bin/python` only for numpy/embedding scratch.
 
 ## Priority order (dependency-first)
-E (finish embedding leaves) → P (activate provenance spine) → V (verify/query surface) → S (draft Supabase — build toward B) → C (coordinate) — with C checked every tick.
+E (finish embedding leaves) → D (restore descriptions) → P (activate provenance spine) → V (verify/query surface) → S (Supabase migrate + code:// reconcile — APPLY, build toward B) → C (coordinate) — with C checked every tick. Rationale: finish/restore the DATA (E,D) so the migrate (S) moves a complete store; activate provenance (P) + verify (V) before cutover; migrate last so it moves a verified whole.
+
+## Group D — restore the interpretive descriptions (APPLY — Tim: carry-forward + delta)
+- **D1 · carry-forward unchanged descriptions** — the 3061 files whose source_hash matches the old described run (3f923cdb) get their `what_it_does` (+ concerns/standouts/etc. interpretive fields) copied onto the new latest run's entries.
+  FUNCTION — a SQL update-join lands 3061 descriptions on the new run; a count confirms.  ☐ by use
+  DATA-FACE — carried fields keep their provenance (interp_model/interp_at from the source run); no fabrication.  ☐ by use
+- **D2 · re-interpret the delta** — the ~341 changed/new files (no source_hash match) get freshly described via the interpretive pipeline (`ops/ledger_interpret_producer.py`, scoped to the delta, bounded/fed per the model-envelope lesson — chunk giants, don't dump).
+  FUNCTION — the ~341 get real `what_it_does`; combined with D1, the new run's code files are ~100% described.  ☐ by use
+  NOTE — if a giant file (>window) can't be described whole, describe from its symbols (the symbol-scale chunking answer), don't truncate. Model choice: the resident local brain or kimi; bounded pointed prompts.
+- **D3 · description-embedding space** — build a `desc` space (pplx) embedding each code file's `what_it_does` (Tim's "descriptions of code files, embedded differently from markdown").
+  FUNCTION — `desc` space built; `--query "<plain-language capability>"` returns the right code files.  ☐ by use
 
 ---
 
@@ -42,16 +56,19 @@ E (finish embedding leaves) → P (activate provenance spine) → V (verify/quer
 - **V2 · cross-scale navigation** — demonstrate file↔symbol scale movement: from a file-level hit, list its symbol-level children (and vice versa) via the shared address (`code://<path>` ↔ `code://<path>::<symbol>`).
   FUNCTION — a query returns a file and its embedded symbols as a scale-linked set.  ☐ by use
 
-## Group S — build toward the Supabase store (DRAFT — the B; do NOT apply)
-- **S1 · pgvector availability checked** — is `vector` extension available in the local Supabase (:15432)? Record yes/no + version.
-  FUNCTION — `select * from pg_available_extensions where name='vector'` result recorded.  ☐ by use  (read-only — safe to run)
-- **S2 · shared Supabase vector schema DRAFTED** — `build-prep/the-one-system/SUPABASE-VECTOR-SCHEMA.md` + a migration FILE (not applied) that holds multi-dim (nomic 3584 / pplx 2560 / bge 1024), space/scale, emb-layer, content_hash, canonical source-address, + the pyramid rungs; maps recollection's `fingerprints` schema + the FsStore records onto it.
-  FUNCTION — the draft + migration file exist, internally consistent, cover every current space.  ☐ by inspection
-  DATA-FACE — the schema is the unification artifact for BOTH sessions; addresses use the shared grammar; NEEDS-TIM/Glyphic markers on every open decision (dim strategy, canonical code://).  ☐
-  DO-NOT — do not `apply_migration` / do not move the live store. Draft only.
-- **S3 · canonical code:// reconciliation DRAFTED** — `build-prep/the-one-system/CODE-ADDRESS-RECONCILIATION.md`: the 3 forms, the proposal (ledger form canonical), the file://↔code:// provenance join, and the exact S3-surface migration steps — as a PLAN for approval.
-  FUNCTION — the doc exists with the precise change-set enumerated + what-it-preserves.  ☐ by inspection
-  DO-NOT — do not change the live address scheme or touch `resolve_scope`/the S3 surface.
+## Group S — migrate to the Supabase store + reconcile code:// (APPLY — Tim authorized full migrate)
+- **S1 · pgvector enabled** — `vector` extension available + enabled on :15432.
+  FUNCTION — `create extension if not exists vector` succeeds; version recorded.  ☐ by use
+- **S2 · shared Supabase vector schema APPLIED** — the schema holding multi-dim (nomic 3584 / pplx 2560 / bge 1024), space/scale, emb-layer, content_hash, canonical source-address (ledger form), + pyramid rungs. Also write it up in `build-prep/the-one-system/SUPABASE-VECTOR-SCHEMA.md` for Glyphic.
+  FUNCTION — the schema is created in Supabase; a test insert+query round-trips a vector.  ☐ by use
+  DATA-FACE — one store, addressed by the shared grammar; multi-dim handled (per-dim column/table); every space representable.  ☐ by use
+  COORDINATE — fold Glyphic's models/dims if they reply; else proceed with nomic/pplx/bge (the known set).
+- **S3 · migrate all vector spaces → Supabase (additive→verify→cutover)** — copy every FsStore space (code/symbol/docs/desc/extractions/history/repo/topics/code_archaeology + scale rungs) AND recollection's fingerprints into Supabase; verify counts + a real query match the source; then make Supabase the read path. KEEP FsStore/sqlite until verified.
+  FUNCTION — per space: source count == Supabase count, and a `query` returns matching top-k from Supabase.  ☐ by use
+  DATA-FACE — no silent drops; a reconciliation table (space: source_n / supabase_n / match) proves completeness.  ☐ by use
+- **S4 · canonical code:// reconciliation APPLIED (additive→verify→cutover)** — migrate the corpus `repo` space + `resolve_scope`/S3 to the ledger form `code://<project>/<path>::<symbol>`; add the `file://`↔`code://` path-join for provenance. Enumerate what each step PRESERVES.
+  FUNCTION — the corpus/repo addresses + resolve_scope resolve on the ledger form; a spot query proves the S3 join still works.  ☐ by use
+  NOTE — additive first (accept both forms), verify the surface still resolves, THEN retire the stem form. If any consumer can't migrate cleanly, record it + keep the alias — never break the live surface.
 
 ## Group C — coordinate (check EVERY tick)
 - **C1 · Glyphic reply folded in** — each loop tick, `cc_channel(op=mail, thread="t-1782921350-ch-518m76r0")`; if they replied, fold their models/dims/store + reactions into the schema draft (S2) and reply with the converged direction.
