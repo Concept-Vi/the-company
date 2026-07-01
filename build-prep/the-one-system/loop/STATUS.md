@@ -2,6 +2,19 @@
 
 *Updated each tick so the next tick (and Tim) resume cleanly. Criteria: COMPLETION_CRITERIA.md.*
 
+## TICK 6 (05:45) — FULL MIGRATE essentially complete; unified store = 74,996 vectors / 25 spaces
+- **S3 FULL MIGRATE GREEN** — `ledger.embedding` on :15432 now unifies: code 1042 · symbol 6201 · docs 679 · all corpus spaces (extractions 51600/history/repo/topics/code_archaeology) · **exchange 6983** (recollection's conversation embeddings — the MEMORY half; 8222 fingerprints→6983 = honest same-source dedup, verified) · **16 scale-pyramid rungs** (~1046 centroids). CODE + CONVERSATION + multi-scale, ONE pgvector store. FsStore/sqlite kept as fallback (not yet cut over).
+- **D GREEN** — still-missing code/md → **0** (2 kimi bad-json files retried successfully). Real code fully described.
+- **S4-provenance GREEN** — 1403 generated-by edges (code↔exchange) in ledger.edge.
+- **desc space** — PARTIAL (504/1041); pplx stall-prone under concurrent load; resumed (incremental) — the ONLY in-flight embedding piece. It's the 3rd lens (plain-language code search); core spaces are done without it.
+
+## NEEDS-TIM (the only non-auto items):
+- **S4-B code:// surface reconcile** — resolve_scope/S3 is LIVE chat-surface code; drafted (CODE-ADDRESS-RECONCILIATION.md) as a ~15-min supervised change. NOT done unattended.
+- **cutover** — switch the query read-path FsStore→Supabase (all data is IN Supabase + verified; the read-path flip is a deliberate step for when you + Glyphic confirm).
+- **Glyphic** — still no reply; the shared schema (SUPABASE-VECTOR-SCHEMA.md) awaits their models/dims.
+
+## Essentially COMPLETE. Remaining auto: desc finish+migrate (in-flight). Everything else = NEEDS-TIM.
+
 ## TICK 5 (05:14) — corpus migration verified, D2 done, provenance edges landed, desc space built
 - **S3 corpus GREEN** — history 2928 / repo 1292 / topics 325 / code_archaeology 2900 / extractions 51600 all migrated + count-verified. **ledger.embedding now holds 66,967 vectors across 8 spaces.**
 - **D2 GREEN** — ingested scoped output; still-missing code/md **299→2** (the 2 = kimi bad-json on ledger_coverage_audit.py + use_side_gates_acceptance.py — mechanical retry). Real code 1041/1228 described (rest = excluded claude-ds).
