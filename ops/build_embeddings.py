@@ -42,6 +42,12 @@ SPACES = {
              # real 32768-tok window (~3.4 chars/tok prose) as the only safety net; a doc over it (essentially
              # none) is flagged for chunking, not silently truncated.
              "char_ceiling": 110000},
+    "desc": {"kind": "fabric",   # the DESCRIPTION space: each code file's what_it_does, embedded as TEXT (pplx)
+             "model": "perplexity-ai/pplx-embed-context-v1-4b", "base_url": "http://127.0.0.1:8007/v1", "dim": 2560,
+             "n_ctx": 32768, "emb": "pplx", "desc": "code file's what_it_does description -> text embedder",
+             # Tim: 'markdown embedded differently from the descriptions of code files' — this is that space.
+             # Enables plain-language 'find code that DOES X' search, distinct from raw-code (nomic) similarity.
+             "char_ceiling": 110000},
 }
 PG = ["psql", "-h", "127.0.0.1", "-p", "15432", "-U", "postgres", "-d", "postgres", "-tAc"]
 
@@ -75,6 +81,24 @@ def corpus_for(space: str, project: str, root: str):
             continue
         corpus.append({"address": f"code://{project}/{p}", "text": text})
     return corpus, empty, missing
+
+
+def corpus_for_desc(project, root):
+    """The DESCRIPTION corpus: each CODE file's what_it_does (from the ledger interpretive layer), addressed by
+    the file's code:// address. Text = the description, embedded by pplx (text model) — the plain-language
+    'find code that does X' lens, distinct from the raw-code nomic space."""
+    rows = psql(f"select e.path||chr(1)||replace(coalesce(e.what_it_does,''),chr(1),' ') "
+                f"from ledger.entry_latest e where e.project=$q${project}$q$ and e.node_type='file' "
+                f"and e.ext in ($q$.py$q$,$q$.ts$q$,$q$.tsx$q$,$q$.js$q$,$q$.jsx$q$) "
+                f"and coalesce(e.what_it_does,'')<>'' and coalesce(e.coverage_state,'')<>'excluded' order by e.path").splitlines()
+    corpus = []
+    for r in rows:
+        if chr(1) not in r:
+            continue
+        path, desc = r.split(chr(1), 1)
+        if desc.strip():
+            corpus.append({"address": f"code://{project}/{path}", "text": desc})
+    return corpus, 0, 0
 
 
 def corpus_for_symbols(project, root):
@@ -173,6 +197,8 @@ def main():
     root = os.path.abspath(a.root)
     if a.space == "symbol":
         corpus, empty, missing = corpus_for_symbols(a.project, root)
+    elif a.space == "desc":
+        corpus, empty, missing = corpus_for_desc(a.project, root)
     else:
         corpus, empty, missing = corpus_for(a.space, a.project, root)
     print(f"space={a.space} ({cfg['desc']}) | model={cfg['model']} dim={cfg['dim']} n_ctx={cfg['n_ctx']}", flush=True)
