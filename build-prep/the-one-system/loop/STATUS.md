@@ -2,6 +2,13 @@
 
 *Updated each tick so the next tick (and Tim) resume cleanly. Criteria: COMPLETION_CRITERIA.md.*
 
+## TICK 3 (04:11) — V green, S1+S2 green (Supabase schema live)
+- **V GREEN** — `ops/embed_status.py`: efficient per-space table (code 1042 · symbol 6201 · docs 679 · extractions 51600 · history 2928 · repo 1292 · topics 325 · code_archaeology 2900). Retrieval PROVEN: query "resolve which brain model" → code: brain_router/model_routing; symbol: the exact fns active_brain/_chat_brain_cfg/require_brain; docs: brain-loadouts.md. Multi-scale semantic search works.
+- **S1 GREEN** — pgvector 0.8.2 enabled on :15432.
+- **S2 GREEN** — `ledger.embedding` applied + round-trip verified. One table, per-dim **halfvec** columns (3584 nomic / 2560 pplx / 1024 bge), HNSW-cosine indexed (halfvec→4000 dims; plain vector caps at 2000 so nomic+pplx would be exact-only). Addressed by canonical code://. Schema draft written for Glyphic: SUPABASE-VECTOR-SCHEMA.md.
+- **D2 still grinding:** batch2 producer (kimi, --limit 400) still running; its ingest (waiting task) fires when done → still-missing code/md drops from 299. Fresh-only ingest (stale-june archived).
+- **NEXT: S3** (migrate all FsStore spaces + recollection fingerprints → ledger.embedding, additive→verify→cutover) → **S4** (code:// reconcile on corpus/repo+resolve_scope; LAND provenance edges via the file://↔code:// join, now trivial since both can be SQL) → finish D2 → D3 (desc space).
+
 ## TICK 2 (03:39) — done: D2 ingest #1 (120, still-missing 341→299), provenance spine ACTIVATED
 - **P GREEN — provenance spine live.** Ran `recollection/dist/crossings-cli.js build` (RECOLLECTION_CONFIG_DIR=/home/tim/company/.recollection): **23,608 links** (produced 4790 · referenced 4019 · temporal 6560 · containment 8239); 33,007 gap (Bash/Grep, no artefact path) deliberately NOT crossed (no fabrication). Axis PROVEN: `crossings-cli touched <abs-path>` resolves a code file → the `exchange://<sid>/<i>` + session + timestamp that generated it (e.g. store/vector_index.py → exchange://7c2c1b74…/1, 2026-05-31). Recent files (ledger_build.py) return [] — not yet in the indexed archive; honest.
 - **Landing provenance as LEDGER edges** folds into S: once recollection's data is on Supabase, the `file://`↔`code://<project>/<path>` join is one SQL — no throwaway sqlite→postgres bridge. (P is green; the ledger-edge materialization is an S sub-step.)
