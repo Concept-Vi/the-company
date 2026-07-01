@@ -2,6 +2,12 @@
 
 *Updated each tick so the next tick (and Tim) resume cleanly. Criteria: COMPLETION_CRITERIA.md.*
 
+## TICK 4 (04:43) — S3 (my spaces) migrated+verified; D2 scoped-fixed & grinding; corpus migration backgrounded
+- **S3 partial GREEN** — `ops/migrate_vectors_to_supabase.py`: code 1042→1042, symbol 6201→6201, docs 679→679 into `ledger.embedding` (exact counts). VERIFIED by query: "resolve which brain model" against Supabase symbol space returns the SAME ranking as FsStore (require_brain/brainRow/active_brain/_local_brain_key/_chat_brain_cfg) — halfvec fp16 distances differ, ranking identical. FsStore kept as fallback.
+- **corpus migration RUNNING** (bg, tmp/migrate_corpus.log): history/repo/topics/code_archaeology/extractions(51600) → ledger.embedding. Heavy (watch DB). Verify counts next tick.
+- **D2 scoped-FIXED** — producer was describing 5650 .json noise (sorted ahead of code); scoped to code/docs exts. D2-scoped grinding (309 real items, ~150/309). When done: ingest FRESH out/ → still-missing code/md 299→~0.
+- **NEXT:** verify corpus migration counts → finish D2 (ingest) → **D3** (desc space: pplx over what_it_does, batch≤4) → **S4** (code:// reconcile corpus/repo+resolve_scope to canonical, additive alias first; LAND provenance edges via file://↔code:// join now that both are queryable). Glyphic: still no reply.
+
 ## TICK 3 (04:11) — V green, S1+S2 green (Supabase schema live)
 - **V GREEN** — `ops/embed_status.py`: efficient per-space table (code 1042 · symbol 6201 · docs 679 · extractions 51600 · history 2928 · repo 1292 · topics 325 · code_archaeology 2900). Retrieval PROVEN: query "resolve which brain model" → code: brain_router/model_routing; symbol: the exact fns active_brain/_chat_brain_cfg/require_brain; docs: brain-loadouts.md. Multi-scale semantic search works.
 - **S1 GREEN** — pgvector 0.8.2 enabled on :15432.
