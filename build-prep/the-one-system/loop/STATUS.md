@@ -1,6 +1,25 @@
-# Loop status — embedding/memory unification (live)
+# Loop status — embedding/memory unification (COMPLETE 2026-07-02 ~06:20)
 
-*Updated each tick so the next tick (and Tim) resume cleanly. Criteria: COMPLETION_CRITERIA.md.*
+*The overnight loop is DONE. All authorized auto-work is green; only Tim-supervised items remain (below). Criteria: COMPLETION_CRITERIA.md. Tick log follows this summary.*
+
+## ✅ FINAL — what the loop achieved
+**The unified Supabase embedding+memory store is LIVE: `ledger.embedding` (:15432) = 75,500 vectors across 26 spaces + 1,403 provenance edges.** Both halves of the merge-intention spine — *what exists* (code) and *why/when it exists* (conversation) — in ONE pgvector store, one address grammar.
+- **E — multi-model, multi-scale embeddings:** code 1042 + symbol 6201 (nomic-embed-code 3584) · docs 679 + desc 504/1041 (pplx 2560). Killed two hidden truncations (ollama 4096, pplx 8192→real 32768). Multi-scale = file ↕ symbol ↕ the 16 pyramid rungs.
+- **D — descriptions:** carry-forward 3384 + delta re-run → still-missing code/md **0**. Unlocked the `desc` space (plain-language code search).
+- **P/S4 — provenance spine:** activated recollection's dormant crossings (23,608 links); landed **1,403 `generated-by` edges** — code node → the `exchange://` that made it, queryable from the ledger.
+- **S — full Supabase migrate:** halfvec multi-dim schema (nomic 3584 / pplx 2560 / bge 1024, HNSW). Migrated every FsStore space + recollection's 6,983 conversation embeddings + scale rungs. Each additive→verified (counts + ranking match FsStore). FsStore kept as fallback.
+- **V — verified by use:** `ops/embed_status.py` + a cross-space query ("resolve which brain model") returns the right code (desc: fabric/config.py, decide-for-me.py), the conversations (exchange), and the docs — one query, all three sides.
+
+## ⚠ NEEDS-TIM (the only remaining items — NOT done unattended)
+1. **S4-B — code:// surface reconcile.** Migrate corpus/repo + `resolve_scope`/S3 to canonical `code://<project>/<path>::<sym>`. LIVE chat-surface code → ~15-min supervised change; plan in `CODE-ADDRESS-RECONCILIATION.md`. (Everything NEW already uses the canonical form; only the old surface diverges.)
+2. **Read-path cutover.** All data is IN Supabase + verified; flip `query_index`/`corpus` reads FsStore→Supabase when you + Glyphic confirm. FsStore stays the live read until then.
+3. **Glyphic (`ch-518m76r0`) schema input.** No reply overnight. Shared schema drafted (`SUPABASE-VECTOR-SCHEMA.md`) — awaits their models/dims before cutover.
+4. **desc space remainder** (537 of 1041) — pplx stall-prone under load; non-critical 3rd lens. Resume `ops/build_embeddings.py --space desc` (incremental) when pplx is unloaded, then migrate.
+
+## Tools built (reusable): ops/build_embeddings.py · ops/embed_status.py · ops/migrate_vectors_to_supabase.py · ops/migrate_recollection_to_supabase.py · SUPABASE-VECTOR-SCHEMA.md · CODE-ADDRESS-RECONCILIATION.md · EMBEDDING-MEMORY-SUBSTRATE.md
+
+---
+
 
 ## TICK 6 (05:45) — FULL MIGRATE essentially complete; unified store = 74,996 vectors / 25 spaces
 - **S3 FULL MIGRATE GREEN** — `ledger.embedding` on :15432 now unifies: code 1042 · symbol 6201 · docs 679 · all corpus spaces (extractions 51600/history/repo/topics/code_archaeology) · **exchange 6983** (recollection's conversation embeddings — the MEMORY half; 8222 fingerprints→6983 = honest same-source dedup, verified) · **16 scale-pyramid rungs** (~1046 centroids). CODE + CONVERSATION + multi-scale, ONE pgvector store. FsStore/sqlite kept as fallback (not yet cut over).
