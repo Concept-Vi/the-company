@@ -48,6 +48,23 @@ check("1 live_sessions returns the alive session", "ch-live" in ids)
 check("2 live_sessions PRUNES the dead session (real presence)", "ch-dead" not in ids)
 check("3 the dead registration file was removed", not os.path.exists(os.path.join(tmp, "ch-dead.json")))
 
+# --- claude_pid-aware presence: presence = the message can actually be DELIVERED, not just node-helper-alive ---
+import signal as _sig, subprocess as _sp, time as _tt
+def reg_cp(handle, claude_pid):   # node server = our (alive) pid; claude_pid varies
+    json.dump({"handle": handle, "session_id": "", "cwd": "/home/tim/" + handle, "description": handle,
+               "pid": os.getpid(), "claude_pid": claude_pid, "port": PORT, "started": "2026-06-14T00:00:00"},
+              open(os.path.join(tmp, handle + ".json"), "w"))
+reg_cp("ch-orphan", 999998)                               # node alive, Claude session DEAD → orphaned
+_child = _sp.Popen(["sleep", "60"]); os.kill(_child.pid, _sig.SIGSTOP); _tt.sleep(0.2)
+reg_cp("ch-susp", _child.pid)                             # node alive, Claude session STOPPED (state T)
+_ids2 = {r["handle"] for r in cc.live_sessions()}
+check("3b orphaned reg (Claude session pid dead) is PRUNED",
+      "ch-orphan" not in _ids2 and not os.path.exists(os.path.join(tmp, "ch-orphan.json")))
+check("3c suspended session (state T) is EXCLUDED from live (would time out on send)", "ch-susp" not in _ids2)
+check("3d suspended reg is KEPT, not pruned (it can resume)", os.path.exists(os.path.join(tmp, "ch-susp.json")))
+os.kill(_child.pid, _sig.SIGCONT); _child.kill(); _child.wait()
+os.unlink(os.path.join(tmp, "ch-susp.json"))
+
 # --- find resolution + fail-loud ---
 check("4 find by handle", cc.find("ch-live")["handle"] == "ch-live")
 check("5 find by exact cwd", cc.find("/home/tim/a")["handle"] == "ch-live")

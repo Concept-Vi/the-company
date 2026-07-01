@@ -53,6 +53,38 @@ def _alive(pid: int) -> bool:
         return False
 
 
+def _proc_state(pid: int):
+    """The process state char from /proc/<pid>/stat, or None if the pid is dead. 'R'/'S'/'D' = live,
+    'T'/'t' = STOPPED (suspended — Ctrl-Z / SIGSTOP; cannot consume an injected message), 'Z' = zombie."""
+    try:
+        with open(f"/proc/{int(pid)}/stat") as f:
+            data = f.read()
+        # state is the field right after the (comm) paren group — comm may contain spaces/parens
+        return data[data.rindex(")") + 2]
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def _channel_presence(reg: dict) -> str:
+    """TRUE reachability of a channel-transport member: 'live' | 'suspended' | 'dead'. Presence means the
+    message can actually be DELIVERED — which needs BOTH the node channel-server (reg['pid']) alive AND the
+    Claude session it feeds (reg['claude_pid']) alive-and-not-stopped. The old test checked only reg['pid']
+    (the node helper) and treated os.kill(pid,0) as alive, so an ORPHANED server (Claude gone) or a SUSPENDED
+    session (state T) both falsely read as live and then timed out on send. claude_pid is honoured when
+    present; older regs without it fall back to the node-pid test (unchanged)."""
+    if not _alive(reg.get("pid", -1)):
+        return "dead"                                    # node channel-server gone
+    cpid = reg.get("claude_pid")
+    if cpid in (None, "", -1):
+        return "live"                                    # older reg: no claude_pid recorded → node-pid test only
+    st = _proc_state(cpid)
+    if st is None:
+        return "dead"                                    # the Claude session is gone → this server is orphaned
+    if st in ("T", "t"):
+        return "suspended"                               # session paused (Ctrl-Z) — can't consume, but may resume
+    return "live"
+
+
 def _read_reg(path: str):
     try:
         with open(path, encoding="utf-8") as f:
@@ -127,14 +159,17 @@ def live_sessions() -> list:
                 continue          # un-routable supervised reg — neither dispatch nor list it
             sup_regs.setdefault(base, []).append((p, reg))
             continue
-        # channel transport (default): pid-alive + has a port (the original presence test)
+        # channel transport (default): reachable = node-server alive AND Claude session alive-and-not-stopped
         if "port" not in reg:
             continue
-        if not _alive(reg.get("pid", -1)):
-            try: os.unlink(p)          # prune the dead channel registration
+        presence = _channel_presence(reg)
+        if presence == "dead":
+            try: os.unlink(p)          # node server gone OR Claude session gone (orphaned) → prune the reg
             except OSError: pass
             continue
-        out.append(reg)
+        if presence == "suspended":
+            continue                   # paused session — NOT reachable (excluded from live), but KEEP the reg
+        out.append(reg)                #   (it re-appears when resumed; pruning would strip a resumable session)
     # supervised members: one /sessions probe per distinct supervisor base
     for base, items in sup_regs.items():
         if base not in sup_cache:
