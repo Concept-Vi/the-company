@@ -2,6 +2,15 @@
 
 *Updated each tick so the next tick (and Tim) resume cleanly. Criteria: COMPLETION_CRITERIA.md.*
 
+## TICK 5 (05:14) — corpus migration verified, D2 done, provenance edges landed, desc space built
+- **S3 corpus GREEN** — history 2928 / repo 1292 / topics 325 / code_archaeology 2900 / extractions 51600 all migrated + count-verified. **ledger.embedding now holds 66,967 vectors across 8 spaces.**
+- **D2 GREEN** — ingested scoped output; still-missing code/md **299→2** (the 2 = kimi bad-json on ledger_coverage_audit.py + use_side_gates_acceptance.py — mechanical retry). Real code 1041/1228 described (rest = excluded claude-ds).
+- **S4-provenance GREEN** — **1403 `generated-by` edges** (459 code files) landed in ledger.edge: code node → the `exchange://` that generated it (e.g. store/vector_index.py → exchange://7c2c1b74…/1). The code↔conversation spine is queryable FROM the ledger.
+- **D3** — `desc` space (pplx over what_it_does) built (1041) + migrating to Supabase (bg task bpcjc7jwz).
+- **S4-B code:// surface = NEEDS-TIM** — resolve_scope/S3 is live chat-surface code; additive-alias cutover drafted (CODE-ADDRESS-RECONCILIATION.md) for a ~15-min supervised change. Not done unattended (never break the live surface).
+
+## REMAINING: desc migrate (finishing) · recollection fingerprints 8222 → Supabase (memory side of full-migrate, TODO) · scale rungs (scale:extractions:k512) → Supabase · 2 D2 bad-json retries · S4-B (Tim) · Glyphic still no reply.
+
 ## TICK 4 (04:43) — S3 (my spaces) migrated+verified; D2 scoped-fixed & grinding; corpus migration backgrounded
 - **S3 partial GREEN** — `ops/migrate_vectors_to_supabase.py`: code 1042→1042, symbol 6201→6201, docs 679→679 into `ledger.embedding` (exact counts). VERIFIED by query: "resolve which brain model" against Supabase symbol space returns the SAME ranking as FsStore (require_brain/brainRow/active_brain/_local_brain_key/_chat_brain_cfg) — halfvec fp16 distances differ, ranking identical. FsStore kept as fallback.
 - **corpus migration RUNNING** (bg, tmp/migrate_corpus.log): history/repo/topics/code_archaeology/extractions(51600) → ledger.embedding. Heavy (watch DB). Verify counts next tick.
