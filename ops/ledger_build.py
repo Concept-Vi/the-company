@@ -39,6 +39,8 @@ _SCHEME_RE = re.compile(r"\b([a-z][a-z0-9+.\-]*)://")
 _TODO_RE = re.compile(r"\b(TODO|FIXME|XXX|HACK)\b")
 _STUB_RE = re.compile(r"\b(skeleton|not wired|not-wired|stub|placeholder|not implemented|unimplemented)\b", re.I)
 _EMIT_FNS = {"emit", "_emit", "_emit_durable", "append_event", "emit_event"}
+_ROUTE_VERBS = {"get", "post", "put", "delete", "patch", "route", "add_api_route", "add_url_rule", "websocket"}
+_SUBSCRIBE_FNS = {"subscribe", "on", "on_event", "add_listener", "addEventListener", "listen", "handle"}
 
 
 def _ts() -> str:
@@ -160,9 +162,12 @@ def extract_python(rel: str, src: str) -> dict:
                 edges.append({"from": file_addr, "kind": "imports", "to_raw": a.name, "line": n.lineno})
         elif isinstance(n, ast.ImportFrom):
             mod = n.module or "."
+            names = [a.name for a in n.names if a.name != "*"]     # the symbols this file pulls from mod
             imports.append({"target": mod, "kind": "from", "internal": _is_internal(mod),
-                            "line": n.lineno, "lazy": n.col_offset > 0})
-            edges.append({"from": file_addr, "kind": "imports", "to_raw": mod, "line": n.lineno})
+                            "line": n.lineno, "lazy": n.col_offset > 0, "names": names})
+            # carry the imported names on the edge so the resolver can bind call `foo()` -> mod::foo
+            edges.append({"from": file_addr, "kind": "imports", "to_raw": mod, "line": n.lineno,
+                          "extra": {"names": names} if names else {}})
 
     # module-level constructs (constants + uppercase-dict declarations — top-level only, correctly)
     for node in ast.iter_child_nodes(tree):
@@ -249,6 +254,21 @@ def extract_python(rel: str, src: str) -> dict:
             if fname in _EMIT_FNS and n.args and isinstance(n.args[0], ast.Constant) and isinstance(n.args[0].value, str):
                 events.add(n.args[0].value)
                 edges.append({"from": file_addr, "kind": "emits-event", "to_raw": n.args[0].value, "line": getattr(n, "lineno", None)})
+            # ROUTE DEFINITION — reusable: @app.get("/x")/@router.post/app.route/add_url_rule (FastAPI/Flask/
+            # express-py) with a string path starting "/". Server SERVES this endpoint (the seam's far side).
+            if fname in _ROUTE_VERBS and n.args and isinstance(n.args[0], ast.Constant) \
+                    and isinstance(n.args[0].value, str) and n.args[0].value.startswith("/"):
+                routes.add(n.args[0].value)
+                edges.append({"from": file_addr, "kind": "serves-endpoint", "to_raw": n.args[0].value,
+                              "line": getattr(n, "lineno", None)})
+        elif isinstance(n, ast.Compare) and len(n.comparators) == 1:
+            # DISPATCHER pattern (stdlib-http): `self.path == "/api/x"` / `path == "/api/x"` — the company
+            # bridge's route table. Either side may hold the literal. Server SERVES it.
+            for side in (n.left, n.comparators[0]):
+                if isinstance(side, ast.Constant) and isinstance(side.value, str) and side.value.startswith("/api/"):
+                    routes.add(side.value)
+                    edges.append({"from": file_addr, "kind": "serves-endpoint", "to_raw": side.value,
+                                  "line": getattr(n, "lineno", None)})
         elif isinstance(n, ast.Subscript):  # os.environ["X"]
             if isinstance(n.value, ast.Attribute) and n.value.attr == "environ":
                 key = n.slice
@@ -261,6 +281,43 @@ def extract_python(rel: str, src: str) -> dict:
         elif isinstance(n, ast.Constant) and isinstance(n.value, str):
             if n.value.startswith("/api/"):
                 routes.add(n.value.split()[0])
+
+    # SUBSCRIBES-EVENT — the consumer side of the event graph (matches the file-level emits-event edges).
+    # Consumers pull the log and filter by kind: `x.get("kind") == "lit"` (inline) or bind `k = x.get("kind")`
+    # then `k == "lit"` / `k in TUPLE` (dispatch). Two passes: collect the kind-bound vars, then harvest.
+    def _is_kind_access(node):                                    # x.get("kind"|"type") or x["kind"|"type"]
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "get" \
+                and node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value in ("kind", "type"):
+            return True
+        if isinstance(node, ast.Subscript) and isinstance(node.slice, ast.Constant) and node.slice.value in ("kind", "type"):
+            return True
+        return False
+    kind_vars, tuple_consts = set(), {}
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Assign) and _is_kind_access(n.value):
+            for t in n.targets:
+                if isinstance(t, ast.Name):
+                    kind_vars.add(t.id)
+        if isinstance(n, ast.Assign) and isinstance(n.value, (ast.Tuple, ast.List)):  # named string-tuple consts
+            lits = [e.value for e in n.value.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)]
+            if lits and len(lits) == len(n.value.elts):
+                for t in n.targets:
+                    if isinstance(t, ast.Name):
+                        tuple_consts[t.id] = lits
+    subs = set()
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Compare) and len(n.comparators) == 1 and isinstance(n.ops[0], (ast.Eq, ast.In)):
+            left, right, op = n.left, n.comparators[0], n.ops[0]
+            kind_side = (isinstance(left, ast.Name) and left.id in kind_vars) or _is_kind_access(left)
+            if isinstance(op, ast.Eq) and kind_side and isinstance(right, ast.Constant) and isinstance(right.value, str):
+                subs.add(right.value)
+            elif isinstance(op, ast.In) and kind_side:            # k in ("a","b") / k in NAMED_TUPLE
+                if isinstance(right, (ast.Tuple, ast.List)):
+                    subs.update(e.value for e in right.elts if isinstance(e, ast.Constant) and isinstance(e.value, str))
+                elif isinstance(right, ast.Name) and right.id in tuple_consts:
+                    subs.update(tuple_consts[right.id])
+    for ev in sorted(subs):
+        edges.append({"from": file_addr, "kind": "subscribes-event", "to_raw": ev, "line": None})
 
     # scheme refs (regex over source — OPEN, not a fixed list) with first line
     schemes = {}
@@ -908,8 +965,36 @@ def resolve_edges(ex: dict) -> dict:
             return "stdlib"
         return "external"                                        # a library / dynamic / method-on-value
 
-    # PASS A — imports (also builds per-file imported-file set, for import-scoped call resolution)
-    per_file_imp, resolved_n = {}, 0
+    # endpoint index: normalized server URL -> serving node(s). Built from serves-endpoint edges so the
+    # client seam (calls-endpoint) can resolve to the backend that answers it. Reusable (both sides are data).
+    def norm_url(u):
+        u = u.split("?")[0].split("#")[0]                        # drop query/fragment
+        return u.rstrip("/") or "/"
+    endpoint_serves = {}
+    for g in ex["edges"]:
+        if g["kind"] == "serves-endpoint":
+            endpoint_serves.setdefault(norm_url(g["to_raw"]), set()).add(g["from"])
+    # event index: name -> emitter file(s). subscribes-event resolves to the emitter (symmetric to endpoints).
+    event_emits = {}
+    for g in ex["edges"]:
+        if g["kind"] == "emits-event":
+            event_emits.setdefault(g["to_raw"], set()).add(g["from"])
+
+    def resolve_endpoint(url):
+        u = norm_url(url)
+        if u in endpoint_serves:
+            hit = endpoint_serves[u]
+            return next(iter(hit)) if len(hit) == 1 else None    # unambiguous exact
+        # prefix routes: server "/api/image" serves client "/api/image/123"
+        best = None
+        for su, servers in endpoint_serves.items():
+            if u.startswith(su + "/") and len(servers) == 1 and (best is None or len(su) > len(best[0])):
+                best = (su, next(iter(servers)))
+        return best[1] if best else None
+
+    # PASS A — imports (builds: per-file imported-FILE set + per-file imported-NAME→file map, both used
+    # for import-scoped call resolution — `from x import foo; foo()` binds foo -> x's file, then x::foo).
+    per_file_imp, per_file_name, resolved_n = {}, {}, 0
     for g in ex["edges"]:
         if g["kind"] != "imports":
             continue
@@ -922,7 +1007,10 @@ def resolve_edges(ex: dict) -> dict:
         g["to_resolved"] = res
         if res:
             resolved_n += 1
-            per_file_imp.setdefault(ff, set()).add(res.split("::")[0])
+            resf = res.split("::")[0]
+            per_file_imp.setdefault(ff, set()).add(resf)
+            for nm in (g.get("extra") or {}).get("names", []):     # bind each imported name to its file
+                per_file_name.setdefault(ff, {})[nm] = resf
         else:
             g.setdefault("extra", {})["far"] = "stdlib" if raw.split(".")[0] in _STDLIB else "external"
 
@@ -934,10 +1022,23 @@ def resolve_edges(ex: dict) -> dict:
         res = None
         if k == "contains":
             res = raw if raw in all_nodes else None
+        elif k == "calls-endpoint":
+            res = resolve_endpoint(raw)                          # client seam -> the backend that serves it
+            if not res:
+                g.setdefault("extra", {})["far"] = "external"    # a URL no server in this tree serves
+        elif k == "subscribes-event":
+            hit = event_emits.get(raw) or set()                  # consumer -> the emitter of that event
+            res = next(iter(hit)) if len(hit) == 1 else None
+            if not res and not hit:
+                g.setdefault("extra", {})["far"] = "external"    # subscribed to an event nothing in-tree emits
         elif k in ("calls", "extends", "references"):
             ff, nm = file_of(g["from"]), raw.split(".")[-1]
             if ff and ff in per_file and nm in per_file[ff]:
                 res = per_file[ff][nm]                           # same-file
+            elif ff and nm in per_file_name.get(ff, {}):         # explicitly imported: `from x import nm` -> x::nm
+                tgt_file = per_file_name[ff][nm]
+                cand = per_file.get(tgt_file[len(f"code://{PROJECT}/"):], {}).get(nm)
+                res = cand or None
             else:
                 ids = global_name.get(nm) or set()
                 if len(ids) == 1:
