@@ -938,13 +938,25 @@ def resolve_edges(ex: dict) -> dict:
     all_nodes = set(f"code://{PROJECT}/{p}" for p in file_set)
     mod_map = {p[:-3].replace("/", "."): p for p in file_set if p.endswith(".py")}
     global_name, per_file = {}, {}
+    per_file_qual = {}                                           # file -> {qual (e.g. 'ClassName.method'): code_id}
+    class_files = {}                                             # ClassName -> set of files defining it
     for s in ex["symbols"]:
         global_name.setdefault(s["name"], set()).add(s["code_id"])
         per_file.setdefault(s["_parent_path"], {}).setdefault(s["name"], s["code_id"])
+        qual = s["code_id"].split("::", 1)[1] if "::" in s["code_id"] else s["name"]
+        per_file_qual.setdefault(s["_parent_path"], {})[qual] = s["code_id"]
+        if s["symbol_kind"] == "class":
+            class_files.setdefault(s["name"], set()).add(s["_parent_path"])
 
     def file_of(ref):
         pre = f"code://{PROJECT}/"
         return ref[len(pre):].split("::")[0] if ref.startswith(pre) else None
+
+    def enclosing_class(ref):                                    # from 'file.py::ClassName.method' -> 'ClassName'
+        if "::" not in ref:
+            return None
+        q = ref.split("::", 1)[1]
+        return q.rsplit(".", 1)[0] if "." in q else None
 
     def resolve_js_import(from_file, target):                    # relative/path → a real file in the tree
         cand = os.path.normpath(os.path.join(os.path.dirname(from_file), target))
@@ -1033,13 +1045,25 @@ def resolve_edges(ex: dict) -> dict:
                 g.setdefault("extra", {})["far"] = "external"    # subscribed to an event nothing in-tree emits
         elif k in ("calls", "extends", "references"):
             ff, nm = file_of(g["from"]), raw.split(".")[-1]
-            if ff and ff in per_file and nm in per_file[ff]:
+            recv = raw.split(".")[0] if "." in raw else None
+            # RECEIVER-AWARE dotted resolution — resolve what the code LOCALLY states, no type inference:
+            if recv in ("self", "cls") and ff:                   # self.m -> the enclosing class's m (same file)
+                ec = enclosing_class(g["from"])                  # exact Class.method only (base-class m -> stays
+                if ec:                                           # unresolved+classified; a guess would mis-link)
+                    res = per_file_qual.get(ff, {}).get(f"{ec}.{nm}")
+            elif recv and recv[:1].isupper() and recv in class_files:  # ClassName.m -> that class's m
+                for cf in class_files[recv]:
+                    hit = per_file_qual.get(cf, {}).get(f"{recv}.{nm}")
+                    if hit:
+                        res = hit
+                        break
+            if res is None and ff and ff in per_file and nm in per_file[ff]:
                 res = per_file[ff][nm]                           # same-file
-            elif ff and nm in per_file_name.get(ff, {}):         # explicitly imported: `from x import nm` -> x::nm
+            elif res is None and ff and nm in per_file_name.get(ff, {}):  # `from x import nm` -> x::nm
                 tgt_file = per_file_name[ff][nm]
                 cand = per_file.get(tgt_file[len(f"code://{PROJECT}/"):], {}).get(nm)
                 res = cand or None
-            else:
+            elif res is None:
                 ids = global_name.get(nm) or set()
                 if len(ids) == 1:
                     res = next(iter(ids))                        # unambiguous global
