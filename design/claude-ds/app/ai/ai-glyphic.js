@@ -58,7 +58,7 @@
 
   AI.register({
     id: 'glyphic.generate', name: 'Generate glyphic symbols', layer: 'capability', family: 'icon',
-    surfaces: ['icons', 'glyphics', '*'], behaviours: ['voice.conceptv'], provider: 'claude',
+    surfaces: ['icons', 'glyphics', '*'], behaviours: ['voice.conceptv'], role: 'text',  /* A1: role-indirection (was provider:'claude') — resolves text→claude now, →Company when A flips the binding */
     params: { brief: '', count: 4, thread: [] }, icon: 'plus', provenance: 'built-in',
     description: 'Propose candidate symbol records (24px line glyphs + tags/domain/kind) from a brief; multi-step by threading prior turns. Candidates validate against CV_GLYPHIC.schema; save with glyphic.save.',
     run: function (a) {

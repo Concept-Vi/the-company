@@ -168,6 +168,7 @@
       surfaces: t.surfaces || null,        // which surfaces an entry applies to (null = any)
       behaviours: t.behaviours || [],      // behaviour ids a capability composes
       provider: t.provider || null,        // provider id a capability runs on
+      role: t.role || null,                // A1 role-indirection — provider-ROLE (resolved via ROLE_PROVIDERS); carried so a cap can declare a role instead of a literal provider
       params: t.params || {},              // dials (count, angle, …)
       tags: t.tags || [],
       provenance: t.provenance || 'user',
@@ -238,6 +239,21 @@
   }
 
   // ---------------------------------------------------------------------------
+  // ROLE INDIRECTION (A1, the AI-fusion seam) — a capability may declare a
+  // provider-ROLE instead of a literal provider id. ONE config binds role→provider,
+  // so flipping every model touch to a different provider (e.g. the Company) is a
+  // single edit here, not ~40 pinned call-sites. ADDITIVE: a cap with an explicit
+  // `provider` still resolves exactly as before; only caps that opt into `role` use this.
+  const ROLE_PROVIDERS = { text: 'claude', image: 'openai-image' };  // embed/etc. bind here as A wires the Company
+  function providerForRole(role) {
+    const id = ROLE_PROVIDERS[role];
+    if (!id) throw new Error('[CV_AI] no provider bound to role "' + role + '" (roles: ' + Object.keys(ROLE_PROVIDERS).join(', ') + ')');
+    return id;
+  }
+  // the provider id a capability resolves to: its explicit provider, else its role. Loud via providerForRole.
+  function providerIdFor(cap) { return cap.provider || (cap.role ? providerForRole(cap.role) : null); }
+
+  // ---------------------------------------------------------------------------
   // Context resolution — "resolve context from what screen Vi is on." Runs the
   // registered context resolver whose surface matches, producing the compact
   // context object capabilities build prompts from. Falls through a generic
@@ -296,7 +312,8 @@
     // resolve a provider only when the capability DECLARES one — a pure-function run()
     // capability (provider:null, no LLM) must not require a live LLM runtime to execute.
     // The build/parse (LLM) path below resolves 'claude' where it actually needs it.
-    const provider = cap.provider ? resolveProvider(cap.provider) : null;
+    const providerId = providerIdFor(cap);                    // explicit provider OR role-indirection (A1)
+    const provider = providerId ? resolveProvider(providerId) : null;
 
     // run() path — the capability owns build→complete→parse (it needs the
     // composer's prompt helpers). It still receives the resolved provider (or null
@@ -337,6 +354,7 @@
     register, registerMany, update, remove,
     get, all, query, resolve, lineage, children,
     resolveProvider, resolveContext, composeBehaviours, execute,
+    providerForRole, providerIdFor, get roleProviders() { return { ...ROLE_PROVIDERS }; },  // A1 role-indirection (read-only view)
     // convenience: route a one-off text completion through the resolved claude
     // provider — the single endpoint every surface should call instead of
     // window.claude.complete directly. Loud if the runtime is absent.

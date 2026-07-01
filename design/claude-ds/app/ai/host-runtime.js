@@ -57,6 +57,15 @@
   // do (caps), whether it is available right now, and how to activate it.
   // ==========================================================================
   const RUNTIMES = new Map();
+  // KIND REGISTRY (A1 seam) — provider runtime-KINDS resolve via a registry instead of a
+  // hardcoded if-ladder. registerKind(kind, fn) adds a resolver; resolveProviderRuntime checks
+  // this FIRST, then falls through to the built-in kinds below (ADDITIVE — nothing removed yet;
+  // the built-ins migrate INTO registered kinds in a later step, once this is proven).
+  const KINDS = new Map();
+  function registerKind(kind, fn) {
+    if (!kind || typeof fn !== 'function') throw new Error('[CV_HOST] registerKind requires (kind, resolverFn)');
+    KINDS.set(kind, fn); notify(); return kind;
+  }
   function registerRuntime(r) {
     if (!r || !r.id) throw new Error('[CV_HOST] runtime missing id');
     RUNTIMES.set(r.id, r);
@@ -154,6 +163,8 @@
   // ==========================================================================
   function resolveProviderRuntime(p) {
     const kind = p && p.runtime && p.runtime.kind;
+    // A1 seam: a registered kind resolver wins FIRST (additive — the built-in kinds below are unchanged).
+    if (KINDS.has(kind)) return KINDS.get(kind)(p);
     // host filesystem provider — used by repo.* capabilities
     if (kind === 'host-fs') {
       return { ...p, read, list, write, capabilities, async commit(change) { return commit(change); } };
@@ -417,7 +428,7 @@
   // ==========================================================================
   window.CV_HOST = {
     // runtimes
-    runtimes: RUNTIMES, registerRuntime, ranked, best, reader, writer, canWrite, reconnectFsapi,
+    runtimes: RUNTIMES, registerRuntime, registerKind, ranked, best, reader, writer, canWrite, reconnectFsapi,
     // ops
     read, list, write, capabilities,
     // CV_AI bridge

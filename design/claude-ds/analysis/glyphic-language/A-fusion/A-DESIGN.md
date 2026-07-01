@@ -101,8 +101,9 @@ the whole projection at the Company.
 - **A6 · Collaborative AI** — consume `CV_GLYPHGRAPH_SESSION`; act on selection + push graph-ops.
 Each verified by USE; §5 guardrails are acceptance criteria.
 
-## 9 · Decisions for Tim
-- **Home of the AI = the Company** (my grounded call — it holds the substance; CV_AI folds in as projection). Confirm or redirect.
-- **Door A (vite app) vs Door B (bridge-served)** for the same-origin face. *(rec: A.)*
-- **The `~/company` additions (§6) — the charter nod.**
-- Confirm `/api/stream` carries graph-deltas before relying on it (inferred [READ-5]).
+## 9 · Decisions — SETTLED (Tim, 2026-07-01)
+- **Home of the AI = the Company.** ✓ CONFIRMED — one AI registry lives in the Company; CV_AI folds in as the browser projection.
+- **Same-origin face = Door A (vite app + `/api`→`:8770` proxy).** ✓ CONFIRMED (the canvas/phone precedent).
+- **The `~/company` additions (§6) — YES, proceed** (with care; reversible; convergence). ✓ CHARTER NOD given — design/CLAUDE.md updated ("touch ~/company only as deliberate convergence").
+- **Still to VERIFY at build (not a decision):** does `/api/stream` carry graph-deltas (inferred [READ-5]) — confirm the `_emit` sites before relying on it for live delta-flow.
+A is now DECISION-COMPLETE and build-ready in the A1–A6 sequence (§8).
