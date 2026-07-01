@@ -1,0 +1,77 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Glyphgraph — A0 spine skeleton</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- A0 walking skeleton (Glyphic AI-fusion). DISPOSABLE probe: proves the spine IN-BROWSER, SAME-ORIGIN —
+     a page served by the vite dev server (:5174) fires run_role(+schema) and embed through the /api→:8770
+     proxy and renders the validated result. Loud-fail: any error / ok:false is shown red, never swallowed.
+     MUST be loaded via http://localhost:5174/glyph-skeleton.html (through vite) or the /api proxy isn't exercised. -->
+<style>
+  body{font:15px/1.5 system-ui,sans-serif;max-width:760px;margin:36px auto;padding:0 18px;color:#1F1A12;background:#FCFAF2}
+  h1{font-size:20px;color:#988058;margin:0 0 4px} .sub{color:#6B5F47;margin:0 0 20px;font-size:13px}
+  .card{border:1px solid #E8DFC5;border-radius:12px;padding:14px 16px;margin-bottom:14px;background:#fff}
+  .card h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#A89678;margin:0 0 8px}
+  button{font:600 13px/1 system-ui;color:#fff;background:#988058;border:none;border-radius:8px;padding:9px 13px;cursor:pointer}
+  pre{background:#F6F1E4;border-radius:8px;padding:10px;overflow:auto;font:12px/1.5 ui-monospace,monospace;margin:8px 0 0;white-space:pre-wrap}
+  .ok{color:#4A7A3C;font-weight:600} .bad{color:#B5482E;font-weight:600;white-space:pre-wrap}
+  .origin{font:12px/1 ui-monospace,monospace;color:#A89678}
+</style></head><body>
+<h1>Glyphgraph — A0 spine skeleton</h1>
+<p class="sub">Proves the AI-fusion spine in-browser, same-origin: this page (served by vite) calls the Company through
+<code>/api</code>. Loaded from <span class="origin" id="origin"></span>. Both calls auto-fire on load; loud-fail on any error.</p>
+
+<div class="card"><h2>1 · run_role + output_schema → validated JSON</h2>
+  <button id="run-role">fire run_role (eval_classify)</button>
+  <div id="rr"></div></div>
+
+<div class="card"><h2>2 · embed → vector</h2>
+  <button id="run-embed">fire embed</button>
+  <div id="em"></div></div>
+
+<div class="card"><h2>verdict</h2><div id="verdict">…running…</div></div>
+
+<script>
+  document.getElementById('origin').textContent = location.origin + location.pathname;
+  var results = { role: null, embed: null };
+
+  // LOUD-FAIL fetch helper: throws on non-2xx, on transport error, AND on ok:false-in-200 (the READ-6 trap).
+  async function apiPost(path, body){
+    var res;
+    try { res = await fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }); }
+    catch (e) { throw new Error('transport error hitting ' + path + ' — is the vite dev server (:5174) up and proxying /api→:8770?  (' + e.message + ')'); }
+    var txt = await res.text();
+    if (!res.ok) throw new Error(path + ' → HTTP ' + res.status + '\n' + txt.slice(0,400));
+    var json; try { json = JSON.parse(txt); } catch(e){ throw new Error(path + ' returned non-JSON:\n' + txt.slice(0,400)); }
+    if (json && json.ok === false) throw new Error(path + ' returned ok:false (error inside HTTP 200 — the silent-fail trap):\n' + JSON.stringify(json).slice(0,400));
+    return json;
+  }
+
+  async function fireRole(){
+    var el = document.getElementById('rr'); el.innerHTML = '<span>…firing…</span>';
+    try {
+      var j = await apiPost('/api/cognition/run_role', { role:'eval_classify', utterance:'a file is part of a project' });
+      var validated = j && j.output && typeof j.output.label === 'string';   // the schema field
+      el.innerHTML = '<div class="'+(validated?'ok':'bad')+'">'+(validated?'✓ validated structured JSON — schema field present':'✗ no schema-validated field in output')+'</div><pre>'+esc(JSON.stringify(j,null,2))+'</pre>';
+      results.role = validated; verdict();
+    } catch(e){ el.innerHTML = '<div class="bad">✗ '+esc(e.message)+'</div>'; results.role=false; verdict(); }
+  }
+  async function fireEmbed(){
+    var el = document.getElementById('em'); el.innerHTML = '<span>…firing…</span>';
+    try {
+      var j = await apiPost('/api/cognition/embed', { text:'a file is part of a project' });
+      var v = j && j.output && j.output.vector; var ok = Array.isArray(v) && v.length>0;
+      el.innerHTML = '<div class="'+(ok?'ok':'bad')+'">'+(ok?'✓ vector returned — dim '+v.length:'✗ no vector in output')+'</div><pre>'+esc(JSON.stringify({role:j.role,op:j.op,dim:(v&&v.length),first8:(v&&v.slice(0,8))},null,2))+'</pre>';
+      results.embed = ok; verdict();
+    } catch(e){ el.innerHTML = '<div class="bad">✗ '+esc(e.message)+'</div>'; results.embed=false; verdict(); }
+  }
+  function verdict(){
+    var d = document.getElementById('verdict');
+    if (results.role===null || results.embed===null) return;
+    if (results.role && results.embed) d.innerHTML = '<span class="ok">✓ SPINE PROVEN in-browser same-origin — run_role+schema AND embed both work through /api.</span>';
+    else d.innerHTML = '<span class="bad">✗ spine NOT proven — see the failing call above.</span>';
+  }
+  function esc(s){ return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+  document.getElementById('run-role').onclick = fireRole;
+  document.getElementById('run-embed').onclick = fireEmbed;
+  fireRole(); fireEmbed();
+</script>
+</body></html>
