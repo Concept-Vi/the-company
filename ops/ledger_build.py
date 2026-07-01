@@ -344,63 +344,88 @@ _TS_API = re.compile(r"""fetch\(\s*[`'"]([^`'"]+)|\.(get|post|put|delete|patch)\
 _TS_EVENT = re.compile(r"""(?:addEventListener|dispatchEvent|new\s+CustomEvent)\(\s*['"]([^'"]+)['"]""")
 
 
-def extract_ts(rel: str, src: str) -> dict:
+_TS_LIB = None
+
+
+def _resolve_ts_lib() -> str:
+    """Find a node_modules that has `typescript` — reusable across repos: env override, the SCAN ROOT's
+    own node_modules, then this tool's known ones. Absent -> JS/TS recorded shallow with reason (loud)."""
+    global _TS_LIB
+    if _TS_LIB is not None:
+        return _TS_LIB
+    cands = [os.environ.get("COMPANY_TS_LIB", ""),
+             os.path.join(ROOT, "node_modules"), os.path.join(ROOT, "app", "node_modules"),
+             os.path.join(REPO, "canvas", "app", "node_modules"), os.path.join(REPO, "surface", "app", "node_modules")]
+    _TS_LIB = next((c for c in cands if c and os.path.isdir(os.path.join(c, "typescript"))), "")
+    return _TS_LIB
+
+
+def extract_ts(rel: str, src: str, raw: bytes = b"") -> dict:
+    """Real-AST extractor for JS/JSX/TS/TSX via the TypeScript compiler (ops/ts_extract.js over node) —
+    replaces the line-regex that was blind to expression-embedded definitions (object-literal methods,
+    window.* assigns, HOC/anonymous components). Captures functions/components/classes/methods/interfaces/
+    types/enums/module-constants + imports + the JS call-graph + endpoints + events. Same return contract."""
     file_addr = f"code://{PROJECT}/{rel}"
-    is_tsx = rel.endswith(".tsx") or rel.endswith(".jsx")
-    imports, symbols, edges = [], [], []
-    components, exports, api_calls, types = [], [], [], []
-    events = set()
-    def sym(name, kind, line, **extra):
-        symbols.append({"code_id": f"code://{PROJECT}/{rel}::{name}", "stem_id": f"code://{_stem(rel)}/{name}",
-                        "name": name, "qual": name, "symbol_kind": kind, "signature": extra.get("sig", name),
-                        "params": [], "returns": None, "decorators": [], "bases": extra.get("bases", []),
-                        "line_start": line, "line_end": line, "is_async": extra.get("async", False),
-                        "is_exported": extra.get("exported", False)})
-    for i, ln in enumerate(src.splitlines(), 1):
-        for m in _TS_IMPORT.finditer(ln):
-            tgt = next((g for g in m.groups() if g), None)
-            if tgt:
-                imports.append({"target": tgt, "kind": "import", "internal": tgt.startswith("."), "line": i})
-                edges.append({"from": file_addr, "kind": "imports", "to_raw": tgt, "line": i})
-        m = _TS_DECL.match(ln)
-        if m:
-            exported = bool(m.group(1) or m.group(2)); kw = m.group(4); name = m.group(5)
-            kind = "class" if kw == "class" else ("component" if (is_tsx and name[:1].isupper()) else "function")
-            sym(name, kind, i, exported=exported, async_=bool(m.group(3)), sig=ln.strip()[:160])
-            if kind == "component": components.append(name)
-            if exported: exports.append(name)
-        m = _TS_ARROW.match(ln)
-        if m:
-            exported = bool(m.group(1) or m.group(2)); name = m.group(3)
-            kind = "component" if (is_tsx and name[:1].isupper()) else "function"
-            sym(name, kind, i, exported=exported, sig=ln.strip()[:160])
-            if kind == "component": components.append(name)
-            if exported: exports.append(name)
-        m = _TS_TYPE.match(ln)
-        if m:
-            sym(m.group(2), "type", i, exported=bool(m.group(1)))
-            types.append(m.group(2))
-        m = _TS_EXPORTS.match(ln)
-        if m:
-            for nm in m.group(1).split(","):
-                nm = nm.strip().split(" as ")[0].strip()
-                if nm: exports.append(nm)
-        for am in _TS_API.finditer(ln):
-            url = am.group(1) or am.group(3)
-            if url:
-                api_calls.append({"method": (am.group(2) or "fetch").upper(), "url": url, "line": i})
-                edges.append({"from": file_addr, "kind": "calls-endpoint", "to_raw": url, "line": i})
-        for em in _TS_EVENT.finditer(ln):
-            events.add(em.group(1))
-    signals = {"n_imports": len(imports), "n_symbols": len(symbols), "n_components": len(components),
-               "n_exports": len(set(exports)), "n_types": len(types), "n_api_calls": len(api_calls),
-               "n_edges": len(edges), "has_entry_point": False}
+
+    def shallow(reason):
+        return {"imports": [], "declares": [], "address_schemes_used": _schemes(src), "env_vars": [],
+                "markers": _scan_markers(src), "symbols": [], "edges": [],
+                "signals": {"js_extract_skipped": reason, "has_entry_point": False},
+                "extra_fields": {"js_extract_skipped": reason}}
+
+    lib = _resolve_ts_lib()
+    if not lib:
+        return shallow("typescript not resolvable - `npm i typescript` or set COMPANY_TS_LIB for JS/TS extraction")
+    try:
+        proc = subprocess.run(["node", os.path.join(REPO, "ops", "ts_extract.js"), rel, lib],
+                              input=src, capture_output=True, text=True, timeout=90)
+        data = json.loads(proc.stdout) if proc.stdout.strip() else {"error": (proc.stderr or "no output")[:200]}
+    except Exception as e:
+        return shallow(f"node/ts_extract failed: {str(e)[:150]}")
+    if "error" in data:
+        return shallow(f"parse error: {str(data['error'])[:150]}")
+
+    symbols, edges, imports = [], [], []
+    components, exports, types, consts = [], [], [], []
+    for s in data.get("symbols", []):
+        nm, kind = s.get("name", ""), s.get("kind", "")
+        if not nm:
+            continue
+        symbols.append({"code_id": f"code://{PROJECT}/{rel}::{nm}", "stem_id": f"code://{_stem(rel)}/{nm}",
+                        "name": nm, "qual": nm, "symbol_kind": kind, "signature": nm,
+                        "params": [], "returns": None, "decorators": [], "bases": [],
+                        "line_start": s.get("line", 0), "line_end": s.get("line", 0),
+                        "is_async": s.get("async", False), "is_exported": s.get("exported", False)})
+        if kind == "component": components.append(nm)
+        if kind in ("type", "interface", "enum"): types.append(nm)
+        if kind == "constant": consts.append(nm)
+        if s.get("exported"): exports.append(nm)
+    for im in data.get("imports", []):
+        imports.append({"target": im["target"], "kind": "import", "internal": im.get("relative", False),
+                        "line": im.get("line", 0)})
+        edges.append({"from": file_addr, "kind": "imports", "to_raw": im["target"], "line": im.get("line", 0)})
+    for c in data.get("calls", []):
+        edges.append({"from": file_addr, "kind": "calls", "to_raw": c["name"], "line": c.get("line", 0)})
+    api_calls = data.get("endpoints", [])
+    for e in api_calls:
+        edges.append({"from": file_addr, "kind": "calls-endpoint", "to_raw": e["url"], "line": e.get("line", 0)})
+    events = sorted(set(data.get("events", [])))
+    seen, uedges = set(), []
+    for g in edges:
+        k = (g["kind"], g["to_raw"], g["line"])
+        if k not in seen:
+            seen.add(k); uedges.append(g)
+    signals = {"n_imports": len(imports), "n_symbols": len(symbols), "n_components": len(set(components)),
+               "n_exports": len(set(exports)), "n_types": len(types), "n_constants": len(set(consts)),
+               "n_calls": sum(1 for g in uedges if g["kind"] == "calls"),
+               "n_api_calls": len(api_calls), "n_edges": len(uedges), "has_entry_point": False}
     return {"imports": imports, "declares": [{"name": s["name"], "kind": s["symbol_kind"], "line": s["line_start"]}
                                              for s in symbols if s["is_exported"]],
             "address_schemes_used": _schemes(src), "env_vars": [], "markers": _scan_markers(src),
-            "signals": signals, "symbols": symbols, "edges": edges,
+            "signals": signals, "symbols": symbols, "edges": uedges,
             "extra_fields": {"components": sorted(set(components)), "exports": sorted(set(exports)),
-                             "api_calls": api_calls, "types": types, "events": sorted(events)}}
+                             "api_calls": api_calls, "types": types, "constants": sorted(set(consts)),
+                             "events": events}}
 
 
 # ── SQL extractor ──
@@ -644,10 +669,10 @@ def _python_norm(rel, src, raw):
 
 
 EXTRACTORS = [
-    {"id": "python",   "version": "py-ast-v2",   "match": lambda ext, lang: lang == "python",
+    {"id": "python",   "version": "py-ast-v2",   "parse_safe": True, "match": lambda ext, lang: lang == "python",
      "fn": lambda rel, src, raw: _python_norm(rel, src, raw)},
-    {"id": "ts",       "version": "ts-regex-v1", "match": lambda ext, lang: ext in _TS_EXTS,
-     "fn": lambda rel, src, raw: extract_ts(rel, src)},
+    {"id": "ts",       "version": "ts-tsc-v1", "parse_safe": True, "match": lambda ext, lang: ext in _TS_EXTS,
+     "fn": lambda rel, src, raw: extract_ts(rel, src, raw)},
     {"id": "sql",      "version": "sql-regex-v1", "match": lambda ext, lang: lang == "sql",
      "fn": lambda rel, src, raw: extract_sql(rel, src)},
     {"id": "systemd",  "version": "systemd-v1",  "match": lambda ext, lang: ext in (".service", ".timer", ".target"),
@@ -674,8 +699,12 @@ _MAX_TEXT_DEEP = 800_000     # bytes — above this, deep extraction is skipped 
 _MAX_LINE_DEEP = 5_000       # chars — a max line longer than this signals minified/generated → skip deep
 
 
-def _too_big_to_deep_parse(src: str, raw: bytes) -> str | None:
-    if len(raw) > _MAX_TEXT_DEEP:
+def _too_big_to_deep_parse(src: str, raw: bytes, parse_safe: bool = False) -> str | None:
+    # parse_safe extractors (real AST/tree-sitter parsers — python, tree-sitter) handle large files fine;
+    # the byte cap only ever protected the REGEX path from catastrophic backtracking. So skip it for them.
+    # The minified-single-line guard still applies to ALL: a one-line generated bundle is a DERIVED artifact
+    # (rebuild from source), recorded shallow — not a parse limitation, a relevance decision.
+    if not parse_safe and len(raw) > _MAX_TEXT_DEEP:
         return f"oversized:{len(raw)//1024}KB"
     # max line length without materializing all lines hugely: scan once
     maxln = 0
@@ -696,7 +725,8 @@ def extract_file(rec: dict) -> dict:
     language = _LANG_BY_EXT.get(ext, "other")
     base = {"rel_path": rel, "language": language, "ext": ext, "size_bytes": len(raw),
             "line_count": src.count("\n") + 1, "source_hash": hashlib.sha256(raw).hexdigest()}
-    big = _too_big_to_deep_parse(src, raw)
+    chosen = next((s for s in EXTRACTORS if s["match"](ext, language)), None)
+    big = _too_big_to_deep_parse(src, raw, parse_safe=bool(chosen and chosen.get("parse_safe")))
     if big:
         base["extractor"], base["extractor_version"] = "shallow", "shallow-v1"
         base.update({"imports": [], "declares": [], "address_schemes_used": [], "env_vars": [],
@@ -704,7 +734,6 @@ def extract_file(rec: dict) -> dict:
                      "signals": {"shallow": True, "has_entry_point": False},
                      "extra_fields": {"shallow_reason": big, "note": "generated/minified/oversized — recorded as a node, not deep-parsed (derived artifact; deep facts live in its source)"}})
         return base
-    chosen = next((s for s in EXTRACTORS if s["match"](ext, language)), None)
     if chosen:
         r = chosen["fn"](rel, src, raw)
         base["extractor"], base["extractor_version"] = chosen["id"], chosen["version"]
