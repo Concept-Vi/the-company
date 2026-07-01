@@ -1,0 +1,33 @@
+{
+  "project": "claude-ds",
+  "path": "components/Switch.jsx",
+  "model": "opus",
+  "what_it_does": "Implements the Switch as a function component using React.createElement (h). Renders a single button with type='button', role='switch', aria-checked reflecting the checked prop, and class cv-switch. On click (only when onChange is provided) it calls onChange(!checked, e), emitting the toggled value. The caller's className is merged and ...rest is spread onto the button.",
+  "observations": [
+    "Renders only a button element (the track/thumb visuals come entirely from .cv-switch CSS) — no children",
+    "role='switch' with aria-checked='true'/'false' for accessibility",
+    "onClick attached only when onChange is given; emits !checked (the next state) plus the event",
+    "className merged via ['cv-switch', className].filter(Boolean).join(' ')",
+    "Uses global React with const h = React.createElement (no JSX)",
+    "Controlled component: no internal state, relies on checked from props"
+  ],
+  "standouts": [
+    "Entire on/off appearance (including the gold track) is delegated to the .cv-switch token class; the component is purely a controlled toggle shell"
+  ],
+  "conventions": [
+    "Token-class wrapper with no inline styles or literals (one-home design discipline)",
+    "ARIA switch role for accessibility",
+    "Buildless React.createElement authoring",
+    "Defensive default (props || {})"
+  ],
+  "concerns": [],
+  "notes": "A token-class-only controlled switch; clicking emits the negated checked value, and all visuals (gold track when on) live in .cv-switch CSS.",
+  "questions": [],
+  "purpose_vs_actual": "Match — implements the on/off toggle the header comment and .d.ts describe.",
+  "apparent_themes": ["token-class wrapper", "controlled boolean toggle", "accessibility via ARIA switch role", "no-literals design discipline"],
+  "intention_signals": "To express an on/off switch as a minimal accessible button shell over design-system CSS, so the track/thumb/gold-on look lives in tokens and the JS only flips and reports the boolean.",
+  "novelty": "Buildless React.createElement authoring of a pure controlled toggle with no internal state.",
+  "contribution": "Contributes the structural/ARIA implementation of the on/off switch as a controlled button that emits the negated value, delegated entirely to the .cv-switch token class.",
+  "summary_for_embedding": "React.createElement implementation of an on/off Switch as a controlled button with role=switch, aria-checked, and an onChange emitting the negated checked value, styled via .cv-switch.",
+  "intention_for_embedding": "To provide the buildless, token-class-only controlled on/off switch whose visuals live in design-system CSS."
+}

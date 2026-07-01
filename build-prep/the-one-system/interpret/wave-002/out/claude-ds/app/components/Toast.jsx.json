@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/Toast.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a global toast notifier: a module-level window._toastListeners array and a window.dsaToast(msg) function that fans a message to all listeners, plus a React `Toast` component that subscribes on mount, shows the message for 2200ms then clears it, and renders a ViShape glyph beside the text. Exposes window.Toast.",
+  "observations": [
+    "Pub/sub via window._toastListeners (initialized with `|| []`) and window.dsaToast as the publish entry point.",
+    "Toast component holds local msg state; subscriber sets msg then setTimeout(2200) clears it.",
+    "Cleanup removes the subscriber from window._toastListeners on unmount.",
+    "Renders <div className='dsa-toast {show}'> with a ViShape size=14 and the message span.",
+    "Single shared instance model (header comment 'single shared instance').",
+    "useEffect_t/useState_t destructured from global React."
+  ],
+  "standouts": [
+    "Decouples emitters from the React tree via a plain window-global pub/sub (dsaToast can be called from anywhere, including non-React code)."
+  ],
+  "conventions": [
+    "Window-global registration (window.Toast, window.dsaToast) consistent with the app.",
+    "Suffix-aliased React hooks (useEffect_t, useState_t).",
+    "Composes the ViShape brand glyph rather than an icon font."
+  ],
+  "concerns": [
+    "The 2200ms duration is a magic number, not tokenized.",
+    "No queueing: rapid successive dsaToast calls overwrite msg and reset the single timer, so messages can be lost or clipped.",
+    "Assumes a single mounted Toast; multiple instances would each show every message."
+  ],
+  "notes": "A window-global toast: call window.dsaToast('...') from anywhere; one mounted <Toast/> shows it for 2.2s with the Vi glyph.",
+  "questions": [
+    "Is exactly one <Toast/> guaranteed to be mounted, given the single-instance assumption?",
+    "Is the lack of a message queue intentional for this design surface?"
+  ],
+  "purpose_vs_actual": "Matches: header comment 'simple global notifier (single shared instance)' is exactly the implemented behavior.",
+  "apparent_themes": [
+    "Global event bus / pub-sub",
+    "Brand-consistent feedback (ViShape glyph)",
+    "Decoupling non-React emitters from React state"
+  ],
+  "intention_signals": "Aims to give any part of the studio (React or not) a one-call way to surface transient feedback, branded with the Vi mark, without prop-drilling a notifier.",
+  "novelty": "Pairs a non-React window-global emit API with a React renderer, and brands the toast with the Vi diamond rather than a generic icon.",
+  "contribution": "Contributes a window-global call-from-anywhere toast channel with a branded glyph that a fused system would keep as the transient-notification primitive.",
+  "summary_for_embedding": "Global React toast notifier using a window._toastListeners pub/sub and window.dsaToast publisher, showing a 2.2s message with a ViShape glyph from a single shared instance.",
+  "intention_for_embedding": "To let any code surface brief branded feedback with one global call, decoupled from the React tree."
+}

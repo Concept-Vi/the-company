@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/consolidation-drafts/coordination-protocols.md",
+  "model": "opus",
+  "what_it_does": "An analysis/consolidation-draft markdown produced by the consolidation-drafter lane. It examines two coordination files it names as overlap members (MERGE-COORDINATION.md at repo root and build-prep/coordination/WORK-SPLIT.md) and reaches a MIXED verdict: keep both files (they are different organs — one a verbatim exchange record, one the live coordination board), but the protocol layer is genuinely duplicated across four places and two stale channel-pointers actively mislead. It then drafts a single consolidated § PROTOCOL text (14 items with provenance marks), an archive banner, and a proposed (never-executed) disposition table.",
+  "observations": [
+    "Verdict is MIXED rather than keep-or-merge: keep both files, consolidate only the duplicated protocol layer, fix two misleading pointers.",
+    "Characterizes MERGE-COORDINATION.md as the relay-era verbatim exchange record (primary source, channel role superseded) and WORK-SPLIT.md as the live coordination organ (CLAIMS board + PROTOCOL).",
+    "Identifies the protocol existing in FOUR places of descending authority (the locked list, a superseded early 4-item block, a separated gate-bar amendment, and MERGE-COORDINATION prose with five strays never folded in).",
+    "Flags two stale pointers as actively misleading: WORK-SPLIT's own header still names MERGE-COORDINATION as the relay channel (contradicting its own locked item 10), and MERGE-COORDINATION carries no archive banner.",
+    "Provides a full CONSOLIDATED TEXT — a 14-item § PROTOCOL with provenance marks ([LOCKED-10], [AMEND], [FOLD-IN: MC], [EARLY-4]) intended to replace WORK-SPLIT's scattered protocol content.",
+    "Includes per-consumer deltas (what cron loops / joining sessions / Tim / the convergence round each read) and a proposed archive banner for MERGE-COORDINATION.md.",
+    "Disposition table: MERGE-COORDINATION keep-as-pointer (banner only, do not move/edit body), WORK-SPLIT fold-in the consolidated protocol, retire NONE (only a ROLE — channel — is retired)."
+  ],
+  "standouts": [
+    "Unlike the other consolidation drafts in the same family which all conclude keep-separate, this one produces an actual consolidated artefact (the 14-item protocol) for the duplicated layer while still keeping both source files.",
+    "The provenance-marked consolidation ([LOCKED-10]/[AMEND]/[FOLD-IN: MC]/[EARLY-4]) preserves the ratification lineage of every clause inside a single restated law.",
+    "The cold-session trap analysis: a new session reading either file top-down would post to a dead channel and wait for a relay that no longer happens — a concrete operational hazard."
+  ],
+  "conventions": [
+    "Consolidation-draft convention: verdict → rationale → consolidated text → disposition table; proposed-not-executed, no source touched.",
+    "Records-stay-verbatim discipline (the exchange record is evidence; truth-ladder item 2 depends on it being unedited).",
+    "Additive-or-marking edits only (a banner, a superseded-marker, a header fix, a provenance-preserving restatement).",
+    "Self-flags that the restatement itself, since it relayouts a ratified list, should be posted on the board before landing (the shared-rule-announce protocol)."
+  ],
+  "concerns": [
+    "Self-identified: the two stale pointers actively mislead cold sessions today (post-to-dead-channel-and-wait) until the proposed fixes land.",
+    "The one embedded judgment call (folding the gate-bar amendment into item 4's text) changes the literal layout of a list three sessions ratified — the draft itself notes this needs board sign-off before adoption.",
+    "Approximate line anchors (WORK-SPLIT.md lines ~5, 174-180; MERGE-COORDINATION dated entries) may drift."
+  ],
+  "notes": "If briefing someone: this is a no-execute analysis with a MIXED verdict — keep both coordination files (record vs live board) but consolidate the four-places-duplicated protocol into one provenance-marked § PROTOCOL and fix two misleading channel-pointers; nothing is retired but the dead channel role.",
+  "questions": [
+    "Will the owning session adopt the consolidated 14-item § PROTOCOL, and post it on the board for ratification first as the draft recommends?",
+    "Will the two stale pointers (WORK-SPLIT header; missing MERGE-COORDINATION banner) be fixed before another cold session is misled?",
+    "Should the ever-growing claims/scope log eventually roll up into a registry (flagged open, not proposed)?"
+  ],
+  "purpose_vs_actual": "Matches. The header states it is a consolidation-draft, proposed-only, nothing executed; the body delivers a MIXED verdict, a consolidated protocol text, an archive banner, and a never-executed disposition that keeps both files.",
+  "apparent_themes": [
+    "Different-organs (record vs live board) — keep both, consolidate only the shared layer",
+    "Records-stay-verbatim as evidence (truth-ladder dependency)",
+    "Single canonical law with preserved provenance",
+    "Operational hazard of stale pointers / cold-session traps",
+    "No-versioning / one-canonical-surface, update-in-place"
+  ],
+  "intention_signals": "Trying to de-duplicate a coordination protocol scattered across four authority levels into one provenance-marked statement and repair two misleading pointers, while preserving both source files (the verbatim record and the live board) intact.",
+  "novelty": "Producing a full provenance-marked consolidated protocol (with [LOCKED]/[AMEND]/[FOLD-IN]/[EARLY-4] tags) that merges a duplicated layer without merging the files, plus identifying concrete cold-session pointer traps, is distinctive within the consolidation-draft family.",
+  "contribution": "Contributes a file-local analysis distinguishing the verbatim exchange record from the live board, a consolidated 14-item § PROTOCOL preserving every ratified clause's provenance, an archive banner, and the two stale-pointer fixes. A fused system would keep this as the worked proposal for one canonical coordination law plus the record-vs-board distinction.",
+  "summary_for_embedding": "A no-execute consolidation-draft with a MIXED verdict on two coordination files (MERGE-COORDINATION.md and WORK-SPLIT.md): keep both as record-vs-board but consolidate the four-places-duplicated protocol into one provenance-marked 14-item § PROTOCOL and fix two misleading channel-pointers.",
+  "intention_for_embedding": "To unify a scattered coordination protocol into a single provenance-preserving law and repair misleading channel-pointers while keeping the verbatim record and the live board both intact."
+}

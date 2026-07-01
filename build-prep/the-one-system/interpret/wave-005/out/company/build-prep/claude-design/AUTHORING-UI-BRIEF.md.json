@@ -1,0 +1,58 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/AUTHORING-UI-BRIEF.md",
+  "model": "opus",
+  "what_it_does": "A Claude-Design-ready brief for the Company's cognition AUTHORING UI — the operator screen for creating/editing the roles and rules of the concurrent-cognition system. The backend is built/live with no front-end yet; the brief specifies what the screen is, its proposed information architecture, the exact backend contract (every endpoint with request/response/source), the propose->approve->apply UX flow, the design bar/aesthetic, nine hard laws, and open questions for Tim.",
+  "observations": [
+    "Header is explicitly for Claude Design and carries a strong no-fiction note: every screen is PROPOSED/to-be-built; the only living cognition surface is the read-only CognitionView.tsx.",
+    "Lists primary sources with file:line citations (AUTHORING-FE-HANDOFF.md, bridge.py endpoints, rules.py grammar floor, tokens.json, CognitionView.tsx, reuse components).",
+    "Section 1 explains the cognition model: roles fire in parallel emitting structured results, rules read those results and route values to destinations, the reply assembles in staged parts; today roles/rules live as files and the UI replaces files with a screen.",
+    "Frames the authoring forms as the existing registry-renderer / NodeConfigForm+Inspector pattern applied to roles+rules instead of node-types.",
+    "Section 2 proposes one Authoring region (sibling to canvas regions) with role authoring (palette, config form, schema editor, dry-run), rule authoring (recursive block/condition composer, dry-run, attach/detach), preview-a-turn, and an approval loop riding existing inbox/surfaced surfaces.",
+    "Section 3 is an exact backend contract: clarifies the endpoint count (12 cognition authoring endpoints, flagging that there is NO /api/cognition/role/apply — apply rides the existing /api/apply), with READ, WRITE-roles, TEST-role, WRITE/TEST-rules, PREVIEW, SELECT, and APPLY tables citing bridge.py lines and verified-live curl shapes.",
+    "Documents the data shapes: RoleFieldSpec, RuleAST (the closed 16-op grammar, leaves/boolean/comparison/arithmetic/membership, no now/random/call/IO op, depth-capped MAX_RULE_DEPTH=6), RuleDecl, and the 5 destination_kinds (inject, chain, address, surface, lane).",
+    "Section 4 diagrams the propose->surface->resolve(approve)->apply flow and states the proven invariant: an apply WITHOUT a prior operator approve is REFUSED (HTTP 400 GovernanceError).",
+    "Section 5 'design bar' fixes the aesthetic as the gold living instrument / commander's bridge: --acc gold #e6ab5c, warm charcoal --bg #0c0a08, NO green/mint/teal, Fraunces display + IBM Plex Mono body, status-by-colour two-vivid+one-muted, named token ramps, and lists components to reuse (kit.tsx, NodeConfigForm, CognitionView, Inbox/ProposeAffordance).",
+    "Emphasizes recognition-by-sight (Tim navigates by shape not text): role facets render by shape/colour, a rule renders as its when_text edge-badge, renderable:false surfaces as 'too deep — decompose' not silent truncation.",
+    "Notes NO cognition mockups exist; CognitionView.tsx is the only living aesthetic reference, so Tim's recognition is the real input.",
+    "Section 6 enumerates nine hard laws (reflects-never-owns, propose-not-apply, closed+renderable+registry-driven grammar, claude-p/dispatch floor lead-only with surface!=resolve distinction, run:// addressing, author-from-registry, fail-loud, protected roles, operator-only off the MCP face), each backed by code citations.",
+    "Section 7 lists five open questions for Tim framed as options (one-gesture vs two for approve/apply, one Authoring region vs split, under-specified lane destination, unbuilt directory-scan source node, Vi-gold vs switchable personas), and closes with the depth/dealer's-choice/tentative-artifact next-step option pattern."
+  ],
+  "standouts": [
+    "The endpoint-count correction: explicitly verifies there is NO role/apply route and that apply rides the existing /api/apply, fixing the originating task's off-by-one brace-list.",
+    "The closed, renderable, registry-driven rule grammar (16 ops, 5 destinations, depth cap 6, no IO/now/random op — determinism is structural).",
+    "The propose-not-apply governance floor with the proven HTTP-400 refusal of un-approved applies.",
+    "The careful distinction between the 'surface' destination kind (an inbox ask, resolved=None) and the propose-surfaces-for-approval flow — and the lead-only claude-p/dispatch floor.",
+    "Recognition-by-sight as a first-class design requirement tied to Tim's navigation style."
+  ],
+  "conventions": [
+    "Heavily grounded with file:line citations and verified-live curl shapes; uses an explicit no-fiction note and flags inferences vs verified facts.",
+    "Follows the repo's working-with-Tim conventions: open questions as options not yes/no, a closing depth/dealer's-choice/artifact next-step block.",
+    "Defers to AUTHORING-FE-HANDOFF.md as the contract one-source and reuses existing FE patterns rather than inventing.",
+    "Embodies the laws it documents (registry-driven dropdowns, reflects-never-owns, fail-loud, propose-not-apply)."
+  ],
+  "concerns": [
+    "The doc itself flags under-specified/unbuilt areas: the lane destination UX has no defined surface, and the directory-scan source node is downstream/unbuilt — surfaced honestly as open scope.",
+    "preview_turn fires a REAL staged turn (emits cognition.* to live SSE, writes to run:// CAS) though it does not touch chat history — a subtlety the UI must surface honestly to avoid surprise."
+  ],
+  "notes": "The build brief for the operator-only cognition authoring screen: roles+rules forms on the existing registry-renderer pattern, an exact propose->approve->apply backend contract, the gold-instrument aesthetic, and nine enforced governance laws — none of it built in the FE yet.",
+  "questions": [
+    "Which of the five open questions did Tim steer (one-gesture vs two apply, single vs split region, persona switch)?",
+    "Have the lane-destination UX and the directory-scan source node been built since this brief?",
+    "Did Claude Design render the first pass (role palette + config form) and was it accepted?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is a Claude-Design-ready brief telling the tool what to build on existing conventions, and delivers a complete, code-grounded spec of surfaces, contract, UX flow, aesthetic, laws, and open questions.",
+  "apparent_themes": [
+    "Propose-not-apply governance / operator approval as the floor",
+    "Registry-driven authoring (author from truth, never hardcode)",
+    "Closed, renderable, deterministic rule grammar",
+    "Reflects-never-owns and reuse-over-reinvent",
+    "Recognition-by-sight rendering at Tim's altitude",
+    "Replacing file-editing with a screen for the system's own thinking"
+  ],
+  "intention_signals": "Trying to let the operator author the system's cognition (its roles and rules) safely from a screen instead of editing files — every change surfaced for approval, every dropdown from truth, the rule grammar closed and renderable — so the Company can edit how it thinks without losing the governance floor or Tim's by-sight legibility.",
+  "novelty": "An authoring surface for a system's own concurrent-cognition roles/rules, built on a closed renderable rule grammar with a strict propose->approve->apply floor and a recognition-by-sight design bar, fully code-grounded with an endpoint-count correction.",
+  "contribution": "Contributes the complete cognition-authoring spec: the proposed Authoring-region IA, the exact 12-endpoint backend contract with data shapes (RoleFieldSpec/RuleAST/RuleDecl/destination_kinds), the propose->approve->apply flow with the refusal invariant, the gold-instrument design bar and reuse list, nine enforced laws, and five steered-by-Tim open questions.",
+  "summary_for_embedding": "A Claude-Design build brief for the Company's operator-only cognition authoring UI (creating/editing concurrent-cognition roles and rules), specifying the proposed Authoring-region IA, an exact code-cited backend contract with the closed 16-op rule grammar and 5 destinations, the propose->approve->apply governance flow, the gold living-instrument aesthetic, nine laws, and open questions for Tim.",
+  "intention_for_embedding": "To give Claude Design everything needed to build the right cognition-authoring screen on existing conventions, letting the operator edit the system's thinking safely while preserving propose-not-apply governance and by-sight legibility."
+}

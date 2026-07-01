@@ -1,0 +1,52 @@
+{
+  "project": "claude-ds",
+  "path": "app/ai/ai-registry.js",
+  "model": "opus",
+  "what_it_does": "Defines window.CV_AI, the Universal AI Registry — one hierarchical registry of parametric, inheritable entries across five layers (provider, behaviour, skill, capability, context) with an API that mirrors CV_REGISTRY (register/registerMany/update/remove/get/all/query/resolve/lineage/children/subscribe). It implements provider runtime resolution (claude/openai-image/CV_HOST-delegated), surface-keyed context resolution, behaviour composition, and execute() — the generative path ai-output = f(capability, context, params) — with loud failures throughout. Built-ins live in memory; user/vi entries persist to localStorage.",
+  "observations": [
+    "LAYERS = provider/behaviour/skill/capability/context, with LAYER_INFO carrying label, rank, swatch color, and desc per layer.",
+    "Two stores: BUILTIN (in-memory, re-seeded each load) and USER (localStorage-persisted under 'cv:ai-registry:user-entries'); register routes by provenance.",
+    "register throws on missing id or unknown layer; update forks a built-in into user space on edit (mirrors CV_REGISTRY contract), bumping version.",
+    "query supports layer/layers/family/families/surface/tags/provenance/extendsId/search and sorts by layer rank then name; surface filter treats '*' or absent surfaces as match-any.",
+    "resolve() flattens an entry with its ancestors (leaf wins), merging params/behaviours/surfaces/tags and carrying functional members; lineage walks the extends chain with cycle guard.",
+    "resolveProvider binds a provider to its live runtime: kind 'claude' needs window.claude.complete, 'openai-image' needs window.cvOpenAI; any other kind is delegated to window.CV_HOST.resolveProviderRuntime, else throws — no silent fallback.",
+    "resolveContext picks the most specific surface context resolver (falling back to context.generic) and merges its resolveCtx output; throws if a resolver fails.",
+    "execute() resolves the capability (+inheritance); if it's a skill it delegates to its target capability threading the instruction as brief; supports both a run() path (capability owns build→complete→parse) and a build/parse path; every failure throws with a descriptive message listing registered ids.",
+    "ACTIVE object records 'what screen Vi is on' via setActiveSurface; CV_AI.complete is a convenience that routes a one-off completion through the resolved claude provider.",
+    "normalize() fills defaults and carries functional members through untouched (run/build/parse/resolveCtx/text/instruction/target/runtime/modality/caps)."
+  ],
+  "standouts": [
+    "Deliberately mirrors CV_REGISTRY's API verbatim so the two registries are learnable as one — same register/resolve/lineage/query/subscribe shape.",
+    "execute() is the single generative path expressing ai-output = f(capability, context, params), unifying skills, run-capabilities, and build/parse-capabilities through one dispatcher.",
+    "Provider resolution is loud and layered: known kinds bound directly, unknown kinds delegated to CV_HOST, else throw with activation guidance — no degrade-to-default anywhere.",
+    "Built-in-forks-on-edit contract: editing a built-in creates a versioned user copy with forkedFrom set, preserving the original."
+  ],
+  "conventions": [
+    "Loud-fail discipline: throws (with the list of registered ids) on missing/wrong-layer entries, missing runtimes, failed resolvers — matches the project's non-negotiables.",
+    "Registry-as-single-source: the running interface is meant to be a projection of this catalogue (register data, not write code).",
+    "API parity with CV_REGISTRY and the same layer/inheritance idea (single-inheritance via extends).",
+    "Catch blocks that swallow are limited to localStorage I/O and listener notify — not to the generative/resolution path."
+  ],
+  "concerns": [
+    "loadFromStorage and saveUser swallow all exceptions silently (empty catch) — localStorage failures pass unnoticed; acceptable for persistence but a quiet spot in an otherwise loud system.",
+    "notify() swallows listener exceptions silently (try{}catch{}), so a broken subscriber fails quietly."
+  ],
+  "notes": "This is the heart of the AI layer: one CV_REGISTRY-shaped registry of provider/behaviour/skill/capability/context entries with a single loud execute() generative path and runtime-binding provider resolution — register data to add an AI move.",
+  "questions": [
+    "resolveProvider's 'claude' branch requires window.claude.complete and openai-image requires window.cvOpenAI — where are those live runtimes injected, and what guarantees they exist before execute() runs?",
+    "Skills delegate to a target capability but skills are excluded from the capability query in error messages — is there a query path that surfaces skills to the UI separately?"
+  ],
+  "purpose_vs_actual": "Match — the header describes a unified, CV_REGISTRY-shaped AI registry with a single generative execute path and loud provider/context resolution, and the implementation delivers exactly that.",
+  "apparent_themes": [
+    "Single source of truth / one catalogue for all AI moves",
+    "API parity across registries (learnable as one)",
+    "Loud failure over silent fallback",
+    "Atomic composition + single-inheritance (provider→behaviour→skill→capability→context)",
+    "ai-output = f(capability, context, params) as the generative discipline"
+  ],
+  "intention_signals": "Trying to express the entire AI layer in the same registry shape as the rest of the unified system — so 'what Vi can do, with what, knowing where it is' is one inheritable, queryable, projectable catalogue, and adding an AI move is data not code.",
+  "novelty": "Treating AI capabilities/providers/behaviours/context as Types in a registry isomorphic to the design-type registry, with one execute() that handles skill delegation, run-capabilities, and build/parse-capabilities uniformly, plus CV_HOST delegation for unknown runtimes.",
+  "contribution": "Contributes the CV_AI registry engine itself: the layer model, the mirrored register/resolve/lineage/query API, the loud provider runtime resolution (incl. CV_HOST delegation), surface-keyed context resolution, behaviour composition, and the unified execute() generative dispatcher.",
+  "summary_for_embedding": "window.CV_AI, a CV_REGISTRY-shaped hierarchical AI registry (provider/behaviour/skill/capability/context) with register/resolve/lineage/query/subscribe, loud provider runtime binding, surface-keyed context resolution, and a single execute() generative path.",
+  "intention_for_embedding": "To express the whole AI layer as one inheritable, queryable registry mirroring the design-type registry, so every AI move is single-sourced data and runs through one loud generative dispatcher."
+}

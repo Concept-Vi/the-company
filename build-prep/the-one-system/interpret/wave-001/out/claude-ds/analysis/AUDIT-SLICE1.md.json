@@ -1,0 +1,52 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/AUDIT-SLICE1.md",
+  "model": "opus",
+  "what_it_does": "The scoped slice-1 audit covering design tokens and their consumers: it records a vigilance correction (the logo gold #E0C010 is a sampled brand asset and must NOT be softened), maps the consumers that hardcode gold/bronze hex (the de-hardcode backlog), states the additive-only action taken (add --ramp-1..4, leave logo gold/bronze untouched), and lists the next deliberate steps.",
+  "observations": [
+    "Correction: --accent-gold #E0C010 is the REAL logo gold, sampled from the actual ConceptV logo PNG (234k px) — a brand ASSET, not a guess; do NOT overwrite/soften it.",
+    "The decks' softer working gold #d6bf57 is the APPLIED gold (washes, hero numbers, diagram-ring sequence) — a ramp stop, not a replacement → keep --accent-gold, ADD --ramp-* (bright/working-gold/bronze/tan).",
+    "Same logic for bronze: keep --accent-bronze #988058 but the decks use a lighter structural bronze #c09d5d for section-headers/captions → add as --ramp-3 (optionally --accent-bronze-warm), don't overwrite.",
+    "Consumer map (de-hardcode backlog) lists specific files hardcoding the hex: app/canvases/Colors.jsx (BASE_PALETTE + makeTokenMap + prompt strings), Patterns.jsx, Workshop.jsx (prompt strings + theme-chip samples), workshop/Export.jsx (exported standalone CSS --gold:#E0C010), workshop/Layouts.jsx (blueprint-ghost SVG #988058 + gold-grid #E0C010 + diamond watermark).",
+    "Notes that Layouts.jsx ALREADY contains blueprint-ghost + gold-grid + diamond watermark — evidence the system is not as 'flat' as the README claims (tensions #1/#2 partially already built) — to be mined for texture tokens.",
+    "assets/icons/CvIcon.jsx is marked token-correct (✅, references var(--accent-bronze/gold)); preview/* + app/services/openai.js brand-prompt hardcoded but lower risk.",
+    "Slice-1 action taken: additive only — add --ramp-1..4 to colors_and_type.css (logo gold + bronze untouched), annotated @kind color, no consumer churn this step.",
+    "Zone ladder: current --zone-* already mixes toward --zone-ground; sampled targets (#fdfcf7 etc.) close at intensity 1 → defer pigment retune to a measured pass (compute output vs sampled) rather than guess.",
+    "Next steps: (1) de-hardcode pass pointing ~10 consumers at var(--accent-gold)/ramp; (2) measured zone-ladder retune diffing computed --zone-*-surface vs sampled #fdfcf7/#f8f8f8; (3) reconcile mine status chips with existing warm status dots (--status-* lines ~59-68, KEEP/extend)."
+  ],
+  "standouts": [
+    "The audit caught and reversed a planned mistake mid-flight: the synthesis plan would have softened the gold, but the gold is a sampled brand asset — correction recorded before any colour was touched.",
+    "Discovery that texture/blueprint-ghost/gold-grid already exist in Layouts.jsx contradicts the README 'flat' claim — a found counter-example rather than an assumed one.",
+    "Strict additive-only discipline: add a ramp, change no existing token, defer the measured retune until output can be compared to samples (no guessing)."
+  ],
+  "conventions": [
+    "Additive-only change discipline (add ramp tokens; never overwrite the brand asset).",
+    "Single-home / de-hardcode backlog (point consumers at var(--accent-gold)/ramp so recalibration propagates).",
+    "Defer-until-measured (don't retune the zone ladder by guess; compute vs sampled first).",
+    "Evidence-before-fix (cite exact files and the 234k-px sampled provenance); reconcile/extend rather than fork (status chips → existing dots)."
+  ],
+  "concerns": [
+    "Names a ~10-consumer de-hardcoding backlog as not-yet-done — load-bearing drift risk explicitly deferred to a later pass.",
+    "Cites line ranges (--status-* ~59-68) that can drift as colors_and_type.css changes."
+  ],
+  "notes": "Slice-1 token audit: the logo gold #E0C010 is a sampled brand asset (don't soften); add a --ramp-* instead, and there's a ~10-file backlog where gold/bronze hex is hardcoded that must be pointed back at the token.",
+  "questions": [
+    "Has the de-hardcode pass (step 1) been executed, or does the ~10-consumer backlog still stand?",
+    "What sampled targets define the measured zone-ladder retune beyond #fdfcf7/#f8f8f8?"
+  ],
+  "purpose_vs_actual": "Matches — it is the slice-1 token-and-consumer audit and delivers the correction, consumer map, action taken, and next steps for exactly that scope.",
+  "apparent_themes": [
+    "single-source-of-truth (de-hardcode → var(--token))",
+    "anti-drift",
+    "additive-only change",
+    "evidence-grounded (sampled provenance, cite files)",
+    "defer-until-measured (no guessing)",
+    "reconcile-don't-fork",
+    "brand-asset-is-invariant"
+  ],
+  "intention_signals": "Inferred: to recalibrate the token layer toward the source DNA WITHOUT damaging genuine brand assets or churning consumers blindly — by distinguishing the invariant sampled logo gold/bronze from the applied ramp stops, cataloguing exactly where hex is hardcoded so recalibration can later propagate from one home, and refusing to retune anything (the zone ladder) until computed output can be measured against sampled targets.",
+  "novelty": "Notable for being an audit that reverses its own parent plan on evidence (the gold must not be softened) and for finding that the 'flat' system already contains texture/ghost/grid artifacts to mine — turning a recalibration into a surgical, provenance-anchored, measured operation.",
+  "contribution": "Contributes the token-layer audit findings: the invariant brand-asset golds/bronzes vs the additive ramp stops, the precise hardcoded-hex consumer backlog (file-level), the additive --ramp-1..4 action, and the deferred measured zone-retune plan — the recalibration worklist and provenance a fused system would keep to know which colour values are sacred and where drift hides.",
+  "summary_for_embedding": "Slice-1 token-and-consumer audit of the ConceptV Design System: records that logo gold #E0C010 and bronze #988058 are sampled brand assets to keep, adds applied ramp stops --ramp-1..4 instead, maps the files that hardcode gold/bronze hex, and defers the zone-ladder retune to a measured pass.",
+  "intention_for_embedding": "Intended to recalibrate tokens toward source DNA without damaging brand assets or churning consumers, by separating invariant sampled colours from applied ramp stops, cataloguing hardcoded-hex drift, and refusing to retune until output is measured against samples."
+}

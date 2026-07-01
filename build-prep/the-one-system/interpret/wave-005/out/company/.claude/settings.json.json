@@ -1,0 +1,32 @@
+{
+  "project": "company",
+  "path": ".claude/settings.json",
+  "model": "opus",
+  "what_it_does": "Claude Code project settings file: disables worktree background isolation and registers one SessionStart hook that runs a bash registry-freshness-check script.",
+  "observations": [
+    "worktree.bgIsolation set to 'none'",
+    "Single SessionStart hook invoking ops/hooks/cc_registry_freshness_check.sh via absolute path",
+    "Hook type is 'command'"
+  ],
+  "standouts": [
+    "SessionStart hook ties every Claude Code session opening to a registry-freshness check"
+  ],
+  "conventions": [
+    "Uses Claude Code's settings.json hooks schema (SessionStart -> hooks -> command)",
+    "Hardcoded absolute path /home/tim/company/... rather than a relative or env-based path"
+  ],
+  "concerns": [
+    "Absolute machine-specific path makes this non-portable across checkouts/machines"
+  ],
+  "notes": "If briefing someone: this is the repo's Claude Code config — its one job is firing a registry-freshness check at session start.",
+  "questions": [
+    "What does cc_registry_freshness_check.sh actually verify and what does it do on staleness?"
+  ],
+  "purpose_vs_actual": "n/a — config file, no stated purpose to compare; content is self-evident",
+  "apparent_themes": ["session-start automation", "registry/self-model freshness discipline"],
+  "intention_signals": "Wants every session to begin by confirming the live registry is up to date, enforcing the repo's self-description discipline automatically.",
+  "novelty": "Binds session start to a freshness-check rather than typical lint/format hooks.",
+  "contribution": "Contributes the wiring that auto-runs a freshness check on session start and the choice to disable worktree bg isolation.",
+  "summary_for_embedding": "Claude Code project settings.json disabling worktree background isolation and registering a SessionStart command hook that runs a registry-freshness-check bash script.",
+  "intention_for_embedding": "To automatically verify registry/self-model freshness whenever a Claude Code session begins in this repo."
+}

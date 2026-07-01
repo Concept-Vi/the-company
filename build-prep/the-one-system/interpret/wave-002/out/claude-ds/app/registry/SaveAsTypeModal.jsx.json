@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/SaveAsTypeModal.jsx",
+  "model": "opus",
+  "what_it_does": "A React modal component (assigned to window.SaveAsTypeModal) that lets a user review and edit a draft Type extracted by Vi's promoteInstance before committing it to CV_REGISTRY. It subscribes to window.CV_TYPES_PROMPT for the draft, exposes editable fields (name, id, layer, family, description) and an editable list of variables, and on Save calls window.CV_REGISTRY.register(draft).",
+  "observations": [
+    "Uses global React via destructured useState/useEffect aliased as useState_sat/useEffect_sat.",
+    "Subscribes to window.CV_TYPES_PROMPT?.subscribe in an effect and returns the unsubscribe; renders null when no draft.",
+    "patch/patchVar/rmVar/addVar implement immutable updates to the draft and its variables array.",
+    "addVar seeds a new variable with key 'var_N', label 'New', default '', kind 'text'.",
+    "save() validates name and id are non-empty (toasts via window.dsaToast otherwise), then registers and toasts success.",
+    "Layer select is populated from window.CV_REGISTRY.LAYERS / LAYER_INFO; variable kind select offers text/number/url/choice.",
+    "Inline styles use design tokens (var(--font-body), var(--fg-muted), var(--accent-bronze)).",
+    "Renders ViShape and uses dsa-btn / tb-modal class conventions; copy notes variables 'become Template parameters when the Type is run.'"
+  ],
+  "standouts": [
+    "The whole modal is a thin review/edit gate over an AI-extracted draft (Vi's promoteInstance) before it enters the registry — human-in-the-loop promotion of an instance to a reusable Type.",
+    "Variables edited here are explicitly framed as the parameters the Type exposes when run as a Template."
+  ],
+  "conventions": [
+    "Follows the project's single-registry pattern: registration goes through CV_REGISTRY.register, not a parallel store.",
+    "Uses design tokens for all styling values (no raw hex), consistent with the no-second-home rule.",
+    "Loud-ish failure via toasts on invalid input, though register() itself is wrapped only in try/finally (no catch).",
+    "Optional-chaining guards on globals (CV_TYPES_PROMPT, dsaToast) tolerate their absence."
+  ],
+  "concerns": [
+    "save() wraps register in try/finally with no catch — if CV_REGISTRY.register throws, busy resets but the error is unhandled and the user gets no feedback, which sits uneasily with the project's loud-fail rule.",
+    "Layer select has no fallback if draft.layer is unset (controlled select with possibly undefined value)."
+  ],
+  "notes": "This is the human review step that turns a Vi-extracted instance draft into a registered, reusable Type via CV_REGISTRY.register.",
+  "questions": [
+    "What produces the draft pushed through CV_TYPES_PROMPT, and what shape does promoteInstance emit (does it always include layer)?",
+    "Does CV_REGISTRY.register throw on duplicate id, and if so should save() surface that to the user?"
+  ],
+  "purpose_vs_actual": "Match — the header comment describes a small surface-anywhere modal wrapping promoteInstance's result in a review/edit step before committing to the registry, which is exactly what the component does.",
+  "apparent_themes": [
+    "Human-in-the-loop promotion (instance → reusable Type)",
+    "Registry-as-single-source-of-truth",
+    "Interface as a projection that writes back into the registry"
+  ],
+  "intention_signals": "Trying to make Type creation a lightweight, reviewable act anywhere in the app — Vi proposes a Type from a concrete instance and the user confirms it into the one registry.",
+  "novelty": "The pairing of an AI-extracted draft (promoteInstance) with an editable variables grid whose entries directly become the Type's runnable Template parameters.",
+  "contribution": "Contributes the review/commit UI that bridges Vi's instance-to-Type extraction and CV_REGISTRY.register, including the inline editor for a Type's variables.",
+  "summary_for_embedding": "A React modal that reviews and edits a Vi-extracted draft Type (name, id, layer, family, variables) and commits it to CV_REGISTRY via register.",
+  "intention_for_embedding": "To let a user confirm and refine an AI-proposed Type before it enters the single registry, turning a concrete instance into a reusable, parameterised Template."
+}

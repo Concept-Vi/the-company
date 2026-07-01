@@ -1,0 +1,114 @@
+/* ============================================================
+   ConceptV · THEME MODES  —  light / dim / dark / contrast
+   ------------------------------------------------------------
+   The colour system mixes every wash TOWARD --zone-ground (see
+   colors_and_type.css). So a theme is just: flip the ground, flip
+   the ink ramp, and let the 28 zone tokens recompute themselves.
+   Warm dark is mixed toward a warm near-black — never cold grey.
+
+   Apply on any wrapper (or <html>):  data-theme="dark"
+   Light is the default and needs no attribute. Themes are OPT-IN
+   (not auto from prefers-color-scheme) so existing light screens
+   are never surprised — opt in per surface, or add the @media
+   block at the bottom to follow the OS.
+   ============================================================ */
+
+[data-theme="dim"],
+[data-theme="dark"],
+[data-theme="contrast"] { color: var(--ink); background: var(--bg-canvas); }
+
+/* ---- DIM — a soft dark; the everyday low-light workspace ---- */
+[data-theme="dim"] {
+  color-scheme: dark;
+  --zone-ground:      #221D17;
+  --zone-ground-soft: #261F18;
+  --zone-intensity:   1.5;   /* @kind other */  /* more pigment so washes read on dark */
+
+  --ink:         #ECE6DA;
+  --ink-2:       #CFC6B5;
+  --ink-3:       #A1957E;
+  --ink-4:       #7A6E58;
+  --ink-5:       #564D3E;
+  --ink-inverse: #221D17;
+
+  --paper: #221D17; --paper-2: #281F18; --paper-3: #2E251C;
+  --bg-canvas: #1F1A14; --bg-surface: #2A231B; --bg-muted: #271F18; --bg-sunken: #1A1610;
+
+  --border-faint:   color-mix(in oklch, var(--ink) 9%,  transparent);
+  --border-soft:    color-mix(in oklch, var(--ink) 12%, transparent);
+  --border-default: color-mix(in oklch, var(--ink) 16%, transparent);
+  --border-strong:  color-mix(in oklch, var(--ink) 26%, transparent);
+
+  --shadow-c: hsl(20 30% 3% / 1);
+  --grain-opacity: 0.07; /* @kind other */
+}
+
+/* ---- DARK — full warm dark ---------------------------------- */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --zone-ground:      #151109;
+  --zone-ground-soft: #1A140C;
+  --zone-intensity:   1.7; /* @kind other */
+  --gold-intensity:   1.15; /* @kind other */
+
+  --ink:         #F4EFE4;
+  --ink-2:       #D9D0BF;
+  --ink-3:       #A89B83;
+  --ink-4:       #7C7058;
+  --ink-5:       #574E3E;
+  --ink-inverse: #151109;
+
+  --paper: #151109; --paper-2: #1C150C; --paper-3: #241B10;
+  --bg-canvas: #120E07; --bg-surface: #1E1810; --bg-muted: #1A140C; --bg-sunken: #0E0B05;
+
+  --border-faint:   color-mix(in oklch, var(--ink) 8%,  transparent);
+  --border-soft:    color-mix(in oklch, var(--ink) 11%, transparent);
+  --border-default: color-mix(in oklch, var(--ink) 15%, transparent);
+  --border-strong:  color-mix(in oklch, var(--ink) 24%, transparent);
+
+  --shadow-c: hsl(20 40% 2% / 1);
+  --grain-opacity: 0.08; /* @kind other */
+}
+
+/* ---- CONTRAST — high-contrast light (accessibility) --------- */
+[data-theme="contrast"] {
+  --zone-ground:      #FFFFFF;
+  --zone-ground-soft: #FFFFFF;
+  --zone-intensity:   1.45;   /* @kind other */  /* surfaces more distinct */
+
+  --ink:   #100C06;
+  --ink-2: #241D12;
+  --ink-3: #463A26;
+  --ink-4: #6B5C40;
+
+  --border-faint:   #D9CEB0;
+  --border-soft:    #CFC299;
+  --border-default: #B6A876;
+  --border-strong:  #8A7C52;
+  --shadow-c: hsl(28 25% 12% / 1);
+}
+
+/* ---- GROUND — clean ↔ warm sub-axis of `light` (capital-raise vs the ivory
+   decks). ORTHOGONAL to data-theme: the dense analytical decks ride a clean
+   WHITE ground (#fff); the editorial / leave-behind decks ride the warm ivory.
+   Same zone ladder, same ink — only the colour every wash mixes TOWARD changes,
+   so depth then reads through panel elevation on white and through undertone on
+   ivory. A knob, never a redraw. Apply on any wrapper:  data-ground="clean".
+   (Listed in the derived-roles selector in colors_and_type.css so the --zone-*
+   and --comm-* roles recompute against the new ground.) ---- */
+[data-ground="clean"] { --zone-ground: #FFFFFF; --zone-ground-soft: #FFFEFB; }
+[data-ground="warm"]  { --zone-ground: #FCFAF2; --zone-ground-soft: #FBF7EC; }
+
+/* Themed scrollbars so the dark world is consistent. */
+[data-theme="dim"] ::-webkit-scrollbar-thumb,
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--ink) 18%, transparent);
+  border-radius: 999px;
+}
+
+/* ---- OPTIONAL: follow the OS. Uncomment to auto-apply dark
+   when no explicit data-theme is set on <html>. ----------------
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) { ... copy the [data-theme="dark"] block ... }
+}
+*/

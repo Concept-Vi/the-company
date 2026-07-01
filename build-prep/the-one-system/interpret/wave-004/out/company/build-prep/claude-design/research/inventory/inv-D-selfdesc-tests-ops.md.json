@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/inventory/inv-D-selfdesc-tests-ops.md",
+  "model": "opus",
+  "what_it_does": "A fast coverage-scan inventory (Layer 1, INV-D) of the self-description layer (every AGENTS.md/MAP.md/STATE.md), the tests/ directory (130 acceptance suites), docs/, and ops/. Provides directory trees, a self-description file table mapping each AGENTS.md to the contracts it governs, a full categorized listing of all 130 test suites, docs/ and ops/ breakdowns, summary counts, top-10 deep-read priorities, key insights, and gaps.",
+  "observations": [
+    "Marked 'As of 2026-06-08 — Fast coverage scan, READ-ONLY'.",
+    "Enumerates 16 code modules each with an AGENTS.md, exactly 1 MAP.md and 1 STATE.md (root only), and names build-prep/ and design/ as the only two non-code dirs without AGENTS.md.",
+    "Lists all 130 acceptance suites grouped into ~12 subsystem categories (Engine E1-E6, Wire S8/W1-W4, Address Grammar C3, Conversation ×16, RHM, Activation/Scheduler, Governance/Self-Mod, Fabric/Models, Voice, Data/Persistence, Presentation/UI, Misc).",
+    "Maps each AGENTS.md to its governed contract IDs (e.g. runtime→S1/C5/C6/S7, contracts→C1-C8, store→C1/C4, nodes→C2, fabric→S6, canvas→S5/D3, mcp_face→C7, roles→C2.1-C2.5).",
+    "Details ops/: the `company` CLI, services.json registry (vram_mb/vram_ceiling_mb fields), gpu.py VRAM fit-gate with measured 16GB numbers, capabilities.py model-id capability registry, 13 systemd units under company.target.",
+    "States two anchoring design decisions: D3 'one substrate, per-type view-modes' and PoLR-3 path-of-least-resistance self-maintenance via Suite.refresh_self_description().",
+    "Gives the run command for the suites: for t in tests/*.py; do ./.venv/bin/python \"$t\"; done."
+  ],
+  "standouts": [
+    "The drift-check mechanism: tests/drift_acceptance.py fails loud if MAP.md/STATE.md fall out of sync with code or a registered capability lacks a suite.",
+    "The system describing itself end-to-end — AGENTS.md in every module, auto-maintained MAP/STATE, no orphans claimed.",
+    "ops/cli/gpu.py measured-on-16GB placement facts (4B brain solo at 256K, co-resides with light voices at 64K, Orpheus blocks) joined to capabilities.py by model-id.",
+    "'Done' defined as green suite + use-evidence, never code-read-only."
+  ],
+  "conventions": [
+    "Follows the layered research method's Layer 1 coverage census (per RESEARCH-METHOD.md).",
+    "Maps each self-description file to its governed contract IDs rather than describing standalone.",
+    "Uses PRIORITY flags (YES/NO) on files for downstream deep-read selection."
+  ],
+  "concerns": [
+    "Self-declared coverage scan — 'Appears to be' descriptions are inferences from file presence/names, not verified by execution.",
+    "Test count and module count are point-in-time (2026-06-08) and would drift; the doc asserts 'no orphans' without showing the drift-check output proving it."
+  ],
+  "notes": "A complete index of the Company's self-description spine, its 130 acceptance suites by subsystem, and the ops/CLI substrate — the map of how the system documents, tests, and runs itself.",
+  "questions": [
+    "Were the 'no orphans' / 'every module has AGENTS.md' claims verified by running drift_acceptance.py, or inferred from the tree?",
+    "Are all 130 suites currently green, or just listed in STATE.md?",
+    "Which of the YES-flagged files were actually deep-read downstream vs only flagged?"
+  ],
+  "purpose_vs_actual": "Match — states it is a fast READ-ONLY coverage scan of self-description/tests/docs/ops and delivers a classified census of exactly those regions with priorities.",
+  "apparent_themes": [
+    "Self-description as a maintained, drift-checked layer",
+    "Tests-as-proof-record (acceptance suites name capabilities)",
+    "One-console / one-substrate ops (D3)",
+    "Path-of-least-resistance self-maintenance (PoLR-3)",
+    "Contracts-implement-not-redefine discipline"
+  ],
+  "intention_signals": "To give a deep-read agent the full map of how the Company describes, proves, documents, and operates itself — so the architecture-visibility pack can cover the self-model, the test record, and the ops substrate completely.",
+  "novelty": "The exhaustive 130-suite catalog grouped by subsystem with one-line capability descriptions, paired with the AGENTS.md→contract-ID mapping, is a uniquely complete view of the proof + governance layer.",
+  "contribution": "Contributes the full self-description-file→contract map, the categorized 130-suite proof catalog, the ops/CLI+services.json+gpu.py substrate index, and the D3/PoLR-3/drift-check discipline observations that a fused system would keep as its self-model orientation.",
+  "summary_for_embedding": "A 2026-06-08 read-only coverage inventory of the Company's self-description layer (16 AGENTS.md + root MAP/STATE), its 130 categorized acceptance suites, docs/, and the ops CLI/services.json/gpu.py substrate, with contract mappings and deep-read priorities.",
+  "intention_for_embedding": "To map how the Company documents, tests, governs, and runs itself so a deeper read can fully cover the self-model, proof record, and operational substrate."
+}

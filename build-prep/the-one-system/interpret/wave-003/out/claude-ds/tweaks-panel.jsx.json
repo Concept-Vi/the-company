@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "tweaks-panel.jsx",
+  "model": "opus",
+  "what_it_does": "A self-contained React (no build step, global-window) library that ships a floating, draggable 'Tweaks' editing panel plus a set of form-control components (slider, toggle, segmented radio, select, text, number-scrubber, curated color/palette picker, button) for live-editing prototype parameters; it also owns the postMessage host protocol that activates/deactivates edit mode and persists tweak values back to disk.",
+  "observations": [
+    "Top line marks it @ds-adherence-ignore as an 'omelette starter scaffold' that intentionally uses raw hex/px",
+    "Large inline CSS string (__TWEAKS_STYLE) styles all controls; macOS-flavoured glassmorphism (backdrop-filter blur/saturate, translucent backgrounds)",
+    "useTweaks hook is the single source of truth for values; setTweak accepts either (key,value) or an edits object",
+    "setTweak posts __edit_mode_set_keys to window.parent AND dispatches a same-window 'tweakchange' CustomEvent so in-page peers can react",
+    "Host protocol: listens for __activate_edit_mode/__deactivate_edit_mode, posts __edit_mode_available/__edit_mode_set_keys/__edit_mode_dismissed",
+    "TweakRadio auto-falls-back to TweakSelect past width thresholds (2 options ~16 chars, 3 ~10) with detailed comment explaining the px math",
+    "TweakColor accepts a single hex or an array palette; renders hero color + stacked supporting swatches; computes checkmark contrast via relative-luminance (__twkIsLight)",
+    "TweakNumber label is a drag-to-scrub control (ew-resize) with decimal snapping from step",
+    "Panel is draggable, clamps to viewport via ResizeObserver (with resize-listener fallback), reads --dc-inv-zoom for inverse-zoom scaling",
+    "All components Object.assign'd onto window for use in Babel-in-browser HTML pages",
+    "EDITMODE-BEGIN/EDITMODE-END markers in the usage example delimit the JSON block the host rewrites on disk"
+  ],
+  "standouts": [
+    "The bidirectional host protocol (iframe<->host) with explicit ordering: registers the message listener BEFORE announcing __edit_mode_available to avoid a race where activate lands before the handler exists",
+    "Persistence model where setTweak rewrites a marked JSON block on disk via the host rather than localStorage",
+    "Width-fit heuristic that picks segmented control vs dropdown from measured character budgets"
+  ],
+  "conventions": [
+    "Global-window component registration (no imports/exports) — Babel-standalone prototype pattern",
+    "Type-preserving option handling: select/radio map string DOM values back to original number/boolean option values",
+    "Components documented inline in a /* BEGIN USAGE */ block with a runnable example",
+    "Explicitly opts out of the design-system token discipline (raw hex/px by design, flagged at top)"
+  ],
+  "concerns": [
+    "Uses postMessage targetOrigin '*' for parent messages (no origin restriction)",
+    "Reads window.parent.postMessage unconditionally; in a top-level (non-iframe) context parent === self, so the protocol still fires"
+  ],
+  "notes": "If briefing someone: this is the reusable edit-mode chrome + control kit for the 'omelette' prototype system — drop it in, wrap state in useTweaks, and a host can flip edit mode and write changes back to the file.",
+  "questions": [
+    "What is the 'host' that rewrites the EDITMODE block on disk, and where does it live?",
+    "What is the 'omelette' system this scaffold belongs to?",
+    "What consumes the same-window 'tweakchange' event besides the mentioned 'deck-stage rail thumbnails'?"
+  ],
+  "purpose_vs_actual": "Matches — the header describes a reusable Tweaks shell + control helpers owning the host protocol, and the code implements exactly that set of exports and protocol.",
+  "apparent_themes": ["live in-place editing of prototypes", "single-source-of-truth state with disk persistence", "iframe/host message protocol", "control kit as a floor not a ceiling", "type preservation across DOM boundaries"],
+  "intention_signals": "Aims to remove boilerplate from every prototype: one place owns the edit-mode protocol and a consistent set of polished controls, so prototype authors only declare a defaults JSON block and bind controls, and edits flow back to source.",
+  "novelty": "The disk-write-back persistence via host postMessage + EDITMODE JSON markers, and the drag-scrub number label, are unusual touches for a prototype tweak panel.",
+  "contribution": "Contributes a reusable edit-mode panel + a full set of styled live-edit form controls and the host/iframe protocol for activating edit mode and persisting tweaks back to source files.",
+  "summary_for_embedding": "A global-window React Tweaks panel library with a full set of live-edit form controls and a postMessage host protocol that persists tweak values back to disk for in-browser prototypes.",
+  "intention_for_embedding": "To give every prototype a consistent, ready-made live-editing panel and controls, with edits single-sourced and written back to the source file via a host protocol."
+}

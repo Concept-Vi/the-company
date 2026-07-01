@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0002_clients.sql",
+  "model": "opus",
+  "what_it_does": "Creates public.clients — the client registry holding each remote-MCP client's full policy in one place: id, label, allowed_tools (jsonb of {tool: {remote_posture, allowed ops, scope}}), scopes[], approval_mode, channels[], default posture, status, timestamps. Adds table/column comments documenting the fail-closed posture rule, sets grants (service_role/postgres ALL, anon/authenticated SELECT), and seeds the first row, 'claude-design', with a concrete allowed_tools map and scopes/channels.",
+  "observations": [
+    "allowed_tools jsonb encodes per-tool {remote_posture, allowed (op allow-list or null), scope}; column comment defines posture vocabulary safe|design|consent|hazard|locked",
+    "Fail-closed rule stated in comment: a tool absent, or with posture not in {safe,design}, is NOT exposed",
+    "Header comment says this is the Supabase home of what was remote_exposure.json — config folded into the company DB",
+    "Both the Edge Function gate and the Python gateway resolve policy from here at call time (registry-is-truth; gateway owns no private allow-list)",
+    "Seeded claude-design row: ~14 safe read tools (some with op allow-lists like corpus/sessions/channels/marks/operator) plus two design-posture write tools (cc_channel:send, claude_design:[ingest_bundle,submit_seed,walk_decision])",
+    "scopes seeded as company:design:read + company:design:write; channels ['design-pipeline']; approval_mode 'operator-gate'",
+    "Seed uses on conflict (id) do nothing (idempotent insert)"
+  ],
+  "standouts": [
+    "registry-is-truth: a single DB row is the authoritative policy resolved by both the Edge gate and the Python gateway",
+    "The concrete claude-design allow-list with per-tool op restrictions and posture/scope tags",
+    "Fail-closed exposure rule encoded as the absence/posture default"
+  ],
+  "conventions": [
+    "Idempotent DDL + on-conflict-do-nothing seed",
+    "Self-describing table/column comments documenting the policy semantics",
+    "Same grant pattern as 0001 (service_role ALL, read roles SELECT)"
+  ],
+  "concerns": [
+    "posture, approval_mode, status, scope values are free text/jsonb enforced only by comment, not DB CHECK constraints",
+    "anon SELECT exposes the client policy/allow-list to the public anon key",
+    "updated_at has a default but no trigger shown here to maintain it on UPDATE"
+  ],
+  "notes": "The single-source client registry: one row per remote-MCP client carrying its tool/scope/channel/approval policy, seeded with the claude-design allow-list folded in from remote_exposure.json.",
+  "questions": [
+    "Where are posture/scope values validated if not by DB constraints — only in the gateway code?",
+    "What maintains updated_at on UPDATE (a trigger in a later migration, or app code)?",
+    "Will the 'shared posture registry the rows reference' mentioned in the comment arrive in a later migration?"
+  ],
+  "purpose_vs_actual": "Matches — stated purpose (one place a client's remote-MCP policy lives, resolved at call time) is what the table + seed implement.",
+  "apparent_themes": [
+    "registry-is-truth / single source of policy",
+    "fail-closed exposure (deny by default)",
+    "config-into-company fold (json file becomes DB rows)",
+    "least-privilege per-tool op allow-lists"
+  ],
+  "intention_signals": "Centralises remote-MCP authorization into one auditable, queryable DB row per client so policy is data the gate/gateway resolve, not code they each carry — and so adding a client is adding a row.",
+  "novelty": "Folding a former JSON exposure config into a DB-resident registry with per-tool posture+op+scope as jsonb, consumed by two independent enforcers.",
+  "contribution": "Brings the client-policy data model and the seeded claude-design policy — the authoritative allowed_tools/scopes/channels that the gateway and Edge gate read to decide what a remote client may call.",
+  "summary_for_embedding": "SQL migration creating public.clients, the remote-MCP client registry (allowed_tools jsonb, scopes, channels, approval_mode, posture) with a fail-closed exposure rule, seeded with the claude-design client policy.",
+  "intention_for_embedding": "To make each remote client's tool/scope/channel policy a single authoritative DB row resolved at call time by both the Edge gate and the Python gateway."
+}

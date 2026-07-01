@@ -1,0 +1,38 @@
+{
+  "project": "claude-ds",
+  "path": "preview/components_inputs.html",
+  "model": "opus",
+  "what_it_does": "A self-contained design-system preview card rendering form-input components: a focused text field with inline URL-preview helper, a search input with embedded magnifier, gold checkboxes (on/off), and a textarea.",
+  "observations": [
+    "Carries the @dsCard metadata comment (group Brand, name 'Inputs & checkboxes', viewport 700x280).",
+    "Two-column grid of .field blocks (label + input + help text).",
+    "Inputs use --bg-surface, --border-default, --r-md; .focus state sets --accent-gold border + a 3px --accent-gold-soft ring.",
+    "Search input embeds an inline data-URI SVG magnifier (stroke colour hardcoded as %23A89678) positioned left.",
+    "Checkboxes are CSS-only: a gold .box with a ::after rotated-border checkmark; .off swaps to --accent-gold-soft and hides the check.",
+    "Help text uses --font-mono; the URL-preview helper bolds a sample conceptv.io panotours URL.",
+    "Textarea reuses .input styling with inline resize:none/height overrides."
+  ],
+  "standouts": [
+    "The pure-CSS checkmark (rotated border on ::after) avoids any icon dependency.",
+    "Inline URL-preview helper ties an input field to a concrete product URL pattern."
+  ],
+  "conventions": [
+    "Follows token references for colours, borders, radii.",
+    "Breaks token discipline with the hardcoded SVG stroke colour (%23A89678) inside the data-URI search icon.",
+    "Uses inline style overrides on the textarea and some help spans."
+  ],
+  "concerns": [
+    "The search-icon stroke colour is a hardcoded hex inside the data-URI rather than a token reference."
+  ],
+  "notes": "A form-controls preview: focused text field, search-with-icon, CSS-only gold checkboxes, and textarea — token-driven except the inline SVG icon colour.",
+  "questions": [
+    "Can the data-URI SVG icon colour be sourced from a token, or is hardcoding unavoidable inside a CSS url()?"
+  ],
+  "purpose_vs_actual": "Matches — declares an inputs & checkboxes preview and renders exactly those controls.",
+  "apparent_themes": ["token-referenced form styling", "gold focus/selection signature", "icon-free CSS controls", "self-describing preview card"],
+  "intention_signals": "To show the consistent input border/focus treatment across single-line, search, multi-line, and checkbox controls so the form vocabulary reads as one family.",
+  "novelty": "The CSS-only rotated-border checkmark and the inline product-URL preview helper bound to a field.",
+  "contribution": "Contributes the form-control styling vocabulary (input/search/checkbox/textarea, focus ring, gold check) expressed against the token system.",
+  "summary_for_embedding": "A token-driven HTML preview card rendering form inputs: focused text field with URL helper, search input with embedded SVG magnifier, CSS-only gold checkboxes, and a textarea.",
+  "intention_for_embedding": "To present the design system's consistent form-control and focus vocabulary for visual review in the gallery."
+}

@@ -1,0 +1,56 @@
+{
+  "project": "claude-ds",
+  "path": "assets/icons/cv-icons.js",
+  "model": "opus",
+  "what_it_does": "Defines window.CV_ICONS, the icon library and 'single source of truth' for symbols. It holds .data (name → raw 24x24 SVG path body) for ~130 icons across themed groups (people, files, communication, architecture, browser/dashboard, media, actions, system, logic/flow, platform, and a ConceptV brand feature set); an .aliases map (semantic⇄brand names → canonical bodies, no duplicate drawing); a .brand list; a two-facet .taxonomy (domain + kind) with a per-symbol .facets map (domain, kind, tags, brand flag); query helpers (byDomain, byKind, search, resolve, get); SVG renderers (svg() returning an element, markup() returning a string); and a write path (add/_persist/_loadPersisted) that lets the AI glyphic-foundry register new symbols into .data + .facets and persist user/vi symbols to localStorage.",
+  "observations": [
+    "Header codifies the drawing convention: 24x24 grid, 1.5px stroke, rounded caps/joins, no fills, currentColor stroke; ~20x20 active area; prefer simple 'architectural' geometry.",
+    "Icons are stored as raw inner SVG path strings, grouped by section comments (People, Files, Communication, Architecture, Browser, Media, Actions, System, Logic/flow, Platform, Brand feature set).",
+    "A dedicated 'ConceptV BRAND FEATURE SET' (guided-tour, change-style, finishes, drone-view, day-night, filters, markup, stages, furniture, lighting, etc.) vectorised from gold/bronze source sheets and tagged brand:true.",
+    "aliases resolve semantic/brand names to existing bodies; resolution order is data[name] first then aliases (alias never shadows a real key).",
+    "FACETED TAXONOMY replaces ad-hoc section comments with a real domain+kind classification plus free tags; both the Glyphic registry and the explorer read it (no second category list).",
+    "Some icon bodies use var(--cv-icon-bg,#FBF7EC) so an inner cutout can be filled with the surface color (knockout effect).",
+    "search() matches name, domain id, kind, domain label, and tags; resolve() follows one alias hop; get() returns the body via resolve.",
+    "svg()/markup() throw on unknown icon names (loud fail).",
+    "add() validates against CV_GLYPHIC.schema when present (else a minimal id/svg/name check), writes into both .data and .facets, and optionally persists; new symbols default domain 'feature', kind 'object', provenance 'vi'.",
+    "_persist/_loadPersisted round-trip user/vi-provenance symbols through localStorage, swallowing errors in try/catch."
+  ],
+  "standouts": [
+    "The faceted taxonomy (domain + kind + tags) as the single source for what each symbol MEANS, consumed by both Glyphic and explorer.",
+    "The write path (add/_persist/_loadPersisted) that makes AI-generated symbols first-class — dropped into the same .data/.facets every reader uses and persisted to localStorage.",
+    "Aliases that map many semantic/brand names onto one drawn body (no duplicate art), with a guaranteed non-shadowing resolution order.",
+    "The knockout pattern via var(--cv-icon-bg,#FBF7EC) for overlapping inner shapes (e.g. team, world-network, checklist-double)."
+  ],
+  "conventions": [
+    "Single-source-of-truth header + extend-by-adding-an-entry workflow (then regenerate per-icon SVGs via the build script).",
+    "Strict, uniform icon drawing spec (24x24, 1.5px, no fills, currentColor).",
+    "window.CV_ICONS global with sub-objects and helper functions (script-load model).",
+    "Loud fail on unknown names in svg()/markup(); add() validates and never silently accepts bad records.",
+    "localStorage helpers swallow errors silently (a deliberate exception to loud-fail for persistence robustness)."
+  ],
+  "concerns": [
+    "Inline hex fallbacks inside var() (e.g. #FBF7EC, #988058, #E0C010 mentioned in header) are off-token literals embedded in the icon bodies and header.",
+    "_persist/_loadPersisted use empty catch blocks — a corrupt localStorage payload is silently ignored (intentional but masks errors).",
+    "The brand[] list and facets[].brand flag both encode brand membership — two places to keep aligned for the brand set (the taxonomy facets are the stated single source, but brand[] persists)."
+  ],
+  "notes": "The icon single-source: ~130 stroke icons as raw SVG bodies, an alias map, a domain+kind+tags taxonomy, query/render helpers, and a localStorage-backed write path so AI-generated symbols are first-class.",
+  "questions": [
+    "Is the legacy window.CONCEPTV_ICONS (used by the deprecated ConceptVIcon.jsx) generated from this, or fully separate?",
+    "Does the per-icon SVG build (scripts/build-icon-svgs.html) stay in sync automatically, or is it a manual regen step?",
+    "Is the standalone brand[] list still needed now that facets[].brand exists, or is it a back-compat remnant?"
+  ],
+  "purpose_vs_actual": "Matches — header claims 'single source of truth' for icons; the file is the icon data plus its taxonomy, queries, renderers, and write path, and other files (cv-glyphics.js) confirm they read from it.",
+  "apparent_themes": [
+    "Single-source-of-truth for symbols and their meaning",
+    "Faceted classification (domain + kind + tags)",
+    "Alias-to-one-body (no duplicate art)",
+    "AI-foundry write path / generated symbols as first-class",
+    "Consistent architectural icon drawing language",
+    "currentColor-tintable, knockout-aware SVGs"
+  ],
+  "intention_signals": "Trying to make icons a queryable, classifiable, extensible registry — one home where every symbol's geometry AND meaning live, readable by the Glyphic compositor and an explorer, and writable by an AI symbol-foundry that persists new symbols seamlessly.",
+  "novelty": "An icon set that is also a meaning registry (domain/kind/tags) with a live write path letting AI-generated symbols join the same single source and persist to localStorage.",
+  "contribution": "Contributes the full ConceptV icon corpus (~130 stroke icons + brand feature set) as raw SVG bodies, the alias map, the domain/kind/tags taxonomy and per-symbol facets, the query/render helpers, and the validated add/persist write path for new symbols.",
+  "summary_for_embedding": "window.CV_ICONS: the ConceptV icon single-source — ~130 24x24 stroke-icon SVG bodies in themed groups plus a ConceptV brand feature set, an alias map, a domain+kind+tags taxonomy with per-symbol facets, query/render helpers, and a validated localStorage-backed write path for AI-generated symbols.",
+  "intention_for_embedding": "To provide one queryable, classifiable, extensible home for every symbol's geometry and meaning, consumed by the Glyphic compositor and an explorer and writable by an AI symbol-foundry."
+}

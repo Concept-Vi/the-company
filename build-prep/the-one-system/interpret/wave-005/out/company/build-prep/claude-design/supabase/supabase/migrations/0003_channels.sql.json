@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0003_channels.sql",
+  "model": "opus",
+  "what_it_does": "Creates the shared channel substrate in Supabase: public.channels (id/kind/name/purpose/mode/coordinator/status/members jsonb/origin jsonb/posts count/shared bool/timestamps) and public.channel_posts (uuid id, channel_id FK cascade, from_session, sender_kind, to_session, thread, kind, text, created_at) with three indexes. Adds a trigger function _bump_channel_on_post that recounts posts and updates last_activity on each insert, registers both tables in the supabase_realtime publication, enables RLS, sets grants (service_role ALL, authenticated SELECT, no anon), and ensures the pgcrypto extension for gen_random_uuid().",
+  "observations": [
+    "channels mirrors the existing agent_sessions/channels.jsonl shape; channel_posts mirrors the mail-leaf post shape (frm/to/thread/text/ts) — stated as the alignment for fork's company-fabric → Supabase sync",
+    "Header marks the schema PROVISIONAL pending fork's confirm/adjust",
+    "shared boolean is OPT-IN visibility, fail-closed: false=internal (never leaves the box), true=publishes + client-eligible; per-client scoping layered on top via clients.channels",
+    "sender_kind ('session'|'client') tags origin so the company injector skips self-origin posts and tags Claude Design posts",
+    "posts is a denormalised count maintained by the after-insert trigger (full recount per insert)",
+    "Realtime publication add wrapped in a DO block catching duplicate_table so the migration is re-runnable",
+    "RLS enabled but NO policies defined here — comment defers them to 0005/0006; explicitly no anon grant and no broad using(true) policy (C-1: would OR-widen past scoped policies)",
+    "Participation model described as Edge Function write → Realtime → company session reply → Realtime back to Claude Design"
+  ],
+  "standouts": [
+    "Supabase-as-neutral-room, zero-box-exposure architecture (both sides reach OUTBOUND to Supabase; nobody connects into Tim's machine)",
+    "Two-level fail-closed visibility: shared=true AND client-listed",
+    "The C-1 caution: avoid a broad using(true) anon/SELECT policy that would OR-widen scoped policies"
+  ],
+  "conventions": [
+    "Idempotent DDL, DO-block exception handling for the publication add, create-extension-if-not-exists",
+    "Schema deliberately mirrors existing company fabric shapes for clean sync",
+    "RLS enabled-here / policies-elsewhere split (0005/0006)",
+    "Self-describing table/column comments"
+  ],
+  "concerns": [
+    "Trigger recounts all posts per insert (count(*)) rather than incrementing — O(n) per post, could be costly on hot channels",
+    "kind/mode/status/sender_kind are free text enforced only by comment, not CHECK constraints",
+    "RLS is enabled with no policies in this file, so the tables are inaccessible to authenticated until 0005/0006 run — correctness depends on migration ordering"
+  ],
+  "notes": "The shared channel registry + posts in Supabase as the neutral meeting room between the company fabric and Claude Design, with realtime, a post-count trigger, and RLS enabled but policies deferred to 0005/0006.",
+  "questions": [
+    "Has fork confirmed the provisional schema, or is it still pending adjustment?",
+    "Why a full recount in the bump trigger rather than posts = posts + 1?",
+    "Are mode/status/sender_kind values validated anywhere outside the comments?"
+  ],
+  "purpose_vs_actual": "Matches — implements the shared channel meeting ground described in the header (registry + posts + realtime + opt-in sharing), with policies explicitly deferred.",
+  "apparent_themes": [
+    "Supabase as neutral shared room / zero inbound box exposure",
+    "opt-in, fail-closed, two-level visibility",
+    "schema-mirrors-existing-fabric for clean sync",
+    "realtime bidirectional participation",
+    "registry-is-truth"
+  ],
+  "intention_signals": "Lets Claude Design and the company sessions converse on the same data via an outbound-only shared room, while keeping channels internal by default and only exposing what is explicitly shared and client-scoped.",
+  "novelty": "The zero-inbound design (both peers reach out to Supabase, neither connects into the box) combined with opt-in two-level channel visibility and origin-tagging to prevent self-echo in the injector.",
+  "contribution": "Brings the cross-party channel/post data model, the realtime wiring, the post-count trigger, and the RLS-on/policies-deferred posture that make Supabase the shared conversation substrate between the company fabric and Claude Design.",
+  "summary_for_embedding": "SQL migration creating public.channels and public.channel_posts as a Supabase realtime shared channel substrate (opt-in shared flag, sender_kind tagging, post-count trigger, RLS enabled with policies deferred) mirroring the company channel fabric shapes.",
+  "intention_for_embedding": "To make Supabase a neutral outbound-only room where the company fabric and Claude Design participate on the same channel data without exposing Tim's box."
+}

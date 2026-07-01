@@ -1,0 +1,36 @@
+{
+  "project": "company",
+  "path": "board_edges/references.py",
+  "model": "opus",
+  "what_it_does": "Defines a single RELATION_TYPE dict for the 'references' board edge: a directed cross-reference linking any address to any address (this artifact references / is-compared-against / builds-on that one), with inverse 'referenced_by'.",
+  "observations": [
+    "Module-level RELATION_TYPE constant only.",
+    "directed=True, inverse='referenced_by', label='references'.",
+    "desc describes any-address-to-any-address links (image://<id> to image://<src>, image to text, attachment to attachment).",
+    "desc names the comparison workflow: link a generated image to its source image, then traverse to pair them."
+  ],
+  "standouts": [
+    "The broadest/most generic edge among the siblings (any address to any address).",
+    "Carries the 'generated output vs source' comparison-pairing use case."
+  ],
+  "conventions": [
+    "Follows the board_edges RELATION_TYPE pattern (id/directed/label/inverse/desc).",
+    "Heterogeneous address linking via scheme://<id>."
+  ],
+  "concerns": [],
+  "notes": "The general-purpose directed cross-reference edge; siblings like composes_with/refutes exist precisely so this one isn't overloaded.",
+  "questions": [
+    "What distinguishes 'references' from 'is-compared-against' and 'builds-on' if all three map to this one edge?"
+  ],
+  "purpose_vs_actual": "Match: desc describes a generic directional cross-reference and the dict declares it.",
+  "apparent_themes": [
+    "Generic cross-referencing across heterogeneous addresses",
+    "Output-vs-source pairing for comparison",
+    "Directed links with explicit inverse"
+  ],
+  "intention_signals": "Trying to provide the catch-all directional link between any two addressed artifacts, especially to pair a generated output with its source for comparison.",
+  "novelty": "Its breadth (any address to any address) and the explicit generated-vs-source comparison pairing use case.",
+  "contribution": "Contributes the general directional cross-reference edge with its referenced_by inverse and the output-to-source comparison-pairing pattern.",
+  "summary_for_embedding": "A board relation-type definition for 'references', a directed any-address-to-any-address cross-reference edge (inverse referenced_by) used to pair artifacts such as a generated image and its source.",
+  "intention_for_embedding": "To provide a general directional link between any two addressed artifacts so outputs can be paired with their sources for comparison."
+}

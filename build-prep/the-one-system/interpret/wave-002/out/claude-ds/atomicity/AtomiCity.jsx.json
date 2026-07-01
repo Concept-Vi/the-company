@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/AtomiCity.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the AtomiCity React root component that welds the Atlas browser and the Vi console into one app. It owns navigation state (selected node, expansion, highlight), keeps the tree live by subscribing to window.ATLAS, pushes the active surface/node into CV_AI context, and implements ATOMICITY.act() — a verb protocol (open/expand/highlight/search/connect/ingest/explore/restyle/run) that Vi drives the interface through. It also provides element picking via CV_PICK/CV_SHOT, a Cmd+K command bar (node search + Vi quick-commands), a Cmd+E mode toggle, a CV_MODE-projected ModeSwitch, and a normalizeStyle helper that turns a Vi style recipe into inline style props (resolving --token names to var()).",
+  "observations": [
+    "Header comment: 'welds the Atlas browser and Vi into one app', owns navigation, implements the ATOMICITY.act() verb protocol Vi drives the interface through, pushes the active node into CV_AI context, hosts the command bar.",
+    "act() is the central dispatch: open/expand/highlight navigate; search opens the command bar; connect activates the 'fsapi' runtime via CV_HOST and rebuilds ATLAS; ingest opens the ingest surface and adds/recognizes/analyzes a CV_SOURCE; explore opens explore; restyle applies a style through CV_OVERRIDE so the change survives re-render; run executes a CV_AI capability.",
+    "openNode uses document.startViewTransition + ReactDOM.flushSync for the 'nothing teleports' cross-fade, falling back to direct nav when unsupported.",
+    "Exposes window.ATOMICITY = { act, openNode, askVi, startPick, setVi, setPicked, pickElement } and cleans it up on unmount.",
+    "Element pick: CV_PICK.start(callback) selects a real DOM element; CV_SHOT.snapshot(el) lazily attaches a screenshot to the picked descriptor, guarded by _el identity check.",
+    "Keyboard: Cmd/Ctrl+K toggles command bar, Cmd/Ctrl+E toggles CV_MODE between inspect and operator, Escape closes the command bar.",
+    "useEffect pushes CV_AI.setActiveSurface('atomicity', ...) on selId change so context.atomicity resolves for capabilities.",
+    "ModeSwitch is explicitly 'a projection of CV_MODE, like every other UI surface' — subscribes and re-renders via a force reducer.",
+    "normalizeStyle maps a compact recipe (bg/fg/radius/shadow/border/weight/font/padding/tracking/color) to inline styles, auto-wrapping --token strings in var().",
+    "restyle's setPicked callback applies CV_OVERRIDE.apply but swallows errors in an empty catch; connect/run surface errors via window.dsaToast."
+  ],
+  "standouts": [
+    "ATOMICITY.act() is a declarative verb protocol that lets the AI operate the whole UI through a small set of typed actions — the concrete 'agent drives the interface' contract.",
+    "restyle routes through an override layer (CV_OVERRIDE) specifically so an AI-applied change persists across React re-renders — a deliberate solution to ephemeral DOM edits.",
+    "Heavy use of pluggable window globals (ATLAS, CV_AI, CV_HOST, CV_PICK, CV_SHOT, CV_SOURCE, CV_OVERRIDE, CV_MODE, VI_BRAIN) as a registry-driven runtime."
+  ],
+  "conventions": [
+    "Interface as projection of registries (tree from ATLAS, modes from CV_MODE) per the project's non-negotiable.",
+    "Aliased React hook imports to avoid global-bundle collisions.",
+    "Typed-action dispatch (a.type switch) rather than ad-hoc handlers; errors surfaced via toast, not silent — except the restyle catch."
+  ],
+  "concerns": [
+    "The restyle handler's catch (e) {} swallows CV_OVERRIDE.apply failures silently, which conflicts with the project's 'loud fail, never silent' rule — file-local note.",
+    "Many window globals are used without presence guards (e.g. window.CV_AI.setActiveSurface, window.CV_HOST.describe()); a missing dependency would throw at mount — observed from this file alone."
+  ],
+  "notes": "The AtomiCity app root — owns navigation and the ATOMICITY.act() verb protocol through which Vi operates the UI (open/restyle/ingest/run/connect), plus the command bar, element picker, and mode switch; it orchestrates the many CV_* runtime globals.",
+  "questions": [
+    "What is the full set/shape of style recipe keys CV_OVERRIDE.apply and normalizeStyle support, and where is CV_OVERRIDE defined?",
+    "What are CV_PICK/CV_SHOT/CV_MODE/VI_BRAIN and their contracts (e.g. VI_BRAIN.quickCommands) — referenced here but defined elsewhere?"
+  ],
+  "purpose_vs_actual": "Match — the header promises a root that welds Atlas + Vi, owns navigation, implements the act() verb protocol, pushes context into CV_AI, and hosts the command bar; the code implements all of these.",
+  "apparent_themes": [
+    "Agent drives the interface via a typed verb protocol",
+    "Interface as projection of registries",
+    "Persistent (override-layer) edits over ephemeral DOM changes",
+    "'Nothing teleports' motion via View Transitions"
+  ],
+  "intention_signals": "Trying to make the AI a first-class operator of the UI: a small declarative action vocabulary (act) plus context-push and an element picker so Vi can navigate, restyle real elements, ingest sources, and run capabilities exactly as a person would, with the interface always reflecting the live registries.",
+  "novelty": "A React app root that exposes a global typed action protocol (window.ATOMICITY.act) for an AI to operate the interface, combined with element picking, an override-layer restyle that survives re-render, and registry-projected navigation/modes.",
+  "contribution": "Contributes the app's orchestration layer: navigation state, the ATOMICITY.act() agent verb protocol, CV_AI context-push, the command bar, the element picker wiring, the mode switch, and the Vi-style-recipe-to-inline-style normalizer.",
+  "summary_for_embedding": "The AtomiCity React root component that unites the Atlas browser and the Vi console, owns navigation state, pushes active context into CV_AI, and implements window.ATOMICITY.act() — a typed verb protocol (open/expand/highlight/search/connect/ingest/explore/restyle/run) through which the AI operates the interface, plus a command bar, element picker, and CV_MODE-projected mode switch.",
+  "intention_for_embedding": "To make the AI a first-class operator of the design-system interface by giving it a small declarative action vocabulary and live context, while keeping navigation and modes projected from the runtime registries."
+}

@@ -1,0 +1,53 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/controls.css",
+  "model": "opus",
+  "what_it_does": "The CONTROLS & COMPONENTS layer of the ConceptV Design System — a token-pure, theme-aware stylesheet of UI primitives: buttons (.cv-btn with primary/ink/outline/ghost/soft/comm variants + pill/sm/lg/block/icon modifiers), cards (.cv-card + soft/surface/outline/gold/raised/pad/interactive + head/title/sub/foot parts), fields/inputs (.cv-field/label/hint, .cv-input/textarea/select, .cv-search), badges/pills/chips/tags, comparison/pricing tables (.cv-table), dividers, tabs, segmented control, switch/toggle, avatar, tooltip, modal (overlay+panel), and stepper. Every value resolves to a registered token (colour roles, --r-*, --elev/--shadow-*, --control-h, --d-* spacing, --focus-ring) so a token recalibration repaints every control across light/dim/dark/clean grounds.",
+  "observations": [
+    "Header states intent: 'the bread-and-butter UI primitives the system was missing' in ONE home, token-pure and theme-aware, and grounded in source DNA (maps each primitive to a real artifact: gold action button, dark panotour button, gold-outline pill, cream deck panel, gold-focus field, embossed stat pill, comparison table).",
+    "Buttons: one base (.cv-btn) with variants setting bg/color/border directly from role tokens (no per-component custom props); primary uses fixed --on-gold label on fixed --accent-gold (deliberately not theme-flipping --ink).",
+    "Comments explain semantic colour intent: gold = the active/decision voice; sage/comm = the relationship voice (.cv-btn--comm, .cv-badge--comm).",
+    "Theme-awareness via --vi-surface tints and color-mix(in oklch, ...) so soft/outline/chip/segmented stay legible on dark grounds.",
+    "Accessibility: :focus-visible focus rings (--focus-ring), aria-disabled/aria-invalid/aria-checked/aria-selected driven states, prefers-reduced concerns handled elsewhere.",
+    "Uses color-mix(in oklch, ...) extensively for tints (hover washes, badges, stripes, avatars).",
+    "Fallback defaults inline in var() calls (e.g. var(--d-2, 8px), var(--weight-semibold, 600)) — resilient if a token is missing.",
+    "Select control draws its own dropdown caret via two linear-gradients; switch/stepper/segmented encode state purely via aria-* or .is-* classes.",
+    "Comment notes the stepper here is the 'plain process indicator' distinct from the diagram solver's ramp-tinted chevron stepper.",
+    "Stated as both hand-usable AND the render targets of the React primitives (Button/Card/Input/Badge…); imported by styles.css."
+  ],
+  "standouts": [
+    "Each primitive is explicitly grounded in a real source artifact (capital-raise p27 outlined panel, deck statpills, panotour MENU button, product dashboard tabs) rather than invented — design DNA traceability in comments.",
+    "Semantic colour voices encoded as variants: gold = decision/active, comm/sage = relationship — a small consistent vocabulary across button/badge.",
+    "Single base + role-token variants pattern keeps the token registry clean (no per-component custom-prop declarations)."
+  ],
+  "conventions": [
+    "Strict DS adherence: every value var()s a registered token; no raw hex; few raw px are control geometry with token fallbacks.",
+    "oklch color-mix for all tints (consistent colour-math), --r-*/--d-*/--shadow-*/--control-h scales throughout.",
+    "aria-* / .is-* dual state hooks for interactive components.",
+    "Imported by styles.css (the one CSS entry) — matches the four-registry / single-home model.",
+    "Comments carry the 'grounded in source DNA, not invented' design-language convention."
+  ],
+  "concerns": [
+    "Some inline magic numbers remain (badge padding 3px 9px, pill gap 10px, switch 40x24, avatar 44px, chip 5px 12px) — small component geometry as file-local literals rather than tokens.",
+    "Heavy reliance on color-mix(in oklch) and :focus-visible assumes modern-browser support (file-local observation)."
+  ],
+  "notes": "The component/control layer of the DS — every standard UI primitive (buttons, cards, inputs, badges/pills/chips, tables, tabs, modal, switch, stepper, avatar, tooltip) as token-pure, theme-aware classes grounded in real ConceptV artifacts and used by both hand and the React primitives.",
+  "questions": [
+    "Which React components render these classes, and are the class names the agreed render-target contract?",
+    "Are the small inline geometry literals intended as future tokens or accepted as component-local constants?"
+  ],
+  "purpose_vs_actual": "Matches: the header promises a single token-pure, theme-aware home for the missing UI primitives grounded in source DNA, and the file delivers exactly that catalogue.",
+  "apparent_themes": [
+    "one home, referenced everywhere (token-pure, single-source)",
+    "design DNA traceability (every primitive maps to a real artifact)",
+    "semantic colour voices (gold=active/decision, comm=relationship)",
+    "theme-awareness across light/dim/dark/clean grounds",
+    "accessibility via aria-* and focus-visible",
+    "interface as a projection of the registry (classes = React render targets)"
+  ],
+  "intention_signals": "Built to fill the DS's missing component layer with primitives that are computed from the token registry (so one recalibration repaints everything) and traceably derived from the real product's visual DNA, usable both by hand and as the render targets of the React primitive components — never a second, drifting place for control styling.",
+  "novelty": "A control library where each primitive is documented against the specific source artifact it derives from and colour carries a named semantic voice, with one base + role-token variants keeping the registry clean.",
+  "contribution": "Contributes the full token-pure, theme-aware UI control vocabulary (buttons, cards, fields, badges/pills/chips/tags, tables, dividers, tabs, segmented, switch, avatar, tooltip, modal, stepper) and its semantic-voice + DNA-grounding conventions — the component layer that the React primitives and hand-authored mockups both render against.",
+  "summary_for_embedding": "ConceptV Design System controls.css: a token-pure, theme-aware component layer of UI primitives (buttons, cards, inputs, badges/pills/chips/tags, tables, tabs, segmented, switch, avatar, tooltip, modal, stepper), each grounded in real product artifacts, with gold=active/comm=relationship colour voices, used by hand and as React render targets.",
+  "intention_for_embedding": "To provide the design system's missing UI control layer as single-sourced, token-driven, theme-aware classes grounded in the product's real visual DNA, so one token change repaints every control."
+}

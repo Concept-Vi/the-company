@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "preview/ai_bridge.html",
+  "model": "opus",
+  "what_it_does": "A standalone preview card that renders a live, read-only projection of CV_HOST.describe() — showing the environment mode, its capabilities (read/write/list/compile/tools), the registered pluggable runtimes with their per-runtime caps and availability, the serializers, and the Vi repo capabilities queried from CV_AI. It loads the ai-registry, ai-seed, ai-capabilities-canvas, host-runtime, and host-serializer scripts then builds the DOM from the host description.",
+  "observations": [
+    "Carries a @dsCard HTML comment annotation with group=AI, name='CV_HOST — the Bridge', a subtitle, and viewport='820x560'.",
+    "Frames CV_HOST as 'the bridge between Vi and the repository, built in the same shape as CV_AI': a registry of runtimes resolved by capability, a serializer, and a reviewable change queue.",
+    "States the governing relation 'capability-available = f(environment, runtime)' inline in the lead copy.",
+    "Distinguishes a sandbox runtime (stages for review) from a connected runtime (writes to disk).",
+    "Maps internal cap keys to display labels via CAP = { read, write, list, exec:'compile', tools }.",
+    "Renders runtime availability as a coloured dot (green status-success if available, border-strong if not) and appends ' · ACTIVE' for available runtimes.",
+    "Falls back to an error message ('CV_HOST failed to load.') if window.CV_HOST is absent.",
+    "Footer lists serializers as 'kind→target' and the repo capabilities from AI.query({ family: 'repo' }), plus the note that adding a runtime/serializer/repo-move = one registration.",
+    "All styling uses CSS custom properties (var(--font-display), var(--accent-bronze), var(--status-success), etc.) with literal hex fallbacks."
+  ],
+  "standouts": [
+    "Self-describes as 'a live projection of CV_HOST.describe()' — the card is a read-only view of a registry, not hand-authored content.",
+    "Explicitly mirrors CV_AI's shape onto the host/environment layer ('built in the same shape as CV_AI').",
+    "The inline formula capability-available = f(environment, runtime) names the resolution model."
+  ],
+  "conventions": [
+    "Follows the @dsCard annotation + _card.css link convention for preview cards.",
+    "Uses var(--token) throughout with hardcoded hex fallbacks (the design-system token discipline).",
+    "Reads from the registry (CV_HOST / CV_AI) rather than embedding data — interface-as-projection.",
+    "Respects the documented script load order: ai-registry → ai-seed → ai-capabilities-canvas before consumers."
+  ],
+  "concerns": [],
+  "notes": "A read-only preview card that visualises the CV_HOST environment/runtime/serializer registry as the 'Bridge' between Vi and the repo, projecting CV_HOST.describe().",
+  "questions": [
+    "What concrete runtimes and serializers does host-runtime.js / host-serializer.js seed (only their projection is visible here)?",
+    "Where is the interactive 'Bridge canvas in Studio' that this card is the read-only counterpart to?"
+  ],
+  "purpose_vs_actual": "Match — the annotation and lead describe a read-only projection of the host/bridge layer, and the script does exactly that by rendering CV_HOST.describe() plus a CV_AI repo query.",
+  "apparent_themes": [
+    "Registry-as-truth / interface-as-projection",
+    "Capability-based resolution (environment × runtime)",
+    "Reviewable change queue / staged-vs-connected writes",
+    "Single-registration extensibility",
+    "Token-driven styling"
+  ],
+  "intention_signals": "Trying to show that the environment/repo-writing layer is modelled with the same registry shape as the AI layer — pluggable runtimes resolved by capability, a serializer that turns mutations into source, and a reviewable queue — so that adding a runtime, serializer, or repo move is a single registration rather than new plumbing.",
+  "novelty": "Modelling the repo-write bridge (CV_HOST) as a capability-resolved runtime registry parallel to the AI registry, with serializers that turn registry mutations into exact source, surfaced as a live projection card.",
+  "contribution": "Contributes a worked example of extending the registry-as-truth pattern beyond AI/types to the environment/repo-write layer, and a read-only projection-card pattern that renders a registry's describe() output with capability/runtime/serializer visualisation.",
+  "summary_for_embedding": "A claude-ds preview card rendering a live read-only projection of the CV_HOST environment/runtime/serializer registry — the 'Bridge' between Vi and the repo — showing mode, capabilities, pluggable runtimes, serializers, and repo capabilities.",
+  "intention_for_embedding": "To demonstrate the repo-writing bridge layer modelled as a capability-resolved runtime registry mirroring CV_AI, where adding a runtime, serializer, or repo move is a single registration."
+}

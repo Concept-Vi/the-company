@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/company-landscape/AREA-buildprep.md",
+  "model": "opus",
+  "what_it_does": "An exhaustive read-only inventory of the entire build-prep/ directory (461 files, 27 top-level + 21 nested subdirectories), generated 2026-06-21. For each sub-area it records what it is, key docs, key decisions/contracts, status, nested sub-dirs, and stale/contradictory/gap flags. It closes with cross-area connections, a loop-prep triad hierarchy, a notable-stale/contradictory/incomplete/surprising list, and a canonical-location anchor table.",
+  "observations": [
+    "Self-describes as a dragnet sweep with a count reconciliation note (initial maxdepth-2 sweep caught 302 of 461 files; a second pass found 21 nested dirs)",
+    "Identifies the-one-application/ as the largest, most active area (63 files) holding all current loop-state, with MORNING-STACK.md as freshest state and COMMISSION-COMPLETION-REGISTER.md as master scope",
+    "Maps the four-layer frame: DNA (identity/face/tokens), FACTORY (types/composition), GALLERY (content/scenes), COMPANY (address-resolution/models)",
+    "Catalogs many loop-prep triads (Completion Criteria + Implementation Guide + Research Synthesis) and ranks them freshest->oldest in a hierarchy table",
+    "Records concrete contracts: the ONE resolver resolve(invariant,coordinate)->surface; the C1/merge-sa keystone gate; the gated floor #1b operator-token seam; the four root axes (ROOT-1/2 locked, ROOT-3/4 Tim-provisional)",
+    "Flags specific drifts: channel:// and cluster:// used but not in the SCHEMES tuple (contracts/address.py:116); 2,793 unreachable vectors in vectors.bge-backup-20260615; _CORPUS_REGISTRIES 4-vs-6 row drift",
+    "Marks likely-superseded areas: episodic-memory-adaptation (deprecated plugin), instrument-surface (superseded by universal-projection), coordination (superseded by channel system), self-serve-core (missing Implementation Guide)",
+    "Embeds an anchor/decision-pointer table mapping topics to canonical file locations",
+    "Notes the concurrent-cognition build may live in a separate ~/company-cognition worktree of unverified merge status"
+  ],
+  "standouts": [
+    "The loop-prep triad hierarchy (freshest->oldest with supersession notes) — a single ranking of which build-prep plans are authoritative vs scaffolding",
+    "The cross-area connections section that traces the ONE resolver / keystone gate / gated floor / four root axes spine across files",
+    "Self-honest count reconciliation (302 of 461 on first pass) demonstrating coverage discipline rather than claiming completeness"
+  ],
+  "conventions": [
+    "Follows the area-landscape dragnet format (per-sub-area What/Key docs/Decisions/Status/Nested/Stale flags) shared with sibling AREA-*.md files",
+    "Follows the no-completeness-without-verification ethos via the count reconciliation note",
+    "Uses canonical-location anchor table convention to point builders at the authoritative doc per topic",
+    "Marks register/status honestly (descriptive map, not blueprint)"
+  ],
+  "concerns": [
+    "Single-snapshot dated 2026-06-21; many 'verify if built' items mean the map could drift quickly against the fast-moving the-one-application area",
+    "Numerous status claims are deferred to other docs ('cross-check', 'verify current state') rather than resolved here",
+    "Large file (777 lines) that itself indexes many other large files — high maintenance burden to keep current"
+  ],
+  "notes": "The master index of build-prep/: every planning/loop-prep/contract sub-area mapped with status and staleness flags, plus the resolver/keystone/floor/four-axes spine and a canonical-anchor table for builders.",
+  "questions": [
+    "Which of the flagged 'verify if built' areas (concurrent-cognition worktree, coherence, registry-generation) are actually merged to main?",
+    "Has the channel://-and-cluster://-missing-from-SCHEMES address grammar gap been closed?",
+    "Is this inventory being kept current, or is it a 2026-06-21 snapshot only?"
+  ],
+  "purpose_vs_actual": "Match: it sets out to be an exhaustive inventory of build-prep/ with staleness/gap flags and cross-area contracts, and it delivers a comprehensive per-sub-area map plus connection and anchor tables.",
+  "apparent_themes": [
+    "Scan-before-build / map the terrain before acting",
+    "Honest verification-state and staleness flagging over claimed completeness",
+    "Loop-prep triad as the standard build-planning unit",
+    "Registry/resolver spine connecting all areas",
+    "Canonical-anchor pointers to avoid citing superseded docs"
+  ],
+  "intention_signals": "It is trying to give any build-loop or session a single navigable map of the planning substrate — what each area is, whether it is current, where the authoritative spec lives, and what contradictions/gaps to watch for — so agents build on the right docs and don't rebuild on superseded ones.",
+  "novelty": "The supersession-aware loop-prep hierarchy and the explicit contradictory-items list (e.g. the projection.py-vs-projections/ name collision, the PURE-READ-vs-everything-authorable instrument floor reversal) — a curated map of where the planning corpus disagrees with itself.",
+  "contribution": "Contributes a complete navigable inventory of the build-prep planning substrate: per-area identity/status/staleness, the cross-area resolver/keystone/floor/axes spine, the freshest-to-oldest triad ranking, and the canonical-location anchor table.",
+  "summary_for_embedding": "An exhaustive 2026-06-21 read-only inventory of the build-prep/ directory (461 files, 48 subdirectories), mapping every planning/loop-prep/contract sub-area with status and stale/contradictory/gap flags, the cross-area resolver/keystone/floor/four-root-axes spine, a freshest-to-oldest loop-prep triad hierarchy, and a canonical-location anchor table.",
+  "intention_for_embedding": "To give build-loops and sessions a single authoritative map of the Company's planning substrate so they build on current, non-superseded specs and know the open gaps and contracts."
+}

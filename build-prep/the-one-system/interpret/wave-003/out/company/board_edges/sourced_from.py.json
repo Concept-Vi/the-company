@@ -1,0 +1,36 @@
+{
+  "project": "company",
+  "path": "board_edges/sourced_from.py",
+  "model": "opus",
+  "what_it_does": "Declares a single RELATION_TYPE dict for a 'sourced_from' board edge: a directed edge from a board item to the source-type row it originated from (e.g. claude_code, a future github), described as the seam the GitHub fold-in joins on via author/path/time.",
+  "observations": [
+    "Module-level constant RELATION_TYPE only; no functions or classes.",
+    "Fields: id, directed (True), label ('sourced-from'), desc; no inverse field.",
+    "desc gives the target as a source-type row and names claude_code as a current source and github as a future one.",
+    "desc names the join keys for a future GitHub fold-in: author, path, time."
+  ],
+  "standouts": [
+    "Names a future GitHub integration ('the GitHub fold-in') and the author/path/time join seam it would use."
+  ],
+  "conventions": [
+    "Follows the board_edges one-RELATION_TYPE-per-file pattern.",
+    "directed=True without an inverse, like same_law in this batch."
+  ],
+  "concerns": [],
+  "notes": "A provenance edge tying a board item to its origin source-type row; doubles as the planned join seam for folding in GitHub data.",
+  "questions": [
+    "What is a 'source-type row' (which table/registry) that this points into?",
+    "Is the GitHub fold-in implemented anywhere, or purely planned per this desc?"
+  ],
+  "purpose_vs_actual": "Match: the file declares exactly the sourced-from provenance edge its purpose states.",
+  "apparent_themes": [
+    "Provenance / origin tracking",
+    "Source-type as a typed target",
+    "Forward-planning for external-source ingestion (GitHub)"
+  ],
+  "intention_signals": "Aims to record where each board item came from as a typed edge, and to pre-shape the seam (author/path/time) on which future external sources like GitHub can be joined in.",
+  "novelty": "Encodes both current provenance and a planned external-ingestion join key inside one relation-type declaration.",
+  "contribution": "Contributes the sourced-from provenance edge definition linking board items to their origin source-type and naming the author/path/time join for external sources.",
+  "summary_for_embedding": "A board_edges relation-type declaration defining the directed sourced_from edge that links a board item to its origin source-type row (claude_code, future github), the join seam for the GitHub fold-in.",
+  "intention_for_embedding": "To track board-item provenance as a typed edge and pre-shape the author/path/time seam for folding in external sources like GitHub."
+}

@@ -1,0 +1,59 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/APPLICATION-STRUCTURE-PACK.md",
+  "model": "opus",
+  "what_it_does": "A canonical keystone document that exposes the Company application's architecture (the 'sockets') that the separate Claude Design session designs into (the 'plugs'). It defines five layers (surface skeletons, component contracts, integration seams, token-slots, conventions/laws), a complete 7-group CSS token-slot contract plus 5 gap categories, the per-surface skeletons for ~17 surfaces, the interaction law, the Sequences primitive, a 6-step region recipe, and a built-vs-net-new cut, cross-referencing BACKEND-SEAM-PACK and the authoring docs.",
+  "observations": [
+    "Opens with Tim's 2026-06-08 correction: he does NOT build a design system (that would freeze his aesthetic); his job (as Claude Code) is to give Claude Design the application structure to plug into. Sockets vs plugs is the governing metaphor.",
+    "Declares itself canonical, superseding an earlier worktree version, and one-source with BACKEND-SEAM-PACK.md for the backend contract.",
+    "Describes a two-context seam: Job A (Claude Design session designs) yields a bundle; Job B (Claude Code) integrates it because seams to ui:// + organ + /api are pre-declared.",
+    "Five layers: surface skeletons, component contracts, integration seams, token-slots, conventions+laws; most detail cross-referenced to BACKEND-SEAM-PACK sections.",
+    "Token-slot contract enumerates 7 groups (surface tiers, signal/semantic, ink-on-bright, node-type language, typography, living-instrument, shape) with per-slot tables; single source of truth is tokens.json, compiled by emit.py, hardcoded literals are a contract violation caught by check.py.",
+    "Notes registry status honestly: only two live node kinds (process, content); kind-present and personas Atlas/Nova are defined-not-live; --sp legacy alias kept for back-compat.",
+    "Lists 5 token gap categories Claude Design should close: motion/animation, breakpoints, z-index stack, opacity scale, icon sizing.",
+    "Documents the addressing scheme: data-ui-ref joins DOM to addresses.json; three URI forms ui://, run:// (pattern-based not enumerated), code://; parse.py produces element-map.json flagging orphans bidirectionally; 45 registered ui:// addresses across 15 regions, 16 views with address_gap.",
+    "Flags a design-lint coverage gap: check.py fires only inside Suite._design_critic() per-changed-file during build dispatch, not wired to CI/pre-commit/npm, so files written directly to canvas/app/src are unguarded; the bespoke-element detector is a documented stub returning [].",
+    "States the interaction law: click INDICATES + CONSENTS, the RHM proposes, action goes through governance + see-and-approve; tier comes from the address union record's posture, never the verb or a confidence value.",
+    "Describes the IA as the parent 'commander's bridge' co-resolution surface (same locus threaded across BOARD/INSPECTOR/RHM PANE), the studio as a child page, and an assembly law (surfaces assembled from registries not authored against them).",
+    "Defines the Sequences primitive: one relational loop resolve->present/work->persist->next/trigger running at every scale (engine, walkthrough/review organ, collective cognition).",
+    "Provides a per-surface table of ~17 surfaces with mockup files, intent, composition source, and BUILT/DESIGNED/DESIGNED-checkbox status tags.",
+    "Gives the studio end-state spec (I1+I5+I6+R2+L1 on the mockup corpus), an explicit BUILT-on-main table with suite.py line numbers, and a DESIGNED-checkbox net-new table including L2 (the wire trigger, deliberately built-not-armed/locked).",
+    "Includes a concrete 6-step region recipe with code samples and hard rules (no useState/useEffect for domain state, no fetch in regions, kit-first, data-ui-ref required), plus component contracts for kit.tsx, api.ts, useAppController/AppContext, registryStore.ts.",
+    "Details the studio (Review.tsx) three-region structure, the five StudioKit components, a seam table, studio laws, and the --studio-* token-slot membrane."
+  ],
+  "standouts": [
+    "The sockets-vs-plugs inversion: build the application structure others design INTO rather than building a design system, so Tim's aesthetic is never frozen.",
+    "The interaction law (click indicates+consents, tier from the address's posture not the verb) as the single architectural invariant every surface must preserve.",
+    "The Sequences primitive as one loop the whole company runs at every scale, making 'a new capability is a new station, not a new pipeline'.",
+    "The honest built-vs-net-new cut with suite.py line numbers and the deliberately-locked L2 wire trigger (built-not-armed by design).",
+    "The design-lint coverage gap candidly documented: a contract that can be broken silently because the gate only runs in the build-dispatch path."
+  ],
+  "conventions": [
+    "Heavy cross-referencing to BACKEND-SEAM-PACK and AUTHORING docs with an explicit do-not-restate one-source discipline.",
+    "Source tags throughout (BUILT / DESIGNED / DESIGNED-checkbox / INFERRED) with cited line numbers and source files.",
+    "Token = name I own, value = aesthetic Tim owns; reflects-never-owns; registry-is-truth; fail-loud — recurring repo laws restated and enforced.",
+    "Honest status / address_gap fields surfaced rather than hidden, consistent with the repo's no-false-completeness rule."
+  ],
+  "concerns": [
+    "The document itself notes the design-lint gate is not wired to CI/pre-commit/npm, so the token contract can be violated silently — a real legibility gap flagged within the file.",
+    "The doc warns that the worktree CONNECTION-CONTRACT.md is stale and every live claim must be re-verified against suite.py, implying drift risk between this pack and code."
+  ],
+  "notes": "The keystone that defines the application's sockets (layers, token-slots, addressing, seams, surface skeletons, region recipe) so Claude Design's plugs integrate cleanly, with an honest built-vs-net-new cut and the click-indicates-consents law as the governing invariant.",
+  "questions": [
+    "How current are the cited suite.py line numbers given the doc's own warning about drift against code?",
+    "When will the design-lint gate be wired to CI/pre-commit/npm to close the silent-violation gap it documents?"
+  ],
+  "purpose_vs_actual": "Matches — it states its job is to make the application architecture visible so Claude Design can design into it, and it delivers exactly that: layers, token contract, surface skeletons, recipe, and seams, deferring backend detail to the seam pack.",
+  "apparent_themes": [
+    "Sockets vs plugs (structure owned here, aesthetic owned by Tim)",
+    "Registry-as-truth and assembly-from-registries over hardcoded lists",
+    "Click as indicate+consent, governance by address posture",
+    "One universal loop (Sequences) reused at every scale",
+    "Honest status / coverage / built-vs-net-new transparency"
+  ],
+  "intention_signals": "Trying to make integration of externally-designed surfaces a clean plug-in by pre-declaring every structural primitive, token slot, address, and seam — so design work returns 'in the right shape' and no re-plumbing is needed, while keeping the aesthetic entirely Tim's.",
+  "novelty": "The explicit two-session (Job A / Job B) division of labor and the token-slot-as-membrane contract paired with a candid lint-coverage gap are distinctive; so is the deliberately-locked-not-armed L2 wire trigger.",
+  "contribution": "Contributes the canonical socket definition: the five-layer model, the full 7-group token contract plus 5 gap categories, the addressing scheme, the ~17-surface skeleton table, the interaction law and Sequences primitive framing, the 6-step region recipe, and the BUILT-vs-net-new cut with code locations.",
+  "summary_for_embedding": "A Company keystone document defining the application's architecture (five layers, a 7-group CSS token-slot contract, ui:// addressing, ~17 surface skeletons, the click-indicates-consents law, the Sequences loop, and a 6-step region recipe) that the separate Claude Design session designs into, with an honest built-vs-net-new cut.",
+  "intention_for_embedding": "To expose the Company application's sockets so externally-authored designs plug in cleanly without freezing Tim's aesthetic or requiring re-plumbing."
+}

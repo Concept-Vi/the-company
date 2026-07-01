@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/platform.css",
+  "model": "opus",
+  "what_it_does": "Defines the local CSS for the 'platform' UI kit — a full application-shell style sheet (sidebar + main grid, topbar, buttons, search, media tiles, forms, checkboxes, dropzone, a calendar widget, and a floating chats pill), layered on top of the shared colors_and_type.css token base.",
+  "observations": [
+    "Header comment states it is 'local styles on top of colors_and_type.css'",
+    "Two-column app shell via CSS grid (280px sidebar + 1fr main), html/body/#app set to full height with overflow:hidden",
+    "Heavy use of design tokens via var(): --font-body/display/mono, --fg-*, --bg-*, --accent-gold*/bronze, --border-*, --r-* radii, --shadow-*, --ease-out",
+    "Extensive 'cv-' class namespace (cv-shell, cv-sidebar, cv-nav-item, cv-btn, cv-search, cv-tile, cv-panel, cv-cal-*, cv-chats, etc.)",
+    "Button system with modifier classes: --outline, --primary, --dashed, --ghost, --dark, --icon-only",
+    "Dashed-border motif used repeatedly for slots/placeholders (cv-logo-slot, cv-slot, cv-nav-item.active, cv-btn--dashed)",
+    "Calendar block (cv-cal-*) includes color-coded chips and task names by category",
+    "Several hardcoded hex colors break the token pattern: #F04325 (badge red, twice), #DCD5BC (dropzone hover), #FAF1B6 (add button), and the entire cal-task/cal-chip color palette (#5A8A4A green, #7E5AB8 purple, #C24A3C red, #4A78B8 blue, #E5A547 orange, #E5C547 yellow, #A89678 gray) plus chip backgrounds",
+    "Notification badges (cv-bell-badge, cv-chats .count) use fixed pill shapes (border-radius:999px)"
+  ],
+  "standouts": [
+    "The dashed-border placeholder aesthetic (logo slot, generic slots, active nav, dashed buttons) is a distinct visual signature",
+    "A self-contained calendar widget with a category color system lives inside this kit CSS",
+    "Gold accent is the dominant brand color, threaded everywhere via --accent-gold variants"
+  ],
+  "conventions": [
+    "Follows the 'reference the token, never the raw value' convention for most layout/brand colors",
+    "BREAKS that convention with ~15 hardcoded hex literals, especially the calendar category palette and alert reds — these are off-token literals the design-lint would flag",
+    "Consistent cv- BEM-ish modifier naming"
+  ],
+  "concerns": [
+    "Hardcoded hex colors (#F04325 alert red repeated, #DCD5BC, #FAF1B6, and the full calendar category palette) are off-token and would drift from the central token source",
+    "Calendar category colors are defined inline per-class rather than as named tokens/roles, so a palette change needs editing this file in many places"
+  ],
+  "notes": "The platform kit's full app-shell stylesheet — mostly tokenised but carrying a cluster of hardcoded calendar/alert hex colors that sit outside the token system.",
+  "questions": [
+    "Are the calendar category colors (green/purple/red/blue/orange) and the #F04325 alert red intended to become tokens, or are they accepted exceptions?",
+    "Does colors_and_type.css define all the var() tokens this file consumes, or are some undefined?"
+  ],
+  "purpose_vs_actual": "Matches — the header says 'local styles on top of colors_and_type.css' and the file is exactly that: kit-local component styles referencing the shared token base.",
+  "apparent_themes": ["token-referencing design system", "single application shell", "dashed-placeholder aesthetic", "gold/bronze brand identity", "component-class kit"],
+  "intention_signals": "Aims to give the 'platform' UI kit a complete, tokenised look for a full app shell so screens (Calendar, Gallery) can be composed from cv- classes without restating layout or brand values.",
+  "novelty": "The dashed-border placeholder motif used as an intentional, recurring design language element, and an embedded calendar widget with a per-category color taxonomy.",
+  "contribution": "Contributes a complete platform app-shell stylesheet (sidebar/main grid, button modifiers, search, media tiles, forms, dropzone, calendar widget, chats pill) and a dashed-placeholder visual signature, mostly bound to shared tokens.",
+  "summary_for_embedding": "Platform UI kit CSS defining a tokenised app shell — sidebar, topbar, buttons, search, media tiles, forms, a calendar widget, and a chats pill — using cv- classes on top of colors_and_type.css.",
+  "intention_for_embedding": "To provide the platform kit a complete, single-sourced visual style for a full application shell that screens compose from."
+}

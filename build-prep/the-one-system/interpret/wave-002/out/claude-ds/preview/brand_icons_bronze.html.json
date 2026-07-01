@@ -1,0 +1,41 @@
+{
+  "project": "claude-ds",
+  "path": "preview/brand_icons_bronze.html",
+  "model": "opus",
+  "what_it_does": "A static preview card showing the brand's bronze line-icon library as a single reference image (icon-library-bronze.jpg), with descriptive copy and a metadata row listing the icon style spec: colour #988058, ~1.5px stroke, round caps, no fill, and the asset file path.",
+  "observations": [
+    "Unlike the other preview cards in this batch, it carries no @dsCard annotation comment.",
+    "Displays a JPG sheet (../assets/icons/icon-library-bronze.jpg) rather than rendering live SVGs.",
+    "Copy describes ~80 glyphs covering people, files, processes, building types, devices, and platform actions, used in pitch decks, architecture diagrams, and explainer surfaces.",
+    "Metadata row hardcodes the icon spec as literal text: Color #988058, Stroke ~1.5px, Caps round, Fill none.",
+    "Card chrome (padding, surface, radius) uses tokens (var(--bg-surface), var(--r-md), var(--font-body))."
+  ],
+  "standouts": [
+    "Documents the exact bronze icon spec (#988058, ~1.5px stroke, round caps, no fill) as a brand reference.",
+    "Presents the library as a flat image sheet — a reference artefact rather than a live registry projection."
+  ],
+  "conventions": [
+    "Uses _card.css and design tokens for the card chrome (follows the preview-card look).",
+    "Breaks the @dsCard annotation convention used by sibling preview cards (no group/name/viewport comment).",
+    "States the bronze colour #988058 as a literal in display text rather than a token reference (it is documentation copy, not a styled consumer)."
+  ],
+  "concerns": [
+    "The icon spec values (#988058, 1.5px) are written as literal copy here; if the canonical token/icon definitions change, this descriptive card would have to be updated by hand to stay true."
+  ],
+  "notes": "A static image-sheet card documenting the bronze line-icon library and its style spec; reference documentation rather than a live registry projection.",
+  "questions": [
+    "Is #988058 the same value as the --accent-bronze token used by the live icon cards, or a separate brand-icon colour?",
+    "Why is this library shown as a JPG sheet while brand_emoji_nav renders live SVGs from CV_ICONS — are these the same glyph set?"
+  ],
+  "purpose_vs_actual": "Match — it presents itself as a reference card for the bronze icon library and does exactly that via an image plus a spec row.",
+  "apparent_themes": [
+    "Brand reference / icon library documentation",
+    "Consistent icon style spec (colour, stroke, caps, fill)",
+    "Bronze brand identity"
+  ],
+  "intention_signals": "Trying to give a single browsable reference for the brand's bronze line-icon set and pin down its exact drawing spec so all bronze glyphs stay consistent across decks, diagrams, and explainer surfaces.",
+  "novelty": "n/a",
+  "contribution": "Contributes the bronze line-icon library reference and its explicit style spec (colour #988058, ~1.5px round-cap unfilled stroke, ~80 glyphs), and the catalogue of subject areas the icons cover.",
+  "summary_for_embedding": "A claude-ds preview card documenting the brand's bronze line-icon library via a reference image and a spec row (#988058, ~1.5px stroke, round caps, no fill, ~80 glyphs).",
+  "intention_for_embedding": "To provide a single reference for the bronze line-icon library and pin its exact style spec so bronze glyphs stay consistent across brand surfaces."
+}

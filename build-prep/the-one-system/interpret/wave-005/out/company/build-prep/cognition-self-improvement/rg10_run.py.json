@@ -1,0 +1,48 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/rg10_run.py",
+ "model": "opus",
+ "what_it_does": "RG10 at full scale: an incremental, resume-safe batch wrapper around registry_generation_run.run_registry_generation. For each mockup (derived from candidates.json mockup_file values), it runs the full RG3-RG6 chain (ground -> map -> reduce/cluster-dedup -> confirm) and writes a per-mockup artifact rg10-batch-<stem>.json (confirmed + flagged dossiers). State in .build/rg10/state.json tracks done/failed per mockup; pre-existing artifacts are adopted as done; a chain that raises or yields 0 dossiers from >0 candidates is recorded as failed (never marked done) and retried up to MAX_ATTEMPTS=2 then left loud. Proposes only — nothing writes addresses.json or the mockups.",
+ "observations": [
+  "_adopt_existing adopts any mockup with an existing artifact carrying n_dossiers as done (incomplete/stranded work reused, never re-burned).",
+  "Time-budgeted (default 420s); breaks the loop when budget exceeded so batches compose across runs.",
+  "Fail-loud is the explicit lesson from the file's first draft, which read only .resolved and silently swallowed 940 .failed units.",
+  "Failed mockups carry an attempts counter and truncated error; skipped once at MAX_ATTEMPTS.",
+  "On success it pops the mockup from failed and records candidate/dossier/cluster/confirmed/flagged counts in done.",
+  "Returns ran_this_batch, mockups_done/total, failed, and confirmed/flagged totals.",
+  "The artifact shape written here matches what registry_generation_run's __main__ writes (one canonical shape)."
+ ],
+ "standouts": [
+  "The reuse-don't-parallel stance: explicitly wraps the proven run_registry_generation rather than reimplementing the three manual seams.",
+  "The fail-loud discipline born from a named past bug (silently swallowing 940 failed units) is documented in the docstring.",
+  "Resume-safe + adopt-existing makes it idempotent and stranded-work-friendly."
+ ],
+ "conventions": [
+  "Propose-only floor (no write-back to addresses.json or mockups).",
+  "State file in .build/rg10/ shared with the rest of the pipeline.",
+  "Time-budgeted bounded batches that compose — same pattern as rejury/redescribe.",
+  "chdir + sys.path bootstrap consistent with siblings."
+ ],
+ "concerns": [
+  "MAX_ATTEMPTS=2 means a persistently transient-failing mockup is abandoned after two tries (intended, but a hard ceiling that needs the surface step to catch).",
+  "_load swallows OSError/ValueError into defaults — a corrupted state.json would silently reset rather than fail loud (slight tension with the file's own fail-loud ethos).",
+  "Mockup list is derived from candidates.json each run; a change there silently changes the work set."
+ ],
+ "notes": "RG10 driver: resume-safe per-mockup batch runner over the proven registry-generation chain, fail-loud on zero-dossier mockups, propose-only, artifacts feed the reconcile/re-ask/re-jury/re-describe passes.",
+ "questions": [
+  "What does run_registry_generation return precisely (mockup, ground, n_candidates, n_dossiers, n_clusters, confirmed, flagged) and where are its three manual seams defined?",
+  "What surface step consumes state['failed'] to show the operator the loud, abandoned mockups?"
+ ],
+ "purpose_vs_actual": "Match — the docstring's incremental, resume-safe, fail-loud, propose-only batch wrapper is exactly what the code implements.",
+ "apparent_themes": [
+  "Reuse the proven path over re-parallelizing.",
+  "Fail-loud (never silently swallow failures), lesson-from-a-named-bug.",
+  "Resume-safety / stranded-work adoption / idempotency.",
+  "Propose-only floor before any write-back."
+ ],
+ "intention_signals": "Tries to scale the proven single-mockup registry generation to all 23 mockups / 940 candidates safely — bounded composable batches, no re-burning, and loud surfacing of any mockup that can't produce dossiers, so the operator sees the true state before approving any write-back.",
+ "novelty": "The combination of adopt-existing, attempt-capped retry, and a documented fail-loud reaction to a specific prior silent-swallow bug makes this a distinctive resume-safe batch driver.",
+ "contribution": "Contributes the full-scale generation driver — the resume-safe, fail-loud orchestration that produces the per-mockup batch artifacts every downstream RG10 pass (reconcile/re-ask/re-jury/re-describe) reads.",
+ "summary_for_embedding": "A resume-safe, time-budgeted Python batch driver that runs the proven registry-generation chain over all mockups, writes per-mockup dossier artifacts, and records fail-loud state without any write-back.",
+ "intention_for_embedding": "To scale single-mockup registry generation to all mockups safely with bounded composable batches, fail-loud failure handling, and propose-only output feeding the downstream reconcile passes."
+}

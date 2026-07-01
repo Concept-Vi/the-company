@@ -1,0 +1,44 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/OVERNIGHT-MANDATE.md",
+  "model": "opus",
+  "what_it_does": "A dated (2026-06-10) overnight-build mandate document. It restates Tim's verbal goal as an actionable bar, defines the concrete 'morning experience' the autonomous loop aims to deliver (5 numbered outcomes), enumerates a work queue (S1-S6) with file-level build targets, and lists binding 'loop laws' that govern each autonomous loop fire.",
+  "observations": [
+    "Opens by quoting Tim's literal words ('blow my fricking mind') then offers a 'best version of that intent' as the operating goal.",
+    "States a 5-point 'morning experience' bar: he is greeted, the builder is in the surface, a memory returns by itself, the night presents itself, the night's ideas enter the lifecycle.",
+    "Each morning-bar item carries an honest scoping caveat (e.g. 'condition partially fires — the panel exists, the full UI doesn't').",
+    "Work queue S1-S6 names specific files (runtime/ui_claude_session.py), CLI invocations (claude -p --output-format stream-json), API routes (/api/claude/start|continue|history), and env gates (COMPANY_PANEL_PERMISSION default plan).",
+    "Loop laws bind every fire: one bounded beat, lock-or-exit (loop.lock <25min), commit-per-unit to main with '[overnight]' prefix and NO Co-Authored-By, verify-by-USE, FLOOR UNCHANGED, fail-loud, no green-paint, GPU-aware.",
+    "Distinguishes an agent-facing record (.build/overnight/MORNING.md) from 'TIM's copy' which is the surface itself.",
+    "Repeatedly asserts the operator/MCP face boundary: /api/claude/* never on the MCP face, panel launches claude only operator-initiated."
+  ],
+  "standouts": [
+    "The 'no green-paint, ever' / 'feel/aesthetics → needs-tim' honesty discipline woven through both the bar and the laws.",
+    "The 'FLOOR UNCHANGED' invariant: the loop itself never self-dispatches builds; autonomous claude stays lead-only; nothing auto-resolves.",
+    "Explicit 'state lives in files, never in any one context window' — compaction-survival as a design premise."
+  ],
+  "conventions": [
+    "Uses the repo's altitude vocabulary (Pulse/River), surface/floor/gate vocabulary, and address forms (ui://).",
+    "Follows a mandate/criteria style: a goal restatement, a concrete bar, a queue, and binding laws.",
+    "Commit-law convention is explicitly overridden for this loop (NO Co-Authored-By, '[overnight]' prefix) versus the repo default."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the charter for one overnight autonomous build loop — the goal, the felt-morning bar, the S1-S6 file-level queue, and the laws every loop fire must obey.",
+  "questions": [
+    "Were S1-S6 actually built, and which morning-bar items reached 'felt' vs stayed partial? (the file states intent, not outcome)",
+    "What is the relationship of this single-night mandate to the longer-lived build skills referenced elsewhere in the repo?"
+  ],
+  "purpose_vs_actual": "Match — it is titled a mandate and reads as a complete mandate: goal, target experience, queue, and governing laws.",
+  "apparent_themes": [
+    "Felt outcome over reported tasks ('a changed morning, not a list')",
+    "Honesty / anti-green-paint and explicit scoping caveats",
+    "Operator-vs-MCP face separation and an immovable safety floor",
+    "Compaction-resilient, file-based loop state",
+    "Resolution at the operator's altitude (greeting, not a log)"
+  ],
+  "intention_signals": "An attempt to give an autonomous overnight agent loop a north star that is both ambitious (mind-blowing morning) and disciplined (reversible, honest, floor-preserving), so it can run unsupervised across compaction boundaries and still arrive at a coherent, trustworthy result.",
+  "novelty": "The 'morning experience' framing — defining success as a felt arrival state for one specific person rather than a feature checklist — plus the hard 'no green-paint' honesty law attached to a fully autonomous loop.",
+  "contribution": "Contributes a concrete operating charter for an overnight autonomous build: the felt-morning success bar, the S1-S6 file-level queue, and a complete set of loop laws (lock, commit-form, verify-by-USE, floor-unchanged, no-green-paint, GPU-aware) that a fused system could keep as the template for unattended build runs.",
+  "summary_for_embedding": "A dated overnight autonomous-build mandate for the Company that defines a five-point felt morning-experience bar, an S1-S6 file-level work queue, and binding per-fire loop laws including verify-by-use, floor-unchanged, and no-green-paint.",
+  "intention_for_embedding": "To direct an unsupervised overnight agent loop toward delivering a coherent, honest, reversible 'changed morning' for Tim rather than a list of completed tasks."
+}

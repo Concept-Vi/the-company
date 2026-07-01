@@ -1,0 +1,59 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/ORIGIN-MEMORY-AMPLIFICATION.md",
+  "model": "opus",
+  "what_it_does": "A twelve-part 'amplification' document that renders Tim's verbatim 2026-06-11 articulation of the system's origin, common memory, and cognition into shareable language, explicitly as reaction material (not a spec) awaiting his per-part ratification.",
+  "observations": [
+    "Opens by stating its own nature: amplification not specification, mirroring a chat response, REACTION MATERIAL for Tim, each part to be ratified or corrected by his reaction.",
+    "Part 1 (Origin): the system has an 'Origin' — a single identity everything is for and relative to, an axis of the coordinate system (egocentric vs allocentric frame); v1 has exactly one origin (Tim); operator-memory registry is the seed of the origin-model.",
+    "Part 2 (inverse cognition): system as the virtual inverse of the origin's memory/cognition; two complementary halves of one cognition bridged by common memory (corpus-callosum analogy, extended-mind comparison).",
+    "Part 3 (identity): identity is invariant under substitution (Ship-of-Theseus); carried by common memory + laws/dials + origin-model; produced by continuity of memory across change of parts.",
+    "Part 4 (typed relations): relations carry dimensional meaning (contains/precedes/scales-to/is-state-of/instantiates); each relation type adds an axis; cites knowledge-graph-embedding research modeling relations as geometric operations.",
+    "Part 5 (memory that reorganizes): records permanent/append-only, geometry alive; learning is reorganization of space over unchanging past; overnight re-indexing named 'sleep'/consolidation.",
+    "Part 6 (body as memory): code as crystallized understanding / a developing mind mid-thought; concurrent-cognition build as an unintegrated 'footmark'; proposal lifecycle turns thought into body.",
+    "Part 7 (spatial brain): place cells/grid cells, cognitive map, predictive processing as independent derivations; things hold positions in many simultaneous spaces; now-organ as present position.",
+    "Part 8 (three tiers): surfaces/sensors=body, 4B swarm=subconscious, Claude-class minds=conscious; each role an instrument measuring one dimension; deterministic rules as reflexes.",
+    "Part 9 (digital presence): system as Tim's extension into digital reality (not a twin), sensors+effectors over territory owned by/accessible to him.",
+    "Part 10 (renderer): UI as a viewport/projection of one n-dimensional space; position=meaning; navigation replaces linearity; renders both Tim's memory and the system's live cognition.",
+    "Part 11 (definition is position): a thing's identity is its full coordinate tuple across all spaces; rendering selects which coordinates are in play; explains why specs were never possible.",
+    "Part 12 (amplification): the construction process itself — curate context -> amplifier renders -> Tim reacts -> recognition ratifies -> ratified enters common memory -> next amplification starts further along; sessions as vantage points Tim places.",
+    "Status footer: awaiting Tim's per-part reactions; ratified parts become founding material for the memory-system design."
+  ],
+  "standouts": [
+    "The Origin as an axis of the coordinate system rather than a user/profile — egocentric frame by design.",
+    "Identity-as-invariant-under-substitution test: swap every part, if it still feels like IT, identity held.",
+    "'Records are permanent; geometry is alive' two-layer memory design, with overnight re-indexing reframed as 'sleep'/consolidation.",
+    "'Definition is position' — a thing's identity is its full coordinate tuple across all spaces, inverting specification.",
+    "Amplification (curate->render->react->ratify) named as the system's primary construction process and sessions as placed vantage points."
+  ],
+  "conventions": [
+    "Build-prep amplification format: numbered parts, each a thread of Tim's message, bold lead phrases, explicit not-a-spec framing.",
+    "Maps Tim's independently-derived intuitions onto named external concepts (egocentric frame, extended mind, place/grid cells, predictive processing) without claiming he read them.",
+    "Status line at the end marking ratification-pending state (expand-before-harden)."
+  ],
+  "concerns": [
+    "Self-described as reaction material and best-current-rendering, so its claims are interpretive amplifications of Tim's words, not ratified design — easy to mistake for settled architecture if read out of context."
+  ],
+  "notes": "A twelve-part rendering of Tim's deepest articulation of the system as an egocentric dual-cognition with living-geometry memory and a coordinate-space renderer — explicitly awaiting his ratification, not a spec.",
+  "questions": [
+    "Which of the twelve parts has Tim since ratified or corrected?",
+    "How do the named primitives (common memory, laws/dials, origin-model, relation_types registry, now-organ, resolver) map to actual files/modules in the repo?",
+    "What is the concrete 'resolver/injection design' referenced as already doing the positioning?"
+  ],
+  "purpose_vs_actual": "Matches: it declares itself an amplification of Tim's mental model into shareable reaction material and delivers exactly that across twelve parts.",
+  "apparent_themes": [
+    "Egocentric coordinate frame / the Origin as axis",
+    "Dual complementary cognition bridged by common memory",
+    "Identity as continuity of memory across substitution of parts",
+    "Typed relations as dimensions; everything as position in many spaces",
+    "Append-only records with living, reorganizing geometry (consolidation/sleep)",
+    "Code as a developing mind; UI as a renderer of the one space",
+    "Definition-as-position inverting specification",
+    "Amplification (recognition over origination) as the construction process"
+  ],
+  "intention_signals": "Trying to translate Tim's intuitive, hard-to-articulate model of the system-as-his-cognitive-other-half into legible parts he can recognize and ratify, so the ratified pieces can found the memory-system and UI design.",
+  "novelty": "The unifying claim that the whole system is an egocentric coordinate space whose UI is a renderer and whose memory is living geometry over permanent records, plus 'definition is position' and the amplification-as-construction loop.",
+  "contribution": "Contributes the consolidated articulation of the Origin/dual-cognition/living-geometry/definition-is-position doctrine and the amplification construction loop — the conceptual foundation downstream memory and UI design draws on.",
+  "summary_for_embedding": "A twelve-part amplification document rendering Tim's articulation of the system as an egocentric dual-cognition with append-only records, living geometry, typed-relation dimensions, and a coordinate-space renderer, awaiting his ratification.",
+  "intention_for_embedding": "To translate Tim's intuitive mental model of the system as his cognitive other-half into recognizable parts he can ratify as the foundation for the memory-system and UI design."
+}

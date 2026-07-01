@@ -1,0 +1,362 @@
+<!-- @dsCard group="Colors" name="Tonal Zoning System" subtitle="Registry + component roles + applied Overview re-skin" viewport="1360x900" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ConceptV · Surface-Zone Language</title>
+<link rel="stylesheet" href="colors_and_type.css"/>
+<link rel="stylesheet" href="tonal-zoning.css"/>
+</head>
+<body>
+<div class="tz-doc">
+
+  <!-- ===== Masthead ===== -->
+  <header class="tz-mast">
+    <div class="tz-eyebrow"><span class="tz-diamond"></span> ConceptV Design System · Surface registry</div>
+    <h1 class="tz-title">A warm spatial interface,<br/>spoken in <em>tonal zones</em>.</h1>
+    <p class="tz-lede">The system is differentiated through subtle undertones, not obvious colour blocks. Near-white tinted surfaces mark <b>containment depth</b> — each level nested inward adds ~2% undertone over the ground, so you read the structure without borders. Semantic tones (content, support, source, review) are an <b>optional layer on top</b> of that depth ladder. <b>Gold is reserved for Vi, active decisions and selected states.</b> Every wash is mixed from a named pigment toward the ground, scaled by one intensity knob: re-tune the whole language by moving a single token.</p>
+    <p class="tz-key">Zoning = containment depth made visible (warm near-white throughout — no cool greys). Use gold only for Vi, active decisions, selected states, and key emphasis. The differences should be felt more than seen.</p>
+  </header>
+
+  <!-- ===== 1. The zone registry ===== -->
+  <section class="tz-section">
+    <div class="tz-sec-head">
+      <span class="tz-sec-num">01</span>
+      <h2 class="tz-sec-title">The zone registry</h2>
+      <p class="tz-sec-note">The optional semantic tones — each a pigment mixed toward the ground at a low percentage (the tint shown is at the system's default intensity). The primary zoning is <em>depth</em> (see <code>core/containers.css</code>); these are the opt-in category layer on top.</p>
+    </div>
+    <div class="tz-registry" id="tz-registry"></div>
+  </section>
+
+  <!-- ===== 2. Component roles ===== -->
+  <section class="tz-section">
+    <div class="tz-sec-head">
+      <span class="tz-sec-num">02</span>
+      <h2 class="tz-sec-title">Component roles</h2>
+      <p class="tz-sec-note">Pills, chips and badges read differently. Only one thing is gold-filled and clickable — the primary decision.</p>
+    </div>
+    <div class="tz-roles">
+      <div class="tz-role">
+        <div class="demo"><button class="cvx-btn cvx-btn--primary"><span class="tz-diamond" style="width:8px;height:8px"></span> Build &amp; send</button></div>
+        <div><span class="lbl">Primary action</span><div class="hint">Filled gold, strongest contrast. Used sparingly — the one decision on the screen.</div></div>
+      </div>
+      <div class="tz-role">
+        <div class="demo"><button class="cvx-btn cvx-btn--secondary">Export folder</button></div>
+        <div><span class="lbl">Secondary action</span><div class="hint">Light stone surface, subtle border, warm neutral text. Never gold-filled.</div></div>
+      </div>
+      <div class="tz-role">
+        <div class="demo"><span class="cvx-chip cvx-chip--ready">ready</span> <span class="cvx-chip cvx-chip--source">live sequence</span></div>
+        <div><span class="lbl">Status chip</span><div class="hint">Small, state-coloured. Reads as state, not a button.</div></div>
+      </div>
+      <div class="tz-role">
+        <div class="demo"><span class="cvx-vi"><span class="gem"></span> Vi pick</span> <span class="cvx-vi"><span class="gem"></span> Vi recommends</span></div>
+        <div><span class="lbl">Vi recommendation</span><div class="hint">Gold accent + gem. Means intelligent recommendation, not mere selection.</div></div>
+      </div>
+      <div class="tz-role">
+        <div class="demo"><span class="cvx-chip cvx-chip--pending">README pending</span></div>
+        <div><span class="lbl">Warning badge</span><div class="hint">Amber tint — attention without alarm. Deliberately not the brand gold.</div></div>
+      </div>
+      <div class="tz-role">
+        <div class="demo"><button class="cvx-btn cvx-btn--reject">Reject as anti-pattern</button></div>
+        <div><span class="lbl">Rejection action</span><div class="hint">Rose-coral. Negative memory that feels stored and useful, not destructive.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 3. Applied — Overview ===== -->
+  <section class="tz-section">
+    <div class="tz-sec-head">
+      <span class="tz-sec-num">03</span>
+      <h2 class="tz-sec-title">Applied · the Overview</h2>
+      <p class="tz-sec-note">The same dashboard, now zoned. Each functional area carries its own undertone; path lines trace how work moves through the system.</p>
+    </div>
+
+    <div class="tz-applied-wrap">
+      <div class="tz-ghost left"></div>
+      <div class="tz-ghost right"></div>
+      <div class="tz-applied-frame">
+        <div class="ov">
+          <!-- spatial connective layer -->
+          <svg class="ov-spatial" viewBox="0 0 1280 760" preserveAspectRatio="none" aria-hidden="true">
+            <g fill="none" stroke="var(--spatial-line)" stroke-width="1.4" stroke-dasharray="2 7" stroke-linecap="round">
+              <path d="M232 150 C 360 150, 380 250, 540 250"/>
+              <path d="M540 250 C 720 250, 720 430, 540 430"/>
+              <path d="M540 430 C 760 430, 820 560, 540 560"/>
+              <path d="M960 250 C 1020 250, 1040 360, 960 470"/>
+            </g>
+            <g fill="var(--spatial-node)">
+              <rect x="536" y="246" width="8" height="8" rx="1.5" transform="rotate(45 540 250)"/>
+              <rect x="536" y="426" width="8" height="8" rx="1.5" transform="rotate(45 540 430)"/>
+              <rect x="956" y="246" width="8" height="8" rx="1.5" transform="rotate(45 960 250)"/>
+            </g>
+          </svg>
+
+          <!-- LEFT NAV (base) -->
+          <nav class="ov-nav">
+            <div class="ov-brand"><span class="logo">Concept<b>V</b></span><span class="tag">STUDIO</span></div>
+            <div class="ov-navgroup">
+              <h6>Workspace</h6>
+              <div class="ov-nav-item active"><span class="ic">◇</span> Overview</div>
+              <div class="ov-nav-item"><span class="ic">⌕</span> Search everything</div>
+              <div class="ov-nav-item"><span class="ic">▤</span> Workshop</div>
+              <div class="ov-nav-item"><span class="ic">▦</span> Build</div>
+              <div class="ov-nav-item"><span class="ic">✉</span> Inbox <span class="ct">1</span></div>
+            </div>
+            <div class="ov-navgroup">
+              <h6>Foundations</h6>
+              <div class="ov-nav-item"><span class="ic">◷</span> Colors <span class="ct">25</span></div>
+              <div class="ov-nav-item"><span class="ic">T</span> Type <span class="ct">3</span></div>
+              <div class="ov-nav-item"><span class="ic">✦</span> Icons <span class="ct">99</span></div>
+              <div class="ov-nav-item"><span class="ic">◈</span> Logos &amp; marks <span class="ct">4</span></div>
+              <div class="ov-nav-item"><span class="ic">▥</span> Imagery <span class="ct">12</span></div>
+            </div>
+            <div class="ov-health">
+              <b>System health · 91%</b>
+              Coverage strong · 3 gaps flagged in Inbox.
+            </div>
+          </nav>
+
+          <!-- MAIN -->
+          <main class="ov-main">
+            <svg class="ov-flow" aria-hidden="true"></svg>
+            <div class="ov-head">
+              <div>
+                <h1>Overview</h1>
+                <p>Everything ConceptV owns, at a glance. Open any zone to browse, edit, or generate.</p>
+              </div>
+              <div class="ov-head-actions">
+                <button class="cvx-btn cvx-btn--secondary">Export to disk</button>
+                <button class="cvx-btn cvx-btn--primary"><span class="tz-diamond" style="width:8px;height:8px"></span> Build something</button>
+              </div>
+            </div>
+
+            <!-- glance = content zone -->
+            <div class="ov-block content" style="--zone-ink:var(--zone-content-ink)">
+              <div class="ov-zone-label">System at a glance</div>
+              <div class="ov-stats">
+                <div class="ov-stat"><div class="lab">◷ Colors</div><div class="v">25 <span class="u">tokens</span></div><div class="d">+2 this week</div></div>
+                <div class="ov-stat"><div class="lab">✦ Icons</div><div class="v">99 <span class="u">glyphs</span></div><div class="d">+12 new</div></div>
+                <div class="ov-stat"><div class="lab">▦ Components</div><div class="v">14 <span class="u">patterns</span></div><div class="d">3 to triage</div></div>
+                <div class="ov-stat flag"><div class="lab">✉ Inbox</div><div class="v">1 <span class="u">untriaged</span></div><div class="d">needs you</div></div>
+              </div>
+            </div>
+
+            <!-- canvases = working area on base -->
+            <div class="ov-zone-label" style="color:var(--accent-bronze);margin-top:6px">Canvases</div>
+            <div class="ov-canvases">
+              <div class="ov-tile"><div class="prev" style="--zone-surface:var(--zone-content-strong);--zone-edge:var(--zone-content-edge);--zone-ink:var(--zone-content-ink)">◷</div><div class="nm">Colors</div><div class="mt">25 tokens</div></div>
+              <div class="ov-tile"><div class="prev" style="--zone-surface:var(--zone-content-strong);--zone-edge:var(--zone-content-edge);--zone-ink:var(--zone-content-ink)">✦</div><div class="nm">Icons</div><div class="mt">99 glyphs</div></div>
+              <div class="ov-tile"><div class="prev" style="--zone-surface:var(--zone-source-surface);--zone-edge:var(--zone-source-edge);--zone-ink:var(--zone-source-ink)">❝</div><div class="nm">Voice &amp; tone</div><div class="mt">rules, rewriter</div></div>
+              <div class="ov-tile"><div class="prev" style="--zone-surface:var(--zone-package-surface);--zone-edge:var(--zone-package-edge);--zone-ink:var(--zone-package-ink)">▤</div><div class="nm">Templates</div><div class="mt">slides, hubs</div></div>
+              <div class="ov-tile"><div class="prev" style="--zone-surface:var(--zone-content-strong);--zone-edge:var(--zone-content-edge);--zone-ink:var(--zone-content-ink)">◈</div><div class="nm">Logos &amp; marks</div><div class="mt">4 assets</div></div>
+              <div class="ov-tile"><div class="prev" style="--zone-surface:var(--zone-panel-surface);--zone-edge:var(--zone-panel-edge);--zone-ink:var(--zone-panel-ink)">▥</div><div class="nm">Motion &amp; space</div><div class="mt">shadows, easing</div></div>
+            </div>
+
+            <!-- recent activity = source / factual log -->
+            <div class="ov-block source" style="--zone-ink:var(--zone-source-ink);margin-top:18px">
+              <div class="ov-zone-label" style="color:var(--zone-source-ink)">Recent activity · provenance</div>
+              <div class="ov-feed">
+                <div class="ov-row"><span class="bullet">▸</span><span><b>Brand Kit</b> updated — added 2 logos. <span class="by">by you</span></span><span class="tm">14m</span></div>
+                <div class="ov-row"><span class="bullet">▸</span><span><b>Voice rule</b> "No exclamation marks" added. <span class="by">by Vi</span></span><span class="tm">3h</span></div>
+                <div class="ov-row"><span class="bullet">▸</span><span><b>Icons</b> 12 glyphs generated from brief. <span class="by">by Vi</span></span><span class="tm">1d</span></div>
+              </div>
+            </div>
+          </main>
+
+          <!-- RIGHT VI RAIL (gold accent) -->
+          <aside class="ov-vi">
+            <div class="ov-vi-head"><span class="gem"></span><span class="nm">Vi</span><span class="scope">whole system</span></div>
+            <div class="ov-vi-card">
+              <div class="who"><span class="gem"></span> Vi</div>
+              <p>I can audit, generate, and shape every part of your design system. What are we doing today?</p>
+            </div>
+            <div class="ov-vi-sugg">
+              <span class="pill">Audit my system</span>
+              <span class="pill">What gaps should I fill?</span>
+              <span class="pill">Show me what I have</span>
+            </div>
+            <div class="ov-vi-rec">
+              <div class="t"><span class="gem"></span> Vi recommends</div>
+              <p>Three components reference a deprecated colour token. Migrate them to <b>--zone-content-ink</b> to stay on-system.</p>
+              <button class="cvx-btn cvx-btn--primary" style="width:100%;justify-content:center">Review 3 fixes</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <!-- zone legend under the applied screen -->
+    <div class="tz-applied-note" id="tz-legend"></div>
+  </section>
+
+</div>
+
+<!-- ===== React + Babel (pinned) ===== -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- static specimen data + dom build (no JSX needed) -->
+<script>
+  const TZ_ZONES = [
+    { key:'base',    role:'Environment', name:'Base workspace', pig:'--pig-base',    pct:'3.5%', desc:'The architectural white ground. Calm, warm, never pure white or yellow.' },
+    { key:'content', role:'Primary',     name:'Content · ivory', pig:'--pig-content', pct:'3%',   desc:'Default readable surface for main cards and panels. Softly raised from base.' },
+    { key:'panel',   role:'Secondary',   name:'Panel · stone',  pig:'--pig-panel',   pct:'5%',   desc:'Supporting structure — metadata, side panels, secondary controls.' },
+    { key:'review',  role:'Decision',    name:'Review · cream',  pig:'--pig-review',  pct:'6%',   desc:'Creative review state. Warm and tactile for candidate comparison.' },
+    { key:'source',  role:'Provenance',  name:'Source · cool',   pig:'--pig-source',  pct:'5%',   desc:'Factual, evidence-based. References, briefs, traces — precise and grounded.' },
+    { key:'package', role:'Handoff',     name:'Package · manila',pig:'--pig-package', pct:'6.5%', desc:'Formal delivery. Folder / bundle metaphor — warmer than source, never gold.' },
+    { key:'success', role:'Ready',       name:'Success · sage',  pig:'--pig-success', pct:'6%',   desc:'Passed checks, valid outputs. Calm validation that never dominates.' },
+    { key:'warning', role:'Incomplete',  name:'Warning · amber', pig:'--pig-warning', pct:'7%',   desc:'Attention without alarm. Distinct from brand gold and from Vi states.' },
+    { key:'reject',  role:'Anti-pattern',name:'Rejected · rose', pig:'--pig-reject',  pct:'6%',   desc:'Negative memory. Stored and useful — distinct from a warning.' },
+    { key:'vi',      role:'Vi / gold',   name:'Active decision',  pig:'--accent-gold', pct:'9%',   desc:'The only saturated voice. Recommendations, selected candidate, primary action.' },
+  ];
+
+  function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+
+  const reg = document.getElementById('tz-registry');
+  TZ_ZONES.forEach(z => {
+    const surf = z.key === 'vi' ? 'var(--vi-surface)' : `var(--zone-${z.key}-surface)`;
+    const strong = z.key === 'vi' ? 'var(--vi-strong)' : `var(--zone-${z.key}-strong)`;
+    const edge = z.key === 'vi' ? 'var(--vi-edge)' : `var(--zone-${z.key}-edge)`;
+    const ink = z.key === 'vi' ? 'var(--accent-gold)' : `var(--zone-${z.key}-ink)`;
+    const card = el('div','tz-zone');
+    card.style.setProperty('--zone-edge', edge);
+    card.style.setProperty('--zone-ink', ink);
+    const wash = el('div','tz-zone-wash');
+    wash.style.background = surf;
+    const chip = el('div','chip-strong'); chip.style.background = strong;
+    const dot = el('div','dot'); dot.appendChild(el('i'));
+    wash.appendChild(chip); wash.appendChild(dot);
+    const meta = el('div','tz-zone-meta');
+    meta.appendChild(el('div','tz-zone-role', z.role));
+    meta.appendChild(el('div','tz-zone-name', z.name));
+    meta.appendChild(el('div','tz-zone-desc', z.desc));
+    const toks = el('div','tz-zone-tokens');
+    const t1 = el('div','tz-zone-tok'); t1.innerHTML = `<b>${z.key === 'vi' ? '--vi-surface' : '--zone-'+z.key+'-surface'}</b><span class="pct">${z.pct}</span>`;
+    const t2 = el('div','tz-zone-tok'); t2.innerHTML = `pigment <b>${z.pig}</b>`;
+    toks.appendChild(t1); toks.appendChild(t2);
+    meta.appendChild(toks);
+    card.appendChild(wash); card.appendChild(meta);
+    reg.appendChild(card);
+  });
+
+  const legendZones = [
+    { k:'base', n:'Base', d:'workspace ground', s:'var(--zone-base-surface)' },
+    { k:'content', n:'Content', d:'glance / cards', s:'var(--zone-content-surface)' },
+    { k:'source', n:'Source', d:'activity log', s:'var(--zone-source-surface)' },
+    { k:'warning', n:'Warning', d:'inbox needs you', s:'var(--zone-warning-surface)' },
+    { k:'success', n:'Success', d:'system health', s:'var(--zone-success-surface)' },
+    { k:'vi', n:'Vi · gold', d:'recommendations', s:'var(--vi-surface)' },
+  ];
+  const leg = document.getElementById('tz-legend');
+  legendZones.forEach(z => {
+    const row = el('div','tz-legend');
+    const sw = el('div','sw'); sw.style.background = z.s;
+    row.appendChild(sw);
+    row.appendChild(el('div', null, `<b>${z.n}</b><small>${z.d}</small>`));
+    leg.appendChild(row);
+  });
+
+  // Scale the fixed-width Overview mock to fit its frame at any viewport width
+  (function () {
+    const frame = document.querySelector('.tz-applied-frame');
+    const ov = frame && frame.querySelector('.ov');
+    if (!frame || !ov) return;
+    const DESIGN_W = 1240;
+
+    function buildFlow() {
+      const main = ov.querySelector('.ov-main');
+      const svg = ov.querySelector('.ov-flow');
+      if (!main || !svg) return;
+      const W = main.offsetWidth, H = main.offsetHeight;
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      svg.setAttribute('width', W); svg.setAttribute('height', H);
+      const labels = [...main.querySelectorAll('.ov-zone-label')];
+      const pts = labels.map(l => ({ x: l.offsetLeft + 4, y: l.offsetTop + l.offsetHeight / 2 }));
+      if (pts.length < 2) { svg.innerHTML = ''; return; }
+      // vertical spine through the zone markers
+      let d = `M ${pts[0].x} ${pts[0].y}`;
+      for (let i = 1; i < pts.length; i++) d += ` L ${pts[i].x} ${pts[i].y}`;
+      // a branch off the middle node, flowing right toward the Vi rail
+      const mid = pts[Math.min(1, pts.length - 1)];
+      const branch = `M ${mid.x} ${mid.y} C ${mid.x + W * 0.5} ${mid.y}, ${W - 40} ${mid.y - 30}, ${W + 30} ${mid.y - 30}`;
+      const nodes = pts.map(p =>
+        `<rect x="${p.x - 4}" y="${p.y - 4}" width="8" height="8" rx="1.5" fill="var(--spatial-node)" transform="rotate(45 ${p.x} ${p.y})"/>` +
+        `<rect x="${p.x - 7.5}" y="${p.y - 7.5}" width="15" height="15" rx="2" fill="none" stroke="var(--spatial-faint)" stroke-width="1" transform="rotate(45 ${p.x} ${p.y})"/>`
+      ).join('');
+      svg.innerHTML =
+        `<path d="${d}" fill="none" stroke="var(--spatial-line)" stroke-width="1.4" stroke-dasharray="2 6" stroke-linecap="round"/>` +
+        `<path d="${branch}" fill="none" stroke="var(--spatial-line)" stroke-width="1.4" stroke-dasharray="2 6" stroke-linecap="round"/>` +
+        nodes;
+    }
+
+    function fit() {
+      const avail = frame.clientWidth || frame.offsetWidth;
+      const scale = Math.min(1, avail / DESIGN_W);
+      ov.style.transform = `scale(${scale})`;
+      buildFlow();
+      frame.style.height = (ov.offsetHeight * scale) + 'px';
+    }
+    fit();
+    new ResizeObserver(fit).observe(frame);
+    window.addEventListener('resize', fit);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    setTimeout(fit, 300);
+  })();
+</script>
+
+<!-- Tweaks -->
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "tintIntensity": 1,
+  "goldIntensity": 1,
+  "palette": "warm",
+  "spatial": true,
+  "spatialAmount": 1
+}/*EDITMODE-END*/;
+
+function TweaksApp() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  React.useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--zone-intensity', String(t.tintIntensity));
+    root.style.setProperty('--gold-intensity', String(t.goldIntensity));
+    root.style.setProperty('--spatial-opacity', String(t.spatial ? t.spatialAmount : 0));
+    document.body.classList.remove('zone-palette-cooler','zone-palette-warmer');
+    if (t.palette === 'cooler') document.body.classList.add('zone-palette-cooler');
+    if (t.palette === 'warmer') document.body.classList.add('zone-palette-warmer');
+  }, [t]);
+
+  return (
+    <TweaksPanel title="Tweaks">
+      <TweakSection label="Surface tint" />
+      <TweakSlider label="Tint intensity" value={t.tintIntensity} min={0.45} max={1.7} step={0.05} unit="×"
+                   onChange={(v) => setTweak('tintIntensity', v)} />
+      <p style={{font:'400 11px/1.45 var(--font-body)',color:'var(--ink-3)',margin:'2px 2px 0'}}>
+        Lower = quieter, felt more than seen. Higher = zones a touch more present.
+      </p>
+      <TweakSection label="Palette" />
+      <TweakRadio label="Undertone" value={t.palette} options={['warm','cooler','warmer']}
+                  onChange={(v) => setTweak('palette', v)} />
+      <TweakSection label="Vi / gold" />
+      <TweakSlider label="Gold intensity" value={t.goldIntensity} min={0.4} max={1.8} step={0.05} unit="×"
+                   onChange={(v) => setTweak('goldIntensity', v)} />
+      <TweakSection label="Spatial layer" />
+      <TweakToggle label="Path lines & ghosting" value={t.spatial}
+                   onChange={(v) => setTweak('spatial', v)} />
+      <TweakSlider label="Spatial strength" value={t.spatialAmount} min={0} max={1.4} step={0.05} unit="×"
+                   onChange={(v) => setTweak('spatialAmount', v)} />
+    </TweaksPanel>
+  );
+}
+
+const tweakMount = document.createElement('div');
+document.body.appendChild(tweakMount);
+ReactDOM.createRoot(tweakMount).render(<TweaksApp />);
+</script>
+
+</body>
+</html>

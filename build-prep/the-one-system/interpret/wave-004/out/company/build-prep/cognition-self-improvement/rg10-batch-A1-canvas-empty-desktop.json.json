@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-A1-canvas-empty-desktop.json",
+  "model": "opus",
+  "what_it_does": "A generated RG10 per-mockup result artifact for the A1-canvas-empty-desktop.html screen. Records the screen grounding (screen_present + plain-language what_this_is / what_you_can_do), run counts (n_candidates=28, n_dossiers=28, n_clusters=21), and two lists: confirmed (13 entries) and flagged (8). Each entry carries a dossier (address, capabilities, grounding, howto{what,what_you_can_do,how_to_change}, maps_to_feature, represents), its cluster_size/cluster_members, the confirm verdict (jury votes_grounded/votes_ungrounded/quorum/unanimous + reasons), and the source mockup filename.",
+  "observations": [
+    "mockup field: A1-canvas-empty-desktop.html",
+    "ground describes the empty canvas starting screen — drag a node from the palette or click Start Demo",
+    "Counts: 28 candidates → 28 dossiers → 21 clusters → 13 confirmed + 8 flagged (21 surfaced clusters)",
+    "Confirmed entries carry a unanimous-grounded jury (e.g. votes_grounded 3/3, quorum true, reasons [])",
+    "Flagged entries carry a no-quorum jury (e.g. 0/3 grounded) with a named soft-accuracy reason",
+    "Dossier addresses use ui:// scheme (e.g. ui://toolbar/layers); howto.how_to_change cites real source files (canvas/app/src/regions/Toolbar.tsx) and the build-intent wire",
+    "represents uses concept codes (LAY-layers) and maps_to_feature uses feature codes (NODE-layer)",
+    "grounding field values like 'built'"
+  ],
+  "standouts": [
+    "Each element's dossier includes a how_to_change pointing at the actual code region and the build-intent wire — the element explains how to modify itself",
+    "The jury verdict object distinguishes votes_grounded vs votes_ungrounded with quorum/unanimous flags",
+    "Flagged reason explicitly framed as Layer-2 SOFT (variance not error)"
+  ],
+  "conventions": [
+    "Consistent dossier schema across confirmed and flagged entries",
+    "ui:// addressing scheme and concept/feature code conventions (LAY-, NODE-)",
+    "Generated-artifact shape consumed by rg10_surface.py / rg10_writeback_run.py (the sibling scripts read exactly these keys)"
+  ],
+  "concerns": [
+    "Generated data — no file-local concerns; correctness depends on the upstream chain, not visible here"
+  ],
+  "notes": "A generated registry-candidate result for the empty A1 canvas screen: 21 unique elements (13 confirmed, 8 flagged) each with an at-altitude dossier and a jury verdict — the per-mockup unit the surface/writeback scripts aggregate.",
+  "questions": [
+    "What model/prompts produced the dossier prose and the jury votes (only counts are recorded here)?",
+    "Why 21 clusters but 13+8=21 surfaced — are all clusters surfaced as either confirmed or flagged?"
+  ],
+  "purpose_vs_actual": "n/a — generated data artifact, no stated purpose of its own beyond being the run output.",
+  "apparent_themes": [
+    "Self-describing UI elements at the operator's altitude (what / what-you-can-do / how-to-change)",
+    "Jury-based grounding confirmation with explicit flagging of non-quorum",
+    "Grounding UI claims in real source paths"
+  ],
+  "intention_signals": "An autonomous attempt to turn one rendered mockup's clickable elements into grounded, plain-language registry dossiers, with a voting jury separating confirmed from flagged so the operator only adjudicates the uncertain.",
+  "novelty": "Dossiers that bind a UI address to both a plain-language capability description and a concrete how-to-change pointer into the codebase.",
+  "contribution": "Contributes the A1-canvas-empty screen's grounded element dossiers and jury verdicts — 13 confirmed and 8 flagged ui:// entries with how-to-change pointers — as one consumable per-mockup registry-run record.",
+  "summary_for_embedding": "Generated RG10 per-mockup artifact for the empty A1 canvas screen: 28 candidates clustered to 21, yielding 13 confirmed and 8 flagged ui:// element dossiers with jury verdicts and how-to-change source pointers.",
+  "intention_for_embedding": "To capture one mockup screen's clickable elements as grounded self-describing registry dossiers with jury confirmation, for operator review and write-back into the address registry."
+}

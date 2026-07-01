@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/consolidation-drafts/methodology-docs.md",
+  "model": "opus",
+  "what_it_does": "A draft consolidation proposal (explicitly never executed) that analyzes three build-loop methodology docs (company-build, rhm-build, wire-build), establishes they are byte-identical mirrors of live runnable skills, catalogs their shared protocol skeleton and the drift between copies, and proposes ADDING a new one-source docs/methodology/build-loop-protocol.md page rather than merging or retiring any source. It includes the full proposed protocol text plus per-build deltas.",
+  "observations": [
+    "States STATUS: DRAFT/PROPOSED ONLY at top; nothing executed, all sources untouched; owning session decides.",
+    "Documents an md5sum-verified 'mirror invariant': each repo doc is byte-identical to a live ~/.claude/skills/<name>/SKILL.md and must change in lockstep (both-or-neither).",
+    "Estimates ~60-70% of each doc is a shared protocol skeleton: header discipline, files block, lanes, the 10-step fire, stopping, laws, invocation.",
+    "Catalogs concrete drift between the three copies (bridge restart hardening reached only 2 of 3, worker dispatch mode auto vs bypassPermissions, console-clean gate, refresh_self_description, scenario- vs unit-verify, channel-back presence).",
+    "Lists what each source uniquely holds (company lanes E/N/K/U/F; rhm S1-S7 + E3 channel-back; wire W6 unattended dispatch + fullest commit-law).",
+    "Notes branch rules in all three are superseded by the 2026-06-04 feedback-no-branches-company law (commit to main, no branches).",
+    "Includes a full proposed protocol page, a per-build delta section, a decisions table (D-a..D-e), and a disposition table.",
+    "Final verdict: mixed — extraction yes (add one page), replacement no (keep all three full); retire nothing."
+  ],
+  "standouts": [
+    "The mirror-invariant argument: consolidating repo docs without identically restructuring live skills would manufacture the exact drift the lane exists to cure.",
+    "Frames the three docs as historical records of an EVOLVING protocol (company -> rhm -> wire), so normalizing onto one core would retroactively falsify what each loop actually ran.",
+    "The [VARIANT] annotation convention preserves divergent facts inline instead of erasing them on merge."
+  ],
+  "conventions": [
+    "Follows the vault working-doc convention: explicit STATUS banner, RATIONALE, VERDICT, disposition table.",
+    "Self-describes as the deliverable of one consolidation lane with a named origin (DRIFT-RADAR-REPORT.md candidate #1, cos .86).",
+    "Uses ☐/✅/◑ marker glyphs and the repo's commit-law / no-Co-Authored-By trailer conventions in the embedded protocol text."
+  ],
+  "concerns": [],
+  "notes": "A never-executed consolidation verdict that decides to ADD a canonical build-loop-protocol page while keeping all three mirror-of-skill docs intact, because they are simultaneously live-skill mirrors, self-contained cron prompts, and historical records.",
+  "questions": [
+    "Has the owning session acted on any of the D-a..D-e decisions since this draft, or is it still purely proposed?",
+    "Were the md5sum matches re-verified after 2026-06-10, or could the mirror invariant already be stale?"
+  ],
+  "purpose_vs_actual": "Match — it presents itself as a draft consolidation deliverable for one lane and delivers exactly that: rationale, verdict, proposed text, deltas, dispositions, all marked unexecuted.",
+  "apparent_themes": [
+    "One-source / no-repeat law applied at the methodology layer",
+    "Additive consolidation over destructive merge",
+    "Preserving historical/as-ran fidelity (don't erase what actually ran)",
+    "Mirror invariants between repo docs and live skills",
+    "Fork-and-drift as the cost of copy-and-mutate reproduction"
+  ],
+  "intention_signals": "Trying to cure methodology-layer duplication without breaking the live-skill mirror or falsifying history — extract the shared build-loop protocol once as a future instantiation source and single landing place for improvements, while leaving every historical recipe intact.",
+  "novelty": "The explicit reasoning that duplication here is partly BY DESIGN (declared lineage + durable-copy contract) and that 'three copies' are actually evolutionary snapshots, which inverts the usual dedup instinct.",
+  "contribution": "Contributes a fully reasoned, evidence-grounded consolidation verdict for the build-loop methodology family plus a drafted canonical build-loop-protocol page with per-build deltas — a consolidated record of the cron/lanes/verify-by-use protocol and the precise unique facts each instantiation holds.",
+  "summary_for_embedding": "A never-executed consolidation draft analyzing three byte-identical build-loop methodology docs and proposing to ADD a single canonical build-loop-protocol page (with per-build deltas) while keeping all sources intact.",
+  "intention_for_embedding": "To resolve methodology-layer duplication additively by extracting the shared cron/lanes/verify-by-use build-loop protocol once, without breaking the repo-doc-to-live-skill mirror or erasing each loop's as-ran history."
+}

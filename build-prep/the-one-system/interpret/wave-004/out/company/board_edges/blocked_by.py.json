@@ -1,0 +1,35 @@
+{
+  "project": "company",
+  "path": "board_edges/blocked_by.py",
+  "model": "opus",
+  "what_it_does": "Declares a single RELATION_TYPE dict named 'blocked_by' defining a directed board edge meaning 'X is blocked by Y' — a conceptual dependency relation between addressed perspectives/claims on the board.",
+  "observations": [
+    "RELATION_TYPE fields: id='blocked_by', directed=True, label='blocked-by', desc.",
+    "desc says X is blocked by Y (a claim/work item gated on an unmet dependency).",
+    "Framed as a CONCEPTUAL edge between addressed perspectives/claims (the harvest's RELATIONS), kept first-class so the linking layer parses it rather than collapsing it to 'references'.",
+    "Stated to be surfaced by-use during the wind-down harvest (recollection)."
+  ],
+  "standouts": [
+    "The deliberate refusal to collapse this into a generic 'references' edge — it is kept first-class."
+  ],
+  "conventions": [
+    "Single-dict module shape (RELATION_TYPE with id/directed/label/desc), the board-edge registry-row convention.",
+    "id uses snake_case while label uses hyphenated form."
+  ],
+  "concerns": [],
+  "notes": "A first-class directed 'blocked-by' dependency edge type for the board, harvested from session wind-down.",
+  "questions": [
+    "What other board_edges relation types exist alongside this, and do they share the same harvest/recollection origin?"
+  ],
+  "purpose_vs_actual": "Matches: declares exactly the blocked-by relation type its desc describes.",
+  "apparent_themes": [
+    "First-class typed relations (resisting collapse to generic references)",
+    "Conceptual/dependency modeling of claims and work items",
+    "By-use surfacing during session harvest"
+  ],
+  "intention_signals": "Trying to preserve a specific dependency/blocking relationship between claims as a distinct, parseable edge rather than flattening it, so blocking structure is legible on the board.",
+  "novelty": "n/a",
+  "contribution": "Contributes the directed 'blocked-by' dependency edge type definition for the board's relation registry, including the rationale for keeping it distinct from 'references'.",
+  "summary_for_embedding": "A Python registry-row defining a directed 'blocked-by' relation type between board claims, kept first-class rather than collapsed into a generic references edge.",
+  "intention_for_embedding": "To represent unmet dependencies between claims/work items as a distinct, parseable board edge surfaced during the wind-down harvest."
+}

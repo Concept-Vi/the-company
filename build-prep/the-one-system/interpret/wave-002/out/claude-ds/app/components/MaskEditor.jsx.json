@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/MaskEditor.jsx",
+  "model": "opus",
+  "what_it_does": "A canvas brush-mask editor that lets the user paint a region on top of a source image. It maintains a hidden mask canvas and a visible composed canvas; brushing erases mask alpha to mark 'edit here', shows the marked area as a gold tint, and emits an onChange(blob) PNG where transparent pixels mark the area to edit (per OpenAI gpt-image-2 images/edits spec). Tools: brush, eraser, brush size, invert, reset.",
+  "observations": [
+    "Three canvases via refs: imgRef (offscreen Image), maskRef (hidden mask), composedRef (visible composite). Mask sized to image natural dimensions.",
+    "repaintComposed() reads mask alpha pixel-by-pixel; where alpha < 128 it tints gold (#E0C010 / rgba 224,192,16,180) and, for output, builds a canvas with RGB=source and alpha=0 where 'edit here' -> emits via out.toBlob PNG.",
+    "Brush uses globalCompositeOperation 'destination-out' (erases alpha); eraser uses 'source-over' (restores opacity). Mask initialized fully opaque (default = no edits).",
+    "Pointer handling scales client coords into mask pixel space (rect ratio), draws round-cap/round-join strokes between lastPos and current.",
+    "invert() inverts mask alpha (special-cased: if untouched/fully-opaque, clears to fully transparent so invert 'feels meaningful').",
+    "Toolbar buttons use CvIcon (edit, no-symbol) with tone switching on active state; help text explains the gold tint, and a status chip shows 'Mask ready' vs 'No mask yet'.",
+    "onChange is documented as debounced but is fired directly inside repaintComposed on every mask change (no visible debounce in this file).",
+    "Attaches to window.MaskEditor."
+  ],
+  "standouts": [
+    "Encodes a specific external API contract: alpha-transparent = region to edit, matching OpenAI gpt-image-2 images/edits — the mask semantics are inverted-alpha by design and the code is built around that.",
+    "Dual-canvas approach: hidden alpha mask drives both the gold-tint preview and the exported PNG from one source of truth."
+  ],
+  "conventions": [
+    "Follows browser-React no-build pattern (suffixed hook aliases useState_me etc., window attach).",
+    "Uses CvIcon and .cv-mask-* class vocabulary.",
+    "Hardcoded tint color (#E0C010 / 224,192,16) and rgba black strokes are canvas paint values, not CSS consumer tokens — outside the token system's scope."
+  ],
+  "concerns": [
+    "Header comment says onChange is debounced, but the code fires onChange synchronously in repaintComposed on every stroke/repaint — getImageData + toBlob per move is potentially heavy and the documented debounce is absent (doc/behavior mismatch).",
+    "repaintComposed runs full-image getImageData and per-pixel loops on every pointer move, which can be expensive for large images (file-local performance smell)."
+  ],
+  "notes": "A brush-mask painter whose exported PNG follows OpenAI's edit-mask alpha convention (transparent = edit region); gold tint previews the mask, but the documented onChange debounce is not present.",
+  "questions": [
+    "Is the missing debounce intentional, or should onChange be throttled given the per-move getImageData/toBlob cost?",
+    "Who consumes the emitted blob — is it MaskEditor's caller that pairs it with a prompt and sends to the openai-image provider?"
+  ],
+  "purpose_vs_actual": "Mostly match — the editor and OpenAI-mask-alpha output match the header, but the stated 'debounced' onChange is not implemented as debounced.",
+  "apparent_themes": [
+    "Conforming to an external AI provider's input contract (mask alpha semantics)",
+    "Single source (the alpha mask) driving both preview and export",
+    "Direct-manipulation canvas editing"
+  ],
+  "intention_signals": "Aims to give users an intuitive brush-on-the-image way to specify exactly which region an AI image edit should change, producing the precise alpha-PNG the provider requires.",
+  "novelty": "Inverted-alpha mask painting purpose-built for the OpenAI images/edits contract, with a live gold-tint composite derived from the same mask canvas.",
+  "contribution": "Contributes the inpainting mask-authoring surface — a brush/eraser canvas that produces the OpenAI-spec alpha-PNG mask and previews it as a gold tint.",
+  "summary_for_embedding": "React canvas brush-mask editor producing an OpenAI gpt-image-2-spec alpha PNG (transparent = edit region), with brush/eraser/size/invert/reset and a gold-tint live preview.",
+  "intention_for_embedding": "To let users paint the exact region an AI image edit should change, emitting the alpha-channel mask PNG the image provider requires."
+}

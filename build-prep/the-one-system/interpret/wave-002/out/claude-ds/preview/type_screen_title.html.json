@@ -1,0 +1,34 @@
+{
+  "project": "claude-ds",
+  "path": "preview/type_screen_title.html",
+  "model": "opus",
+  "what_it_does": "A standalone HTML preview card demonstrating the screen-title (dashboard H1) pattern: display-700 type at ~36px in bronze, shown via two example titles ('Brand Kit', 'Virtual Hub Settings') each with a descriptive subtitle on a canvas stage.",
+  "observations": [
+    "Carries a @dsCard annotation: group='Brand', name='Screen-title treatment', subtitle='Display 700 in bronze — the dashboard H1 pattern', viewport='700x220'.",
+    "Links shared _card.css; local <style> uses var(--bg-canvas), --r-lg, --font-display, --accent-bronze, --font-body, --fg-secondary.",
+    "Lead text states the rule explicitly: titles are display 700 at ~36px in bronze (#988058) — 'not gold' — used as the H1 on every dashboard surface.",
+    "Two live examples styled with .title at 38px/700 bronze plus subtitles describing each screen's purpose.",
+    "Example titles/subtitles reference real product surfaces: Brand Kit (visual identity inheritance) and Virtual Hub Settings (menu/navigation/hub variants)."
+  ],
+  "standouts": [
+    "Explicitly distinguishes bronze (#988058) from gold for titles — a stated do-not-confuse rule.",
+    "Names the pattern as the universal dashboard H1 and grounds it in real screens (Brand Kit, Virtual Hub Settings)."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery convention and var()-token discipline (canvas bg, radius, fonts, bronze accent).",
+    "Lead text hardcodes the literal hex #988058 alongside the --accent-bronze token usage — documenting the value inline.",
+    "Title sizes are inline literals as specimen values."
+  ],
+  "concerns": [],
+  "notes": "The dashboard screen-title (H1) pattern card; display 700 ~36px in bronze (not gold), demonstrated on two real product screen titles.",
+  "questions": [
+    "Is #988058 the canonical value behind --accent-bronze, kept in sync with the token registry?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard names it the screen-title treatment and that bronze display-700 H1 pattern is what renders.",
+  "apparent_themes": ["screen-title / dashboard H1 pattern", "bronze-vs-gold distinction", "display typeface application", "self-documenting previews", "product-grounded examples"],
+  "intention_signals": "Intended to fix the dashboard H1 convention by eye and rule — bronze display 700 at ~36px — and prevent confusion with the gold accent.",
+  "novelty": "The bronze-not-gold title rule made explicit and demonstrated on actual screen titles, distinguishing title colour from accent colour.",
+  "contribution": "Contributes the dashboard screen-title (H1) treatment — bronze display 700 ~36px — with the explicit bronze-vs-gold rule and real-screen examples.",
+  "summary_for_embedding": "An HTML @dsCard preview defining the dashboard screen-title H1 pattern as bronze (#988058) display-700 at ~36px, shown on two real product screen titles.",
+  "intention_for_embedding": "To fix the dashboard H1 convention by eye and rule — bronze display 700, not gold — and ground it in actual screens."
+}

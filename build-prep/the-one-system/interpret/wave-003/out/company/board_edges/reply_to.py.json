@@ -1,0 +1,38 @@
+{
+  "project": "company",
+  "path": "board_edges/reply_to.py",
+  "model": "opus",
+  "what_it_does": "Declares a single RELATION_TYPE dict for a 'reply_to' board edge: a directed edge from a reply board item to the comment/note board item it replies to, with inverse 'has_reply', label 'reply-to', and a descriptive docstring explaining it builds comment threads.",
+  "observations": [
+    "Module-level constant RELATION_TYPE only; no functions or classes.",
+    "Fields: id, directed (True), label, inverse ('has_reply'), desc.",
+    "desc encodes usage: reply_to points to board://<comment-id>, and reverse_traverse(comment, reply_to) gathers replies, nested recursively.",
+    "desc names the threading model: comment links commented_on -> address; reply links reply_to -> that comment.",
+    "Attributes the feature to Tim ('the replied-to comments Tim named') and frames annotation as a conversation, not a flat list."
+  ],
+  "standouts": [
+    "Has an explicit inverse ('has_reply'), unlike the two sibling files in this batch.",
+    "Describes recursive nesting via reverse_traverse as the threading mechanism."
+  ],
+  "conventions": [
+    "Follows the board_edges relation-type declaration pattern: one RELATION_TYPE dict per file.",
+    "directed=True with a meaningful inverse aligns with the repo's directional-edge law."
+  ],
+  "concerns": [],
+  "notes": "A pure data declaration of the reply threading edge; the logic lives in whatever consumes RELATION_TYPE, not here.",
+  "questions": [
+    "Where is RELATION_TYPE registered/consumed (what reads board_edges/*.py)?",
+    "Is reverse_traverse a real helper referenced elsewhere or just descriptive prose?"
+  ],
+  "purpose_vs_actual": "Match: the file's stated purpose (declare the reply-to threading edge) is exactly what its single dict does.",
+  "apparent_themes": [
+    "Annotation-as-conversation",
+    "Directed edges with explicit inverses",
+    "Registry-as-data relation declarations"
+  ],
+  "intention_signals": "Aims to make comment threading a first-class, traversable graph edge so the linking layer parses replies into nested threads rather than treating them as flat references.",
+  "novelty": "Encodes a recursive comment-thread structure entirely as a relation-type declaration with an inverse for reverse traversal.",
+  "contribution": "Contributes the reply-to threading edge definition and its inverse, enabling nested comment-thread traversal on the board.",
+  "summary_for_embedding": "A board_edges relation-type declaration defining the directed reply_to edge (inverse has_reply) that links a reply board item to the comment it replies to, building nested comment threads.",
+  "intention_for_embedding": "To make comment-reply threading a first-class traversable graph edge so annotations form conversational threads rather than a flat list."
+}

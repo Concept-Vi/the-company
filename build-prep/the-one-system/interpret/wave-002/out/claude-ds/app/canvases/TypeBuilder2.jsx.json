@@ -1,0 +1,57 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/TypeBuilder2.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the inner panels and field editors for the Type Builder (companion to TypeBuilder.jsx): the left-rail Type browser (BuilderLibrary), the center live preview (BuilderPreview) including a per-layer archetype renderer (RenderArchetype), the right-rail inspector (BuilderInspector), and all the field editors (BasicsForm, LineageForm, ViForm, SlotsEditor, DefaultsEditor, VariablesEditor, TagsField, JsonEditor, ReviewPanel) plus a SlotBrowserModal for choosing what a slot accepts. Also defines helpers mergeVars/stringifyField and resolves a draft against its ancestor for preview. Exports all components onto window via Object.assign.",
+  "observations": [
+    "Aliased React hooks (useState_tb2 etc.) consistent with TypeBuilder.jsx's collision-avoidance pattern.",
+    "BuilderPreview computes a 'resolved' Type by virtually merging the parent (R.resolve(draft.extends)) with the draft — slots/defaults spread-merged, variables via mergeVars, tags deduped — because draft.id may not be saved yet.",
+    "BuilderPreview branches on mode: 'vi' shows a Vi-led brief shell with a textarea and Draft button; other modes show name/badges/lineage/description, a live TypeThumb, slots, defaults JSON, and a variables list.",
+    "RenderArchetype renders a layer-specific representative: token (colour swatch or font sample), atom (icon), block (live WS_BLOCKS render or SchemaPreview), system/surface/doc (slot tiles/chrome/compose lists).",
+    "BuilderLibrary uses CustomEvent('tb-open', {detail:{id}}) on window to ask the parent to load a different draft — decoupled selection via events, with a confirm for unsaved changes.",
+    "DefaultsEditor and JsonEditor are raw-JSON textareas that parse on blur and surface parse errors inline (err state) without crashing.",
+    "VariablesEditor edits key/label/default/kind (text|number|url|choice); hint says 'Variables become Template parameters. List the 2-5 things that change per run.'",
+    "SlotsEditor marks slot keys readOnly ('Rename: remove and re-add') and delegates accepts editing to SlotBrowserModal.",
+    "SlotBrowserModal lets you pick accepted layers (pills, colored by LAYER_INFO.swatch) + families + tags, with a live preview of matching Types via R.candidatesForSlot, capped at 30 shown.",
+    "TagsField and DefaultsEditor reset their raw buffer on draft.id change (useEffect) so switching drafts re-syncs the editor.",
+    "Final Object.assign(window, {...}) exports 15 components/helpers globally."
+  ],
+  "standouts": [
+    "The preview resolves against a virtual ancestor so an unsaved draft still shows inherited slots/defaults/variables — preview reflects inheritance before save.",
+    "RenderArchetype gives each Type layer its own representative rendering, including a live block render via WS_BLOCKS — the preview is layer-aware, not generic.",
+    "SlotBrowserModal's live candidatesForSlot preview turns abstract accept-filters into a concrete count of matching Types as you edit.",
+    "Cross-component coordination via window CustomEvents ('tb-open') instead of prop-drilling navigation."
+  ],
+  "conventions": [
+    "Registry-as-truth: previews, parent resolution, slot candidates, and layer metadata all read from CV_REGISTRY (resolve/query/candidatesForSlot/LAYERS/LAYER_INFO).",
+    "Raw-JSON editors parse-on-blur with inline error surfacing rather than blocking or silent failure.",
+    "window-global component pattern; mass-export via Object.assign(window, {...}).",
+    "Immutable state updates and dedupe-on-commit for tags/variables/accepts.",
+    "Slot keys are immutable once created (remove-and-re-add to rename) — a deliberate stable-key convention."
+  ],
+  "concerns": [
+    "Several optional globals chained (TypeThumb, WS_BLOCKS, candidatesForSlot); missing ones silently omit preview sections rather than failing loud — a mild deviation from the project's loud-fail rule.",
+    "VariablesEditor uses array index as React key, so reordering/removing variables can cause input identity churn.",
+    "Cross-component navigation via window CustomEvent is implicit coupling that's hard to trace from this file alone (the listener lives elsewhere).",
+    "block-layer render calls def.render(data, ()=>{}) with a no-op handler — interactive blocks render inert in preview (expected, but undocumented)."
+  ],
+  "notes": "The Type Builder's inner machinery: a tree browser, an inheritance-resolving live preview with per-layer archetype rendering, a full inspector of field editors, and a slot-accepts modal — all reading from CV_REGISTRY and exported onto window.",
+  "questions": [
+    "Where is the 'tb-open' CustomEvent listened to (the parent that reloads the draft)?",
+    "What does R.candidatesForSlot({accepts}) return and how does it interpret layers/families/tags (any-of vs all-of)?",
+    "What is the WS_BLOCKS registry and its render(data, onChange) contract used by block-layer previews?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment (sub-components for TypeBuilder.jsx, split out for file size) is exactly the file's content and role.",
+  "apparent_themes": [
+    "Inheritance made visible: preview resolves the draft against its ancestor.",
+    "Layer-aware representation (one archetype renderer per Type layer).",
+    "Registry-as-truth and UI-as-projection.",
+    "Multiple authoring modalities (visual/form/Vi/JSON) sharing one draft.",
+    "Variables→Template-parameters lineage."
+  ],
+  "intention_signals": "Aims to let an author see and edit a Type's full resolved shape (with inherited parts) across any layer before saving, choosing the right representation per layer and the right editing modality, while every read stays sourced from the central registry.",
+  "novelty": "The virtual-ancestor resolution in an unsaved-draft preview and the per-layer RenderArchetype (including live block rendering) — making inheritance and layer-identity tangible in the editor.",
+  "contribution": "Contributes the Type Builder's preview/inspector/library panels, the per-layer archetype renderer, all field editors (basics/lineage/Vi/slots/defaults/variables/tags/JSON/review), the slot-accepts browser modal, and the mergeVars/stringifyField/inheritance-resolution helpers.",
+  "summary_for_embedding": "A React file of Type Builder sub-components: a Type browser, an inheritance-resolving live preview with per-layer archetype rendering, field/JSON editors, and a slot-accepts modal, all reading from CV_REGISTRY.",
+  "intention_for_embedding": "To render and edit a registry Type's fully resolved (inherited) shape across any layer with layer-appropriate previews and multiple editing modes before it is saved."
+}

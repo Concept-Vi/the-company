@@ -1,0 +1,26 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/.temp/cli-latest",
+  "model": "opus",
+  "what_it_does": "A Supabase CLI temp-state file recording the latest known CLI version. Contains the single string 'v2.107.0'.",
+  "observations": [
+    "Single line: 'v2.107.0'",
+    "Lives under supabase/.temp, which the sibling .gitignore ignores"
+  ],
+  "standouts": [],
+  "conventions": [
+    "Generated Supabase CLI cache file (normally gitignored)"
+  ],
+  "concerns": [],
+  "notes": "A generated Supabase CLI cache file noting the latest CLI version (v2.107.0) — not authored content.",
+  "questions": [],
+  "purpose_vs_actual": "n/a",
+  "apparent_themes": [
+    "CLI version caching"
+  ],
+  "intention_signals": "Caches the latest detected Supabase CLI version for update checks.",
+  "novelty": "n/a",
+  "contribution": "Contributes the cached latest-CLI-version marker (v2.107.0) for the Supabase workspace.",
+  "summary_for_embedding": "A Supabase CLI temp cache file recording the latest CLI version 'v2.107.0'.",
+  "intention_for_embedding": "To cache the latest known Supabase CLI version for the local workspace's update check."
+}

@@ -1,0 +1,199 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<!-- @dsCard group="System" name="The Glyphic Language" subtitle="Every mark reads itself as a sentence — meaning composed from facet fields, via the meaning registry" viewport="1100x1400" -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Glyphic Language — marks that say themselves</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body{background:var(--paper,#FCFAF2);color:var(--ink,#1F1A12);font-family:var(--font-body),system-ui,sans-serif;margin:0;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 22px 90px}
+  h1{font:700 30px/1.05 var(--font-display),sans-serif;letter-spacing:-.02em;color:var(--accent-bronze,#988058);margin:0 0 4px}
+  .lede{color:var(--ink-3,#6B5F47);font-size:14.5px;margin:0 0 8px;max-width:64ch}
+  .note{font-size:12px;color:var(--accent-gold-deep,#9F772C);background:var(--accent-gold-50,#FBF4C8);border:1px solid var(--accent-gold-dashed,#D8C040);border-radius:8px;padding:8px 12px;margin:14px 0 28px;display:inline-block}
+  h2{font:600 18px/1.2 var(--font-display),sans-serif;color:var(--ink,#1F1A12);margin:30px 0 4px}
+  .sub{color:var(--ink-3,#6B5F47);font-size:13px;margin:0 0 16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .card{background:var(--bg-surface,#fff);border:1px solid var(--border-default,#E8DFC5);border-radius:12px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:12px;box-shadow:var(--shadow-card,0 1px 2px rgba(31,26,18,.03),0 6px 18px rgba(31,26,18,.04))}
+  .card .glyph{min-height:72px;display:flex;align-items:center;justify-content:center}
+  .card .sentence{font:500 14px/1.5 var(--font-body),sans-serif;color:var(--ink-2,#3A3026);text-align:center}
+  .card .sentence b{color:var(--accent-bronze-2,#7A6A48)}
+  .card .spec{font:500 10px/1 var(--font-mono),monospace;color:var(--fg-muted,#A89678);letter-spacing:.02em}
+  .rel{background:var(--bg-surface,#fff);border:1px solid var(--border-default,#E8DFC5);border-radius:12px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:var(--shadow-card)}
+  .rel .glyph{transform:scale(1.4);margin:8px 0 14px}
+  .rel .sentence{font:500 15px/1.55 var(--font-body),sans-serif;color:var(--ink-2);text-align:center;max-width:60ch}
+  .err{color:var(--status-error,#C24A3C);font-family:var(--font-mono),monospace;font-size:12px}
+  .graphwrap{display:grid;grid-template-columns:minmax(280px,1fr) minmax(240px,0.85fr);gap:22px;align-items:center;background:var(--bg-surface,#fff);border:1px solid var(--border-default,#E8DFC5);border-radius:14px;padding:22px;box-shadow:var(--shadow-card)}
+  .graphstage{width:100%;min-width:0}
+  .graphstage>div{width:100%}
+  .graphstage .cv-diagram{margin:0 auto}
+  .readout{display:flex;flex-direction:column;gap:12px}
+  .readlabel{font:600 11px/1 var(--font-mono),monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted,#A89678)}
+  .paragraph{font:500 17px/1.6 var(--font-body),sans-serif;color:var(--ink,#1F1A12);margin:0}
+  .labeltoggle{align-self:flex-start;font:600 12px/1 var(--font-body),sans-serif;color:var(--accent-bronze-2,#7A6A48);background:var(--accent-gold-50,#FBF4C8);border:1px solid var(--accent-gold-dashed,#D8C040);border-radius:999px;padding:7px 14px;cursor:pointer}
+  .labeltoggle[aria-pressed="true"]{background:var(--accent-bronze,#988058);color:var(--paper,#FCFAF2);border-color:var(--accent-bronze,#988058)}
+  @media(max-width:680px){.graphwrap{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+
+<h1>The Glyphic Language</h1>
+<p class="lede">A glyphic is a sign; its meaning is a field, composed across its facets. The English sentence under each mark is a <em>read-out</em> — generated live by the meaning registry, not written by hand. Change a facet value and the sentence changes with it.</p>
+<div class="note">Live render of the real engine (cv-meaning + cv-glyphics). Every sentence below is computed; nothing is hardcoded. Loud-fail: an unknown value throws rather than guess.</div>
+
+<h2>Marks that say themselves</h2>
+<p class="sub">Each is composed from facets, then read out.</p>
+<div class="grid" id="marks"></div>
+
+<h2>The same mark, three modes</h2>
+<p class="sub">Only the fill changes — the meaning (the mode) changes with it. Meaning is a combination, not one facet.</p>
+<div class="grid" id="modes"></div>
+
+<h2>The simplest complex sentence</h2>
+<p class="sub">Two nodes and the edge between them. The line is the relation's mood: dashed = could, solid = is.</p>
+<div class="rel" id="rel-dashed"></div>
+<div style="height:14px"></div>
+<div class="rel" id="rel-solid"></div>
+
+<h2>A laid-out glyphgraph — a whole sentence, drawn</h2>
+<p class="sub">Several glyphics joined by edges, drawn <b>with no text labels</b>. Each edge carries meaning
+visually: line texture is the <em>mood</em> (solid = is, dashed = could), colour is the <em>state</em>
+(green = approved, gold = active), and the routing + arrow give <em>direction</em>. The paragraph beneath is
+generated <em>live</em> from this exact graph by the meaning registry — nothing is written by hand. Hover an
+edge to hear its clause, or reveal the labels. <em>(Next: the relation's <b>type</b> by sight — a small
+relation-glyph at the line — so a dashed "part-of" can't be mistaken for a dashed "face"; today type is read
+on hover / labels.)</em></p>
+<div class="graphwrap">
+  <div class="graphstage"><div id="glyphgraph"></div></div>
+  <div class="readout">
+    <div class="readlabel">the read-out (live, from the graph)</div>
+    <p class="paragraph" id="gg-sentence"></p>
+    <button class="labeltoggle" id="gg-toggle" type="button">show edge labels</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../assets/icons/cv-edges.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<script>
+  var GL = window.CV_GLYPHIC;
+  function markCard(spec) {
+    var d = GL.describe(spec);
+    var el = document.createElement('div'); el.className = 'card';
+    el.innerHTML = '<div class="glyph">' + GL.render(spec, { size: 66 }) + '</div>' +
+      '<div class="sentence">' + d.sentence + '</div>' +
+      '<div class="spec">' + spec.form + (spec.symbol ? ' · ' + spec.symbol : '') + ' · ' + (spec.fill || 'none') + '</div>';
+    return el;
+  }
+  var marks = [
+    { form: 'octagon', symbol: 'house', fill: 'wash', motion: 'none' },
+    { form: 'circle', symbol: 'person', fill: 'none' },
+    { form: 'hex', symbol: 'gear', fill: 'paper', texture: 'grid' },
+    { form: 'square', symbol: 'file', fill: 'paper' },
+    { form: 'diamond', symbol: 'atom', fill: 'wash', motion: 'glow' },
+    { form: 'triangle', symbol: 'play', fill: 'paper' },
+  ];
+  var mEl = document.getElementById('marks');
+  marks.forEach(function (s) { try { mEl.appendChild(markCard(s)); } catch (e) { var d = document.createElement('div'); d.className = 'card err'; d.textContent = e.message; mEl.appendChild(d); } });
+
+  var modeEl = document.getElementById('modes');
+  ['none', 'paper', 'wash'].forEach(function (fl) { modeEl.appendChild(markCard({ form: 'octagon', symbol: 'house', fill: fl, motion: 'none' })); });
+
+  function relCard(elId, edge) {
+    var rel = { source: { form: 'square', symbol: 'house', fill: 'paper' }, target: { form: 'octagon', symbol: 'browser', fill: 'wash' }, edge: edge };
+    var r = GL.composeRelation(rel, { nodeSize: 30, edgeLength: 34 });
+    var el = document.getElementById(elId);
+    el.innerHTML = '<div class="glyph">' + r.html + '</div><div class="sentence">' + r.sentence + '</div>';
+  }
+  relCard('rel-dashed', { line: 'dashed', kind: 'face' });
+  relCard('rel-solid', { line: 'solid', kind: 'face' });
+</script>
+
+<!-- THE GLYPHGRAPH — load DiagramSolver FROM SOURCE (Babel-transform the .jsx, the same way
+     app/index.html does) so this turn renders the LIVE solver, never the stale _ds_bundle.js.
+     One real graph → DiagramSolver(type:'glyphgraph') for the picture; CV_MEANING.readGraph for
+     the paragraph. SAME node objects feed both — the language and its drawing are one graph. -->
+<script>
+(async function () {
+  var stage = document.getElementById('glyphgraph');
+  var sentEl = document.getElementById('gg-sentence');
+  try {
+    // author a few glosses so the words read as words (the live-authoring path).
+    var M = window.CV_MEANING;
+    [['browser','web page'],['file','file'],['folder','project'],['gear','engine'],['person','owner']]
+      .forEach(function (g) { M.author.setGloss(g[0], g[1]); });
+
+    // fetch + transform DiagramSolver.jsx from SOURCE → window.__cvDiagramSolver
+    var res = await fetch('../core/DiagramSolver.jsx');
+    if (!res.ok) throw new Error('failed to fetch DiagramSolver.jsx: ' + res.status);
+    var src = await res.text();
+    var stripped = src.replace(/^export default .*;?$/gm, '').replace(/^export \{[^}]*\};?$/gm, '').replace(/^export /gm, '');
+    var code = Babel.transform(stripped, { presets: ['react'] }).code;
+    (new Function('React', 'window', code))(window.React, window);
+    var DiagramSolver = window.__cvDiagramSolver;
+    if (!DiagramSolver) throw new Error('DiagramSolver global not set after source load');
+
+    // ONE real meaning-graph (a project). The owner is part of the project (solid = is, gold = the
+    // active/live one); the file is part of it too (solid, green = approved); the project HAS A PAGE
+    // face (dashed = could/projected, gold = active). The EDGES carry all of this with NO labels:
+    // line texture = mood, colour = state, routing + arrow = direction. Authored x/y → a deliberate
+    // layout. The SAME node objects feed BOTH the drawing (DiagramSolver) and the read-out (readGraph).
+    var graph = {
+      type: 'glyphgraph',
+      nodes: [
+        { id: 'pr', form: 'circle', symbol: 'folder', fill: 'none', x: 0.50, y: 0.16 },        // the project (a kind/concept — open ring)
+        { id: 'ow', form: 'circle', symbol: 'person', fill: 'paper', x: 0.14, y: 0.60 },       // the owner (an entity, present)
+        { id: 'fl', form: 'square', symbol: 'file', fill: 'paper', x: 0.50, y: 0.84 },          // a file (an instance, present)
+        { id: 'pg', form: 'octagon', symbol: 'browser', fill: 'wash', x: 0.88, y: 0.60 }        // its page (a gateway)
+      ],
+      edges: [
+        { from: 'ow', to: 'pr', line: 'solid', kind: 'part-of', lineColor: 'active', routing: 'curved' },   // owner — is part of → project (gold)
+        { from: 'fl', to: 'pr', line: 'solid', kind: 'part-of', lineColor: 'approved' },                    // file — is part of → project (green/approved)
+        { from: 'pr', to: 'pg', line: 'dashed', kind: 'face', lineColor: 'active', routing: 'curved' }       // project — could be the face of → page (gold, dashed=could)
+      ]
+    };
+
+    // ONE root, reused — render the picture (the language itself — reads from the visual facets, no labels)
+    var root = ReactDOM.createRoot(stage);
+    var draw = function () { root.render(React.createElement(DiagramSolver, { graph: Object.assign({}, graph) })); };
+    draw();
+
+    // compute the paragraph LIVE from the same graph. readGraph walks OUTWARD from one source;
+    // this graph has TWO sources (owner, file) both into the project, so one walk would drop a
+    // node. Cover EVERY source so the paragraph matches the picture: the first source's walk
+    // (coordination + subordination), then each remaining source as its own clause. All from the
+    // SAME graph via the SAME engine — nothing hand-written. (WORDING is tuned live later, G4.5.)
+    var tos = {}; graph.edges.forEach(function (e) { tos[e.to] = 1; });
+    var sources = graph.nodes.filter(function (n) {
+      return graph.edges.some(function (e) { return e.from === n.id; }) && !tos[n.id];
+    }).map(function (n) { return n.id; });
+    if (!sources.length) sources = [graph.nodes[0].id];
+    var byId = {}; graph.nodes.forEach(function (n) { byId[n.id] = n; });
+    var clauses = [];
+    clauses.push(M.readGraph(graph, { focus: sources[0] }).sentence);           // the rich branching walk
+    sources.slice(1).forEach(function (sid) {                                    // each further source = its own clause
+      var out = graph.edges.filter(function (e) { return e.from === sid; });
+      out.forEach(function (e) {
+        clauses.push(M.readGraph({ nodes: [byId[e.from], byId[e.to]], edges: [e] }).sentence);
+      });
+    });
+    sentEl.textContent = clauses.join(' ');
+
+    // labels-mode toggle — labels are OFF by default; this flips graph.labels and re-renders the same root.
+    var toggle = document.getElementById('gg-toggle');
+    toggle.addEventListener('click', function () {
+      graph.labels = !graph.labels;
+      toggle.setAttribute('aria-pressed', graph.labels ? 'true' : 'false');
+      toggle.textContent = graph.labels ? 'hide edge labels' : 'show edge labels';
+      draw();
+    });
+  } catch (e) {
+    stage.innerHTML = '<div class="err">' + (e && e.message ? e.message : e) + '</div>';
+    if (sentEl) sentEl.innerHTML = '<span class="err">read-out failed: ' + (e && e.message ? e.message : e) + '</span>';
+    throw e;
+  }
+})();
+</script>
+</div></body></html>

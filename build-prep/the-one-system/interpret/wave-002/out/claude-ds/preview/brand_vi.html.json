@@ -1,0 +1,39 @@
+{
+  "project": "claude-ds",
+  "path": "preview/brand_vi.html",
+  "model": "opus",
+  "what_it_does": "A preview card (@dsCard group=\"Brand\") for the Vi AI-framework mark: a two-column layout with the Vi vessel (a diamond with line-fill carrying the traced V glyph) rendered on the left via CV_SHAPES.markSVG('vi'), and explanatory copy on the right describing Vi as the internal AI system.",
+  "observations": [
+    "Loads cv-vi-glyph.js and cv-shapes.js; the mark is injected by an IIFE calling CV_SHAPES.markSVG('vi', {size:150}).",
+    "Copy names Vi as powering User Portal, Property Wizard, and Virtual Hubs.",
+    "Explicitly states the mark uses the exact same vessel as the Shape system — both call CV_SHAPES.markSVG('vi').",
+    "Meta line records shape (diamond · line-fill), glyph (traced V / CV_VI_GLYPH), and source (CV_SHAPES.markSVG).",
+    "Highlighted product names use a .a class colored --accent-gold."
+  ],
+  "standouts": [
+    "Asserts the Vi mark is not a separate asset but the same registry-rendered vessel as the shape system ('vi' shape type).",
+    "The V is described as the canonical glyph traced from the logo (CV_VI_GLYPH)."
+  ],
+  "conventions": [
+    "Follows @dsCard preview convention.",
+    "Single-source reuse — the brand mark is generated from the same renderer as the shape vocabulary, not duplicated.",
+    "Tokens via var(--…) for colors and type."
+  ],
+  "concerns": [],
+  "notes": "The brand card establishing Vi's mark as a registry-generated 'vi' vessel (diamond + traced V), single-sourced from CV_SHAPES rather than a standalone logo file.",
+  "questions": [
+    "What exactly does the traced-V glyph (CV_VI_GLYPH) look like and how is it composited inside the diamond vessel?"
+  ],
+  "purpose_vs_actual": "Matches — subtitle (diamond with line-fill + traced V glyph, same vessel as Shape system, from CV_SHAPES) is exactly what the markup and script produce.",
+  "apparent_themes": [
+    "Single source of truth (mark reuses the shape renderer)",
+    "Brand identity tied to the AI framework",
+    "Canonical glyph traced from the logo",
+    "No duplicated assets"
+  ],
+  "intention_signals": "Anchors the Vi AI brand mark inside the same generative shape system so the identity can't drift from the vessel vocabulary — the mark is computed, not a pasted image.",
+  "novelty": "Treating a product/AI brand mark as just another typed shape-type ('vi') in the same renderer, unifying brand and component geometry.",
+  "contribution": "Contributes the Vi AI-framework mark definition (diamond + traced V) and the principle that the brand mark is a registry-rendered vessel, which a fused system would keep as its AI-identity mark.",
+  "summary_for_embedding": "A ConceptV brand preview card defining the Vi AI-framework mark as a line-filled diamond vessel carrying the traced V glyph, rendered from CV_SHAPES.markSVG('vi') — the same vessel as the shape system.",
+  "intention_for_embedding": "To establish Vi's brand mark as a single-sourced, registry-generated vessel rather than a standalone logo asset."
+}

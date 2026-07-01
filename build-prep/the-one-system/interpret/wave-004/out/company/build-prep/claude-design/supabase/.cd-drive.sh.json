@@ -1,0 +1,54 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/.cd-drive.sh",
+  "model": "opus",
+  "what_it_does": "A bash verification script ('drive handle') that exercises the claude-design connector Edge Function's security gates A–H against a local Supabase stack. It mints a JWT for a throwaway design-test user, then makes a sequence of MCP tool/call requests to verify RLS scoping, fail-closed tool allow-listing, an inlet ingest, audit logging, and an audit-before-dispatch invariant (by temporarily revoking INSERT on connector_audit and confirming no post persists).",
+  "observations": [
+    "Header comment marks it as the CD-side DRIVE HANDLE for the lead's LIVE-LOCAL-VERIFY using local throwaway creds, gitignored",
+    "Hardcodes local endpoints: Edge Function at 127.0.0.1:8773/mcp, API at 127.0.0.1:15421",
+    "Embeds anon and service_role JWTs (iss supabase-demo) plus test creds design-test@company.local / TestPass123!",
+    "Mints a design_client JWT via password grant and fails fast if no token returned",
+    "Gate A: list channels, expects RLS to show only the granted 'design' shared channel",
+    "Gate B: send to granted 'design' channel, expects success",
+    "Gate E/F: send to non-granted 'internal-only-fake', expects 403 RLS dispatch-error (proves service_role not silently writing)",
+    "Gate G: call cc_clone (not in client allow-list), expects REFUSED isError (fail-closed)",
+    "Inlet test: claude_design ingest_bundle into design_submissions, expects success",
+    "Audit check: reads connector_audit recent rows via service_role",
+    "Gate H: revokes INSERT on connector_audit via docker exec psql, sends a post, asserts channel_posts count unchanged (write did not persist), then re-grants",
+    "Uses python3 inline for JSON parsing of token and counts"
+  ],
+  "standouts": [
+    "Gate H proves audit-before-dispatch: if audit can't be written, the action must not persist — verified by revoking the grant and checking post count equality",
+    "Embeds both anon AND service_role JWTs directly in the script",
+    "Drives the live DB via docker exec into supabase_db_supabase container to toggle a grant mid-test"
+  ],
+  "conventions": [
+    "Lettered gate labels (A, B, E/F, G, H) for traceable verification steps",
+    "JSON-RPC 2.0 tools/call envelopes for MCP Edge Function",
+    "Throwaway-creds-not-prod, gitignored discipline stated in header",
+    "set -u for unset-variable safety"
+  ],
+  "concerns": [
+    "Contains hardcoded service_role JWT and test password in plaintext (mitigated by being a local demo stack and gitignored per header)",
+    "Gates C and D are not present in the lettered sequence (jumps A,B,E/F,G,H)",
+    "Destructive mid-test side effect (revoke/grant on connector_audit) relies on the re-grant line running even if an earlier step exits"
+  ],
+  "notes": "A live local-verify script that exercises gates A–H of the claude-design connector to prove RLS scoping, fail-closed allow-listing, and the audit-before-dispatch invariant.",
+  "questions": [
+    "Where are gates C and D verified, or were they intentionally omitted?",
+    "What enforces the audit-before-dispatch ordering server-side that gate H is testing?",
+    "What is the full client tool allow-list that cc_clone falls outside of?"
+  ],
+  "purpose_vs_actual": "Matches: the header states it mints a design_client JWT and exercises gates A–H, and the body does exactly that.",
+  "apparent_themes": [
+    "Fail-closed security (allow-list refusal, RLS scoping)",
+    "Audit-before-dispatch as a hard invariant",
+    "Verification by USE against a live stack, not assertion",
+    "Throwaway/test isolation from boundary and prod principals"
+  ],
+  "intention_signals": "Trying to empirically prove the connector's security gates hold against a real Supabase instance — that a design client can only reach what it is granted, refused tools fail closed, and no action persists without a successful audit write.",
+  "novelty": "The gate-H audit-before-dispatch proof: revoking the audit-table INSERT grant and confirming a send produces no persisted post, demonstrating dispatch is gated on audit success.",
+  "contribution": "Contributes an executable end-to-end verification of the claude-design connector's RLS, fail-closed allow-list, inlet ingest, and audit-before-dispatch behaviors against a local Supabase stack.",
+  "summary_for_embedding": "Bash drive-handle script exercising claude-design connector Edge Function gates A–H (RLS, fail-closed allow-list, inlet, audit, audit-before-dispatch) on a local Supabase stack.",
+  "intention_for_embedding": "To empirically verify the design connector's security gates and audit-before-dispatch invariant against a live local instance."
+}

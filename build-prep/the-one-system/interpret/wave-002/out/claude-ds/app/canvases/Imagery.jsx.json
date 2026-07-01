@@ -1,0 +1,53 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Imagery.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React canvas component `Imagery` (window.Imagery) that hosts the imagery subsystem across four lanes/tabs: System library, Projects, 360° Hubs, and AI Studio. It reads/writes all imagery through window.cvImageStore (persistence) and reads generation status from window.cvOpenAI. SystemLane and ProjectsLane handle upload (file picker + drag-drop), tagging, removal, and cross-scope promotion; HubsLane manages equirectangular panoramas with a Pano360 viewer and editable hotspots plus a hub-URL preview; AI Studio is delegated to an external window.AIStudio component. An ImageEditor modal handles per-image editing/save.",
+  "observations": [
+    "Header comment states every action routes through cvImageStore and cvOpenAI, and that imagery can be promoted across scopes.",
+    "TABS array defines the four lanes with id/label/icon/sub; SYSTEM_TAGS and PROJECT_TAGS are hardcoded tag vocabularies.",
+    "Subscribes to both cvImageStore and cvOpenAI changes via useEffect to force re-render / track openAIReady.",
+    "SystemLane offers `seedStarter()` which adds a fixed list of ../assets/illustrations references with tags.",
+    "ProjectsLane uses window.prompt() to create projects (name + optional client) and scopes uploads per project id.",
+    "HubsLane edits hotspots (add via prompt label at a lon/lat, remove), renames panos, and shows a conceptv.io/panotours/<company>/<project>/<pano> URL preview.",
+    "AI Studio is documented as implemented in canvases/AIStudio.jsx and referenced as <AIStudio/> (a file-local dependency on window.AIStudio).",
+    "Shared components: ImageCard (with edit/promote/remove overlay and an AI tag), EmptyStateImagery, plus inline Octagon and Diamond SVGs.",
+    "Pano viewer height fixed at 460; ImageCard shows w×h dims and tags.",
+    "cvOpenAI exposes isConfigured(), getSettings().imageModel, and a subscribe()."
+  ],
+  "standouts": [
+    "Cross-scope promotion model: an AI generation or project image can be promoted into the System library; project images stay scoped.",
+    "Editable 360° hub panoramas with hotspot placement and a live hub-URL preview.",
+    "Single canvas unifying four distinct imagery scopes (system/project/hub/AI) over one store."
+  ],
+  "conventions": [
+    "Routes all persistence through cvImageStore and all generation/status through cvOpenAI rather than local state.",
+    "Subscribe-and-force-rerender pattern on external stores.",
+    "Uses CvIcon name tokens and CSS vars for styling.",
+    "Aliases React hooks with an `_im` suffix for the shared bundle.",
+    "Uses window.prompt() for naming projects/panos/hotspots."
+  ],
+  "concerns": [
+    "Repeated use of blocking window.prompt() for project, pano, and hotspot naming.",
+    "Upload error handling swallows failures with empty/toast-only catches (e.g. seedStarter's catch {}).",
+    "Depends on several externally-defined globals (cvImageStore, cvOpenAI, AIStudio, Pano360, ImageEditor, KitPreviews-like) whose contracts are not visible in this file."
+  ],
+  "notes": "The imagery subsystem canvas: four lanes (system/project/360 hubs/AI) over one cvImageStore, with upload, tagging, cross-scope promotion, pano hotspot editing, and a delegated AI Studio.",
+  "questions": [
+    "What is the shape of cvImageStore (list/add/update/remove/counts/listProjects) and how does it persist?",
+    "What does the external window.AIStudio (canvases/AIStudio.jsx) render and how does it use cvOpenAI?",
+    "How is the Pano360 hotspot lon/lat coordinate space defined?"
+  ],
+  "purpose_vs_actual": "Matches. The header describes a four-lane imagery subsystem routed through cvImageStore/cvOpenAI with cross-scope promotion, and the component implements exactly those lanes and flows.",
+  "apparent_themes": [
+    "One store, multiple scopes",
+    "Promotion of assets across brand/project/system scopes",
+    "Direct-manipulation 360° editing",
+    "External-store-as-source-of-truth"
+  ],
+  "intention_signals": "Trying to centralize all imagery — brand library, per-project assets, 360 panoramas, and AI generations — into one canvas where assets flow between scopes and panos can be authored with hotspots, all backed by a single persistence store.",
+  "novelty": "A unified imagery canvas combining scoped libraries, cross-scope promotion, and an editable equirectangular pano/hotspot authoring lane.",
+  "contribution": "Contributes the Imagery canvas: system/project/hub/AI lanes over cvImageStore, upload + tagging + cross-scope promotion, 360 pano hotspot editing with URL preview, and a delegated AI Studio mount.",
+  "summary_for_embedding": "A React canvas (window.Imagery) with four lanes (system library, projects, 360 hubs, AI studio) over cvImageStore/cvOpenAI, supporting upload, tagging, cross-scope promotion, and pano hotspot editing.",
+  "intention_for_embedding": "To centralize brand, project, 360, and AI-generated imagery in one store-backed canvas where assets promote across scopes and panoramas are authored with hotspots."
+}

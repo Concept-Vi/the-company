@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/ground-synth.report.json",
+  "model": "opus",
+  "what_it_does": "Records the outcome and by-use verification of the ground-synth build lane (the spec-compiler's GROUND + SYNTH half), which added two new roles, roles/ground_criterion.py and roles/triad_synth.py. Reports files written, new role ids, verification narrative, status, and design notes.",
+  "observations": [
+    "files_written: roles/ground_criterion.py, roles/triad_synth.py; new_role_ids: ['ground_criterion', 'triad_synth'].",
+    "ground_criterion: op=generate, mode_scope={'spec'}, input_addresses=('utterance',); fires as a run_items MAP and emits a closed Literal grounded in {'reuse','net-new'} plus a cite (default '').",
+    "triad_synth: op=generate, NO mode_scope (in no cast), input_addresses=('notes',); fired directly via run_reduce(mode='role') and returns {completion_criteria, implementation_guide, research_synthesis}.",
+    "By-use: ground_criterion over two mock criteria returned grounded='reuse' with a real file:symbol cite for a built target and grounded='net-new' with empty cite for an unbuilt one; report states no-fiction held both directions.",
+    "Honest-status note: triad_synth at 2200 tokens INVENTED two extra entries not present in its two inputs; report frames this as within the advisory-draft frame and not a role defect, locating the no-fiction guarantee in ground_criterion.",
+    "Floor: cognition_governance_acceptance 42/42 PASS; a grep confirms only floor-declaration comments, no resolve/dispatch/claude -p calls.",
+    "roles_acceptance.py reds are all the same kind (drift-home roles/AGENTS.md not yet updated), with zero floor/schema/cast/binding reds; the drift-home update is deferred to the next beat.",
+    "Notes the two extra ids in the drift line (decompose_seed, expand_criterion) belong to the MAP lane, evidenced by git status showing them untracked.",
+    "Self-classifies status as built-verified; emphasizes max_tokens=2200 to avoid truncation->fail-loud JSON parse failure."
+  ],
+  "standouts": [
+    "ground_criterion's closed reuse/net-new verdict with no-fiction holding both ways (refusing an ambiguous cite, returning net-new).",
+    "The honest distinction: triad_synth over-generated beyond its inputs, and the report keeps the no-fiction guarantee in the grounding role, not the synthesis role.",
+    "The design catch that triad_synth carries no mode_scope so a cast cannot auto-fire its ('notes',) reduce axis as a swarm role."
+  ],
+  "conventions": [
+    "Follows the seam-lane report schema; states it mirrors verify_lens.py / register_element.py (for the MAP role) and reduce_synth.py / score_options.py (for the reduce role).",
+    "Closed Literal output with default-'' cite, mirroring verify_lens's closed verdict token.",
+    "File-disjoint respected (only the two new roles), nothing committed."
+  ],
+  "concerns": [],
+  "notes": "A build-lane status record: ground-synth added the GROUND (ground_criterion) and SYNTH (triad_synth) roles of the spec-compiler, with the no-fiction guarantee verified in the grounding role and synthesis flagged as a rough advisory draft.",
+  "questions": [
+    "Will triad_synth's tendency to over-generate beyond its inputs be constrained downstream, or is it accepted as inherent to an advisory draft?"
+  ],
+  "purpose_vs_actual": "Matches — a build report recording the two roles built and how each was verified by use.",
+  "apparent_themes": [
+    "No-fiction grounding as a closed verdict",
+    "Registry-is-truth (roles go live on discover, no driver change)",
+    "Honest-status / advisory-draft framing of generative output"
+  ],
+  "intention_signals": "Aims to build the spec-compiler's grounding and synthesis halves so criteria are tagged reuse-vs-net-new with real cites, and a draft triad of build docs is reduced from those criteria, while being honest about the small model's over-generation.",
+  "novelty": "The split placement of the no-fiction guarantee (in the grounding MAP role) versus the deliberately generative synthesis reduce role, and the mode_scope asymmetry between them.",
+  "contribution": "Contributes the two spec-compiler roles' definitions, the reuse/net-new grounding verdict shape, and the documented honest-status of synthesis over-generation, which a fused system would keep as the provenance of the GROUND/SYNTH behavior.",
+  "summary_for_embedding": "A seam-lane JSON report documenting the ground-synth lane's two new roles (ground_criterion grounding verdicts and triad_synth build-doc synthesis), verified by use on the resident 4B.",
+  "intention_for_embedding": "To build the spec-compiler's grounding and synthesis roles with a closed no-fiction reuse/net-new verdict and an advisory triad-of-docs draft."
+}

@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/Foundations.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React component (AcFoundations) that presents the design system's visual foundations (palette, type, roundness, depth, spacing) as a human-facing, no-jargon editor: a facet rail, a gallery of visual specimens, a live product preview, and a closable inspector sheet that lets a non-technical person change a CSS custom property and save it to the brand.",
+  "observations": [
+    "Reads React hooks and an AcKit component library off the global window (no imports/bundler); aliases hooks with _fd suffix.",
+    "Maintains live edits in a global window.__acFoundationEdits map and applies them by setting CSS custom properties on document.documentElement directly.",
+    "FACETS array is the curated, human-readable language mapping CSS token names (e.g. --accent-gold) to friendly names ('Gold') and plain-English descriptions, grouped under Surfaces/Brand/Text/Typefaces/Corners/Elevation/Rhythm.",
+    "Inspector subscribes to window.CV_SCAN usage data (how many places a token is used) and reads token values from window.ATLAS.manifest.tokens.",
+    "save() calls window.CV_HOST.commit with a structured css.token payload and shows a window.dsaToast notification.",
+    "LivePreview renders a fictional real-estate 'User Portal' surface (14 Eclipse Boulevard listing, Vi insight blurb, stats) that reflows as tokens are edited.",
+    "Advanced 'technical details' toggle reveals the raw token name, value, defined-in file, and the files where it's used."
+  ],
+  "standouts": [
+    "Two-language design: machine token names hidden behind human names, with the technical detail available only on demand via the advanced toggle.",
+    "Edits applied live to the actual document root so the in-page LivePreview updates instantly from the same tokens.",
+    "Inspector integrates a usage counter ('Used in N places across your product') sourced from a live scanner subscription."
+  ],
+  "conventions": [
+    "Follows the project's window-global registry pattern (AcKit, CV_SCAN, ATLAS, CV_HOST, CvIcon) rather than ES imports.",
+    "Honors the 'render to Tim's recognition / surface outcomes not code' style — friendly names, descriptions, hidden internals.",
+    "Token names use the --kebab CSS custom property convention; KIND_TO_FACET maps token kinds to facet ids."
+  ],
+  "concerns": [
+    "Mutates global window state and document.documentElement style directly, which is shared mutable state across the page.",
+    "Hard dependencies on several globals (ATLAS, CV_SCAN, CV_HOST, CvIcon, AcKit) that are assumed present; CV_HOST.commit is wrapped in try/catch but ATLAS/CvIcon are not guarded."
+  ],
+  "notes": "A no-jargon, live-editing 'brand foundations' editor: pick a facet, see specimens, tweak a token in plain language, watch a sample product reflow, and commit the change.",
+  "questions": [
+    "Where are AcKit, CV_SCAN, ATLAS, CV_HOST, and CvIcon defined and loaded relative to this file?",
+    "What does CV_HOST.commit actually persist the token change into (a file, a registry, a server)?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment promises a no-token-name, human-facing foundations explorer composed from AcKit with rail/gallery/preview/inspector zones, and the code implements exactly that.",
+  "apparent_themes": [
+    "Single-source-of-truth design tokens edited from one place",
+    "Translating machine internals into human-recognizable language",
+    "Live, see-the-effect editing tied to a real product surface"
+  ],
+  "intention_signals": "Trying to let a non-technical brand owner change the design system's foundational values by sight and plain language, with the change propagating everywhere instantly and optionally saved back to the brand.",
+  "novelty": "The deliberate dual-layer presentation (human names front, token machinery hidden behind an advanced toggle) plus a usage-count integration that tells the editor the blast radius of a change.",
+  "contribution": "Contributes a human-facing token-foundations editing surface that maps CSS custom properties to plain language, applies edits live to the document, shows usage breadth, and commits changes via CV_HOST — a complete non-technical brand-editing pane.",
+  "summary_for_embedding": "A React component rendering a no-jargon design-tokens editor (palette/type/roundness/depth/spacing) with a facet rail, visual specimen gallery, live product preview, and an inspector that edits CSS custom properties live and commits them to the brand.",
+  "intention_for_embedding": "To let a non-technical person change the brand's foundational design values by sight and plain language, seeing the effect propagate live across a sample product and saving it back to the design system."
+}

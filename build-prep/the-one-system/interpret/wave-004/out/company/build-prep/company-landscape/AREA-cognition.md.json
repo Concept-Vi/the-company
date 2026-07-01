@@ -1,0 +1,53 @@
+{
+  "project": "company",
+  "path": "build-prep/company-landscape/AREA-cognition.md",
+  "model": "opus",
+  "what_it_does": "An exhaustive read-only dragnet landscape (2026-06-21) of the cognition area's five file-discovered registries: roles/ (30 source files), minds/ (4), generation_policies/ (6), lifters/ (3), ai_tics/ (7). For each it gives the constitution/schema, a full per-row inventory with op/mode_scope/jury/description, and a gaps/surprises list, then closes with cross-cutting architecture patterns, a seam inventory (declared-but-unbuilt), capability tiers, and a file-count-vs-brief reconciliation.",
+  "observations": [
+    "Inventories all 30 roles with op/mode_scope/jury/description, grouped by cast (core/legacy, listening, walkthrough, explain-wire, jury, reduce, registry-generation, spec-compiler, verification, option-panel, transcript-miner, drift-radar, atlas/agent-authored)",
+    "Provides a mode->cast mapping (listening, walkthrough, registration, verification, mining, spec, panel, drift, none/explicit)",
+    "Documents the newest mechanism: explain_role's prompt_slot + coordinate={subtype} that REPLACES prompt_template wholesale at run-time (4 subtypes; 2026-06-21)",
+    "Flags concrete role gaps: check chainer (G3/G4) not built, reduce_synth capability-tier mismatch, judge dual-binding (G8), mine_exchange pattern_tag embed-cluster not built, triad_synth max_tokens caller-contract gotcha, confirm_registration sys.path hardcode",
+    "minds/ has NO AGENTS.md constitution (clear gap); 4 source files (extractor/judge role-minds, pair composition, bind_compose_test binding); brief said 13",
+    "generation_policies/ schema centers on rep_penalty_ladder (the cure for the degenerate-repetition pathology); four policy.* dot-named explain policies authored 2026-06-21; ladder-into-run_role wiring may NOT be built",
+    "lifters/ has 3 deterministic extractors (frontmatter/links/blocks); create_lifter authoring face NOT built; frontmatter fail-softs to a line-parser if PyYAML absent",
+    "ai_tics/ has 7 tics all seeded from Tim's NAMED frustrations (framework_imposition, versioning, false_finality, silent_fallback, agent_arch, closure_form, mvp); fingerprint mark-pass (M4) NOT wired; markers are exact-string",
+    "Cross-cutting: file-discovered registry, no-model-inside-a-rule (L2), floor invariant (no resolve/approve/dispatch tokens), no-confidence-floats (G16) consistently applied",
+    "File-count reconciliation: brief counts (97/13/16/11/23) included __pycache__ artifacts; real source counts are 30/4/6/3/7; two Python versions (cpython-312 and -314) exercised the code"
+  ],
+  "standouts": [
+    "explain_role's prompt_slot + coordinate mechanism: the prompt is replaced wholesale by subtype at run-time (no placeholders) — the newest and unique pattern in the layer",
+    "ai_tics as Tim's CLAUDE.md frustrations materialized as subtract-direction marks (denoising = surfacing the inversion)",
+    "Rigorous no-confidence-float law shown migrating register_element from confidence:float (empirically flat at 0.85) to a discrete grounding tag"
+  ],
+  "conventions": [
+    "Follows the area-landscape dragnet format (constitution/inventory/gaps per module) shared with sibling AREA-*.md files",
+    "Follows registry-is-truth (drop a file = add an entry; id == file stem) across all five registries",
+    "Follows no-model-inside-a-rule (L2), fail-loud, no-confidence-floats (G16), and the floor invariant (no resolve/approve/dispatch)",
+    "Reports honest seam inventory (declared-but-unbuilt) and file-count-vs-brief reconciliation"
+  ],
+  "concerns": [
+    "Single 2026-06-21 snapshot; the explain-wire and policy batch were authored the same day and their wiring status is explicitly open",
+    "Many seams are declared-but-unbuilt (check chainer, fingerprint pass, create_lifter/create_ai_tic faces, rep_penalty ladder wiring) — the catalogues exist but the integrations may not",
+    "minds/ lacks a constitution and its source-count contradicts the brief, leaving the module under-documented"
+  ],
+  "notes": "The cognition terrain map: five file-discovered registries (roles/minds/generation_policies/lifters/ai_tics) with full inventories, the new explain_role prompt_slot mechanism, the no-confidence/no-model-in-rule/floor invariants, and a seam list of what's declared but not yet wired.",
+  "questions": [
+    "Has run_role been wired to actually read the rep_penalty_ladder, and is the M4 fingerprint mark-pass built?",
+    "Is the check chaining executor (G3/G4) and the mine_exchange pattern_tag embed-cluster built yet?",
+    "Will minds/ get an AGENTS.md constitution, and what is its intended real-vs-fixture set?"
+  ],
+  "purpose_vs_actual": "Match: it sets out to exhaustively inventory the five cognition registries with schemas, full role/policy/lifter/tic sets, and gaps, and it delivers that plus cross-cutting patterns, a seam list, and capability tiers.",
+  "apparent_themes": [
+    "Registry-is-truth / file-discovered self-registration",
+    "No model inside a rule; render/judge separation",
+    "No confidence floats; discrete tags and ordinal ranks",
+    "Fail-loud and the floor invariant (no resolve/approve/dispatch)",
+    "Honest declared-but-unbuilt seam accounting"
+  ],
+  "intention_signals": "It is trying to give builders a complete, accurate inventory of the cognition layer's declarative registries — every role/policy/lifter/tic with its schema and status — and to separate what is catalogued from what is actually wired, so the next build targets real gaps rather than re-declaring existing rows.",
+  "novelty": "The coordinate-resolved prompt_slot (whole-prompt replacement by decision subtype) and the ai-tic catalogue derived directly from Tim's named frustrations as subtract-direction fingerprints are distinctive mechanisms surfaced here.",
+  "contribution": "Contributes a complete schema-and-inventory reference for the five cognition registries (roles, minds, generation_policies, lifters, ai_tics), the mode->cast mapping, the capability-tier scheme, and a precise seam list of declared-but-unbuilt cognition wiring.",
+  "summary_for_embedding": "An exhaustive 2026-06-21 dragnet of the Company cognition area's five file-discovered registries (30 roles, 4 minds, 6 generation_policies, 3 lifters, 7 ai_tics), with full per-row inventories, the new explain_role prompt_slot/coordinate mechanism, the no-confidence/no-model-in-rule/floor invariants, a mode->cast map, capability tiers, and a declared-but-unbuilt seam list.",
+  "intention_for_embedding": "To give builders an accurate inventory of the cognition layer's declarative registries and a clear separation of what is catalogued versus what is actually wired, so new work targets real gaps."
+}

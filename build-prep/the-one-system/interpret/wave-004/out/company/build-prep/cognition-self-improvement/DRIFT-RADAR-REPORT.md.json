@@ -1,0 +1,44 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/DRIFT-RADAR-REPORT.md",
+  "model": "opus",
+  "what_it_does": "The canonical, update-in-place human-judgment report layer over the drift_radar.py findings. Records the 2026-06-10 first full-repo sweep: 1,626 near-pairs over 586 digests, 21 clusters judged, 8 confirmed unification candidates (each described with cosine and a lead verdict), the single channel-B doc-vs-code candidate (ruled a measurement artifact), and a logged limitations / next-pass-upgrades section.",
+  "observations": [
+    "States the pipeline numerically: all-pairs cosine (1,626 pairs >=0.82) -> union-find clusters -> judge_drift on the 21 largest -> 8 confirmed, 13 distinct.",
+    "Lists 8 confirmed unification candidates with cosines, e.g. the three build-methodology docs (.86), the live-resolution-surface pair (.94, the repo's nearest pair), MERGE-COORDINATION vs WORK-SPLIT (.86).",
+    "Explicitly marks candidate #6 (speakable test vs module) as borderline false-positive judged by the lead — a test mirroring its module is the test doing its job — kept reviewable as a known radar limitation.",
+    "Channel B: ai_tics/AGENTS.md at 0.436 vs centroid INVESTIGATED and ruled a measurement artifact, not drift, because a deterministic rows-vs-files check (26 green checks) already guards it.",
+    "Articulates a CHANNEL-B CALIBRATION rule: where a deterministic drift-home check exists it outranks the cosine signal; channel B is for modules without one.",
+    "Limitations logged: intent-blindness (judge sees digests not purpose-relations), digest ceiling (6k chars not full files), and the first-run empty-sweep vec:// key-wrap bug caught by zero-is-suspicious."
+  ],
+  "standouts": [
+    "The lead overriding the radar on a borderline false-positive and keeping it visible rather than deleting it — judgment layered transparently over the machine signal.",
+    "The channel-B calibration principle: a deterministic drift-home check outranks the cosine signal, scoping where the fuzzy signal is even useful.",
+    "Self-referential fix direction: feed the judge the pair's RELATION as declared context — 'the GC2 context-package law applied to the radar itself.'"
+  ],
+  "conventions": [
+    "Self-describes as canonical, update-in-place, with the data source path stated up front (.build/drift/findings.json).",
+    "Pairs every confirmed candidate with a cosine and a one-line lead verdict (real / by-design / borderline).",
+    "Follows the repo's render-not-judge discipline: candidates are surfaced, the operator/lead decides, never auto-fixed."
+  ],
+  "concerns": [],
+  "notes": "The human/lead judgment companion to drift_radar.py — reads the machine findings and rules on each confirmed duplication candidate, calibrates channel B, and logs the radar's own known blind spots.",
+  "questions": [
+    "Has any of the 8 confirmed candidates been consolidated since this pass, or do all marks remain open?",
+    "The header says 586 digests but candidate listing implies 587 elsewhere in the engine — which is the true space size for this pass?",
+    "Were the proposed next-pass upgrades (relation context to the judge, space_size sanity assert) implemented?"
+  ],
+  "purpose_vs_actual": "Match — it presents itself as the canonical judgment-layer report over the findings and delivers exactly that: numeric summary, per-candidate verdicts, channel-B ruling, and logged limitations.",
+  "apparent_themes": [
+    "Human judgment layered over machine signal (render-not-judge)",
+    "Calibrating a fuzzy detector against deterministic guards",
+    "Honest logging of a tool's own blind spots",
+    "One-source / consolidation candidacy",
+    "Zero-is-suspicious verification discipline"
+  ],
+  "intention_signals": "Trying to be the durable, operator-facing verdict ledger for repo drift — turning the radar's raw clusters into reviewed unification candidates, ruling out a false-positive doc-drift signal, and recording how to make the next sweep smarter.",
+  "novelty": "The explicit calibration that a deterministic drift-home check outranks cosine, and the candid record of a false-positive the lead refused to let the tool assert.",
+  "contribution": "Contributes the reviewed verdict layer for the 2026-06-10 drift sweep: a concrete list of confirmed duplication/consolidation candidates with cosines and lead rulings, plus the channel-B calibration rule and the radar's logged limitations.",
+  "summary_for_embedding": "The canonical judgment-layer report over the drift-radar findings for the 2026-06-10 full-repo sweep, listing 8 confirmed duplication candidates with cosines and lead verdicts, a ruled-out doc-drift candidate, and logged radar limitations.",
+  "intention_for_embedding": "To convert the drift radar's raw near-clusters into reviewed, operator-decidable unification candidates and to calibrate and document the detector's reliability and blind spots."
+}

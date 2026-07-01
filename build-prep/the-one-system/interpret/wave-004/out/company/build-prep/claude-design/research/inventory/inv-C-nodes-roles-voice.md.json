@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/inventory/inv-C-nodes-roles-voice.md",
+  "model": "opus",
+  "what_it_does": "A fast coverage-scan inventory (Layer 1, INV-C) of four regions of the Company codebase — nodes/, roles/, mcp_face/, voice/ — listing every file with a one-line purpose, a PRIORITY flag for deep-read, and a note. Includes folder trees, an inventory table, summary counts, a top-10 deep-read list, architecture insights, and legacy/experimental notes.",
+  "observations": [
+    "Frontmatter declares type: research, source: fast-inventory, method: coverage (not deep), scan_date 2026-06-08.",
+    "Catalogs 19 node-types (7 marked live/core, 12 skeletons/experimental like constant/uppercase/titlecase/wordcount/similarity), 9 cognition roles (judge as role #0 config-only, 6 listening-cast, 1 jury), and the voice stack.",
+    "Voice stack detailed: 3 GPU STT 'ears' (parakeet :2031 ~3.05GB, canary :2032 ~10.06GB, granite :2033 ~4.66GB) and 5 trial TTS 'engines' (chatterbox :4124, orpheus :4125, cosyvoice :4126, xtts :4127, qwen3tts :4128 ~6GB 2700 tok/s), plus Kokoro CPU default and 8 systemd units.",
+    "Names self-registering patterns: nodes, roles, and voice engines/ears discover themselves via file presence (C2, C2.1-C2.5, G2) — no central registry.",
+    "Records a 2026-06-06 convergence: voice lifecycle unified VRAM authority with ops/cli/gpu.py (the 'keeper'), closing a dual-authority bug.",
+    "Maps modules to contract IDs (C2, C7, S6, G2-G4) and context references (context-05, context-13)."
+  ],
+  "standouts": [
+    "The self-registration-by-file-presence pattern across three independent subsystems (nodes/roles/voice).",
+    "VRAM-conflict reality: trial TTS engines and GPU ears compete with brain+embedding models, forcing an on-demand (not all-resident) policy with whisper.cpp CPU as zero-install boot default.",
+    "The explicit dual-authority VRAM bug + its convergence fix is recorded as a dated event."
+  ],
+  "conventions": [
+    "Follows the layered research method (Layer 1 coverage census) described in the same pack's RESEARCH-METHOD.md.",
+    "Uses a PRIORITY column (YES/Maybe/No) to flag deep-read candidates.",
+    "Ties every module to a contract/context ID rather than describing it standalone."
+  ],
+  "concerns": [
+    "Self-declared as coverage not comprehension — purposes are one-line inferences ('appears to be'), not verified by reading the code.",
+    "Some VRAM figures and throughput numbers (e.g. 2700 tok/s, 10.06GB) are stated without provenance markers in this file."
+  ],
+  "notes": "A one-line-per-file map of the node/role/MCP/voice quarter of the codebase with deep-read priorities — a where-things-are index, not a how-they-work explanation.",
+  "questions": [
+    "Are the VRAM/throughput numbers measured or declared, and where do they come from?",
+    "Which of the 'Maybe'/'No' skeleton nodes are intentional authoring templates vs dead code?",
+    "Is verify_jury.py live or experimental — the file flags 'jury pattern in flux per C2.4'?"
+  ],
+  "purpose_vs_actual": "Match — states it is a fast coverage scan of four regions and delivers exactly that: a classified file census with priorities, no deep comprehension claimed.",
+  "apparent_themes": [
+    "Self-description / self-registering systems",
+    "Swappable provider registries (STT/TTS/roles all catalog-based)",
+    "Resource (VRAM) as a first-class architectural constraint",
+    "Coverage-before-comprehension research discipline"
+  ],
+  "intention_signals": "To give a deep-read agent a complete, prioritized map of where the node-types, cognition roles, agent face, and voice subsystems live so Layer 2 can read the right places without guessing.",
+  "novelty": "The voice-stack census with per-engine ports and VRAM budgets, plus the recorded dual-authority convergence event, is unusually concrete for an inventory doc.",
+  "contribution": "Contributes a prioritized file-level map of the nodes/roles/mcp_face/voice regions, the per-engine voice port+VRAM catalog, and the self-registration + swappable-registry pattern observations that a fused system would keep as orientation for those subsystems.",
+  "summary_for_embedding": "A 2026-06-08 fast coverage inventory of the Company's nodes/, roles/, mcp_face/, and voice/ regions, listing 68 files with one-line purposes, deep-read priorities, VRAM/port catalogs, and self-registration architecture notes.",
+  "intention_for_embedding": "To produce a complete, prioritized location map of the node-type, cognition-role, MCP-face, and voice subsystems so a deeper read can cover them without missing anything."
+}

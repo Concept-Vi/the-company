@@ -1,0 +1,44 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/PlatformSidebar.jsx",
+  "model": "opus",
+  "what_it_does": "Defines PlatformSidebar, the left navigation rail for the platform UI kit. It renders the ConceptV wordmark, a 'Menu' header, a primary nav list of six items (NAV_ITEMS), and three collapsible Sections — Tools (four items plus a favourites slot), Integrations (collapsed, with View All and activation slots), and Support (collapsed, FAQs + Tutorials). Items call an onSelect(id) callback and highlight via an `active` prop. A local Section component provides the open/close collapse behaviour. The component is attached to window.",
+  "observations": [
+    "NAV_ITEMS and TOOL_ITEMS are arrays of {id, glyph, label}; glyphs are emoji",
+    "Section is a small reusable collapsible with useState(open) and a chevron toggle (⌄ / ›)",
+    "Integrations and Support default to closed; Tools defaults open",
+    "Logo loaded via relative path ../../assets/logos/conceptv-wordmark-black.png",
+    "Several slots show placeholder copy ('Favourited options appear here', 'Activated options appear here')",
+    "Integrations/Support buttons have no onClick wiring (inert), unlike NAV_ITEMS/TOOL_ITEMS",
+    "Uses inline style objects for layout (background:none, gap:4, marginTop:8, etc.) alongside cv- CSS classes"
+  ],
+  "standouts": [
+    "Two-tier nav model: a flat primary nav plus collapsible secondary Sections, with empty slots reserved for future favourited/activated items"
+  ],
+  "conventions": [
+    "Uses cv- prefixed class names and var(--bg-canvas) token reference, consistent with the design-system token discipline",
+    "Attaches component to window for global-script consumption",
+    "Mixes inline styles with token-driven classes — inline literals (gap:4, padding '0 14px') are off-token hardcodes"
+  ],
+  "concerns": [
+    "Inline style literals (gap, padding, marginTop) bypass the token system the project mandates (no raw px in consumers)",
+    "Integrations 'View All', FAQs, and Tutorials buttons have no onClick, so they are non-functional placeholders",
+    "Logo src is a relative file path that depends on mount location"
+  ],
+  "notes": "The platform left-rail: data-driven primary nav + collapsible Tools/Integrations/Support sections with reserved empty slots, calls onSelect to drive screen routing.",
+  "questions": [
+    "Should the inline px/gap literals be tokens per the project's no-raw-px rule, or are these intentional prototype shortcuts?",
+    "Are the Integrations/Support buttons meant to be wired to onSelect like the others?"
+  ],
+  "purpose_vs_actual": "Matches — comment says 'left nav rail' and it is the navigation rail driving screen selection.",
+  "apparent_themes": [
+    "Data-driven navigation (config arrays render the items)",
+    "Collapsible disclosure sections",
+    "Reserved slots for future personalization (favourites, activated integrations)"
+  ],
+  "intention_signals": "Aims to present a full product navigation rail mirroring the screen catalogue, with collapsible grouping and placeholders for personalization features not yet built.",
+  "novelty": "The reserved-slot placeholders ('Favourited options appear here') that pre-shape where future user-customized nav entries will land.",
+  "contribution": "Contributes a two-tier navigation taxonomy (primary nav + Tools/Integrations/Support groups) and the collapsible Section primitive, plus the glyph+label nav item config.",
+  "summary_for_embedding": "React PlatformSidebar nav rail rendering a six-item primary nav plus collapsible Tools/Integrations/Support sections, driving screen selection via onSelect.",
+  "intention_for_embedding": "To provide the platform's left navigation rail mirroring the product screen catalogue, with collapsible groups and reserved slots for future personalization."
+}

@@ -1,0 +1,38 @@
+{
+  "project": "claude-ds",
+  "path": "preview/colors_gold.html",
+  "model": "opus",
+  "what_it_does": "A standalone preview card (a @dsCard, group 'Brand') that displays the gold accent colour scale as six swatch chips with names and hex values, plus a lead paragraph explaining gold's role as the system's single saturated 'active/decision' accent.",
+  "observations": [
+    "HTML comment header `@dsCard group=\"Brand\" name=\"Gold scale\" subtitle=... viewport=\"700x200\"` — metadata for a gallery harness.",
+    "Links a shared `_card.css` stylesheet and adds card-local inline CSS using design tokens (--font-body, --fg-secondary, --r-md, --border-faint, etc.).",
+    "Six tiers shown with literal hardcoded hex backgrounds: gold-50 #FBF6DC, gold-soft #F4ECC4, gold-dashed #D8C040, gold #D8B820 (starred ★), gold-hover #C0A218, gold-press #9C8413.",
+    "Lead text states gold is reserved for Vi, primary actions, active borders, selected states, link emphasis — and is never a default background.",
+    "References gold as a ramp (gold→bronze→tan, --ramp-1..4) used to position sequence & depth; the six tiers are its interaction states."
+  ],
+  "standouts": [
+    "Names the gold accent as 'the one saturated voice, reserved for Vi' — a strong design-doctrine statement embedded in a swatch card.",
+    "The starred (★) gold-#D8B820 marks the base/default tier among the six."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery convention (comment metadata + _card.css + viewport).",
+    "Uses design tokens for typography/borders but hardcodes the actual swatch hex values inline (expected for a colour-definition card displaying the literal values).",
+    "Card-local style block scoped under .card."
+  ],
+  "concerns": [],
+  "notes": "A gallery swatch card defining and explaining the gold/bronze/tan accent ramp and its six interaction tiers.",
+  "questions": [
+    "Where are these gold hex values canonically defined as tokens (the card hardcodes them) and do --ramp-1..4 map to this scale?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard metadata says 'Gold scale / Primary brand accent — 6 tiers' and the body shows exactly six gold tiers with usage doctrine.",
+  "apparent_themes": [
+    "Single saturated accent reserved for active/decision states",
+    "Tokenised colour scale with interaction tiers (base/hover/press)",
+    "Self-describing design-system documentation"
+  ],
+  "intention_signals": "Aims to document and visually anchor the brand's one accent colour, teaching both its tiers and its strict usage rule (decision accent only, never a default background).",
+  "novelty": "The explicit doctrine that gold is 'reserved for Vi' and is a sequence/depth ramp, not just a palette entry.",
+  "contribution": "Contributes a visual + doctrinal definition of the gold accent ramp (six tiers, hex values, usage rule) that a fused system would keep as the canonical accent-colour reference card.",
+  "summary_for_embedding": "A Brand-group design-system preview card showing the six-tier gold accent scale with hex values and a usage doctrine that gold is the single saturated decision accent reserved for Vi and active states.",
+  "intention_for_embedding": "To define and explain the brand's one saturated accent colour, its interaction tiers, and its strict usage rule within the design system."
+}

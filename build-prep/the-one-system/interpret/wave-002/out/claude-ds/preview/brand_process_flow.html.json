@@ -1,0 +1,41 @@
+{
+  "project": "claude-ds",
+  "path": "preview/brand_process_flow.html",
+  "model": "opus",
+  "what_it_does": "A standalone preview card (@dsCard group=\"Brand\") that depicts the staged-process flow pattern: a vertical ladder of white stage cards joined by solid-gold connectors with gap-pills (durations/actions) and a ⊕ join, paired with a right-hand gallery of escalating-fidelity render frames (grey massing → defined → detailed → hero) fed by image-slot custom elements.",
+  "observations": [
+    "Links _card.css and loads image-slot.js for droppable render slots.",
+    "Left ladder uses .stage cards (2.5px gold border, r-20) and .conn connectors built from dot + seg lines + pill + ▼ arrow, plus a circular ⊕ join.",
+    "Gap-pills carry either an action (\"Revision\") or a muted duration (\"1 – 2 Weeks\") styled with --accent-bronze-2.",
+    "Right gallery has four frames at increasing heights (64/76/88/104px) with captions GREY MASSING / DEFINED / DETAILED / HERO RENDER.",
+    "image-slot elements point at ../assets/illustrations/staged/*.png with placeholder=\"Drop render\".",
+    "Stages are hardcoded: Mobilisation (head), Stage 1/2/3, Marketing Package.",
+    "Meta footer summarizes the pattern's tokens (card / connector / gap / join) and lists related cards."
+  ],
+  "standouts": [
+    "Render fidelity is encoded visually by escalating frame height plus caption, mirroring the project's process stages.",
+    "The lead text explicitly states vessels reuse the container + connector system and titles use --accent-gold-deep."
+  ],
+  "conventions": [
+    "Follows the @dsCard preview convention (HTML comment metadata: group/name/subtitle/viewport).",
+    "Uses design tokens via var(--…) throughout (no raw hex except a shadow/text-shadow rgba).",
+    "Self-describing lead + meta footer naming related cards, matching the corpus self-description discipline."
+  ],
+  "concerns": [],
+  "notes": "A brand preview card demoing the staged-deliverable ladder pattern with real escalating-fidelity render slots — the visual spec for how project stages are drawn.",
+  "questions": [
+    "Do the referenced staged render PNGs actually exist at ../assets/illustrations/staged/, or are these still empty drop-slots?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard subtitle (vertical stage ladder, gap-pills, ⊕ join, escalating-fidelity renders) is exactly what the markup builds.",
+  "apparent_themes": [
+    "Token-driven visual language (gold connectors, bronze captions)",
+    "Reuse of one container/connector system across patterns",
+    "Process-as-escalating-fidelity (massing → hero)",
+    "Self-describing design cards"
+  ],
+  "intention_signals": "Codifies the staged-process / deliverable-flow as a reusable brand pattern so any process diagram in the product is drawn the same way, with the render-fidelity ramp as a built-in concept.",
+  "novelty": "Encoding deliverable fidelity through frame height and tying gap-pills to either duration or action on a shared connector vessel.",
+  "contribution": "Contributes the canonical visual treatment of a staged/iterative process flow (ladder + gold connectors + gap-pills + ⊕ join + escalating render gallery) that a fused system would keep as its process-diagram pattern.",
+  "summary_for_embedding": "A ConceptV design-system brand preview card rendering the staged-process flow pattern as a vertical stage ladder with gold connectors, gap-pills, a ⊕ join, and an escalating-fidelity render gallery via image-slot elements.",
+  "intention_for_embedding": "To codify the reusable visual pattern for staged/iterative deliverable processes in the ConceptV brand language."
+}

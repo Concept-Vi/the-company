@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-A3-settings-elevated.json",
+  "model": "opus",
+  "what_it_does": "A grounding/confirmation result for the A3-settings-elevated.html mockup (the 'Living Instrument' settings control-room). Holds 31 candidate dossiers reduced to 17 clusters, each with a ui:// address, capabilities, grounding flag, the what/what-you-can-do/how-to-change triple, a maps_to_feature id, and a 3-draw jury verdict sorting them into confirmed (11) and flagged (6).",
+  "observations": [
+    "ground block frames Settings as a dark glowing workspace for tuning the AI's brain/voice/behavior, with a left rail (Brain, Modes, Voice, Roles, Composition) and a GPU resource meter.",
+    "Counts: n_candidates 31, n_dossiers 31, n_clusters 17 — and an unusually high confirmed rate (11 confirmed vs 6 flagged).",
+    "A dominant 11-member cluster (ui://settings/rhm-config) collapses most of the settings surface into one confirmed RHM-config dossier (unanimous jury).",
+    "How-to text repeatedly states writes go through the existing config path suite.py:set_rhm_config and emphasizes 'reuse-only over the real config, not a new store'.",
+    "Refcheck fabrication flagged: RHM-voice (cluster_size 5).",
+    "Honesty framing recurs: read-only/unavailable settings shown 'honestly, never as working'.",
+    "Flagged proposed displays include hardware spec (RTX 4080), a static endpoint URL, and a timeout knob."
+  ],
+  "standouts": [
+    "The 'reuse-only over the real config' insistence — every write routed through one existing set_rhm_config path rather than a new store.",
+    "Explicit honesty principle: unavailable settings are surfaced as read-only, never faked as working.",
+    "The single 11-member rhm-config cluster carrying most of the settings surface as one confirmed feature."
+  ],
+  "conventions": [
+    "Same audit schema as the rest of the batch (ground / counts / confirmed / flagged, howto triple, verdict object).",
+    "ui://settings/<element> addressing for the settings rail and knobs.",
+    "Closed capability + grounding vocabularies."
+  ],
+  "concerns": [
+    "RHM-voice flagged as a fabricated feature id despite Voice being a named rail section — a feature the surface needs but the inventory lacks.",
+    "Two different ui://settings/endpoint dossiers exist (one built RHM-config, one proposed mockup-only display) — address reused for different meanings.",
+    "The brain-persona rail dossier is 'built' yet gets 0-of-3 jury grounding."
+  ],
+  "notes": "The settings-panel slice of the UI-grounding audit; notable for a high confirmed rate driven by one large rhm-config cluster and a strong 'reuse the real config, show unavailable honestly' principle.",
+  "questions": [
+    "Should RHM-voice be promoted to an inventory feature id given the Voice rail section exists?",
+    "How are the two ui://settings/endpoint dossiers (built vs proposed) meant to coexist?"
+  ],
+  "purpose_vs_actual": "Matches: an honest grounding audit of the settings control-room, with the reuse-only config principle reflected throughout.",
+  "apparent_themes": [
+    "Consolidated config control-room over one real config path",
+    "Reuse-only, no new store",
+    "Honest exposure of read-only/unavailable settings",
+    "UI grounding with two-layer adjudication"
+  ],
+  "intention_signals": "Aims to ground the settings surface honestly while asserting that all configuration is reuse-only over the existing set_rhm_config path — confirming most controls and flagging the Voice feature gap and mockup-only displays.",
+  "novelty": "The explicit reuse-only-over-real-config principle and the honesty rule about never showing unavailable settings as working, captured as UI grounding metadata.",
+  "contribution": "Contributes the settings-elevated grounding-audit record: the consolidated config inventory, the reuse-only/honest-readonly principle, and the confirmed/flagged verdicts a fused system would keep as the settings-surface grounding evidence.",
+  "summary_for_embedding": "A UI-grounding audit result for the A3 settings 'Living Instrument' mockup, clustering 31 dossiers into 11 confirmed and 6 flagged via refcheck and a 3-draw soft jury, centered on a reuse-only RHM-config path.",
+  "intention_for_embedding": "To verify each settings control is truthfully grounded in the existing config path, enforce reuse-only/honest-readonly framing, and flag the missing Voice feature and mockup-only displays."
+}

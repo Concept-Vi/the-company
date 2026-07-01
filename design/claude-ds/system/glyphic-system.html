@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Glyphic System" name="Glyphic System — the compositional model" subtitle="A living spec: the icon system is really a multi-facet GLYPHIC — outer form (n-gon) + inner symbol + fill + colour + texture + motion + size + depth, each independent, each token-driven, each meaning-bearing, generatively composed" viewport="1180x4400" -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glyphic System — the compositional model</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../tokens/texture.css">
+<link rel="stylesheet" href="../tokens/motion.css">
+<link rel="stylesheet" href="../axes/motion/motion.css">
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<link rel="stylesheet" href="../assets/icons/cv-glyphic.css">
+<style>
+  :root { --maxw: 1080px; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--zone-ground, #FCFAF2);
+    color: var(--fg-primary, #211C14);
+    font-family: var(--font-body, "DM Sans", system-ui, sans-serif);
+    -webkit-font-smoothing: antialiased;
+  }
+  .doc { max-width: var(--maxw); margin: 0 auto; padding: 56px 56px 120px; }
+
+  /* ---- masthead ---- */
+  .mast { display: flex; flex-direction: column; gap: 14px; padding-bottom: 30px; border-bottom: 2px solid var(--accent-gold); margin-bottom: 8px; }
+  .mast .kicker { font: 600 11px/1 var(--font-mono, "JetBrains Mono", monospace); letter-spacing: .22em; text-transform: uppercase; color: var(--accent-bronze); }
+  .mast h1 { margin: 0; font: 800 40px/1.04 var(--font-display, "Sora", sans-serif); letter-spacing: -0.02em; color: var(--fg-primary); }
+  .mast .stand { font: 400 16px/1.55 var(--font-body); color: var(--fg-secondary); max-width: 76ch; text-wrap: pretty; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .badge { font: 600 10px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-bronze); background: var(--accent-gold-50, color-mix(in srgb, var(--accent-gold) 14%, transparent)); border: 1px solid color-mix(in srgb, var(--accent-gold) 40%, transparent); border-radius: 999px; padding: 6px 11px; }
+
+  section { margin-top: 52px; scroll-margin-top: 30px; }
+  .secnum { font: 700 11px/1 var(--font-mono); letter-spacing: .12em; color: var(--accent-gold-deep, #9F772C); }
+  h2 { margin: 8px 0 4px; font: 700 26px/1.12 var(--font-display); letter-spacing: -0.015em; color: var(--fg-primary); }
+  .lede { font: 400 14.5px/1.6 var(--font-body); color: var(--fg-secondary); max-width: 80ch; margin: 10px 0 0; text-wrap: pretty; }
+  h3 { margin: 30px 0 10px; font: 700 16px/1.2 var(--font-display); color: var(--fg-primary); letter-spacing: -0.01em; }
+  p { font: 400 14px/1.62 var(--font-body); color: var(--fg-secondary); max-width: 80ch; text-wrap: pretty; }
+  p b, li b { color: var(--fg-primary); font-weight: 600; }
+  code { font: 500 12.5px/1.4 var(--font-mono); color: var(--accent-bronze); background: color-mix(in srgb, var(--accent-bronze) 9%, transparent); padding: 1px 5px; border-radius: 4px; }
+  a { color: var(--accent-gold-deep); }
+  ul { padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; max-width: 82ch; }
+  ul li { font: 400 14px/1.55 var(--font-body); color: var(--fg-secondary); padding-left: 22px; position: relative; text-wrap: pretty; }
+  ul li::before { content: ""; position: absolute; left: 2px; top: 9px; width: 7px; height: 7px; background: var(--accent-gold); border-radius: 1px; transform: rotate(45deg); }
+
+  /* ---- verbatim brief ---- */
+  .brief { margin-top: 22px; border-left: 3px solid var(--accent-gold); background: var(--paper, #fff); border-radius: 0 12px 12px 0; padding: 22px 26px; box-shadow: var(--shadow-card, 0 2px 10px rgba(152,128,88,.1)); }
+  .brief .by { font: 600 11px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-bronze); margin-bottom: 12px; }
+  .brief p { color: var(--fg-primary); font-size: 14px; line-height: 1.66; max-width: none; white-space: pre-wrap; margin: 0; }
+
+  /* ---- facet table ---- */
+  .facets { margin-top: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .facet { display: grid; grid-template-columns: 120px 1fr; gap: 0; border: 1px solid var(--border-faint, color-mix(in srgb, var(--accent-bronze) 18%, transparent)); border-radius: 14px; overflow: hidden; background: var(--paper); box-shadow: var(--shadow-card, 0 1px 6px rgba(152,128,88,.08)); }
+  .facet .demo { background: color-mix(in srgb, var(--accent-gold) 5%, var(--paper)); display: flex; align-items: center; justify-content: center; padding: 16px; border-right: 1px solid var(--border-faint); }
+  .facet .demo svg, .facet .demo .stub { display: block; }
+  .facet .body { padding: 15px 18px; }
+  .facet .ftitle { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .facet .fname { font: 700 15px/1.1 var(--font-display); color: var(--fg-primary); letter-spacing: -0.01em; }
+  .facet .fhome { font: 500 11px/1 var(--font-mono); color: var(--accent-bronze); }
+  .facet .fdesc { margin: 6px 0 0; font: 400 12.5px/1.5 var(--font-body); color: var(--fg-secondary); max-width: 72ch; }
+  .facet .fmeta { margin-top: 8px; display: flex; gap: 18px; flex-wrap: wrap; font: 400 11px/1.3 var(--font-body); color: var(--fg-muted); }
+  .facet .fmeta b { color: var(--accent-gold-deep); font-weight: 600; }
+
+  /* ---- matrices ---- */
+  .matrix { margin-top: 18px; display: flex; flex-direction: column; gap: 16px; }
+  .mrow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border-faint, color-mix(in srgb, var(--accent-bronze) 16%, transparent)); }
+  .mrow .mlabel { width: 158px; flex: none; }
+  .mrow .mlabel .ax { display: block; font: 700 13px/1.2 var(--font-display); color: var(--accent-gold-deep, #9F772C); }
+  .mrow .mlabel .lk { display: block; margin-top: 3px; font: 400 10.5px/1.4 var(--font-body); color: var(--fg-muted); }
+  .mcells { display: flex; gap: 10px; flex: 1; flex-wrap: nowrap; justify-content: space-between; align-items: center; }
+  .mcell { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+  .mcell .cap { font: 500 9px/1.2 var(--font-mono); color: var(--fg-muted); letter-spacing: .01em; white-space: nowrap; }
+  .mcell.lockend .cap { color: var(--accent-gold-deep); font-weight: 700; }
+
+  /* ---- callout ---- */
+  .callout { margin-top: 22px; background: linear-gradient(150deg, var(--accent-gold-50, #FBF1D6), color-mix(in srgb, var(--accent-gold) 7%, var(--paper))); border: 1px solid color-mix(in srgb, var(--accent-gold) 36%, transparent); border-radius: 14px; padding: 20px 24px; }
+  .callout .ctitle { font: 700 14px/1.2 var(--font-display); color: var(--accent-gold-deep); margin: 0 0 8px; letter-spacing: -0.01em; }
+  .callout p { color: var(--fg-primary); margin: 0; max-width: none; }
+
+  /* ---- code-ish schema block ---- */
+  pre { margin: 16px 0 0; background: var(--fg-primary, #211C14); color: #F3EEDF; border-radius: 12px; padding: 18px 20px; overflow-x: auto; font: 500 12px/1.6 var(--font-mono); }
+  pre .k { color: #E0C56A; } pre .s { color: #B7D6A8; } pre .c { color: #8C8472; }
+
+  /* ---- research cards ---- */
+  .research { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .rcard { border: 1px solid var(--border-faint); border-radius: 12px; padding: 16px 18px; background: var(--paper); }
+  .rcard h4 { margin: 0 0 6px; font: 700 14px/1.2 var(--font-display); color: var(--fg-primary); }
+  .rcard .file { font: 500 10.5px/1.3 var(--font-mono); color: var(--accent-bronze); word-break: break-all; }
+  .rcard p { font-size: 12.5px; line-height: 1.5; margin: 8px 0 0; max-width: none; }
+
+  /* ---- steps ---- */
+  .steps { margin-top: 18px; counter-reset: step; display: flex; flex-direction: column; gap: 14px; }
+  .step { display: grid; grid-template-columns: 38px 1fr; gap: 14px; align-items: start; }
+  .step .n { counter-increment: step; width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent-gold); color: var(--accent-gold-deep); display: flex; align-items: center; justify-content: center; font: 700 14px/1 var(--font-display); }
+  .step .n::before { content: counter(step); }
+  .step .stitle { font: 700 14.5px/1.2 var(--font-display); color: var(--fg-primary); margin: 4px 0 0; }
+  .step p { margin: 5px 0 0; font-size: 13px; }
+
+  .openq { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .openq .q { display: flex; gap: 12px; align-items: flex-start; background: var(--paper); border: 1px dashed color-mix(in srgb, var(--accent-bronze) 40%, transparent); border-radius: 10px; padding: 13px 16px; }
+  .openq .q .mark { font: 800 16px/1 var(--font-display); color: var(--accent-gold); flex: none; }
+  .openq .q p { margin: 0; font-size: 13px; color: var(--fg-primary); }
+
+  /* ---- motion facet (cumulative-walk row 6 + locked thereafter) ---- */
+  @media (prefers-reduced-motion: no-preference) {
+    .mo-glow svg   { animation: moGlow 1.9s ease-in-out infinite; }
+    .mo-pulse svg  { animation: moPulse 1.6s ease-in-out infinite; transform-origin: 50% 50%; }
+    .mo-breathe svg{ animation: moBreathe 2.4s ease-in-out infinite; }
+    .mo-spin svg   { animation: moSpin 7s linear infinite; transform-origin: 50% 50%; }
+    .mo-bob svg    { animation: moBob 2s ease-in-out infinite; }
+    .mo-tilt svg   { animation: moTilt 2.6s ease-in-out infinite; transform-origin: 50% 50%; }
+    .mo-float svg  { animation: moFloat 3s ease-in-out infinite; transform-origin: 50% 50%; }
+  }
+  @keyframes moGlow   { 0%,100% { filter: drop-shadow(0 0 0 transparent); } 50% { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent-gold) 80%, transparent)); } }
+  @keyframes moPulse  { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+  @keyframes moBreathe{ 0%,100% { opacity: 1; } 50% { opacity: .42; } }
+  @keyframes moSpin   { to { transform: rotate(360deg); } }
+  @keyframes moBob    { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @keyframes moTilt   { 0%,100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+  @keyframes moFloat  { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.05); } }
+
+  .note { margin-top: 28px; font: 400 12px/1.5 var(--font-body); color: var(--fg-muted); border-top: 1px solid var(--border-faint); padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <!-- ============================ MASTHEAD ============================ -->
+  <header class="mast" data-screen-label="Masthead">
+    <div class="kicker">ConceptV · Living Specification</div>
+    <h1>The Glyphic System</h1>
+    <p class="stand">What we have been calling the "icon system" is really something larger: a <b>compositional glyphic</b> — a small stack of <b>independent, meaning-bearing facets</b> (an outer form, an inner symbol, the fill between them, colour, texture, motion, size) that are <b>composed generatively</b> and <b>resolved from single sources</b>. Because the facets are independent, their meanings <b>multiply</b> rather than add. This document is the brief, the decomposition, the model, the codebase research behind it, and a proposed plan — written so you can mark it up and steer.</p>
+    <div class="badges">
+      <span class="badge">Status · Foundations built</span>
+      <span class="badge">Naming · "Glyphic"</span>
+      <span class="badge">For · Markup &amp; direction</span>
+    </div>
+  </header>
+
+  <!-- ============================ 0 · HOW TO USE ============================ -->
+  <section data-screen-label="How to use this doc">
+    <div class="secnum">00 / ORIENTATION</div>
+    <h2>How to read &amp; mark this up</h2>
+    <p class="lede">This page lives in the design-system tab on purpose — so you can comment on any block, drag, and mark it up, and I see it in context. The foundations are now built (taxonomy · registry · schema — §6 marks what shipped); the rest is proposal. Treat every section as a proposal open to your red pen. You named the unit a <b>Glyphic</b>; the facet names are still provisional — rename freely; the structure is the part I'm asking you to react to.</p>
+  </section>
+
+  <!-- ============================ 1 · THE BRIEF ============================ -->
+  <section data-screen-label="The brief verbatim">
+    <div class="secnum">01 / SOURCE</div>
+    <h2>The brief, verbatim</h2>
+    <p class="lede">Your message, reproduced exactly — the seed everything below is an attempt to decompose. Where my reading diverges or fills a gap, I say so explicitly in §2 onward rather than quietly editing your intent here.</p>
+    <div class="brief">
+      <div class="by">Vi — original message</div>
+      <p>Ok good. I want you to find all token systems, the registries, the single source of truths, the other calculated and generated system, and the other systems and code along the architectural pattern that's emerging. To gain the context I need you to have to do what I want you to do without me telling you everything (I can't, I don't know what's there), see where this design system is going. Those icons, it's more than icons it's a system. The outer ring can be any polygon up to 8 from zero (the lack of outer ring) with a simple n + 1, . In the centre, is the actual icon, the distinct symbol representing a distinct 'thing'. The icons are tagged with what they represent, and there's a (currently flat) categorisation or grouping, currently disorganised and ad-hoc. There's a shape system (which currently has a hardcoded value definition for only a subset of the polygons), which assigns a distinct 'value' or meaning to shapes. The icon system is multi-dimensional (currently only a subset of it's dimensions, I might be using dimension wrong maybe 'axis' or 'faceted' would be better than dimensional, I don't know), with a currently two part composition - the outer part (which I've called the outer ring, the n-gon) and the inner part, which I've been calling the icon. (as a sub-comment, I will want the AI system built into the icon system, so it can generate icons for me and add them into the collective icon system, I'd want to generate with it, like see options, have a multi-step conversation, updating on screen and me giving feedback and clicking options it generates for me until I click a save button, this would need to include the tags and descriptions and allocating to categories and whatever else, integrating it into the system, I imagine that'd be best to make through schemas or something). Shapes and icons can have distinct meaning, generatively. There's also the colour tokens, so the outer and inner part can also change colour, dynamically, according to an allocated value. That might be state, might be type, what it represents is a variable, for compositional use, like the icon and the outer ring/n-gon. There are other axes to be added, like animation (glows, actual svg animations or css animations or dealers choice how it's done), fill (including alpha/translucent, the 0 on that axis), texture (some of the shapes in the current shape system have a texture, currently only directional lines but the concept could apply to any kind of texture), size, and likely others. All parts, outer ring, the internal icon, the space between them/fill/background, are independent of each other, and so the combinations multiply the meanings/possibilities. I don't know how to describe the system it needs to become, I'm not a developer, but I'm really hoping you can. If you write a new category into the design system or something, and initially fill it with my full message, and your proper description and decomposition of it, and research through the codebase to see the other systems that seem to share similar design philosophies and principles, what is starting to take shape, you'll have stronger context for what I'm trying to do. If it's in the design system I can see it, and I can comment on it and do markups in it that you see, it would leverage all the tools and things your whole platform is built for, and you could put your whole plan and design and relationship and your attempts at it, and I can give feedback and guide that way. I can't do it through chat, I don't have the terminology to be able to describe or instruct or give specs or anything. I know you probably normally keep things in the design system small or concise to a convention or something, but it has more uses, and this will make it far easier for me to give you directions. Think this whole message through, each part, stretch every sentence of mine out a lot, figure out what I'm grasping at, what I'm describing, your own insights. I don't know any of the code, how any of it currently works, what other systems have been built so far, what state they're in (but none of them are finished), so you already have a lot of good perspective.</p>
+    </div>
+  </section>
+
+  <!-- ============================ 1b · THE BRIEF — ADDENDUM ============================ -->
+  <section data-screen-label="The brief — universal architecture addendum">
+    <div class="secnum">01b / SOURCE · ADDENDUM</div>
+    <h2>The brief, verbatim — the universal-component layer</h2>
+    <p class="lede">A later message, added once the foundations existed — reproduced exactly. This one widens the frame: the Glyphic stops being a special case and becomes the <b>first worked example of a universal component grammar</b> (slots, sockets, declarations) that every other component will share. My decomposition of it follows in §2b–§2d, and the build it triggered is logged in §6.</p>
+    <div class="brief">
+      <div class="by">Info / Tim — message (universal architecture)</div>
+      <p>Yes, I want you to do all of them. Also, I don't know if this has been done already or not, but if it hasn't then the glyphic itself will need to be made into a component in the components place and registry. It needs to have the three independent parts, like the outer ring, the symbol and the fill, and slots and sockets in the component. I called them slots and sockets because I don't know what any of the industry terminology or anything else, I don't have any domain expertise in any of this. But I call them that because to me the slots are the values that each thing can take, from all of the axes and tokens and whatever the terminology is, and sockets are what a glyphic can fill, like whatever other container types that glyphics can populate. Again I don't know any of the industry terminology, for other components like let's say a template compositional menu panel as one example, what positions and places a glyphic can be put, what sockets they go in, and other kinds of actions. As in a socket could be on a trigger event as well, like an on click action. If something clicked to open then the things that it can open are sockets with addresses to the component thing that occupies them. That kind of thing is what I mean by sockets, neither of them are full list, but as a general rule of thumb in my Architecture design is that in any interaction or interface, everything on it and in it is a templated dynamic component thing (again I don't know what the terminology is, when I say component time referring to the thing that a glyphic is one of, you could have a practically infinite number of distinct glyphics doing all sorts of different things, but they are one thing, they are a universal component, but that's just one kind though, like a parametric generated compositional template menu panel or a graph generator system, or a slide system of literally everything, they all have the same slot socket universal component Architecture but I'm distinct things, like glyphics are a distinct thing) and slots and sockets. Everything is one of those, and they're all in registries, what I've been referring to as type registries. I guess there are some similarities to atomic composition design Brad frost, its own thing, are use the word type pretty broadly but oh registries contain types and every type declares itself and it's parts. Like it would declare multiple schemas, like what it is and what slots and sockets it has and what kind of classification, what rules it belongs to, what sockets it has and what types cannot occupy those sockets, all of its slots and the tokens that can go in them and any other rules or whatever, and so that example of the compositional menu, it would declare a slot for a glyphic type/classification that glyphics belong to, and so in the generator and when these get used for actual things, the AI using the system, or me using it through an interface, Those declaration and rules are what renders and governance the interface, like there's no extra code for it, if I'm making a paddle then no one needs to write down that socket XYZ can be filled by a glyphic/types/things, it's just automatic, and if I click on it or something then it can automatically show me the library of things that can fill it, without writing specific code for it. This has been really hard to describe, because again I don't have any domain expertise so I don't know any of the terms or any of the details or whatever, And obviously the design architecture a lot more than just what I'm able to articulate. But wherever glyphics and soon other components are registered, that's kind of how it should work or declare. I don't know if it should have multiple typed declarations (I'm going to call these attachments for now, I have no idea if it's a thing and if so what any of the terms, I'm describing this from my imagination) or sections in a big one, but like different attachments or sections that go a different thing, like for each of the parts, the outer ring, the symbol, the fill for example, they are kind of like sub types or sub components or molecules of the glyphic, each of them have their own slots and sockets and declarations and stuff, and there are multiple different kinds of things that connect to it. Like each of the three sub components have their own things but the glyphic the parent also has ones. I was a bad way of describe, I guess I'm just trying to say organised modular declarations for each different part of the system, that way all of the universal components can all resolve and operate with one mechanism. Though I guess that actually kind of makes sense as I'm thinking about it, that example I gave earlier about the compositional panel and it's type declaring sockets, and based on those the system automatically knows that a glyphic can occupy these inputs under these conditions (everything can have conditions for their slots and sockets and declarations), I guess that's kind of the same for the glyphic having sockets for the outer ring, the symbol. Also now that I think about it, I've been referring to the fill as a third and equal piece, but I'm now realising that I think it's actually a part of the outer ring, like the outer ring is a polygon with a line thickness, and it has space inside it, and now that I think about it, it also has Space outside it technically, both of which are sub components of that outer ring with slots for tokens and variables etc. The space outside the ring, I guess we will listen that the actual glyphic itself is a perfect square in terms of its actual component/element, and in pretty much all Real use cases that outer space would be alpha so would be invisible, but I guess there are scenarios that exist where using that space for something might be of use. And it is important to get the implementation and build of this to be the most faithful to the theory and purity of the manifestation to be its best, because everything else that we build for it will use what you are making now as both the foundation and the example. [continues — asks: write this verbatim into the spec with a rich decomposition that references/links the rest of the system, candidate higher-theory, my own extensions, maps/principles/rules/locations/documents; THEN build everything proposed plus the notches, with this elevated mentality, extending the implementations to serve the overall pursuit.]</p>
+    </div>
+  </section>
+
+  <!-- ============================ 2 · DECOMPOSITION ============================ -->
+  <section data-screen-label="Decomposition">
+    <div class="secnum">02 / DECOMPOSITION</div>
+    <h2>What you're describing, in precise terms</h2>
+    <p class="lede">Stretching each thread of your message into the vocabulary the rest of the system already uses. The terminology you reached for — "axis / faceted" over "dimensional" — is exactly right; I'll use <b>facet</b> throughout.</p>
+
+    <h3>The unit: a "Glyphic"</h3>
+    <p>The thing you've been calling an icon is actually a <b>composite</b>. You named the whole composite a <b>Glyphic</b>. A Glyphic is not one drawing — it is a <b>composition of facets</b>, each chosen independently. The two facets you named (outer ring + inner icon) are the first two of a longer list; the rest (fill, colour, texture, motion, size) are facets too, and you already intuited them.</p>
+
+    <h3>"Multi-dimensional" → orthogonal facets</h3>
+    <p>You hesitated on "dimensional". The precise word is <b>orthogonal facets</b>: each facet varies <b>independently</b> of the others. That independence is the whole point — it's why you said "the combinations multiply the meanings/possibilities." If a Glyphic has 8 facets with (say) 8 useful values each, the space is <b>8⁷ ≈ two million</b> distinct Glyphics from a handful of small, legible vocabularies. Meaning is <b>multiplicative</b>, not additive. (This is the same rule the rest of the system already lives by — see §4.)</p>
+
+    <h3>"Distinct meaning, generatively" → meaning is assigned, then composed</h3>
+    <p>Each facet carries its own <b>meaning vocabulary</b>: a <b>form</b> means a type-class (Entity, Action, System…), a <b>symbol</b> means a specific thing (a house, a person, a drone), a <b>colour</b> means an allocated <b>value</b> — and crucially you said that value "is a variable": it might be <i>state</i>, might be <i>type</i>, might be <i>category</i>. The Glyphic's <b>total meaning is the composition</b> of its facets' meanings. "Generatively" = a Glyphic is <b>computed from a small spec</b> (which form, which symbol, which value→colour binding…), never hand-drawn per case.</p>
+
+    <h3>"The space between" is its own facet</h3>
+    <p>You were careful to separate three regions — <b>the outer ring, the inner symbol, and the space/fill/background between them</b> — and to say all three are independent. That third region (the fill plane) is a genuine facet with its own value range, and its <b>zero</b> is "translucent / none" — exactly as you noted alpha-0 is the zero of the fill axis. Every facet has a zero (no ring = 0 sides; no fill = transparent; no texture; no motion).</p>
+  </section>
+
+  <!-- ============================ 3 · THE MODEL ============================ -->
+  <section data-screen-label="The facet model">
+    <div class="secnum">03 / THE MODEL</div>
+    <h2>A Glyphic = a stack of facets</h2>
+    <p class="lede">Each facet below has: what it is, its value range (including its zero), the <b>single source</b> it resolves from, and the kind of meaning it can carry. The little specimens are rendered live through the Glyphic registry (<code>CV_GLYPHIC.render</code>, which composes via <code>CV_SHAPES.markSVG</code>) — proof the composition is real, not a mock.</p>
+
+    <div class="facets" id="facets"><!-- injected --></div>
+
+    <div class="callout">
+      <p class="ctitle">Meaning is loadable — and lives apart from geometry</p>
+      <p>Two layers, deliberately separated. <b>Invariant</b>: a hexagon's geometry, a house symbol, the render defaults — fixed. <b>Contextual</b>: what a hexagon, a gold ring, a hatch or a raised depth <i>mean</i> — loadable, per context, in <code>CV_MEANING</code> profiles you can export, edit and reload. Symbols are the lone exception: their meaning is intrinsic. So the same glyphic vocabulary re-skins its <i>meaning</i> for a pitch deck, a product screen, or a process map without redrawing or recoding a thing.</p>
+    </div>
+
+    <div class="callout">
+      <p>No facet hard-codes another. Form doesn't know which symbol it holds; colour doesn't know the shape; texture doesn't know the size. Each reads its value from its <b>own single source</b> (shapes ← <code>CV_SHAPES</code>, symbols ← <code>CV_ICONS</code>, colour ← the token graph, texture ← <code>tokens/texture.css</code>, motion ← <code>tokens/motion.css</code>, size ← <code>tokens/icons.css</code>). A Glyphic is just a <b>spec that names a value on each facet</b>; the renderer composes them. Change a home → every Glyphic using it updates.</p>
+    </div>
+  </section>
+
+  <!-- ============================ 3b · MEANING MULTIPLIES ============================ -->
+  <section data-screen-label="Meaning multiplies">
+    <div class="secnum">03b / WHY IT COMPOUNDS</div>
+    <h2>A cumulative walk through every facet</h2>
+    <p class="lede">One demonstration, built up facet by facet. <b>Each row changes exactly one facet</b>; the value it <b>ends on (gold label) locks in</b> and is carried by every row below it. So the Glyphic accumulates — by the final rows it is fully composed (octagon + house + gold colour + hatch + glow) and you can read how each axis contributed. Eight examples per row; nothing is hand-drawn, every cell is a point in the facet space. (Form's first cell is the axis <b>zero</b> — no ring; the Fill row ends on its zero, <b>none</b>, so rows below carry a clear fill; Motion is shown via CSS for now, and Depth — the shadow / elevation facet — is the last row — see the plan.)</p>
+    <div class="matrix" id="matrix"><!-- injected --></div>
+  </section>
+
+  <!-- ============================ 4 · RESEARCH ============================ -->
+  <section data-screen-label="Codebase research">
+    <div class="secnum">04 / RESEARCH</div>
+    <h2>Where this already lives in the codebase</h2>
+    <p class="lede">You asked me to find the token systems, registries, single-sources, and generated systems that share this philosophy — to see what's taking shape. Here is the honest map. The headline: <b>the Glyphic is not a new idea bolted on. It is the existing system's pattern, expressed at the smallest scale.</b></p>
+
+    <div class="research">
+      <div class="rcard">
+        <h4>The four registries (one home each)</h4>
+        <div class="file">analysis/INTEGRATION.md · app/registry/types-core.js · app/ai/ai-registry.js</div>
+        <p>Tokens, Types (<code>CV_REGISTRY</code>), the Engine (<code>core/</code> solvers), and AI (<code>CV_AI</code>) all share one API — <code>register / resolve / lineage / query / subscribe</code>, layered with single-inheritance. Every concept has exactly one home; consumers hold references, never copies. <b>A Glyphic needs its home in this same shape.</b></p>
+      </div>
+      <div class="rcard">
+        <h4>The parametric model — orthogonal axes</h4>
+        <div class="file">analysis/AXES.md</div>
+        <p><code>design = f(content, axisPosition)</code> over a fixed core. The cardinal rule: "keep axes orthogonal — never collapse them." Your facets <b>are</b> this rule, applied to a single glyph instead of a whole layout. The Glyphic is the parametric model at atom scale.</p>
+      </div>
+      <div class="rcard">
+        <h4>The Form facet already exists, typed</h4>
+        <div class="file">assets/icons/cv-shapes.js → window.CV_SHAPES</div>
+        <p><code>shapeTypes</code> assigns a meaning to each polygon (Entity/Action/Object/Decision/Feature/System/Specialised/Gateway); <code>markDefaults</code> makes every part a token parameter; <code>markSVG()</code> already composes ring + symbol + fill + texture + ink + shadow. <b>This is the proto-Glyphic renderer.</b> Today it covers circle + 3–8 sides; the "0 = no ring" end of your axis is the piece to add.</p>
+      </div>
+      <div class="rcard">
+        <h4>The Symbol facet — and the flat taxonomy</h4>
+        <div class="file">assets/icons/cv-icons.js · _ingest/ICON-AUDIT.md</div>
+        <p>~110 glyphs in one source, with aliases and a flat <code>brand</code> list. The categorisation is, as you said, <b>ad-hoc</b> — section comments (People / Files / Communication…) plus a flat brand array. The audit doc itself flags this. <b>Symbols need a faceted taxonomy</b>, not a single flat list.</p>
+      </div>
+      <div class="rcard">
+        <h4>The modifier facets are already tokenised</h4>
+        <div class="file">colors_and_type.css · tokens/texture.css · tokens/motion.css · tokens/icons.css</div>
+        <p>Colour (L0 primitives → L1 roles → L2 component tokens), texture (<code>--hatch-*</code>, blueprint grid), motion ("nothing teleports": enter/exit/move + glow + stagger), size (<code>--icon-xs…xl</code>). Every modifier facet you listed <b>already has a single-source token home</b> — they just aren't yet wired into one Glyphic compositor.</p>
+      </div>
+      <div class="rcard">
+        <h4>Glyphics are already the nodes of the engine</h4>
+        <div class="file">analysis/AXES.md (block + graph solvers) · CvIcon.jsx (shape=)</div>
+        <p>The graph solver places <b>nodes</b> by relationship; <code>CvIcon</code> already renders a glyph-inside-a-shape "node treatment". A Glyphic <b>is</b> the atom the diagram engine positions. The type registry even defines an <code>atom</code> layer as "a single visual unit — an icon glyph, a status dot, a stamp." The Glyphic is that atom.</p>
+      </div>
+      <div class="rcard">
+        <h4>The AI generation hooks already exist</h4>
+        <div class="file">app/ai/ai-capabilities-canvas.js · app/ai/ai-seed.js</div>
+        <p><code>CV_AI</code> already registers <code>icon.generate</code>, <code>icon.edit</code>, <code>icon.single</code>, and an <code>openai-image</code> provider; <code>theme.generate</code> demonstrates the multi-candidate "propose options" pattern. <b>The conversational mark-foundry you want is a short hop</b>, not a new subsystem — it's new capabilities on the existing registry.</p>
+      </div>
+      <div class="rcard">
+        <h4>Provenance &amp; persistence are solved</h4>
+        <div class="file">tokens/provenance.css · CV_REGISTRY (user/vi/imported)</div>
+        <p>The registries already distinguish <code>built-in / user / vi / imported</code> and persist user/Vi-authored entries. A Vi-generated Glyphic or Symbol drops into the same provenance model — so AI-made marks are first-class, attributable, and editable, not a separate pile.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 5 · EMERGING ARCHITECTURE ============================ -->
+  <section data-screen-label="The emerging architecture">
+    <div class="secnum">05 / THE INSIGHT</div>
+    <h2>What's taking shape: one grammar, every scale</h2>
+    <p class="lede">Reading all of it together, a single shape emerges. The system has <b>one generative grammar</b> — <i>typed things + orthogonal axes + token-resolved rendering, computed not hand-set</i> — and it recurs at every scale, like a fractal.</p>
+    <ul>
+      <li><b>Document scale</b> — a deck/page is computed from Surface × LOD × Density × Theme over an invariant core (<code>AXES.md</code>).</li>
+      <li><b>Block scale</b> — a layout is a containment tree of typed containers, each with a collapse rule (the block solver).</li>
+      <li><b>Graph scale</b> — a diagram is typed nodes placed by relationship (the graph solver).</li>
+      <li><b>Glyphic scale</b> — <b>(this spec)</b> a glyph is typed Form × Symbol × Fill × Colour × Texture × Motion × Size × Depth. The atom of the whole grammar.</li>
+    </ul>
+    <div class="callout">
+      <p class="ctitle">The one-line version</p>
+      <p>The Glyphic is the <b>atom</b> of the same function that draws everything else: <code>glyphic = f(facet-spec)</code> is just <code>design = f(content, axis)</code> at its smallest radius. Give the Glyphic a registry home that mirrors the other three, have each facet resolve from its existing single source, and the design system becomes <b>self-similar from a single glyph up to a whole deck</b> — one set of rules to learn, no second place for anything to drift.</p>
+    </div>
+  </section>
+
+  <!-- ============================ 5b · UNIVERSAL COMPONENT ============================ -->
+  <section data-screen-label="The universal component">
+    <div class="secnum">05b / THE GRAMMAR</div>
+    <h2>Everything is a universal component — the Glyphic is the first one</h2>
+    <p class="lede">The widening insight: a Glyphic isn't special. It is the <b>first worked example</b> of a single component grammar that <b>everything in any interface obeys</b>. In your words — "in any interaction or interface, everything on it and in it is a templated dynamic component." There is one mechanism; the Glyphic, a compositional menu panel, a graph generator, a slide system are all <b>distinct kinds of the same universal component</b>, each registered as a <b>Type</b> that <b>declares itself and its parts</b>.</p>
+
+    <div class="callout">
+      <p class="ctitle">One mechanism, many kinds</p>
+      <p>A universal component is anything that registers a Type and declares its <b>slots</b> (the values its parts accept) and <b>sockets</b> (the attachment points where typed things — or events — plug in). "Glyphic" is one <i>kind</i> (practically infinite distinct glyphics, but one Type). "Compositional menu panel", "graph generator", "slide" are other kinds. Same grammar, different declarations. The grammar — not bespoke code per screen — is what builds and governs every interface.</p>
+    </div>
+
+    <p>This is the principle <code>CLAUDE.md</code> already states — "the interface is a projection of the registries, not a parallel structure" — taken to its limit: <b>not just menus and galleries read from the registries; the entire interface is generated from Type declarations.</b> If a panel's Type declares a socket that accepts the <code>glyphic</code> classification, the system already knows a glyphic can go there and can show you the library that fits — <b>without anyone writing that wiring</b>. Most of this substrate already exists (see §5c).</p>
+  </section>
+
+  <!-- ============================ 5c · SLOTS & SOCKETS ============================ -->
+  <section data-screen-label="Slots and sockets">
+    <div class="secnum">05c / SLOTS &amp; SOCKETS</div>
+    <h2>Slots &amp; sockets — your two words, made precise</h2>
+    <p class="lede">Your coinage is good and I'll keep it. The two are duals: a slot takes a <b>value</b>; a socket takes a <b>thing</b>. Both can carry <b>conditions</b>. Here's the precise mapping onto the registry that already exists.</p>
+
+    <div class="research">
+      <div class="rcard">
+        <h4>Slot — a value an axis/token can take</h4>
+        <div class="file">resolves from: token graph · CV_SHAPES · CV_ICONS · CV_GLYPHIC.facets</div>
+        <p>A <b>slot</b> is a parameter on a part that accepts a <b>value from a vocabulary</b> — a colour token, a form (n-gon), a texture, a depth, a size. Its vocabulary is enumerable and lives in a single source; its "zero" is a real value (no ring, α-0 fill, no texture). Slots are the <b>facets</b> of §3, now seen as the part-level inputs. A slot may declare <b>conditions</b> (e.g. <i>texture only when fill ≠ none</i>).</p>
+      </div>
+      <div class="rcard">
+        <h4>Socket — a place a typed thing plugs in</h4>
+        <div class="file">resolves from: CV_REGISTRY.slots + accepts() + candidatesForSlot()</div>
+        <p>A <b>socket</b> is a named attachment point that accepts <b>another component (a Type)</b>, under conditions (<i>accepts these classifications, forbids those</i>). The registry's <code>slots:{accepts:{layers,families,tags}}</code> + <code>accepts()</code> + <code>candidatesForSlot()</code> <b>already are</b> sockets — so "click a socket → see the library that fits" is one function call, no bespoke code. A socket can also be <b>event-triggered</b> (see below) and carries an <b>address</b> to whatever occupies it.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p class="ctitle">Three twists you added that extend the existing model</p>
+      <p><b>1 · Event-sockets.</b> A socket needn't be a spatial slot — it can hang off a <i>trigger</i> ("on click, open X"). The thing it opens is a socket with an <b>address</b> to the occupying component. → a new <code>socket.kind: 'slot' | 'event'</code>. &nbsp; <b>2 · Addresses.</b> Every occupant is referenced by a stable address, never copied in — same anti-drift rule as the registries. &nbsp; <b>3 · Conditions everywhere.</b> Slots, sockets and declarations all admit conditions (a slot enabled only in a state; a socket that accepts a glyphic only when small). The registry's <code>accepts()</code> is the seed; conditions generalise it.</p>
+    </div>
+  </section>
+
+  <!-- ============================ 5d · ANATOMY ============================ -->
+  <section data-screen-label="Glyphic anatomy revised">
+    <div class="secnum">05d / ANATOMY · REVISED</div>
+    <h2>The anatomy, corrected: the square, the ring, its two spaces, the symbol</h2>
+    <p class="lede">Your realisation reshapes the parts. <b>Fill is not a third equal part</b> — it is the ring's <i>inner space</i>. The ring is a polygon-with-thickness that bounds two regions: the space <b>inside</b> it (the fill plane) and the space <b>outside</b> it (out to the element's edge). And the element itself is a <b>perfect square</b>. So the part-tree is a parent with two sockets, one of which (the ring) has its own sub-parts.</p>
+
+    <div style="display:grid; grid-template-columns: 300px 1fr; gap: 26px; align-items: center; margin-top: 22px;">
+      <svg viewBox="0 0 200 200" width="300" height="300" style="display:block">
+        <defs>
+          <pattern id="alpha" width="12" height="12" patternUnits="userSpaceOnUse">
+            <rect width="12" height="12" fill="color-mix(in srgb, var(--accent-bronze) 6%, transparent)"/>
+            <path d="M0 12 L12 0" stroke="color-mix(in srgb, var(--accent-bronze) 16%, transparent)" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <!-- the square element + outer space -->
+        <rect x="6" y="6" width="188" height="188" rx="8" fill="url(#alpha)" stroke="var(--accent-bronze)" stroke-width="1" stroke-dasharray="4 4"/>
+        <!-- ring outer space label region implied between square and polygon -->
+        <!-- inner space (fill) -->
+        <polygon points="100,34 157,67 157,133 100,166 43,133 43,67" fill="color-mix(in srgb, var(--accent-gold) 12%, var(--paper))"/>
+        <!-- ring stroke -->
+        <polygon points="100,34 157,67 157,133 100,166 43,133 43,67" fill="none" stroke="var(--accent-gold)" stroke-width="7" stroke-linejoin="round"/>
+        <!-- symbol -->
+        <g transform="translate(100 100)" stroke="var(--accent-bronze)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M-15 4 L0 -12 L15 4 M-11 1 L-11 16 L11 16 L11 1"/>
+        </g>
+      </svg>
+      <div class="facets" style="margin:0">
+        <div class="facet"><div class="body"><div class="ftitle"><span class="fname">Glyphic</span><span class="fhome">the square element · parent</span></div><p class="fdesc">A perfect square. Owns whole-unit slots (size, motion, depth, allocated value) and two sockets: <b>ring</b> and <b>symbol</b>. The unit other components socket into.</p></div></div>
+        <div class="facet"><div class="body"><div class="ftitle"><span class="fname">Outer ring</span><span class="fhome">polygon + thickness · sub-component</span></div><p class="fdesc">A regular n-gon with a stroke weight. Slots: form (sides 0–8 / ∞), stroke thickness, ring colour, ring texture. Bounds two regions, each its own sub-part with slots:</p>
+          <div class="fmeta"><span><b>· inner space</b> — the fill plane (token / wash / tint / <b>α-0 = none</b>)</span></div>
+          <div class="fmeta"><span><b>· outer space</b> — ring→square edge, normally α-0; available when needed</span></div></div></div>
+        <div class="facet"><div class="body"><div class="ftitle"><span class="fname">Symbol</span><span class="fhome">inner glyph · sub-component</span></div><p class="fdesc">The distinct mark (a CV_ICONS id). Slots: symbol, symbol colour, symbol texture. Its <b>meaning is intrinsic</b> — the one facet not governed by a loadable meaning profile.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 5e · DECLARATIONS ============================ -->
+  <section data-screen-label="Declarations and attachments">
+    <div class="secnum">05e / DECLARATIONS</div>
+    <h2>Declarations ("attachments") — modular schemas per part</h2>
+    <p class="lede">Your "attachments" map to <b>modular declaration blocks</b>: each part (parent + each sub-component) carries its own declaration — identity, classification &amp; rules, its slots (+ vocabularies + conditions), its sockets (+ accepted/forbidden types + conditions). One mechanism reads them all, so every universal component "resolves and operates with one mechanism." Draft shape:</p>
+    <pre><span class="c">// A universal-component TYPE declaration (the Glyphic, here)</span>
+{
+  <span class="k">id</span>: <span class="s">"glyphic"</span>, <span class="k">kind</span>: <span class="s">"glyphic"</span>, <span class="k">layer</span>: <span class="s">"atom"</span>,
+  <span class="k">classification</span>: [<span class="s">"glyphic"</span>, <span class="s">"mark"</span>],     <span class="c">// what sockets elsewhere accept it as</span>
+  <span class="k">parts</span>: {
+    <span class="k">ring</span>:   { <span class="k">slots</span>: { form, thickness, color, texture },
+             <span class="k">sockets</span>: { innerSpace: { accepts:[<span class="s">"fill"</span>] },
+                        outerSpace: { accepts:[<span class="s">"fill"</span>,<span class="s">"glyphic"</span>], optional:true } } },
+    <span class="k">symbol</span>: { <span class="k">slots</span>: { symbol, color, texture } }   <span class="c">// meaning intrinsic</span>
+  },
+  <span class="k">slots</span>:   { size, motion, depth, value },          <span class="c">// whole-unit (parent) slots</span>
+  <span class="k">sockets</span>: { ring: { accepts:[<span class="s">"ring"</span>] }, symbol: { accepts:[<span class="s">"symbol"</span>] } },
+  <span class="k">conditions</span>: [ <span class="s">"texture requires fill != none"</span> ]
+}
+
+<span class="c">// Another KIND, declaring a socket that accepts glyphics — no bespoke code:</span>
+{ <span class="k">id</span>:<span class="s">"composition-menu"</span>, <span class="k">kind</span>:<span class="s">"panel"</span>,
+  <span class="k">sockets</span>: { items: { <span class="k">accepts</span>:[<span class="s">"glyphic"</span>], multiple:true,
+                       <span class="k">onPick</span>:<span class="s">"insert"</span> } } }  <span class="c">// click → candidatesForSlot() → the glyphic library</span></pre>
+    <div class="callout">
+      <p class="ctitle">Why this is the foundation, not just a feature</p>
+      <p>Get this faithful and <b>everything else inherits it</b>: a graph generator, a slide system, a template menu — each is just another Type with parts, slots and sockets. The interface that composes them needs <b>no per-case code</b>: it reads declarations, resolves <code>candidatesForSlot()</code>, and renders. This is why the build (§6) treats the Glyphic as <i>the reference implementation</i> of the universal grammar, not a one-off.</p>
+    </div>
+  </section>
+
+  <!-- ============================ 6 · THE PLAN ============================ -->
+  <section data-screen-label="The plan">
+    <div class="secnum">06 / PROPOSAL</div>
+    <h2>A plan — how I'd build it</h2>
+    <p class="lede">Sequenced so each step is usable on its own and nothing is built on sand. This is a proposal for you to cut, reorder, or redirect.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="n"></div>
+        <div><div class="stitle">Name &amp; register the unit <span style="color:var(--accent-gold-deep)">· BUILT</span></div>
+        <p>Done — you named it the <b>Glyphic</b>, and it now has a registry home, <code>window.CV_GLYPHIC</code> (<code>assets/icons/cv-glyphics.js</code>), mirroring the other registries' shape (<code>facets / valuesOf / normalize / validate / compose / symbols</code>). It does not redraw anything: <code>compose()</code> delegates geometry to <code>CV_SHAPES.markSVG</code> and symbols to <code>CV_ICONS</code>. No new mechanism; the existing renderer became the compositor.</p></div>
+      </div>
+      <div class="step">
+        <div class="n"></div>
+        <div><div class="stitle">Complete the Form axis <span style="color:var(--accent-gold-deep)">· BUILT</span></div>
+        <p>The axis is now <code>{0=none, 3, 4, 5, 6, 7, 8, ∞=circle}</code> — your "n+1" progression. The <b>0 = no ring</b> end (symbol alone) is handled by <code>CV_GLYPHIC.compose</code> (<code>form:'none'</code>), and geometry never exceeds 8 sides (a circle is the limit). <code>valuesOf('form')</code> returns the live set.</p></div>
+      </div>
+      <div class="step">
+        <div class="n"></div>
+        <div><div class="stitle">Give symbols a faceted taxonomy <span style="color:var(--accent-gold-deep)">· BUILT</span></div>
+        <p>Done — the flat ad-hoc categories are replaced by a real taxonomy in <code>CV_ICONS.taxonomy</code> (13 <code>domains</code> + 4 <code>kinds</code>) with per-symbol <code>facets</code> (<code>domain</code>, <code>kind</code>, free <code>tags</code>, <code>brand</code> flag) on every glyph. Queries <code>CV_ICONS.byDomain / byKind / search</code> read it; the icon explorer's category bar is now a <b>projection</b> of the taxonomy, not a hand-kept list.</p></div>
+      </div>
+      <div class="step">
+        <div class="n"></div>
+        <div><div class="stitle">Write the schemas <span style="color:var(--accent-gold-deep)">· BUILT</span></div>
+        <p>Done — the <b>Glyphic</b> facet-spec schema lives in <code>CV_GLYPHIC.facets</code> (each facet's source, zero, value space and meaning), and <code>validate()</code> checks a spec against the live vocabularies, failing loud on any unknown value. The <b>Symbol record</b> shape is the <code>CV_ICONS.facets</code> entry. Schema-first, as you intuited. (Shapes below.)</p></div>
+      </div>
+      <div class="step">
+        <div class="n"></div>
+        <div><div class="stitle">Loadable meaning profiles <span style="color:var(--accent-gold-deep)">· BUILT</span></div>
+        <p><b>Meaning is contextual</b> — a hexagon, a gold ring, a hatch or a raised depth signify different things in a deck vs a product screen vs a process map. So every facet→meaning binding is now <b>loadable and swappable</b>, packaged as a named <b>meaning profile</b> in <code>window.CV_MEANING</code> (<code>assets/icons/cv-meaning.js</code>). The one exception is <b>symbols</b> — a house is always a house — whose intrinsic meaning stays in <code>CV_ICONS.facets</code>. A default profile ships (<code>conceptv-default</code>; form types seeded from the shape system, colour/fill/texture/depth/motion meanings are editable drafts). Profiles round-trip to JSON (<code>export()</code> → edit → <code>load()</code>), so meaning sets are authored without code. A glyphic spec can carry an allocated <code>value</code> (e.g. <code>'active'</code>, <code>'warning'</code>) and <code>CV_GLYPHIC</code> resolves it to colour through the active profile — so a node turns gold when active, blue in a process map, with no bespoke code.</p></div>
+      </div>
+      <div class="step">
+        <div class="n"></div>
+        <div><div class="stitle">Register the Glyphic as the reference universal component <span style="color:var(--accent-gold-deep)">· BUILT</span></div>
+        <p>Done — the Glyphic is now a real <b>component</b> (<code>components/Glyphic.jsx</code> + <code>.d.ts</code>, a React socket around <code>CV_GLYPHIC.compose</code>) <b>and</b> a registered <b>Type</b> in <code>CV_REGISTRY</code> (<code>app/registry/glyphic-type.js</code>). Its declaration carries the <b>parts</b> (ring · symbol), the parent's <b>slots</b> (size · motion · depth · value) and <b>sockets</b> (ring · symbol), and each part's own slots/sockets — the ring declaring its <b>inner space</b> (fill) and <b>outer space</b> as sockets, per §5d. Slot vocabularies are read live from <code>CV_GLYPHIC.facets</code> (no second list). The registry's <code>accepts()/candidatesForSocket()</code> now resolve classification-based sockets, so "a panel socket accepts a glyphic → show the library" needs no bespoke code (§5c).</p></div>
+      </div>
+      <div class="step">
+        <div class="n"></div>
+        <div><div class="stitle">Wire the modifier facets to their token homes <span style="color:var(--accent-gold-deep)">· BUILT</span></div>
+        <p>Done — <b>Motion</b> now resolves from one home, <code>assets/icons/cv-glyphic.css</code> (the <code>.mo-*</code> classes + keyframes the compositor names), reduced-motion-safe; the explorer and this spec both link it. <b>Depth</b>'s SVG ramp is documented as the mirror of <code>tokens/depth.css</code>'s <code>--elev-*</code> scale and now tints from its <code>--shadow-c</code> token, so palette swaps carry through. Fill ramps are recipes of colour tokens, not raw colours.</p></div>
+      </div>
+      <div class="step">
+        <div class="n"></div>
+        <div><div class="stitle">Build the AI glyphic-foundry <span style="color:var(--accent-gold-deep)">· CAPABILITIES BUILT · UI NEXT</span></div>
+        <p>The registry-way wiring is done: <code>CV_AI</code> now declares <code>glyphic.generate</code> (propose N candidate symbol records — 24px line glyphs with domain/kind/tags — multi-step by threading prior turns) and <code>glyphic.save</code> (schema-validate via <code>CV_GLYPHIC.validateSymbol</code> → write to <code>CV_ICONS.add</code>, provenance <i>vi</i>, instantly live), in <code>app/ai/ai-glyphic.js</code>. The record shape is <code>CV_GLYPHIC.schema</code> (single source); the write path persists user/Vi symbols. <b>Remaining:</b> the <b>conversational surface</b> itself — the on-screen propose → feedback → click → iterate → Save panel — which I'd build once you've signed off the schema + value vocabularies in §7 (and it needs a live provider). Routed through <code>CV_AI.execute</code>, never the raw model.</p></div>
+      </div>
+    </div>
+
+    <h3>Schema — what a Glyphic and a Symbol are, as data <span style="color:var(--accent-gold-deep)">· BUILT</span></h3>
+    <pre><span class="c">// A SYMBOL record — the inner-glyph facet's vocabulary entry</span>
+{
+  <span class="k">id</span>: <span class="s">"drone-view"</span>,
+  <span class="k">svg</span>: <span class="s">"&lt;path d='…'/&gt;"</span>,        <span class="c">// 24×24, stroke currentColor</span>
+  <span class="k">name</span>: <span class="s">"Drone view"</span>,
+  <span class="k">description</span>: <span class="s">"Aerial FPV fly-through of a property"</span>,
+  <span class="k">facets</span>: {
+    <span class="k">domain</span>:  <span class="s">"capture"</span>,           <span class="c">// faceted taxonomy, not one flat category</span>
+    <span class="k">kind</span>:    <span class="s">"action"</span>,            <span class="c">// object | action | state</span>
+    <span class="k">tags</span>:    [<span class="s">"drone"</span>, <span class="s">"aerial"</span>, <span class="s">"video"</span>]
+  },
+  <span class="k">provenance</span>: <span class="s">"vi"</span>                  <span class="c">// built-in | user | vi | imported</span>
+}
+
+<span class="c">// A GLYPHIC record — a point in the facet space (all facets optional → defaults)</span>
+{
+  <span class="k">form</span>:    <span class="s">"octagon"</span>,    <span class="c">// 0 | 3..8 | circle  — the outer ring</span>
+  <span class="k">symbol</span>:  <span class="s">"globe"</span>,      <span class="c">// a CV_ICONS id — the inner glyph</span>
+  <span class="k">fill</span>:    <span class="s">"wash"</span>,       <span class="c">// none(α0) | paper | wash | tint | texture</span>
+  <span class="k">color</span>:   { <span class="k">ring</span>: <span class="s">"gold"</span>, <span class="k">symbol</span>: <span class="s">"bronze"</span>, <span class="k">fill</span>: <span class="s">"gold-50"</span> },
+  <span class="k">texture</span>: <span class="s">"none"</span>,       <span class="c">// none | hatch | lines | …  (per part)</span>
+  <span class="k">motion</span>:  <span class="s">"none"</span>,       <span class="c">// none | glow | draw | pulse | enter-*</span>
+  <span class="k">size</span>:    <span class="s">"md"</span>,
+  <span class="k">value</span>:   <span class="s">"active"</span>      <span class="c">// optional: an allocated value that drives bindings</span>
+}</pre>
+  </section>
+
+  <!-- ============================ 7 · OPEN QUESTIONS ============================ -->
+  <section data-screen-label="Open questions">
+    <div class="secnum">07 / DECIDE WITH ME</div>
+    <h2>Open questions — mark these up</h2>
+    <p class="lede">The places where your judgement should set the direction. Comment directly on any of these.</p>
+    <div class="openq">
+      <div class="q"><span class="mark">✓</span><p><b>Naming — decided.</b> You named the unit a <b>Glyphic</b>; it's now the registry name (<code>CV_GLYPHIC</code>). Facet names (Form / Symbol / Fill / Colour / Texture / Motion / Size / Depth) are still open — rename any.</p></div>
+      <div class="q"><span class="mark">?</span><p><b>v1 facet set.</b> Which facets ship first? I'd propose Form + Symbol + Fill + Colour in v1; Texture, Motion, Size in v2. Agree, or pull one forward?</p></div>
+      <div class="q"><span class="mark">?</span><p><b>The Form axis ends.</b> Confirm <code>0 = no ring</code> and <code>circle = ∞</code> as the two ends, with 3–8 between. Are degenerate 1- and 2-side steps ever wanted, or skipped?</p></div>
+      <div class="q"><span class="mark">?</span><p><b>Meaning vocabularies.</b> The 8 shape-types are my proposal — do they match how you think about your entities, or should the type list change?</p></div>
+      <div class="q"><span class="mark">?</span><p><b>The value variable.</b> When colour is driven by "an allocated value," what are the real value sets you care about — status, entity-type, lifecycle stage, something else?</p></div>
+      <div class="q"><span class="mark">?</span><p><b>Taxonomy depth.</b> How many facets does a symbol's taxonomy need to be genuinely useful for you (and for Vi to place new ones correctly)?</p></div>
+    </div>
+    <p class="note">This is a draft for you to steer. Mark up anything — rename, cross out, reorder, add. I'll revise the spec from your markup, then we build against whatever this settles into. Nothing downstream is committed until you're happy with the model here.</p>
+  </section>
+
+  <!-- ============================ 8 · UNIVERSAL AXES ============================ -->
+  <section data-screen-label="Universal axis systems">
+    <div class="secnum">08 / THE CONVERGENCE — UNIVERSAL AXES</div>
+    <h2>Every facet becomes a first-class Axis system <span style="color:var(--accent-gold-deep);font-size:0.6em;vertical-align:middle">· FOUNDATION BUILT</span></h2>
+    <p class="lede">The next architectural move (foundations now built). A facet was already "an axis value resolved from a single source." Each is now a <b>dedicated, hierarchical, typed Axis system</b> (<code>window.CV_AXES</code>) with one shared shape — and a Glyphic stops <i>owning</i> any axis: it is a <b>subscriber</b> that <b>declares which values of an axis it uses</b> in its part slots. Motion is the worked example: not "glyphic motion" but the <b>Motion axis</b> (<code>axes/motion/</code>), of which the Glyphic subscribes to some values. <b>Tokens are the value-units</b> of an axis — the colour axis <i>is</i> the colour tokens, typed and grouped. Nine axes are live: <code>color · space · size · motion · texture · depth · fill · form · symbol</code>. Full plan + carried-scope: <code>analysis/AXIS-REFACTOR.md</code>.</p>
+
+    <div class="callout">
+      <p class="ctitle">The rule, generalised</p>
+      <p>One home per axis (Motion · Colour · Space · Size · Form · Texture · Depth · Fill · Symbol · Meaning · …), each a hierarchy of typed values with the shared <code>register / resolve / list / query / subscribe</code> API, registered in a top-level <code>CV_AXES</code>. Everything visual <b>resolves its value through an axis</b>; no consumer hardcodes a value table. A component's slot declaration is a <b>subscription</b>: <code>{ axis, groups?|values?, default, conditions? }</code> — and an editor/foundry shows exactly <code>candidates(subscription)</code>. This is the substrate every future universal component (panel, graph, slide) shares.</p>
+    </div>
+
+    <h3>Carried scope — not lost in the refactor</h3>
+    <ul>
+      <li><b>Foundry conversational UI</b> — propose → feedback → click → iterate → Save. Capabilities <code>glyphic.generate</code> / <code>glyphic.save</code> + record schema already built; needs the value-vocab sign-off (§7) + a live provider.</li>
+      <li><b>Consumer convergence</b> — brand_shapes / brand_vi / box-variants onto the one render path (cosmetic; same single source below).</li>
+      <li><b>§7 open questions</b> — still yours to settle (facet naming, v1 set, Form-axis ends, meaning vocabularies, the value variable, taxonomy depth).</li>
+      <li><b>Socket conditions</b> — event-sockets, addresses, and the condition evaluator (declared in §05c; <code>accepts()</code> seeded, full engine pending).</li>
+      <li><b>Per-axis cards</b> — each axis (Motion · Colour · Space · …) wants its own Design-System card showing its typed value hierarchy, like this spec. Pending.</li>
+    </ul>
+    <p class="note">This section tracks an in-flight autonomous build; it updates as each axis lands. The authoritative, detailed scope is <code>analysis/AXIS-REFACTOR.md</code>.</p>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var S = window.CV_SHAPES;
+  var GL = window.CV_GLYPHIC;
+
+  // ---- §3 facet table: live specimens from the real renderer ----
+  function svgWrap(inner, size){ return '<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'" style="overflow:visible">'+inner+'</svg>'; }
+
+  var facets = [
+    { name:'Form', home:'CV_SHAPES.geom', range:'0 (no ring) · 3–8 sides · ∞ (circle)', means:'type-class — Entity / Action / System / Gateway …',
+      desc:'The outer ring: a regular n-gon vessel, sized so every form shares one height. Its number of sides is a single parameter; the zero of the axis is no ring at all (symbol alone).',
+      demo: function(){ return GL.render({ form:'hex', symbol:'gear', fill:'paper' }, { size: 72 }); } },
+    { name:'Symbol', home:'CV_ICONS.data + .facets', range:'~110 glyphs · faceted taxonomy', means:'the specific thing — a house, a person, a drone',
+      desc:'The inner glyph: a distinct line-symbol on a 24-grid, tinted via currentColor. Each is now tagged with a domain + kind + tags in CV_ICONS.facets (the flat ad-hoc grouping is gone).',
+      demo: function(){ return GL.render({ form:'octagon', symbol:'house' }, { size: 72 }); } },
+    { name:'Fill', home:'token (paper / wash / tint)', range:'none (α0) · paper · wash · tint',
+      means:'secondary state / grouping', desc:'The plane between ring and symbol. Its zero is translucent / none; otherwise a paper sheen, a gold wash, or a colour tint. An independent region — the third part you flagged.',
+      demo: function(){ return GL.render({ form:'square', symbol:'file', fill:'wash' }, { size: 72 }); } },
+    { name:'Colour', home:'colors_and_type.css + tokens', range:'any role token, per part', means:'an allocated value — state OR type OR category',
+      desc:'Ring, symbol, and fill each take a colour independently, each bound to a role token. The colour encodes a value that is itself a variable: what it means is assigned per use.',
+      demo: function(){ return GL.render({ form:'circle', symbol:'check', color:{ ring:'sage', symbol:'sage' } }, { size: 72 }); } },
+    { name:'Texture', home:'tokens/texture.css', range:'none · hatch · dense · cross · grid · lines · vert · dots',
+      means:'sub-class / material', desc:'A low-opacity surface pattern on a part — now 8 values in the single source. The concept generalises to any texture. Felt, not seen.',
+      demo: function(){ return GL.render({ form:'hex', symbol:'gear', texture:'hatch' }, { size: 72 }); } },
+    { name:'Motion', home:'tokens/motion.css', range:'none · breathe · pulse · bob · tilt · spin · float · glow',
+      means:'liveness / attention / status', desc:'Ambient or entrance animation per part — a gold glow on the active glyphic, a draw-on of the symbol, a stagger as a row arrives. "Nothing teleports."',
+      demo: function(){ return GL.render({ form:'diamond', symbol:'atom', texture:'lines', motion:'glow' }, { size: 72 }); } },
+    { name:'Size', home:'tokens/icons.css + sizing', range:'xs → xl (the icon scale)', means:'hierarchy / emphasis',
+      desc:'Overall scale of the Glyphic, from an inline xs chip to a hero xl node. One scale, shared with the icon tokens.',
+      demo: function(){ return '<div style="display:flex;align-items:center;gap:6px">'+GL.render({form:'pentagon',symbol:'star'},{size:34})+GL.render({form:'pentagon',symbol:'star'},{size:56})+'</div>'; } },
+    { name:'Depth', home:'tokens/depth.css', range:'flat (0) → raised → deep', means:'elevation / focus / layering',
+      desc:'The shadow + sense of depth a Glyphic sits at. Its zero is flat (no shadow); higher steps lift it off the surface. One of the compositional pieces — the selected or active Glyphic can rise above its neighbours.',
+      demo: function(){ return GL.render({ form:'square', symbol:'tile-stack', depth:'d5' }, { size: 72 }); } },
+  ];
+
+  document.getElementById('facets').innerHTML = facets.map(function(f){
+    return '<div class="facet">' +
+      '<div class="demo">' + f.demo() + '</div>' +
+      '<div class="body"><div class="ftitle"><span class="fname">' + f.name + '</span><span class="fhome">' + f.home + '</span></div>' +
+      '<p class="fdesc">' + f.desc + '</p>' +
+      '<div class="fmeta"><span>range&nbsp;&nbsp;<b>' + f.range + '</b></span><span>carries&nbsp;&nbsp;<b>' + f.means + '</b></span></div>' +
+      '</div></div>';
+  }).join('');
+
+  // ---- §3b cumulative facet walk: each row varies ONE facet; its end value
+  //      locks for all rows below. 8 cells/row, all 7 facets. ----
+  var FILLS = {
+    none: null,
+    paper:        ['var(--bg-surface)','var(--paper)','var(--paper-2)'],
+    bronze:       ['color-mix(in srgb, var(--accent-bronze) 17%, var(--paper))','color-mix(in srgb, var(--accent-bronze) 9%, var(--paper))','var(--paper)'],
+    sage:         ['color-mix(in srgb, var(--accent-communication,#5A8A4A) 18%, var(--paper))','color-mix(in srgb, var(--accent-communication,#5A8A4A) 9%, var(--paper))','var(--paper)'],
+    ink:          ['color-mix(in srgb, var(--fg-primary) 13%, var(--paper))','color-mix(in srgb, var(--fg-primary) 6%, var(--paper))','var(--paper)'],
+    'gold-soft':  ['var(--accent-gold-soft)','var(--accent-gold-50)','var(--accent-gold-soft)'],
+    'gold':       ['var(--accent-gold)','var(--accent-gold-soft)','var(--accent-gold)'],
+    'gold-50':    ['var(--accent-gold-50)','var(--accent-gold-soft)','var(--accent-gold-50)'],
+    // muted brand-hue fills for the Fill walk — each a different colour, low mix toward paper
+    'f-gold':   ['color-mix(in srgb, var(--accent-gold) 22%, var(--paper))','color-mix(in srgb, var(--accent-gold) 12%, var(--paper))','var(--paper)'],
+    'f-bronze': ['color-mix(in srgb, var(--accent-bronze) 20%, var(--paper))','color-mix(in srgb, var(--accent-bronze) 11%, var(--paper))','var(--paper)'],
+    'f-sage':   ['color-mix(in srgb, var(--accent-communication,#5A8A4A) 20%, var(--paper))','color-mix(in srgb, var(--accent-communication,#5A8A4A) 11%, var(--paper))','var(--paper)'],
+    'f-amber':  ['color-mix(in srgb, var(--status-warning,#C8881F) 20%, var(--paper))','color-mix(in srgb, var(--status-warning,#C8881F) 11%, var(--paper))','var(--paper)'],
+    'f-blue':   ['color-mix(in srgb, var(--status-info,#3E6F9E) 18%, var(--paper))','color-mix(in srgb, var(--status-info,#3E6F9E) 10%, var(--paper))','var(--paper)'],
+    'f-clay':   ['color-mix(in srgb, var(--status-error,#B5482E) 17%, var(--paper))','color-mix(in srgb, var(--status-error,#B5482E) 9%, var(--paper))','var(--paper)'],
+    'f-ink':    ['color-mix(in srgb, var(--fg-primary) 13%, var(--paper))','color-mix(in srgb, var(--fg-primary) 7%, var(--paper))','var(--paper)']
+  };
+  var COLORS = {
+    bronze:'var(--accent-bronze-2, #7E6539)', gold:'var(--accent-gold, #E0C010)',
+    sage:'var(--accent-communication, #5A8A4A)', warning:'var(--status-warning, #C8881F)',
+    error:'var(--status-error, #B5482E)', info:'var(--status-info, #3E6F9E)',
+    ink:'var(--fg-primary, #211C14)', muted:'var(--fg-muted, #9A8E78)'
+  };
+
+  function iconOnly(name, color, size){
+    var body = (window.CV_ICONS && CV_ICONS.get) ? CV_ICONS.get(name) : '';
+    return '<svg viewBox="0 0 24 24" width="'+size+'" height="'+size+'" fill="none" stroke="'+color+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:'+color+'">'+(body||'')+'</svg>';
+  }
+  function mk(st){
+    var color = COLORS[st.color] || COLORS.bronze;
+    var sz = st.size;
+    var inner;
+    if (st.form === 'none') {
+      inner = iconOnly(st.symbol, color, Math.round(sz * 0.72));
+    } else {
+      var opts = { size: sz, icon: st.symbol, stroke: color, ink: color };
+      if (st.texture && st.texture !== 'none') opts.pattern = st.texture;
+      if (st.fill === 'none') opts.frameOnly = true;
+      else if (FILLS[st.fill]) opts.fill = FILLS[st.fill];
+      if (st.depth === 'flat') opts.flat = true;
+      else if (DEPTHS[st.depth]) opts.shadow = DEPTHS[st.depth];
+      inner = S.markSVG(st.form, opts);
+    }
+    var moCls = (st.motion && st.motion !== 'none') ? ' mo-' + st.motion : '';
+    return '<span class="mo' + moCls + '" style="display:inline-flex">' + inner + '</span>';
+  }
+
+  // depth scale (shadow objects) — the Depth facet's value range; 'normal' = the default
+  var DEPTHS = {
+    d1: { color:'var(--accent-bronze)', dx:0.4, dy:1,  blur:1,   opacity:0.16 },
+    d2: { color:'var(--accent-bronze)', dx:0.5, dy:2,  blur:1.8, opacity:0.20 },
+    d3: { color:'var(--accent-bronze)', dx:0.6, dy:3,  blur:2.6, opacity:0.24 },
+    d4: { color:'var(--accent-bronze)', dx:0.7, dy:4.5,blur:3.6, opacity:0.28 },
+    d5: { color:'var(--accent-bronze)', dx:0.8, dy:6,  blur:5,   opacity:0.30 },
+    d6: { color:'var(--accent-bronze)', dx:1.0, dy:8,  blur:6.5, opacity:0.32 }
+  };
+
+  // base state before the walk begins
+  var st = { form:'circle', symbol:'person', fill:'paper', color:'bronze', texture:'none', motion:'none', size:54, depth:'normal' };
+
+  // each row: which facet varies, a human "locks → X" note, the field, and 8 [value,caption]
+  var rows = [
+    { ax:'1 · Symbol', field:'symbol', lk:'ring fixed (circle)',
+      vals:[['person','person'],['people','people'],['file','file'],['gear','gear'],['globe','globe'],['drone','drone'],['building-tall','building'],['house','house']] },
+    { ax:'2 · Form', field:'form', lk:'symbol locked (house)',
+      vals:[['none','0 · none'],['triangle','triangle'],['square','square'],['diamond','diamond'],['pentagon','pentagon'],['hex','hexagon'],['heptagon','heptagon'],['octagon','octagon']] },
+    { ax:'3 · Fill', field:'fill', lk:'form locked (octagon)',
+      vals:[['f-gold','gold'],['f-bronze','bronze'],['f-sage','sage'],['f-amber','amber'],['f-blue','blue'],['f-clay','clay'],['f-ink','ink'],['none','none · α0']] },
+    { ax:'4 · Colour', field:'color', lk:'fill locked (none)',
+      vals:[['bronze','bronze'],['ink','ink'],['muted','muted'],['sage','sage'],['info','info'],['warning','warning'],['error','error'],['gold','gold']] },
+    { ax:'5 · Texture', field:'texture', lk:'colour locked (gold)',
+      vals:[['none','none'],['dots','dots'],['grid','grid'],['vert','vertical'],['lines','lines'],['cross','cross'],['dense','dense'],['hatch','hatch']] },
+    { ax:'6 · Motion', field:'motion', lk:'texture locked (hatch)',
+      vals:[['none','none'],['breathe','breathe'],['pulse','pulse'],['bob','bob'],['tilt','tilt'],['spin','spin'],['float','float'],['glow','glow']] },
+    { ax:'7 · Size', field:'size', lk:'motion locked (glow)',
+      vals:[[30,'30'],[38,'38'],[46,'46'],[54,'54'],[62,'62'],[70,'70'],[78,'78'],[86,'86']] },
+    { ax:'8 · Depth', field:'depth', lk:'fully composed', fix:{ size:56 },
+      vals:[['flat','flat · 0'],['d1','lift'],['d2','low'],['d3','base'],['d4','raised'],['d5','high'],['d6','deep'],['normal','normal']] }
+  ];
+
+  var html = '';
+  rows.forEach(function(row){
+    var cells = row.vals.map(function(v, i){
+      var cellState = {}; for (var k in st) cellState[k] = st[k];
+      cellState[row.field] = v[0];
+      if (row.fix) for (var fk in row.fix) cellState[fk] = row.fix[fk];
+      var isEnd = (i === row.vals.length - 1);
+      return '<div class="mcell' + (isEnd ? ' lockend' : '') + '">' + mk(cellState) + '<span class="cap">' + v[1] + '</span></div>';
+    }).join('');
+    html += '<div class="mrow"><div class="mlabel"><span class="ax">' + row.ax + '</span><span class="lk">' + row.lk + '</span></div><div class="mcells">' + cells + '</div></div>';
+    // lock this row's end value into the running state
+    st[row.field] = row.vals[row.vals.length - 1][0];
+  });
+  document.getElementById('matrix').innerHTML = html;
+})();
+</script>
+</body>
+</html>

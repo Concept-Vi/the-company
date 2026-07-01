@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-SCENARIO-PLAYER.json",
+  "model": "opus",
+  "what_it_does": "A grounding/confirmation report for the SCENARIO-PLAYER.html mockup: it records 41 candidate UI elements, clustered into 26 dossiers, each carrying an address (ui://...), capabilities, a howto, a maps_to_feature, and a jury verdict, split into 'confirmed' and 'flagged' lists.",
+  "observations": [
+    "Top-level counts: n_candidates 41, n_dossiers 41, n_clusters 26 (note n_dossiers equals n_candidates, not n_clusters).",
+    "'ground' block describes the screen as a warm gold-themed control room with personas Vi/Atlas/Nova and phone/desktop frame toggle.",
+    "Each dossier has an address using a ui:// scheme (e.g. ui://scenario-player/ptt, ui://chat/reply) and a capabilities list drawn from a small vocabulary: pointable, openable, driven, presentable, spotlit.",
+    "Confirmation is decided by a 3-draw jury producing votes_grounded/votes_ungrounded, unanimous, quorum, and an overall verdict.",
+    "Two distinct check layers are named: 'refcheck (Layer 1, deterministic floor)' and 'accuracy jury (Layer 2, SOFT — variance not error)'.",
+    "Layer 1 floor rejects maps_to_feature values that are neither an inventory id nor 'proposed' — flagged as 'feature fabrication' (e.g. RHM-identity, RHM-thinking, RHM-persona, RHM-listen, RHM-utterance, RHM-status).",
+    "Some elements are flagged despite a unanimous grounded jury (e.g. ui://chat/listen, ui://chat/utterance) purely because Layer 1 caught a fabricated feature id.",
+    "Two dossiers carry grounding 'built' (ui://chat/toolbar→RUN-run, ui://chat/status→RHM-status); most are grounding 'proposed'.",
+    "Two different dossiers share the address ui://chat/utterance with different capabilities and maps_to_feature.",
+    "howto.how_to_change frequently names concrete source files (ScenarioPlayer.tsx, RhmChat.tsx, Toolbar.tsx, runtime/suite.py:chat, runtime/suite.py:scenario)."
+  ],
+  "standouts": [
+    "The two-layer jury: a deterministic floor (refcheck for feature fabrication) plus a soft variance-tolerant accuracy jury, with the floor able to flag even a unanimous-grounded element.",
+    "'feature fabrication' as an explicit failure mode: maps_to_feature must resolve to an inventory id or the literal 'proposed'.",
+    "Grounded-but-flagged cases reveal the floor and jury are independent gates that both must pass."
+  ],
+  "conventions": [
+    "Follows a ui:// addressing scheme and a fixed capability vocabulary.",
+    "Each dossier carries a howto triple (what / what_you_can_do / how_to_change) pointing at real surface files.",
+    "Jury record shape (verdict, votes_grounded, votes_ungrounded, n, unanimous, quorum) is uniform across all dossiers.",
+    "maps_to_feature uses prefixed inventory ids (RHM-*, RUN-*, INB-*, ENG-*) or the sentinel 'proposed'."
+  ],
+  "concerns": [
+    "Several maps_to_feature ids the file itself marks as fabricated (RHM-identity, RHM-thinking, RHM-persona, RHM-listen, RHM-utterance, RHM-status) — the file flags these but they remain in the dossiers.",
+    "n_dossiers (41) does not match n_clusters (26), so the field naming inside this file is internally ambiguous.",
+    "Duplicate address ui://chat/utterance appears in two entries with divergent content."
+  ],
+  "notes": "A QA-style grounding report classifying each Scenario Player UI element as confirmed or flagged via a deterministic floor plus a soft accuracy jury.",
+  "questions": [
+    "What is the authoritative 'inventory' of feature ids that refcheck validates maps_to_feature against?",
+    "Why does n_dossiers equal n_candidates (41) rather than n_clusters (26)?",
+    "Are 'built' vs 'proposed' grounding values asserted or inferred for ui://chat/toolbar and ui://chat/status?"
+  ],
+  "purpose_vs_actual": "Matches: it presents itself as a grounding/confirmation pass over a mockup's UI elements and the body delivers exactly that with per-element jury verdicts.",
+  "apparent_themes": [
+    "Addressable UI surface (every element gets a ui:// address and capabilities)",
+    "Grounding verification with explicit fabrication detection",
+    "Two-layer evaluation: deterministic floor + soft probabilistic jury",
+    "Operator-scrutiny escalation for low-quorum elements"
+  ],
+  "intention_signals": "Auto-generated artefact from a pipeline that proposes UI-element dossiers for a mockup, then gates them through a refcheck floor and a multi-draw accuracy jury, separating safe-to-confirm elements from those needing operator review.",
+  "novelty": "The 'feature fabrication' floor check that distinguishes inventory-backed feature ids from hallucinated ones, combined with a vote-tally jury that can be overridden by the deterministic layer.",
+  "contribution": "Contributes a worked instance of element-level UI grounding output for the Scenario Player surface — the address/capability/howto/jury dossier shape and the confirmed/flagged partition with explicit fabrication reasons.",
+  "summary_for_embedding": "A grounding-confirmation report for the SCENARIO-PLAYER.html mockup listing 41 addressed UI-element dossiers (ui:// addresses, capabilities, howtos, feature mappings) partitioned into confirmed and flagged by a deterministic refcheck floor plus a 3-draw accuracy jury.",
+  "intention_for_embedding": "To gate auto-proposed UI-element dossiers for a mockup through a fabrication floor and an accuracy jury, surfacing which elements are confirmed and which need operator scrutiny."
+}

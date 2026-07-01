@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "preview/icons_tones.html",
+  "model": "opus",
+  "what_it_does": "A preview card (HTML) demonstrating the icon component's tone and size parameters: it renders the same five icons at five sizes (16/20/24/32/40 px) across four tone rows (bronze, gold, ink, and cream on a dark background), each tone mapped to a CSS-variable colour, pulled from the shared cv-icons.js data object.",
+  "observations": [
+    "Carries a @dsCard annotation (group='Brand', name='Icon — tones & sizes', subtitle 'Bronze · gold · ink · muted · cream', viewport='700x280').",
+    "Defines TONES mapping bronze→var(--accent-bronze), gold→var(--accent-gold), ink→var(--fg-primary), cream→var(--bg-canvas).",
+    "SIZES = [16,20,24,32,40] and ICONS = ['house','file','chat','dashboard','network']; each icon rendered at the size with matching index.",
+    "The 'cream' tone is shown on a .stage.dark with var(--bg-dark) background so the light glyph is visible.",
+    "States defaults in the meta row: tone='bronze', size={24}, stroke fixed at 1.5px.",
+    "Loads ../assets/icons/cv-icons.js and reads window.CV_ICONS.data[name]; skips a stage if its element is missing."
+  ],
+  "standouts": [
+    "Tones are expressed as references to design tokens (CSS vars), not literal colours — the icon's colour vocabulary is single-sourced.",
+    "Subtitle mentions five tones (bronze/gold/ink/muted/cream) but the rows render only four (bronze/gold/ink/cream) — 'muted' is named but not shown."
+  ],
+  "conventions": [
+    "Follows the @dsCard + _card.css + CSS-variable preview-card convention.",
+    "Maps a component prop (tone) to design tokens rather than raw values, consistent with the reference-not-copy directive."
+  ],
+  "concerns": [
+    "Subtitle lists 'muted' as a tone but no muted row is rendered — a mismatch between the card's stated tones and the demonstrated set.",
+    "Inline style literals (font-family/size/color) repeated in the lead's <code> elements."
+  ],
+  "notes": "A brand card showing the icon component's tone (token-mapped) and size axes across four example rows; note the subtitle lists 'muted' which the body does not render.",
+  "questions": [
+    "Is 'muted' an intended tone that was dropped from the rendered rows, or a stale subtitle?",
+    "Is the size-per-icon pairing illustrative only, or does it reflect recommended sizes for those specific icons?"
+  ],
+  "purpose_vs_actual": "Mostly matches — it demonstrates tones and sizes as the @dsCard claims, but the subtitle promises a 'muted' tone that the rendered rows omit.",
+  "apparent_themes": [
+    "Token-mapped component props (tone = a reference to a design token)",
+    "Parametric component axes (tone, size) shown by example",
+    "Self-describing preview cards"
+  ],
+  "intention_signals": "Aims to show that the icon component is parametric — its colour comes from named tones bound to tokens, and its size is a free axis — proving icons inherit the system's palette rather than carrying their own colours.",
+  "novelty": "Demonstrates a component's colour API as a small enum of token-bound tones (including an on-dark case), making the icon's colour single-sourced from the palette.",
+  "contribution": "Contributes the demonstration of the icon component's tone/size parameter surface, mapping tone names to design tokens and showing the on-dark rendering case.",
+  "summary_for_embedding": "An HTML preview card rendering five icons at five sizes across four token-bound tone rows (bronze/gold/ink/cream-on-dark) from the ConceptV shared icon data object.",
+  "intention_for_embedding": "To show the icon component's parametric tone and size axes, with tones bound to design tokens rather than literal colours."
+}

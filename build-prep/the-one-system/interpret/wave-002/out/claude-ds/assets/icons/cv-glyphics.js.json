@@ -1,0 +1,54 @@
+{
+  "project": "claude-ds",
+  "path": "assets/icons/cv-glyphics.js",
+  "model": "opus",
+  "what_it_does": "An IIFE defining window.CV_GLYPHIC, the registry/compositor for the 'Glyphic' — a composable mark built from independent facets (form/outer n-gon, symbol/inner glyph, fill, color, texture, motion, size, depth). It declares the FACET schema (each facet's single source, zero value, and live value space), system DEFAULTS, color tokens, fill ramps, and depth-shadow ramps; provides record schemas for symbols and glyphics; and exposes methods to validate, normalize, resolve facet value spaces, look up contextual meaning (via CV_MEANING), resolve motion classes (via CV_AXES), and compose/render a glyphic to SVG by delegating geometry to CV_SHAPES.markSVG.",
+  "observations": [
+    "Header declares this the ONE home for the Glyphic unit; it COMPOSES other single sources rather than redefining geometry/symbols/colors/textures/motion.",
+    "need(name) guard throws a loud error with the required load order if a dependency (CV_SHAPES, CV_ICONS) isn't loaded.",
+    "FACETS object is called 'THE contract' — each facet carries source, zero, type, a values() function reading the live vocabulary, and a 'means' description.",
+    "Facet value spaces are resolved LIVE from their sources (e.g. form from CV_SHAPES.geom, symbol from CV_ICONS.data, motion preferentially from the CV_AXES motion axis with a hardcoded fallback list).",
+    "DEFAULTS: form circle, symbol person, fill paper, color {ring gold, symbol bronze}, texture none, motion none, size 56, depth normal.",
+    "COLOR_TOKENS map facet color names to CSS vars with fallbacks (e.g. sage→var(--accent-communication,#5A8A4A)).",
+    "FILL_RAMPS and DEPTH ramps are recipes of tokens; depth shadows are SVG-filter params (dx/dy/blur/opacity) because a polygon shadow can't be a CSS box-shadow.",
+    "Schemas for 'symbol' and 'glyphic' records (the shape the AI foundry emits and the registry validates); validateSymbol enforces kebab-case id and required fields, never coerces.",
+    "Meaning is delegated to CV_MEANING (contextual, profile-driven), with a CV_SHAPES.shapeTypes fallback for form only.",
+    "compose() builds SVG: form 'none' renders the bare inner symbol; otherwise delegates to CV_SHAPES.markSVG with resolved stroke/ink/fill/pattern/shadow; motion returned as a class for the consumer to apply.",
+    "Mirrors register/resolve/query API shape of CV_REGISTRY / CV_AI / CV_MEANING by design."
+  ],
+  "standouts": [
+    "The FACETS object as a single declared contract that editors, validators, and the AI foundry all read — there is no second list of facets.",
+    "Facet value spaces resolved live from their own single sources (CV_SHAPES, CV_ICONS, CV_AXES) rather than duplicated here.",
+    "Depth shadows expressed as SVG-filter geometry (not CSS box-shadow) so the drop-shadow follows the polygon, with the tint single-sourced from --shadow-c.",
+    "Loud-fail load-order guard (need) and non-coercing validators."
+  ],
+  "conventions": [
+    "Single-source composition: this layer composes; geometry/symbols/colors/textures/motion live in their own homes.",
+    "IIFE + window.CV_GLYPHIC global, 'use strict', ES5-style var — matches the script-load registry pattern.",
+    "Mirrors the shared register/resolve/validate/query API of the other registries.",
+    "Loud fail (throw on missing dependency, problem-list on invalid spec) per the system's no-silent-degrade rule."
+  ],
+  "concerns": [
+    "Motion facet keeps a hardcoded fallback value list (['none','breathe',...]) that duplicates the axis vocabulary — a drift risk if the axis set diverges (the code marks it explicitly as a fallback).",
+    "DEFAULTS and COLOR_TOKENS embed some literal fallbacks (#5A8A4A etc.) inside var() fallbacks, off-token literals living in JS."
+  ],
+  "notes": "The Glyphic registry/compositor: defines the facet contract and renders a faceted mark to SVG by delegating to CV_SHAPES, while sourcing symbols, colors, motion, and meaning from their own single homes.",
+  "questions": [
+    "What is the exact signature/output of CV_SHAPES.markSVG that compose() depends on (the geometry contract)?",
+    "How does CV_AXES.css('motion', id) name its classes vs the legacy 'mo-'+id fallback?",
+    "Is the 'value' field (allocated meaning value) wired through any editor UI, or only consumed in compose()?"
+  ],
+  "purpose_vs_actual": "Matches — header states it is the one home that COMPOSES facets (not redefines them) and mirrors the other registries' API, and the code does exactly that: declares the facet contract, validates, and composes via delegation.",
+  "apparent_themes": [
+    "Generative composition from independent facets",
+    "Single-source-of-truth / no second list",
+    "Contextual meaning delegated to a swappable profile",
+    "Registry-family symmetry (same API across registries)",
+    "Loud-fail validation, never silent coerce"
+  ],
+  "intention_signals": "Trying to make a mark a point in a multi-axis facet space — composed generatively from independent, single-sourced vocabularies and renderable/validatable by both an AI foundry and human authors through one contract.",
+  "novelty": "Treating an icon/badge as a 'Glyphic' — a composed stack of meaning-bearing facets (form, symbol, fill, color, texture, motion, size, depth) each resolved live from its own source, with depth as SVG-filter geometry.",
+  "contribution": "Contributes the Glyphic facet contract, record schemas (symbol + glyphic), facet-value resolution, validation/normalization, and the compose/render pipeline that assembles a faceted mark to SVG by delegating to the shape/icon/meaning/motion single sources.",
+  "summary_for_embedding": "An IIFE registry (window.CV_GLYPHIC) defining the 'Glyphic' faceted-mark contract (form/symbol/fill/color/texture/motion/size/depth), its record schemas, validation, and a compose/render pipeline that builds SVG by delegating geometry to CV_SHAPES and sourcing symbols, meaning, and motion from CV_ICONS/CV_MEANING/CV_AXES.",
+  "intention_for_embedding": "To provide one home that composes independent single-sourced facet vocabularies into a generative, validatable, renderable mark for both an AI glyphic-foundry and human authors."
+}

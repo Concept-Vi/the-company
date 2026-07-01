@@ -1,0 +1,30 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/CanvasHeader.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a small shared CanvasHeader React component that renders a canvas header bar: a title (h1), an optional subtitle (p), and an optional actions slot. Attaches it to window.CanvasHeader.",
+  "observations": [
+    "Three props: title, sub (optional), actions (optional)",
+    "Subtitle and actions are conditionally rendered only when provided",
+    "Uses class names only (dsa-canvas-header / -title-block / -title / -sub / -actions) — no inline styles",
+    "Exposed via window.CanvasHeader rather than ES export"
+  ],
+  "standouts": [],
+  "conventions": [
+    "Follows the project's window-global component pattern",
+    "Pure class-based styling (defers all look to the design-system CSS / tokens) — no raw px or hex, on-system"
+  ],
+  "concerns": [],
+  "notes": "A tiny presentational header (title + optional subtitle + actions slot) reused across canvases via window.CanvasHeader.",
+  "questions": [],
+  "purpose_vs_actual": "Matches — the comment calls it a shared canvas header and that is exactly what it is.",
+  "apparent_themes": [
+    "Reusable presentational primitive",
+    "Style deferred to tokens/classes (single-source look)"
+  ],
+  "intention_signals": "Provides one consistent header shell every canvas/editor reuses, so titles, subtitles, and action toolbars look identical everywhere without duplication.",
+  "novelty": "n/a",
+  "contribution": "Contributes the shared canvas header layout primitive — title + optional subtitle + actions slot — that the builder canvases compose.",
+  "summary_for_embedding": "A small shared React CanvasHeader component rendering a title, optional subtitle, and an optional actions slot, exposed on window.CanvasHeader.",
+  "intention_for_embedding": "To give every canvas/editor one consistent, class-styled header shell with a title, subtitle, and actions slot, avoiding duplicated header markup."
+}

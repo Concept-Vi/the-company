@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/canvas.css",
+  "model": "opus",
+  "what_it_does": "A CSS scaffold for a 'SPATIAL CANVAS' — the structural layer (coordinates, pan/zoom transform, node placement, edge layer) for a workflow-vision surface where source → candidate → approval → package are laid out in space with branch traces, off-frame ghosting, a memory shelf for rejected work, and a brought-forward selected branch. Defines :root canvas variables (--cv-x/--cv-y/--cv-scale pan+zoom, --cv-grid, --cv-grid-color, --cv-ghost-opacity) and classes: .spatial-canvas (viewport, gridded background, touch-action:none), .spatial-world (the transformed pannable plane), .spatial-edges (full-world SVG edge layer), .spatial-node (absolutely placed nodes reusing diagram node tokens), node states (active/rejected/branch), .spatial-ghost (mask-faded off-frame), and .spatial-memory (docked reject shelf).",
+  "observations": [
+    "Header comment explicitly scopes this as the STRUCTURAL scaffold; the interactive engine (drag pan/zoom, auto-routing, spec→diagram generation) is named as a later component built on this + tokens/diagram.css.",
+    "Coordinate model documented: .spatial-canvas = viewport, .spatial-world = pannable/zoomable plane transformed by --cv-x/--cv-y/--cv-scale, nodes at --x/--y, edges in one <svg> spanning the world.",
+    "Several custom properties carry `/* @kind other */` annotations (--cv-x, --cv-y, --cv-scale, --cv-ghost-opacity) — a token-classification marker.",
+    ".spatial-world has a transform transition (var(--dur-move) var(--ease-emphasized)) for programmatic glides, removed via .dragging for 1:1 live drag.",
+    ".spatial-node reuses diagram tokens (--dgm-node-min-w/-pad/-radius/-fill/-edge, --dgm-stroke-hair) and --elev-2 — not bespoke values.",
+    "State styling: [data-active] gets --glow-active + --vi-edge; [data-state=rejected] dashed + --zone-reject-edge; .has-branch softens non-active branch nodes to --cv-ghost-opacity.",
+    ".spatial-ghost uses linear-gradient mask-image (with -webkit- prefix) to fade off-frame continuation.",
+    ".spatial-memory is a right-docked reject/near-miss shelf using --zone-reject-surface/-edge and --z-raised.",
+    "Grid drawn as two layered linear-gradients sized by --cv-grid, positioned by the pan offset over --zone-base-surface."
+  ],
+  "standouts": [
+    "Encodes a spatial workflow-vision metaphor in CSS: branch traces, off-frame ghosting ('there's more this way'), and a docked memory shelf for rejected/near-miss work.",
+    "Pan/zoom expressed purely as CSS custom properties (--cv-x/--cv-y/--cv-scale) on a transform, so the engine only mutates variables.",
+    "Live-drag vs programmatic-move distinction (.dragging removes the transition) is a deliberate interaction-feel detail in the scaffold."
+  ],
+  "conventions": [
+    "Token-pure: every value resolves to a registered token (diagram/zone/elevation/duration/easing tokens) — matches the DS no-raw-literals rule; the few raw px (grid 28px, memory width 132px, mask 40%) are scaffold geometry.",
+    "Reuses diagram.css node tokens rather than inventing node styling — single-source adherence.",
+    "Uses the `/* @kind other */` token-classification comment convention.",
+    "Variable-driven transform pattern consistent with a 'mutate vars, not DOM' engine design."
+  ],
+  "concerns": [
+    "A few raw literals remain (--cv-grid:28px, .spatial-memory width:132px, ghost mask 40%, hairline 1px) — scaffold geometry, but file-local hardcodes.",
+    "Self-described as scaffold only: the interactive engine it depends on does not exist in this file, so nothing here is verifiable as working without it."
+  ],
+  "notes": "The structural CSS skeleton for a pan/zoom spatial workflow canvas (source→candidate→approval→package in space) — coordinates, world transform, edge layer, node states, ghosting, and a reject memory shelf; the interaction engine is a separate later piece.",
+  "questions": [
+    "Where is the interactive engine that mutates --cv-x/--cv-y/--cv-scale and does auto-routing — does it exist yet?",
+    "Is the spec→diagram generation it references built, or still planned?"
+  ],
+  "purpose_vs_actual": "Matches: the header declares it the structural scaffold (coordinates/transform/placement/edge layer) and the body delivers exactly that, deferring the engine.",
+  "apparent_themes": [
+    "spatial workflow vision (source→candidate→approval→package laid out in space)",
+    "branch traces + memory of rejected work",
+    "off-frame ghosted continuation",
+    "engine-mutates-variables (transform driven by CSS custom props)",
+    "token-pure reuse of diagram/zone tokens"
+  ],
+  "intention_signals": "Aiming to give the workflow/approval pipeline a spatial, map-like surface where the decision tree (chosen branch forward, rejected branches softened/shelved, more continuing off-frame) is visible in space — laying the CSS foundation a future pan/zoom engine drives by changing variables.",
+  "novelty": "A spatial-canvas idiom with explicit memory-of-rejection (a docked reject shelf) and off-frame ghosting baked into design tokens — a workflow visualized as a navigable plane rather than a list.",
+  "contribution": "Contributes the spatial-canvas structural layer: the pan/zoom variable model, .spatial-canvas/world/edges/node class system, branch/reject/active state styling, off-frame ghost masking, and the docked memory-shelf — the foundation a spatial workflow engine builds on.",
+  "summary_for_embedding": "CSS scaffold for a pan/zoom spatial workflow canvas: :root pan/zoom variables, .spatial-canvas viewport with gridded background, transformed .spatial-world plane, full-world SVG edge layer, token-reusing .spatial-node with active/rejected/branch states, off-frame ghost masking, and a docked reject memory shelf.",
+  "intention_for_embedding": "To lay the structural CSS foundation for a spatial, navigable workflow surface (source→candidate→approval→package) with branch traces, ghosted continuation, and a memory of rejected work, driven later by a pan/zoom engine."
+}

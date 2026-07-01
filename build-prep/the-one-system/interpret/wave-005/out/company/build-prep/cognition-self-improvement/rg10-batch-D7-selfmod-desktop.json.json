@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-D7-selfmod-desktop.json",
+  "model": "opus",
+  "what_it_does": "A RG-10 confirmation-batch result for the mockup D7-selfmod-desktop.html (a 'Self-Modification Audit' panel for reviewing and undoing system self-changes). It records 38 candidate UI elements clustered into 17 groups, each a dossier (ui:// address, capabilities, grounding, howto, maps_to_feature, represents) plus a jury confirmation block, split into confirmed and flagged arrays.",
+  "observations": [
+    "Header: mockup name, ground summary (the panel shows the single most recent self-change with a Revert button; older changes hidden as a future feature), counts n_candidates=38, n_dossiers=38, n_clusters=17.",
+    "Only 2 dossiers confirmed (ui://toolbar/run and ui://workshop/self-changes/sm-revert); 15 clusters flagged.",
+    "The sm-revert dossier describes an instant no-confirm git revert that re-discovers the node registry and emits a revert event, itself git-reversible; maps_to_feature SM-revert, grounding 'built'.",
+    "Flagged clusters span toolbar/* (workshop, layers, wire, force), inbox/* (coa, audit, ask, self-apply), workshop/* (audit, nodes, revert, sentiment-node, extend), activity/evt-now, and inbox/walk.",
+    "The biggest flagged cluster is ui://workshop/audit (cluster_size 16), with the audit panel reading from runtime/suite.py:ui_info.",
+    "All flags here are Layer-2 accuracy-jury non-quorum (no refcheck/fabrication failures in this file).",
+    "ui://inbox/walk has grounding 'defer' (a third grounding value beyond built/proposed)."
+  ],
+  "standouts": [
+    "Very low confirmation rate (2 of 17 clusters) — the self-mod surface dossiers largely failed to reach grounding quorum.",
+    "The sm-revert howto encodes a notable safety property: a self-change undo that is itself reversible and re-runs node discovery.",
+    "grounding:'defer' appears on the walk control, distinct from built/proposed."
+  ],
+  "conventions": [
+    "Identical RG-10 batch schema to the sibling files (mockup/ground/counts/confirmed/flagged, jury blocks, reasons).",
+    "Addresses namespaced by region: ui://toolbar/*, ui://workshop/*, ui://inbox/*, ui://activity/*.",
+    "howto triad (what / what_you_can_do / how_to_change) on every dossier; code homes cited (Toolbar.tsx, runtime/suite.py:revert_self_change, Inbox.tsx)."
+  ],
+  "concerns": [
+    "The self-modification audit surface is almost entirely unconfirmed, so its dossier accuracy is largely unverified by this batch.",
+    "maps_to_feature SM-revert is reused across many distinct addresses (toolbar/workshop, toolbar/layers, inbox/self-apply, workshop/audit, workshop/revert), so the mapping is many-to-one."
+  ],
+  "notes": "This is the confirmation ledger for the self-modification-audit mockup; nearly all dossiers are flagged for operator scrutiny, only run and sm-revert passed.",
+  "questions": [
+    "What does grounding:'defer' mean operationally versus 'built'/'proposed'?",
+    "Why did so many self-mod dossiers fail grounding quorum — weak mockup signal, or genuinely speculative elements?"
+  ],
+  "purpose_vs_actual": "Matches: header declares a Self-Modification Audit panel and the dossiers are its toolbar/workshop/inbox controls (revert, audit, extend, node-type proposals).",
+  "apparent_themes": [
+    "Safe, reversible self-modification with operator oversight",
+    "Audit-and-undo as a first-class surface",
+    "Two-layer verification with soft jury flagging",
+    "Self-extension (new node types, extensions) gated by review"
+  ],
+  "intention_signals": "Trying to give the operator a single panel to see and instantly revert the system's most recent self-edit, and to vet the generated dossiers for that panel — flagging the many uncertain ones rather than asserting them.",
+  "novelty": "An audit surface specifically for the system's edits to itself, with a built, git-reversible no-confirm revert action as the one confidently-grounded control.",
+  "contribution": "Contributes the D7 self-modification-audit slice of the dossier corpus: the SM-revert / workshop-audit / self-extension addresses and their verdicts, including the confidently-grounded sm-revert control and the grounding:'defer' walk control.",
+  "summary_for_embedding": "RG-10 confirmation batch for the D7 Self-Modification Audit desktop mockup: 38 candidate UI dossiers clustered into 17, with ui:// addresses, grounding, howto, maps_to_feature and jury verdicts; only run and sm-revert confirmed, the rest flagged.",
+  "intention_for_embedding": "To vet generated dossiers for the self-modification-audit surface (revert, audit, self-extension) via the accuracy jury, surfacing the mostly-unconfirmed elements for operator scrutiny."
+}

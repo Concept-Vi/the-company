@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/THE-SEED-geometric-substrate.md",
+  "model": "opus",
+  "what_it_does": "The root capture (2026-06-11) of Tim Geldard's geometric seed - 'the geometric substrate of everything'. It reconstructs his construction (box, centre, reciprocal-partitioned side, doubling grids, concentric circles, axial coincidence points, forbidden corner circle, the law 2pi/n=(1/n)^k), runs a math check, then maps the object onto every Company primitive across eleven sections, including the invariant-law section (everything is a variable) and explicit assignments of each system primitive to circle/square/angle/radius/axis.",
+  "observations": [
+    "Reconstructs the construction with counts (x/3 -> 5 points/edge -> 4x4 grid; grids double 4x4,8x8,16x16 = 2^2,2^3,2^4; m/2 circles for an mxm grid) and a math check noting non-load-bearing slips (45deg=pi/4 not pi/2; 8x8 has 9 points/edge).",
+    "Section 2 maps primitives: centre=Origin (egocentric/Tim), square/grid=structure (addresses, paths, typed relations as axes), circle/polar=meaning (embeddings, similarity), radius=relevance/similarity, angle=kind/type, scale n=recursive zoom/altitude (Pulse->River->Nodes), coincidence points=the real/ratified/addressable, forbidden zones=residue/translation-loss/edge of the knowable.",
+    "Section 3 names the fundamental tension: square = world's representations, circle = Tim's inarticulable meaning; they agree only along the shared axes (spine); the gate's job is to bring a thing onto the axes; recognition = rotating a forbidden-diagonal point onto a coincidence point.",
+    "Section 4 reads the law 2pi/n=(1/n)^k as a resonance/conservation relation: angular resolution (types) trades against radial depth (scale levels).",
+    "Section 8 states THE INVARIANT LAW verbatim from Tim: no definition, axes are variables, divisions are variables, every integer is a variable, the relative centre moves (the object of attention); the invariant is the relationship, the variable is everything filling it; attention IS origin-selection.",
+    "Section 9 gives explicit assignments Tim requested ('you tell me'): embeddings=circle, directories=square, type registries=angular sectors + axis-vocabulary, timestamps=privileged axis + radial-recency, nodes=populated points, edges=typed vectors/moves, registries=the discrete lattice itself.",
+    "Section 10 defines the forbidden operationally in three kinds: circle-without-square (un-addressed meaning = gate inbox), square-without-circle (un-meant structure = drift/decay list), the corner (maximal incommensurability = architecture-growth signal, grow a new axis).",
+    "Section 11 splits discrete vs continuous: discrete=addressable/gated/ratified/exact/shared; continuous=felt/searched/relative; discrete is sampled from continuous at the current n; gate = permanently promoting a sample to the ratified discrete lattice.",
+    "Section 7 deliberately leaves open tensions unresolved (what the two axes are, what 'forbidden' means operationally, the discrete/continuous design seam) under 'expand-before-harden'."
+  ],
+  "standouts": [
+    "The verbatim invariant law (section 8): law = invariant relationship over variable content, which makes the same instrument agnostic across any domain via axis-assignment + content.",
+    "Recognition defined geometrically as rotating an inarticulable forbidden-diagonal point onto a shared coincidence point - Tim's one irreplaceable act located in the geometry.",
+    "The three operational kinds of 'forbidden' mapped directly to system to-do lists (gate inbox / drift list / architecture-growth signal): the system's to-do list IS its forbidden zones.",
+    "Gate defined as permanently promoting a continuous sample to the ratified discrete lattice (it stays when you zoom back out)."
+  ],
+  "conventions": [
+    "Strong author attribution (Tim's work; all derived generation attributed to him) and verbatim-where-load-bearing capture.",
+    "Math-check-when-asked, distinguishing exact counts from non-load-bearing slips.",
+    "Expand-before-harden: section 7 keeps tensions deliberately unresolved.",
+    "Establishes the dual-coordinate vocabulary (circle/square, coincidence, forbidden, resonance law) reused across the other brain files."
+  ],
+  "concerns": [],
+  "notes": "This is the root seed document - the canonical statement of the box/circle dual-coordinate substrate, the invariant-everything-is-variable law, the per-primitive assignments, and the three operational kinds of forbidden; the other brain files grow from this one.",
+  "questions": [
+    "What is GC14 (referenced as conditional memory firing as the centre moves) - defined here only by name?",
+    "Are the 'two axes' ever fixed, or do they remain deliberately open as section 7 leaves them?"
+  ],
+  "purpose_vs_actual": "Match - it declares itself the geometric substrate of everything and delivers a full construction-to-primitive mapping plus the invariant law and operational definitions.",
+  "apparent_themes": [
+    "Two coordinate systems (square=structure, circle=meaning) over one shared origin",
+    "Invariant relationship over variable content (law not config)",
+    "Attention as origin-selection / moving centre",
+    "Coincidence = real/ratified; forbidden = the work (gate, drift, growth)",
+    "Discrete as sampled-from-continuous at resolution n",
+    "Recognition and gating as geometric operations"
+  ],
+  "intention_signals": "It is trying to capture, at the moment given, a single geometric object Tim claims underlies the entire Company - and to prove its reach by mapping every system primitive onto it, defining the gate and recognition geometrically, and stating the invariant law that makes the instrument domain-agnostic, while honestly leaving the spine-defining choices open.",
+  "novelty": "The unification of structure (square/address) and meaning (circle/embedding) as one dual-coordinate lattice about a moving centre, with the forbidden zones operationalized as the system's actual to-do list and recognition/gating defined as geometric rotations onto the axes.",
+  "contribution": "Contributes the foundational substrate: the dual square/circle coordinate model about a moving origin, the invariant-everything-is-variable law (verbatim), the per-primitive assignments, the resonance law reading, and the operational tri-fold definition of 'forbidden' as gate-inbox/drift/architecture-growth.",
+  "summary_for_embedding": "The root capture of Tim Geldard's geometric seed: a box-and-circle dual-coordinate substrate about a moving centre where square=structure/address and circle=meaning/embedding, coincidence points are the ratified-real, forbidden zones are the work, and the invariant law is relationship-over-variable-content.",
+  "intention_for_embedding": "To capture and prove the reach of the single geometric object Tim says underlies the whole Company by mapping every primitive onto it and defining gating and recognition geometrically."
+}

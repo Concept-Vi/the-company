@@ -1,0 +1,44 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/inventory/inv-B-fe-design.md",
+  "model": "opus",
+  "what_it_does": "A fast read-only census of the Company front-end and design-substrate region (canvas/, design/, panels/ — 106 files), mapping each file's location and apparent purpose with a deep-read priority marker. Produces a directory tree, a file inventory table, key findings on FE structure / design substrate / declarative panels, a top-10 priority list, and the documented extend-points for tokens/addresses/components/panels.",
+  "observations": [
+    "Renders a compressed directory tree of canvas/app/src (App.tsx, useAppController.ts, api.ts, registryStore.ts, NodeShape.tsx, kit.tsx, 19 region components, components, extensions), the design/_system corpus, blueprint surfaces, and panels.",
+    "Documents the F0 restructure: the former 1659-line Hud carved into api.ts, registryStore.ts, NodeShape.tsx, useAppController.ts (~37 useState), AppContext.ts, and 19 region components under a CSS-grid shell over tldraw.",
+    "Maps the design/_system generator pipeline: tokens.json + components.css -> emit.py -> design-system.css (generated, never edit); parse.py -> element-map.json; check.py (coherence + design-lint with --fail-on FORM gate); refcheck/symbols/codeedges produce the code:// reverse-index and dependency graph.",
+    "Names the two sources of truth: tokens.json (WARM GOLD theme, sig/await/wire/fail signal split) and addresses.json (ui://<region>/<element>[@state] with capabilities pointable/spotlit/presentable/openable/driven mapped to code+feature).",
+    "Describes register.json as the production contract (views/variants/features/journeys/coverage) and the blueprint as the importable build-to-schema spec (B1) with J1-J9 surface specs.",
+    "Documents panels/ as pure declarative data (settings.json) proposed via RHM, git-reversible, with registry-overridden field options.",
+    "Lists the concrete extend-points (token, address, component, panel, design-lint gate) with the exact commands (python3 emit.py, parse.py, check.py --target --fail-on)."
+  ],
+  "standouts": [
+    "The generator pipeline as the load-bearing design-substrate mechanism: edit tokens/addresses -> regenerate -> every mockup reflows, with generated files marked do-not-edit.",
+    "kit.tsx as the WAVE-2 shared vocabulary (SectionHead/LaneHead/Badge/Surface) enforcing recognition-by-shape+tint as one product language.",
+    "The free structural tools (check/refcheck/symbols/codeedges) that produce the ui://->code://->files corpus the backend resolver reads."
+  ],
+  "conventions": [
+    "Uses appears-to-be hedging and PRIORITY/MAYBE/NO markers appropriate to a no-deep-synthesis coverage pass.",
+    "Marks every generated file NO / do-not-edit, matching the design corpus's registry-as-truth + generated-output discipline.",
+    "Documents extend-by-registration consistently (new thing = add registry entry + regenerate)."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the FE + design-substrate file map, the fastest way to learn the carved-from-monolith canvas structure, the token/address generator pipeline, and the blueprint/panels mechanisms, plus the exact commands to extend each.",
+  "questions": [
+    "The dist/ and generated _system/*.json are marked do-not-read; are the source tokens.json/addresses.json counts (WARM GOLD, the element addresses) still current?",
+    "How many mockups exist under design/mockups (the file says hundreds, not inventoried) and do they all carry data-ui-ref?"
+  ],
+  "purpose_vs_actual": "Match. Stated as a fast location+purpose mapping with no deep synthesis, and it delivers a tree, inventory table, key findings, priorities, and extend-points.",
+  "apparent_themes": [
+    "Generated-from-registry design substrate (tokens/addresses -> emit/parse -> CSS + element-map)",
+    "Carved-from-monolith FE with a controller hook and 19 region components on a grid shell",
+    "Extend-by-registration with do-not-edit generated outputs",
+    "Design-lint as the FORM build gate (off-token literals fail the build)",
+    "Recognition-by-shape+tint as one product visual language (kit.tsx)"
+  ],
+  "intention_signals": "Trying to give the deeper research layer a complete, honestly-scoped inventory of the FE and design-substrate files with priorities and concrete extend-commands, so the design effort knows the existing component structure and registry pipeline it must build on rather than around.",
+  "novelty": "n/a",
+  "contribution": "Contributes the FE + design-substrate file-by-file inventory with the generator-pipeline map, the two sources-of-truth (tokens/addresses), and the documented extend-points/commands; a fused system keeps this as the structural index of the canvas/design/panels region that the deep reads and any surface work build on.",
+  "summary_for_embedding": "A 2026-06-08 fast read-only census of the Company FE and design substrate (canvas/, design/, panels/ — 106 files) with a directory tree, file-purpose table, the tokens/addresses generator pipeline, the carved-from-monolith canvas structure, deep-read priorities, and documented extend-points.",
+  "intention_for_embedding": "To give the deep-read research layer an honestly-scoped inventory of the FE and design-substrate files plus their extend-points so the design effort builds on the existing component structure and registry pipeline."
+}

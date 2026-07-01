@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "app/ai/ai-capabilities-canvas.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that registers every per-canvas generative move of the app into the CV_AI registry as first-class 'capability' entries, so the catalogue describes the full generative surface (not just the composer's and image's moves). It defines generic run functions (runText/runImgGen/runImgEdit), seeds a TEXT array (~28 text capabilities across color/icon/voice/pattern/component/build/deck/widget/wizard/type/inbox/chat families) and an IMAGE array (2 image moves), plus one bespoke 'deck.titlechain' capability whose prompt is inlined in its run.",
+  "observations": [
+    "Throws on load if window.CV_AI is missing, naming the load-order fix ('load app/ai/ai-registry.js first').",
+    "runText completes a.params.prompt (or a.params) — the canvas hands in its own prompt so the prompt text is not duplicated here; the canvas keeps its own parse.",
+    "TEXT entries are terse tuples [id, name, family, surfaces[], icon]; all register with behaviours ['voice.conceptv'], provider 'claude', provenance 'built-in', and the generic runText.",
+    "IMAGE entries [id,name,family,surfaces,icon,run] register with behaviours [], provider 'openai-image', and the image run functions.",
+    "chat.respond has surfaces ['*'] (every surface); most others are surface-scoped.",
+    "deck.titlechain is registered separately with a fully inlined prompt implementing DESIGN-LANGUAGE §16 (slide titles as one running sentence with leading connectives following problem→thesis→mechanism→proof→moat→ask).",
+    "All registrations use { silent: true } and the file sets window.CV_AI._canvasCapsSeeded = true at the end.",
+    "Header comment states the design intent: registering the move does NOT duplicate the prompt text because the generic run takes a prompt via params."
+  ],
+  "standouts": [
+    "The catalogue-as-dispatch pattern: capability id == the move name, so the data array IS the generative surface description and the registry inspector projection.",
+    "deck.titlechain is the one capability that breaks the 'prompt single-sourced in the canvas' pattern by inlining its rule-prompt — deliberately, citing DESIGN-LANGUAGE §16 as the single rule source.",
+    "A typo/spacing note: two entries ('build.colors', 'image.studio.generate') have non-aligned column spacing but are otherwise consistent."
+  ],
+  "conventions": [
+    "Follows the project's registry-projection pattern: moves are data, registered, queryable, executable via CV_AI.execute.",
+    "Generic-run-with-handed-in-prompt keeps each canvas's bespoke prompt single-sourced where its domain helpers live.",
+    "Sets a _canvasCapsSeeded marker flag like the seed file's _seeded marker.",
+    "deck.titlechain departs from the generic-run convention by carrying its own inline prompt (consciously, for a single-sourced rule)."
+  ],
+  "concerns": [
+    "deck.titlechain inlines a long prompt string while the file's whole premise is that prompts stay single-sourced in canvases — a localized inconsistency (the comment justifies it, but it is a second prompt-home pattern in the same file)."
+  ],
+  "notes": "This file is the registry of EVERY per-canvas Vi move as data — terse tuples completing canvas-supplied prompts — so the AI catalogue and the inspector show the app's full generative surface; deck.titlechain is the one move with an inlined rule-prompt.",
+  "questions": [
+    "Are the surface keys (e.g. 'colors','icons','registry','inbox') guaranteed to match the surface ids the context resolvers and setActiveSurface use elsewhere?",
+    "Since runText returns the raw provider reply and 'the canvas keeps its own parse', where is each canvas's parse — is there a risk a move is registered here but no canvas actually invokes it?"
+  ],
+  "purpose_vs_actual": "Match — the header says it registers every per-canvas generative move into one catalogue without duplicating prompts, and the code does exactly that (with deck.titlechain as a noted exception that inlines a single-sourced rule).",
+  "apparent_themes": [
+    "Catalogue-as-dispatch / interface as a projection of the registry",
+    "Single-sourcing prompts (don't duplicate prompt text on registration)",
+    "Full generative surface made queryable and inheritable",
+    "Loud load-order enforcement (throw if CV_AI absent)"
+  ],
+  "intention_signals": "Trying to make 'what Vi can do' fully described by one data catalogue covering every screen's moves, so the registry inspector and the AI execute path read one synchronized source — completing 'the interface is a projection into both' for every surface.",
+  "novelty": "Expressing ~30 heterogeneous per-screen generative moves as uniform data tuples sharing one generic prompt-completing run, so adding a move is a registration, not code.",
+  "contribution": "Contributes the full per-canvas capability catalogue (the breadth of Vi's generative moves keyed by surface/family) and the generic-run convention that registers a move without copying its prompt, plus the deck.titlechain narrative-title-rail move.",
+  "summary_for_embedding": "IIFE registering ~30 per-canvas Vi generative moves (color/icon/voice/pattern/component/build/deck/widget/wizard/type/inbox/chat + 2 image + deck.titlechain) into CV_AI as data capabilities sharing a generic prompt-completing run.",
+  "intention_for_embedding": "To make the app's entire generative surface a single queryable catalogue of capabilities the inspector and AI both read, without duplicating each canvas's prompt."
+}

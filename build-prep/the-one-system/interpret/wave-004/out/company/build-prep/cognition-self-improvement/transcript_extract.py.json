@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/transcript_extract.py",
+  "model": "opus",
+  "what_it_does": "A deterministic, model-free, network-free Python extractor that parses Claude-Code session transcripts (*.jsonl) into EXCHANGE units — each one Tim-message paired with the assistant's joined text reply. These units feed capture(role='mine_exchange', projection='history') for the ③ transcript-miner. It caps text per exchange, exchanges per file, and selects files by size, batching incrementally toward the full corpus.",
+  "observations": [
+    "Module docstring identifies it as ③ the transcript-miner's deterministic EXTRACT (G23), promoted from proven mine-lane logic; emphasizes 'no model, no network', pure extraction is the floor",
+    "Constants: MAX_TIM=1200, MAX_REPLY=2000, MIN_TIM=25 (a Tim message shorter than 25 chars is treated as a non-exchange ack/handle)",
+    "_text_of handles both string content and content-block lists, joining only type=='text' blocks and skipping tool blocks",
+    "_is_tool_result_record encodes the 'reply-boundary fix': a tool_result rides as type='user' and must NOT start a new exchange or truncate the reply",
+    "extract_exchanges streams the file line-by-line, resilient to bad JSON lines (continue on JSONDecodeError/UnicodeDecodeError), and to a missing file (returns [])",
+    "Exchange-close logic: a real Tim message closes the previous {session,ts,tim,reply} unit; caps reply to MAX_REPLY; honors max_exchanges (default 40); flushes a trailing exchange at EOF",
+    "transcripts_by_size selects .jsonl files >= min_kb (default 30KB) and orders mid-size first, deprioritizing huge files (>max_mb=20MB) via a sort-key trick (adds 2*max + sz so they sort last but still get mined later)",
+    "Units carry session (basename before first dot), timestamp, capped tim text, and joined reply",
+    "Notes the history space is the ⑨ durable-memory substrate (corpus, NOT episodic-memory — Tim's standing rule)"
+  ],
+  "standouts": [
+    "The reply-boundary fix: recognizing that tool_result records are type='user' and excluding them so a tool round-trip doesn't falsely split or truncate an exchange",
+    "The deliberately deterministic floor — extraction carries no model and no network, leaving judgment to downstream roles",
+    "The size-sort trick that mines mid-size dialogue-rich transcripts first while still eventually covering huge tool-noisy ones via the per-file cap"
+  ],
+  "conventions": [
+    "Follows the incremental-batch shape explicitly likened to exocortex_ingest (caps + batching toward the full set)",
+    "Resilient/fail-soft parsing at the line level (skip bad lines) rather than aborting a file",
+    "Pure-function style with keyword-only caps and small private helpers; docstrings explain intent and the standing rules behind choices"
+  ],
+  "concerns": [
+    "Head+tail truncation is via simple slicing ([:MAX_REPLY] / [:MAX_TIM]) — the docstring says 'head + tail carry the substance' but the code keeps only the head, so the tail is dropped despite the comment",
+    "An assistant reply arriving before any qualifying Tim message (tim_msg is None) is silently discarded, and sub-MIN_TIM Tim messages drop their following reply entirely"
+  ],
+  "notes": "A small deterministic transcript→exchange extractor (the floor of the ③ miner) whose key subtlety is treating tool_result records as non-Tim so exchanges aren't wrongly split.",
+  "questions": [
+    "Is the head-only truncation intentional given the docstring claims head+tail are kept?",
+    "Where is the calling driver that batches transcripts_by_size into capture(role='mine_exchange')?",
+    "How are the timestamp and session keys used downstream (e.g. for the temporal axis / exchange:// idempotency keys mentioned elsewhere)?"
+  ],
+  "purpose_vs_actual": "Mostly matches: it is the deterministic extract feeding the miner exactly as stated; the only divergence is the docstring's 'head + tail' claim versus the code's head-only slicing.",
+  "apparent_themes": [
+    "deterministic floor — keep model judgment out of extraction",
+    "exchange (Tim-turn + reply) as the unit of mining",
+    "resilient incremental batching toward a full corpus",
+    "transcripts as the durable-memory (history space) substrate, not episodic memory"
+  ],
+  "intention_signals": "Trying to turn raw session transcripts into clean, capped, dialogue-focused exchange units that downstream model-driven mining can judge, while keeping the extraction step pure, deterministic, and robust to malformed lines and tool-result noise.",
+  "novelty": "The explicit tool_result-as-type='user' reply-boundary handling and the size-sort trick that prioritizes mid-size dialogue-rich transcripts while still queuing huge ones.",
+  "contribution": "Contributes the deterministic extract primitive — the exact exchange-unit shape {session,ts,tim,reply}, the reply-boundary rule, and the size-prioritized batching — that a fused system would keep as the model-free front of the transcript-mining pipeline.",
+  "summary_for_embedding": "A deterministic model-free Python extractor that parses Claude-Code .jsonl transcripts into capped Tim-message/assistant-reply exchange units (handling tool_result boundary records) for the ③ transcript-miner.",
+  "intention_for_embedding": "To provide the pure deterministic extraction floor that converts session transcripts into clean exchange units for downstream mining into the durable history space."
+}

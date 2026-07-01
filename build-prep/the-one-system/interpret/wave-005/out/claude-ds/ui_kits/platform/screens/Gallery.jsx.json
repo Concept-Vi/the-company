@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/screens/Gallery.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a 'Gallery' screen for the platform UI kit: a title, an ActionToolbar (select/create/upload/search), a grid/list view toggle, a grid of 15 selectable image media tiles, and a grid of 5 video tiles. Carries minimal interactive state (which tiles are selected, grid vs list) and is exposed on window.Gallery.",
+  "observations": [
+    "Uses React hooks via destructuring from the global React (`const { useState: useState_g } = React;`) — aliased to avoid name collisions in a shared bundle.",
+    "Two useState hooks: a Set of selected tile indices (default {0,6,8}) and a view mode ('grid'/'list').",
+    "toggle() clones the Set, adds/removes the index, and sets state (immutable update pattern).",
+    "Renders 15 image tiles and 5 video tiles via Array.from(...).map with keys.",
+    "References an external ActionToolbar component not defined in this file (expected to be a global/sibling).",
+    "MediaTile draws an inline SVG play button for video, including a hardcoded rgba(31,26,18,.08) circle fill (a raw color literal).",
+    "view state toggles the active class but both view modes render the same tile-grid (list view not visually implemented).",
+    "Attached to global via `window.Gallery = Gallery;` rather than module export."
+  ],
+  "standouts": [
+    "It is the interactive member of the kit — actual selection state and a view toggle, unlike the static Calendar screen.",
+    "The aliasing of useState to useState_g signals a shared global-namespace bundle where multiple screens coexist."
+  ],
+  "conventions": [
+    "Follows the kit's global-window registration and class-only styling conventions.",
+    "Uses immutable Set updates for React state (idiomatic).",
+    "Breaks the no-raw-color rule once: rgba(31,26,18,.08) inline in the video play SVG.",
+    "Depends on an undeclared external ActionToolbar — relies on global load order rather than imports."
+  ],
+  "concerns": [
+    "List view is selectable but not implemented — toggling to 'list' changes nothing visible.",
+    "Hardcoded rgba(31,26,18,.08) bypasses the token system.",
+    "ActionToolbar is referenced but undefined here; will throw if the global isn't loaded first."
+  ],
+  "notes": "An interactive gallery-screen mockup with tile selection and a (cosmetic-only) grid/list toggle, depending on a global ActionToolbar and registered on window.Gallery.",
+  "questions": [
+    "Where is ActionToolbar defined and is it guaranteed to load before this file?",
+    "Is the list view intended to render differently, or is the toggle purely decorative for the mockup?"
+  ],
+  "purpose_vs_actual": "Mostly matches: it presents a gallery screen and is interactive, though the 'list' view it advertises is not actually rendered.",
+  "apparent_themes": ["interactive screen mockup", "tile selection state", "global-window kit registration", "class/token-driven styling"],
+  "intention_signals": "Provides a media-gallery screen for the platform kit with enough interactivity (selection, view toggle) to demonstrate the design's behavior, not just its static look.",
+  "novelty": "Among the kit screens it carries real React state and an immutable-Set selection model, making it the interactive exemplar.",
+  "contribution": "Brings a media-gallery screen layout plus a selectable-tile interaction pattern and a grid/list view-toggle control to the platform kit.",
+  "summary_for_embedding": "An interactive React gallery-screen mockup in the platform UI kit with selectable image tiles, video tiles, an action toolbar, and a grid/list view toggle, registered on window.Gallery.",
+  "intention_for_embedding": "To present a media-gallery screen for the platform kit with demonstrable tile-selection and view-toggle interactivity."
+}

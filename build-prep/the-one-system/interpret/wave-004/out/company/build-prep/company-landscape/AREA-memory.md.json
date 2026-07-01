@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/company-landscape/AREA-memory.md",
+  "model": "opus",
+  "what_it_does": "A read-only dragnet of the Company's memory/fabric/channel/introspection substrate: channel-memory/ (the communal fabric vault), channels/ (the cross-session channel MCP server), fabric/ (the model-binding transport+client+config), operator_memory/ (Tim-grounded memory rows), introspection/ (the mirror-registry capability engine), routines/ (recurring routine definitions), and the live .data/ stores (channels/clones/recall-index). Tags claims O/I/V (observed/inferred/verified).",
+  "observations": [
+    "channel-memory/ is a git-tracked communal vault for the cross-session fabric (established 2026-06-14): noticeboard (32 items via cc_board), mega-prep (incl. 55KB OVERNIGHT-STATE.md), vision (Tim's decompressed intents, ending 2026-06-15), schema (session-store grammar), scans (NDJSON event datasets), map (session lineage), recall, design patches, plan.",
+    "channels/company_channel.mjs is THE channel server: an MCP server declaring the claude/channel capability so sessions launched with --dangerously-load-development-channels receive injected <channel> tags; registers sessions under .data/channels/<HANDLE>.json; exposes reply/announce/profile tools; identifies the Claude ancestor PID via /proc walk.",
+    "fabric/ is the model call layer (S6): transport.py (4 transport factories — chat, tools, ollama-native /api/chat that honours think, embeddings; NO Gemini), client.py (guarded complete/complete_with_tools/complete_embeddings with retries+JSON-repair+schema-guided decoding), config.py (ollama-direct default :11434, embed :8007 pplx 2560-dim, DEFAULT_BRAIN deepseek-v4-pro:cloud).",
+    "operator_memory/ holds ~28+ Python rows (one MEMORY dict each: id/rule/why/evidence/scope/status/confirmed) — declared things known about working with Tim, loaded by runtime/operator_memory.py, exposed via mcp_face/tools/operator.py; lifecycle is mine->propose->Tim-confirm.",
+    "introspection/ is the mirror-registry engine (Level 1): engine.py four-verb circuit DISCOVER->CLASSIFY->PROJECT->REFRESH, rules.py five closed rules (R1 LOCKED/R2 HAZARD/R3 CONSENT/R5 SAFE/R4 UNMATCHED + R6 exclusion), registry.py cached singleton (expensive binary discovery), discover.py, platforms.py, 4 adapters; leak invariant = zero platform-name literals in Level-1 code.",
+    "routines/ has 3 definitions: completion_poke.py (the adversarial completion-refuter, every 30 min, newest file 2026-06-21), self_status.py (daily 09:00 health check), launch-surfaces.py (manual review-surface URL report).",
+    ".data/ live stores: 8 session registry files + _mail.jsonl (5.26MB, 2628 lines, 1367 msgs + 1261 replies since 2026-06-14) + _threads.json (485 threads) + 4 named channels; .data/clones (8 supervised clones from lead bda8ce28) + .data/recall-index (5 sessions indexed, pplx 2560-dim chunks).",
+    "Cross-cutting wiring map: channel server -> session registry; supervisor -> mail/threads; cc_board -> noticeboard md; operator_memory loader -> py rows; introspection refresh -> store cache; recall-index written by session_pointintime."
+  ],
+  "standouts": [
+    "The fabric is genuinely live: _mail.jsonl records 2628 cross-session messages over a week with a rich sender mix — the cross-session channel layer is operating, not theoretical.",
+    "ollama_native_transport is the ONLY path that honours the think control for reasoning models (the /v1 path silently ignores it — verified 1304->43 output tokens on kimi-k2.6:cloud); a concrete transport-correctness finding.",
+    "The leak invariant in introspection — zero platform-name literals in Level-1 code, enforced by a grep acceptance test — keeps the capability engine platform-agnostic."
+  ],
+  "conventions": [
+    "Tags every claim O/I/V (observed/inferred/verified) — the repo's evidence-classification discipline applied throughout.",
+    "Respects registry-is-truth: operator_memory and introspection are file-discovered declarations, fabric is data-driven (NO Gemini as a config constant).",
+    "Records freshness honestly (file dates, 'stale vs current reality' notes)."
+  ],
+  "concerns": [
+    "Records several staleness/gaps as live state: operator_memory AGENTS.md lists 7 rows but 28 files exist (drift); LiteLLM config dormant; named channels have empty descriptions; vision entries stopped 2026-06-15; only 5 sessions in recall-index.",
+    "introspection live-verify (C-REG-1, >=30-flag real-binary discovery) is LEAD-verify-queued — the engine is feature-complete but not live-proven here.",
+    "operator_memory hasn't been added to in 10+ days and lacks rows for recent Tim directives — a content gap in the Tim-grounded memory."
+  ],
+  "notes": "If briefing someone: this is the Company's memory-and-fabric substrate — the git-tracked communal vault, the live cross-session channel server + 2628-message mail log, the model-call transport/client (ollama-direct, no Gemini), the Tim-grounded operator_memory rows, and the platform-agnostic introspection capability engine.",
+  "questions": [
+    "Is the operator_memory AGENTS.md 7-vs-28-row drift a documentation lag or are some of the 28 files not actually loaded?",
+    "Is LiteLLM intentionally dormant (ollama-direct default) or an unintended regression?",
+    "Why does recall-index cover only 5 (June 13-14) sessions — is the recollection path depending on a stale index?"
+  ],
+  "purpose_vs_actual": "Matches. Stated as a read-only first-pass extraction of the memory/fabric substrate; delivers per-area capture with file sizes/dates, a wiring map, and a surprises list, with O/I/V tagging as promised.",
+  "apparent_themes": [
+    "Cross-session fabric as shared communal memory",
+    "Platform-agnostic capability discovery (leak invariant)",
+    "Tim-grounded operator memory as governed registry",
+    "Model-binding as a guarded, fail-loud, no-Gemini transport layer",
+    "Honest freshness / staleness surfacing",
+    "Adversarial standing routines (completion-refuter)"
+  ],
+  "intention_signals": "Trying to map the substrate that lets many sessions share one identity and memory across time — the communal vault, the live channel transport, the recall index, the model-call layer, and the Tim-grounded memory — and to flag where the live state has drifted from the docs so an agent does not trust stale figures.",
+  "novelty": "The combination of a live multi-session channel fabric (with a 2628-message durable log), point-in-time session clones, and a platform-name-free capability engine is a distinctive cross-session-memory architecture.",
+  "contribution": "Contributes the consolidated map of the memory/fabric/introspection substrate: the communal vault layout, the channel server mechanism and live mail/thread/clone/recall stores, the fabric transport/client/config (ollama-direct, no-Gemini, think-honouring path), the operator_memory registry shape, and the five-rule mirror-registry capability engine — the cross-session-memory counterpart to the runtime and interface captures.",
+  "summary_for_embedding": "Exhaustive landscape capture of the Company's memory/fabric substrate: the git-tracked channel-memory vault, the cross-session channel MCP server and its 2628-message live mail log, the fabric model-call transport/client/config, the Tim-grounded operator_memory rows, the five-rule introspection capability engine, and the routines + .data clone/recall stores.",
+  "intention_for_embedding": "To map the substrate enabling one identity and shared memory across many sessions over time, and to flag where live state has drifted from the docs so agents do not trust stale figures."
+}

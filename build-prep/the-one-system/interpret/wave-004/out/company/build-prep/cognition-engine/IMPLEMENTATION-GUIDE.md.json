@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-engine/IMPLEMENTATION-GUIDE.md",
+  "model": "opus",
+  "what_it_does": "A planning/spec markdown — the HOW document of a loop-prep triad for building the cognition engine. It maps each Completion-Criteria group (A-G) to concrete file territories, a parallel-lane cut, governing build principles, and verification steps. Five appended parts layer on top: a corpus/discovery pillar spec mined from a by-hand prototype (~/wizard-run-1/), an adversarial-review fold that explicitly supersedes earlier over-claims, and two standing cross-cutting bars (agent-knowledge + self-describing-for-update).",
+  "observations": [
+    "Five governing principles stated up front (project don't hardcode; wire don't rebuild; one surface three faces; each change preserves the rest; verify by use).",
+    "Groups A-G each carry status, lanes, files-to-modify, and explicit Do/Don't pairs; Group A marked already built (#58, verify-only).",
+    "A parallel-lane cut assigns each hot file (cognition.py, suite.py, mcp_face/server.py, etc.) to exactly ONE owner-lane to keep parallel work file-disjoint.",
+    "Part 3 maps run-1 hand-code to real-engine NEW|CHANGE|REUSE line by line (projections.json→runtime/projections.py, fleet.local4b→run_role change, etc.).",
+    "Part 4 is an adversarial-review fold that re-sizes scope upward — declaring the cascade RUNNER and cloud routing NET-NEW, correcting the earlier 'mostly wiring' / '~3 new' framing.",
+    "Repeated file:line refs (coherence_actions.py:5-8, authoring.py:48) used to ground claims against actual code.",
+    "Open decisions are flagged in-file for Tim (rep_penalty vs legitimate enumeration; node-authoring line; pillar-relationship).",
+    "Carries lane additions discovered mid-document: LANE-BRIDGE, LANE-FABRIC, LANE-STORE added after the initial six-lane cut."
+  ],
+  "standouts": [
+    "Part 4 openly SUPERSEDES Parts 1-3 — the document corrects its own earlier over-sold reuse rather than rewriting it, so the corrected view only emerges by reading to the end.",
+    "The run-1 prototype → real-engine mapping table is the spine: it grounds the whole pillar in a concrete by-hand precedent.",
+    "Explicit no-regression restorations (C7.3 animated craft-surface, G8 residency invariants, C7.4 canvas authoring) flagged as previously-dropped items given a home again."
+  ],
+  "conventions": [
+    "Follows the loop-prep triad convention (this is the HOW guide companion to a Completion-Criteria + Research-Synthesis pair).",
+    "Uses status emoji and confidence/grounding language; honest-status discipline (nothing green-painted).",
+    "Append-only evolution: rounds and adversarial folds added below rather than edited into earlier text.",
+    "Registry-is-truth / no-hardcoding framing applied throughout (project from a registry, don't add to a list)."
+  ],
+  "concerns": [
+    "A reader must reach Part 4 to learn that Parts 1-3 over-claimed reuse and several pieces are actually net-new — the corrected scope is not visible from the top of the file.",
+    "The lane-cut is revised multiple times within the same file (6 lanes → +LANE-BRIDGE → +LANE-FABRIC +LANE-STORE), so the authoritative lane set requires assembling across sections."
+  ],
+  "notes": "If briefing someone: this is the HOW spec for the cognition-engine build, lane-by-lane and group-by-group — but read Part 4 first, it supersedes the earlier parts' reuse claims.",
+  "questions": [
+    "Which lane-cut is final — the 6-lane, the +BRIDGE, or the +FABRIC/+STORE version?",
+    "Have the json_schema transport branch and the 4B honoring it actually been verified, or is that still flagged as unverified (4.7)?",
+    "Were the Tim open-decisions (rep_penalty, node-authoring, pillar-relationship) ever resolved?"
+  ],
+  "purpose_vs_actual": "Matches. The 'What this is' header states it is the HOW document connecting criteria to existing systems with file territories + a parallel-lane cut; the body delivers exactly that plus the layered enrichments and adversarial corrections.",
+  "apparent_themes": [
+    "Wire-don't-rebuild / reuse-existing-primitives",
+    "Registry-is-truth, no hardcoding, project-don't-list",
+    "One composition surface projected onto three faces (MCP/FE/CLI)",
+    "Honest scope-sizing and self-correction via adversarial review",
+    "File-disjoint parallel work with single-owner hot files"
+  ],
+  "intention_signals": "Trying to turn a set of completion criteria into a buildable, parallelizable plan grounded in what already exists, while resisting both duplication and over-optimistic reuse — and to make the plan honest about what is genuinely new versus wiring.",
+  "novelty": "The in-document adversarial-review fold that explicitly supersedes earlier parts, and the line-by-line mapping of a hand-built prototype onto the real engine, are distinctive — the doc evolves its own scope estimate in place.",
+  "contribution": "Contributes the lane-cut + file-ownership map and the run-1→real-engine NEW|CHANGE|REUSE mapping for the cognition engine, plus the honest re-sized scope (cascade runner, cloud routing, model-layer file-discovery as net-new). A fused system would keep this as the concrete build-territory and scope-grounding layer for the engine.",
+  "summary_for_embedding": "A loop-prep HOW guide mapping cognition-engine completion criteria (groups A-G) to file territories and a file-disjoint parallel-lane cut, with a corpus/discovery pillar spec and an adversarial fold that re-sizes scope upward.",
+  "intention_for_embedding": "To produce a buildable, parallelizable, honestly-scoped implementation plan for the cognition engine that wires into existing primitives without duplication."
+}

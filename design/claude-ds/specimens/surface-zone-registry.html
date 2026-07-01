@@ -1,0 +1,85 @@
+<!-- @dsCard group="Colors" name="Surface-Zone Registry" subtitle="Low-opacity tonal zoning · gold reserved for decisions" viewport="1100x720" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Surface-Zone Registry</title>
+<link rel="stylesheet" href="../styles.css"/>
+<style>
+  body {
+    margin: 0;
+    background:
+      radial-gradient(120% 80% at 50% -10%, var(--zone-base-strong), transparent 60%),
+      var(--zone-base-surface);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    padding: 34px 36px 40px;
+  }
+  .hd { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+  .hd .gem { width: 9px; height: 9px; background: var(--accent-gold); transform: rotate(45deg); border-radius: 1px; align-self: center; }
+  h1 { font: 700 25px/1 var(--font-display); letter-spacing: -0.02em; margin: 0; color: var(--ink); }
+  .sub { font: 400 13px/1.5 var(--font-body); color: var(--ink-3); margin: 8px 0 24px; max-width: 640px; text-wrap: pretty; }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .z {
+    border-radius: var(--r-md); overflow: hidden; background: #fff;
+    border: 1px solid var(--border-faint); box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column;
+  }
+  .z .wash { height: 64px; position: relative; border-bottom: 1px solid var(--ze, var(--border-faint)); }
+  .z .wash .strong { position: absolute; right: 9px; top: 9px; width: 30px; height: 22px; border-radius: 4px; border: 1px solid var(--ze, var(--border-faint)); }
+  .z .wash .dot { position: absolute; left: 9px; bottom: 9px; width: 9px; height: 9px; border-radius: 2px; background: var(--zi, var(--ink)); }
+  .z .m { padding: 9px 11px 11px; display: flex; flex-direction: column; gap: 3px; }
+  .z .role { font: 700 8px/1 var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: var(--zi, var(--accent-bronze)); }
+  .z .nm { font: 700 12.5px/1.15 var(--font-display); color: var(--ink); letter-spacing: -.01em; }
+  .z .tk { font: 500 9px/1.3 var(--font-mono); color: var(--ink-4); margin-top: 3px; }
+  .z .tk .pct { color: var(--accent-bronze); }
+  .rule {
+    margin-top: 22px; padding: 13px 16px; border-left: 2px solid var(--accent-gold);
+    background: var(--vi-surface); border-radius: 0 var(--r-md) var(--r-md) 0;
+    font: 500 12.5px/1.5 var(--font-body); color: var(--ink-2);
+  }
+  .rule b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="hd"><span class="gem"></span><h1>Surface-Zone Registry</h1></div>
+  <p class="sub">Near-white surfaces mark <b>containment depth</b> (zoning = depth; see <code>core/containers.css</code>). These ten <b>semantic tones</b> are the opt-in layer on top — each a pigment mixed toward the ground at a low percentage, scaled by one <code>--zone-intensity</code> knob. Warm throughout. The differences should be felt more than seen.</p>
+  <div class="grid" id="grid"></div>
+  <p class="rule"><b>The gold rule —</b> gold is the only saturated voice, reserved for Vi, active decisions, selected states, key emphasis and primary actions. Never a default background.</p>
+
+<script>
+  const ZONES = [
+    { k:'base',    role:'Environment',  nm:'Base',    pct:'3.5%' },
+    { k:'content', role:'Primary',      nm:'Content', pct:'3%' },
+    { k:'panel',   role:'Secondary',    nm:'Panel',   pct:'5%' },
+    { k:'review',  role:'Decision',     nm:'Review',  pct:'6%' },
+    { k:'source',  role:'Provenance',   nm:'Source',  pct:'5%' },
+    { k:'package', role:'Handoff',      nm:'Package', pct:'6.5%' },
+    { k:'success', role:'Ready',        nm:'Success', pct:'6%' },
+    { k:'warning', role:'Incomplete',   nm:'Warning', pct:'7%' },
+    { k:'reject',  role:'Anti-pattern', nm:'Rejected',pct:'6%' },
+    { k:'vi',      role:'Vi / gold',    nm:'Decision',pct:'9%' },
+  ];
+  const g = document.getElementById('grid');
+  ZONES.forEach(z => {
+    const isVi = z.k === 'vi';
+    const surf = isVi ? 'var(--vi-surface)' : `var(--zone-${z.k}-surface)`;
+    const strong = isVi ? 'var(--vi-strong)' : `var(--zone-${z.k}-strong)`;
+    const edge = isVi ? 'var(--vi-edge)' : `var(--zone-${z.k}-edge)`;
+    const ink = isVi ? 'var(--accent-gold)' : `var(--zone-${z.k}-ink)`;
+    const tok = isVi ? '--vi-surface' : `--zone-${z.k}-surface`;
+    const el = document.createElement('div');
+    el.className = 'z';
+    el.style.setProperty('--ze', edge);
+    el.style.setProperty('--zi', ink);
+    el.innerHTML =
+      `<div class="wash" style="background:${surf}"><div class="strong" style="background:${strong}"></div><div class="dot"></div></div>` +
+      `<div class="m"><div class="role">${z.role}</div><div class="nm">${z.nm}</div>` +
+      `<div class="tk">${tok} <span class="pct">${z.pct}</span></div></div>`;
+    g.appendChild(el);
+  });
+</script>
+</body>
+</html>

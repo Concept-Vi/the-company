@@ -1,0 +1,38 @@
+{
+  "project": "company",
+  "path": "attachment_types/dragnet_runs.py",
+  "model": "opus",
+  "what_it_does": "Defines a single ATTACHMENT_TYPE dict declaring a 'dragnet_runs' attachment type: a tracked dragnet RUN bound to a channel, target_kind='address' (a run-record address run://corpus/.../dragnet/<id>), multi=True; the desc enumerates the run telemetry captured (started/ended/duration, files_total/processed/failed/retries, throughput, coverage) as the introspective record, accumulating a queryable run history per channel.",
+  "observations": [
+    "target_kind is 'address' pointing to a run-record address scheme run://corpus/.../dragnet/<id>.",
+    "Most verbose desc of the six: lists concrete telemetry fields captured per run.",
+    "Frames the run telemetry as 'the introspective record of the process'.",
+    "States the channel accumulates a queryable dragnet-run history.",
+    "Two-line docstring also describes the run as an operational record over an input directory."
+  ],
+  "standouts": [
+    "Spells out a telemetry schema (times, resources, fails, retries, coverage) for a dragnet run.",
+    "Positions the channel as the accumulator of queryable run history."
+  ],
+  "conventions": [
+    "Same single-dict descriptor pattern as siblings, but with a much richer desc and a multi-line docstring.",
+    "Inline comment documents the address scheme for target_kind."
+  ],
+  "concerns": [],
+  "notes": "Registry entry for 'dragnet_runs': a run-record-address attachment whose desc doubles as the telemetry/introspection spec for a channel's dragnet run history.",
+  "questions": [
+    "What is a dragnet RUN concretely, and where is the run telemetry persisted and made queryable?"
+  ],
+  "purpose_vs_actual": "Match — declares the dragnet-run attachment type and its introspective record semantics per the docstring.",
+  "apparent_themes": [
+    "Declarative type registry",
+    "Process introspection / telemetry",
+    "Channels as history accumulators",
+    "Addressed run records"
+  ],
+  "intention_signals": "Aims to make every dragnet run over a channel's input a tracked, addressed, introspectable record so channels build a queryable operational history.",
+  "novelty": "Embedding a concrete run-telemetry field list directly in the attachment-type descriptor.",
+  "contribution": "Contributes the declarative definition of the dragnet-run attachment type plus its enumerated telemetry/introspection fields and run-address scheme.",
+  "summary_for_embedding": "A descriptor module declaring the 'dragnet_runs' channel attachment type: an addressed run-record (run://.../dragnet/<id>) capturing run telemetry, multi=True, accumulating queryable history.",
+  "intention_for_embedding": "To register dragnet runs as tracked, addressed, introspectable channel attachments that build a queryable operational history."
+}

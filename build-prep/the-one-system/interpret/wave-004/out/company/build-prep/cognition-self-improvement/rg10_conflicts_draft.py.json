@@ -1,0 +1,49 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/rg10_conflicts_draft.py",
+ "model": "opus",
+ "what_it_does": "Reads .build/rg10/reconciled.json and design/register.json, filters to entries with class=='conflict' (one address described differently by multiple mockups), and deterministically picks one variant per conflict using an ordered heuristic chain (H1 dedicated-screen, H2 feature-reality, H3 richness, H4 first-order fallback). Demotes any 'built' grounding whose maps_to_feature isn't a real feature id to 'proposed'. Writes a draft-resolutions artifact to .build/rg10/conflict-drafts.json with picked/rejected variants, the named deciding heuristic, and a needs_eyes flag for H4 fallbacks.",
+ "observations": [
+  "Heuristics are documented in the docstring in precedence order and each output names which heuristic decided it.",
+  "H1 matches by checking whether any address segment (after stripping 'ui://' and splitting on '/') appears as a substring in the variant's mockup filename (lowercased).",
+  "H2 returns a tuple (real, built_ok) where built_ok is True unless grounding=='built' on a non-real feature.",
+  "H3 (rich) sums lengths of dossier.howto.what and howto.what_you_can_do; H3 only fires when the top is >1.5x the runner-up.",
+  "Line 60 contains a conditional-expression-as-condition: `if rich(ranked[0]) > rich(ranked[1]) * 1.5 if len(ranked) > 1 else False:` — evaluates the ternary first, then uses it as the if test.",
+  "Final demotion guard (lines 67-68) forces grounding='proposed' for a 'built' claim on a non-real feature, so a false 'built' is never silently kept.",
+  "Output summary tallies counts by heuristic (split on ':' prefix) and counts needs_eyes.",
+  "os.chdir('/home/tim/company') hard-codes the working directory.",
+  "Docstring frames this as 'PROPOSES an artifact only' and 'Tim scans and vetoes' — deterministic judgment, human override."
+ ],
+ "standouts": [
+  "Each resolution carries the named heuristic that decided it, so the reviewer sees WHY a variant was picked, not just THAT it was.",
+  "The H4 fallback explicitly self-flags as needs_eyes ('flagged for your eyes especially') rather than pretending the heuristic resolved it.",
+  "The 'never silently keep a false built' demotion enforces a truthfulness invariant on grounding."
+ ],
+ "conventions": [
+  "Follows the family pattern: os.chdir to repo root, read/write JSON under .build/rg10/, deterministic 'PROPOSES only' framing, json.dump with indent.",
+  "Inline nested-function heuristics (h1/h2/rich) defined per-conflict inside the loop.",
+  "Docstring carries the design rationale and the heuristic legend rather than a separate spec."
+ ],
+ "concerns": [
+  "Line 60's ternary-as-condition is hard to read and fragile; the IndexError guard is folded into the ternary's else branch — a maintainer could easily misread precedence.",
+  "Line 56 indexes v['maps_to_feature'] directly (not .get) when comparing dedicated variants, which would KeyError if a dedicated variant lacks that key, unlike the .get usage elsewhere.",
+  "H1 substring matching ('seg in stem') could match unintended addresses if a short segment is a substring of an unrelated filename token."
+ ],
+ "notes": "Deterministic conflict-resolver for cross-mockup registry disagreements: picks one variant per conflict by a named heuristic chain and proposes drafts for Tim to veto, never writing the registry itself.",
+ "questions": [
+  "What is the schema of a 'conflict' entry's variants list (which keys are guaranteed present vs optional)?",
+  "Is design/register.json's features list the same real-id source used by the rest of the RG10 family (refcheck)?"
+ ],
+ "purpose_vs_actual": "Match — docstring says it produces DRAFT resolutions for the 33 cross-screen conflicts via named heuristics and proposes an artifact only, which is exactly what the code does.",
+ "apparent_themes": [
+  "Deterministic-judgment-with-human-veto (the 'floor': propose, never resolve)",
+  "Named/auditable decisions (every pick carries its reason)",
+  "Truthfulness invariants on grounding claims (no false 'built')",
+  "Refine-before-gating (prepare option-1 ahead so Tim scans a smaller set)"
+ ],
+ "intention_signals": "Reduce a 33-way human review burden to a scannable set of pre-resolved drafts where the machine's reasoning is explicit and overridable, so Tim approves/vetoes rather than adjudicates from scratch.",
+ "novelty": "The explicit precedence-ordered heuristic chain where the chosen heuristic name is emitted alongside each pick, plus self-flagging of the unresolved (H4) cases as needing eyes.",
+ "contribution": "Contributes a deterministic, auditable conflict-resolution heuristic for reconciling multiple mockups' competing descriptions of one address, with built-truthfulness demotion and a needs-eyes escape hatch.",
+ "summary_for_embedding": "A deterministic resolver that picks one variant per cross-mockup registry conflict using an ordered named-heuristic chain (dedicated-screen, feature-reality, richness, order) and writes draft resolutions with reasons for human veto.",
+ "intention_for_embedding": "To pre-resolve the cross-screen conflicts into a small auditable draft set so the human reviews and vetoes named machine judgments instead of adjudicating each conflict raw."
+}

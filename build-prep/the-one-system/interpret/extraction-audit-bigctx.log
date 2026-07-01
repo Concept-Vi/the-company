@@ -1,0 +1,11 @@
+auditing 86 code files (resume on) | concurrency=10 | engine=http://127.0.0.1:8770/api/cognition/run_items
+  20/86  ok=20 flagged=19 err=0  346s
+  40/86  ok=40 flagged=39 err=0  638s
+  60/86  ok=60 flagged=59 err=0  989s
+  80/86  ok=80 flagged=79 err=0  1228s
+final persist: CREATE TABLE
+CREATE TABLE
+COPY 26
+INSERT 0 26
+
+DONE: 86/86 ok | 85 flagged | 0 err | 1324s

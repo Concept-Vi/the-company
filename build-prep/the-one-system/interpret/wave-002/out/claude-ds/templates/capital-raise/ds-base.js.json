@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "templates/capital-raise/ds-base.js",
+  "model": "opus",
+  "what_it_does": "A small loader script that injects the design system into the capital-raise template page. An IIFE sets a `base` path (here '../..') and appends <link> tags for the full token/CSS stack (colors_and_type.css, all tokens/*.css, core/containers.css, styles.css) plus <script> tags for cv-shapes.js, cv-icons.js, the compiled _ds_bundle.js, and the universal core/slide-fit.js fitter — wiring every asset relative to that one editable base line.",
+  "observations": [
+    "Single IIFE; the only thing a consuming project edits is the `const base` line (comment explains pointing it at the bound _ds/<folder> tree)",
+    "Loads a fixed ordered list of ~20 stylesheets: colors_and_type.css, tokens/{surfaces,sizing,depth,motion,diagram,theme,density,layout,states,focus,icons,dataviz,imagery,canvas,provenance,export,texture}.css, core/containers.css, styles.css",
+    "Loads cv-shapes.js (window.CV_SHAPES — canonical entity geometry) and cv-icons.js (window.CV_ICONS) before the bundle",
+    "Loads _ds_bundle.js with an onerror handler that prints a detailed remediation message (point the base line at the bound _ds/<folder>, or the bundle isn't compiled yet)",
+    "Loads core/slide-fit.js?v=3 — the universal paged-surface fitter that letterboxes slide/print stages to fit",
+    "Inline comments document each script's purpose and the consuming-project rebinding workflow"
+  ],
+  "standouts": [
+    "The whole DS dependency set is centralised behind ONE editable `base` path line, so binding the template to a different DS location is a one-line change",
+    "The _ds_bundle.js onerror handler gives an actionable diagnostic rather than failing silently"
+  ],
+  "conventions": [
+    "Single-home / one-line-to-edit principle (base path) matches the project's anti-drift ethos",
+    "Loads the compiled _ds_bundle.js (the CLAUDE.md trap notes it is generated output, never hand-edited) — this file consumes it, doesn't produce it",
+    "Cache-busting ?v=3 on slide-fit.js mirrors the ?v=3 on ds-base.js in the template",
+    "Loud, informative failure on a missing bundle rather than a silent no-op"
+  ],
+  "concerns": [
+    "The long stylesheet list is hardcoded here and must be kept in sync by hand with the actual tokens/*.css set — a drift risk if a token file is added/removed",
+    "The base path '../..' is environment-specific; a wrong base silently loads nothing for the CSS links (only the bundle script has an onerror handler)"
+  ],
+  "notes": "The template's DS bootstrap: one IIFE that injects the full token CSS stack, shape/icon scripts, the compiled bundle, and the slide fitter, all relative to a single editable base path.",
+  "questions": [
+    "Is the explicit tokens/*.css list generated/checked against the real tokens directory, or maintained manually here?",
+    "Why are only some assets given onerror handling (the bundle) while the CSS links and other scripts fail silently?"
+  ],
+  "purpose_vs_actual": "Matches its top comment: it loads this design system into the template with a single editable base path; the body does exactly that.",
+  "apparent_themes": [
+    "One editable home / single point of rebinding (the base path)",
+    "Explicit dependency manifest assembled at runtime",
+    "Consume the compiled bundle, never author it",
+    "Loud, actionable failure"
+  ],
+  "intention_signals": "It tries to make a template portable and self-contained: a drop-in bootstrap that wires the entire design system from one place, so moving the template between projects is a single-line edit and a missing build gives a clear, fixable error.",
+  "novelty": "n/a",
+  "contribution": "Contributes the canonical runtime bootstrap that assembles the full DS asset stack (tokens CSS + shapes/icons + compiled bundle + slide fitter) behind one rebindable base path — the wiring a fused system would keep for embedding the design system into any consuming page.",
+  "summary_for_embedding": "An IIFE loader that injects the ConceptV design system into the capital-raise template — appending the full tokens CSS stack, cv-shapes/cv-icons, the compiled _ds_bundle.js, and core/slide-fit.js relative to a single editable base path, with an informative onerror on the bundle.",
+  "intention_for_embedding": "To bootstrap the entire design system into a template page from one editable base path, making the template portable and failing loudly when the bundle is missing."
+}

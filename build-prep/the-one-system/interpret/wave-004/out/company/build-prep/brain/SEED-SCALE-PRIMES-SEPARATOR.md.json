@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/SEED-SCALE-PRIMES-SEPARATOR.md",
+  "model": "opus",
+  "what_it_does": "A long (17-section + Appendix A) capture of a 2026-06-13 conversation arc that extends Tim Geldard's geometric seed with scale-as-rules, the prime/divisor lattice, the two-gravity pollution separator, and a viewpoint (not resolution) reading of polygon-vs-circle. It records Tim's corrections, the agent's decompressions, a dependency-ordered buildable list, and reproduces Tim's four raw messages verbatim in Appendix A as the primary source.",
+  "observations": [
+    "Written at Tim's explicit instruction to move full conversation content into project storage ('Not summaries, not key terms, the full things — I pay for your tokens').",
+    "Re-confirms the standing frame: the equation is a form with empty slots; nothing hardcoded/fixed is valid, only what occupies a variable at a point.",
+    "Decomposes the equation 2pi/n=(1/n)^k variable by variable: n=count of divisions (=number of primes at that scale), 2pi=the whole/invariant, k=dimension/fractal exponent, x=the step (flagged as unused in the build).",
+    "Section 6 defines the two-gravity separator: an axis between Tim's-model and AI-deformation poles; embed the corpus twice with framing instructions; the gap between a unit's two positions IS its pollution signal.",
+    "Section 8 (the keystone): scale changes the RULES not the content; rules-as-data=schema=type=registry; register-of-registries, infinite both ways = scale-invariance / fractal.",
+    "Section 9 introduces the prime/divisor-lattice formalism: prime=irreducible type, exponent=influence/mass, each prime its own axis, a number's position = vector of exponents.",
+    "Section 11 records Tim's correction that polygon-vs-circle is VIEWPOINT (centre=circle, corner=square), not a resolution limit; corners=primes (fixed), knowledge fills the harmonic wave between corners; a type crystallizes at ~20/80 nucleation.",
+    "Section 17 records the 'model-call dissolution': all four agent 'questions for Tim' were invalid because they tried to freeze variables Tim left free; the ratification gate is dissolved, not pending.",
+    "Section 14 notes a concrete build fix: replace the 15s poll with pub-sub via the existing /api/stream SSE.",
+    "Appendix A reproduces Tim's four full raw messages (A1-A4) verbatim with dictation artifacts preserved as ground truth.",
+    "Section 16 lists buildable near-term items in dependency order and an explicit mine-vs-his ledger of what Tim confirmed/corrected vs agent extrapolations."
+  ],
+  "standouts": [
+    "The keystone: 'the thing that changes at each scale isn't the content but the rules' → register-of-registries = fractal scale-invariance.",
+    "The two-gravity separator as a corpus-cleaning machine: dual framed embeddings, the position-gap = pollution signal.",
+    "The model-call dissolution naming the agent's own recurring error ('the hardcoding / first-binding reflex wearing the costume of a Tim-only decision').",
+    "Appendix A preserving Tim's four verbatim high-effort messages as the explicit primary source separate from interpretation."
+  ],
+  "conventions": [
+    "Rigorously separates primary source (Appendix A, verbatim) from interpretation (the numbered sections).",
+    "Maintains a mine-vs-his ledger labeling confirmed / corrected / agent-extrapolation status per claim.",
+    "Uses the repo's resolve/centre/registry/coincidence/forbidden vocabulary and cites a prior verified build (commit 0779cee, /api/projection).",
+    "Expand-before-harden: closes by stating NONE of it is ratified as built."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the maximal capture of the 2026-06-13 'from the other side' arc — scale-as-rules, the prime/divisor lattice, the two-gravity pollution separator, the viewpoint correction, and the dissolution of the model-call gate, with Tim's four raw messages preserved verbatim.",
+  "questions": [
+    "Of the six dependency-ordered buildable items (pub-sub, binding-as-row, grid/strain, freed time, two-gravity separator, multi-scale pyramid), which were subsequently built?",
+    "Is the prime/divisor-lattice the object Tim's intuition was gesturing at — the file proposes it but flags it needs his confirmation (and §17 reframes it as one description, not a new formalism)?"
+  ],
+  "purpose_vs_actual": "Match — it states it is a maximal, full-content capture per Tim's instruction and delivers exactly that, including verbatim primary source.",
+  "apparent_themes": [
+    "Everything is a variable; nothing hardcoded is valid",
+    "Scale changes rules not content (fractal scale-invariance / register-of-registries)",
+    "Primes as irreducible types, exponents as influence/mass",
+    "Viewpoint (where you stand) determines discrete-vs-continuous, not resolution",
+    "Two gravities separating Tim's signal from AI pollution",
+    "Definition-is-position; existence-is-resolution (closed-world)",
+    "Primary-source fidelity and mine-vs-his attribution discipline"
+  ],
+  "intention_signals": "To capture, in full and faithfully, a dense design conversation that grew Tim's seed from the registry/scale/prime side until it met the geometric side in the middle — and to give the build a grounded, dependency-ordered set of next strokes while preventing the agent's hardcoding reflex from freezing Tim's deliberately-free variables.",
+  "novelty": "The register-of-registries = divisor-lattice formalism (one prime per axis, exponent=mass), the viewpoint reading of discrete-vs-continuous, the dual-framed-embedding pollution separator, and the explicitly-named 'model-call dissolution' meta-pattern about the agent freezing free variables.",
+  "contribution": "Contributes the scale/prime/separator extension of the seed plus Tim's verbatim source messages: the scale-as-rules keystone, the prime-lattice vocabulary, the two-gravity corpus-cleaning design, the viewpoint correction, and the dissolution of the ratification gate — material a fused system could keep both as design and as ground-truth anchors.",
+  "summary_for_embedding": "A maximal 2026-06-13 capture extending Tim Geldard's geometric seed with scale-as-rules, the prime/divisor-lattice register-of-registries, a dual-framed-embedding two-gravity pollution separator, and a viewpoint reading of polygon-vs-circle, with his four raw messages preserved verbatim as primary source.",
+  "intention_for_embedding": "To preserve in full a dense design conversation growing the seed from the registry/scale/prime side and to give the build a grounded, unratified set of next construction strokes."
+}

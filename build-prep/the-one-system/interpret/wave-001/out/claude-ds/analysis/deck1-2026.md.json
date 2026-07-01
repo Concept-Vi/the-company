@@ -1,0 +1,54 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/deck1-2026.md",
+  "model": "opus",
+  "what_it_does": "A comparative structural analysis of a 16-page pitch deck folder (deck1-2026) treated as a terse/presented CUT of the same source as the verbose pitch-deck baseline, confirming the shared design DNA across two folders and deriving the register/purpose, LOD, and motion dimensions from the diff between the two cuts.",
+  "observations": [
+    "Frames deck1-2026 and pitch-deck as two CUTS of one deck: same DNA, different verbosity/motion/length",
+    "Introduces a REGISTER/PURPOSE dimension (terse/presented vs verbose/leave-behind) with a side-by-side comparison table",
+    "Uses the same 0-9 grammar-delta ladder and confirm/new/generalise/contradict tag vocabulary as the sibling analyses",
+    "Promotes the zoning ladder and gold ramp to CONFIRMED (2 folders) because values match across both folders with cited exact hexes",
+    "Second half is a DEEP COMPARATIVE PASS (sections A-I) deriving principles from the diff itself rather than either deck alone",
+    "Declares deck1-2026 the canonical/living master (2x resolution, named 2026, motion-ready) and says to sample values from it on conflict",
+    "Routes all findings to SYSTEM-GAPS.md with explicit promotions"
+  ],
+  "standouts": [
+    "Section A 'space ↔ time complexity trade-off': a slide has a fixed complexity budget spendable in space (static stack) OR time (animation), making a dense static diagram and a simple-frame+GIF register variants of one component",
+    "Section B 'who controls the pace determines the register': register is set by who paces the artifact (reader=verbose self-sufficient, presenter=terse anchors), yielding a predictive rule that self-serve/mobile needs verbose",
+    "Section E 'every bullet decomposes to {claim, support}': the verbose->terse diff is a compression map keeping claim and dropping support, giving a precise content-model",
+    "Section D 'invariant skeleton vs flexible muscle': numbers and diagrams are sacred fixed payload slots, prose is LOD-variable — 'numbers are sacred; sentences are negotiable'"
+  ],
+  "conventions": [
+    "Evidence-grounded with exact hexes (#fdfcf7, #d6bf57, #c09d5d) and measurements (12%/7.5%/76% grid, 3056x1719)",
+    "Multi-folder confirmation discipline: a property is promoted to CONFIRMED only when it matches across 2 folders",
+    "Axis-orthogonality thinking: register, LOD, surface treated as independent axes",
+    "Token-driven routing: findings map onto the existing --density knob and propose new motion/GIF slots",
+    "The diff-between-artifacts is itself treated as primary data ('the diff between the cuts is itself data')"
+  ],
+  "concerns": [
+    "Canonical-master designation ('sample from deck1-2026') is a ranking/authority call derived from inference (resolution + name), stated as a rule",
+    "Many derived principles (auto-shorten via narrative-priority, ink-budget conservation) are extrapolations from a single 17->16 slide diff",
+    "References SYSTEM-GAPS.md and pitch-deck baseline whose state cannot be confirmed from this file"
+  ],
+  "notes": "A two-cut comparative analysis that confirms the design DNA across folders and mines the verbose-vs-terse diff into reusable axes (register, LOD, motion placement, {claim,support} bullets, space-time complexity budget).",
+  "questions": [
+    "What is the pitch-deck baseline analysis this confirms against, and does it agree on the cited values?",
+    "Is the {claim, support} bullet content-model actually implemented in the type/registry system, or proposed here?",
+    "How is the canonical-master rule (sample from deck1-2026) reconciled with the folder's stated no-ranking convention?",
+    "Are register, LOD, and motion-slot exposed as real data-* knobs yet, or still gaps in SYSTEM-GAPS.md?"
+  ],
+  "purpose_vs_actual": "Matches — the header promises a 2nd-folder confirmation plus the register/purpose dimension, and the body delivers the confirmation, the register table, and a deep comparative derivation of further axes.",
+  "apparent_themes": [
+    "axis=f(content,position)",
+    "single-source-multi-output",
+    "LOD-as-axis",
+    "register-as-purpose",
+    "invariant-skeleton-flexible-muscle",
+    "evidence-confirmation-discipline"
+  ],
+  "intention_signals": "Inferred: the author wants to prove that one source can generate many outputs (a 17pp read, a 16pp pitch, a 1pp summary) by isolating which properties are invariant (DNA, numbers, diagrams) and which are knobs (verbosity, motion, density). The deep comparative pass shows an intent to extract generative PRINCIPLES from artifact diffs — the diff is the teacher — and to wire register/LOD/motion as first-class controls in a single-sourced template engine.",
+  "novelty": "The space-time complexity-budget trade-off (density and motion as two ways to pay one bill), the pace-controller-determines-register rule, and the {claim, support} bullet decomposition derived from a compression map are distinctive framings not typical of ordinary design notes.",
+  "contribution": "Contributes the register/purpose axis, the LOD-orthogonal-to-surface axis, the motion/GIF first-class slot with placement rules, the {claim,support} bullet content-model, the invariant-skeleton-vs-flexible-muscle distinction, the conserved-ink-budget sizing rule, and the space-time complexity-budget principle — all as generative controls for one-source-many-outputs.",
+  "summary_for_embedding": "A comparative analysis of two cuts of one pitch deck confirming shared design DNA across folders and deriving the register/purpose, LOD, motion-placement, and {claim,support} bullet axes from the verbose-vs-terse diff.",
+  "intention_for_embedding": "To establish that one source can generate many outputs by separating invariant DNA from knobs (register, LOD, motion, density) and mining artifact diffs into reusable generative principles."
+}

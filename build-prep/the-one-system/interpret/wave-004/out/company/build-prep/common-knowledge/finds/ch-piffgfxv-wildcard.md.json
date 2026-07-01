@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/finds/ch-piffgfxv-wildcard.md",
+  "model": "opus",
+  "what_it_does": "A per-member append-only 'finds' log owned by the session 'wildcard' (channel ch-piffgfxv), whose territory is the vi-visual-bridge prototype Tim actually uses. It records Tim-verbatim design quotes (the 'OmniFile' addressable-markdown coordinate system, multi-runtime intent, the 'landscape of prototype buildings') plus code-grounded findings: a working addressable-markdown slice in document mode, one element-walker serving all modes, a catalog v4 that holds both composition's slots and DNA's presentation tokens, and the full typed interaction vocabulary plus a portable makeAnnotatable binding contract for DNA's gallery.",
+  "observations": [
+    "Same shared finds header/discipline; territory line: vi-visual-bridge (slide mode live; ~30K-line server.py+index.ts; 1,377 md mostly session-talk; 7,141 interaction snapshots).",
+    "F1 quotes Tim verbatim (2026-03-02) that markdown extensions + element walkers + an address system already make markdown elements addressable with typed IDs, and an OmniFile blurs single-document boundaries via graph-like chains across files — 'it's a coordinate system, and the coordinate system already exists in the markdown format.'",
+    "F13b documents an Observed-in-code working slice: document mode does a Chrome-side DOM walk assigning element_ids to annotatable markdown elements, persists per-element annotations at ~/.vi-visual/annotations/file/{file_hash}/{element_id}.json, with a render-generation counter and orphan detection on file change.",
+    "F13c: one walker (_annotationDomWalkContent) serves slide and document modes, differing only by id-prefix (narrative-N vs md-0) and section index; includes an _INFRA_CLASSES exclusion list and a SEAM-03 ancestor-guard so only the outermost matched element gets an ID.",
+    "F14: catalog.json v4 holds components (86, addressed {category}/{name}@v{version}), schema_types, layout_tokens, surface_tokens (16 presets), annotation_tokens, themes, devices, panel_types, motion tokens — both composition's slots and DNA's presentation layer in one registry resolved by /api/component.",
+    "F15: the complete typed interaction vocabulary from contracts/taxonomies.json — 4 annotation categories (comment/reaction/highlight/favour), 5 reaction stamps, 6 content-comment types, 4 meta-comment types (10 comment types total), 3 navigation actions.",
+    "F16: the portable binding contract extracted from code — makeAnnotatable(el, elementId, sectionIndex, {meta}) -> accumulate to global ANNOTATIONS.items -> collectAnnotationsForSubmit -> POST /api/submit_response; flagged surface-agnostic, with the one re-point seam being the route-back target (bridge submit vs fork's mutation-at-address).",
+    "Distinguishes Tim-verbatim design-doc quotes from Observed-in-code findings from Inferred render-gaps, with explicit verification-state per find.",
+    "Repeatedly frames vi-visual as having built the agent-facing half of the circuit completely and the Tim-facing render only partially (slide renders richly; graph/document less so)."
+  ],
+  "standouts": [
+    "The OmniFile thesis in Tim's own words: the addressed/typed coordinate system already exists in the markdown format, with modes as projections of it.",
+    "F13c's 'modes-as-projections is IN THE RENDERER' — slide vs document share one element-addressing walk distinguished only by a prefix parameter, not a separate mechanism.",
+    "F14's single catalog holding both composition's slots (components with props/depends/outputs, versioned) and DNA's presentation tokens (themes/surface/layout/devices/motion) as data.",
+    "F16's claim that the gallery inherits the interaction layer 'by being walked' — re-skin and re-point elementId at the address rather than rebuild."
+  ],
+  "conventions": [
+    "Follows the shared finds format; carefully labels Tim-verbatim vs Observed-in-code vs Inferred (the repo evidence-classification discipline).",
+    "Grounds findings in actual file paths and line indices in server.py/index.ts and contract JSON files (litellm 'investigate actual code first' lesson cited).",
+    "Frames each find as one partial sketch of a single company-wide shape (the EMERGING_SHAPE thesis)."
+  ],
+  "concerns": [
+    "Several render-gap and end-to-end claims are explicitly NOT use-verified by wildcard (Observed/Inferred only), so portability of makeAnnotatable to a non-vi-visual surface is asserted by shape, not demonstrated.",
+    "The territory (vi-visual-bridge) is a large external-ish prototype; the finds rely on grep/code-reading of ~30K-line files, with the deeper UNIFIED_SHELL read still pending."
+  ],
+  "notes": "wildcard's finds log — the vi-visual-bridge prototype already implements addressable-markdown (OmniFile), one element-walker for all modes, a catalog holding slots+presentation, and a typed interaction vocabulary with a portable binding contract for DNA's gallery.",
+  "questions": [
+    "Do the OmniFile's per-file element_ids carry cross-FILE links (== H1.2 typed board-edges), or only per-file addressing — the open test-2 seam?",
+    "Have catalog.json v4 and taxonomies.json been verified against the actual files (marked Observed/not-use-verified)?",
+    "Has the route-back re-point seam (submit_response -> mutation-at-address) been built with fork for the gallery?"
+  ],
+  "purpose_vs_actual": "Matches: header declares a per-member append-only finds log feeding the lead; the body delivers vi-visual-side finds and a concrete deliverable (the portable binding contract) in that exact form.",
+  "apparent_themes": [
+    "Addressable/typed content as a coordinate system that already exists in the markdown format (the OmniFile).",
+    "Modes-as-projections implemented in the renderer (one walker, different prefix).",
+    "One addressed registry holding both composition slots and DNA presentation tokens as data.",
+    "A closed, typed interaction vocabulary fed by a single contract to multiple language layers.",
+    "Reuse-don't-rebuild: the gallery inherits the interaction layer by being walked and re-pointed."
+  ],
+  "intention_signals": "wildcard is proving, from the vi-visual prototype's code and Tim's own design words, that the company-wide 'one addressed-typed coordinate system, projection-agnostic' shape is already partly built (addressable markdown, a shared walker, a slots+presentation catalog, a typed interaction vocabulary) so the interface layer can mine and re-point these built pieces rather than re-derive them.",
+  "novelty": "The code-grounded demonstration that addressable-markdown (OmniFile) and modes-as-projections are running implementations (DOM-walk to element_ids, one walker per mode), and that a single catalog already unifies composition slots and DNA presentation tokens.",
+  "contribution": "Contributes the vi-visual-bridge ground truth: Tim-verbatim design intent (OmniFile, multi-runtime, the prototype landscape) plus the concrete built artifacts (element-walker addressing, catalog v4 slots+presentation, taxonomies interaction vocabulary, the portable makeAnnotatable binding contract) that a fused interface would keep as the content-addressing and interaction layer.",
+  "summary_for_embedding": "wildcard's append-only finds log (channel ch-piffgfxv) grounding the company-wide addressed-coordinate-system shape in the vi-visual-bridge prototype: the OmniFile addressable markdown, one element-walker for all modes, a catalog holding slots+presentation, and a typed interaction vocabulary with a portable binding contract.",
+  "intention_for_embedding": "To show that the addressed/typed/projection-agnostic interface shape is already partly built in vi-visual so the interface layer mines and re-points those pieces instead of re-deriving them."
+}

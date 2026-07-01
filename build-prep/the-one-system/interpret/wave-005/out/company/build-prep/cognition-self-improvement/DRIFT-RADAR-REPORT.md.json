@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/DRIFT-RADAR-REPORT.md",
+  "model": "opus",
+  "what_it_does": "The canonical, update-in-place report (lead's judgment layer) summarizing the drift-radar run of 2026-06-10: a full-repo sweep of 586 file-digests producing 1,626 near-pairs, clustered and judged into 8 confirmed unification candidates plus 13 rejected-as-distinct, with one doc-vs-code channel-B candidate. Lists each confirmed candidate, the channel-B investigation, and honest limitations for the next pass.",
+  "observations": [
+    "Reports pipeline numbers: 586 digests, 1,626 near-pairs ≥0.82, 21 largest clusters judged, 8 confirmed, 13 distinct, 1 doc-vs-code candidate.",
+    "Confirmed candidate #1 is the three build-methodology docs (cos .86) — the same item the methodology-docs consolidation draft addresses.",
+    "Other candidates: a live-resolution-surface pair (cos .94, the repo's nearest pair), MERGE-COORDINATION vs WORK-SPLIT (.86), guided-review ANCHOR vs main (.86), two test acceptance suites (.85), a test↔module mirror flagged borderline-FP by the lead (.84), and a design-doc series overlap (.83).",
+    "Channel B's single hit (ai_tics/AGENTS.md at 0.436) was INVESTIGATED and ruled a measurement artifact, not drift — a deterministic acceptance check already guards it.",
+    "Establishes a 'Channel-B calibration' rule: where a deterministic drift-home check exists it outranks the cosine signal; channel B is only valuable for modules without one.",
+    "Honest limitations section logs: intent-blindness (the GC2 fix direction — feed the judge the pair's relation), digest ceiling (6k-char digests not full files), and the empty-set zero bug caught by zero-is-suspicious."
+  ],
+  "standouts": [
+    "The lead explicitly OVERRIDES a confirmed mark (the test↔module 'built-twice' is the test doing its job) while keeping the mark reviewable — judgment-over-automation in action.",
+    "The Channel-B calibration finding: a deterministic check outranks cosine, so semantic distance ≠ staleness for enumerating constitutions.",
+    "Self-aware limitations list naming the exact next-pass fix (declared relation context to the judge), which the drift_radar.py relation() function later implements."
+  ],
+  "conventions": [
+    "Update-in-place canonical report backed by a machine findings file (.build/drift/findings.json) — separation of data layer from judgment layer.",
+    "Render/surface-not-resolve: candidates are explicitly 'the operator/lead decides — never auto-fixed.'",
+    "Dated provenance and evidence-cited (cosine values, check counts) per the repo's no-speculation discipline."
+  ],
+  "concerns": [],
+  "notes": "The human-judgment report over the drift-radar data: 8 confirmed dedup candidates (the three build docs leading), one false channel-B alarm explained, and a candid limitations log driving the next radar upgrade.",
+  "questions": [
+    "Which of the 8 confirmed candidates have been acted on since this 2026-06-10 pass?",
+    "Did the noted 'space_size sanity assert belongs in the flow row' upgrade get added?"
+  ],
+  "purpose_vs_actual": "Match — it presents itself as the canonical judgment layer over the radar data and delivers the confirmed candidates, channel-B verdict, and limitations exactly.",
+  "apparent_themes": [
+    "Judgment layer over automated detection",
+    "False-positive guarding and intent-blindness",
+    "Deterministic checks outranking model signals",
+    "Self-improving cognition auditing its own corpus"
+  ],
+  "intention_signals": "Trying to turn raw drift-radar similarity data into actionable, operator-decidable unification candidates while honestly bounding what the radar can and cannot conclude, and feeding its own weaknesses back as next-pass upgrades.",
+  "novelty": "A drift report that both lists candidates AND records the lead overriding the machine (the borderline test↔module mark) plus a calibration rule placing deterministic checks above cosine — encoding epistemic humility into the artifact.",
+  "contribution": "Contributes the named inventory of confirmed duplication/consolidation candidates across the repo (with cosines and verdicts) plus the channel-B calibration rule and the logged radar limitations.",
+  "summary_for_embedding": "The canonical drift-radar judgment report listing 8 confirmed unification candidates from a 586-file repo sweep, a debunked doc-vs-code false alarm, and logged radar limitations.",
+  "intention_for_embedding": "To present operator-decidable consolidation candidates from the drift-radar data and honestly bound the detector's reliability for future improvement."
+}

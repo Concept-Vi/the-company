@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/workshop/Export.jsx",
+  "model": "opus",
+  "what_it_does": "Implements Workshop document export in three formats. window.WSExport(doc, format) routes to exportHtml (builds a self-contained standalone HTML string with inlined CSS, motif backgrounds, and downloads it), exportPdf (opens the same HTML in a new window with print:true and triggers print), or exportPptx (deck-only, lazy-loads PptxGenJS from a CDN and builds a slide per page with motif-aware backgrounds and per-block shape/text rendering). buildStandaloneHtml + blockToHtml serialise a subset of block kinds to HTML; a motif-CSS table and PPTX background-color table mirror the on-screen motifs. Also exports window.WSExportMenu, a React popover offering the format choices (PPTX only for decks).",
+  "observations": [
+    "buildStandaloneHtml inlines CSS variables and a full baseCss block, sets frame max-width per type (deck 1100px / brochure 760px), uses aspect-ratio 16/9 for deck frames, and links Google Fonts (Sora + DM Sans) via remote CDN",
+    "MOTIF_CSS mirrors eight motifs (ivory/paper/blueprint/edgeband/watermark/ink/goldBleed/section) as inline background recipes; bleed class (light/dark/gold) is resolved via WS_MOTIFS",
+    "motifFor delegates to window.WS_resolveMotif (from Layouts.jsx) and falls back to 'ivory'; bleedFor reads WS_MOTIFS[motif].bleed",
+    "blockToHtml only serialises hero/headline/body/quote/icons/stats/palette/button/callout/image/divider — all other block kinds (the composites) return '' (empty)",
+    "exportPptx lazy-injects pptxgenjs@3.12.0 from cdn.jsdelivr.net, sets LAYOUT_WIDE, and per-block adds PptxGenJS shapes/text with bleed-aware colors; only the same primitive block subset is handled",
+    "Hardcoded hex literals throughout (GOLD E0C010, BRONZE 988058, etc.) duplicated across cssVars, PPTX_BG, and the PPTX color constants",
+    "exportHtml/pptx derive a filename by slugging doc.title; toasts via window.dsaToast for progress/failure/pop-up-blocked",
+    "escapeHtml escapes &<>\" for the HTML path"
+  ],
+  "standouts": [
+    "Three real exporters (HTML, print-to-PDF, editable PPTX) sharing one motif/bleed model so exported output keeps the deck's visual rhythm",
+    "Self-contained HTML export with all CSS inlined and motif backgrounds baked in",
+    "Motif-aware PPTX: per-slide background color, edge-band shape, watermark/section diamond overlays, and bleed-aware text colors"
+  ],
+  "conventions": [
+    "Reuses the shared motif system (WS_resolveMotif / WS_MOTIFS) rather than reinventing backgrounds — single-source for motif identity",
+    "Breaks the project's no-raw-hex rule heavily: brand colors are hardcoded hex strings inlined and duplicated (legitimate for a standalone export that can't ship CSS vars, but the PPTX constants and MOTIF_CSS duplicate the token values)",
+    "Loads external resources (Google Fonts, PptxGenJS CDN) — fine for the live app but means exported HTML and PPTX export depend on network"
+  ],
+  "concerns": [
+    "blockToHtml and exportPptx cover only ~11 primitive block kinds; every composite block (process, funnel, statTable, timeline, orgDiagram, bio, etc.) silently exports as nothing — a doc using those loses content with no warning",
+    "Brand color values are duplicated across cssVars, MOTIF_CSS, PPTX_BG, and the inline PPTX constants — four places to drift from the token source",
+    "Standalone HTML export links remote Google Fonts, so 'self-contained' degrades without network; fonts won't embed in the downloaded file",
+    "exportHtml calls doc.title.replace without guarding null title (would throw if title missing)"
+  ],
+  "notes": "This is Workshop's exporter: one motif/bleed model rendered three ways (inlined-CSS HTML, print-to-PDF, motif-aware PPTX), but only the primitive block subset is serialised — composites drop out.",
+  "questions": [
+    "Is the missing composite-block coverage in blockToHtml/exportPptx intentional (decks built from primitives) or a known gap?",
+    "Should the duplicated brand hex values be generated from the token source rather than hand-inlined?",
+    "Is a network dependency on Google Fonts / PptxGenJS acceptable for the export path?"
+  ],
+  "purpose_vs_actual": "Partially matches: the header promises 'real exporters with motif/bleed support' for HTML/PDF/PPTX, which it delivers — but it understates that only primitive blocks are serialised, so composite-heavy docs export incompletely.",
+  "apparent_themes": [
+    "One visual model (motif + bleed) projected into multiple output formats",
+    "Self-contained, portable artifacts (downloadable HTML, editable PPTX)",
+    "Brand fidelity in export (colors, fonts, motif rhythm preserved)",
+    "Graceful UX (toasts, pop-up-block handling, deck-only PPTX gating)"
+  ],
+  "intention_signals": "Trying to let a Workshop doc leave the app as a faithful, brand-consistent artifact in the format the recipient needs, reusing the same motif system the editor uses so exports look like what was designed.",
+  "novelty": "Motif-aware PPTX generation with bleed-driven color logic and shape overlays (edge band, watermark/section diamonds) is an unusual amount of brand fidelity for a client-side PowerPoint export.",
+  "contribution": "Contributes the export layer: format dispatch, the standalone-HTML builder with inlined motif CSS, the print-to-PDF path, the motif-aware client-side PPTX generator, and the export-menu UI — the way Workshop docs become portable HTML/PDF/PPTX artifacts.",
+  "summary_for_embedding": "Workshop export module: window.WSExport renders a doc to self-contained motif-styled HTML, print-to-PDF, or deck-only motif-aware PPTX (lazy-loaded PptxGenJS), serialising a primitive-block subset with bleed-aware brand colors, plus a React export-menu popover.",
+  "intention_for_embedding": "To let Workshop documents leave the app as faithful, brand-consistent HTML, PDF, or editable PowerPoint artifacts using the same motif system as the editor."
+}

@@ -1,0 +1,123 @@
+/* ============================================================
+   ConceptV · SURFACES & ORIENTATION REGISTRY
+   ------------------------------------------------------------
+   "Every design is desktop AND mobile native — and mobile has
+    both portrait and landscape." This file defines the canonical
+    SURFACES the whole system designs against, plus the rules that
+    make a single responsive source render correctly on each.
+
+   MODEL — author once, present many:
+     • You build ONE responsive source using fluid sizing
+       (tokens/sizing.css) and container queries.
+     • The MultiSurface harness frames that source at each
+       canonical viewport below, simultaneously, so desktop +
+       mobile-portrait + mobile-landscape are always in view.
+     • When a layout must genuinely differ (e.g. side rail →
+       bottom tab bar), you branch on the surface data-attribute
+       (see "Surface switching" below) — not on guesswork.
+
+   Nothing here is aesthetic; these are functional dimensions the
+   visual DNA pours into later.
+   ============================================================ */
+:root {
+  /* ---- Breakpoints (numeric source of truth) --------------- *
+     CSS vars can't drive @media directly, so these are the
+     canonical numbers — mirror them in @media / @container. */
+  --bp-mobile:   480px;   /* ≤ : phone                          */
+  --bp-tablet:   768px;   /* ≤ : tablet / large phone landscape */
+  --bp-desktop: 1024px;   /* ≤ : laptop                         */
+  --bp-wide:    1440px;   /* ≤ : large desktop                  */
+
+  /* ---- Canonical surface frames — a TYPE system, not flat px pairs ----------
+     Each surface DECLARES a type: { -ar = aspect ratio (w/h, unitless), -w = base
+     width }. Height is DERIVED: -h = calc(w / ar). Adding a new surface = declare
+     its -ar + -w and the -h auto-calculates — nothing hand-set. Ratio is the type;
+     density/LOD compose on top; the % grid rules below are ratio-invariant.
+     (analysis/AXES.md surface axis; REQUIREMENTS C1.) */
+  --frame-desktop-ar: calc(1440 / 900); /* @kind other */  --frame-desktop-w: 1440px;  --frame-desktop-h: calc(var(--frame-desktop-w) / var(--frame-desktop-ar));
+  --frame-tablet-ar:  calc(834 / 1112); /* @kind other */  --frame-tablet-w:   834px;  --frame-tablet-h:  calc(var(--frame-tablet-w)  / var(--frame-tablet-ar));
+  --frame-mobile-p-ar: calc(390 / 844); /* @kind other */  --frame-mobile-p-w: 390px;  --frame-mobile-p-h: calc(var(--frame-mobile-p-w) / var(--frame-mobile-p-ar)); /* portrait */
+  --frame-mobile-l-ar: calc(844 / 390); /* @kind other */  --frame-mobile-l-w: 844px;  --frame-mobile-l-h: calc(var(--frame-mobile-l-w) / var(--frame-mobile-l-ar)); /* landscape */
+
+  /* deck / print / web surfaces (confirmed across the corpus) — same rule */
+  --frame-deck-16x9-ar: calc(16 / 9); /* @kind other */    --frame-deck-16x9-w: 1920px; --frame-deck-16x9-h: calc(var(--frame-deck-16x9-w) / var(--frame-deck-16x9-ar));
+  --frame-deck-3x2-ar:  calc(3 / 2); /* @kind other */     --frame-deck-3x2-w:  1893px; --frame-deck-3x2-h:  calc(var(--frame-deck-3x2-w)  / var(--frame-deck-3x2-ar)); /* dense pitch */
+  --frame-a4-p-ar:      calc(794 / 1123); /* @kind other */ --frame-a4-p-w:       794px; --frame-a4-p-h:      calc(var(--frame-a4-p-w) / var(--frame-a4-p-ar)); /* one-pager portrait */
+  --frame-a4-l-ar:      calc(1123 / 794); /* @kind other */ --frame-a4-l-w:      1123px; --frame-a4-l-h:      calc(var(--frame-a4-l-w) / var(--frame-a4-l-ar));
+  --frame-web-ar:       0; /* @kind other */               --frame-web-w:       1280px; /* web: fixed width, height = content (scroll), ar=0 sentinel */
+
+  /* ---- Ratio-invariant GRID rules (percentage TYPES — hold at any frame) ---- */
+  --grid-margin:  12%;   /* @kind other */  /* outer side margin (measured across corpus) */
+  --grid-title-y: 7.5%;  /* @kind other */  /* title top */
+  --grid-band:    76%;   /* @kind other */  /* content band width (100 - 2*margin) */
+  --grid-split:   46%;   /* @kind other */  /* split-layout divider */
+
+  /* ---- Device safe-area insets (notch / home indicator) ----
+     Fall back to env() on real devices; fixed values in frames. */
+  --safe-top:    env(safe-area-inset-top,    0px);
+  --safe-right:  env(safe-area-inset-right,  0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left,   0px);
+
+  /* mobile chrome heights — keep touch targets ≥ 44px */
+  --mobile-statusbar:  44px;
+  --mobile-tabbar:     56px;
+  --mobile-topbar:     52px;
+  --touch-min:         44px;   /* minimum interactive hit target */
+
+  /* ---- Adaptive gutters — scale with surface ---------------- */
+  --gutter-desktop: var(--s-12);   /* 48px */
+  --gutter-tablet:  var(--s-7);    /* 32px */
+  --gutter-mobile:  var(--s-4);    /* 16px */
+  --gutter: var(--gutter-mobile);  /* default; raised per surface below */
+}
+
+/* ============================================================
+   SURFACE SWITCHING
+   A design declares its surface so layout branches are explicit,
+   never accidental. The harness stamps [data-surface] on each
+   frame; standalone pages can set it on <html> or a wrapper.
+     <div data-surface="mobile-portrait"> … </div>
+   Components read it for structural changes (rail ↔ tab bar).
+   For everything else, prefer fluid sizing + container queries so
+   you DON'T need a branch at all.
+   ============================================================ */
+[data-surface="desktop"]        { --gutter: var(--gutter-desktop); }
+[data-surface="tablet"]         { --gutter: var(--gutter-tablet); }
+[data-surface="mobile-portrait"],
+[data-surface="mobile-landscape"] { --gutter: var(--gutter-mobile); }
+
+/* Orientation helpers — use INSIDE a surface, not as a global query,
+   so they work in framed previews as well as real devices. */
+[data-surface="mobile-portrait"]  [data-orient="landscape-only"] { display: none !important; }
+[data-surface="mobile-landscape"] [data-orient="portrait-only"]  { display: none !important; }
+[data-surface^="mobile"] [data-desktop-only] { display: none !important; }
+[data-surface="desktop"] [data-mobile-only]  { display: none !important; }
+
+/* ============================================================
+   CONTAINER-QUERY CONVENTION
+   Mark any panel that should adapt to ITS OWN width (not the
+   viewport) as a query container. Components then resize to wherever
+   they're placed — the key to "responsive & computed", and why the
+   same card works in a desktop column and a mobile stack.
+     <section class="cq"> … </section>
+   In component CSS:  @container (max-width: 360px) { … }
+   ============================================================ */
+.cq      { container-type: inline-size; }
+.cq-size { container-type: size; }
+
+/* Reusable mobile shell — a frame chrome any mobile design drops into.
+   Reserves status/tab bars and respects safe areas. */
+.surface-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding-top:    calc(var(--mobile-topbar) + var(--safe-top));
+  padding-bottom: calc(var(--mobile-tabbar) + var(--safe-bottom));
+  padding-left:   var(--safe-left);
+  padding-right:  var(--safe-right);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+[data-surface="desktop"] .surface-shell,
+[data-surface="tablet"]  .surface-shell { padding: 0; }

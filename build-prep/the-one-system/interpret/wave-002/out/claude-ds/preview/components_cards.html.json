@@ -1,0 +1,37 @@
+{
+  "project": "claude-ds",
+  "path": "preview/components_cards.html",
+  "model": "opus",
+  "what_it_does": "A self-contained design-system preview card showing three surface patterns: a white content card, a sunken media/video tile, and a dashed empty-state dropzone for uploads.",
+  "observations": [
+    "Carries the @dsCard metadata comment (group Brand, name 'Cards & dropzones', viewport 700x280).",
+    "Three-column CSS grid; lead paragraph spans all columns.",
+    ".surface uses --bg-surface, --r-lg, --shadow-card; .placeholder uses --bg-sunken; .dropzone uses --bg-canvas with a 2px dashed --border-dashed border.",
+    "Media tile shows a round play affordance (▶ glyph in a tinted circle, --accent-bronze).",
+    "Dropzone shows a round + add affordance with --accent-gold-50 fill and --accent-gold-dashed border.",
+    "One placeholder uses an inline hardcoded linear-gradient (#E8E2CC,#D0C098) as a sample image; the empty dropzone surface overrides background/box-shadow/border inline."
+  ],
+  "standouts": [
+    "Pairs three distinct surface tiers (white card / sunken media / dashed empty) in one comparative view.",
+    "The dashed empty-state is explicitly tied to the upload affordance pattern."
+  ],
+  "conventions": [
+    "Follows token references for backgrounds, radii, shadows, borders.",
+    "Breaks token discipline with the inline hardcoded gradient hex pair used as a stand-in image.",
+    "Uses inline style overrides to mutate the third .surface into the empty variant rather than a modifier class."
+  ],
+  "concerns": [
+    "Inline hardcoded gradient hexes and inline style overrides are bespoke literals rather than tokens/classes."
+  ],
+  "notes": "A three-tier surface gallery (content card, sunken media tile, dashed dropzone) demonstrating the brand's container and empty-state treatments.",
+  "questions": [
+    "Should the empty-state variant be a modifier class rather than inline style overrides on .surface?"
+  ],
+  "purpose_vs_actual": "Matches — declares a cards & dropzones preview and renders the three surface patterns described.",
+  "apparent_themes": ["surface depth tiers (white/sunken/empty)", "empty-state-as-affordance", "token-referenced styling", "self-describing preview card"],
+  "intention_signals": "To codify how content surfaces, media placeholders, and upload empty-states look and differ, so the surface vocabulary can be judged together.",
+  "novelty": "The explicit dashed-gold empty-state-as-dropzone affordance shown alongside its sibling surfaces.",
+  "contribution": "Contributes the surface-tier and empty-state/dropzone styling patterns (card vs sunken-media vs dashed-upload) expressed against the token system.",
+  "summary_for_embedding": "A token-driven HTML preview card showing three surface patterns: white content card, sunken media tile with play affordance, and a dashed gold empty-state dropzone.",
+  "intention_for_embedding": "To present the design system's surface and empty-state container vocabulary for visual review in the gallery."
+}

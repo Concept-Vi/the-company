@@ -1,0 +1,40 @@
+{
+  "project": "claude-ds",
+  "path": "preview/brand_shapes.html",
+  "model": "opus",
+  "what_it_does": "A preview card (@dsCard group=\"Brand\") that renders the Shape system: a grid of typed geometric vessels (regular polygons 3–8 sides plus the circle), each carrying an icon, built at runtime by iterating CV_SHAPES.shapeTypes and calling CV_SHAPES.markSVG(shape) for each entry, with name, sub-line (shape · sides · icon), and meaning.",
+  "observations": [
+    "Loads three JS modules: cv-icons.js, cv-vi-glyph.js, cv-shapes.js, plus colors_and_type.css and _card.css.",
+    "Grid is populated by an IIFE that maps S.shapeTypes into .type cells using template strings.",
+    "Sub-line handles the circle specially (sides shown as ∞) and singular/plural 'side(s)'.",
+    "Lead text declares the token cascade: markDefaults (tokens) ◀ shape-type ◀ markSVG(opts).",
+    "Footer cites the source registries: CV_SHAPES.geom, CV_ICONS, markDefaults → tokens, single renderer CV_SHAPES.markSVG.",
+    "All shape data (geometry, sides, icon, meaning) comes from CV_SHAPES, not hardcoded in this file."
+  ],
+  "standouts": [
+    "Shapes carry typed meaning — the vessel itself signals the kind of thing inside, not decoration.",
+    "Single-renderer claim: one markSVG call can retint/restroke/reshape any vessel via the token cascade."
+  ],
+  "conventions": [
+    "Follows @dsCard preview metadata convention.",
+    "Data-driven rendering from a single registry (CV_SHAPES) rather than static markup — matches the project's register-as-truth law.",
+    "Tokens via var(--…); no raw color/size literals in the styles beyond layout."
+  ],
+  "concerns": [],
+  "notes": "The brand card that demonstrates the typed-shape vessel system, rendered entirely from CV_SHAPES so the catalogue IS the display.",
+  "questions": [
+    "What is the full set of shapeTypes and their meanings (defined in cv-shapes.js, not visible here)?"
+  ],
+  "purpose_vs_actual": "Matches — subtitle (typed geometric vessels, icon inside, every treatment a token parameter) is exactly what the script renders from CV_SHAPES.",
+  "apparent_themes": [
+    "Single source of truth (one renderer, one geometry registry)",
+    "Typed meaning carried by form",
+    "Token-parameterized treatment cascade",
+    "Interface as projection of a registry"
+  ],
+  "intention_signals": "Establishes that shapes are a typed semantic vocabulary driven from one registry and one renderer, so any vessel in the product is generated, retintable, and meaning-bearing without bespoke markup.",
+  "novelty": "Constraining the vessel vocabulary to regular polygons 3–8 sides (plus circle as ∞) and assigning each shape a fixed meaning, all rendered by one parametric SVG function.",
+  "contribution": "Contributes the typed-shape vessel vocabulary and its single-renderer/token-cascade model that a fused system would keep as its geometric entity-marking language.",
+  "summary_for_embedding": "A ConceptV brand preview card that renders the typed shape system — regular polygons 3–8 sides plus circle, each a meaning with an icon — generated from the CV_SHAPES registry via one markSVG renderer and token defaults.",
+  "intention_for_embedding": "To define and demonstrate a single-sourced, token-parameterized vocabulary of meaning-bearing geometric vessels."
+}

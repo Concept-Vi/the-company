@@ -1,0 +1,61 @@
+/* ============================================================
+   ConceptV · EXPORT SURFACES + COMPONENT LIFECYCLE
+   ------------------------------------------------------------
+   Two governance systems.
+
+   1. EXPORT SURFACES — deliverables are surfaces too. Just as a
+      design is mobile-native, it is export-native: print/PDF page
+      sizes and slide frames are first-class targets, so a handoff
+      package or deck composes against a known page the same way a
+      screen composes against a viewport.
+
+   2. LIFECYCLE TAGS — mark a component/pattern experimental, stable
+      or deprecated, so your experiments are visibly quarantined
+      instead of silently rotting (and consumers know what's safe).
+   ============================================================ */
+:root {
+  /* page frames (CSS px @96dpi) */
+  --page-a4-w:     794px;  --page-a4-h:    1123px;   /* A4 portrait */
+  --page-a4-l-w:  1123px;  --page-a4-l-h:   794px;   /* A4 landscape */
+  --page-letter-w: 816px;  --page-letter-h:1056px;
+  --slide-16x9-w: 1920px;  --slide-16x9-h: 1080px;
+  --slide-4x3-w:  1440px;  --slide-4x3-h:  1080px;
+  --page-margin:   64px;
+}
+
+/* A composed page/slide frame for on-screen authoring of exports. */
+.page {
+  width: var(--page-w, var(--page-a4-w));
+  min-height: var(--page-h, var(--page-a4-h));
+  margin-inline: auto;
+  background: var(--zone-ground, #fff);
+  box-shadow: var(--elev-3);
+  padding: var(--page-margin);
+  box-sizing: border-box;
+}
+.page.landscape { --page-w: var(--page-a4-l-w); --page-h: var(--page-a4-l-h); }
+.page.slide     { --page-w: var(--slide-16x9-w); --page-h: var(--slide-16x9-h); padding: 0; }
+
+/* Print: paint backgrounds, drop chrome, one page per .page. */
+@media print {
+  :root { --zone-intensity: 1; /* @kind other */ }
+  html, body { background: #fff; }
+  .no-print, [data-no-print] { display: none !important; }
+  .page { box-shadow: none; margin: 0; break-after: page; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* ---- Lifecycle tags -------------------------------------- */
+.lc {
+  display: inline-flex; align-items: center; gap: 5px;
+  font: 700 9px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 4px; border: 1px solid transparent;
+}
+.lc::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.lc-experimental { color: var(--zone-warning-ink); background: var(--zone-warning-surface); border-color: var(--zone-warning-edge); }
+.lc-stable       { color: var(--zone-success-ink); background: var(--zone-success-surface); border-color: var(--zone-success-edge); }
+.lc-deprecated   { color: var(--zone-reject-ink);  background: var(--zone-reject-surface);  border-color: var(--zone-reject-edge); text-decoration: line-through; }
+
+/* whole-object hint for deprecated/experimental work in the canvas */
+[data-lifecycle="deprecated"]   { opacity: 0.6; }
+[data-lifecycle="experimental"] { outline: 1px dashed var(--zone-warning-edge); outline-offset: 2px; }

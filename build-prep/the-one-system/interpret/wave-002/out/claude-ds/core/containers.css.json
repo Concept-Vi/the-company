@@ -1,0 +1,53 @@
+{
+  "project": "claude-ds",
+  "path": "core/containers.css",
+  "model": "opus",
+  "what_it_does": "CSS layer of the 'containment ladder' — the structural spine of the design system. Defines the recursive container hierarchy (Band → Section → Zone → Cluster → Atom) as classes, where a Zone's surface wash is COMPUTED from its nesting depth (~2.1% pigment per level via color-mix toward --zone-ground), plus collapse/reflow rules per container level and a fixed-ratio paged-surface stage (slide/print) frame.",
+  "observations": [
+    "Registers a custom @property --zone-depth (integer, initial 1) so a missing value falls back cleanly rather than invalidating the wash",
+    "Five-level ladder: .cv-band (artifact ground), .cv-section (labelled unpainted sub-region, bronze uppercase header with a rotated gold square ::before), .cv-zone (the painted panel), .cv-cluster (sibling layout group), .cv-atom (leaf)",
+    "Zone wash: --_pct = zone-depth * 2.1%, background = color-mix(in oklch, pigment * pct * intensity, ground); a hairline inset box-shadow at 2.2x depth gives a borderless edge",
+    "Wash mixes toward --zone-ground so it is theme-invariant (works on dark grounds)",
+    "Band carries ratio-invariant % frame margins (--grid-margin 12%, --grid-title-y 7.5%); locks aspect-ratio for data-surface slide/print, free-height for web",
+    "Full-bleed variant .cv-band--bleed (cover/closing/photo-divider): zero padding, overlay cluster height 100%",
+    "Zone tone variants via data-tone (neutral→--pig-panel, review→--pig-review), data-raised→--elev-2 elevation, and .cv-zone--frosted (backdrop blur glass card over full-bleed image)",
+    "Cluster flows: column default, row, grid (auto-fit minmax), split (46fr/54fr working-slide split), overlay (single-cell stacking via grid-area 1/1), wall (dense logo-wall grid)",
+    "Collapse rules use CSS @container queries (max-width 640px) AND data-surface mobile selectors; .cv-band/.cv-zone set container-type: inline-size so reflow keys off container width not viewport",
+    "Paged-surface stage: .cv-slide-frame + .cv-slide-stage with --cv-stage-w (default 1280px), scaled by core/slide-fit.js (CV_SLIDE_FIT); explicit 720px heights for bleed slides",
+    "Inline comments document several specific bug fixes (the 32px-wide frosted-panel collapse, the bleed-slide height collapse)"
+  ],
+  "standouts": [
+    "Depth-computed zoning: a Zone's colour is a pure function of nesting depth, so structure is read by undertone not borders — the 'universal, almost-imperceptible zoning' principle made into CSS",
+    "Theme-invariance by mixing toward --zone-ground rather than picking colours",
+    "Per-container collapse philosophy: 'reflow is not global; each level knows how to fold'",
+    "Heavy use of modern CSS: @property, color-mix(in oklch), container queries, custom-prop arithmetic"
+  ],
+  "conventions": [
+    "Token-pure: every value resolves to a registered token (no raw hex except #fff fallbacks)",
+    "Classes are hand-usable AND solver-emitted (ContainmentTree.jsx sets --zone-depth as it walks the tree)",
+    "Data-attribute knobs (data-surface, data-flow, data-tone, data-raised) follow the DS axis/dial convention",
+    "Single-home: this file is declared 'the one home' for the paged-surface frame"
+  ],
+  "concerns": [
+    "Magic constants (2.1% per level, 2.2x edge multiplier, 720px stage min-height, min(440px,72%) frosted width) are inline literals rather than tokens, though they encode design rules"
+  ],
+  "notes": "The CSS spine of the containment ladder: Band/Section/Zone/Cluster/Atom where zone wash is computed from nesting depth, with per-level collapse rules and a scaled fixed-ratio slide/print frame.",
+  "questions": [
+    "Are the inline magic numbers (2.1%, 2.2x, 720px) intentionally non-tokenised, or candidates for the token registry per the DS no-literals rule?",
+    "How does --zone-intensity get set, and what is its default if absent?"
+  ],
+  "purpose_vs_actual": "Matches — the header declares it the 'generative core, CSS layer' implementing the containment ladder + depth-keyed zoning, and the rules deliver exactly that.",
+  "apparent_themes": [
+    "computed not hand-set (design as a function of structure/depth)",
+    "recursive typed containment",
+    "theme-invariance via mixing toward ground",
+    "per-level responsive collapse",
+    "ratio-invariant surfaces",
+    "single home for the presentation frame"
+  ],
+  "intention_signals": "Trying to make visual structure emergent from the content tree — zoning, spacing rhythm, and collapse all derive from a container's role and nesting depth rather than hand-authored colours, so the same markup reads correctly across themes and surfaces.",
+  "novelty": "Nesting-depth-driven zone wash via @property + oklch color-mix — colour as a computed function of structural depth rather than a chosen value.",
+  "contribution": "Contributes the structural container vocabulary (Band/Section/Zone/Cluster/Atom), the depth-computed zoning mechanism, the per-level collapse rules, and the scaled fixed-ratio slide/print stage — the CSS substrate a fused system would keep for laying out any artifact surface.",
+  "summary_for_embedding": "CSS defining the recursive Band→Section→Zone→Cluster→Atom containment ladder with nesting-depth-computed zone washes (oklch color-mix), per-level collapse rules, and a scaled fixed-ratio slide/print frame.",
+  "intention_for_embedding": "To make an artifact's visual structure (zoning, spacing, collapse) a computed function of its container roles and nesting depth, theme- and surface-invariant."
+}

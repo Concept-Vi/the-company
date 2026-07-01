@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/.temp/pgdelta/catalog-local-migrations-5553d687518b450f9a80f72047e3e92a69f867f2b23d079742725a55e0abe792-1781752155312.json",
+  "model": "opus",
+  "what_it_does": "A 1.5MB machine-generated PostgreSQL catalog snapshot produced by the pgdelta tool (Supabase CLI migration diffing), capturing the full database schema state at a point in time. The top object records postgres version 170006 and currentUser 'postgres', then enumerates every catalog object type: aggregates, collations, compositeTypes, domains, enums, extensions, procedures, indexes, materializedViews, subscriptions, publications, rlsPolicies, roles, schemas, sequences, tables, triggers, eventTriggers, rules, ranges, views, foreign data wrappers/servers/tables, and a depends graph. It holds 12 schemas, 49 tables, 44 procedures, 12 enums, 6 extensions, 5 triggers, 2 sequences, and 0 RLS policies/views.",
+  "observations": [
+    "Filename encodes a 64-hex content/migration hash plus a millisecond timestamp (1781752155312), and sits under a .temp/pgdelta directory — a transient diff-tool work file, not authored source",
+    "Schemas covered are almost entirely Supabase/Postgres platform internals: _realtime, auth, extensions, graphql, graphql_public, pgbouncer, realtime, storage, supabase_functions, supabase_migrations, vault, plus public",
+    "Table distribution is platform-heavy: auth=23, storage=10, realtime=8, _realtime=4, supabase_functions=2, supabase_migrations=1, and exactly one application table in public",
+    "The single public table is public.connector_audit with columns id, ts, subject, scope, tool, args_preview, outcome, detail",
+    "Extensions present: uuid-ossp, pg_net, pg_stat_statements, pgcrypto, plpgsql, supabase_vault",
+    "Each catalog object carries deep per-column and privilege detail (data_type, is_custom_type, custom_type_schema, not_null, is_identity, default, comment, plus grantee/privilege/grantable privilege rows and security_labels)",
+    "compositeTypes example includes realtime.user_defined_filter and realtime.wal_column with fields like op typed as the custom enum realtime.equality_op"
+  ],
+  "standouts": [
+    "Of 49 tables only one (public.connector_audit) is application-defined — the rest is captured Supabase platform schema",
+    "connector_audit's column shape (subject, scope, tool, args_preview, outcome, detail) reads as an audit log of connector/tool invocations"
+  ],
+  "conventions": [
+    "Follows pgdelta/Supabase catalog-snapshot JSON conventions: object keys namespaced like 'type:schema.name', 'table:schema.name', 'extension:\"name\"'",
+    "Lives under .temp/ — a build/diff artifact directory, consistent with generated-not-authored placement"
+  ],
+  "concerns": [
+    "Large (1.5MB) generated transient artifact checked into the repo tree under build-prep; .temp files are typically disposable",
+    "Mostly platform-catalog noise; the only project-meaningful signal is the lone public.connector_audit table"
+  ],
+  "notes": "Generated pgdelta DB-catalog snapshot — ignore as authored design; the only project content here is the public.connector_audit table definition.",
+  "questions": [
+    "Was this .temp snapshot meant to be committed, or is it a stray diff-tool leftover?",
+    "Is public.connector_audit the intended app schema for this Supabase project, or just whatever existed at snapshot time?"
+  ],
+  "purpose_vs_actual": "n/a — generated tool artifact with no stated purpose; it faithfully serves as a full catalog state snapshot for migration diffing",
+  "apparent_themes": [
+    "Schema-as-state capture for declarative migration diffing",
+    "Supabase platform baseline (auth/storage/realtime/vault) surrounding a minimal application surface"
+  ],
+  "intention_signals": "Produced so pgdelta could compute the difference between local migrations and a target DB state; the idea is to snapshot the entire catalog so schema changes can be derived rather than hand-written.",
+  "novelty": "Exhaustive Postgres catalog serialized to JSON at column/privilege/dependency granularity — unusual in being a complete machine view of the DB rather than DDL text.",
+  "contribution": "Contributes a point-in-time full-catalog snapshot of the claude-design Supabase database, and specifically the definition of the public.connector_audit audit-log table (subject/scope/tool/args_preview/outcome/detail) as the application's schema footprint within an otherwise stock Supabase install.",
+  "summary_for_embedding": "A generated pgdelta JSON snapshot of a Supabase Postgres catalog (12 schemas, 49 tables, 44 procedures) whose only application table is public.connector_audit, the rest being auth/storage/realtime/vault platform schema.",
+  "intention_for_embedding": "Created by the Supabase CLI's pgdelta diffing tool to capture full database catalog state so schema migrations could be computed by comparison."
+}

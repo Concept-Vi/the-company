@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "app/ai/ai-glyphic.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that registers two CV_AI capabilities wiring the AI 'Glyphic Foundry' into the registry: glyphic.generate (propose N candidate line-symbol records from a brief, multi-step by threading prior turns) and glyphic.save (commit a chosen candidate into CV_ICONS + taxonomy, schema-validated, provenance 'vi'). It owns only the generation prompt builder and the candidate parser; the record shape, write path, and voice are sourced elsewhere.",
+  "observations": [
+    "Guards on window.CV_AI: logs console.error and returns (does NOT throw) if CV_AI is absent — unlike sibling files that throw.",
+    "buildPrompt threads prior turns (p.thread) and the live CV_ICONS.taxonomy (domains/kinds) so candidates are on-system; specifies a strict SVG style (24×24, fill none, stroke currentColor, width 1.5, round caps).",
+    "Prompt instructs the model to return ONLY a JSON array of N candidates with id/name/description/svg/facets{domain,kind,tags}.",
+    "parseCandidates extracts the first [...] JSON array via regex, JSON.parses it, and validates each record against window.CV_GLYPHIC.validateSymbol (tolerant if CV_GLYPHIC absent → empty problems).",
+    "glyphic.generate's run prefers AI.complete (bound) over a.provider.complete, throws if no completion provider, and returns a Promise resolving to parsed candidates.",
+    "glyphic.save throws if CV_ICONS.add is unavailable, calls CV_ICONS.add with provenance 'vi' merged in, returns { saved: id }.",
+    "Both capabilities use surfaces ['icons','glyphics','*'] and { silent: true }; glyphic.save has provider null and behaviours [].",
+    "Header documents the single-source claim: record SHAPE = CV_GLYPHIC.schema, write path = CV_ICONS.add, voice = voice.conceptv behaviour; this file owns only prompt + parse."
+  ],
+  "standouts": [
+    "The capability's prompt is built FROM the live taxonomy (CV_ICONS.taxonomy domains/kinds) so generated symbols are constrained to the existing system vocabulary.",
+    "glyphic.generate is explicitly multi-step (threads prior turns) — a conversational generate loop rather than one-shot.",
+    "Inline strict SVG body spec (no <svg> wrapper, currentColor, 1.5 stroke) bakes the icon design language into the prompt."
+  ],
+  "conventions": [
+    "Registry-way wiring: a UI feature ('AI built into the icon system') expressed as registered capabilities owning only prompt + parse.",
+    "Uses 'use strict' and var (older style) vs the const/arrow style of ai-capabilities-canvas.js — a stylistic divergence among sibling AI files.",
+    "Breaks the project's loud-fail convention at load: console.error + return instead of throw when CV_AI is missing.",
+    "Validates candidates against the schema's single home (CV_GLYPHIC.validateSymbol) rather than re-declaring validation."
+  ],
+  "concerns": [
+    "Load-time guard uses console.error + return rather than throw — silently inert if CV_AI is absent, which diverges from the system's stated loud-fail discipline (sibling ai-capabilities-canvas.js throws).",
+    "parseCandidates tolerates a missing CV_GLYPHIC by treating records as valid (problems=[]) — a candidate could be marked valid:true without real schema validation if the schema module hasn't loaded."
+  ],
+  "notes": "Wires the icon-foundry AI into CV_AI as two capabilities — a taxonomy-aware multi-step symbol generator and a schema-validated save into CV_ICONS — owning only prompt+parse while sourcing shape/write/voice from their single homes.",
+  "questions": [
+    "Why does this file use console.error+return on missing CV_AI while ai-capabilities-canvas.js throws — is the inertness intentional or a drift from the loud-fail rule?",
+    "If CV_GLYPHIC hasn't loaded, candidates are marked valid:true with no validation — is that an acceptable state for the save path downstream?"
+  ],
+  "purpose_vs_actual": "Match — the header says it registers two glyphic capabilities owning only prompt+parse with shape/write/voice single-sourced, and the code does exactly that.",
+  "apparent_themes": [
+    "Registry-way wiring of an AI feature (capabilities as data)",
+    "On-system generation (prompt built from the live taxonomy + design language)",
+    "Single-sourcing of schema, write path, and voice",
+    "Conversational/multi-step generate loop with live candidate feedback"
+  ],
+  "intention_signals": "Trying to make icon creation a first-class Vi generative move that produces on-system line glyphs and commits them instantly into the live icon library/taxonomy, threaded as a conversation, while keeping schema/write/voice single-sourced.",
+  "novelty": "A taxonomy-and-design-language-aware symbol generator that returns validated SVG-body records and an instant-save-to-library path, all as two registered capabilities.",
+  "contribution": "Contributes the glyphic (icon) generation+save capabilities and the pattern of building a generation prompt from the live taxonomy plus a strict inline SVG-body spec, with validation delegated to the schema's single home.",
+  "summary_for_embedding": "IIFE registering CV_AI capabilities glyphic.generate (taxonomy-aware multi-step line-symbol candidate generator) and glyphic.save (schema-validated commit into CV_ICONS, provenance vi), owning only prompt and parse.",
+  "intention_for_embedding": "To make on-system icon/symbol creation a registered Vi capability that generates validated glyph candidates from a brief and instantly saves chosen ones into the live icon library."
+}

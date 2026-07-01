@@ -1,0 +1,91 @@
+/* ============================================================
+   ConceptV · STATES  —  loading→resolve, empty/error, interaction
+   ------------------------------------------------------------
+   The partner to the motion language: if "nothing teleports," then
+   content RESOLVES from a placeholder — it never pops in. This file
+   gives skeletons that morph into content, designed empty/error
+   states, and a consistent interaction-state + focus-ring language.
+   ============================================================ */
+:root {
+  --skeleton-base:   color-mix(in oklch, var(--ink) 8%, transparent);
+  --skeleton-sheen:  color-mix(in oklch, var(--ink) 14%, transparent);
+  --skeleton-radius: var(--r-sm, 6px);
+
+  --focus-ring:        var(--accent-gold);
+  --focus-ring-width:  2px;
+  --focus-ring-offset: 2px;
+
+  --state-hover:    color-mix(in oklch, var(--ink) 5%, transparent);
+  --state-press:    color-mix(in oklch, var(--ink) 9%, transparent);
+  --state-selected: var(--vi-strong);
+  --disabled-opacity: 0.45; /* @kind other */
+}
+
+/* ---- Skeleton / shimmer ---------------------------------- *
+   Mark loading placeholders .skeleton; they shimmer, then you swap
+   in real content with an .enter-* class so it resolves, not pops. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--skeleton-base);
+  border-radius: var(--skeleton-radius);
+  color: transparent !important;
+}
+.skeleton.text { height: 0.8em; margin: 0.18em 0; }
+.skeleton.line { height: 8px; }
+.skeleton.circle { border-radius: 50%; }
+.skeleton::after {
+  content: "";
+  position: absolute; inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--skeleton-sheen), transparent);
+  animation: cvShimmer 1.4s var(--ease-in-out, ease) infinite;
+}
+@keyframes cvShimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; opacity: 0.5; }
+}
+
+/* ---- Empty / error / first-run --------------------------- *
+   A designed zero-state, never a bare line of grey text. Icon slot
+   on top, a short line, an optional action. Tint by zone via a
+   .zone-* class on the wrapper (e.g. error → .zone-reject). */
+.state-block {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: var(--d-3); padding: var(--space-fluid-lg);
+  border-radius: var(--r-lg, 14px);
+  border: 1px dashed var(--border-default);
+  color: var(--ink-3);
+  max-width: 42ch; margin-inline: auto;
+}
+.state-block .glyph {
+  width: 56px; height: 56px; display: grid; place-items: center;
+  border-radius: 50%; color: var(--zone-ink, var(--accent-bronze));
+  background: color-mix(in oklch, currentColor 12%, transparent);
+  font-size: 24px;
+}
+.state-block .title { font: 700 var(--fs-h4) / var(--lh-snug) var(--font-display); color: var(--ink); }
+.state-block .body  { font-size: var(--fs-meta); }
+
+/* ---- Interaction states — consistent everywhere ---------- *
+   .interactive gives any element the hover/press/focus/disabled
+   language. Pair with role/tabindex for non-button elements. */
+.interactive {
+  cursor: pointer;
+  transition: background var(--dur-quick) var(--ease-out),
+              box-shadow var(--dur-quick) var(--ease-out),
+              transform var(--dur-instant) var(--ease-out);
+}
+.interactive:hover  { background: var(--state-hover); }
+.interactive:active { background: var(--state-press); transform: translateY(0.5px); }
+.interactive[aria-disabled="true"],
+.interactive:disabled { opacity: var(--disabled-opacity); pointer-events: none; }
+.interactive[aria-selected="true"],
+.interactive[data-selected] { background: var(--state-selected); }
+
+/* Gold focus ring — keyboard only, never on mouse press. */
+:where(a, button, [tabindex], input, select, textarea, .interactive):focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--r-sm, 6px);
+}

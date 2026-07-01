@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/kit.jsx",
+  "model": "opus",
+  "what_it_does": "Defines AcKit, the AtomiCity component kit: a small set of composable React primitives (Specimen, StateDot, Tile, Sheet, Field, HumanControl, OptionRow) that the rest of the app instances. Each shows meaning by visual implication rather than technical text. It exposes them on window.AcKit and assigns several to the global window.",
+  "observations": [
+    "Specimen renders the visual truth of a design value by kind — color (swatch), radius (rounded box), spacing (gapped bars), shadow (lifted card), font ('Ag' specimen) — all via `var(--token)`, with a size scale (sm/md/lg/xl).",
+    "StateDot is a single SVG (ring + diamond + check paths) that morphs between idle/selected/active/edited states by CSS class and animation, aria-hidden, with no text label.",
+    "Tile is a button surface primitive with selected/className/style passthrough.",
+    "Sheet is a closable dialog panel that binds an Escape-key handler while open and has a close button; side defaults to 'bottom'.",
+    "Field wraps children with a label and optional plain-language hint.",
+    "HumanControl adapts the editor to value kind: color → swatch + native color input (only when value is a hex); radius/spacing → a range slider with human end-labels (Sharp/Round, Tight/Roomy) when the value is px-editable; shadow/font → explanatory notes; fallback → a plain text field.",
+    "normHexK normalizes 3/6/8-digit hex into a 6-digit hex (or #000000) for the native color input.",
+    "OptionRow renders equal-width quick-reply buttons with optional icons and a primary variant — the agent's 'what next' pattern.",
+    "Exports via window.AcKit and also Object.assign onto window (with Tile aliased AcTile, etc.)."
+  ],
+  "standouts": [
+    "The guiding rule 'show meaning by visual implication, never by raw technical text' is implemented literally across every primitive (specimens, morphing state dot, human-labeled sliders).",
+    "Specimens are computed entirely from `var(--token)` so they always reflect the live design system with no hardcoded values.",
+    "HumanControl gates editability on the value's actual form (hex / px) and falls back gracefully, only exposing controls a layperson can use."
+  ],
+  "conventions": [
+    "All visual values reference design tokens via `var(...)` — no raw hex/px in the rendered primitives, honoring the single-source-of-truth rule.",
+    "window-global export pattern (AcKit + Object.assign onto window) consistent with the project's no-import style.",
+    "OptionRow encodes Tim's 'offer options not binary' interaction pattern as a reusable component."
+  ],
+  "concerns": [
+    "Dual export (window.AcKit and Object.assign onto window) creates two reference paths to the same components, a mild duplication of access surface.",
+    "HumanControl.value is assumed to be a string with .trim() — a non-string value would throw.",
+    "shadow and font kinds offer no actual in-control editing (just notes), so those facets are not editable through HumanControl despite being editable conceptually."
+  ],
+  "notes": "AcKit: the visual-implication primitive kit — specimens that render token truth, a morphing state dot, a tile, an escapable sheet, a labelled field, an adaptive layperson control, and an equal-width option row.",
+  "questions": [
+    "Why are both window.AcKit and direct window assignments provided — which is the intended consumption path?",
+    "Are shadow/font meant to remain note-only (non-editable) in HumanControl, with editing happening elsewhere (the live preview / brand kit)?"
+  ],
+  "purpose_vs_actual": "Matches — the header describes a small set of composable primitives that show meaning visually for a person with no system knowledge, and each primitive is built to do exactly that.",
+  "apparent_themes": [
+    "Meaning by visual implication, not technical text",
+    "Primitives computed from the live token system",
+    "Adaptive, layperson-friendly editing controls"
+  ],
+  "intention_signals": "Trying to give the whole app a coherent, jargon-free visual vocabulary where every control and indicator communicates by sight, so a non-technical person understands the design system by looking.",
+  "novelty": "A state indicator that conveys status purely by morphing SVG shapes, specimens that render the literal visual truth of any token kind, and a control that reshapes itself to the value's nature with human end-labels.",
+  "contribution": "Contributes the foundational AtomiCity primitive kit — token-driven Specimen renderers per value kind, the morphing StateDot, Tile, Sheet, Field, the adaptive HumanControl editor, and the OptionRow quick-reply pattern — that every other AtomiCity surface instances.",
+  "summary_for_embedding": "AcKit, a React primitive kit for AtomiCity (Specimen, StateDot, Tile, Sheet, Field, HumanControl, OptionRow) that renders design-token values as visual specimens and adaptive layperson controls, conveying meaning by visual implication rather than text.",
+  "intention_for_embedding": "To give the AtomiCity app a coherent jargon-free visual vocabulary so a non-technical person understands the design system and edits its values by sight alone."
+}

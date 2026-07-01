@@ -1,0 +1,33 @@
+{
+  "project": "claude-ds",
+  "path": "preview/type_scale.html",
+  "model": "opus",
+  "what_it_does": "A standalone HTML preview card rendering the full 9-step type scale as a table: each row names a role (Display, H1-H4, Body, Body sm, Caption, Eyebrow), shows a live sample at its size/weight, and lists the px/weight on the right.",
+  "observations": [
+    "Carries a @dsCard annotation: group='Brand', name='Type scale', subtitle='9-step ramp from Display → Eyebrow', viewport='700x380'.",
+    "Links shared _card.css; local <style> uses var(--font-display), --font-body, --font-mono, --fg-primary/secondary/muted, --border-faint, --accent-bronze.",
+    "Nine rows: Display 48/700, H1 36/700, H2 28/600, H3 22/600, H4 17/700, Body 15/400, Body sm 13/400, Caption 11/500, Eyebrow 11/600.",
+    "Display through H3 use the display font; H4 down switch to body font (.x.body). Eyebrow (.eb) is uppercase, bronze accent, tracked.",
+    "Each sample's font-size/weight is set inline per row; Body sample reuses brand copy 'The mathematics of operation.'"
+  ],
+  "standouts": [
+    "Encodes the font-family switch point: display font for Display-H3, body font from H4 down.",
+    "Defines a distinct Eyebrow style (uppercase, bronze, tracked) as a named scale step."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery convention and var()-token discipline for fonts/colours/borders.",
+    "Per-row sizes/weights are inline literals (illustrative scale values), not references to size tokens."
+  ],
+  "concerns": [],
+  "notes": "The 9-step type-scale reference card; shows every role's live sample, size/weight, the display→body font switch at H4, and the bronze Eyebrow style.",
+  "questions": [
+    "Are these 9 steps codified as named size/weight tokens elsewhere, or only enumerated visually here?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard names it the 'Type scale' 9-step ramp and that is exactly what renders.",
+  "apparent_themes": ["typographic scale/ramp", "role-named type steps", "display vs body font split", "self-demonstrating previews", "bronze accent for eyebrows"],
+  "intention_signals": "Intended as the single eye-reference for the whole type hierarchy, so each role's size/weight/font and the family-switch point can be recognised at a glance.",
+  "novelty": "Making the font-family switch (display→body at H4) and the Eyebrow's distinct bronze/uppercase treatment explicit within one ramp.",
+  "contribution": "Contributes the consolidated 9-step type scale with per-role size/weight, the display-to-body font boundary, and the named Eyebrow style.",
+  "summary_for_embedding": "An HTML @dsCard preview rendering the design system's 9-step type scale (Display through Eyebrow) with live samples, px/weight values, and the display-to-body font switch.",
+  "intention_for_embedding": "To give a single eye-recognisable reference for the entire type hierarchy, each role's size/weight/font, and where the display font yields to body."
+}

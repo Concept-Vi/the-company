@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/SEM-4-composition.md",
+  "model": "opus",
+  "what_it_does": "A companion findings doc on how a structural finding (exact, deterministic, auto-actable) and a semantic finding (a fuzzy 4B-swarm candidate, positive-only) live in one coherence finding-model without the fuzzy class corroding the exact one. It specifies the record-shape delta, the positive-only-as-a-leg discipline, structural-semantic disagreement as a derived meta-finding, the two-level confirmation flow, and how the build loop consumes both classes.",
+  "observations": [
+    "Proposes a +2-field schema delta on the AREA-1 record: source: structural|semantic (a discriminator) and a semantic-only derived confidence; evidence is already polymorphic enough to carry an AST reach-result or a swarm JSON.",
+    "Expresses positive-only as a fourth propose-only leg in AREA-3's directional hybrid: semantic may ADD a candidate but never demote/close/confirm-live; a 4B 'looks fine' is discarded, never recorded.",
+    "Models structural-semantic disagreement as a read-time-derived meta-finding over two source-tagged events at one address, keeping the own/reflect split (nothing new owned).",
+    "Grounds disagreement in the measured 3/82 false-wires from AREA-3 (including /api/mockup-feedback) as the first live disagreement findings.",
+    "Separates two confirmation levels: jury agreement raises quality but stays candidate; promotion to actionable is a separate act by a stronger authority (Claude Code agent or Tim), recorded as an owned disposition.",
+    "Argues the loop discriminates by DISPOSITION not SOURCE: a semantic finding is born action != finish, so AREA-4's existing 'if action != finish: continue' absorbs both classes.",
+    "Corrects two sibling-area proposals: AREA-4's detector-re-run closure does not transfer to semantic (a 4B re-read can't close), and AREA-1's content-hash dedup key is wrong for semantic (coarse key on finding-type+target+source instead)."
+  ],
+  "standouts": [
+    "The disagreement meta-finding as the spine: the one place the fuzzy class bears on the exact class without violating positive-only.",
+    "The coarse-key correction forced by LLM non-determinism, so a confirmed disposition survives re-worded re-reads.",
+    "The single composition diagram tying record-shape, the four legs, the confirm-path, and the loop together."
+  ],
+  "conventions": [
+    "Uses OBS/INF/your-idea/external marking.",
+    "Composes against the sibling AREA-1..6 docs rather than re-inventing, citing each precedent.",
+    "Closes with a 'yes, but actually' list of corrections to anchor and sibling areas."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: one record shape with a +1 discriminator; the discriminator decides which lane a finding may travel, never whether it is real; semantic adds only candidates and its single power over the structural skeleton is to raise a disagreement for a stronger judge.",
+  "questions": [
+    "Where exactly does the detector-to-finding ingestion adapter that discards 'looks fine' live in the codebase?",
+    "How is the read-time disagreement derivation computed and surfaced, given it is proposed as your-idea?"
+  ],
+  "purpose_vs_actual": "Matches its stated area: it is the join — the record shape and disciplines that carry both detector classes in one model — not a detector doc or a substrate doc.",
+  "apparent_themes": [
+    "Positive-only enforced by record shape and lane, not by remembered rule",
+    "Own/reflect split (reflect detection, own disposition)",
+    "Disagreement as the highest-value composed finding",
+    "Discriminate by disposition not source"
+  ],
+  "intention_signals": "It is trying to make the two-class composition safe-by-construction so a cheap fuzzy class cannot corrupt the trustworthy exact class, while keeping the loop unchanged and reusing the existing disposition substrate.",
+  "novelty": "The propose-only-fourth-leg framing and the coarse-dedup-key correction forced by sampling non-determinism are distinctive design moves.",
+  "contribution": "Contributes the unified finding-record schema delta, the positive-only-as-a-leg composition, the derived disagreement meta-finding, the two-level confirmation flow, and the disposition-not-source loop-consumption model.",
+  "summary_for_embedding": "A composition findings doc defining one coherence finding-model carrying both structural and semantic findings via a source discriminator, a propose-only semantic leg, a derived disagreement meta-finding, and a two-level confirm path.",
+  "intention_for_embedding": "To compose the exact structural and fuzzy semantic detector classes into a single finding-model without the fuzzy class corroding the trustworthy one."
+}

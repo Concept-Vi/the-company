@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "preview/spacing_elevation.html",
+  "model": "opus",
+  "what_it_does": "A preview card (HTML) presenting the design system's nine-tier 'luxury' elevation/shadow scale. It defines nine box-shadow tokens (--lux-0 through --lux-modal plus --lux-glow-gold, all built on a shared --lux-hairline) and displays each as a chip floating on a paper plinth, labelled with an ordinal, name, y-offset recipe, and usage description, ending with footnotes stating the colour recipe and discipline rules.",
+  "observations": [
+    "@dsCard annotation: group='Brand', name='Elevation / shadows', subtitle 'Nine-tier warm-bronze elevation scale', viewport='700x220'.",
+    "Defines the shadow tokens inline in :root: --lux-hairline (an inset top-light + faint bottom line) referenced by every tier, then --lux-0/xs/sm/md/lg/xl/pop/modal and --lux-glow-gold.",
+    "Each tier layers a hairline contact shadow + warm-bronze ambient pass(es); colours use warm rgba (e.g. rgba(31,26,18,...), rgba(152,128,88,...), gold rgba(224,192,16,...)) — explicitly no cool greys.",
+    "Nine tiles each: a .plinth (paper gradient + hairline 12px grid via ::after) holding a .chip with the tier's box-shadow; labelled Resting(00)/xs/sm/md★/lg/xl/pop/modal/gold glow.",
+    "md is marked with a star (★) as 'The default card'; gold glow is 'Reserved for the primary action and active brand tokens'.",
+    "Footnotes encode rules: contact-over-bronze colour recipe, mandatory inset top-light, and discipline ('Step one tier at a time on hover', 'Never combine glow with modal', 'Never stack md on md — escalate to lg').",
+    "Uses design tokens for type/colour (--font-body, --fg-primary, --accent-bronze, --r-lg, --border-faint) but hardcodes the chip gradients (#FFFFFF/#FDFBF2, gold #FBEC8A/#E0C010) and all shadow rgba values."
+  ],
+  "standouts": [
+    "It both defines the elevation tokens (in :root) and documents the philosophy behind them ('paper on paper', 'never floating, not glued', 'cool greys are forbidden').",
+    "Encodes usage discipline as prose rules, not just visuals — e.g. never stack md on md, never combine glow with modal.",
+    "Each shadow is a multi-layer recipe (contact + bronze ambient + inset top-light) rather than a single box-shadow."
+  ],
+  "conventions": [
+    "Follows the @dsCard + _card.css + token convention for most type/colour.",
+    "Partly breaks the no-raw-literals discipline: the shadow rgba recipes and chip gradient hexes are defined here as literals (though as a tokens-definition card this may be their legitimate single home rather than drift)."
+  ],
+  "concerns": [
+    "The shadow rgba recipes are hand-authored literals in this preview file; if this card is only a preview (not the canonical token home) these values could drift from the real token source.",
+    "Hardcoded chip/glow gradient hexes (#FDFBF2, #E0C010, etc.) sit alongside token-based styling."
+  ],
+  "notes": "The elevation card: defines and documents a nine-tier warm-bronze, paper-on-paper shadow scale with named tiers, y-offset recipes, and explicit usage discipline.",
+  "questions": [
+    "Is this card the canonical home of the --lux-* shadow tokens, or a preview that mirrors definitions held elsewhere (e.g. tokens/*.css)?",
+    "Are the y-offset values shown (e.g. 'y 1 · 6 · 14') generated from the token definitions or hand-written labels?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard claims a 'Nine-tier warm-bronze elevation scale' and the file defines and showcases exactly nine elevation tiers with that warm-bronze recipe.",
+  "apparent_themes": [
+    "Material, warm, paper-like depth (a deliberate aesthetic identity)",
+    "Tokenised, named elevation scale with usage semantics",
+    "Encoded discipline / rules-as-documentation",
+    "Single-source token definition shown on its own surface"
+  ],
+  "intention_signals": "Aims to establish a distinctive, warm-bronze elevation language as a named, disciplined scale — depth that 'feels earned' like paper, with rules preventing harsh or cool shadows and misuse (stacking/glow-modal), so every elevated surface across the system reads as one material.",
+  "novelty": "A multi-layer, explicitly warm-bronze 'paper on paper' shadow system with a reserved gold-glow tier for primary actions, plus codified anti-patterns — an unusually opinionated and aesthetic elevation scale.",
+  "contribution": "Contributes the nine named elevation/shadow tokens (--lux-* with the shared hairline), their layered warm-bronze recipes, and the usage-discipline rules a fused system would keep as its depth language.",
+  "summary_for_embedding": "An HTML preview card defining and showcasing the ConceptV nine-tier warm-bronze 'luxury' elevation scale (--lux-0..modal + gold-glow), each shown as a chip on a paper plinth with usage notes and discipline rules.",
+  "intention_for_embedding": "To establish and document a distinctive warm, paper-like, tokenised elevation language with named tiers and rules for consistent depth across the product."
+}

@@ -1,0 +1,65 @@
+<!-- @dsCard group="Spacing" name="Spacing · Radius · Elevation" subtitle="The dimensional tokens — density spacing, the radius scale, the elevation/shadow ramp" viewport="1280x980" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Spacing · Radius · Elevation</title>
+<link rel="stylesheet" href="../styles.css"/>
+<style>
+  body { margin: 0; background: var(--zone-ground); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; padding: 36px 40px 56px; }
+  h1 { font: var(--weight-bold,700) var(--fs-h2)/1 var(--font-display); letter-spacing: -.02em; margin: 0 0 4px; }
+  .sub { color: var(--ink-3); font-size: var(--fs-meta); margin: 0 0 30px; max-width: 80ch; }
+  h2 { font: 700 11px/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--accent-bronze); margin: 34px 0 14px; display: flex; align-items: center; gap: 10px; }
+  h2::before { content: ""; width: 7px; height: 7px; background: var(--accent-gold); transform: rotate(45deg); border-radius: 1px; }
+  .rowlist { display: flex; flex-direction: column; gap: 10px; }
+  .srow { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: 16px; }
+  .srow .nm { font: 500 11px/1 var(--font-mono); color: var(--ink-3); }
+  .srow .bar { height: 14px; border-radius: 3px; background: var(--accent-gold); }
+  .radii, .elevs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; }
+  .rad { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .rad .box { width: 100%; height: 64px; background: color-mix(in oklch, var(--pig-content) 6%, var(--zone-ground)); box-shadow: inset 0 0 0 1.5px var(--accent-gold); }
+  .rad .nm { font: 500 10px/1.3 var(--font-mono); color: var(--ink-3); text-align: center; }
+  .elev { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .elev .box { width: 100%; height: 64px; border-radius: var(--r-lg); background: var(--bg-surface, #fff); }
+  .elev .nm { font: 500 10px/1.3 var(--font-mono); color: var(--ink-3); text-align: center; }
+</style>
+</head>
+<body>
+  <h1>Spacing · Radius · Elevation</h1>
+  <p class="sub">The dimensional tokens that govern rhythm and depth across the system. Spacing is density-aware (<code>--d-*</code> scale with <code>data-density</code>); radii and elevation are fixed ramps. Every control and container references these — change a token, every consumer re-tunes.</p>
+
+  <h2>Spacing — the density scale (--d-*)</h2>
+  <div class="rowlist" id="space"></div>
+
+  <h2>Radius (--r-*)</h2>
+  <div class="radii" id="radii"></div>
+
+  <h2>Elevation / shadow ramp</h2>
+  <div class="elevs" id="elevs"></div>
+
+<script>
+  const space = [["--d-1","4"],["--d-2","8"],["--d-3","12"],["--d-4","16"],["--d-5","20"],["--d-6","24"],["--d-8","32"],["--d-12","48"]];
+  const s = document.getElementById("space");
+  space.forEach(([v]) => {
+    const r = document.createElement("div"); r.className = "srow";
+    r.innerHTML = '<span class="nm">'+v+'</span><span class="bar" style="width:var('+v+',0)"></span>';
+    s.appendChild(r);
+  });
+  const radii = ["--r-xs","--r-sm","--r-md","--r-lg","--r-xl","--r-2xl"];
+  const rc = document.getElementById("radii");
+  radii.forEach(v => {
+    const d = document.createElement("div"); d.className = "rad";
+    d.innerHTML = '<div class="box" style="border-radius:var('+v+')"></div><span class="nm">'+v+'</span>';
+    rc.appendChild(d);
+  });
+  const elevs = ["--shadow-xs","--shadow-sm","--shadow-card","--shadow-pop","--shadow-modal","--elev-2"];
+  const ec = document.getElementById("elevs");
+  elevs.forEach(v => {
+    const d = document.createElement("div"); d.className = "elev";
+    d.innerHTML = '<div class="box" style="box-shadow:var('+v+')"></div><span class="nm">'+v+'</span>';
+    ec.appendChild(d);
+  });
+</script>
+</body>
+</html>

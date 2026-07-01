@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/RESEARCH-METHOD.md",
+  "model": "opus",
+  "what_it_does": "A method note (2026-06-08, framed as Tim's steer) describing a three-layer architecture-visibility research process — cheap coverage/inventory fan-out, smart targeted deep-reads keyed off the inventory, and an Opus synthesis with a completeness critic — plus a coverage guarantee, the five-agent Layer-1 partition (INV-A..INV-E), and current status.",
+  "observations": [
+    "States the goal: make the whole application architecture visible/understandable so Claude Design and any agent can design into it and integrate cleanly.",
+    "Quotes Tim's caution that much was built from many angles (6 branches + worktree + vault) and 'don't underestimate the research.'",
+    "Defines three layers: LAYER 1 coverage/inventory (cheap, Haiku, broad parallel), LAYER 2 deep read (Sonnet/Opus, targeted off Layer 1), LAYER 3 synthesis (Opus) plus a completeness critic with a top-up loop.",
+    "Names the deliverables: research/inventory/<region>.md, research/deep/<cluster>.md, and the keystone APPLICATION-STRUCTURE-PACK.md at full scope.",
+    "Distinguishes this full sweep from a prior Wave 1 5-agent sampler.",
+    "Specifies a coverage guarantee: Layer 1 maps every dir across all angles; Layer 2 must cover every PRIORITY-flagged place; Layer 3 critic loops-until-dry on coverage.",
+    "Gives the explicit Layer-1 partition mapping the five INV agents (A=runtime/store/fabric/contracts/root, B=canvas/design/panels, C=nodes/roles/mcp_face/voice, D=tests/docs/ops/self-description, E=the angles).",
+    "Status: Layer 1 launched 2026-06-08 with Haiku x5; Layer 2 dispatches after inventory review; the studio scaffold runs in parallel as the proving slice."
+  ],
+  "standouts": [
+    "The cheap->smart->synthesis layering with cost-tiered model assignment (Haiku for breadth, Sonnet/Opus for depth, Opus for synthesis).",
+    "The completeness-critic + loop-until-dry coverage discipline so no angle is missed.",
+    "The explicit separation of 'location' (Layer 1) from 'comprehension' (Layer 2) — inventory is WHERE, not what.",
+    "Parallel proving: the studio scaffold proves the pack's USE while the research produces the pack's INPUT."
+  ],
+  "conventions": [
+    "Encodes the loop-prep / research-wave methodology of cheap-broad-coverage then strong-final-synthesis.",
+    "Uses a fenced ASCII diagram to lay out the three layers.",
+    "Ties each layer to a concrete output path, following the repo's artifact-addressing habit."
+  ],
+  "concerns": [],
+  "notes": "The method spec behind this research dir: a three-layer (inventory -> deep-read -> synthesis+critic) architecture-visibility sweep across all 6 branches + worktree + vault, with the INV-A..E agent partition.",
+  "questions": [
+    "Did the keystone APPLICATION-STRUCTURE-PACK.md get produced, and did the completeness critic run to dry?",
+    "Were all PRIORITY-flagged places from Layer 1 actually covered in Layer 2?",
+    "Which model tiers were ultimately used for Layers 2 and 3 in practice?"
+  ],
+  "purpose_vs_actual": "Matches — it is a method/plan note and it lays out the method, partition, coverage guarantee, and status without claiming the work is complete.",
+  "apparent_themes": [
+    "Layered cheap-to-smart research (coverage then comprehension then synthesis)",
+    "Coverage guarantee / no-angle-missed discipline",
+    "Cost-tiered model assignment",
+    "Architecture made visible/understandable as the deliverable",
+    "Proving by parallel use (the studio slice)"
+  ],
+  "intention_signals": "Intends to make a large, multi-angle codebase fully legible to design agents by a disciplined layered sweep that guarantees coverage before synthesis, avoiding the under-research Tim warned against.",
+  "novelty": "The explicit three-tier model-cost layering paired with a per-angle coverage guarantee and a loop-until-dry completeness critic feeding one keystone pack.",
+  "contribution": "Contributes the methodology and agent partition for the claude-design research wave — the layer definitions, the INV-A..E division of the tree across all angles, the coverage guarantee, and the named keystone output.",
+  "summary_for_embedding": "A method note defining a three-layer (cheap inventory, smart deep-read, Opus synthesis+critic) architecture-visibility research sweep across all branches/worktree/vault, with a five-agent INV-A..E Layer-1 partition and a coverage guarantee.",
+  "intention_for_embedding": "To make the whole Company architecture visible to design agents via a disciplined, coverage-guaranteed layered research process producing one keystone structure pack."
+}

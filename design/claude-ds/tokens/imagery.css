@@ -1,0 +1,60 @@
+/* ============================================================
+   ConceptV · IMAGERY
+   ------------------------------------------------------------
+   Images are responsive and never flash: fixed aspect-ratio boxes
+   (no layout shift), sensible object-fit, blur-up loading, and
+   per-surface art direction so a hero crops differently on mobile
+   portrait vs. landscape vs. desktop. Pairs with image-slot fills.
+   ============================================================ */
+:root {
+  --ar-square:    1 / 1;     /* @kind other */
+  --ar-portrait:  3 / 4;     /* @kind other */
+  --ar-landscape: 4 / 3;     /* @kind other */
+  --ar-wide:      16 / 9;    /* @kind other */
+  --ar-ultrawide: 21 / 9;    /* @kind other */
+  --ar-hero:      3 / 2;     /* @kind other */
+
+  --img-radius: var(--r-md, 10px);
+  --img-bg:     var(--zone-panel-strong, #eee);   /* placeholder ground */
+  --img-overlay: color-mix(in oklch, var(--ink) 18%, transparent); /* legibility scrim */
+}
+
+/* MEDIA box — locks ratio so there's zero layout shift while loading.
+   Set --ar (default wide). */
+.media {
+  position: relative;
+  aspect-ratio: var(--ar, var(--ar-wide));
+  overflow: hidden;
+  border-radius: var(--img-radius);
+  background: var(--img-bg);
+}
+.media > img, .media > video, .media > image-slot {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: var(--fit, cover);
+  object-position: var(--pos, center);
+}
+.media.contain > img, .media.contain > video { object-fit: contain; }
+
+/* legibility scrim for text over imagery — bottom-up by default */
+.media.scrim::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top, var(--img-overlay), transparent 55%);
+}
+
+/* BLUR-UP — start with a tiny/blurred placeholder, swap to sharp.
+   Add .is-loaded (JS, on load) to clear the blur — it transitions,
+   so the image resolves rather than popping. */
+.img-blurup { filter: blur(14px); transform: scale(1.04); transition: filter var(--dur-enter) var(--ease-out), transform var(--dur-enter) var(--ease-out); }
+.img-blurup.is-loaded { filter: none; transform: none; }
+
+/* ART DIRECTION — show the crop that suits each surface. Author all
+   crops; the harness/surface hides the others. (For true <picture>
+   art direction use <source media>; this is the framed-preview path.) */
+[data-art] { display: none; }
+[data-surface="desktop"]         [data-art="desktop"],
+[data-surface="tablet"]          [data-art="desktop"],
+[data-surface="mobile-portrait"] [data-art="portrait"],
+[data-surface="mobile-landscape"][data-art="landscape"] { display: block; }
+/* fallback when no surface is declared: show the desktop crop */
+:not([data-surface]) > [data-art="desktop"] { display: block; }

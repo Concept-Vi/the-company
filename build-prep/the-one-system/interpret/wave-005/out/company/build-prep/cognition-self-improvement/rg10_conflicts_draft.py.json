@@ -1,0 +1,45 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/rg10_conflicts_draft.py",
+ "model": "opus",
+ "what_it_does": "Reads .build/rg10/reconciled.json and design/register.json, picks out entries classed 'conflict' (an address that multiple mockup screens described differently), and deterministically drafts a resolution for each by applying an ordered set of heuristics. Writes the drafts (chosen variant, the heuristic that decided it, the rejected variants, and a needs_eyes flag) to .build/rg10/conflict-drafts.json. Proposes only; never touches the operator's resolved field.",
+ "observations": [
+  "Heuristics in precedence order: H1 dedicated-screen (an address segment appears in the mockup filename), H2 feature-reality (variant naming a real inventory feature beats 'proposed', and a 'built' claim requires the feature to be real), H3 richness (fullest howto prose, only if >1.5x the runner-up), H4 order (first variant, flagged needs_eyes).",
+  "real_ids is built from design/register.json features; maps_to_feature is checked against it.",
+  "Demotes a 'built' grounding to 'proposed' if its maps_to_feature is not in real_ids — never silently keeps a false 'built'.",
+  "needs_eyes is set true only when the H4 (no heuristic separated them) fallback fired.",
+  "Output summary tallies counts by heuristic and total needs_eyes.",
+  "chdir to /home/tim/company hardcoded at import time."
+ ],
+ "standouts": [
+  "Each resolution carries the named heuristic string that decided it, so a human can scan and veto with reasoning attached.",
+  "The H3 richness comparator uses an inline conditional `rich(ranked[0]) > rich(ranked[1]) * 1.5 if len(ranked) > 1 else False` whose operator precedence makes the whole expression resolve via the ternary first."
+ ],
+ "conventions": [
+  "Follows the repo's 'THE FLOOR: proposes only' discipline stated in the docstring.",
+  "Writes a deterministic artifact to .build/rg10/ alongside the rest of the RG10 pipeline.",
+  "No model calls — pure deterministic judgment, distinguishing it from the model-driven re-ask/redescribe passes."
+ ],
+ "concerns": [
+  "Line 60: `if rich(ranked[0]) > rich(ranked[1]) * 1.5 if len(ranked) > 1 else False:` is hard to read; the ternary binds looser than the comparison, which is the intended behavior but fragile to edit.",
+  "H4 fallback uses variants[0] arbitrarily; ordering of variants determines the pick when nothing separates them.",
+  "The by_heuristic summary key parsing splits on ':' so relies on the heuristic strings always containing a colon (they do, but it's implicit coupling)."
+ ],
+ "notes": "Deterministic conflict-resolver for the RG10 registry pipeline: applies named heuristics to pick a winning variant per disputed address and emits a vetoable draft artifact.",
+ "questions": [
+  "What downstream step consumes .build/rg10/conflict-drafts.json and applies the picks after Tim's veto pass?",
+  "What is the exact shape of a 'variant' (dossier/mockup/maps_to_feature/grounding) as produced by the reconcile step?"
+ ],
+ "purpose_vs_actual": "Match — the docstring describes a deterministic, heuristic-named, propose-only conflict drafter and the code does exactly that.",
+ "apparent_themes": [
+  "Refine-before-gating (prepare resolutions ahead so Tim only vetoes).",
+  "Propose-only floor (never write the operator's resolved field).",
+  "Named, auditable judgment over opaque ranking.",
+  "Honesty enforcement (never keep a false 'built' claim)."
+ ],
+ "intention_signals": "Aims to shrink the human review burden on cross-screen conflicts by pre-resolving each with a transparent, named rule, so the operator scans and vetoes rather than adjudicating 33 conflicts from scratch.",
+ "novelty": "The heuristic-precedence cascade where each output records WHICH rule decided it, plus the 1.5x-margin richness tiebreaker, is a distinctive transparent-arbitration pattern.",
+ "contribution": "Contributes a deterministic, self-documenting conflict-resolution layer for cross-mockup address disagreements — the precedence heuristics (dedicated-screen, feature-reality, richness, order) and the false-'built' demotion guard.",
+ "summary_for_embedding": "A deterministic Python script that resolves cross-screen address conflicts in the RG10 registry pipeline by applying ordered named heuristics and writing vetoable draft picks to conflict-drafts.json.",
+ "intention_for_embedding": "To pre-resolve the 33 cross-mockup conflicts with transparent named heuristics so the operator only vetoes rather than adjudicating each from scratch."
+}

@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "app/App.jsx",
+  "model": "opus",
+  "what_it_does": "The React root component for ConceptV Studio. Holds all app-level state (mostly via window.usePersisted: inbox, generated icons, extra colors, color/pattern edits, locked tokens/patterns, saved templates/rewrites, workshop docs, workspace vars, snapshots), wires global behaviours (Cmd/Ctrl+K command palette, a tb-open custom event, window.cvNav for prop-drill-free navigation, registry/image/openai subscriptions for re-render), applies colorEdits and patternEdits live to :root CSS custom properties, computes sidebar counts + a recent-activity feed, and routes the `active` string to one of ~17 canvas components, rendering the shell (Sidebar / main canvas / ChatRail / Toast / ExportPatch / CommandPalette / SaveAsTypeModal). Mounts itself with ReactDOM.createRoot guarded by getElementById('app').",
+  "observations": [
+    "Destructures React.useState/useEffect with _app-suffixed aliases (useState_app, useEffect_app) — a guard against name collisions in a shared global-scope bundle.",
+    "Persistent state goes through window.usePersisted(key, default); ephemeral UI state (active, exportOpen, paletteOpen, sidebarCollapsed, pendingBrief, pendingWorkshopDoc, tbTypeId) uses plain useState.",
+    "colorEdits effect sets --${name} on document.documentElement; patternEdits effect sets or removes --${name} — confirming the 'simple --name: value protocol' for colors/spacing/radii/shadows/motion.",
+    "Bridges to many global stores: CV_REGISTRY, cvImageStore, cvOpenAI, CV_ICONS, WS_DOCS, WS_VARS, cvStudioStorage, dsaToast, cvNav.",
+    "counts has several HARDCODED base numbers: colorCount 20+extras, componentCount 14+gen, typeCount 3, logoCount 4, patternCount 13+7+6+5 (=31, with an inline comment), templateCount 3+saved, voiceCount 7, gaps 3, healthScore 86+....",
+    "recentActivity mixes real derived entries (adopted icons, last color edit, last template) with two FIXED placeholder rows ('Brand Kit updated — added 2 logos', 'Voice rule ... added').",
+    "Router is a long if/else if chain mapping active → a specific canvas component with tailored props; unknown active falls back to <StubCanvas/>.",
+    "ChatRail is rendered for every surface EXCEPT 'registry' (active !== 'registry').",
+    "tb-open event and window.cvNav are cross-canvas escape hatches to navigate/open the TypeBuilder without prop drilling.",
+    "Several useEffect hooks subscribe but their returned cleanup is the subscribe() return value (relies on the store returning an unsubscribe fn)."
+  ],
+  "standouts": [
+    "Live token editing: colorEdits/patternEdits write straight to :root custom properties, so the registry-as-truth tokens can be overridden at runtime from the UI and cascade everywhere.",
+    "The UI is a projection of registries — sidebar counts and re-renders are driven by subscribing to CV_REGISTRY / cvImageStore / cvOpenAI rather than local duplicated state.",
+    "Global cvNav + tb-open event implement cross-surface routing without prop drilling."
+  ],
+  "conventions": [
+    "Follows the project's loud/single-source intent: tokens edited via :root vars, stores subscribed not copied.",
+    "Self-mounting guarded by `if (_mountApp)` — exactly the DOM-guard the project CLAUDE.md requires for shared-bundle .jsx.",
+    "Aliased React hook imports to avoid global-scope collisions (no module system / classic-script bundle).",
+    "Breaks tidiness with hardcoded count bases and two hardcoded placeholder activity rows."
+  ],
+  "concerns": [
+    "Hardcoded magic numbers in counts (20, 14, 3, 4, 13+7+6+5, 7, 3, 86) are baked-in figures that can drift from the real registries they purport to summarize — e.g. typeCount:3 vs typeCountTotal from CV_REGISTRY.all().",
+    "Two fixed placeholder rows in recentActivity present fabricated events ('added 2 logos', voice rule) as if real activity.",
+    "Subscribe effects assume the store's subscribe() returns an unsubscribe function; if any returns undefined the effect cleanup is a no-op (minor leak risk).",
+    "resetSession uses confirm() and location.reload() — a hard, irreversible session wipe behind a single dialog."
+  ],
+  "notes": "The ConceptV Studio React root — owns all persisted app state, applies token edits live to :root, and routes one `active` string to ~17 canvas surfaces inside the three-pane shell.",
+  "questions": [
+    "Are the hardcoded count bases (colorCount 20, patternCount 31, voiceCount 7, etc.) meant to track real registry sizes, or are they fixed display figures?",
+    "Should the two placeholder recentActivity rows be removed given the project's no-fiction stance, or are they intentional seed content?"
+  ],
+  "purpose_vs_actual": "Matches: it is the app root and does the root's job (state ownership, global wiring, surface routing, shell render); the only tension is hardcoded counts/activity vs the system's single-source-of-truth ideal.",
+  "apparent_themes": [
+    "UI as a projection of registries/stores (subscribe, don't duplicate)",
+    "Runtime single-source token editing via :root custom properties",
+    "Centralized state ownership with prop-drilled canvases plus global escape hatches"
+  ],
+  "intention_signals": "Trying to make one root that owns the studio's whole persisted working state and projects it onto a routed set of canvas surfaces, with token edits flowing straight to :root so the design-system's single source can be tuned live and reflected everywhere.",
+  "novelty": "Editing design tokens directly onto document.documentElement custom properties from React state (colorEdits/patternEdits) so the running app re-skins itself live, combined with usePersisted-backed full-session persistence and global event/cvNav cross-surface routing.",
+  "contribution": "Contributes the studio's application skeleton: the persisted-state model, the live :root token-edit application, the registry/store subscription wiring, the surface router (active → ~17 canvases), and the shell composition (Sidebar/ChatRail/Toast/Export/CommandPalette/SaveAsType).",
+  "summary_for_embedding": "The React root of ConceptV Studio: owns persisted app state via usePersisted, applies color/pattern edits to :root CSS variables, subscribes to CV_REGISTRY/cvImageStore/cvOpenAI for counts, handles Cmd+K and cross-surface navigation, and routes an active string to ~17 canvas components inside a three-pane shell.",
+  "intention_for_embedding": "To be the single root that owns the studio's working state and projects it onto routed canvas surfaces, with live :root token editing so the design system's single source can be tuned and reflected app-wide."
+}

@@ -1,0 +1,36 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/screens/Stub.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a small React placeholder component Stub({title, note}) that renders a screen title plus a muted, centered card reading 'Not implemented in this kit' with either a passed-in note or a default message explaining the screen would reuse the shell + soft-gold-panel patterns. Attaches it to window.Stub.",
+  "observations": [
+    "Accepts two props: `title` (rendered as the cv-screen-title heading) and optional `note` (overrides the default explanatory text).",
+    "Default note text instructs: compose the screen from this kit's Sidebar + TopBar + sections.",
+    "All styling is inline via CSS custom properties (var(--bg-muted), var(--r-lg), var(--font-body), var(--accent-bronze)).",
+    "An uppercase, letter-spaced bronze 'Not implemented in this kit' eyebrow sits above the body text.",
+    "Module-as-global: window.Stub = Stub at the end."
+  ],
+  "standouts": [
+    "It is self-documenting about how a real screen should be built ('compose the Sidebar + TopBar + sections from this kit')."
+  ],
+  "conventions": [
+    "Honest-placeholder convention: explicitly labels unbuilt surfaces rather than faking them, matching the design corpus 'no fiction' rule.",
+    "Token-driven inline styling and module-as-window-global export, consistent with sibling kit files."
+  ],
+  "concerns": [],
+  "notes": "A reusable 'screen not built in this kit' placeholder card that names the title and points at the shell pattern to build it for real.",
+  "questions": [
+    "Which screens in the platform kit are routed to Stub vs fully implemented?"
+  ],
+  "purpose_vs_actual": "Matches: the header comment says 'placeholder for screens that aren't fully built out' and the code is exactly that.",
+  "apparent_themes": [
+    "Honest placeholders over fiction",
+    "Composability of a shared shell (Sidebar + TopBar + sections)",
+    "Token-driven design language"
+  ],
+  "intention_signals": "Provides a single honest stand-in for screens not yet built, keeping the kit navigable and explicit about what is and isn't implemented without depicting nonexistent functionality.",
+  "novelty": "Its instructional default text doubles as in-kit guidance for how to flesh the screen out.",
+  "contribution": "Contributes a reusable honest-placeholder primitive that labels unbuilt surfaces and documents the shell-composition recipe inline.",
+  "summary_for_embedding": "A React placeholder component that renders a titled 'Not implemented in this kit' card with optional override text, exported on window.Stub.",
+  "intention_for_embedding": "To stand in honestly for kit screens that are not yet built while pointing at the shell pattern needed to build them."
+}

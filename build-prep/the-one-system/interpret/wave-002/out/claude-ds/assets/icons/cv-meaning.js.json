@@ -1,0 +1,55 @@
+{
+  "project": "claude-ds",
+  "path": "assets/icons/cv-meaning.js",
+  "model": "opus",
+  "what_it_does": "An IIFE defining window.CV_MEANING, the meaning registry. It holds swappable, named 'meaning profiles' that bind each contextual facet VALUE (form, color, fill, texture, depth, motion — symbols deliberately excluded as intrinsic) to what it SIGNIFIES in a given context. It ships one default profile ('conceptv-default') whose form bindings are seeded by reference from CV_SHAPES.shapeTypes and whose color/fill/texture/depth/motion meanings are editable starting drafts. It provides register/load/export(JSON)/resolve/use/list, valuesFor/meaningOf/tokenForValue lookups, an axis() bridge (facet ids ARE axis ids), and a separate CV_MEANING.encodings sub-registry for surface-scoped data→visual-channel encodings (with a fully specified 'system-map' encoding profile).",
+  "observations": [
+    "Core thesis (header): meaning is CONTEXTUAL and SWAPPABLE; only SYMBOL denotation is intrinsic (lives in CV_ICONS.facets, never here).",
+    "MEANING_FACETS = ['form','color','fill','texture','depth','motion']; these ids ARE axis ids (CV_AXES) — Meaning is the contextual layer over the axes.",
+    "Default profile form bindings are seeded by REFERENCE from CV_SHAPES.shapeTypes (geometry stays the home of form→type); other profiles may override per context.",
+    "Ships editable draft meanings: color values (neutral/active/positive/warning/error/info/muted → token names), fill, texture, depth, motion — each with a plain-language meaning string.",
+    "Profiles are plain data that round-trip to JSON (export → edit → load), so Vi/Tim can author meaning sets without code.",
+    "API mirrors the other registries: register/resolve/use/list, plus load(json|obj), export(id), valuesFor(facet), meaningOf(facet,value), tokenForValue(value).",
+    "Loud fail via fail() throw on malformed profile / unknown profile / non-meaning facet.",
+    "axis(facet) bridges to CV_AXES.resolve(facet) when axes are loaded — the reconciliation that facet ids equal axis ids.",
+    "A second sub-registry CV_MEANING.encodings (surface → encoding profile) maps a data FACET to a visual CHANNEL (colour/size/texture/border/glow/opacity), discrete value→appearance or continuous scale, with descriptions.",
+    "The 'system-map' encoding is fully specified: role/type colour maps, link/usedby/filesize/links scales, and DRAFT depth-border / kind-texture / state-glow channels for Claude Code to build live."
+  ],
+  "standouts": [
+    "The invariant/contextual split: geometry+symbols+render-defaults are invariant; what a form/colour-value/texture/depth/motion/fill MEANS is loadable, swappable profile data.",
+    "Form bindings seeded by reference (not copy) from CV_SHAPES.shapeTypes — single source preserved.",
+    "JSON round-trip authoring so meaning sets can be edited without touching code.",
+    "The encodings sub-registry: a surface's visual vocabulary (e.g. the System Map's colour/size selectors) is a projection of one encoding profile, including detailed role→colour and file-type→colour maps and named scales."
+  ],
+  "conventions": [
+    "Single-source / by-reference seeding (form→type stays in CV_SHAPES; this adopts it).",
+    "IIFE + window.CV_MEANING global, 'use strict', ES5 var.",
+    "Mirrors the register/resolve/use/list API of CV_REGISTRY / CV_AI / CV_GLYPHIC.",
+    "Loud fail on malformed/unknown/invalid-facet; data-as-profile (no hardcoded meaning in consumers).",
+    "Symbols intentionally excluded from meaning facets (their denotation is intrinsic)."
+  ],
+  "concerns": [
+    "The 'system-map' encoding embeds many hardcoded hex colors and RGB stops (role-colour, type-colour, link-heat) — off-token literals living in JS for the map's visual vocabulary.",
+    "Default color/fill/texture/depth/motion meanings are explicitly 'first drafts meant to be overridden' — using them as-is risks treating drafts as settled meaning."
+  ],
+  "notes": "The meaning registry: swappable profiles binding facet VALUES to what they signify per context (symbols excluded as intrinsic), seeded by reference from the shape system, JSON-authorable, plus a surface-scoped data→visual encoding sub-registry (with a full system-map profile).",
+  "questions": [
+    "Which other meaning profiles exist beyond conceptv-default, and where are they registered/loaded?",
+    "How does the System Map's build (build-system-map.js) bake this encoding into system-map.json — is this the live source or a snapshot input?",
+    "Are the DRAFT encoding channels (depth-border, kind-texture, state-glow) implemented yet, or still intent-only?"
+  ],
+  "purpose_vs_actual": "Matches — header declares meaning as contextual, swappable profiles with symbols excluded, mirroring the other registries; the code implements exactly that plus the surface-encoding sub-registry it also describes.",
+  "apparent_themes": [
+    "Invariant vs contextual separation",
+    "Meaning as swappable, JSON-authorable profile data",
+    "Facet ids = axis ids (Meaning as the layer over the axes)",
+    "Single-source by reference (form→type from CV_SHAPES)",
+    "Surface encoding as a projection of one profile",
+    "Registry-family API symmetry, loud fail"
+  ],
+  "intention_signals": "Trying to make 'what a visual property means' a first-class, context-swappable, non-code-authored layer — so the same geometry/colour/texture can signify different things in a deck vs a product screen vs a system map, while keeping symbol denotation fixed and visual encodings single-sourced per surface.",
+  "novelty": "Separating intrinsic symbol denotation from a loadable per-context meaning layer over the axes, plus a sibling 'encodings' registry that turns surface DATA facets into visual channels as a projection of one profile.",
+  "contribution": "Contributes the meaning-profile registry (facet-value → significance bindings, JSON round-trip, default profile seeded from the shape system) and the surface-scoped data→visual encoding sub-registry including the full system-map node-encoding profile.",
+  "summary_for_embedding": "window.CV_MEANING: a registry of swappable named 'meaning profiles' binding contextual facet values (form/color/fill/texture/depth/motion) to what they signify (symbols excluded as intrinsic), seeded by reference from CV_SHAPES, JSON-authorable, with a sibling 'encodings' sub-registry mapping surface data facets to visual channels (full system-map profile included).",
+  "intention_for_embedding": "To make the meaning of visual properties a context-swappable, code-free-authorable layer over the design axes, while keeping symbol denotation intrinsic and single-sourcing each surface's data-to-visual encoding."
+}

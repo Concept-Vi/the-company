@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/deep/angles-delta.md",
+  "model": "opus",
+  "what_it_does": "A branch-merge delta report (read 2026-06-08) that corrects a prior inventory (inv-E) and records the current ground truth: the concurrent-cognition and interactive-surface-build branches are now BOTH MERGED into one unified main (at 233f34e and e1063f7). It enumerates what each merge added structurally (files, suite.py/bridge.py hunks, SSE events, governance verbs, test files), how each reshaped shared seams, the still-unmerged operable-interface-build worktree (3 commits with studio/mockups and a CognitionView.tsx deletion risk), then lists the surfaces/routes the design pack must ADD or note as CHANGED, and flags the mode-dial unification (MODE_SPECS + THOUGHT_SHAPES) as the biggest pending reshape.",
+  "observations": [
+    "Opens with an explicit CORRECTION to inv-E-angles.md: both branches previously 'pending merge' are now merged; unified main is ground truth.",
+    "Status table of four branches: concurrent-cognition MERGED@233f34e, interactive-surface-build MERGED@e1063f7, night-build remote-only/folded, overnight-20260605 superseded.",
+    "Angle 1 lists concurrent-cognition's 7 runtime files + 8 role files (cognition.py, roles.py, rules.py, activation.py, authoring.py, contracts/cognition_info.py) and large shared hunks in suite.py (chat_parts, THOUGHT_SHAPES) and bridge.py (_stream_parts voice overlap).",
+    "Describes the cognition.* SSE lifecycle: wave.start -> role.fire xN -> role.ran xN -> inject -> wave.done, addressable by run://<turn>/<role>.",
+    "Lists 13 new cognition test files and 15 new X/L-series test files, all acceptance-by-use.",
+    "Angle 2 details interactive-surface-build's X1-X17 (the address-to-scope-to-build chain, code-edges.json substrate, vector index, R2 ranking knobs) plus the L-series wires (intent-at, wire_armed, located-gold, self-changes-at, ref-versions, journey recording, stale-at).",
+    "Documents contract CHANGES (not additions): surface_build_intent now persists address/symbols/context at mint; blast_radius returns 4 distinguished kinds; capabilities() gains composition_config; the mode dial is built twice awaiting unification.",
+    "Angle 3: operable-interface-build worktree is 3 commits ahead with StudioKit/Review/mockups and REMOVES CognitionView.tsx (214 lines) — named the primary merge risk.",
+    "Provides a 'what to ADD to the pack' list (10 items) and a 'contracts that CHANGED' list (3 items), plus a cross-reference map of exists-where vs needs-addition.",
+    "Names the mode-dial unification as 'the integration (the real prize)' deferred in MERGE-COORDINATION.md."
+  ],
+  "standouts": [
+    "The self-correction discipline: explicitly overturning a prior inventory's status claims with commit SHAs as evidence.",
+    "The mode-dial split (MODE_SPECS / resolution_spec_for vs THOUGHT_SHAPES / shape_for) flagged as one declaration on the same 8 modes, unified only semantically and deferred.",
+    "The CognitionView.tsx add-vs-delete conflict between main and the worktree, named as the primary merge risk."
+  ],
+  "conventions": [
+    "Records branch state with commit SHAs and merge-commit messages as evidence (not inference).",
+    "Distinguishes ADDITIONS from CHANGES-to-existing-contracts as separate categories.",
+    "Cross-references existing docs (BACKEND-SEAM-PACK, AUTHORING-FE-HANDOFF, seams.md) and says 'reference, don't re-do'.",
+    "Uses honest status flags and a verified/not-an-open-issue distinction for the thread-scoped chat_history fix."
+  ],
+  "concerns": [
+    "Self-flagged: many seam additions (cognition.* SSE, blast_radius shape, approve-reach, L5/L6/L8/L9/L10 routes, three corpus layers, composition_config) are noted as MISSING from seams.md — the pack is incomplete relative to merged main at read time.",
+    "The worktree->main merge carries a known CognitionView.tsx reconciliation risk."
+  ],
+  "notes": "This is the merge-truth delta — read it to know that both major branches are on one main, what they added/changed at the seam level, and which contracts and routes the design pack still has to absorb (chiefly the mode-dial unification).",
+  "questions": [
+    "Has the mode-dial unification (MODE_SPECS + THOUGHT_SHAPES) landed since this 2026-06-08 read, or is it still pending?",
+    "Was the operable-interface-build worktree's CognitionView.tsx deletion ever reconciled against main's addition?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is a branch-merge report correcting a prior inventory and delivers exactly that delta plus the pack implications.",
+  "apparent_themes": [
+    "One unified main as ground truth",
+    "Self-correcting evidence-grounded inventory",
+    "Seam-level contract change tracking",
+    "Convergence-as-design (deferred unifications are the prize, not bugs)",
+    "Reflects-never-owns FE driven by registries + SSE"
+  ],
+  "intention_signals": "Trying to give the design pack an accurate, post-merge picture of the unified backend so design work wires against the real current contracts and does not build mode-specific rendering that an imminent mode-dial unification would invalidate.",
+  "novelty": "The framing of two independently-built halves of one mode dial that merged cleanly textually but await semantic unification — and the catalog of which previously-latent FE capabilities now have a consumer (CognitionView).",
+  "contribution": "Contributes the authoritative merge delta: the SHA-evidenced branch state, the per-merge structural additions, the changed-contract list, the worktree merge risk, and the explicit gap list of seams/routes the pack must still add.",
+  "summary_for_embedding": "Branch-merge delta report confirming concurrent-cognition and interactive-surface-build are both merged into one main, cataloging their structural additions, changed seams, and the pending mode-dial unification.",
+  "intention_for_embedding": "To correct a stale inventory and hand the design pack the accurate post-merge contract surface, including which seams and routes still need documenting."
+}

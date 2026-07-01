@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "system/system-map.html",
+  "model": "opus",
+  "what_it_does": "A single-page interactive visualisation of the entire design-system codebase: it fetches system-map.json (a file-tree model with role/size/edge metadata) and renders every folder and file as a nested treemap of boxes-in-boxes, with gold 'resolution' lines showing how files wire together. It offers switchable layouts (Nested, Sunburst, Districts by role, Layers by depended-on-ness), size lenses (Role/File-size/Links/Used-by/Even), colour lenses (System/File-type/Heat), a detail panel tracing each node's outgoing/incoming connections, search/legend filtering, and an in-browser structural EDITOR that queues create/rename/duplicate/move/archive/delete operations for a separate disk-write adapter to apply.",
+  "observations": [
+    "Self-contained single HTML file (~1032 lines) with all CSS and JS inline; loads colors_and_type.css plus the cv-icons/cv-vi-glyph/cv-shapes/cv-glyphics scripts from ../",
+    "Top @dsCard comment registers it as a design-system specimen card with viewport 1280x860",
+    "Implements a squarified treemap (cites Bruls et al.) for the nested layout; FLIP-transform morph animations when switching layouts/lenses, with geometry computed as authoritative and the transform layered on top",
+    "Four 'registry' patterns each declared as ONE object: SIZERS (size lenses), COLORERS (colour lenses), LAYOUTS (directory→RECT projections), EDGE_TYPES (relationships as bidirectional verb pairs) — comments state adding an entry makes it appear in the menu",
+    "Carries large hardcoded DESC, ROLE, RC, EXT_COL, ROLE_LABELS, SYS maps giving plain-language descriptions/colours for specific files and roles; RC/EXT_COL are explicitly FALLBACKS, live values come from DATA.encoding (baked from CV_MEANING.encodings('system-map'))",
+    "Editor mutates an in-memory model, persists to localStorage (key cv-sysmap-edits-v1), supports undo/redo (history of model+op-queue, cap 60), and exports a system-map-operations.json payload",
+    "The glyphic toolbar builds every control via CV_GLYPHIC.render({form,symbol,...}) so the toolbar is described as a projection of the glyphic system, not a parallel button set",
+    "Polls system-map.json every 6s for regeneration but skips reload while local edits are pending (never clobbers edits)",
+    "Footer text and an opsdrawer footer point to analysis/SYSTEM-MAP-EDITOR-ADAPTER.md as the disk-write adapter (Claude Code) and note the browser can't write project files"
+  ],
+  "standouts": [
+    "Same-tree-many-projections design: four LAYOUTS are deterministic projections of one directory tree, each revealing a different relational structure (containment / hierarchy / kind / resolution-strata)",
+    "The editor produces a typed operation QUEUE for an out-of-band adapter to apply to disk, rather than writing files itself — an explicit preview/apply split",
+    "Resolution edges are computed by following uses:<global> edges through a DEFINER map back to the file that defines that global, so 'who resolves from whom' is derived not stored"
+  ],
+  "conventions": [
+    "Follows the project's 'one home, referenced everywhere' idea: encoding/colours sourced from CV_MEANING with local fallbacks; toolbar icons composed from CV_GLYPHIC",
+    "IIFE with \"use strict\"; ES5-style var/function code throughout; defensive try/catch around CV_GLYPHIC and storage",
+    "Registry-as-menu pattern (SIZERS/COLORERS/LAYOUTS/EDGE_TYPES) mirrors the design system's extend-by-registration ethos",
+    "Heavy inline literal maps (DESC/ROLE/RC) sit alongside a stated preference to source values from the encoding — a tension the file acknowledges via the FALLBACK comment"
+  ],
+  "concerns": [
+    "Large hardcoded per-file DESC and per-role RC/colour tables embedded in the visualiser duplicate descriptive knowledge that could drift from the actual files they describe",
+    "localStorage-persisted edits can diverge from disk; the 6s poll deliberately stops refreshing while edits pend, so a stale edited view can persist silently until cleared"
+  ],
+  "notes": "An interactive treemap/graph explorer of the whole design-system directory with a queue-based structural editor whose changes are applied to disk by a separate adapter, not by the page.",
+  "questions": [
+    "What is the exact schema of system-map.json's nodes/edges/globals/encoding that this consumes (defined by system/build-system-map.js, referenced but not in this file)?",
+    "What does the disk-write adapter (analysis/SYSTEM-MAP-EDITOR-ADAPTER.md) actually do with the exported operation queue?"
+  ],
+  "purpose_vs_actual": "Matches: the @dsCard subtitle promises 'the whole system on one screen ... with the resolution lines that show how they wire together' and the code delivers a nested directory treemap plus derived resolution edges, with extra layout/size/colour lenses and an editor.",
+  "apparent_themes": [
+    "Same model, many projections (one tree → four relational views)",
+    "Registry-as-truth / extend-by-registration (lenses and edge-types as single-home tables)",
+    "Self-describing system turned onto its own face (the codebase visualising itself)",
+    "Preview-then-apply separation between an in-browser editor and a disk adapter"
+  ],
+  "intention_signals": "It tries to make an entire codebase legible and navigable at a glance — showing not just where files live (folders) but how they resolve together (wiring) — and to let structure be edited visually, capturing edits as a typed, auditable operation queue that an agent applies to disk.",
+  "novelty": "The combination of a squarified-treemap directory map, multiple switchable relational projections of the same tree, derived resolution edges, and a browser-side structural editor that emits a queue for an external disk-write adapter.",
+  "contribution": "Contributes a reusable pattern for visualising a codebase/registry as a same-tree-many-projections interactive map with derived dependency edges and a preview/apply structural-edit queue — plus the concrete encodings (role colours, layout/size/colour lenses, edge verb-pairs) for the ConceptV design system.",
+  "summary_for_embedding": "Self-contained interactive HTML treemap/graph explorer of the ConceptV design-system directory (system-map.json) with switchable nested/sunburst/districts/layers layouts, size/colour lenses, derived resolution edges, and a queue-based structural editor applied to disk by a separate adapter.",
+  "intention_for_embedding": "To make the whole design-system codebase legible on one screen — folders as nested boxes, wiring as resolution lines — and editable via a visual operation queue an external adapter writes to disk."
+}

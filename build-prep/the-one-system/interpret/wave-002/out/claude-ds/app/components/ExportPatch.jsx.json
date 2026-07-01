@@ -1,0 +1,44 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/ExportPatch.jsx",
+  "model": "opus",
+  "what_it_does": "A React modal component that takes the in-browser Studio edits (generated icons, extra colors, color-token edits, pattern/spacing/radii/shadow/motion edits) and serializes them into ready-to-paste code patches (a JS snippet for cv-icons.js, CSS snippets for colors_and_type.css), each with Copy and Download buttons.",
+  "observations": [
+    "Three useMemo blocks build the three patch strings: iconsJs (JS object entries for window.CV_ICONS.data), colorsCss (:root token edits + new palette groups), patternsCss (bucketed into spacing/radii/shadows/motion/other).",
+    "patternEdits are bucketed by name prefix: 's-' -> spacing, 'r-' -> radii, 'shadow-' -> shadows, 'ease-'/'dur-' -> motion, else other.",
+    "ExportBlock subcomponent renders a titled code block with Copy (navigator.clipboard, 1.5s 'Copied' state) and Download (Blob + object URL, filename studio-patch.js or .css).",
+    "Empty state ('Nothing to export yet') shown via .dsa-stub when all three patches are null.",
+    "Local slug() helper lowercases and hyphenates names for CSS var names.",
+    "Modal uses inline styles bound to design tokens (var(--bg-canvas), --r-xl, --shadow-modal, --accent-bronze, font vars) with click-outside-to-close and stopPropagation on the inner panel.",
+    "Attaches itself to window.ExportPatch (global, no module export)."
+  ],
+  "standouts": [
+    "Generates patches that target named source files explicitly (assets/icons/cv-icons.js, colors_and_type.css) with positional comments like 'Append inside :root' — the export is location-aware, not just a value dump.",
+    "Framing in the copy: 'Studio holds your edits in browser state... drop these patches into the right places' — names the persistence gap it bridges."
+  ],
+  "conventions": [
+    "Follows the no-build, browser-React pattern: destructures React.useState/useMemo into suffixed aliases (useState_xp), attaches component to window.",
+    "Consumes design tokens via var() inline styles rather than hardcoded values (mostly — one rgba(31,26,18,.4) backdrop literal).",
+    "Uses the project's .dsa-btn / .dsa-stub class vocabulary."
+  ],
+  "concerns": [
+    "Download filename collapses every extension to either .js or .css ('studio-patch.${ext === 'js' ? 'js' : 'css'}') — two CSS patches would both download as studio-patch.css.",
+    "Backdrop color rgba(31,26,18,.4) is a hardcoded literal rather than a token."
+  ],
+  "notes": "The 'commit your live token/icon edits back to the real source files' export bridge for the design Studio — produces copy/download-able patches keyed to specific files.",
+  "questions": [
+    "Where do generatedIcons/extraColors/colorEdits/patternEdits originate — what Studio surface produces them and holds the live state?",
+    "Is there any automated apply path, or is hand-pasting the patch into the source file the only route to persistence?"
+  ],
+  "purpose_vs_actual": "Match — header comment 'modal that shows what's changed and lets you download patches' matches the implementation exactly.",
+  "apparent_themes": [
+    "Single-source-of-truth / anti-drift (edits must land back in the one home file rather than living in browser state)",
+    "Round-tripping browser edits into source code",
+    "Location-aware code generation"
+  ],
+  "intention_signals": "Aims to close the loop between a live visual token/icon editor and the design system's canonical files, so ephemeral browser-state edits become durable source patches the user can drop into the right place.",
+  "novelty": "Generating file-targeted, comment-annotated source patches (not just raw values) from live UI edits, with both clipboard and download delivery.",
+  "contribution": "Contributes the export/serialization layer that turns in-browser Studio edits into pasteable, file-addressed source patches — the bridge from live editing back to canonical token/icon files.",
+  "summary_for_embedding": "React modal that serializes in-browser Studio edits (icons, palette colors, token/pattern edits) into file-targeted JS/CSS patch snippets with copy and download.",
+  "intention_for_embedding": "To let users persist their live design-system edits by generating ready-to-paste patches for the canonical source files (cv-icons.js, colors_and_type.css)."
+}

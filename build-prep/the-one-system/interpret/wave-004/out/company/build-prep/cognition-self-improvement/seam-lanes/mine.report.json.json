@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/mine.report.json",
+  "model": "opus",
+  "what_it_does": "Seam-lane report (JSON record) for the 'transcript miner' MAP-half: a new self-registering role roles/mine_exchange.py (op=generate, mode_scope={mining}) that extracts patterns from Tim/agent exchange units. Records verification by a bounded 13-unit mining run on the resident chat-4b, the extractor scaffold, and the actual pattern findings from one transcript.",
+  "observations": [
+    "files_written: roles/mine_exchange.py; new_role_ids: [mine_exchange]; composition is COMPOSITIONS.md section ③ (transcript miner MAP-half).",
+    "how_verified: RoleRegistry discovery shows mine_exchange live (can_fire, op=generate, is_jury=False, mode_scope={mining}); output_schema has 8 fields (7 optional str + required pattern_tag); cast_for_mode('mining')=[judge_mining, mine_exchange] while listening cast is untouched.",
+    "By-use run: run_items(mine_exchange, 13 exchange-units) on resident chat-4b (cyankiwi/Qwen3.5-4B-AWQ @ :8000), 13 runs, 0 failed/skipped, all Pydantic-validated.",
+    "Floor: cognition_governance_acceptance.py 42/42; roles_acceptance.py reds only on the expected drift for the two new roles.",
+    "needs_tim: the cross-exchange embed-CLUSTER reduce-half needs the bge-m3 embedder window (embed-bge @ :8001) which is not resident; full 462-file mining and capture/embed into space='history' also need it.",
+    "Mirrors roles/verify_lens.py exactly (self-registering ROLE dict + Pydantic out class, exchange rides in unit at ctx['utterance']).",
+    "Findings section reports recurring pattern_tags from source f609942f (35 genuine exchanges, 13 mined), a dominant verification/grounding-discipline cluster (5/13), and notable Tim corrections.",
+    "Documents an extractor bug (reply-boundary truncation dropping post-tool conclusions) caught by the advisor and fixed before the final run."
+  ],
+  "standouts": [
+    "The miner reflexively surfaced the agent's own recurring failure modes (wrong order, routing-around models, asserting stale state) and Tim's exact corrections of each.",
+    "The dominant mined cluster (verification/grounding discipline) is the same bar the lane itself re-proved when the advisor caught the truncation bug.",
+    "Honest needs_tim split: MAP-half done on resident 4B; the embed-cluster REDUCE-half flagged as blocked on the down embedder, not green-painted."
+  ],
+  "conventions": [
+    "Mirror-an-existing-role discipline (verify_lens.py) for a new role.",
+    "Cast-beyond-listening pattern (new mode_scope, listening cast untouched, unknown mode -> empty cast).",
+    "Pure ROLE dict + Pydantic class, no resolve/approve/dispatch (governance floor by construction).",
+    "Expected-red-on-drift acknowledged because roles/AGENTS.md is off-limits this beat."
+  ],
+  "concerns": [
+    "Findings are drawn from a single transcript (N=13); the report itself frames the clustering as eyeball-level pending the embed reduce."
+  ],
+  "notes": "Builds the transcript-miner MAP role and proves it works as a self-improvement organ by mining one session into named failure-patterns plus Tim's corrections, with the clustering reduce-half blocked on the embedder.",
+  "questions": [
+    "When the embedder window is available, will the full 462-transcript mining and embed-cluster reduce be a separate lane?",
+    "How are the mined feedback-*.md drafts confirmed before being written as standing memory?"
+  ],
+  "purpose_vs_actual": "Matches — it is the mine-lane report and documents the MAP role build plus a real bounded mining run and its extracted findings.",
+  "apparent_themes": [
+    "Self-improvement via transcript mining of agent failure modes and Tim corrections",
+    "MAP/REDUCE split with the reduce-half deferred to embedder availability",
+    "Verification/grounding discipline (mined AND re-enacted)",
+    "Mirror-existing-role and cast-beyond-listening composition"
+  ],
+  "intention_signals": "Documents building an organ that turns past Tim/agent exchanges into structured, confirmable feedback about the agent's own recurring mistakes — a cognition self-improvement loop.",
+  "novelty": "A role whose output is a structured critique of the agent itself, plus the reflexive moment where the mined dominant pattern matched the bug the lane had just fixed.",
+  "contribution": "Contributes the mine_exchange MAP role (8-field schema with required pattern_tag cluster key), the exchange-extractor scaffold design, and a concrete demonstration of mining-as-self-improvement with named failure-pattern tags.",
+  "summary_for_embedding": "Seam-lane report building the transcript-miner MAP role roles/mine_exchange.py (op=generate, mode_scope=mining) and verifying it by a 13-unit mining run that extracted recurring agent-failure pattern tags and Tim corrections from one transcript.",
+  "intention_for_embedding": "To build a self-improvement organ that mines past exchanges into structured, confirmable feedback on the agent's recurring mistakes, with the cross-transcript clustering deferred to the embedder."
+}

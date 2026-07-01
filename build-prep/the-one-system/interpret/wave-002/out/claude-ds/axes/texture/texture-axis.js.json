@@ -1,0 +1,39 @@
+{
+  "project": "claude-ds",
+  "path": "axes/texture/texture-axis.js",
+  "model": "opus",
+  "what_it_does": "Defines and registers the 'texture' axis on window.CV_AXES — a typed enumeration of surface textures (none, hatch, lines, vertical, cross-hatch, grid, dense, dots) organised into three groups (none/line/field), with 'none' as the zero/default value. Self-invoking IIFE that guards on CV_AXES existing first.",
+  "observations": [
+    "IIFE with 'use strict'; bails with console.error if window.CV_AXES is absent ('CV_AXIS core must load first')",
+    "Calls CV_AXES.make({...}) to build the axis then CV_AXES.register(texture)",
+    "Eight values across three groups; 'none' carries zero:true and is the default",
+    "Comments state geometry is realised elsewhere by CV_SHAPES.markSVG / tokens/texture.css — this file is only the typed view of 'which textures exist'",
+    "Description note: 'Generalises beyond directional lines.'"
+  ],
+  "standouts": [
+    "Strict separation: this file enumerates the texture vocabulary; the actual pattern rendering lives in CV_SHAPES.markSVG / texture.css"
+  ],
+  "conventions": [
+    "Follows the registry pattern (make/register on a global CV_AXES) described in the project's CLAUDE.md — one home for a concept, referenced elsewhere",
+    "Load-order dependency made explicit and fail-loud (console.error if core missing) — matches the 'loud fail' non-negotiable",
+    "data/declaration style rather than code branches — an axis is declared as values, not coded"
+  ],
+  "concerns": [],
+  "notes": "The single declaration of the texture axis vocabulary — eight named textures in three groups — registered on CV_AXES; rendering happens elsewhere.",
+  "questions": [
+    "What is the difference in intended rendering between 'lines' and 'vert' beyond orientation, and between 'cross' and 'grid'?",
+    "Does 'dense' parametrise an existing pattern or name its own?"
+  ],
+  "purpose_vs_actual": "Match — the header comment says it is a typed view over surface textures with zero=none, and that is exactly what the code declares and registers.",
+  "apparent_themes": [
+    "Registry-as-single-source-of-truth",
+    "Separation of vocabulary from realisation",
+    "Axis/dial model of design (design = f(content, axis))",
+    "Fail-loud on missing dependency"
+  ],
+  "intention_signals": "Establishing texture as a first-class, enumerable design dial so any surface can carry a texture value drawn from one shared vocabulary, decoupled from how that texture is drawn.",
+  "novelty": "Treating surface texture as a typed axis with grouped values and an explicit zero, rather than as ad-hoc CSS classes.",
+  "contribution": "Contributes the texture-axis vocabulary (the named set of surface patterns and their grouping) plus the make/register binding to CV_AXES — the catalogue entry a fused system would keep as the single home for 'which textures exist'.",
+  "summary_for_embedding": "A small IIFE that declares and registers the 'texture' design axis on window.CV_AXES with eight grouped texture values (none/hatch/lines/vert/cross/grid/dense/dots) defaulting to none.",
+  "intention_for_embedding": "To make surface texture a single-sourced, typed, enumerable axis decoupled from its rendering, so any part can carry a texture from one shared vocabulary."
+}

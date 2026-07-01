@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/theme.css",
+  "model": "opus",
+  "what_it_does": "Defines the theme-mode layer of the design system: dim, dark, contrast (and default light) themes plus an orthogonal clean/warm ground sub-axis, all expressed as [data-theme] / [data-ground] attribute overrides that flip --zone-ground, the ink ramp, paper/bg surfaces, borders, shadow color, and grain opacity. Because every wash mixes toward --zone-ground, flipping the ground recomputes the 28 zone tokens automatically.",
+  "observations": [
+    "[data-theme=dim|dark|contrast] sets base color/background; light is the unattributed default; themes are opt-in (not from prefers-color-scheme) so existing light screens aren't surprised",
+    "DIM: warm near-black ground (#221D17), color-scheme:dark, --zone-intensity 1.5 (more pigment so washes read on dark), full ink ramp + paper/bg + oklch-mixed borders + grain 0.07",
+    "DARK: deeper warm ground (#151109), --zone-intensity 1.7 and --gold-intensity 1.15, lighter ink ramp, grain 0.08",
+    "CONTRAST: high-contrast light on white ground, --zone-intensity 1.45, near-black ink, fixed-hex (non-mixed) borders, warmer shadow",
+    "[data-ground=clean|warm] is an orthogonal sub-axis of light — clean rides white (#FFFFFF), warm rides ivory (#FCFAF2) — changing only what washes mix toward, not the ink",
+    "Themed -webkit-scrollbar-thumb for dim/dark; a commented-out @media (prefers-color-scheme: dark) block offered as opt-in OS-follow",
+    "Warm-dark explicitly mixed toward warm near-black, never cold grey"
+  ],
+  "standouts": [
+    "A theme is reduced to 'flip the ground + ink ramp and let the 28 zone tokens recompute themselves' — the mix-toward-ground architecture makes themes nearly free",
+    "data-ground as an axis ORTHOGONAL to data-theme (clean white vs warm ivory) — 'a knob, never a redraw' — so depth reads through elevation on white but through undertone on ivory",
+    "Opt-in themes (no auto prefers-color-scheme) as a deliberate non-surprise contract, with the OS-follow left commented for opt-in"
+  ],
+  "conventions": [
+    "Attribute-driven axis knobs ([data-theme], [data-ground]) matching the system's dial pattern",
+    "Borders via color-mix(in oklch, var(--ink) N%, transparent) so they track each theme's ink (except contrast, which uses fixed warm hexes)",
+    "/* @kind other */ annotations on intensity/grain tokens; cross-references colors_and_type.css for the mix-toward-ground mechanism and the derived-roles selector",
+    "No raw consumer hardcoding beyond the theme token definitions themselves (the legitimate token home)"
+  ],
+  "concerns": [
+    "CONTRAST defines only ink through --ink-4 (no --ink-5) and uses fixed-hex borders rather than oklch mixes, a slight inconsistency with dim/dark — relies on inheritance for the rest",
+    "Relies entirely on colors_and_type.css listing [data-ground] in its derived-roles selector for the zone recompute to fire; this file can't enforce that join itself"
+  ],
+  "notes": "The theme-modes file: dim/dark/contrast as [data-theme] ground+ink+surface flips (warm-dark, never cold grey), plus an orthogonal [data-ground] clean-vs-warm light sub-axis — all leveraging the mix-toward-ground engine so the zone ladder recomputes itself.",
+  "questions": [
+    "Are the 28 zone tokens and --comm-* roles in fact recomputing for [data-ground] (is data-ground actually in the derived-roles selector in colors_and_type.css)?",
+    "Why does CONTRAST stop at --ink-4 and use fixed-hex borders while dim/dark go to --ink-5 with oklch mixes?"
+  ],
+  "purpose_vs_actual": "Match — the header promises light/dim/dark/contrast modes achieved by flipping ground + ink and recomputing zones, and the file delivers exactly those attribute blocks plus the orthogonal ground sub-axis.",
+  "apparent_themes": [
+    "Theme as a single-knob recompute (flip the ground, everything follows)",
+    "Warmth as identity (warm dark, warm ivory, never cold grey)",
+    "Opt-in, non-surprising theming",
+    "Orthogonal axes (theme vs ground) composing rather than multiplying redraws"
+  ],
+  "intention_signals": "Trying to make dark/dim/contrast modes and the clean-vs-warm light split essentially free and drift-proof by leaning on the mix-toward-ground color engine — change the ground in one place and the whole zone system re-tints itself, preserving warmth and avoiding per-mode hand-tuning.",
+  "novelty": "The clean/warm ground sub-axis declared orthogonal to theme ('a knob, never a redraw'), and the framing of an entire theme as just flipping --zone-ground plus the ink ramp.",
+  "contribution": "Contributes the theme-mode + ground-axis layer — dim/dark/contrast token overrides and the orthogonal clean/warm light sub-axis — that re-tints the whole zone system from a single ground flip while keeping the system's warm, opt-in character.",
+  "summary_for_embedding": "A ConceptV design-system CSS file defining dim/dark/contrast themes and an orthogonal clean/warm light ground sub-axis as [data-theme]/[data-ground] attribute overrides that flip the ground and ink ramp so the mix-toward-ground zone tokens recompute automatically.",
+  "intention_for_embedding": "To make dark/dim/contrast modes and the clean-vs-warm light split free and drift-proof by flipping --zone-ground in one place and letting the warm color engine re-tint every zone token."
+}

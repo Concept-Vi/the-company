@@ -1,0 +1,54 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/CHAIN-DESIGNS.md",
+  "model": "opus",
+  "what_it_does": "A design document cataloguing the concrete coherence detection chains the 4B-swarm would build on the corpus-chain primitive — the WHAT of each chain (its MAP extraction schema, its REDUCE judgment, the findings it emits, its trust level). It states the organizing law (the 4B does bounded structured extraction, never judgment), gives the shape every chain shares (MAP then EXACT/EMBEDDING/STRONGER-MODEL reduce), then lists chains grouped into seven categories (A connection, B claim, C shape, D concept, E coverage, F enrichment, G multi-pass), the trust spine, why it is a scale-up not a parallel system, and a build order.",
+  "observations": [
+    "States the organizing law Tim keeps pressing: the 4B does bounded structured EXTRACTION, never judgment; the cheap MAP layer touches every byte, the expensive judgment only ever touches small structured digests",
+    "The shape of every chain: MAP (4B, 32-wide, ~seconds, fixed extraction schema, one call per unit) → REDUCE (EXACT code = trustworthy/gateable, EMBEDDINGS = candidate, STRONGER MODEL = only the few candidates, positive-only)",
+    "MAP output is a reusable repo fact-base / digest, cached, cas://-addressable, re-derived on content-hash change; many reduces run over one map pass (cheap re-reduce over warm digest)",
+    "Category A CONNECTION: A1 universal connection graph (defines/calls/serves/consumes/emits/listens/reads_registry/writes_registry/imports → exact join → unwired-anything + dangling findings), A2 address-reference graph",
+    "Category B CLAIM: B1 doc-drift (claims vs actual capabilities → intent-drift), B2 self-description truth (is the description still TRUE beyond is-it-listed)",
+    "Category C SHAPE: C1 half-migration (record_shapes + lifecycle_states diff catches the /status pending→applied→dismissed drop), C2 producer↔consumer schema agreement (contract-break)",
+    "Category D CONCEPT: D1 built-twice/concept-coherence (embed concept meanings, cluster — divergent names in one cluster = built twice, the mode-dial detector), D2 semantic duplication (NN over function bodies)",
+    "Category E COVERAGE: E1 semantic coverage (test exercises vs source provides, exact join → coverage-gap) — cracks the Tier-3 unsolvable",
+    "Category F ENRICHMENT (output IS the product): F1 company onboard (institutional memory in seconds), F2 auto-explain every finding (bulk up_translate), F3 candidate-disposition (bulk)",
+    "Category G MULTI-PASS/recursive: G1 claim→symbol→exists (reduce decides next map), G2 the compiler chain (a cheap scan grounds the NL→chain-config compiler — the corpus-chain compiling itself)",
+    "The trust spine carried from SEM-3: exact reduces can gate, embedding candidate-only, stronger-model only on flagged candidates, never the 4B judging itself, never a same-model jury (variance≠error); calibrated against captured-incident fixtures before shipping",
+    "Build order: A1 first (highest leverage, subsumes reachability across all languages), then F1+F2, then C1+B1, then D1 (needs embed op), then E1+G last"
+  ],
+  "standouts": [
+    "The central law restated: the 4B extracts, the reduce judges — the cheap model touches every byte, judgment only touches small digests",
+    "A1 universalises a Python-only/route-only AST detector to every language and shape via per-file structured extraction + an exact string-join on route literals",
+    "D1 explicitly framed as the chain that would have caught the mode-dial-built-twice before the merge",
+    "Two sources into one model: structural AST detectors ∧ 4B-extraction chains, where their disagreement (wired-but-meaningless) is the prize",
+    "F-category enrichment where the 4B output is the product, not checked — company onboard as institutional-memory-that-replaces-the-developer, as a verb"
+  ],
+  "conventions": [
+    "Organizes chains into lettered categories by reduce-pattern, each with MAP schema + REDUCE + finding + trust",
+    "Cites prior research findings (SEM-3, SEM-4) as the basis for trust and bounded-class claims",
+    "Reuses the project store verbs (append_finding, dispose_finding, calibrate, build_action, company coherence) to argue it's a scale-up not a parallel system",
+    "Ends with a leverage-ordered build sequence gated by calibration"
+  ],
+  "concerns": [],
+  "notes": "This is the catalogue of WHAT each coherence detector extracts and judges — read it with CHAIN-COMPONENTS.md (the HOW) to see the full chain design; A1 connection graph is the highest-leverage first build.",
+  "questions": [
+    "What is the corpus-chain primitive's status — has the engine (run_items/run_reduce + embed op) landed so these chains can be built?",
+    "Which captured-incident fixtures exist for calibrating each chain beyond the /status and mode-dial incidents named?"
+  ],
+  "purpose_vs_actual": "Match — it states its purpose as capturing the concrete chains to build toward once the engine lands and delivers a full categorized catalogue with schemas, reduces, trust levels, and build order.",
+  "apparent_themes": [
+    "extraction-not-judgment as the law for the cheap model",
+    "judgment escalated by reduce-type (exact gates, embedding/stronger-model propose)",
+    "every-language/every-file/every-shape coverage in seconds",
+    "the structural∧semantic two-sources-one-model integrity picture",
+    "enrichment chains where the output is the product (onboard, auto-explain)",
+    "calibration against real incidents before a chain may gate",
+    "recursive/self-compiling chains (the corpus-chain compiling itself)"
+  ],
+  "intention_signals": "It tries to lay out the full menu of coherence detectors as parameterized 4B-extraction chains so the build can proceed toward them in leverage order, all feeding one finding store, all keeping judgment in the reduce, scaling the structural detector layer from exact/one-language/one-shape to extract-anything/every-file/every-language with judgment escalated only where needed.",
+  "novelty": "Casting the whole space of architectural-integrity checks (connections, claims, shapes, concepts, coverage, onboarding) as one family of map-extract/reduce-judge chains over a cheap resident model, with the cross-language connection graph and the embedding built-twice detector as standout coverage that off-the-shelf tools and the AST detector can't reach.",
+  "contribution": "Contributes the categorized design catalogue of coherence chains: per-chain MAP schemas and REDUCE judgments across seven categories, the per-reduce-type trust spine, the scale-up-not-parallel argument tying them into the existing finding store, and the leverage-ordered build sequence.",
+  "summary_for_embedding": "A design catalogue of coherence detection chains built on a 4B-swarm corpus-chain primitive, grouped into seven categories (connection, claim, shape, concept, coverage, enrichment, multi-pass), each a bounded structured MAP extraction plus an exact/embedding/stronger-model REDUCE that writes calibrated findings into one store, with A1 the universal connection graph as the highest-leverage first build.",
+  "intention_for_embedding": "To catalogue the concrete coherence detectors to build toward once the engine lands, scaling integrity-checking to every file and language by keeping bounded extraction on the cheap 4B and all judgment in the reduce."
+}

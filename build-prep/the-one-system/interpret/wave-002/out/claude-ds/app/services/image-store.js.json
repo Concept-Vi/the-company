@@ -1,0 +1,52 @@
+{
+  "project": "claude-ds",
+  "path": "app/services/image-store.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that defines window.cvImageStore, a single shared, localStorage-backed, observable image library used by every image surface in the studio (Imagery/Build canvases, Workshop embed blocks, Vi adoption). It holds collections scoped as system (brand-wide), projects (per-project), hubs (per-project 360 panos), ai (recent generations, capped), and a projectsList. It downsamples any File/Blob/src to a JPEG data URL (≤1280px stills, ≤2400px panos) before storage, and exposes snapshot/subscribe, project + collection listing, addFromFile/addFromSrc, update, remove, counts, and an approximate bytes() footprint.",
+  "observations": [
+    "Namespace key 'cvstudio:cvImageStore:v1'; three DEFAULT_PROJECTS seeded (Eclipse Tower, Bayside Villa, Lumen Apartments)",
+    "DEFAULT_DATA shape: system[], projects{pid:[]}, hubs{pid:[]}, ai[], projectsList[]",
+    "load() merges parsed storage over defaults, defensively re-merging projects/hubs maps and projectsList",
+    "persist() catches localStorage failures and surfaces window.dsaToast('Storage limit reached…') on quota error, then notifies listeners",
+    "downsample(): reads File/Blob via FileReader or uses a string src, loads into an Image (crossOrigin anonymous), scales to maxEdge by long edge, draws to canvas, returns {src: dataURL, w, h} as lossy JPEG (default quality 0.85)",
+    "addFromFile/addFromSrc downsample then build a record (id, src, w, h, name, tags, note, source, createdAt; hubs also get yaw:0, hotspots:[]) and _push it",
+    "_push prepends to the scoped collection; the ai collection is capped at 60 via .slice(0,60)",
+    "hubs scope downsamples at maxEdge 2400 (panos) vs 1280 for other scopes",
+    "counts() totals system+projects+hubs and reports ai separately; bytes() returns the raw localStorage string length as an approximate footprint",
+    "uid() → 'img_' + random base36; addProject generates 'proj_' ids and initializes its projects/hubs slots",
+    "downsample is exported on the api for reuse"
+  ],
+  "standouts": [
+    "One global store explicitly declared the single read/write surface for ALL image consumers (the system's anti-drift, one-home principle applied to imagery)",
+    "Client-side downsampling to data URLs is the storage strategy — images become self-contained, no external host",
+    "ai history is intentionally bounded (60) so generation history can't grow unbounded in localStorage"
+  ],
+  "conventions": [
+    "Same observable localStorage store pattern as ai-presets.js / openai.js (NS, load/persist, listeners Set, snapshot/subscribe)",
+    "Defensive merge of persisted data over defaults so new default keys survive upgrades",
+    "User-facing toast on quota rather than silent loss",
+    "IIFE with a single window.* export"
+  ],
+  "concerns": [
+    "Storing downsampled data URLs in localStorage will hit the ~5MB quota quickly; the only mitigation is the quota toast and the ai cap (no eviction for system/projects/hubs)",
+    "bytes() reports the serialized string length of only this store's key, an approximation that ignores UTF-16/base64 overhead",
+    "update/remove for projects/hubs require the caller to pass the correct pid; a wrong/absent pid silently no-ops"
+  ],
+  "notes": "The one shared image library: system/project/hub/ai collections in localStorage, with automatic client-side downsampling to JPEG data URLs and an observable subscribe API.",
+  "questions": [
+    "What evicts system/projects/hubs images when localStorage fills, beyond the user removing them?",
+    "Is the 60-item ai cap and the 1280/2400px downsample sizing tuned to a target localStorage budget?"
+  ],
+  "purpose_vs_actual": "Matches — header describes one global image store every surface reads/writes through with downsampled data-URL storage, and the file implements exactly that scoped store plus downsampling.",
+  "apparent_themes": [
+    "One shared home for a concern (no parallel image stores)",
+    "Self-contained assets (downsampled data URLs, no external host)",
+    "Observable store the UI subscribes to",
+    "Scoped collections (system / project / hub / ai)"
+  ],
+  "intention_signals": "Trying to be the single image library the whole studio shares so every surface reads and writes the same assets, with images normalized (downsampled) on the way in so storage stays bounded and assets are portable.",
+  "novelty": "The scope model (brand system vs per-project vs per-project 360 panos vs capped AI history) combined with on-ingest client-side downsampling to data URLs and a quota-aware toast path.",
+  "contribution": "Contributes the shared image-asset data layer: the scoped collection model (system/projects/hubs/ai), client-side downsampling to data URLs, the Image/Pano/Project record shapes, CRUD+observable store, counts/bytes, and the dsaToast quota path.",
+  "summary_for_embedding": "A localStorage-backed observable image library (cvImageStore) with system/project/hub/ai scopes that downsamples ingested File/Blob/src to JPEG data URLs and exposes CRUD, counts, and subscribe.",
+  "intention_for_embedding": "To be the single shared image library every studio surface reads and writes through, normalizing assets to bounded portable data URLs so imagery has one home and cannot drift."
+}

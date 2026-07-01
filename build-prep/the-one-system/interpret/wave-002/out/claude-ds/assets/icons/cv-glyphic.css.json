@@ -1,0 +1,39 @@
+{
+  "project": "claude-ds",
+  "path": "assets/icons/cv-glyphic.css",
+  "model": "opus",
+  "what_it_does": "A tiny CSS file (14 lines) defining base presentation for the '.cv-glyphic' element: an inline-flex wrapper with line-height 0 and centered transform-origin, plus a rule making its child <svg> display:block. A header comment states that motion is no longer defined here — it has moved to axes/motion/motion.css and is applied as .mo-* classes by the compositor.",
+  "observations": [
+    "Only two CSS rules: .cv-glyphic (inline-flex, line-height:0, transform-origin:center) and .cv-glyphic > svg (display:block).",
+    "Header explicitly states motion is a first-class AXIS now: keyframes + .mo-* classes live in axes/motion/motion.css, value set in axes/motion/motion-axis.js.",
+    "Describes the Glyphic as a CONSUMER that subscribes to the Motion axis; the compositor applies the class from CV_AXES.css('motion', value).",
+    "Instructs including axes/motion/motion.css wherever glyphics animate.",
+    "transform-origin:center is set so axis-applied motion transforms pivot correctly."
+  ],
+  "standouts": [
+    "The comment documents a deliberate extraction: motion was removed from this file and promoted to a shared Motion axis, leaving only base layout here.",
+    "Minimal file whose main value is the boundary it draws (base presentation here, motion elsewhere)."
+  ],
+  "conventions": [
+    "Single-source / axis separation: presentation base here, motion in the motion axis — follows the design system's 'one home per concept' rule.",
+    "'cv-' namespacing consistent with the rest of the set.",
+    "Comment-as-contract: the header tells consumers exactly which file to also include for motion."
+  ],
+  "concerns": [],
+  "notes": "The base layout CSS for the Glyphic element; motion was deliberately moved out to the Motion axis (motion.css), and this file just sets inline-flex + svg display and a center pivot.",
+  "questions": [
+    "What does CV_AXES.css('motion', value) emit, and does motion.css need to be co-loaded for animations to appear?",
+    "Are there other base .cv-glyphic states (hover/selected) defined elsewhere, or is base presentation intentionally this minimal?"
+  ],
+  "purpose_vs_actual": "Matches — header declares 'base presentation only, motion moved to the axis', and the file contains exactly base presentation with no motion rules.",
+  "apparent_themes": [
+    "Axis-as-first-class (motion extracted to its own axis)",
+    "Consumer subscribes to a single-source axis",
+    "Minimal base layer, behaviour composed elsewhere"
+  ],
+  "intention_signals": "Trying to keep the Glyphic's CSS to the irreducible base so that motion (and other behaviour) can be composed onto it from the shared axis system rather than redefined per element.",
+  "novelty": "The framing of a CSS element as an axis 'consumer' that gets motion applied by a compositor.",
+  "contribution": "Contributes the minimal base layout rule for .cv-glyphic (inline-flex wrapper, block svg, center transform-origin) and documents the motion-as-axis boundary.",
+  "summary_for_embedding": "A 14-line base stylesheet for the '.cv-glyphic' element (inline-flex wrapper, block svg, center transform-origin) whose header documents that motion now lives in the separate Motion axis (motion.css), not here.",
+  "intention_for_embedding": "To provide only the Glyphic's base presentation so motion and other behaviour can be composed from the shared single-source axis system."
+}

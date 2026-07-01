@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "assets/icons/ConceptVIcon.jsx",
+  "model": "opus",
+  "what_it_does": "A small React (Babel-in-browser) component file defining two global components: ConceptVIcon, which renders an icon SVG by looking up its name in window.CONCEPTV_ICONS and injecting the path body via dangerouslySetInnerHTML; and ConceptVBadge, a gold-circle wrapper that places a ConceptVIcon inside a bordered round badge. Both are attached to window.",
+  "observations": [
+    "File header marks itself DEPRECATED — directs new work to CvIcon (CvIcon.jsx + cv-icons.js), 'the single live icon home'.",
+    "Reads from window.CONCEPTV_ICONS (legacy icon-paths.js), a DIFFERENT registry than cv-icons.js's window.CV_ICONS.",
+    "Unknown icon name renders a visible dashed-square placeholder with the missing name as text (fail-visible, not silent).",
+    "Supports a 'bg' prop that string-replaces var(--cv-icon-bg, #fff) in the icon body and sets the CSS var on the wrapper.",
+    "Props: name, size=20, color='currentColor', weight=1.5, bg, style, plus rest-spread onto the svg.",
+    "ConceptVBadge defaults: size 56, gold color, gold-faint background, inner icon ~50% of badge size.",
+    "Uses dangerouslySetInnerHTML to inject raw SVG path strings."
+  ],
+  "standouts": [
+    "Explicit DEPRECATED banner pointing to the single live successor (CvIcon / cv-icons.js).",
+    "Missing-icon placeholder makes absent icons visible rather than blank — a fail-loud rendering choice.",
+    "Reads the legacy window.CONCEPTV_ICONS registry, distinct from the CV_ICONS registry the rest of the set uses."
+  ],
+  "conventions": [
+    "Attaches components to window (script-tag / Babel load model, no ES modules).",
+    "24x24 viewBox, fill=none, stroke=currentColor, rounded caps/joins — matches the system's icon drawing convention.",
+    "Follows the design system's 'one live home' rule by explicitly deprecating itself toward CvIcon.",
+    "Uses dangerouslySetInnerHTML, acceptable here because bodies are trusted internal SVG strings."
+  ],
+  "concerns": [
+    "Kept only for back-compat against a legacy registry (window.CONCEPTV_ICONS) that differs from the active window.CV_ICONS — two icon-data sources coexist.",
+    "String .replace of the bg token only matches the literal 'var(--cv-icon-bg, ?#fff)' pattern; bodies using a different fallback color would not be substituted."
+  ],
+  "notes": "A deprecated legacy React icon/badge renderer over window.CONCEPTV_ICONS, kept for back-compat; new code should use CvIcon instead.",
+  "questions": [
+    "Is window.CONCEPTV_ICONS (icon-paths.js) still populated, or fully superseded by CV_ICONS?",
+    "Are there remaining call sites of ConceptVIcon/ConceptVBadge, or is this dead-but-retained?",
+    "Does CvIcon offer the same gold-circle badge convenience, or is ConceptVBadge's pattern reimplemented there?"
+  ],
+  "purpose_vs_actual": "Matches — header states it is a deprecated back-compat renderer for the legacy icon list, and that is exactly what the code is.",
+  "apparent_themes": [
+    "Single-live-home discipline (self-deprecation toward CvIcon)",
+    "Fail-visible rendering (missing-icon placeholder)",
+    "currentColor-driven tintable icons",
+    "Back-compat preservation during a registry migration"
+  ],
+  "intention_signals": "Trying to keep older usages working during the migration to the consolidated CvIcon/CV_ICONS icon home, while clearly signposting that this is the old path and steering new work elsewhere.",
+  "novelty": "n/a",
+  "contribution": "Contributes the legacy icon/badge render path (over window.CONCEPTV_ICONS) and the gold-circle entity-badge wrapper pattern, plus the explicit deprecation pointer to the successor CvIcon.",
+  "summary_for_embedding": "A deprecated React/Babel icon component (ConceptVIcon) and gold-circle badge (ConceptVBadge) that render SVG icons from the legacy window.CONCEPTV_ICONS registry, kept for back-compat and pointing new work to CvIcon.",
+  "intention_for_embedding": "To preserve older icon-rendering call sites against the legacy icon-paths registry during migration to the consolidated CvIcon/CV_ICONS single source."
+}

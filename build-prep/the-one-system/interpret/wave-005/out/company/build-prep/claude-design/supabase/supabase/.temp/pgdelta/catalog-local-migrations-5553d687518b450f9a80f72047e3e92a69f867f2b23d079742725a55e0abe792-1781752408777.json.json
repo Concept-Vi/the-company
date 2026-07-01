@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/.temp/pgdelta/catalog-local-migrations-5553d687518b450f9a80f72047e3e92a69f867f2b23d079742725a55e0abe792-1781752408777.json",
+  "model": "opus",
+  "what_it_does": "A 1.6MB machine-generated full-catalog snapshot of a local Supabase Postgres database, produced by the pgdelta migration-diffing tool. It serializes the entire database schema state: every schema, table, column, index, enum, composite type, procedure, trigger, role, sequence, extension, publication, and a 2412-entry dependency list. The hash+timestamp filename and .temp/pgdelta location mark it as a transient catalog dump used to compute migration diffs against a target state.",
+  "observations": [
+    "Top-level keys cover the complete pgdelta catalog model: aggregates, collations, compositeTypes, domains, enums, extensions, procedures, indexes, materializedViews, subscriptions, publications, rlsPolicies, roles, schemas, sequences, tables, triggers, eventTriggers, rules, ranges, views, foreignDataWrappers, servers, userMappings, foreignTables, depends.",
+    "Postgres server version recorded as 170006 (PG 17.x); currentUser is postgres.",
+    "12 schemas present, almost all stock Supabase: _realtime, auth, extensions, graphql, graphql_public, pgbouncer, public, realtime, storage, supabase_functions, supabase_migrations, vault.",
+    "49 tables total, but only ONE application table lives in public: table:public.connector_audit. The remaining tables are Supabase-managed (auth.*, storage.*, _realtime.*, etc.).",
+    "6 extensions: uuid-ossp, pg_net, pg_stat_statements, pgcrypto, plpgsql, supabase_vault.",
+    "12 enums, all platform-defined (auth.aal_level, auth.factor_type, auth.oauth_* family, realtime.action, realtime.equality_op, storage.buckettype).",
+    "44 procedures, 142 indexes, 16 roles, 5 triggers, 6 event triggers, 1 publication, 2 sequences.",
+    "Empty buckets for aggregates, collations, domains, materializedViews, subscriptions, rlsPolicies, rules, ranges, views, foreignDataWrappers, servers, userMappings, foreignTables — meaning none of those object kinds exist in this DB state.",
+    "Per-table metadata is exhaustive: row_security, force_row_security, replica_identity, partition info, owner, and full column descriptors with data_type, is_custom_type, custom_type_schema/name, not_null, identity, generated, collation, default, comment.",
+    "depends is a flat list of 2412 dependency edges, the raw graph pgdelta uses to order DDL."
+  ],
+  "standouts": [
+    "Only one user-defined table — public.connector_audit — sits atop an otherwise stock Supabase baseline, so this snapshot's app-specific footprint is essentially a single audit table.",
+    "rlsPolicies is empty {} despite row_security flags being tracked per table — no RLS policies defined in this captured state.",
+    "Filename embeds a 64-hex content hash plus epoch-ms timestamp (1781752408777), a fingerprinting scheme for catalog snapshots."
+  ],
+  "conventions": [
+    "Follows pgdelta's catalog JSON schema with object keys namespaced by kind:schema.name (e.g. 'table:public.connector_audit', 'type:auth.aal_level', 'extension:\"uuid-ossp\"').",
+    "Lives under supabase/.temp/ — a conventionally gitignored scratch area for tooling intermediates, here checked into the build-prep tree.",
+    "Pretty-printed JSON (indented) rather than minified, despite being machine-generated."
+  ],
+  "concerns": [
+    "A 1.6MB generated, hash-and-timestamp-named .temp artifact is committed into build-prep; such transient tool output normally is not version-controlled and will go stale immediately as the schema evolves.",
+    "Snapshot freezes a point-in-time DB state; nothing in the file dates or contextualizes it beyond the epoch in the filename, so a reader cannot tell which migration it corresponds to without external context."
+  ],
+  "notes": "A pgdelta full-catalog dump of a local Supabase DB — almost entirely stock platform schema, with public.connector_audit as the lone app table; a transient migration-diff input, not authored design.",
+  "questions": [
+    "Which migration or target state was this catalog being diffed against when pgdelta produced it?",
+    "Is connector_audit the only intended application table at this build stage, or was this captured before the app schema was applied?",
+    "Why is a .temp pgdelta intermediate retained in build-prep rather than discarded after the diff ran?"
+  ],
+  "purpose_vs_actual": "n/a — generated tool artifact with no stated purpose; its implicit purpose (capture full catalog state for migration diffing) matches its contents.",
+  "apparent_themes": [
+    "Declarative full-state schema capture",
+    "Migration diffing via catalog snapshots",
+    "Supabase as the database platform baseline",
+    "Dependency-ordered DDL generation"
+  ],
+  "intention_signals": "Captures the complete current shape of a local Postgres/Supabase database so a diffing tool (pgdelta) can compute the DDL delta between this state and a desired state — i.e., reproducible, declarative schema migrations rather than hand-written migration scripts.",
+  "novelty": "The exhaustiveness of the catalog model (28 object kinds plus a 2412-edge dependency graph) and the content-hash + timestamp snapshot naming are the distinct elements; the schema contents themselves are mostly stock Supabase.",
+  "contribution": "Contributes a concrete record of the local Supabase database baseline at a captured moment — naming the platform version (PG 17), the active extensions, the full set of platform schemas, and the single application table (public.connector_audit) present at that point. A fused view would keep it as ground-truth evidence of the connector-audit data surface and the Supabase substrate the project builds on.",
+  "summary_for_embedding": "A pgdelta-generated full-catalog JSON snapshot of a local Supabase Postgres 17 database, serializing all schemas, tables, indexes, enums, procedures, roles, and a 2412-edge dependency graph, with one app table (public.connector_audit) atop the stock Supabase baseline.",
+  "intention_for_embedding": "Captures the complete point-in-time state of a local Supabase database so pgdelta can compute declarative migration diffs against a target schema."
+}

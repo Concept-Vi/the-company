@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/FRAME-the-two-halves.md",
+  "model": "opus",
+  "what_it_does": "An externalised orientation reference document that frames the cognition self-improvement loop as the DOWNSTREAM half of one Company circuit whose UPSTREAM half is the Live Intent Resolution Surface. It quotes Tim's verbatim 2026-06-09 intent, draws the one-circuit diagram (vague intent -> Surface -> executable spec -> cognition engine/wire -> artifact, with memory/store as the loop-back), maps Surface 'organs' to existing downstream pieces with build status, describes the Wizard-lineage substrate-mcp exploration, and lays out a 5-step sequencing plan for how the loop serves this frame.",
+  "observations": [
+    "Opens by declaring itself the externalised reference that orients directionless multi-agent autonomous development (Tim's 2026-06-09 principle), living in the writable program dir and cross-referencing root-owned read-only build-prep/live-resolution-surface/.",
+    "Quotes Tim verbatim: the workflows/loop/cron are the SECOND HALF of the Surface docs, which are the UPSTREAM (intent -> spec).",
+    "ASCII diagram presents THE COMPANY as one circuit: upstream Surface (intent->spec by reaction) -> handoff package -> downstream engine + 12 compositions + workflows + cron + decision->build wire -> artifact -> memory/store loop-back.",
+    "Frames the Surface as the altitude-transformation layer generalized: two-way translation between Tim's altitude and the depths, for every user and artifact ('the whole screen is the conversation').",
+    "Includes an ORGAN-MAP table mapping each Surface organ (with section refs) to a downstream piece and a build status (built/partial/net-new), e.g. fan-out -> swarm+run_items (built), spec compilation -> spec-compiler (built), the live generative surface -> FE/RHM organ (net-new).",
+    "Lean conclusion: downstream ~80% built; net-new is the Surface's own FE plus upstream glue (artifact-type taxonomy, progressive-type-resolution, schema->UI render) — to be VERIFIED with the repo-exocortex before trusting.",
+    "Describes the Wizard lineage: substrate-mcp 'Wizard' content as the earlier expression of the same idea (the Surface calls itself 'a non-linear dynamic live wizard'), to be embedded into space='wizard-lineage' and find_relations'd, reconstructing intent (not copying AI-baked misreadings).",
+    "5-step SEQUENCING: this doc -> repo-exocortex grounding -> Wizard-lineage exploration -> dogfood the spec-compiler ON the Surface -> build the Surface FE extending the RHM organ.",
+    "Standing truth: the loop builds the ORGANS; the Surface is the BODY they compose into — the product face through which Tim guides every future build."
+  ],
+  "standouts": [
+    "The two-halves thesis: the Surface (authored unaware of the engine) and the cognition loop are independently-authored halves of ONE circuit, discovered to fit at the §15 Stage 9 execution-handoff seam.",
+    "Repeated epistemic-humility discipline: the organ-map is a LEAN reading to be GROUNDED by the repo-exocortex before trusting the ~80% figure, not asserted.",
+    "The recursive dogfood plan: run the spec-compiler ON the Surface's own spec so the system resolves its OWN intent."
+  ],
+  "conventions": [
+    "Follows the externalised-reference convention (orient autonomous agents via a durable doc) and cross-references a read-only sibling dir rather than editing it.",
+    "Uses the build-status legend (built / scoped-partial / net-new) and section-reference citations to the Surface doc.",
+    "Carries the repo's ground-before-trust / verify discipline explicitly into its own conclusions.",
+    "Numbered-composition shorthand (the circled-digit pieces) consistent with the cognition-self-improvement program's vocabulary."
+  ],
+  "concerns": [
+    "The ~80%-built figure and the organ-map statuses are self-declared LEAN estimates the doc itself flags as unverified — easy to over-trust if read out of context.",
+    "Relies on verbatim quotes and section refs to an external read-only doc; if that doc moves or its sections renumber, the mapping silently dangles."
+  ],
+  "notes": "The orientation doc that reframes the whole cognition loop as the downstream half of one Company circuit whose upstream is the Live Intent Resolution Surface, with an unverified organ-map and a 5-step plan to ground it, mine the Wizard lineage, and dogfood the system on its own intent.",
+  "questions": [
+    "Has the repo-exocortex grounding pass (step 2) actually verified the ~80%-built organ-map, and did the figure hold?",
+    "Was the Wizard-lineage exploration run and did it surface ideas neither the Surface nor the engine captured?",
+    "Did the dogfood-the-spec-compiler-on-the-Surface step produce an MVP build-triad?"
+  ],
+  "purpose_vs_actual": "Match — it presents itself as the externalised orientation reference tying the loop to the Surface and delivers exactly that: the frame, the circuit diagram, the organ-map, the Wizard lineage, and the sequencing.",
+  "apparent_themes": [
+    "Two halves of one circuit (intent->spec upstream, spec->artifact downstream)",
+    "Altitude transformation / render-for-cognition as a product",
+    "Externalised references to orient autonomous multi-agent development",
+    "Ground-before-trust epistemic humility",
+    "Recursive self-application (the system resolving its own intent)",
+    "Reuse/extend the existing organ, don't build a second renderer"
+  ],
+  "intention_signals": "Trying to give every autonomous agent/cron a durable orientation: show that the cognition loop and the Live Intent Resolution Surface are two halves of one Company circuit, inventory how much of the downstream already exists, and sequence the work (ground, mine the lineage, dogfood, build the FE) so the loop knowingly serves the product face Tim reacts through.",
+  "novelty": "The realization-as-artifact that two independently-authored bodies of work are upstream/downstream halves of one circuit meeting at the execution-handoff seam, plus the Wizard substrate as the 'upstream of the upstream' intent-history.",
+  "contribution": "Contributes the unifying frame and organ-map that connects the cognition engine/wire/loop to the Live Intent Resolution Surface, the Wizard-lineage exploration plan, and the sequencing that orders grounding, lineage-mining, dogfooding, and the net-new FE build.",
+  "summary_for_embedding": "An externalised orientation doc framing the cognition self-improvement loop as the downstream half of one Company circuit whose upstream is the Live Intent Resolution Surface, with a lean organ-map (downstream ~80% built), a Wizard-lineage exploration plan, and a 5-step sequencing.",
+  "intention_for_embedding": "To orient autonomous agents by establishing that the engine/wire/loop and the Live Intent Resolution Surface are two halves of one intent->spec->artifact circuit, and to sequence grounding, lineage-mining, dogfooding, and the net-new surface build."
+}

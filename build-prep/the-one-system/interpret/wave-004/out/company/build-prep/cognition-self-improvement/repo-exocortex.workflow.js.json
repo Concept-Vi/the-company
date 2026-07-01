@@ -1,0 +1,55 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/repo-exocortex.workflow.js",
+  "model": "opus",
+  "what_it_does": "A workflow script (build-only, no commit) that dispatches two parallel agent lanes to build the repo-exocortex composition: LANE INGEST builds a new exocortex_ingest.py that deterministically walks ~/company into per-file units and runs a bounded capture+embed into corpus space='repo' (reusing existing engine seams), and LANE GROUND builds organ-map-grounded.md by verifying each row of the FRAME organ-map against the real code (by query or grep) and computing a real built-percentage. It defines binding LAWS, an output JSON SCHEMA, runs the two lanes via parallel(), and logs the result.",
+  "observations": [
+    "Header comments label it COMPOSITION ①, BUILD-ONLY, with the next loop beat committing",
+    "Declares export const meta with name, description, and a single 'Build' phase",
+    "LAWS string mandates reading AGENTS.md -> MAP.md -> STATE.md -> module AGENTS.md + two cognition-self-improvement docs first",
+    "LAW-0 UNIFICATION enumerates specific reuse seams with file:line: Suite.capture_corpus (suite.py:9630), cognition.embed_corpus_to_spaces (:376), store/vector_index.build_index (:64), Suite.find_relations (:9734), Suite.list_corpus (:9717), roles/repo_digest.py — with REUSE-DON'T-PARALLEL",
+    "Embedder discipline: load via run_role(ensure=True)/capture embed-on-write; co-resides with chat-4b (~13GB on 16GB card, check `company gpu`, surface swap-approval [G14], never silent-evict",
+    "Floor discipline: ingest/query is run:// COMPUTATION emitting no resolve/approve/dispatch, launching no claude -p; lineage gate required before first capture (fail-loud)",
+    "Anti-hardcoding rules: chunk-size from model context not a constant; file-set from a deterministic walk; NO green-paint (a real embed that didn't persist -> say so)",
+    "File-disjoint enforcement: each lane works only its lane's files, do NOT edit runtime/cognition.py|suite.py|roles.py|mcp_face/* (read-only for the reuse seam), do NOT commit",
+    "SCHEMA requires lane/files_written/how_verified/status with status enum built-verified|built-untested|blocked, plus findings/needs_tim/notes",
+    "LANE INGEST: new exocortex_ingest.py walks named dirs into units {path, kind, text, sha, module_home}, skips .git/binaries/node_modules/.venv, then captures a ~25-40 file subset via Suite.capture_corpus(project=company, session=exocortex-1, round=1, projection=repo) reusing repo_digest, verifying by list_corpus + a real-neighbour query",
+    "LANE GROUND: new organ-map-grounded.md verifies each FRAME row as ✅ EXISTS / 🟡 PARTIAL / 🔴 NET-NEW with file:symbol cites, computes the real built-percentage, flags overclaimed/wrong FRAME rows, degrades to grep if the corpus isn't queryable yet"
+  ],
+  "standouts": [
+    "LAW-0 REUSE-DON'T-PARALLEL is enforced concretely by listing the exact existing engine seams (file:line) the agent must reuse rather than re-build a second corpus/embed/index path",
+    "The two lanes are designed file-disjoint and complementary: INGEST builds the embedded corpus, GROUND uses it (or grep) to verify-and-correct the FRAME organ-map and produce the real NET-NEW backlog",
+    "Explicit NO-green-paint and fail-loud rules: a real embed that didn't persist must be reported, lineage gate required before first capture, never silent-evict the co-resident model"
+  ],
+  "conventions": [
+    "Follows the workflow-script convention (meta + phases, LAWS preamble, JSON output SCHEMA, parallel() lanes, log())",
+    "Follows the floor / run://-computation / propose-only discipline",
+    "Follows registry-is-truth / no-hardcoding (chunk-size and file-set derived, not constant)",
+    "Follows verify-by-use and workers-never-commit discipline",
+    "Embeds binding-law reading order and file-disjoint lane boundaries as agent instructions"
+  ],
+  "concerns": [
+    "Hardcodes specific file:line reuse-seam locations (suite.py:9630 etc.) in the LAWS string — these drift if the source files change",
+    "GPU figures (~13GB, 16GB card, 7GB free) are stated as point-in-time facts in the instructions and could go stale"
+  ],
+  "notes": "This is the build-only workflow that stands up the repo-exocortex: one lane ingests+embeds the repo into a queryable corpus, the other grounds the FRAME organ-map against real code — both reusing existing engine seams, file-disjoint, propose-only, no commit.",
+  "questions": [
+    "Did both lanes complete, and did the FRAME organ-map's '~80% built' claim hold up against the grounded cites?",
+    "What was the full file-count the deterministic walk found (the known-next full-ingest size)?",
+    "Did the bounded embed persist real vectors and return real neighbours (the keystone verification)?"
+  ],
+  "purpose_vs_actual": "Matches — the header states COMPOSITION ① build-only repo-exocortex (ingest+embed corpus + ground the organ-map, no commit), and the two-lane parallel body implements exactly that with the stated reuse, floor, and file-disjoint constraints.",
+  "apparent_themes": [
+    "Reuse-don't-parallel / LAW-0 unification (no second corpus/embed/index path)",
+    "Grounding claims against real code (verified cites over guessed percentages)",
+    "Floor / run://-computation discipline (no resolve/approve/dispatch)",
+    "Anti-green-paint, fail-loud honesty",
+    "File-disjoint parallel lanes, workers-never-commit",
+    "Embedder co-residency / swap-approval governance"
+  ],
+  "intention_signals": "Trying to turn the repo into a queryable embedded exocortex by reusing the existing capture/embed/index engine, and to use that (or grep) to convert an unverified lean organ-map into a grounded one with real file:symbol cites and a real NET-NEW build backlog.",
+  "novelty": "The keystone idea of ingesting the repo + Surface docs into an embedded space='repo' corpus and then grounding a self-describing organ-map by querying that corpus, with the workflow enforcing reuse of named existing seams rather than building a parallel path.",
+  "contribution": "Contributes the orchestration that builds the repo-exocortex (deterministic walk + bounded embed-capture reusing existing engine seams) and the grounded organ-map verification lane, with concrete reuse-seam citations and floor/embedder governance encoded as agent laws.",
+  "summary_for_embedding": "A build-only two-lane workflow script that builds exocortex_ingest.py to walk and embed the repo into corpus space='repo' (reusing capture_corpus/embed/index seams) and organ-map-grounded.md to verify the FRAME organ-map against real code with file:symbol cites.",
+  "intention_for_embedding": "Built to stand up a queryable embedded repo exocortex by reusing the existing engine and to ground an unverified organ-map into real file:symbol cites plus a real NET-NEW backlog, file-disjoint and without committing."
+}

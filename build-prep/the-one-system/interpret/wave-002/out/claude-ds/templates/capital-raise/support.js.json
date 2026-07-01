@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "templates/capital-raise/support.js",
+  "model": "opus",
+  "what_it_does": "A generated (do-not-edit) IIFE bundle that is the entire 'dc-runtime' — a client-side Design Component runtime. It loads React/ReactDOM UMD from unpkg, parses an <x-dc> template + a <script data-dc-script> logic class out of the host HTML page, compiles the template (a {{expr}}/sc-for/sc-if/x-import/dc-import/helmet mini-language) into React element builders, evaluates the author's `class Component extends DCLogic` via `new Function`, and mounts it into #dc-root. Supports streaming updates, sibling-component fetch, external JS/JSX module imports (Babel for JSX), an editor bridge (annotated template + postMessage to parent), error boundaries, placeholders, and print CSS.",
+  "observations": [
+    "Header comment: 'GENERATED from dc-runtime/src/*.ts — do not edit. Rebuild with `cd dc-runtime && bun run build`.' — esbuild-style IIFE with __publicField helpers.",
+    "Has its own tiny expression resolver (src/expr.ts) supporting paths, indexing, equality (===/!==/==/!=), negation, literals — no full JS eval for templates.",
+    "Template mini-language: {{interpolation}}, <sc-for list as>, <sc-if value>, <x-import from/component>, <dc-import name>, <helmet>, hint-size/hint-placeholder-count for streaming skeletons.",
+    "Loads React 18.3.1 + ReactDOM via unpkg URLs pinned with SRI hashes; Babel standalone 7.26.4 from unpkg for JSX x-imports.",
+    "Uses `new Function(...)` in two places (logic class eval, external module load) — each tagged `//! nosemgrep: eval-and-function-constructor`.",
+    "Registry pattern: createRegistry()/get/bump/bumpAll with per-name subscriber sets; components subscribe and force re-render on bump.",
+    "StreamableComponent is a React error boundary (getDerivedStateFromError/componentDidCatch); detects circular imports via an AncestorContext chain.",
+    "Streaming awareness throughout: htmlStreaming/jsStreaming flags drive placeholder vs render-nothing, shimmer CSS on html.sc-dc-streaming.",
+    "Editor bridge API on window: __dcUpdate, __dcSetProps, __dcAnnotatedTemplate, __dcTemplateSource, __dcBoot, __dcRegistry; postMessage __dc_booted to parent frame.",
+    "Exposes both DCLogic and StreamableLogic as the same base class (documented name vs implementation alias)."
+  ],
+  "standouts": [
+    "A complete from-scratch reactive template runtime (parser + expression engine + React bridge + registry + error boundary + streaming) shipped as one self-contained generated file.",
+    "First-class streaming: partial templates/logic render as shimmering placeholders, with hint-size/hint-placeholder-count to reserve layout before content arrives.",
+    "Editor round-trip via data-dc-tpl stamping — every rendered node carries the template-node id so a host editor can map render→source."
+  ],
+  "conventions": [
+    "Follows the project's 'generated artifact, never hand-edit' convention (matches CLAUDE.md trap about _ds_bundle.js).",
+    "esbuild IIFE bundling with src/*.ts section comments preserved.",
+    "Loud-ish failure: getReact/getReactDOM throw if React absent; logic/template eval errors are caught and surfaced as on-screen error overlays rather than silent.",
+    "External resources (React/Babel) loaded from public CDN with SRI — a network dependency baked into the runtime."
+  ],
+  "concerns": [
+    "Lives at templates/capital-raise/support.js but is byte-identical to a general dc-runtime bundle — its location implies it is a per-template copy of the runtime.",
+    "Hard CDN dependency on unpkg.com for React/ReactDOM/Babel; offline or blocked-CDN environments cannot boot."
+  ],
+  "notes": "This is the whole Design Component client runtime (dc-runtime) compiled into a support.js that a .dc.html page includes; do not edit it — edit dc-runtime/src and rebuild.",
+  "questions": [
+    "Is this file a per-template copy of the runtime or symlinked/copied from a single dc-runtime build output (the file alone can't tell)?",
+    "Where does the streaming source (__dcUpdate caller) live — what pushes html/js/props chunks in?"
+  ],
+  "purpose_vs_actual": "Matches: the header states it is the generated dc-runtime, and the body is exactly that runtime.",
+  "apparent_themes": [
+    "registry-as-truth with reference-not-copy (registry get/bump/subscribe)",
+    "streaming/progressive rendering of AI-generated UI",
+    "self-describing render→source mapping for an editor",
+    "fail-visible error boundaries over silent degradation"
+  ],
+  "intention_signals": "Built to let a server (likely an AI) stream HTML templates + a logic class into a live page and have them render incrementally as React, with placeholders during streaming and an editor that can map rendered nodes back to template source — a runtime for AI-authored, editable, content-as-data components.",
+  "novelty": "A bespoke HTML-template-to-React compiler with a custom safe-ish expression language and built-in streaming placeholders + circular-import detection + editor bridge, all in one generated bundle.",
+  "contribution": "Contributes the complete client-side Design Component execution runtime — template parsing/compilation, the {{}}/sc-for/sc-if/x-import mini-language, the registry+subscription reactivity, streaming placeholders, the error boundary, and the editor postMessage bridge that any .dc.html page boots from.",
+  "summary_for_embedding": "Generated dc-runtime IIFE bundle: a client-side Design Component runtime that loads React/ReactDOM from unpkg, parses <x-dc> templates and a DCLogic class, compiles a {{}}/sc-for/sc-if/x-import template language into React, supports streaming placeholders, error boundaries, external module imports, and an editor bridge.",
+  "intention_for_embedding": "To render AI-streamed HTML templates plus a logic class as live, incrementally-rendered, editable React components on a standalone .dc.html page."
+}

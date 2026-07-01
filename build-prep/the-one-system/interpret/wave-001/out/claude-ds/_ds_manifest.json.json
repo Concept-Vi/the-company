@@ -1,0 +1,54 @@
+{
+  "project": "claude-ds",
+  "path": "_ds_manifest.json",
+  "model": "opus",
+  "what_it_does": "A generated compiler-output manifest for the ConceptV Design System: it enumerates the system's components (with source paths), the DS-tab preview/specimen cards (path, group, viewport, subtitle, name), templates, the global CSS load list, and a full dump of every design token (name, value, kind, definedIn, optional scope/annotation).",
+  "observations": [
+    "Top-level keys: namespace, components, startingPoints, cards, templates, hasThumbnailHtml, globalCssPaths, tokens.",
+    "namespace is a hashed id ('ConceptVDesignSystem_c8f43c'), suggesting machine-generated isolation.",
+    "Components list maps names to sourcePath .jsx files (Avatar, Badge, Button, Card, Glyphic, Input, Modal, Segmented, Stepper, Switch, Tabs + core: ContainmentTree, DiagramSolver, RenderType, CoreTypes, Slide, Archetypes).",
+    "Cards array (~50+) groups DS-tab previews by group (AI, Axis System, Brand, Colors, Components, Glyphic System, Spacing, Type System, UI Kit ...) each with an explicit pixel viewport and a descriptive subtitle.",
+    "Two templates registered: Capital Raise and Pitch Deck, each with folder, entryPath (*.dc.html) and a captured .thumbnail.",
+    "globalCssPaths lists the ordered stylesheet load: colors_and_type.css then ~20 tokens/*.css then core/containers.css, tokens/controls.css, styles.css.",
+    "tokens array is an exhaustive flat dump: colors (paper/ink/fg/accent-gold ramp/bronze/status/border), shadows, radii (--r-*), spacing (--s-*), fonts, tracking, easing/duration, layout rails, zone pigments (--pig-*) and computed --zone-*-surface/strong/edge/ink via color-mix(in oklch ...), --vi-* gold zone, --comm-* communication zone, palette-scoped overrides (.zone-palette-cooler/warmer), surface frame aspect-ratios, fluid type clamps, element size ramp, elevation ramp.",
+    "Many color tokens carry annotation:'color'; some entries are mis-kinded (e.g. --frame-*-h computed values tagged kind:'color' though they are dimensions).",
+    "Zone surfaces are computed from --pig-* pigments mixed against --zone-ground by a --zone-intensity multiplier — the 'subtle zoning' mechanism rendered as tokens.",
+    "Truncated view: file is ~72k chars; tokens section continues past the elevation ramp shown."
+  ],
+  "standouts": [
+    "The token system encodes 'containment-depth zoning' as computed color-mix tokens (--zone-*-surface = pig mixed toward ground by --zone-intensity), i.e. depth-as-tint is parametric in the token layer itself.",
+    "A single --zone-intensity / --gold-intensity knob scales the whole zone/gold wash system uniformly.",
+    "Palette-scoped token redefinitions (.zone-palette-cooler / .zone-palette-warmer) let one ground knob retint every zone.",
+    "Surface frames are defined as aspect-ratio + width with the height computed via calc() (desktop/tablet/mobile/deck/a4/web)."
+  ],
+  "conventions": [
+    "Generated artifact / compiler output — not hand-authored (hashed namespace, flat exhaustive dump).",
+    "Single-source token discipline: nearly all values live in colors_and_type.css with downstream tokens var()/color-mix()'ing them.",
+    "Layered token naming (L0 primitive --pig-base → L1 computed role --zone-*-surface).",
+    "Ordered CSS load list (colors_and_type first, styles.css last) as an explicit contract."
+  ],
+  "concerns": [
+    "Several dimension/calc tokens are tagged kind:'color' (e.g. --frame-desktop-h, --safe-top, --gutter) — kind annotation looks unreliable for non-color computed values.",
+    "Duplicate token names across scopes (--pig-base appears in :root and both palette scopes) are legitimate scoping but flatten ambiguously in this dump.",
+    "File is large (~72k chars) and machine-regenerated; per the project charter it must never be hand-edited."
+  ],
+  "notes": "The compiled manifest of the whole design system — the machine index of every component, preview card, template, CSS load-order, and design token (including the computed oklch zone-depth tints); regenerated, never hand-edited.",
+  "questions": [
+    "What process emits this manifest and from what sources (it claims to mirror colors_and_type.css + tokens/*.css + the cards)?",
+    "Why are some clearly-dimensional computed tokens annotated kind:'color' — is the kind classifier reading var()/calc() values heuristically?"
+  ],
+  "purpose_vs_actual": "n/a — generated index; it does what a manifest does (enumerate the system) and matches that purpose.",
+  "apparent_themes": [
+    "registry-is-truth",
+    "single-source-of-truth",
+    "token-driven",
+    "depth-as-tint (zoning is containment made visible)",
+    "parametric-knob (one intensity scales the system)",
+    "generated-not-authored"
+  ],
+  "intention_signals": "Inferred: this is the build artifact that lets tooling and the DS gallery know everything the design system contains in one queryable object — components, cards to render, templates, the exact CSS load order, and the complete token vocabulary — so the interface can be a projection of the registry rather than a hand-maintained parallel list.",
+  "novelty": "The token dump encodes a full parametric zoning model in CSS color-mix(in oklch) keyed by pigment + intensity + ground, so 'subtle containment-depth tinting' and theme palette swaps are expressed entirely as tokens rather than component code.",
+  "contribution": "Contributes a complete machine-readable inventory of the design system (component source paths, preview-card catalogue with viewports, template entrypoints, ordered global CSS, and the exhaustive token vocabulary incl. computed oklch zone/gold/comm tints and surface-frame ratios) — the index a fused system would keep to know what tokens and pieces exist and how they load.",
+  "summary_for_embedding": "Generated ConceptV Design System manifest enumerating components, DS preview/specimen cards with viewports, templates, ordered global CSS, and the full design-token vocabulary including computed oklch containment-depth zone tints and surface-frame aspect ratios.",
+  "intention_for_embedding": "Intended as the single machine-readable index of everything the design system contains so tooling and galleries project the registry instead of maintaining a parallel hand-edited list."
+}

@@ -1,0 +1,54 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/SEMANTIC-LAYER-ANCHOR.md",
+  "model": "opus",
+  "what_it_does": "An 'anchor exploration' document that frames a research idea — a SEMANTIC detector layer (a cheap 4B-model swarm reading the repo for meaning, not wiring) as the second half of the Coherence Substrate — to be the shared starting picture for a wave of research agents who each explore one allocated area and write companion files beside it.",
+  "observations": [
+    "Explicitly states it is NOT a plan or spec but 'the shape of an idea caught early', a shared anchor for a research wave; demands an 'expansion ratio > 1' and 'yes, but actually…' contradiction from agents.",
+    "Defines the gap: structural detectors (AST/registry/call-graph/string) see wiring but are 'constitutionally unable' to see a semantic class of incoherence — half-migration, suite-covers-capability, intent-vs-implementation drift, concept/vocabulary coherence.",
+    "Cites concrete real incidents as test cases: the /api/mockup-feedback /status dropped-lifecycle bug and the 'mode dial built twice' incident.",
+    "Anchors the economics on a resident 4B model claimed to run ~32 concurrent inferences at ~3000 tokens/second, making whole-repo semantic reads 'essentially free' in seconds — flagged as a claim to verify against ~/vllm-tests benchmarks.",
+    "Asserts the engine already exists — the cognition stream's swarm (run_swarm, roles/rules, schema-enforced JSON, run:// addressing) — so this is 'build-on-not-beside', pointing the chat swarm at the repo instead.",
+    "Presents an ASCII diagram of the spine: STRUCTURAL (exact, auto-act) vs SEMANTIC (fuzzy, candidate-only) detectors feeding ONE typed/addressed/dispositioned coherence finding model.",
+    "Names two load-bearing disciplines: positive-only/candidate-only (semantic findings propose, never declare/auto-act) and own/reflect (detection re-derivable/reflected, only disposition owned).",
+    "Section 4 enumerates generative what-ifs grouped as semantic DETECTORS, semantic ENRICHMENT (auto-explain findings, candidate dispositions, cross-session dedup), and whole-corpus ON-DEMAND faculties (company onboard, repo-wide semantic QA, pre-commit semantic review).",
+    "Section 5 maps the supporting machinery with file references (runtime/cognition.py, runtime/roles.py, runtime/rules.py, fabric/transport.py json_schema branch, ops/cli/gpu.py, services.json).",
+    "Section 6 lists six 'hard parts' to research hardest: 4B trust/cry-wolf, context-window vs whole-repo, positive-only sufficiency, VRAM contention, the 4B's real code ceiling, determinism/reproducibility.",
+    "Closes with open what-ifs (continuous background watch, declared semantic finding-types, feeding the RHM, recursion, structural-vs-semantic disagreement as highest-value finding) and an instruction to research agents to mark observed/inferred/external-prior-art/your-idea."
+  ],
+  "standouts": [
+    "The structural-vs-semantic two-class spine feeding one finding model, with semantic findings strictly candidate-only.",
+    "The 4B-swarm-points-at-the-repo move: reusing the chat cognition engine for schema-enforced whole-repo meaning judgments.",
+    "The cry-wolf trust problem named as the make-or-break (a 4B 'looks fine' proves nothing; 'looks wrong' is only a candidate for a stronger judge).",
+    "The what-if that structural/semantic DISAGREEMENT is itself the highest-value finding neither class catches alone."
+  ],
+  "conventions": [
+    "Follows the research-wave anchor convention: a non-confirmable 'shape of an idea' read first by all agents, who then write companion files beside it, marking evidence as observed/inferred/external/your-idea.",
+    "Heavy file:line and incident grounding tying speculation to real code and documented bugs.",
+    "Reuses the project's standing laws (positive-only, own/reflect, no-humans, registry/declared-types) as the design constraints.",
+    "Required-context discipline: directs the reader to COHERENCE-SUBSTRATE.md and findings/AREA-3 first."
+  ],
+  "concerns": [
+    "Self-admittedly speculative ('held loosely', 'what-if'); capability numbers (32 concurrent / 3000 tok/s) are unverified within the file.",
+    "Very long and idea-dense; risk that downstream agents anchor on the author's framing despite the explicit instruction to contradict it."
+  ],
+  "notes": "This is the seed/anchor for the semantic half of the coherence substrate — read it as a research brief framing the idea and its hard parts, not as an implementation commitment.",
+  "questions": [
+    "Are the 4B throughput/concurrency claims confirmed by the actual benchmark sheet?",
+    "What is the resolved unit of semantic reading (file vs symbol vs module+self-description) given the 4B context bound?",
+    "Which specific trust mechanism (jury agreement, determinism, stronger-model confirm, calibration) was adopted to clear semantic findings?"
+  ],
+  "purpose_vs_actual": "Match — it declares itself an anchor exploration for a research wave and the body is exactly that: gap framing, organizing insight, generative what-ifs, hard parts, code anchors, and instructions to agents.",
+  "apparent_themes": [
+    "Meaning vs wiring (semantic vs structural detection)",
+    "Cheap massive concurrency as an economic unlock",
+    "Build-on-not-beside / reuse the cognition swarm",
+    "Positive-only candidate discipline and own/reflect persistence",
+    "No-humans institutional memory generated fresh on demand"
+  ],
+  "intention_signals": "It is trying to seed a grounded, unbiased research wave that proves or breaks the idea of a cheap 4B semantic-detector layer extending the coherence substrate, by giving all agents the same partial picture and explicitly inviting contradiction and evidence.",
+  "novelty": "The framing of a fuzzy candidate-only semantic detector class coexisting with exact structural detectors under one finding model, powered by a resident small-model swarm pointed at the repo, plus the disagreement-as-signal insight, is distinctive.",
+  "contribution": "Contributes the conceptual design and risk inventory for the semantic-detection half of coherence: the two-class spine, the candidate-only/own-reflect disciplines for fuzzy findings, the catalogue of semantic detectors/enrichments/on-demand faculties, and the enumerated hard parts a fused system would keep as the rationale and guardrails for any 4B-swarm semantic layer.",
+  "summary_for_embedding": "A research-wave anchor proposing a semantic detector layer — a cheap concurrent 4B-model swarm reading the repo for meaning rather than wiring — as the candidate-only second half of the Company's coherence substrate, with code anchors and a hard-parts/trust risk inventory.",
+  "intention_for_embedding": "To seed and unbias a multi-agent research wave that grounds and stress-tests the idea of reusing the cognition swarm as a positive-only semantic coherence detector across the whole repo."
+}

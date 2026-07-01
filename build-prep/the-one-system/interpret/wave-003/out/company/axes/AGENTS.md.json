@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "axes/AGENTS.md",
+  "model": "opus",
+  "what_it_does": "Folder-note/constitution for the axes/ directory. Declares axes/ as the file-discovered registry of the resolver's COORDINATE dimensions: each <id>.py exports a module-level AXIS dict for one orthogonal dimension, and adding an axis = dropping a file (zero engine code). Documents the mechanism (runtime/axis_registry.py), the AXIS row shape, the resolver's list-agnostic stance, the provisional status of the seeded axis set, and who consumes the registry.",
+  "observations": [
+    "States the resolver contract: resolve(invariant, coordinate) -> surface, with axes being the coordinate's vocabulary.",
+    "Names the mechanism file runtime/axis_registry.py and says it mirrors stack_item_types/item_types/mark_types as the ONE file-discovered registry mechanism with its own row shape.",
+    "Documents the AXIS row shape: id (==filename), namespace (coordinate key), optional fields {sub_field: continuous|discrete}, optional value_source ('live' | a ref | 'pending'), optional desc.",
+    "Defines the per-sub-field resolve mechanism: continuous=DERIVE via a relationship-AST, discrete=registry-SELECT.",
+    "Asserts the resolver (runtime/resolver.py) is list-AGNOSTIC — resolves against whatever coordinate it is handed, not a switch it branches on.",
+    "Lists the seeded surface-projection axes: device/viewer/mode/type/resolution/state/register.",
+    "Explicitly subordinates this seeded list to the FORMAL ROOT axes (four-root lock, the 3/1, time-as-meta, state/scale/frame-one-family) which are described as Tim+fork vault work, Tim-adjudicated; says these rows are swappable DATA and the mechanism survives any root-set.",
+    "Names perspective/intent/posture as a-row-away, to be seeded when they get real resolve-usage.",
+    "Names consumers (co-scope): the resolver, projection's coordinate-computation, the host — all reading as_records(); 'reading an axis is a READ' as the floor."
+  ],
+  "standouts": [
+    "'★ ADD AN AXIS = DROP A FILE' — the file-discovery / self-extending coordinate-space principle stated as the core mechanism.",
+    "Explicit instruction DON'T assert this list as final — the seeded axis set is provisional and subordinate to Tim-adjudicated formal root axes.",
+    "The continuous=DERIVE-via-relationship-AST vs discrete=registry-SELECT distinction tied to per-sub-field resolution."
+  ],
+  "conventions": [
+    "Follows the repo's every-folder-has-an-AGENTS.md folder-note convention.",
+    "Uses the ★ marker for load-bearing claims, consistent with other AGENTS.md notes in this repo.",
+    "Explicitly states it mirrors sibling registries (stack_item_types/item_types/mark_types) — the shared file-discovered registry pattern."
+  ],
+  "concerns": [],
+  "notes": "The constitution for a file-as-a-dimension coordinate registry: each .py drops one AXIS dict, runtime/axis_registry.py discovers them, the resolver stays agnostic; the current axis list is explicitly provisional.",
+  "questions": [
+    "What is the exact 'own row shape' of runtime/axis_registry.py versus the sibling registries it mirrors?",
+    "What is the relationship-AST that drives continuous DERIVE, and where is it defined?",
+    "How are the formal-root axes (four-root lock, 3/1, time-as-meta) reconciled with these seeded surface-projection rows in practice?"
+  ],
+  "purpose_vs_actual": "Matches — the note declares itself the axes-registry constitution and the content is exactly that (mechanism, row shape, consumers, provisional status).",
+  "apparent_themes": [
+    "Registry-is-truth / self-extending vocabulary via file discovery",
+    "Mechanism-vs-data separation (engine survives any axis set)",
+    "Orthogonal coordinate dimensions for a resolve(invariant, coordinate) model",
+    "Epistemic humility about the seeded list (don't assert as final)"
+  ],
+  "intention_signals": "Trying to encode Tim's 'axes ARE registries' / recursive registry-is-truth idea as a working substrate: a coordinate space that grows by adding files, with a list-agnostic resolver, while keeping the actual axis set swappable and subordinate to a deeper Tim-adjudicated root-axis theory.",
+  "novelty": "Treating coordinate DIMENSIONS themselves as a file-discovered registry (a dimension = a file), and per-sub-field declaring whether resolution is continuous-derive or discrete-select.",
+  "contribution": "Contributes the constitutional contract for the axis-registry layer: the AXIS row shape, the file-discovery mechanism pointer, the continuous/discrete sub-field semantics, the list-agnostic resolver stance, and the explicit provisional/swappable framing of the seeded axis set.",
+  "summary_for_embedding": "Folder constitution declaring axes/ as a file-discovered registry where each <id>.py exports an AXIS dict defining one orthogonal resolver coordinate dimension, consumed by a list-agnostic resolver via runtime/axis_registry.py.",
+  "intention_for_embedding": "To establish a self-extending coordinate-dimension registry (add-an-axis = drop-a-file) implementing Tim's 'axes are registries' resolve(invariant, coordinate) model while keeping the actual axis set swappable data."
+}

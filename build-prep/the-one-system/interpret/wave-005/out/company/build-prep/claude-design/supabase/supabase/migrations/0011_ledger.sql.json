@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0011_ledger.sql",
+  "model": "opus",
+  "what_it_does": "Creates the 'ledger' Postgres schema for the-one-system: a run-scoped structural ledger of code extraction. Enables vector, pg_trgm, and ltree extensions; creates tables ledger.run (one extraction run per project/channel/purpose/layer), ledger.entry (per-file/node interpretation rows with rich jsonb fields), ledger.symbol (per-symbol rows), and ledger.edge (relationships); adds idempotent ALTERs for provenance columns; creates indexes (including a gin trgm index on path); and defines latest_run / entry_latest / symbol_latest / edge_latest / coverage views.",
+  "observations": [
+    "Header frames it as the canonical, tracked home for the ledger schema, superseding a loose build-prep/the-one-system/ledger_schema.sql; idempotent and reversible (DROP SCHEMA ledger CASCADE).",
+    "Non-flat design: every extraction is a RUN scoped by (project, channel, purpose, layer); runs accumulate and are comparable over time (drift).",
+    "ledger.run carries provenance/versioning: model, prompt_version, schema_version, tool_git_sha, tool_version, status (default 'running'), stats jsonb, started/ended timestamps.",
+    "ledger.entry holds the interpretive payload fields mirroring this very interpretation task (what_it_does, observations, standouts, conventions, concerns, notes, questions, purpose_vs_actual, apparent_themes, intention_signals, novelty) plus structural fields (imports, declares, address_schemes_used, stores_touched, env_vars, markers, signals, coverage_state) and per-extractor provenance.",
+    "Unique constraints: entry (run_id, path), symbol (run_id, code_id).",
+    "Edges are simple from_ref/kind/to_raw/to_resolved with line + provenance.",
+    "Additive idempotent ALTERs add tool_git_sha/tool_version/extractor/extractor_version to existing tables.",
+    "Views: latest_run uses distinct on (project, purpose) over status='complete'; coverage aggregates entry coverage_state per project/purpose for node_type='file'.",
+    "Reuses a code:// coordinate (mentioned in header)."
+  ],
+  "standouts": [
+    "The run-scoped, accumulate-and-compare (drift) model rather than a flat overwrite table.",
+    "ledger.entry's field set is essentially the schema for the interpretive JSON this very wave produces — the ledger is the sink for these interpretations.",
+    "Per-row provenance (extractor, extractor_version, produced_by_session, pass, model, prompt_version) on entries and symbols."
+  ],
+  "conventions": [
+    "Idempotent everything (create ... if not exists, add column if not exists, create or replace view).",
+    "jsonb for open/extensible fields; explicit extra jsonb escape hatches on entry/symbol/edge.",
+    "latest-view pattern (distinct on) to surface the newest complete run per (project, purpose)."
+  ],
+  "concerns": [
+    "This file lives under the claude-design supabase migrations folder yet defines a general the-one-system ledger schema — a domain placement mismatch within this migration set, observable from its own header."
+  ],
+  "notes": "This is the durable, run-scoped database home for code-extraction interpretations (file entries, symbols, edges) with full provenance and drift-over-time, and its entry columns mirror the interpretive JSON schema being produced.",
+  "questions": [
+    "Why does the-one-system ledger schema live inside the claude-design supabase migration sequence rather than its own migration tree?",
+    "What populates these tables — the same interpretation pipeline that emits the out/*.json files?"
+  ],
+  "purpose_vs_actual": "Match — header describes a run-scoped structural ledger schema and the SQL creates exactly that (run/entry/symbol/edge + views + provenance).",
+  "apparent_themes": [
+    "Provenance-on-every-row",
+    "Accumulation + drift over time (non-flat, comparable runs)",
+    "Open/extensible schema via jsonb",
+    "Ingest-once, query-many via latest-views and coverage rollups",
+    "Self-description (entry fields == the interpretation schema)"
+  ],
+  "intention_signals": "Trying to give code interpretation a durable, queryable, version-stamped home where every run is preserved and comparable, so extractions become a growing corpus rather than disposable output.",
+  "novelty": "A ledger whose entry table is shaped exactly like the per-file interpretive JSON (what_it_does/observations/standouts/...), unifying the interpretation product and its storage schema, with run-scoping for drift.",
+  "contribution": "Contributes the run-scoped ledger schema (run/entry/symbol/edge tables, provenance columns, latest/coverage views) that serves as the structural+interpretive sink for code extraction.",
+  "summary_for_embedding": "A Postgres 'ledger' schema for the-one-system defining run-scoped entry/symbol/edge tables with rich jsonb interpretive fields, provenance, indexes, and latest/coverage views.",
+  "intention_for_embedding": "To persist code-extraction interpretations as accumulating, version-stamped, queryable runs comparable over time rather than flat disposable output."
+}

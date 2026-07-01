@@ -1,0 +1,33 @@
+{
+  "project": "claude-ds",
+  "path": "components/Avatar.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration file for the Avatar component. Declares an AvatarProps interface extending React.HTMLAttributes<HTMLSpanElement> with optional src, alt, gold (filled gold variant), and size (number px or any CSS length), and declares the Avatar function returning JSX.Element, exported as both named and default.",
+  "observations": [
+    "AvatarProps extends React.HTMLAttributes<HTMLSpanElement> (the avatar renders as a span)",
+    "Props: src?, alt?, gold? (filled gold variant), size? (number|string)",
+    "JSDoc: 'Circular avatar — a photo (src) or initials/children. gold = filled gold variant.'",
+    "Both named export (Avatar) and default export declared"
+  ],
+  "standouts": [
+    "size typed as number | string with the px-vs-CSS-length intent documented inline"
+  ],
+  "conventions": [
+    "Co-located .d.ts beside the .jsx, mirroring its surface — a typing convention for the component set",
+    "Extends the native element attribute type so all standard span attributes pass through"
+  ],
+  "concerns": [],
+  "notes": "The type contract for Avatar: a span-based circular avatar taking src/alt/gold/size; mirrors the Avatar.jsx implementation.",
+  "questions": [],
+  "purpose_vs_actual": "Match — it is a declaration file and it accurately declares the Avatar component's public type surface consistent with Avatar.jsx.",
+  "apparent_themes": [
+    "Typed component contracts",
+    "Pass-through of native HTML attributes",
+    "Brand 'gold' variant as a first-class prop"
+  ],
+  "intention_signals": "To give consumers a precise, IDE-visible type contract for Avatar while keeping it a thin token-class wrapper over a span.",
+  "novelty": "n/a",
+  "contribution": "Contributes the typed public interface for the Avatar component (prop names, types, the gold variant flag, the number|string size convention) that a fused system would keep as Avatar's contract.",
+  "summary_for_embedding": "TypeScript declarations for the Avatar component: an AvatarProps interface (src, alt, gold, size) extending span HTML attributes, with named and default exports.",
+  "intention_for_embedding": "To provide a precise type contract for the circular Avatar wrapper so consumers get typed props including the gold variant and flexible size."
+}

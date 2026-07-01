@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-A2-rhm-mobile-elevated.json",
+  "model": "opus",
+  "what_it_does": "A grounding/confirmation result for the A2-rhm-mobile-elevated.html mockup (the mobile RHM chat interface with a glowing voice orb). Holds 17 candidate dossiers reduced to 11 clusters, each with a ui:// address, capabilities, grounding flag, the what/what-you-can-do/how-to-change triple, a maps_to_feature id, and a 3-draw jury verdict sorting them into confirmed (3) and flagged (8).",
+  "observations": [
+    "ground block describes RHM as a living conversational entity with a breathing orb, listening ring, record, and config controls.",
+    "Counts: n_candidates 17, n_dossiers 17, n_clusters 11.",
+    "Confirmed: chat mode selector (RHM-modes), the memo-gate inquiry (proposed), and the 'not now' decline button (RHM-verbs, unanimous).",
+    "How-to text repeatedly cites RhmChat.tsx as the surface and suite.py:chat as the brain/logic.",
+    "Refcheck fabrications flagged: RHM-identity and RHM-utterance (appearing on multiple dossiers).",
+    "Two distinct dossiers share the address ui://chat/utterance with different capabilities (presentable vs driven) and different represented meanings.",
+    "A recurring narrative claim: 'your turns train the twin, its working-grade inference drives the system' (chat/rhm dossier)."
+  ],
+  "standouts": [
+    "The 'twin training' framing: operator turns are cast as training data for a working-grade inference twin that then drives the system.",
+    "RHM-utterance is flagged as a fabricated feature id yet appears repeatedly as an intended mapping, signaling a feature the mockup wants but the inventory lacks.",
+    "Address collision: ui://chat/utterance used by two separate dossiers."
+  ],
+  "conventions": [
+    "Same audit schema as the canvas siblings (ground / counts / confirmed / flagged, howto triple, verdict object).",
+    "ui://chat/<element> addressing for the RHM surface.",
+    "Closed capability + grounding vocabularies."
+  ],
+  "concerns": [
+    "Duplicate ui://chat/utterance address across two dossiers risks ambiguous resolution.",
+    "RHM-utterance and RHM-identity repeatedly fail refcheck as non-inventory ids, suggesting the mockup outran the feature inventory.",
+    "Several 'built'-grounded controls (chat/run, chat/toolbar, chat/rhm) get 0–1 of 3 jury grounding, an internal built-vs-jury tension."
+  ],
+  "notes": "The mobile RHM-chat slice of the UI-grounding audit; surfaces a voice/twin conversational entity and repeatedly flags RHM-utterance/RHM-identity as feature ids missing from the inventory.",
+  "questions": [
+    "Should RHM-utterance and RHM-identity be added to the feature inventory, or remapped to existing ids?",
+    "How is the duplicate ui://chat/utterance address meant to be disambiguated by consumers?"
+  ],
+  "purpose_vs_actual": "Matches: an honest grounding audit of the RHM mobile chat mockup elements.",
+  "apparent_themes": [
+    "Conversational/voice presence (RHM) as a living entity",
+    "Operator-turns-train-the-twin model",
+    "UI grounding with built-vs-proposed honesty",
+    "Two-layer adjudication"
+  ],
+  "intention_signals": "Aims to ground the RHM voice-chat surface honestly — confirming code-backed controls (modes, decline) and flagging the aspirational RHM-utterance/identity features that the mockup imagines but the inventory does not yet hold.",
+  "novelty": "The RHM 'twin' conversational framing and the cluster of aspirational RHM-* feature ids that fail refcheck.",
+  "contribution": "Contributes the RHM-mobile grounding-audit record: the voice/chat element inventory, the twin-training narrative, and the confirmed/flagged verdicts a fused system would keep as the RHM-mobile grounding evidence.",
+  "summary_for_embedding": "A UI-grounding audit result for the A2 RHM mobile chat mockup (voice orb interface), clustering 17 element dossiers into 3 confirmed and 8 flagged via refcheck and a 3-draw soft jury.",
+  "intention_for_embedding": "To verify each RHM mobile chat element is truthfully grounded in code and flag aspirational RHM feature ids absent from the inventory for operator review."
+}

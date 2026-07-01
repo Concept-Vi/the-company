@@ -1,0 +1,37 @@
+{
+  "project": "company",
+  "path": "bindings/raw.py",
+  "model": "opus",
+  "what_it_does": "Defines a single radial-view BINDING dict named 'raw' whose sectors are the distinct `kind` values present in the store, with radius from time and order by count, plus operator-facing meta {name, is, fills, why}.",
+  "observations": [
+    "angle_from='kind', radius_from='time', order_by='count'.",
+    "Described as 'THE DATA-DRIVEN DEFAULT — no hardcode' since sectors are whatever kinds exist in the store.",
+    "meta describes each dot as one event, slice=kind, distance-from-centre=how long ago (centre=now).",
+    "Comments mark the meta as a TENTATIVE SEED field-set (name/is/fills/why) pending Tim/DNA ratification, journey-gated by OPERATOR-SURFACE-LOOP.md OQ1-4.",
+    "Notes the operator never sees machine names; references composition legibility shape ch-2mnxl9j0."
+  ],
+  "standouts": [
+    "Self-describes as the data-driven default view with no hardcoded sectors."
+  ],
+  "conventions": [
+    "Same meta field-set (name/is/fills/why) as bindings/by_lens.py and the broader SEED legibility shape.",
+    "Operator-law: never expose machine names; plain-language meaning lives in the binding.",
+    "Marks copy TENTATIVE pending ratification."
+  ],
+  "concerns": [],
+  "notes": "The default live-activity radial view: sectors are the kinds present in the store, distance is recency.",
+  "questions": [
+    "Where is the time->radius mapping (centre=now) actually computed and rendered?"
+  ],
+  "purpose_vs_actual": "Match — states it is the data-driven default kinds-by-time view and provides exactly that.",
+  "apparent_themes": [
+    "data-driven views (no hardcoded sectors)",
+    "operator legibility / plain-language meaning",
+    "recency-as-distance spatial metaphor"
+  ],
+  "intention_signals": "Trying to give the operator an at-a-glance live map of activity where the categories emerge from the data itself rather than being predeclared.",
+  "novelty": "n/a",
+  "contribution": "Contributes the default radial binding mapping store `kind` to sectors and time to radius, plus the operator-facing description of the live-activity view.",
+  "summary_for_embedding": "A radial-view binding 'raw' whose sectors are the distinct kinds in the store and whose radius is recency, with operator-facing meaning copy.",
+  "intention_for_embedding": "To give an operator an at-a-glance, data-driven live map of what kinds of things are happening and how recently."
+}

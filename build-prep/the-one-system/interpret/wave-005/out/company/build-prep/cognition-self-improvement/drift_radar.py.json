@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/drift_radar.py",
+  "model": "opus",
+  "what_it_does": "A runnable analysis script that scans the repo-space embedding index (587 file-digest vectors) on two channels: Channel A (BUILT-TWICE) computes all-pairs cosine over code:// vectors, filters known-intentional nearness via a deterministic relation() function, union-finds the rest into clusters, sends each cluster to a judge_drift role, and marks confirmed built_twice/overlap clusters; Channel B (DOC-VS-CODE) compares each AGENTS.md vector to its module's file centroid and reports low-similarity docs as drift candidates. Writes findings to .build/drift/findings.json and never auto-fixes.",
+  "observations": [
+    "Operates over space='repo' via store.vector_index; cos() is hand-rolled (no numpy).",
+    "Comments record a real prior bug: the first run filtered on bare 'code://' but index keys are wrapped 'vec://code://<path>#space=repo', so it swept an empty set (0/587) — caught by zero-is-suspicious.",
+    "Skips absolute-path records and stale/deleted-file records explicitly, with inline rationale.",
+    "relation() encodes a closed vocabulary of intentional-nearness types: test-of, summary-of (ANCHOR/README), series-sibling (numbered docs); these are bucketed separately, never judged.",
+    "Conservative thresholds as constants: PAIR_T=0.82, DOC_T=0.45, MAX_CLUSTERS=24.",
+    "Channel B is deterministic/report-only this pass; only Channel A drives the LLM judge and marks.",
+    "Confirmed clusters become marks via s.mark with mark_type built_twice/overlap, direction=surface (operator decides), tagged source_pass='drift-radar-2026-06-10'.",
+    "Explicit floor stated in docstring: 'judges + marks + reports — never auto-fixes, never resolves.'"
+  ],
+  "standouts": [
+    "The judge-as-false-positive-guard design: cosine nearness only proposes; a closed-vocabulary judge_drift confirms built-twice/overlap/distinct before anything is marked.",
+    "relation() as the 'a judgment the model kept misfiring on becomes a data check' pattern (cited as the same arc as refcheck/prose_check, labeled GC11).",
+    "The marks are surface-direction only — render-not-judge — keeping the operator as the decider."
+  ],
+  "conventions": [
+    "Follows repo law: render/surface not resolve; never auto-fixes (reflects-never-owns at the analysis layer).",
+    "Dense inline comments documenting the bug history and skip-reasons, consistent with the no-speculation/evidence discipline.",
+    "Hardcodes os.chdir and sys.path to /home/tim/company — a build-prep one-off script convention, not library code."
+  ],
+  "concerns": [
+    "All-pairs O(n^2) cosine over ~587 vectors in pure Python with no early pruning; fine at this size but not generalized.",
+    "os.chdir('/home/tim/company') and absolute sys.path make it environment-bound and non-portable."
+  ],
+  "notes": "The drift-radar engine: embeds the whole repo, cosine-clusters near-duplicate files, filters known-intentional pairs, has an LLM judge confirm built-twice/overlap, and surfaces marks for the operator — never fixes.",
+  "questions": [
+    "Where is judge_drift's prompt/closed vocabulary defined (the role definition), since this file only invokes it by name?",
+    "Is .build/drift/findings.json the input to DRIFT-RADAR-REPORT.md (the lead's judgment layer referenced in the docstring)?"
+  ],
+  "purpose_vs_actual": "Match — docstring describes the two-channel drift radar with judge-then-mark and report-only doc channel, and the code implements exactly that.",
+  "apparent_themes": [
+    "Drift detection as a measurable, automatable concern",
+    "Determinism over model-confidence (relation() pre-filter, deterministic doc channel)",
+    "Surface/render-not-resolve governance",
+    "Self-improving cognition reading the system's own corpus"
+  ],
+  "intention_signals": "Trying to find duplicated/forked code and doc-vs-code divergence across the whole repo automatically, while guarding hard against false positives and never overstepping into auto-fixing — the operator stays the decider.",
+  "novelty": "Using the repo's own embedding index plus a closed-vocabulary judge to detect 'built-twice' code, with a deterministic intent-relation filter to subtract by-design nearness (tests, anchors, series) before judging.",
+  "contribution": "Contributes the executable mechanism for whole-repo duplication/drift detection: vector-clustering + intent-relation filtering + judge-confirmed marking + doc-vs-centroid drift candidates, all surface-only.",
+  "summary_for_embedding": "A two-channel drift-radar script that cosine-clusters repo file embeddings to find built-twice code (judge-confirmed, marked surface-only) and flags AGENTS.md docs that drifted from their module's code centroid.",
+  "intention_for_embedding": "To automatically detect duplicated code and doc-code drift across the whole Company repo and surface confirmed findings as operator-decidable marks without ever auto-fixing."
+}

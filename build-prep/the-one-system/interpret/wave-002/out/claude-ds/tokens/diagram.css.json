@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/diagram.css",
+  "model": "opus",
+  "what_it_does": "Defines a diagram vocabulary as tokens and static primitives: stroke weights/colours, node shape/size/padding/icon tokens, connector and arrowhead styles, dash patterns, and an edge-kind colour map reusing surface-zone inks. Provides static diagram primitives: a .dgm grid container, an absolute SVG .dgm-layer for connectors behind nodes, a .dgm-node with icon slot and label, an active state, and connector stroke presets (flow/dep/ref/rej/comm/bi) for the SVG layer.",
+  "observations": [
+    "Documents an intended future spec shape for a generator: nodes[{id,label,shape,zone,icon}], edges[{from,to,kind,label}], kind in flow|dependency|reference|rejected",
+    "Stroke weights hair/regular/bold (1/1.5/2.5px); stroke colours derive from --hairline-strong/--hairline with color-mix(var(--ink)) fallbacks",
+    "Node tokens reference --r-md, --s-3/--s-4, --space-fluid-md; node fill is #ffffff, edge is --hairline-strong",
+    "Edge-kind colour map: flow=--accent-gold (active path), dependency/reference/rejected from zone inks, communication from --comm-line (green) with hex fallbacks",
+    "Dash patterns differ by edge kind: ref 2 7, dep 6 5; rejected reuses the dep dash",
+    ".dgm-layer is pointer-events:none, overflow:visible, z-index 0 behind nodes (z-index 1)",
+    ".dgm-node[data-active] swaps to --glow-active and --vi-edge border; icon box uses color-mix(currentColor 10%) background tinted by --zone-ink",
+    "Connector presets are SVG stroke classes (fill:none, round caps/joins); --dgm-edge--bi notes markers set in the solver"
+  ],
+  "standouts": [
+    "Edge semantics are encoded as both colour (zone inks) and dash pattern, so a dependency vs reference vs rejected edge is legible by line style as well as hue",
+    "Node fill reuses surface-zone roles so a source node and a decision node carry their semantic colour for free",
+    "Gold reserved for the active/flow path, consistent with the system's gold-for-the-key-thing rule"
+  ],
+  "conventions": [
+    "Tokenise the language first, defer the generative component (components come after the language)",
+    "Static primitives emit the same markup the future generator will, keeping hand-built and generated diagrams identical",
+    "Heavy token referencing (--hairline, --r-md, --s-*, zone inks, --elev-1, --glow-active) with hex fallbacks",
+    "@kind annotations on dash/other tokens consistent with token tagging"
+  ],
+  "concerns": [],
+  "notes": "A diagram design language: tokens for strokes/nodes/connectors plus zone-coloured, dash-coded edge kinds, with static .dgm/.dgm-node/.dgm-edge primitives that prefigure a future spec-to-diagram generator.",
+  "questions": [
+    "Where is the future generator/solver that consumes the documented node/edge spec - is it built yet?",
+    "Where are --comm-line, --vi-edge, --zone-*-ink, --glow-active, --elev-1 defined that this file references?"
+  ],
+  "purpose_vs_actual": "Matches: the header states it tokenises the diagram vocabulary (strokes, nodes, connectors, fills) and provides hand-buildable static primitives ahead of the generator, and the file delivers exactly that plus the intended spec shape as documentation.",
+  "apparent_themes": [
+    "language before component (tokenise vocabulary, defer the generator)",
+    "semantic colour reuse (zone inks carry node/edge meaning)",
+    "multi-channel legibility (colour + dash encode edge kind)",
+    "every diagram looks from the same hand (system coherence)",
+    "reserved gold for the active path"
+  ],
+  "intention_signals": "Aims to establish a single coherent visual language for diagrams (icons, lines, shapes) so that any diagram - hand-built now or generated later - looks unified and carries semantic meaning through reused zone colours and edge styles, with a documented spec reserved for a future spec-to-diagram generator.",
+  "novelty": "Pre-defining a diagram generator's data spec inside the token file's header, and encoding edge semantics through both zone-derived colour and per-kind dash patterns while reusing the surface zone roles for node fills.",
+  "contribution": "Contributes the diagram vocabulary: stroke/node/connector/icon tokens, the edge-kind colour and dash map keyed to zones, the static .dgm container/layer/node/edge primitives, and the documented future generator spec shape.",
+  "summary_for_embedding": "A CSS file defining a diagram design language: tokens for stroke weights, node shapes/sizes, connectors and arrowheads, a zone-derived edge-kind colour and dash map, plus static .dgm/.dgm-node/.dgm-edge primitives and a documented future generator spec.",
+  "intention_for_embedding": "To establish one coherent visual language for diagrams so hand-built and future-generated diagrams look from the same hand and carry semantic meaning via reused zone colours and dash-coded edge kinds, ahead of building the spec-to-diagram generator component."
+}

@@ -1,0 +1,37 @@
+{
+  "project": "claude-ds",
+  "path": "components/Tabs.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration file for a Tabs React component. Declares a TabItem interface ({id?, label}), a TabsProps interface extending HTMLAttributes<HTMLDivElement> (with onChange omitted/redefined), and the Tabs function plus default export.",
+  "observations": [
+    "TabsProps.items accepts an Array of TabItem OR string (string shorthand allowed)",
+    "value and onChange are optional, making the component controllable but not requiring it",
+    "onChange signature is (id: string, e: React.MouseEvent) => void — passes both the tab id and the click event",
+    "Uses Omit<HTMLAttributes, 'onChange'> to replace the native onChange with the custom one",
+    "JSDoc comment describes it as a 'Dashboard tab bar' where the active tab gets a 'gold underline'"
+  ],
+  "standouts": [
+    "The JSDoc ties the type to a specific visual treatment ('gold underline'), embedding design intent in the type declaration"
+  ],
+  "conventions": [
+    "Standard React .d.ts pattern: import * as React, named export + default export of the same component",
+    "Controlled-component convention via value/onChange props"
+  ],
+  "concerns": [],
+  "notes": "Type contract for a controlled Tabs component; items can be strings or {id,label}, active tab gets a gold underline.",
+  "questions": [
+    "What is the default/uncontrolled behavior when value is omitted — does the .jsx track internal state?",
+    "When items are strings, what becomes the id used in onChange?"
+  ],
+  "purpose_vs_actual": "n/a — declaration file; the JSDoc 'Dashboard tab bar' purpose matches the declared shape.",
+  "apparent_themes": [
+    "controlled-component design",
+    "design intent encoded in types (gold underline)",
+    "flexible input shape (string | object)"
+  ],
+  "intention_signals": "Aims to give consumers a typed, controllable tab bar with minimal-boilerplate input (string shorthand) while exposing the click event for richer handling.",
+  "novelty": "Embedding a concrete visual treatment ('gold underline') directly in the type's JSDoc.",
+  "contribution": "Contributes the typed public contract for the Tabs component — the string|object item flexibility and the (id, event) onChange signature a fused system would keep for tab interaction.",
+  "summary_for_embedding": "TypeScript declaration for a controlled React Tabs component with TabItem/TabsProps interfaces, string-or-object items, and an (id, MouseEvent) onChange.",
+  "intention_for_embedding": "To provide the typed public API for a dashboard tab bar component with a gold-underline active state."
+}

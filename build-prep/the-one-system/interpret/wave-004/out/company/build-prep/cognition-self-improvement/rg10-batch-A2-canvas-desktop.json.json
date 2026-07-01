@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-A2-canvas-desktop.json",
+  "model": "opus",
+  "what_it_does": "A grounding/confirmation result for the A2-canvas-desktop.html mockup (the 'Running Chain' workspace). Holds 31 candidate UI-element dossiers reduced to 17 clusters, each with a ui:// address, capability tags, a grounding flag (built/proposed), a how-to/what/what-you-can-do triple, a maps_to_feature inventory id, and a 3-draw jury verdict that sorts each cluster into 'confirmed' (7) or 'flagged' (12).",
+  "observations": [
+    "Top-level ground block describes the screen as a live map of an active pipeline where nodes execute or wait; lists click-to-inspect, drag-to-link, toolbar-mode actions.",
+    "Counts: n_candidates 31, n_dossiers 31, n_clusters 17.",
+    "Each dossier carries capabilities from a fixed vocabulary: pointable, spotlit, presentable, openable, driven.",
+    "grounding is either 'built' (points at a real code region like canvas/app/src/regions/Toolbar.tsx or NodeShape.tsx) or 'proposed' (mockup-only, no code path).",
+    "Jury structure: votes_grounded / votes_ungrounded out of n=3, with unanimous + quorum booleans driving the verdict.",
+    "Two flag mechanisms appear: Layer 1 refcheck (deterministic 'feature fabrication' when maps_to_feature is not an inventory id nor 'proposed') and Layer 2 accuracy jury (SOFT, 'variance not error', flags when no quorum agrees the dossier is grounded).",
+    "Some clusters are large (RUN-presence cluster_size 4, RUN-force cluster_size 4) collapsing multiple candidate indices into one dossier.",
+    "Flagged-for-fabrication features include RUN-force, CAN-modes; the tabbar dossier got unanimous jury approval yet was still flagged purely on the refcheck fabrication of 'CAN-modes'."
+  ],
+  "standouts": [
+    "The two-layer judging design: a hard deterministic refcheck floor plus a soft probabilistic accuracy jury, each able to flag independently.",
+    "Explicit 'feature fabrication' detection comparing maps_to_feature against an inventory id whitelist or the literal 'proposed'.",
+    "Honesty framing in how-to text distinguishing 'built' code-backed elements from 'mockup-only' proposed ones."
+  ],
+  "conventions": [
+    "Follows a ui://<region>/<element> address scheme.",
+    "Uses the howto triple (what / what_you_can_do / how_to_change) consistently across every dossier.",
+    "Separates results into 'confirmed' and 'flagged' arrays at top level.",
+    "Capability and grounding values come from closed vocabularies."
+  ],
+  "concerns": [
+    "A dossier can have a unanimous true jury verdict and still land in 'flagged' solely due to a refcheck fabrication (e.g. CAN-modes tabbar) — the two layers can disagree, which a reader must reconcile.",
+    "maps_to_feature 'proposed' is used both as a sentinel and as an actual feature mapping, conflating 'unmapped' with 'intentionally proposed'."
+  ],
+  "notes": "This is the desktop-canvas slice of an automated UI-grounding audit: each clickable element is judged for whether its description is truthfully backed by real code, with confirmed vs flagged buckets.",
+  "questions": [
+    "Where is the authoritative inventory of valid maps_to_feature ids that the refcheck validates against?",
+    "What downstream consumes the 'flagged' bucket — is operator scrutiny a manual review step or a re-run?"
+  ],
+  "purpose_vs_actual": "Matches: the file's stated screen-grounding purpose is exactly what the data structure delivers — a per-element grounding audit with verdicts.",
+  "apparent_themes": [
+    "Truthful grounding of UI affordances to real code paths",
+    "Multi-layer adjudication (deterministic floor + soft jury)",
+    "Honesty about built-vs-proposed state",
+    "Addressable, capability-tagged UI elements"
+  ],
+  "intention_signals": "Aims to verify that every interactive element on a generated mockup is honestly describable — that its claimed feature and how-to actually map to built code — and to surface the doubtful ones for human review rather than silently asserting them.",
+  "novelty": "The hybrid refcheck-floor-plus-soft-jury verdict with explicit 'variance not error' framing, and feature-fabrication detection against an inventory whitelist.",
+  "contribution": "Contributes a worked grounding-audit record for the desktop canvas surface: the address/capability/grounding/feature schema, the two-layer verdict model, and concrete examples of confirmed and flagged elements that a fused system would keep as the canvas-desktop grounding evidence.",
+  "summary_for_embedding": "A UI-grounding audit result for the A2 canvas-desktop 'Running Chain' mockup, clustering 31 element dossiers into confirmed and flagged buckets via a deterministic refcheck floor and a 3-draw soft accuracy jury.",
+  "intention_for_embedding": "To verify each interactive canvas-desktop element is truthfully grounded in real code and flag doubtful or fabricated feature mappings for operator review."
+}

@@ -1,0 +1,38 @@
+{
+  "project": "company",
+  "path": "axes/resolution.py",
+  "model": "opus",
+  "what_it_does": "Declares the RESOLUTION/detail axis as a module-level AXIS dict: id/namespace 'resolution', a single discrete field 'grain' (coarse|medium|fine), value_source 'live', and a long description defining grain as multi-resolution levels-of-detail with two facets (extraction-time forward-stepping and read-time multi-scale rollup) unified into one axis.",
+  "observations": [
+    "AXIS dict: id='resolution', namespace='resolution', fields={'grain':'discrete'}, value_source='live'",
+    "grain values: coarse | medium | fine — described as 'the same thing zoomed', the MRL grain",
+    "desc records a dated decision (resolved 2026-06-22, 'Tim's STEPPED cascade')",
+    "Facet (a): EXTRACTION-TIME forward-stepping — coarse on all, step deeper in-pass per chunk by its own coarse output's kind (decision/spec/discussion->fine; log->stop), FORWARD-ONLY, never re-extract, no up-projection",
+    "Facet (b): READ-TIME multi-scale ROLLUP — a subset projection of the stored superset (determine-many)",
+    "Asserts the dragnet grain axis (recollection commit 4207e75) + multi-scale embeddings = ONE axis, not two; never-re-extract holds throughout"
+  ],
+  "standouts": [
+    "Unifies two facets (extraction forward-stepping and read-time rollup) into a single axis, with an explicit dated design decision and a referenced commit (4207e75)",
+    "Encodes the 'never re-extract / forward-only' invariant directly in the axis description",
+    "Per-chunk content-kind routing (decision/spec/discussion->fine, log->stop) embedded as the stepping rule"
+  ],
+  "conventions": [
+    "Follows the same AXIS declaration pattern as axes/register.py",
+    "Pure declarative data module, no logic",
+    "Carries design rationale and a provenance date/commit inside the desc string"
+  ],
+  "concerns": [
+    "Substantial design decision and invariants live only in a free-text desc string, making them non-machine-enforced from this file"
+  ],
+  "notes": "If briefing someone: this is the detail/grain axis — one axis covering both extraction-time forward-stepping (coarse->fine per chunk, never re-extract) and read-time multi-scale rollup.",
+  "questions": [
+    "Where are the extraction-time stepping rules and read-time rollup actually implemented and enforced, since this file only declares the axis?"
+  ],
+  "purpose_vs_actual": "Matches — module comment and AXIS dict describe the resolution/grain axis; the desc additionally records the unifying design decision.",
+  "apparent_themes": ["multi-resolution / levels-of-detail", "forward-only never-re-extract invariant", "extraction-time vs read-time facet unification", "decision provenance embedded in declarations"],
+  "intention_signals": "Tries to collapse what could be two separate mechanisms (stepped extraction grain and multi-scale read rollup) into one declared axis with a forward-only never-re-extract guarantee.",
+  "novelty": "One-axis-two-facets framing of resolution, plus a content-kind-driven in-pass forward-stepping extraction rule, recorded with its decision date and commit.",
+  "contribution": "Contributes the resolution/grain axis declaration and the unified stepped-cascade detail model (extraction forward-stepping + read-time rollup, never re-extract).",
+  "summary_for_embedding": "Python AXIS declaration for the resolution/grain axis: discrete coarse/medium/fine field, live value_source, unifying extraction-time forward-stepping and read-time multi-scale rollup into one never-re-extract levels-of-detail axis.",
+  "intention_for_embedding": "To define detail/grain as a single live axis covering both stepped extraction and multi-scale read rollup under a forward-only never-re-extract invariant."
+}

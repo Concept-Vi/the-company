@@ -1,0 +1,41 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/platform.css",
+  "model": "opus",
+  "what_it_does": "Local stylesheet for the 'platform' UI kit, layering concrete component styles (shell grid, sidebar nav, topbar, buttons, search, media tiles, forms, checkboxes, dropzone, a fixed chats pill, and a full calendar with task rows and colored chips) on top of the shared colors_and_type.css token base.",
+  "observations": [
+    "Header comment declares it as 'local styles on top of colors_and_type.css'.",
+    "Organized into labeled sections via comment banners (Shell, Sidebar, Top bar, Screen header, Buttons, Media tiles, Calendar, etc.).",
+    "Heavy use of var(--token) for color/type/space/radius/shadow/easing (e.g. --fg-primary, --accent-gold, --r-md, --shadow-xs, --ease-out).",
+    "Defines a two-column shell grid (280px sidebar + 1fr main) sized to 100vh with body overflow hidden.",
+    "Button system has many modifier classes: --outline, --primary, --dashed, --ghost, --dark, --icon-only.",
+    "Uses dashed borders and 'slot' placeholders (.cv-logo-slot, .cv-slot) as a recurring visual motif.",
+    "Calendar section defines colored chip/task variants (green/yellow/orange/red/blue/purple/gray) with paired background + dot colors.",
+    "Contains several raw hex literals not routed through tokens: #F04325 (notification badge red, used twice), #DCD5BC (dropzone hover), #FAF1B6/#FBF1B6 dropzone add, and the full calendar color palette (#5A8A4A, #7E5AB8, #C24A3C, #4A78B8, #E5A547, #E5C547, #A89678, and chip backgrounds).",
+    "All cv- prefixed class names; namespaced to the ConceptV design system."
+  ],
+  "standouts": [
+    "The calendar block carries its own bespoke multi-color palette as hardcoded hex pairs rather than tokens.",
+    "The recurring dashed-border 'slot'/'placeholder' aesthetic suggests a deliberate unfinished/composable look."
+  ],
+  "conventions": [
+    "Follows the design-system rule of consuming design values via var() for the majority of color/space/type.",
+    "Breaks the 'no raw hex in consumers' non-negotiable in several places (notification reds, dropzone colors, calendar palette).",
+    "Uses the cv- BEM-ish naming convention (.cv-btn--primary, .cv-cal-chip.green)."
+  ],
+  "concerns": [
+    "Hardcoded hex colors (#F04325 duplicated, dropzone and calendar palettes) are drift candidates per the system's single-source-of-truth rule.",
+    "body { overflow: hidden } plus height:100vh assumes a fixed full-viewport shell, which can clip content on small screens."
+  ],
+  "notes": "The platform kit's component stylesheet — mostly tokenized, but the notification reds and the entire calendar color palette are baked-in hex that the design system would expect as tokens.",
+  "questions": [
+    "Should the calendar's category colors and the notification red (#F04325) be promoted to design tokens?"
+  ],
+  "purpose_vs_actual": "Matches: the header says 'local styles on top of colors_and_type.css' and that is exactly what it provides.",
+  "apparent_themes": ["token-referenced styling", "shell/sidebar app layout", "dashed-slot placeholder aesthetic", "calendar + media management UI"],
+  "intention_signals": "Provides the concrete visual layer for a platform-style screen kit (calendar, gallery) by composing shared tokens into reusable cv- component classes.",
+  "novelty": "The dashed-border 'slot' motif and the gold-accented platform chrome give it a distinct ConceptV visual identity.",
+  "contribution": "Brings a concrete, ConceptV-branded component stylesheet for an app shell (sidebar+main, topbar, buttons, search, tiles, forms, calendar) keyed to the shared token base.",
+  "summary_for_embedding": "A ConceptV platform UI-kit CSS defining shell, sidebar, topbar, button, search, media-tile, form, and calendar component styles over the shared token base, mostly via var() with some hardcoded hex.",
+  "intention_for_embedding": "To style a platform app-shell screen kit (calendar/gallery) using the shared design tokens with cv- component classes."
+}

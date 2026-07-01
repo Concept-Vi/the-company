@@ -1,0 +1,65 @@
+/* ============================================================
+   ConceptV · ICON LANGUAGE
+   ------------------------------------------------------------
+   Diagrams and chrome lean on icons, so every glyph must look like
+   one hand drew it: a consistent grid, stroke weight, line cap, and
+   an optional two-tone treatment where the accent fill is gold (the
+   decision colour) over a neutral stroke.
+
+   Author icons as inline <svg class="icon"> on a 24 grid with
+   fill="none" and stroke="currentColor"; these tokens enforce the
+   weight and let size/colour come from context.
+   ============================================================ */
+:root {
+  --icon-xs:  14px;
+  --icon-sm:  16px;
+  --icon-md:  20px;   /* default inline */
+  --icon-lg:  24px;
+  --icon-xl:  32px;
+
+  --icon-stroke:       1.6;   /* @kind other */  /* px on the 24 grid */
+  --icon-stroke-bold:  2.2;   /* @kind other */
+  --icon-cap:          round; /* @kind other */
+  --icon-join:         round; /* @kind other */
+
+  --icon-ink:    var(--ink-2);            /* default neutral stroke */
+  --icon-muted:  var(--ink-4);
+  --icon-accent: var(--accent-gold);      /* the two-tone fill / emphasis */
+  --icon-box-bg: color-mix(in oklch, currentColor 11%, transparent);
+}
+
+.icon {
+  width: var(--icon-md); height: var(--icon-md);
+  flex: none;
+  display: inline-block;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--icon-stroke);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--icon-ink);
+}
+.icon.xs { width: var(--icon-xs); height: var(--icon-xs); }
+.icon.sm { width: var(--icon-sm); height: var(--icon-sm); }
+.icon.lg { width: var(--icon-lg); height: var(--icon-lg); }
+.icon.xl { width: var(--icon-xl); height: var(--icon-xl); }
+.icon.bold { stroke-width: var(--icon-stroke-bold); }
+.icon.muted { color: var(--icon-muted); }
+.icon.accent { color: var(--icon-accent); }
+
+/* two-tone: neutral stroke + a gold-filled accent sub-path
+   (give the accent element class="ic-accent" inside the svg) */
+.icon .ic-accent { fill: var(--icon-accent); stroke: none; }
+
+/* boxed icon — the recurring "icon in a tinted square" chip. Inherits
+   the surrounding zone ink via currentColor when placed in a zone. */
+.icon-box {
+  display: inline-grid; place-items: center;
+  width: var(--icon-box, 32px); height: var(--icon-box, 32px);
+  border-radius: var(--r-sm, 6px);
+  color: var(--zone-ink, var(--accent-bronze));
+  background: var(--icon-box-bg);
+}
+.icon-box.circle { border-radius: 50%; }
+.icon-box > .icon { color: inherit; }

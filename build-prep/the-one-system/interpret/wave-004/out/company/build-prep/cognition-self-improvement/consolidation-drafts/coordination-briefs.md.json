@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/consolidation-drafts/coordination-briefs.md",
+  "model": "opus",
+  "what_it_does": "An analysis/consolidation-draft markdown produced by a consolidation-drafter subagent. It examines two coordination briefs it names as overlap members (build-prep/coordination/COGNITION-BRIEF.md and GUIDED-REVIEW-BRIEF.md) and concludes KEEP SEPARATE — BY DESIGN. The argument: these files are correspondence (signed, session-owned halves of a handshake), not documentation, so merging would orphan two sessions' signatures and erase the deltas the protocol depends on. It inventories what each brief uniquely holds, flags one staleness hazard, and gives a proposed (never-executed) disposition table.",
+  "observations": [
+    "Opens with a do-not-consolidate verdict and frames the two files as correspondence between two live work-lanes, not two descriptions of one system.",
+    "Argues the 'duplicated system-context' is the protocol's error-detection mechanism — each session restating the split in its own words is how mutual understanding is verified.",
+    "Section 3 shows the agreement-substance already consolidated in the authoritative place (WORK-SPLIT.md), with a table mapping each agreement item to its location in both briefs and in WORK-SPLIT.md.",
+    "Cites the truth ladder (live gates > git history > claims board > memory) and the duplicated-ownership-memory fork hazard as the reason per-session restatement matters.",
+    "A unique-content inventory lists what each brief alone holds (cognition's ownership inventory + standing offers vs guided-review's fork-identity + 8-row files-touched map + three C consumer-requirements).",
+    "Surfaces one real issue: a staleness hazard inside COGNITION-BRIEF.md (a 'RESOLVED — one owner' section superseded by a later Tim CORRECTION declaring it genuinely three sessions), with a proposed one-line superseded-pointer fix owned by the cognition session.",
+    "Disposition table: both files keep-as-is, no consolidated file created, nothing retired."
+  ],
+  "standouts": [
+    "The correspondence-not-documentation framing — these are signed handshake halves whose value is in the deltas between restatements, so merging would destroy authorship/provenance.",
+    "The observation that consolidation has ALREADY happened in the right place (WORK-SPLIT.md is the agreement single-source-of-truth) and a second merge would create a competing truth-surface below the board's own ratified ladder.",
+    "The staleness hazard (a reader of COGNITION-BRIEF alone gets the wrong final ownership state) caught precisely because two voices each described the same work as theirs."
+  ],
+  "conventions": [
+    "Consolidation-draft convention: verdict → rationale → unique-content inventory → disposition table; proposed-not-executed, no source touched.",
+    "Treats exchange records like the foundation/exchanges archive (the conversation IS the construction — preserved verbatim, per-voice).",
+    "Subordinate-to-the-board framing (truth ladder; claims-board authoritative over memory).",
+    "Expansion-over-reduction / preserve-in-place; any edit attributed to the owning session's signature."
+  ],
+  "concerns": [
+    "Self-flagged: COGNITION-BRIEF.md alone presents a superseded 'one owner' resolution as final, a real misleading-on-read hazard, mitigated only by the truth ladder unless the proposed pointer line is added.",
+    "References approximate line anchors in runtime/suite.py and dated WORK-SPLIT.md sections that may drift over time."
+  ],
+  "notes": "If briefing someone: this is a no-execute analysis arguing two coordination briefs are signed correspondence between sessions and must stay separate, since the agreement-substance already lives consolidated in WORK-SPLIT.md — plus one staleness fix the cognition session should consider.",
+  "questions": [
+    "Will the cognition session add the proposed superseded-pointer line, or rely on the truth ladder to mitigate the stale 'one owner' section?",
+    "Is the ownership resolution genuinely settled as three sessions with guided-review as forward-owner of surface/FE/wire?",
+    "Are the three C consumer-requirements in GUIDED-REVIEW-BRIEF still the active inputs the cognition build is consuming?"
+  ],
+  "purpose_vs_actual": "Matches. The header states it is a consolidation-draft, proposed-only, nothing executed; the body delivers a keep-separate verdict with rationale, unique-content inventory, one flagged issue, and a never-executed disposition.",
+  "apparent_themes": [
+    "Correspondence-as-primary-source (preserve per-voice, verbatim)",
+    "Restatement-as-verification (the deltas do real coordination work)",
+    "Single-source-of-truth already exists (the board / WORK-SPLIT.md)",
+    "Truth ladder and claims-board-over-memory",
+    "Provenance/authorship preservation against lossy merging"
+  ],
+  "intention_signals": "Trying to prevent a well-intentioned merge that would damage a live coordination protocol — proving the briefs are signed correspondence whose separation is load-bearing, while surfacing the one genuine staleness hazard for the owning session to fix.",
+  "novelty": "The framing of inter-session briefs as a handshake whose redundancy is the error-detection mechanism — duplication that verifies mutual understanding rather than wasting space — is a distinctive justification for non-consolidation.",
+  "contribution": "Contributes a file-local analysis of the two coordination briefs: the correspondence-not-documentation judgment, the per-brief unique-content inventory, and the flagged ownership-staleness hazard with a proposed pointer fix. A fused system would keep this as the recorded reasoning for why signed session correspondence is preserved per-voice.",
+  "summary_for_embedding": "A no-execute consolidation-draft analyzing two coordination briefs (COGNITION-BRIEF and GUIDED-REVIEW-BRIEF), concluding keep-separate as signed inter-session correspondence whose agreement-substance already lives in WORK-SPLIT.md, plus one ownership-staleness flag.",
+  "intention_for_embedding": "To stop a merge that would orphan session signatures and erase coordination deltas, by proving the briefs are correspondence and surfacing the one genuine staleness hazard."
+}

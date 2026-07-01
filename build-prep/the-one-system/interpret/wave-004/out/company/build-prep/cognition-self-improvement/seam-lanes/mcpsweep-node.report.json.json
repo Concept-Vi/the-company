@@ -1,0 +1,44 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/mcpsweep-node.report.json",
+  "model": "opus",
+  "what_it_does": "Build-lane report (JSON record) documenting the consolidation of four flat MCP node tools (create_node/delete_node/apply_node/propose_node) into one `node` tool with op=create|delete|propose|apply, written to mcp_face/tools/node.py. Records the verification done, the tool signature, governance-floor reasoning, and status built-verified.",
+  "observations": [
+    "Lists ops [create, delete, propose, apply] and flat_tools_to_remove for the four originals.",
+    "how_verified describes isolated testing: a throwaway FastMCP plus a real Suite(FsStore, NodeRegistry) mirroring server.py:20-21, firing each op plus error paths, with `company gpu` so propose's brain call was real.",
+    "Documents a FLOOR PROOF: op='apply' on an UNAPPROVED surfaced_id raised GovernanceError ('action code_build requires confirmation (CONFIRM)') — the refusal is treated as the pass.",
+    "States the real signature node(op, graph='', type='', config={}, node_id='', name='', spec='', surfaced_id='') because create/delete, propose, and apply take disjoint param sets.",
+    "Notes authorization is read from the substrate inside Suite.apply_node via guard('code_build', confirmed=self.inbox.is_approved(surfaced_id)) at suite.py:8763 — never a caller flag.",
+    "Records that a real surfaced item s95-code_build was left in the inbox unapproved, deliberately not force-resolved.",
+    "File-disjoint: wrote only mcp_face/tools/node.py, did not touch server.py; not committed."
+  ],
+  "standouts": [
+    "FLOOR PROOF framing: the GovernanceError refusal counts as evidence the floor holds, not as a test failure.",
+    "Deliberate honesty discipline — leaving the unapproved s95-code_build inbox item rather than forging a resolution.",
+    "Signature derived from disjoint per-op param sets with per-op teaching-error validation carrying the steering."
+  ],
+  "conventions": [
+    "Follows a shared seam-lane report schema (lane/module/tool/ops/flat_tools_to_remove/how_verified/status/notes/new_suite_methods).",
+    "Cites exact code addresses (suite.py:8763, server.py:20-21) per the repo's evidence discipline.",
+    "Returns high-signal dicts {op, node_id/address/surfaced_id/path} matching corpus.py, not raw 'ok' strings.",
+    "Verify-in-isolation-not-whole-server pattern stated as a law followed across lanes."
+  ],
+  "concerns": [],
+  "notes": "A build-lane completion record proving one consolidated `node` MCP tool was built and that op=apply introduces no new governance escalation path.",
+  "questions": [
+    "What is the serial 'flat-tool removal pass' that will delete the four originals from server.py, and when does it run?",
+    "Who eventually rejects or approves the leftover s95-code_build inbox item?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is a node-tool consolidation lane report and the body documents exactly that build and its verification.",
+  "apparent_themes": [
+    "Tool consolidation (flat tools to op-dispatched resource tools)",
+    "Governance floor preservation (authorization read from substrate, not caller)",
+    "Verify-by-use and verify-in-isolation discipline",
+    "File-disjoint parallel build hygiene"
+  ],
+  "intention_signals": "Documents an MCP-surface consolidation beat whose central worry is that folding apply into a multi-op tool could open a new escalation path, and proves empirically it does not.",
+  "novelty": "The 'refusal IS the pass' floor-proof and the explicit refusal to force-resolve a real surfaced inbox item as a correctness stance.",
+  "contribution": "Contributes the concrete consolidated `node` tool design (op set, disjoint signature, teaching-error validation) plus a proven governance argument that apply's authorization lives in the Suite, not the face — a reusable seam pattern for other tool-folding lanes.",
+  "summary_for_embedding": "Seam-lane report documenting consolidation of four flat node MCP tools into one op-dispatched `node` tool in mcp_face/tools/node.py, verified in isolation including a GovernanceError floor proof on unapproved apply.",
+  "intention_for_embedding": "To fold the node-related flat MCP tools into a single op-keyed tool while proving the consolidation adds no new governance escalation path."
+}

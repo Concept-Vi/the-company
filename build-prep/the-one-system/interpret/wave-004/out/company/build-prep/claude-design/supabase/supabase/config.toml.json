@@ -1,0 +1,41 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/config.toml",
+  "model": "opus",
+  "what_it_does": "The Supabase CLI project configuration for the 'claude-design' local stack. Sets project_id 'gctunhsuwpaxeatwlmuv' and configures every Supabase subsystem: API (port 15421, public+graphql_public schemas, max_rows 1000), local DB (Postgres major_version 17, port 15432), pooler (disabled), migrations (enabled), seed (./seed.sql), realtime (enabled), Studio (port 15423), inbucket email testing, storage (50MiB limit, S3 protocol + vector buckets on), and auth (site_url 127.0.0.1:3000, signup on, anonymous off, MFA mostly off, no external OAuth providers enabled).",
+  "observations": [
+    "Non-default port block (15421/15432/15423/15424) avoids collision with the standard Supabase local ports.",
+    "TLS for the API is disabled; the additional_redirect_urls lists an https 127.0.0.1:3000 entry.",
+    "auth.email.enable_confirmations = false (no email confirm needed to sign in locally).",
+    "minimum_password_length = 6 and password_requirements empty (weak local defaults).",
+    "experimental.pgdelta enabled = true (new schema-diff engine instead of legacy migra).",
+    "storage.vector and storage.s3_protocol enabled; analytics disabled.",
+    "Many secret-bearing fields use env() substitution (OPENAI_API_KEY, Twilio auth token, S3 keys, OAuth secrets).",
+    "Inline comment notes auto_expose_new_tables field will be removed 2026-10-30."
+  ],
+  "standouts": [
+    "project_id ties this local config to a specific remote Supabase project (the Claude Design connector home).",
+    "Custom port range signals this stack runs alongside other Supabase instances on the same host."
+  ],
+  "conventions": [
+    "Follows the standard supabase-generated config.toml layout, leaving most options at documented defaults with commented examples.",
+    "Uses env() for every secret rather than committing values — matches the repo's secret-handling discipline."
+  ],
+  "concerns": [],
+  "notes": "The local-dev Supabase stack config for the Claude Design connector project; mostly stock defaults with custom 1542x/1543x ports and a pinned remote project_id.",
+  "questions": [
+    "Is the project_id the actual production project, or a placeholder local id?",
+    "Why is API TLS disabled while an https redirect URL is allow-listed?"
+  ],
+  "purpose_vs_actual": "n/a (no stated purpose beyond being the config; content matches a standard Supabase project config).",
+  "apparent_themes": [
+    "local-first development before remote push",
+    "secrets via environment substitution",
+    "fail-safe defaults (anonymous sign-in off, secrets never inline)"
+  ],
+  "intention_signals": "Stand up a reproducible local Supabase stack for the Claude Design connector that mirrors a specific remote project, with secrets externalized and ports chosen to coexist with other stacks.",
+  "novelty": "The deliberately offset port range and the pinned project_id pointing at the connector's remote home.",
+  "contribution": "Provides the concrete runtime/stack configuration (ports, enabled services, auth posture, project_id binding) that the migration set runs against — the environmental anchor for the Claude Design Supabase substrate.",
+  "summary_for_embedding": "Supabase CLI config.toml for the claude-design local stack with custom ports, Postgres 17, pgdelta, vector/S3 storage, env-substituted secrets, and a pinned remote project_id.",
+  "intention_for_embedding": "To configure a reproducible local Supabase development stack mirroring the Claude Design connector's remote project with externalized secrets and non-colliding ports."
+}

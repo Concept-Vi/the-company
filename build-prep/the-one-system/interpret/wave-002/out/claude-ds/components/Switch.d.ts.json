@@ -1,0 +1,30 @@
+{
+  "project": "claude-ds",
+  "path": "components/Switch.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration file for the Switch component: declares a SwitchProps interface extending button HTMLAttributes (omitting onChange) with an optional checked boolean and an onChange callback (next: boolean, e: MouseEvent), and declares the Switch function plus a default export.",
+  "observations": [
+    "Extends React.ButtonHTMLAttributes<HTMLButtonElement> with Omit on 'onChange'",
+    "onChange signature is (next: boolean, e: React.MouseEvent) => void — passes the toggled-to value plus the event",
+    "checked is optional",
+    "Doc comment: 'On/off switch. The track turns gold when checked (gold = active voice).'"
+  ],
+  "standouts": [
+    "The 'gold = active voice' note ties the switch's color semantics to a system-wide meaning convention"
+  ],
+  "conventions": [
+    "Paired .d.ts/.jsx typing convention",
+    "Omit-then-redefine onChange to override the native handler shape",
+    "JSDoc on the interface; default + named export"
+  ],
+  "concerns": [],
+  "notes": "Type contract for an on/off Switch rendered on a button; checked controls state, onChange emits the next boolean plus the event.",
+  "questions": [],
+  "purpose_vs_actual": "Match — declares exactly the props the .jsx implements (checked, onChange).",
+  "apparent_themes": ["typed component contract", "controlled toggle", "system color-semantics (gold = active)"],
+  "intention_signals": "Gives the buildless Switch a typed surface with a boolean-next onChange so consumers get type-safe controlled-toggle usage.",
+  "novelty": "n/a",
+  "contribution": "Contributes the public type signature of the Switch toggle, including the checked prop and the (next, event) onChange contract over a button element.",
+  "summary_for_embedding": "TypeScript declaration for an on/off Switch component on a button with a checked prop and a (next-boolean, event) onChange callback.",
+  "intention_for_embedding": "To provide a typed contract for the design-system's on/off switch toggle."
+}

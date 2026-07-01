@@ -1,0 +1,38 @@
+{
+  "project": "claude-ds",
+  "path": "components/Badge.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React `Badge` function component that renders a single element (default `<span>`) with a computed `cv-badge` className. It maps `tone` and `dot` props to BEM-style modifier classes (`cv-badge--<tone>`, `cv-badge--dot`), merges any caller `className`, passes remaining props through, and renders children inside.",
+  "observations": [
+    "Uses `React.createElement` aliased to `h` rather than JSX, with a `/* global React */` comment implying React is a global rather than imported.",
+    "Header comment states tones map to system voices/states: gold (attention), success/warning/error (status), comm (sage relationship).",
+    "All visual styling is deferred to `.cv-badge` in `tokens/controls.css`; this file carries no styles.",
+    "Class list is assembled then `.filter(Boolean).join(' ')` to drop empty strings.",
+    "`as` prop allows rendering as a different element (default `span`); rest props are spread onto the element.",
+    "Exports both a named `Badge` and a default export of the same."
+  ],
+  "standouts": [
+    "Tone tokens are described as 'voices/states' of a larger system, signalling a shared semantic vocabulary across components."
+  ],
+  "conventions": [
+    "Follows the project's 'token-class wrapper' pattern: component is a thin shell, all visuals come from CSS tokens.",
+    "Follows BEM-ish modifier naming (`cv-badge--<modifier>`).",
+    "Matches the sibling Button/Card pattern (same `h = React.createElement`, same className-assembly idiom, same dual export)."
+  ],
+  "concerns": [],
+  "notes": "A ~20-line presentational label primitive: maps tone/dot props to cv-badge CSS classes; zero styling of its own.",
+  "questions": [
+    "What is the full set of valid `tone` values the CSS actually defines (the comment lists some but not exhaustively)?"
+  ],
+  "purpose_vs_actual": "Match — the header comment ('label primitive, token-class wrapper over .cv-badge') accurately describes the code.",
+  "apparent_themes": [
+    "Single-source-of-truth styling via tokens",
+    "Thin component-as-projection-of-CSS",
+    "Semantic 'voice/state' vocabulary shared across the design system"
+  ],
+  "intention_signals": "Aims to give a typed, named badge primitive whose appearance is entirely governed by design tokens, so the same component recalibrates with the palette/theme without code change.",
+  "novelty": "The framing of badge tones as system 'voices' (gold attention, comm sage relationship) rather than generic semantic colors.",
+  "contribution": "Contributes the status/label primitive of this design system and its tone-to-voice mapping (attention/status/relationship), plus the polymorphic `as` + dot-modifier surface.",
+  "summary_for_embedding": "A React Badge component that wraps the .cv-badge token class, mapping tone and dot props to CSS modifier classes for a token-styled label primitive.",
+  "intention_for_embedding": "To provide a thin, theme-aware label/status badge primitive whose visuals are fully driven by design tokens."
+}

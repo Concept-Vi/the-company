@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-build-2.workflow.js",
+  "model": "opus",
+  "what_it_does": "A workflow script (a build-only loop beat, no commit phase) that runs two file-disjoint build lanes in parallel via a Workflow harness. LANE G9 adds a deterministic verdict-tally reduce-rule to mcp_face/server.py's _REDUCE_RULES and saves a reusable 'verify-jury' cascade (run_items over verify_lens then run_reduce by rule). LANE PANEL builds two new declarative roles in roles/ — develop_option (a MAP role that develops one approach to a decision through one biasing lens) and score_options (a REDUCE role that scores the per-lens approaches and synthesizes a recommendation). It declares meta, a shared LAWS preamble, a JSON output SCHEMA for each lane's report, fires both agents via parallel(), then logs the aggregate.",
+  "observations": [
+    "Top comments mark it BUILD-ONLY with the rationale 'no commit phase — G8 fix; the next loop beat commits'.",
+    "The LAWS preamble enumerates binding rules: read AGENTS.md → MAP.md → STATE.md and module AGENTS.md plus COMPOSITIONS/SYSTEM-GAPS first; LAW-0 UNIFICATION (REUSE-DON'T-PARALLEL); THE FLOOR STAYS (emit no resolve/approve/dispatch, launch no claude -p; a reduce-rule is a pure deterministic function with no model; a role is declarative-direct).",
+    "Lanes are explicitly file-disjoint: G9 touches only mcp_face/server.py, PANEL touches only the two new roles/ files; both forbidden from editing runtime/cognition.py|suite.py|roles.py and roles/AGENTS.md.",
+    "The verdict-tally rule semantics are spelled out: green IFF every verdict=='pass'; 'fail' if any=='fail'; else 'flag' (any 'uncertain').",
+    "GPU note: a verify fire needs chat-4b via `company gpu` / `company up chat-4b --wait`; NO Gemini, NO green-paint.",
+    "Each lane must write a seam-lanes/<lane>.report.json with a fixed shape; the SCHEMA constrains status to built-verified|built-untested|blocked.",
+    "VERIFY BY USE is mandated with concrete assertions (e.g. mock verdict-sets all-pass→green, one-fail→fail, one-uncertain→flag; RoleRegistry().discover(['roles']) shows both new roles live).",
+    "The script notes roles_acceptance will red only on 'drift: [develop_option, score_options]' as EXPECTED because AGENTS.md cannot be edited this beat.",
+    "develop_option's lens vocabulary is mvp-first|risk-first|reuse-first|framework-first|radical-recompose; it runs in a 'panel' mode_scope described as cast-beyond-listening with listening untouched.",
+    "Uses harness primitives phase(), parallel(), agent(label/phase/schema), log()."
+  ],
+  "standouts": [
+    "The floor invariant restated operationally: a reduce-rule must be a pure deterministic function (no model) and the tally derives from sorted(_REDUCE_RULES) so adding the rule auto-appears in reduce_rule_names()/run_reduce description without a second list.",
+    "The option-panels lens set explicitly serves Tim's A/B/C forks — building a faculty that produces biased alternatives then a grafting recommendation."
+  ],
+  "conventions": [
+    "Follows the seam-lane workflow pattern: meta + LAWS + SCHEMA + phase('Build') + parallel([agent,...]) + aggregate log.",
+    "Embeds binding laws as a template-literal preamble prepended to each agent prompt.",
+    "Registry-is-truth / no-hardcoding / additive / fail-loud discipline stated as lane constraints.",
+    "Splits work into file-disjoint lanes to avoid an index race and a mega-commit timeout (the cited G8 fix)."
+  ],
+  "concerns": [],
+  "notes": "This is the build script for one cognition loop beat: it parallel-builds the verify-jury tally+cascade and the option-panels roles, self-verifies by use, and deliberately does not commit.",
+  "questions": [
+    "What is the Workflow harness that provides phase/parallel/agent/log, and how does agent() dispatch a sub-build?",
+    "Where is the canonical cascades registry that save_cascade writes to, and what makes the 'verify-jury' name canonical there?",
+    "What reflects the new roles into roles/AGENTS.md on the 'next beat' the comments reference?"
+  ],
+  "purpose_vs_actual": "Matches: meta.description states G9 tally+cascade ∥ option-panels roles, file-disjoint, build+self-verify by use, no commit — and the two agent prompts implement exactly that.",
+  "apparent_themes": [
+    "Parallel file-disjoint build lanes to avoid contention",
+    "The deterministic floor (no model in reduce-rules; declarative roles)",
+    "Registry-derived behavior (rules and roles discovered, not hardcoded)",
+    "Verification by use against a resident model",
+    "Build/commit separation across loop beats"
+  ],
+  "intention_signals": "It seems to be trying to advance the cognition self-improvement program two gaps at a time — completing the verify-jury (the deterministic tally over per-lens verdicts plus a saved cascade) and adding an option-developing faculty — while strictly preserving the floor and avoiding the commit-race that motivated the build-only beat design.",
+  "novelty": "Encodes the verdict-tally semantics, the verify-jury cascade composition, and a five-lens option-development faculty directly as parallel agent build instructions with by-use acceptance checks baked in.",
+  "contribution": "Contributes the build specification for the verify-jury tally reduce-rule + saved cascade and the develop_option/score_options option-panel roles, including their exact input/output schemas, lens vocabularies, and the floor/file-disjoint constraints a fused system would keep as the authoring intent for these faculties.",
+  "summary_for_embedding": "A build-only cognition workflow script running two parallel file-disjoint lanes: a deterministic verify-jury verdict-tally reduce-rule plus a saved verify-jury cascade in mcp_face, and two new roles (develop_option MAP, score_options REDUCE) for option panels.",
+  "intention_for_embedding": "To advance the cognition self-improvement gaps by completing the verify-jury (tally + cascade) and adding a lens-biased option-development faculty, building and self-verifying by use without committing."
+}

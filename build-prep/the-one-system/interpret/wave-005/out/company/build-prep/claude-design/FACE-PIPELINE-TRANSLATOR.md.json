@@ -1,0 +1,44 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/FACE-PIPELINE-TRANSLATOR.md",
+  "model": "opus",
+  "what_it_does": "Designs a 'resolution-first JOB-B' Face Pipeline translator: instead of landing a Claude Design export as bespoke React, it turns the same JOB-A bundle (framework-neutral HTML/CSS export) into ARCHETYPE-CATALOG instances and records that resolve through the one engine (renderArchetype + the resolver). It defines six typed pipeline stages (ingest, tag, compose, validate, reconcile, register), the net-new typed contracts (translation-candidate, composed-asset), the mapping from candidate to catalog archetypes, the unification claim (~80% reuse, only the translator is net-new), and status/next.",
+  "observations": [
+    "Frames itself as composition's JOB-B done resolution-first, built INTO the existing claude-design bridge (same JOB-A bundle input), explicitly unified not parallel",
+    "Six numbered stages with their tool tier: ingest (code parser), tag (#71 4B light-model swarm emitting translation-candidates), compose (big cloud-judge model into a valid archetype/component), validate (registry.validate + schemas + decoration-ban + legibility-required + operator-laws), reconcile (RHM + Tim via the decision-surface), register (vi-vision:// address + corpus + resolution + persist -> live)",
+    "Defines the translation-candidate typed shape with source_ref, candidate_archetype (from catalog: graph/selector/instrument/diagram/spatial-material/decision-card), candidate_component (atom/molecule/organism), token_snaps (law-aware snap-to-DNA: gold-budget / foreign-hue-quarantine / equal-lightness), legibility {name,is}",
+    "Gives the candidate->catalog mapping (node-graph->graph, pick-list->selector, dial/gauge->instrument, flow->diagram, material/reveal->spatial-material, decision->decision-card, composed box->organism), reuse-first/dedup before minting",
+    "Asserts ~80% reuse — the only net-new is the TRANSLATOR (ingest parser + candidate type + mapping); everything else wires existing machinery",
+    "States the design/contract is authored NOW render-independent, ahead of Tim adopting Claude Design; the build lands when a real bundle exists; prove-on-one: one seeded face round-trip to live",
+    "Schema for translation-candidate deliberately deferred until the translator builds against a real bundle (grounded, not speculative-ahead)",
+    "Relates to face-pipeline-direction, ARCHETYPE-CATALOG.md, RESOLVER-CONTRACT.md, DECISION-SURFACE-BUILD.md, APPLICATION-STRUCTURE-PACK.md"
+  ],
+  "standouts": [
+    "The resolution-first reframing: a design becomes a TYPED ROW that resolves across the device axis and re-resolves on token/axis change, vs a bespoke-React integration that freezes the design as code",
+    "The two-tier model split: light #71 swarm for extraction-not-judgment tagging, big cloud judge for composition",
+    "The reconcile stage IS the decision-surface (one mechanism, two jobs) and ambiguities become decision-cards the RHM walks Tim through"
+  ],
+  "conventions": [
+    "Uses the Company framework vocabulary heavily: resolution-first, unions-not-bridges (unified not parallel), reuse-first/dedup, fail-loud, registry-is-truth",
+    "Defers concrete schemas until grounded against a real bundle (no-speculative-ahead / epistemic humility)",
+    "Uses vault relations and cross-refs to sibling design docs"
+  ],
+  "concerns": [],
+  "notes": "The contract for translating a Claude Design export into resolvable archetype/component rows (not bespoke React) via a six-stage two-model pipeline that reuses ~80% existing machinery; only the translator is new, built when a real bundle exists.",
+  "questions": [
+    "What exactly is the vi-vision:// address scheme and how does it relate to the run://cas://ui:// schemes in the seam pack?",
+    "Has the prove-on-one round-trip (one seeded face designed -> stages 1-6 -> live) been attempted yet?"
+  ],
+  "purpose_vs_actual": "Matches. It states it is a render-independent design/contract for the resolution-first JOB-B translator authored ahead of adoption, and the body delivers the stages, typed contracts, mapping, and unification, deferring the build.",
+  "apparent_themes": [
+    "resolution-first / everything-compositional (design as a row that resolves, not frozen code)",
+    "reuse-not-parallel (unify into the existing bridge; ~80% reuse)",
+    "two-tier model labor (light extraction swarm + big composition judge)",
+    "the decision-surface as the single reconcile mechanism; fail-loud validation"
+  ],
+  "intention_signals": "Trying to make Tim's Claude-Design-authored faces the system's primary input by turning a design export into typed catalog rows that resolve through the one engine — so a design wears the DNA language, resolves across devices, and re-resolves on change, rather than being hand-merged as bespoke React.",
+  "novelty": "Treating a design import as a typed-row resolution problem (translation-candidate -> composed-asset through archetype catalog) with law-aware token snapping, rather than as code integration.",
+  "contribution": "Contributes the resolution-first translation pipeline design: the six typed stages, the translation-candidate and composed-asset contracts, the candidate->archetype mapping with reuse-first dedup, and the law-aware snap-to-DNA token rules — a fused system would keep this as the compositional inlet that turns design exports into resolvable assets.",
+  "summary_for_embedding": "A render-independent design for a resolution-first Face Pipeline translator that converts a Claude Design HTML/CSS bundle into archetype-catalog instances and resolvable records via six typed stages (ingest, light-model tag, big-model compose, validate, decision-surface reconcile, register), defining the translation-candidate and composed-asset contracts and reusing ~80% existing machinery.",
+  "intention_for_embedding": "Authored ahead of Claude Design adoption to make Tim's designed faces the system's primary input as typed rows that resolve through the one engine, wear the DNA language, and re-resolve on token/axis change, rather than being frozen as hand-written bespoke React."
+}

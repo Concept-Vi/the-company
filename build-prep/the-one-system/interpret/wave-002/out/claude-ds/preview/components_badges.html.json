@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "preview/components_badges.html",
+  "model": "opus",
+  "what_it_does": "A standalone @dsCard preview (group 'Brand') demonstrating small status indicators: filled status dots, soft-fill calendar task chips, status/dropdown pills, and a notification bell with a red count badge plus an avatar.",
+  "observations": [
+    "Comment header `@dsCard group=\"Brand\" name=\"Status dots, chips, bell\" subtitle=\"Dots · task chips · pills · notification badge\" viewport=\"700x260\"`.",
+    "Four labelled rows: Status dots, Task chips, Pills/dropdowns, Bell + avatar.",
+    "Status dots reuse the status colours (#5A8A4A, #E5C547, #E5A547, #C24A3C, #4A78B8, #A89678).",
+    "Task chips pair a soft-fill bg with the matching dot and a label (Site survey, Floorplan v2, Reshoot lobby, Hub copy) — examples drawn from a property/real-estate-ish domain.",
+    "Pills include a status pill, a 'Task Type ▾' dropdown, and a dark 'MENU ▴' pill using --bg-dark/--fg-inverse.",
+    "Bell is an inline SVG with a red circular badge (#F04325) showing '7'; lead notes the badge has no '+'.",
+    "Avatar is a 28px circle on --bg-muted with a placeholder glyph."
+  ],
+  "standouts": [
+    "Doctrine line: status uses filled dots; task chips inherit the dot colour at a soft-fill bg; the bell badge is a small red circle with no '+'.",
+    "The red badge colour #F04325 is hardcoded and distinct from the status-error #C24A3C."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery convention.",
+    "Uses tokens for chrome (--bg-canvas, --r-sm/xs, --bg-dark, --fg-inverse) but hardcodes status/badge hexes inline.",
+    "Reuses the same status hex palette as colors_status.html (consistent across cards) but as literals, not vars."
+  ],
+  "concerns": [
+    "Status/badge colours are hardcoded literals here rather than referenced as tokens, so they could drift from the status colour card if either changes."
+  ],
+  "notes": "A components card showing how status colour translates into dots, task chips, pills, and a no-plus notification badge.",
+  "questions": [
+    "Why is the notification badge #F04325 rather than the defined error token #C24A3C — is the badge a separate intentional colour?"
+  ],
+  "purpose_vs_actual": "Matches — metadata promises dots/chips/pills/badge and the body demonstrates each with usage doctrine.",
+  "apparent_themes": [
+    "Status colour applied consistently across small UI indicators",
+    "Soft-fill chip pattern inheriting a status dot colour",
+    "Minimal notification badge convention (red circle, no plus)"
+  ],
+  "intention_signals": "Aims to show the applied form of the status palette — how the abstract colours become dots, chips, pills, and badges — and to pin the badge convention.",
+  "novelty": "The explicit no-'+' badge rule and the dot-colour-inheriting task-chip pattern.",
+  "contribution": "Contributes the applied status-indicator vocabulary (dots, soft-fill task chips, pills, notification badge, avatar) that a fused system would keep as its small-indicator/badge reference.",
+  "summary_for_embedding": "A Brand-group design-system preview card demonstrating status dots, soft-fill task chips, status/dropdown pills, a red no-plus notification bell badge, and an avatar.",
+  "intention_for_embedding": "To show how the status colour system is applied across small UI indicators and to fix the notification-badge convention."
+}

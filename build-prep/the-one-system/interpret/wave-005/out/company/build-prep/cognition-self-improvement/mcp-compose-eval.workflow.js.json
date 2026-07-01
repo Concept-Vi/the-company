@@ -1,0 +1,44 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/mcp-compose-eval.workflow.js",
+  "model": "opus",
+  "what_it_does": "Defines a Workflow script that evaluates whether the 'company' MCP server is intuitive for composition by dispatching seven parallel fresh agents, each restricted to MCP tools only (no repo/docs reading), to drive real compositional flows (make/check/use/run/discover/feed/ask/tally/propose/gate) and log every point of friction. The collected friction is the deliverable — a prioritised MCP gap list. No code is built or committed.",
+  "observations": [
+    "FRESH constant is a shared agent prompt enforcing MCP-only usage, forbidding repo/AGENTS.md/source reading, and mandating honest friction reporting (smooth runs count as real results).",
+    "Throwaway artifacts must be prefixed 'eval_'; agents may create declarative things (roles, cascades) but never resolve/approve/dispatch/claude-p (a 'FLOOR' rule).",
+    "SCHEMA is a JSON schema with required task/outcome/friction, an outcome enum of smooth|completed-with-friction|blocked, a steps trace, friction array of {tool,confusion,fix}, and a top_gap field.",
+    "Seven tasks A-G cover: full compose loop (make->check->use->reduce->save cascade), ask-the-corpus retrieval, discovery of composable vocabulary, running an existing saved cascade, the feed->ask->tally knowledge loop, running pre-built production-line chains cold, and the governed growth loop (operator memory, propose-not-create, gated cascade 'registration-gauntlet').",
+    "Task A asks agents to build a role 'eval_classify' labelling text as question/statement/command then reduce to counts and save 'eval-classify-flow'.",
+    "Task E feeds the sibling file MCP-DESIGN-PRINCIPLE.md into queryable memory and asks the system its own MCP design rules.",
+    "Task G tests the approval boundary by proposing flow 'eval_g_probe' and running 'registration-gauntlet' with invented feature ids that should be caught by gates.",
+    "Final log reports outcomes per task; returns { evals }."
+  ],
+  "standouts": [
+    "The methodological inversion: friction is treated as the deliverable, not a defect to suppress.",
+    "Fresh-agent isolation rule (MCP-only, no doc reading) to test cold discoverability honestly.",
+    "Task G uses deliberately invented feature ids as an adversarial check that gates catch them."
+  ],
+  "conventions": [
+    "Uses an export const meta {name, description, phases} workflow header convention.",
+    "Uses workflow primitives phase(), parallel(), agent(), log() with per-agent {label, phase, schema}.",
+    "Header comment carries run command and dated rationale attributed to Tim 2026-06-09."
+  ],
+  "concerns": [],
+  "notes": "A self-evaluation harness that fans out fresh MCP-only agents to surface composition friction as a prioritised gap list driving a later sweep.",
+  "questions": [
+    "Where is the Workflow runner that interprets phase/parallel/agent primitives defined?",
+    "What consumes the returned { evals } / how is the gap list aggregated into the sweep?"
+  ],
+  "purpose_vs_actual": "Match — the header states an intuitiveness eval producing a friction-driven gap list, and the script implements exactly that via seven friction-reporting agents.",
+  "apparent_themes": [
+    "Composition-through-MCP as a usability bar",
+    "Cold/fresh evaluation to test discoverability",
+    "Friction-as-signal",
+    "Governed growth with approval gates and operator awareness"
+  ],
+  "intention_signals": "Trying to empirically measure whether the company MCP can be composed intuitively by an agent with no prior knowledge, and to convert every confusion into an actionable design fix, feeding a downstream sweep.",
+  "novelty": "Treating agent friction as a structured, schema-captured deliverable rather than noise, with an adversarial gate-catching probe.",
+  "contribution": "Contributes a reusable self-evaluation pattern that drives fresh MCP-only agents through end-to-end compositional flows and captures friction in a fixed schema as a prioritised gap list.",
+  "summary_for_embedding": "A company Workflow script that dispatches seven fresh MCP-only agents through make/check/use/run/discover/feed/ask/tally/propose/gate flows and captures every friction point in a fixed JSON schema as a prioritised MCP composition gap list.",
+  "intention_for_embedding": "To empirically test whether the company MCP is intuitive for composition by cold agents and turn their friction into an actionable design gap list."
+}

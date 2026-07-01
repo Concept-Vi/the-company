@@ -1,0 +1,53 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/REGISTRY-FILLING-PATTERN.md",
+  "model": "opus",
+  "what_it_does": "A tentative design-capture document defining the Registry-Filling Pattern (GC2): a reusable production-line for growing registries. It names the chain skeleton (SOURCE -> GROUND -> MAP -> DEDUPE -> FLOOR -> JURY -> SURFACE -> [Tim APPROVES] -> WRITE-BACK), explains what each stage requires and the specific failure each prevents, lists the per-instance parameters (the reuse axes), and records three related extensions (GC1 the FLOW registry/MCP consequence already built, GC3 addresses-as-accumulation-points, and standing/next instances).",
+  "observations": [
+    "Marked TENTATIVE, written 2026-06-10, explicitly states Tim has not reviewed it and assumptions are marked",
+    "Opens with Tim's verbatim intent about the high reusability of the registry-filling principle",
+    "Defines the chain in one sentence and as an 8-stage pipeline diagram",
+    "For each stage describes what it REQUIRES, citing RG10 instance numbers (940 candidates, ~550 unique after dedupe)",
+    "The MAP stage names four reusable context-package slots: the unit, parent/neighbour records, the ground, exemplars+closed-vocabularies",
+    "States the law that a model-judgement step is only designed when its context package is designed with it",
+    "A table maps each stage to the observed (not hypothetical) failure it prevents, citing concrete RG10 failures (invented INB-focus/NODE-act ids passing the prompt instruction; the all-940-fail reporting 'done, 0 proposals')",
+    "Lists six per-instance parameters as the reuse axes and asserts everything else should exist ONCE",
+    "GC1 section: the FLOW registry (runtime/flows.py + flows/<id>.py + flows MCP tool) is BUILT 2026-06-10, with repo-AUTHORED / MCP-INVOKED boundary and proposes_only enforced; founding rows registry_generation, transcript_mine, pattern_cluster",
+    "GC3 section: addresses as accumulation points — WRITE-BACK becomes a standing write-path where field families accumulate on the same address, with open design questions",
+    "Standing instances: RG10/ui-addresses (231 confirmed / 320 flagged), the transcript miner (pattern-shaped, missing floor+gate), and next candidates (feature inventory, capability vocab, mark_types/relation_types, model-capability registry)"
+  ],
+  "standouts": [
+    "The failure-prevention table grounds every stage in an observed failure rather than theory — e.g. the FLOOR caught real invented ids despite a verbatim copy-instruction, proving prompt context reduces but does not stop fiction",
+    "The explicit separation of what changes per instance (six parameters) from what should exist exactly ONCE (the skeleton, dedupe, jury, gate, batch state) — the reuse contract",
+    "GC1's one-door split: data-chains go through save_cascade (cascades); code-chains go through repo-authored flows — and the observation that agents default to the ungrounded design even with the grounded module in their own history"
+  ],
+  "conventions": [
+    "Follows the propose-only / operator-gated truth-growth discipline (nothing writes itself)",
+    "Follows flag-never-drop honesty",
+    "Uses the closed-vocabulary + exemplars grounding convention for small models",
+    "Marks tentativeness and assumptions explicitly per the repo's epistemic-humility convention for unreviewed design docs"
+  ],
+  "concerns": [
+    "Self-flagged as unreviewed by Tim with marked assumptions (e.g. ASSUMPTION that memory-writes stay ungated) — a design seed, not a settled spec"
+  ],
+  "notes": "This is the reusable-pattern abstraction extracted from the RG10 run — the named 8-stage registry-growing production line, what each stage prevents, the six reuse axes, and the FLOW-registry consequence already built to enforce grounding.",
+  "questions": [
+    "Has Tim reviewed and confirmed the pattern, especially the ASSUMPTION that memory-writes stay ungated?",
+    "Were the open GC3 design questions (field-family naming, versioning vs in-place, per-consumer projections) resolved?",
+    "Which of the next-candidate registries (feature inventory, capability vocab, etc.) have been instantiated through this pattern?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is the tentative design capture of a reusable registry-filling pattern, and the body delivers the pattern definition, stage requirements, failure table, reuse parameters, and related extensions.",
+  "apparent_themes": [
+    "Reusable composition / identify-the-primitive-once",
+    "Operator-gated truth growth (propose-only)",
+    "Deterministic floor as the no-fiction guarantee",
+    "Grounding small models with designed context packages",
+    "Addresses as accumulating coordinates / altitude-transformation",
+    "Flag-never-drop honesty"
+  ],
+  "intention_signals": "Trying to crystallize the proven RG10 run into a reusable production-line abstraction so that future registries that lack their data entries can be grown the same way once, with the load-bearing pieces (floor, gate, ground) named and the per-instance axes isolated.",
+  "novelty": "The framing of WRITE-BACK evolving from a terminal stage into a standing write-path (GC3 address accumulation), and the explicit law that a model-judgement step is only designed alongside its context package, with the four named reusable context slots.",
+  "contribution": "Contributes the named, staged, reuse-parameterized registry-filling pattern with a failure-grounded justification per stage and the address-accumulation extension — the abstraction that makes the RG10 chain reusable across many registries.",
+  "summary_for_embedding": "A tentative design document defining the reusable Registry-Filling Pattern (GC2): an 8-stage SOURCE-to-WRITE-BACK production line for growing registries with a deterministic floor, model jury, operator gate, six per-instance reuse parameters, and address-accumulation extension.",
+  "intention_for_embedding": "Written to crystallize the proven RG10 registry-generation run into a reusable, parameterized production-line pattern for growing any under-filled registry while keeping the floor, the operator gate, and grounding load-bearing."
+}

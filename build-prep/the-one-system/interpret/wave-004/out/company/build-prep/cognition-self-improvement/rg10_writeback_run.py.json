@@ -1,0 +1,53 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10_writeback_run.py",
+  "model": "opus",
+  "what_it_does": "Executes the operator-approved RG9 write-back. Loads reconciled.json and candidates.json, takes the confirmed-class entries, reconstructs each into the registry_writeback contract shape (address, represents, howto, capabilities, maps_to_feature, mockup_file, outerHTML pulled from the candidate, run/model stamps), then runs a SAFETY PARTITION against the live design/_system/addresses.json: new addresses and byte-identical existing ones go to the safe set, addresses that differ on key fields are held back as curated conflicts. It calls registry_writeback(safe, write=True, skip_already_stamped=True), records Tim's verbatim approve verdict on s107-review via inbox.resolve, and returns a report (submitted/added/skipped/stamped/conflicts-held/unbuildable/total-after).",
+  "observations": [
+    "Imports registry_writeback as wb (sys.path includes design/_system)",
+    "TIM_VERDICT constant holds Tim's verbatim 2026-06-10 approval quote",
+    "Operates only on entries with class=='confirmed'",
+    "candidate_of() resolves a candidate from sources[0] mockup via the rg10-batch artifact's confirmed/flagged sets and cluster_members[0], caching artifacts in arts dict",
+    "Entries that can't resolve a candidate go to unbuildable (reported, not written)",
+    "Writeback entry stamps run='rg10-refined' and model='chat-4b (floor+prose+panel gated)'",
+    "Safety partition compares on cmp_keys=(region, represents, howto, capabilities, maps_to_feature); identical existing entries kept in safe (merge is idempotent), differing ones held as conflicting with differs_on list",
+    "registry_writeback called with write=True, skip_already_stamped=True; every write is git-committed per docstring",
+    "inbox.resolve('s107-review','approve', reason=TIM_VERDICT) records the verdict",
+    "Returns counts derived from report['merged'] statuses (added/skipped) plus stamped/conflicts/unbuildable/registered_after"
+  ],
+  "standouts": [
+    "Records a verbatim human-conversation verdict as a constant tied to a specific inbox item (s107-review)",
+    "Safety partition refuses to fold a curated-content collision into a block-approve — conflicting curated entries become their own decision",
+    "All-or-nothing, fail-loud, git-committed write-back delegated to the existing registry_writeback module (reuse-don't-parallel)",
+    "Mentions 385 confirmed entries in docstring (this is the actual apply run)"
+  ],
+  "conventions": [
+    "Reuses registry_writeback rather than reimplementing merge/stamp/re-parse",
+    "Same path-bootstrap + main()->dict + __main__ json.dumps(default=str) pattern as sibling scripts",
+    "Stamp every written entry with run + model provenance"
+  ],
+  "concerns": [
+    "candidate_of has nontrivial index logic (cluster_members[0] into the per-mockup candidate slice) that silently yields unbuildable if the index doesn't line up",
+    "wb._dossier_to_entry is a private (underscore) function called from outside its module",
+    "Bare json.load(open(...)) on several files with no missing-file handling",
+    "Hardcoded model string and run label as literals"
+  ],
+  "notes": "The RG9 apply step: takes operator-approved confirmed dossiers, partitions out curated-content collisions, writes only the safe set through the existing registry_writeback (git-committed), and records Tim's verbatim approve verdict on s107-review.",
+  "questions": [
+    "What exactly does registry_writeback's merge/stamp/re-parse do and what is its report schema (merged/stamped/registered_after)?",
+    "Why does the docstring reference 385 entries while sibling surface/walk scripts reference different counts (190/463) — are these different run snapshots?",
+    "What is region (a cmp_key) and where does it come from since it isn't in the dossier shape seen in the batch files?"
+  ],
+  "purpose_vs_actual": "Match — performs the operator-approved write-back with a curated-conflict safety partition and verdict recording, exactly as the docstring describes.",
+  "apparent_themes": [
+    "Approval-authorizes-action (the verdict is the trigger and is recorded with provenance)",
+    "Safety partition / never overwrite curated content silently",
+    "All-or-nothing, fail-loud, reversible (git-committed) writes",
+    "Provenance stamping on every generated entry"
+  ],
+  "intention_signals": "Trying to safely grow the address registry from an approved autonomous run while guaranteeing that nothing the operator curated is overwritten without a separate explicit decision, and that the human approval is durably recorded alongside the write.",
+  "novelty": "The pre-write safety partition that separates new/identical/conflicting against live curated entries, and binding the write to a stored verbatim operator verdict.",
+  "contribution": "Contributes the approved write-back runner: dossier→writeback-contract reconstruction, a curated-conflict safety partition, delegation to registry_writeback, and verdict recording on the originating inbox item.",
+  "summary_for_embedding": "Python script (RG9) that applies operator-approved confirmed RG10 dossiers to the address registry via registry_writeback after a safety partition that holds back curated-content conflicts, and records Tim's verbatim approve verdict on s107-review.",
+  "intention_for_embedding": "To safely write an approved autonomous registry run into the live address registry without clobbering curated entries, recording the operator's approval as the authorizing, reversible action."
+}

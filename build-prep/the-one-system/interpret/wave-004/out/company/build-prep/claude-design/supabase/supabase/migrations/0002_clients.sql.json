@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0002_clients.sql",
+  "model": "opus",
+  "what_it_does": "Creates public.clients, the client registry: one row per remote-MCP client holding its full policy — id, label, allowed_tools (jsonb mapping tool -> {remote_posture, allowed ops, scope}), scopes (text[]), approval_mode, channels (text[]), default posture, status, timestamps. Adds table+column comments, grants ALL to service_role+postgres and SELECT to anon+authenticated, then seeds the first client 'claude-design' with a per-tool allow-list (mostly safe/read tools plus design/write tools cc_channel.send and claude_design.{ingest_bundle,submit_seed,walk_decision}), scopes company:design:read/write, operator-gate approval, the design-pipeline channel, and active status (on conflict do nothing).",
+  "observations": [
+    "allowed_tools is a structured jsonb policy per tool: remote_posture (safe|design|consent|hazard|locked), allowed ops (list or null=all), scope (read|write).",
+    "Column comment defines the fail-closed rule: a tool absent or with posture not in {safe,design} is NOT exposed.",
+    "Header documents this as the Supabase home of what was remote_exposure.json (config-into-company fold).",
+    "Both the Edge Function gate and the Python gateway resolve policy from this table (registry-is-truth; gateway owns no private allow-list).",
+    "Seed grants read on a broad set of company tools (object_info, corpus, sessions, channels, marks, etc.) and write on only two design tools.",
+    "approval_mode defaults to 'operator-gate'; posture defaults to 'safe'; status defaults to 'active'."
+  ],
+  "standouts": [
+    "Single-source-of-truth policy model: one row fully describes a client's remote surface, consumed by two independent enforcers.",
+    "The folding of a former JSON config file (remote_exposure.json) into a queryable DB row.",
+    "Fail-closed posture encoded in the data shape (absence or wrong posture = not exposed)."
+  ],
+  "conventions": [
+    "Idempotent create-if-not-exists + on conflict do nothing seed.",
+    "Heavy explanatory comments documenting the policy semantics and provenance.",
+    "Same grant pattern as 0001 (service_role all, read roles select)."
+  ],
+  "concerns": [
+    "posture/approval_mode/status/scope are free-text with conventions documented only in comments, no CHECK/enum constraints.",
+    "anon SELECT exposes the full client policy (allowed tools/scopes/channels) to the public anon key.",
+    "Enforcement of the 'posture not in {safe,design} => not exposed' rule lives in the consumers, not the schema; a malformed allowed_tools row relies on the gate to fail closed."
+  ],
+  "notes": "The remote-MCP client registry — one row per client is the single source of truth for which tools/ops/scopes/channels it may touch; seeds claude-design as the first fail-closed client.",
+  "questions": [
+    "Is there a shared posture registry the rows will later reference (the comment hints at it), or does each row carry its full allow-list indefinitely?",
+    "How is allowed_tools jsonb validated against the documented shape before the gate trusts it?"
+  ],
+  "purpose_vs_actual": "Matches: stated as the one place a client's remote-MCP policy lives; the DDL+seed implement exactly that registry with the documented fields.",
+  "apparent_themes": [
+    "registry-is-truth (one authoritative policy source, multiple enforcers)",
+    "fail-closed least-privilege exposure",
+    "config-as-data (folding files into queryable DB state)",
+    "per-tool, per-op granularity of access"
+  ],
+  "intention_signals": "Centralize remote-client access policy into one DB-resident, queryable, idempotently-seeded registry so every enforcer resolves the same truth at call time and the surface stays fail-closed by default.",
+  "novelty": "The structured per-tool posture/ops/scope jsonb policy and the explicit move of an exposure config file into a registry table consumed by both an Edge Function and a Python gateway.",
+  "contribution": "Brings the policy/authorization substrate for remote clients — the data model and seed that define which tools, ops, scopes, and channels each external MCP client is permitted.",
+  "summary_for_embedding": "SQL migration creating the clients registry table (per-client allowed_tools jsonb policy, scopes, approval_mode, channels, posture) and seeding the fail-closed claude-design client.",
+  "intention_for_embedding": "To make a single DB-resident registry the source of truth for each remote MCP client's permitted tools, scopes, and channels, resolved by every enforcer at call time."
+}

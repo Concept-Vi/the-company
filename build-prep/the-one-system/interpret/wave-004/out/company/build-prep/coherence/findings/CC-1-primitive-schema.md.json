@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/CC-1-primitive-schema.md",
+  "model": "opus",
+  "what_it_does": "A research-findings markdown companion stress-testing the corpus-chain primitive and its declared Chain config schema against the real cognition engine (run_swarm/run_role/run_jury, transport's json_schema path, the file-discovered role registry, the serial node-graph scheduler); it corrects three load-bearing anchor claims, defines the net-new seam as a fan-out axis inversion, and proposes a run_items refactor and a build_chain validator.",
+  "observations": [
+    "Declares the allocated area in the header and uses tags Observed (file:line) / Inferred / External-prior-art / Your-idea.",
+    "Headline corrections: the net-new seam is a fan-out axis inversion (run_swarm fans N roles x 1 ctx; the map needs 1 role x N units), not the ctx->messages generalization; run_jury is NOT the reduce; a compiler emits data so map_schema must be a JSON-Schema dict not a Pydantic class.",
+    "Reads run_swarm line-by-line (cognition.py:523-621) showing the fan-out axis is the role with a shared ctx.",
+    "Proposes a run_items(work_items) refactor with a WorkItem dataclass that subsumes cast, jury, and map into one pool body.",
+    "Establishes that run_role uses transport's weaker json_object path (cognition.py:115-118) while the json_schema server-side path (transport.py:47) is present-but-unproven (suite.py:7053 'false-greened by INVOCATION') and the 4B emits malformed JSON ~2-in-6.",
+    "Argues the reduce is a strong run_role over the digest at synth_model, and run_jury belongs at the map tier as a per-unit jury (map_draws).",
+    "Lays out the declared Chain schema field-by-field (id, map_prompt, map_schema, map_model, map_draws, passes, reduce_prompt/schema/model) justifying each against a real primitive.",
+    "Resolves the registry-vs-graph fork: a chain cannot be a saved node-graph because the graph scheduler is strictly serial (scheduler.py:64) and the map is parallel; the load-bearing reuse is a build_chain validator mirroring _build_role, not the registry.",
+    "Provides a net-new-vs-reused ledger and shows the four faces (research-wave, coherence-scan, onboard, repo-QA) as instances differing only in field values."
+  ],
+  "standouts": [
+    "The fan-out axis inversion as the single real net-new mechanism, landed via a run_items refactor that unifies all three call shapes.",
+    "The transport finding: map_schema must be a dict (not a Pydantic class), forcing the json_schema path which is unproven on the resident model.",
+    "The serial-scheduler discriminator that structurally proves a chain is its own type, not a saved node-graph."
+  ],
+  "conventions": [
+    "Holds the evidence discipline and explicitly marks where the 'body is identical' claim is strong Inferred not executed.",
+    "Reuse-don't-parallel framing throughout (universal composition at the engine level).",
+    "Corrects the anchor with a dedicated 'yes, but actually' list backed by file:line."
+  ],
+  "concerns": [
+    "Several core claims (run_items body identical, vLLM honouring server-side json_schema) are flagged as unverified seams, so the design rests on probes not yet run.",
+    "The map_schema enforcement path is described as a genuine trust seam, not solved, which gates the 'typed record by construction' claim."
+  ],
+  "notes": "The corpus-chain is mostly run_swarm reused verbatim; the real net-new work is the fan-out axis inversion (run_items), a json_schema-dict enforcement path (unproven on the 4B), a unit enumerator, and a build_chain validator, with the reduce being run_role at synth_model rather than run_jury.",
+  "questions": [
+    "What is the ANCHOR.md whose sections (3, 6, 7, 8, 9) this file corrects and grounds?",
+    "What are SEM-1/SEM-2/SEM-3 (the prior rounds whose results this file inherits and references)?",
+    "Does the resident vLLM actually honour server-side json_schema constrained decoding (the file marks this as a must-probe unknown)?"
+  ],
+  "purpose_vs_actual": "Matches: the stated area (the chain primitive and declared config, stress-tested against the real engine) is delivered, with concrete corrections, a schema, and a net-new ledger.",
+  "apparent_themes": [
+    "Universal composition at the engine level (one run_items for cast/jury/map)",
+    "Reuse-don't-parallel grounded against real types",
+    "A compiler emits data, not code (dict schema, not Pydantic class)",
+    "Two drivers one substrate (serial graph vs parallel cognition)"
+  ],
+  "intention_signals": "Trying to make the corpus-chain primitive honest and minimal by correcting mis-described anchor claims against the real engine, isolating the single genuine net-new mechanism, and showing the four faces are one schema over one runner.",
+  "novelty": "The fan-out axis inversion framing, the run_items unification of three near-duplicate fan-out functions, and the proof (via the serial scheduler) that a chain must be its own declared type.",
+  "contribution": "Contributes the corrected primitive shape, the run_items refactor, the field-by-field Chain schema grounded in real types, the json_schema-dict transport seam, the build_chain validator as the one-door reuse, and the net-new-vs-reused ledger.",
+  "summary_for_embedding": "A research companion stress-testing a corpus-chain primitive against cognition.py, identifying a fan-out axis inversion (run_items) as the one net-new mechanism and a JSON-Schema-dict transport seam as the unproven trust point.",
+  "intention_for_embedding": "To establish the true shape of the corpus-chain primitive and its declared config by grounding it against the real engine rather than the anchor's description."
+}

@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-build.workflow.js",
+  "model": "opus",
+  "what_it_does": "A workflow script (build-only loop beat, no commit phase) that runs two file-disjoint cognition build lanes in parallel. LANE G1 adds a new MCP tool path to mcp_face/server.py — an inline draft/one-off run (run_draft and/or run_draft_items) that fires an ephemeral draft role spec without registering or committing a role, reusing the existing engine (roles.py:_build_role, suite.py:dry_run_role, cognition.run_items). LANE JURY builds a new roles/verify_lens.py role that judges one change-under-test through one verification lens (lens rides in the per-unit input so run_items can fan one role over N lenses). It declares meta, a LAWS preamble, a report SCHEMA, fires both agents via parallel(), and logs the aggregate.",
+  "observations": [
+    "Top comments state it is BUILD-ONLY ('the G8 fix: the next loop beat commits, avoiding the index race + the mega-commit-agent timeout').",
+    "G1 problem framing: run_role/run_items take a registered role id (string), so a one-off bounded classify forces create_role which commits a throwaway role (registry pollution + index race) or drops below the MCP.",
+    "G1 fix is stated as REUSE-DON'T-PARALLEL: the new tool builds a Role from a draft dict and runs it via the existing engine; the draft role is never written to roles/ and never committed.",
+    "The FLOOR is restated: a draft run is run:// computation emitting no resolve/approve/dispatch; verify must assert no file appears under roles/ after a draft run.",
+    "verify_lens lens vocabulary: correctness · floor · drift · matches-criterion · registry-is-truth · adversarial-disprove; output_schema {lens, verdict (pass|fail|uncertain), evidence, breaking_case}.",
+    "The adversarial-disprove lens is told to default to fail/uncertain if it can construct any breaking case.",
+    "The script explicitly defers the verdict-tally reduce-rule to a later beat because it would live in mcp_face's _REDUCE_RULES (the other lane's file) and editing it here would collide.",
+    "GPU note: a verify-by-use fire needs chat-4b; NO Gemini; NO green-paint (if not headlessly confirmable, say needs-tim).",
+    "Each lane writes seam-lanes/<lane>.report.json with a fixed SCHEMA (status enum built-verified|built-untested|blocked).",
+    "Lanes forbidden from editing runtime/cognition.py|suite.py|roles.py (read-only reuse) and roles/AGENTS.md.",
+    "Uses harness primitives phase(), parallel(), agent(label/phase/schema), log()."
+  ],
+  "standouts": [
+    "The G1 distinction drawn sharply: a draft RUN is run:// computation (ephemeral spec) versus declarative authoring (a real committed role file) — the draft role is never persisted.",
+    "Cross-lane collision avoidance is designed in: the verify_lens lane is told NOT to add the tally rule because it belongs in the other lane's file this beat."
+  ],
+  "conventions": [
+    "Follows the seam-lane workflow pattern: meta + LAWS preamble + report SCHEMA + phase('Build') + parallel([agent,...]) + aggregate log.",
+    "Binding laws embedded as a template-literal prepended to each agent prompt.",
+    "Registry-is-truth / no-hardcoding / fail-loud / additive discipline as lane constraints.",
+    "File-disjoint lanes with read-only reuse of engine functions."
+  ],
+  "concerns": [],
+  "notes": "This is the build script for the cognition beat that adds the ephemeral draft-run MCP path and the per-lens verify role, build-only with verification by use, no commit.",
+  "questions": [
+    "What is the Workflow harness providing phase/parallel/agent/log and how does agent() spawn a sub-build?",
+    "What exactly does dry_run_role accept and how does it differ from the new run_draft path beyond not persisting?",
+    "Which existing reduce or manual tally is meant to be used for verify_lens until the deferred tally reduce-rule lands?"
+  ],
+  "purpose_vs_actual": "Matches: meta.description states G1 draft/one-off run path (mcp_face) ∥ verify_lens role (roles/), file-disjoint, build + self-verify by use, no commit — and the two agent prompts implement exactly that.",
+  "apparent_themes": [
+    "Ephemeral computation vs committed authoring (no registry pollution)",
+    "The deterministic floor (run:// computation, no forbidden verbs)",
+    "Reuse the existing engine rather than building a parallel path",
+    "Composable verification: one role fanned over many lenses via run_items",
+    "Build/commit separation across loop beats to avoid races"
+  ],
+  "intention_signals": "It seems to be trying to unblock the registry-coverage classify by giving the MCP face a way to run a one-off bounded role without committing it, and to lay the reusable verification primitive (a per-lens judge role) whose deterministic tally is intentionally left for the next beat.",
+  "novelty": "Encodes an ephemeral draft-role MCP run path and a single-lens verification role with an adversarial-disprove lens directly as parallel agent build instructions with no-file-leak and by-use acceptance baked in.",
+  "contribution": "Contributes the build specification for the inline draft/one-off run tools (run_draft / run_draft_items reusing _build_role + dry_run_role) and the verify_lens role's lens vocabulary and output schema, including the floor and file-disjoint constraints a fused system would keep as the authoring intent for these primitives.",
+  "summary_for_embedding": "A build-only cognition workflow script running two parallel file-disjoint lanes: an ephemeral draft/one-off MCP run path (run_draft/run_draft_items reusing the existing engine) in mcp_face, and a new verify_lens role that judges a change through one of six verification lenses.",
+  "intention_for_embedding": "To add an MCP path for running an un-committed one-off role (unblocking bounded classifies) and to build the reusable per-lens verification role, building and self-verifying by use without committing."
+}

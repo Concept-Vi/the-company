@@ -1,0 +1,56 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/THINKING-MEMORY-IDENTITY-PRESENCE.md",
+  "model": "opus",
+  "what_it_does": "A dated 'thinking, not spec' design note (2026-06-10) that works through how memory, identity, presence, and persistence should function in this system, treating all four as one mechanism ('resolution') seen at four timescales. It inventories what is already built, frames a memory primitive, and records Tim's confirmations and riff-extensions across three conversation rounds.",
+  "observations": [
+    "Explicitly marked STATUS: THINKING, not spec — 'Nothing here is decided; the ideas are deliberately generative.'",
+    "Opens by collapsing memory/identity/presence/persistence into one mechanism named 'resolution' (address -> auto-resolve -> inject).",
+    "Section 1 presents a 6-layer 'refinement gradient' table: record -> meaning -> recurring -> standing -> self -> identity, with gates between each layer.",
+    "Claims memory formation is the SAME CIRCUIT as registry filling: generate -> ground -> floor -> propose -> approve.",
+    "Defines a memory as 'a record PLUS the condition under which it returns,' citing a failed passive-recall test (deferred-27 ranked below conversation noise).",
+    "Memory primitive carries content + three addresses: where (space, BUILT), when (time-as-activity, DESIGNED/GC14), who (audience, NAMED/undesigned).",
+    "States 'time is native here, not calendar' — the clock is activity-states / modes.",
+    "Section 3 states the asymmetry law: Tim may misremember the system, but the system must NEVER misremember Tim; evidence-required on operator_memory is framed as an identity boundary.",
+    "Section 4 introduces the 'NOW-ORGAN' — an unbuilt organ answering 'what is now,' with two consumers (Tim's presence experience and the memory injection trigger).",
+    "Section 5: persistence is append-only with 'honest forgetting' (supersession + de-ranking, never deletion); Tim-sourced memory sacred, system-derived replaceable.",
+    "Section 6 gives an ASCII diagram of 'the brain is a resolver' over three axes (space/time/audience) under Tim's gate.",
+    "Section 7 'the linchpin' maps what only Claude Code currently holds to its substrate home, with migration status, and defines a 'switch-flip test' (boot a cold agent from substrate alone vs a warm Claude).",
+    "Round 2 (section 9) records Tim quotes confirming 'context resolves rather than constantly appending,' who-axis as a parameter not a projection, and reuse of the concurrent-cognition rules engine as the memory-condition language (no new DSL).",
+    "Round 3 (section 10.5) argues the UI itself is the resolver wearing a face — components as vocabulary, bindings as addresses, composition as rules, presentation as learned.",
+    "Section 11 tracks open threads, two struck through as resolved (the garden question; anticipation/stability now built as dials)."
+  ],
+  "standouts": [
+    "The reframing of memory/identity/presence/persistence as one 'resolution' mechanism at four timescales.",
+    "The asymmetry law: the system must never misremember Tim, framed as existential no-fiction.",
+    "The 6-layer record-to-identity gradient with explicit gates.",
+    "'A memory is a record PLUS the condition under which it returns' and the 'switch-flip test' for bootstrapping continuity off-substrate."
+  ],
+  "conventions": [
+    "Uses the vault's design-note voice: dated provenance header, Tim's words quoted as grounding, heavy use of bold lead-ins.",
+    "Reuses established system vocabulary (registries, floors, gates, GC14, RHM, dials, corpus, modes) rather than inventing terms.",
+    "Tracks open threads as a numbered list with strikethrough for resolved items — a living-doc convention.",
+    "Names build status per item (BUILT/DESIGNED/NAMED/PARTIAL/DONE) consistently."
+  ],
+  "concerns": [],
+  "notes": "A generative thinking-corpus, not a spec, that fuses memory/identity/presence/persistence into one 'resolution' engine and records Tim's confirmations over three rounds.",
+  "questions": [
+    "Which of the open threads in section 11 have since been resolved or built beyond what the strikethroughs show?",
+    "Is the 'now-organ' described here ever built, and where would it live?",
+    "Has the 'switch-flip test' actually been run against a cold agent?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is generative thinking to 'get the juices flowing,' and delivers exactly that: a wide-ranging, explicitly undecided exploration with confirmations layered in, not a binding spec.",
+  "apparent_themes": [
+    "Universal composition (one circuit reused for memory and registry-filling)",
+    "Resolution over storage / context-as-view-not-store",
+    "Identity vs memory as separable layers by return-condition",
+    "Presence as construction, not a running process",
+    "Append-only persistence with honest forgetting",
+    "No-hardcoding / data-driven UI as rendered resolution"
+  ],
+  "intention_signals": "Trying to discover that the Company's memory/identity infrastructure does not need new machinery — that everything maps onto already-built or already-designed pieces (addresses, rules engine, registries, dials, the gate), so the blueprint is 'assembly with intent, not invention.'",
+  "novelty": "The collapse of four cognitive concepts into a single resolution mechanism distinguished only by return-condition, plus the claim that the interface is literally the same resolution pipeline as agent-context injection (prompts for models, surfaces for Tim).",
+  "contribution": "Contributes a unifying conceptual frame (resolution at four timescales), the record-to-identity gradient, the asymmetry law, the now-organ concept, the switch-flip bootstrap test, and a documented mapping of conversation-anchored design decisions to existing substrate homes.",
+  "summary_for_embedding": "A generative design-thinking note framing memory, identity, presence, and persistence in the Company system as one 'resolution' mechanism over space/time/audience axes, with a record-to-identity gradient, an asymmetry law against misremembering Tim, a now-organ concept, and three rounds of Tim's confirmations.",
+  "intention_for_embedding": "To seed the brain/blueprint design by showing the system's memory and identity needs already map onto built/designed components, getting ideas flowing without committing to a spec."
+}

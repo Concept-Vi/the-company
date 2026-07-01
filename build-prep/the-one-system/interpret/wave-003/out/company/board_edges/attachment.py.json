@@ -1,0 +1,39 @@
+{
+  "project": "company",
+  "path": "board_edges/attachment.py",
+  "model": "opus",
+  "what_it_does": "Declares one RELATION_TYPE dict registering the 'attachment' board edge-kind: a directed item->artifact link (to an image://, blob:// address) with inverse 'attached_to'.",
+  "observations": [
+    "Module docstring describes the edge as: this item carries an attached artifact (image/file) at image://<channel>/<path>.",
+    "Docstring narrates the use case: a comment carries images the operator attached on the phone; the review surface renders them inline; an agent receiving the comment gets the attachment address in the envelope.",
+    "id='attachment', directed=True, label='attachment', inverse='attached_to'.",
+    "desc: the source item (e.g. a comment) has an attached artifact at the target address (image://, blob://)."
+  ],
+  "standouts": [
+    "Declares inverse='attached_to', pairing this edge with the separately-defined attached_to row.",
+    "Docstring ties the edge to a concrete end-to-end flow: phone attach -> inline render -> agent envelope."
+  ],
+  "conventions": [
+    "Single module-level RELATION_TYPE constant, id matching filename.",
+    "Adds an inverse key (unlike the minimal attached_to.py row), using the optional schema fields."
+  ],
+  "concerns": [
+    "Declares inverse='attached_to', but attached_to.py is an item->channel edge with its own meaning (not the inverse of an item->artifact edge); the inverse pairing may be semantically overloaded — unclear from this file alone whether that is intended."
+  ],
+  "notes": "The 'attachment' edge: a board item (e.g. a comment) points to an attached image/blob artifact, with inverse attached_to.",
+  "questions": [
+    "Is inverse='attached_to' intentionally reusing the channel-attachment edge id, or is it meant to invert artifact attachment specifically?",
+    "What address schemes beyond image:// and blob:// are valid targets?"
+  ],
+  "purpose_vs_actual": "Match — registers the attachment edge-kind described in its docstring.",
+  "apparent_themes": [
+    "Typed edges over flat fields",
+    "Address-referenced artifacts (image://, blob://)",
+    "Carrying operator-attached media through to agents and review surfaces"
+  ],
+  "intention_signals": "Tries to make an attached image/file a first-class typed link from a board item so the same attachment flows from phone capture to inline rendering to the agent's envelope.",
+  "novelty": "The address-scheme targets (image://, blob://) and the explicit phone->render->agent-envelope flow encoded in a registry row's docstring.",
+  "contribution": "Contributes the 'attachment' edge-kind row enabling board items (comments) to carry typed references to attached image/blob artifacts.",
+  "summary_for_embedding": "A board_edges row declaring the directed 'attachment' edge-kind linking a board item (e.g. a comment) to an attached image/blob artifact, with inverse attached_to.",
+  "intention_for_embedding": "To let board items carry operator-attached images/files as typed edges that render inline and reach agents via the envelope."
+}

@@ -1,0 +1,41 @@
+{
+  "project": "company",
+  "path": "axes/resolution.py",
+  "model": "opus",
+  "what_it_does": "Declares the 'resolution' axis as a module-level AXIS dict — the detail/grain axis (how close). Defines id and namespace 'resolution', a single discrete field 'grain' (coarse | medium | fine, the MRL grain / levels-of-detail), value_source 'live', and a description stating it is ONE axis with two facets resolved 2026-06-22: (a) extraction-time forward-stepping (coarse on all, step deeper in-pass per chunk by its coarse output's kind, forward-only, never re-extract), and (b) read-time multi-scale rollup (subset projection of a stored superset). It unifies the dragnet grain axis and multi-scale embeddings as one axis.",
+  "observations": [
+    "Pure declarative data — only the AXIS dict, no logic",
+    "Single discrete field: {'grain': 'discrete'} with values coarse | medium | fine",
+    "value_source is 'live'",
+    "desc records a dated design resolution (2026-06-22, 'Tim's STEPPED cascade')",
+    "Distinguishes two facets: extraction-time forward-stepping vs read-time multi-scale rollup",
+    "Extraction rule: coarse on all, step deeper per chunk by its own coarse output's kind (decision/spec/discussion to fine; log stops), forward-only, never re-extract, no up-projection",
+    "Read facet: a subset projection of the stored superset (determine-many)",
+    "Cites the recollection dragnet grain axis commit 4207e75 and unifies it with multi-scale embeddings",
+    "Invariant: never-re-extract holds throughout"
+  ],
+  "standouts": [
+    "Collapses two previously separate concepts (dragnet grain axis + multi-scale embeddings) into ONE axis with two facets",
+    "Encodes a kind-driven forward-stepping extraction policy (decision/spec to fine; log stops) directly in the axis description",
+    "The never-re-extract / forward-only invariant"
+  ],
+  "conventions": [
+    "Follows the same AXIS-dict declaration pattern as register.py (id, namespace, fields, value_source, desc)",
+    "Uses the desc field to carry substantial dated design rationale, not just a definition"
+  ],
+  "concerns": [
+    "The desc field is dense with design history and policy; the actual stepping/rollup logic lives elsewhere, so this declaration alone does not enforce the stated invariants"
+  ],
+  "notes": "The grain/level-of-detail axis declaration — one discrete grain field unifying extraction-time forward-stepping and read-time multi-scale rollup under a never-re-extract rule.",
+  "questions": [
+    "Where is the extraction-time forward-stepping logic (kind-based deepening) and the read-time rollup actually implemented?",
+    "What enforces the forward-only / never-re-extract invariant declared here?"
+  ],
+  "purpose_vs_actual": "Matches — header and desc describe the resolution/grain axis and its two facets; the dict declares exactly a discrete grain field, with the policy detail carried in desc.",
+  "apparent_themes": ["one-axis-both-facets unification", "forward-only never-re-extract", "multi-scale levels-of-detail (MRL)", "axis-as-data with embedded rationale"],
+  "intention_signals": "To define resolution as a single live axis that unifies how deeply content is extracted (stepped forward by kind, once) and how it is read back (multi-scale rollup from a stored superset), preserving the never-re-extract invariant.",
+  "novelty": "The explicit one-axis-two-facets resolution and the kind-driven forward-only stepping cascade are distinctive, and the dict embeds a dated design decision as its rationale.",
+  "contribution": "Contributes the 'resolution' axis definition: a discrete live grain field unifying extraction-time forward-stepping and read-time multi-scale rollup under never-re-extract.",
+  "summary_for_embedding": "An axes declaration file defining the discrete live 'resolution' (grain) axis unifying extraction-time forward-stepping and read-time multi-scale rollup under a never-re-extract rule.",
+  "intention_for_embedding": "To declare resolution as one live axis covering both how deeply content is extracted (once, forward) and how it is read back at multiple scales."
+}

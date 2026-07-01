@@ -1,0 +1,61 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/HANDOFF.md",
+  "model": "opus",
+  "what_it_does": "The master 'start here' handoff for an agent taking over the ConceptV Design System build with no human guidance: states the mission and mindset, the domain, a full annotated repository map, the analysis-layer reading order, the conventions/protocols (token-layer anti-drift, colour roles, zoning=depth, axis-knob pattern, where to write things, type authoring, validation), the generative core, a traps list, a done-vs-next plan, suspected missed opportunities, and the agent's first moves.",
+  "observations": [
+    "Frames the build as a unified GENERATIVE system, not a component pile: design = f(content, axisPosition), one spec computes a 16:9 slide, mobile scroll, A4 one-pager, or app screen",
+    "Declares four single-source registries of the same shape: tokens, types (CV_REGISTRY), the engine (core/ solvers), and AI (CV_AI)",
+    "Gives a deeply annotated repo tree with the role of every directory and which files are COMPILED OUTPUT (never hand-edit)",
+    "Defines the L0/L1/L2 token-layer anti-drift contract: value defined once at its lowest layer, everything above var()s it, consumers carry no hex",
+    "States the colour-role logic (ink=content, gold=active/attention, bronze=structural voice) and the gold ramp; true logo gold #E0C010 must never be softened",
+    "Central insight 'zoning = containment depth': near-white washes render nesting depth (~2% undertone per level mixed toward --zone-ground), theme-invariant",
+    "Documents a 7-item TRAPS list (stale mid-turn bundle, self-mounting jsx poisoning the bundle, token @kind annotations, bulk move ownership, legitimate-literal-holders)",
+    "Section 8 is an explicit skeptic's list of suspected missed opportunities flagged for the checker, including doubt cast on the handoff itself",
+    "Claims all 12 source folders analysed with zero contradictions; next work is building (slices 4-5), not analysing"
+  ],
+  "standouts": [
+    "The mindset section: 'vigilance against technical success' — compiles/renders/passes-check is NOT necessarily right; always ask is this computed from the rules or hand-set, deep or merely functional",
+    "Anti-drift guarantee stated mechanically: generative output inherits the DNA by construction because it has no literals to drift with",
+    "Section 8 instructs the reader to 'be skeptical of all prior work — including this' and lists concrete soft spots — institutionalised self-doubt as a handoff feature",
+    "The proposal to make atom rendering itself a registry so new atoms are data not code branches — pushing single-source even into the solver's render logic",
+    "Self-mounting .jsx DOM-guard trap: a module top-level createRoot throws on a page without #app and aborts the whole bundle eval"
+  ],
+  "conventions": [
+    "Single-source / one-home-per-concept (the prime directive, four parallel registries of the same shape)",
+    "Token-layer L0->L1->L2 anti-drift discipline (no hex in consumers, color-mix derivation)",
+    "Axis-knob pattern for new dials (data-* attribute + CSS vars, orthogonal axes, correlation != coupling)",
+    "Fail-loud / prove-by-use / audit-before-touch / vigilance-against-technical-success",
+    "Docs-in-lockstep (DESIGN-LANGUAGE.md + README v2 updated with any new rule the system makes)",
+    "check_design_system after every edit until clean; FINDINGS-LOG appended every slice"
+  ],
+  "concerns": [
+    "Many compiled-output and self-mounting traps indicate a fragile build pipeline where a single unguarded file breaks every component card",
+    "The 'zero contradictions across 12 folders' claim is self-reported and broad; section 8 itself doubts prior work",
+    "Bulk file move 'needs project ownership' and failed mid-build — a known infrastructure fragility worked around manually",
+    "References a large web of sibling docs (AXES.md, INTEGRATION.md, REQUIREMENTS.md, SYSTEM-GAPS.md, etc.) whose current state cannot be confirmed from this file"
+  ],
+  "notes": "The master onboarding brief for an unattended agent to take over the design-system build — mission, full repo map, anti-drift token discipline, generative core, traps, and a skeptic's done-vs-next plan; read it (and AXES.md) before touching anything.",
+  "questions": [
+    "Is the generative core's atom-role rendering still a code-branch starter set, or was it made a registry as section 8 proposes?",
+    "Have slices 4 (template/component library) and 5 (motion/deck->app bridge) been built since this handoff was written?",
+    "Are the v1 leftovers (tonal-zoning.css, --accent-gold-50 consumers) still pointing at deprecated tokens?",
+    "Does AXES.md (the named spine) actually contain the full parametric model this handoff defers to?"
+  ],
+  "purpose_vs_actual": "Matches — titled the master handoff and complete briefing, and it delivers exactly that: mission, repo map, conventions, core, traps, plan, and first moves for a fresh agent.",
+  "apparent_themes": [
+    "single-source-no-drift",
+    "axis=f(content,position)",
+    "registry-is-truth",
+    "vigilance-against-technical-success",
+    "depth-over-speed",
+    "institutionalised-self-doubt",
+    "fail-loud",
+    "audit-before-touch"
+  ],
+  "intention_signals": "Inferred: the author wants a fresh autonomous agent to inherit not just facts but a MINDSET — build the unified generative thing deeply, never hand-set what should be computed, and distrust 'it works'. The four-registry framing and the no-literals-to-drift guarantee signal an intent to make design correctness structural (computed from one source) rather than a matter of care, and section 8 signals an intent to keep the system self-critical across handoffs.",
+  "novelty": "An onboarding doc that bakes in a stance ('vigilance against technical success', 'be skeptical of all prior work including this') and a structural anti-drift guarantee (generative output has no literals to drift with) is unusual versus an ordinary README/handoff.",
+  "contribution": "Contributes the orienting mission+mindset, the four-single-source-registry framing, the L0/L1/L2 anti-drift token contract, the zoning=depth insight, the colour-role logic with the logo-gold rule, the generative-core usage spec, the hard-won traps list, and the skeptic's done-vs-next plan — the connective tissue that makes the rest of the corpus navigable and buildable by an unattended agent.",
+  "summary_for_embedding": "The master handoff briefing for taking over the ConceptV Design System build: mission and mindset, annotated repository map, four single-source registries, the L0/L1/L2 anti-drift token contract, zoning=depth, the generative core, a traps list, and a skeptic's done-vs-next plan.",
+  "intention_for_embedding": "To let a fresh autonomous agent inherit the mindset and map to build a unified generative design system where correctness is structural (computed from one source, no literals to drift), and to keep the system self-critical across handoffs."
+}

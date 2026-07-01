@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/AREA-1-addressable-substrate.md",
+  "model": "opus",
+  "what_it_does": "A research-wave companion document (Area 1) that grounds the Coherence anchor's question against the repo's actual addressable substrate — the address grammar/schemes, the capabilities() registry as self-model, the typed structured-record storage patterns, and the event log/store. It maps where a finding would concretely be stored and addressed, marks every claim Observed/Inferred/Idea with file:line, and deliberately surfaces where the existing machinery does NOT fit.",
+  "observations": [
+    "Marks evidence explicitly as [OBS] (code, file:line), [INF] (inferred from shape), [IDEA] (own proposal), and says it deliberately mined 'the almost' (where machinery doesn't fit)",
+    "Documents the address grammar: SCHEMES=('run','cas','blob','vec','ui','code') at contracts/address.py:32, with ui:///code:// as additive precedents; parse_ui_address() at contracts/ui_info.py:186-217",
+    "Counts real registry coverage: addresses.json = 71 ui:// entries only; code-symbols.json = 94 code:// symbols; suites/migrations/voice-engines have no address",
+    "Distinguishes resolution machineries: run://+cas:// are live store coordinates (resolve to bytes); ui://+code:// are labels into side registries the store refuses to resolve",
+    "Identifies three storage patterns: Pattern A (append-only addressed log, append_annotation, 'the address IS the key', fs_store.py:534-566), Pattern B (mutable-state overlay via pins, append_pin/pin_state_for last-wins, fs_store.py:569-625), Pattern C (read-time rollup, emit_run_record→run_stats)",
+    "Central contradiction (§4): a finding CANNOT be a surfaced item — Inbox.resolve() is operator-only off the agent face (governance.py:184-187) and the inbox already drowned at ~90% test pollution (governance.py:123-133); findings need their own agent-disposable lane, only by-design escalating through the consent gate",
+    "Decides the coherence:// question (§5): no new scheme — a finding's TARGET rides existing schemes, its OWN identity is a record id; notes address_view/parse_ui_address is ui://-gated (suite.py:9482-9486, bridge.py:401) so code://-targeted findings would 400 until a one-method widening",
+    "Gives the concrete three-lives storage answer (§6): DETECTION = addressed coherence.finding event; STANDING STATE = disposition overlay (pin pattern) in own lane; MODEL = run_stats-style read-time rollup",
+    "Recommends promoting _ORPHAN_ROUTES from a hardcoded dict (suite.py:7017) into persisted dispositioned records as the first real findings (migration + first lane test + recursion)",
+    "Flags honest fragilities: event seq not cross-process-unique (fs_store.py:438-444, key identity on (kind,target,content-hash) instead); last-wins overlay reads are O(scan) on a growing jsonl; dangling code:// targets are themselves a stale-target finding",
+    "Argues Coherence and Cognition are two kind= filters over one event log, not two substrates"
+  ],
+  "standouts": [
+    "The §4 contradiction — a finding cannot be a surfaced item because the operator inbox is deliberately operator-only and already-drowned — and the resolution (own agent-disposable lane, only by-design escalates)",
+    "The pin-overlay-on-immutable-log pattern (fs_store.py:569-625) identified as the exact prior art for a finding's mutable disposition on an append-only detection record",
+    "The decided no-coherence://-scheme answer: target rides existing schemes, identity is a record id; four registrations, zero parallel machinery"
+  ],
+  "conventions": [
+    "Follows the research-wave companion form (cite file:line, Observed/Inferred/Idea tagging, mine-the-almost, leave-the-idea-bigger)",
+    "Upholds the repo laws it cites: registry-is-truth/no-hardcoding, reflects-never-owns, own/reflect, no-silent-failures, build-on-not-beside, more-types-not-more-tools/schemes",
+    "Uses the project's substrate vocabulary (addresses/schemes, append_event/_emit, run_stats, capabilities(), surfaced status/resolve/reason, consent gate)"
+  ],
+  "concerns": [],
+  "notes": "Area-1 companion proving the Coherence model can live on existing substrate with no new store/scheme/resolver — but a finding must NOT be a surfaced item (own lane, by-design escalates) and the address space is ui://-only today and must grow code://-style.",
+  "questions": [
+    "Are the cited line numbers (e.g. suite.py:7017, :9482-9486) still accurate against the current suite.py?",
+    "Has the _ORPHAN_ROUTES→records migration or the address_view code:// widening been done since this companion was written?",
+    "Where is the ANCHOR.md this is a companion to (referenced as ../ANCHOR.md)?"
+  ],
+  "purpose_vs_actual": "Match — it is the Area-1 companion answering the anchor's substrate question, delivering the concrete storage/addressing answer, the scorecard, and the contradictions it set out to mine.",
+  "apparent_themes": [
+    "build-on-not-beside (no new store/scheme/resolver; configure existing mechanisms)",
+    "mine-the-almost (where machinery does NOT fit is the load-bearing part)",
+    "the agent-disposable vs operator-only boundary (a finding is not an inbox item)",
+    "own/reflect and reflects-never-owns (detection re-derived, disposition owned, model as read-time fold)",
+    "more-types-not-more-tools applied to addresses and finding-types",
+    "recursion (the system holding findings about its own mechanisms)"
+  ],
+  "intention_signals": "Trying to prove the Coherence substrate is mostly a re-use of existing machinery while honestly surfacing the two hard truths (findings can't be surfaced items; the address space is too narrow) and giving a concrete, file-grounded storage/addressing design plus a first migration step.",
+  "novelty": "Identifying the pin-overlay-on-immutable-log pattern as the exact disposition mechanism, and the decision that a finding needs no new scheme (target rides existing addresses, identity is a record id) — plus the (kind,target,content-hash) identity key that turns concurrent duplicate detection into dedup-as-still-stands-signal.",
+  "contribution": "Contributes the grounded substrate map for coherence findings: the address/scheme coverage census, the three storage patterns (append log, pin overlay, run_stats rollup), the findings-are-not-surfaced-items boundary with the by-design-escalates rule, the no-new-scheme decision, and the three-lives storage answer — the addressable-ground design a fused system would keep for any integrity-finding model.",
+  "summary_for_embedding": "An Area-1 research companion grounding the Coherence model on the repo's existing addressable substrate — schemes, capabilities() registry, the append-only addressed event log, the pin-overlay disposition pattern, and run_stats rollups — concluding findings need no new store/scheme/resolver but must live in their own agent-disposable lane (not the operator inbox) and the ui://-only address space must grow code://-style.",
+  "intention_for_embedding": "To prove, with file-grounded evidence, exactly where and how a coherence finding would be stored and addressed on existing machinery, and to surface the hard constraints (not-a-surfaced-item, narrow address space) before any build."
+}

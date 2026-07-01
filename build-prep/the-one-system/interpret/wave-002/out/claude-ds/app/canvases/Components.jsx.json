@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Components.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React canvas component `Components` (window.Components, also exports window.COMPONENT_GROUPS) that is a gallery of UI patterns. It declares COMPONENT_GROUPS — built-in specs grouped Buttons/Inputs/Cards/Chips/Panels — and renders each pattern in a multi-state grid (default/hover/active/disabled and variant-specific states) via a hand-written `Renderer`. A generation panel calls window.CV_AI.complete with a prompt describing the brand CSS variables to produce one new component variant as inline-styled HTML (plus hover/disabled states), which the user can adopt; adopted/generated variants render their HTML via dangerouslySetInnerHTML.",
+  "observations": [
+    "COMPONENT_GROUPS hardcodes the built-in catalog with id/name/desc per pattern (lines 9-38), each desc tying the pattern to real brand usage (e.g. MENU pill in the Virtual Hub viewer).",
+    "STATES constant lists default/hover/active/disabled.",
+    "`generate()` prompt enumerates brand tokens (--accent-gold #E0C010, --accent-gold-soft, --accent-bronze #988058, radii, font) and asks for one variant with name/group/desc/html/states JSON.",
+    "Generated components render as HTML strings via dangerouslySetInnerHTML in ComponentStates/StateCell; built-ins render as real React in BuiltinStates/Renderer.",
+    "`BuiltinStates` maps each id to its own state list (e.g. check -> off/on, chip-status -> pending/success/error).",
+    "`Renderer` is a long if-chain that hand-renders each built-in id across states using inline styles with CSS vars.",
+    "Group filter pills include an extra 'Generated' bucket when session-generated variants exist.",
+    "Some demo values are inline hex literals (e.g. chip-task backgrounds #FBF1C0/#E6EFDB/#DCE7F3, badge red #F04325/#C24A3C, gradient #E8E2CC/#D0C098)."
+  ],
+  "standouts": [
+    "Two rendering paths in one gallery: real React for curated built-ins, raw injected HTML for AI-generated variants.",
+    "Component descriptions explicitly anchor each pattern to where it appears in the real product (Virtual Hub viewer, calendar, sidebar favourites).",
+    "AI generation returns inline-styled HTML keyed to the documented token vars so a new variant slots into the same state grid."
+  ],
+  "conventions": [
+    "Follows a generate -> proposal -> adopt flow with discard.",
+    "Parses model JSON defensively (raw then {...} regex).",
+    "Uses CSS vars for built-in renderers; some demo-only color literals are inline.",
+    "Aliases React hooks with a `_cm` suffix for the shared bundle.",
+    "Built-in patterns are described as mirroring the patterns from the real UI kits (header comment)."
+  ],
+  "concerns": [
+    "Generated component HTML is rendered with dangerouslySetInnerHTML directly from model output, with no sanitization of the model-produced markup.",
+    "Renderer is a large hand-maintained if-chain that must be edited per new built-in id, separate from the COMPONENT_GROUPS data list.",
+    "Several status/demo colors are hardcoded hex rather than referencing the palette tokens."
+  ],
+  "notes": "The component gallery: curated built-in patterns shown across states via hand-written React, plus a Vi panel that generates new inline-HTML variants in the brand token system.",
+  "questions": [
+    "Are generated variants persisted beyond the session, and where does addGenerated store them?",
+    "Why are built-in patterns split between a data list (COMPONENT_GROUPS) and a separate Renderer if-chain rather than driven from one source?",
+    "Is the dangerouslySetInnerHTML on model output considered acceptable given the trusted-model assumption?"
+  ],
+  "purpose_vs_actual": "Matches. The header calls it a 'gallery of UI patterns with live state previews + Vi generation' and the component renders built-ins across states and generates new variants via CV_AI.",
+  "apparent_themes": [
+    "State-matrix visualization of components",
+    "Brand-token-constrained AI generation",
+    "Patterns anchored to real product usage",
+    "Generate-and-adopt extensibility"
+  ],
+  "intention_signals": "Trying to give a single browsable place to see every UI pattern in all its states and to extend the set by describing a new variant in natural language, returned as token-styled HTML that drops into the same state grid.",
+  "novelty": "A gallery that mixes real-React built-in renderers with AI-generated inline-HTML variants in one state-grid presentation.",
+  "contribution": "Contributes the Components canvas: a grouped catalog of built-in UI patterns with per-state previews and a Vi generator that emits adoptable token-styled HTML variants.",
+  "summary_for_embedding": "A React canvas (window.Components) showing grouped built-in UI patterns across states via React renderers, plus a Vi generator that produces adoptable inline-styled HTML variants.",
+  "intention_for_embedding": "To present every UI pattern in all its states and let users extend the component set by generating new brand-token-styled variants from a description."
+}

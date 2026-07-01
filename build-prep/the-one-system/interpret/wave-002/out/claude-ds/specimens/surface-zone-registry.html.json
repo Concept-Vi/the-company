@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "specimens/surface-zone-registry.html",
+  "model": "opus",
+  "what_it_does": "A design-system specimen page that displays the surface-zone registry: ten near-white semantic tones (base, content, panel, review, source, package, success, warning, reject, and the gold 'vi'/decision zone), each shown as a card with a wash swatch, a strong-variant chip, an ink dot, a role label, a name, and its surface token + mix percentage. Closes with a stated 'gold rule'. Links ../styles.css and builds the grid from a JS ZONES array.",
+  "observations": [
+    "@dsCard group=\"Colors\" header with name 'Surface-Zone Registry' and subtitle 'Low-opacity tonal zoning · gold reserved for decisions'.",
+    "Body background is a radial gradient of --zone-base-strong over --zone-base-surface.",
+    "ZONES array pairs each zone key with a role and a mix percentage: base 3.5%, content 3%, panel 5%, review 6%, source 5%, package 6.5%, success 6%, warning 7%, reject 6%, vi 9%.",
+    "Each card reads four tokens per zone (--zone-<k>-surface/-strong/-edge/-ink), with the 'vi' zone special-cased to --vi-surface/--vi-strong/--vi-edge and gold ink (--accent-gold).",
+    "Explanatory copy states near-white surfaces mark containment depth (cross-references core/containers.css) and that these ten semantic tones are an opt-in layer on top, scaled by one --zone-intensity knob.",
+    "A highlighted rule block states the 'gold rule': gold is the only saturated voice, reserved for Vi, active decisions, selected states, key emphasis, primary actions — never a default background.",
+    "Roles map zones to system concepts: Environment, Primary, Secondary, Decision, Provenance, Handoff, Ready, Incomplete, Anti-pattern, Vi/gold."
+  ],
+  "standouts": [
+    "The explicit per-zone mix percentages (3%-9%) document the exact 'almost imperceptible' tonal ladder as data.",
+    "The codified 'gold rule' — gold reserved for decisions, never a default background — stated inline on the specimen.",
+    "Roles tie visual zones to product/workflow semantics (Provenance/Handoff/Decision/Anti-pattern), revealing a decision-workflow domain behind the colours."
+  ],
+  "conventions": [
+    "Follows the specimen pattern: @dsCard header + self-contained HTML linking the shared stylesheet, grid built by inline JS.",
+    "All zone colours resolved via --zone-<k>-* tokens (and --vi-* for the gold zone); no raw zone hex in the page.",
+    "Uses the rotated-gold-gem motif in the header, consistent with sibling specimens.",
+    "Special-cases the 'vi' zone to the --vi-* token family rather than the --zone-* pattern (one deviation from the uniform naming)."
+  ],
+  "concerns": [
+    "The mix percentages are written as static strings in the JS array; if the actual token mixes in styles.css change, these displayed percentages could become stale (a second copy of the value)."
+  ],
+  "notes": "The specimen that documents the ten near-white semantic zone tones, their exact mix percentages and roles, and the canonical 'gold = decisions only' rule — the colour-meaning map of the system.",
+  "questions": [
+    "Are the displayed mix percentages kept in sync with the real --zone-*-surface token definitions, or could they drift?",
+    "Why is the 'vi' zone modelled under --vi-* tokens instead of the uniform --zone-vi-* pattern used for the other nine?"
+  ],
+  "purpose_vs_actual": "Matches: the subtitle promises low-opacity tonal zoning with gold reserved for decisions, and the page renders the ten zone tones plus the explicit gold rule.",
+  "apparent_themes": [
+    "Zoning as depth, not category (containment made visible)",
+    "Semantic tone as an opt-in layer over the depth ladder",
+    "Gold discipline (one saturated voice, reserved for decisions)",
+    "Warm-only near-white palette"
+  ],
+  "intention_signals": "Trying to teach the rule that surfaces signal containment/role through barely-perceptible warm tints while gold stays scarce and meaningful — making the colour-meaning contract visible and checkable.",
+  "novelty": "Exposing the exact low single-digit mix percentages per semantic zone, and tying zones to decision-workflow roles (Provenance/Handoff/Decision/Anti-pattern), is a distinctive way to document colour.",
+  "contribution": "Contributes the canonical zone-tone registry with per-zone roles and mix percentages plus the codified gold-reservation rule — the system's colour-semantics map rendered as a verifiable specimen.",
+  "summary_for_embedding": "A ConceptV design-system specimen HTML page documenting ten near-white semantic surface zones (with roles and exact mix percentages) and the gold-reserved-for-decisions rule, all resolved from --zone-* and --vi-* tokens.",
+  "intention_for_embedding": "To make visible and checkable the system's colour-meaning contract: warm near-white zones encode containment depth/role while gold stays the single saturated decision voice."
+}

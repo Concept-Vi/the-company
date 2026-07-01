@@ -1,0 +1,55 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/vi-brain.js",
+  "model": "opus",
+  "what_it_does": "Defines window.VI_BRAIN, an IIFE that is Vi's agent mind inside AtomiCity. It owns no UI; it composes Vi's system prompt from the live registry census + architecture rules + current node/picked-element context + learned preferences + an action protocol; runs one interpret() turn (model call → prose + parsed actions + staged CV_HOST proposals + quick-reply options + followup); offers proactive suggestions and quickCommands keyed to the viewed node's kind; and implements learn() which distils conversational feedback into a crisp instruction, registers it live as a CV_AI behaviour, persists it in localStorage, and proposes it to CV_HOST for permanence. Throws at load if CV_AI is missing; registers its own context resolver and capabilities into CV_AI and rehydrates learnings at boot.",
+  "observations": [
+    "ACTIONS object is the single-source verb vocabulary (open/search/expand/run/propose/connect/highlight/ingest/explore/restyle/pageshot) — the host (AtomiCity.jsx) implements each via window.ATOMICITY.act",
+    "systemPrompt injects a full live system census via window.ATLAS.census() and instructs Vi to never ask the user for what it can read",
+    "When a picked element is present, the prompt tells Vi to JUST DO IT (return a restyle action), keep prose to one warm line, and put next moves in dynamic options buttons rather than clinical prose questions",
+    "interpret() composes messages, includes last 6 history turns (stripped of HTML), parses a fenced ```atomicity/json block, and stages any 'propose' action immediately through CV_HOST.commit so the user sees a real diff",
+    "Learned behaviours are stored locally (LS_MEM key 'atomicity:learnings'), rehydrated into CV_AI at boot, and proposed to CV_HOST as ai.entry for permanence",
+    "learn() distils feedback into {label, instruction, scope} via the model with a plain-text fallback when parsing fails",
+    "suggestions() and quickCommands() branch on node.kind (token/component/card/ai-entry/type/runtime/template) to stay contextual",
+    "feedbackNudge() returns an action-specific 'would it be better if' prompt",
+    "Prompt explicitly forbids claiming a disk commit — proposals are staged unless a writer is connected ('be honest about that boundary')",
+    "Voice is referenced as behaviour voice.conceptv on the interpret capability, never inlined as a string"
+  ],
+  "standouts": [
+    "The full closed loop: KNOW (census) → INTERPRET → ACT (interface verbs) → PROPOSE (single-sourced repo change via serializer) → LEARN (feedback folded back into the one AI registry)",
+    "Self-improvement is single-sourced: a learned preference becomes a live CV_AI behaviour AND a proposed ai-seed.js entry, so 'gets better' has one home",
+    "The action vocabulary is declared once here as the contract both Vi and the host read"
+  ],
+  "conventions": [
+    "Single-source discipline: verbs, learnings, and capabilities all register into the one CV_AI registry; UI is a projection",
+    "Loud-fail at boot if CV_AI absent (throw); honest about the staged-vs-committed boundary",
+    "Voice sourced as a behaviour reference, never inlined",
+    "Extend-by-registration: registers context + capabilities into CV_AI rather than a parallel list",
+    "Co-locates the model-facing prompt text with the agent logic"
+  ],
+  "concerns": [
+    "Several swallow-silent catch blocks on JSON parse, saveMemory, CV_HOST.commit, and AI.remove — in tension with the project's loud-fail rule (some are arguably acceptable best-effort, but the parse-failure in interpret discards a malformed block silently)",
+    "Large model-instruction prose embedded as string literals is hard to keep in lockstep with the actual ACTIONS/registry shape (e.g. restyle key lists appear in both ACTIONS desc and the picked-element prompt and could drift)",
+    "localStorage is the durable store for learnings until a CV_HOST writer connects — learnings are per-browser until committed"
+  ],
+  "notes": "Vi's brain: a UI-less agent that reads the live registries to know the system, interprets intent into interface actions and staged repo proposals, and turns user feedback into a durable, single-sourced learned behaviour — the 'version of you that operates the system and gets better at it.'",
+  "questions": [
+    "What is window.ATLAS.census() and what shape does it return that the prompt embeds wholesale?",
+    "How does CV_HOST.commit serialize a propose payload into the exact source for a home file, and when is a writer 'connected'?",
+    "Does the host (AtomiCity.jsx) implement every verb in ACTIONS, and how is drift between this contract and the host caught?"
+  ],
+  "purpose_vs_actual": "Match — the header promises an agent that knows the system, interprets intent, acts on the interface, solicits feedback, and learns back into the one registry; the code implements all five with the action protocol, CV_HOST proposals, and the live+persisted+proposed learning loop.",
+  "apparent_themes": [
+    "Agent as registry-reader (knows by reading, not by being told)",
+    "Do over describe; intent interpretation over exact commands",
+    "Single-sourced self-improvement (learnings have one home)",
+    "Honesty about the staged-vs-committed boundary",
+    "Interface as projection; verbs as a shared contract",
+    "Options-not-binary interaction (quick-reply buttons over clinical questions)"
+  ],
+  "intention_signals": "Tries to realise 'a version of you that operates the system for me and gets better' — an agent that already knows everything by reading the same registries, acts directly on the screen and proposes real single-sourced changes, and folds feedback into the one AI registry so improvement is durable and centralised rather than ad hoc.",
+  "novelty": "Closing the operate-and-improve loop entirely through the registries — learned preferences becoming both a live behaviour and a proposed source entry, and an action vocabulary declared once as a two-sided contract — is the distinctive contribution.",
+  "contribution": "Contributes the agent-brain layer: a UI-less Vi mind that composes its knowledge from the live registry census, interprets intent into a single-sourced interface-action protocol plus staged CV_HOST repo proposals, and learns durable preferences back into the one AI registry (live + persisted + proposed), with context-aware suggestions and an honest staged-vs-committed boundary.",
+  "summary_for_embedding": "A JS IIFE (window.VI_BRAIN) UI-less agent mind for AtomiCity that builds Vi's prompt from the live registry census, interprets intent into a single-source action vocabulary and staged CV_HOST proposals, and distils feedback into durable CV_AI learned behaviours.",
+  "intention_for_embedding": "To be the operator-agent that already knows the system by reading its registries, acts on the interface and proposes single-sourced repo changes, and gets durably better by folding feedback into the one AI registry."
+}

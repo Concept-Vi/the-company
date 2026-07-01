@@ -1,0 +1,36 @@
+{
+  "project": "company",
+  "path": "board_edges/part_of.py",
+  "model": "opus",
+  "what_it_does": "Defines a single RELATION_TYPE dict for the 'part_of' board edge: a directed containment edge where a block/item is a part of a target container document (board://<document>), with inverse 'contains'.",
+  "observations": [
+    "Has a module docstring explaining containment and how it pairs with an item's 'order' field.",
+    "directed=True, inverse='contains', label='part-of'.",
+    "Docstring states part_of gives membership while a separate 'order' field gives sequence.",
+    "Inverse 'contains' lets reverse_traverse find a document's blocks."
+  ],
+  "standouts": [
+    "Explicit separation of concerns: membership (part_of edge) vs sequence (order field).",
+    "Has a real module docstring, more than the bare-dict siblings."
+  ],
+  "conventions": [
+    "Follows the board_edges RELATION_TYPE pattern (id/directed/label/inverse/desc).",
+    "Adds a module-level docstring (richer than commented_on/composes_with/references which lack one)."
+  ],
+  "concerns": [],
+  "notes": "The block-to-document containment edge; membership via part_of, ordering left to a separate 'order' field.",
+  "questions": [
+    "Where is the 'order' field defined on the document/block item type?"
+  ],
+  "purpose_vs_actual": "Match: docstring and desc both describe a part/block-of-container edge and the dict declares it.",
+  "apparent_themes": [
+    "Document composed of ordered blocks",
+    "Separation of membership from sequence",
+    "Reverse traversal to enumerate children"
+  ],
+  "intention_signals": "Trying to model documents as containers of blocks via a containment edge, deliberately keeping ordering out of the edge so sequence is a separate concern.",
+  "novelty": "The explicit membership/sequence split (part_of edge + order field) is the distinctive design choice here.",
+  "contribution": "Contributes the containment edge with its 'contains' inverse and the documented membership-vs-sequence separation for assembling documents from blocks.",
+  "summary_for_embedding": "A board relation-type definition for 'part_of', a directed containment edge (inverse contains) linking a block to its container document.",
+  "intention_for_embedding": "To model documents as containers of member blocks, with membership expressed by the edge and sequence handled by a separate order field."
+}

@@ -1,0 +1,36 @@
+{
+  "project": "company",
+  "path": "attachment_types/sessions.py",
+  "model": "opus",
+  "what_it_does": "Defines a single ATTACHMENT_TYPE dict declaring a 'sessions' attachment type: a session addressed as session://<id> attached to a channel as context / a recall source (the §3 manifest sessions bucket), target_kind='address', multi=True.",
+  "observations": [
+    "target_kind is 'address' with scheme session://<id>.",
+    "desc states the session serves as context and as a recall source for the channel.",
+    "References the §3 manifest sessions bucket.",
+    "multi=True allows many session attachments per channel."
+  ],
+  "standouts": [
+    "Frames an attached session as both general context and a recall source, linking to the recall scope concept."
+  ],
+  "conventions": [
+    "Same single-dict descriptor pattern as siblings.",
+    "Inline comment labels the session:// address scheme for target_kind."
+  ],
+  "concerns": [],
+  "notes": "Registry entry for 'sessions': session://<id> addresses attached as channel context and recall sources, many-per-channel.",
+  "questions": [
+    "How does a session attached as a recall source relate to the single recall-scope selector in recall.py?"
+  ],
+  "purpose_vs_actual": "Match — declares the sessions attachment type as the docstring states.",
+  "apparent_themes": [
+    "Declarative type registry",
+    "Addressed sessions as context",
+    "Recall sourcing",
+    "Manifest-driven configuration"
+  ],
+  "intention_signals": "Aims to let channels attach prior sessions as addressed context and recall sources so a channel carries relevant session history.",
+  "novelty": "The dual role of an attached session as both context and recall source under one address scheme.",
+  "contribution": "Contributes the declarative definition of the sessions attachment type, its session:// address scheme, and its context/recall-source role.",
+  "summary_for_embedding": "A descriptor module declaring the 'sessions' channel attachment type: session://<id> addresses attached as context and recall sources, multi=True.",
+  "intention_for_embedding": "To register prior sessions as channel-bound addressed attachments serving as context and recall sources."
+}

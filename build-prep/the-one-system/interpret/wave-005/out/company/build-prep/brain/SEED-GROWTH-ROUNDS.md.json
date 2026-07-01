@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/SEED-GROWTH-ROUNDS.md",
+  "model": "opus",
+  "what_it_does": "Captures two conversational 'amplification rounds' (Round 2 and Round 3, 2026-06-11/12) growing Tim Geldard's geometric seed. Round 2 records Tim's correction (everything is variables; the centre moves) and a set of agent-proposed bindings of the seed's geometry to Company primitives. Round 3 translates those into a database law, a UI law, and a unified resolve operation across three audiences.",
+  "observations": [
+    "Round 2 states Tim's correction: there is no fixed definition; axes/divisions/everything are variables; he is the origin in one instance but the centre is the object of attention and it MOVES; 'an invariant system law, for agnostic systems... an instrument.'",
+    "Bindings proposed: embeddings = the circle (continuous, radius=relevance/angle=kind); directories/addresses = the square (discrete, citable); type registries = angular sectors AND grammar of legal moves (contains=scale-in, precedes=angular step, supersedes=radial replace); timestamps = the involuntary axis; nodes = populated points real only at coincidence; edges = performed moves.",
+    "Attention is framed as a coordinate transform - to look is to re-centre; the resolver IS the system's eye; origins NEST (root Tim -> project -> node -> agent-task).",
+    "Forbidden zones = where only recognition can operate (the gate's domain); forbidden-zone density = gap-pressure = the instruction to grow a new axis; learning = growth of new axes under that pressure.",
+    "Round 3 DB law: STORE POSITIONS, COMPUTE PERSPECTIVES - radius/angle are per-centre perspective quantities computed at read time; store holds absolute coordinates plus two new registries (origins, axes).",
+    "Round 3 UI law: the viewport IS the instrument; ONE query (centre, spaces, n, k) -> points in first rings; tap = re-centre, zoom = change n; forbidden zones render as gaps/haze.",
+    "One resolve(centre, spaces, n, k, audience, exhale) is proposed to collapse the per-address gatherer, greeting assembler, builder context block, and boot bundle into a single parameterized call across three audiences (Tim, RHM/Viv, Sidecar/builder).",
+    "Explicitly marked unratified: 'Tim has not yet ratified rounds 2-3 part-by-part.'"
+  ],
+  "standouts": [
+    "The single property claimed: what Tim sees and what the AIs know are two output formats (exhale faces) of ONE read - they cannot drift apart because they are not two things.",
+    "Learning reframed geometrically as axis-birth under forbidden-zone (gap) pressure, distinct from recognition (a single point rotated onto an existing axis).",
+    "The store/compute split (positions stored, perspectives computed) as a concrete DB consequence of 'the centre moves'."
+  ],
+  "conventions": [
+    "Author attribution discipline: all derived work attributed to Tim Geldard; primary prose said to live in the transcript, this file holds 'load-bearing results'.",
+    "Expand-before-harden honesty: each extension flagged as awaiting Tim's per-part reaction, none ratified.",
+    "Uses the seed's dual-coordinate vocabulary (circle/square, radius/angle, coincidence, forbidden) consistently."
+  ],
+  "concerns": [],
+  "notes": "This is the rounds-2-and-3 capture that turns the geometric seed into concrete system laws (store positions/compute perspectives, viewport-as-instrument, one parameterized resolve) - all explicitly unratified.",
+  "questions": [
+    "Which of the proposed bindings has Tim since ratified, given the file says none were at capture time?",
+    "What is GC14, referenced as the 'ring-membership test' mechanism, without definition here?"
+  ],
+  "purpose_vs_actual": "Match - it states it preserves the growth rounds across compaction and it does exactly that, as two structured round-captures.",
+  "apparent_themes": [
+    "Invariant law over variable bindings",
+    "Attention as re-centring / coordinate transform",
+    "Store-positions / compute-perspectives",
+    "One read, two exhale-faces (shared structural reality)",
+    "Learning as axis-growth under gap-pressure"
+  ],
+  "intention_signals": "It is trying to carry a live, unfinished design conversation across session/compaction boundaries while turning Tim's geometric intuition into actionable system shape - DB schema deltas, a UI query, and a single resolve primitive - without prematurely hardening anything Tim has not confirmed.",
+  "novelty": "The collapse of four distinct context-assembly mechanisms into one resolve(centre, spaces, n, k, audience, exhale), and the claim that Tim's view and the AI's context are non-divergent because they are two formats of one read.",
+  "contribution": "Contributes the round-2/3 design translation: the store-positions/compute-perspectives DB law, the origins+axes registries, the viewport-as-instrument single query, the three-audience binding table, and the unified resolve() proposal.",
+  "summary_for_embedding": "A capture of two amplification rounds growing Tim's geometric seed into system laws: everything-is-variables with a moving centre, bindings of geometry to Company primitives, a store-positions/compute-perspectives DB law, and one parameterized resolve() across three audiences.",
+  "intention_for_embedding": "To preserve an unratified design conversation across compaction and translate Tim's moving-centre geometry into concrete DB, UI, and resolve-primitive deltas."
+}

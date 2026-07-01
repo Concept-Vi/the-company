@@ -1,0 +1,151 @@
+/* ============================================================
+   ConceptV · FLUID SIZING & OVERFLOW-SAFE RHYTHM
+   ------------------------------------------------------------
+   Solves the two recurring pains directly:
+     1. "Text too long spills out of an area."
+     2. "Pills get grouped however long their text is."
+   The rule: NOTHING is sized by its content alone. Type is fluid,
+   space is fluid, every flex child can shrink, and text always has
+   an honest truncation/wrap strategy.
+
+   Pairs with tokens/surfaces.css — fluid values mean a single source
+   reads correctly across desktop / tablet / mobile without per-frame
+   font sizes.
+   ============================================================ */
+:root {
+  /* ---- Fluid type scale — clamp(min, preferred, max) -------- *
+     Min protects mobile legibility; max protects desktop from
+     over-scaling. Preferred is viewport-relative. Swap the family
+     in colors_and_type.css; these are size/rhythm only. */
+  /* Modular scale — the RULE made explicit: each step ≈ previous × --scale-ratio
+     (1.25), with a ~1.9 display jump. New type steps DERIVE from this rule; the
+     clamp pairs below are its responsive expression. (analysis REQUIREMENTS B3.) */
+  --scale-ratio: 1.25; /* @kind other */
+  --scale-base:  16px; /* @kind other */
+  --fs-caption: clamp(11px, 0.70rem + 0.15vw, 13px); /* @kind other */
+  --fs-meta:    clamp(12px, 0.78rem + 0.15vw, 14px); /* @kind other */
+  --fs-body:    clamp(14px, 0.86rem + 0.25vw, 16px); /* @kind other */
+  --fs-lead:    clamp(16px, 0.95rem + 0.45vw, 19px); /* @kind other */
+  --fs-h4:      clamp(17px, 1.00rem + 0.60vw, 22px); /* @kind other */
+  --fs-h3:      clamp(20px, 1.10rem + 1.10vw, 28px); /* @kind other */
+  --fs-h2:      clamp(24px, 1.20rem + 2.10vw, 40px); /* @kind other */
+  --fs-h1:      clamp(30px, 1.30rem + 3.60vw, 60px); /* @kind other */
+  --fs-display: clamp(38px, 1.40rem + 6.00vw, 92px); /* @kind other */
+
+  /* matched line-heights — tighter as size grows */
+  --lh-tight:   1.04; /* @kind other */
+  --lh-snug:    1.18; /* @kind other */
+  --lh-body:    1.55; /* @kind other */
+  --lh-loose:   1.7; /* @kind other */
+
+  /* ---- Fluid spacing — for gaps that should breathe by surface
+     while the 8px scale (--s-*) stays for fixed component innards. */
+  --space-fluid-sm: clamp(8px,  1.2vw, 14px);
+  --space-fluid-md: clamp(14px, 2.2vw, 28px);
+  --space-fluid-lg: clamp(24px, 4.0vw, 56px);
+  --space-fluid-xl: clamp(40px, 6.5vw, 96px);
+
+  /* ---- Measure — cap line length for readability ----------- */
+  --measure:       66ch; /* @kind other */
+  --measure-tight: 46ch; /* @kind other */
+  --measure-wide:  78ch; /* @kind other */
+
+  /* ---- Element / mark SIZE ramp — the value-units of the SIZE AXIS
+     (axes/size/size-axis.js). These are the canonical sizes a whole
+     element/mark (e.g. a Glyphic) is rendered at, xs → hero. Distinct
+     from the inline --icon-* sub-scale (tokens/icons.css), which sizes
+     a glyph WITHIN chrome. One home for "how big a thing is". */
+  --size-xs:   16px; /* @kind other */
+  --size-sm:   24px; /* @kind other */
+  --size-md:   40px; /* @kind other */
+  --size-lg:   56px; /* @kind other */
+  --size-xl:   72px; /* @kind other */
+  --size-hero: 96px; /* @kind other */
+}
+
+/* ============================================================
+   OVERFLOW-SAFE UTILITIES
+   ============================================================ */
+
+/* Single-line ellipsis. REQUIRES the element (and its flex
+   ancestors) to allow shrinking — see .min0 below. */
+.truncate {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Multi-line clamp — set lines with --lines (default 2). */
+.line-clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 2);
+  line-clamp: var(--lines, 2);
+  overflow: hidden;
+}
+
+/* The single most common overflow bug: a flex/grid child won't
+   shrink below its content because min-width defaults to auto.
+   Put .min0 on any flex child that contains truncatable text. */
+.min0 { min-width: 0; }
+.min0-col { min-height: 0; }
+
+/* Long unbroken strings (URLs, IDs) wrap instead of pushing width. */
+.wrap-anywhere { overflow-wrap: anywhere; word-break: break-word; }
+
+.measure       { max-width: var(--measure); }
+.measure-tight { max-width: var(--measure-tight); }
+.measure-wide  { max-width: var(--measure-wide); }
+
+/* ============================================================
+   PILL / CHIP GROUP — wraps as a set, never overflows
+   ------------------------------------------------------------
+   Use .pill-group as the container; each child gets even gaps and
+   wraps to a new line as a group. Individual pills truncate their
+   own label past --pill-max rather than stretching the row.
+     <div class="pill-group">
+       <span class="pill">…</span> …
+     </div>
+   ============================================================ */
+.pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+  min-width: 0;
+}
+.pill-group.scroll {          /* opt-in: single row that scrolls */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.pill-group.scroll::-webkit-scrollbar { display: none; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  max-width: var(--pill-max, 22ch);
+  min-width: 0;
+  flex: 0 1 auto;             /* may shrink, won't grow to fill */
+  padding: var(--s-1) var(--s-3);
+  border-radius: 999px;
+  font-size: var(--fs-caption);
+  line-height: 1;
+  white-space: nowrap;
+}
+.pill > .pill-label {          /* the truncating part */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive auto-grid — children flow into as many columns as fit
+   at --col-min wide, then wrap. No media queries needed. */
+.auto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--col-min, 240px), 100%), 1fr));
+  gap: var(--space-fluid-md);
+}

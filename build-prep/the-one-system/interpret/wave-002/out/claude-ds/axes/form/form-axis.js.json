@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "axes/form/form-axis.js",
+  "model": "opus",
+  "what_it_does": "Defines the 'form' axis — a typed view over outer-ring geometry — by building an axis object with CV_AXES.make() and registering it on window.CV_AXES. The axis enumerates ring shapes (none, triangle, square, diamond, pentagon, hex, heptagon, septagon, octagon, circle) ordered by side-count, grouped into none/polygon/round, and references shapes that exist in window.CV_SHAPES.geom.",
+  "observations": [
+    "IIFE that guards on window.CV_AXES existing, logging an error and returning if the axis core hasn't loaded first.",
+    "Captures window.CV_SHAPES as local S; the axis is a typed view over CV_SHAPES.geom, not a definition of geometry.",
+    "ORDER array lists shapes as [name, sideCount, optionalLabel]; 'none' is 0 sides, 'circle' is Infinity ('the ∞ end').",
+    "values are filtered: 'none' and 'circle' always included, others only kept if S.geom[name] exists — so the axis reflects which ring forms actually exist in CV_SHAPES.",
+    "Each value's resolve() returns null — form has no single CSS payload; consumers render via CV_SHAPES.markSVG.",
+    "Marks 'none' with zero:true; default value is 'circle'.",
+    "Includes apparent duplicate-side entries (square+diamond both 4; heptagon+septagon both 7).",
+    "meta carries {sides, shape}, with shape null for 'none'.",
+    "Group assignment is inline: 'none'→none, 'circle'→round, everything else→polygon."
+  ],
+  "standouts": [
+    "The n-gon progression framing: 0 (no ring) → 3..8 sides → ∞ (circle) as a single ordered axis.",
+    "resolve() deliberately returns null — explicitly states form delegates rendering to CV_SHAPES.markSVG rather than emitting CSS.",
+    "Form→type-class MEANING is explicitly kept out of this file (lives in CV_SHAPES.shapeTypes / CV_MEANING)."
+  ],
+  "conventions": [
+    "Follows the project's single-home rule: references CV_SHAPES.geom rather than redefining geometry.",
+    "Uses the CV_AXES.make()/register() axis pattern with id/label/description/groups/values/default.",
+    "Load-order discipline stated in header comment (after axis-core.js and cv-shapes.js).",
+    "Guard-and-return-on-missing-dependency idiom at top of IIFE."
+  ],
+  "concerns": [],
+  "notes": "The 'form' axis = which outer-ring shapes exist, as a typed ordered view over CV_SHAPES.geom; it renders nothing itself (resolve→null), deferring to CV_SHAPES.markSVG and CV_MEANING for shape and meaning.",
+  "questions": [
+    "square and diamond both have 4 sides, heptagon and septagon both 7 — are these distinct shapes in CV_SHAPES.geom or aliases, and how do consumers disambiguate?",
+    "If 'none' or 'circle' are not present in CV_SHAPES.geom but always included by the filter, will CV_SHAPES.markSVG handle them, or is rendering of these special-cased elsewhere?"
+  ],
+  "purpose_vs_actual": "Match — the header states it is a typed view over outer-ring geometry that defines no geometry and keeps meaning elsewhere, and the code does exactly that (filters/maps CV_SHAPES.geom keys, resolve→null, no meaning logic).",
+  "apparent_themes": [
+    "Single source of truth / reference-don't-copy (geometry stays in CV_SHAPES).",
+    "Axis as a generative dial over an existing registry.",
+    "Separation of geometry, meaning, and rendering into distinct homes."
+  ],
+  "intention_signals": "Provides a queryable, ordered catalogue of 'which ring forms exist' as one axis in a generative design model, so consumers can dial form without each holding its own shape list, while geometry and meaning stay in their own single homes.",
+  "novelty": "Treating discrete geometric shapes as a continuous-feeling ordered axis (0→n-gon→∞) and giving it a deliberately empty resolve() because rendering is delegated to a sibling shapes module.",
+  "contribution": "Contributes the 'form' dimension of the axis model — an ordered, group-bucketed, filtered enumeration of outer-ring shapes that is a typed view over CV_SHAPES.geom and defers rendering/meaning to other homes.",
+  "summary_for_embedding": "A JS IIFE registering the 'form' axis on window.CV_AXES as a typed, ordered view over CV_SHAPES.geom ring shapes (none→polygons→circle) with no CSS payload, deferring rendering to CV_SHAPES.markSVG.",
+  "intention_for_embedding": "To provide one home for 'which outer-ring forms exist' as a generative axis dial, referencing existing geometry rather than redefining it."
+}

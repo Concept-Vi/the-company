@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Icon — tones & sizes" subtitle="Bronze · gold · ink · muted · cream" viewport="700x280" --><html><head><meta charset="utf-8"><title>Icon — tones & sizes</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 22px 26px; min-height: 240px; }
+  .lead { font: 400 12px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 18px; max-width: 90%; }
+  .lead b { color: var(--fg-primary); }
+  .row { display: grid; grid-template-columns: 92px 1fr; gap: 14px; align-items: center; margin-bottom: 14px; }
+  .label { font: 600 11px/1 var(--font-body); color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .stage { display: flex; gap: 14px; align-items: center; }
+  .stage.dark { background: var(--bg-dark); padding: 12px 14px; border-radius: var(--r-md); }
+  .meta { font: 400 11px/1 var(--font-body); color: var(--fg-secondary); margin-top: 8px; }
+  .meta code { font-family: var(--font-mono); font-size: 11px; color: var(--accent-gold); }
+</style></head>
+<body><div class="card">
+  <p class="lead">Tones & sizes. Pass <code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-gold)">tone="bronze|gold|ink|muted|cream"</code> and <code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-gold)">size</code> (px).</p>
+  <div class="row"><span class="label">Bronze</span><div class="stage" id="t-bronze"></div></div>
+  <div class="row"><span class="label">Gold</span><div class="stage" id="t-gold"></div></div>
+  <div class="row"><span class="label">Ink</span><div class="stage" id="t-ink"></div></div>
+  <div class="row"><span class="label">On dark</span><div class="stage dark" id="t-cream"></div></div>
+  <p class="meta">Default <code>tone="bronze"</code> · default <code>size={24}</code> · stroke fixed at 1.5 px</p>
+</div>
+<script src="../assets/icons/cv-icons.js"></script>
+<script>
+const SIZES = [16, 20, 24, 32, 40];
+const ICONS = ['house','file','chat','dashboard','network'];
+const TONES = { bronze: 'var(--accent-bronze)', gold: 'var(--accent-gold)', ink: 'var(--fg-primary)', cream: 'var(--bg-canvas)' };
+Object.entries(TONES).forEach(([t, color]) => {
+  const stage = document.getElementById('t-' + t);
+  if (!stage) return;
+  ICONS.forEach((name, i) => {
+    const sz = SIZES[i];
+    const body = window.CV_ICONS.data[name];
+    stage.innerHTML += `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+  });
+});
+</script>
+</body></html>

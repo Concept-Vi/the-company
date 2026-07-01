@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/imagery.css",
+  "model": "opus",
+  "what_it_does": "Defines responsive imagery handling: aspect-ratio tokens (square through ultrawide plus hero), image radius/background/overlay tokens, a `.media` ratio-locked box with object-fit children, a legibility `.scrim` gradient, a `.img-blurup` blur-up loading treatment, and a `[data-art]` art-direction system that shows the crop matching the declared `[data-surface]`.",
+  "observations": [
+    "Aspect-ratio tokens: --ar-square 1/1, portrait 3/4, landscape 4/3, wide 16/9, ultrawide 21/9, hero 3/2",
+    ".media locks aspect-ratio (default --ar-wide) with overflow hidden to prevent layout shift while loading",
+    ".media children (img/video/image-slot) absolutely fill and use object-fit var(--fit, cover) and var(--pos, center)",
+    ".scrim adds a bottom-up linear-gradient ::after for text legibility over imagery",
+    "--img-overlay uses color-mix(in oklch, var(--ink) 18%, transparent)",
+    ".img-blurup starts blurred + scaled and transitions to sharp when .is-loaded is added by JS on load",
+    "Art direction: [data-art] hidden by default; surface-scoped selectors reveal desktop/portrait/landscape crops; fallback shows desktop crop when no surface declared",
+    "References custom element <image-slot> as a possible media child"
+  ],
+  "standouts": [
+    "Art-direction via [data-surface] descendant selectors as a 'framed-preview' alternative to native <picture> media queries",
+    "Zero-layout-shift framing through aspect-ratio plus absolute-fill children"
+  ],
+  "conventions": [
+    "Token-then-class pattern with per-instance overrides (--ar, --fit, --pos)",
+    "@kind other annotations on the aspect-ratio token values",
+    "Reuses motion tokens (--dur-enter, --ease-out) for the blur-up transition",
+    "References zone/ink tokens with fallbacks"
+  ],
+  "concerns": [
+    "The blur-up transition references --ease-out, but the motion file (motion.css) defines --ease-entrance/--ease-exit/--ease-emphasized/--ease-spring — no --ease-out is defined there, so the easing may fall back to default unless --ease-out exists in another token file (unverified from this file alone)"
+  ],
+  "notes": "The single home for ratio-locked media boxes, blur-up loading, legibility scrims, and surface-keyed art direction; default ratio is 16/9 and default fit is cover.",
+  "questions": [
+    "Is --ease-out defined elsewhere, or is the blur-up easing relying on a token that does not exist (the motion file uses different easing names)?",
+    "What is the <image-slot> custom element and where is it defined/registered?",
+    "Where are --zone-panel-strong, --ink, and --r-md defined?"
+  ],
+  "purpose_vs_actual": "Matches — header promises responsive, no-flash images with art direction; the file delivers ratio boxes, blur-up, scrim, and surface-keyed crop switching.",
+  "apparent_themes": [
+    "zero layout shift",
+    "progressive/blur-up loading",
+    "art direction per surface",
+    "single-source design tokens"
+  ],
+  "intention_signals": "Trying to make imagery responsive and stable by construction — never flashing or shifting layout, cropping appropriately per surface, and resolving from blurred placeholder to sharp.",
+  "novelty": "The [data-surface]-scoped art-direction selectors as a CSS-only crop switcher distinct from <picture>, and the <image-slot> custom element as a media child.",
+  "contribution": "Contributes the aspect-ratio token set, the ratio-locked .media box, blur-up loading, the legibility scrim, and the surface-keyed art-direction mechanism.",
+  "summary_for_embedding": "ConceptV design-system CSS for responsive imagery: aspect-ratio tokens, a layout-shift-free .media box, blur-up loading, a legibility scrim, and surface-keyed art-direction crop switching.",
+  "intention_for_embedding": "To make images responsive and non-flashing by construction, with per-surface crops and progressive blur-up loading driven by single-source tokens."
+}

@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-B4-presence-dial-desktop.json",
+  "model": "opus",
+  "what_it_does": "Records the grounding-batch result for the B4-presence-dial-desktop.html mockup: a 'ground' summary of the screen, candidate/dossier/cluster counts (35/35/6), and two arrays of UI-element dossiers — 'confirmed' (3) and 'flagged' (3) — each carrying an address, capabilities, grounding state, a howto (what/what-you-can-do/how-to-change), feature mapping, and a jury verdict.",
+  "observations": [
+    "Screen is the Presence Dial: 8 RHM modes (Listening, Text-Only, Background, Focus, Walkthrough, Watch-and-React, Decide-for-Me, Off) that change the assistant's posture, loudness, autonomy.",
+    "Each dossier addresses a UI element via a ui:// scheme (e.g. ui://toolbar/presence/dial, .../watch-and-react, .../self-approve).",
+    "Capabilities vocabulary includes pointable, presentable, openable.",
+    "Grounding field carries values 'built' and 'proposed'.",
+    "Verdicts come from an 'accuracy jury' with n=3 draws, votes_grounded/votes_ungrounded, quorum and unanimous flags.",
+    "The largest flagged cluster (ui://toolbar/presence/dial) holds 30 of 35 members yet failed quorum (1 of 3 grounded).",
+    "Flag reasons cite 'Layer 2, SOFT — variance not error' for accuracy-jury failures.",
+    "howto.how_to_change repeatedly points at runtime/suite.py:set_mode and a MODES registry as where modes live.",
+    "A self-approve guard dossier represents a UI element that visually blocks selecting a self-approve mode."
+  ],
+  "standouts": [
+    "The dominant cluster (30 members) is the one that gets flagged, so the most-represented element is the least-confidently-grounded.",
+    "A guard element (no self-approve) is modeled as a first-class addressable UI dossier.",
+    "Decide-for-Me dossier was unanimously voted ungrounded (0 of 3)."
+  ],
+  "conventions": [
+    "Follows a ui:// addressing convention for surface elements.",
+    "Uses a confirmed/flagged split driven by a quorum-based jury rather than a single judgment.",
+    "Every dossier carries a plain-language howto triad (what / what_you_can_do / how_to_change).",
+    "howto.how_to_change always names a concrete code location."
+  ],
+  "concerns": [
+    "Within this file the same maps_to_feature 'RHM-modes' is attached to several distinct represents values, so the feature key is coarse relative to the element distinctions.",
+    "The biggest cluster is flagged, which leaves the screen's central control without a confirmed grounding in this artifact."
+  ],
+  "notes": "A jury-graded inventory of the desktop presence-dial mockup's clickable elements; 3 confirmed, 3 flagged, with the central dial itself among the flagged.",
+  "questions": [
+    "What threshold defines 'quorum' for the accuracy jury (the data shows quorum=true at 2 of 3 grounded, false at 1 of 3)?",
+    "Why does the 30-member dial cluster fail grounding while small single-member clusters of the same feature pass?",
+    "What downstream process consumes the confirmed vs flagged split?"
+  ],
+  "purpose_vs_actual": "Matches: the file states it is a grounding result for one mockup and that is exactly what its structure and contents are.",
+  "apparent_themes": [
+    "Operator posture/mode control (presence)",
+    "Bounded autonomy with explicit guards (no self-approve)",
+    "Evidence-graded UI grounding via multi-draw jury"
+  ],
+  "intention_signals": "It appears to be trying to verify, element by element, whether each described UI control on a mockup is actually grounded in built code, using a soft probabilistic jury so that uncertain mappings are flagged for human scrutiny rather than asserted true.",
+  "novelty": "Treats UI-element-to-code grounding as a probabilistic, quorum-voted claim (variance-not-error) rather than a binary fact.",
+  "contribution": "Contributes the desktop presence-dial element inventory with per-element addresses, capability tags, plain-language howtos, and jury-graded grounding verdicts for the 8-mode RHM posture control including its self-approve guard.",
+  "summary_for_embedding": "Grounding-batch JSON for the desktop presence-dial mockup, listing 35 clustered UI-element dossiers (RHM modes, self-approve guard) split into 3 jury-confirmed and 3 flagged with quorum-voted grounding verdicts.",
+  "intention_for_embedding": "To check whether each described control on the presence-dial desktop mockup is actually grounded in built code, flagging low-confidence mappings for operator review."
+}

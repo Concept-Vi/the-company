@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/depth.css",
+  "model": "opus",
+  "what_it_does": "Defines an elevation and texture token layer: a warm-tinted shadow colour, a six-step elevation ramp (--elev-0..--elev-5) each built from an ambient + key shadow layer, a gold active-glow, an inset/pressed shadow, and grain/hairline texture tokens. Provides elevation helper classes (.e0..-.e5, .glow-active) and a .grain utility that paints an inline SVG fractal-noise overlay.",
+  "observations": [
+    "--shadow-c is a warm hsl base mixed into each elevation via color-mix(in srgb, var(--shadow-c) N%, transparent)",
+    "Elevation ramp roles are documented: e0 flush, e1 raised card, e2 hover, e3 popover/menu, e4 modal, e5 dragged/floating; opacity and blur grow with the step",
+    "--glow-active combines a 1px --vi-edge ring with a gold (--accent-gold) drop, reserved for the one decision element",
+    "--elev-inset provides a pressed inset shadow",
+    "Texture tokens: --grain-opacity 0.05, --grain-scale 180px, --hairline and --hairline-strong as shadow-tinted color-mix",
+    ".grain uses isolation:isolate and an ::after pseudo with a data:URI SVG feTurbulence fractalNoise, pointer-events:none, mix-blend-mode:multiply",
+    "Header flags tint/grain colour as placeholders the visual DNA will refine; the ramp and roles are the durable part"
+  ],
+  "standouts": [
+    "Shadows are warm-tinted (parchment world) rather than neutral grey, and derived from one --shadow-c so palette swaps carry through",
+    "Each elevation is an ambient+key two-layer shadow so cards read as stacked sheets, not heavy boxes",
+    "Gold glow reserved for the single decision element, echoing the system's gold-for-the-key-thing discipline"
+  ],
+  "conventions": [
+    "Tokenised ramp instead of ad-hoc box-shadows; consumers use --elev-* / helper classes",
+    "color-mix derivation from a single base colour for palette-swap safety",
+    "@kind inline annotations on select declarations consistent with token tagging",
+    "Self-masking overlay (pointer-events:none) so decoration never blocks interaction"
+  ],
+  "concerns": [],
+  "notes": "A warm-tinted elevation ramp (e0-e5, ambient+key two-layer shadows) plus a gold active-glow, inset, and an SVG-noise grain overlay; aesthetic values are placeholders but the ramp/roles are durable.",
+  "questions": [
+    "Where are --vi-edge and --accent-gold defined that this file references?",
+    "The header says tint/grain are placeholders the visual DNA will refine - has that refinement happened or is it pending?"
+  ],
+  "purpose_vs_actual": "Matches: the header promises a tokenised warm elevation ramp plus subtle grain texture, and the file delivers the ramp, glow, inset, hairlines, and the grain utility.",
+  "apparent_themes": [
+    "depth/texture as a tokenised dimension, not ad-hoc shadows",
+    "warmth/material coherence (parchment world, sheets not boxes)",
+    "single-source derivation for palette-swap resilience",
+    "reserved gold emphasis for the decision element",
+    "decoration that never impedes interaction"
+  ],
+  "intention_signals": "Aims to give the surface a felt material depth (lightly stacked warm sheets with subtle paper tooth) through a coherent elevation ramp and texture tokens, all derived from one shadow colour so the look stays consistent under palette changes.",
+  "novelty": "Warm-tinted, two-layer (ambient+key) elevation expressed as a tokenised ramp tied to a parchment aesthetic, with an inline SVG fractal-noise grain overlay as a reusable utility.",
+  "contribution": "Contributes the depth/elevation vocabulary: the warm shadow base, the e0-e5 ramp with named roles, the gold active-glow, inset, hairline tokens, and the self-masking grain texture utility.",
+  "summary_for_embedding": "A CSS file defining a warm-tinted elevation ramp (--elev-0..5, ambient+key shadows), a gold active-glow, inset and hairline tokens, and a grain texture utility using an inline SVG fractal-noise overlay, with helper elevation classes.",
+  "intention_for_embedding": "To add a coherent, palette-resilient depth and texture dimension (stacked warm sheets, subtle paper grain) as tokenised elevation roles rather than ad-hoc box-shadows, reserving a gold glow for the decision element."
+}

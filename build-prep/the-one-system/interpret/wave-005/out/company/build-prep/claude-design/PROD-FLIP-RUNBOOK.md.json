@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/PROD-FLIP-RUNBOOK.md",
+  "model": "opus",
+  "what_it_does": "A staged, one-confirm-to-execute runbook for taking the Claude Design connector public. It splits the flip into AUTOMATIC steps (lead applies prod migrations 0001-0006 and mints the prod boundary principal; builder deploys the edge function), TIM's three dashboard steps (enable OAuth server, create the OAuth client, set custom domain vspokes.com), a lead live re-verify on the prod public endpoint (the full A-I gate), and a handoff card of connector-dialog inputs for Tim. It also lists OPEN items to resolve at the flip and explains why it is staged not fired.",
+  "observations": [
+    "Precondition stated up front: Tim's EXPLICIT, PRESENT 'do the flip' — not a vague 'go' — because opening the public door is irreversible and outward-facing and needs Tim at a keyboard for his 3 dashboard steps",
+    "Lead steps: apply migrations 0001-0006 to prod project gctunhsuwpaxeatwlmuv via supabase MCP apply_migration (lists each file by name/role); mint the prod boundary principal with app_metadata.role=company_boundary and hand fork the cred out-of-channel (canonical env names)",
+    "Builder step: deploy the edge function with verify_jwt=false because the EF IS the auth gate (jose jwtVerify vs JWKS) — Supabase's function-JWT would double-gate; Supabase auto-injects URL/SERVICE_ROLE/ANON keys",
+    "Tim's 3 dashboard steps: enable OAuth server, create OAuth client (Name Vi, Redirect URI https://claude.ai/api/mcp/auth_callback, Confidential) yielding Client ID+Secret, and route custom domain vspokes.com",
+    "Notes the CD OAuth-flow user must carry app_metadata role=design_client + client_id=claude-design + scope company:design:write so 0006 RLS gates it like local",
+    "Lead's gate-before-usable: re-run the full A-I LIVE-LOCAL-VERIFY gate on the prod public endpoint with a real OAuth token; only on green is the door 'open'",
+    "Handoff card gives the exact connector-dialog inputs (Name, MCP server URL, OAuth Client ID, Secret) to paste into Claude's Add-custom-connector dialog",
+    "OPEN items: the design_client OAuth-claims mechanism (likely a custom-access-token hook that also does the AUDIENCE resource-binding fast-follow), and whether the OAuth-client step is Tim-in-dashboard or lead-via-API",
+    "Closes with rationale: nothing touched prod while Tim was away on a bike ride; everything staged for a minutes-long execution on his present confirm"
+  ],
+  "standouts": [
+    "The hard precondition gating execution on Tim's explicit present confirm for an irreversible public deploy",
+    "The verify_jwt=false rationale (the EF is the single auth gate; double-gating would break it)",
+    "The clean automatic-vs-Tim-dashboard split, with secrets handed out-of-channel and the exact handoff card"
+  ],
+  "conventions": [
+    "Embodies operator-only / human-in-the-loop discipline for high-severity irreversible actions",
+    "Re-uses the A-I gate from LIVE-LOCAL-VERIFY.md as the prod go-live condition (one gate, two environments)",
+    "Carries provenance (staged by lead 2026-06-18 while Tim away) and out-of-channel secret handling"
+  ],
+  "concerns": [],
+  "notes": "The execute-on-confirm runbook for the connector's public flip: who does what (lead migrations+principal, builder EF deploy, Tim's 3 dashboard steps), the prod A-I re-verify, and the connector handoff card — gated on Tim's explicit present 'do the flip'.",
+  "questions": [
+    "Was the flip ever executed, and did the prod A-I re-verify pass green?",
+    "Did the custom-access-token hook (carrying both the design_client claims and the AUDIENCE resource binding) get built as the OPEN item anticipated?"
+  ],
+  "purpose_vs_actual": "Matches. It states it is a staged one-confirm-to-execute runbook for the public flip, and the body delivers the step split, the gate, the handoff, and the opens to exactly that end.",
+  "apparent_themes": [
+    "operator-only / human-confirm for irreversible outward-facing actions",
+    "the edge function as the single auth gate (verify_jwt=false by design)",
+    "one gate re-run live (A-I) as the go-live condition",
+    "staged-not-fired: nothing touches prod without explicit present confirm"
+  ],
+  "intention_signals": "Trying to make the public flip a minutes-long, low-risk execution of an already-proven thing — every automatic step pre-specified, Tim's irreducible dashboard/OAuth/domain steps isolated, and the door declared open only after the same security gate passes live on prod.",
+  "novelty": "The explicit AUTOMATIC-vs-Tim-dashboard task split with out-of-channel secret handoff and a ready-to-paste connector-dialog handoff card, plus the verify_jwt=false single-gate rationale.",
+  "contribution": "Contributes the operational procedure for taking the connector public: the prod migration/principal/EF-deploy steps, Tim's three irreducible dashboard steps, the prod A-I re-verify as the go-live gate, and the connector handoff card — a fused system would keep this as the connector's deploy runbook and its human-confirm discipline.",
+  "summary_for_embedding": "A staged one-confirm-to-execute runbook for taking the Claude Design connector public: lead applies prod migrations and mints the boundary principal, builder deploys the edge function (verify_jwt=false), Tim does three dashboard steps (OAuth server, OAuth client, custom domain vspokes.com), the lead re-runs the full A-I gate live, and a handoff card gives the connector-dialog inputs.",
+  "intention_for_embedding": "Written so the irreversible public flip is a fast, low-risk execution of an already-proven connector — pre-specifying every automatic step, isolating Tim's irreducible OAuth/domain steps, and opening the door only after the same security gate passes live on prod, gated on Tim's explicit present confirm."
+}

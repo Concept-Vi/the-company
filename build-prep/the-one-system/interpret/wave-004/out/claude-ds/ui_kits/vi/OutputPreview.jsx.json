@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/vi/OutputPreview.jsx",
+  "model": "opus",
+  "what_it_does": "A React (browser-Babel, no imports) component for the Vi kit that renders a live-updating brochure preview. Driven by a `filled` props object, it shows a real-estate brochure (hero title, brand palette swatches, feature stats, description, starting price, agent contact, export formats) where each section reflects a state of done/pending/gap — filled content, a drafting skeleton, or a 'missing' gap.",
+  "observations": [
+    "Defines BrochureSection (a section wrapper that maps state -> icon ✓/●/! and label Filled/Drafting/Missing) and the main OutputPreview component",
+    "Each section's visual state is derived from boolean flags on the `filled` prop (filled.title, filled.brand, filled.stats, filled.description, filled.price, filled.agent, filled.finalize)",
+    "Hardcoded demo content: a 'Sky Apartments — From the 12th floor' title, 2BED/2BATH/98m²/1CAR stats, a fixed description, source 'Tower East Master Info'",
+    "Brand palette swatches use four hardcoded hex literals (#1F1A12, #E0C010, #988058, #F4E89A); when not filled they fall back to var(--bg-muted)",
+    "Missing/gap states render '— missing —' colored with var(--status-error)",
+    "Skeleton placeholders via .vi-brochure-value.skel when content not yet generated",
+    "Heavy inline styles mixed with vi- classes (presumably from vi.css)",
+    "Self-registers via window.OutputPreview; no module export",
+    "Export formats (PDF/DOC/HTML) become 'active' only when filled.finalize is true"
+  ],
+  "standouts": [
+    "Models a progressive-generation UX: each brochure field shows drafting -> filled, and explicitly surfaces GAPS (missing price/agent) rather than hiding them",
+    "The done/pending/gap tri-state with distinct icons and colors is a clear status vocabulary",
+    "Demonstrates the 'live preview of an AI being built' concept central to the Vi workspace"
+  ],
+  "conventions": [
+    "Follows the Vi kit's window-global self-registration convention",
+    "Uses status tokens (var(--status-error)) and shared tokens for muted/faint colors",
+    "BREAKS the token convention with four hardcoded brand-palette hex literals in the swatch row"
+  ],
+  "concerns": [
+    "Four hardcoded brand hex colors in the swatches are off-token (though arguably illustrating a generated palette, not the kit's own theme)",
+    "All brochure content is fixed demo data, so this previews one scripted example rather than arbitrary input"
+  ],
+  "notes": "The Vi kit's live brochure-preview component — a state-driven (done/pending/gap) real-estate brochure that shows generation progress and surfaces missing fields, driven by a `filled` flags prop.",
+  "questions": [
+    "Who sets the `filled` flags over time (which parent drives the live-update sequence)?",
+    "Are the four palette hex values meant to represent a generated brand palette (data) rather than the kit's tokens?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment says 'the brochure being built, updates live' and the component renders exactly a progressively-filled brochure with live states.",
+  "apparent_themes": ["live AI output preview", "progressive generation states (done/pending/gap)", "explicit gap-surfacing", "skeleton loading", "state-driven UI from a flags prop"],
+  "intention_signals": "Aims to make the AI's work-in-progress visible and trustworthy — showing each brochure field as it drafts and fills, and honestly marking what is still missing, embodying a 'show outcomes, surface gaps' philosophy.",
+  "novelty": "The explicit gap/'— missing —' state alongside done/pending, turning the preview into an honest progress + completeness signal rather than a finished-looking mockup.",
+  "contribution": "Contributes the Vi workspace's live-output-preview pattern: a state-driven brochure that visualises AI generation progress (drafting/filled) and explicitly surfaces missing fields, with skeletons and an export-formats footer.",
+  "summary_for_embedding": "React OutputPreview component for the Vi kit rendering a live real-estate brochure whose sections show done/pending/gap states (filled content, skeleton, or missing), driven by a `filled` flags prop, registered on window.",
+  "intention_for_embedding": "To visualise an AI-generated brochure being built live, showing per-field progress and honestly surfacing missing fields."
+}

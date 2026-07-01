@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/focus.css",
+  "model": "opus",
+  "what_it_does": "Implements a focus/attention mechanism where one object becomes the subject and everything else recedes (desaturated, dimmed, slightly blurred and lowered) while the subject lifts forward (translateY, scale, raised shadow and z-index). Defines recede/focus tuning tokens, a .focus-scope container with transitions, explicit [data-recede] and [data-focus] targeting, an implicit is-focusing mode that recedes everything that is not the subject, and a reduced-motion fallback.",
+  "observations": [
+    "Tuning tokens: --recede-opacity 0.42, --recede-saturate 0.65, --recede-blur 1.5px, --focus-lift -2px, --focus-scale 1.015",
+    ".focus-scope > * transitions opacity/filter/transform/box-shadow using --dur-move with --ease-out and --ease-emphasized",
+    "Receding applies opacity + saturate + blur filter; the subject lifts via translateY+scale, --elev-4 shadow, --z-raised, position:relative",
+    "Implicit mode uses :not([data-focus]):not(:has([data-focus])) so containers wrapping the subject do not recede",
+    "prefers-reduced-motion:reduce drops the subject transform and keeps only desaturation (no blur) for receded items",
+    "@kind annotations on the unitless tuning tokens"
+  ],
+  "standouts": [
+    "Framed as the inverse of off-frame ghosting, aimed inward at attention - turning a spatial instinct into a reusable mechanism",
+    "Uses :has() so an element containing the focus subject is exempted from receding, keeping ancestor chains visible",
+    "Reduced-motion path preserves the recede signal via desaturation while removing motion and blur"
+  ],
+  "conventions": [
+    "Knob pattern: data-* attributes ([data-focus]/[data-recede]) and an is-focusing class driving CSS vars",
+    "Token-referenced motion (--dur-move, --ease-*), elevation (--elev-4), and z-index (--z-raised)",
+    "Accessibility: explicit prefers-reduced-motion fallback"
+  ],
+  "concerns": [],
+  "notes": "A focus mechanism: mark a subject [data-focus] inside a .focus-scope (or use is-focusing) and the rest recedes (dim/desaturate/blur/lower) while the subject lifts; :has() spares ancestors and a reduced-motion fallback keeps only desaturation.",
+  "questions": [
+    "Where are --dur-move, --ease-out, --ease-emphasized, --elev-4, and --z-raised defined?",
+    "Is is-focusing toggled by JS at runtime, and what drives the focus selection?"
+  ],
+  "purpose_vs_actual": "Matches: the header describes bring-the-subject-forward / soften-the-rest as a mechanism, and the file implements both explicit and implicit forms plus a reduced-motion fallback.",
+  "apparent_themes": [
+    "attention as a first-class spatial mechanism",
+    "inverse symmetry with off-frame ghosting (recede inward)",
+    "ancestor-aware selection via :has()",
+    "accessibility (reduced-motion preservation of the signal)"
+  ],
+  "intention_signals": "Aims to codify the instinct of focusing attention - lift the subject, push the rest back - into a reusable, tokenised CSS mechanism that works either by explicit marking or an implicit scope mode, while remaining accessible.",
+  "novelty": "Casting attention/focus as a tokenised recede-and-lift mechanism (the inward inverse of off-frame ghosting), with :has()-based exemption of the subject's ancestors and a recede signal that survives reduced-motion as pure desaturation.",
+  "contribution": "Contributes the focus/attention vocabulary: recede/lift tuning tokens, the .focus-scope container with explicit ([data-focus]/[data-recede]) and implicit (is-focusing) modes, and the reduced-motion fallback.",
+  "summary_for_embedding": "A CSS file implementing a focus/attention mechanism via a .focus-scope container that lifts the [data-focus] subject and recedes (dims, desaturates, blurs, lowers) everything else, with explicit and implicit modes and a reduced-motion fallback.",
+  "intention_for_embedding": "To turn the instinct of bringing one object forward while softening the rest into a reusable tokenised mechanism (the inward inverse of off-frame ghosting), usable by explicit marking or scope mode, and accessible under reduced motion."
+}

@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10_surface.py",
+  "model": "opus",
+  "what_it_does": "Surfaces the full RG10 mockup-element registry run as ONE aggregate review card at the operator's APPROVE gate. Loads .build/rg10/state.json and design/_system/candidates.json, refuses to run unless every mockup is either done or failed-loud, refuses if an unresolved full-run card already sits in the inbox, then aggregates per-mockup counts (candidates/clusters/confirmed/flagged) plus compact confirmed rows (address, maps_to_feature, grounding) read from each rg10-batch-*.json artifact, and posts the item via Suite.surface_review. It writes nothing to addresses.json or the mockups.",
+  "observations": [
+    "os.chdir to /home/tim/company and sys.path.insert at module top before imports",
+    "Reads STATE=.build/rg10/state.json and candidates from design/_system/candidates.json",
+    "Two fail-loud guards: not-done mockups (RuntimeError listing up to 3) and an existing unresolved full-run registry_proposal_batch card in s.inbox.list()",
+    "Builds per_mockup summary list and confirmed_by_mockup map of {address, maps_to_feature, grounding} from each batch artifact",
+    "Carries state['failed'] forward as failed_loud in the payload so failed mockups ride along as needs-attention",
+    "Item kind is registry_proposal_batch with scope full-run; summary prose narrates the GROUND→MAP→cluster-dedup→jury+refcheck CONFIRM chain and references 82 existing registry entries",
+    "Uses Suite(FsStore('.data/store'), NodeRegistry().discover(['nodes']), nodes_dir='nodes') and origin='responsive'",
+    "main() returns a dict and __main__ prints it as indented JSON"
+  ],
+  "standouts": [
+    "Heavy docstring encodes a governance rule it calls THE FLOOR: this surfaces, only the operator approves; nothing here writes addresses.json",
+    "Duplicate-guard treats inbox.list() as the real listing API and refuses a second card",
+    "failed-loud mockups are explicitly never silently dropped — they ride the payload"
+  ],
+  "conventions": [
+    "Fail-loud RuntimeError with descriptive messages rather than silent skips",
+    "main()->dict + __main__ json.dumps(default=str) pattern shared across the rg10 scripts",
+    "Path bootstrapping via os.chdir + sys.path.insert at top of file",
+    "Reuse of existing Suite/inbox/surface_review primitives rather than new machinery"
+  ],
+  "concerns": [
+    "Many bare json.load(open(...)) calls with no file-not-found handling beyond the implicit exception",
+    "Hardcoded absolute path /home/tim/company makes the script environment-specific"
+  ],
+  "notes": "The RG8 step: aggregates a finished RG10 run into a single scannable approve-gate card and refuses to run if incomplete or already surfaced — read-only, no write-back here.",
+  "questions": [
+    "Where does state.json's 'done'/'failed' structure get written (which run script populates it)?",
+    "What does surface_review return and how is origin='responsive' consumed downstream?"
+  ],
+  "purpose_vs_actual": "Match — the docstring's claim (surface the full run as one approve-gate aggregate card, never write) is exactly what the code does.",
+  "apparent_themes": [
+    "Operator-as-sole-authority gate (approval authorizes write-back, code never self-applies)",
+    "Render-for-scanning at the operator's altitude",
+    "Fail-loud completeness — nothing dropped, no duplicate cards",
+    "Reuse existing surfacing primitives"
+  ],
+  "intention_signals": "Trying to give the operator one approvable view of an entire autonomous registry-generation run, with totals and per-mockup confirmed rows up front and full dossiers deferred to artifacts, while enforcing that approval (not the code) is what authorizes any change.",
+  "novelty": "The explicit 'THE FLOOR' separation of surfacing from authorization, plus carrying failed-loud mockups into the same approve card as needs-attention.",
+  "contribution": "Contributes the aggregate-surfacing step that turns a completed per-mockup RG10 run into a single operator approve-gate review item, with completeness and duplicate guards and a scannable per-mockup/confirmed-rows payload shape.",
+  "summary_for_embedding": "Python script (RG8) that aggregates a completed RG10 mockup-element registry run into one operator APPROVE-gate review card via Suite.surface_review, with completeness and duplicate guards, writing nothing itself.",
+  "intention_for_embedding": "To present an entire autonomous registry-generation run as a single scannable approval item at the operator's altitude, where only the operator's approval authorizes the subsequent write-back."
+}

@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "assets/icons/icon-paths.js",
+  "model": "opus",
+  "what_it_does": "Defines window.CONCEPTV_ICONS, a large flat object mapping icon names to {set, cat, body} entries where body is inline SVG inner markup (paths/circles/rects/lines/text) drawn on a 24x24 grid with currentColor stroke. It is explicitly marked DEPRECATED — a legacy parallel icon list kept only so older consumers don't break, superseded by cv-icons.js / CvIcon.jsx.",
+  "observations": [
+    "Top comment flags DEPRECATED — DO NOT EXTEND, names cv-icons.js (window.CV_ICONS.data) + CvIcon.jsx as the single home, and instructs migrating consumers then deleting this file.",
+    "Icons are grouped by 'set' tags: core (vectorised from a bronze source sheet), ext-status, ext-ui, ext-media, ext-files, ext-arch, ext-time, ext-comms, ext-data.",
+    "Shared rendering contract documented: viewBox 0 0 24 24, stroke currentColor, stroke-width 1.5 default, round caps/joins, fill none unless explicit.",
+    "Each entry carries a category (cat) such as Comms, Arch, People, Action, Files, Data, Status, UI, Media, Time, Place, Process, Tech, Brand.",
+    "Domain-specific real-estate/architecture glyphs (building-house, crane, floorplan-tag, skyline, area-m2, blueprint) alongside generic UI/status icons.",
+    "Some bodies use var(--cv-icon-bg, #fff) for knockout fills and inline <text> for typed labels (PDF/CSV/DOC, m2, N)."
+  ],
+  "standouts": [
+    "Self-labels as legacy/deprecated and points to its replacement — an explicit migrate-and-delete instruction at the top.",
+    "Carries a domain-specific real-estate/architecture icon vocabulary (cranes, floorplans, skylines, area-m2) not just generic UI."
+  ],
+  "conventions": [
+    "Follows the shared 24x24 / currentColor / 1.5-stroke icon contract.",
+    "Set + category tagging on every entry.",
+    "Knockout fills use a CSS var with a hex fallback (var(--cv-icon-bg, #fff)).",
+    "BREAKS the project's single-source rule deliberately — it is the explicitly-deprecated parallel list the rule warns against, kept transitionally."
+  ],
+  "concerns": [
+    "It is a duplicate icon registry (window.CONCEPTV_ICONS) parallel to the canonical window.CV_ICONS — the exact drift the system forbids, retained only for back-compat.",
+    "Some bodies hardcode #fff via the var fallback rather than a token-only knockout colour.",
+    "Inline <text> elements with font-size in some glyphs depend on font availability and may render inconsistently."
+  ],
+  "notes": "The DEPRECATED legacy icon path list (window.CONCEPTV_ICONS) kept only so old consumers survive; the live home is cv-icons.js / CvIcon.jsx.",
+  "questions": [
+    "Which consumers still read window.CONCEPTV_ICONS, blocking deletion of this file?",
+    "Are all of these glyphs already mirrored in cv-icons.js, or do some exist only here?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is a deprecated back-compat parallel icon list and that is exactly what it is.",
+  "apparent_themes": [
+    "Deprecation / managed migration",
+    "Domain-specific (real-estate/architecture) iconography",
+    "Single rendering contract across a large icon set",
+    "Transitional tolerance of a second home"
+  ],
+  "intention_signals": "Trying to retire an old icon registry gracefully — keep it working for legacy consumers while loudly directing all new work to the canonical cv-icons.js, with the explicit goal of eventual deletion.",
+  "novelty": "An icon registry that documents its own deprecation and migration path inline, including the named successor and the delete-when-empty instruction.",
+  "contribution": "Contributes a tagged inline-SVG icon catalogue (including domain-specific real-estate/architecture glyphs) under a shared 24x24 rendering contract, retained for back-compat.",
+  "summary_for_embedding": "A deprecated JavaScript icon registry (window.CONCEPTV_ICONS) mapping names to set/category-tagged inline-SVG bodies on a 24x24 currentColor grid, kept for back-compat and superseded by cv-icons.js/CvIcon.jsx.",
+  "intention_for_embedding": "To keep legacy icon consumers working during migration to the canonical cv-icons.js while signposting its own removal."
+}

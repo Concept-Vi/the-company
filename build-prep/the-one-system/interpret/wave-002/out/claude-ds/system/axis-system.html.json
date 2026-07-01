@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "system/axis-system.html",
+  "model": "opus",
+  "what_it_does": "A self-rendering design-system card that is a live projection of window.CV_AXES. It loads the axis-core engine plus each per-axis module (color, space, size, motion, texture, depth, fill, form, symbol) and, for every registered axis, renders its groups and values as preview swatches with their resolving token names — building the whole page from the registry rather than a hand-written list.",
+  "observations": [
+    "Declared as a @dsCard (group 'Axis System') with a fixed 1180x2600 viewport in an HTML comment.",
+    "Links three token CSS files plus axes/motion/motion.css, and loads ~14 scripts: axis-core.js, icon/shape asset scripts, and nine *-axis.js modules.",
+    "A per-axis preview() function switch-cases each axis id (color/fill/space/size/depth/motion/texture/form/symbol) to draw a representative swatch.",
+    "Iterates AX.all() and, per axis, reads axis.groups(), axis.ids(), axis.valuesIn()/values() to build sections live.",
+    "Caps the symbol axis preview at 14 per group ('symbol axis is large') and shows a '+N more' chip for the remainder.",
+    "Hardcodes a homeMap object mapping each axis id to its single-source file (e.g. color → colors_and_type.css, form → CV_SHAPES.geom, symbol → CV_ICONS).",
+    "Footer states the count of axes and that the page 'writes nothing of its own' — adding an axis makes it appear automatically.",
+    "Carries data-screen-label attributes on the masthead and each axis section."
+  ],
+  "standouts": [
+    "Explicitly frames itself as a projection of the registry: 'the interface reads the system, it is not a parallel list'.",
+    "Each value shows the token it resolves to (v.token → '--<token>' or 'zero'), making tokens-as-value-units visible.",
+    "References its companion docs in-page: analysis/AXIS-REFACTOR.md (plan) and system/glyphic-system.html §08 (model)."
+  ],
+  "conventions": [
+    "Follows the design system's projection rule (UI generated from the registry, no parallel data).",
+    "All colours/spacing in the inline <style> use var(--token) tokens, no raw values for theme colours.",
+    "Vanilla IIFE DOM-building, consistent with the other system/*.html cards."
+  ],
+  "concerns": [
+    "homeMap is a hardcoded literal in this file mapping axis id → its source path; if an axis's home moves this annotation could drift (it is descriptive metadata, not resolved from the axis itself)."
+  ],
+  "notes": "If briefing someone: this page auto-draws every CV_AXES axis (its groups, values, preview swatches and resolving tokens) as a living catalogue that updates when you add an axis.",
+  "questions": [
+    "Why is homeMap hand-maintained here rather than read from each axis's own metadata?",
+    "Does each *-axis.js define a consistent groups()/ids()/values()/valuesIn() interface that this page relies on?"
+  ],
+  "purpose_vs_actual": "Match — the @dsCard subtitle says it is a live projection of CV_AXES showing each axis as a typed value hierarchy, and the script does exactly that.",
+  "apparent_themes": [
+    "Registry-as-truth / interface is a projection",
+    "Orthogonal axes as first-class systems",
+    "Tokens as the value-units of an axis",
+    "Self-extending documentation (add an axis → it appears)"
+  ],
+  "intention_signals": "Trying to make the abstract axis registry visible and self-maintaining — one page that shows the entire visual-dimension model and proves the registry is the single source by reading it live.",
+  "novelty": "Per-axis bespoke preview rendering (a different swatch idiom per visual dimension) all driven from one registry walk.",
+  "contribution": "Contributes a live, self-updating visual catalogue of every axis (values + groups + resolving tokens) generated entirely from CV_AXES.",
+  "summary_for_embedding": "Design-system card that live-renders every window.CV_AXES axis (color/space/size/motion/texture/depth/fill/form/symbol) as grouped preview swatches with their resolving token names.",
+  "intention_for_embedding": "To make the axis registry visible as a self-maintaining catalogue and demonstrate that the interface is a projection of the system, not a parallel list."
+}

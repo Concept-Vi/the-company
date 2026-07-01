@@ -1,0 +1,260 @@
+/* ============================================================
+   ConceptV Design System · CONTROLS & COMPONENTS  (the component layer)
+   ------------------------------------------------------------
+   The bread-and-butter UI primitives the system was missing: buttons,
+   cards, fields/inputs, badges, pills, chips, tables, dividers. ONE home,
+   token-pure and theme-aware — every value resolves to a registered token
+   (colour roles, --r-*, --elev/--shadow-*, --control-h, --d-* spacing,
+   --focus-ring), so a token recalibration repaints every control and the
+   same class works on light / dim / dark / clean grounds.
+
+   Grounded in the source DNA, not invented:
+     · gold action button (the decision voice)         → .cv-btn--primary
+     · dark panotour button (MENU / USER GUIDE)        → .cv-btn--ink
+     · gold-outline pill (Virtual Tour / View example) → .cv-btn--outline.cv-btn--pill
+     · cream deck panel / white content card           → .cv-card--soft / --surface
+     · gold-focus field (the composer input)           → .cv-input:focus
+     · embossed stat pill (deck statpills)             → .cv-pill
+     · comparison / pricing table (landing mockups)    → .cv-table
+   These are usable by hand AND are the render targets of the React
+   primitives (Button/Card/Input/Badge…). Imported by styles.css.
+   ============================================================ */
+
+/* ---- BUTTON ------------------------------------------------ *
+   One base; each variant sets background/color/border DIRECTLY from role
+   tokens (no per-component custom-prop declarations — keeps the token registry
+   clean). Default = quiet text-weight action. */
+.cv-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--d-2, 8px);
+  box-sizing: border-box; min-height: var(--control-h); padding-inline: var(--d-5, 18px);
+  border-radius: var(--r-md); border: 1.5px solid transparent;
+  background: transparent; color: var(--ink);
+  font: var(--weight-semibold, 600) var(--fs-caption)/1 var(--font-body);
+  white-space: nowrap; text-decoration: none; cursor: pointer; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--dur-quick, 140ms) var(--ease-out, ease),
+              border-color var(--dur-quick, 140ms) var(--ease-out, ease),
+              color var(--dur-quick, 140ms) var(--ease-out, ease),
+              box-shadow var(--dur-quick, 140ms) var(--ease-out, ease),
+              transform var(--dur-instant, 90ms) var(--ease-out, ease);
+}
+.cv-btn:active { transform: translateY(0.5px); }
+.cv-btn:disabled, .cv-btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; transform: none; }
+.cv-btn:focus-visible { outline: var(--focus-ring-width, 2px) solid var(--focus-ring); outline-offset: var(--focus-ring-offset, 2px); }
+
+/* primary — the gold decision/action voice (FIXED dark label on the fixed gold
+   surface — --on-gold, never the theme-flipping --ink) */
+.cv-btn--primary { background: var(--accent-gold); color: var(--on-gold); border-color: var(--accent-gold); box-shadow: var(--shadow-sm); }
+.cv-btn--primary:hover { background: var(--accent-gold-hover); border-color: var(--accent-gold-hover); }
+.cv-btn--primary:active { background: var(--accent-gold-press); border-color: var(--accent-gold-press); }
+
+/* ink — dark solid (the panotour MENU / USER GUIDE / MARKETING buttons) */
+.cv-btn--ink { background: var(--ink); color: var(--ink-inverse); border-color: var(--ink); }
+.cv-btn--ink:hover { background: var(--ink-2); border-color: var(--ink-2); }
+
+/* outline — gold stroke on the ground (Virtual Tour / Click to View Example) */
+.cv-btn--outline { background: var(--zone-ground); color: var(--ink); border-color: var(--accent-gold); box-shadow: var(--shadow-xs); }
+.cv-btn--outline:hover { background: var(--vi-surface); }   /* theme-aware gold tint (flips with the ground) */
+
+/* ghost — text only, hover wash (toolbar / low-emphasis) */
+.cv-btn--ghost { color: var(--ink-2); }
+.cv-btn--ghost:hover { background: var(--state-hover, color-mix(in oklch, var(--ink) 6%, transparent)); }
+
+/* soft — gold-tinted low-emphasis fill (theme-aware: tint + ink both flip) */
+.cv-btn--soft { background: var(--vi-surface); color: var(--ink); }
+.cv-btn--soft:hover { background: color-mix(in oklch, var(--accent-gold) 18%, var(--zone-ground)); }
+
+/* comm — the sage relationship voice (rare: share / connect actions) */
+.cv-btn--comm { background: var(--comm-surface); color: var(--comm-ink); border-color: var(--comm-edge); }
+.cv-btn--comm:hover { background: var(--comm-strong); }
+
+/* shape + size modifiers */
+.cv-btn--pill  { border-radius: var(--r-pill); }
+.cv-btn--sm    { min-height: var(--control-h-sm); padding-inline: var(--d-3, 12px); font-size: var(--fs-meta); }
+.cv-btn--lg    { min-height: calc(var(--control-h) + 8px); padding-inline: var(--d-6, 24px); font-size: var(--fs-body); }
+.cv-btn--block { display: flex; width: 100%; }
+.cv-btn--icon  { padding-inline: 0; aspect-ratio: 1; }
+
+/* ---- CARD -------------------------------------------------- */
+.cv-card {
+  display: flex; flex-direction: column; gap: var(--d-3); box-sizing: border-box;
+  padding: var(--d-5); border-radius: var(--r-lg);
+  background: var(--zone-ground); color: var(--ink);
+  border: 1px solid transparent; box-shadow: var(--shadow-card);
+}
+/* the soft cream deck panel (warm undertone over the ground) */
+.cv-card--soft    { background: color-mix(in oklch, var(--pig-content) calc(4% * var(--zone-intensity, 1)), var(--zone-ground)); }
+/* the white content card (images / dashboards) that lifts off the paper */
+.cv-card--surface { background: var(--bg-surface, var(--zone-ground)); }
+/* stroke-only panel (the outlined gold panel — capital-raise p27) */
+.cv-card--outline { background: transparent; box-shadow: none; border-color: var(--hairline-strong); }
+.cv-card--gold    { border-color: var(--accent-gold); box-shadow: none; background: var(--accent-gold-faint); }
+.cv-card--raised  { box-shadow: var(--shadow-pop); }
+.cv-card--pad-lg  { padding: var(--d-6); }
+.cv-card--pad-sm  { padding: var(--d-3); }
+.cv-card--interactive { cursor: pointer; transition: box-shadow var(--dur-quick, 140ms) var(--ease-out, ease), transform var(--dur-quick, 140ms) var(--ease-out, ease); }
+.cv-card--interactive:hover { box-shadow: var(--shadow-pop); transform: translateY(-1px); }
+.cv-card__head { display: flex; align-items: baseline; gap: var(--d-2); }
+.cv-card__title { margin: 0; font: var(--weight-semibold, 600) var(--fs-h4)/1.2 var(--font-display); color: var(--ink); }
+.cv-card__sub   { margin: 0; font: var(--weight-regular, 400) var(--fs-caption)/1.4 var(--font-body); color: var(--ink-3); }
+.cv-card__foot  { display: flex; align-items: center; gap: var(--d-2); margin-top: auto; padding-top: var(--d-2); }
+
+/* ---- FIELD / INPUT ---------------------------------------- */
+.cv-field { display: flex; flex-direction: column; gap: var(--d-1); min-width: 0; }
+.cv-label { font: var(--weight-semibold, 600) var(--fs-caption)/1.2 var(--font-body); color: var(--ink-2); }
+.cv-hint  { font: var(--weight-regular, 400) var(--fs-meta)/1.35 var(--font-body); color: var(--ink-3); }
+.cv-hint--error { color: var(--pig-reject); }
+
+.cv-input, .cv-textarea, .cv-select {
+  box-sizing: border-box; width: 100%; min-height: var(--control-h);
+  padding-inline: var(--d-3); border-radius: var(--r-md);
+  border: 1px solid var(--hairline-strong); background: var(--bg-surface, var(--zone-ground)); color: var(--ink);
+  font: var(--weight-regular, 400) var(--fs-caption)/1.4 var(--font-body);
+  transition: border-color var(--dur-quick, 140ms) var(--ease-out, ease), box-shadow var(--dur-quick, 140ms) var(--ease-out, ease);
+}
+.cv-textarea { min-height: calc(var(--control-h) * 2.2); padding-block: var(--d-2); resize: vertical; line-height: 1.5; }
+.cv-select { appearance: none; padding-right: var(--d-6);
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-3) 50%), linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
+  background-position: calc(100% - 16px) center, calc(100% - 11px) center; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
+.cv-input::placeholder, .cv-textarea::placeholder { color: var(--ink-4); }
+.cv-input:focus, .cv-textarea:focus, .cv-select:focus {
+  outline: none; border-color: var(--accent-gold); box-shadow: 0 0 0 3px var(--accent-gold-soft);
+}
+.cv-input:disabled, .cv-textarea:disabled, .cv-select:disabled { opacity: 0.55; cursor: not-allowed; }
+.cv-input[aria-invalid="true"] { border-color: var(--pig-reject); box-shadow: 0 0 0 3px color-mix(in oklch, var(--pig-reject) 24%, transparent); }
+
+/* search pill — the rounded search field (icon + input) */
+.cv-search { display: inline-flex; align-items: center; gap: var(--d-2); box-sizing: border-box; min-height: var(--control-h);
+  padding-inline: var(--d-3); border-radius: var(--r-pill); border: 1px solid var(--hairline-strong); background: var(--bg-surface, var(--zone-ground)); }
+.cv-search:focus-within { border-color: var(--accent-gold); box-shadow: 0 0 0 3px var(--accent-gold-soft); }
+.cv-search > input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; color: var(--ink); font: var(--weight-regular, 400) var(--fs-caption)/1 var(--font-body); }
+
+/* ---- BADGE / PILL / CHIP / TAG ---------------------------- */
+/* badge — a small status label */
+.cv-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: var(--r-pill);
+  font: var(--weight-semibold, 600) var(--fs-meta)/1.3 var(--font-body);
+  background: color-mix(in oklch, var(--ink) 7%, transparent); color: var(--ink-2); }
+.cv-badge--gold    { background: var(--accent-gold-faint); color: var(--accent-bronze-2); }
+.cv-badge--success { background: var(--zone-success-surface); color: var(--zone-success-ink); }
+.cv-badge--warning { background: color-mix(in oklch, var(--pig-warning) 16%, var(--zone-ground)); color: color-mix(in oklch, var(--pig-warning) 62%, var(--ink)); }
+.cv-badge--error   { background: var(--zone-reject-surface, color-mix(in oklch, var(--pig-reject) 12%, var(--zone-ground))); color: var(--zone-reject-ink); }
+.cv-badge--comm    { background: var(--comm-surface); color: var(--comm-ink); }
+.cv-badge--dot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+
+/* stat pill — embossed value + label (the deck statpills / metric chips) */
+.cv-pill { display: inline-flex; align-items: baseline; gap: 10px; box-sizing: border-box; padding: 10px 18px; border-radius: var(--r-md);
+  background: var(--zone-ground); box-shadow: var(--shadow-inset, inset 0 1px 0 rgba(255,255,255,.6)), var(--shadow-sm); }
+.cv-pill__v { font: var(--weight-bold, 700) var(--fs-h3)/1 var(--font-display); color: var(--accent-gold); font-variant-numeric: tabular-nums; letter-spacing: var(--tracking-tight, -0.02em); }
+.cv-pill__l { font: var(--weight-medium, 500) var(--fs-caption)/1.3 var(--font-body); color: var(--ink-3); }
+
+/* chip — a keyword / token / filter chip (hairline ring) */
+.cv-chip { display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; padding: 5px 12px; border-radius: var(--r-pill);
+  background: var(--zone-ground); box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  font: var(--weight-medium, 500) var(--fs-caption)/1 var(--font-body); color: var(--ink-2); cursor: default; }
+.cv-chip--active { box-shadow: inset 0 0 0 1.5px var(--accent-gold); background: var(--vi-surface); color: var(--ink); }   /* theme-aware tint so it stays legible on dark grounds */
+button.cv-chip, a.cv-chip { cursor: pointer; transition: box-shadow var(--dur-quick,140ms) var(--ease-out,ease); }
+button.cv-chip:hover, a.cv-chip:hover { box-shadow: inset 0 0 0 1.5px var(--accent-gold); }
+
+/* tag — tiny mono label (versions / kinds) */
+.cv-tag { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: var(--r-sm);
+  font: var(--weight-medium, 500) var(--fs-meta)/1.2 var(--font-mono); letter-spacing: var(--tracking-caps, 0.06em); text-transform: uppercase;
+  color: var(--accent-bronze); background: color-mix(in oklch, var(--accent-bronze) 10%, transparent); }
+
+/* ---- TABLE (comparison / pricing) -------------------------- */
+.cv-table { width: 100%; border-collapse: collapse; font: var(--weight-regular, 400) var(--fs-caption)/1.4 var(--font-body); color: var(--ink-2); }
+.cv-table th { text-align: left; padding: var(--d-2) var(--d-3); border-bottom: 1.5px solid var(--hairline-strong);
+  font: var(--weight-semibold, 600) var(--fs-caption)/1.2 var(--font-body); color: var(--accent-bronze);
+  text-transform: uppercase; letter-spacing: var(--tracking-caps, 0.08em); }
+.cv-table td { padding: var(--d-2) var(--d-3); border-bottom: 1px solid var(--hairline); }
+.cv-table tr:last-child td { border-bottom: none; }
+.cv-table--striped tbody tr:nth-child(even) td { background: color-mix(in oklch, var(--ink) 2.5%, transparent); }
+.cv-table__num { text-align: right; font-variant-numeric: tabular-nums; }
+.cv-table__feature { color: var(--accent-gold); font-weight: var(--weight-bold, 700); }   /* the highlighted offer column */
+
+/* ---- DIVIDER ---------------------------------------------- */
+.cv-divider { height: 1px; border: none; background: var(--hairline); margin-block: var(--d-3); }
+.cv-divider--dashed { height: 0; background: none; border-top: 1px dashed var(--hairline-strong); }
+.cv-divider--gold { background: var(--accent-gold); height: 2px; width: 40px; border-radius: 1px; margin-block: var(--d-2); }
+
+/* ---- TABS (product dashboard: SCREENSHOT · CAPTURES · ARCHIVE) -- *
+   Text tabs on a hairline baseline; the active tab carries the gold underline
+   (gold = the active voice). */
+.cv-tabs { display: flex; gap: var(--d-4, 16px); border-bottom: 1px solid var(--hairline-strong); }
+.cv-tab {
+  appearance: none; background: none; border: none; cursor: pointer;
+  padding: var(--d-2) 2px var(--d-3); margin-bottom: -1px;
+  font: var(--weight-semibold, 600) var(--fs-caption)/1 var(--font-body); color: var(--ink-3);
+  border-bottom: 2px solid transparent;
+  transition: color var(--dur-quick, 140ms) var(--ease-out, ease), border-color var(--dur-quick, 140ms) var(--ease-out, ease);
+}
+.cv-tab:hover { color: var(--ink-2); }
+.cv-tab[aria-selected="true"], .cv-tab.is-active { color: var(--ink); border-bottom-color: var(--accent-gold); }
+.cv-tab:focus-visible { outline: var(--focus-ring-width, 2px) solid var(--focus-ring); outline-offset: 2px; border-radius: var(--r-sm); }
+
+/* ---- SEGMENTED CONTROL (landing audience toggle) -------------- *
+   A pill track of 2–3 options; the active one lifts onto a surface. */
+.cv-segmented { display: inline-flex; padding: 3px; border-radius: var(--r-pill); background: color-mix(in oklch, var(--ink) 6%, transparent); box-shadow: inset 0 0 0 1px var(--hairline); }
+.cv-segmented__opt {
+  appearance: none; background: none; border: none; cursor: pointer; white-space: nowrap;
+  padding: var(--d-1) var(--d-4); border-radius: var(--r-pill);
+  font: var(--weight-semibold, 600) var(--fs-caption)/1.4 var(--font-body); color: var(--ink-3);
+  transition: background var(--dur-quick, 140ms) var(--ease-out, ease), color var(--dur-quick, 140ms) var(--ease-out, ease), box-shadow var(--dur-quick, 140ms) var(--ease-out, ease);
+}
+.cv-segmented__opt[aria-selected="true"], .cv-segmented__opt.is-active { background: var(--bg-surface, var(--zone-ground)); color: var(--ink); box-shadow: var(--shadow-sm); }
+
+/* ---- SWITCH / TOGGLE (status on·off) ------------------------- *
+   The track goes gold when on (gold = active). Drive with [aria-checked] or .is-on. */
+.cv-switch { position: relative; display: inline-flex; flex: none; align-items: center; width: 40px; height: 24px; padding: 0; border: none; cursor: pointer;
+  border-radius: var(--r-pill); background: color-mix(in oklch, var(--ink) 18%, transparent);
+  transition: background var(--dur-quick, 140ms) var(--ease-out, ease); }
+.cv-switch::after { content: ""; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--bg-surface, #fff); box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-quick, 140ms) var(--ease-out, ease); }
+.cv-switch[aria-checked="true"], .cv-switch.is-on { background: var(--accent-gold); }
+.cv-switch[aria-checked="true"]::after, .cv-switch.is-on::after { transform: translateX(16px); }
+.cv-switch:focus-visible { outline: var(--focus-ring-width, 2px) solid var(--focus-ring); outline-offset: 2px; }
+
+/* ---- AVATAR (team / personnel) ------------------------------- *
+   Circular initials/photo holder (the team rows). Size via --avatar-size. */
+.cv-avatar { display: inline-grid; place-items: center; flex: none; box-sizing: border-box;
+  width: var(--avatar-size, 44px); height: var(--avatar-size, 44px); border-radius: 50%; overflow: hidden;
+  background: color-mix(in oklch, var(--pig-content) 7%, var(--zone-ground)); box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  font: var(--weight-semibold, 600) var(--fs-caption)/1 var(--font-body); color: var(--accent-bronze); }
+.cv-avatar > img { width: 100%; height: 100%; object-fit: cover; }
+.cv-avatar--gold { color: var(--on-gold); background: var(--accent-gold); box-shadow: none; }
+
+/* ---- TOOLTIP (dark bubble) ----------------------------------- */
+.cv-tooltip { display: inline-block; padding: var(--d-1) var(--d-3); border-radius: var(--r-sm);
+  background: var(--ink); color: var(--ink-inverse); box-shadow: var(--shadow-pop);
+  font: var(--weight-medium, 500) var(--fs-meta)/1.4 var(--font-body); max-width: 240px; }
+
+/* ---- MODAL (overlay + panel) -------------------------------- *
+   Warm-dim backdrop + a raised surface panel. Drive open/close from the host
+   (the React Modal toggles [data-open]); the panel is a .cv-card by nature. */
+.cv-modal-overlay { position: fixed; inset: 0; z-index: var(--z-modal, 1000); display: grid; place-items: center; padding: var(--d-5);
+  background: color-mix(in oklch, var(--ink) 48%, transparent); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+.cv-modal { box-sizing: border-box; width: min(520px, 100%); max-height: 86vh; overflow: auto;
+  display: flex; flex-direction: column; gap: var(--d-4); padding: var(--d-6); border-radius: var(--r-xl);
+  background: var(--bg-surface, var(--zone-ground)); color: var(--ink); box-shadow: var(--shadow-modal); }
+.cv-modal__head { display: flex; align-items: flex-start; gap: var(--d-3); }
+.cv-modal__title { margin: 0; flex: 1; font: var(--weight-semibold, 600) var(--fs-h3)/1.2 var(--font-display); color: var(--ink); }
+.cv-modal__close { appearance: none; flex: none; width: var(--control-h-sm); aspect-ratio: 1; border: none; cursor: pointer; border-radius: var(--r-md);
+  background: transparent; color: var(--ink-3); font: var(--weight-bold, 700) var(--fs-body)/1 var(--font-body); }
+.cv-modal__close:hover { background: var(--state-hover, color-mix(in oklch, var(--ink) 6%, transparent)); color: var(--ink); }
+.cv-modal__foot { display: flex; justify-content: flex-end; gap: var(--d-2); margin-top: var(--d-1); }
+
+/* ---- STEPPER (linear numbered progress) --------------------- *
+   A horizontal sequence of numbered steps joined by a track; done/current/
+   upcoming states. (The ramp-tinted chevron stepper is the diagram solver's;
+   this is the plain process indicator.) */
+.cv-stepper-line { display: flex; align-items: flex-start; gap: 0; }
+.cv-step { display: flex; flex-direction: column; align-items: center; gap: var(--d-1); flex: 1; min-width: 0; position: relative; text-align: center; }
+.cv-step::before { content: ""; position: absolute; top: 13px; right: 50%; left: -50%; height: 2px; background: var(--hairline-strong); z-index: 0; }
+.cv-step:first-child::before { display: none; }
+.cv-step__dot { position: relative; z-index: 1; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--zone-ground); box-shadow: inset 0 0 0 2px var(--hairline-strong); color: var(--ink-3);
+  font: var(--weight-bold, 700) var(--fs-meta)/1 var(--font-body); }
+.cv-step__label { font: var(--weight-semibold, 600) var(--fs-meta)/1.3 var(--font-body); color: var(--ink-3); max-width: 14ch; }
+.cv-step.is-done   .cv-step__dot { background: var(--accent-gold); box-shadow: none; color: var(--on-gold); }
+.cv-step.is-done::before { background: var(--accent-gold); }
+.cv-step.is-active .cv-step__dot { box-shadow: inset 0 0 0 2px var(--accent-gold); color: var(--ink); }
+.cv-step.is-active .cv-step__label, .cv-step.is-done .cv-step__label { color: var(--ink); }

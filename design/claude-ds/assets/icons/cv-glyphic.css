@@ -1,0 +1,13 @@
+/* ============================================================
+   ConceptV · GLYPHIC — base presentation only
+   ------------------------------------------------------------
+   Motion is NO LONGER defined here. It is a first-class axis:
+   the .mo-* classes + keyframes live in axes/motion/motion.css
+   and the value set in axes/motion/motion-axis.js. A Glyphic is
+   just one CONSUMER that subscribes to the Motion axis; the
+   compositor applies the class from CV_AXES.css('motion', value).
+   Include axes/motion/motion.css wherever glyphics animate.
+   ============================================================ */
+
+.cv-glyphic { display: inline-flex; line-height: 0; transform-origin: center; }
+.cv-glyphic > svg { display: block; }

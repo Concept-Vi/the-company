@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/components-type.js",
+  "model": "opus",
+  "what_it_does": "Registers every React UI component (Button, Badge, Avatar, Card, Input, Switch, Tabs, Segmented, Stepper, Modal) into window.CV_REGISTRY as universal-component Types, using the same parts/slots/sockets/conditions grammar as the Glyphic. Each Type declares its classification (what sockets accept it as), value-slots (enum/boolean/int props or axis subscriptions), content/event sockets (where it accepts other components), and conditions; then attaches a shared react-component runtime pointer and provenance before R.registerMany.",
+  "observations": [
+    "IIFE, 'use strict'; guards on window.CV_REGISTRY existence and console.error-returns if missing.",
+    "Four small helpers define slot shapes: en(values,def,means) for enum props, ax(axis,extra) for axis-subscribed props, bool(def,means), content(label,opts) for component sockets (default accepts glyphic/atom/block/text, optional).",
+    "Comment states the principle 'everything on an interface is a templated dynamic component … all in registries' and 'vocabularies are never copied' — enum props inline their values (the component's own contract), axis-backed props point at the axis.",
+    "Each def carries id (component.*), name, kind, layer (atom/block/surface), family, classification[], icon, description, valueSlots, sockets, tags.",
+    "Avatar.size and Card.depth subscribe to axes via ax('size')/ax('depth'); other size-like props (e.g. Button.size sm/lg) are inline enums.",
+    "Modal declares an EVENT-socket 'trigger' with kind:'event', event:'click', accepts:['control','action'], onPick:'open', address:'component.modal'.",
+    "Registration sets provenance:'built-in' and runtime {kind:'react-component', global: NS + '.' + d.name} where NS is a namespaced bundle global 'ConceptVDesignSystem_c8f43c'.",
+    "registerMany called with {silent:true}."
+  ],
+  "standouts": [
+    "The slot/socket grammar applied uniformly to ordinary UI components — props become value-slots, children become typed sockets with accepts[].",
+    "The Modal event-socket modeling a trigger relationship (what opens it) as a first-class socket with an address.",
+    "Explicit distinction between inline enum vocabularies (component's own contract) and axis subscriptions (single source)."
+  ],
+  "conventions": [
+    "Follows the project's 'register a Type, don't fork a parallel component list' rule and 'vocabularies never copied' principle.",
+    "Pure data module loaded after types-core.js + conditions + axes; renders via the existing component bundle.",
+    "Guard-and-return on missing registry rather than throwing here (logs an error)."
+  ],
+  "concerns": [
+    "The runtime global namespace 'ConceptVDesignSystem_c8f43c' is a hardcoded magic string coupling these defs to a specific bundle export name.",
+    "On missing CV_REGISTRY it console.errors and returns silently rather than throwing — softer than the project's loud-fail mandate."
+  ],
+  "notes": "Maps the concrete React UI kit into the universal Type grammar so every component is registry-resolvable with typed slots/sockets and a react-component runtime pointer.",
+  "questions": [
+    "Where is the 'ConceptVDesignSystem_c8f43c' namespace defined, and how is the hash kept in sync with the bundle?",
+    "Is the list of ten components the full kit, or a subset (the header says 'every React UI component')?"
+  ],
+  "purpose_vs_actual": "Matches: the header promises total component coverage as registry Types, and the file registers the components with classification/slots/sockets/conditions accordingly.",
+  "apparent_themes": [
+    "Interface as a projection of the registry",
+    "Single-source vocabularies (axis subscription vs inline contract enums)",
+    "Uniform parts/slots/sockets grammar across all component kinds",
+    "Relationships (events/triggers) modeled as typed sockets"
+  ],
+  "intention_signals": "Trying to make ordinary UI components first-class registry entities so menus, builders, and the engine resolve them through one catalogue — props as value-slots, children/triggers as typed sockets, with vocabularies referenced not duplicated.",
+  "novelty": "Treating a React UI component library as registry Types with axis-subscribing props and event-sockets, including a Modal whose 'opened-by' trigger is a typed socket.",
+  "contribution": "Contributes the registration of the React UI component kit into CV_REGISTRY as universal Types with classification, value-slots, sockets, and react-component runtime pointers.",
+  "summary_for_embedding": "A pure-data JS module registering the React UI component kit (Button/Card/Modal/etc.) into CV_REGISTRY as universal Types with classification, value-slots, typed sockets, and conditions.",
+  "intention_for_embedding": "To make every UI component a registry-resolvable Type in the shared parts/slots/sockets grammar so interfaces project from the one catalogue."
+}

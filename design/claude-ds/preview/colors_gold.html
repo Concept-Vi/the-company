@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Gold scale" subtitle="Primary brand accent — 6 tiers" viewport="700x200" --><html><head><meta charset="utf-8"><title>Gold accent</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 22px 24px; min-height: 200px; }
+  .lead { font: 400 12px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 14px; }
+  .row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .sw { display: flex; flex-direction: column; gap: 6px; }
+  .chip { height: 70px; border-radius: var(--r-md); border: 1px solid var(--border-faint); }
+  .name { font: 600 11px/1 var(--font-body); color: var(--fg-primary); }
+  .hex { font: 400 11px/1 var(--font-mono); color: var(--fg-muted); }
+</style></head>
+<body><div class="card">
+  <p class="lead">Gold is the system's <b>active / decision accent</b> — the one saturated voice, reserved for Vi, primary actions, active borders, selected states and link emphasis (never a default background). It's a <b>ramp</b> (gold→bronze→tan, <code>--ramp-1..4</code>) used to position sequence &amp; depth; the tiers below are its interaction states.</p>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:#FBF6DC"></div><span class="name">gold-50</span><span class="hex">#FBF6DC</span></div>
+    <div class="sw"><div class="chip" style="background:#F4ECC4"></div><span class="name">gold-soft</span><span class="hex">#F4ECC4</span></div>
+    <div class="sw"><div class="chip" style="background:#D8C040"></div><span class="name">gold-dashed</span><span class="hex">#D8C040</span></div>
+    <div class="sw"><div class="chip" style="background:#D8B820"></div><span class="name">gold ★</span><span class="hex">#D8B820</span></div>
+    <div class="sw"><div class="chip" style="background:#C0A218"></div><span class="name">gold-hover</span><span class="hex">#C0A218</span></div>
+    <div class="sw"><div class="chip" style="background:#9C8413"></div><span class="name">gold-press</span><span class="hex">#9C8413</span></div>
+  </div>
+</div></body></html>

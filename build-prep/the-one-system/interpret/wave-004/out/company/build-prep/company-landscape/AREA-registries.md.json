@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/company-landscape/AREA-registries.md",
+  "model": "opus",
+  "what_it_does": "An exhaustive read-only landscape of the Company's typed-registry vocabularies plus the repo's loose root files. Per registry it gives purpose, field schema, full entry inventory, and a gaps/stale/surprises list: decisions/, decision_subtypes/, mark_types/, item_types/, stack_item_types/, relation_types/, attachment_types/, source_types/, kinds/, verdict_panels/, panels/, forms/, mode_detection_rules/, checks/, board_edges/ — and root files AGENTS.md/MAP.md/STATE.md/README.md/HANDOFF*/coordination docs.",
+  "observations": [
+    "decisions/ (24 .py rows, decision://global/<id>): each declares DECISION dict (id/meaning/options/subtype/explanation_source/scope/legibility); state is NOT on the row — resolved from decision_take/decision_retract marks; subtype resolves card_variant+explanation_policy+owner+required_elements.",
+    "decision_subtypes/ (4): authorize(binary/tim/risk-grounding), cross-lane(n-panel/fabric/technical-recommendation), theorem-fork(n-panel/tim/theorem-grounding), trade-off(n-panel/tim/trade-off-neutral); owner lives ONLY here, never on the decision row.",
+    "mark_types/ (~11): two families — ANALYSIS (gold_likelihood/ai_fingerprint/contradiction/built_twice/overlap/strain) and INTERACTION (comment/decision_take/decision_retract/favour/reaction); value_shape score|label|bool|span|free|claim; direction surface|subtract (only ai_fingerprint subtracts).",
+    "item_types/ (6 board lifecycles: guide/idea/issue/request/signal/tip) vs stack_item_types/ (4 render/dispatch contracts: decision-sequence[live precedent]/explanation/presentation/verify-request, 3 declared-not-rendered).",
+    "relation_types/ (6: contradicts/depends_on/fragment_of/precedes/principle_beneath/sibling) and board_edges/ (4: attached_to/authored_by/promoted_from/sourced_from) — both reuse RelationTypeRegistry verbatim, kept separate (corpus-semantic vs structural/provenance edges), unification tracked as a board idea.",
+    "Thin/seeded registries: attachment_types/ (5), source_types/ (1: claude_code, github obvious next), verdict_panels/ (1: registration_confirm), panels/ (1: settings.json), checks/ (2 wrappers into design/_system/), forms/ (4 effort-routing forms, no skip-stage form), mode_detection_rules/ (3 rules for 3 of 8 presence modes).",
+    "kinds/ is the ODD ONE: not file-per-entry — a single kinds/raw.py KIND_META dict (53 entries mapping kind_id->{name,is}) for human meaning on event sectors; marked TENTATIVE (Tim/DNA ratify), un-seeded kinds fall back to humanized id.",
+    "Root files captured with status: AGENTS.md (10 laws + where-things-go), MAP.md (auto-maintained live registry), STATE.md (2026-06-07, likely stale), README.md (STALE 'Skeleton only'), HANDOFF docs, MERGE-COORDINATION.md (103KB, superseded), CRITIC-VERDICT (PASS with 5 flags)."
+  ],
+  "standouts": [
+    "The ONE-mechanism-many-vocabularies finding: every registry is the same file-discovered <id>.py-with-a-dict mechanism, validated at discovery, fail-loud on malformed, id==filename — single-sourced, only the row shape differs.",
+    "Decision state is resolved from marks on the canonical address, not stored on the row — and 4 design-language decisions are decided-but-unmarked, so they still resurface in Tim's queue until decision_take marks land.",
+    "The 2026-06-21 subtype-coverage fix: 10 of 24 decisions were silently absent from Tim's queue for weeks (incl. the keystone 'substrate-home') because they lacked a subtype; now schema-gated."
+  ],
+  "conventions": [
+    "Documents the uniform registry schema discipline (id MUST equal file stem, fail-loud, open-vocab DATA fields) consistently across 15 registries.",
+    "Honest-coverage: reconciles its own counts against AGENTS.md drift (e.g. mark_types AGENTS.md says 11/12, confirms 11 files; verdict_panels brief said 3, found 1).",
+    "Flags every cross-registry dependency (generation_policies ids, role ids, design/_system check wrappers) rather than treating registries as self-contained."
+  ],
+  "concerns": [
+    "Records many thin/incomplete registries as current state: source_types 1 entry, verdict_panels 1, checks 2, panels 1, 5 of 8 presence modes have no detection rule, 3 of 4 stack item types unrendered, no skip-stage form.",
+    "16 of 24 decisions have no explanation_source — the explanation_policy fires against no declared grounding pointer (theorem-fork cube-3d/dimension-meaning have a required grounding_source resolving to nothing).",
+    "Root staleness: README 'Skeleton only', STATE.md frozen at 2026-06-07, MERGE-COORDINATION.md superseded 103KB navigation noise; AGENTS.md drift-home lists fewer rows than exist."
+  ],
+  "notes": "If briefing someone: this is the Company's typed-vocabulary layer — ~15 file-discovered registries (decisions, subtypes, mark/item/relation/attachment/source/stack types, kinds, forms, checks, panels, board-edges) all sharing one mechanism, plus the loose root constitution/map/state files; note decision state lives in marks, not rows, and many registries are intentionally thin-for-extension.",
+  "questions": [
+    "When will the 4 decided-but-unmarked design-language decisions get their decision_take marks so they leave Tim's pending queue?",
+    "Is kinds/raw.py meant to migrate to file-per-entry like the others, or stay a single dict?",
+    "Are the 16 missing explanation_source pointers a content backlog with an owner, or unowned?"
+  ],
+  "purpose_vs_actual": "Matches. Stated as a read-only exhaustive landscape of the typed registries + root files; delivers per-registry purpose/schema/inventory/gaps plus a cross-registry observations section, exactly as scoped.",
+  "apparent_themes": [
+    "One file-discovered mechanism, many vocabularies",
+    "Registry-is-truth (decision state from marks)",
+    "Thin-for-forward-extension registries (seed now, grow later)",
+    "Fail-loud schema discipline (id==filename)",
+    "Cross-registry dependency mapping",
+    "Honest coverage + stale-root-file flagging"
+  ],
+  "intention_signals": "Trying to give an agent the complete vocabulary picture of the Company — every typed registry, its row shape, its current entries, and where it is thin or drifted — so the agent can extend a vocabulary by dropping one file, and understands that decision/board state resolves from marks and edges rather than mutable fields.",
+  "novelty": "The systematic demonstration that ~15 distinct vocabularies are the SAME mechanism (only row-shape and dir differ), plus the mark-resolved decision-state model and the documented subtype-coverage-gap bug, is a distinctive registry-architecture portrait.",
+  "contribution": "Contributes the consolidated map of the typed-registry layer: the shared file-discovered mechanism, the full entry inventory and field schema of each of the ~15 registries, the mark-resolved decision-state model, the corpus-semantic-vs-structural edge split, and the root-file status ledger — the vocabulary counterpart to the runtime/interface/ops captures.",
+  "summary_for_embedding": "Exhaustive landscape capture of the Company's ~15 file-discovered typed registries (decisions, subtypes, mark/item/relation/attachment/source/stack types, kinds, forms, checks, panels, board-edges, verdict-panels, mode-detection-rules) with per-registry schema and entry inventory, plus the loose root constitution/map/state files.",
+  "intention_for_embedding": "To give an agent the complete vocabulary picture so it can extend any registry by dropping one file, and to make clear decision and board state resolve from marks and typed edges rather than mutable row fields."
+}

@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/content-router-oauth-patch.ts",
+  "model": "opus",
+  "what_it_does": "Defines an additive patch for an existing content-router Supabase edge function: a small if-check (in comments) that intercepts the /oauth/consent path, plus an executable serveConsent function that returns an HTML page rendering an OAuth consent/authorization screen for 'Vi (Claude Design)'.",
+  "observations": [
+    "The file is structured as a patch with explicit insertion instructions in comments: BLOCK 1 (the if-check) is given only as commented text to paste, while BLOCK 2 (serveConsent) is real code.",
+    "serveConsent builds a self-contained HTML string and returns it as a text/html Response with Cache-Control: no-store.",
+    "The HTML loads @supabase/supabase-js v2 from cdn.jsdelivr.net and creates a browser Supabase client using injected supabaseUrl and SUPABASE_ANON_KEY.",
+    "The consent flow reads authorization_id from the query string and calls sb.auth.oauth.approveAuthorization(authId), then redirects to data.redirect_url.",
+    "Sign-in supports both email and phone OTP via signInWithOtp / verifyOtp, with tabbed UI to switch between methods.",
+    "If a session already exists, it skips login and shows the 'Allow Vi' button directly.",
+    "References supabaseUrl as an in-scope variable (not defined in this file), implying it exists in the target content-router module.",
+    "Consent copy states Vi wants access to the user's Company 'design' channel and design submissions, labeled as 'Tim's first-party connector.'"
+  ],
+  "standouts": [
+    "Uses Supabase's auth.oauth.approveAuthorization API to complete a first-party OAuth authorization flow.",
+    "Entire consent UI (markup, styles, login logic, OTP verify, approve) is inlined into one server-returned HTML string."
+  ],
+  "conventions": [
+    "Follows an explicitly additive-patch convention: insert before existing routes, leave /r//p//app/ routes and the fallback untouched.",
+    "Inlines CSS and JS rather than serving separate assets, typical of edge-function-served HTML.",
+    "Depends on env var SUPABASE_ANON_KEY via Deno.env.get with a '' fallback."
+  ],
+  "concerns": [
+    "supabaseUrl is referenced but not defined in this file, so this snippet cannot compile standalone — correctness depends on the target module providing it.",
+    "BLOCK 1 (the route interception) exists only as comment text, so the actual routing wiring is not enforced by this file.",
+    "Loads the supabase-js client from an external CDN, creating a runtime dependency on cdn.jsdelivr.net availability."
+  ],
+  "notes": "An additive OAuth-consent patch for the content-router edge function: paste-in route interceptor plus a serveConsent() that renders an inline email/phone-OTP login + approveAuthorization consent page for Vi.",
+  "questions": [
+    "Where is supabaseUrl defined in the target content-router module?",
+    "Has BLOCK 1's route interception actually been applied to content-router, or does this patch remain unapplied?"
+  ],
+  "purpose_vs_actual": "Matches: the file states it is the approved additive OAuth-consent patch, and its content is exactly that interceptor comment plus the serveConsent HTML function.",
+  "apparent_themes": [
+    "First-party OAuth connector authorization",
+    "Additive, non-destructive patching of an existing route handler",
+    "Self-contained edge-function-served HTML UI"
+  ],
+  "intention_signals": "Aims to give Vi/Claude Design a hosted consent screen so a user can sign in (email or phone OTP) and approve an OAuth authorization for access to their design channel and submissions, wired into the existing content-router without disturbing its current routes.",
+  "novelty": "The patch-as-instructions format (comments describing exactly where to insert each block) combined with a complete inline OAuth approval UI is distinctive.",
+  "contribution": "Contributes a concrete OAuth consent screen and approveAuthorization integration plus a documented additive-insertion recipe for the content-router, usable as the authorization-grant surface of a first-party connector.",
+  "summary_for_embedding": "A TypeScript additive patch for a Supabase content-router edge function that intercepts /oauth/consent and serves an inline HTML OAuth consent page with email/phone OTP sign-in and approveAuthorization for the Vi connector.",
+  "intention_for_embedding": "To provide and wire in a first-party OAuth consent/authorization surface for Vi (Claude Design) so users can sign in and grant access to their Company design channel and submissions."
+}

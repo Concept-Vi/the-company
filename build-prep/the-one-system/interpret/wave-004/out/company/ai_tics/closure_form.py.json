@@ -1,0 +1,29 @@
+{
+  "project": "company",
+  "path": "ai_tics/closure_form.py",
+  "model": "opus",
+  "what_it_does": "Declares one seed AI-tic, 'closure_form', as a module-level AI_TIC dict. Defines its id, label 'closure-form', a list of six text markers (in conclusion, to summarize, in summary, to wrap up, final thoughts, that's everything), and a description identifying closure-form writing (summarized/finished, expansion-ratio<1) as a named Tim frustration that kills institutional memory.",
+  "observations": [
+    "Pure declarative data file — no functions, no imports, only the AI_TIC dict",
+    "id ('closure_form') equals the file stem as required by the registry schema",
+    "markers is a non-empty list of six phrase strings",
+    "Docstring cross-references runtime/ai_tics.py and ai_tics/AGENTS.md and names the open-future-writing frustration"
+  ],
+  "standouts": [
+    "Encodes a behavioral writing antipattern as matchable marker phrases — the 'cues the fingerprint pass matches'"
+  ],
+  "conventions": [
+    "Conforms exactly to the AI_TIC schema in ai_tics/AGENTS.md (id == stem, non-empty markers, optional label/desc)",
+    "Follows the file-per-tic self-registering registry pattern (add-a-file, no code branch)"
+  ],
+  "concerns": [],
+  "notes": "A single seed AI-tic file cataloguing closure-form phrasing as a generic-AI tell to subtract.",
+  "questions": [],
+  "purpose_vs_actual": "Matches — docstring says it is the closure-form seed tic and the AI_TIC dict declares exactly that.",
+  "apparent_themes": ["catalogue-as-data", "open-future-writing over closure-form", "fingerprint-by-marker-match"],
+  "intention_signals": "To register closure-form writing as a detectable generic-AI tell so the cognition fingerprint pass can flag and subtract it, defending institutional memory across sessions.",
+  "novelty": "Operationalizes a soft writing-style frustration into concrete matchable phrases as registry data.",
+  "contribution": "Contributes the closure_form tic entry and its six marker phrases to the AI-tic catalogue.",
+  "summary_for_embedding": "An ai_tics seed file declaring the closure_form AI-tic with marker phrases like 'in conclusion' and 'to summarize'.",
+  "intention_for_embedding": "To catalogue closure-form writing as a generic-AI tell the cognition fingerprint pass detects and subtracts."
+}

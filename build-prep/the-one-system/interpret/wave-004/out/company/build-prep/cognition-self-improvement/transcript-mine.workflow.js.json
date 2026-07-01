@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/transcript-mine.workflow.js",
+  "model": "opus",
+  "what_it_does": "A build-orchestration workflow script (using an agent()/parallel()/phase()/log() DSL) that orchestrates building two new declarative roles in parallel file-disjoint lanes: roles/mine_exchange.py (a MAP role extracting self-improvement signal from one Tim-message/response exchange) and roles/judge_mining.py (a no-fiction validator of a mine_exchange extract against its raw source). The MINE lane also runs a bounded real mining over ~12-15 exchange-units parsed from recent .jsonl transcripts on the resident chat-4b model. It is build-only with no commit phase.",
+  "observations": [
+    "Defines a meta object with name 'transcript-mine-3', a description, and a single 'Build' phase",
+    "Embeds a shared MINE_SCHEMA string describing the mine_exchange output contract: decision, rationale, tim_correction, my_error, bug_fix, needs_tim, frustration, pattern_tag fields (all strings, mostly optional)",
+    "Embeds a LAWS string requiring agents to read AGENTS.md → MAP.md → STATE.md → roles/AGENTS.md and COMPOSITIONS.md section ③ first",
+    "Defines a JSON SCHEMA for the report each lane returns (lane, files_written, new_role_ids, how_verified, status enum, findings, needs_tim, notes)",
+    "Instructs lanes to mirror roles/verify_lens.py and roles/screen_reader.py for the self-registering ROLE dict + Pydantic shape",
+    "Transcripts source is /home/tim/.claude/projects/-home-tim/*.jsonl, parsed deterministically into exchange-units",
+    "JUDGE lane verification is adversarial: a fabricated-correction pair must return grounded:false; a faithful pair grounded:true",
+    "Calls out GPU dependency: the mining needs chat-4b, with 'company gpu' / 'company up chat-4b --wait' to bring it up"
+  ],
+  "standouts": [
+    "The mine_exchange role's purpose is to extract 'how-I-work-with-Tim' self-improvement signal — pattern_tags like 'green-painting', 'summaries-not-detail', 'dismissed-stranded-work', 'over-cautious-gating'",
+    "The judge_mining role is framed as a no-fiction gate against the miner fabricating decisions/corrections not in the raw exchange",
+    "The stated value is the actual mining FINDINGS returned in the report, not just the role-building"
+  ],
+  "conventions": [
+    "Follows the COMPOSITIONS ③ build-loop pattern: parallel file-disjoint lanes, verify-by-use, report JSON to seam-lanes/<lane>.report.json",
+    "Enforces 'THE FLOOR STAYS': roles are declarative, emit no resolve/approve/dispatch, launch no claude -p",
+    "Follows registry-is-truth (file-discovered roles), NOTHING static, fail-loud, additive principles stated in LAWS",
+    "Explicitly bans Gemini and 'green-paint' (false-success) and forbids editing other lanes' files or roles/AGENTS.md"
+  ],
+  "concerns": [],
+  "notes": "This is the build recipe for the transcript-mining cognition roles, not the role code itself — it directs two agents to build mine_exchange + judge_mining and run a bounded mining over real transcripts.",
+  "questions": [
+    "What does the agent()/parallel()/phase() workflow DSL runtime look like and where is it executed (Workflow tool)?",
+    "What is the full mine_exchange/judge_mining role shape after build, since this file only specifies the contract?"
+  ],
+  "purpose_vs_actual": "Match — stated as BUILD-ONLY with no commit phase, and the script defines only a Build phase, explicitly instructs each lane not to commit, and leaves committing to the next loop beat.",
+  "apparent_themes": [
+    "self-improvement via mining one's own conversation transcripts",
+    "declarative role composition with self-registration and Pydantic shapes",
+    "anti-fabrication / grounded-extraction validation",
+    "file-disjoint parallel build lanes with verify-by-use",
+    "the cognition 'floor' invariant that roles stay declarative"
+  ],
+  "intention_signals": "It aims to turn the agent's own past behavior into structured, validated learning signal — mining exchanges for corrections/errors/frustrations and tagging recurring failure patterns, while guarding against the miner inventing signal that wasn't there.",
+  "novelty": "Pairing a generative mining role with an adversarial no-fiction validator role, plus baking the self-improvement vocabulary (named failure pattern_tags) directly into the output schema.",
+  "contribution": "Contributes a declarative MAP-role-build recipe for per-exchange self-improvement extraction, a shared mining output contract with named pattern tags, and a paired grounded-extraction validator pattern, plus a bounded real-transcript mining run for verify-by-use.",
+  "summary_for_embedding": "A build-only workflow script that orchestrates building two declarative cognition roles (mine_exchange extractor + judge_mining no-fiction validator) in parallel file-disjoint lanes and runs a bounded mining over real conversation transcripts to surface how-I-work-with-Tim self-improvement findings.",
+  "intention_for_embedding": "To build and demonstrate a transcript-mining capability that extracts and validates self-improvement signal (corrections, errors, frustrations, recurring failure patterns) from the agent's own past exchanges with Tim."
+}

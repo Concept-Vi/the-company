@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/SEM-6-priorart-frame.md",
+  "model": "opus",
+  "what_it_does": "A companion findings doc covering the external prior art for the semantic detector class (LLM-as-judge, doc/comment-code drift detection, semantic code search, LLM-built code knowledge-graphs/GraphRAG, cheap-model swarms) each mapped to its delta, plus the bigger frame and the parent anchor's §8 what-ifs grounded in this repo's code, centered on whether the semantic-coherence swarm is the same kind of thing as the cognition swarm.",
+  "observations": [
+    "Headline frame: for the semantic detector the engine IS run_swarm itself (cognition.py:523) — a repo artifact becomes the utterance, a declared role emits schema-enforced finding-JSON to a run:// address.",
+    "Corrects the corpus denominator: excluding deps, ~234 first-party Python files / ~48,035 LOC + ~124 markdown + ~39 TS/TSX (suite.py alone ~9,776 lines).",
+    "Corrects throughput to 2,241 tok/s at concurrency 32 with sublinear prefill (30K input in ~1.07s) as the axis that matters, so reading is cheap prefill and findings are tiny decodes.",
+    "Cites the LLM-as-judge survey/bias literature (position, verbosity, self-preference 10-25%) and maps the anchor's use as typed binary judgment, not scoring, sidestepping ranking biases.",
+    "Corrects the anchor's trust mechanism: it named 'N roles must concur' but run_jury (cognition.py:645) is N draws of the SAME role, whose docstring (649-651) calls them correlated — a stability check not a correctness check.",
+    "Maps each prior-art line to its delta: doc-drift at module-vs-AGENTS.md altitude and held; semantic search is pull while the swarm is push and local-first; GraphRAG builds a meaning-graph to keep while the anchor re-derives it.",
+    "Grounds the §8 what-ifs in existing code: the background and rollup activation contexts (activation.py) are ready-but-driver-gated; VRAM contention is solved by FLOOR_RESERVE_R + swarm_slots; a finding-type is a role file the RoleRegistry already discovers; recursion terminates via the existing self-exclusion rule."
+  ],
+  "standouts": [
+    "The grounded claim that the semantic-coherence detector is not a sibling of the swarm but the swarm itself, with roles/check.py ({contradicts, note}) as the live template.",
+    "The finding that cheap-small-model bulk semantic detection at corpus scale is a sparse/unoccupied external design point, which it argues validates the anchor's economics premise.",
+    "The structural-says-wired AND semantic-says-meaningless disagreement as a finding-type no single external tool emits — the literal join of the two graphs."
+  ],
+  "conventions": [
+    "Uses OBS/INF/PRIOR-ART/IDEA marking and supplies a full external source list with URLs.",
+    "Deliberately does not re-cover the structural sibling's prior-art territory, referencing and building past it.",
+    "Closes with an expansion-ratio summary of the residue to put in front of Tim."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: the prior art has all the pieces (LLM judges, doc-drift, semantic search, code knowledge-graphs) but nobody composes them into a cheap-concurrent-small-model detector swarm whose output is a held dispositioned coherence finding — and this system already owns that engine.",
+  "questions": [
+    "Who authorizes the always-on driver for the continuous background watch, given the mechanism is ready but driver-gated as needs-tim?",
+    "How is the structural-semantic disagreement finding-type actually emitted, given it is proposed as IDEA?"
+  ],
+  "purpose_vs_actual": "Matches its stated area: it delivers the semantic-half prior art with deltas plus the bigger frame and the §8 what-ifs grounded in this repo's real code.",
+  "apparent_themes": [
+    "One swarm engine, two activation contexts (cognition and semantic-coherence)",
+    "Prior-art delta mapping rather than summary",
+    "Pull (search) vs push (standing watch); local-first by construction",
+    "§8 what-ifs as already-built mechanism, not speculation"
+  ],
+  "intention_signals": "It is trying to locate the design against external work, sharpen the parent anchor's trust and capacity claims with grounded corrections, and argue the semantic detector is literally another lens on the existing swarm engine.",
+  "novelty": "The literal engine-identity frame (detector = run_swarm) and the observation that the cheap-bulk-small-model detection point is externally sparse are distinctive.",
+  "contribution": "Contributes the external prior-art deltas for the semantic class, the run_jury trust-mechanism correction, the corrected corpus/throughput numbers, and the grounded status of each §8 what-if against existing activation-context code.",
+  "summary_for_embedding": "A prior-art-and-frame findings doc mapping LLM-as-judge, doc-drift, semantic search, GraphRAG and small-model-swarm prior art to their deltas, and grounding the anchor's §8 what-ifs in existing code while arguing the semantic detector is run_swarm itself.",
+  "intention_for_embedding": "To situate the semantic detector layer against external prior art and to test whether it is another lens on the one existing swarm engine."
+}

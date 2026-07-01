@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/Ingest.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the React UI (AcIngest) for the ingestion flow: a rail with a drop/paste zone and a source list, and a detail pane that shows a selected source, lets the user trigger deep analysis, and displays the resulting design-DNA findings grouped by dimension with per-finding and bulk 'bring forward' actions. All model/data work is delegated to the CV_SOURCE registry.",
+  "observations": [
+    "Subscribes to CV_SOURCE.on(force) so the UI re-renders whenever the source corpus changes.",
+    "DIM maps dimensions (color/type/voice/structure/value/motif) to labels and icons; TYPE_LABEL maps recognizer types to display labels.",
+    "onFiles reads each file via FileReader (DataURL for images, text otherwise), calls CV_SOURCE.addSource then CV_SOURCE.recognize, and selects it.",
+    "onPaste creates a timestamped pasted-note source and recognizes it.",
+    "Dropzone has Upload/Paste tabs, drag-over state, a hidden file input, and a paste textarea with an Add button.",
+    "SourceView triggers CV_SOURCE.analyze with busy/error state, renders findings grouped by dimension, and offers per-finding 'Bring forward' and a 'Bring all N forward' button.",
+    "Color findings whose evidence is a hex string render a live swatch; evidence is shown as a quote.",
+    "Uses window.dsaToast for staging feedback and shows a loud inline error block on analyze failure.",
+    "Reads StateDot/AcKit off window and uses CvIcon/ViShape globals."
+  ],
+  "standouts": [
+    "Findings are presented as reviewable, dimension-grouped cards with evidence quotes and explicit bring-forward actions — keeping the human in the loop before anything is staged.",
+    "Image sources show a thumbnail and color findings render actual swatches, tying evidence to the visual.",
+    "Errors from analysis are surfaced inline rather than swallowed, matching the loud-fail ethos."
+  ],
+  "conventions": [
+    "Pure projection of the CV_SOURCE registry — the UI reads list/get and calls registry methods, holding no parallel state, consistent with 'interface is a projection of the registries'.",
+    "window-global components (AcKit, CvIcon, ViShape) and React-off-window, consistent with the project's no-import style.",
+    "Reuses fz2-btn classes from the Foundations stylesheet for buttons (shared styling)."
+  ],
+  "concerns": [
+    "FileReader onerror just resolves the promise (res) with no user-visible error, so a failed file read is silent.",
+    "onFiles calls recognize but not analyze; recognize is fire-and-forget (no await), so ordering relative to the re-render relies on the subscription.",
+    "Borrows fz2-btn class names from Foundations, coupling this view's styling to another file's CSS."
+  ],
+  "notes": "The ingest UI: drop/paste sources into a rail, pick one, click 'Analyse for depth', then review dimension-grouped DNA findings and bring chosen proposals forward into the system.",
+  "questions": [
+    "Should a failed FileReader read surface an error to the user rather than silently resolving?",
+    "Where are the fz2-btn styles defined and is reusing them across views an intentional shared convention?"
+  ],
+  "purpose_vs_actual": "Matches — the header promises an upload→recognize→deep-read→reviewable-proposals UI composed from AcKit with all model work via CV_SOURCE, and the component delivers exactly that interaction.",
+  "apparent_themes": [
+    "Human-in-the-loop review of machine-mined proposals",
+    "UI as a thin projection of a registry",
+    "Evidence-grounded findings (quotes, swatches, thumbnails)"
+  ],
+  "intention_signals": "Trying to give the user a simple, trustworthy surface to feed inspiration in, watch Vi recognize and read it, and decide which extracted design signals to stage into their system.",
+  "novelty": "Presenting model-extracted design DNA as dimension-grouped, evidence-backed cards with granular and bulk staging — analysis output rendered as a review queue rather than freeform text.",
+  "contribution": "Contributes the ingestion user interface: the drop/paste capture, the source list with recognition status, and the findings review pane with per-finding and bulk bring-forward staging that sits atop the CV_SOURCE registry.",
+  "summary_for_embedding": "A React ingest UI for AtomiCity that uploads or pastes source material, shows a source list with recognition status, triggers deep analysis via CV_SOURCE, and renders design-DNA findings grouped by dimension with bring-forward staging actions.",
+  "intention_for_embedding": "To give the user a trustworthy surface to feed in inspiration, watch Vi recognize and deeply read it, and review and stage the extracted design signals into their system."
+}

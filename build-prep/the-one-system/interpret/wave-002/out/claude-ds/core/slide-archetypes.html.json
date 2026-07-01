@@ -1,0 +1,52 @@
+{
+  "project": "claude-ds",
+  "path": "core/slide-archetypes.html",
+  "model": "opus",
+  "what_it_does": "A dsCard demo/gallery page that renders the ConceptV slide-archetype system. It imports React (UMD via unpkg) and the compiled design-system bundle, then uses the exported Slide component to build slides from pure content objects. Three sections: one split spec rendered at three LOD levels (summary/pitch/full), a hand-listed archetype gallery (cover, metric-band, compare, triptych, stepper, diagram·hub), and a capital-raise archetype gallery that pulls each type's default content from a single-source catalogue (CV_ARCHETYPE_CATALOG/META).",
+  "observations": [
+    "Top-line HTML comment is a @dsCard annotation with group/name/subtitle/viewport metadata (1280x2600).",
+    "Loads React 18.3.1 and ReactDOM from unpkg with SRI integrity hashes and crossorigin.",
+    "Pulls the namespace from window.ConceptVDesignSystem_c8f43c and destructures Slide from it.",
+    "frameInto() helper creates a scaled artboard: renders at DESIGN_W=1100 then scales to fit the frame width via transform and a ResizeObserver + requestAnimationFrame + setTimeout(350) fit routine.",
+    "Each Slide is rendered with archetype + content + lod + surface:'slide' + density:'compact'.",
+    "splitContent demonstrates content-as-data: bullets carry title/text/bullet/priority/detail so LOD pruning can drop 'support' detail by priority.",
+    "Gallery cases feed real ConceptV content (Virtual Hubs, 70+ delivered, $1.5M+ IP, 41,500+ users).",
+    "diagram case hands a hub graph (center Vi, diamond/circle/hex/octagon node shapes) to the graph solver.",
+    "Capital-raise section reads defaultsOf(key) from CV_ARCHETYPE_CATALOG (id 'surface.deck-slide.'+key) so card and registry can't drift; falls back to {} which the builder tolerates.",
+    "twelve new capital-raise keys incl. five diagram sub-types: orbital, stacked, spectrum, manifold, fidelity."
+  ],
+  "standouts": [
+    "Stated thesis: a slide archetype is a pure function content → CVNode tree; design = f(content, axisPosition).",
+    "LOD is recomputation (prune by narrative priority, grow sections/atom depth) not a different layout.",
+    "Capital-raise content is pulled from the single-source catalogue explicitly to prevent card/registry drift."
+  ],
+  "conventions": [
+    "Follows the design-system's single-source rule: content from CV_ARCHETYPE_CATALOG, look from --tokens, no hand layout.",
+    "Uses var(--token) throughout the inline <style> (zone/ink/accent/font/elev/fs tokens).",
+    "@dsCard comment convention so the gallery machinery can catalogue this page.",
+    "Inline scaling/fit pattern via ResizeObserver rather than a CSS-only approach."
+  ],
+  "concerns": [
+    "Hardcoded fallback colours in inline style (#fff via var fallback) and the c8f43c namespace suffix are magic strings local to this page.",
+    "External unpkg React load means the page depends on network/CDN to render at all.",
+    "fit() relies on a setTimeout(350) fallback, a timing heuristic that can misfire if render is slow."
+  ],
+  "notes": "A self-describing demo page proving slides are pure content→tree builders recomputed across LOD, with the capital-raise archetypes sourced from the single catalogue to avoid drift.",
+  "questions": [
+    "Where is the Slide component and the block/graph solvers actually implemented (referenced via the bundle)?",
+    "What populates window.CV_ARCHETYPE_CATALOG / CV_ARCHETYPE_META at runtime?",
+    "Is the c8f43c namespace suffix stable across bundle rebuilds or regenerated?"
+  ],
+  "purpose_vs_actual": "Match — the @dsCard subtitle promises 25 corpus archetypes as content→tree builders recomputed across LOD, and the page renders exactly that across three galleries.",
+  "apparent_themes": [
+    "Content-as-data / design = f(content, axis)",
+    "Single source of truth, anti-drift",
+    "Computed layout over hand layout",
+    "Self-describing demo cards"
+  ],
+  "intention_signals": "Demonstrate and visually prove the generative slide system: that one spec recomputes across LOD and that every archetype (including the mined capital-raise grammar) is a builder fed registry-sourced content, so the eye can verify the engine works.",
+  "novelty": "The explicit framing of LOD as recomputation by narrative priority, and the five new diagram sub-types (orbital verb-ring, stacked pipeline, 1-D spectrum axis, converging manifold, progressive-fidelity stepper) as first-class content→tree builders.",
+  "contribution": "Contributes a live, self-scaling visual demonstration of the slide-archetype generative engine and a worked example of sourcing archetype defaults from the single catalogue, plus the enumerated capital-raise archetype grammar and diagram sub-types.",
+  "summary_for_embedding": "An HTML dsCard gallery rendering ConceptV slide archetypes (cover, compare, triptych, diagram, capital-raise set) via the Slide component as pure content→CVNode-tree builders recomputed across three LOD levels.",
+  "intention_for_embedding": "To visually prove the slide system where design = f(content, axis), LOD is recomputation, and archetype defaults come from the single-source catalogue to prevent drift."
+}

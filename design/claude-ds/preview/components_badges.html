@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Status dots, chips, bell" subtitle="Dots · task chips · pills · notification badge" viewport="700x260" --><html><head><meta charset="utf-8"><title>Badges, dots, chips</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 22px 26px; min-height: 240px; }
+  .lead { font: 400 12px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 14px; }
+  .row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .label { font: 600 10px/1 var(--font-body); color: var(--fg-muted); letter-spacing: .08em; text-transform: uppercase; width: 90px; flex: none; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; display: inline-block; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg-canvas);
+    padding: 6px 10px;
+    border-radius: var(--r-sm);
+    font: 500 12px/1 var(--font-body);
+    color: var(--fg-primary);
+  }
+  .task-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 10px;
+    border-radius: var(--r-xs);
+    font: 500 11px/1 var(--font-body);
+  }
+  .bell { position: relative; display: inline-flex; }
+  .bell svg { width: 24px; height: 24px; stroke: var(--fg-primary); fill: none; stroke-width: 1.5; }
+  .badge {
+    position: absolute; top: -4px; right: -4px;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    border-radius: 999px; background: #F04325; color: white;
+    font: 700 9px/16px var(--font-body); text-align: center;
+  }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--bg-muted);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--fg-muted); font-size: 13px;
+  }
+</style></head>
+<body><div class="card">
+  <p class="lead">Status uses <b>filled dots</b>. Calendar task chips inherit the dot colour at a soft-fill background. Notification bell uses a small red circular badge — no <code>+</code>.</p>
+  <div class="row">
+    <span class="label">Status dots</span>
+    <span class="dot" style="background:#5A8A4A"></span><span class="dot" style="background:#E5C547"></span>
+    <span class="dot" style="background:#E5A547"></span><span class="dot" style="background:#C24A3C"></span>
+    <span class="dot" style="background:#4A78B8"></span><span class="dot" style="background:#A89678"></span>
+  </div>
+  <div class="row">
+    <span class="label">Task chips</span>
+    <span class="task-chip" style="background:#FBF1C0"><span class="dot" style="background:#E5C547"></span>Site survey</span>
+    <span class="task-chip" style="background:#E6EFDB"><span class="dot" style="background:#5A8A4A"></span>Floorplan v2</span>
+    <span class="task-chip" style="background:#F5D7D2"><span class="dot" style="background:#C24A3C"></span>Reshoot lobby</span>
+    <span class="task-chip" style="background:#DCE7F3"><span class="dot" style="background:#4A78B8"></span>Hub copy</span>
+  </div>
+  <div class="row">
+    <span class="label">Pills / dropdowns</span>
+    <span class="chip"><span class="dot" style="background:#E5C547"></span>Pending</span>
+    <span class="chip">Task Type ▾</span>
+    <span class="chip" style="background:var(--bg-dark);color:var(--fg-inverse)">MENU ▴</span>
+  </div>
+  <div class="row">
+    <span class="label">Bell + avatar</span>
+    <span class="bell">
+      <svg viewBox="0 0 24 24"><path d="M6 19 V11 a6 6 0 0 1 12 0 v8 z"/><path d="M9 19 a3 3 0 0 0 6 0"/></svg>
+      <span class="badge">7</span>
+    </span>
+    <span class="avatar">◉</span>
+  </div>
+</div></body></html>

@@ -1,0 +1,44 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/recent-pitches.md",
+  "model": "opus",
+  "what_it_does": "Records the analysis of a third pitch-deck ingest folder ('recent-pitches', 49 pages, 3:2 aspect ratio, high level-of-detail) used as a stress test of the design-language model, reporting whether density/detail is coupled to aspect ratio and whether the LOD ladder holds a third rung.",
+  "observations": [
+    "States the central verdict: the design language is ratio-invariant and the LOD ladder gains a third high-detail rung.",
+    "Reports measured values: side margins ~12% (11.6%), zoning wash #faf9f7, base #fdfdfd, gold ramp #c4ab43/#c49649, all unchanged at 3:2 (1893x1287).",
+    "Concludes ratio and density/LOD are correlated by choice, not mechanically coupled.",
+    "Headlines a finding that slides ARE templates: p-25 and p-49 share identical 'Our Entry Markets' layout filled with different data.",
+    "Lists new atoms/patterns: QR 'Virtual Tour' card, two bullet semantics (gold triangle vs gold arrow flow-bullet), quadrant/positioning map, team/org grid, geo locator, multi-section slide, device-channel showcase row.",
+    "Walks the 0-9 layer deltas (Frame/Grid/Zoning/Colour/Atoms/Patterns/Sequence) confirming each against prior folders.",
+    "Marks the AXES.md open question 'density-perp-ratio?' as resolved: independent."
+  ],
+  "standouts": [
+    "Slide-as-template proof via two identically-laid-out slides with swapped data (p-25/p-49).",
+    "Bullet glyph carries semantics: triangle = plain list, arrow = causal/flow list.",
+    "Explicit resolution of an open generative question (density independent of ratio)."
+  ],
+  "conventions": [
+    "Uses a 0-9 numbered-layer diff format shared with sibling analysis notes (pitch-deck.md).",
+    "Uses checkmark/plus/pencil/warning glyphs to classify findings (confirmed / new / generalises / contradiction).",
+    "Cross-references sibling docs (SYSTEM-GAPS.md, AXES.md) rather than restating.",
+    "Frames findings as answers to pre-set stress-test questions."
+  ],
+  "concerns": [],
+  "notes": "An evidence log proving the design language holds at a new aspect ratio and a higher detail level, and that decks are assembled from reusable, data-swappable slide templates.",
+  "questions": [
+    "What are the 13 archetypes / baseline atoms referenced as already established elsewhere?",
+    "Where is the ingest sample data physically (ingest/recent-pitches/) and is it still present?"
+  ],
+  "purpose_vs_actual": "Matches — the note is framed as a stress test and delivers stress-test results with measured evidence.",
+  "apparent_themes": [
+    "Single-source / reference-everywhere design language",
+    "Generative model where design = f(content, axis)",
+    "Invariance under surface parameters (ratio, density)",
+    "Templates as fixed-layout + swappable-data"
+  ],
+  "intention_signals": "Trying to confirm, with a deliberately different sample, that the extracted design DNA generalises across aspect ratios and detail levels, and to harvest new reusable atoms/archetypes before synthesising the system.",
+  "novelty": "The empirical template-equivalence proof (two slides, same layout, different data) and the semantic-bullet-glyph distinction.",
+  "contribution": "Contributes the ratio-invariance finding, the LOD-ladder third rung, the slide-as-template evidence, and a set of new design atoms (QR card, flow-bullet, quadrant map, team grid, geo locator, channel strip) to the fused design-language model.",
+  "summary_for_embedding": "Analysis note recording that a 3:2 high-detail pitch-deck folder confirms the design language is ratio- and density-invariant, proves slides are reusable data-swappable templates, and adds new design atoms.",
+  "intention_for_embedding": "To stress-test and validate the extracted design DNA against a differently-shaped, denser sample before synthesising it into one generative system."
+}

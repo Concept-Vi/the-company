@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "templates/capital-raise/CapitalRaise.dc.html",
+  "model": "opus",
+  "what_it_does": "A Durable-Components (x-dc) template that defines a full investor capital-raise deck for ConceptV entirely as data. A DCLogic Component class holds a DECK getter — an array of ~16 slides, each picking an archetype (product-cover, split, metric-band, orbital, stacked, compare, spectrum, logo-wall, manifold, fidelity, team, reasons, dashboard, photo-divider, product-closing) and supplying content; the markup loops the slides via sc-for and renders each through the design system's Slide component (x-import of ConceptVDesignSystem...Slide) under register/lod/density/theme/ground dials. componentDidMount drives the universal slide auto-fitter on a stabilising loop and adds per-slide IntersectionObserver entrance animations.",
+  "observations": [
+    "@template comment names it 'Capital Raise' and frames it as 'content-as-data, recomputed live by the LOD / density / theme dials,' citing the running-sentence title chain DESIGN-LANGUAGE §16",
+    "Props are declared as enums in a data-props blob: register (custom/presenter/reader), lod (summary/pitch/full), density (compact/comfortable/spacious), theme (light/dim/dark/contrast), ground (clean/warm)",
+    "Loads ds-base.js?v=3 in <helmet>; each slide is rendered by x-import component-from-global-scope=ConceptVDesignSystem_c8f43c.Slide with hint-size 1280x720",
+    "Slide titles are written so reading them top-to-bottom forms one running sentence (the argument legible from the title rail alone) — an explicit narrative device",
+    "Contains real, specific ConceptV business content: metrics (52% rework, $430B+ cost), SAM figures, a 16-logo client wall, $1,035,000 ARR pipeline, deal terms ($1M SAFE, $5.5M pre-money), named team members and real contact details (phone, email, address)",
+    "componentDidMount uses refit/kick defensively (only calls what exists, loops until the stage signatures stabilise, capped at 120 ticks) so cold loads can't throw",
+    "Entrance animation respects prefers-reduced-motion and leaves the base visible for print/no-JS; cleans up the IntersectionObserver on unmount",
+    "renderVals zero-pads slide numbers and, when register != 'custom', blanks lod/density (so a named register preset governs instead of explicit dials)"
+  ],
+  "standouts": [
+    "The entire deck is content-as-data: editing the deck means editing the DECK array; layout is computed by the generative core's block/graph solvers under the dials, not hand-laid",
+    "The running-sentence title chain (§16) — the slide titles read as one continuous argument",
+    "Each slide reuses a named archetype, so the same Slide component renders 15+ visually distinct slide grammars from declarative content"
+  ],
+  "conventions": [
+    "Follows the project's generative ethos: declare content + archetype, let the engine compute the layout under axis dials; no bespoke per-slide layout code",
+    "Defensive integration with async-loaded fitter/slides (never assume a method exists) matches the CLAUDE.md trap about compiled-bundle/async load order",
+    "Props as enums consumed by the Slide via register/lod/density/theme/surface — the dial pattern threaded through",
+    "Uses var(--token) styling and the cv-slide-frame/cv-slide-stage classes from the DS rather than raw values"
+  ],
+  "concerns": [
+    "Real, sensitive business data (valuation, deal terms, pipeline ARR, personal contact details) is embedded directly in a template file — a confidentiality/exposure consideration if the corpus is shared",
+    "Image fields are prose descriptions of intended renders ('warm coastal-luxury interior render'), not real assets — the slides depend on the engine/placeholder handling to fill them"
+  ],
+  "notes": "An investor pitch deck expressed as a data array of archetype+content slides, rendered live through the design system's generative Slide component under LOD/density/theme dials, with a running-sentence title rail.",
+  "questions": [
+    "How does the Slide component map each archetype name (orbital, manifold, fidelity, etc.) to a computed layout — where are those archetypes defined?",
+    "What does the global ConceptVDesignSystem_c8f43c bundle expose and how is its hashed name kept in sync with the compiled _ds_bundle.js?"
+  ],
+  "purpose_vs_actual": "Matches: the @template description promises a capital-raise deck 'computed from the generative core' with the running-sentence chain and named archetypes as content-as-data, which is exactly the DECK array + Slide rendering implemented.",
+  "apparent_themes": [
+    "Content-as-data / design = f(content, axis) (the deck is data, layout is computed)",
+    "Reuse one universal component (Slide) across many archetypes",
+    "Narrative-as-structure (the running-sentence title chain §16)",
+    "Defensive, degradable integration (fitter loop, reduced-motion, print fallback)"
+  ],
+  "intention_signals": "It tries to prove the generative design system on a real, high-stakes artifact: a complete investor deck where editing equals editing data, the visuals recompute under dials, and the argument is carried by the title rail — demonstrating that a serious deliverable can be authored declaratively on the shared engine.",
+  "novelty": "A real fundraising deck authored as a declarative slide-data array bound to named generative archetypes and axis dials, with the slide titles deliberately composed into one running sentence.",
+  "contribution": "Contributes a concrete, content-rich template that exercises many Slide archetypes and the LOD/density/theme dials end-to-end, plus the running-sentence title pattern and a robust async-fitter mount routine — a worked example a fused system would keep as both a template and a stress test of the generative core.",
+  "summary_for_embedding": "An x-dc Durable-Components template defining ConceptV's investor capital-raise deck as a ~16-slide content-as-data array bound to named generative archetypes, rendered live by the design system's Slide component under register/lod/density/theme dials with a running-sentence title rail.",
+  "intention_for_embedding": "To produce a complete investor pitch deck that is edited as data and computed by the generative core under axis dials, proving the design system on a real high-stakes deliverable."
+}

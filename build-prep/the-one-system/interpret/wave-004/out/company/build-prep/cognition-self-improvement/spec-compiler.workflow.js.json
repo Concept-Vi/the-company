@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/spec-compiler.workflow.js",
+  "model": "opus",
+  "what_it_does": "An executable build-workflow script (run via a Workflow harness) that builds the 'spec-compiler' faculty — four new declarative roles across two file-disjoint parallel lanes — that decomposes a dense seed idea into a loop-prep triad (completion criteria, implementation guide, research synthesis). It defines the shared criterion contract, binding laws, an output report schema, and dispatches two parallel build agents, then logs the result. It is build-only with no commit phase.",
+  "observations": [
+    "meta.name='spec-compiler-7', one phase 'Build', described as COMPOSITIONS section 7",
+    "Defines a CRITERION contract: a two-faced shape {id, function, form, files_touched, reuse_or_netnew, preserves} where FORM is mandatory where a surface exists",
+    "LAWS string enumerates a reading order (AGENTS.md → MAP.md → STATE.md → roles/AGENTS.md), LAW-0 UNIFICATION, the 'floor stays' rule (roles are declarative, emit no resolve/approve/dispatch, launch no claude -p), registry-is-truth, fail-loud, additive, NO-FICTION",
+    "SCHEMA constrains lane reports with status enum ['built-verified','built-untested','blocked']",
+    "LANE MAP builds roles/decompose_seed.py (seed→groups, 1x1) and roles/expand_criterion.py (group→two-faced criterion, fanned via run_items)",
+    "LANE GROUND builds roles/ground_criterion.py (no-fiction reuse check) and roles/triad_synth.py (reduce, mode=role, mirrors reduce_synth.py)",
+    "Both lanes instructed to MIRROR roles/verify_lens.py's self-registering ROLE-dict + Pydantic shape and use mode_scope 'spec'",
+    "Verification-by-use instructions: fire on a sample seed, expect floor (cognition_governance_acceptance) green and roles_acceptance red ONLY on the expected drift list",
+    "Explicit file-disjoint fencing: each lane works only its two role files, must not edit the other lane, runtime/*, mcp_face/*, or roles/AGENTS.md, and must not commit",
+    "GPU note: verify-fire needs chat-4b; check `company gpu`, bring up if down; NO Gemini, NO green-paint"
+  ],
+  "standouts": [
+    "The two-faced criterion contract embedded as a shared string both lanes align to (expand emits it, ground reads it, synth assembles it)",
+    "The NO-FICTION rule: a reuse-claim must cite a real file or be marked 'net-new', never an invented reuse",
+    "Lanes are file-disjoint by design with explicit do-not-touch lists, encoding concurrent-build collision avoidance"
+  ],
+  "conventions": [
+    "Follows the repo's workflow-script DSL (meta/phases, phase(), agent(), parallel(), log(), schema-constrained agents)",
+    "Roles are mirrored from existing roles (verify_lens.py, reduce_synth.py) for shape consistency rather than parallel-invented",
+    "Build-only with commit deferred to the next loop beat, matching the seam-lane discipline",
+    "Output report schema matches the lane.report.json shape used elsewhere in this directory"
+  ],
+  "concerns": [
+    "Reuse-grounding degrades to 'name the file you believe + mark confidence' since corpus-grounded retrieval is a future enhancement, so cites rely on agent confidence rather than verified lookup"
+  ],
+  "notes": "An orchestration script that builds the spec-compiler faculty (seed→loop-prep triad) as four declarative roles in two parallel file-disjoint lanes, sharing one two-faced criterion contract.",
+  "questions": [
+    "What is the Workflow/agent/parallel harness that executes this, and where is its definition?",
+    "How is the 'spec' mode_scope wired into the cast so the listening cast stays untouched?",
+    "Does run_reduce(mode='role', role='triad_synth') reliably assemble all three docs from N grounded criteria in practice?"
+  ],
+  "purpose_vs_actual": "Matches: header and meta both state a build-only spec-compiler workflow, and the body dispatches exactly the described four-role/two-lane build.",
+  "apparent_themes": [
+    "self-improving cognition that drafts its own loop-prep specs",
+    "two-faced (function AND form) completion criteria as the unit of done",
+    "no-fiction grounding of reuse claims",
+    "file-disjoint parallel lanes sharing one contract",
+    "roles as declarative registry-discovered units, not imperative dispatchers"
+  ],
+  "intention_signals": "Trying to give the cognition system a faculty that turns a terse human seed into a structured, grounded, two-faced loop-prep triad automatically, while keeping each piece a clean declarative role and avoiding cross-lane contamination.",
+  "novelty": "A spec-compiler expressed as composable declarative roles (decompose/expand/ground/synth) that produces loop-prep artifacts, with a mandatory FORM face and a no-fiction reuse-citation discipline baked into the prompts.",
+  "contribution": "Contributes the orchestration and the shared two-faced criterion contract for auto-drafting loop-prep triads from seeds — the build recipe and lane structure for the spec-compiler faculty that a fused system would keep as its seed-to-spec pipeline.",
+  "summary_for_embedding": "A build-only workflow script that constructs the spec-compiler faculty as four declarative roles in two file-disjoint lanes, turning a dense seed into a two-faced loop-prep triad.",
+  "intention_for_embedding": "To let the cognition system auto-compile a grounded, function-and-form loop-prep specification from a terse human seed idea."
+}

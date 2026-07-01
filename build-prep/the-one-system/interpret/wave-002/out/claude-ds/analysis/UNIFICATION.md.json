@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/UNIFICATION.md",
+  "model": "opus",
+  "what_it_does": "A design/architecture note documenting how the ConceptV design system, built as two disconnected halves (a type system + Vi generator in app/registry/*, and a rule engine + two solvers in core/*), is being welded into one machine. It maps the duplication between the halves, states the canonical decision for collapsing it, and tracks a staged weld (W1–W7) with per-stage DONE/open status.",
+  "observations": [
+    "Frames the system as two halves of one machine: 'the type system has no engine; the engine has no type system' with zero references between them (confirmed by grep).",
+    "Tables three parallel strands per concept (app type model / app composer WS_LAYOUTS+WS_BLOCKS / core engine) and assigns a single canonical resolution for each.",
+    "Aligns three hierarchies into one ladder: AXES containment (Deck→Band→Section→Zone→Cluster→Atom), CV_REGISTRY layers (doc→surface→system→block→atom +token/template), core CVNode kinds.",
+    "Canonical decision picks CV_REGISTRY schema as the type system and the core solvers as the rule engine, bridged by a single function typeToNode(type,data,axis) with a RenderType React entry point.",
+    "Tracks weld stages W1–W7 with ✅ DONE markers and a 'Still open' list (W6 inline-editing through engine, W7 live widget render, moving types-core into the bundle).",
+    "Records 'LOUD-FAIL' discipline: every fallback removed, RenderType/Slide/buildSlide/typeToNode/CoreTypes throw when their dependency is missing.",
+    "Section 4 lists risks: don't churn what's right, fragile app boot (self-mounting .jsx poison the bundle), stale bundle mid-turn.",
+    "Honestly records a past mistake — the 'slice-4 mistake' where Slide/Archetypes shipped as a fourth parallel strand."
+  ],
+  "standouts": [
+    "The whole document is organized around eliminating duplication via a single bridge function (typeToNode) rather than rewriting either half.",
+    "Explicit self-recorded mistake (slice-4 fourth-strand) kept in the doc rather than erased.",
+    "LOUD-FAIL section enumerates exactly which functions throw and distinguishes a readiness gate (window.__coreReady) from a fallback."
+  ],
+  "conventions": [
+    "Per-stage status with ✅ DONE markers and a separate 'Still open' section — a build-log style.",
+    "Cites sibling docs by name (AXES.md, INTEGRATION.md, REQUIREMENTS.md) and code files by path (core/RenderType.jsx, app/registry/types-core.js).",
+    "Markdown tables to express the duplication/canonical mapping; fenced ASCII for the ladder alignment.",
+    "Embodies the project's 'one home, referenced everywhere; no second place to drift' charter."
+  ],
+  "concerns": [],
+  "notes": "This is the keystone weld-map: it explains WHY the design system had two non-communicating halves and HOW one bridge function (typeToNode/RenderType) joins them, with stage-by-stage status.",
+  "questions": [
+    "What is the current status of the three 'Still open' items (W6 composer render swap, deleting dead Spark/Delta/KPITile, moving types-core into the bundle) — is this doc kept current as those land?",
+    "Are the ✅ DONE claims independently verified, given the doc itself warns the bundle is stale mid-turn?"
+  ],
+  "purpose_vs_actual": "Match — the stated purpose ('unification, not new design — map the duplication, the canonical decision, the staged weld') is exactly what the body delivers.",
+  "apparent_themes": [
+    "Single source of truth / anti-drift",
+    "Unification of parallel implementations into one machine",
+    "Loud failure over silent fallback",
+    "design = f(content, axis) as the generative spine",
+    "Honest build memory (recording mistakes, not erasing them)"
+  ],
+  "intention_signals": "Trying to capture and execute a deliberate structural decision — turn a system that was accidentally two disconnected engines into one unified generative system, so a Vi-generated Type renders through the same engine as everything else (closing the generation→render loop).",
+  "novelty": "The framing of a design system as two halves of one machine joined by a single bridge function, plus the candid in-doc record of a prior architectural mistake folded into the weld.",
+  "contribution": "Contributes the unification narrative and the canonical bridge concept (CV_REGISTRY types → typeToNode → core solvers → DNA-pure output): the explicit mapping that collapses three parallel strands (archetypes, atoms, tokens, docs) into one ladder and one render path, plus the staged-weld status memory.",
+  "summary_for_embedding": "Architecture note welding the ConceptV design system's two disconnected halves (type system+Vi generator and rule engine+two solvers) into one machine via a single typeToNode/RenderType bridge, mapping duplication, the canonical decision, and staged-weld status W1–W7.",
+  "intention_for_embedding": "To document and drive the unification of the design system into one generative engine where any Type — including a Vi-generated one — renders through the same axis-dialed solvers with no second place to drift."
+}

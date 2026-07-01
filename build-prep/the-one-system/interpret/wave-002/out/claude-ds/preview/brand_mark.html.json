@@ -1,0 +1,39 @@
+{
+  "project": "claude-ds",
+  "path": "preview/brand_mark.html",
+  "model": "opus",
+  "what_it_does": "A preview card showing the ConceptV 'V' brand mark in three placement variants across three background panes: yellow V on canvas background, white V on gold background, and yellow V on dark background — each labelled with its placement tag.",
+  "observations": [
+    "Carries a @dsCard annotation: group=Brand, name='V mark — three placements', subtitle 'Yellow on canvas · white on gold · yellow on dark', viewport='700x240'.",
+    "Three-column grid; each pane sets its background from a token (var(--bg-canvas), var(--accent-gold), var(--bg-dark)).",
+    "Uses two logo assets: conceptv-v-yellow.png (canvas + dark panes) and conceptv-v-white.png (gold pane).",
+    "Tag colours adapt per background (fg-muted on canvas, fg-primary on gold, semi-transparent cream on dark).",
+    "Logo rendered at a fixed 110x110px in each pane."
+  ],
+  "standouts": [
+    "Encodes the brand-mark colour-on-background rules as three side-by-side demonstrations (which V colour to use on which surface).",
+    "Pane backgrounds are token-driven so the placements track the design system's actual colours."
+  ],
+  "conventions": [
+    "Follows the @dsCard + _card.css preview-card convention.",
+    "Background colours from tokens (--bg-canvas, --accent-gold, --bg-dark) rather than literals.",
+    "Logos sourced from shared assets/logos rather than inline.",
+    "Uses a faint mix (rgba) for the dark-pane border and tag — minor literal use for hairline/opacity."
+  ],
+  "concerns": [],
+  "notes": "A brand-mark card demonstrating the three sanctioned V placements (yellow-on-canvas, white-on-gold, yellow-on-dark) against token-driven backgrounds.",
+  "questions": [
+    "Are there other sanctioned placements (e.g. on light/photographic backgrounds) beyond these three?"
+  ],
+  "purpose_vs_actual": "Match — the card states three V placements and shows exactly those three against their backgrounds.",
+  "apparent_themes": [
+    "Brand mark usage rules",
+    "Colour-on-background contrast discipline",
+    "Token-driven brand surfaces"
+  ],
+  "intention_signals": "Trying to fix the rules for how the V mark is coloured on each background so the logo stays legible and on-brand across canvas, gold, and dark surfaces.",
+  "novelty": "n/a",
+  "contribution": "Contributes the V-mark placement rules (which logo colour on which background) and the two logo asset variants (yellow / white) tied to token-driven backgrounds.",
+  "summary_for_embedding": "A claude-ds Brand preview card showing the ConceptV V mark in three placements — yellow on canvas, white on gold, yellow on dark — against token-coloured backgrounds.",
+  "intention_for_embedding": "To fix the rules for colouring the V brand mark on different backgrounds so it stays legible and on-brand across surfaces."
+}

@@ -1,0 +1,36 @@
+{
+  "project": "company",
+  "path": "attachment_types/cloning.py",
+  "model": "opus",
+  "what_it_does": "Defines a single module-level ATTACHMENT_TYPE dict declaring a 'cloning' attachment type that binds a point-in-time cloning capability to a channel; target_kind is 'scope' (the source session/scope clones are minted from), multi=True.",
+  "observations": [
+    "One module = one ATTACHMENT_TYPE dict with keys id, label, target_kind, multi, desc.",
+    "target_kind is 'scope' meaning the target is a source session/scope rather than a concrete address.",
+    "multi=True allows many clone attachments per channel.",
+    "Mentions 'era-clones minted from the target source' — ties to a cloning/time-travel concept.",
+    "Module docstring restates the id's purpose."
+  ],
+  "standouts": [
+    "Models cloning as an attachment bound to a channel, with the clone source expressed as a scope target."
+  ],
+  "conventions": [
+    "Follows a uniform single-dict descriptor pattern (id/label/target_kind/multi/desc) shared across attachment_types modules.",
+    "Inline comment annotates what target_kind means for this type."
+  ],
+  "concerns": [],
+  "notes": "A tiny declarative registry entry: the 'cloning' channel-attachment type, target = a scope (clone source), many-per-channel.",
+  "questions": [
+    "What consumer reads ATTACHMENT_TYPE and how is target_kind='scope' resolved into an actual clone source?"
+  ],
+  "purpose_vs_actual": "Match — docstring says it declares the cloning attachment type and the dict does exactly that.",
+  "apparent_themes": [
+    "Declarative type registry",
+    "Channels as the binding point for capabilities",
+    "Point-in-time / era cloning"
+  ],
+  "intention_signals": "Aims to make cloning a first-class, channel-attachable capability described as data so a generic attachment system can list/resolve it.",
+  "novelty": "The scope-targeted 'era-clones' framing of cloning as a channel attachment.",
+  "contribution": "Contributes the declarative definition of the cloning attachment type, including its scope target semantics and multi-cardinality.",
+  "summary_for_embedding": "A single-dict descriptor module declaring the 'cloning' channel attachment type whose target is a scope (clone source session) with multi=True.",
+  "intention_for_embedding": "To register point-in-time/era cloning as a channel-bound attachment type expressed as data for a generic attachment system."
+}

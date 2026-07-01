@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/BACKEND-SEAM-PACK.md",
+  "model": "opus",
+  "what_it_does": "Documents the complete FE-facing contract surface of the unified Company backend so generated FE work (from Claude Design) lands in the right shapes. It enumerates ~102 /api/* HTTP routes grouped by subsystem (RHM organ, interface/address, wire, settings/models/voice, graph/canvas, cognition) with method/request/response/law per route, the SSE event contract for /api/stream, the address+resolution substrate (address grammar + ui:// registry), the registry-as-data projections (object_info/ui_info/cognition_info/capabilities), nine FE laws, the canvas/app/src placement map for generated code, and four read-the-code genuine gaps.",
+  "observations": [
+    "Marks each documented shape as '(curled live)' (from a real curl against a live bridge) vs '(from code)' (read off the handler/return), explicitly distinguishing verification levels",
+    "States the work was read from branch concurrent-cognition == unified main 49debc4, against runtime/bridge.py, runtime/suite.py, contracts/*",
+    "The conceptual spine is given as Principal -> Domain -> Intent -> Proposal -> Approval -> Execution mapped onto route groups",
+    "Cross-references build-prep/concurrent-cognition/AUTHORING-FE-HANDOFF.md for the 12 cognition authoring routes rather than re-documenting them",
+    "Route tables cite exact bridge.py/suite.py line numbers for handlers (e.g. do_GET 287-509, do_POST 733-1346, resolve bridge.py:1331)",
+    "Two universal conventions: fail-loud HTTP 400 with {error:'<ExcType>: <message>'} on every handler, and graph_id defaults to DEMO (=='codebase')",
+    "Documents the SSE transport tailing shared events.jsonl (captures both UI and MCP faces), gapless resume via ?since or Last-Event-ID, ~15s keepalive heartbeat",
+    "Gives the 6 cognition.* lifecycle event kinds with payload fields and their firing order (turn.start -> role.fire -> part -> role.ran -> inject -> part -> turn.done)",
+    "Section 7 reports a live-broken route: GET /api/roles returns 400 due to a Pydantic ModelMetaclass not being JSON-serializable",
+    "Reports several emitted event kinds with no dedicated FE dispatch branch (op.run, journey.*, guide.start, trial.debrief.start) hitting the default else (setNow only)"
+  ],
+  "standouts": [
+    "The (curled live) vs (from code) provenance marking on every shape, tied to AGENTS.md rule 8 (nothing invented)",
+    "Section 7's found bug: /api/roles 400 from a non-serializable Pydantic class, with the exact cause and a 'flag for the lead' note",
+    "The nine FE laws (reflects-never-owns, propose-not-apply, operator-only dispatch floor, closed renderable rule grammar, author-from-registry, fail-loud, design-tokens-only, tldraw pin)"
+  ],
+  "conventions": [
+    "Follows the repo's evidence discipline: explicit verification labels and cited file:line for each claim",
+    "Follows the vault convention of pointing to a single canonical doc rather than duplicating (cross-ref to AUTHORING-FE-HANDOFF.md)",
+    "Uses the registry-is-truth / reflects-never-owns vocabulary consistent with the wider Company framework"
+  ],
+  "concerns": [],
+  "notes": "The authoritative contract reference for any FE built against the Company backend: every route, the SSE table, the projections, and the nine laws, with live-vs-code provenance and four known gaps.",
+  "questions": [
+    "Has the /api/roles serialization bug (gap 1) been fixed since this was written, or is it still live?",
+    "The route-count arithmetic in section 1 (15+16+6+30+21+14+1) and the per-section header counts (13, 16, 5, 22, 11, 14) appear inconsistent with the stated 102 total — which counting is current?"
+  ],
+  "purpose_vs_actual": "Matches. It states it is the one precise description of the backend's FE-facing contract surface, and the body delivers exactly that across routes, events, addresses, projections, laws, and placement.",
+  "apparent_themes": [
+    "reflects-never-owns (FE drives via addresses+verbs, never owns state)",
+    "propose-not-apply with operator-only approval as a non-negotiable floor",
+    "registry-as-data / author-from-the-registry (generic renderer, no per-type FE code)",
+    "fail-loud evidence discipline"
+  ],
+  "intention_signals": "Trying to make Claude Design's generated FE land automatically in the correct shapes by giving it one exhaustive, provenance-marked contract so the design tool never invents an endpoint, shape, or law.",
+  "novelty": "The explicit (curled live) vs (from code) per-shape provenance marking and the embedded read-the-code gap report (a broken route, undispatched events) inside what is otherwise a contract doc.",
+  "contribution": "Contributes a single exhaustive, provenance-annotated map of the backend's entire FE-facing surface — the route catalog, SSE event contract, address grammar, projection shapes, FE laws, and FE-structure placement map — that a fused system would keep as its FE-backend contract reference, plus a record of four concrete code-level defects/gaps.",
+  "summary_for_embedding": "A documentation pack cataloging the unified Company backend's full FE-facing contract surface — ~102 /api routes, the /api/stream SSE event contract, the address/resolution substrate, the registry-as-data projections, nine FE laws, the canvas/app/src placement map, and four code-level gaps — with per-shape live-curl vs read-from-code provenance.",
+  "intention_for_embedding": "Built so Claude Design's generated frontend code lands in the correct backend-defined shapes automatically, by providing one precise, evidence-marked description of every route, event, address, projection, and law it must honor."
+}

@@ -1,0 +1,39 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-A12-workshop-desktop.json",
+  "model": "opus",
+  "what_it_does": "A generated RG10 per-mockup result artifact for the A12-workshop-desktop.html screen. Same shape as its sibling batch files: a screen-level ground block (screen_present + plain-language what_this_is / what_you_can_do), run counts (n_candidates=25, n_dossiers=25, n_clusters=18), and confirmed (5) and flagged (13) lists. Each entry holds a dossier (address, capabilities, grounding, howto{what,what_you_can_do,how_to_change}, maps_to_feature, represents), cluster_size/cluster_members, the jury confirm verdict, and the source mockup name.",
+  "observations": [
+    "mockup field: A12-workshop-desktop.html",
+    "Counts: 25 candidates → 25 dossiers → 18 clusters → 5 confirmed + 13 flagged",
+    "Notably flagged-heavy: 13 flagged vs only 5 confirmed (inverse of A1/A11) — most workshop elements did not reach grounded jury quorum",
+    "Identical generated schema to A1 and A11 (dossier/cluster_size/cluster_members/confirm/mockup)",
+    "confirm.jury records grounded/ungrounded votes with quorum/unanimous; flagged entries carry named soft-accuracy reasons"
+  ],
+  "standouts": [
+    "Confirmed:flagged ratio is inverted here (5:13) — this screen is where the autonomous chain was least confident, the kind of screen the triage walk's flagged/residue blocks target"
+  ],
+  "conventions": [
+    "Shared generated-artifact schema consumed by the rg10 surface/walk/writeback scripts",
+    "ui:// addressing and concept/feature code conventions"
+  ],
+  "concerns": [
+    "Generated data — no file-local concerns; the high flag rate is a signal about the run, not a defect in the file"
+  ],
+  "notes": "A generated registry-candidate result for the A12 workshop screen: 18 unique elements but only 5 confirmed against 13 flagged — the flag-heavy per-mockup unit that drives the operator-scrutiny path.",
+  "questions": [
+    "Why is the workshop screen so much more flag-heavy than canvas/portals — ungrounded UI, harder-to-map elements, or jury calibration?",
+    "What model and prompts produced these dossiers and jury votes?"
+  ],
+  "purpose_vs_actual": "n/a — generated data artifact.",
+  "apparent_themes": [
+    "Self-describing UI elements at the operator's altitude",
+    "Jury-based grounding confirmation with conservative flagging",
+    "Surfacing uncertainty rather than asserting confidence"
+  ],
+  "intention_signals": "An autonomous attempt to turn the workshop screen's elements into grounded registry dossiers, with the jury conservatively flagging most for operator scrutiny rather than over-confirming.",
+  "novelty": "n/a — structurally the same generated unit as its siblings; distinct in its strongly flag-skewed outcome.",
+  "contribution": "Contributes the A12-workshop screen's grounded element dossiers and jury verdicts (5 confirmed, 13 flagged ui:// entries) as one consumable per-mockup registry-run record, weighted toward operator scrutiny.",
+  "summary_for_embedding": "Generated RG10 per-mockup artifact for the A12 workshop desktop screen: 25 candidates clustered to 18, yielding only 5 confirmed against 13 flagged ui:// element dossiers with jury verdicts.",
+  "intention_for_embedding": "To capture the workshop screen's clickable elements as grounded self-describing registry dossiers with jury confirmation, surfacing the many uncertain ones for operator scrutiny."
+}

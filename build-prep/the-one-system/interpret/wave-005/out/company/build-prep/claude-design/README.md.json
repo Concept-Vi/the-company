@@ -1,0 +1,40 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/README.md",
+  "model": "opus",
+  "what_it_does": "A reading-order + doc-ownership index for the claude-design build-prep directory. It names the three primary docs to read (BACKEND-SEAM-PACK, the cognition authoring handoff/brief pair, APPLICATION-STRUCTURE-PACK), states which doc owns what (and does NOT own), declares BACKEND-SEAM-PACK as the one-source for the backend contract, splits the docs by session type (cognition vs interface), points at the research/ evidence corpus, and lists two studio patch files as studio-reconcile material.",
+  "observations": [
+    "Defines a canonical reading order of three doc groups, with the seam pack as step 1 ('start here').",
+    "Contains an explicit ownership table (Doc | Owns | Does NOT own) for four docs.",
+    "States a 'one-source note': if the same content appears in both seam pack and structure pack, the seam pack is source of truth.",
+    "Splits work by session type: cognition session (backend+integration) vs interface session (FE structure+design).",
+    "Catalogs the research/ folder: deep/ (seven distillations named), inventory/ (inv-A through inv-E), plus INVENTORY-MAP, RESEARCH-METHOD, scout-studio-extract.",
+    "Lists two studio patches as the reconcile material: studio-fe-wiring.patch and studio-suite-mockup-focus.patch.",
+    "Lists seven deep-read filenames including fe-structure.md, contracts-governance.md, design-substrate.md, angles-delta.md (this batch's siblings)."
+  ],
+  "standouts": [
+    "The one-source rule naming BACKEND-SEAM-PACK.md as authoritative over the structure pack for the backend contract.",
+    "The division-by-session-type mapping that assigns specific doc sets to each kind of build session."
+  ],
+  "conventions": [
+    "Follows a 'one doc owns each concern, others cross-reference' documentation discipline.",
+    "Uses an explicit owns/does-not-own table rather than prose to fix boundaries.",
+    "Frames the research/ corpus as a 'bounded-read' evidence base that produced the packs."
+  ],
+  "concerns": [],
+  "notes": "This is the table-of-contents / navigation note for the claude-design pack — read it to know which of the sibling docs to open and which is authoritative.",
+  "questions": [
+    "The deep/ list names seven files (incl. surface-intent.md, seams.md, selfdesc-ops.md) but only four deep-reads are in this batch — are the others elsewhere?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is a reading-order + doc-ownership index and that is exactly its content.",
+  "apparent_themes": [
+    "Single-source-of-truth documentation",
+    "Separation of concerns by document ownership",
+    "Evidence-grounded design (a bounded-read corpus behind the packs)"
+  ],
+  "intention_signals": "Trying to prevent doc drift and duplication across a multi-doc design pack by fixing one authoritative source per concern and routing readers to the right doc for their session type.",
+  "novelty": "The 'division by session type' that hands each kind of build session a tailored doc set, plus an explicit does-NOT-own column.",
+  "contribution": "Contributes the navigation map and ownership boundaries for the claude-design doc set — the index that tells a reader which pack is authoritative for the backend contract and which docs belong to which session type.",
+  "summary_for_embedding": "Reading-order and doc-ownership index for the claude-design build-prep pack, naming BACKEND-SEAM-PACK as the one-source backend contract and splitting docs by cognition vs interface session.",
+  "intention_for_embedding": "To orient a builder to the claude-design design docs, fix one authoritative source per concern, and route each session type to its correct doc set."
+}

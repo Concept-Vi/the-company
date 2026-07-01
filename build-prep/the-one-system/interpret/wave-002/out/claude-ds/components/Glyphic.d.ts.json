@@ -1,0 +1,41 @@
+{
+  "project": "claude-ds",
+  "path": "components/Glyphic.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration file for a React component named Glyphic. Declares the GlyphicProps interface (extending React.HTMLAttributes<HTMLSpanElement>) and exports the Glyphic function component plus a default export.",
+  "observations": [
+    "GlyphicProps fields: form, symbol, fill, ringColor, symbolColor, texture, motion, depth, size, value — each documented with a JSDoc comment.",
+    "form is a string-literal union: none | triangle | square | pentagon | hex | septagon | octagon | diamond | circle.",
+    "fill union: none | paper | wash | tint; depth union: flat | d1..d6 | normal; motion union of 8 named ambient/entrance modes; texture union of 8 named surface patterns.",
+    "ringColor, symbolColor, and value are typed as plain string (colour-token names / allocated values), not literal unions.",
+    "Top-of-file JSDoc describes the 'ConceptV Glyphic' as a perfect-square universal compositional mark: outer ring (n-gon form) plus inner symbol, with whole-unit slots size/motion/depth/value.",
+    "Docstring states geometry/symbols/colour/texture/motion/depth all resolve via window.CV_GLYPHIC.compose, and this component is 'the React socket around that one renderer, not a second implementation'.",
+    "value drives colour through the 'active meaning profile'."
+  ],
+  "standouts": [
+    "The docstring's framing of the component as a 'React socket' around a single window.CV_GLYPHIC.compose renderer rather than a reimplementation.",
+    "The 'allocated value drives colour through the active meaning profile' coupling of a semantic value to colour resolution."
+  ],
+  "conventions": [
+    "Single-source / reference-not-copy: declares a socket over one renderer rather than embedding rendering logic (matches the project's 'one home' directive).",
+    "Heavy JSDoc on every prop — typed surface is self-documenting.",
+    "String-literal unions for closed vocabularies (form/fill/depth/motion/texture); open string for colour-token names and values."
+  ],
+  "concerns": [],
+  "notes": "The .d.ts type contract for the Glyphic compositional-mark component — defines its prop vocabulary and frames it as a thin React socket over the CV_GLYPHIC renderer.",
+  "questions": [
+    "What is window.CV_GLYPHIC.compose and where does it live (only referenced, not defined here)?",
+    "What are the valid colour-token names and 'value' strings (typed only as string)?"
+  ],
+  "purpose_vs_actual": "Match — the docstring describes a compositional mark component and the interface declares exactly the props that mark would need.",
+  "apparent_themes": [
+    "Compositional design primitive (ring + symbol + whole-unit slots)",
+    "Single-source rendering (one compose renderer, React as socket)",
+    "Semantic-to-visual mapping (value → colour via meaning profile)"
+  ],
+  "intention_signals": "Aims to expose a typed, well-documented React surface for a universal compositional glyph mark while keeping the actual rendering single-sourced in one renderer.",
+  "novelty": "The 'Glyphic' concept — a perfect-square mark built from independent meaning-bearing parts (n-gon ring form + inner symbol + spaces) with an allocated value driving colour.",
+  "contribution": "Contributes the typed prop vocabulary and conceptual definition of the Glyphic compositional mark — the closed vocabularies for form/fill/texture/motion/depth and the value→meaning-profile colour coupling.",
+  "summary_for_embedding": "TypeScript .d.ts declaring the GlyphicProps interface and Glyphic React component, a perfect-square compositional mark with ring form, inner symbol, and slots for fill, colour, texture, motion, depth, size, and an allocated value.",
+  "intention_for_embedding": "To provide the typed contract for a universal compositional glyph mark rendered through a single CV_GLYPHIC.compose renderer."
+}

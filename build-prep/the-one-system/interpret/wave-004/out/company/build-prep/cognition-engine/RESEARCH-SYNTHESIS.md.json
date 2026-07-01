@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-engine/RESEARCH-SYNTHESIS.md",
+  "model": "opus",
+  "what_it_does": "A planning/research markdown — the WHAT-EXISTS document of the cognition-engine loop-prep triad. It inventories the systems, registries, surfaces, and primitives the build must connect to (never duplicate), organized into four 'Rounds' (registries, surfaces, systems-to-connect, primitives-that-exist) plus a don't-duplicate/don't-hardcode ledger. Three enrichment rounds appended below correct and verify the initial scaffold using a parallel research wave, the run-1 prototype, and a 5-adversary review.",
+  "observations": [
+    "Confidence tags used throughout (✓known / ~recall / ?open) to mark verification state of each claim.",
+    "ROUND 1 lists the registries (RoleRegistry, SkillRegistry, MODEL_CAPABILITIES, MODE_REGISTRY, SCHEMES, field_types, the cognition_info projection pattern) with file paths and accessors.",
+    "ROUND 2 enumerates the four surfaces (MCP, /api, FE, CLI) and the one-surface-three-faces contract.",
+    "ROUND 3 lists systems to wire into (resource-manager, store+vector index, address resolver, fabric, governance/floor, design system).",
+    "ROUND 4 lists existing primitives to reuse (the engine quartet run_swarm/run_role/run_items/run_reduce, put_vector/query_index, op.run index, ensure_resident).",
+    "A don't-duplicate/don't-hardcode ledger restates the bar as a checklist.",
+    "ROUND 1 ENRICHMENT corrects the original field_types claim — it is projected after all, the real issue is its set is too-narrow (flat scalars), reframing B2 from 'make a registry' to 'widen the grammar'.",
+    "ROUND 2 ENRICHMENT records the run-1 prototype connections and an MCP-tool inspection (41 tools, two engines on one shared spine).",
+    "ROUND 3 records the 5-adversary review converged findings and the store rules (portability = address never changes, Resolver Protocol C4, CAS-immutable)."
+  ],
+  "standouts": [
+    "The field_types reframe is an explicit self-correction: the doc's own ROUND 1 claim is overturned by its ROUND 1 ENRICHMENT (projected-but-narrow, not hardcoded).",
+    "The /api/corpus name-collision finding (the cognition corpus would clobber the mockup/design gallery) is a concrete trap surfaced by research.",
+    "The doc tracks its own review history at the bottom of each section, making the scaffold-then-enrich evolution legible."
+  ],
+  "conventions": [
+    "Loop-prep triad convention (the WHAT-EXISTS / connect-to companion to the criteria + HOW guide).",
+    "Confidence-tagged claims (✓/~/?) — never asserts completeness it didn't verify.",
+    "Append-only enrichment rounds with explicit corrections rather than in-place rewrites.",
+    "Registry-is-truth framing: every select/param should project from a Round-1 registry."
+  ],
+  "concerns": [
+    "Because corrections live in appended enrichment rounds, an early claim (e.g. 'field_types is the one hardcoded select') is contradicted later in the same file — the accurate view requires reading past ROUND 1.",
+    "Some ~recall claims are upgraded to ✓ only in later rounds, so reading top-down briefly presents unverified items as the current state."
+  ],
+  "notes": "If briefing someone: this is the connect-to / don't-duplicate evidence base for the cognition engine — but the enrichment rounds at the bottom correct several ROUND 1 claims (notably field_types).",
+  "questions": [
+    "Was the hardcoded-select sweep beyond field_types ever completed (flagged ?open in the ledger)?",
+    "Did the reference-session file (Tim's path) mentioned as the next enrichment ever land and change any conclusions?",
+    "Is the surface-coverage matrix (per criterion × MCP/FE/CLI) resolved, or still ?open?"
+  ],
+  "purpose_vs_actual": "Matches. The 'What this is' header states it is the evidence base of what already exists that the build must connect to without duplicating; the body delivers that inventory plus the enrichment/correction rounds it promised.",
+  "apparent_themes": [
+    "Connect-to / don't-duplicate as the governing bar",
+    "Registry-is-truth and projection-from-one-source",
+    "Honest confidence-tagging and scaffold-then-verify",
+    "One surface, multiple faces (reflects-never-owns)",
+    "Grounding claims against real code and adversarial review"
+  ],
+  "intention_signals": "Trying to build a verified map of the existing terrain so the cognition-engine build wires into established primitives and registries rather than creating parallel systems — and to keep that map honest by tagging confidence and correcting itself as research lands.",
+  "novelty": "The confidence-tag discipline plus the explicit scaffold-then-enrich-and-correct structure (a planning doc that visibly overturns its own earlier claims as evidence arrives) is distinctive.",
+  "contribution": "Contributes the inventoried map of existing registries, surfaces, systems, and primitives the engine must connect to, with verification state and the corrected field_types/name-collision findings. A fused system would keep this as the grounded 'what already exists' reference layer that prevents duplication.",
+  "summary_for_embedding": "A confidence-tagged research-synthesis cataloguing the existing registries, surfaces, systems, and primitives the cognition-engine build must connect to without duplicating, with appended enrichment rounds correcting earlier claims.",
+  "intention_for_embedding": "To provide a verified connect-to / don't-duplicate evidence base so the cognition engine wires into existing systems rather than rebuilding them."
+}

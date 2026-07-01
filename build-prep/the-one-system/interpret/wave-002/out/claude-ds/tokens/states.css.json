@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/states.css",
+  "model": "opus",
+  "what_it_does": "Defines the design-token layer for UI states: loading skeletons with shimmer, designed empty/error zero-states, and a consistent interaction-state (hover/press/selected/disabled) + keyboard focus-ring language. Provides CSS custom properties under :root plus utility classes (.skeleton, .state-block, .interactive) and a :focus-visible rule.",
+  "observations": [
+    "Skeleton tokens (--skeleton-base/-sheen/-radius) and a cvShimmer keyframe that slides a sheen gradient; .skeleton sets color:transparent !important to hide placeholder text",
+    "@media (prefers-reduced-motion: reduce) disables the shimmer and drops to static opacity 0.5",
+    "Focus tokens use --accent-gold for the ring; a :where(...) selector applies the ring only on :focus-visible (keyboard), explicitly not on mouse press",
+    ".state-block is a designed zero-state with a circular glyph slot, title, body, dashed border, max-width 42ch, tintable by a .zone-* class via --zone-ink",
+    ".interactive centralises hover (--state-hover), active/press (--state-press with a 0.5px translateY nudge), disabled (opacity + pointer-events:none), and selected (aria-selected/data-selected → --state-selected)",
+    "State colors built with color-mix(in oklch, var(--ink) N%, transparent) so they ride the ink ramp rather than fixed greys"
+  ],
+  "standouts": [
+    "Stated design principle 'nothing teleports — content RESOLVES from a placeholder, never pops in' tying skeletons to the motion language",
+    "Skeleton-to-content handoff via an .enter-* class (referenced, defined elsewhere) so loading morphs into content",
+    "color-mix in oklch against --ink means states auto-recompute per theme without re-declaration"
+  ],
+  "conventions": [
+    "Follows token-then-utility layering and var() referencing with fallbacks (var(--r-sm, 6px))",
+    "Uses oklch color-mix and aria-attribute-driven state selectors (aria-disabled, aria-selected)",
+    "Carries a /* @kind other */ annotation on --disabled-opacity, matching the corpus token-kind tagging"
+  ],
+  "concerns": [
+    "color:transparent !important on .skeleton could mask content if the .enter-* swap or class removal fails",
+    "Several referenced tokens (--ink, --accent-gold, --vi-strong, --dur-quick, --ease-out, --space-fluid-lg, --fs-h4) are assumed defined elsewhere; this file does not self-contain them"
+  ],
+  "notes": "The states/feedback token file: skeletons that shimmer-then-resolve, designed empty/error blocks, and one .interactive class carrying hover/press/select/disabled + a keyboard-only gold focus ring.",
+  "questions": [
+    "Where is the .enter-* class family that swaps skeleton placeholders into resolved content defined?",
+    "What sets --zone-ink for the .state-block glyph tint, and how do .zone-* wrappers map to error vs success?"
+  ],
+  "purpose_vs_actual": "Match — the header comment promises skeletons, empty/error states, and an interaction+focus language, and the file delivers exactly those tokens and classes.",
+  "apparent_themes": [
+    "Resolve-don't-pop continuity with motion",
+    "Designed zero-states instead of bare grey text",
+    "Single consistent interaction + accessibility (focus-visible, reduced-motion) language",
+    "Theme-aware color via oklch mixing toward the ink ramp"
+  ],
+  "intention_signals": "Trying to make every loading/empty/error/interaction moment feel authored and consistent across the whole system from one token home, so feedback states inherit the design DNA rather than being hand-set per component.",
+  "novelty": "The skeleton-as-motion-partner framing ('nothing teleports') and the keyboard-only gold focus ring expressed purely through :focus-visible + oklch ink-mixing.",
+  "contribution": "Contributes the system's state/feedback vocabulary — shimmer skeletons, designed empty/error blocks, and a reusable .interactive hover/press/select/disabled + accessible focus-ring layer keyed to the ink ramp and reduced-motion.",
+  "summary_for_embedding": "A ConceptV design-system CSS token file defining loading skeletons with shimmer, designed empty/error zero-states, and a unified interaction-state and keyboard focus-ring language built on oklch ink-ramp color-mixing.",
+  "intention_for_embedding": "To give the design system one authored home for loading, empty, error, and interaction feedback so content resolves rather than pops and every state inherits the design language consistently."
+}

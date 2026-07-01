@@ -1,0 +1,39 @@
+{
+  "project": "company",
+  "path": "attachment_types/recall.py",
+  "model": "opus",
+  "what_it_does": "Defines a single ATTACHMENT_TYPE dict declaring a 'recall' attachment type (label 'Recall scope'): the channel-scoped recall selector that cc_channel op=recall runs over, described as the §3 manifest recall_scope and the '5th wire'; target_kind='scope' (a project/session/segment selector, not an address), multi=False.",
+  "observations": [
+    "target_kind is 'scope' — explicitly a recall-scope selector (project/session/segment), not an address.",
+    "multi=False — unlike the other five types in this batch, only one recall scope per channel.",
+    "Ties to cc_channel op=recall as the consumer.",
+    "References both the §3 manifest recall_scope and a '5th wire' seam concept.",
+    "Label differs from a simple capitalization of id ('Recall scope')."
+  ],
+  "standouts": [
+    "The only multi=False type in this batch — a channel has exactly one recall scope.",
+    "Names the consuming operation explicitly (cc_channel op=recall) and the '5th wire' seam."
+  ],
+  "conventions": [
+    "Same single-dict descriptor pattern as siblings.",
+    "Breaks the multi=True norm seen in the other batch members (deliberately single).",
+    "Inline comment clarifies scope means a selector, not an address."
+  ],
+  "concerns": [],
+  "notes": "Registry entry for the 'recall' type: a single channel-scoped recall selector that cc_channel op=recall runs over (the 5th wire).",
+  "questions": [
+    "What are the four other wires the '5th wire' joins, and how is a project/session/segment selector encoded?"
+  ],
+  "purpose_vs_actual": "Match — declares the recall-scope selector type as the docstring states.",
+  "apparent_themes": [
+    "Declarative type registry",
+    "Scoped recall / retrieval",
+    "Channels as recall context boundaries",
+    "Manifest-driven wiring"
+  ],
+  "intention_signals": "Aims to give a channel a single recall scope selector so a channel-level recall operation can run over the right project/session/segment slice.",
+  "novelty": "A scope-selector (not address) target plus the single-cardinality '5th wire' recall framing.",
+  "contribution": "Contributes the declarative definition of the recall-scope attachment type, its selector-not-address semantics, single cardinality, and link to cc_channel op=recall.",
+  "summary_for_embedding": "A descriptor module declaring the 'recall' channel attachment type: a single recall-scope selector (project/session/segment) that cc_channel op=recall runs over, multi=False.",
+  "intention_for_embedding": "To register a channel's single recall scope selector as a typed attachment driving channel-level recall (the 5th wire)."
+}

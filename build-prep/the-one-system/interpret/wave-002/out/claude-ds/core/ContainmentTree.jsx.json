@@ -1,0 +1,62 @@
+{
+  "project": "claude-ds",
+  "path": "core/ContainmentTree.jsx",
+  "model": "opus",
+  "what_it_does": "Implementation of THE BLOCK SOLVER. Recursively walks a CVNode tree and renders it as the containment ladder (band/section/zone/cluster/atom DOM), driven by axis dials (lod/surface/density) and runtime flags (onEdit/motion/loading). LOD prunes low-priority/support nodes before layout; zone depth is passed down (depth+1 per zone) to drive the computed wash; leaf atoms are rendered through a role-keyed registry (ATOM_RENDERERS); diagram nodes are delegated to an injected DiagramSolver.",
+  "observations": [
+    "JSX-free (h = React.createElement, global React) for unambiguous binding in the compiled bundle",
+    "LOD_RULES map summary/pitch/full to {maxPriority, support}; visibleAtLOD prunes by node.priority and node.detail==='support'",
+    "ATOM_RENDERERS registry keyed by role: metric, chart (spark/bar/gauge), hero-number, bullet, chip, badge, note, qr, logo, ramp-card, image, icon, text, headline — each (node,key)=>element; roleFor() infers role (value→metric, bullet→bullet, else text)",
+    "ContainmentTree.registerAtom(role, fn) / atomRoles() expose data-extensibility — add an atom without editing the solver",
+    "Module-level mutable state (CURRENT_ONEDIT, CURRENT_MOTION, CURRENT_LOADING) is set/saved/restored around each synchronous walk to thread per-leaf context without prop drilling",
+    "Inline-edit (edit()): when onEdit is set, text-bearing leaves become contentEditable, commit-on-blur to node.edit* data paths; integrates window.__cvFieldFocus",
+    "withMotion staggers children via .enter-up + animationDelay using --stagger-max/--stagger-step (E1 'nothing teleports'); end-state is base style so motion-off is static",
+    "TimePlayer component: a cluster with mode:'time' plays children one at a time (prev/next + dots) — SPACE↔TIME (E2), same subtree budgeted in time not space",
+    "Disclose component: progressive disclosure (F1) — section shown at low LOD with a +Show more toggle that re-renders children at full LOD in place",
+    "applyFocus: a container with node.focus spotlights the named child ([data-focus]) and recedes the rest via .focus-scope.is-focusing",
+    "skeletonFor: role-shaped skeleton placeholders while loading (resolve-never-pop, states.css §10)",
+    "SHAPE_CLIP entity-shape vocabulary (circle/hex/octagon/diamond) sourced from window.CV_SHAPES with a byte-identical inline fallback for the bundle; brand mapping documented (circle=User Portal, hex=Property Wizard, octagon=Virtual Hubs, diamond=Vi)",
+    "zone rendering reads node.author (human|vi|suggested) to label authorship; supports frosted overlay panels and place/grid keywords",
+    "cluster supports flows via data-flow and sets --col-min / --split CSS vars; chart atom draws an inline SVG sparkline from node.points",
+    "Exposes window.__cvContainmentTree and falls back to window.__cvDiagramSolver if no DiagramSolver passed"
+  ],
+  "standouts": [
+    "The atom-as-data registry: new leaf types are registered, the solver's switch only knows the five container kinds — leaves never become if-branches",
+    "design = f(content, axis): one tree at different lod/surface/density yields different concrete output, and SPACE↔TIME lets the same subtree play in time (TimePlayer) instead of space",
+    "Module-level mutable context (CURRENT_*) saved/restored around the synchronous walk — a deliberate non-prop-drilling threading of edit/motion/loading state",
+    "Authorship is legible in the layout (human/vi/suggested labels), and the brand's entity-shape system is rendered as a first-class atom",
+    "Resolve-never-pop loading: shaped skeletons matched to each role so layout doesn't jump"
+  ],
+  "conventions": [
+    "Literal-pure: every emitted class/var resolves to a design-system token (colours/spacing/type all via var())",
+    "Extend-by-registration (registerAtom) per the DS prime directive",
+    "JSX-free createElement pattern for build-free bundling",
+    "Follows the AXES.md generative model and references many companion-doc sections in comments (W6/W7, E1/E2, F1, §10/§11/§13)"
+  ],
+  "concerns": [
+    "Module-level mutable singletons (CURRENT_ONEDIT/MOTION/LOADING) are not re-entrant — concurrent/nested renders or async could interleave; mitigated only by the save/restore around a synchronous walk",
+    "TimePlayer/Disclose use React.useState while the rest is a synchronous render function — mixing stateful components into a context that relies on synchronous module-state threading",
+    "A few inline literals in component styles (button 28px, dot 7px, viewBox dims) sit outside the token system"
+  ],
+  "notes": "The recursive block solver: walks a CVNode tree into the band/section/zone/cluster/atom ladder under lod/surface/density dials, with a registry of atom leaf renderers, inline-edit, motion stagger, focus, time-play, and loading skeletons.",
+  "questions": [
+    "Is the module-level CURRENT_* state safe under React concurrent rendering, or does it assume strictly synchronous single-pass walks?",
+    "How do the stateful sub-components (TimePlayer/Disclose) interact with the saved/restored CURRENT_* context on their own re-renders?"
+  ],
+  "purpose_vs_actual": "Matches — the header declares it the block solver computing a laid-out containment ladder from a CVNode tree + axis, with atoms as a registry; the implementation delivers exactly that plus the motion/time/focus/loading/edit dimensions.",
+  "apparent_themes": [
+    "design = f(content, axis)",
+    "atoms-as-data / extend-by-registration",
+    "computed not hand-set (depth-driven zoning)",
+    "SPACE↔TIME equivalence",
+    "progressive disclosure and focus as mechanisms",
+    "resolve-never-pop loading",
+    "legible authorship",
+    "token purity"
+  ],
+  "intention_signals": "Trying to build one engine where a single content tree, plus orthogonal dials, deterministically computes every concrete rendering (different LOD/surface/density, played in space or time, focused, editable, loading) — and where the engine is grown by registering data (atom roles), never by editing its core branches.",
+  "novelty": "A single recursive solver that renders the SAME content tree as space OR time (TimePlayer), with atom leaves as a runtime registry and per-leaf context threaded via saved/restored module state during a synchronous walk.",
+  "contribution": "Contributes the generative rendering engine — the recursive container walk, the LOD-prune-then-layout pipeline, the atom-role registry with ~14 leaf renderers, and the motion/focus/time-play/loading/inline-edit mechanisms — the runtime a fused system would keep to turn a content tree into a concrete, dial-tunable design.",
+  "summary_for_embedding": "JSX-free React block solver that recursively renders a CVNode tree as the band/section/zone/cluster/atom ladder under lod/surface/density dials, using a registry of atom-leaf renderers plus motion, focus, time-play, loading-skeleton, and inline-edit mechanisms.",
+  "intention_for_embedding": "To be the generative engine computing every concrete design from one content tree and axis dials, extended by registering atom roles rather than editing the solver."
+}

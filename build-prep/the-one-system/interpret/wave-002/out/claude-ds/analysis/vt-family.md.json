@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/vt-family.md",
+  "model": "opus",
+  "what_it_does": "An analysis note recording a 'family study' of five design-corpus source documents (vt-architects 4pp A4, vt-gatehouse 3pp, vt-property 2pp, vt-residential 2pp, vi-onepager 1pp 16:9). It stress-tests existing design-system hypotheses against these print/one-pager artifacts and records what each confirms about the surface axis, the LOD ladder, template parameterisation, and a couple of new atoms.",
+  "observations": [
+    "Verdict line: confirms the A4-print surface and the tight (summary) end of the LOD ladder, and that client/audience is a TEMPLATE PARAMETER — 'No new grammar.'",
+    "Confirms stress-test items by id (G3 A4 print surface, C2 tight LOD end) — implying a tracked requirements register elsewhere.",
+    "Claims the surface axis now spans slide (16:9, 3:2) ↔ web (scroll) ↔ print (A4) with no grammar change.",
+    "Claims the LOD ladder spans summary(1pp) → terse-pitch(16pp) → standard(17pp) → high-detail(49pp).",
+    "★ marks 'strongest proof yet': vt-gatehouse/p-1 and vt-residential/p-1 are the same one-pager template filled with different client + prose → audience/client = a parameter, content = data.",
+    "★ identifies a new atom: a stage/progress chevron stepper whose accent slides along the gold→bronze ramp per variant (gatehouse gold, residential tan/bronze) → ramp used for variant theming.",
+    "Notes a comparison table reused across surfaces (vt-architects p-2 ↔ landing pricing table), section bands within a print page, an annotation callout/pointer atom, and a two-pane one-pager archetype.",
+    "Diff section uses ✅✅✅✅✅ / ✏️ / ➕ / ⚠️ markers and ends with '→ Docs updated' listing register changes (REQUIREMENTS G3+C2 → 🟢, AXES surface axis marked complete)."
+  ],
+  "standouts": [
+    "The discovery that the ramp (gold→bronze) is not just a fixed semantic role but a per-variant theming parameter (chevron recolor).",
+    "The 'same template, different client param' proof now confirmed across decks, web, AND print — claimed truly universal.",
+    "The whole note is a confirmation/no-contradiction study: it strengthens existing hypotheses rather than adding grammar."
+  ],
+  "conventions": [
+    "Frontmatter-style header block (Sources / Status: ☑ analysed / Verdict) before the body.",
+    "★ to flag the highest-signal findings; ✅/✏️/➕/⚠️ symbols in the diff section.",
+    "References artifacts by id and page (vt-gatehouse/p-1, pitch-deck p-05) and requirement ids (G3, C2, D2).",
+    "Closes with a '→ Docs updated' provenance line naming which registry docs were changed."
+  ],
+  "concerns": [],
+  "notes": "A corpus family-study that confirms the design system spans print/A4 and the summary LOD rung, and proves audience/client is a template parameter and the gold ramp can theme variants — no new grammar, two new atoms.",
+  "questions": [
+    "Where are the source artifacts (vt-architects etc.) and the requirements register (G3/C2/D2) this note updates — what format are they in?",
+    "Were the page-count LOD figures (1/16/17/49pp) measured from the actual artifacts or estimated?"
+  ],
+  "purpose_vs_actual": "Match — it states itself as a family study confirming surface/LOD hypotheses and that is what it delivers, ending with the registry doc updates it triggered.",
+  "apparent_themes": [
+    "Template + parameter (content as data, audience as a dial)",
+    "One grammar across surfaces (slide/web/print) and LODs (summary→high-detail)",
+    "Tokens/ramp as a parametric theming axis",
+    "Evidence-grounded confirmation against real artifacts (no fiction)"
+  ],
+  "intention_signals": "Trying to validate, against real client artifacts, that the design system's generative model (one containment grammar, axis dials, template+parameter) holds for print and the tight LOD end — and to harvest any reusable atoms the artifacts reveal (stepper, annotation callout, two-pane one-pager).",
+  "novelty": "The empirical finding that the gold→bronze ramp position is itself a per-variant parameter (chevron recolors per client), and the cross-surface (print-included) confirmation of the template+audience-parameter mechanism.",
+  "contribution": "Contributes the print/A4 surface and summary-LOD evidence plus the variant-theming-via-ramp insight and three reusable atoms (chevron stepper, annotation callout/pointer, two-pane one-pager archetype) into the system's grounded model.",
+  "summary_for_embedding": "Design-corpus family study of five vt-* one-pagers/print artifacts confirming the A4-print surface and tight-LOD rung, proving audience/client is a template parameter and the gold ramp themes variants, adding stepper/annotation/two-pane atoms.",
+  "intention_for_embedding": "To stress-test the design system's grammar against real print/one-pager client artifacts and confirm it spans all surfaces and LODs while harvesting any new reusable atoms."
+}

@@ -1,0 +1,40 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/vi/index.html",
+  "model": "opus",
+  "what_it_does": "The host HTML page for the 'Vi' UI kit (an AI workspace). It links the shared color/type tokens and the kit-local vi.css, mounts a #app root, loads React 18.3.1 + ReactDOM + Babel-standalone from a CDN, and then loads six text/babel kit component files (ViMark, ViStatusPill, ChatPanel, TaskTree, OutputPreview, ViKitApp) that assemble the workspace.",
+  "observations": [
+    "Carries a @dsCard HTML comment with metadata: group 'UI Kit — Vi', name 'UI Kit — Vi (AI workspace)', subtitle 'Vi workspace — chat + task tree + live brochure preview', viewport 1480x800",
+    "Links two stylesheets: ../../colors_and_type.css (shared tokens) and vi.css (kit-local)",
+    "Loads React 18.3.1, ReactDOM, and @babel/standalone 7.29.0 from unpkg.com CDN with SRI integrity hashes and crossorigin",
+    "Loads six JSX files via <script type='text/babel' src=...> in a deliberate order ending with ViKitApp.jsx (the app assembler)",
+    "Single <div id='app'></div> mount point",
+    "Uses development builds of React/ReactDOM (react.development.js)"
+  ],
+  "standouts": [
+    "The @dsCard comment makes this page self-describing to the design-system gallery/catalogue tooling",
+    "Browser-Babel + CDN React, no build step — the kit runs directly in a browser",
+    "Explicit script load order with ViKitApp.jsx last (consistent with the components self-registering before assembly)"
+  ],
+  "conventions": [
+    "Follows the kit convention: shared token CSS + kit-local CSS, components as text/babel scripts, window-global registration assembled by an App file last",
+    "Follows the @dsCard self-describing-card convention for catalogue integration",
+    "Uses CDN dependencies with SRI hashes (a hardening convention)"
+  ],
+  "concerns": [
+    "Depends on external unpkg.com CDN at runtime — will not render offline or under a strict CSP that blocks external hosts",
+    "Uses React development builds rather than production builds"
+  ],
+  "notes": "The Vi AI-workspace kit's host page — token CSS + vi.css, CDN React/Babel, and six ordered JSX scripts assembling a chat + task-tree + live-preview workspace; self-describes via a @dsCard comment.",
+  "questions": [
+    "Is the unpkg CDN dependency acceptable for the corpus's render/screenshot pipeline, or is a local/offline fallback expected?",
+    "Which of the six JSX files actually calls ReactDOM render into #app (presumably ViKitApp.jsx)?"
+  ],
+  "purpose_vs_actual": "Matches — it is the index/host page for the Vi kit and it wires exactly the stylesheets, runtime, and component scripts needed to render that workspace.",
+  "apparent_themes": ["self-describing design-system card", "no-build browser-Babel kit", "ordered component assembly", "shared-token + kit-local CSS layering", "AI workspace (chat + tasks + live preview)"],
+  "intention_signals": "Aims to be the runnable entry point for the Vi AI-workspace kit, demonstrating a chat + task-tree + live-brochure-preview layout assembled from registered components on shared tokens.",
+  "novelty": "The @dsCard metadata comment carrying gallery-card identity (group/name/subtitle/viewport) directly in the HTML.",
+  "contribution": "Contributes the Vi kit's host/entry page: the @dsCard catalogue identity, the CSS+runtime wiring, and the ordered six-component assembly that produces the chat + task-tree + live-preview AI workspace.",
+  "summary_for_embedding": "Host HTML for the Vi AI-workspace UI kit — links shared tokens and vi.css, loads CDN React/Babel, and assembles six text/babel components (chat, task tree, live preview) into #app, self-describing via a @dsCard comment.",
+  "intention_for_embedding": "To serve as the runnable entry page that assembles and renders the Vi AI-workspace kit for review."
+}

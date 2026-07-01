@@ -1,0 +1,37 @@
+{
+  "project": "company",
+  "path": ".gitignore",
+  "model": "opus",
+  "what_it_does": "Git ignore rules for the repo: excludes Python/Node build artifacts and venvs, runtime store data, per-user Obsidian workspace/cache state, generated CLI telemetry/logs, secret credential files (connector boundary env, CD verify drive creds, Tailscale Funnel TLS cert+key), and the-one-system regenerable scratch directories.",
+  "observations": [
+    "Ignores multiple venvs: .venv/, .litellm-venv/, .voice-venv/",
+    "Ignores runtime store dirs: store-data/, .data/ (commented 'written by the live system, never code')",
+    "Obsidian section keeps shared settings but ignores workspace.json, workspace-mobile.json, cache, graph.json",
+    "Secret files are heavily commented as live-out-of-tree, chmod 600, NEVER commit: .boundary.env, .cd-drive.*, .cd-history.*, and *.ts.net.key/.crt (named workstation001.tail777bc2.ts.net.*)",
+    "Ignores build scratch (.build/), CLI telemetry (ops/cli/telemetry.jsonl), .adv.log, .loop.log, mcp_registration_debug.log",
+    "Ignores /recollection/ and /.recollection/ (root-anchored)",
+    "Ignores build-prep/the-one-system/discovery/ and fusion-scope/ as regenerable scratch"
+  ],
+  "standouts": [
+    "Explicit comments naming a live EC private key (*.ts.net.key) and a specific host workstation001.tail777bc2.ts.net as TLS cert/key that must never be committed",
+    "Distinguishes 'written by the live system, never code' (.data/) from source — a code-vs-runtime boundary encoded in ignore rules"
+  ],
+  "conventions": [
+    "Uses descriptive comment blocks to explain WHY each secret/runtime path is ignored, not just listing patterns",
+    "Both glob (*.ts.net.key) and explicit-name (workstation001...) forms for the same secret class"
+  ],
+  "concerns": [
+    "Naming a specific Tailscale hostname (workstation001.tail777bc2.ts.net) in a tracked file leaks an internal host identifier"
+  ],
+  "notes": "A heavily-annotated gitignore that doubles as documentation of the repo's secret files, runtime store boundary, and regenerable scratch.",
+  "questions": [
+    "Are the secret files (boundary.env, TLS key) actually managed out-of-tree as the comments claim?"
+  ],
+  "purpose_vs_actual": "n/a",
+  "apparent_themes": ["code-vs-runtime separation", "secrets live out-of-tree", "regenerable scratch is not source"],
+  "intention_signals": "To keep the tracked tree free of secrets, runtime-written state, and regenerable scratch, while documenting the boundary so agents understand what is source versus generated.",
+  "novelty": "The inline prose explaining each secret's nature (live EC private key, chmod 600 out-of-tree) is more documentary than a typical gitignore.",
+  "contribution": "Contributes the precise exclusion boundary for secrets, venvs, runtime store, Obsidian per-user state, and the-one-system scratch.",
+  "summary_for_embedding": "A .gitignore excluding venvs, runtime store data, Obsidian workspace state, logs, secret credentials, TLS cert/key, and the-one-system regenerable scratch.",
+  "intention_for_embedding": "To exclude secrets, runtime-written state, and regenerable scratch from version control while documenting the code-vs-runtime boundary."
+}

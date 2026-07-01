@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/export.css",
+  "model": "opus",
+  "what_it_does": "Combines two governance systems in one file. (1) Export surfaces: tokens for print/PDF page sizes (A4 portrait/landscape, Letter) and slide frames (16x9, 4x3) plus a page margin, a .page class for on-screen authoring of those frames, landscape/slide modifiers, and a @media print block that paints backgrounds, hides chrome, and forces one page per .page. (2) Lifecycle tags: a .lc badge with experimental/stable/deprecated variants coloured from zone roles, plus data-lifecycle whole-object hints (dimmed deprecated, dashed-outline experimental).",
+  "observations": [
+    "Page frame tokens given in CSS px @96dpi with explicit dimensions (A4 794x1123, landscape 1123x794, Letter 816x1056, slide 16x9 1920x1080, 4x3 1440x1080)",
+    ".page defaults to A4 portrait via --page-w/--page-h fallbacks, centers with margin-inline:auto, uses --zone-ground bg and --elev-3 shadow",
+    ".page.slide drops padding to 0; .page.landscape swaps to landscape dimensions",
+    "@media print sets --zone-intensity:1, white bg, hides .no-print/[data-no-print], removes page shadow/margin, break-after:page, and forces print-color-adjust:exact",
+    ".lc badge uses font-mono, uppercase, a leading currentColor dot; variants pull color/background/border from zone-warning/success/reject role tokens",
+    ".lc-deprecated adds line-through; [data-lifecycle=deprecated] sets opacity 0.6, experimental adds a dashed warning outline"
+  ],
+  "standouts": [
+    "Treats deliverables (print/PDF/slides) as first-class surfaces that compose against a known page just as screens compose against a viewport - export-native alongside mobile-native",
+    "Lifecycle tags visibly quarantine experimental/deprecated work so it cannot silently rot, with both a badge and a whole-object visual hint"
+  ],
+  "conventions": [
+    "Surface-as-target framing consistent with the system's axis/surface model",
+    "Lifecycle colours reuse zone role tokens (warning/success/reject) rather than new colours",
+    "Caller-overridable frame via --page-w/--page-h with sensible fallbacks (knob pattern)",
+    "@kind annotation on the print --zone-intensity override"
+  ],
+  "concerns": [],
+  "notes": "Two governance concerns bundled: export page/slide frame tokens + a print-ready .page surface, and lifecycle (experimental/stable/deprecated) badges plus whole-object hints, all coloured from zone roles.",
+  "questions": [
+    "Why are export surfaces and lifecycle tags co-located in one file rather than split - is this an intentional grouping or convenience?",
+    "Where are --zone-ground, --elev-3, --zone-intensity, and the zone role tokens (warning/success/reject ink/surface/edge) defined?"
+  ],
+  "purpose_vs_actual": "Matches: the header declares two governance systems (export surfaces and lifecycle tags) and the file implements both; the only nuance is that two distinct concerns share one file.",
+  "apparent_themes": [
+    "deliverables as surfaces (export-native parity with screen/mobile)",
+    "visible quarantine of experimental/deprecated work (anti-rot governance)",
+    "reuse of zone role colours for new semantic states",
+    "print fidelity (exact colour, page breaks, chrome removal)"
+  ],
+  "intention_signals": "Aims to make handoff packages, PDFs, and decks compose against known page/slide frames the same way UIs compose against viewports, and to give the design system a lifecycle governance vocabulary so consumers can see at a glance what is safe, experimental, or deprecated.",
+  "novelty": "Framing print pages and slide frames as first-class compositional surfaces, and pairing that with a lifecycle-tagging system that both badges and visually marks the whole object.",
+  "contribution": "Contributes the export-surface vocabulary (page/slide frame tokens, the .page authoring surface, the print stylesheet) and the lifecycle governance vocabulary (the .lc badge variants and data-lifecycle object hints).",
+  "summary_for_embedding": "A CSS file defining export-surface tokens (A4/Letter/slide page frames), a printable .page authoring surface with a print media block, and lifecycle tags (.lc experimental/stable/deprecated badges plus data-lifecycle whole-object hints) coloured from zone roles.",
+  "intention_for_embedding": "To make deliverables (print, PDF, slides) first-class surfaces that compose against known pages, and to add a lifecycle governance vocabulary that visibly quarantines experimental and deprecated components so consumers know what is safe."
+}

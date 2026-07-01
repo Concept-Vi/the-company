@@ -1,0 +1,38 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/RefinePop.jsx",
+  "model": "opus",
+  "what_it_does": "A small shared per-item 'refine' control used across canvases: a trigger (either a corner ↻ dot or a pill button) that opens a popover textarea where the user types a change; submitting calls onRefine(text) and shows a busy state until it resolves. Two visual modes: 'dot' (absolute-positioned gold circle on a tile corner) and pill.",
+  "observations": [
+    "State: open, val (textarea content), busy. go() guards empty/busy, awaits onRefine(val.trim()), and in finally resets busy/val and closes.",
+    "Two trigger renderings switched by mode prop ('dot' default vs pill), both stopPropagation on click to avoid triggering the parent tile.",
+    "Popover is an absolutely-positioned panel with an autofocus textarea: Enter (without shift) submits, Escape closes; plus Cancel and Refine buttons.",
+    "All styling is inline via var() design tokens (--accent-gold, --bg-surface, --shadow-pop, --r-md, font vars) and uses ViShape + .dsa-btn classes.",
+    "Defined directly as window.RefinePop = function RefinePop(...) (assigned to global inline rather than declared then attached)."
+  ],
+  "standouts": [
+    "Explicitly designed for interaction-consistency: header comment says it gives the 'identical visual language to the dots in Build, so the interaction feels the same everywhere' — a deliberately shared primitive.",
+    "Dual-mode (dot/pill) lets one component serve both tile-corner and inline-button placements."
+  ],
+  "conventions": [
+    "Follows browser-React no-build pattern (React.useState alias useState_rp, window attach).",
+    "Token-driven inline styling (var()) with no raw color/size literals except numeric layout px and borderRadius 999/'50%' — clean adherence.",
+    "Reuses .dsa-btn/.dsa-btn--ai/.dsa-btn--ghost and ViShape vocabulary."
+  ],
+  "concerns": [],
+  "notes": "The reusable per-item refine popover (dot or pill) that standardizes the 'hover a tile, click refine, type a change' interaction across every canvas.",
+  "questions": [
+    "What does onRefine actually trigger downstream (which AI capability / regeneration) — this file only invokes the callback?"
+  ],
+  "purpose_vs_actual": "Match — header describes a shared refine UI with dot-style triggers consistent with Build; the code implements exactly that plus a pill variant.",
+  "apparent_themes": [
+    "Shared interaction primitive for consistency across surfaces",
+    "Per-item / addressable refinement",
+    "Token-driven styling and registry-fed action callbacks"
+  ],
+  "intention_signals": "Aims to make 'refine this specific item with a natural-language change' a uniform, recognizable gesture everywhere in the app by factoring it into one small, mode-flexible component.",
+  "novelty": "A single dual-mode (corner-dot vs pill) refine popover designed expressly to make the refine gesture feel identical across all canvases.",
+  "contribution": "Contributes the shared per-item refine-popover primitive — the consistent textarea-and-submit refine gesture (dot or pill) reused across canvases.",
+  "summary_for_embedding": "Shared React per-item refine popover (corner-dot or pill trigger) with an autofocus textarea that calls onRefine(text) and shows a busy state, styled via design tokens.",
+  "intention_for_embedding": "To standardize the per-item natural-language refine gesture across all canvases with one reusable, mode-flexible control."
+}

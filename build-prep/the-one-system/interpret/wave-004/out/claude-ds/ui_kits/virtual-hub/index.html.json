@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/index.html",
+  "model": "opus",
+  "what_it_does": "The HTML entry page for the Virtual Hub UI kit viewer. It sets up a single #app mount, loads React 18.3.1, ReactDOM, and Babel-standalone from unpkg CDNs, then loads eight type='text/babel' .jsx kit files (HubBug, MenuButton, QuickMenu, InfoPanel, SharePanel, FloorplanOverlay, CaptureComment, HubApp) to be transpiled in-browser. Links two stylesheets (colors_and_type.css and hub.css).",
+  "observations": [
+    "Carries a @dsCard HTML comment annotation describing the gallery card: group 'UI Kit — Virtual Hub', name, subtitle 'Buyer-side panotour overlay · MENU · Info · Floorplan · Capture', viewport '1280x720'",
+    "Loads React, ReactDOM, and Babel from unpkg.com with SRI integrity hashes and crossorigin='anonymous'",
+    "Uses development builds of React/ReactDOM (react.development.js)",
+    "Eight component scripts loaded as type='text/babel' (in-browser transpilation), HubApp.jsx loaded last as the orchestrator/mount",
+    "Empty <div id='app'></div> as the mount point",
+    "Links ../../colors_and_type.css (the design-token stylesheet) and local hub.css",
+    "Component load order: building blocks first, HubApp.jsx last"
+  ],
+  "standouts": [
+    "@dsCard metadata comment driving an external gallery rendering",
+    "In-browser Babel transpilation of all .jsx — a no-build prototype harness",
+    "SRI integrity + crossorigin on every CDN script"
+  ],
+  "conventions": [
+    "Follows the claude-ds kit pattern of a Babel-in-browser viewer linking the shared colors_and_type.css token stylesheet",
+    "Component scripts ordered building-blocks-first, app-orchestrator-last (matches the charter's load-order discipline)",
+    "Pins exact CDN versions (react@18.3.1, babel@7.29.0) with integrity hashes",
+    "Uses external CDN dependencies, which differs from a fully self-contained artifact"
+  ],
+  "concerns": [
+    "Ships React development builds and runs Babel transpilation at runtime — viewer/prototype-grade, not production-optimized",
+    "Hard dependency on unpkg.com availability for the kit to render"
+  ],
+  "notes": "The no-build viewer page that assembles the Virtual Hub buyer-side overlay kit by Babel-transpiling eight .jsx components into a single #app mount.",
+  "questions": [
+    "Is hub.css local to this kit and colors_and_type.css the shared token source?",
+    "Does HubApp.jsx perform the createRoot mount into #app?",
+    "Is the @dsCard comment consumed by the design folder's gallery.py or a separate claude-ds gallery?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard subtitle and title accurately describe a buyer-side panotour overlay UI kit viewer with MENU/Info/Floorplan/Capture.",
+  "apparent_themes": [
+    "No-build, Babel-in-browser prototype harness",
+    "Component-assembly viewer for a UI kit",
+    "Design-token reuse via shared stylesheet linking",
+    "Gallery-card self-description via metadata comment"
+  ],
+  "intention_signals": "Aims to provide a zero-build standalone viewer that stitches the virtual-hub overlay components together for visual review, self-describing as a gallery card and reusing the shared token stylesheet.",
+  "novelty": "The @dsCard annotation comment that lets the page self-describe as a gallery entry (group/name/subtitle/viewport).",
+  "contribution": "Contributes the buyer-side panotour overlay assembly — the manifest of which eight components compose the Virtual Hub viewer and the gallery-card metadata that catalogs it; a fused system would keep this as the kit's entry/composition point and its self-describing card.",
+  "summary_for_embedding": "An HTML viewer page that Babel-transpiles eight React .jsx components in-browser to render the buyer-side Virtual Hub panotour overlay UI kit, with a @dsCard gallery annotation and shared token stylesheet links.",
+  "intention_for_embedding": "To assemble and visually preview the Virtual Hub buyer-side overlay UI kit as a no-build, self-describing gallery card."
+}

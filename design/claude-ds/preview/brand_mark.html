@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="V mark — three placements" subtitle="Yellow on canvas · white on gold · yellow on dark" viewport="700x240" --><html><head><meta charset="utf-8"><title>V mark</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; padding: 0; min-height: 240px; }
+  .pane { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; position: relative; gap: 10px; }
+  .pane.canvas { background: var(--bg-canvas); border-right: 1px solid var(--border-faint); }
+  .pane.gold   { background: var(--accent-gold); }
+  .pane.dark   { background: var(--bg-dark); border-left: 1px solid rgba(255,255,255,.04); }
+  .pane img { width: 110px; height: 110px; }
+  .tag { font: 600 10px/1 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; }
+  .pane.canvas .tag { color: var(--fg-muted); }
+  .pane.gold .tag { color: var(--fg-primary); }
+  .pane.dark .tag { color: rgba(251,247,236,.6); }
+</style></head>
+<body><div class="card">
+  <div class="pane canvas"><img src="../assets/logos/conceptv-v-yellow.png" alt="V"><span class="tag">Yellow · canvas</span></div>
+  <div class="pane gold"><img src="../assets/logos/conceptv-v-white.png" alt="V"><span class="tag">White · gold</span></div>
+  <div class="pane dark"><img src="../assets/logos/conceptv-v-yellow.png" alt="V"><span class="tag">Yellow · dark</span></div>
+</div></body></html>

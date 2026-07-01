@@ -1,0 +1,60 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/AXES.md",
+  "model": "opus",
+  "what_it_does": "States the parametric model of the design system: design = f(content, axisPosition) over a fixed invariant core. It defines four kinds of thing (input axes you set, derived outputs computed from them, invariants that never move, and the function), two rules that keep it powerful (keep axes orthogonal; correlation ≠ coupling), the containment hierarchy (the structural axis), the unification 'zoning IS the containment hierarchy made visible', how every axis operates on the containment tree, the capstone that everything catalogued is a typed composable container at some tree level, and that block and graph are one generative system with two solvers.",
+  "observations": [
+    "Input axes (orthogonal, compose freely): Surface (desktop/tablet/mobile-p/mobile-l/print/slide), Level-of-Detail (summary→pitch→full-read, independent of surface), Register/pace (presenter↔reader), Theme (light/dim/dark/contrast), Density (compact/comfortable/spacious via --density), Tint/gold intensity (quiet↔present).",
+    "Derived outputs computed from dials, never set directly: type sizes (←surface), margins/gutters (←surface×density), reflow (←surface), surface tints (←intensity×ground×pigment), bullet depth (←LOD), visual mode dense-static vs simple+motion (←space/time budget via register), slide count (←LOD×narrative-priority×time budget).",
+    "Invariants ('sacred skeleton', never computed): the numbers, the diagrams, brand DNA (gold ramp, zoning ladder), the frame signature, the colour-role logic.",
+    "The function: design = f(content, axisPosition) over the invariant core — one source → many outputs (17-page read, 16-page pitch, 1-page summary, mobile scroll).",
+    "Two rules: keep axes orthogonal (LOD ≠ surface — a phone can show high detail, a desktop low detail); correlation ≠ coupling (presenter-paced tends to pair with terse+motion but must be breakable; defaults may link axes, the architecture must not).",
+    "Containment hierarchy: Deck → Slide/Frame → Section → Zone/Panel → Group/Cluster → Atom, each a container with inherited spacing rhythm (panel padding ~2.5–3%, gutter ~2%, marker→text ~3%).",
+    "Unification: the near-white tonal washes are container boundaries rendered as ~1–3% undertone shifts — zoning marks containment DEPTH, not meaning; semantic colour is an optional layer on top.",
+    "Each axis operates on the tree: Surface = per-container-level collapse; Motion ('nothing teleports') = temporal depth-first traversal (space↔time trade-off: show children in space OR play over time); LOD = per-node prune/grow (can be local = progressive disclosure); Interactive (deck→app bridge) = runtime mutation of the tree (same nav→panel→table→row tree, mutable); Depth/z-stack = elevation encodes nesting+focus; Theme = zoning-as-depth is theme-invariant (only the ground flips); Invariants are node-TYPES (LOD-locked) not a separate concept.",
+    "Capstone: atoms, components, layout patterns, and the 13 archetypes are not separate kinds — they are typed containers at different tree depths, parameterised by dials, made visible by depth-keyed zoning; templates nest and compose → build the system as a library of typed composable containers.",
+    "Block & Graph are one generative substrate (typed things + rules that compute layout) differing only in solver: block solver = flow/stacking (position implied by nesting+order); graph solver = relational placement (radial/mesh/pipeline/quadrant/timeline, position computed from relationships); a node can host either solver → one type system, one rule engine, two solvers.",
+    "Open questions section records several as RESOLVED via specific source folders: density independent of ratio/surface (resolved independent, 3:2 dense unchanged); LOD ladder holds at tight end (resolved, vi-onepager = summary rung, 4 rungs); language survives scrolling web (resolved intact, Slide generalises to paged-or-stacked band)."
+  ],
+  "standouts": [
+    "The single governing equation design = f(content, axisPosition) over an invariant core — the whole system stated as one function.",
+    "The unification claim that zoning IS the containment hierarchy made visible (1–3% undertone = container boundary), so subtle tinting encodes structure not category.",
+    "Every parametric axis is shown to operate on the SAME containment tree (surface=collapse, motion=traversal, LOD=prune/grow, interactive=mutation, depth=elevation, theme=ground-flip) — one spine, many dials.",
+    "Block and graph declared the same generative substrate with two interchangeable solvers, a node able to host either.",
+    "Hard-won rules: keep axes orthogonal and correlation≠coupling, explicitly guarding against the 'too hot-coded' collapse that kills range (e.g. a verbose mobile leave-behind)."
+  ],
+  "conventions": [
+    "Compute-don't-author: derived outputs are computed from dials, never set directly.",
+    "Orthogonality discipline (axes compose freely; never fuse LOD and surface).",
+    "Single invariant core (numbers, diagrams, brand DNA, frame signature, colour-role logic never move).",
+    "Resolve-by-source-folder (open questions closed by pointing at specific analysed decks).",
+    "One model for both deck and app (decks render the tree fixed; the app renders it mutable)."
+  ],
+  "concerns": [
+    "Cites '13 archetypes' here while the manifest/other docs reference 25 corpus archetypes — the catalogued count appears inconsistent across docs (file-local note).",
+    "Several spacing rhythms are given as approximate ranges (panel padding ~2.5–3%, gutter ~2%) — soft targets rather than exact tokens within this file."
+  ],
+  "notes": "The system's theory of operation: design = f(content, axis) over an invariant core, where every axis acts on ONE containment tree, zoning makes that tree's depth visible, and block vs graph are two solvers on one substrate.",
+  "questions": [
+    "Is the archetype count 13 or 25 — which figure is current (this file says 13, the manifest references 25)?",
+    "Which axes are wired as live data-* knobs versus still conceptual in this model?"
+  ],
+  "purpose_vs_actual": "Matches — it sets out to describe the shape of the parametric system and does so end to end (axes, outputs, invariants, function, containment, solvers).",
+  "apparent_themes": [
+    "design=f(content,axisPosition)",
+    "axis=f(content,position)",
+    "orthogonal-axes (correlation≠coupling)",
+    "containment-tree-is-the-spine",
+    "zoning-is-containment-made-visible (depth-as-tint)",
+    "compute-don't-author",
+    "one-substrate-two-solvers (block + graph)",
+    "invariant-core (sacred skeleton)",
+    "one-source-many-outputs",
+    "resolve-by-source-evidence"
+  ],
+  "intention_signals": "Inferred: to stop the design system feeling 'handwritten/flat' by defining it as a small space of orthogonal dials computing concrete output over a fixed core, so one content source yields many surfaces/LODs/themes; and to unify what looked like separate concepts (atoms, components, patterns, archetypes, responsive, motion, interactivity, diagrams) as ONE typed-container tree acted on by axes, with block and graph as two solvers — the generative core that is the real depth fix.",
+  "novelty": "Distinctive in collapsing responsiveness, motion, LOD, interactivity, depth, and theming into operations on a single containment tree, equating subtle zoning with that tree's visible depth, and declaring block-flow and graph-relational layout the same substrate differing only by solver — an unusually unified theory of a design system.",
+  "contribution": "Contributes the unifying conceptual model: the design=f(content,axis) equation, the orthogonal-axis set with its keep-separable rules, the containment hierarchy, the zoning-equals-containment-depth unification, the per-axis-acts-on-the-tree mapping, the everything-is-a-typed-container capstone, and the one-substrate-two-solvers (block+graph) framing — the architecture vocabulary a fused system would keep to reason about how any output is computed.",
+  "summary_for_embedding": "The ConceptV Design System parametric model: design = f(content, axisPosition) over an invariant core, with orthogonal input axes (surface, LOD, register, theme, density, tint) computing derived outputs, a containment hierarchy (Deck→Slide→Section→Zone→Group→Atom) whose depth is made visible by zoning, every axis acting on that tree, and block and graph as two solvers on one typed-container substrate.",
+  "intention_for_embedding": "Intended to make the design system deep and generative rather than handwritten by defining it as orthogonal dials computing output over a fixed core, unifying atoms/components/patterns/archetypes/responsive/motion/interactivity as one containment tree, with block-flow and graph-relational as two solvers on one substrate."
+}

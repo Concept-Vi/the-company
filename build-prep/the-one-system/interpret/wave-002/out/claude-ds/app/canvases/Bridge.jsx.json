@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Bridge.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React canvas component `Bridge` (assigned to window.Bridge) that renders the Environment/Host layer of the design Studio. It reads everything it shows from `window.CV_HOST.describe()` and from `window.CV_AI.query({family:'repo'})`, then displays: the current environment + its capabilities (read/write/list/exec/tools), the list of connectable runtimes with Connect buttons, a handoff-mode radio setting, the queue of proposed changes (each with serialized source, copy, apply-to-disk, reject), an optional agent-stash copy/clear block, and a listing of repo capabilities plus serializer kinds.",
+  "observations": [
+    "Top docstring states the contract: 'PURE PROJECTION: every value shown here is read from CV_HOST.describe()' — no hand-written status text.",
+    "`useHost()` is a subscribe-and-force-rerender hook using useReducer over window.CV_HOST.subscribe.",
+    "`CAP_LABEL` maps capability keys (read/write/list/exec/tools) to human labels like 'run compiler', 'call tools'.",
+    "`activate(id)` handles both runtime activation and a special `__reconnect` id that calls HOST.reconnectFsapi(); errors surface via window.dsaToast.",
+    "Runtimes render with availability dot, capability list, ACTIVE marker, and a Connect button gated on r.canActivate/r.supported.",
+    "Reads `window.__cvFsapiPending` to offer a 'Reconnect last folder' button when write capability is absent.",
+    "Handoff section maps over `d.handoff.modes` as radios and exposes an auto-apply checkbox (off by default per the label).",
+    "ChangeRow shows status color, provenance (highlighting 'vi'), the target file + strategy, expandable serialized source in a <pre>, and Apply gated on canWrite.",
+    "Stash section only renders when d.stash > 0; offers Copy stash JSON and Clear stash.",
+    "Local React hooks aliased with `_br` suffix (useState_br etc.), presumably to avoid collisions in a shared bundle."
+  ],
+  "standouts": [
+    "Explicit projection contract in the docstring: the view recomputes from the registry rather than carrying its own status text.",
+    "The runtime ladder concept: sandbox review as the floor, escalating to browser file access and native/MCP.",
+    "Changes are shown as real serialized source for a single 'home' file, with copy/apply/reject affordances."
+  ],
+  "conventions": [
+    "Follows a registry-as-source pattern: reads CV_HOST and CV_AI rather than holding hardcoded data.",
+    "Uses CSS custom properties (var(--accent-bronze), var(--font-display), etc.) for all styling, inline.",
+    "Aliases React hook destructures with a per-file suffix to coexist in a shared global bundle.",
+    "Surfaces side-effect feedback through window.dsaToast?.() rather than throwing to the user."
+  ],
+  "concerns": [
+    "Some color fallbacks are inlined as literal hex alongside the var() (e.g. 'var(--accent-gold-50, #FBF4D8)', 'var(--status-success, #2E7D32)'), a hardcoded value inside a token reference."
+  ],
+  "notes": "A read-only-of-the-registry status surface for where Vi reaches the repository: environment capabilities, runtime connections, handoff mode, and a reviewable/applyable change queue.",
+  "questions": [
+    "What does CV_HOST.describe() actually return for runtimes (the shape of r.caps, r.canActivate, r.supported)?",
+    "What is the agent stash and how is it consumed on 'the next turn' mentioned in the stash copy?",
+    "What writes window.__cvFsapiPending?"
+  ],
+  "purpose_vs_actual": "Matches. The docstring claims a pure projection of CV_HOST/CV_AI with no hand-written status, and the component reads all displayed values from those registries.",
+  "apparent_themes": [
+    "Interface as projection of a registry",
+    "Capability-aware/permission-aware UI",
+    "Human-in-the-loop change review before disk writes",
+    "Progressive runtime escalation (sandbox -> browser -> native)"
+  ],
+  "intention_signals": "Trying to make the boundary between Vi and the real filesystem visible and governed: show exactly what the environment allows, let the user connect stronger runtimes, and keep every proposed change reviewable as real source before it touches disk.",
+  "novelty": "A 'Bridge' surface that frames repository access as a recomputed projection of host capabilities plus a staged-change review queue with copy/apply/reject.",
+  "contribution": "Contributes a host/environment canvas that surfaces runtime capabilities, a handoff-mode setting, an agent stash, and a reviewable serialized-change queue wired to CV_HOST and CV_AI repo capabilities.",
+  "summary_for_embedding": "A React canvas component (window.Bridge) projecting CV_HOST environment capabilities, connectable runtimes, handoff mode, and a reviewable queue of serialized proposed changes with apply-to-disk.",
+  "intention_for_embedding": "To make Vi's access to the repository visible and governed, recomputed from the host registry, with staged changes reviewable as real source before being written to disk."
+}

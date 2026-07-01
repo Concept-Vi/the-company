@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "system/build-system-map.js",
+  "model": "opus",
+  "what_it_does": "The canonical generator that scans the design-system directory and emits system/system-map.json — a model (version 2) of the codebase as nodes (files/folders with role, size, defined/used CV_* globals), edges (contains/loads/uses:<GLOBAL>), and a globals list. It is environment-agnostic: callers inject ls/readFile so it runs in the run_script sandbox, a Node watcher, etc.",
+  "observations": [
+    "Header declares it the SINGLE SOURCE of the codebase model and that system-map.json is its OUTPUT, never hand-edited.",
+    "SKIP set excludes compiled/transient artifacts (_ds_bundle.js, _ds_manifest.json, _adherence.oxlintrc.json, system-map.json, _shot.png).",
+    "classifyRole() is the one place a file's system-membership is decided — a long ordered chain mapping paths/exts to roles (archive, token, axis, axis-core, glyphic-core, registry, ai, engine, component, template, ui-kit, card, doc, etc.).",
+    "Metadata regexes detect CV_* definitions (DEF_RE), CV_* references (REF_RE), src/href (SRC_RE), JS imports (IMP_RE), and CSS @imports (CSS_IMP_RE).",
+    "Walk is a parallel BFS — one ls round-trip per directory LEVEL — using a candidate/dotless-file trick to detect extensionless files vs folders.",
+    "Reads code files in batches of 60 with a timeBudgetMs (default 24000) guard; computes byte size via TextEncoder, defines[] and uses[] from the regexes.",
+    "A second budget-bounded pass sizes the rest of the tree (text via length, binaries via readFileBinary); leftover images keep size=null and are filled on re-run.",
+    "Builds globals as global → first defining node; edges include contains (parent→child), uses:<GLOBAL> (resolves type), and loads (resolved import/href targets).",
+    "normalizePath() resolves relative ./.. paths and rejects http/data/#/mailto; resolve() tries extension/index fallbacks.",
+    "Exports buildSystemMap + classifyRole via module.exports and attaches buildSystemMap to window."
+  ],
+  "standouts": [
+    "Self-aware about its own model shape and edge-type vocabulary (contains↔sits-inside, loads↔loaded-by, resolves-from↔resolves-into) documented in the header.",
+    "Time-budgeted, batched, re-runnable design: a single 30s pass can't byte-size hundreds of images, so it fills incrementally while staying single-source.",
+    "Detects the CV_* global graph by static regex, turning window globals into typed nodes + resolves edges — the structural backbone the atlas/map cards consume."
+  ],
+  "conventions": [
+    "Dependency-injected IO (ls/readFile/readFileBinary) for environment-agnosticism.",
+    "Generated output is never hand-edited — matches the repo's edit-data-not-generated-files law.",
+    "classifyRole centralises one decision in one place ('change it here and the whole map re-colours from one edit')."
+  ],
+  "concerns": [
+    "Regex-based global/import detection can miss dynamic or non-literal references and may false-match CV_* inside strings/comments.",
+    "Budget cutoffs (break on timeBudgetMs) mean a single run can produce a partial model (sizes/defines absent for late files) — correct but requires re-runs to converge.",
+    "classifyRole is a long ordered if-chain whose order matters; a misordered rule could mislabel a file."
+  ],
+  "notes": "If briefing someone: this is the one script that crawls the design folder and writes system-map.json (nodes/edges/globals) — the model the System Atlas and System Map cards render.",
+  "questions": [
+    "Where/when is buildSystemMap invoked today (the header mentions run_script and a future file-watch) and who writes system-map.json?",
+    "Does any consumer rely on model version 1, or is version 2 the only shape in use?"
+  ],
+  "purpose_vs_actual": "Match — the header claims it is the canonical generator of the system-map model and the code builds exactly that nodes/edges/globals structure.",
+  "apparent_themes": [
+    "Single source of the codebase model / generated-not-edited",
+    "Registry/global graph as first-class structure",
+    "Environment-agnostic, budgeted, re-runnable scanning",
+    "One central classification decision"
+  ],
+  "intention_signals": "Trying to give the design system a machine-readable self-model — turning the directory and its CV_* globals into a queryable graph so the explainer cards can render the system from truth rather than hand-kept lists.",
+  "novelty": "Level-parallel BFS with a candidate/dotless-file detection trick, plus byte-budget incremental sizing that keeps the scan single-source across re-runs.",
+  "contribution": "Contributes the canonical scanner that derives the design system's structural self-model (files, roles, CV_* globals, contains/loads/resolves edges) consumed by the map/atlas surfaces.",
+  "summary_for_embedding": "Environment-agnostic JS generator that BFS-scans the design folder and emits system-map.json — nodes (files/folders with role, size, CV_* defines/uses), edges (contains/loads/uses), and a globals list.",
+  "intention_for_embedding": "To produce the single canonical machine-model of the codebase so explainer surfaces can render the system's structure and dependencies from generated truth."
+}

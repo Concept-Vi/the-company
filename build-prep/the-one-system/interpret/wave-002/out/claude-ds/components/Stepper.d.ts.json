@@ -1,0 +1,30 @@
+{
+  "project": "claude-ds",
+  "path": "components/Stepper.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration file for the Stepper component: declares a StepItem interface ({label}), a StepperProps interface extending div HTMLAttributes with steps (array of StepItem or string) and an optional active index, and declares the Stepper function plus a default export.",
+  "observations": [
+    "steps accepts Array<StepItem | string>",
+    "active is an optional number (current step index)",
+    "Doc comment describes the three visual states: steps before active are done (gold checkmark dots), active is highlighted, the rest upcoming",
+    "Extends React.HTMLAttributes<HTMLDivElement> without omitting any handlers (no custom onChange here)"
+  ],
+  "standouts": [
+    "The doc comment encodes the gold checkmark / highlight / upcoming state model that the .jsx implements"
+  ],
+  "conventions": [
+    "Paired .d.ts/.jsx typing convention for createElement components",
+    "JSDoc on the interface",
+    "Default + named export"
+  ],
+  "concerns": [],
+  "notes": "Type contract for a linear numbered stepper; steps are strings or {label}, active marks the current index.",
+  "questions": [],
+  "purpose_vs_actual": "Match — declares exactly the props the .jsx consumes (steps, active).",
+  "apparent_themes": ["typed component contract", "linear progress indication", "state-by-index model"],
+  "intention_signals": "Gives the buildless Stepper a typed surface so consumers know steps/active and the done/active/upcoming visual semantics.",
+  "novelty": "n/a",
+  "contribution": "Contributes the public type signature of the Stepper progress indicator, including the string-or-{label} step shape and the active-index prop.",
+  "summary_for_embedding": "TypeScript declaration for a linear Stepper component with string-or-object steps and an active index prop over a div.",
+  "intention_for_embedding": "To provide a typed contract for the design-system's numbered linear stepper."
+}

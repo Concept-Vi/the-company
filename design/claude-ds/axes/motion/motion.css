@@ -1,0 +1,39 @@
+/* ============================================================
+   ConceptV · MOTION AXIS — animation home
+   ------------------------------------------------------------
+   The CSS realisation of the Motion axis values (axes/motion/
+   motion-axis.js). Each .mo-* class = one axis value's payload;
+   the axis is the single source of WHICH motions exist, this is
+   the single source of HOW each looks. Any consumer applies the
+   class returned by CV_AXES.css('motion', <value>).
+
+   Aligned with tokens/motion.css ("nothing teleports"):
+   reduced-motion users get the settled end-state, never a loop.
+   ============================================================ */
+
+/* applies to any element carrying a motion value (glyphic, card, node…) */
+[class*="mo-"] { transform-origin: center; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .mo-breathe { animation: cvmo-breathe 3.6s var(--ease-soft, ease-in-out) infinite; }
+  .mo-pulse   { animation: cvmo-pulse   1.8s var(--ease-soft, ease-in-out) infinite; }
+  .mo-bob     { animation: cvmo-bob     2.4s var(--ease-soft, ease-in-out) infinite; }
+  .mo-tilt    { animation: cvmo-tilt    4s   var(--ease-soft, ease-in-out) infinite; }
+  .mo-spin    { animation: cvmo-spin    2.2s linear infinite; }
+  .mo-float   { animation: cvmo-float   4.2s var(--ease-soft, ease-in-out) infinite; }
+  .mo-glow    { animation: cvmo-glow    2.6s var(--ease-soft, ease-in-out) infinite; }
+}
+
+/* hover-intent (interactive group) stays under reduced-motion — user-initiated, brief */
+.mo-tilt:hover { animation-play-state: paused; transform: rotate(-3deg) scale(1.04); transition: transform .25s var(--ease-soft, ease-out); }
+
+@keyframes cvmo-breathe { 0%,100% { transform: scale(1); }      50% { transform: scale(1.045); } }
+@keyframes cvmo-pulse   { 0%,100% { opacity: 1; }               50% { opacity: .55; } }
+@keyframes cvmo-bob     { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes cvmo-tilt    { 0%,100% { transform: rotate(-2.5deg);} 50% { transform: rotate(2.5deg); } }
+@keyframes cvmo-spin    { to { transform: rotate(360deg); } }
+@keyframes cvmo-float   { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.02); } }
+@keyframes cvmo-glow {
+  0%,100% { filter: drop-shadow(0 0 0 color-mix(in srgb, var(--accent-gold) 0%, transparent)); }
+  50%     { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent-gold) 55%, transparent)); }
+}

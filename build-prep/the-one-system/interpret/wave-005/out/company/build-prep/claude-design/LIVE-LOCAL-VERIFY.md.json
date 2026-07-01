@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/LIVE-LOCAL-VERIFY.md",
+  "model": "opus",
+  "what_it_does": "A by-use acceptance gate (the lead's, #77 step c) to be executed on the LOCAL Supabase stack before the prod flip of the Claude Design connector. It defines what the gate proves, the preconditions to confirm, a four-step round-trip (A-D: box->shared publish, shared->box inject, CD->shared, shared->CD read), a five-part security bar (E-I: private stays dark, no impersonation/no service_role bypass, fail-closed tools, mandatory audit, internal lifeline intact), the pass condition (all boxes observed by use), pre-flip hardening items, and a note on FORM being out of scope for this backend gate.",
+  "observations": [
+    "Insists 'No error is not a pass; the PURPOSE must be observed' — verification by use, real call + watched result, not by reading code",
+    "Lists concrete preconditions: local Supabase API/Auth :15421, DB :15432, 5 tables in supabase_realtime, boundary principal env (.boundary.env role=company_boundary), design_client credential (client_id=claude-design), seed 'design' shared channel, a control internal-only channel, fork's boundary Realtime sub connected with principal JWT in phx_join",
+    "Round-trip A-D uses checkbox items for each observable (row present, second session receives, poster not re-delivered/no echo, CD post reaches sessions, CD reads same data)",
+    "Security item F is flagged as THE crux: proves service_role does NOT bypass RLS on CD writes — a forged from_session must 403 through the Edge Function path, with a grep-corroboration that service_role touches only connector_audit + clients lookup",
+    "Item E proves private (shared=false) channels are never published to Supabase and CD gets 403 on internal or non-granted-shared channels",
+    "Item H: mandatory audit — every CD call writes a connector_audit row; an induced audit-write failure makes the call fail loud (no un-audited call succeeds)",
+    "Pass condition: ALL boxes by use; any red = not done, re-run the WHOLE gate not just the failed line (integration regressions hide)",
+    "Pre-flip hardening A (audit-BEFORE-execute) marked RESOLVED 2026-06-18 with the verification described; the 'audits AFTER dispatch' framing is called STALE",
+    "Pre-flip hardening B (audience binding) notes AUDIENCE defaults to generic 'authenticated', accepted for the first flip given scope+policy gates, with a custom-access-token-hook fast-follow to stamp aud=<MCP resource>",
+    "Note on FORM: this is a backend round-trip gate; the navigable/legible face is assessed when participation is live + visible, flagged so it is not skipped"
+  ],
+  "standouts": [
+    "Item F's named threat: service_role bypasses RLS, so a service_role-used CD write would silently succeed a forged from_session — the worst failure of a public connector — and the 403 proves it dead, corroborated by grep",
+    "The whole-gate-re-run-on-any-red rule (integration regressions hide)",
+    "The explicit STALE-correction on audit ordering (audit-BEFORE, not after)"
+  ],
+  "conventions": [
+    "Embodies the repo's verification-before-completion / no-green-paint discipline at the security boundary",
+    "Names the two RLS gates (posture + RLS) and ties each checkbox to an observable, not a code read",
+    "Carries provenance (authored by lead ch-al7jdfdr 2026-06-18 against live contracts) and cross-refs migration files by number"
+  ],
+  "concerns": [],
+  "notes": "The by-use security/round-trip acceptance gate that must go fully green on local before the connector's prod flip — proves CD is a scoped two-way peer with no impersonation, no service_role bypass, fail-closed tools, and mandatory audit.",
+  "questions": [
+    "Was this gate ever run fully green on local, and is there a recorded result?",
+    "Did the audience-binding fast-follow (custom-access-token hook stamping aud) land before or after the public flip?"
+  ],
+  "purpose_vs_actual": "Matches. It states it is the by-use gate before the flip proving CD is a scoped secure peer on shared data, and the body delivers preconditions, round-trip, security bar, and pass condition to that exact end.",
+  "apparent_themes": [
+    "verification by use / purpose-observed (no-error is not a pass)",
+    "security boundary: two-gate scoping (posture + RLS), deny-by-default, no service_role bypass",
+    "mandatory audit / fail-closed",
+    "additive shared path must not disturb the live internal coordination fabric"
+  ],
+  "intention_signals": "Trying to prove, by real watched calls on the local stack, that opening Claude Design as a public two-way peer leaks nothing, cannot be impersonated, and audits everything — so the prod flip deploys a proven thing rather than new untested work.",
+  "novelty": "The explicit service_role-bypass impersonation threat model for a public connector and the corroborate-by-grep requirement that service_role touches no CD-write path.",
+  "contribution": "Contributes the executable by-use acceptance criteria for the Claude Design connector's security and round-trip — the preconditions, the A-D data round-trip, the E-I security bar with its named impersonation threat, the whole-gate-re-run rule, and the audit-before-execute and audience-binding hardening — a fused system would keep this as the connector's go-live gate.",
+  "summary_for_embedding": "A by-use local-stack acceptance gate for the Claude Design connector: preconditions, an A-D data round-trip (publish/inject/CD-post/CD-read on shared channels), and an E-I security bar (private-stays-dark, no service_role-bypass impersonation, fail-closed tools, mandatory audit-before-execute, internal lifeline intact), all observed by real calls, with audit-ordering and audience-binding hardening notes.",
+  "intention_for_embedding": "Written to prove on the local stack, before any prod flip, that the public Claude Design connector is a scoped two-way peer that leaks nothing, cannot be impersonated, fails closed, and audits every call — so the flip deploys a verified thing."
+}

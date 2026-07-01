@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/THE-SEED-geldard-lattice.md",
+  "model": "opus",
+  "what_it_does": "A 'cold-reader rendering' (the ENCODING ray) of Tim Geldard's geometric seed stated 2026-06-11. It restates his construction (a square box, a centre, dyadic/quadtree subdivision, concentric circles, cardinal coincidence points, a forbidden corner circle, the master relation 2pi/n=(1/n)^k), runs an independent math check, then amplifies the seed into seven mappings onto system primitives (address=quadtree/Morton path, radius=relevance, angle=relation type, n=scale, k=dimension knob, coincidence=valid states, renderer=lattice unfolding).",
+  "observations": [
+    "Records the doubling pattern 4->8->16 = 2^2,2^3,2^4 as the load-bearing dyadic/quadtree subdivision.",
+    "Math check confirms Tim's own flag that 45deg = pi/4 not pi/2, and verifies the cardinal-vs-diagonal asymmetry: diagonal lattice point at radius 2*sqrt(2)u overshoots onto the forbidden corner circle - the sqrt(2) incommensurability between square and circle.",
+    "Derives a clean form of the law: n^(1-k) = 2pi, i.e. k = 1 - ln(2pi)/ln(n).",
+    "Maps address to a Morton/Z-order quadtree path (the hierarchy IS the coordinate IS the position), replacing string paths like memory://a/b/c.",
+    "Maps angle to relation TYPE as a DIRECTION in the lattice (relations are not edges between nodes but directions); cardinals = primary structural relations, diagonals = derived/cross relations that 'overshoot'.",
+    "Interprets k as a fractal/Hausdorff-style dimension exponent and reads the structure as the discrete skeleton of log-polar space / the complex exponential e^(i*theta).",
+    "Names open growth fronts: mapping 8 modes onto sectors, whether k is global or per-region, registering embedding neighbourhoods onto lattice coincidence points, and a conformal-map (z->z^k branch points = forbidden corners) reading."
+  ],
+  "standouts": [
+    "The sqrt(2) incommensurability framed as the ancient root-tension between Cartesian and polar structure - the reason a grid and circle never reconcile - located as the system's natural gate/limit zone.",
+    "Address-as-Morton-path: the recursive subdivision makes a thing's address fall out of where it sits in the box, unifying hierarchy, coordinate, and position.",
+    "Relations reconceived as DIRECTIONS in a lattice rather than drawn edges."
+  ],
+  "conventions": [
+    "Strong author-attribution discipline (idea is Tim's; the growth is amplification, not separate invention).",
+    "Math-check-when-asked discipline, distinguishing Tim's exact counts from minor non-load-bearing slips.",
+    "Expand-before-harden: explicitly lists open growth fronts that grow from the seed without replacing it.",
+    "Uses the recurring dual-coordinate vocabulary (square/circle, coincidence, forbidden) shared across the brain files."
+  ],
+  "concerns": [],
+  "notes": "This is the ENCODING ray of the seed - it turns the box/circle construction into concrete addressing math (quadtree/Morton paths, log-polar, k as a fractal dimension knob) and locates the sqrt(2) forbidden-corner tension.",
+  "questions": [
+    "Are the '8 modes / relation-axes' referenced for sector-mapping defined elsewhere, since this file only names them as an open front?",
+    "Is k intended to be a single global constant or to vary per region (the file flags this as unresolved)?"
+  ],
+  "purpose_vs_actual": "Match - it presents itself as a cold-reader rendering plus amplification of the seed, and delivers exactly that (construction, math check, seven mappings, open fronts).",
+  "apparent_themes": [
+    "One generator, two coordinate systems (Cartesian box + polar circles)",
+    "Address = quadtree/Morton path = position",
+    "Incommensurability (sqrt(2)) as the structural limit/gate",
+    "Relations as directions, scale as zoom, k as fractal dimension",
+    "Generator-and-unfolding (the system is the seed unfolded at growing n)"
+  ],
+  "intention_signals": "It is trying to prove the seed is a generator from which the whole system unfolds, by giving the encoding its concrete computational form - making the address-as-path, the log-polar reading, and the dimension knob k explicit enough to build against while honestly marking what remains open.",
+  "novelty": "The Morton/Z-order quadtree address derivation from the dyadic subdivision, the explicit k = 1 - ln(2pi)/ln(n) form, and the log-polar / conformal-map (z->z^k branch points = forbidden corners) reading of Tim's construction.",
+  "contribution": "Contributes the encoding-layer formalization of the seed: dyadic-quadtree addressing as Morton paths, the clean k = 1 - ln(2pi)/ln(n) law form, relations-as-lattice-directions, and the log-polar/conformal-map readings.",
+  "summary_for_embedding": "An encoding-ray rendering of Tim's geometric seed: a square box with dyadic quadtree subdivision and concentric circles, math-checked, mapped to Morton-path addressing, angle=relation-direction, k as a fractal dimension knob, with the sqrt(2) forbidden-corner incommensurability.",
+  "intention_for_embedding": "To show the seed is a generator whose system unfolds from it, by formalizing its addressing math (quadtree/Morton, log-polar, dimension knob k) and locating its structural limits."
+}

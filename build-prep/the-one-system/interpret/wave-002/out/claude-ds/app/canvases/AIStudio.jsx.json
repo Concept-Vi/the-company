@@ -1,0 +1,54 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/AIStudio.jsx",
+  "model": "opus",
+  "what_it_does": "A large React canvas implementing a GPT-Image-2-powered 'AI Studio' with five modes sharing one chrome: Generate (text→image), Edit (source+instruction), Compose (up to 16 role-tagged references), Mask (brushed inpainting), and Chat (multi-turn via the Responses API). It manages model selection and per-model capability coercion, a full parameter surface (size/custom-size, quality, n, format, compression, background, moderation, streaming/partial-images), preset and pipeline rails, and runs all image work through window.CV_AI.resolveProvider('openai-image'), saving every output into window.cvImageStore and offering adopt/download. Defines many sub-components (ConnectBanner, PresetRail, PromptCard, SourcePicker, LibraryPicker, ComposeRack, ParamBar, ResultsRail, ChatLane, SavePresetModal, DiamondShape) and exports window.AIStudio.",
+  "observations": [
+    "MODES and ROLE_OPTIONS are module-level config arrays; mode tabs auto-disable when the current model's caps.supports lacks edit/multiRef/mask.",
+    "All model calls route through window.CV_AI.resolveProvider('openai-image').{generateImage,editImage,responsesImage} — never a direct provider/SDK call, matching the project's single-AI-catalogue rule.",
+    "A useEffect coerces every dependent option (size, quality, format, background, stream, customSize, n) to legal values whenever modelId changes, reading window.cvOpenAI.getModelCapabilities.",
+    "buildOptions assembles the request conditionally on capabilities; compose mode builds a textual 'Reference images:' block listing each image's role and routes through editImage.",
+    "Pipelines run sequentially with a per-step log (generate/edit/adopt step kinds), threading lastImage from one step to the next; failures mark the running step 'fail'.",
+    "Every successful image is persisted via cvImageStore.addFromSrc('ai', ...) inside try/catch that swallows persistence errors (catch {}).",
+    "Subscriptions to cvOpenAI.subscribeModels and cvAIPresets.subscribe keep models/presets/pipelines live.",
+    "Chat uses previous_response_id (out.responseId) to thread context; failures push a '⚠' turn into the feed.",
+    "Three-column resizable layout via a <Resizable storageKey='ai-studio-cols'> with min/max column sizes; cost line shows n × FORMAT [compression] · modelId.",
+    "ConnectBanner appears when window.cvOpenAI.isConfigured() is false; many controls disable until configured.",
+    "Uses React hook aliases (useState_as etc.) for the shared-bundle global scope.",
+    "sizeValidation via useMemo calls cvOpenAI.validateSize and gates the run button (also surfaces 'experimental size' warnings)."
+  ],
+  "standouts": [
+    "Capability-driven UI: the whole parameter surface and mode availability are derived from getModelCapabilities, so a model swap reshapes the controls and coerces stale options automatically.",
+    "Five distinct generative modes unified under one chrome and one provider entrypoint (resolveProvider('openai-image')).",
+    "Preset + pipeline system: save the entire current config as a preset, and chain generate→edit→adopt steps as a runnable pipeline with a live status log."
+  ],
+  "conventions": [
+    "Routes ALL model work through CV_AI.resolveProvider — honours the 'never window.cvOpenAI.generateImage directly' rule from the project charter.",
+    "self-mounting avoided; exports window.AIStudio for the router to mount (App.jsx renders it via the surface map).",
+    "Heavy use of project tokens/cv- classes and CvIcon/ViShape shared marks; deck-aligned visual language noted in the header comment.",
+    "Hook-alias pattern for global-scope bundle safety."
+  ],
+  "concerns": [
+    "Persistence errors are silently swallowed (catch {}) on every cvImageStore.addFromSrc — a generated image could fail to be stored with no signal, which sits against the project's loud-fail stance.",
+    "Very large single file (~1000 lines, 11 components) — all AI Studio UI lives here; the sub-components are not individually reusable outside it.",
+    "addComposeFiles caps to caps.maxRefImages || 16 but runCompose also re-checks maxRefImages || 0; if caps are missing the two defaults disagree (16 vs 0) and could let through then reject.",
+    "downloadResult builds an anchor with im.format || 'png' but format may be e.g. 'jpeg' — fine, just note the extension is trusted from the result."
+  ],
+  "notes": "The full multi-mode AI image studio surface — five modes (generate/edit/compose/mask/chat) over one OpenAI-image provider, capability-coerced controls, presets+pipelines, and adopt-into-library; everything funnels through CV_AI.resolveProvider.",
+  "questions": [
+    "What is the exact shape of getModelCapabilities (sizes/qualities/outputFormats/backgrounds/moderations/supports.*) that drives all the conditional UI?",
+    "What does cvImageStore consider 'scopes' (system/projects/hubs/ai) and how do hubs differ — the adopt logic branches on them without definition here?"
+  ],
+  "purpose_vs_actual": "Matches: the header promises five modes in one chrome with three resizable columns and GPT Image 2 control, and the code delivers exactly that plus presets/pipelines.",
+  "apparent_themes": [
+    "Capability-as-source-of-truth (UI derived from model caps)",
+    "One provider entrypoint for all AI moves (single AI catalogue)",
+    "Generation→adopt→library as a closed loop",
+    "Reusable parametric presets + composable pipelines"
+  ],
+  "intention_signals": "Trying to give the studio a single rich, model-agnostic image-creation surface where the available controls and modes are dictated by the chosen model's declared capabilities, every result flows into the shared image store, and repeatable configs (presets) and multi-step recipes (pipelines) make generation reproducible — all dispatched through the one AI registry.",
+  "novelty": "Driving an entire complex control surface (modes, sizes, quality, streaming, custom-size validation) from a declarative per-model capability object with automatic option coercion, plus a generate→edit→adopt pipeline runner with live per-step status, inside a self-contained classic-script React component.",
+  "contribution": "Contributes the complete AI image-studio surface: the five-mode chrome, capability-coerced parameter UI, preset/pipeline rails with a sequential runner+log, library source-picking and adopt-into-scope, and Responses-API multi-turn chat editing — all bound to the openai-image provider via CV_AI.resolveProvider.",
+  "summary_for_embedding": "A React 'AI Studio' canvas with five modes (generate/edit/compose/mask/chat) over the openai-image provider, model-capability-driven controls, presets and runnable pipelines, library source-picking, streaming partials, and adopt/download of results into cvImageStore.",
+  "intention_for_embedding": "To provide one model-agnostic image-creation surface whose controls and modes follow the chosen model's declared capabilities, funnel every result into the shared image store, and make generation reproducible via presets and composable pipelines through the single AI registry."
+}

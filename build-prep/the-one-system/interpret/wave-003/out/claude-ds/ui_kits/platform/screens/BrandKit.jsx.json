@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/screens/BrandKit.jsx",
+  "model": "opus",
+  "what_it_does": "Defines BrandKit, a customer brand-kit settings screen for the platform kit. It renders a form: a main-logo dropzone, a company-name input that live-builds a slugified URL preview (https://conceptv.io/panotours/<slug>/projectname), an additional-logos dropzone, and a two-column panel pairing a colour-scheme list (seven labelled colour rows plus a 'Revert to Default' checkbox) against a live Preview card showing how a hub title/icons/description/button would look. The component holds the company name in state and is attached to window.",
+  "observations": [
+    "ColourRow is a local component rendering a swatch + label",
+    "Seven colour rows with hardcoded hex values: #1F1A12, #FFFFFF, #D8B820, #FFFFFF, #988058, #A89678, #6B5F47 — labelled menu bg, menu text, button, button text, title, icon, description text",
+    "Company-name input is controlled (useState 'Acme Architecture'); URL preview slugifies via .toLowerCase().replace(/\\s+/g,'-')",
+    "Preview card uses tokens (var(--bg-surface), --r-lg, --shadow-card, --accent-bronze) and emoji room icons (🛏 🛋 🛁 🚗)",
+    "Mixes token references (var(--r-sm), --border-faint, --font-body) with hardcoded inline literals (gap:14, minHeight:160, fontSize:13, rgba(31,26,18,.08))",
+    "cv-info-i 'i' badges next to several field labels; placeholder lorem-ipsum description text",
+    "Two dropzones rendered as cv-dropzone with an 'add' + glyph (no upload wiring shown)"
+  ],
+  "standouts": [
+    "The live URL-slug preview that reacts to the company name input as you type",
+    "The side-by-side colour-scheme editor ↔ Preview card showing the branding applied"
+  ],
+  "conventions": [
+    "Uses cv- class names and design tokens for the structural look, consistent with the design system",
+    "Aliases useState as useState_bk and attaches to window — same bundle-safe pattern as siblings",
+    "Breaks the no-raw-px/no-raw-hex rule heavily: colour rows pass literal hex, layout uses inline px gaps/heights"
+  ],
+  "concerns": [
+    "Seven hardcoded hex colours and an rgba literal bypass the token system the project mandates (though these may be sample brand data, not theme tokens)",
+    "Dropzones and Revert checkbox have no interactive wiring beyond display",
+    "Heavy inline-style px literals (gap, minHeight, fontSize) rather than tokens"
+  ],
+  "notes": "The brand-kit screen: logo dropzones + company-name-to-URL live preview + a seven-colour scheme editor mirrored by a live hub Preview card.",
+  "questions": [
+    "Are the seven hex values sample customer brand data (legitimately literal) or should they reference tokens?",
+    "Is the colour scheme editable/persisted, or is this a static display of the rows?"
+  ],
+  "purpose_vs_actual": "Matches — README calls it the 'customer brand-kit form' and that is what it renders.",
+  "apparent_themes": [
+    "Branding/white-label customization of a Virtual Hub",
+    "Live preview of applied settings (URL slug, colour scheme)",
+    "Form-as-settings surface"
+  ],
+  "intention_signals": "Aims to let a customer define their hub's branding — logo, name (which drives the public URL), and a colour scheme — and immediately see it reflected in a representative preview before publishing.",
+  "novelty": "The dual live previews: company name → public panotour URL slug, and colour scheme → a rendered hub card.",
+  "contribution": "Contributes the brand-kit / white-label customization surface: the colour-scheme vocabulary (seven named hub colour roles), the name→URL slug preview, and the colour-editor↔preview pairing.",
+  "summary_for_embedding": "React BrandKit screen: a customer branding form with logo dropzones, a company-name-driven URL slug preview, and a seven-colour scheme editor mirrored by a live hub preview card.",
+  "intention_for_embedding": "To let a customer define and preview their Virtual Hub's branding — logo, name/URL, and colour scheme — before publishing."
+}

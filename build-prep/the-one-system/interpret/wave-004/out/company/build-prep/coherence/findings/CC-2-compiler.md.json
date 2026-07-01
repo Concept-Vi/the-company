@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/CC-2-compiler.md",
+  "model": "opus",
+  "what_it_does": "A skeptical research-finding doc assessing whether a strong model (the 'compiler' / NL front-end) can reliably turn freeform intent into a valid, runnable, law-abiding corpus-chain config. It emits four real Chain instances for four intent classes, adversarially inspects each as an approver, and derives a tiered trust verdict plus the guardrails that hedge the missing 'stronger-model-confirm' keystone.",
+  "observations": [
+    "Companion to CORPUS-CHAIN-ANCHOR.md; explicitly framed as the make-or-break / skeptic area of the corpus-chain research round and as a generalization of an earlier finding called SEM-3.",
+    "Uses an evidence-marking template (Verified / Observed / Inferred / External-prior-art / [my idea]) and applies the tags consistently, including a careful two-part tag on the planted-defect probe (defect invisibility is Observed, approver-miss is Inferred).",
+    "Runs four empirical probes (A well-specified per-file, B ambiguous scope, C planted non-unit-local prompt, D genuinely cross-unit) and tabulates them into tiers T1/T2/T3.",
+    "Central structural claim: COMPILE has no model tier above it (the strong model IS the planner), so the keystone of the prior SEM-3 architecture (a stronger model confirms) is structurally unavailable.",
+    "Dissects five trust legs (schema-constrain, validate-before-run, dry-run-one-unit, inspect-approve, cheap pre-map) for what each provably buys and does not.",
+    "Cites specific code file:lines as connection points (transport.py:47-48 json_schema branch, transport.py:15-25 list_models, client.py:54-87, runtime/rules.py, cognition.py:109/70-89, governance.py:1-12, authoring.py dry_run_role, implement.py, compile.py:47-113/67), and external prior art (BIRD NL2SQL, arXiv 2408.02442, 2509.25370, 2503.11984, 2509.00581).",
+    "Proposes building a compile calibration harness from the anchor's five labelled intent->Chain face pairs plus the four probe intents."
+  ],
+  "standouts": [
+    "The 'missing keystone' structural-asymmetry argument: there is no model stronger than the planner to correct its systematic errors, so trust must come from a hedge rather than a better judge.",
+    "Names the dominant failure mode precisely: a schema-valid, reads-fine Chain whose map_prompt is non-unit-local (asks a cross-unit question of a worker handed one unit) and is invisible in the plan text.",
+    "The save-the-config-not-the-intent insight that concentrates compile-risk in the cheap novel-query quadrant and makes saved faces safe.",
+    "Identifies a name-collision: runtime/compile.py already exists as a workflow-graph compiler, distinct from the proposed NL->Chain compiler."
+  ],
+  "conventions": [
+    "Follows the repo's evidence-discipline (Tim's Observed/Inferred/Verified template) rigorously.",
+    "Opens with a one-paragraph verdict-first summary, then sectioned argument, then direct answers to deliverable questions, then a 'yes-but-actually' correction list.",
+    "Grounds claims in real repo facts (file counts, file:lines) and labels design proposals as [my idea]."
+  ],
+  "concerns": [
+    "Empirical basis is self-stated as n=4 with the author acting as both compiler and approver (an epistemic-monoculture limit the doc itself flags), so the tiering is reasoned judgment rather than a measured rate."
+  ],
+  "notes": "A skeptical, evidence-tagged trust analysis of the NL-to-chain compiler: tiered verdict, named dominant failure mode, and a hedge-not-keystone guardrail stack with concrete reuse targets.",
+  "questions": [
+    "Are the proposed CLI verbs (research/ask/onboard) and the Chain typed object intended to be built next, given the doc notes they don't yet exist in ops/cli/app.py?",
+    "What thresholds would Tim set per intent-class for the calibration harness to admit a class to T1 auto-compile?"
+  ],
+  "purpose_vs_actual": "Match. The title poses the question 'can a smart model reliably turn intent into a valid runnable law-abiding chain config' and the doc answers it with a tiered yes/conditional/no plus guardrails and an empirical probe.",
+  "apparent_themes": [
+    "Trust surfaces and where they fail",
+    "Evidence over speculation",
+    "Reuse existing mechanisms rather than reinvent",
+    "Determinism via saved configs",
+    "Tiered governance (auto / surface / confirm / refuse)"
+  ],
+  "intention_signals": "It is trying to honestly bound where an NL-to-config compiler can be trusted, refuse to oversell any single guardrail, and hand the build a concrete first-step (validate + dry-run + calibration harness) plus a hard do-not-auto-compile boundary for cross-unit reasoning intents.",
+  "novelty": "The structural-asymmetry framing (a planning stage with no judge above it) and the dry-run-one-unit-as-keystone-substitute argument, derived empirically by emitting and adversarially inspecting real Chain instances.",
+  "contribution": "Contributes a skeptical, empirically-probed trust model for the NL-to-chain compiler: the no-keystone structural argument, four emitted-Chain probes mapped to a T1/T2/T3 tiering, a leg-by-leg dissection of five guardrails, the save-the-config determinism insight, and a concrete reuse map to existing governance/authoring/transport machinery.",
+  "summary_for_embedding": "A skeptical research finding (CC-2) that emits and adversarially inspects four real corpus-chain Chain instances to assess whether a strong-model NL-to-config compiler can be trusted, concluding a tiered verdict hedged by validate/dry-run/approve legs because no model tier sits above the planner.",
+  "intention_for_embedding": "To bound trustworthiness of the corpus-chain compiler, name its dominant valid-but-wrong failure mode, and specify the guardrail stack and calibration harness needed before auto-compiling intents."
+}

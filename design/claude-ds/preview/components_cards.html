@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Cards & dropzones" subtitle="Surface card · video tile · dashed empty state" viewport="700x280" --><html><head><meta charset="utf-8"><title>Cards & dropzones</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 22px 24px; min-height: 280px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .lead { grid-column: 1 / -1; font: 400 12px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0; }
+  .surface {
+    background: var(--bg-surface);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 8px;
+    min-height: 120px;
+  }
+  .placeholder {
+    background: var(--bg-sunken);
+    border-radius: var(--r-xs);
+    min-height: 140px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .play {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(31,26,18,.08);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent-bronze);
+  }
+  .dropzone {
+    background: var(--bg-canvas);
+    border: 2px dashed var(--border-dashed);
+    border-radius: var(--r-md);
+    min-height: 140px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .add {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--accent-gold-50);
+    border: 1.5px solid var(--accent-gold-dashed);
+    color: var(--fg-primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; line-height: 0;
+  }
+  .tag { font: 600 10px/1 var(--font-body); color: var(--fg-muted); letter-spacing: .08em; text-transform: uppercase; }
+  .meta { font: 400 12px/1 var(--font-body); color: var(--fg-secondary); }
+</style></head>
+<body><div class="card">
+  <p class="lead">Three surface patterns. White cards for content; sunken placeholders for media; <b>dashed empty-state</b> for upload affordances.</p>
+  <div class="surface">
+    <span class="tag">Card · default</span>
+    <div class="placeholder" style="background:linear-gradient(135deg,#E8E2CC,#D0C098)"></div>
+    <span class="meta">Tower East — North facade</span>
+  </div>
+  <div class="surface">
+    <span class="tag">Card · video tile</span>
+    <div class="placeholder"><div class="play">▶</div></div>
+    <span class="meta">Walkthrough · 2:14</span>
+  </div>
+  <div class="surface" style="background:var(--bg-canvas);box-shadow:none;border:none;">
+    <span class="tag">Empty · dropzone</span>
+    <div class="dropzone"><div class="add">+</div></div>
+    <span class="meta" style="color:var(--fg-muted)">Drop images or click to upload</span>
+  </div>
+</div></body></html>

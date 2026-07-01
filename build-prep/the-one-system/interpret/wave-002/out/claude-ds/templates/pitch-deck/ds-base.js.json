@@ -1,0 +1,44 @@
+{
+  "project": "claude-ds",
+  "path": "templates/pitch-deck/ds-base.js",
+  "model": "opus",
+  "what_it_does": "A small loader IIFE that injects the ConceptV Design System into a template page at runtime. It computes a `base` path (here '../..'), then appends to document.head: a <link> to styles.css (which @imports every token file + core/containers.css), <script> tags for assets/icons/cv-shapes.js (window.CV_SHAPES) and cv-icons.js (window.CV_ICONS), the compiled _ds_bundle.js, and core/slide-fit.js?v=3 (the paged-surface fitter). The bundle <script> has an onerror that prints guidance about re-pointing the base line for a consuming project.",
+  "observations": [
+    "Single editable knob: `const base = '../..'` — comment says point it at the bound _ds/<folder> relative to the page.",
+    "Loads styles.css as the single CSS entry that @imports tokens + containers.css.",
+    "Loads two icon/shape global scripts: cv-shapes.js (window.CV_SHAPES — 'canonical entity geometry') and cv-icons.js (window.CV_ICONS).",
+    "Loads _ds_bundle.js (the compiled DS bundle) with an onerror that logs a remediation hint (bundle not compiled / wrong base path).",
+    "Loads core/slide-fit.js?v=3 — described as the universal paged-surface fitter that letterboxes slide/print stages to fit.",
+    "Cache-busting query string only on slide-fit (?v=3), not on the other assets."
+  ],
+  "standouts": [
+    "Single-line rebind (`base`) is the only thing a consuming project edits to wire in the whole design system — the file's stated reason to exist.",
+    "onerror on the bundle script carries an actionable, specific failure message rather than failing silently."
+  ],
+  "conventions": [
+    "Matches CLAUDE.md: styles.css is the one CSS home that @imports tokens; _ds_bundle.js is compiled output; CV_SHAPES/CV_ICONS are window globals.",
+    "Imperative head-injection of <link>/<script> rather than static tags — lets the base path be computed.",
+    "Loud-on-failure for the bundle (console.error with guidance)."
+  ],
+  "concerns": [
+    "`base` is a hardcoded relative literal ('../..') the comment says must be hand-edited per consuming location — a known manual wiring point.",
+    "Only slide-fit.js is version-busted; if styles.css or the bundle change, cached stale copies could load (file-local observation)."
+  ],
+  "notes": "The DS injector for a template page: edit the one `base` line to point at the design-system tree, and it pulls in styles.css, icons/shapes, the compiled bundle, and the slide fitter.",
+  "questions": [
+    "Is _ds_bundle.js expected to already be compiled when this runs (the onerror suggests it may not be)?",
+    "Why is only slide-fit cache-busted and not the bundle/styles?"
+  ],
+  "purpose_vs_actual": "Matches: the top comment says 'Loads this design system into the template' and the body does exactly that with one editable base path.",
+  "apparent_themes": [
+    "one home referenced everywhere (single styles.css entry, single bundle)",
+    "single editable wiring point to avoid drift",
+    "fail-loud with actionable guidance",
+    "paged/slide surface support (slide-fit)"
+  ],
+  "intention_signals": "Meant to be the one-line bridge that drops the full ConceptV Design System (tokens + icons/shapes + engine bundle + slide fitter) onto any template page, so a consuming project wires in by editing a single path rather than copying assets.",
+  "novelty": "Encodes the whole DS dependency set as an ordered runtime head-injection driven by a single editable base path, with a self-explaining failure for a missing bundle.",
+  "contribution": "Contributes the design-system loader/wiring shim — the ordered set of DS assets a template page needs (styles.css, cv-shapes, cv-icons, _ds_bundle.js, slide-fit.js) and the single-base-path convention that lets a consuming project bind to the DS without copying.",
+  "summary_for_embedding": "Loader IIFE that injects the ConceptV Design System into a template page: appends styles.css, cv-shapes.js/cv-icons.js globals, the compiled _ds_bundle.js, and core/slide-fit.js to head, driven by one editable `base` path with a fail-loud onerror.",
+  "intention_for_embedding": "To wire the full ConceptV Design System into any template page through a single editable base-path line instead of copied assets."
+}

@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/StubCanvases.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a STUB_DEFS object describing six not-yet-built design-system canvases (type, logos, imagery, components, templates, voice) — each with title, subtitle, description, and a feature list — and a StubCanvas React component that renders a placeholder view for a given canvas id: header, an explanatory paragraph, the bullet feature list, and two buttons ('Ask Vi to build this canvas', 'Skip'). Exposes StubCanvas on window.",
+  "observations": [
+    "Six canvas definitions keyed by id: type, logos, imagery, components, templates, voice.",
+    "Each def carries title, sub, desc, and a features array of 4 capability descriptions.",
+    "StubCanvas looks up the def by id and renders 'Unknown canvas: {id}' if absent.",
+    "Placeholder paragraph explicitly says the canvas works 'just like Icons and Colors — gallery on the left, Vi generation, drop-zone for new uploads, applied to the rest of the system automatically.'",
+    "Uses CanvasHeader and ViShape components that are not imported here (assumed global from the shared bundle).",
+    "Two action buttons: a Vi-AI build button and an outline skip button.",
+    "Voice def encodes concrete brand rules in its sub: 'Sentence-case, second-person, no exclamation marks.'",
+    "Attached to window.StubCanvas rather than exported as a module."
+  ],
+  "standouts": [
+    "The feature lists double as a roadmap/spec for each unbuilt canvas, describing intended Vi-driven behaviours (auto-tagging, off-brand detection, variant generation).",
+    "The 'Ask Vi to build this canvas' button frames the placeholder itself as an entry point to generative construction."
+  ],
+  "conventions": [
+    "Follows the project's window-global mounting pattern (window.StubCanvas) and relies on globally available shared components rather than ES imports.",
+    "Uses dsa-* and feat/features CSS class names consistent with a design-system-app stylesheet.",
+    "Centralizes the six stub definitions in one data object, with one component projecting any of them by id — a data-driven render."
+  ],
+  "concerns": [
+    "CanvasHeader and ViShape are referenced but not defined/imported in this file; correctness depends on external bundle load order.",
+    "One inline style object on the button row (display/gap/justifyContent) rather than a CSS class — a small hardcoded-style deviation from the token/class discipline."
+  ],
+  "notes": "A data-driven placeholder canvas for six design surfaces not yet built; the feature arrays read as the intended spec for each, and a button invites Vi to build them.",
+  "questions": [
+    "Where are CanvasHeader and ViShape defined, and is load order guaranteed before this file runs?",
+    "Which surfaces (Icons, Colors) are the 'fully built' reference these stubs promise to mirror?"
+  ],
+  "purpose_vs_actual": "Matches — the file's stated purpose (placeholder canvases for surfaces not yet built) is exactly what it implements.",
+  "apparent_themes": [
+    "Scaffolding-as-spec: placeholders that document intended capability.",
+    "Vi/AI generation as the path from stub to built surface.",
+    "Single design-system surface where every asset class (type, logos, imagery, components, templates, voice) is a parallel canvas."
+  ],
+  "intention_signals": "Aims to make unbuilt surfaces feel coherent and on-roadmap rather than missing, presenting each as a future Vi-generated canvas that mirrors the existing Icons/Colors pattern, with its feature list serving as the build brief.",
+  "novelty": "The placeholder is itself an invitation to generative build ('Ask Vi to build this canvas'), turning a stub into an actionable construction entry point.",
+  "contribution": "Contributes the enumerated definitions and intended feature sets for six design-system canvases (type, logos, imagery, components, templates, voice) plus a reusable id-driven placeholder renderer and the brand voice rules embedded in the voice def.",
+  "summary_for_embedding": "A React file defining six placeholder design-system canvases (type, logos, imagery, components, templates, voice) with feature specs and a data-driven StubCanvas component exposed on window.",
+  "intention_for_embedding": "To scaffold not-yet-built design surfaces as coherent, on-roadmap placeholders whose feature lists brief their future Vi-generated implementations."
+}

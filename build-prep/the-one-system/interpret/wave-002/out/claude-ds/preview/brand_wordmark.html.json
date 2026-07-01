@@ -1,0 +1,40 @@
+{
+  "project": "claude-ds",
+  "path": "preview/brand_wordmark.html",
+  "model": "opus",
+  "what_it_does": "A static preview card (@dsCard group=\"Brand\") showing the ConceptV wordmark in two contexts: a light/canvas pane displaying the real black wordmark PNG (primary), and a dark pane that switches to the yellow V mark — demonstrating the on-dark substitution rule.",
+  "observations": [
+    "Static HTML, only _card.css linked.",
+    "Two side-by-side panes: light (--bg-canvas) shows conceptv-wordmark-black.png; dark (--bg-dark) shows conceptv-v-yellow.png at 96px.",
+    "Corner tags label each pane: 'On canvas · primary' and 'On dark · use V mark'.",
+    "A code comment notes the dark pane swaps the wordmark for the V mark rather than inverting.",
+    "Body background uses --bg-canvas; panes use token backgrounds and a faint border divider."
+  ],
+  "standouts": [
+    "The dark-context rule is enforced by substitution (full wordmark on light, V mark on dark) rather than recoloring the same asset."
+  ],
+  "conventions": [
+    "Follows @dsCard preview convention.",
+    "References real logo assets under ../assets/logos/ (no fiction).",
+    "Tokens via var(--…) for backgrounds, borders, tag colors."
+  ],
+  "concerns": [
+    "The dark pane V mark uses inline style overrides (filter:none; width:auto; height:96px) rather than a class — a small local hardcoded-px touch."
+  ],
+  "notes": "The wordmark card — primary black wordmark on canvas, yellow V mark on dark, demonstrating the context-based mark substitution rule.",
+  "questions": [
+    "Do conceptv-wordmark-black.png and conceptv-v-yellow.png exist at ../assets/logos/ as referenced?"
+  ],
+  "purpose_vs_actual": "Matches — subtitle (real wordmark file; on dark, switch to the V mark) is exactly what the two panes show.",
+  "apparent_themes": [
+    "Context-appropriate brand mark usage",
+    "Substitution over recoloring",
+    "Grounding in real logo assets",
+    "Light/dark surface contrast"
+  ],
+  "intention_signals": "Specifies how the brand wordmark must be deployed across light and dark surfaces — full wordmark on canvas, V mark on dark — to keep the identity legible and correct per context.",
+  "novelty": "The explicit rule to swap to the V mark (not invert the wordmark) on dark backgrounds.",
+  "contribution": "Contributes the wordmark-usage rule (primary wordmark on canvas vs V mark on dark) and the real logo asset references that a fused system would keep as its logo-deployment guidance.",
+  "summary_for_embedding": "A ConceptV brand preview card showing wordmark usage — the black wordmark on canvas (primary) and the yellow V mark on dark — demonstrating context-based mark substitution.",
+  "intention_for_embedding": "To document the correct deployment of the brand wordmark across light and dark surfaces."
+}

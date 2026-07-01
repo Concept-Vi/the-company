@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Sidebar emoji convention" subtitle="Bronze CV line icons as nav glyphs — never emoji" viewport="700x240" --><html><head><meta charset="utf-8"><title>Sidebar nav icons</title>
+<link rel="stylesheet" href="_card.css">
+<script src="../assets/icons/cv-icons.js"></script>
+<style>
+  .card { padding: 24px 28px; min-height: 240px; }
+  .blurb { font-size: 13px; color: var(--fg-secondary); margin: 0 0 16px; line-height: 1.55; max-width: 92%; }
+  .blurb strong { color: var(--fg-primary); }
+  .nav { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 10px;
+    background: var(--bg-surface);
+    border-radius: var(--r-md);
+    border: 1px solid var(--border-faint);
+    font: 500 12px/1 var(--font-body);
+    color: var(--fg-primary);
+  }
+  .item.active { border: 1.5px dashed var(--border-dashed); background: var(--bg-surface); }
+  .glyph { width: 17px; height: 17px; flex: none; display: grid; place-items: center; }
+  /* Icons are stroked in a TOKEN colour — the bronze nav-glyph default — never emoji. */
+  .glyph svg { width: 17px; height: 17px; display: block; fill: none;
+    stroke: var(--accent-bronze); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .item.active .glyph svg { stroke: var(--accent-gold); }   /* selected row picks up the gold active voice */
+</style></head>
+<body><div class="card">
+  <p class="blurb">The platform sidebar uses <strong>CV line icons stroked in a token colour</strong> — the bronze nav-glyph default (<code>--accent-bronze</code>), with the active row in <code>--accent-gold</code>. <strong>Never emoji</strong>: glyphs must theme, recolour, and stay on-brand with the rest of the system.</p>
+  <div class="nav" id="nav"></div>
+</div>
+<script>
+  var ITEMS = [
+    ["Projects","files-stack"], ["Dashboard","dashboard"], ["Landing","globe"],
+    ["Files","folder"], ["Gallery","image","active"], ["Brand Kit","color-swatches"],
+    ["Calendar","calendar"], ["Templates","document"], ["Pricing","tag"],
+    ["View All","hierarchy"], ["FAQs","chat"], ["Tutorials","lightbulb"]
+  ];
+  var D = (window.CV_ICONS && window.CV_ICONS.data) || {};
+  var nav = document.getElementById("nav");
+  ITEMS.forEach(function (it) {
+    var row = document.createElement("div");
+    row.className = "item" + (it[2] ? " active" : "");
+    row.innerHTML = '<span class="glyph"><svg viewBox="0 0 24 24">' + (D[it[1]] || "") + '</svg></span>' + it[0];
+    nav.appendChild(row);
+  });
+</script>
+</body></html>

@@ -1,0 +1,39 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0008_drop_broad_read_policies.sql",
+  "model": "opus",
+  "what_it_does": "Removes the broad using(true) placeholder SELECT policies that earlier migrations (0003/0004) shipped on channels, channel_posts, dna_tokens, design_seeds and design_submissions, revokes anon SELECT on the shared tables, and runs a DO-block assertion that fails the migration if any of those broad policies still exist.",
+  "observations": [
+    "Header labels this C-1, an adversarial-review CRITICAL fix, explaining that Postgres ORs all permissive policies so a broad using(true) widens past the scoped 0005/0006 policies.",
+    "Drops named broad read policies for both authenticated and anon on channels and channel_posts (0003) and on the three collab tables (0004).",
+    "Revokes SELECT from anon on channels, channel_posts, dna_tokens, design_seeds, design_submissions.",
+    "Sanity DO block queries pg_policies for the listed policy names with qual='true' and raises an exception if any remain.",
+    "Header notes 0003/0004 SOURCE were also fixed; this migration is belt-and-suspenders for already-applied environments and fresh db reset."
+  ],
+  "standouts": [
+    "The post-condition assertion (raise exception if a broad using(true) policy survives) — the migration verifies its own effect rather than assuming it.",
+    "The stated Postgres semantics that permissive policies are OR-combined, which is the actual root cause of the leak."
+  ],
+  "conventions": [
+    "Idempotent drop policy if exists.",
+    "Self-verifying migration via a DO $$ ... $$ guard block.",
+    "Detailed header tying the change to an adversarial review finding (C-1)."
+  ],
+  "concerns": [],
+  "notes": "This is the security hardening that deletes the permissive placeholder read policies so the scoped boundary/design_client policies become authoritative, and asserts it stuck.",
+  "questions": [
+    "Do the 0005/0006 scoped policies fully cover every legitimate read that the dropped broad policies previously allowed (i.e. no functionality regression)?"
+  ],
+  "purpose_vs_actual": "Match: header states it drops broad read policies and revokes anon SELECT so scoped policies win, and the SQL plus the assertion do exactly that.",
+  "apparent_themes": [
+    "Least-privilege / removing accidental broad grants",
+    "Adversarial-review-driven hardening",
+    "Self-verifying idempotent migrations",
+    "Defense for already-applied and fresh-reset environments"
+  ],
+  "intention_signals": "Trying to close a real read-leak where placeholder permissive policies OR-widened past the intended scoped policies, and to guarantee the fix cannot silently fail.",
+  "novelty": "Embedding a fail-loud assertion that the broad policies are truly gone, turning the migration into its own verification.",
+  "contribution": "Contributes the corrective removal of OR-widening broad read policies plus an in-migration assertion guard that the scoped policy regime is authoritative.",
+  "summary_for_embedding": "Supabase migration that drops broad using(true) SELECT policies and anon SELECT grants on the shared design tables and asserts none remain, so scoped RLS policies are authoritative.",
+  "intention_for_embedding": "To fix a critical read-leak where permissive placeholder policies bypassed scoped access control, and to verify the fix held across applied and fresh environments."
+}

@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/usePersisted.js",
+  "model": "opus",
+  "what_it_does": "Defines, inside an IIFE, a window.usePersisted(key, initial) React hook that mirrors useState to localStorage under a 'cvstudio:' namespace (lazy init reads stored JSON or the initial value/function; an effect writes the value on change), plus a window.cvStudioStorage utility with getAll() and clear() over all namespaced keys.",
+  "observations": [
+    "Namespace constant NS = 'cvstudio:'; an `all()` helper lists localStorage keys starting with NS.",
+    "usePersisted supports a function-form initial (typeof initial === 'function' ? initial() : initial) in both the no-value and parse-error branches.",
+    "Lazy initializer reads and JSON.parses the stored value; try/catch falls back to initial on any error.",
+    "useEffect writes JSON.stringify(val) on [fullKey, val] change, wrapped in try/catch (silent).",
+    "cvStudioStorage.getAll() returns a {shortKey: parsedValue} map (null on parse failure); clear() removes every namespaced key.",
+    "Uses React.useState/React.useEffect from the global React, no imports.",
+    "Entire module is an IIFE attaching to window."
+  ],
+  "standouts": [
+    "The shared 'cvstudio:' namespace plus getAll/clear gives a single place to export or wipe all persisted studio state."
+  ],
+  "conventions": [
+    "Window-global registration and global-React usage consistent with the app.",
+    "Namespacing matches Resizable.jsx's 'cvstudio:resizable:' prefix (same NS root).",
+    "Mirrors the standard useState-to-localStorage hook pattern."
+  ],
+  "concerns": [
+    "Writes are silent try/catch; a quota or serialization failure is swallowed with no signal.",
+    "No cross-tab sync (no storage-event listener), so two tabs can diverge."
+  ],
+  "notes": "The studio's localStorage-backed useState plus a namespaced export/clear utility; everything persists under 'cvstudio:' so it can be dumped or wiped at once.",
+  "questions": [
+    "Is cross-tab synchronization out of scope for this hook?"
+  ],
+  "purpose_vs_actual": "Matches: header comment 'small localStorage state hook ... namespaced so we can clear/export everything at once' is exactly what getAll/clear and the namespace provide.",
+  "apparent_themes": [
+    "Single-namespace persistent state",
+    "Export/wipe-everything-at-once design",
+    "Graceful degradation on storage errors"
+  ],
+  "intention_signals": "Aims to make persistence a one-liner across the studio while keeping all persisted state under one namespace so it can be inspected, exported, or reset as a unit.",
+  "novelty": "Pairs the common persisted-state hook with a deliberate namespace-wide export/clear API, treating all studio state as one collection.",
+  "contribution": "Contributes a namespaced localStorage useState hook plus a getAll/clear collection utility that a fused system would keep as its persistence primitive and state export/reset point.",
+  "summary_for_embedding": "IIFE defining window.usePersisted, a localStorage-backed React useState hook under a 'cvstudio:' namespace, plus window.cvStudioStorage getAll/clear over all namespaced keys.",
+  "intention_for_embedding": "To make studio state persist with one hook while keeping all of it under one namespace for export or wipe."
+}

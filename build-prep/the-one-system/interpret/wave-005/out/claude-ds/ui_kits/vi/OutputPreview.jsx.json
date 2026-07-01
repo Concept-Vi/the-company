@@ -1,0 +1,41 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/vi/OutputPreview.jsx",
+  "model": "opus",
+  "what_it_does": "Renders the 'live preview' pane of the Vi AI-workspace kit: a real-estate brochure that fills in section-by-section as a `filled` prop object flips fields true. It draws a hero title, a brand/palette swatch row, feature stats, a description, starting price, and agent contact — each section showing a done/drafting/missing state with a check/clock/gap glyph, skeleton loaders for pending text, and a red 'missing' state for gaps. A footer shows the source and PDF/DOC/HTML export formats that activate when finalized. Exposed on window.OutputPreview.",
+  "observations": [
+    "Two components: BrochureSection (a labeled section with state glyph + state label) and OutputPreview (the brochure itself).",
+    "Driven entirely by a `filled` prop object whose boolean/string fields (title, brand, stats, description, price, agent, finalize) gate each section's rendered state.",
+    "State vocabulary: 'done' (✓ Filled), 'pending' (● Drafting, with .skel skeleton placeholders), 'gap' (! Missing, shown in --status-error red).",
+    "Hardcoded sample real-estate content: 'Sky Apartments — From the 12th floor', '2 BED / 2 BATH / 98m² / 1 CAR', a description paragraph, 'Tower East · Sydney CBD'.",
+    "Brand palette swatches are hardcoded hex literals ['#1F1A12','#E0C010','#988058','#F4E89A'] rendered only when filled.brand is true (else --bg-muted).",
+    "Mix of class-based styling (vi-brochure*, skel, feat) and many inline styles, several using var() tokens for color/type.",
+    "Export formats (PDF/DOC/HTML) gain an 'active' class when filled.finalize is set.",
+    "Global-window registration (window.OutputPreview = OutputPreview)."
+  ],
+  "standouts": [
+    "The whole component is a state-machine view: it visualizes a generation-in-progress (drafting → filled → gap) as a brochure assembles, which is the kit's 'live brochure preview' concept made concrete.",
+    "Distinguishes 'pending' (drafting, recoverable) from 'gap' (missing, error-red) — a deliberate two-tier incompleteness signal."
+  ],
+  "conventions": [
+    "Follows the kit's global-window registration and token-via-var() inline styling.",
+    "Breaks the no-raw-hex rule for the brand palette swatches (intentional, since the swatches ARE sample brand colors being previewed).",
+    "Uses --status-error token for the missing/gap state (good token use for the error signal)."
+  ],
+  "concerns": [
+    "Heavy reliance on inline styles rather than classes for layout/typography — harder to keep on-system than the cv- class screens.",
+    "Sample content is hardcoded English real-estate copy; the component shows one fixed brochure, not arbitrary content."
+  ],
+  "notes": "The Vi workspace's live-preview pane: a real-estate brochure that assembles section-by-section under a `filled` prop, with drafting/done/missing states, skeleton loaders, and activatable export formats.",
+  "questions": [
+    "What drives the `filled` prop over time (the chat/task-tree producing fields), and is the fill sequence scripted or interactive?",
+    "Is the real-estate brochure the canonical example output, or one of several output types Vi can preview?"
+  ],
+  "purpose_vs_actual": "Matches: the header comment says 'the brochure being built, updates live' and the component renders exactly a brochure whose sections fill from the `filled` prop.",
+  "apparent_themes": ["live-generation preview", "incremental state visualization (drafting/done/gap)", "skeleton-loading placeholders", "real-estate brochure as exemplar output", "two-tier incompleteness (pending vs missing)"],
+  "intention_signals": "Embodies the idea of an AI output that the user watches assemble in real time, with clear visual signals for what is filled, still drafting, or genuinely missing — making the generation process legible.",
+  "novelty": "It models output as a partially-filled artifact with per-section completion states (including an explicit 'missing/gap' error state), rather than as a finished result or a plain loading spinner.",
+  "contribution": "Brings the live-assembling-output pattern: a preview pane that shows a generated artifact filling section-by-section with drafting/done/missing states, skeleton loaders, and finalize-gated export formats.",
+  "summary_for_embedding": "A React 'live preview' component for the Vi kit rendering a real-estate brochure that fills section-by-section from a `filled` prop, with drafting/done/missing states, skeleton loaders, and activatable PDF/DOC/HTML exports.",
+  "intention_for_embedding": "To visualize an AI-generated output assembling in real time with clear per-section completion and missing-field signals."
+}

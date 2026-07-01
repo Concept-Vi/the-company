@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "app/workshop.css",
+  "model": "opus",
+  "what_it_does": "A large stylesheet (3556 lines) for a 'Workshop' document-authoring canvas — a slide/brochure builder. Styles a doc-type picker, a three-column workspace (asset library left, document center, slide-outline right), a draggable asset library (icons/imagery tiles), a fixed 1280x720 slide stage scaled via transform, slide chrome (page number, brand mark, edge), background motifs (paper/blueprint/edgeband/ink/goldBleed), and a very large set of '.ws-blk-*' content block styles (hero, headline, quote, stats, process, funnel, cluster, features, pullquote, metric-row, bullets, icon-strip, comparison, hex-badges, chip-row, stat-pills, stat-table, checklist, and more), each with dark/gold 'bleed' color-flip variants.",
+  "observations": [
+    "Comment header says it 'extends Studio's design language'; everything is built on var(--…) tokens (no raw colors except a few rgba() literals for translucent overlays).",
+    "Slide is treated as a fixed 1280x720 design surface; a 16:9 stage box wraps a transform-scaled inner frame so block sizes never reflow at small widths (explicit comment block ~line 376).",
+    "data-attribute-driven theming: [data-kind=title/closing/quote/section] center content; [data-bleed=dark|gold] flip block text/border colors across every block type.",
+    "Each new content block consistently ships with both a base style and a matching '.ws-slide-frame[data-bleed=dark]' (and sometimes 'gold') override block.",
+    "Many blocks cite an 'inspo' source in comments (image_13, image_14, sshot_113712, Property Wizard / Vi style) tying CSS to a visual reference.",
+    "Uses modern CSS: color-mix(in oklch, …), aspect-ratio, clip-path hexagons, display:contents for table-like grids, repeating-linear-gradient hatch placeholders.",
+    "Collapsible left library with .ws-library-close / .ws-library-reopen and .no-left / .no-right workspace grid variants.",
+    "Image placeholders are CSS-only diagonal-hatch gradients labelled in uppercase."
+  ],
+  "standouts": [
+    "The fixed-canvas + transform-scale slide model (1280x720 frame, comment explains why sizes must not reflow).",
+    "Exhaustive per-block dark/gold bleed color-flip system — every block has its inverse-theme rules.",
+    "Comments tie individual blocks to specific image/screenshot inspirations (a CSS-to-reference provenance trail)."
+  ],
+  "conventions": [
+    "Tokenised throughout (var(--accent-gold), --fg-primary, --r-md, --font-display, --ease-out…); follows the design-system single-source rule.",
+    "Strict BEM-ish 'ws-' / 'ws-blk-' / 'ws-library-' namespacing.",
+    "Font shorthand 'font: weight size/lh var(--font-…)' used uniformly.",
+    "Breaks the no-raw-literal ideal in a controlled way: hardcoded rgba(251,247,236,…) and rgba(31,26,18,…) for translucent overlays/shadows instead of tokens."
+  ],
+  "concerns": [
+    "Hardcoded rgba() and a few hex values (#d8e3ea, #e8dcc7, #d4cdc1) for tones/overlays are off-token literals that a design-lint pass would flag.",
+    "Very large single file; only first ~1242 of 3556 lines were read, so blocks beyond line 1242 (checklist continues + likely more) are inferred to follow the same pattern but not directly observed."
+  ],
+  "notes": "The full visual stylesheet for the Workshop slide/brochure builder — a token-driven block library with a fixed-canvas slide model and per-block dark/gold theme flips.",
+  "questions": [
+    "What does 'Studio' refer to, and where is its base design language defined (this file only 'extends' it)?",
+    "Do the .ws-motif-blueprint and motif background layers have JS counterparts that draw the blueprint grid?",
+    "What lives in lines 1243-3556 beyond the checklist block (more block types? responsive rules? print styles?)"
+  ],
+  "purpose_vs_actual": "Matches — header states it extends Studio's design language for the workshop canvas, and the file is exactly the workshop canvas + block library styling.",
+  "apparent_themes": [
+    "Token-single-source design system",
+    "Content-block composition (a vocabulary of reusable slide blocks)",
+    "Theme-as-data (data-bleed / data-kind drive appearance)",
+    "Fixed design surface scaled, not reflowed",
+    "Reference-grounded design (blocks traced to visual inspirations)"
+  ],
+  "intention_signals": "Trying to give a slide/brochure authoring tool a rich, brand-consistent library of pre-styled content blocks that always render in the ConceptV look, switch cleanly between light/dark/gold backgrounds, and stay pixel-stable on a presentation-sized canvas.",
+  "novelty": "The fixed 1280x720 transform-scaled slide stage and the systematic per-block dark/gold bleed inversion across dozens of block types.",
+  "contribution": "Contributes a comprehensive, token-driven CSS vocabulary of presentation/document content blocks plus a scaled fixed-canvas slide model and a complete light/dark/gold theme-flip layer for them.",
+  "summary_for_embedding": "A large token-driven stylesheet for a slide/brochure authoring 'Workshop' canvas: a three-column workspace, a fixed 1280x720 transform-scaled slide stage, background motifs, and dozens of reusable '.ws-blk-*' content blocks each with dark/gold theme-flip variants.",
+  "intention_for_embedding": "To style a brand-consistent slide/document builder where every content block renders in the ConceptV design tokens and adapts to light, dark, and gold slide backgrounds on a stable presentation-sized canvas."
+}

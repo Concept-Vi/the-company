@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "system/type-system.html",
+  "model": "opus",
+  "what_it_does": "A specimen page that renders a LIVE projection of window.CV_REGISTRY: it loads the full axis + glyphic + registry script chain, then iterates every registered Type, grouping them by layer (atom/token/block/system/surface/doc) and drawing a card per Type showing its name, kind, provenance, description, classification, value-slots (axis subscriptions / enums), parts, sockets (with accepts/event/multiple annotations), and conditions. It also runs a declarative-acceptance demo, calling R.candidatesForSocket() on the composition-menu's items socket and reporting how many Types match live.",
+  "observations": [
+    "@dsCard comment registers it as the 'Type System' card; viewport 1180x3200 (a tall document)",
+    "Loads a long ordered script chain: colors_and_type.css + motion.css, then axis-core, cv-icons/cv-vi-glyph/cv-shapes, the 9 axis files (color/space/size/motion/texture/depth/fill/form/symbol), cv-meaning, cv-glyphics, then the registry chain conditions → types-core → archetype-catalog → types-seed → glyphic-type → components-type → kinds-type",
+    "Reads from window.CV_REGISTRY only; shows a red 'CV_REGISTRY failed to load' message if absent (loud fail, no fabricated content)",
+    "LAYER_ORDER and LAYER_DESC give human descriptions per layer; sorts within each layer so Types with parts/sockets (full universal components) appear first",
+    "renderType() builds chips for classification (cls), value-slots (ax when bound to an axis, plain/enum otherwise), parts, sockets (sock, or evt with ⚡ for kind:event), and conditions",
+    "acceptsLabel() decodes a socket's accepts spec (classification/layers/families/tags, plus ¬forbid) into a compact label",
+    "Footer reports total Types across layers and, where resolvable, the candidatesForSocket() count for panel.composition-menu's items socket",
+    "Standfirst text references the model file system/glyphic-system.html and frames every interface element as a universal component declaring parts, value-slots, sockets"
+  ],
+  "standouts": [
+    "It is a self-describing live view: the page contains no Type data of its own — it projects whatever CV_REGISTRY holds, so it can never drift from the registry",
+    "The declarative-acceptance demo proves the socket-matching system at render time (candidatesForSocket resolves matching Types with no bespoke code)"
+  ],
+  "conventions": [
+    "Embodies the project's 'interface is a projection of the registries' non-negotiable — UI reads from CV_REGISTRY rather than a parallel list",
+    "Strict script load order (registry must exist before resolution) matches the CLAUDE.md trap about ai-registry/types load order",
+    "Loud-fail on missing registry rather than degrading to a placeholder",
+    "Inline IIFE + token-based CSS (var(--...), color-mix) throughout; no hardcoded palette"
+  ],
+  "concerns": [
+    "Renders type-provided strings (name, description, value-slot values) directly into innerHTML without escaping; safe only because the registry is trusted/internal data"
+  ],
+  "notes": "A live, self-describing catalogue page that projects window.CV_REGISTRY into per-layer cards of Types with their parts/value-slots/sockets, and demos declarative socket acceptance.",
+  "questions": [
+    "What is the full set of Types and layers CV_REGISTRY actually holds at runtime (depends on the seeded registry, not visible in this file)?",
+    "What does R.candidatesForSocket() use as its matching algorithm (classification/layers/families/tags/forbid) — defined in types-core.js, referenced here?"
+  ],
+  "purpose_vs_actual": "Matches: the @dsCard subtitle promises 'a live projection of window.CV_REGISTRY: every universal component ... with its parts, value-slots and sockets,' which is exactly what the script renders.",
+  "apparent_themes": [
+    "Interface as a projection of the registry (no parallel data)",
+    "Universal component grammar: everything = parts + value-slots + sockets",
+    "Declarative acceptance / typed sockets over bespoke wiring",
+    "Self-description that cannot drift from its source"
+  ],
+  "intention_signals": "It tries to demonstrate and document the single type registry by rendering it directly — proving the 'one grammar, total coverage' claim and the declarative socket-acceptance mechanism, so the catalogue is the registry seen, not a maintained copy.",
+  "novelty": "Treating a documentation/specimen page as a pure runtime projection of the type registry, including a live socket-candidate resolution demo rather than static prose.",
+  "contribution": "Contributes the live-projection rendering of the type registry (per-layer cards exposing parts/value-slots/sockets/conditions and the candidatesForSocket demo) — a view a fused system would keep to make its component grammar self-documenting.",
+  "summary_for_embedding": "Self-contained specimen HTML that projects window.CV_REGISTRY live into per-layer cards showing each Type's parts, value-slots (axis subscriptions), sockets, and conditions, with a candidatesForSocket declarative-acceptance demo.",
+  "intention_for_embedding": "To document the ConceptV type system by rendering the registry itself — proving one universal-component grammar and declarative socket acceptance with no static copy to drift."
+}

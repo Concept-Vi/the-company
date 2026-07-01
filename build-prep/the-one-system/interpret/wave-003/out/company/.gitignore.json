@@ -1,0 +1,39 @@
+{
+  "project": "company",
+  "path": ".gitignore",
+  "model": "opus",
+  "what_it_does": "Git ignore rules for the company repo: excludes virtualenvs, Python caches, node_modules, build/runtime store data, secrets and TLS credentials, Obsidian per-user workspace/cache state, CLI telemetry, and the-one-system regenerable scratch directories.",
+  "observations": [
+    "Multiple distinct venv dirs ignored: .venv/, .litellm-venv/, .voice-venv/.",
+    "Runtime store data ignored: store-data/, .data/ ('written by the live system, never code'), .build/.",
+    "Secrets ignored with inline NEVER-commit comments: .secrets, .boundary.env/*.boundary.env, and Tailscale Funnel TLS cert+key by both glob (*.ts.net.key/.crt) and exact filename (workstation001.tail777bc2.ts.net.key/.crt).",
+    "Obsidian section tracks shared settings but ignores workspace.json, workspace-mobile.json, cache, graph.json.",
+    "Local throwaway test creds ignored: .cd-drive.sh/.env, .cd-history.sh (with globbed variants).",
+    "the-one-system scratch ignored as 'regenerable; not source': build-prep/the-one-system/discovery/ and fusion-scope/.",
+    "A specific stray root debug log mcp_registration_debug.log and ops/cli/telemetry.jsonl are ignored as generated runtime data.",
+    "Root-anchored /recollection/ and /.recollection/ ignored."
+  ],
+  "standouts": [
+    "Secrets and live TLS private keys are ignored both by glob AND by exact hostname filename (workstation001.tail777bc2.ts.net), with explicit 'live EC private key, NEVER commit' comments.",
+    "Comments encode rationale (e.g. '.data/ — written by the live system, never code') turning the ignore file into documentation."
+  ],
+  "conventions": [
+    "Follows repo law that runtime store data lives separate from code and is never committed.",
+    "Heavily commented to explain WHY each group is ignored — consistent with the repo's self-describing discipline.",
+    "Mixes glob patterns with exact filenames for defense-in-depth on secrets."
+  ],
+  "concerns": [
+    "An exact-hostname TLS filename hardcoded here will not protect a cert/key for a different host; relies on the glob to catch others."
+  ],
+  "notes": "Git ignore file whose comments double as documentation of which artifacts are runtime/secret/regenerable and why none of them belong in git.",
+  "questions": [
+    "Is the build-prep/the-one-system/discovery and fusion-scope scratch truly regenerable from committed inputs?"
+  ],
+  "purpose_vs_actual": "n/a (config); the explanatory comments match the patterns they annotate.",
+  "apparent_themes": ["secrets never in git", "runtime/store separated from code", "regenerable scratch excluded", "self-documenting config"],
+  "intention_signals": "Keep the repo as pure source: exclude all secrets, live TLS material, per-user Obsidian state, venvs, and machine-regenerable runtime/scratch, while documenting the reasoning inline.",
+  "novelty": "The inline rationale comments and exact-hostname TLS key entries make the ignore file self-describing about the repo's secret and runtime boundaries.",
+  "contribution": "Contributes the concrete exclusion boundary between committed source and runtime/secret/scratch artifacts, with annotated rationale.",
+  "summary_for_embedding": "A heavily-commented .gitignore for the company repo excluding venvs, runtime store data, secrets, live TLS keys, Obsidian state, and regenerable the-one-system scratch.",
+  "intention_for_embedding": "To keep secrets, live credentials, runtime data, and regenerable scratch out of git while documenting why each is excluded."
+}

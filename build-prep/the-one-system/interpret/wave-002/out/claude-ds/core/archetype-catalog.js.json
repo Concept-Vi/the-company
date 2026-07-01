@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "core/archetype-catalog.js",
+  "model": "opus",
+  "what_it_does": "Single-source catalogue of deck-slide ARCHETYPES for the CV_REGISTRY. Defines a META map (per-archetype name/icon/desc) and a SAMPLES map (representative ConceptV sample content per archetype), then derives `seeds` — one CV_REGISTRY Type per archetype (id 'surface.deck-slide.<key>', layer 'surface', family 'deck-slide', runtime {kind:'core-archetype', key}, defaults from SAMPLES). Exposes via window globals and module.exports.",
+  "observations": [
+    "IIFE module; plain JS with no compile/imports so it can load without the bundle",
+    "~30 archetypes defined: cover, split, statement, compare, modes, triptych, metric-band, checklist, timeline, profile, terms, gallery, closing, stepper, diagram, plus capital-raise additions (product-cover, product-closing, photo-divider, logo-wall, team, dashboard, reasons, orbital, stacked, spectrum, manifold, fidelity)",
+    "Header comment states this replaced three duplicate archetype lists (app stubs, WS_LAYOUTS, core/Slide)",
+    "Schema lives here; RENDERER for each archetype is a builder in core/Slide.jsx keyed by the same `key` (Type-vs-runtime separation, explicitly compared to block.* Type vs WS_BLOCKS[k].render)",
+    "SAMPLES contains real ConceptV business content: actual names (Tim Geldard CEO, Michael Baggott CTO, Jackie Nishimura CPO, Grant Plummer CSO), real metrics ($1.5M+ IP, 41,500+ users, 70+ hubs), contact details, fundraising figures ($800k committed, $1M round, $5.5M pre-money)",
+    "seeds tag each Type with ['deck','slide','archetype',key] and provenance 'built-in'",
+    "id when an object item lacks id falls back to label (in the diagram graph edge mapping)",
+    "Dual export: window.CV_ARCHETYPE_META / window.CV_ARCHETYPE_CATALOG and module.exports",
+    "Comment asserts the module is 'Token/voice-pure — metadata only, no new design'"
+  ],
+  "standouts": [
+    "Explicitly named as the deduplication fix — collapsing a thrice-duplicated archetype list into one home (the DS prime directive made concrete)",
+    "Carries real, specific ConceptV pitch-deck content (names, financials, contacts) as defaults — making this both a schema registry and a content seed",
+    "Type/runtime split: schema here keyed by `key`, renderer in Slide.jsx keyed by the same `key`"
+  ],
+  "conventions": [
+    "Follows DS 'single source of truth' / 'one catalogue, never a parallel list' rule",
+    "Plain-JS-no-compile + dual window/module export pattern for build-free loading",
+    "Mirrors the WS_BLOCKS pattern (defaults double as preview seed; Type vs render keyed by same key)"
+  ],
+  "concerns": [
+    "Real personal contact details and financial figures (phone, email, valuations, exit multiples like '91×') are embedded as sample defaults — sensitive business data living in a code catalogue"
+  ],
+  "notes": "The one home for ~30 deck-slide archetype Types — schema + icon + real ConceptV sample content — that seeds CV_REGISTRY; renderers live keyed by the same key in Slide.jsx.",
+  "questions": [
+    "Are the embedded financials/contacts intended to ship as defaults, or only as design-time preview placeholders?",
+    "What guarantees every META key has a matching builder in Slide.jsx (the comment says add one entry + one builder, but nothing here enforces it)?"
+  ],
+  "purpose_vs_actual": "Matches — stated as the single archetype catalogue that both halves read; the code derives exactly that set of registry seeds.",
+  "apparent_themes": [
+    "single source of truth / deduplication",
+    "schema vs renderer separation keyed by a shared id",
+    "registry seeding",
+    "real-content-as-defaults",
+    "build-free portability"
+  ],
+  "intention_signals": "Trying to eliminate a thrice-duplicated archetype list by establishing one canonical catalogue that both the bundle renderer and the app registry read, with representative content so each archetype previews meaningfully.",
+  "novelty": "An archetype catalogue whose `defaults` are the company's actual pitch-deck content, doubling the schema registry as a populated preview/content seed.",
+  "contribution": "Contributes the canonical deck-slide archetype vocabulary (~30 named slide types with icons, descriptions, and rich sample content) and the id/runtime-key contract linking each Type to its Slide.jsx builder — the catalogue a fused system would keep as its slide-archetype dictionary.",
+  "summary_for_embedding": "Plain-JS IIFE catalogue defining ~30 deck-slide archetype Types (META + ConceptV sample SAMPLES) seeded into CV_REGISTRY, keyed by `key` to renderers in Slide.jsx.",
+  "intention_for_embedding": "To be the single source of the deck-slide archetype schema and sample content, replacing three duplicate lists read by both the bundle renderer and the app registry."
+}

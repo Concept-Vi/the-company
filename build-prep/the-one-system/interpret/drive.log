@@ -1,0 +1,1050 @@
+[drive] start 02:15:26
+[drive] iter 1: remaining=4023 02:15:32
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-008
+  25/400  ok=25 fail=0 skip=0
+  50/400  ok=50 fail=0 skip=0
+  75/400  ok=75 fail=0 skip=0
+  100/400  ok=100 fail=0 skip=0
+  125/400  ok=125 fail=0 skip=0
+  150/400  ok=150 fail=0 skip=0
+  175/400  ok=175 fail=0 skip=0
+  200/400  ok=200 fail=0 skip=0
+  225/400  ok=225 fail=0 skip=0
+  250/400  ok=250 fail=0 skip=0
+  275/400  ok=275 fail=0 skip=0
+  300/400  ok=300 fail=0 skip=0
+  325/400  ok=325 fail=0 skip=0
+  350/400  ok=350 fail=0 skip=0
+  375/400  ok=375 fail=0 skip=0
+  400/400  ok=400 fail=0 skip=0
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-008",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 400,
+  "ok": 400,
+  "fail": 0,
+  "skip": 0,
+  "fails": []
+}
+[drive] iter 2: remaining=3623 03:24:57
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-009
+  25/720  ok=20 fail=5 skip=0
+  50/720  ok=45 fail=5 skip=0
+  75/720  ok=70 fail=5 skip=0
+  100/720  ok=95 fail=5 skip=0
+[drive] start 05:18:46
+[drive] iter 1: remaining=3522 05:18:48
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-010
+  25/720  ok=25 fail=0 skip=0
+  50/720  ok=50 fail=0 skip=0
+  75/720  ok=75 fail=0 skip=0
+  100/720  ok=100 fail=0 skip=0
+  125/720  ok=125 fail=0 skip=0
+  150/720  ok=150 fail=0 skip=0
+  175/720  ok=175 fail=0 skip=0
+  200/720  ok=200 fail=0 skip=0
+  225/720  ok=225 fail=0 skip=0
+  250/720  ok=250 fail=0 skip=0
+  275/720  ok=275 fail=0 skip=0
+  300/720  ok=300 fail=0 skip=0
+  325/720  ok=325 fail=0 skip=0
+  350/720  ok=350 fail=0 skip=0
+  375/720  ok=375 fail=0 skip=0
+  400/720  ok=400 fail=0 skip=0
+  425/720  ok=425 fail=0 skip=0
+  450/720  ok=450 fail=0 skip=0
+  475/720  ok=475 fail=0 skip=0
+  500/720  ok=500 fail=0 skip=0
+  525/720  ok=525 fail=0 skip=0
+  550/720  ok=550 fail=0 skip=0
+  575/720  ok=575 fail=0 skip=0
+  600/720  ok=600 fail=0 skip=0
+  625/720  ok=625 fail=0 skip=0
+  650/720  ok=650 fail=0 skip=0
+  675/720  ok=675 fail=0 skip=0
+  700/720  ok=700 fail=0 skip=0
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-010",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 720,
+  "ok": 720,
+  "fail": 0,
+  "skip": 0,
+  "fails": []
+}
+[drive] iter 2: remaining=2802 05:46:23
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-011
+  25/676  ok=25 fail=0 skip=0
+  50/676  ok=50 fail=0 skip=0
+  75/676  ok=75 fail=0 skip=0
+  100/676  ok=100 fail=0 skip=0
+  125/676  ok=125 fail=0 skip=0
+  150/676  ok=150 fail=0 skip=0
+  175/676  ok=175 fail=0 skip=0
+  200/676  ok=200 fail=0 skip=0
+  225/676  ok=225 fail=0 skip=0
+  250/676  ok=250 fail=0 skip=0
+  275/676  ok=275 fail=0 skip=0
+  300/676  ok=300 fail=0 skip=0
+  325/676  ok=325 fail=0 skip=0
+  350/676  ok=350 fail=0 skip=0
+  375/676  ok=375 fail=0 skip=0
+  400/676  ok=400 fail=0 skip=0
+  425/676  ok=425 fail=0 skip=0
+  450/676  ok=450 fail=0 skip=0
+  475/676  ok=475 fail=0 skip=0
+  500/676  ok=500 fail=0 skip=0
+  525/676  ok=525 fail=0 skip=0
+  550/676  ok=550 fail=0 skip=0
+  575/676  ok=575 fail=0 skip=0
+  600/676  ok=600 fail=0 skip=0
+  625/676  ok=625 fail=0 skip=0
+  650/676  ok=650 fail=0 skip=0
+  675/676  ok=675 fail=0 skip=0
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-011",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 676,
+  "ok": 676,
+  "fail": 0,
+  "skip": 0,
+  "fails": []
+}
+[drive] iter 3: remaining=2043 06:25:08
+Traceback (most recent call last):
+  File "/home/tim/company/ops/ledger_interpret.py", line 187, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/tim/company/ops/ledger_interpret.py", line 181, in main
+    print(json.dumps(queue(a.wave_bytes, a.wave_files, a.max_batches), indent=2))
+                     ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tim/company/ops/ledger_interpret.py", line 89, in queue
+    existing = [int(os.path.basename(d).split("-")[1]) for d in glob.glob(os.path.join(SCRATCH, "wave-*")) if os.path.isdir(d)]
+                ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: 'codex'
+[drive] no wave queued, stop
+{
+  "claude-ds": {
+    "remaining": 0,
+    "total": 295,
+    "done": 295
+  },
+  "company": {
+    "remaining": 1267,
+    "total": 3461,
+    "done": 2194
+  },
+  "counterpart-design": {
+    "remaining": 775,
+    "total": 859,
+    "done": 84
+  }
+}
+[drive] end 06:25:12
+[drive] start 06:40:35
+[drive] iter 1: remaining=1965 06:40:38
+Traceback (most recent call last):
+  File "/home/tim/company/ops/ledger_interpret.py", line 187, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/tim/company/ops/ledger_interpret.py", line 181, in main
+    print(json.dumps(queue(a.wave_bytes, a.wave_files, a.max_batches), indent=2))
+                     ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tim/company/ops/ledger_interpret.py", line 89, in queue
+    existing = [int(os.path.basename(d).split("-")[1]) for d in glob.glob(os.path.join(SCRATCH, "wave-*")) if os.path.isdir(d)]
+                ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: 'codex'
+[drive] no wave queued, stop
+{
+  "claude-ds": {
+    "remaining": 0,
+    "total": 295,
+    "done": 295
+  },
+  "company": {
+    "remaining": 1267,
+    "total": 3461,
+    "done": 2194
+  },
+  "counterpart-design": {
+    "remaining": 698,
+    "total": 859,
+    "done": 161
+  }
+}
+[drive] end 06:40:42
+[drive] start 11:49:49
+[drive] iter 1: remaining=1624 11:49:54
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-013
+  25/443  ok=25 fail=0 skip=0
+  50/443  ok=50 fail=0 skip=0
+  75/443  ok=75 fail=0 skip=0
+  100/443  ok=100 fail=0 skip=0
+  125/443  ok=125 fail=0 skip=0
+  150/443  ok=150 fail=0 skip=0
+  175/443  ok=175 fail=0 skip=0
+  200/443  ok=200 fail=0 skip=0
+  225/443  ok=224 fail=1 skip=0
+  250/443  ok=249 fail=1 skip=0
+  275/443  ok=274 fail=1 skip=0
+  300/443  ok=299 fail=1 skip=0
+  325/443  ok=324 fail=1 skip=0
+  350/443  ok=349 fail=1 skip=0
+  375/443  ok=374 fail=1 skip=0
+  400/443  ok=399 fail=1 skip=0
+  425/443  ok=424 fail=1 skip=0
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-013",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 443,
+  "ok": 442,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 2: remaining=1066 12:20:07
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-014
+  25/478  ok=24 fail=1 skip=0
+  50/478  ok=49 fail=1 skip=0
+  75/478  ok=74 fail=1 skip=0
+  100/478  ok=99 fail=1 skip=0
+  125/478  ok=124 fail=1 skip=0
+  150/478  ok=149 fail=1 skip=0
+  175/478  ok=174 fail=1 skip=0
+  200/478  ok=199 fail=1 skip=0
+  225/478  ok=224 fail=1 skip=0
+  250/478  ok=249 fail=1 skip=0
+  275/478  ok=273 fail=2 skip=0
+  300/478  ok=298 fail=2 skip=0
+  325/478  ok=323 fail=2 skip=0
+  350/478  ok=348 fail=2 skip=0
+  375/478  ok=373 fail=2 skip=0
+  400/478  ok=398 fail=2 skip=0
+[drive] start 12:50:18
+[drive] iter 1: remaining=644 12:50:25
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-015
+  25/513  ok=24 fail=1 skip=0
+  50/513  ok=49 fail=1 skip=0
+  75/513  ok=74 fail=1 skip=0
+  100/513  ok=99 fail=1 skip=0
+  125/513  ok=124 fail=1 skip=0
+  150/513  ok=148 fail=2 skip=0
+  175/513  ok=173 fail=2 skip=0
+  200/513  ok=198 fail=2 skip=0
+  225/513  ok=223 fail=2 skip=0
+  250/513  ok=248 fail=2 skip=0
+  275/513  ok=273 fail=2 skip=0
+  300/513  ok=298 fail=2 skip=0
+  325/513  ok=323 fail=2 skip=0
+  350/513  ok=348 fail=2 skip=0
+  375/513  ok=372 fail=3 skip=0
+  400/513  ok=397 fail=3 skip=0
+  425/513  ok=422 fail=3 skip=0
+  450/513  ok=447 fail=3 skip=0
+  475/513  ok=472 fail=3 skip=0
+  500/513  ok=497 fail=3 skip=0
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-015",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 513,
+  "ok": 510,
+  "fail": 3,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'",
+    "tests/configs_acceptance.py: bad-json",
+    "voice/ears/__init__.py: bad-json"
+  ]
+}
+[drive] iter 2: remaining=134 13:15:58
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-016
+  25/134  ok=24 fail=1 skip=0
+  50/134  ok=49 fail=1 skip=0
+  75/134  ok=74 fail=1 skip=0
+  100/134  ok=99 fail=1 skip=0
+  125/134  ok=124 fail=1 skip=0
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-016",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 134,
+  "ok": 133,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 3: remaining=1 13:23:29
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-017
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-017",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 4: remaining=1 13:23:37
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-018
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-018",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 5: remaining=1 13:23:45
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-019
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-019",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 6: remaining=1 13:23:53
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-020
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-020",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 7: remaining=1 13:24:01
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-021
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-021",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 8: remaining=1 13:24:09
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-022
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-022",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 9: remaining=1 13:24:18
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-023
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-023",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 10: remaining=1 13:24:26
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-024
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-024",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 11: remaining=1 13:24:35
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-025
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-025",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 12: remaining=1 13:24:45
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-026
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-026",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 13: remaining=1 13:24:53
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-027
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-027",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 14: remaining=1 13:25:02
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-028
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-028",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 15: remaining=1 13:25:10
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-029
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-029",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 16: remaining=1 13:25:19
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-030
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-030",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 17: remaining=1 13:25:29
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-031
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-031",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 18: remaining=1 13:25:38
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-032
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-032",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 19: remaining=1 13:25:47
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-033
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-033",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 20: remaining=1 13:25:55
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-034
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-034",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 21: remaining=1 13:26:04
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-035
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-035",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 22: remaining=1 13:26:13
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-036
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-036",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 23: remaining=1 13:26:22
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-037
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-037",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 24: remaining=1 13:26:31
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-038
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-038",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 25: remaining=1 13:26:41
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-039
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-039",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 26: remaining=1 13:26:50
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-040
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-040",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 27: remaining=1 13:26:59
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-041
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-041",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 28: remaining=1 13:27:08
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-042
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-042",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 29: remaining=1 13:27:18
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-043
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-043",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 30: remaining=1 13:27:27
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-044
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-044",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 31: remaining=1 13:27:37
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-045
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-045",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 32: remaining=1 13:27:47
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-046
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-046",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 33: remaining=1 13:27:57
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-047
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-047",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 34: remaining=1 13:28:07
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-048
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-048",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 35: remaining=1 13:28:16
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-049
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-049",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 36: remaining=1 13:28:26
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-050
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-050",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 37: remaining=1 13:28:36
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-051
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-051",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 38: remaining=1 13:28:46
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-052
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-052",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 39: remaining=1 13:28:56
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-053
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-053",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 40: remaining=1 13:29:06
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-054
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-054",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 41: remaining=1 13:29:16
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-055
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-055",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 42: remaining=1 13:29:27
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-056
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-056",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 43: remaining=1 13:29:37
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-057
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-057",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 44: remaining=1 13:29:48
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-058
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-058",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 45: remaining=1 13:29:58
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-059
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-059",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 46: remaining=1 13:30:09
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-060
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-060",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 47: remaining=1 13:30:20
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-061
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-061",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 48: remaining=1 13:30:31
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-062
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-062",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 49: remaining=1 13:30:41
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-063
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-063",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 50: remaining=1 13:30:52
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-064
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-064",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 51: remaining=1 13:31:03
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-065
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-065",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 52: remaining=1 13:31:14
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-066
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-066",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 53: remaining=1 13:31:25
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-067
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-067",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 54: remaining=1 13:31:36
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-068
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-068",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 55: remaining=1 13:31:47
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-069
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-069",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 56: remaining=1 13:31:58
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-070
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-070",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 57: remaining=1 13:32:09
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-071
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-071",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 58: remaining=1 13:32:20
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-072
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-072",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 59: remaining=1 13:32:32
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-073
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-073",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[drive] iter 60: remaining=1 13:32:43
+[drive] producing /home/tim/company/build-prep/the-one-system/interpret/wave-074
+{
+  "wave": "/home/tim/company/build-prep/the-one-system/interpret/wave-074",
+  "model": "kimi-k2.7-code:cloud",
+  "total": 1,
+  "ok": 0,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+{
+  "claude-ds": {
+    "remaining": 0,
+    "total": 295,
+    "done": 295
+  },
+  "company": {
+    "remaining": 1,
+    "total": 3461,
+    "done": 3460
+  },
+  "counterpart-design": {
+    "remaining": 0,
+    "total": 859,
+    "done": 859
+  }
+}
+[drive] end 13:32:55

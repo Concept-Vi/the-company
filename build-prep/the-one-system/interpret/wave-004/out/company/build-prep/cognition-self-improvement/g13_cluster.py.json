@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/g13_cluster.py",
+  "model": "opus",
+  "what_it_does": "Reads the full mined 'history' projection corpus via the Suite, tallies pattern_tag values and signal fields (tim_correction, my_error, frustration, bug_fix, needs_tim), embeds the distinct pattern tags with the resident bge model, greedily clusters them by cosine similarity above a 0.78 threshold (heaviest tag seeds each cluster), names and weights clusters by recurrence, and writes .build/g13/clusters.json. Returns a summary dict with top-10 clusters.",
+  "observations": [
+    "chdir/sys.path hardcoded to /home/tim/company; lazy imports of runtime.suite, runtime.registry, store.fs_store, fabric.client/transport/config inside main()",
+    "THRESHOLD=0.78 with inline rationale 'conservative (under-merge > over-merge)'",
+    "hand-rolled cosine function cos(a,b) rather than a library",
+    "captures one example per cluster, preferring tags that have a tim_correction or my_error, truncated to 160 chars",
+    "greedy weight-ordered clustering: iterates tags by most_common, joins existing cluster on first match >= threshold",
+    "uses find_corpus(projection='history') and store.get_content(r['cas']) to retrieve mined output records",
+    "output keeps only top 30 clusters in JSON; return value gives top 10 with name/weight/n_tags"
+  ],
+  "standouts": [
+    "explicitly framed in docstring as 'the system's first complete self-study of how-I-work-with-Tim'",
+    "deliberately conservative threshold choice favoring under-merge over over-merge",
+    "the report (G13-PATTERN-REPORT.md) is declared as lead/judgment work, not script work — clear floor/ceiling split"
+  ],
+  "conventions": [
+    "follows a 'THE FLOOR: read + embed + cluster — proposes/reports only' discipline stated in docstring",
+    "node-id-style stage naming (③/G13) in the docstring",
+    "main() returns a structured dict and __main__ prints it as JSON — consistent script harness pattern"
+  ],
+  "concerns": [
+    "hardcoded absolute path /home/tim/company makes it non-portable",
+    "greedy single-seed clustering compares only to the seed vector, not cluster centroid — cluster drift is not accounted for"
+  ],
+  "notes": "A self-analysis clustering script: tallies and embeds mined interaction pattern tags, cosine-clusters them, dumps weighted named groups for a human-written report.",
+  "questions": [
+    "What schema do the mined 'history' projection records use (the output dict shape) and where are they produced?",
+    "Is DEFAULT_EMBED_MODEL the bge model referenced in the docstring as 'embed-bge'?"
+  ],
+  "purpose_vs_actual": "Match — docstring states it reads, embeds, clusters and proposes/reports only, and the code does exactly that, deferring the report to the lead.",
+  "apparent_themes": [
+    "self-study / meta-cognition over interaction history",
+    "floor-vs-ceiling separation (deterministic script vs judgment report)",
+    "conservative-by-design heuristics"
+  ],
+  "intention_signals": "Trying to turn a corpus of mined Tim-agent interaction patterns into a weighted, named taxonomy of recurring failure/correction patterns so the system can study how it works with Tim.",
+  "novelty": "Pattern-tag clustering applied to a system's own mined working-history as deliberate self-study, with an explicit floor/ceiling division of labor between script and report.",
+  "contribution": "Contributes a deterministic embed-then-greedy-cosine-cluster pipeline over mined pattern_tag history, with weighted named clusters and per-cluster example extraction feeding a downstream human report.",
+  "summary_for_embedding": "A Python script that tallies, embeds, and greedily cosine-clusters mined pattern_tags from the history corpus into weighted named failure-pattern groups, written to .build/g13/clusters.json.",
+  "intention_for_embedding": "To perform the system's first complete self-study of recurring patterns in how it works with Tim by clustering mined interaction pattern tags."
+}

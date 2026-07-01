@@ -28,5 +28,10 @@
     "content_type": "text/html",
     "source": "cas://b2:d11f035c771b8770066571fdaa1c66cc",
     "title": "Using skills"
+  },
+  "ui://canvas/colors": {
+    "content_type": "text/html",
+    "source": "cas://b2:d955d08aa2c797c4e991d5c8d6983914",
+    "title": "The ConceptV color system"
   }
 }

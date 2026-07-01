@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/scout-studio-extract.md",
+  "model": "opus",
+  "what_it_does": "A read-only scout report on the studio-extract git worktree/branch. Determines what it is (an abandoned parallel studio build, 6 commits ahead but diverged from main before the concurrent-cognition merge), compares its lineage to operable-interface-build, identifies what it uniquely adds, and recommends DISCARD with five reasons.",
+  "observations": [
+    "Frontmatter: status scout-read-only, date 2026-06-08, worktree /home/tim/company-studio-extract, branch studio-extract.",
+    "Finds the studio surface (Review.tsx, StudioKit.tsx, Composer/Rail/Stage/RhmPanel, vite proxy, bridge.py mockup serving) byte-for-byte identical to operable-interface-build through the first ~80 lines.",
+    "Lineage table: studio-extract is 6 commits ahead of operable-interface-build; operable-interface-build has 3 commits with identical messages but different SHAs (re-downloaded); vs main both diverged (studio-extract 6 ahead, main 1 ahead via mode-dial unify).",
+    "Code diff main..studio-extract is only docs + design mockups + minimal surface wiring — 'zero unique code' beyond operable-interface-build; collision risk none.",
+    "Critical finding: studio-extract is NOT a superset; it forked before the mode-dial unify so its commits (cb471aa..314221d) won't linearly rebase onto current main.",
+    "Unique adds: a 60+ file build-prep documentation bundle (better kept in the canonical vault) and a back-and-forth revert pair (7cf145c dropped /api/mockup-feedback/status, 314221d reverted) flagged as noise.",
+    "Recommendation DISCARD with 5 numbered reasons; keep operable-interface-build as the studio lineage and delete studio-extract."
+  ],
+  "standouts": [
+    "Byte-for-byte identity check (first 80 lines) used as concrete evidence the code is not lost.",
+    "The 'identical messages, different SHAs' finding exposing duplicate re-downloaded commits.",
+    "The revert-of-a-revert on the mockup-feedback status route flagged as undecided-closure noise."
+  ],
+  "conventions": [
+    "Carries proper frontmatter (status/date/worktree/branch), unlike the README and RESEARCH-METHOD in the same dir.",
+    "Uses evidence-classification style (lineage table, diff results, named commit SHAs) consistent with the repo's evidence discipline.",
+    "Routes design-doc value toward the canonical vault per the pack's one-source rule."
+  ],
+  "concerns": [
+    "Makes a destructive recommendation (delete a branch) from a read-only scan — the call depends on git state that can change.",
+    "The 80-line identity sample is a partial check, not a full byte-for-byte diff of every studio file.",
+    "References /mnt/c Windows vault path as the canonical home, which the repo warns against for fsync."
+  ],
+  "notes": "A read-only scout concluding studio-extract is a stale parallel fork with zero unique code beyond operable-interface-build (only docs + a revert-noise pair) and should be discarded, keeping operable-interface-build as the studio lineage.",
+  "questions": [
+    "Has the full studio file set been diffed (not just first 80 lines) to confirm true byte-for-byte identity?",
+    "Was the /api/mockup-feedback/status route decision ever settled on main?",
+    "Was studio-extract actually deleted following this recommendation?"
+  ],
+  "purpose_vs_actual": "Match — it is a scout report and it scouts: identifies the branch, traces lineage, isolates unique adds, and gives a reasoned recommendation, all read-only as stated.",
+  "apparent_themes": [
+    "One-source-of-truth / avoid parallel divergent lineages",
+    "Evidence-grounded git-lineage analysis",
+    "Docs belong in the canonical vault, not committed as code",
+    "Discard stale forks to reduce merge friction"
+  ],
+  "intention_signals": "To decide cleanly whether a parallel studio worktree holds anything worth keeping before it causes merge friction or re-decision — and to prove (not assert) that its code is already safe in another branch.",
+  "novelty": "The 'identical commit messages, different SHAs' duplicate-detection and the pre-mode-dial-unify divergence diagnosis are distinctive git-archaeology findings.",
+  "contribution": "Contributes the git-lineage verdict on studio-extract (stale fork, zero unique code, discard) with its supporting evidence (identity check, SHA-duplicate finding, divergence point, revert-noise) — a reconciliation finding a fused system would keep to avoid re-investigating this branch.",
+  "summary_for_embedding": "A 2026-06-08 read-only scout report finding the studio-extract worktree is a stale parallel fork diverged before the mode-dial unify, with zero unique code beyond operable-interface-build (only docs + revert noise), recommending DISCARD.",
+  "intention_for_embedding": "To determine whether the studio-extract branch holds any unique value before merge and to evidence that its studio code is already preserved elsewhere, so it can be safely discarded."
+}

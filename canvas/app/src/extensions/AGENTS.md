@@ -1,5 +1,6 @@
 ---
 type: constitution
+register: prescriptive
 module: extensions
 aliases: ["extensions — constitution"]
 tags: [company, constitution, extensions, self-mod, generated]

@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/CC-6-priorart-frame.md",
+  "model": "opus",
+  "what_it_does": "A research-finding doc surveying external prior art for the corpus-chain map-reduce-over-a-corpus primitive (hierarchical summarization, NL-to-pipeline compilers, model cascades, declarative LLM-data pipelines), mapping each to its precise delta, then grounding the anchor's section-9 what-ifs in the real repo code, with a central correction that run_swarm is only the MAP half and the REDUCE is the real net-new build.",
+  "observations": [
+    "Companion to CORPUS-CHAIN-ANCHOR.md and sibling of SEM-6; uses OBS/INF/PRIOR-ART/IDEA tags grounded in file:lines (cognition.py, compile.py, activation.py, roles.py, transport.py) and many cited external papers.",
+    "Maps prior art line by line: LangChain map_reduce/refine and RAPTOR (hierarchical summarization), LOTUS and DocETL (declarative LLM-data pipelines), DSPy/LMQL (LLM compiler/structured generation), RAG-vs-full-corpus-map debate, FrugalGPT/RouteLLM cascades, and plan-then-execute agents.",
+    "Central external finding: DocETL's published motivation IS the anchor's section-5 coverage-certainty argument (LLMs skim long inputs so decompose), citing the lost-in-the-middle literature, so that argument is corroborated rather than novel.",
+    "Distinguishes the four claimed novelties: declared-chain-as-typed-object (anticipated by LOTUS/DocETL), coverage-certainty (corroborated not novel), NL-compiler (narrowly novel since DocETL only optimizes a user-authored pipeline and text-to-SQL already does NL-to-query), one-primitive-many-faces (partial).",
+    "Central code correction: run_swarm is fan-out-to-distinct-addresses + barrier + resolve-each-back-individually (cognition.py:585-621), with no cross-unit reduce/join (grep-confirmed); run_jury is N draws of one role (cognition.py:637); the only join is run_role's two-named-input injection rule (cognition.py:127).",
+    "Argues the chain config is well-modeled as a Graph of typed nodes and runtime/compile.py already lowers a Graph to ExecNodes, so what is net-new is the NL-to-Graph step and the reduce/resolve node-types.",
+    "Identifies DocETL's resolve operator as the anchor's missing pairing/dedup pass and recommends stealing it as a distinct node-type.",
+    "Grounds the section-9 what-ifs as built-vs-not: CAS store built but digest-as-first-class-artifact net-new; compiler-is-a-chain recursion sound and bounded; continuous-mode already covered by SEM-6 and the same build as the warm digest; the RHM's answer-gen IS a repo-QA chain face; map half auto-instruments but reduce/compile telemetry is net-new.",
+    "Names the defensible novelty as the composition+context (a resident local concurrent small-model swarm serving multiple faces, output held as a dispositioned substrate feeding an autonomous no-humans push loop, local-first)."
+  ],
+  "standouts": [
+    "The grep-grounded correction that run_swarm is the MAP only and the cross-unit REDUCE (join + decide-next + hierarchical staging) is the unbuilt, valuable half.",
+    "The intellectual-honesty move of crediting DocETL/LOTUS for the coverage-certainty argument and reducing the novelty claims to a precise, small delta.",
+    "The cascade-vs-task-split distinction: the anchor does a task split (cheap=map, smart=reduce, never the same task), a stronger cost claim than a confidence cascade, while SEM-3's confirm-tier IS a cascade so the system has both.",
+    "Coherence framed as the canonical full-recall task where retrieval is provably wrong, giving a grounded (not preference) reason map beats RAG.",
+    "Collapsing the RHM's answer-generation into a repo-QA chain face rather than treating the RHM as a downstream consumer."
+  ],
+  "conventions": [
+    "Follows the repo evidence-tagging discipline and the deliberately-not-re-covering-a-sibling-lane convention (defers to SEM-6).",
+    "Maps each prior-art item to its delta rather than summarizing, and grounds every what-if in real code.",
+    "Provides per-thread source lists and a final expansion-ratio-greater-than-one residue summary."
+  ],
+  "concerns": [
+    "Some cited URLs appear malformed or speculative (e.g. a misspelled langchain readthedocs host and future-dated arXiv ids), so a few external references would need verification."
+  ],
+  "notes": "A prior-art + frame finding: the corpus-chain mechanics are mostly settled prior art (LOTUS/DocETL/RAPTOR), the defensible novelty is the composition+context, and the grep-grounded headline is that run_swarm is the MAP only while the general cross-unit REDUCE is the real net-new build.",
+  "questions": [
+    "Should the corpus-chain be implemented as a node-type family on the existing Graph/compile.py substrate rather than a separate chain object?",
+    "What exactly should a general run_reduce's interface be (read N addresses, stage hierarchically, emit a decide-next directive back into run_swarm)?"
+  ],
+  "purpose_vs_actual": "Match. The doc's stated lane is prior art for the primitive plus the bigger frame and the section-9 what-ifs, and it delivers all three with deltas and code grounding.",
+  "apparent_themes": [
+    "Intellectual honesty about novelty (mechanics are prior art; composition is the contribution)",
+    "Local-first cheap-concurrent compute as the unoccupied design point",
+    "Map is built and shared; reduce is the universal gap",
+    "Task-split versus model-cascade cost arguments",
+    "Full-recall (coherence) versus retrieval (RAG)",
+    "Not-agent-architecture-by-default (declarative bounded plan-then-execute)"
+  ],
+  "intention_signals": "It is trying to situate the corpus-chain honestly against the literature so the team neither over-claims novelty nor misses that half the primitive already exists, and to redirect the build to the genuinely net-new pieces: a general reduce engine, an NL-to-Graph compiler, and reduce/resolve node-types on the existing graph substrate.",
+  "novelty": "The grep-confirmed MAP-only diagnosis of run_swarm with the three named unbuilt reduce constructs, the chain-config-is-a-graph-on-existing-compile.py framing, and the cascade-vs-task-split distinction.",
+  "contribution": "Contributes an external prior-art map with precise per-line deltas (LOTUS/DocETL/RAPTOR/DSPy/cascades/plan-then-execute), the corroboration that coverage-certainty is settled prior art, the grounded run_swarm-is-MAP-only correction with the three unbuilt reduce constructs, the chain-as-graph-on-compile.py framing, the resolve-as-pairing-pass steal, the coherence-as-full-recall argument, and a built-vs-net-new grounding of every section-9 what-if.",
+  "summary_for_embedding": "A prior-art and framing research finding (CC-6) that maps the corpus-chain primitive to settled external work (LOTUS/DocETL/RAPTOR/cascades), corrects the unification claim with grep evidence that run_swarm is the MAP only while a general cross-unit REDUCE is net-new, and grounds the anchor's what-ifs as built-vs-not against the real repo.",
+  "intention_for_embedding": "To situate the corpus-chain honestly against the literature and the existing codebase so novelty is claimed precisely and the build targets the genuinely net-new reduce engine, NL-to-Graph compiler, and reduce/resolve node-types."
+}

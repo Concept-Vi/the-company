@@ -1,0 +1,38 @@
+{
+  "project": "company",
+  "path": "ai_tics/AGENTS.md",
+  "model": "opus",
+  "what_it_does": "Module constitution (prescriptive folder-note) for ai_tics/ — the file-discovered AI-TIC registry. Defines an AI-tic as a catalogued generic-AI fingerprint, specifies the per-file declaration schema (a module-level AI_TIC dict over {id, markers, label, desc}), lists the seven seeded live tics, and states the rules: each tic is one self-registering file, reads only (never resolve), update this file when adding one.",
+  "observations": [
+    "Frontmatter: type constitution, register prescriptive, module ai_tics, governs [P1, M4], status living",
+    "Defines the schema: id MUST equal file stem; markers a non-empty list of non-empty strings; label/desc optional; malformed entry fails loud at discovery",
+    "Lists 7 seeded tics: framework_imposition, versioning, false_finality, silent_fallback, agent_arch, closure_form, mvp — each tied to a NAMED Tim frustration",
+    "States the M4 fingerprint pass matches coined-vocab projection against this registry to produce ai-fingerprint marks with direction 'subtract'",
+    "Asserts the catalogue is directory-discovered (add-a-row = a FILE), explicitly NOT a python AI_TICS = {...} dict (cites PART 4.3)",
+    "Names the seam: discovered by runtime/ai_tics.py:AiTicRegistry, mirroring ProjectionRegistry/RoleRegistry/NodeRegistry; consumers all_markers() and as_records() are pure reads",
+    "Flags create_ai_tic authoring + the fingerprint mark-pass wiring as a SEPARATE coordinated seam, not built in this lane",
+    "tests/ai_tics_acceptance.py asserts each live tic is reflected here"
+  ],
+  "standouts": [
+    "The denoising inversion: generic+recurring = a tic to SUBTRACT; idiosyncratic+recurring = gold — denoising as surfacing in the opposite direction",
+    "AI-tics are seeded from Tim's own NAMED frustrations (no-versioning, verify-before-claiming, no-silent-failures, open-future-writing, no-MVP)",
+    "Explicit 'registry like anything else' mirroring of roles/skills/projections/node-types — add-a-file, no-code-edit discipline"
+  ],
+  "conventions": [
+    "Follows the vault folder-note constitution pattern (frontmatter + Is/Why/Guarantees/Seam/Never/Relates-to/Read-next sections)",
+    "Open-vocabulary typed relations (governs, relates-to) and alias-based links",
+    "Enforces the file-per-entry self-registering registry pattern shared across the repo"
+  ],
+  "concerns": [],
+  "notes": "The governing spec for the AI-tic fingerprint registry — a file-per-tic catalogue of generic-AI tells to subtract during cognition, seeded from Tim's named frustrations.",
+  "questions": [
+    "Is the create_ai_tic authoring path and the M4 fingerprint mark-pass wiring actually built yet, or still the flagged unbuilt seam?"
+  ],
+  "purpose_vs_actual": "n/a (this file IS the prescriptive spec; it states intent rather than implements)",
+  "apparent_themes": ["registry-is-truth", "add-a-file not edit-code", "denoising as subtraction", "fail-loud", "reads stay reads (the floor)", "naming frustrations into a catalogue"],
+  "intention_signals": "To make the AI-tic catalogue an extensible, directory-discovered registry mirroring every other registry in the repo, so the cognition fingerprint pass can subtract generic-AI tells while idiosyncratic recurrence is preserved as signal.",
+  "novelty": "Framing recurring generic-AI writing patterns as a denoising-by-subtraction catalogue, with direction-aware marks and Tim's frustrations as seed data, is a distinctive cognition-engine concept.",
+  "contribution": "Contributes the full prescriptive contract for the ai_tics registry: tic definition, schema, the seven seeded tics, the subtract-direction fingerprint semantics, and the read-only floor.",
+  "summary_for_embedding": "Module constitution for the file-discovered ai_tics registry of generic-AI fingerprint tells, defining the AI_TIC declaration schema, seven seeded tics, and the M4 subtract-direction fingerprint pass.",
+  "intention_for_embedding": "To govern an extensible add-a-file registry of generic-AI tells the cognition engine subtracts, seeded from Tim's named frustrations."
+}

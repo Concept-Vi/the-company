@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Elevation / shadows" subtitle="Nine-tier warm-bronze elevation scale" viewport="700x220" --><html><head><meta charset="utf-8"><title>Elevation</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card {
+    padding: 30px 32px 32px;
+    min-height: 220px;
+    background: var(--bg-canvas);
+  }
+  .lead {
+    font: 400 12.5px/1.55 var(--font-body);
+    color: var(--fg-secondary);
+    margin: 0 0 8px;
+    max-width: 70ch;
+  }
+  .lead b { color: var(--fg-primary); font-weight: 600; }
+  .lede-row {
+    display: flex; gap: 32px; align-items: baseline;
+    margin-bottom: 26px;
+  }
+  .lede-row .tag {
+    font: 600 10px/1 var(--font-body);
+    color: var(--accent-bronze);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+
+  /* ===== Luxury shadow tokens — layered, warm, never harsh =====
+     Each tier mixes a hairline contact shadow with one or two
+     larger warm-bronze ambient passes. Inset top-light gives the
+     surface a paper-thin highlight you read before you see it. */
+  :root {
+    --lux-hairline: inset 0 1px 0 rgba(255, 253, 245, 0.85),
+                    inset 0 -1px 0 rgba(165, 144, 10, 0.04);
+
+    --lux-0: var(--lux-hairline),
+             0 1px 0 rgba(31, 26, 18, 0.025);
+
+    --lux-xs: var(--lux-hairline),
+              0 1px 1px rgba(31, 26, 18, 0.035),
+              0 2px 4px rgba(152, 128, 88, 0.04);
+
+    --lux-sm: var(--lux-hairline),
+              0 1px 2px rgba(31, 26, 18, 0.04),
+              0 3px 8px rgba(152, 128, 88, 0.06);
+
+    --lux-md: var(--lux-hairline),
+              0 1px 2px rgba(31, 26, 18, 0.045),
+              0 6px 14px rgba(152, 128, 88, 0.08),
+              0 14px 28px rgba(31, 26, 18, 0.035);
+
+    --lux-lg: var(--lux-hairline),
+              0 2px 4px rgba(31, 26, 18, 0.05),
+              0 10px 22px rgba(152, 128, 88, 0.10),
+              0 22px 44px rgba(31, 26, 18, 0.06);
+
+    --lux-xl: var(--lux-hairline),
+              0 3px 6px rgba(31, 26, 18, 0.06),
+              0 16px 34px rgba(152, 128, 88, 0.13),
+              0 34px 64px rgba(31, 26, 18, 0.08);
+
+    --lux-pop: var(--lux-hairline),
+               0 2px 4px rgba(31, 26, 18, 0.05),
+               0 8px 18px rgba(152, 128, 88, 0.10),
+               0 18px 36px rgba(31, 26, 18, 0.07);
+
+    --lux-modal: var(--lux-hairline),
+                 0 4px 8px rgba(31, 26, 18, 0.08),
+                 0 24px 48px rgba(152, 128, 88, 0.16),
+                 0 48px 96px rgba(31, 26, 18, 0.14);
+
+    --lux-glow-gold: var(--lux-hairline),
+                     0 1px 2px rgba(31, 26, 18, 0.04),
+                     0 6px 14px rgba(224, 192, 16, 0.18),
+                     0 16px 30px rgba(165, 144, 10, 0.10);
+  }
+
+  /* ===== Grid ===== */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 26px 22px;
+  }
+  .tile {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Each chip floats on a quiet paper plinth so the shadow has room.
+     The plinth carries a hairline grid so you can feel the lift. */
+  .plinth {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--r-lg);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.55), rgba(248,243,225,0.55)),
+      var(--paper);
+    padding: 14px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .plinth::after {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(152,128,88,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(152,128,88,0.05) 1px, transparent 1px);
+    background-size: 12px 12px;
+    background-position: -1px -1px;
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .chip {
+    position: relative;
+    z-index: 1;
+    width: 72%;
+    aspect-ratio: 5 / 3;
+    border-radius: var(--r-md);
+    background: linear-gradient(180deg, #FFFFFF 0%, #FDFBF2 100%);
+  }
+
+  /* tier-specific shadows */
+  .e-0     { box-shadow: var(--lux-0); }
+  .e-xs    { box-shadow: var(--lux-xs); }
+  .e-sm    { box-shadow: var(--lux-sm); }
+  .e-md    { box-shadow: var(--lux-md); }
+  .e-lg    { box-shadow: var(--lux-lg); }
+  .e-xl    { box-shadow: var(--lux-xl); }
+  .e-pop   { box-shadow: var(--lux-pop); }
+  .e-modal { box-shadow: var(--lux-modal); }
+  .e-glow  { box-shadow: var(--lux-glow-gold); }
+
+  .e-glow {
+    background: linear-gradient(180deg, #FBEC8A 0%, #E0C010 100%);
+    border: 1px solid rgba(165, 144, 10, 0.35);
+  }
+
+  /* ===== Label block ===== */
+  .row-meta {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: baseline;
+    column-gap: 10px;
+  }
+  .ord {
+    font: 500 10px/1 var(--font-mono);
+    color: var(--accent-bronze);
+    letter-spacing: .04em;
+  }
+  .name {
+    font: 600 13px/1.1 var(--font-display);
+    color: var(--fg-primary);
+    letter-spacing: -0.005em;
+  }
+  .y {
+    font: 500 10.5px/1 var(--font-mono);
+    color: var(--fg-muted);
+  }
+  .desc {
+    font: 400 11.5px/1.45 var(--font-body);
+    color: var(--fg-secondary);
+    grid-column: 2 / -1;
+    margin-top: 2px;
+    text-wrap: pretty;
+  }
+
+  /* ===== Footer notes ===== */
+  .footnotes {
+    margin-top: 30px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-faint);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    font: 400 11px/1.5 var(--font-body);
+    color: var(--fg-secondary);
+  }
+  .footnotes b {
+    display: block;
+    font: 600 10px/1 var(--font-body);
+    color: var(--fg-muted);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .footnotes code {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--accent-bronze-2);
+  }
+</style></head>
+<body><div class="card">
+  <div class="lede-row">
+    <span class="tag">Elevation</span>
+    <p class="lead">
+      Nine tiers, layered to feel like paper on paper. Every shadow stacks a
+      hairline <b>contact</b>, a warm <b>bronze ambient</b>, and a quiet inset
+      top-light so the surface reads as material — not floating, not glued.
+      Never cool, never harsh.
+    </p>
+  </div>
+
+  <div class="grid">
+
+    <div class="tile">
+      <div class="plinth"><div class="chip e-0"></div></div>
+      <div class="row-meta">
+        <span class="ord">00</span>
+        <span class="name">Resting</span>
+        <span class="y">y 0</span>
+        <span class="desc">Flush surface. Hairline highlight only — for sections and panels that read as the page itself.</span>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="plinth"><div class="chip e-xs"></div></div>
+      <div class="row-meta">
+        <span class="ord">01</span>
+        <span class="name">xs</span>
+        <span class="y">y 1 · 2</span>
+        <span class="desc">List rows, dividers, the lightest pressable. Just enough to suggest a seam.</span>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="plinth"><div class="chip e-sm"></div></div>
+      <div class="row-meta">
+        <span class="ord">02</span>
+        <span class="name">sm</span>
+        <span class="y">y 1 · 3</span>
+        <span class="desc">Chips, badges, secondary buttons at rest. The "leaf on paper" tier.</span>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="plinth"><div class="chip e-md"></div></div>
+      <div class="row-meta">
+        <span class="ord">03</span>
+        <span class="name">md ★</span>
+        <span class="y">y 1 · 6 · 14</span>
+        <span class="desc">The default card. Most surfaces live here — dashboards, content cards, panels.</span>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="plinth"><div class="chip e-lg"></div></div>
+      <div class="row-meta">
+        <span class="ord">04</span>
+        <span class="name">lg</span>
+        <span class="y">y 2 · 10 · 22</span>
+        <span class="desc">Hover &amp; selected states. The lift you feel before you see the cursor land.</span>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="plinth"><div class="chip e-xl"></div></div>
+      <div class="row-meta">
+        <span class="ord">05</span>
+        <span class="name">xl</span>
+        <span class="y">y 3 · 16 · 34</span>
+        <span class="desc">Featured tiles, hero cards, marketing surfaces. Generous depth, still quiet.</span>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="plinth"><div class="chip e-pop"></div></div>
+      <div class="row-meta">
+        <span class="ord">06</span>
+        <span class="name">pop</span>
+        <span class="y">y 2 · 8 · 18</span>
+        <span class="desc">Floating popovers, menus, chat bubbles, the gold comment marker.</span>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="plinth"><div class="chip e-modal"></div></div>
+      <div class="row-meta">
+        <span class="ord">07</span>
+        <span class="name">modal</span>
+        <span class="y">y 4 · 24 · 48</span>
+        <span class="desc">Dialogs, drawers, sheets. The room behind the page — softly cast, never theatrical.</span>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="plinth"><div class="chip e-glow"></div></div>
+      <div class="row-meta">
+        <span class="ord">08</span>
+        <span class="name">gold glow</span>
+        <span class="y">y 6 · 16</span>
+        <span class="desc">Reserved for the primary action and active brand tokens — a warm halo, never a hard ring.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footnotes">
+    <div>
+      <b>Color recipe</b>
+      Contact shadow <code>rgba(31,26,18, .04)</code> over a bronze ambient
+      <code>rgba(152,128,88, .10)</code>. Cool greys are forbidden.
+    </div>
+    <div>
+      <b>Inset top-light</b>
+      Every elevated surface carries <code>inset 0 1px 0 rgba(255,253,245,.85)</code> —
+      the hairline of paper that makes shadow feel earned.
+    </div>
+    <div>
+      <b>Discipline</b>
+      Step one tier at a time on hover. Never combine glow with modal.
+      Never stack <i>md</i> on <i>md</i> — escalate to <i>lg</i>.
+    </div>
+  </div>
+
+</div></body></html>

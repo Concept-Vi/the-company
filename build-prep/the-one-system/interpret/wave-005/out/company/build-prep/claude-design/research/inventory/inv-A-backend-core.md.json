@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/inventory/inv-A-backend-core.md",
+  "model": "opus",
+  "what_it_does": "A fast read-only census of the Company backend-core region (runtime, store, fabric, contracts, plus root markdown and sampled voice/ops/nodes/roles), listing each file's apparent purpose, a deep-read priority marker, and notes drawn from docstrings/headings without logic tracing. Produces a directory tree, per-region file tables, a summary, a top-10 deep-read priority list, and notable observations.",
+  "observations": [
+    "Renders an ASCII directory tree of the whole repo with byte sizes for root docs and one-line purposes for each module file.",
+    "Provides per-region file tables (runtime 13 modules, store 2, fabric 4, contracts 10, root markdown 8) each with appears-to-be / PRIORITY / notes columns.",
+    "Marks suite.py double-star (the heart: scheduler spine, RHM dispatch, voice, self-mod governance) and bridge.py, registry.py, scheduler.py, governance.py, fs_store.py, address.py, node_record.py, node_type.py, bridge_msgs.py, client.py as priority deep-reads.",
+    "Maps contract files to their C-numbers (address.py=C1, node_type.py=C2, node_record.py=C3, resolver.py=C4, bridge_msgs.py=C8, tools.py=C7) and notes ui_info.py carries 77 addressed elements.",
+    "Gives a top-10 deep-read priority list led by suite.py, bridge.py, fs_store.py, address.py, node_record.py.",
+    "Lists notable observations (self-describing repo, cross-process fcntl + RLock + fsync concurrency, schema-additive Pydantic, live governance postures, no hardcoding, first-real-use is its own codebase) and a not-yet-scanned next-pass list."
+  ],
+  "standouts": [
+    "The C-number mapping of contract files anchors the abstract contract specs to concrete source files.",
+    "Identification of suite.py and bridge.py as the two faces meeting at one Suite, and fs_store.py as the durability/concurrency keystone.",
+    "Self-flags scope honestly: docstring/heading-only, no logic trace, canvas/nodes/roles/tests not deep-scanned this pass."
+  ],
+  "conventions": [
+    "Carries frontmatter (type: inventory, region, scope, date) per the vault convention.",
+    "Uses a consistent star-based PRIORITY notation and appears-to-be hedging language appropriate to a no-logic-trace census.",
+    "Explicitly separates scanned from not-yet-scanned regions, matching the repo's coverage-honesty discipline."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the backend-core file map, the fastest way to learn what every runtime/store/fabric/contracts file is and which ten matter most for a deep read.",
+  "questions": [
+    "The note that build-prep vault specs may not be accessible from a WSL agent (Windows-side) raises whether that source was actually reachable for the deep reads.",
+    "Are the file sizes and module list still current, or has the backend grown since 2026-06-08?"
+  ],
+  "purpose_vs_actual": "Match. Stated as a fast read-only structure+purpose census marked for priority deep-read, and it delivers a tree, tables, priorities, and honest scope flags.",
+  "apparent_themes": [
+    "Coverage-priority census (map breadth, defer depth)",
+    "Contracts as the pinned seams of the system (C1-C8 anchored to files)",
+    "The self-describing, registry-driven, schema-additive backend as already-disciplined terrain",
+    "Honest scope-limiting (docstring-only, sampled regions named)"
+  ],
+  "intention_signals": "Trying to give the deeper research layer a complete, honestly-scoped inventory of the backend-core files with priority markers, so the expensive deep-read passes know exactly which files to open and why.",
+  "novelty": "n/a",
+  "contribution": "Contributes the backend-core file-by-file inventory with C-number anchoring and deep-read priorities; a fused system keeps this as the structural index of the runtime/store/fabric/contracts region that points to the files the deep reads characterize.",
+  "summary_for_embedding": "A 2026-06-08 fast read-only census of the Company backend core (runtime/store/fabric/contracts + root docs) with a directory tree, per-file purpose tables, C-number contract anchoring, deep-read priority markers, and a top-10 priority list.",
+  "intention_for_embedding": "To give the deep-read research layer an honestly-scoped inventory of backend-core files with priorities so it knows which files to open and why."
+}

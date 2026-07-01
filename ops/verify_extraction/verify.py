@@ -75,8 +75,11 @@ def main():
             p, n = l.split(chr(9), 1)
             led[p].add(n.split(".")[-1])
 
+    # EXCLUDE files the extractor deliberately did not deep-parse (coverage_state='excluded' — e.g. a
+    # vendored/separate-project subtree). Counting them as "misses" is false — they were never in scope.
     files = [l for l in psql(f"select path from ledger.entry_latest where project='{a.project}' "
-             f"and node_type='file' and ext in ('.py','.js','.jsx','.ts','.tsx')").splitlines() if l]
+             f"and node_type='file' and ext in ('.py','.js','.jsx','.ts','.tsx') "
+             f"and coalesce(coverage_state,'') <> 'excluded'").splitlines() if l]
     on_disk = [f for f in files if os.path.isfile(os.path.join(REPO, f))]
 
     tsmods = find_typescript()

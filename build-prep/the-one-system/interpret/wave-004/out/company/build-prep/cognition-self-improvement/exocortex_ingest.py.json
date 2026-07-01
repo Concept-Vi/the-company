@@ -1,0 +1,54 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/exocortex_ingest.py",
+  "model": "opus",
+  "what_it_does": "A reusable in-process module that ingests repo files (.py/.md) into the embedded, queryable corpus under space='repo' so an agent can later Suite.query_corpus(text, space='repo') instead of cold-reading the codebase. It deterministically walks roots (skipping junk dirs and near-empty files, slicing the first 6000 chars), fans the repo_digest role concurrently over the files via cognition.run_items, then captures+embeds each digest with source_address=code://<path> via Suite.capture_corpus. It is idempotent/resume-safe and exposes an ingest() function plus a __main__ entrypoint.",
+  "observations": [
+    "Docstring states it was adopted from a dead INGEST lane that died on a stream-timeout (G8) and written directly (no-defer).",
+    "REUSE-DON'T-PARALLEL is explicit: no new corpus/embed/index path; pipeline is WALK -> FAN digest -> CAPTURE+EMBED reusing run_items and capture_corpus.",
+    "SKIP_DIRS excludes __pycache__/.git/node_modules/.venv/.data/dist/build; EXTS=(.py,.md); MAX_CHARS=6000 head slice; files <80 chars skipped as noise.",
+    "walk_files sorts dirnames and filenames for stable, resume-stable order and skips undecodable/binary files.",
+    "Digest fan uses cognition.run_items (1 role x N units on the 32-slot swarm); resolved results normalized to an index dict.",
+    "G18 convention cited: content goes in output, source_address is the SHORT retrieval key (code://<path>).",
+    "Per-unit resilience (F2): a skipped/failed digest unit is dropped, not fabricated.",
+    "Idempotency rests on capture_corpus -> put_content being write-once (same digest -> same cas -> no-op overwrite).",
+    "GPU-aware note: bge-m3 must be resident (warm via run_role(op='embed', ensure=True)); co-resides with chat-4b.",
+    "Declares 'The FLOOR: pure run:// computation — no resolve/approve/dispatch.'",
+    "__main__ defaults roots to runtime/store/contracts/mcp_face/fabric/ops/cli/roles and runs session='exocortex-core'."
+  ],
+  "standouts": [
+    "Self-aware provenance: rebuilt directly because the originally-assigned lane crashed on a stream-timeout — a no-defer adoption.",
+    "The deterministic-walk / concurrent-fan / write-once-capture split that makes whole-repo re-runs cheaply incremental.",
+    "G18 discipline: digest in output, short path as the retrieval key, so source_address stays a clean addressable key."
+  ],
+  "conventions": [
+    "Reuse-don't-parallel and the FLOOR (run:// only) laws stated and followed.",
+    "Cites repo gap/convention ids inline (G8, G18, F2) as design rationale.",
+    "Stable sorted walk for resume-safety; write-once content store for idempotency.",
+    "GPU-residency awareness consistent with the repo's co-resident-model discipline."
+  ],
+  "concerns": [
+    "The 6000-char head slice means large files are digested from their head only — a documented tradeoff but could miss tail content.",
+    "list_corpus is called twice in the no-files path and the return path to compute corpus_total — a minor redundant pass over the corpus.",
+    "Hardcodes /home/tim/company on sys.path in __main__, tying the CLI entry to one machine layout."
+  ],
+  "notes": "The reusable repo-exocortex ingest: walk repo files, concurrently digest them with the repo_digest role, and embed each digest into space='repo' so agents can query the codebase rather than read it cold — idempotent and reuse-only.",
+  "questions": [
+    "How does query_corpus consume these digests at retrieval time (top-k, reranking)?",
+    "Is there a cap on how stale a digest can be, given write-once means an edited file won't re-digest unless its content changes the unit?",
+    "What does RepoDigestOut's {digest, kind} look like and how is 'kind' used downstream?"
+  ],
+  "purpose_vs_actual": "Match — it claims to be the reusable repo-exocortex ingest building a queryable code corpus via existing primitives, and the code does exactly walk -> fan-digest -> capture+embed with no new pipeline.",
+  "apparent_themes": [
+    "Ask-the-codebase exocortex (query instead of cold-read)",
+    "Reuse-don't-parallel (no second embed/index path)",
+    "Idempotent, resume-safe, write-once ingestion",
+    "Concurrent role fan-out over a swarm",
+    "FLOOR discipline (pure computation, no governance actions)"
+  ],
+  "intention_signals": "Trying to give agents a queryable digest of the repo built only from existing corpus/embed primitives — turning the codebase into an embedded exocortex so an agent can semantically ask it questions instead of reading files cold, while staying idempotent and GPU-aware.",
+  "novelty": "The deterministic-walk + concurrent-digest-fan + write-once-capture composition specifically as a self-improvement exocortex, recovered no-defer from a crashed lane.",
+  "contribution": "Contributes the reusable repo-ingest module that populates the space='repo' corpus: the file walk policy, the concurrent repo_digest fan via run_items, and the G18-shaped capture_corpus records (code://path key, digest in output) that the drift radar and corpus queries depend on.",
+  "summary_for_embedding": "A reusable Python module that walks repo .py/.md files, concurrently digests them with the repo_digest role, and captures+embeds each digest into the space='repo' corpus for semantic codebase querying, idempotently and GPU-aware.",
+  "intention_for_embedding": "To build a queryable repo exocortex from existing corpus/embed primitives so agents can semantically ask the codebase questions instead of cold-reading files."
+}

@@ -1,0 +1,36 @@
+{
+  "project": "company",
+  "path": "ai_tics/versioning.py",
+  "model": "opus",
+  "what_it_does": "Declares a module-level AI_TIC dict for 'versioning': creating v2/round-N/dated copies instead of updating the canonical file in place. Carries id, label, markers, and description.",
+  "observations": [
+    "Docstring names the rule 'no-versioning: update the SAME file every pass.'",
+    "AI_TIC keys: id ('versioning'), label ('versioning'), markers (9 phrases), desc.",
+    "markers: \"v2\", \"v3\", \"round 2\", \"round-2\", \"-final\", \"_final\", \"version 2\", \"(copy)\", \"revised\".",
+    "Largest marker set in the batch (9 phrases), covering filename-suffix and prose forms.",
+    "References runtime/ai_tics.py and ai_tics/AGENTS.md."
+  ],
+  "standouts": [
+    "Markers mix filename suffixes ('-final', '_final', '(copy)') with prose version labels ('v2', 'round 2')."
+  ],
+  "conventions": [
+    "Same seed-as-data dict shape as sibling ai_tics files.",
+    "label equals id here ('versioning')."
+  ],
+  "concerns": [],
+  "notes": "A seed file defining the 'versioning' tic — flagging v2/copy/-final artifacts that violate update-in-place.",
+  "questions": [
+    "Are the suffix markers matched against filenames, file content, or both?"
+  ],
+  "purpose_vs_actual": "Match — declares the versioning seed tic exactly as described.",
+  "apparent_themes": [
+    "no-versioning / update in place",
+    "single canonical artifact per concept",
+    "subtracting machine-made versioned copies"
+  ],
+  "intention_signals": "Encodes Tim's update-the-same-file rule as detectable markers so versioned/dated copies can be flagged as machine tells.",
+  "novelty": "Cataloguing version-suffix vocabulary itself (including filename forms) as a detectable anti-pattern.",
+  "contribution": "Contributes the 'versioning' tic definition and its v2/copy/-final markers to a fused tic catalogue.",
+  "summary_for_embedding": "A Python seed file defining the 'versioning' AI-tic dict with markers for v2/round-N/copy/-final versioned artifacts.",
+  "intention_for_embedding": "To detect and subtract versioned/dated copies, enforcing update-the-canonical-file-in-place."
+}

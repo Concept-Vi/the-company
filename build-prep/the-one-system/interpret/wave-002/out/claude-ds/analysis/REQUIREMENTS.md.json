@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/REQUIREMENTS.md",
+  "model": "opus",
+  "what_it_does": "A living requirements spec enumerating what the ConceptV design system must achieve, organized into lettered sections (A foundational fidelity, B structure, C parametric axes, D reuse/generation, E motion, F interactivity/deck-to-app bridge, G output surfaces), each requirement coded with a confidence status, derived from the analysis of multiple ingest folders.",
+  "observations": [
+    "Opens with a NORTH STAR: requirements must be expressed as rules/ratios/tokens/parameters so design is computed as f(content, axis-position), never hand-authored per case.",
+    "Uses a confidence legend: green = confirmed across 3+ folders, yellow = confirmed in 2, blue = provisional.",
+    "Section A fixes visual truth: near-white tonal ladder, zoning-as-depth (not semantic), gold-bronze-tan ramp #dad364/#d6bf57/#c09d5d/#b98664, colour-role logic, textures, soft warm depth, and explicit restraint guardrails listing what to REFUSE (pure black, gradients, emoji, etc).",
+    "Section C defines independent composable axes: Surface, Level-of-Detail (4 rungs confirmed), Register/pace, Density, Theme, and the f(content,axis) computation.",
+    "Section D covers templates with typed slots, client-variant as a parameter, invariant skeleton (numbers/diagrams never prune), and a diagram generator with 10 catalogued diagram types.",
+    "Maintains an append log at the bottom tracking which folders established/confirmed which requirements.",
+    "Frontmatter-like header cross-references SYNTHESIS-PLAN.md, AXES.md, SYSTEM-GAPS.md, DIAGRAMS.md."
+  ],
+  "standouts": [
+    "The restraint guardrails (A7) define the system by what it REFUSES, not just what it permits.",
+    "Zoning marks containment DEPTH not semantic category (A2) — a deliberate inversion of common practice.",
+    "Invariance as a node-TYPE property (D3) — numbers/diagrams never prune, prose is LOD-variable."
+  ],
+  "conventions": [
+    "Coded requirement IDs (A1-A7, B1-B5, C1-C6, etc.) for stable cross-reference.",
+    "Status-emoji confidence ladder tied to evidence count (number of folders confirming).",
+    "Append-only growth: each new ingest folder appends or upgrades requirements.",
+    "Pairs explicitly with sibling docs rather than restating their content."
+  ],
+  "concerns": [],
+  "notes": "The binding requirements contract for the design system, where every requirement is a computable rule with an evidence-backed confidence status, and the system is defined as much by its refusals as its capabilities.",
+  "questions": [
+    "What distinguishes Register/pace (C3) from LOD and Density given it is said to drive them together yet stay separable?",
+    "What are the vt-* and vi ingest samples that several requirements cite as evidence?"
+  ],
+  "purpose_vs_actual": "Matches — titled as requirements for what the system must achieve/support and the body is exactly that, with traceable evidence statuses.",
+  "apparent_themes": [
+    "Design as computation over an invariant core",
+    "Parameters over variants, ratios over pixels, rules over layouts",
+    "Single-source / reference-everywhere",
+    "Definition by refusal (restraint guardrails)",
+    "Evidence-graded requirements"
+  ],
+  "intention_signals": "Trying to pin down the design system as a generative engine specified entirely in computable terms, so brand-new never-seen components can be generated and still obey the DNA, and to track confidence in each rule by how many real samples confirm it.",
+  "novelty": "Treating each requirement as a rule that must compute (pushing any one-off-write finding back to a rule) and grading every requirement by cross-folder evidence count.",
+  "contribution": "Contributes the structured, evidence-graded requirement set (visual fidelity rules, the parametric axes, template/generation rules, motion and interactivity requirements, output-surface list) and the refusal guardrails that any fused design system would keep as its spec.",
+  "summary_for_embedding": "A living, evidence-graded requirements spec for the ConceptV design system defining visual fidelity, parametric axes, template/generation rules, motion, interactivity, and output surfaces as computable rules.",
+  "intention_for_embedding": "To specify the design system entirely as computable rules and parameters so on-brand output can be generated for any surface and detail level, with confidence tracked by real-sample evidence."
+}

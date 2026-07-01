@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Axis System" name="Axis System — every visual dimension, typed" subtitle="A live projection of window.CV_AXES: each primary axis (Colour · Space · Size · Motion · Texture · Depth · Fill · Form · Symbol) as a typed hierarchy of values. Tokens are the value-units; everything resolves from here." viewport="1180x2600" -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Axis System</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../tokens/texture.css">
+<link rel="stylesheet" href="../tokens/depth.css">
+<link rel="stylesheet" href="../axes/motion/motion.css">
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--zone-ground, #FCFAF2); color: var(--fg-primary); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .doc { max-width: 1080px; margin: 0 auto; padding: 56px 56px 120px; }
+  .mast { padding-bottom: 26px; border-bottom: 2px solid var(--accent-gold); margin-bottom: 12px; }
+  .kicker { font: 600 11px/1 var(--font-mono); letter-spacing: .22em; text-transform: uppercase; color: var(--accent-bronze); }
+  h1 { margin: 12px 0 10px; font: 800 38px/1.04 var(--font-display); letter-spacing: -0.02em; }
+  .stand { font: 400 15px/1.55 var(--font-body); color: var(--fg-secondary); max-width: 80ch; text-wrap: pretty; }
+  .stand code { font: 500 13px/1 var(--font-mono); color: var(--accent-bronze); }
+
+  .axis { margin-top: 36px; border: 1px solid var(--border-faint); border-radius: 16px; overflow: hidden; background: var(--paper); box-shadow: var(--shadow-card); }
+  .axis > header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 16px 20px; background: color-mix(in srgb, var(--accent-gold) 5%, var(--paper)); border-bottom: 1px solid var(--border-faint); }
+  .axis .id { font: 700 18px/1 var(--font-display); letter-spacing: -0.01em; }
+  .axis .home { font: 500 11px/1 var(--font-mono); color: var(--accent-bronze); }
+  .axis .desc { flex: 1 1 100%; font: 400 12.5px/1.5 var(--font-body); color: var(--fg-secondary); margin: 2px 0 0; }
+  .axis .count { font: 600 10px/1 var(--font-mono); color: var(--fg-muted); letter-spacing: .06em; text-transform: uppercase; }
+
+  .grp { padding: 14px 20px; border-bottom: 1px dashed var(--border-faint); }
+  .grp:last-child { border-bottom: 0; }
+  .grp h4 { margin: 0 0 12px; font: 600 10px/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-muted); }
+  .vals { display: flex; flex-wrap: wrap; gap: 14px; }
+  .val { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 84px; }
+  .swatch { width: 64px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-faint); overflow: hidden; background: var(--paper); }
+  .vlabel { font: 500 10px/1.15 var(--font-mono); color: var(--fg-secondary); text-align: center; word-break: break-word; }
+  .vtoken { font: 400 8.5px/1.1 var(--font-mono); color: var(--fg-muted); text-align: center; }
+  .sym-val { width: 58px; }
+  .sym-val .swatch { width: 48px; height: 48px; }
+  .note { margin-top: 30px; font: 400 12px/1.5 var(--font-body); color: var(--fg-muted); border-top: 1px solid var(--border-faint); padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="doc">
+  <header class="mast" data-screen-label="Axis System masthead">
+    <div class="kicker">ConceptV · Living Projection</div>
+    <h1>The Axis System</h1>
+    <p class="stand">Every primary visual dimension is a first-class <b>Axis</b> in <code>window.CV_AXES</code> — a typed hierarchy of values. This page is a <b>live projection</b> of the registry (the interface reads the system, it is not a parallel list). <b>Tokens are the value-units</b>: each value shows its resolved token where it has one. Everything visual resolves its value through these axes; a component subscribes to a subset. Plan: <code>analysis/AXIS-REFACTOR.md</code> · model: <code>system/glyphic-system.html</code> §08.</p>
+  </header>
+  <div id="axes"></div>
+  <p class="note" id="foot"></p>
+</div>
+
+<script>
+(function () {
+  var AX = window.CV_AXES, S = window.CV_SHAPES, I = window.CV_ICONS;
+  var root = document.getElementById('axes');
+
+  // per-axis preview renderer for a single value
+  function preview(axisId, v) {
+    switch (axisId) {
+      case 'color': {
+        var css = AX.css('color', v.id) || 'transparent';
+        return '<div class="swatch" style="background:' + css + '"></div>';
+      }
+      case 'fill': {
+        var bg = v.id === 'none' ? 'repeating-linear-gradient(45deg,#0000,#0000 5px,color-mix(in srgb,var(--accent-bronze) 12%,transparent) 5px,color-mix(in srgb,var(--accent-bronze) 12%,transparent) 6px)'
+               : v.id === 'wash' ? 'linear-gradient(135deg,var(--accent-gold-50),var(--accent-gold-soft))'
+               : v.id === 'tint' ? 'color-mix(in srgb,var(--accent-gold) 22%,var(--paper))'
+               : 'linear-gradient(135deg,var(--bg-surface),var(--paper) 60%,var(--paper-2))';
+        return '<div class="swatch" style="background:' + bg + '"></div>';
+      }
+      case 'space': {
+        var px = v.meta && v.meta.px || 0;
+        return '<div class="swatch"><div style="width:' + Math.max(2, Math.min(px, 56)) + 'px;height:14px;background:var(--accent-gold);border-radius:2px"></div></div>';
+      }
+      case 'size': {
+        var p = v.meta && v.meta.px || 16; var d = Math.min(p, 44);
+        return '<div class="swatch"><div style="width:' + d + 'px;height:' + d + 'px;border:2px solid var(--accent-gold);border-radius:5px"></div></div>';
+      }
+      case 'depth': {
+        var sh = v.meta ? '0 ' + (v.meta.dy || 0) + 'px ' + (v.meta.blur || 0) + 'px rgba(42,33,26,' + (v.meta.opacity || 0) + ')' : 'var(--shadow-card)';
+        if (v.id === 'flat') sh = 'none';
+        return '<div class="swatch" style="background:transparent;border:0"><div style="width:34px;height:34px;border-radius:7px;background:var(--paper);border:1px solid var(--border-faint);box-shadow:' + sh + '"></div></div>';
+      }
+      case 'motion': {
+        var cls = AX.css('motion', v.id) || '';
+        return '<div class="swatch"><span class="' + cls + '" style="display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--accent-gold)"></span></div>';
+      }
+      case 'texture': {
+        var inner = (S && S.markSVG) ? S.markSVG('square', { size: 44, icon: false, pattern: v.id === 'none' ? null : v.id, flat: true }) : '';
+        return '<div class="swatch" style="border:0;background:transparent">' + inner + '</div>';
+      }
+      case 'form': {
+        var inner2 = (v.meta && v.meta.shape && S && S.markSVG) ? S.markSVG(v.meta.shape, { size: 44, icon: false, flat: true })
+          : (v.id === 'none' ? '<span style="font:600 9px/1 var(--font-mono);color:var(--fg-muted)">∅</span>' : '');
+        return '<div class="swatch" style="border:0;background:transparent">' + inner2 + '</div>';
+      }
+      case 'symbol': {
+        var body = I && I.get ? I.get(v.id) : '';
+        return '<div class="swatch"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="var(--accent-bronze)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + (body || '') + '</svg></div>';
+      }
+      default:
+        return '<div class="swatch"></div>';
+    }
+  }
+
+  AX.all().forEach(function (axis) {
+    var groups = axis.groups();
+    var ids = axis.ids();
+    var sectionEl = document.createElement('section');
+    sectionEl.className = 'axis';
+    sectionEl.setAttribute('data-screen-label', 'Axis: ' + axis.id);
+
+    var homeMap = { color: 'colors_and_type.css', space: 'tokens/sizing.css · --s-*', size: 'tokens/sizing.css · --size-*',
+      motion: 'axes/motion/*', texture: 'tokens/texture.css', depth: 'tokens/depth.css', fill: 'token recipes',
+      form: 'CV_SHAPES.geom', symbol: 'CV_ICONS' };
+
+    var head = '<header><span class="id">' + axis.label + '</span>' +
+      '<span class="home">CV_AXES.resolve(\'' + axis.id + '\') · ' + (homeMap[axis.id] || '') + '</span>' +
+      '<span class="count">' + ids.length + ' values · ' + groups.length + ' groups</span>' +
+      '<p class="desc">' + (axis.description || '') + '</p></header>';
+
+    var body = '';
+    // symbol axis is large — cap the preview per group
+    var cap = axis.id === 'symbol' ? 14 : 999;
+    (groups.length ? groups : [{ id: null, label: 'values' }]).forEach(function (g) {
+      var vals = g.id ? axis.valuesIn(g.id) : axis.values();
+      if (!vals.length) return;
+      var shown = vals.slice(0, cap);
+      var more = vals.length - shown.length;
+      var cells = shown.map(function (v) {
+        var vcls = axis.id === 'symbol' ? 'val sym-val' : 'val';
+        var tok = v.token ? '<span class="vtoken">--' + v.token + '</span>' : (v.zero ? '<span class="vtoken">zero</span>' : '');
+        return '<div class="' + vcls + '">' + preview(axis.id, v) + '<span class="vlabel">' + v.id + '</span>' + tok + '</div>';
+      }).join('');
+      if (more > 0) cells += '<div class="val"><div class="swatch" style="border:0;background:transparent;font:600 11px/1 var(--font-mono);color:var(--fg-muted)">+' + more + '</div></div>';
+      body += '<div class="grp"><h4>' + g.label + '</h4><div class="vals">' + cells + '</div></div>';
+    });
+
+    sectionEl.innerHTML = head + body;
+    root.appendChild(sectionEl);
+  });
+
+  document.getElementById('foot').innerHTML = 'Projected live from <code style="font-family:var(--font-mono)">window.CV_AXES</code> — ' + AX.all().length + ' axes. Add or extend an axis and it appears here automatically; this page writes nothing of its own.';
+})();
+</script>
+</body>
+</html>

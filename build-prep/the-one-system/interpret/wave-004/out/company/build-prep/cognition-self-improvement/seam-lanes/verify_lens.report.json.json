@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/verify_lens.report.json",
+  "model": "opus",
+  "what_it_does": "A build-lane report (machine-readable JSON) recording the construction and verification of the 'verify_lens' role: which files were written, the new role id, an extensive 'how_verified' narrative, build status, needs_tim flag, and a long 'notes' field carrying design decisions and handoff instructions for the next build beat.",
+  "observations": [
+    "lane='verify_lens', files_written=['roles/verify_lens.py'], new_role_ids=['verify_lens'], status='built-verified', needs_tim=''",
+    "how_verified describes RoleRegistry().discover(['roles']) showing the role live (can_fire=True, is_jury=False, op=generate, in 'verification' cast only)",
+    "Verified by-use via run_items over 2 lens-units (correctness + adversarial-disprove) against a mock buggy add() on a resident chat-4b model (~8GB GPU resident)",
+    "Reports two lens verdicts: correctness verdict=fail ('returns a-b not the sum'), adversarial-disprove verdict=fail with breaking_case='add(5,3) returns 2, not 8'",
+    "Claims tests/cognition_governance_acceptance.py = 42/42 PASS and tests/roles_acceptance.py passes all structural checks then fails at exactly line 174 'drift: [verify_lens]' (un-reflected-role drift assertion), described as EXPECTED",
+    "notes carries the unit contract for the next beat: each unit is {lens, change, bar}; insists key is 'change' DELIBERATELY (not COMPOSITIONS example's 'diff')",
+    "Documents that THE TALLY (verdict-tally reduce-rule) is deferred to the next beat in mcp_face's _REDUCE_RULES, not built here to avoid collision",
+    "verdict is Literal['pass','fail','uncertain']; breaking_case defaults to ''; mode_scope={'verification'}; input_addresses stays default ('utterance',)",
+    "Did NOT commit and did NOT edit roles/AGENTS.md (per brief); by-use harness left at /tmp/verify_lens_byuse.py"
+  ],
+  "standouts": [
+    "The verify-by-use trace: a deliberately buggy add() driven through two distinct lenses, each returning a structured {lens,verdict,evidence,breaking_case}",
+    "Explicit warning that the next-beat cascade must pass key 'change' not the doc's 'diff', or it mismatches the prompt",
+    "An expected-red test (roles_acceptance line 174) is documented as a non-defect drift that the next beat's reflection turns green"
+  ],
+  "conventions": [
+    "Follows a lane-report JSON shape (lane, files_written, new_role_ids, how_verified, status, needs_tim, notes)",
+    "Carries cross-beat handoff state inside a free-text notes field rather than structured fields",
+    "Uses the repo's verification-by-use discipline (fire the role, observe verdicts) and exact-acceptance-test counts as evidence"
+  ],
+  "concerns": [],
+  "notes": "A build-lane provenance record for the verify_lens role, heavy on verification narrative and next-beat handoff instructions packed into one notes string.",
+  "questions": [
+    "Where does the next-beat tally reduce-rule actually land, and has roles/AGENTS.md since been reflected to clear the line-174 drift?",
+    "Is the /tmp/verify_lens_byuse.py harness preserved anywhere durable, or was it ephemeral?"
+  ],
+  "purpose_vs_actual": "Matches: it is a verification/handoff report for a build lane and reads exactly as that.",
+  "apparent_themes": [
+    "verification-by-use as the acceptance bar",
+    "cross-lens fan-out as a non-jury verification mechanism",
+    "file-disjoint lane discipline to avoid collisions between concurrent builds",
+    "closed-vocabulary verdicts feeding a downstream deterministic tally"
+  ],
+  "intention_signals": "Recording, with strong evidentiary discipline, that a new verification role was built and proven by firing it against a known-bad change, while explicitly fencing off the parts (tally, AGENTS reflection, commit) belonging to other lanes/beats.",
+  "novelty": "The 'verify_lens' design as a cross-LENS fan (N distinct lenses, one draw each via run_items) deliberately NOT implemented as a draws-jury, with a mode_scope cast beyond the listening cast.",
+  "contribution": "Contributes a verified provenance record and design rationale for a per-lens verification role, including the precise unit contract {lens,change,bar} and the deferred-tally seam that a fused system would keep as the verification-organ's wiring memory.",
+  "summary_for_embedding": "A build-lane JSON report documenting that the verify_lens role was built and verified by-use through two distinct lenses against a known-buggy function, with deferred-tally and next-beat handoff notes.",
+  "intention_for_embedding": "To record evidence-backed completion of the verify_lens verification role and hand the tally/reflection/commit work to the next build beat."
+}

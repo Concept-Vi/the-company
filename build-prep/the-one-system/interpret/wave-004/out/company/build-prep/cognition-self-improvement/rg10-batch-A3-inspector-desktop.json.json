@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-A3-inspector-desktop.json",
+  "model": "opus",
+  "what_it_does": "A grounding/confirmation result for the A3-inspector-desktop.html mockup (the Node Inspector config panel for a process node). Holds 46 candidate dossiers reduced to 27 clusters, each with a ui:// address, capabilities, grounding flag, the what/what-you-can-do/how-to-change triple, a maps_to_feature id, and a 3-draw jury verdict sorting them into confirmed (7) and flagged (20).",
+  "observations": [
+    "ground block describes the Node Inspector as a panel that opens on clicking a process node, exposing model/temperature/max-tokens and a force re-run.",
+    "Counts: n_candidates 46, n_dossiers 46, n_clusters 27 — the largest candidate set in this batch.",
+    "Confirmed: force trigger (NODE-force), process-11 label, node memo card, llm-process node, model-field, inspector/act/force (ENG-force, unanimous), inspector inbox (INB-lanes).",
+    "How-to text cites Inspector.tsx, NodeConfigForm.tsx, contracts/node_type.py, runtime/scheduler.py, and suite.py:available_models as the backing code regions.",
+    "Refcheck fabrications flagged: NODE-status, NODE-act.",
+    "Many config-field dossiers (top_p, max_tokens, base_url, endpoint, retries) are 'built' yet flagged with 0–1 of 3 jury grounding.",
+    "A large 7-member cluster (ui://inspector/ai-model) collapses many AI-model-config detections into one flagged dossier.",
+    "ENG-force how-to explicitly references doRun([nodeId]) and force-past-memo behaviour in runtime/scheduler.py."
+  ],
+  "standouts": [
+    "Concrete code-path citations (doRun([nodeId]) → scheduler, available_models registry, config_schema-driven fields) tie UI fields to real runtime functions.",
+    "The model-enum dossier notes a fallback behavior: a saved model missing from the live list is displayed rather than dropped.",
+    "Force-re-run / bypass-memo is the dominant confirmed capability, appearing across several addresses (inspector/force, inspector/act/force)."
+  ],
+  "conventions": [
+    "Same audit schema as the rest of the batch (ground / counts / confirmed / flagged, howto triple, verdict object).",
+    "ui://inspector/<field> addressing aligned to config-form fields.",
+    "Closed capability + grounding vocabularies."
+  ],
+  "concerns": [
+    "High flag rate (20 of 27 clusters) — many 'built' config fields fail jury grounding, suggesting the descriptions may not be verifiable against the rendered element.",
+    "NODE-status and NODE-act fail refcheck as non-inventory ids despite plausible config semantics.",
+    "Multiple near-duplicate inspector addresses (force, act/force, run-trigger, ai-model, llm-config) describe overlapping re-run/config intents."
+  ],
+  "notes": "The desktop Node-Inspector slice of the UI-grounding audit; rich in config-field elements with explicit code-path citations, but with the batch's highest flag rate and several fabricated feature ids.",
+  "questions": [
+    "Why do so many 'built' config fields receive 0–1 jury grounding — is the jury seeing the field in the rendered mockup at all?",
+    "Should NODE-status / NODE-act be added to the inventory, given the config panel clearly exposes status and act semantics?"
+  ],
+  "purpose_vs_actual": "Matches: an honest grounding audit of the Node Inspector mockup's config controls.",
+  "apparent_themes": [
+    "Node configuration and per-node sampling parameters",
+    "Force re-run / bypass-memo as a first-class action",
+    "Registry-driven model selection with safe fallback",
+    "UI grounding with two-layer adjudication"
+  ],
+  "intention_signals": "Aims to ground the Node Inspector's config surface honestly — confirming code-backed controls (force, model field, inbox) while flagging the many config fields and fabricated feature ids that the jury could not verify.",
+  "novelty": "Explicit runtime function citations (doRun, available_models, config_schema) and the missing-model fallback behavior captured in a UI dossier.",
+  "contribution": "Contributes the inspector-desktop grounding-audit record: the per-field config inventory, the force/memo and registry-fallback semantics, and the confirmed/flagged verdicts a fused system would keep as the node-inspector grounding evidence.",
+  "summary_for_embedding": "A UI-grounding audit result for the A3 desktop Node Inspector mockup, clustering 46 config-field dossiers into 7 confirmed and 20 flagged via refcheck and a 3-draw soft jury.",
+  "intention_for_embedding": "To verify each Node Inspector config control is truthfully grounded in real code and flag unverifiable fields and fabricated feature ids for operator review."
+}

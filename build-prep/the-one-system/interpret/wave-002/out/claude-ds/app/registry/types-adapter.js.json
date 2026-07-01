@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/types-adapter.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that bridges legacy global picker arrays (WIDGET_KINDS, WIDGET_SYSTEMS, WIZARD_KINDS, STEP_KINDS, WS_BLOCKS) to the new CV_REGISTRY. It rebuilds each legacy array from registry queries (mapping Types into the legacy shapes), preserving original built-in entries, re-runs on every registry change and during boot, marks WS_BLOCKS with their type ids, and exposes CV_TYPES_SAVE (promote-instance helpers) and CV_TYPES_PROMPT (the save-as-Type modal channel).",
+  "observations": [
+    "Direction is explicitly registry → legacy: the registry is source of truth, legacy arrays are mirrors.",
+    "Converter helpers (toWidgetKind/toWidgetSystem/toWizardKind/toStepKind) map a Type to each legacy consumer's shape, deriving id from runtime.key or the id tail.",
+    "rebuild() snapshots the original built-ins into window.__LEGACY_* the first time, then merges registry entries (override) with any legacy-only entries (kept, stamped provenance:'built-in').",
+    "toWizardKind infers shape from tags (hexagon/circle/octagon else diamond) and hydrates steps/shape from legacy when registry lacks them.",
+    "WS_BLOCKS renderers are not replaced — each block def is marked with _typeId 'block.<key>' so consumers can show the link.",
+    "Fires a 'cv-registry-rebuild' CustomEvent after each rebuild to notify watching UI.",
+    "Boot uses both a requestAnimationFrame-debounced schedule (on R.subscribe) and a setInterval polling up to 20 attempts to wait for Babel-loaded builders to populate legacy arrays.",
+    "CV_TYPES_SAVE.fromWidget/fromWizard/fromWizardStep/fromBlock all delegate to window.CV_TYPES_VI.promoteInstance with specific intoLayer/intoFamily.",
+    "CV_TYPES_PROMPT.open/subscribe is a tiny pub-sub feeding the SaveAsTypeModal."
+  ],
+  "standouts": [
+    "The whole file exists to keep old code working unchanged while making the registry the single source — user/Vi-authored Types appear in legacy pickers automatically without touching the consumers.",
+    "It snapshots the original built-in arrays into __LEGACY_* so registry merges never lose hand-authored entries — an idempotent rebuild that tolerates being run repeatedly."
+  ],
+  "conventions": [
+    "Upholds registry-as-truth: legacy arrays are derived mirrors, not parallel sources.",
+    "Warns (console.warn) and returns if CV_REGISTRY is missing rather than throwing — softer than the project's loud-fail rule.",
+    "Idempotent merge keyed by id with a 'seen' set, a recurring pattern across all four array rebuilds.",
+    "Defensive boot handling acknowledges the Babel-trickle load order documented in the project charter."
+  ],
+  "concerns": [
+    "The per-rebuild try/catch around subscriber callbacks (in CV_TYPES_PROMPT.open) swallows errors silently (empty catch), which conflicts with the loud-fail rule.",
+    "The setInterval boot can call rebuild() multiple times before the rAF schedule path takes over; harmless given idempotency but it is two overlapping boot mechanisms.",
+    "Relies on window.CV_TYPES_VI existing when CV_TYPES_SAVE methods are called — no guard; will throw at call time if absent."
+  ],
+  "notes": "This adapter keeps the legacy widget/wizard/step/block pickers populated from CV_REGISTRY so existing builders keep working while the registry is the one source of truth.",
+  "questions": [
+    "What defines window.CV_TYPES_VI.promoteInstance and where is it loaded relative to this file?",
+    "Are the legacy arrays (WIDGET_KINDS etc.) consumed by code that re-reads them on the 'cv-registry-rebuild' event, or do some consumers cache the array reference?"
+  ],
+  "purpose_vs_actual": "Match — the header states it bridges legacy global constants to the registry with direction registry→legacy so user/Vi Types appear automatically, and the code implements exactly that plus the save/promote helpers.",
+  "apparent_themes": [
+    "Registry-as-single-source-of-truth with derived mirrors",
+    "Backward-compatibility / non-invasive migration",
+    "Interface as projection of the registry",
+    "Instance → Type promotion"
+  ],
+  "intention_signals": "Trying to migrate a mature app onto one registry without rewriting its consumers — make the new registry authoritative while the old picker arrays keep working as auto-maintained shadows.",
+  "novelty": "The __LEGACY_* snapshot-then-merge strategy that preserves original built-ins across repeated registry-driven rebuilds, plus marking renderer blocks with their type id rather than replacing them.",
+  "contribution": "Contributes the compatibility bridge that maps registry Types into legacy picker shapes and the promote-instance / save-as-Type plumbing (CV_TYPES_SAVE, CV_TYPES_PROMPT) that feed the modal.",
+  "summary_for_embedding": "A bridge module that rebuilds legacy widget/wizard/step/block picker arrays from CV_REGISTRY queries and exposes promote-instance and save-as-Type helpers.",
+  "intention_for_embedding": "To make the new Type registry the single source of truth while keeping legacy pickers and builders working unchanged by auto-mirroring registry Types into them."
+}

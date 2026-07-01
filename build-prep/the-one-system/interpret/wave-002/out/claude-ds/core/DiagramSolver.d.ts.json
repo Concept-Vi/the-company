@@ -1,0 +1,41 @@
+{
+  "project": "claude-ds",
+  "path": "core/DiagramSolver.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration for the DiagramSolver React component: declares DiagramSolverProps (a CVGraph spec plus an optional axis with lod/surface/density) and exports the DiagramSolver function returning JSX.Element, documenting it as the graph solver that computes node positions from relationships per diagram type.",
+  "observations": [
+    "Imports CVGraph from ./cv-nodes — types against the shared node system.",
+    "axis is typed loosely here: surface is a plain string (not the CVNode union), lod and density reuse the literal unions.",
+    "Doc comment lists the supported types: network·hub·morph·pipeline·timeline·quadrant·tree·compare·stack.",
+    "Calls out type:'morph' with state before|after as the animatable network→hub transform that tweens via motion tokens.",
+    "Default export plus named export of DiagramSolver."
+  ],
+  "standouts": [
+    "The list of diagram types in the comment omits 'stepper' and the capital-raise subtypes (orbital/stacked/spectrum/manifold/fidelity) that the .jsx actually implements — the declaration's documented surface is narrower than the implementation."
+  ],
+  "conventions": [
+    "Mirrors the system's pattern of a paired .d.ts + .jsx for each core component.",
+    "References the shared CVGraph type rather than redefining a graph shape (single source).",
+    "JSDoc on the export describes behaviour, consistent with the heavily-documented .d.ts style."
+  ],
+  "concerns": [
+    "axis.surface is typed as string while the sibling cv-nodes.d.ts gives surface a strict union — a looser contract here.",
+    "Documented type list is incomplete relative to the implementation (no stepper/orbital/stacked/spectrum/manifold/fidelity), so the declaration under-describes the component."
+  ],
+  "notes": "The typed front door to the graph solver — accurate on props but its prose type-list trails what the .jsx now handles.",
+  "questions": [
+    "Why is axis.surface a bare string here when cv-nodes.d.ts defines a surface union — intentional looseness or drift?",
+    "Should the declared type list be kept in lockstep with the new subtype views in the .jsx?"
+  ],
+  "purpose_vs_actual": "Mostly matches: it declares the graph solver's props and export as stated, but the descriptive type list lags the implementation's actual supported types.",
+  "apparent_themes": [
+    "typed contract for a core engine component",
+    "position computed from relationships",
+    "single shared graph type"
+  ],
+  "intention_signals": "Trying to give consumers a stable typed handle on the graph solver — its one graph prop and the axis dials — while documenting what relational layouts it can produce.",
+  "novelty": "n/a",
+  "contribution": "Contributes the public type signature of the graph solver (DiagramSolverProps over a CVGraph) that callers and the bridge compile against.",
+  "summary_for_embedding": "TypeScript declaration of the DiagramSolver React component, taking a CVGraph spec and axis dials and rendering a relationally-laid-out diagram.",
+  "intention_for_embedding": "To expose a typed contract for the graph solver that computes node positions from relationships per diagram type."
+}

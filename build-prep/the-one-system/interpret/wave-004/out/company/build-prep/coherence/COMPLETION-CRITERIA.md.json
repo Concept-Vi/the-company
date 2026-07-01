@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/COMPLETION-CRITERIA.md",
+  "model": "opus",
+  "what_it_does": "The completion-criteria / truth-table document for the Coherence build lane (loop-prep doc 1 of 3). It enumerates the lane's required outcomes grouped A–F (structural detectors+gates, shared pre-commit suite, disposition store+finding model, calibration harness, chains-as-actions declaration half, convergence-round lens), each as a checkable line with a current verification state (Verified/Designed/Broken), a verification protocol, a dependency-first priority order, and a whole-lane definition of done.",
+  "observations": [
+    "Defines a three-state honesty system: ✅ Verified (run+confirmed), 🟡 Designed (specced not by-use-verified), 🔴 Broken — and forbids ✅ from code-reading or a green label alone",
+    "Verification is 'by USE, never code-reading' plus an adversarial re-check that tries to DISPROVE done",
+    "Group A lines are mostly ✅ Verified with commit hashes cited (2707b79, 71f8e8e) and concrete numbers (116 routes, 79 wired, 37 catalogued, 0 new; 114 green suites, 4 dep-skips; 16==16 node-types)",
+    "Groups C/D/E are almost entirely 🟡 Designed (net-new substrate not yet built)",
+    "Explicitly scopes the lane: builds detectors/gates/disposition-store/calibration/pre-commit-suite/build_coherence_info; does NOT build the engine (cognition's) or the FE (guided-review's); detectors READ never mutate",
+    "Marks co-design seams explicitly (E3 runner is cognition's; chains-as-actions is shared)",
+    "Names the laws that bind every line: registry-is-truth/no-hardcoding, additive, fail-loud, reflects-never-owns, own/reflect, positive-only, operator-only floor",
+    "E5 is the gated end-state: actions that compose+run across models AND embeddings, swappable per config",
+    "Includes an engine-independence note: A→B→C→D buildable without cognition's engine"
+  ],
+  "standouts": [
+    "The 'by USE + adversarial disprove' verification protocol with three explicit honesty states and a no-green-paint rule",
+    "Group D's calibration harness built from the system's OWN named incidents as a labelled eval set (/status, mode-dial-twice, /api/knobs, the 3 false-wires + deliberate true-negatives)",
+    "The explicit READ-not-mutate scoping and co-design seam marking (E3 runner is not mine to build)"
+  ],
+  "conventions": [
+    "Follows the loop-prep skill's triad structure (this is doc 1 of 3, references IMPLEMENTATION-GUIDE.md as doc 2 and the research synthesis as doc 3)",
+    "Uses the repo's three-state honesty + commit-hash evidence convention and CLAUDE.md's verification-before-completion / no-green-paint discipline",
+    "Cites the no-hardcoding rule by path (~/.vi/rules/no-hardcoding.md) and references WORK-SPLIT.md / WORK-SPLIT § PROTOCOL"
+  ],
+  "concerns": [
+    "Several lines carry both a leading ✅ marker in the heading (e.g. 'A7 (✅)', 'C1 (✅)') and a trailing 'FUNCTION: 🟡 Designed' — the dual markers could be read as conflicting if skimmed"
+  ],
+  "notes": "The buildable truth-table for the coherence lane — what must be TRUE, current state per line, verified by use not reading, with the engine/FE/runner explicitly out of scope.",
+  "questions": [
+    "What does the '(✅)' in headings like 'C1 (✅)' denote versus the trailing 'FUNCTION: 🟡 Designed'?",
+    "Has guided-review actually handed over the FORM-lint (B2) referenced as pending?",
+    "Where is IMPLEMENTATION-GUIDE.md (doc 2) — is it built alongside this?"
+  ],
+  "purpose_vs_actual": "Match — it is the completion-criteria truth-table it claims to be, with verification protocol, grouped checkable lines, priority order, and definition of done.",
+  "apparent_themes": [
+    "verification by use over code-reading (no green-paint)",
+    "honest current-state tracking (Verified/Designed/Broken)",
+    "scope discipline and explicit co-design seams (read-not-mutate, runner is cognition's)",
+    "registry-is-truth / own-reflect / positive-only laws binding every criterion",
+    "experiment→calibrate→save as the trust-making loop"
+  ],
+  "intention_signals": "Trying to give an autonomous build loop an unambiguous, dependency-ordered, by-use-verifiable target for the coherence lane while keeping strict scope boundaries against the cognition and guided-review lanes.",
+  "novelty": "The calibration harness keyed to the system's own documented self-inflicted incidents as the labelled eval set — using real past failures as ground truth for detector precision/recall.",
+  "contribution": "Contributes the lane's complete acceptance surface: the grouped criteria A–F, the three-state by-use verification protocol, the named real-incident eval set, the scope/co-design seam map, and the dependency-first priority order — the buildable contract a fused system would keep for verifying coherence machinery.",
+  "summary_for_embedding": "A loop-prep completion-criteria truth-table for the Coherence build lane, enumerating grouped criteria (detectors/gates, pre-commit suite, disposition store, calibration harness, chains-as-actions, convergence lens) with by-use three-state verification, real-incident eval set, scope boundaries, and dependency-first priority.",
+  "intention_for_embedding": "To define exactly what must be true and verified-by-use for the coherence lane to be done, so an autonomous build loop can build against it without scope creep or green-paint."
+}

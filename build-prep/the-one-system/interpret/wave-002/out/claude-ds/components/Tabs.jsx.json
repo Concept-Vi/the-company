@@ -1,0 +1,44 @@
+{
+  "project": "claude-ds",
+  "path": "components/Tabs.jsx",
+  "model": "opus",
+  "what_it_does": "React implementation of the Tabs component. Renders a div with role='tablist' containing a button (role='tab') per item, applying .cv-tabs/.cv-tab token classes. Resolves each item's id/label from either a string or {id,label} object, marks one tab active, and wires onClick to onChange(id, e).",
+  "observations": [
+    "Uses React.createElement aliased as h (no JSX syntax despite the .jsx extension)",
+    "Relies on a global React (/* global React */ comment, no import)",
+    "id resolution: object → it.id ?? it.label, otherwise the string itself; label resolution mirrors this",
+    "Active logic: if value is provided, active = (value === id); otherwise the FIRST item (i === 0) is active by default",
+    "onClick is only attached when onChange is provided (undefined otherwise)",
+    "Accessibility: role=tablist/tab and aria-selected are set",
+    "key uses the resolved id",
+    "Passes through ...rest props onto the wrapper div and merges className with 'cv-tabs'"
+  ],
+  "standouts": [
+    "Default-active-first-tab fallback (i === 0) when uncontrolled — visual selection without state",
+    "Styling delegated entirely to .cv-tabs/.cv-tab classes, keeping the component logic-only (token-class wrapper)"
+  ],
+  "conventions": [
+    "Follows the design system's 'token-class wrapper' convention — no literals, styling via cv- classes",
+    "Uses h = React.createElement instead of JSX, a pattern allowing the file to run without a build/transpile step",
+    "Controlled/uncontrolled duality via value/onChange"
+  ],
+  "concerns": [
+    "Uncontrolled mode only ever highlights the first tab visually (i===0); clicking other tabs fires onChange but the component itself never re-renders selection without external state"
+  ],
+  "notes": "Logic-only data-driven tab bar: maps items to role=tab buttons, styling via cv- classes, controlled by value/onChange with first-tab-active fallback.",
+  "questions": [
+    "Is the uncontrolled (no value) mode intended only as a static render, given it can't track clicks itself?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment ('data-driven tab bar, token-class wrapper, controlled via value+onChange') accurately describes the implementation.",
+  "apparent_themes": [
+    "styling via tokens/classes not literals",
+    "build-free React (createElement, global React)",
+    "accessibility by default",
+    "controlled-component pattern"
+  ],
+  "intention_signals": "Trying to provide a minimal, styling-free tab primitive whose look comes entirely from design-system classes, runnable without a transpiler, and driven by data.",
+  "novelty": "Build-free .jsx using React.createElement with a global React rather than imports/JSX.",
+  "contribution": "Contributes the runtime behavior for the Tabs primitive — item normalization (string|object), aria-tab semantics, and the value/onChange controlled wiring that a fused system would keep.",
+  "summary_for_embedding": "React Tabs component built with React.createElement that maps string-or-object items to role=tab buttons styled by cv- classes, controlled via value/onChange.",
+  "intention_for_embedding": "To provide a styling-free, build-free, data-driven, accessible tab bar primitive for the design system."
+}

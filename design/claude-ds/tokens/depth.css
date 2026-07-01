@@ -1,0 +1,74 @@
+/* ============================================================
+   ConceptV · DEPTH — ELEVATION & TEXTURE
+   ------------------------------------------------------------
+   Adds the "more depth and texture" dimension the brief asks for,
+   as a tokenised ramp rather than ad-hoc box-shadows. Shadows are
+   warm-tinted (not neutral grey) to sit inside the parchment world,
+   and built from a soft ambient + a tighter key layer so cards read
+   as lightly stacked sheets, not heavy boxes.
+
+   Aesthetic values (tint, grain colour) are placeholders the visual
+   DNA will refine; the RAMP and roles are the durable part.
+   ============================================================ */
+:root {
+  /* shadow tint — warm, derived so palette swaps carry through */
+  --shadow-hue: 30 24% 18%; /* @kind other */
+  --shadow-c:  hsl(28 25% 16% / 1);    /* base colour for mixing   */
+
+  /* ---- Elevation ramp e0–e5 -------------------------------- *
+     e0 flush · e1 raised card · e2 hover · e3 popover/menu ·
+     e4 modal · e5 dragged/floating. Each = ambient + key. */
+  --elev-0: none;
+  --elev-1:
+    0 1px 2px   color-mix(in srgb, var(--shadow-c) 8%,  transparent),
+    0 1px 1px   color-mix(in srgb, var(--shadow-c) 6%,  transparent);
+  --elev-2:
+    0 2px 6px   color-mix(in srgb, var(--shadow-c) 10%, transparent),
+    0 1px 2px   color-mix(in srgb, var(--shadow-c) 8%,  transparent);
+  --elev-3:
+    0 8px 20px -6px  color-mix(in srgb, var(--shadow-c) 16%, transparent),
+    0 2px 6px  -2px  color-mix(in srgb, var(--shadow-c) 10%, transparent);
+  --elev-4:
+    0 18px 40px -12px color-mix(in srgb, var(--shadow-c) 22%, transparent),
+    0 4px 10px -4px   color-mix(in srgb, var(--shadow-c) 12%, transparent);
+  --elev-5:
+    0 32px 64px -20px color-mix(in srgb, var(--shadow-c) 28%, transparent),
+    0 8px 18px -8px   color-mix(in srgb, var(--shadow-c) 14%, transparent);
+
+  /* selected / active glow — gold, for the one decision element */
+  --glow-active: 0 0 0 1px var(--vi-edge), 0 6px 22px -8px color-mix(in srgb, var(--accent-gold) 45%, transparent);
+
+  /* inset / pressed */
+  --elev-inset: inset 0 1px 2px color-mix(in srgb, var(--shadow-c) 12%, transparent);
+
+  /* ---- Texture / grain ------------------------------------- *
+     Subtle tooth on the parchment ground. Keep opacity low —
+     felt, not seen. The .grain utility paints an SVG noise layer. */
+  --grain-opacity: 0.05; /* @kind other */
+  --grain-scale:   180px;
+  --hairline:      color-mix(in srgb, var(--shadow-c) 12%, transparent);
+  --hairline-strong: color-mix(in srgb, var(--shadow-c) 22%, transparent);
+}
+
+/* elevation helper classes */
+.e0 { box-shadow: var(--elev-0); }
+.e1 { box-shadow: var(--elev-1); }
+.e2 { box-shadow: var(--elev-2); }
+.e3 { box-shadow: var(--elev-3); }
+.e4 { box-shadow: var(--elev-4); }
+.e5 { box-shadow: var(--elev-5); }
+.glow-active { box-shadow: var(--glow-active); }
+
+/* Grain overlay — drop on any surface that wants tooth. Self-masks
+   to pointer-none so it never blocks interaction. */
+.grain { position: relative; isolation: isolate; }
+.grain::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: var(--grain-scale) var(--grain-scale);
+  mix-blend-mode: multiply;
+}

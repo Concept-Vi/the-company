@@ -1,0 +1,52 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/README.md",
+  "model": "opus",
+  "what_it_does": "The method reference for the analysis folder: it states what the analysis layer is (a place that reconstructs the generative rules behind the source material in ingest/, not a style to copy and not a change to the design system), defines the 6-step per-folder workflow, the 9-level analytical lens, the proposed folder order, and the provisional key findings from the first samples.",
+  "observations": [
+    "Opens with a prominent pointer that a new session should read analysis/HANDOFF.md first as the complete briefing; this README is just the method reference.",
+    "States the folder's role: it is the analysis layer, does NOT change the design system, and reconstructs generative rules so confirmed universals can later be promoted into tokens, primitives, and components.",
+    "States the governing principle: images are evidence of a system, not a style to copy; rules are extracted as ratios and relationships, never fixed pixels, so they recompute at any size.",
+    "Defines a 6-step workflow per folder: Ingest -> Analyse (9-level lens, sample pixels, measure as % of frame) -> Diff (mark confirms/new/generalises/contradicts) -> Log gaps (SYSTEM-GAPS.md) -> Update progress (PROGRESS.md) -> Synthesise only after evidence.",
+    "Tabulates the 9-level lens: 0 Frame, 1 Grid & spatial structure, 2 Tonal zoning, 3 Type, 4 Colour & brand, 5 Atoms, 6 Layout patterns, 7 Sequence & rhythm, 8 Construction, 9 Responsive rules.",
+    "Gives a proposed folder order: start with the cleanest canonical deck for baseline vocabulary, then denser/other-ratio dialects, then web + one-pager families.",
+    "Lists provisional key findings from the first 5 samples: zoning is near-imperceptible warm-white separation (not semantic colour blocks; --zone-* too saturated, to be recalibrated), a faint blueprint ghost, gold as the single accent with a gold->bronze->brown gradient, premium warm photography, thin icons, embedded interactive affordances, and the real surface ratios in play (16:9, 3:2, A4, tall web)."
+  ],
+  "standouts": [
+    "The framing 'the images are evidence of a system, not a style to copy' — the entire method is reverse-engineering generative rules, not imitation.",
+    "Rules extracted as ratios and relationships (never fixed pixels) so they recompute at any screen size and drive both static and interactive output.",
+    "The explicit gate 'Synthesise only after evidence' — promotion into the system is forbidden until multi-sample confirmation.",
+    "The 9-level lens as a fixed analytical grammar applied uniformly to every folder."
+  ],
+  "conventions": [
+    "analysis-is-not-mutation: this layer never edits the design system; it only reconstructs rules.",
+    "ratios-not-pixels: extract relationships that recompute, never fixed values.",
+    "evidence-before-synthesis: confirmed universals only are promoted, and only after the diff/log steps.",
+    "evidence-diff discipline: every rule marked confirms / new / generalises / contradicts.",
+    "fixed-lens analysis: the same 9-level lens applied to every folder for comparability.",
+    "single-home routing: gaps go to SYSTEM-GAPS.md, progress to PROGRESS.md, briefing to HANDOFF.md."
+  ],
+  "concerns": [
+    "The key findings section is explicitly marked provisional (from first 5 samples) and could be read as settled if skimmed — it predates the multi-folder confirmations in PROGRESS.md.",
+    "Defers the real boot briefing to HANDOFF.md, so this README alone is incomplete as an entry point despite being the named README."
+  ],
+  "notes": "The method reference for the DNA-extraction analysis layer: a 6-step per-folder workflow and a fixed 9-level lens, with the standing rule that images are evidence of a system and rules are extracted as ratios, promoted into the design system only after evidence.",
+  "questions": [
+    "Have the provisional first-5-sample findings been superseded by the confirmed values elsewhere, and should this README be updated to point to them?",
+    "Why is the canonical baseline deck left ambiguous here (pitch-deck or deck1-2026) when PROGRESS.md later names deck1-2026 the canonical master?"
+  ],
+  "purpose_vs_actual": "Match — it presents itself as the analysis-method reference (deferring the full briefing to HANDOFF.md) and it delivers the method: the layer's role, the principle, the workflow, the lens, the folder order, and provisional findings.",
+  "apparent_themes": [
+    "analysis-is-not-mutation",
+    "ratios-not-pixels",
+    "evidence-before-synthesis",
+    "system-not-style",
+    "fixed-analytical-lens",
+    "single-home-routing"
+  ],
+  "intention_signals": "Inferred: the README is trying to enforce a disciplined reverse-engineering method — treat the source material as evidence of an underlying generative system, extract its rules as size-independent ratios via a uniform lens, and only promote confirmed universals into the design system after diffing and logging — so the eventual tokens/primitives are grounded and drift-free rather than hand-copied from images.",
+  "novelty": "Codifies design analysis as a formal, repeatable, evidence-gated reverse-engineering pipeline with a fixed 9-level lens and an explicit no-synthesis-before-evidence gate, treating mockups as data about a system rather than as targets to clone.",
+  "contribution": "Contributes the analysis method itself — the 6-step workflow, the 9-level lens, the ratios-not-pixels and system-not-style principles, and the evidence-before-synthesis gate — the procedural backbone a fused system would keep for how design evidence is turned into grounded tokens and primitives.",
+  "summary_for_embedding": "Method reference for the design-DNA analysis layer: states that source images are evidence of a generative system (not a style to copy), defines a 6-step per-folder workflow and a 9-level analytical lens, extracts rules as size-independent ratios, and promotes confirmed universals into the design system only after evidence.",
+  "intention_for_embedding": "Intended to enforce a disciplined, evidence-gated reverse-engineering method that reconstructs the generative rules behind source material as ratios and relationships via a uniform lens, so confirmed universals can be promoted into the design system's tokens and primitives without drift or imitation."
+}

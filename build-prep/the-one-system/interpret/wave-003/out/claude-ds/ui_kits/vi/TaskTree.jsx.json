@@ -1,0 +1,39 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/vi/TaskTree.jsx",
+  "model": "opus",
+  "what_it_does": "Defines two React components for the Vi Workspace centre pane: TaskNode (a single labelled task node with a status dot, name, and optional meta) and TaskTree (renders an array of layers, each with a tag/description header and a grid of TaskNodes, with a visual connector between consecutive layers). Exposes TaskTree on window.",
+  "observations": [
+    "TaskNode applies a CSS class from a `state` prop (e.g. idle/active/done/blocked drive styling via vi.css).",
+    "TaskTree maps over `layers`; each layer renders a 'Layer {i+1}' tag, the layer's `desc`, and its `nodes`.",
+    "A vi-layer-connector div is inserted between layers (only when i < layers.length - 1).",
+    "Uses React.Fragment with index keys for the layer+connector pair, and index keys for nodes.",
+    "Assigns to window.TaskTree (global) rather than using module exports.",
+    "Relies on a global React (no import statement)."
+  ],
+  "standouts": [
+    "The component is a pure projection of a `layers` data structure — layer count, node count, and states all come from props, so the three-layer architecture is data-driven not hardcoded."
+  ],
+  "conventions": [
+    "Browser-global component pattern (window.TaskTree, global React, no imports/exports) — consistent with the other Vi kit files in this batch.",
+    "Class-name-from-state styling, delegating all visuals to vi.css."
+  ],
+  "concerns": [
+    "Uses array index as React key for both layers and nodes — acceptable for a static demo list but fragile if lists reorder."
+  ],
+  "notes": "Stateless, data-driven renderer for Vi's three-layer agent task tree; feed it a `layers` array of {desc, nodes:[{name, meta, state}]}.",
+  "questions": [
+    "Which exact `state` values are valid? (idle/active/done/blocked appear in vi.css and App.jsx, but this file doesn't enumerate them.)"
+  ],
+  "purpose_vs_actual": "Matches: file comment says 'Vi's three-layer agent visualisation' and it renders an arbitrary-depth layered node tree driven by data.",
+  "apparent_themes": [
+    "Data-driven UI (visual derived from a layers/nodes structure)",
+    "Making agent execution legible as a layered node tree",
+    "Separation of structure (JSX) from appearance (vi.css classes)"
+  ],
+  "intention_signals": "Tries to render Vi's live agent execution as a generic, reusable layered tree so any task decomposition can be visualised by passing the right data.",
+  "novelty": "n/a",
+  "contribution": "Contributes the concrete render component that turns Vi's three-layer agent model into a live, status-coloured layered node visualisation.",
+  "summary_for_embedding": "React TaskTree/TaskNode components rendering Vi's three-layer agent architecture as a data-driven, status-coloured layered node tree, exposed on window.",
+  "intention_for_embedding": "To visualise an AI agent's layered task decomposition (plan/spawn/execute) as a live status tree from a props-supplied layers structure."
+}

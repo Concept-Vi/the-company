@@ -1,0 +1,57 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/deep/contracts-governance.md",
+  "model": "opus",
+  "what_it_does": "A deep-read distillation of the contracts/ layer and runtime governance (read 2026-06-08, with line citations and BUILD/PARTIAL/DESIGNED status labels). It documents: the contracts spine (import-nothing, additive-only schema discipline); the six-scheme address grammar (run/cas/blob/vec/ui/code); the NodeType contract and declare-by-registration NodeRegistry; the parallel UI-component registry (ui_info, UnionAddressRecord, ui:// grammar reconciliation); the live UI_REGISTRY in suite.py; the object_info/cognition_info serializers; schema discipline (extend-by-registration); the tool surface (small fixed generic verb set, ToolAnnotations); governance POLICY (AUTO/SURFACE/CONFIRM, LOCKED set, guard()); the I4 address->tier gate; the RHM verb set + routing; and the full Decision->Implementation Wire (surface_build_intent, surface_intent_at, request_change, resolve_surfaced, dispatch_decision) with its L1 readiness summary.",
+  "observations": [
+    "Frontmatter declares scope, date, an enumerated source list (contracts/*.py + targeted runtime/suite.py ranges), and a status legend (BUILD/PARTIAL/DESIGNED).",
+    "Address grammar: SCHEMES = (run, cas, blob, vec, ui, code); ui:// and code:// are label-only in the grammar (resolved by ui_info and Suite.resolve_scope respectively).",
+    "NodeType has three kinds (process/content/presentation) and fields incl. ports, config_schema, output_schema, render_set, actions, version; model_post_init derives title from name.",
+    "Declare-by-registration: dropping a .py in nodes/ with a run attr + optional module-level KIND/PORTS/CONFIG/OUTPUT_SCHEMA/VERSION is all it takes; registry synthesizes a NodeType and /object_info gains an entry with zero FE code.",
+    "ui_info defines UiComponentEntry + opt-in Capabilities (pointable/spotlit/presentable/openable/drivenReadOnly, all False by default) and the UnionAddressRecord (one canonical per-address record both corpus and live sides project to, with kind/region required, tier optional).",
+    "Live UI_REGISTRY in suite.py is class-level tuples; 9 bare-region rows + canvas row + _load_corpus_element_addresses() projecting 24+ element addresses with a 6th union-extras element carrying region/represents/code/tier/howto.",
+    "cognition_info declares COGNITION_EVENT_KINDS as DATA (six kinds) — 'the emit-contract the FE binds to so it doesn't bind to events nothing emits'; each carries an address field.",
+    "Tool surface is a small fixed set of generic verbs (NOT one tool per node-type); CreateNode.type is plain str; ToolAnnotations are readonly/destructive/idempotent with readonly+destructive raising.",
+    "Governance: POLICY classes AUTO/SURFACE/CONFIRM; unknown class -> CONFIRM; LOCKED={source_data,external,frozen_contract}; guard() enforces; decision_build is deliberately AUTO meaning auto-DISPATCH-on-approve (not auto-close).",
+    "I4 _tier_for_address reads UI_REGISTRY rows; non-AUTO tier => click PROPOSES (surfaces) and does NOT act; explicitly must NOT route through autonomous_dispatch (would execute do() directly — the inverse U1 regression).",
+    "The Wire is documented end-to-end: surface_build_intent (X1/X2/X3/X16 payload fields, empty scope = DENY-ALL), surface_intent_at (composes ingest_comment + resolve_scope + surface_build_intent), request_change, resolve_surfaced (operator-only, off MCP face, L2 trigger inert by default), dispatch_decision (CHECK->CLAIM->GATE->LAUNCH->VERIFY->CLOSE, git checkpoint, scope-diff via git ground truth).",
+    "L1 readiness summary partitions BUILT / PARTIAL (FE side of L1, per-address tier data, blast-radius display) / DESIGNED (howto rendering at consent time).",
+    "Closes with the uniform register-by-declaration pattern (declare as data -> registry discovers -> serializers project -> one-source enforced -> schema-additive) and the 'correct action is the AI's path of least resistance' law."
+  ],
+  "standouts": [
+    "The single declare-by-registration pattern applied uniformly across node-types, UI components, cognition roles, and tool verbs.",
+    "The I4 click-indicates-consent enforcement: a non-AUTO tiered click surfaces for approval and is structurally barred from autonomous_dispatch to avoid executing the graph.",
+    "Empty/stale scope = DENY-ALL as a durable safety property enforced at the dispatch gate, not only at surface time.",
+    "decision_build being AUTO meaning auto-dispatch-on-approve while the CLOSE still routes through CONFIRM (code_build) — AI-operated is not review-free.",
+    "Governance posture riding inside the same declaration as the thing (tier on address, annotations on verb, consequence_class on intent)."
+  ],
+  "conventions": [
+    "contracts/ is the import-nothing spine; additive-only growth (new optional fields with defaults); breaking changes are new versioned shapes side-by-side.",
+    "Pydantic throughout with validation at the seam; schema_ver/version bumped on shape change.",
+    "One-source enforcement: serializers raise on key/name mismatch rather than emit a wrong projection.",
+    "Fail-loud over silent-allow: unknown governance class -> CONFIRM; unverifiable -> not-passed.",
+    "Cites exact files and line numbers, and labels each component BUILD/PARTIAL/DESIGNED honestly."
+  ],
+  "concerns": [
+    "Self-noted PARTIAL gaps: per-address tier assignments in corpus addresses.json are incomplete (most addresses untiered, falling back to verb class), and the FE side of L1 + blast-radius display are net-new.",
+    "cognition_info live FE rendering is PARTIAL while the backend registries are BUILT."
+  ],
+  "notes": "This is the backbone reference for addressability + governance — read it to understand the address grammar, how everything registers by declaration, and the full governed Decision->Implementation Wire from comment-at-address through dispatched, verified, git-checkpointed self-build.",
+  "questions": [
+    "Have the PARTIAL per-address tier assignments in addresses.json been completed since this read?",
+    "Is the howto-at-consent-time rendering (the DESIGNED stratum) built yet?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is a deep read of contracts + governance and delivers a thorough, line-cited account of exactly those layers.",
+  "apparent_themes": [
+    "Declare-by-registration / extend-by-registration as a universal pattern",
+    "Addressability as a single coordinate system across UI, code, runs, content",
+    "Governance posture carried in the declaration (path-of-least-resistance = correct action)",
+    "Fail-loud, one-source, schema-additive contract discipline",
+    "Consent-time trust (the surfaced record IS what the build composes from)"
+  ],
+  "intention_signals": "Trying to give a builder a precise, verified map of the contract spine and governance gates so design/FE work composes against the real seams and never bypasses the consent/approval floor.",
+  "novelty": "The UnionAddressRecord reconciling two non-interoperable ui:// grammars by making the string purely structural and the semantics live in the record; and the COGNITION_EVENT_KINDS declared as data so the FE binds only to events that actually emit.",
+  "contribution": "Contributes the authoritative description of the address grammar, the register-by-declaration registries (node-type, UI, cognition, tools), the governance POLICY/guard model, the I4 tier gate, and the full Decision->Implementation Wire with honest BUILT/PARTIAL/DESIGNED status.",
+  "summary_for_embedding": "Line-cited deep read of the contracts/ import-nothing spine and runtime governance: address grammar, declare-by-registration registries, POLICY/guard tiers, the I4 address->tier click gate, and the full governed self-build wire.",
+  "intention_for_embedding": "To map the contract and governance backbone so design and FE work compose against real seams and respect the consent/approval/audit floor."
+}

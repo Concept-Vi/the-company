@@ -1,0 +1,57 @@
+/* ============================================================
+   ConceptV · FOCUS / ATTENTION  —  "bring forward, soften the rest"
+   ------------------------------------------------------------
+   Turns your spatial instinct into a mechanism: any time one object
+   becomes the subject, everything else recedes — desaturated, dimmed,
+   slightly blurred and lowered — while the focused object lifts. The
+   inverse of off-frame ghosting, aimed inward at attention.
+
+   Usage — put .focus-scope on a container; mark the subject
+   [data-focus] and the rest [data-recede] (or let .focus-scope.is-
+   focusing recede everything that ISN'T [data-focus]):
+     <div class="focus-scope is-focusing">
+       <div data-focus> … brought forward … </div>
+       <div> … softened … </div>
+     </div>
+   ============================================================ */
+:root {
+  --recede-opacity:   0.42; /* @kind other */
+  --recede-saturate:  0.65; /* @kind other */
+  --recede-blur:      1.5px;
+  --focus-lift:       -2px;        /* translateY of the subject */
+  --focus-scale:      1.015; /* @kind other */
+}
+
+.focus-scope > * {
+  transition: opacity var(--dur-move) var(--ease-out),
+              filter  var(--dur-move) var(--ease-out),
+              transform var(--dur-move) var(--ease-emphasized),
+              box-shadow var(--dur-move) var(--ease-out);
+}
+
+/* explicit receding */
+.focus-scope [data-recede] {
+  opacity: var(--recede-opacity);
+  filter: saturate(var(--recede-saturate)) blur(var(--recede-blur));
+}
+
+/* implicit: when scope is focusing, everything that isn't the subject
+   (and doesn't contain it) recedes */
+.focus-scope.is-focusing > *:not([data-focus]):not(:has([data-focus])) {
+  opacity: var(--recede-opacity);
+  filter: saturate(var(--recede-saturate)) blur(var(--recede-blur));
+}
+
+/* the subject lifts forward */
+.focus-scope [data-focus] {
+  transform: translateY(var(--focus-lift)) scale(var(--focus-scale));
+  box-shadow: var(--elev-4);
+  z-index: var(--z-raised);
+  position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus-scope [data-focus] { transform: none; }
+  .focus-scope [data-recede],
+  .focus-scope.is-focusing > *:not([data-focus]):not(:has([data-focus])) { filter: saturate(var(--recede-saturate)); }
+}

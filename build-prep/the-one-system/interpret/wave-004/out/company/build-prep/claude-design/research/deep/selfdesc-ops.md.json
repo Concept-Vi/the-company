@@ -1,0 +1,41 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/deep/selfdesc-ops.md",
+  "model": "opus",
+  "what_it_does": "Layer-5 deep read of the conventions/laws and operational structure of ~/company: consolidates the ten governing rules (plus the path-of-least-resistance meta-law), documents the two-tier self-description mechanism (auto-generated registry blocks via refresh_self_description vs prose maintained by integration) and its drift-check enforcement, lays out the where-things-go table, and describes the ops console (company CLI, services.json, gpu.py VRAM manager, capabilities.py model-type registry) including the D3 'one substrate, per-type view-modes' law.",
+  "observations": [
+    "Has YAML frontmatter listing 15 source files and a status line noting observed vs inferred labeling per the repo's evidence discipline",
+    "Restates all ten rules with BUILT status: build-against-contracts, schema-additive, one-source, fail-loud, ext4-storage, no-Gemini, stage-gated, author-from-registry, AI-operated-not-review-free (FE enforcement PARTIAL), commit-to-main-no-branches",
+    "Documents the distributed drift-home pattern in a table: each module registry (EDGE_KINDS, RULE_OPS, THOUGHT_SHAPES, ROLE registry, MODEL_CAPABILITIES, etc.) maps to a drift-home prose section and a named acceptance suite",
+    "Tier-1 auto blocks: MAP.md REGISTRY markers (16 node-types, 11 verbs, 8 modes, panels, 15 models) and STATE.md SUITES markers (130 acceptance suites); Tier-2 prose maintained by integration",
+    "Details services.json: vram_ceiling 16376, five groups (core/brain/voice/models/reach), combos, and per-service config blocks where config.gpu_util × ceiling is the one VRAM budget",
+    "Documents gpu.py shared-core functions (budget_vram, read_gpu, check_fit, fit_report, plan_eviction, teardown, format_state) and eviction priority models→brain→voice",
+    "Documents capabilities.py as the third model keying (intrinsic capability by model-id) that JOINs to gpu.py and records honest unknowns (value:None, source:declared)",
+    "Flags the FE legibility gap: show's resolver matches only region handles not element addresses, NODE_STATES not FE-wired, workshop self-change surface not rendered, design-lint not enforced at FE component level"
+  ],
+  "standouts": [
+    "The drift-home table linking each module registry to its prose home and enforcement suite — rule 3 + rule 4 applied to documentation",
+    "The two-tier self-description model (auto registry blocks vs integration-maintained prose) with drift_acceptance.py failing loud on any unreflected capability",
+    "The D3 law: ops console is the first instantiation of one console mechanism that grows by type-view, not by new tools"
+  ],
+  "conventions": [
+    "Strict Observed/Inferred/Verified labeling per the repo's evidence-requirements template",
+    "Vault frontmatter with type/layer/source-files/status/relates-to and wikilink aliases",
+    "Every law tagged with BUILT/PARTIAL/DESIGNED status rather than asserted flatly"
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the laws-and-operations bible for the repo — read it to learn the ten rules, how self-description auto-maintains and drift-checks itself, where new things go, and how the ops console/VRAM/model-capability machinery is structured.",
+  "questions": [],
+  "purpose_vs_actual": "Match — declares itself the layer-5 conventions/laws/operational deep pass and delivers exactly that, source-cited and status-tagged.",
+  "apparent_themes": [
+    "registry-is-truth and one-source as the operating discipline",
+    "self-description as load-bearing orientation infrastructure, not bolted-on docs",
+    "fail-loud drift enforcement (not updating causes a failing test)",
+    "path-of-least-resistance: make the correct action the AI's easiest path"
+  ],
+  "intention_signals": "Trying to hand a design session the complete legal/operational frame of the repo so its surface work composes on the registered single-sourced shapes and respects the laws, rather than introducing parallel definitions that violate rules 1 and 3.",
+  "novelty": "The explicit articulation of the path-of-least-resistance meta-law as the principle from which several rules derive, and the distributed drift-home pattern as a generalizable documentation-integrity mechanism.",
+  "contribution": "Contributes the consolidated laws layer plus the self-description/drift mechanism and the ops/VRAM/model-capability operational map — the governance-and-operations frame a fused system would keep to know its own rules, how it stays legible, and how it manages its runtime resources.",
+  "summary_for_embedding": "A layer-5 deep read of ~/company's ten laws, the two-tier self-description mechanism with drift-check enforcement and distributed drift-homes, the where-things-go table, and the ops console (CLI, services.json, gpu.py VRAM manager, capabilities.py model registry, D3 type-view law).",
+  "intention_for_embedding": "To give a design session the complete conventions/laws and operational frame so its surface work composes on registered single-sourced shapes and obeys the repo's laws."
+}

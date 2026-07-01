@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/consolidation-drafts/consent-tests.md",
+  "model": "opus",
+  "what_it_does": "A consolidation-analysis draft examining two acceptance test suites (propose_affordance_acceptance.py / B1 and interactive_consent_acceptance.py / B2) that overlap by covering the non-executing 'suggest' consent affordance from different angles. It renders a verdict (keep-separate-by-design), maps which proofs are duplicated vs unique to each suite, identifies the only genuine duplication (~45 lines of shared scaffolding), lists coverage gaps neither suite holds, and proposes (never executes) remedies and decisions for the owning session.",
+  "observations": [
+    "States its law-honouring constraint up front: no source file edited, moved, or deleted — for TESTS the deliverable is an analysis doc, never test-code changes",
+    "VERDICT: keep-separate-by-design, with five enumerated reasons (criteria traceability, determinism boundary, failure isolation, institutional memory in headers, load-bearing contract re-proofs)",
+    "An overlap matrix table (§A) classifying each shared invariant as layered/duplicated/disjoint between the two suites",
+    "§B and §C exhaustively inventory what only B1 and only B2 uniquely hold (act-vs-offer distinctness, reuse-equality proof, address grammar vs interactive-marker derivation, CONFIRM-class second approval, per-option fail-loud)",
+    "§D identifies the genuine duplication as ~45 lines of copy-paste scaffolding and proposes extraction to tests/_consent_harness.py rather than merging",
+    "§E surfaces three coverage gaps neither suite tests (single-consequential interactive=True, multi-option non-consequential interactive=False, extend verb never approved)",
+    "§F gives an honest verification split: everything is Observed by reading this session; neither suite was executed in this lane",
+    "Cites specific runtime/suite.py line anchors (suggest schema ~3959-3987, whitelist+interactive ~5757-5801, RHM_VERBS ~3777-3833, dead _parse_rhm_proposal ~4364, B3 consumer ~6685-6726)",
+    "Ends with a decisions list for the owning session and a disposition table where nothing retires and nothing folds"
+  ],
+  "standouts": [
+    "The determinism-boundary argument: merging would infect the always-runnable B1 substrate suite with B2's live-model step, degrading it from always-runnable to sometimes-runnable",
+    "The reuse-equality theorem framing (approve == direct act() outcome) as the 'approve is the act path, not a new path' proof in its strongest form",
+    "Flags _parse_rhm_proposal as still-present dead code (the retired AFFORD: text-directive era) as a routable hygiene item",
+    "Identifies the {verb,address,args,options[],interactive,direction} shape as a multi-consumer contract (FE card mapper, B2 surface, B3 inbox) whose re-assertion in each suite is regression armour, not drift"
+  ],
+  "conventions": [
+    "Evidence-classification discipline: explicit Observed vs NOT-verified split (matches the repo's evidence-requirements style)",
+    "Expansion-over-reduction / no-deferral framing — proposes extraction (not merge) and routing of small lanes",
+    "Disposition-table-as-deliverable consolidation-draft format with keep/create dispositions and reasoning",
+    "Heavy file:line citation discipline consistent with sibling build-prep docs"
+  ],
+  "concerns": [
+    "Line anchors are approximate (~) and could drift from the live file; the analysis explicitly was not run, so pass/fail status is unverified",
+    "The proposed harness extraction and dead-code decision are left open, so the doc records work that may or may not get routed"
+  ],
+  "notes": "An analysis-only consolidation draft arguing two consent-affordance acceptance suites are by-design layered (substrate vs widening) and should stay separate, with the only real duplication being extractable test scaffolding.",
+  "questions": [
+    "Did the owning session accept keep-separate-by-design and extract the shared harness, or park it?",
+    "Was _parse_rhm_proposal deleted in a hygiene pass or kept as a documented fossil?",
+    "Were the three §E derivation-check gaps added to the B2 suite?"
+  ],
+  "purpose_vs_actual": "Matches — it is a consolidation draft analysing an overlap, and it delivers a reasoned verdict, an overlap inventory, and proposed (unexecuted) dispositions exactly as the consolidation-drafter lane intends.",
+  "apparent_themes": [
+    "By-design overlap (layered acceptance) vs genuine duplication",
+    "Reuse-don't-parallel (extract scaffolding, don't merge suites)",
+    "Consent floor — nothing dispatches without explicit operator approval",
+    "Honest evidence classification (observed vs unverified)",
+    "Expansion-over-reduction / nothing-dropped"
+  ],
+  "intention_signals": "It is trying to prevent a future agent from naively merging two overlapping test suites by documenting why the overlap is intentional regression armour, while still routing the one true de-duplication (shared scaffolding) and recording open hygiene decisions.",
+  "novelty": "A rigorous layered-acceptance overlap analysis that distinguishes deliberate regression-smoke re-proofs from copy-paste drift, and treats the consent affordance's data shape as a multi-consumer contract whose redundancy is a feature.",
+  "contribution": "Contributes a documented decision-record for the consent-affordance test layering: the substrate-vs-widening split, the exhaustive unique-fact inventory of each suite, the extractable scaffolding, and the coverage gaps — knowledge a fused system would keep to avoid re-litigating the same overlap.",
+  "summary_for_embedding": "A consolidation analysis draft concluding that two consent-affordance acceptance suites (substrate B1 vs widening B2) are by-design layered and should stay separate, with only their ~45 lines of shared test scaffolding being genuine extractable duplication.",
+  "intention_for_embedding": "To document why two overlapping consent test suites are intentionally layered regression armour, preventing a naive merge while routing the real de-duplication and recording open hygiene decisions."
+}

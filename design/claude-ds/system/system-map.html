@@ -1,0 +1,1031 @@
+<!-- @dsCard group="Glyphic System" name="System Map" subtitle="The whole system on one screen — every folder, subfolder and file as nested boxes in their real directory structure, with the resolution lines that show how they wire together into a thing" viewport="1280x860" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ConceptV · System Map</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body { font-family: var(--font-body); color: var(--ink); background: var(--bg-dark); font-size: 13px; }
+
+  /* top bar */
+  .top { position: fixed; top: 0; left: 0; right: 0; height: 50px; z-index: 30;
+    display: flex; align-items: center; gap: 16px; padding: 0 18px;
+    background: rgba(31,26,18,.9); backdrop-filter: blur(8px); color: var(--paper);
+    border-bottom: 1px solid rgba(255,255,255,.08); }
+  .top .ti { font: 700 15px/1 var(--font-display); letter-spacing: -.01em; }
+  .top .ey { font: 600 9px/1 var(--font-body); letter-spacing: .16em; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 2px; }
+  .top .brand { display: flex; flex-direction: column; }
+  .top .sp { flex: 1; }
+  .legend { display: flex; gap: 11px; flex-wrap: wrap; }
+  .lg { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: rgba(255,255,255,.7); cursor: pointer; }
+  .lg .sw { width: 9px; height: 9px; border-radius: 2px; }
+  .lg.off { opacity: .32; }
+  .search { border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: var(--paper);
+    border-radius: 999px; padding: 7px 14px; font: inherit; width: 190px; outline: none; }
+  .search::placeholder { color: rgba(255,255,255,.45); }
+  .search:focus { border-color: var(--accent-gold); }
+  .wbtn { border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: var(--paper);
+    border-radius: 7px; padding: 7px 11px; font: 600 11px/1 var(--font-body); cursor: pointer; white-space: nowrap; }
+  .wbtn.on { background: var(--accent-gold); color: #1b1712; border-color: var(--accent-gold); }
+
+  /* ===== glyphic toolbar ===== */
+  .gbar { display: flex; align-items: center; gap: 4px; }
+  .ggrp { display: flex; align-items: center; gap: 3px; padding: 0 6px; position: relative; }
+  .ggrp + .ggrp::before { content: ""; position: absolute; left: -1px; top: 9px; bottom: 9px; width: 1px; background: rgba(255,255,255,.12); }
+  .ggrp.editonly { display: none; }
+  body.editing .ggrp.editonly { display: flex; }
+  .gx { position: relative; width: 34px; height: 34px; padding: 0; border: 1px solid transparent; border-radius: 10px;
+    background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background .16s, border-color .16s, transform .12s; }
+  .gx:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); }
+  .gx:active { transform: translateY(1px); }
+  .gx.on { background: rgba(224,192,16,.16); border-color: rgba(224,192,16,.5); }
+  .gx.menu.open { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.22); }
+  .gx[disabled] { opacity: .3; pointer-events: none; }
+  .gx .cv-glyphic svg { display: block; }
+  .gx .vlab { position: absolute; bottom: 1px; right: 2px; font: 700 7px/1 var(--font-body); letter-spacing: .02em;
+    color: rgba(255,255,255,.55); text-transform: uppercase; max-width: 30px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+  .gx .opbadge { position: absolute; top: -3px; right: -3px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px;
+    background: var(--accent-gold); color: #1c1a16; font: 800 9px/15px var(--font-body); text-align: center; }
+  .gx .opbadge.zero { display: none; }
+  /* tooltip — verb names on hover */
+  .gx::after { content: attr(data-tip); position: absolute; top: 40px; left: 50%; transform: translateX(-50%) translateY(-3px);
+    white-space: nowrap; background: #15120e; color: var(--paper); border: 1px solid rgba(255,255,255,.16);
+    font: 600 10.5px/1 var(--font-body); padding: 5px 8px; border-radius: 6px; opacity: 0; pointer-events: none;
+    transition: opacity .14s, transform .14s; z-index: 60; }
+  .gx:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* popover menus */
+  .pop { position: fixed; z-index: 55; min-width: 180px; max-width: 300px; padding: 6px;
+    background: rgba(24,21,16,.98); border: 1px solid rgba(255,255,255,.18); border-radius: 12px;
+    box-shadow: 0 18px 48px rgba(0,0,0,.55); backdrop-filter: blur(10px); }
+  .pop[hidden] { display: none; }
+  .pop .pophd { font: 700 9px/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent-gold); padding: 6px 8px 7px; }
+  .mi { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 9px; border-radius: 8px;
+    background: transparent; border: none; cursor: pointer; text-align: left; color: var(--paper); }
+  .mi:hover { background: rgba(255,255,255,.09); }
+  .mi.sel { background: rgba(224,192,16,.14); }
+  .mi .mig { width: 26px; height: 26px; flex: none; display: flex; align-items: center; justify-content: center; }
+  .mi .mit { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .mi .mil { font: 600 12px/1.1 var(--font-body); }
+  .mi .mih { font: 500 10px/1.25 var(--font-body); color: rgba(255,255,255,.5); white-space: normal; }
+  .mi .mick { margin-left: auto; color: var(--accent-gold); font-size: 12px; opacity: 0; }
+  .mi.sel .mick { opacity: 1; }
+  .mi.danger:hover { background: rgba(181,72,46,.28); }
+  /* legend hosts live inside popovers when open; hidden otherwise */
+  .lh { display: none; }
+  .pop .legend { display: flex; flex-wrap: wrap; gap: 9px; padding: 4px 8px 8px; }
+  #movehint { position: fixed; left: 50%; top: 60px; transform: translateX(-50%) translateY(-8px); z-index: 56;
+    background: var(--accent-gold); color: #1c1a16; font: 700 12px/1 var(--font-body); padding: 9px 14px; border-radius: 9px;
+    box-shadow: 0 8px 26px rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .16s, transform .16s; }
+  #movehint.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  /* drag & drop affordances */
+  .chip.dragging, .box.dragging { opacity: .4; }
+  .box.drop-ok { outline: 2px dashed var(--accent-gold); outline-offset: -2px; background: rgba(224,192,16,.07) !important; }
+  .chip.drop-ok { outline: 2px dashed var(--accent-gold); outline-offset: -1px; }
+  body.editing .chip, body.editing .box.click { cursor: grab; }
+  body.dragging-node, body.dragging-node * { cursor: grabbing !important; }
+
+  /* nested containment map — the whole directory as boxes-in-boxes, one screen */
+  #map { position: fixed; inset: 50px 0 0 0; overflow: hidden;
+    background: radial-gradient(circle at 32% -12%, #2a2620, #15120e 82%); }
+  #canvas { position: absolute; inset: 0; z-index: 2; }
+  #edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; overflow: visible; }
+  .box { position: absolute; border: 1px solid rgba(255,255,255,.09); border-radius: 5px;
+    background: rgba(255,255,255,.014); overflow: hidden;
+    transition: transform .5s cubic-bezier(.45,0,.2,1), background .4s, border-color .4s; }
+  .box.d1 { border-color: rgba(255,255,255,.17); border-radius: 9px; }
+  .box.d2 { border-color: rgba(255,255,255,.12); border-radius: 7px; }
+  .blab { position: absolute; left: 0; top: 0; right: 0; display: flex; align-items: center; gap: 5px;
+    padding: 0 6px; font: 700 10px/1 var(--font-body); color: rgba(255,255,255,.8);
+    letter-spacing: .01em; white-space: nowrap; overflow: hidden; pointer-events: none; }
+  .blab .bsw { width: 7px; height: 7px; border-radius: 2px; flex: none; }
+  .box.d1 > .blab { font-family: var(--font-display); color: var(--paper); letter-spacing: -.01em; }
+  .box.click { cursor: pointer; }
+  /* region label (Districts / Layers group headers) */
+  .rgn { position: absolute; z-index: 1; border: 1px solid; border-radius: 8px; pointer-events: none; overflow: hidden; }
+  .rlab { position: absolute; left: 0; top: 0; right: 0; display: flex; align-items: center; gap: 6px; padding: 4px 9px;
+    font: 700 11px/1 var(--font-display); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; }
+  .rlab .bsw { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  /* Sunburst (radial) */
+  .rsvg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
+  .arc { cursor: pointer; transition: opacity .35s, fill .35s, stroke-width .12s; }
+  .arc:hover { stroke: #fff; stroke-width: 1.4; }
+  .arc.dim { opacity: .16; }
+  .arc.hot { stroke: var(--accent-gold); stroke-width: 1.6; }
+  .arc.sel { stroke: #fff; stroke-width: 2; }
+  .rhub { font: 700 12px/1 var(--font-display); fill: rgba(255,255,255,.85); text-anchor: middle; pointer-events: none; }
+  .rhub.sub { font: 500 9px/1 var(--font-body); fill: rgba(255,255,255,.45); }
+  .rrim { font: 700 10px/1 var(--font-body); letter-spacing: .01em; pointer-events: none; }
+  .chip { position: absolute; border-radius: 4px; cursor: pointer; overflow: hidden;
+    border: 1px solid rgba(0,0,0,.22); display: flex; align-items: center; padding: 0 4px; gap: 3px; z-index: 3;
+    transition: transform .5s cubic-bezier(.45,0,.2,1), background .4s, border-color .4s; }
+  .chip .cl { font: 600 9.5px/1.05 var(--font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip:hover { outline: 2px solid var(--paper); outline-offset: -1px; z-index: 12; }
+  .chip.dim { opacity: .2; }
+  .box.dim { opacity: .42; }
+  .chip.hot { outline: 2px solid var(--accent-gold); outline-offset: -1px; z-index: 10; }
+  .chip.sel { outline: 2px solid #fff; outline-offset: -1px; z-index: 13; box-shadow: 0 0 0 3px rgba(255,255,255,.22); }
+
+  /* detail panel */
+  #panel { position: fixed; left: 16px; bottom: 16px; width: 380px; max-height: calc(100vh - 90px);
+    background: var(--paper); border: 1px solid var(--border-strong); border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5); z-index: 40; display: none; flex-direction: column; }
+  #panel.show { display: flex; }
+  #panel .ph { padding: 14px 16px 10px; border-bottom: 1px solid var(--border-default); }
+  #panel .ph .pp { font: 500 10.5px/1.3 var(--font-mono); color: var(--ink-4); word-break: break-all; }
+  #panel .ph .pn { font: 700 17px/1.15 var(--font-display); margin: 3px 0 0; display: flex; align-items: center; gap: 8px; }
+  #panel .ph .pn .dot { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+  #panel .pb { padding: 12px 16px 16px; overflow: auto; }
+  #panel .role { display: inline-block; font: 600 9px/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--accent-bronze); margin-bottom: 6px; }
+  #panel .what { font-size: 13.5px; line-height: 1.5; color: var(--ink); margin-bottom: 4px; }
+  #panel .grp { margin-top: 15px; }
+  #panel .grp h4 { font: 600 10px/1 var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-bronze); margin: 0 0 8px; }
+  #panel .grp h4 .n { color: var(--ink-4); letter-spacing: 0; text-transform: none; font-weight: 500; }
+  .rel { display: flex; align-items: flex-start; gap: 8px; width: 100%; text-align: left; cursor: pointer;
+    padding: 7px 9px; border: 1px solid var(--border-default); border-radius: 7px; background: var(--paper); margin-bottom: 5px; font: inherit; color: inherit; }
+  .rel:hover { border-color: var(--accent-gold); background: var(--accent-gold-50); }
+  .rel .dot { width: 8px; height: 8px; border-radius: 2px; margin-top: 4px; flex: none; }
+  .rel .rx { min-width: 0; }
+  .rel .rv { font: 700 9.5px/1.3 var(--font-body); letter-spacing: .03em; text-transform: uppercase; color: var(--accent-gold-deep); }
+  .rel .rn { font-weight: 600; }
+  .rel .rw { color: var(--ink-3); font-size: 11.5px; }
+  .empty { color: var(--ink-4); font-style: italic; font-size: 12px; }
+  #panel .close { position: absolute; top: 10px; right: 12px; cursor: pointer; color: var(--ink-4); font-size: 18px; line-height: 1; background: none; border: none; }
+  #panel .close:hover { color: var(--ink); }
+  .hint2 { position: fixed; right: 16px; bottom: 16px; z-index: 35; color: rgba(255,255,255,.5); font-size: 11px; text-align: right; pointer-events: none; }
+
+  /* editor toolbar + ops drawer */
+  #etb { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 40;
+    display: none; align-items: center; gap: 5px; padding: 7px 8px; border-radius: 12px;
+    background: rgba(28,26,22,.92); border: 1px solid rgba(255,255,255,.16); box-shadow: 0 10px 34px rgba(0,0,0,.5); backdrop-filter: blur(8px); }
+  body.editing #etb { display: flex; }
+  #etb button { background: rgba(255,255,255,.07); color: var(--paper); border: 1px solid rgba(255,255,255,.16);
+    border-radius: 7px; padding: 7px 10px; font: 600 11px/1 var(--font-body); cursor: pointer; white-space: nowrap; }
+  #etb button:hover { background: rgba(255,255,255,.16); }
+  #etb button.danger:hover { background: rgba(224,106,80,.32); border-color: rgba(224,106,80,.6); }
+  #etb #opcount { display: inline-block; min-width: 15px; padding: 1px 5px; margin-left: 3px; border-radius: 8px; background: var(--accent-gold,#E0C010); color: #1c1a16; font-weight: 800; }
+  #etb .etbsep { width: 1px; height: 20px; background: rgba(255,255,255,.16); margin: 0 3px; }
+  #etb[data-hint]::before { content: attr(data-hint); position: absolute; left: 50%; top: -30px; transform: translateX(-50%);
+    white-space: nowrap; background: var(--accent-gold,#E0C010); color: #1c1a16; font: 700 11px/1 var(--font-body); padding: 6px 10px; border-radius: 7px; }
+  body.moving #map { cursor: crosshair; }
+  body.moving .box.click:hover { outline: 2px solid var(--accent-gold,#E0C010); outline-offset: -2px; }
+  #opsdrawer { position: fixed; right: 14px; bottom: 70px; width: 360px; max-height: 56vh; z-index: 41; display: none;
+    flex-direction: column; background: rgba(24,22,19,.97); border: 1px solid rgba(255,255,255,.18); border-radius: 12px; box-shadow: 0 16px 44px rgba(0,0,0,.55); overflow: hidden; }
+  #opsdrawer.show { display: flex; }
+  .opshead { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.1); color: var(--paper); font-size: 12px; }
+  .opshead .grow { flex: 1; }
+  .opshead button { background: rgba(255,255,255,.08); color: var(--paper); border: 1px solid rgba(255,255,255,.16); border-radius: 6px; padding: 5px 9px; font: 600 10.5px/1 var(--font-body); cursor: pointer; }
+  .opshead button:hover { background: rgba(255,255,255,.16); }
+  #opsbody { overflow: auto; padding: 6px; }
+  #opsbody .empty { color: rgba(255,255,255,.5); font-size: 11px; padding: 14px 10px; line-height: 1.5; }
+  .oprow { display: flex; align-items: baseline; gap: 8px; padding: 6px 8px; border-radius: 6px; }
+  .oprow:nth-child(odd) { background: rgba(255,255,255,.03); }
+  .opn { color: rgba(255,255,255,.4); font: 700 10px/1 var(--font-mono); min-width: 16px; }
+  .opk { color: var(--accent-gold,#E0C010); font: 700 10px/1 var(--font-mono); text-transform: uppercase; min-width: 64px; }
+  .opp { color: rgba(255,255,255,.8); font: 500 11px/1.35 var(--font-mono); word-break: break-all; }
+  .opsfoot { padding: 9px 12px; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.45); font-size: 10px; line-height: 1.5; }
+  .opsfoot code { color: rgba(255,255,255,.7); }
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand"><span class="ey">ConceptV · System</span><span class="ti">System Map</span></div>
+    <div class="gbar" id="gbar"></div>
+    <span class="sp"></span>
+    <span id="stat" style="font:600 10.5px/1 var(--font-mono);color:rgba(255,255,255,.5);white-space:nowrap"></span>
+    <input class="search" id="q" placeholder="Find a file…">
+  </div>
+  <div id="map"><div id="canvas"></div><svg id="edges" preserveAspectRatio="none"></svg></div>
+  <div class="lh"><span class="legend" id="legend"></span><span class="legend" id="elegend" title="Toggle a relationship type on/off"></span></div>
+  <div id="pop" class="pop" hidden></div>
+  <div id="movehint"></div>
+  <div id="opsdrawer">
+    <div class="opshead"><strong>Queued operations</strong><span class="grow"></span><button id="opsexport">Export JSON</button><button id="opsclear">Clear</button><button id="opsclose">×</button></div>
+    <div id="opsbody"></div>
+    <div class="opsfoot">These are pending. The browser preview can't write project files — a disk-write adapter (Claude Code) applies them, then Rescan shows the real result. See <code>analysis/SYSTEM-MAP-EDITOR-ADAPTER.md</code>.</div>
+  </div>
+  <div class="hint2">nesting = the real folders · gold lines = how files resolve together · click anything to trace it</div>
+  <div id="panel">
+    <button class="close" id="pclose">×</button>
+    <div class="ph"><div class="pp" id="pp"></div><div class="pn" id="pn"></div></div>
+    <div class="pb" id="pb"></div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  var DATA=null, NODE={}, KIDS={}, OUT={}, IN={}, DEFINES={}, DEFINER={}, RECT={}, selected=null;
+  var hidden={}, wiring=true, EDGES=[];
+
+  // ===== specific relationship vocabulary (per registry) =====
+  var SYS = {
+    CV_REGISTRY:{name:"the Type Catalogue", out:"registers / looks up types in", in:"a type is registered in"},
+    CV_GLYPHIC:{name:"the Mark-maker", out:"builds glyphics with", in:"builds glyphics with"},
+    CV_AXES:{name:"the Dials", out:"reads dial settings from", in:"reads dial settings from"},
+    CV_AXIS:{name:"the Dial-maker", out:"builds a dial with", in:"builds a dial with"},
+    CV_SHAPES:{name:"the Shape engine", out:"draws ring shapes with", in:"draws ring shapes with"},
+    CV_ICONS:{name:"the Symbol library", out:"pulls symbols from", in:"pulls symbols from"},
+    CV_MEANING:{name:"the Meaning book", out:"looks up meaning in", in:"looks up meaning in"},
+    CV_AI:{name:"Vi's abilities", out:"runs AI moves through", in:"runs AI moves through"},
+    CV_COND:{name:"the Rules engine", out:"checks rules with", in:"checks rules with"},
+    CV_HOST:{name:"the host bridge", out:"talks to the app through", in:"talks to the app through"},
+    CV_ARCHETYPE_CATALOG:{name:"the Archetype catalogue", out:"seeds blueprints from", in:"seeds blueprints from"},
+    CV_ARCHETYPE_META:{name:"archetype metadata", out:"reads archetype meta from", in:"reads archetype meta from"},
+    CV_SOURCE:{name:"the source-ingest data", out:"reads source material from", in:"reads source material from"},
+    CV_VI_GLYPH:{name:"the traced V glyph", out:"draws the V from", in:"draws the V from"},
+    CV_SLIDE_FIT:{name:"the slide auto-fit", out:"auto-fits slides with", in:"auto-fits slides with"},
+    CV_TYPES_PROMPT:{name:"the type-prompt helper", out:"builds type prompts with", in:"builds type prompts with"},
+    CV_TYPES_VI:{name:"the type-Vi helper", out:"uses", in:"uses"},
+    CV_TYPES_SAVE:{name:"the type-save helper", out:"saves types with", in:"saves types with"}
+  };
+
+  // ===== real, specific descriptions for the code files =====
+  var DESC = {
+    "axes":["The Dials","Every visual property as its own system — change a dial here, everything using it changes."],
+    "axes/axis-core.js":["The Dial-maker","The shared machinery every dial is built from (register · resolve · subscribe) plus the registry that lists all dials."],
+    "axes/motion":["The Motion dial","Every kind of movement anything can use."],
+    "axes/motion/motion-axis.js":["Motion dial — the settings","Defines the kinds of movement (glow, pulse, spin, float, bob, tilt, breathe) grouped by purpose."],
+    "axes/motion/motion.css":["Motion dial — the actual animation","The real keyframes each motion setting produces."],
+    "axes/color/color-axis.js":["Colour dial","The named colours grouped by purpose, each pointing at one raw colour token."],
+    "axes/space/space-axis.js":["Space dial","The 8px spacing steps — gaps and padding."],
+    "axes/size/size-axis.js":["Size dial","The size steps from tiny chip to hero."],
+    "axes/form/form-axis.js":["Form dial","The outer-ring shapes — no ring, 3–8 sides, or a circle — read from the shape engine."],
+    "axes/texture/texture-axis.js":["Texture dial","Surface patterns — hatch, grid, dots, cross…"],
+    "axes/depth/depth-axis.js":["Depth dial","Elevation steps from flat to deep, mirroring the depth tokens."],
+    "axes/fill/fill-axis.js":["Fill dial","The plane inside the ring — none, paper, wash or tint."],
+    "axes/symbol/symbol-axis.js":["Symbol dial","Which inner picture a glyphic shows — wraps the symbol library."],
+    "assets/icons/cv-glyphics.js":["The Mark-maker","Takes dial settings (shape, symbol, fill, colour, texture, motion, depth, size) and composes one finished glyphic. Where a glyphic becomes a glyphic."],
+    "assets/icons/cv-shapes.js":["The Shape engine","Draws the outer-ring n-gon vessels and holds the form→meaning mapping."],
+    "assets/icons/cv-icons.js":["The Symbol library","Every inner picture (~127), each tagged so it can be searched and placed; also the add-symbol write path."],
+    "assets/icons/cv-meaning.js":["The Meaning book","What a colour or shape signifies — loadable profiles so the same mark means different things per context."],
+    "assets/icons/cv-glyphic.css":["Glyphic base style","The base styling a glyphic sits in."],
+    "assets/icons/cv-vi-glyph.js":["The traced V","The ConceptV 'V' glyph traced from the logo into vector paths."],
+    "assets/icons/CvIcon.jsx":["Icon component","A React wrapper that renders one symbol from the library."],
+    "assets/icons/ConceptVIcon.jsx":["Brand-icon component","Renders the ConceptV brand mark."],
+    "app/registry":["The catalogues","Every component, type and rule — the parts list everything is built from."],
+    "app/registry/types-core.js":["The Type Catalogue","The one registry of every component & type: what each is made of (parts), what settings it takes (slots), what can plug in (sockets)."],
+    "app/registry/glyphic-type.js":["The Glyphic, declared","Registers the Glyphic as the first universal component: its parts (ring/symbol/fill) and which dial each part subscribes to."],
+    "app/registry/components-type.js":["The components, declared","Registers every UI building block as a type, each declaring which dials it uses."],
+    "app/registry/conditions.js":["The Rules engine","Decides when a setting or socket is allowed (e.g. texture only when fill isn't none)."],
+    "app/registry/types-adapter.js":["Catalogue adapter","Bridges the registry to the rest of the app."],
+    "app/registry/archetype-catalog.js":["Archetype catalogue","The seed blueprints components are grown from."],
+    "app/registry/SaveAsTypeModal.jsx":["Save-as-Type dialog","The pop-up where you name a new arrangement and save it into the Type Catalogue as a reusable type."],
+    "app/registry/AIRegistryPanel.jsx":["Registry inspector","A panel that shows the live catalogues (types + AI abilities) inside the app."],
+    "app/ai":["Vi's abilities","Everything the AI can do and how it's wired in."],
+    "app/ai/ai-registry.js":["Vi's ability catalogue","The one registry of every AI move, provider, behaviour and skill."],
+    "app/ai/ai-seed.js":["Vi's starter abilities","Registers the built-in AI providers, voice and behaviours."],
+    "app/ai/ai-capabilities-canvas.js":["Canvas AI moves","The AI capabilities available on the canvas (generate, recolor, edit…)."],
+    "app/ai/ai-glyphic.js":["The glyphic foundry","The AI moves that propose new symbols and save them into the library."],
+    "app/ai/host-runtime.js":["Host bridge","Connects the AI registry to the live model runtime."],
+    "app/ai/host-serializer.js":["Host serializer","Packs/unpacks data passed to the host."],
+    "core":["The generative engine","Lays content out automatically from the type definitions."],
+    "tokens":["Raw design values","The lowest layer — real colours, spacing, depth, type. Everything resolves down to here."],
+    "system":["System maps & specs","The documents describing the whole system — including this map."],
+    "analysis":["The project's memory","Plans, findings and the running build log."],
+    "components":["Building blocks","The reusable interface pieces — including the Glyphic, the first universal component."],
+    "assets":["Assets","Symbol library, shape engine, glyphic mark-maker and brand images."],
+    "assets/icons":["Symbol & mark engine","The pieces a glyphic is made from: symbols, shapes, the traced V, the mark-maker."],
+    "templates":["Starting layouts","Ready-made layouts a project copies."],
+    "ui_kits":["Screen kits","Pre-built application screens."],
+    "atomicity":["Atomic-composition app","An experiment building from atoms upward."],
+    "preview":["Specimen cards","Pages showing parts of the system in the design tab."],
+    "app":["The application","The main running app and its catalogues."]
+  };
+  var ROLE = {
+    "axis":["Dial","One visual property as named settings anything can use."],
+    "axis-core":["Dial engine","Machinery every dial is built from."],
+    "axis-css":["Dial CSS","The real CSS a dial's settings produce."],
+    "value-source":["Value source","Raw values a dial draws on."],
+    "glyphic-core":["Mark-maker","Composes a glyphic from the dials."],
+    "glyphic-css":["Mark CSS","Base styling for a glyphic."],
+    "meaning":["Meaning book","What marks signify, per context."],
+    "registry":["Catalogue","A list of things + their rules."],
+    "component":["Building block","A reusable interface piece."],
+    "engine":["Engine","Lays content out automatically."],
+    "token":["Raw values","Colours, spacing, depth, type."],
+    "card":["Specimen","A design-system page."],
+    "spec":["Spec","A written, markable specification."],
+    "doc":["Note","Build notes & plans."],
+    "ai":["AI","An AI ability or its wiring."],
+    "template":["Template","A layout to copy."],
+    "ui-kit":["Screen kit","Pre-built app screens."],
+    "atomicity":["Atomicity app","Composition experiment."],
+    "app":["App","Part of the running app."],
+    "specimen":["Specimen","A finished example."],
+    "other":["Asset","A supporting file."],
+    "archive":["Archive","Old v1 files kept for reference."],
+    "ingest":["Source material","Ingested raw content the system draws on."],
+    "inspo":["Inspiration","Reference imagery & material."],
+    "upload":["Upload","User-provided files."],
+    "shot":["Screenshot","A captured screenshot."],
+    "folder":["Folder","A group of files."]
+  };
+  // RC + EXT_COL are FALLBACKS; the live values come from the baked encoding profile
+  // (DATA.encoding, sourced from CV_MEANING.encodings('system-map')). ENC is set on reload.
+  var ENC=null;
+  var RC = {axis:"#E0C010","axis-core":"#C8920E","axis-css":"#D6BF57","value-source":"#B98664",
+    "glyphic-core":"#F4E89A","glyphic-css":"#C9B58A",meaning:"#7CA85B",registry:"#6BA0E0",
+    component:"#5C8A4C",engine:"#C09D5D",token:"#E0A23C",card:"#988058",spec:"#C8920E",
+    doc:"#8C8A7E",ai:"#E06A50",template:"#A89678",ui_kit:"#5E7CA6","ui-kit":"#5E7CA6",
+    atomicity:"#B49A5C",app:"#9C8C6E",specimen:"#D0C098",other:"#6b6354",folder:"#3a342a",
+    archive:"#5a5048",ingest:"#5b7676",inspo:"#7d709a",upload:"#5f6b7e",shot:"#46423a"};
+  function encSet(id){ return (ENC&&ENC.sets&&ENC.sets[id])||null; }
+  function rc(r){ var s=encSet("role-colour"); return (s&&s.values[r])||RC[r]||"#6b6354"; }
+
+  function pretty(name){ return name.replace(/\.[a-z]+$/,'').replace(/[-_]/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2'); }
+  function describe(n){
+    if (DESC[n.id]) return {what:DESC[n.id][0], more:DESC[n.id][1], role:roleName(n)};
+    var defs=DEFINES[n.id]||[];
+    if (defs.length){ var s=SYS[defs[0]]; if(s) return {what:capitalize(s.name.replace(/^the /,'')), more:"This file provides "+s.name+".", role:roleName(n)}; }
+    var r=ROLE[n.role]||ROLE.other;
+    var what = (n.type==="file") ? pretty(n.name) : n.name;
+    var more = r[1];
+    if (n.role==="other" && n.ext){ if(["png","jpg","jpeg","gif","svg","webp"].indexOf(n.ext)>=0){what=pretty(n.name);more="An image asset (."+n.ext+").";} else if(n.ext==="json"){more="A data file.";} else if(n.ext==="md"){more="A notes / documentation file.";} }
+    else if (n.type==="file") more = r[0]+" — "+r[1];
+    if (n.type==="folder") more = "Holds "+countFiles(n.id)+" files.";
+    return {what:what, more:more, role:roleName(n)};
+  }
+  function roleName(n){ if(n.type==="folder")return "Folder"; return (ROLE[n.role]||ROLE.other)[0]; }
+  function shortWhat(n){ return describe(n).what; }
+  function capitalize(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):s; }
+  function countFiles(id){ var c=0; (function w(p){(KIDS[p]||[]).forEach(function(k){k.type==="file"?c++:w(k.id);});})(id); return c; }
+
+  // ===== index =====
+  function index(){
+    DATA.nodes.forEach(function(n){ NODE[n.id]=n; if(n.parent){(KIDS[n.parent]||(KIDS[n.parent]=[])).push(n);} });
+    KIDS["__root"]=DATA.nodes.filter(function(n){return !n.parent;});
+    (DATA.globals||[]).forEach(function(g){ (DEFINES[g.node]||(DEFINES[g.node]=[])).push(g.global); DEFINER[g.global]=g.node; });
+    DATA.edges.forEach(function(e){
+      if(e.kind==="contains")return;
+      (OUT[e.from]||(OUT[e.from]=[])).push(e);
+      if(e.kind.indexOf("uses:")===0){var f=DEFINER[e.kind.split(":")[1]]; if(f)(IN[f]||(IN[f]=[])).push({from:e.from,kind:e.kind});}
+      else if(e.kind==="loads"){(IN[e.to]||(IN[e.to]=[])).push({from:e.from,kind:e.kind});}
+    });
+  }
+  function resolveOut(id){
+    var seen={}, out=[];
+    (OUT[id]||[]).forEach(function(e){
+      if(e.kind==="loads"){ if(NODE[e.to]&&!seen["L"+e.to]){seen["L"+e.to]=1; out.push({id:e.to, verb:"loads", why:"loads "+NODE[e.to].name});} }
+      else if(e.kind.indexOf("uses:")===0){ var g=e.kind.split(":")[1], s=SYS[g], f=DEFINER[g];
+        if(f&&f!==id&&!seen["U"+f]){seen["U"+f]=1; out.push({id:f, verb:(s?s.out:"uses"), why:(s?s.out+" "+s.name:"uses "+g), sys:s?s.name:g});} }
+    });
+    return out;
+  }
+  function resolveIn(id){
+    var seen={}, out=[];
+    (IN[id]||[]).forEach(function(e){
+      if(seen[e.from])return; seen[e.from]=1;
+      var why, verb;
+      if(e.kind==="loads"){verb="loaded by"; why="loads this file";}
+      else{var g=e.kind.split(":")[1], s=SYS[g]; verb=(s?s.in:"uses"); why=(s?s.in+" "+s.name+" (here)":"uses "+g);}
+      out.push({id:e.from, verb:verb, why:why});
+    });
+    return out;
+  }
+
+  // ===== weights: meaningful system big & readable, supporting assets small but present =====
+  function leafW(n){
+    var r=n.role, e=n.ext;
+    if(["registry","engine","axis-core","glyphic-core","meaning","value-source"].indexOf(r)>=0) return 12;
+    if(["axis","component","token","ai"].indexOf(r)>=0) return 7.5;
+    if(["axis-css","glyphic-css"].indexOf(r)>=0) return 5;
+    if(["card","spec","template","specimen","ui-kit","app","atomicity"].indexOf(r)>=0) return 3.2;
+    if(r==="doc") return 2.2;
+    if(["ingest","inspo","upload"].indexOf(r)>=0) return 0.6;
+    if(["archive","shot"].indexOf(r)>=0) return 0.45;
+    if(["png","jpg","jpeg","gif","webp","svg"].indexOf(e)>=0) return 0.7;
+    return 1.1;
+  }
+  // ===== sizing-mode registry: ONE home for every "size = f(node)" lens =====
+  // (principle gate) the Size selector is a PROJECTION of this — add a mode here and it appears.
+  // Treemap normalises siblings within each parent, so every leaf size is automatically
+  // RELATIVE to the others in its own folder/zone, whichever metric is chosen.
+  function deg(n){ return resolveOut(n.id).length + resolveIn(n.id).length; }
+  var SIZERS = {
+    importance:{label:"Role",      hint:"system importance",      leaf:function(n){return leafW(n);}},
+    size:      {label:"File size", hint:"bytes, relative within folder", leaf:function(n){return n.size!=null?Math.max(n.size,1):1;}},
+    links:     {label:"Links",     hint:"total connections",      leaf:function(n){return Math.max(deg(n),0.35);}},
+    influence: {label:"Used by",   hint:"how many depend on it",   leaf:function(n){return Math.max(resolveIn(n.id).length,0.3);}},
+    even:      {label:"Even",      hint:"pure folder structure",  leaf:function(){return 1;}}
+  };
+  var SIZE_ORDER=["importance","size","links","influence","even"], sizeMode="importance";
+  // ZONES stay stable (sized by system importance) so spatial memory holds across lens switches;
+  // only FILES resize within their own folder by the chosen metric — "relative to others in that folder".
+  function stableFolder(n){ if(n.__sw!=null)return n.__sw;
+    var s=0.4; (KIDS[n.id]||[]).forEach(function(k){ s += (k.type==="folder")?stableFolder(k):leafW(k); });
+    return n.__sw=Math.max(s,0.4); }
+  function weight(n){ if(n.type==="folder") return stableFolder(n);
+    return (SIZERS[sizeMode]||SIZERS.importance).leaf(n); }
+  function metricLeaf(n){ return (SIZERS[sizeMode]||SIZERS.importance).leaf(n); }
+  // Child layout values for ONE folder. Subfolders keep their stable (importance) weight so zones
+  // never move. The folder's loose FILES share a fixed budget (their combined importance) and split
+  // it by the current metric — so a file resizes ONLY against its own siblings, never across the
+  // folder boundary. Folder-weight and file-weight thus stay in the same currency at every level.
+  function childValues(pid){
+    var kids=(KIDS[pid]||[]); if(!kids.length) return [];
+    var files=[],folders=[],budget=0,msum=0;
+    kids.forEach(function(k){ if(k.type==="folder")folders.push(k); else { files.push(k); budget+=leafW(k); msum+=metricLeaf(k); } });
+    if(msum<=0) msum=1; if(budget<=0) budget=files.length*0.5;
+    var out=folders.map(function(f){ return {node:f,value:stableFolder(f)}; });
+    files.forEach(function(f){ out.push({node:f, value: budget*(metricLeaf(f)/msum)}); });
+    return out.filter(function(c){return c.value>0;}).sort(function(a,b){return b.value-a.value;});
+  }
+
+  // ===== colour-mode registry: ONE home for every "colour = f(node)" lens =====
+  var EXT_COL={js:"#E0C010",mjs:"#E0C010",jsx:"#6BA0E0",ts:"#5E7CA6",tsx:"#5E7CA6",css:"#E0A23C",html:"#5C8A4C",md:"#8C8A7E",json:"#B98664",png:"#6b6354",jpg:"#6b6354",jpeg:"#6b6354",gif:"#6b6354",webp:"#6b6354",svg:"#7CA85B"};
+  function heatCol(v,max){ var t=max>0?Math.min(v/max,1):0; var s=encSet("link-heat"); var stops=(s&&s.stops)||[[90,84,72],[224,162,16],[224,90,60]];
+    var seg=t<0.5?0:1, p=t<0.5?t/0.5:(t-0.5)/0.5, f=stops[seg], g=stops[seg+1];
+    return 'rgb('+Math.round(f[0]+(g[0]-f[0])*p)+','+Math.round(f[1]+(g[1]-f[1])*p)+','+Math.round(f[2]+(g[2]-f[2])*p)+')'; }
+  var COLORERS={
+    system:{label:"System",      of:function(n){return rc(n.type==="folder"?(n.role==="folder"?dominRole(n.id):n.role):n.role);}},
+    type:  {label:"File type",   of:function(n){ var s=encSet("type-colour"); if(n.type==="folder")return (s&&s.folderColour)||"#3a342a"; return (s&&s.values[n.ext])||EXT_COL[n.ext]||(s&&s.fallback)||"#6b6354"; }},
+    heat:  {label:"Heat (links)",of:function(n){return n.type==="folder"?((encSet("link-heat")||{}).folderColour||"#3a342a"):heatCol(deg(n),HEATMAX);}}
+  };
+  var COLOR_ORDER=["system","type","heat"], colorMode="system", HEATMAX=1;
+  function colorOf(n){ return (COLORERS[colorMode]||COLORERS.system).of(n); }
+
+  // ===== squarified treemap (Bruls et al.) =====
+  function squarify(items,x,y,w,h){
+    var out=[]; if(!items.length||w<=0||h<=0)return out;
+    var total=0; items.forEach(function(c){total+=c.value;}); if(total<=0)return out;
+    var area=w*h; items.forEach(function(c){ c._a=c.value/total*area; });
+    var rx=x,ry=y,rw=w,rh=h, row=[], i=0;
+    function worst(r,len){ var s=0,mx=0,mn=Infinity; r.forEach(function(c){s+=c._a; if(c._a>mx)mx=c._a; if(c._a<mn)mn=c._a;});
+      var len2=len*len,s2=s*s; return Math.max(len2*mx/s2, s2/(len2*mn)); }
+    function layoutRow(r){ var s=0; r.forEach(function(c){s+=c._a;});
+      if(rw>=rh){ var cw=s/rh, yy=ry; r.forEach(function(c){ var ch=c._a/cw; out.push({node:c.node,x:rx,y:yy,w:cw,h:ch}); yy+=ch; }); rx+=cw; rw-=cw; }
+      else { var chh=s/rw, xx=rx; r.forEach(function(c){ var cwid=c._a/chh; out.push({node:c.node,x:xx,y:ry,w:cwid,h:chh}); xx+=cwid; }); ry+=chh; rh-=chh; } }
+    while(i<items.length){
+      var len=Math.min(rw,rh), c=items[i];
+      if(!row.length){ row.push(c); i++; continue; }
+      if(worst(row,len) >= worst(row.concat([c]),len)){ row.push(c); i++; }
+      else { layoutRow(row); row=[]; }
+    }
+    if(row.length) layoutRow(row);
+    return out;
+  }
+
+  function labH(depth,w,h){ if(depth<1||w<50||h<24)return 0; return Math.min(depth===1?19:13, Math.round(h*0.16)); }
+  function place(id,x,y,w,h,depth){
+    RECT[id]={x:x,y:y,w:w,h:h,depth:depth};
+    var kids=(KIDS[id]||[]); if(!kids.length)return;
+    var lab=labH(depth,w,h), pad=(w>34&&h>34)?3:1;
+    var cx=x+pad, cy=y+lab+pad, cw=w-pad*2, ch=h-lab-pad*2;
+    if(cw<3||ch<3)return;
+    var its=childValues(id);
+    squarify(its,cx,cy,cw,ch).forEach(function(r){ place(r.node.id,r.x,r.y,r.w,r.h,depth+1); });
+  }
+
+  // ===== colour helpers =====
+  function hexToRgb(h){ h=h.replace('#',''); if(h.length===3)h=h.split('').map(function(c){return c+c;}).join(''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+  function tint(hex,a){ var c=hexToRgb(hex); return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
+  function lift(hex){ var c=hexToRgb(hex), m=Math.max(c[0],c[1],c[2]); if(m<170){ var f=205/(m||1); c=c.map(function(v){return Math.min(255,Math.round(v*f));}); } return 'rgb('+c[0]+','+c[1]+','+c[2]+')'; }
+  function dominRole(id){ var c={}; (function w(p){(KIDS[p]||[]).forEach(function(k){ if(k.type==="folder")w(k.id); else c[k.role]=(c[k.role]||0)+1; });})(id);
+    var best="other",bn=-1; Object.keys(c).forEach(function(r){ if(r!=="other"&&c[r]>bn){bn=c[r];best=r;} }); return best; }
+
+  // ===== build the map =====
+  var EL={}, LAYOUT_REGIONS=[], LAYOUT_CENTER={cx:0,cy:0};
+  function isRadial(){ return !!(LAYOUTS[layoutMode] && LAYOUTS[layoutMode].radial); }
+  // annular sector path (for the Sunburst arcs)
+  function annular(cx,cy,r0,r1,a0,a1){
+    var lg=(a1-a0)>Math.PI?1:0, co=Math.cos, si=Math.sin;
+    return "M"+(cx+r1*co(a0)).toFixed(2)+" "+(cy+r1*si(a0)).toFixed(2)
+      +" A"+r1.toFixed(2)+" "+r1.toFixed(2)+" 0 "+lg+" 1 "+(cx+r1*co(a1)).toFixed(2)+" "+(cy+r1*si(a1)).toFixed(2)
+      +" L"+(cx+r0*co(a1)).toFixed(2)+" "+(cy+r0*si(a1)).toFixed(2)
+      +" A"+r0.toFixed(2)+" "+r0.toFixed(2)+" 0 "+lg+" 0 "+(cx+r0*co(a0)).toFixed(2)+" "+(cy+r0*si(a0)).toFixed(2)+" Z";
+  }
+  // role → human label (single source for Districts headers + the colour legend)
+  var ROLE_LABELS={axis:"Dials","axis-core":"Dials","axis-css":"Dials","value-source":"Values","glyphic-core":"Mark-maker","glyphic-css":"Mark-maker",meaning:"Meaning",registry:"Catalogues",component:"Blocks",engine:"Engine",token:"Tokens",card:"Specimens",spec:"Specs",doc:"Notes",ai:"AI",template:"Templates",ui_kit:"UI Kits","ui-kit":"UI Kits",atomicity:"Atomicity",app:"App shell",specimen:"Specimens",other:"Assets",folder:"Assets",archive:"Archive",ingest:"Ingest",inspo:"Inspiration",upload:"Uploads",shot:"Screenshots"};
+  function roleLabel(r){ return ROLE_LABELS[r]||r; }
+  // ===== LAYOUT registry: ONE home for every "directory → RECT" projection =====
+  // Each layout is a deterministic projection of the SAME tree into RECT{x,y,w,h,depth}, optionally
+  // pushing labelled group REGIONS (Districts/Layers). Each reveals a DIFFERENT relational structure:
+  //   nested    → containment  (WHERE a file lives — the folder tree)
+  //   icicle    → hierarchy    (depth read left→right; parent→child cascade)
+  //   districts → kind         (regroup by SYSTEM/role, ignoring folders — the system by type)
+  //   layers    → resolution   (strata by how depended-on a file is — foundations at the base)
+  // Switching is a FLIP morph (applyLayout). Add a layout = one entry here; it appears in the menu.
+  var LAYOUTS = {
+    nested: { label:"Nested", hint:"folders as boxes within boxes — where each file lives",
+      build:function(W,H){ var roots=childValues("__root");
+        squarify(roots, 8, 8, W-16, H-16).forEach(function(r){ place(r.node.id, r.x, r.y, r.w, r.h, 1); }); } },
+
+    sunburst: { label:"Sunburst", hint:"radial — folders are inner-ring sectors, files are spokes whose LENGTH = size",
+      radial:true,
+      build:function(W,H){ var cx=W/2, cy=H/2; LAYOUT_CENTER={cx:cx,cy:cy};
+        var R=Math.min(W,H)/2 - 30, inner=24;
+        // folder depth (rings) + leaf counts (angle) — memoised
+        var maxFD=1; (function s(id,d){ (KIDS[id]||[]).forEach(function(k){ if(k.type==="folder"){ if(d>maxFD)maxFD=d; s(k.id,d+1);} }); })("__root",1);
+        var LC={}; function leaves(id){ if(LC[id]!=null)return LC[id]; var n=NODE[id];
+          if(n && n.type!=="folder") return LC[id]=1;
+          var kids=KIDS[id]||[]; if(!kids.length) return LC[id]=1;
+          var c=0; kids.forEach(function(k){ c+=leaves(k.id); }); return LC[id]=Math.max(c,1); }
+        var folderZone=inner+(R-inner)*0.42, ringW=(folderZone-inner)/maxFD, fileMax=R-folderZone;
+        // size normalisation across files (current size-lens metric) → spoke length
+        var mins=Infinity, maxs=0; DATA.nodes.forEach(function(n){ if(n.type!=="folder"){ var v=metricLeaf(n); if(v<mins)mins=v; if(v>maxs)maxs=v; } });
+        if(!(maxs>mins)){ mins=0; maxs=1; }
+        function frac(n){ return 0.14 + 0.86*((metricLeaf(n)-mins)/(maxs-mins||1)); }
+        function sortKids(arr){ return arr.slice().sort(function(a,b){ return (b.type==="folder")-(a.type==="folder") || a.name.localeCompare(b.name); }); }
+        function node(id,a0,a1,depth){ var n=NODE[id], mid=(a0+a1)/2;
+          if(n && n.type!=="folder"){ var r1=folderZone+fileMax*frac(n), mr=(folderZone+r1)/2;
+            RECT[id]={x:cx+mr*Math.cos(mid), y:cy+mr*Math.sin(mid), w:0, h:0, depth:depth, arc:{a0:a0,a1:a1,r0:folderZone,r1:r1,file:true}}; return; }
+          var r0=inner+(depth-1)*ringW, r1=inner+depth*ringW, mr=(r0+r1)/2;
+          RECT[id]={x:cx+mr*Math.cos(mid), y:cy+mr*Math.sin(mid), w:0, h:0, depth:depth, arc:{a0:a0,a1:a1,r0:r0,r1:r1,folder:true}};
+          var kids=sortKids(KIDS[id]||[]), tot=0; kids.forEach(function(k){ tot+=leaves(k.id); }); if(tot<=0)return;
+          var span=a1-a0, ca=a0; kids.forEach(function(k){ var da=span*leaves(k.id)/tot; node(k.id, ca, ca+da, depth+1); ca+=da; }); }
+        var roots=sortKids(KIDS["__root"]||[]), rtot=0; roots.forEach(function(k){ rtot+=leaves(k.id); }); if(rtot<=0)return;
+        var GAP=0.014, a=-Math.PI/2; roots.forEach(function(k){ var da=2*Math.PI*leaves(k.id)/rtot; node(k.id, a+GAP/2, a+da-GAP/2, 1); a+=da; }); } },
+
+    districts: { label:"Districts", hint:"regroup by SYSTEM, ignoring folders — see the system by kind",
+      build:function(W,H){ var pad=8, byRole={};
+        DATA.nodes.forEach(function(n){ if(n.type==="file"){ (byRole[n.role]=byRole[n.role]||[]).push(n); } });
+        var regions=Object.keys(byRole).map(function(role){ var files=byRole[role], wsum=0; files.forEach(function(f){wsum+=leafW(f);}); return {role:role,files:files,value:Math.max(wsum,0.5)}; })
+          .sort(function(a,b){return b.value-a.value;});
+        squarify(regions.map(function(r){return {node:r,value:r.value};}), pad,pad,W-2*pad,H-2*pad).forEach(function(cell){ var rg=cell.node, col=rc(rg.role);
+          LAYOUT_REGIONS.push({x:cell.x,y:cell.y,w:cell.w,h:cell.h,label:roleLabel(rg.role)+" \u00b7 "+rg.files.length,color:col});
+          var hd=Math.min(22, cell.h*0.13);
+          var items=rg.files.map(function(f){return {node:f,value:metricLeaf(f)};}).filter(function(c){return c.value>0;}).sort(function(a,b){return b.value-a.value;});
+          squarify(items, cell.x+4, cell.y+hd+2, cell.w-8, cell.h-hd-6).forEach(function(r){ RECT[r.node.id]={x:r.x,y:r.y,w:r.w,h:r.h,depth:2}; }); }); } },
+
+    layers: { label:"Layers", hint:"resolution strata — most-depended-on at the base, leaves on top",
+      build:function(W,H){ var pad=8;
+        function band(n){ var u=resolveIn(n.id).length; return u>=7?0:u>=3?1:u>=1?2:3; }
+        var BANDS=[{k:3,label:"Leaves \u00b7 nothing resolves from them",col:"#6b6354"},
+                   {k:2,label:"Used \u00b7 a few dependents",col:"#9C8C6E"},
+                   {k:1,label:"Core \u00b7 widely resolved-from",col:"#6BA0E0"},
+                   {k:0,label:"Foundations \u00b7 the single sources",col:"#E0C010"}];
+        var groups={0:[],1:[],2:[],3:[]}; DATA.nodes.forEach(function(n){ if(n.type==="file") groups[band(n)].push(n); });
+        var hs=BANDS.map(function(b){ var s=0; groups[b.k].forEach(function(f){s+=leafW(f);}); return Math.sqrt(Math.max(s,1)); });
+        var htot=hs.reduce(function(a,b){return a+b;},0)||1, avail=H-2*pad, y=pad;
+        BANDS.forEach(function(b,i){ var bh=avail*hs[i]/htot, files=groups[b.k];
+          LAYOUT_REGIONS.push({x:pad,y:y,w:W-2*pad,h:bh,label:b.label+" \u00b7 "+files.length,color:b.col});
+          var hd=Math.min(20,bh*0.18);
+          var items=files.map(function(f){return {node:f,value:metricLeaf(f)};}).filter(function(c){return c.value>0;}).sort(function(a,b){return b.value-a.value;});
+          squarify(items, pad+4, y+hd+2, W-2*pad-8, bh-hd-6).forEach(function(r){ RECT[r.node.id]={x:r.x,y:r.y,w:r.w,h:r.h,depth:2}; });
+          y+=bh; }); } }
+  };
+  var LAYOUT_ORDER=["nested","sunburst","districts","layers"], layoutMode="nested", radialFocus="__root";
+
+  function computeRECT(){
+    var board=document.getElementById("map"), W=board.clientWidth, H=board.clientHeight;
+    if(W<=0||H<=0) return false;
+    RECT={}; LAYOUT_REGIONS=[]; DATA.nodes.forEach(function(n){ n.__w=null; });
+    (LAYOUTS[layoutMode]||LAYOUTS.nested).build(W,H);
+    return true;
+  }
+  function radialHTML(){
+    var board=document.getElementById("map"), W=board.clientWidth, H=board.clientHeight, C=LAYOUT_CENTER;
+    var R=Math.min(W,H)/2-30;
+    var s='<svg class="rsvg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+    // folder ring sectors first (behind), then file spokes (in front)
+    var folders="", files="", labels="";
+    Object.keys(RECT).forEach(function(id){ var n=NODE[id], Rc=RECT[id]; if(!n||!Rc.arc)return; var a=Rc.arc, col=colorOf(n);
+      if(a.folder){ var gap=Math.min(0.01,(a.a1-a.a0)*0.04);
+        folders+='<path class="arc fold" data-id="'+esc(id)+'" d="'+annular(C.cx,C.cy,a.r0+0.8,a.r1-0.8,a.a0+gap,a.a1-gap)+'" fill="'+tint(col,Rc.depth===1?.34:.2)+'" stroke="'+tint(col,.85)+'" stroke-width="0.7"><title>'+esc(n.name+" — "+shortWhat(n))+'</title></path>';
+        if(Rc.depth===1 && (a.a1-a.a0)>0.05){ var mid=(a.a0+a.a1)/2, lr=R+9, lx=C.cx+lr*Math.cos(mid), ly=C.cy+lr*Math.sin(mid);
+          var deg=mid*180/Math.PI, flip=Math.cos(mid)<0, rot=flip?deg+180:deg, anc=flip?"end":"start";
+          labels+='<text class="rrim" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" text-anchor="'+anc+'" transform="rotate('+rot.toFixed(1)+' '+lx.toFixed(1)+' '+ly.toFixed(1)+')" fill="'+lift(col)+'">'+esc(n.name)+'</text>'; }
+      } else { files+='<path class="arc" data-id="'+esc(id)+'" d="'+annular(C.cx,C.cy,a.r0+0.5,a.r1,a.a0,a.a1)+'" fill="'+tint(col,.62)+'" stroke="'+tint(col,.8)+'" stroke-width="0.35"><title>'+esc(n.name+" — "+shortWhat(n))+'</title></path>'; }
+    });
+    s+=folders+files+labels;
+    s+='<circle cx="'+C.cx+'" cy="'+C.cy+'" r="22" fill="#15120e" stroke="rgba(255,255,255,.18)"/><text class="rhub" x="'+C.cx+'" y="'+(C.cy+4)+'">root</text></svg>';
+    return s;
+  }
+  function buildMap(){
+    if(!computeRECT()){ requestAnimationFrame(buildMap); return; }
+    var ids=Object.keys(RECT).sort(function(a,b){return RECT[a].depth-RECT[b].depth;});
+    var html="";
+    if(isRadial()){ html=radialHTML(); } else {
+    LAYOUT_REGIONS.forEach(function(rg){ html+='<div class="rgn" style="left:'+rg.x.toFixed(1)+'px;top:'+rg.y.toFixed(1)+'px;width:'+rg.w.toFixed(1)+'px;height:'+rg.h.toFixed(1)+'px;border-color:'+tint(rg.color,.4)+';background:'+tint(rg.color,.045)+'"><span class="rlab" style="color:'+lift(rg.color)+'"><span class="bsw" style="background:'+rg.color+'"></span>'+esc(rg.label)+'</span></div>'; });
+    ids.forEach(function(id){ var n=NODE[id], R=RECT[id]; if(!n||n.type!=="folder")return;
+      var dc=colorOf(n), bg=(R.depth===1)?('background:'+tint(dc,.05)+';border-color:'+tint(dc,.42)+';'):'', lab=labH(R.depth,R.w,R.h);
+      html+='<div class="box d'+R.depth+' click" data-id="'+esc(id)+'" style="left:'+R.x.toFixed(1)+'px;top:'+R.y.toFixed(1)+'px;width:'+R.w.toFixed(1)+'px;height:'+R.h.toFixed(1)+'px;'+bg+'">'
+        +'<div class="blab" style="height:'+Math.max(lab,11)+'px;font-size:'+(R.depth===1?12:10)+'px;display:'+(lab>=11?'flex':'none')+'"><span class="bsw" style="background:'+dc+'"></span>'+esc(n.name)+'</div></div>';
+    });
+    ids.forEach(function(id){ var n=NODE[id], R=RECT[id]; if(!n||n.type!=="file")return;
+      var col=colorOf(n), showL=R.w>44&&R.h>12;
+      html+='<div class="chip" data-id="'+esc(id)+'" title="'+esc(n.name+' — '+shortWhat(n))+'" style="left:'+R.x.toFixed(1)+'px;top:'+R.y.toFixed(1)+'px;width:'+R.w.toFixed(1)+'px;height:'+R.h.toFixed(1)+'px;background:'+tint(col,.26)+';border-color:'+tint(col,.6)+'">'
+        +'<span class="cl" style="color:'+lift(col)+';display:'+(showL?'block':'none')+'">'+esc(n.name)+'</span></div>';
+    });
+    }
+    var canvas=document.getElementById("canvas"); canvas.innerHTML=html;
+    EL={}; canvas.querySelectorAll("[data-id]").forEach(function(e){ EL[e.dataset.id]=e; });
+    canvas.querySelectorAll(".chip,.box.click,.arc").forEach(function(el){ el.addEventListener("click",function(e){ e.stopPropagation();
+      if(window.__dragHappened) return;
+      var id=el.dataset.id, n=NODE[id];
+      if(moveSrc){ var dest = (n&&n.type==="folder")?id:(n?n.parent:null); finishMove(dest); return; }
+      select(id,true); }); });
+    buildEdges(); drawEdges();
+  }
+  // apply a new SIZE lens — geometry is AUTHORITATIVE & INSTANT (computed === inline immediately,
+  // never depends on a transition completing). The morph is a FLIP transform layered on top:
+  // transform does not affect computed width/height, so correctness holds even if the animation
+  // is paused (e.g. backgrounded tab) or interrupted by a rapid second lens switch.
+  function relayout(){
+    var prev={}; Object.keys(RECT).forEach(function(id){ var R=RECT[id]; prev[id]={x:R.x,y:R.y,w:R.w,h:R.h}; });
+    computeRECT();
+    Object.keys(RECT).forEach(function(id){ var el=EL[id], R=RECT[id], n=NODE[id]; if(!el||!n)return;
+      el.style.transition="none";
+      el.style.left=R.x.toFixed(1)+"px"; el.style.top=R.y.toFixed(1)+"px"; el.style.width=R.w.toFixed(1)+"px"; el.style.height=R.h.toFixed(1)+"px";
+      if(n.type==="folder"){ var lab=labH(R.depth,R.w,R.h), bl=el.firstChild; if(bl){ bl.style.display=lab>=11?'flex':'none'; if(lab>=11)bl.style.height=lab+'px'; } }
+      else { var cl=el.firstChild, showL=R.w>44&&R.h>12; if(cl) cl.style.display=showL?'block':'none'; }
+      var o=prev[id];
+      if(o && R.w>0 && R.h>0){ el.style.transformOrigin="top left";
+        el.style.transform="translate("+(o.x-R.x).toFixed(1)+"px,"+(o.y-R.y).toFixed(1)+"px) scale("+(o.w/R.w).toFixed(3)+","+(o.h/R.h).toFixed(3)+")"; }
+      else el.style.transform="";
+    });
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      Object.keys(EL).forEach(function(id){ var el=EL[id]; if(!el)return;
+        el.style.transition="transform .5s cubic-bezier(.45,0,.2,1), background .4s, border-color .4s"; el.style.transform=""; });
+    }); });
+    drawEdges(); setTimeout(drawEdges,540);
+  }
+  // Layout switches (and size-lens changes in region layouts) change the SET of nodes on screen, so
+  // a full DOM rebuild is needed — relayout only repositions existing elements. applyLayout rebuilds
+  // and FLIP-morphs the survivors from their previous rects; new nodes appear, removed ones vanish.
+  function applyLayout(){ var prev=captureRects(); buildMap(); flipFrom(prev); if(selected && NODE[selected]) select(selected,true,true); }
+  function reflow(){ if(isRadial() || (LAYOUT_REGIONS && LAYOUT_REGIONS.length)) applyLayout(); else relayout(); }
+  // re-tint to a new COLOUR lens — in place, no relayout
+  function recolor(){
+    Object.keys(EL).forEach(function(id){ var el=EL[id], n=NODE[id]; if(!n)return; var col=colorOf(n);
+      if(n.type==="folder"){ var R=RECT[id]; if(R&&R.depth===1){ el.style.background=tint(col,.05); el.style.borderColor=tint(col,.42); } var bl=el.firstChild, sw=bl&&bl.firstChild; if(sw)sw.style.background=col; }
+      else { el.style.background=tint(col,.26); el.style.borderColor=tint(col,.6); var cl=el.firstChild; if(cl)cl.style.color=lift(col); }
+    });
+  }
+  function fillSel(id,order,reg,cur){ var s=document.getElementById(id); if(!s)return;
+    s.innerHTML=order.map(function(k){return '<option value="'+k+'"'+(k===cur?' selected':'')+'>'+reg[k].label+'</option>';}).join(""); }
+
+  // ===== EDITOR (Piece 5): structural edits → typed OPERATION QUEUE + live morph + persistence =====
+  // The preview can't write project files; edits mutate the in-memory model, morph the canvas, and
+  // emit typed operations (the schema). A disk-write adapter (Claude Code — see
+  // analysis/SYSTEM-MAP-EDITOR-ADAPTER.md) consumes the queue to apply real fs changes, then rescan.
+  var editMode=false, EDITS=[], moveSrc=null, diskModel=null, LSKEY="cv-sysmap-edits-v1";
+  function uid(pre){ return (pre||"new")+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+  function extOf(name){ var d=name.lastIndexOf("."); return d>0?name.slice(d+1).toLowerCase():""; }
+  function descendants(id){ var out=[]; (function w(p){(KIDS[p]||[]).forEach(function(k){out.push(k); if(k.type==="folder")w(k.id);});})(id); return out; }
+  function isAncestor(a,b){ var n=NODE[b]; while(n){ if(n.parent===a)return true; n=NODE[n.parent]; } return false; }
+
+  function reindexAll(){ NODE={};KIDS={};OUT={};IN={};DEFINES={};DEFINER={}; DATA.nodes.forEach(function(n){n.__sw=null;});
+    index(); NODE["__root"]={id:"__root",type:"folder",name:"root"};
+    HEATMAX=1; DATA.nodes.forEach(function(n){ if(n.type==="file"){ var d=deg(n); if(d>HEATMAX)HEATMAX=d; } }); }
+
+  // capture current rects, then after a mutation+rebuild, FLIP-morph survivors from old→new
+  function captureRects(){ var p={}; Object.keys(RECT).forEach(function(id){ p[id]=RECT[id]; }); return p; }
+  function flipFrom(prev){
+    Object.keys(EL).forEach(function(id){ var el=EL[id], o=prev[id], n=RECT[id]; if(!o||!n||!(n.w>0))return;
+      if(el.tagName && el.tagName.toLowerCase()==="path")return;
+      el.style.transition="none"; el.style.transformOrigin="top left";
+      el.style.transform="translate("+(o.x-n.x).toFixed(1)+"px,"+(o.y-n.y).toFixed(1)+"px) scale("+(o.w/n.w).toFixed(3)+","+(o.h/n.h).toFixed(3)+")"; });
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ Object.keys(EL).forEach(function(id){ var el=EL[id]; if(!el)return;
+      el.style.transition="transform .5s cubic-bezier(.45,0,.2,1), background .4s, border-color .4s"; el.style.transform=""; }); }); });
+  }
+  // structural mutation + FLIP morph (survivors animate; moved/new snap), then re-emit + persist
+  function morphEdit(mutate){ pendingSnap=snapshot(); var prev=captureRects(); mutate(); reindexAll(); buildMap(); flipFrom(prev); }
+
+  // ===== UNDO / REDO (history of the in-memory model + op queue) =====
+  var undoStack=[], redoStack=[], pendingSnap=null, HIST_MAX=60;
+  function cloneData(d){ try{ return (typeof structuredClone==="function")?structuredClone(d):JSON.parse(JSON.stringify(d)); }catch(e){ return JSON.parse(JSON.stringify(d)); } }
+  function snapshot(){ return { data:cloneData(DATA), ops:EDITS.slice(), sel:selected }; }
+  function applyState(s){ var prev=captureRects(); DATA=cloneData(s.data); ENC=DATA.encoding||ENC;
+    reindexAll(); buildMap(); flipFrom(prev);
+    EDITS=s.ops.slice(); persistEdits(); renderOps(); updateStatus(); syncToolbar();
+    if(s.sel && NODE[s.sel]) select(s.sel,true,true); else deselect(); }
+  function undo(){ if(!undoStack.length)return; redoStack.push(snapshot()); applyState(undoStack.pop()); syncToolbar(); }
+  function redo(){ if(!redoStack.length)return; undoStack.push(snapshot()); applyState(redoStack.pop()); syncToolbar(); }
+
+  function emit(op){ if(pendingSnap){ undoStack.push(pendingSnap); pendingSnap=null; redoStack=[]; if(undoStack.length>HIST_MAX)undoStack.shift(); }
+    EDITS.push(Object.assign({at:Date.now()},op)); persistEdits(); renderOps(); syncToolbar(); }
+  function persistEdits(){ try{ localStorage.setItem(LSKEY, JSON.stringify({data:DATA, ops:EDITS})); }catch(e){} }
+  function loadEdits(){ try{ var s=localStorage.getItem(LSKEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
+  function clearEdits(){ try{ localStorage.removeItem(LSKEY); }catch(e){} EDITS=[]; renderOps(); }
+
+  // move node under newParentId (null = root); returns false if illegal
+  function relocate(node, newParentId, newName){
+    if(newParentId && (newParentId===node.id || isAncestor(node.id,newParentId))) return false;
+    var name=newName||node.name, pp=newParentId?NODE[newParentId].path:"";
+    var newPath=pp?pp+"/"+name:name; if(NODE[newPath]&&NODE[newPath]!==node) return false;
+    var subs=[node].concat(descendants(node.id)), oldPrefix=node.path, map={};
+    subs.forEach(function(s){ map[s.id]= s.path===oldPrefix ? newPath : newPath+s.path.slice(oldPrefix.length); });
+    subs.forEach(function(s){ s.path=map[s.id]; s.id=map[s.id]; });
+    node.name=name; node.parent=newParentId||null;
+    DATA.edges.forEach(function(e){ if(map[e.from])e.from=map[e.from]; if(map[e.to])e.to=map[e.to]; });
+    (DATA.globals||[]).forEach(function(g){ if(map[g.node])g.node=map[g.node]; });
+    return newPath;
+  }
+  function targetFolder(){ if(!selected)return null; var n=NODE[selected]; if(!n)return null; return n.type==="folder"?n.id:(n.parent||null); }
+  function ensureArchive(){ if(NODE["_archive"])return "_archive"; DATA.nodes.push({id:"_archive",name:"_archive",path:"_archive",parent:null,type:"folder",ext:null,role:"archive",size:null,defines:[],uses:[]}); return "_archive"; }
+
+  function edNewFolder(){ var p=targetFolder(), name=(prompt("New folder name:","new-folder")||"").trim(); if(!name)return;
+    var path=(p?NODE[p].path+"/":"")+name; if(NODE[path]){alert("Already exists");return;}
+    morphEdit(function(){ DATA.nodes.push({id:path,name:name,path:path,parent:p||null,type:"folder",ext:null,role:"folder",size:null,defines:[],uses:[]}); });
+    emit({op:"createFolder", path:path, parent:p||null}); select(path,true);
+  }
+  function edNewFile(){ var p=targetFolder(), name=(prompt("New file name (with extension):","untitled.js")||"").trim(); if(!name)return;
+    var path=(p?NODE[p].path+"/":"")+name; if(NODE[path]){alert("Already exists");return;}
+    morphEdit(function(){ DATA.nodes.push({id:path,name:name,path:path,parent:p||null,type:"file",ext:extOf(name),role:"other",size:0,defines:[],uses:[]}); });
+    emit({op:"createFile", path:path, parent:p||null}); select(path,true);
+  }
+  function edRename(){ if(!selected)return; var n=NODE[selected]; if(!n)return; var name=(prompt("Rename to:",n.name)||"").trim(); if(!name||name===n.name)return;
+    var oldPath=n.path, np; morphEdit(function(){ np=relocate(n,n.parent,name); }); if(np===false){alert("Can't rename (name taken)");return;}
+    emit({op:"rename", from:oldPath, to:np}); select(np,true);
+  }
+  function edDuplicate(){ if(!selected)return; var n=NODE[selected]; if(!n)return;
+    var base=n.name.replace(/(\.[^.]+)$/,""), ext=n.ext?"."+n.ext:"", copyName=base+" copy"+ext;
+    var pPath=n.parent?NODE[n.parent].path:"", newPath=(pPath?pPath+"/":"")+copyName; if(NODE[newPath]){alert("Copy already exists");return;}
+    morphEdit(function(){ var subs=[n].concat(descendants(n.id)), map={};
+      subs.forEach(function(s){ map[s.id]= s.id===n.id ? newPath : newPath+s.path.slice(n.path.length); });
+      subs.forEach(function(s){ var c=Object.assign({},s); c.id=map[s.id]; c.path=map[s.id]; c.parent= s.id===n.id ? n.parent : map[s.parent]; c.defines=[]; DATA.nodes.push(c); });
+      // copy out-edges (loads/uses) so the duplicate resolves like the original
+      DATA.edges.slice().forEach(function(e){ if(map[e.from]) DATA.edges.push({from:map[e.from], to:(map[e.to]||e.to), kind:e.kind, type:e.type}); });
+    });
+    emit({op:"duplicate", from:n.path, to:newPath}); select(newPath,true);
+  }
+  function edArchive(){ if(!selected)return; var n=NODE[selected]; if(!n||n.parent==="_archive")return; var oldPath=n.path, np;
+    morphEdit(function(){ var a=ensureArchive(); np=relocate(n,a,n.name); }); if(np===false){alert("Already archived or name clash");return;}
+    emit({op:"archive", from:oldPath, to:np}); select(np,true);
+  }
+  function edDelete(){ if(!selected)return; var n=NODE[selected]; if(!n)return; if(!confirm("Delete \""+n.name+"\""+(n.type==="folder"?" and everything inside it":"")+"? (queued, not applied to disk until the adapter runs)"))return;
+    var path=n.path, gone={}; [n].concat(descendants(n.id)).forEach(function(s){gone[s.id]=1;});
+    morphEdit(function(){ DATA.nodes=DATA.nodes.filter(function(x){return !gone[x.id];});
+      DATA.edges=DATA.edges.filter(function(e){return !gone[e.from]&&!gone[e.to];}); });
+    emit({op:"delete", path:path}); deselect();
+  }
+  function startMove(){ if(!selected){alert("Select something to move first");return;} moveSrc=selected; document.body.classList.add("moving");
+    showMoveHint("Click a destination folder for “"+NODE[selected].name+"”"); }
+  function finishMove(folderId){ var n=NODE[moveSrc]; document.body.classList.remove("moving"); moveSrc=null; hideMoveHint();
+    if(!n||folderId===n.parent)return; var oldPath=n.path, np; morphEdit(function(){ np=relocate(n,folderId,n.name); });
+    if(np===false){alert("Can't move there (would nest into itself or name clash)");return;}
+    emit({op:"move", from:oldPath, to:np}); select(np,true);
+  }
+  function showMoveHint(t){ var h=document.getElementById("movehint"); if(h){ h.textContent=t; h.classList.add("show"); } }
+  function hideMoveHint(){ var h=document.getElementById("movehint"); if(h) h.classList.remove("show"); }
+
+  function renderOps(){ var b=document.getElementById("opcount"); if(b) b.textContent=EDITS.length;
+    var d=document.getElementById("opsbody"); if(!d)return;
+    if(!EDITS.length){ d.innerHTML='<div class="empty">No edits yet. In Edit mode, use the toolbar to create, rename, duplicate, move, archive or delete — each becomes a queued operation here.</div>'; return; }
+    d.innerHTML=EDITS.map(function(o,i){ var detail=o.path?o.path:(o.from?o.from+(o.to?" → "+o.to:""):""); return '<div class="oprow"><span class="opn">'+(i+1)+'</span><span class="opk">'+esc(o.op)+'</span><span class="opp">'+esc(detail)+'</span></div>'; }).join(""); }
+  function exportOps(){ var payload={generatedFrom:(diskModel&&diskModel.generatedAt)||null, ops:EDITS};
+    var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}), a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download="system-map-operations.json"; a.click(); }
+  function toggleEdit(){ editMode=!editMode; document.body.classList.toggle("editing",editMode);
+    if(!editMode && moveSrc){ moveSrc=null; document.body.classList.remove("moving"); hideMoveHint(); }
+    syncToolbar(); }
+
+
+  // ===== EDGE-TYPE registry: ONE home for every relationship, keyed by its BIDIRECTIONAL VERB =====
+  // An edge type IS a verb pair (forward describes from→to, reverse describes to→from) — never an
+  // opaque name. Toggling a type slices the network. Add a relationship = one entry here (+ the
+  // generator emits edges of that kind). `draw:false` types are shown by the layout, not as lines.
+  var EDGE_TYPES = {
+    contains: { label:"contains",  fwd:"contains",      rev:"sits inside",   color:"#6b6354", draw:false },
+    loads:    { label:"loads",     fwd:"loads",         rev:"loaded by",     color:"#7CA0D0", draw:true  },
+    resolves: { label:"resolves",  fwd:"resolves from", rev:"resolves into", color:"#E0C010", draw:true  }
+  };
+  var EDGE_ORDER=["loads","resolves"], edgeHidden={};
+  function edgeType(kind){ if(kind==="loads")return "loads"; if(kind==="contains")return "contains"; return "resolves"; }
+
+  // ===== resolution edges drawn across the structure =====
+  function buildEdges(){ EDGES=[]; DATA.edges.forEach(function(e){
+    var t=(e.type&&EDGE_TYPES[e.type])?e.type:edgeType(e.kind);
+    if(t==="contains")return;
+    var to=e.to;
+    if(t==="resolves"&&e.kind.indexOf("uses:")===0){ var f=DEFINER[e.kind.split(":")[1]]; if(!f)return; to=f; }
+    if(!RECT[e.from]||!RECT[to]||e.from===to)return;
+    EDGES.push({from:e.from,to:to,type:t}); }); }
+  function ctr(id){ var R=RECT[id]; return R?{x:R.x+R.w/2,y:R.y+R.h/2}:null; }
+  function drawEdges(){
+    var svg=document.getElementById("edges"), b=document.getElementById("map");
+    svg.setAttribute("viewBox","0 0 "+b.clientWidth+" "+b.clientHeight);
+    if(!wiring && !selected){ svg.innerHTML=""; return; }
+    var base="",hi="";
+    EDGES.forEach(function(e){ if(edgeHidden[e.type])return; var et=EDGE_TYPES[e.type]||EDGE_TYPES.resolves;
+      var a=ctr(e.from),c=ctr(e.to); if(!a||!c)return;
+      var involved = selected && (e.from===selected||e.to===selected);
+      var d='M'+a.x.toFixed(1)+' '+a.y.toFixed(1)+' Q '+((a.x+c.x)/2).toFixed(1)+' '+((a.y+c.y)/2).toFixed(1)+' '+c.x.toFixed(1)+' '+c.y.toFixed(1);
+      if(involved){ hi+='<path d="'+d+'" fill="none" stroke="'+et.color+'" stroke-width="2" opacity=".95"/>'; }
+      else if(wiring && !isRadial()){ var strong=e.type==="resolves", op=selected?0.02:(strong?0.14:0.07); base+='<path d="'+d+'" fill="none" stroke="'+et.color+'" stroke-width="'+(strong?0.8:0.6)+'" opacity="'+op+'"/>'; }
+    });
+    svg.innerHTML=base+hi;
+  }
+
+  // ===== selection =====
+  function select(id,fromUser,noDim){ selected=id;
+    var conn={}; resolveOut(id).forEach(function(r){conn[r.id]=1;}); resolveIn(id).forEach(function(r){conn[r.id]=1;});
+    document.querySelectorAll(".chip,.arc").forEach(function(el){ var cid=el.dataset.id;
+      el.classList.toggle("sel",cid===id);
+      el.classList.toggle("hot",!!conn[cid]&&cid!==id);
+      el.classList.toggle("dim", !noDim && cid!==id && !conn[cid]); });
+    document.querySelectorAll(".box.click").forEach(function(el){ var cid=el.dataset.id;
+      el.classList.toggle("dim", !noDim && cid!==id && !conn[cid]); });
+    drawEdges(); renderPanel(id);
+  }
+  function deselect(){ selected=null;
+    document.querySelectorAll(".chip,.arc").forEach(function(c){c.classList.remove("sel","hot","dim");});
+    document.querySelectorAll(".box").forEach(function(c){c.classList.remove("dim");});
+    document.getElementById("panel").classList.remove("show"); drawEdges();
+  }
+  function renderPanel(id){
+    var n=NODE[id]; if(!n)return; var d=describe(n), p=document.getElementById("panel");
+    document.getElementById("pp").textContent=n.path;
+    document.getElementById("pn").innerHTML='<span class="dot" style="background:'+rc(n.role)+'"></span>'+esc(n.name);
+    var defs=DEFINES[id]||[], outs=resolveOut(id), ins=resolveIn(id);
+    var h='<span class="role">'+esc(d.role)+'</span><div class="what">'+esc(d.what)+(d.more?' — '+esc(d.more):'')+'</div>';
+    if(defs.length){ h+='<div class="grp"><h4>What it provides</h4>'; defs.forEach(function(g){var s=SYS[g]; h+='<div class="rel" style="cursor:default"><span class="dot" style="background:'+rc("registry")+'"></span><div class="rx"><div class="rn">'+esc(g)+'</div><div class="rw">'+esc(s?capitalize(s.name):g)+'</div></div></div>';}); h+='</div>'; }
+    if(n.type==="folder"){ var ks=(KIDS[id]||[]).slice().sort(function(a,b){return (b.type==="folder")-(a.type==="folder")||a.name.localeCompare(b.name);}); h+='<div class="grp"><h4>Inside <span class="n">'+ks.length+'</span></h4>'; ks.slice(0,40).forEach(function(kk){h+=relRow(kk.id,"",esc(shortWhat(kk)));}); if(ks.length>40)h+='<div class="empty">+'+(ks.length-40)+' more</div>'; h+='</div>'; }
+    h+='<div class="grp"><h4>How it connects out <span class="n">→ '+outs.length+'</span></h4>';
+    if(!outs.length)h+='<div class="empty">A leaf — raw values or a standalone asset.</div>';
+    outs.forEach(function(r){h+=relRow(r.id,r.verb,esc(NODE[r.id]?NODE[r.id].name:r.id));}); h+='</div>';
+    h+='<div class="grp"><h4>What connects in <span class="n">← '+ins.length+'</span></h4>';
+    if(!ins.length)h+='<div class="empty">Nothing detected uses this'+(n.type==="file"&&["other","doc","card","spec","template"].indexOf(n.role)<0?' — may be unwired.':'.')+'</div>';
+    ins.forEach(function(r){h+=relRow(r.id,r.verb,esc(NODE[r.id]?NODE[r.id].name:r.id));}); h+='</div>';
+    document.getElementById("pb").innerHTML=h;
+    p.classList.add("show");
+    document.getElementById("pb").querySelectorAll("[data-go]").forEach(function(b){b.addEventListener("click",function(){select(b.dataset.go,true);});});
+  }
+  function relRow(id,verb,name){ var n=NODE[id]; if(!n)return ""; return '<button class="rel" data-go="'+esc(id)+'"><span class="dot" style="background:'+rc(n.role)+'"></span><div class="rx">'+(verb?'<div class="rv">'+esc(verb)+'</div>':'')+'<div class="rn">'+name+'</div></div></button>'; }
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+
+  // ===== legend (toggle role visibility) + search =====
+  function buildLegend(){
+    var roles=[["axis","Dials"],["glyphic-core","Mark-maker"],["registry","Catalogues"],["ai","AI"],["component","Blocks"],["engine","Engine"],["token","Tokens"],["meaning","Meaning"],["card","Specimens"],["doc","Notes"],["other","Assets"]];
+    document.getElementById("legend").innerHTML=roles.map(function(r){return '<span class="lg" data-r="'+r[0]+'"><span class="sw" style="background:'+rc(r[0])+'"></span>'+r[1]+'</span>';}).join("");
+    document.querySelectorAll(".lg").forEach(function(l){ l.addEventListener("click",function(){ var r=l.dataset.r; hidden[r]=!hidden[r]; l.classList.toggle("off",hidden[r]); applyFilters(); }); });
+  }
+  function buildEdgeLegend(){ var el=document.getElementById("elegend"); if(!el)return;
+    el.innerHTML=EDGE_ORDER.map(function(k){ var t=EDGE_TYPES[k]; return '<span class="lg el" data-e="'+k+'" title="'+esc(t.fwd+" / "+t.rev)+'"><span class="sw" style="background:'+t.color+'"></span>'+esc(t.label)+'</span>'; }).join("");
+    el.querySelectorAll(".el").forEach(function(l){ l.addEventListener("click",function(e){ e.stopPropagation(); var k=l.dataset.e; edgeHidden[k]=!edgeHidden[k]; l.classList.toggle("off",!!edgeHidden[k]); drawEdges(); }); });
+  }
+  function applyFilters(){
+    var q=(document.getElementById("q").value||"").trim().toLowerCase();
+    document.querySelectorAll(".chip,.arc").forEach(function(el){ var n=NODE[el.dataset.id]; if(!n)return;
+      var roleHidden=!!hidden[n.role];
+      var m=!q||n.name.toLowerCase().indexOf(q)>=0||(shortWhat(n)||"").toLowerCase().indexOf(q)>=0||n.path.toLowerCase().indexOf(q)>=0;
+      el.style.display=(roleHidden||!m)?"none":"";
+      if(q) el.classList.toggle("hot", m); });
+    if(!q) document.querySelectorAll(".chip").forEach(function(el){ if(!selected) el.classList.remove("hot"); });
+  }
+
+  // ===== boot + live refresh (Piece 1b) =====
+  // The model (system-map.json) is the OUTPUT of system/build-system-map.js, the
+  // single source. Regenerating that file on disk is picked up here automatically
+  // (poll on generatedAt) or via the Rescan button — selection/view are preserved.
+  KIDS["__root"]=[];
+  var lastGen=0;
+  function updateStatus(){ var f=0,d=0; DATA.nodes.forEach(function(n){ n.type==="folder"?d++:f++; });
+    var el=document.getElementById("stat"); if(el) el.textContent=f+" files \u00b7 "+d+" folders"; }
+  function reload(j){ var prev=selected;
+    DATA=j; ENC=j.encoding||null; NODE={};KIDS={};OUT={};IN={};DEFINES={};DEFINER={};
+    index(); NODE["__root"]={id:"__root",type:"folder",name:"root"};
+    HEATMAX=1; DATA.nodes.forEach(function(n){ if(n.type==="file"){ var d=deg(n); if(d>HEATMAX)HEATMAX=d; } });
+    buildMap(); lastGen=j.generatedAt; updateStatus();
+    if(prev && NODE[prev]) select(prev,true,true);
+    else if(NODE["app/registry/glyphic-type.js"]) select("app/registry/glyphic-type.js",true,true);
+  }
+  function fetchModel(){ return fetch("system-map.json",{cache:"no-store"}).then(function(r){return r.json();}); }
+  function doRescan(){ var b=document.querySelector('.gx[data-key="rescan"]'); if(b)b.classList.add("on"); fetchModel().then(function(j){ diskModel=j; reload(j); if(b)b.classList.remove("on"); syncToolbar(); }).catch(function(){ if(b)b.classList.remove("on"); }); }
+  fetchModel().then(function(j){ diskModel=j; var saved=loadEdits();
+    reload(saved&&saved.data&&saved.data.nodes?saved.data:j);
+    if(saved&&saved.ops){ EDITS=saved.ops; }
+    renderOps(); buildToolbar(); setupDrag(); }).catch(function(e){ document.getElementById("canvas").innerHTML='<div style="color:#fff;padding:40px">Could not load map data: '+esc(e.message)+'</div>'; });
+
+  // ===== GLYPHIC TOOLBAR — every control is a composed Glyphic (the universal unit) =====
+  // Each control's icon is CV_GLYPHIC.render({form,symbol,fill,color,…}) — the same
+  // compositional component the system is built on — so the toolbar IS a projection of
+  // the glyphic system, not a parallel button set. Form encodes the GROUP (hexagon =
+  // lens/view, square = structure op, circle = system/history); colour encodes polarity
+  // (gold lens · sage add · clay remove · blue neutral edit · muted history). Verb names
+  // surface on hover. Menus group sub-actions by feel (Add ▸ file/folder, Remove ▸ archive/delete).
+  var GLY = {
+    undo:     {form:'circle',  symbol:'undo',          color:{ring:'muted',symbol:'muted'}},
+    redo:     {form:'circle',  symbol:'redo',          color:{ring:'muted',symbol:'muted'}},
+    layout:   {form:'hexagon', symbol:'hierarchy',     color:{ring:'gold',symbol:'gold'}},
+    size:     {form:'hexagon', symbol:'ruler',         color:{ring:'gold',symbol:'gold'}},
+    colour:   {form:'hexagon', symbol:'color-swatches',color:{ring:'gold',symbol:'gold'}},
+    links:    {form:'circle',  symbol:'network',       color:{ring:'blue',symbol:'blue'}},
+    rescan:   {form:'circle',  symbol:'refresh',       color:{ring:'muted',symbol:'muted'}},
+    edit:     {form:'square',  symbol:'edit',          color:{ring:'gold',symbol:'gold'}},
+    add:      {form:'square',  symbol:'plus',          color:{ring:'sage',symbol:'sage'}},
+    rename:   {form:'square',  symbol:'file-edit',     color:{ring:'blue',symbol:'blue'}},
+    duplicate:{form:'square',  symbol:'duplicate',     color:{ring:'blue',symbol:'blue'}},
+    move:     {form:'square',  symbol:'transfer',      color:{ring:'blue',symbol:'blue'}},
+    remove:   {form:'square',  symbol:'minus',         color:{ring:'clay',symbol:'clay'}},
+    ops:      {form:'circle',  symbol:'file-list',     color:{ring:'amber',symbol:'amber'}},
+  };
+  var LEGEND_ROLES=[["axis","Dials"],["glyphic-core","Mark-maker"],["registry","Catalogues"],["ai","AI"],["component","Blocks"],["engine","Engine"],["token","Tokens"],["meaning","Meaning"],["card","Specimens"],["doc","Notes"],["other","Assets"]];
+  var TB=[], popEl=document.getElementById("pop"), popOwner=null;
+  function gIcon(spec,size){ try{ return window.CV_GLYPHIC?CV_GLYPHIC.render(spec,{size:size||22}):'<span style="color:#fff;font-size:13px">•</span>'; }catch(e){ return '<span style="color:#fff;font-size:13px">•</span>'; } }
+  function gel(key,tip){ var b=document.createElement("button"); b.className="gx"; b.dataset.key=key; b.setAttribute("data-tip", typeof tip==="function"?tip():tip); b.innerHTML=gIcon(GLY[key],22); return b; }
+  function btn(key,tip,fn){ var b=gel(key,tip); b.addEventListener("click",function(){ closePop(); fn(); }); TB.push({el:b,tip:tip}); return b; }
+  function toggleBtn(key,onFn,tip,fn){ var b=gel(key,tip); b.addEventListener("click",function(){ closePop(); fn(); }); TB.push({el:b,tip:tip,on:onFn}); return b; }
+  function menuBtn(key,tip,menuFn){ var b=gel(key,tip); b.classList.add("menu"); b.addEventListener("click",function(e){ e.stopPropagation(); openPop(b,menuFn); }); TB.push({el:b,tip:tip}); return b; }
+  function opsBtn(){ var b=gel("ops","Queued operations"); var badge=document.createElement("span"); badge.className="opbadge zero"; b.appendChild(badge);
+    b.addEventListener("click",function(){ closePop(); document.getElementById("opsdrawer").classList.toggle("show"); }); TB.push({el:b,tip:"Queued operations",ops:badge}); return b; }
+  function buildToolbar(){ var bar=document.getElementById("gbar"); if(!bar)return; TB=[];
+    var groups=[
+      {items:[ btn("undo","Undo",undo), btn("redo","Redo",redo) ]},
+      {items:[
+        menuBtn("layout",function(){return "Layout — "+LAYOUTS[layoutMode].label;},layoutMenu),
+        menuBtn("size",function(){return "Size — "+SIZERS[sizeMode].label;},sizeMenu),
+        menuBtn("colour",function(){return "Colour — "+COLORERS[colorMode].label;},colourMenu),
+      ]},
+      {items:[ menuBtn("links",function(){return wiring?"Relationships — wiring on":"Relationships — wiring off";},linksMenu) ]},
+      {items:[ btn("rescan","Rescan from disk",doRescan), toggleBtn("edit",function(){return editMode;},"Edit structure",toggleEdit) ]},
+      {editonly:true, items:[
+        menuBtn("add","Add",addMenu),
+        btn("rename","Rename",edRename),
+        btn("duplicate","Duplicate",edDuplicate),
+        btn("move","Move (or drag)",startMove),
+        menuBtn("remove","Remove",removeMenu),
+        opsBtn(),
+      ]},
+    ];
+    bar.innerHTML=""; groups.forEach(function(g){ var gd=document.createElement("div"); gd.className="ggrp"+(g.editonly?" editonly":""); g.items.forEach(function(el){ gd.appendChild(el); }); bar.appendChild(gd); });
+    syncToolbar();
+  }
+  function syncToolbar(){ TB.forEach(function(t){ if(t.tip) t.el.setAttribute("data-tip", typeof t.tip==="function"?t.tip():t.tip);
+    if(t.on) t.el.classList.toggle("on", !!t.on());
+    var k=t.el.dataset.key; if(k==="undo") t.el.disabled=!undoStack.length; if(k==="redo") t.el.disabled=!redoStack.length;
+    if(t.ops){ var n=EDITS.length; t.ops.textContent=n; t.ops.classList.toggle("zero",!n); } }); }
+
+  // ----- popover plumbing -----
+  function closePop(){ if(popEl.hidden)return; popEl.hidden=true; popEl.innerHTML=""; if(popOwner)popOwner.classList.remove("open"); popOwner=null; }
+  function openPop(b,buildFn){ if(popOwner===b){ closePop(); return; } closePop(); popEl.innerHTML=""; buildFn(popEl); popEl.hidden=false; popOwner=b; b.classList.add("open");
+    var r=b.getBoundingClientRect(); popEl.style.top=(r.bottom+6)+"px"; popEl.style.left=Math.max(10,Math.min(r.left, window.innerWidth-popEl.offsetWidth-10))+"px"; }
+  document.addEventListener("click",function(e){ if(popEl.hidden)return; if(e.target.closest("#pop"))return; if(e.target.closest(".gx.menu"))return; closePop(); });
+
+  function modeMenu(parent,title,order,reg,cur,pick){ parent.innerHTML='<div class="pophd">'+esc(title)+'</div>';
+    order.forEach(function(k){ var it=reg[k]; var mi=document.createElement("button"); mi.className="mi"+(k===cur()?" sel":"");
+      mi.innerHTML='<span class="mit"><span class="mil">'+esc(it.label)+'</span>'+(it.hint?'<span class="mih">'+esc(it.hint)+'</span>':'')+'</span><span class="mick">\u2713</span>';
+      mi.addEventListener("click",function(){ pick(k); closePop(); syncToolbar(); }); parent.appendChild(mi); }); }
+  function layoutMenu(p){ modeMenu(p,"Layout",LAYOUT_ORDER,LAYOUTS,function(){return layoutMode;},function(k){ layoutMode=k; applyLayout(); }); }
+  function sizeMenu(p){ modeMenu(p,"Size",SIZE_ORDER,SIZERS,function(){return sizeMode;},function(k){ sizeMode=k; reflow(); }); }
+  function colourMenu(p){ modeMenu(p,"Colour",COLOR_ORDER,COLORERS,function(){return colorMode;},function(k){ colorMode=k; if(isRadial())applyLayout(); else recolor(); });
+    var hd=document.createElement("div"); hd.className="pophd"; hd.textContent="Filter systems"; p.appendChild(hd);
+    var wrap=document.createElement("div"); wrap.className="legend";
+    LEGEND_ROLES.forEach(function(r){ var s=document.createElement("span"); s.className="lg"+(hidden[r[0]]?" off":""); s.innerHTML='<span class="sw" style="background:'+rc(r[0])+'"></span>'+esc(r[1]);
+      s.addEventListener("click",function(){ hidden[r[0]]=!hidden[r[0]]; s.classList.toggle("off",hidden[r[0]]); applyFilters(); }); wrap.appendChild(s); });
+    p.appendChild(wrap); }
+  function linksMenu(p){ p.innerHTML='<div class="pophd">Relationships</div>';
+    var w=document.createElement("button"); w.className="mi"+(wiring?" sel":"");
+    w.innerHTML='<span class="mit"><span class="mil">Show wiring</span><span class="mih">Draw resolution lines across the map</span></span><span class="mick">\u2713</span>';
+    w.addEventListener("click",function(){ wiring=!wiring; w.classList.toggle("sel",wiring); drawEdges(); syncToolbar(); }); p.appendChild(w);
+    var hd=document.createElement("div"); hd.className="pophd"; hd.textContent="Edge types"; p.appendChild(hd);
+    EDGE_ORDER.forEach(function(k){ var t=EDGE_TYPES[k], on=!edgeHidden[k]; var mi=document.createElement("button"); mi.className="mi"+(on?" sel":"");
+      mi.innerHTML='<span class="mig"><span style="width:12px;height:12px;border-radius:3px;background:'+t.color+'"></span></span><span class="mit"><span class="mil">'+esc(t.label)+'</span><span class="mih">'+esc(t.fwd+" / "+t.rev)+'</span></span><span class="mick">\u2713</span>';
+      mi.addEventListener("click",function(){ edgeHidden[k]=!edgeHidden[k]; mi.classList.toggle("sel",!edgeHidden[k]); drawEdges(); }); p.appendChild(mi); }); }
+  function miRow(p,sym,label,hint,fn,danger){ var mi=document.createElement("button"); mi.className="mi"+(danger?" danger":"");
+    mi.innerHTML='<span class="mig">'+gIcon({form:'none',symbol:sym,color:{symbol:danger?'clay':'sage'}},20)+'</span><span class="mit"><span class="mil">'+esc(label)+'</span><span class="mih">'+esc(hint)+'</span></span>';
+    mi.addEventListener("click",function(){ closePop(); fn(); }); p.appendChild(mi); }
+  function addMenu(p){ p.innerHTML='<div class="pophd">Add</div>';
+    miRow(p,"folder","New folder","Create a folder in the selection",edNewFolder);
+    miRow(p,"file","New file","Create a file in the selection",edNewFile); }
+  function removeMenu(p){ p.innerHTML='<div class="pophd">Remove</div>';
+    miRow(p,"archive","Archive","Move to _archive — kept, not deleted",edArchive);
+    miRow(p,"trash","Delete","Remove entirely (queued)",edDelete,true); }
+
+  // ----- drag & drop move (pointer-based; survives the scaled canvas) -----
+  function setupDrag(){ var canvas=document.getElementById("canvas"), st=null;
+    canvas.addEventListener("pointerdown",function(e){ if(!editMode||e.button!==0)return; var t=e.target.closest("[data-id]"); if(!t)return; var n=NODE[t.dataset.id]; if(!n)return; st={id:t.dataset.id,el:t,x0:e.clientX,y0:e.clientY,dragging:false,drop:null}; });
+    window.addEventListener("pointermove",function(e){ if(!st)return; if(!st.dragging){ if(Math.hypot(e.clientX-st.x0,e.clientY-st.y0)<6)return; st.dragging=true; document.body.classList.add("dragging-node"); st.el.classList.add("dragging"); closePop(); }
+      clearDropHi(); var under=document.elementFromPoint(e.clientX,e.clientY), box=under&&under.closest?under.closest("[data-id]"):null, src=NODE[st.id], fid;
+      if(box){ var bn=NODE[box.dataset.id]; fid=bn?(bn.type==="folder"?bn.id:(bn.parent||null)):undefined; } else fid=undefined;
+      var ok=(fid!==undefined)&&fid!==src.id&&!(fid&&isAncestor(src.id,fid))&&fid!==src.parent;
+      st.drop=ok?{fid:fid}:null; if(st.drop&&st.drop.fid){ var de=EL[st.drop.fid]; if(de)de.classList.add("drop-ok"); } });
+    window.addEventListener("pointerup",function(e){ if(!st)return; var s=st; st=null; if(!s.dragging)return;
+      document.body.classList.remove("dragging-node"); s.el.classList.remove("dragging"); clearDropHi();
+      window.__dragHappened=true; setTimeout(function(){ window.__dragHappened=false; },0);
+      if(s.drop){ doDropMove(s.id,s.drop.fid); } }); }
+  function clearDropHi(){ document.querySelectorAll(".drop-ok").forEach(function(e){ e.classList.remove("drop-ok"); }); }
+  function doDropMove(id,fid){ var n=NODE[id]; if(!n||fid===n.parent)return; var oldPath=n.path, np; morphEdit(function(){ np=relocate(n,fid,n.name); });
+    if(np===false){ alert("Can't move there (name clash)"); return; } emit({op:"move",from:oldPath,to:np}); select(np,true); }
+
+  // ----- standing handlers -----
+  document.getElementById("pclose").addEventListener("click",deselect);
+  document.getElementById("map").addEventListener("click",deselect);
+  document.getElementById("opsexport").addEventListener("click",exportOps);
+  document.getElementById("opsclear").addEventListener("click",function(){ if(confirm("Clear the queued operations and the local edited view? (Resets to the last disk scan.)")){ clearEdits(); undoStack=[]; redoStack=[]; if(diskModel)reload(diskModel); syncToolbar(); } });
+  document.getElementById("opsclose").addEventListener("click",function(){ document.getElementById("opsdrawer").classList.remove("show"); });
+  document.getElementById("q").addEventListener("input",applyFilters);
+  document.addEventListener("keydown",function(e){ var tag=e.target.tagName; if(tag==="INPUT"||tag==="TEXTAREA")return; var mod=e.metaKey||e.ctrlKey;
+    if(mod && e.key.toLowerCase()==="z"){ e.preventDefault(); e.shiftKey?redo():undo(); }
+    else if(mod && e.key.toLowerCase()==="y"){ e.preventDefault(); redo(); }
+    else if(mod && e.key.toLowerCase()==="d" && editMode && selected){ e.preventDefault(); edDuplicate(); }
+    else if((e.key==="Delete"||e.key==="Backspace") && editMode && selected){ e.preventDefault(); edDelete(); }
+    else if(e.key==="Escape"){ closePop(); if(moveSrc){ moveSrc=null; document.body.classList.remove("moving"); hideMoveHint(); } } });
+  var rzt; window.addEventListener("resize",function(){ clearTimeout(rzt); rzt=setTimeout(function(){ buildMap(); if(selected)select(selected,true,true); },160); });
+  // light auto-pickup of regenerations — but NEVER clobber pending local edits
+  setInterval(function(){ if(EDITS.length)return; fetchModel().then(function(j){ if(j.generatedAt!==lastGen){ diskModel=j; reload(j); } }).catch(function(){}); }, 6000);
+})();
+</script>
+</body>
+</html>

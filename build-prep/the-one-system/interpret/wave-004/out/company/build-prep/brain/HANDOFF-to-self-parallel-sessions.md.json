@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/HANDOFF-to-self-parallel-sessions.md",
+  "model": "opus",
+  "what_it_does": "A session-handoff note written by one Claude session to a future/parallel version of itself, summarizing the state of a multi-session 'triangulation' design effort around a 'geometric seed' and pointing to the on-disk files that carry the missing context.",
+  "observations": [
+    "Frames the work as Tim running several parallel sessions today as 'deliberate rays of one triangulation' on the same design object, where agreement locates truth and differences are signal.",
+    "Lists concrete files: THE-SEED-geometric-substrate.md, SEED-GROWTH-ROUNDS.md, THE-SEED-geldard-lattice.md, CONVERGENCE-OBJECT.md, ORIGIN-MEMORY-AMPLIFICATION.md, TOTAL-PROCESSING-PIPELINES.md, UNCONVENTIONAL-EMBEDDING-USES.md, embedding-research-2026-06.md, plus episodic-memory-adaptation/ docs.",
+    "Describes a sibling session formalizing the seed as quadtree / Morton-Z-order paths, dyadic doubling 4->8->16, log-polar space with conformal map z->z^k, k as a fractal/Hausdorff dimension exponent.",
+    "Summarizes CONVERGENCE-OBJECT.md doctrine: Convergence Law (structural vs semantic position, distance=resistance=wasted compute), Classification Law (one axis / two extremes / 3-5 divisions, progressive chains), Barrier Protocol, Ten Derivations.",
+    "Records a live-work collision lesson: read the full existing services.json / registry row before editing because another session may have done verified work (cites commit 09b043a).",
+    "Notes embedding fleet specifics: embed-pplx serving perplexity-ai/pplx-embed-context-v1-4b via custom transformers server, embed-jina-v4 serving jinaai/jina-embeddings-v4 via serve_jina_v4.py, rerank step (jina-v3 CPU + ms-marco).",
+    "Notes ops/model_capabilities.json is the canonical capability catalog (~48 models in the future state, ~10 earlier), guarded by named acceptance tests.",
+    "States the central design collapse: {per-address gatherer, greeting assembler, builder context block, boot bundle} -> resolve(centre, spaces, n, k, audience, exhale), and 'store positions, compute perspectives'.",
+    "Explicitly says none of the design is ratified by Tim yet (expand-before-harden)."
+  ],
+  "standouts": [
+    "The triangulation/parallel-session method: Tim sends each session a part, sessions regenerate from their angle, convergence locates truth.",
+    "The Convergence Law equation of structural-vs-semantic distance with 'resistance' and wasted compute, and 'laws are resistance-removal'.",
+    "The single collapse of four context-feeding mechanisms into one resolve(centre, spaces, n, k, audience, exhale) call.",
+    "The concrete live-collision lesson with a cited corrective commit."
+  ],
+  "conventions": [
+    "Working-doc / build-prep narrative style (first-person message-to-self), not the strict self-description schema.",
+    "Heavy cross-referencing to sibling files by name and path.",
+    "Bold-keyed inline emphasis on laws and lessons."
+  ],
+  "concerns": [
+    "References many sibling docs and external state by memory; correctness depends on those files matching as described (the note itself flags a prior case where on-top notes were wrong).",
+    "Numeric facts (model counts, KB sizes) are time-relative ('the future you're rewinding from'), so they can be stale depending on when read."
+  ],
+  "notes": "A self-handoff memo orienting a parallel/future session inside a multi-ray triangulation design effort on the 'geometric seed' identity/DB system, with a map of sibling docs and a hard lesson about editing shared registries.",
+  "questions": [
+    "What exactly is the geometric seed equation 2pi/n=(1/n)^k beyond the gloss given here?",
+    "Has Tim since ratified any part of the resolve()/store design, or is it still entirely expand-before-harden?",
+    "Which session authored CONVERGENCE-OBJECT.md and is it still being extended?"
+  ],
+  "purpose_vs_actual": "Matches: it is explicitly a message-to-self handoff and it delivers exactly that orientation plus a file map.",
+  "apparent_themes": [
+    "Triangulation across parallel agent sessions as a truth-locating method",
+    "Geometry as substrate for memory/identity (seed, log-polar, quadtree addressing)",
+    "Structural-vs-semantic coincidence as the definition of information (resistance)",
+    "Expand-before-harden / nothing ratified until Tim reacts",
+    "Coordination hygiene around shared registries"
+  ],
+  "intention_signals": "Trying to give a future or sibling session enough context to continue the seed/identity-DB design as one converging ray among several, integrating the Convergence and Classification Laws into the resolve/store design without treating sibling work as noise or competition.",
+  "novelty": "The explicit 'rays of one triangulation' operating model for parallel sessions, and the geometric-seed framing of an identity/DB/memory system collapsing into a single resolve() call.",
+  "contribution": "Contributes the cross-session orientation map and the consolidated statement of the design state — the triangulation method, the file index, the resolve()/store-positions-compute-perspectives design, and the shared-registry editing lesson.",
+  "summary_for_embedding": "A Claude session's handoff note to its parallel/future self orienting it within a multi-session triangulation effort on a geometric-seed identity/DB system, mapping sibling design docs and the convergence/classification laws.",
+  "intention_for_embedding": "To let a parallel or future session continue the seed/identity-DB design as one converging ray, integrating the convergence and classification laws and avoiding shared-registry collisions."
+}

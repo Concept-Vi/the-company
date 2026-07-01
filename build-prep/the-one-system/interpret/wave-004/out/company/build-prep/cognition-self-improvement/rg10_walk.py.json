@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10_walk.py",
+  "model": "opus",
+  "what_it_does": "Composes the reconciled RG10 batch (.build/rg10/reconciled.json) into a CLASS-GROUPED triage walk on the existing walkthrough organ. compose_triage_walk() groups entries by class (confirmed/conflict/floor/panel), refuses if a live registry_triage_block already exists, derives deduped proposed-feature rows from floor entries, builds four block items (confirmed approve-as-block, conflict, proposed-features, residue), surfaces each via surface_review, then starts a walkthrough session over the block ids and returns the stop-1 presentation. compose_conflict_walk() is an opt-in drill-in that turns each conflict into its own one-decision walk step. The module composes/surfaces/verifies presentation only and never resolves.",
+  "observations": [
+    "Reads REC=.build/rg10/reconciled.json; PARENT='s98-review'",
+    "_suite() helper builds the same Suite/FsStore/NodeRegistry as the sibling scripts",
+    "_sample() helper returns first n entries as {address, represents, maps_to_feature}",
+    "by_cls groups reconciled entries into the four refined classes: confirmed, conflict, floor, panel",
+    "Live-card guard: refuses if an unresolved registry_triage_block whose status is not in ('requeue','implemented') exists",
+    "Builds proposed-feature rows from floor entries with proposed_feature.status=='proposed', deduped by row id (notes the GC9 merge where one feature carries several elements)",
+    "Four blocks: confirmed (one block-approve, carries addresses list), conflict (per-element variants), features (proposed inventory rows), residue (panel-rejected entries with named dissents truncated to 120 chars)",
+    "start_session(ids, mode='walkthrough') returns the stop-1 presentation directly; one walk step per DECISION-KIND not per item",
+    "__main__ dispatches compose_conflict_walk on argv 'conflicts', else compose_triage_walk"
+  ],
+  "standouts": [
+    "Design principle 'triage by condition, never a 463-item list' — one walk step per decision-kind",
+    "Explicit reuse-don't-parallel: surface_review + start_session + present_current/coa, NO new stepper",
+    "Docstring records the refine-before-gating cascade (jury → panel → calibrated panel → deterministic prose floor → re-describe) dated 2026-06-10",
+    "conflict-walk composer exists but is fired only on Tim's ask — the disagreement itself is treated as the signal"
+  ],
+  "conventions": [
+    "Fail-loud RuntimeError on duplicate live cards",
+    "Block-item dict spread pattern: {title, kind, parent, artifact, **rest}",
+    "main-style fn()->dict + json.dumps(default=str) under __main__",
+    "Suite/inbox reuse rather than new walk machinery"
+  ],
+  "concerns": [
+    "Truncations (sample n=4, dissent reasons [:120], framing head [:200]) shape what the operator sees but the full data lives only in the artifact",
+    "Bare json.load(open(REC)) with no missing-file handling",
+    "Status-lane semantics ('requeue','implemented') are assumed but not defined in this file"
+  ],
+  "notes": "The GC6 backend half: turns a reconciled RG10 batch into a four-stop class-grouped triage walkthrough (confirmed / conflicts / proposed-features / residue) on the existing organ, leaving the cursor at stop 1 for Tim — presentation only, never resolves.",
+  "questions": [
+    "What writes reconciled.json and how are entries assigned their 'class' (confirmed/conflict/floor/panel)?",
+    "What is the s98-review parent and how does the walkthrough organ consume the parent/session relationship?",
+    "How are conflict 'variants' and panel 'seats' populated upstream?"
+  ],
+  "purpose_vs_actual": "Match — composes + surfaces + verifies presentation of a class-grouped triage walk and never resolves, exactly as the docstring's FLOOR states.",
+  "apparent_themes": [
+    "Decision-kind grouping over item-by-item lists to keep operator cognitive load low",
+    "Operator-only resolution; agent composes the minimum for the gate",
+    "Refine-before-gating (exhaust autonomous refinement before asking)",
+    "Reuse of the existing walkthrough/review organ"
+  ],
+  "intention_signals": "Trying to make a 463-item reconciliation reviewable in roughly four decisions by grouping entries by what kind of decision they need, surfacing each as a block on the existing walkthrough organ, and offering deeper one-by-one walks only when the operator asks.",
+  "novelty": "The 'one step per decision-kind' triage framing and the opt-in conflict drill-in, plus a proposed-features block that can grow the feature inventory rather than the address registry.",
+  "contribution": "Contributes the class-grouped triage-walk composer that maps reconciled registry classes (confirmed/conflict/proposed-feature/residue) onto walkthrough-organ block items and an on-demand per-conflict drill-in walk.",
+  "summary_for_embedding": "Python module that composes a reconciled RG10 registry batch into a four-stop class-grouped triage walkthrough (confirmed/conflicts/proposed-features/residue) on the existing review organ, plus an opt-in per-conflict walk, surfacing presentation only.",
+  "intention_for_embedding": "To let the operator triage a large reconciled registry batch in a few decision-kind-grouped steps on the existing walkthrough organ instead of an unmanageable per-item list."
+}

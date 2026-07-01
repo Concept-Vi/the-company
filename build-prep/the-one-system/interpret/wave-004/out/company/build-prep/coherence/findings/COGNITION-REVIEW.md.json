@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/COGNITION-REVIEW.md",
+  "model": "opus",
+  "what_it_does": "A review doc written from the cognition session (owner of the run_swarm/run_role/run_jury engine) that verifies the three coherence research rounds' load-bearing claims against the actual engine code, issues corrections to its own prior shared docs, answers three cross-round questions, and lays out the 'C' engine-seam design that converges cognition + semantic detectors + corpus-chain + guided-review + embedding-discovery into one build, with a later Tim-corrections addendum.",
+  "observations": [
+    "Verifies at file:line that the research claims hold: run_role hardcodes ctx['utterance'] (cognition.py:109); same-model jury measures variance not error (verify_jury.py, with the verdict_rule built to slot a 2nd-model tiebreak); run_swarm is MAP-only with no cross-unit reduce and reduce-tree is declared-but-dead (suite.py:1474); roles/check.py is the {contradicts,note} template; background/rollup activation contexts exist but are driver-gated.",
+    "Issues self-corrections: vec:// IS resolvable (fs_store.py put_vector/get_vector + vector_index.py query_index k-NN), and the embed lane is live/consumed (R2 context-resolution at suite.py:_r2_score_and_cap:2982 embeds intent and candidates and cosines them each turn), so embeddings are first-class everywhere except the cognition engine.",
+    "Answers three questions: coherence is a SIBLING of cognition (build_coherence_info beside build_object_info), not a merged spine, because cognition is ephemeral-per-turn and coherence is persistent-whole-system (the own/reflect split); the seam is run_role -> input_addresses and the embed-op folds into the same generalization; the stronger-model confirm is the keystone landing in the verify_jury.py:16-18 slot.",
+    "Defines the C design scope as the seam + op-axis + the reduce + cognition-beyond-listening, explicitly excluding the NL-to-config compiler as later/separate.",
+    "Seam: generalize run_role's ctx['utterance'] to resolve input_addresses through the run:// resolver as a run_items axis-inversion (1 role x N units), behaviour-preserving (utterance is the default input).",
+    "Op-axis: a role declares op: generate | embed, reusing the existing complete_embeddings + put_vector, local-resident-only (no cloud embeddings, per Tim).",
+    "Smart reduce: cross-unit join + adjudicate + compose + decide-next, with embed-cluster via the existing query_index k-NN as the smart-join primitive enabling built-twice discovery (the home for embedding-clustering is vector_index.py, just never pointed at repo artifacts).",
+    "Convergence claim: one generalized engine (seam + op + reduce) serves cognition, the semantic detector class, the corpus-chain, the guided-review walkthrough, and embedding-discovery; build order is seam -> op-axis -> reduce -> cognition-beyond-listening, compiler later.",
+    "Tim corrections (2026-06-08): input_addresses must resolve content from ANY address (run://, cas://, a skill/context, the output of a node), with the Utterance: colon-input as the convenience default; and a gated launch/select/evict resident-model capability (system + CLI, extending company up/swap --evict) unifies the embed-op load, brain_config (B), and the per-mode loadout swap, first tested by loading BGE-M3 on demand."
+  ],
+  "standouts": [
+    "A forked session's claims about the engine are checked at file:line rather than trusted, and all the load-bearing ones are confirmed.",
+    "The convergence thesis: seam + op-axis + reduce is one build that five consumers share, with an explicit 'bring me the requirement, don't build your own swarm-input/embed-op/reduce'.",
+    "Locating built-twice discovery's missing home in the already-existing vector_index.py k-NN, reframing it from blocked to just-never-pointed-at-repo-artifacts.",
+    "The Tim correction elevating input_addresses from a future nicety to the actual point: a role's input can be any address in the system.",
+    "Unifying three model-loading needs (embed-op, brain_config, mode loadout) into one gated launch/select/evict capability."
+  ],
+  "conventions": [
+    "Follows the repo evidence discipline with explicit VERIFIED / CORRECTIONS sections and file:line citations, and the own/reflect framing.",
+    "Practices scope discipline (C excludes the compiler) and behaviour-preservation (existing callers keep working).",
+    "Honors local-residency (no cloud embeddings) and reuse-not-parallel (extend company up/swap rather than build a new manager)."
+  ],
+  "concerns": [
+    "It both reviews the research and specifies the build (it is answer + design at once), so the design portions are proposals not yet implemented despite the heavily verified review portions."
+  ],
+  "notes": "The engine-owner's verified review of the coherence rounds plus the converged 'C' design: one engine seam (run_role -> any-address input_addresses) + an op-axis (generate|embed) + a smart cross-unit reduce, serving five consumers, with a gated model launch/select/evict capability unifying the loading needs.",
+  "questions": [
+    "What is the address-resolution interface for input_addresses across run://, cas://, and skill/context addresses, and how does it stay behind schema-validate/fail-loud?",
+    "How is the gated launch/select/evict capability authorized and surfaced in the CLI, and what governs eviction order on a full card?"
+  ],
+  "purpose_vs_actual": "Match. The doc states it is both the answer to the rounds' questions and the grounded C design, and it delivers verification, corrections, answers, and a scoped build order plus addendum.",
+  "apparent_themes": [
+    "Verify a fork's claims against your own code rather than trusting",
+    "Convergence: one engine seam serving many consumers",
+    "Address-resolution as the universal input mechanism",
+    "Own/reflect split (ephemeral cognition vs persistent coherence)",
+    "Local-residency and reuse-not-parallel",
+    "Stronger-model confirm as the correctness keystone",
+    "Scope discipline (defer the compiler)"
+  ],
+  "intention_signals": "It is trying to confirm the research is trustworthy by checking it at file:line, correct its own misleading prior facts, and collapse what looks like four or five separate builds into one engine generalization (the seam + op-axis + reduce) plus one gated model-loading capability, so the team builds the shared substrate once and consumes it.",
+  "novelty": "The any-address input_addresses elevation, the generate|embed op-axis folded into the same seam, and the identification of the existing vector_index k-NN as the ready home for built-twice discovery.",
+  "contribution": "Contributes the engine-owner's file:line verification of the coherence rounds, two self-corrections (vec:// is resolvable; the embed lane is live via R2), the sibling-not-merge answer, and the converged C design (the run_role any-address seam, the generate|embed op-axis reusing complete_embeddings, the smart cross-unit reduce with embed-cluster as the join primitive enabling built-twice discovery) plus the gated launch/select/evict capability that unifies embed-load, brain_config, and mode loadout, with an explicit build order.",
+  "summary_for_embedding": "A cognition-session review (COGNITION-REVIEW) that verifies the three coherence research rounds at file:line, corrects its own docs (vec:// resolvable, embed lane live), and specifies the converged 'C' engine seam (run_role -> any-address input_addresses), a generate|embed op-axis, and a smart cross-unit reduce serving five consumers, plus a gated model launch/select/evict capability.",
+  "intention_for_embedding": "To verify the coherence research against the real engine and collapse the multiple proposed builds into one shared engine generalization plus one model-loading capability, with a scoped build order that defers the NL-to-config compiler."
+}

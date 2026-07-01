@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/WORKFLOW-ARCHITECTURE.md",
+  "model": "opus",
+  "what_it_does": "A design document describing the orchestration architecture for the cognition self-improvement phase — how the Workflow tool builds and runs all twelve compositions coherently as one parameterized substrate rather than twelve ad-hoc scripts. It states LAW 0 (unification), distinguishes BUILD orchestration from RUN artifacts, defines a shared faculty skeleton, a GPU-aware run law, the self-advancing front-end loop (⑫), a seam backlog, and a run sequence.",
+  "observations": [
+    "Dated 2026-06-09, written at Tim's direction with the quoted frame 'the workflow must account for all the examples + the tool-expansion'",
+    "LAW 0 UNIFICATION is the governing discipline: get the full code picture first, take found work into scope, reuse-not-parallel enforced not requested, and standing organs (repo-exocortex, drift-radar) keep the picture whole",
+    "Quotes Tim's framing of the core problem: 'Unification is a big problem I have with AI — there's no humans involved'",
+    "Distinguishes BUILD orchestration (Workflow tool, deterministic JS spawning agents) from RUN artifacts (engine cascades via save_cascade/run_cascade), with the tool-expansion living in the gap between them",
+    "Defines the FACULTY SKELETON: extract → ground → MAP(run_items) → REDUCE(run_reduce) → CONFIRM(jury + refcheck) → PROPOSE(operator floor) → [approve] → ACT",
+    "Maps five compositions (V-A register-a-surface, ② drift-radar, ③ transcript-miner, ⑦ spec-compiler, ⑫ engine-improves-engine) to role-fills of the one skeleton",
+    "States the GPU-AWARE RUN LAW: build-parallelism is free, run-parallelism serializes on one 16GB card, so model-firing steps must be grouped by model to swap once per group",
+    "Lists a SEAM BACKLOG of six tool-expansions the compositions revealed (multi-variable prompt substitution, retrieve/similarity cascade ops, role-scoped capability gating, suite.py live-bind, embedder-resident contention handling, the generalized faculty-runner)",
+    "Defines a three-run sequence: Run 1 V-A registry-generation, Run 2 generalized faculty + bitten seams, Run 3+ repo-exocortex"
+  ],
+  "standouts": [
+    "The deepest claim: 'the system holds the picture the humans can't' — unification organs make the code picture self-maintaining as the codebase grows",
+    "The self-advancing front-end (⑫): the engine reads its own surfaced gaps (needs-tim/flags) and drafts the next workflow's lane-cut — crank an instance, harvest gaps, expand from evidence not prediction",
+    "The insight that twelve compositions are ONE parameterized shape — each is the same skeleton with different role-fills"
+  ],
+  "conventions": [
+    "Uses a callout-style preamble (> blockquote) stating what this is and the problem it solves",
+    "Numbered laws and lettered/numbered runs follow the build-prep design-doc convention",
+    "References roles and modules by name (screen_reader, parse.py, mine_exchange, suite.py) and compositions by circled-number ID",
+    "Ends with a STATUS section recording version and date (v1, 2026-06-09)"
+  ],
+  "concerns": [],
+  "notes": "This is the governing orchestration design for the self-improvement build — read it to understand WHY all the composition workflows share one skeleton and why unification (LAW 0) precedes any build.",
+  "questions": [
+    "Which of the six seam-backlog items have since been built, given this is a 2026-06-09 plan?",
+    "Did Run 1 (V-A RG10) actually produce the first ⑫ input, and what gap did it bite?"
+  ],
+  "purpose_vs_actual": "Match — it states its purpose as the governing design for the self-improvement phase's orchestration and delivers exactly that: laws, layers, skeleton, GPU law, seam backlog, and sequencing.",
+  "apparent_themes": [
+    "unification as a first-class law, not a cleanup pass",
+    "one parameterized substrate over many ad-hoc scripts",
+    "evidence-driven expansion (harvest gaps before predicting them)",
+    "the system maintaining a whole-code picture no human can hold",
+    "GPU resource-awareness shaping orchestration sequencing",
+    "self-improvement as a recurring engine-improves-engine loop"
+  ],
+  "intention_signals": "It tries to solve the fragmentation problem of AI-built codebases (no human holds the whole picture, so AI duplicates) by making unification the governing law and by unifying twelve distinct self-improvement compositions into one parameterized faculty skeleton that the engine can run on itself and extend from its own surfaced gaps.",
+  "novelty": "Treating first-use friction as the input rather than a failure, and framing standing unification organs as the structural answer to 'no humans involved' — the machine holding the picture humans can't.",
+  "contribution": "Contributes the governing orchestration architecture: LAW 0 unification discipline, the BUILD-vs-RUN two-layer distinction, the parameterized faculty skeleton that unifies all compositions as role-fills, the GPU-aware run law, the seam backlog, and the self-advancing ⑫ loop framing.",
+  "summary_for_embedding": "An architecture design doc for the cognition self-improvement phase that makes unification (LAW 0) the first law, distinguishes build-orchestration from run-cascades, defines one parameterized faculty skeleton (extract→ground→MAP→REDUCE→CONFIRM→PROPOSE→ACT) that all twelve compositions instantiate as role-fills, plus a GPU-aware run law, a seam backlog, and a three-run sequence.",
+  "intention_for_embedding": "To define how one orchestration substrate coherently builds and runs all the self-improvement compositions while holding a whole-code picture that prevents AI fragmentation, and how the engine extends itself from its own surfaced gaps."
+}

@@ -1,0 +1,44 @@
+{
+  "project": "claude-ds",
+  "path": "preview/components_box_variants.html",
+  "model": "opus",
+  "what_it_does": "A standalone @dsCard preview (group 'Components') showing the brand's rounded content box in five variants — media box, content box, emphasis box, compact stat box, and pill — each rendered from the same `.box` treatment differing only in the tokens it references; media boxes use a draggable <image-slot> and text boxes are contenteditable so the card is interactively fillable.",
+  "observations": [
+    "Comment header `@dsCard group=\"Components\" name=\"Card / box variants\" ... viewport=\"900x460\"`.",
+    "Links three stylesheets (../colors_and_type.css, ../tokens/controls.css, _card.css) and a script `image-slot.js` providing the <image-slot> custom element.",
+    "One `.box` base: 1.5px --accent-gold border, --r-lg radius, a layered linear-gradient paper sheen (--bg-surface/--paper/--paper-2), --shadow-card; variants are modifier classes (.emphasis, .md, .pill).",
+    ".emphasis swaps the fill to a gold wash (--accent-gold-50/--accent-gold-soft); .md uses --r-md; .pill uses --r-pill.",
+    "Text elements are contenteditable with a gold focus ring (inset box-shadow --accent-gold-soft).",
+    "<image-slot> instances carry shape/radius/src/placeholder attributes and a sample staged-bedroom illustration.",
+    "Lead and foot text explicitly enumerate the tokens each variant references (radius --r-md/--r-lg/--r-pill, fill --paper vs --accent-gold-50, edge --accent-gold, shadow --shadow-card).",
+    "Lead cross-references sibling cards: entity marks live in 'Entity shape system', the staged ladder in 'Staged-process flow' — this card is just the box."
+  ],
+  "standouts": [
+    "Embodies the core single-source doctrine: one box treatment, variants differ ONLY by the tokens referenced — no second box implementation.",
+    "Interactive/fillable card (drag image, click-to-edit text) rather than a static specimen.",
+    "Uses a custom <image-slot> web component for the media variant."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery convention.",
+    "Strongly adheres to the project's no-literals rule — colours, radii, shadow all via var() tokens; almost no hardcoded values in the box itself.",
+    "Cross-references other cards by name rather than duplicating their content (anti-drift)."
+  ],
+  "concerns": [],
+  "notes": "A components card proving 'one rounded content box, variants are just different token values' — interactively fillable via image-slot and contenteditable.",
+  "questions": [
+    "What does image-slot.js implement for the <image-slot> element (drag/drop, sizing), since the card depends on it for the media variant?",
+    "Are --paper / --paper-2 / --accent-gold-deep defined in the linked stylesheets (referenced here but not defined)?"
+  ],
+  "purpose_vs_actual": "Matches — metadata says 'the rounded content box in its variants ... radius/fill/shadow from tokens' and the body demonstrates exactly that, token-driven and fillable.",
+  "apparent_themes": [
+    "One treatment, many variants differing only by referenced tokens (single-source / anti-drift)",
+    "Tokenised box: edge, fill, radius, shadow all from variables",
+    "Interactive, fillable design specimens (image-slot + contenteditable)",
+    "Cross-referencing sibling cards instead of duplicating"
+  ],
+  "intention_signals": "Aims to demonstrate the brand's fundamental container as a single token-parameterised box, showing that visual variety comes from token values not new components, and to let the viewer fill it to see real content.",
+  "novelty": "The interactive fillable specimen (drag-image + contenteditable) and the explicit 'variants differ only in tokens' proof, including a custom <image-slot> element.",
+  "contribution": "Contributes the canonical content-box component (one gold-edged paper-sheen rounded box with media/content/emphasis/compact/pill variants, all token-driven and fillable) that a fused system would keep as its core container primitive.",
+  "summary_for_embedding": "A Components-group design-system preview card showing the brand's single rounded content box in five token-driven variants (media, content, emphasis, compact, pill), interactively fillable via an image-slot element and contenteditable text.",
+  "intention_for_embedding": "To demonstrate the core content-box container as one token-parameterised treatment whose variants differ only by referenced tokens, and to let viewers fill it with real content."
+}

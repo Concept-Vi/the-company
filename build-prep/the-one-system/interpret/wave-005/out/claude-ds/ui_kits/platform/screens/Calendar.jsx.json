@@ -1,0 +1,41 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/screens/Calendar.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a static React 'Calendar' screen mockup for the platform UI kit: a toolbar (filter/sort/search/clear/task-type), a 'Top Tasks & Reminders' row of eight task cards, a month navigator (June 2026), and a 7-column week grid with day cells holding colored task chips. Composed of small presentational components (TopTask, CalChip, Day, CalendarScreen) and exposed on window.CalendarScreen.",
+  "observations": [
+    "Plain function components using JSX, no hooks, no state — a static layout.",
+    "Attached to the global via `window.CalendarScreen = CalendarScreen;` rather than ES module export.",
+    "All visual styling delegated to cv-cal-* / cv-btn-* classes (from platform.css); the file carries only structure and content.",
+    "Placeholder content throughout: 'Task Name', 'Due Date: 00/00/00', 'Lorem ipsum...'.",
+    "Color is passed as a string class name (color='purple', kind='yellow') matching the chip/task color variants in platform.css.",
+    "Inline SVG search icon with stroke=var(--fg-muted) tokens inlined in markup.",
+    "A few inline styles use var() tokens (e.g. font/color on the 'Manage' link and Task Type button).",
+    "Calendar weeks are hand-laid for a specific June 2026 layout (27-31 muted prev-month, day 15 marked today)."
+  ],
+  "standouts": [
+    "Uses the global-window registration pattern (window.CalendarScreen) instead of module export — consistent with a script-tag-loaded mockup kit.",
+    "Hardcoded calendar dates/layout for June 2026 — a fixed mockup, not a data-driven calendar."
+  ],
+  "conventions": [
+    "Follows the kit's pattern of class-only styling (no raw CSS values in the component; even SVG strokes use tokens).",
+    "Decomposes into small reusable sub-components (TopTask/CalChip/Day) — good componentization for a mockup.",
+    "Global-window exposure breaks from ES-module conventions but is internally consistent for this kit."
+  ],
+  "concerns": [
+    "Entirely static placeholder data — no props/state drive the calendar; it is a visual mockup, not functional.",
+    "List items rendered without stable keys in some maps (the headers map has keys; chips/days are positional)."
+  ],
+  "notes": "A static, placeholder-filled React mockup of a calendar screen styled purely via platform.css classes and registered on window.CalendarScreen.",
+  "questions": [
+    "Is this intended to ever become data-driven, or is it permanently a visual mockup?",
+    "Where is window.CalendarScreen consumed (which host page mounts it)?"
+  ],
+  "purpose_vs_actual": "Matches: the filename and content both present a calendar screen layout; it does exactly that as a static mockup.",
+  "apparent_themes": ["static screen mockup", "presentational component decomposition", "token/class-driven styling", "global-window kit registration"],
+  "intention_signals": "Renders a representative calendar/task screen for the platform design kit so the design can be seen and judged, with structure cleanly separated from the shared stylesheet.",
+  "novelty": "The screen is built as composable mockup primitives (Day/CalChip/TopTask) yet hardwired to one month — a mockup that is component-structured but content-frozen.",
+  "contribution": "Brings a calendar/task-management screen layout to the platform kit — the structural template for filter toolbar, top-tasks row, month nav, and a chipped week grid.",
+  "summary_for_embedding": "A static React calendar-screen mockup in the platform UI kit with a task toolbar, top-tasks row, June-2026 month grid, and colored task chips, styled via platform.css classes and exposed on window.CalendarScreen.",
+  "intention_for_embedding": "To present a designed calendar/task screen for the platform kit as a viewable, class-styled mockup."
+}

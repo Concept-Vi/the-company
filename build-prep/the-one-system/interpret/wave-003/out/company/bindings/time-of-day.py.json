@@ -1,0 +1,39 @@
+{
+  "project": "company",
+  "path": "bindings/time-of-day.py",
+  "model": "opus",
+  "what_it_does": "Defines a single Python dict named BINDING describing a visualization 'lens' that arranges events around a day/week cycle frame; carries an id, label, human-meaning meta block, and three axis-mapping keys (angle_from, radius_from, order_by).",
+  "observations": [
+    "id is 'time-of-day' with label 'Day cycle — activity around the clock'.",
+    "meta block holds human-readable name/is/fills/why fields described as registry-true and declared-first.",
+    "Comments mark the meta as a TENTATIVE draft to be ratified by Tim/DNA and warn against using machine names.",
+    "angle_from='kind', radius_from='time', order_by='count'.",
+    "An inline comment notes the FE cycle-frame switch overrides radius to day/week; this value is only an opening hint."
+  ],
+  "standouts": [
+    "Explicit note that the frontend cycle-frame switch overrides radius_from at runtime, so the declared value is just a default hint."
+  ],
+  "conventions": [
+    "Uppercase module-level BINDING constant as the export surface.",
+    "Separates machine axis keys (angle_from/radius_from/order_by) from a human meta block.",
+    "Carries epistemic-status comments (TENTATIVE, ratify) inline with the data."
+  ],
+  "concerns": [],
+  "notes": "A declarative lens config: places events on a clock-like day/week cycle, with FE able to override the radius.",
+  "questions": [
+    "What is the full vocabulary of valid values for angle_from / radius_from / order_by?",
+    "Who or what is 'DNA' that ratifies the meta?"
+  ],
+  "purpose_vs_actual": "Match — the top comment says it binds the radius to the DAY cycle by default, and the dict declares radius_from='time' with a documented day/week override.",
+  "apparent_themes": [
+    "Declarative configuration as data",
+    "Human-meaning-first registry entries",
+    "Epistemic humility / tentative-until-ratified",
+    "Separation of declared default from runtime override"
+  ],
+  "intention_signals": "Tries to register one reusable 'lens' that any event set can be viewed through, framing time cyclically (around a clock) rather than linearly, with the human description authored before machine semantics.",
+  "novelty": "The cyclic-time framing of events plus an explicit 'this is only an opening hint, FE overrides it' contract on a config value.",
+  "contribution": "Contributes one cycle-frame binding definition and its human-meaning meta for arranging events around a day/week clock.",
+  "summary_for_embedding": "A Python BINDING dict defining a 'day cycle' visualization lens that arranges events around a clock-like day/week frame via angle/radius/order axis mappings plus a human-meaning meta block.",
+  "intention_for_embedding": "To register a reusable cyclic-time lens so events can be viewed by the rhythm of the day or week."
+}

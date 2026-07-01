@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "templates/pitch-deck/support.js",
+  "model": "opus",
+  "what_it_does": "A generated (do-not-edit) IIFE bundle that is the entire 'dc-runtime' — the client-side Design Component runtime. It loads React/ReactDOM UMD from unpkg, parses an <x-dc> template + a <script data-dc-script> logic class out of the host HTML page, compiles the template (a {{expr}}/sc-for/sc-if/x-import/dc-import/helmet mini-language) into React element builders, evaluates the author's `class Component extends DCLogic` via `new Function`, and mounts it into #dc-root. Supports streaming updates, sibling-component fetch, external JS/JSX module imports (Babel for JSX), an editor bridge (annotated template + postMessage), error boundaries, placeholders, and print CSS. This is the runtime that PitchDeck.dc.html in this same folder includes.",
+  "observations": [
+    "Header comment: 'GENERATED from dc-runtime/src/*.ts — do not edit. Rebuild with `cd dc-runtime && bun run build`.'",
+    "Byte-identical in content to the dc-runtime bundle shipped at templates/capital-raise/support.js — same parser, expression engine, registry, component factory, external loader, helmet, pseudo-sheet, runtime, and index sections.",
+    "Custom expression resolver (paths, [index], equality/inequality, !, literals) — no full JS eval in templates.",
+    "Template language: {{}}, <sc-for list as hint-placeholder-count>, <sc-if value hint-placeholder-val>, <x-import from/component/component-from-global-scope>, <dc-import name>, <helmet>.",
+    "Pins React 18.3.1 + ReactDOM via unpkg URLs with SRI; Babel standalone 7.26.4 for JSX x-imports.",
+    "Two `new Function(...)` uses (logic eval, external module eval), each nosemgrep-tagged.",
+    "StreamableComponent is a React error boundary with circular-import detection via AncestorContext.",
+    "Streaming flags (htmlStreaming/jsStreaming) drive placeholder/shimmer vs render-nothing; hint-size/hint-placeholder-count reserve skeleton layout (used by PitchDeck's x-import hint-size 1280px,720px).",
+    "Editor bridge window API: __dcUpdate/__dcSetProps/__dcAnnotatedTemplate/__dcTemplateSource/__dcBoot/__dcRegistry; postMessage __dc_booted to parent."
+  ],
+  "standouts": [
+    "A complete from-scratch reactive template runtime (parser + safe-ish expression engine + React bridge + registry + error boundary + streaming) in one generated file.",
+    "Built-in streaming placeholders with hint-driven layout reservation — directly serves PitchDeck's slide x-imports while the Slide component loads.",
+    "data-dc-tpl node stamping for a render→source editor mapping bridge."
+  ],
+  "conventions": [
+    "Generated-artifact 'never hand-edit' convention (matches CLAUDE.md _ds_bundle.js trap).",
+    "esbuild IIFE with src/*.ts section comments preserved.",
+    "getReact/getReactDOM throw when React absent; template/logic errors are caught and surfaced as on-screen overlays.",
+    "Public-CDN dependency (unpkg) for React/ReactDOM/Babel, fetched with SRI."
+  ],
+  "concerns": [
+    "Located at templates/pitch-deck/support.js yet byte-identical to the capital-raise copy — implies a per-template duplicate of the single dc-runtime build output.",
+    "Hard runtime dependency on unpkg.com CDN; cannot boot if the CDN is blocked/offline."
+  ],
+  "notes": "Same dc-runtime bundle as the capital-raise support.js; this is the runtime the sibling PitchDeck.dc.html boots from — edit dc-runtime/src and rebuild, never this file.",
+  "questions": [
+    "Is this a per-template copy or a build output replicated into each template folder (the file alone can't say)?",
+    "What component/server streams chunks into __dcUpdate for the pitch deck's slides?"
+  ],
+  "purpose_vs_actual": "Matches: the header declares it the generated dc-runtime and the body is exactly that runtime.",
+  "apparent_themes": [
+    "registry-as-truth with reference-not-copy + subscription reactivity",
+    "streaming/progressive rendering of AI-generated UI",
+    "render→source self-description for an editor",
+    "fail-visible error boundaries over silent degradation"
+  ],
+  "intention_signals": "Built so a server (likely AI) can stream a template + logic class into a live page and have it render incrementally as React, with placeholders during streaming and an editor able to map rendered nodes back to source — here the runtime under the pitch-deck template.",
+  "novelty": "A bespoke HTML-template-to-React compiler with a custom expression language, streaming skeletons, circular-import detection, and an editor postMessage bridge, all in one generated bundle.",
+  "contribution": "Contributes the complete Design Component execution runtime that the pitch-deck (and capital-raise) templates boot from — template compilation, the mini-language, registry+subscription reactivity, streaming placeholders, error boundary, and the editor bridge.",
+  "summary_for_embedding": "Generated dc-runtime IIFE bundle (identical to the capital-raise copy) under the pitch-deck template: a client-side Design Component runtime loading React from unpkg, compiling <x-dc> templates and a DCLogic class into streaming-aware React with error boundaries and an editor bridge.",
+  "intention_for_embedding": "To render the pitch-deck template's AI-streamed HTML + logic class as live, incrementally-rendered, editable React components on a standalone .dc.html page."
+}

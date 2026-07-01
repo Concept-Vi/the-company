@@ -1,0 +1,41 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/eval-set/reachability.json",
+  "model": "opus",
+  "what_it_does": "A small JSON calibration-fixture set for the reachability CONSUMER detector. It holds six controlled fixtures, each a (fe, tests) code snippet plus a route and an expected `orphan` boolean, used to score the detector's logic against stable ground truth (rather than against live routes, which churn). It captures the false-wire incident class as a permanent regression case: real fetch/EventSource/HTTP calls must read WIRED (orphan:false), while comment-mentions, existence-assertions, and prose-in-strings must read ORPHAN (orphan:true).",
+  "observations": [
+    "Contains a `_doc` key explaining the file's purpose, the stable-ground-truth rationale, and why it deliberately does NOT use live routes",
+    "Six fixtures, each {id, route, fe, tests, orphan}",
+    "Three positive (orphan:false) fixtures: a real fetch POST, an EventSource stream, a Python requests.post test call",
+    "Three negative (orphan:true) fixtures encoding named real bugs: comment-mention (mockup-feedback bug), existence-assertion (scope bug), prose-in-string (voice/turn bug)",
+    "Fixture ids and route names are synthetic placeholders (/api/alpha..zeta) but explicitly tied to real incident classes in their id labels",
+    "Frames the detector's job as: a substring/mention must NOT count as wired; only a real call counts"
+  ],
+  "standouts": [
+    "The three negative fixtures are distilled from named real false-wire incidents (mockup-feedback comment, scope existence-assertion, voice prose-in-string) — using past bugs as permanent regression cases",
+    "The explicit design choice to score logic against stable fixtures rather than the live (churning) route tree — separating calibration from burn-down"
+  ],
+  "conventions": [
+    "Uses a `_doc` self-describing key inside the JSON (a common pattern in this repo's data files)",
+    "Follows the coherence lane's calibration-from-own-incidents principle (the eval set built from the system's own documented failures)",
+    "Encodes the positive-only / no-false-wire detector discipline as concrete labelled examples"
+  ],
+  "concerns": [],
+  "notes": "The permanent regression fixture set for the reachability consumer detector — a real call reads WIRED, a mention/assertion/prose reads ORPHAN; scores detector logic against stable ground truth, not the live tree.",
+  "questions": [
+    "Which detector function consumes this fixture file, and how is the score computed against it?",
+    "Are the synthetic /api/alpha..zeta routes ever swapped for the real incident routes, or kept anonymized deliberately?"
+  ],
+  "purpose_vs_actual": "Match — the `_doc` states it is stable calibration fixtures for the consumer detector, and the fixtures deliver exactly that (labelled wired/orphan snippets covering the false-wire classes).",
+  "apparent_themes": [
+    "calibration against stable ground truth (immune to live-tree churn)",
+    "no-false-wire / a mention is not a consumer",
+    "regression-capture of named real incidents",
+    "detector-logic measurement over assertion"
+  ],
+  "intention_signals": "Trying to lock the reachability consumer detector's accuracy with a permanent, churn-immune test of the exact false-wire failure modes that previously caused a wrongly-deleted route — so the detector can be trusted before it drives any loop.",
+  "novelty": "Distilling real production-class bugs (comment-mention, existence-assertion, prose-in-string) into anonymized stable fixtures that separate detector-logic scoring from the moving live route inventory.",
+  "contribution": "Contributes the concrete labelled ground-truth set that defines correct vs incorrect 'wired' detection — the six false-wire/true-wire cases a fused system would keep to calibrate and regression-test any route-reachability detector.",
+  "summary_for_embedding": "A JSON calibration-fixture set of six labelled (fe, tests) snippets with expected orphan booleans for the reachability consumer detector, encoding real false-wire bug classes (comment-mention, existence-assertion, prose-in-string) as permanent stable-ground-truth regression cases.",
+  "intention_for_embedding": "To calibrate and permanently regression-test the route-reachability consumer detector against the exact false-wire failure modes, independent of the churning live route tree."
+}

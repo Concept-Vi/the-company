@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/mcpsweep-marks.report.json",
+  "model": "opus",
+  "what_it_does": "Records the outcome and isolated verification of the marks lane of an MCP-sweep, which built mcp_face/tools/marks.py — a single op-selector 'marks' tool consolidating three former flat tools (marks_for, marks_by_type, findings_for). Reports the module/tool, its ops, flat tools to remove vs keep, verification, status, and design notes.",
+  "observations": [
+    "module: mcp_face/tools/marks.py; tool: 'marks' with three ops selected by a 'by' verb: target, type, findings.",
+    "by='target' wraps Suite.marks_for; by='type' wraps the REGISTRY-GATED Suite.marks_by_type (fail-loud on unknown type); by='findings' reaches store.findings_for for the distinct legacy coherence findings store.",
+    "flat_tools_to_remove: marks_for, marks_by_type, findings_for; flat_tools_to_keep: mark (the write tool, CQRS preserved); new_suite_methods: [].",
+    "Verified in isolation (not the whole server, since sibling lanes were mid-write): a throwaway FastMCP plus a real Suite, confirming the tool registers and round-trips on a live mark_type.",
+    "Gate test: marks(by='type', mark_type='not_a_real_type_xyz') raises ValueError listing registered types, because it wraps Suite.marks_by_type not store.marks_by_type.",
+    "Live mark_types observed from the registry (ai_fingerprint, built_twice, contradiction, gold_likelihood, overlap) — enums derive from the live registry, nothing hardcoded.",
+    "Documents a store asymmetry carried into the docstring: by='target'/by='type' read the marks store via Suite; by='findings' reads the distinct findings store via store, since there is no Suite.findings_for.",
+    "Flags (not built) a future Suite.findings_for wrapper so by='findings' could also go through the Suite, recommending the SUITE lane add it later (it would edit out-of-lane runtime/suite.py).",
+    "Per-branch concise projection because marks and findings have different schemas, deviating from corpus.py's single _shape.",
+    "Self-classifies status as built-verified; file-disjoint respected (only marks.py), not committed."
+  ],
+  "standouts": [
+    "CQRS held: the write tool 'mark' is kept while the three flat read tools are folded into one op-selector.",
+    "The registry-gated by='type' path (wrapping the Suite, not the store) so unknown mark types fail loud.",
+    "The documented marks-store vs findings-store asymmetry, with a flagged-not-built Suite.findings_for seam."
+  ],
+  "conventions": [
+    "Follows a per-lane report schema (module/tool/ops/flat_tools_*) rather than the role-lane schema.",
+    "Mirrors mcp_face/tools/corpus.py's op-selector + concise-default + teaching-errors pattern, with a per-branch concise projection.",
+    "Registry-is-truth on mark_type; the 'by' verb vocabulary is a hardcoded tuple like corpus.py's OPS.",
+    "File-disjoint respected, not committed; flat-tool removal deferred to the serial server.py pass."
+  ],
+  "concerns": [],
+  "notes": "A build-lane status record: the marks sweep built a consolidated op-selector 'marks' read tool over the marks and findings stores, kept the 'mark' write tool, and flagged a future Suite.findings_for wrapper.",
+  "questions": [
+    "When will the serial server.py pass actually remove the three flat tools, and is anything still importing them in the interim?"
+  ],
+  "purpose_vs_actual": "Matches — a build report recording the consolidated tool built and verified in isolation.",
+  "apparent_themes": [
+    "Consolidate flat tools into one op-selector",
+    "CQRS (separate the write tool from the read tool)",
+    "Registry-is-truth and fail-loud gating; carry asymmetry into the docstring"
+  ],
+  "intention_signals": "Aims to fold three mark/finding read tools into one teaching op-selector while preserving the registry gate and the two distinct stores, and to flag the longer-term Suite.findings_for symmetry without overstepping the lane.",
+  "novelty": "The per-branch concise projection (two schemas under one tool) and the explicit marks-store vs findings-store asymmetry with a flagged Suite-wrapper seam.",
+  "contribution": "Contributes the consolidated 'marks' tool design, its registry-gated type path, the CQRS keep-mark decision, and the documented store asymmetry plus the future Suite.findings_for seam, which a fused system would keep as the provenance of mark/finding read access.",
+  "summary_for_embedding": "A seam-lane JSON report documenting the marks MCP-sweep lane's consolidated op-selector 'marks' read tool over the marks and findings stores, with a kept 'mark' write tool and a registry-gated type path.",
+  "intention_for_embedding": "To consolidate the flat mark/finding read tools into one teaching op-selector while preserving CQRS, the registry gate, and the two distinct stores."
+}

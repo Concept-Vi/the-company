@@ -1,0 +1,41 @@
+{
+  "project": "company",
+  "path": "bindings/by_lens.py",
+  "model": "opus",
+  "what_it_does": "Defines a single radial-view BINDING dict named 'by_lens' whose sectors are the rows of the `projections` registry (corpus lenses like topics/principles/worldview/repo/history), and a PROJECTION_SPACE_META dict mapping each projection-space id to operator-facing {name, is} human meaning.",
+  "observations": [
+    "BINDING has id, label, meta {name,is,fills,why}, angle_from='projections', radius_from='time', order_by='count'.",
+    "order_by='count' is explicitly called the 'HONEST fallback' because projection rows have no inter-row edges to order by.",
+    "PROJECTION_SPACE_META covers common_knowledge, history, principles, topics, worldview, repo, operators, what, claimed_status, and '—' (Unfiled).",
+    "Comments explain the meta lives here (not in projections/_meta.py) because runtime/ on sys.path makes `import projections` resolve to runtime/projections.py, so a projections._meta import would silently fail.",
+    "'operators' deliberately displays as 'Roles' so a human operator doesn't read it as being about themselves (name != id).",
+    "'repo' displays as 'Code'.",
+    "Header comment claims registry-is-truth: dropping a projections/<id>.py makes it appear as a sector with no code edit."
+  ],
+  "standouts": [
+    "Honest-fallback rationale for order_by='count' — refuses to fake a sequence where no inter-row edges exist.",
+    "Collision avoidance: meta kept in bindings/ because `import projections` resolves to the runtime module, not the registry folder."
+  ],
+  "conventions": [
+    "Follows the {id: {name, is}} legibility-type shared with kinds/raw.py, nodes/_meta.py, bindings/grouped.py.",
+    "Operator-law: translates internal terms to operator language, never exposing 'lens/embed/vector space'.",
+    "Marks human-meaning entries TENTATIVE pending Tim/DNA ratification."
+  ],
+  "concerns": [],
+  "notes": "A registry-driven radial view binding whose sectors are the corpus projection-spaces, plus the operator-facing names for those spaces.",
+  "questions": [
+    "Where is the EVENT->ROW edge (corpus.record carrying `projection`) actually consumed to map events to sectors?",
+    "What is the SEED §95 growth front referenced for edges-between-registry-rows?"
+  ],
+  "purpose_vs_actual": "Match — the file states it renders the lenses themselves as a registry-true view and it provides exactly that binding plus the sector meta.",
+  "apparent_themes": [
+    "registry-as-truth (data drives views, not code)",
+    "operator legibility / translation discipline",
+    "epistemic honesty (no faked ordering, no inferred status)"
+  ],
+  "intention_signals": "Trying to make 'the ways of looking' themselves a navigable view that automatically reflects whatever projection-spaces exist, while keeping the human-facing labels honest and operator-readable.",
+  "novelty": "The explicit 'honest fallback' ordering and the import-collision workaround documented inline are distinctive.",
+  "contribution": "Contributes a registry-driven binding that turns corpus projection-spaces into a navigable sector view, plus the operator-language name/description for each projection-space and the '—' unfiled remainder.",
+  "summary_for_embedding": "A radial-view binding 'by_lens' whose sectors are the rows of the projections registry, paired with operator-facing name/description meta for each projection-space.",
+  "intention_for_embedding": "To let an operator browse the set of corpus lenses (ways of looking) as a registry-true, honestly-ordered, plainly-labeled view."
+}

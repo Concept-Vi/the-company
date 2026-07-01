@@ -1,0 +1,59 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Build.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a large React canvas component `Build` (window.Build) that drives a 4-stage 'hand Vi a brief' planner: (1) write a brief (seeded from template SEEDS), (2) review an AI-generated plan decomposed into 2-4 parallel specialist subtasks plus one composer, (3) run the non-composer subtasks in parallel, (4) compose and adopt the result. It calls window.CV_AI.execute / CV_AI.complete to plan, triage refinements, and run each subtask kind (icons/colors/copy/widget/wizard/workshop deck/brochure/type-builder/composer), each via a dedicated async runner with its own prompt. It supports adopting icons/colors, saving the run as a parameterized template, opening generated workshop docs, and refining the output at whole-section, per-item, or composition scope.",
+  "observations": [
+    "SEEDS array provides starter briefs (brochure, palette, icons+colors, voice, slide, widget, wizard).",
+    "Stage machine via useState `stage` 1-4, with busy flags planning/generating/composing/refining.",
+    "`generatePlan()` builds a long planner prompt enumerating the available sub-agents and required JSON output shape, calls CV_AI.execute('build.plan'), and parses JSON with a regex fallback.",
+    "`runGeneration()` marks non-composers active, runs them via Promise.all over runSubtask, then auto-advances to runCompose.",
+    "Two refinement paths: `refinePart(scope, message)` for per-item/section/composed scopes, and `refine()` which uses CV_AI.execute('build.triage') to decide which subtasks to re-run.",
+    "Composer is always re-run after any refinement with up-to-date parts.",
+    "`runSubtask` dispatches by kind to runIcons/runColors/runCopy/runWidget/runWizard/runWorkshopDoc/runTypeBuilder, each throwing if its external engine (window.viDraftWidget, window.viDraftWizard, window.WS_viDraft, window.CV_TYPES_VI) is missing.",
+    "runCopy sources the voice from window.CV_AI.get('voice.conceptv').text rather than inlining it.",
+    "Brand constraints are embedded in the runIcons/runColors prompts (24x24 1.5px stroke; warm ivory #FBF7EC, ink #1F1A12, gold #E0C010, bronze #988058, no cool greys).",
+    "`saveTemplate()` asks Vi to extract 1-3 {{params}} from the brief and calls onSaveAsTemplate with a fallback if parsing fails.",
+    "Inline subcomponents: Stepper, PlanEditor/PlanEditorCard, TaskList/TaskNode, PartsPreview, Output, ComposedPreview, WorkshopDocResult, RefineChip, RefineDot; SUBTASK_META gives a tone/label per kind.",
+    "`parseJson` and `parseJsonLoose` helpers parse model replies, trying raw JSON then a {...} regex then (parseJson) a [...] regex.",
+    "type-builder layer is inferred heuristically from keywords in the brief (runTypeBuilder, lines ~1321-1334)."
+  ],
+  "standouts": [
+    "A user-editable plan-review stage between brief and execution: Vi proposes subtasks, the user edits/removes them before anything runs.",
+    "Multi-granularity refinement (single icon/color/copy item, whole section, or composition-only) with composer always rerun afterward.",
+    "Triage-driven refinement where a model decides which subtasks to re-run from the user's free-text change request."
+  ],
+  "conventions": [
+    "Follows a generate -> propose/plan -> review -> adopt flow.",
+    "Parses model JSON defensively with a regex fallback for fenced/prose-wrapped replies.",
+    "Routes model calls through CV_AI.execute (named capabilities like build.plan/build.triage/build.icons) and CV_AI.complete, never a raw model client.",
+    "Sources the brand voice from the CV_AI voice entry instead of inlining it.",
+    "Aliases React hooks with a `_b` suffix for the shared bundle.",
+    "On bad refinement responses, restores the previous result and toasts rather than blanking a section."
+  ],
+  "concerns": [
+    "Line 618 has a stray trailing `}/>` after the self-closed `<Output .../>` element, which is malformed JSX as written.",
+    "Several runners depend on external globals (window.viDraftWidget, window.viDraftWizard, window.WS_viDraft, window.CV_TYPES_VI, window.WidgetRender, window.CV_TYPES_PROMPT) and throw or fall back when absent.",
+    "Many catch blocks are empty `catch {}` around composer reruns, swallowing errors silently.",
+    "The four brand/specialist prompts (icons, colors, copy, composer) each embed the brand description as a string literal within this file."
+  ],
+  "notes": "The cross-canvas Vi planner: it turns one brief into a reviewable parallel-subtask tree, runs specialist generators, composes a preview, and lets the user adopt/save/refine at multiple granularities.",
+  "questions": [
+    "What capabilities are 'build.plan', 'build.triage', 'build.icons', 'build.colors', 'build.copy' in CV_AI, and how do they differ from CV_AI.complete?",
+    "Is the stray `}/>` at line 618 a typo that would break compilation, or stripped by a build step before this is loaded?",
+    "What contract do viDraftWidget/viDraftWizard/WS_viDraft return?"
+  ],
+  "purpose_vs_actual": "Matches. The header comment calls it a 'cross-canvas Vi planner with 3-layer task tree' and the component implements a brief->plan->parallel-subtasks->compose pipeline with refinement and adoption.",
+  "apparent_themes": [
+    "Orchestration of parallel specialist sub-agents from one brief",
+    "Human-in-the-loop plan review before execution",
+    "Iterative refinement at multiple granularities",
+    "Brand-consistent generation (voice/palette/icon constraints in prompts)",
+    "Capability-routed model calls"
+  ],
+  "intention_signals": "Trying to make Vi an end-to-end maker: decompose a natural-language brief into reviewable specialist work, run it in parallel, assemble a coherent on-brand output, and let the user adopt parts into the system or save the whole run as a reusable parameterized template.",
+  "novelty": "A staged planner UI with an editable subtask tree, parallel specialist execution, and triage-based refinement that re-plans which subtasks to rerun from free text.",
+  "contribution": "Contributes the cross-canvas Build planner: brief seeds, an AI-decomposed editable subtask plan, parallel specialist runners (icons/colors/copy/widget/wizard/deck/brochure/type), a composer, multi-scope refinement, adoption, and template saving.",
+  "summary_for_embedding": "A React canvas (window.Build) that decomposes a brief into 2-4 parallel specialist subtasks plus a composer, runs them via CV_AI, and supports plan review, multi-granularity refinement, adoption, and template saving.",
+  "intention_for_embedding": "To let a user hand Vi one brief and get a reviewable, parallel, on-brand build that assembles icons, colors, copy and workshop docs into an adoptable, refinable, reusable result."
+}

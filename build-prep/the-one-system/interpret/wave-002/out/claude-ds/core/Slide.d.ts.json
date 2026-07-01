@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "core/Slide.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration file for the Slide archetype layer. It declares the ArchetypeName union (15 named archetypes), the SlideProps interface (extends CVAxis, adds optional archetype and content), the Slide component function, and an Archetypes registry handle with list/build/register members. Importing CVNode, CVAxis, CVGraph types from ./cv-nodes.",
+  "observations": [
+    "ArchetypeName union lists 15 archetypes: cover, split, statement, compare, modes, triptych, metric-band, checklist, timeline, profile, terms, gallery, closing, stepper, diagram.",
+    "SlideProps extends CVAxis (so lod/surface/density etc. come from the axis type) and adds archetype?: ArchetypeName | string and content?: Record<string,any>.",
+    "Default archetype documented as 'statement'.",
+    "Archetypes registry exposes list: string[], build(archetype, content?): CVNode, register(name, fn): void.",
+    "Docstrings restate the system thesis: archetype is a pure function content -> CVNode tree; design = f(content, axisPosition); diagram nodes go to the graph solver."
+  ],
+  "standouts": [
+    "archetype typed as ArchetypeName | string — open vocabulary so register() can add archetypes beyond the named union.",
+    "The registry handle (list/build/register) makes archetypes extend-by-registration, matching the system's single-catalogue rule."
+  ],
+  "conventions": [
+    "Pure type declarations, no implementation (the .jsx is the implementation).",
+    "Content typed loosely as Record<string,any> (the typed slots are enforced at build, not in this declaration).",
+    "Reuses CVAxis for axis props rather than redeclaring lod/surface/density."
+  ],
+  "concerns": [
+    "content: Record<string,any> gives no compile-time shape per archetype, so the typed-slot contract is invisible to TS consumers (a deliberate looseness, but a smell for safety)."
+  ],
+  "notes": "The type contract for the Slide archetype layer: 15 named archetypes plus open string, axis props via CVAxis, and an extend-by-registration Archetypes handle, all over the CVNode tree.",
+  "questions": [
+    "What does CVAxis declare (which axes are part of SlideProps)?",
+    "Why is CVGraph imported here but not referenced in any exported declaration?"
+  ],
+  "purpose_vs_actual": "Match — the file declares the archetype layer's public type surface exactly as the docstrings describe.",
+  "apparent_themes": [
+    "Content-as-data / design = f(content, axis)",
+    "Extend-by-registration",
+    "Single catalogue of archetypes",
+    "Open vocabulary (named union + string)"
+  ],
+  "intention_signals": "Give consumers a typed entry point to the archetype layer — what archetypes exist, how to feed them content under the axes, and how to register new ones — without leaking implementation.",
+  "novelty": "n/a",
+  "contribution": "Contributes the canonical type surface and enumerated archetype vocabulary for the Slide layer, plus the build/register API shape a fused system would keep as the archetype contract.",
+  "summary_for_embedding": "A TypeScript .d.ts declaring the Slide archetype component, the 15-name ArchetypeName union, SlideProps (CVAxis + archetype + content), and an Archetypes list/build/register registry over CVNode trees.",
+  "intention_for_embedding": "To type the archetype layer as pure content→CVNode-tree builders with an extend-by-registration registry and axis-driven recomputation."
+}

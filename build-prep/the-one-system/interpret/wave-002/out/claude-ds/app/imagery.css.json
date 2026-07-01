@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "app/imagery.css",
+  "model": "opus",
+  "what_it_does": "Stylesheet for the Studio's Imagery subsystem: the image library (tabs, toolbar/tag bar, image grid, cards, empty state), Projects/Hubs layouts, a 360 panorama viewer with hotspot pins, the AI Studio (v3 'deck-restraint' redesign with banner, tabs, presets, pipelines, prompt/source/compose/params/runbar/results/history/chat panes), a mask editor, and a modal image editor (crop overlay, filters, ratios, rotate, AI-edit panel).",
+  "observations": [
+    "All values reference design tokens (var(--paper-*), --ink-*, --accent-gold*, --font-*, --r-*, --s-*, --shadow-*, --status-*); almost no raw colors except a handful of rgba(31,26,18,...) overlays/backdrops.",
+    "Class prefixes segment the file: cv-im-* (imagery), cv-pano-* (360 viewer), cv-as-* (AI Studio v3), cv-mask-* (mask editor), cv-ed-* (image editor modal).",
+    "Header comment marks a 'v3 — deck-restraint redesign' block, implying an earlier AI Studio styling (cv-im-ai-*) is also still present in the same file.",
+    "Several keyframe animations defined inline: cv-pano-pulse, cv-as-pulse, cv-ed-fade.",
+    "Uses color-mix(in oklch, ...) for one pill background.",
+    "A media query at min-width 1200px switches the results grid to two columns based on :nth-child(5) of a resizable column.",
+    "Repeating-linear-gradient used for skeleton/running-pipeline striping and the editor stage checkerboard."
+  ],
+  "standouts": [
+    "Two AI-studio styling eras coexist (cv-im-ai-* legacy banner/grid AND the cv-as-* v3 deck-restraint set).",
+    "The 360 panorama viewer styling (cv-pano-*) with pulsing hotspot pins and labels.",
+    "A full modal image editor (cv-ed-*) with crop box handles, rule-of-thirds grid overlay, filter thumbnails, aspect-ratio buttons, and an AI-edit results grid."
+  ],
+  "conventions": [
+    "Follows the project's token-reference discipline (var(--token) everywhere, off-token literals limited to translucent dark overlays).",
+    "Uses the warm-paper/gold-ink palette described in its own header comment.",
+    "BEM-ish hyphenated class naming under cv- prefixes, grouped by subsystem with banner comments."
+  ],
+  "concerns": [
+    "Raw rgba(31,26,18,...) and rgba(224,192,16,...) and rgba(251,247,236,...) literals recur for overlays/striping rather than tokenized alpha variants.",
+    "Mix of two variable naming families (--paper-2/--ink-3 vs --bg-surface/--fg-primary/--fg-muted) within one file suggests two token vocabularies in play.",
+    "The .cv-as-results-grid two-column rule keys off :nth-child(5) of a generic .cv-resizable-col, a positional coupling that is brittle if column order changes."
+  ],
+  "notes": "Large multi-subsystem stylesheet for Studio's imagery/AI-studio/mask/image-editor surfaces; token-driven, carries a documented v3 redesign block alongside legacy AI-studio styles.",
+  "questions": [
+    "Are the legacy cv-im-ai-* AI Studio styles still consumed, or superseded by the cv-as-* v3 set?",
+    "Why do two token families (--paper-*/--ink-* and --bg-*/--fg-*) both appear — are they aliases or distinct layers?"
+  ],
+  "purpose_vs_actual": "Matches: the header states 'Imagery subsystem + Settings + Editor + 360 viewer' and the file delivers exactly those plus the AI Studio and mask editor.",
+  "apparent_themes": [
+    "Token-referenced single-source styling (no copies of values)",
+    "Warm-paper/gold-ink brand palette",
+    "Subsystem-segmented stylesheet for image-centric Studio surfaces"
+  ],
+  "intention_signals": "Aims to style the full image-management + AI-generation + editing workflow of the Studio entirely from the shared token system, keeping a documented redesign trail (v3 deck-restraint) in place.",
+  "novelty": "The combination in one stylesheet of a 360 pano viewer, a brush mask editor, and a modal crop/filter/AI image editor — a complete imaging toolchain styled from one token set.",
+  "contribution": "Contributes the visual layer for the Studio's imagery, AI image-generation studio, panorama/hotspot viewer, mask editor, and modal image editor surfaces.",
+  "summary_for_embedding": "A token-driven CSS stylesheet styling the ConceptV Studio's imagery library, AI Studio (v3 deck-restraint), 360 panorama viewer, mask editor, and modal image editor.",
+  "intention_for_embedding": "To style the Studio's complete image management, AI-generation, and editing workflow entirely from the shared design-token system."
+}

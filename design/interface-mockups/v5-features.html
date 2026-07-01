@@ -1,0 +1,1128 @@
+<title>The Company — Operator Console</title>
+<style>
+  :root{
+    --ground:#0b0f17; --ground-2:#0e1320; --panel:#131a27; --panel-2:#18202e; --panel-3:#1d2636;
+    --line:#26303f; --line-bright:#3a465c; --line-faint:#1b232f;
+    --ink:#e9e6dd; --ink-dim:#98a1b3; --ink-faint:#5e6675;
+    --t-code:#4f7390; --t-local:#54a6c4; --t-embed:#62b9b4; --t-claude:#8fae9a; --t-cloud:#cf9f63; --t-tim:#f0b65a;
+    --signal:#5fc6d6; --gold:#f0b65a; --whole:#5fc09a; --fray:#dd6a5e; --violet:#b48cf0;
+    --r:7px;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,"Segoe UI",system-ui,"Helvetica Neue",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden}
+  ::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:var(--line-bright);border-radius:5px}::-webkit-scrollbar-track{background:transparent}
+  .app{display:grid;grid-template-columns:236px 1fr;height:100vh}
+  /* ── rail ── */
+  .rail{background:var(--ground-2);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+  .brand{padding:16px 18px 13px;border-bottom:1px solid var(--line-faint);display:flex;align-items:center;gap:10px}
+  .orb{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold),#9a6a22 68%,#3a2a10);box-shadow:0 0 16px rgba(240,182,90,.45);flex:none;cursor:pointer}
+  .orb.pulse{animation:orbp 3s ease-in-out infinite}
+  @keyframes orbp{0%,100%{box-shadow:0 0 16px rgba(240,182,90,.4)}50%{box-shadow:0 0 22px rgba(240,182,90,.7)}}
+  .brand h1{font-size:14px;margin:0;font-weight:600;letter-spacing:.01em}
+  .brand .sub{font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.03em;margin-top:2px}
+  nav{padding:6px 10px 10px;display:flex;flex-direction:column;gap:1px;flex:1;min-height:0;overflow:auto}
+  .nav-eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);padding:13px 10px 5px}
+  .navi{display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:var(--r);cursor:pointer;color:var(--ink-dim);border:1px solid transparent;position:relative}
+  .navi:hover{background:var(--panel);color:var(--ink)}
+  .navi.on{background:var(--panel-2);color:var(--ink);border-color:var(--line-bright)}
+  .navi.on::before{content:"";position:absolute;left:-10px;top:7px;bottom:7px;width:3px;border-radius:2px;background:var(--gold)}
+  .navi .ico{width:17px;height:17px;flex:none;opacity:.92}
+  .navi .txt{display:flex;flex-direction:column;min-width:0}
+  .navi .nm{font-size:13px;font-weight:500;line-height:1.25}
+  .navi .gloss{font-size:9.5px;color:var(--ink-faint);font-family:var(--mono)}
+  .badge{margin-left:auto;font-family:var(--mono);font-size:9.5px;background:var(--fray);color:#1a0e0c;border-radius:20px;padding:1px 7px;font-weight:700}
+  .badge.cool{background:var(--signal);color:#04181c}.badge.live{background:var(--whole);color:#04140d}
+  .rail-foot{border-top:1px solid var(--line-faint);padding:11px 12px;display:flex;flex-direction:column;gap:9px}
+  .reg-toggle{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:3px;font-family:var(--mono);font-size:10px}
+  .reg-toggle button{flex:1;background:none;border:0;color:var(--ink-faint);padding:6px 4px;border-radius:5px;cursor:pointer}
+  .reg-toggle button.on{background:var(--panel-2);color:var(--ink)}
+  .kbd{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);display:flex;justify-content:space-between}
+  .kbd kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--ink-dim)}
+  /* ── main ── */
+  .main{display:flex;flex-direction:column;min-width:0;min-height:0}
+  .topbar{height:50px;flex:none;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;padding:0 20px;background:linear-gradient(180deg,var(--ground-2),var(--ground))}
+  .crumb{font-family:var(--mono);font-size:11.5px;color:var(--ink-dim)}.crumb b{color:var(--ink);font-weight:600}
+  .legend{display:flex;align-items:center;font-family:var(--mono);font-size:9px}
+  .legend .lab{color:var(--ink-faint);letter-spacing:.1em;text-transform:uppercase;margin-right:8px}
+  .tier-chip{width:30px;height:7px}.tier-chip:first-of-type{border-radius:4px 0 0 4px}.tier-chip:last-of-type{border-radius:0 4px 4px 0}
+  .micro{font-family:var(--mono);font-size:10px;color:var(--ink-faint)}
+  .vram{margin-left:auto;display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:10px;color:var(--ink-dim)}
+  .vram .bar{width:90px;height:8px;background:var(--panel);border:1px solid var(--line);border-radius:5px;overflow:hidden;display:flex}
+  .vram .seg{height:100%}
+  .gstate{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--ink-dim);padding-left:14px;border-left:1px solid var(--line);cursor:pointer}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--whole);box-shadow:0 0 8px var(--whole)}
+  .stage{flex:1;min-height:0;overflow:auto;position:relative}
+  .stage-pad{padding:20px 22px}
+  .room-head{display:flex;align-items:flex-end;gap:13px;margin-bottom:3px}
+  .room-head h2{font-size:21px;margin:0;font-weight:600;letter-spacing:-.01em}
+  .room-head .k{font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:.05em;padding-bottom:4px}
+  .room-head .ask{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--signal);border:1px solid var(--line-bright);background:var(--panel);border-radius:20px;padding:5px 12px;cursor:pointer}
+  .room-head .ask:hover{border-color:var(--signal)}
+  .room-sub{color:var(--ink-dim);max-width:72ch;margin:0 0 16px;font-size:13px}
+  .room-sub code{font-family:var(--mono);font-size:12px;color:var(--signal);background:var(--panel);padding:1px 5px;border-radius:4px}
+  /* canvas */
+  .canvas-wrap{position:relative;background:radial-gradient(130% 130% at 50% 0%,#10182680,#0a0e16);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  canvas{display:block;width:100%}
+  .overlay-ui{position:absolute;display:flex;gap:6px;z-index:3}
+  .pill{font-family:var(--mono);font-size:11px;background:rgba(19,26,39,.84);border:1px solid var(--line-bright);color:var(--ink-dim);padding:6px 11px;border-radius:20px;cursor:pointer;backdrop-filter:blur(6px)}
+  .pill:hover{color:var(--ink)}
+  .pill.on{background:var(--signal);color:#04181c;border-color:var(--signal);font-weight:600}
+  .pill.warm.on{background:var(--gold);color:#1a0e02;border-color:var(--gold)}
+  .runbtn{font-family:var(--mono);font-size:12px;background:var(--gold);color:#1a0e02;border:0;padding:8px 16px;border-radius:20px;cursor:pointer;font-weight:700}
+  .runbtn.cool{background:var(--signal);color:#04181c}.runbtn:disabled{opacity:.5;cursor:default}
+  .tip{position:absolute;pointer-events:none;background:rgba(11,15,23,.96);border:1px solid var(--line-bright);border-radius:8px;padding:9px 11px;font-size:12px;max-width:230px;opacity:0;transition:opacity .12s;z-index:6}
+  .tip .a{font-family:var(--mono);font-size:10px;color:var(--signal);display:block;margin-bottom:3px}
+  .tip .rel{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:5px}
+  .hud{position:absolute;right:12px;top:12px;background:rgba(11,15,23,.82);border:1px solid var(--line);border-radius:8px;padding:11px 13px;font-family:var(--mono);font-size:11px;min-width:166px;backdrop-filter:blur(6px);z-index:3}
+  .hud .row{display:flex;justify-content:space-between;gap:14px;padding:2px 0;color:var(--ink-dim)}
+  .hud .row b{color:var(--ink);font-variant-numeric:tabular-nums}
+  /* drill panel (map focus) */
+  .drill{position:absolute;right:0;top:0;bottom:0;width:310px;background:rgba(13,18,28,.97);border-left:1px solid var(--line-bright);padding:16px;overflow:auto;transform:translateX(100%);transition:transform .22s;z-index:7;backdrop-filter:blur(8px)}
+  .drill.open{transform:none}
+  .drill h3{margin:0 0 2px;font-size:16px}
+  .drill .da{font-family:var(--mono);font-size:10.5px;color:var(--signal);margin-bottom:14px;word-break:break-all}
+  .drill .sec{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin:15px 0 7px}
+  .proj{display:flex;gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--line-faint);font-size:12px}
+  .proj .pl{font-family:var(--mono);font-size:9.5px;color:var(--gold);width:78px;flex:none}
+  .navbtns{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:6px}
+  .navbtns button{font-family:var(--mono);font-size:10.5px;background:var(--panel-2);border:1px solid var(--line-bright);color:var(--ink-dim);padding:7px;border-radius:6px;cursor:pointer}
+  .navbtns button:hover{color:var(--ink);border-color:var(--signal)}
+  .drill .close{position:absolute;top:12px;right:14px;cursor:pointer;color:var(--ink-faint);font-size:18px}
+  .mk{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:20px;background:var(--panel-2);margin:0 5px 5px 0}
+  /* generic cards/grid */
+  .grid{display:grid;gap:13px}.cols-2{grid-template-columns:1fr 1fr}.cols-3{grid-template-columns:1fr 1fr 1fr}.cols-4{grid-template-columns:repeat(4,1fr)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .card .ch{padding:12px 15px;border-bottom:1px solid var(--line-faint);display:flex;align-items:center;gap:9px}
+  .card .ch .t{font-weight:600;font-size:13px}.card .ch .k{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-left:auto}
+  .card .cb{padding:13px 15px}
+  .stripe{border-left:3px solid var(--line-bright)}.stripe.fray{border-left-color:var(--fray)}.stripe.gold{border-left-color:var(--gold)}.stripe.whole{border-left-color:var(--whole)}.stripe.cool{border-left-color:var(--signal)}.stripe.violet{border-left-color:var(--violet)}
+  .metric{display:flex;flex-direction:column;gap:2px}.metric .big{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em}.metric .ml{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase}
+  /* bench */
+  .scarce{font-family:var(--mono);font-size:10.5px;color:var(--gold);display:flex;align-items:center;gap:8px;margin:0 0 14px;padding:9px 13px;background:rgba(240,182,90,.07);border:1px solid rgba(240,182,90,.2);border-radius:8px}
+  .bench-item{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:8px;padding:13px 15px;margin-bottom:11px;transition:opacity .3s}
+  .bench-item.done{opacity:.45;border-left-color:var(--whole)}
+  .bi-top{display:flex;align-items:center;gap:9px;margin-bottom:6px;flex-wrap:wrap}
+  .kind{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:rgba(240,182,90,.13);color:var(--gold)}
+  .kind.find{background:rgba(221,106,94,.13);color:var(--fray)}.kind.mark{background:rgba(95,198,214,.12);color:var(--signal)}.kind.twin{background:rgba(180,140,240,.14);color:var(--violet)}
+  .posture{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--ink-faint);margin-left:auto;border:1px solid var(--line);border-radius:20px;padding:1px 8px}
+  .bi-claim{font-size:14px;font-weight:500;margin:0 0 3px}
+  .bi-ev{font-size:12px;color:var(--ink-dim);font-family:var(--mono);background:var(--ground-2);border:1px solid var(--line-faint);border-radius:6px;padding:8px 10px;margin:7px 0}
+  .bi-ev .lbl{color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em;font-size:8.5px;display:block;margin-bottom:3px}
+  .bi-acts{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+  .act{font-family:var(--mono);font-size:11px;border:1px solid var(--line-bright);background:var(--panel-2);color:var(--ink-dim);padding:6px 12px;border-radius:6px;cursor:pointer}
+  .act.go{border-color:var(--whole);color:var(--whole)}.act.go:hover{background:rgba(95,192,154,.12)}.act.no:hover{border-color:var(--fray);color:var(--fray)}.act:hover{color:var(--ink)}
+  .rhm-bubble{display:flex;gap:10px;align-items:flex-start;background:rgba(240,182,90,.05);border:1px solid rgba(240,182,90,.18);border-radius:8px;padding:10px 12px;margin:6px 0 0;font-size:12.5px}
+  .rhm-bubble .o{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold),#9a6a22);flex:none;margin-top:1px}
+  /* loom */
+  .loom{display:grid;grid-template-columns:172px 1fr 240px;gap:12px}
+  .palette-n .pn{font-family:var(--mono);font-size:11px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel);margin-bottom:7px;cursor:grab;display:flex;align-items:center;gap:8px}
+  .palette-n .pn .vd{width:7px;height:7px;border-radius:2px}
+  .shelf .sh-item{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);margin-bottom:8px;cursor:pointer}
+  .shelf .sh-item:hover{border-color:var(--line-bright)}.shelf .sh-item.on{border-color:var(--gold);background:var(--panel-2)}
+  .sh-item .nm{font-weight:600;font-size:13px}.sh-item .ds{font-size:10.5px;color:var(--ink-faint);font-family:var(--mono);margin-top:2px}.sh-item .tg{font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--signal);margin-top:5px}
+  .loom-canvas{background:radial-gradient(130% 130% at 50% 0%,#10182680,#0a0e16);border:1px solid var(--line);border-radius:10px;position:relative;min-height:360px;overflow:hidden}
+  .loom-grid{position:absolute;inset:0;background-image:linear-gradient(var(--line-faint) 1px,transparent 1px),linear-gradient(90deg,var(--line-faint) 1px,transparent 1px);background-size:25px 25px;opacity:.4}
+  .lnode{position:absolute;background:var(--panel-2);border:1px solid var(--line-bright);border-radius:9px;padding:10px 12px;width:140px;cursor:pointer;z-index:2}
+  .lnode:hover,.lnode.sel{border-color:var(--gold)}
+  .lnode .vrb{font-family:var(--mono);font-size:9.5px;color:var(--signal)}.lnode .lbl2{font-size:12.5px;font-weight:600;margin-top:2px}.lnode .cfg{font-size:9.5px;color:var(--ink-faint);font-family:var(--mono);margin-top:3px}.lnode .tband{height:4px;border-radius:3px;margin-top:7px}
+  .inspect{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .frow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line-faint);font-size:12px}
+  .frow .fl{font-family:var(--mono);font-size:10px;color:var(--ink-faint)}
+  .frow select,.frow .val{font-family:var(--mono);font-size:11px;background:var(--panel-2);border:1px solid var(--line-bright);color:var(--ink);border-radius:5px;padding:3px 8px}
+  /* pulse extras */
+  .seam{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-faint);font-size:12.5px}.seam:last-child{border:0}
+  .seam .sd{width:8px;height:8px;border-radius:50%;flex:none}.seam .sa{font-family:var(--mono);font-size:10.5px;margin-left:auto}
+  .st{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:1px 8px;border-radius:20px}
+  .prize{background:linear-gradient(135deg,rgba(221,106,94,.1),rgba(95,198,214,.08));border:1px solid var(--line-bright)}
+  .prize .cb{display:flex;gap:15px;align-items:center;flex-wrap:wrap}.prize .vs{font-family:var(--mono);font-size:11px;text-align:center}.prize .vs b{display:block;font-size:13px;margin-bottom:3px}
+  .det-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-faint);font-size:12px}.det-row:last-child{border:0}
+  .tierlab{font-family:var(--mono);font-size:9px;padding:1px 7px;border-radius:4px;letter-spacing:.04em}
+  .calib td,.calib th{text-align:left;padding:7px 10px;font-size:11.5px;border-bottom:1px solid var(--line-faint)}.calib th{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}.calib{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  .calib tr.win{background:rgba(95,192,154,.07)}
+  .adr-log{font-family:var(--mono);font-size:11px}.adr-log .e{padding:8px 0;border-bottom:1px solid var(--line-faint)}.adr-log .e:last-child{border:0}.adr-log .who{color:var(--gold)}.adr-log .when{color:var(--ink-faint)}
+  /* cast */
+  .cast-grid{display:grid;grid-template-columns:1fr 320px;gap:13px}
+  .roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:9px}
+  .role{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 11px;position:relative;transition:border-color .2s,background .2s}
+  .role.firing{border-color:var(--signal);background:var(--panel-2);box-shadow:0 0 12px rgba(95,198,214,.25)}
+  .role.ran{border-color:var(--whole)}
+  .role .rn{font-size:12.5px;font-weight:600}.role .rr2{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);margin-top:2px}
+  .role .rs{position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--line-bright)}
+  .role.firing .rs{background:var(--signal);animation:blink 1s infinite}.role.ran .rs{background:var(--whole)}
+  @keyframes blink{50%{opacity:.3}}
+  .dial{margin-bottom:13px}.dial .dl{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+  .dial-opts{display:flex;gap:5px}.dial-opts button{flex:1;font-family:var(--mono);font-size:10.5px;background:var(--panel);border:1px solid var(--line);color:var(--ink-faint);padding:7px 4px;border-radius:6px;cursor:pointer}.dial-opts button.on{border-color:var(--gold);color:var(--gold);background:var(--panel-2)}
+  .staged .part{border-left:2px solid var(--signal);padding:7px 11px;margin-bottom:8px;font-size:13px;background:var(--panel);border-radius:0 6px 6px 0;opacity:0;transform:translateY(6px);transition:.3s}
+  .staged .part.in{opacity:1;transform:none}.staged .part .pm{font-family:var(--mono);font-size:9px;color:var(--signal);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:3px}
+  /* models / fabric */
+  .mrow{display:grid;grid-template-columns:1.4fr 1fr 70px 86px 70px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-faint);font-size:12.5px}
+  .mrow .mn{font-weight:600}.mrow .mid{font-family:var(--mono);font-size:10px;color:var(--ink-faint)}
+  .mvram{height:7px;background:var(--panel);border-radius:4px;overflow:hidden}.mvram i{display:block;height:100%;background:var(--t-local)}
+  .pillstate{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:20px;text-align:center}
+  .resident{background:rgba(95,192,154,.13);color:var(--whole)}.evicted{background:rgba(150,160,178,.1);color:var(--ink-faint)}.down{background:rgba(221,106,94,.13);color:var(--fray)}.cloud{background:rgba(207,159,99,.14);color:var(--t-cloud)}
+  .sess{display:flex;align-items:center;gap:11px;padding:11px 13px;border:1px solid var(--line);border-radius:9px;background:var(--panel);margin-bottom:9px}
+  .sess .sdot{width:8px;height:8px;border-radius:50%;flex:none}.sess .snm{font-weight:600;font-size:13px}.sess .scwd{font-family:var(--mono);font-size:10px;color:var(--ink-faint)}.sess .sright{margin-left:auto;text-align:right;font-family:var(--mono);font-size:10px;color:var(--ink-dim)}
+  /* RHM dock */
+  .dock{position:fixed;right:0;top:0;bottom:0;width:330px;background:rgba(11,15,23,.98);border-left:1px solid var(--line-bright);transform:translateX(100%);transition:transform .24s;z-index:40;display:flex;flex-direction:column;backdrop-filter:blur(10px)}
+  .dock.open{transform:none}
+  .dock .dh{padding:16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px}
+  .dock .dh .o{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold),#9a6a22 70%,#3a2a10);box-shadow:0 0 16px rgba(240,182,90,.4)}
+  .dock .dh b{font-size:14px}.dock .dh .x{margin-left:auto;cursor:pointer;color:var(--ink-faint);font-size:18px}
+  .dock .db{padding:16px;overflow:auto;flex:1}
+  .dock .say{font-size:14.5px;line-height:1.6;margin-bottom:16px}
+  .dock .sugg{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:9px 11px;margin-bottom:8px;cursor:pointer;color:var(--ink-dim)}
+  .dock .sugg:hover{border-color:var(--gold);color:var(--ink)}
+  .dock .voice{margin:14px 16px;border:1px solid var(--line-bright);border-radius:9px;padding:12px;display:flex;align-items:center;gap:11px;cursor:pointer}
+  .wave{display:flex;gap:2px;align-items:center;height:20px}.wave i{width:3px;background:var(--gold);border-radius:2px;animation:wv 1s infinite ease-in-out}
+  @keyframes wv{0%,100%{height:5px}50%{height:18px}}
+  /* command palette */
+  .scrim{position:fixed;inset:0;background:rgba(6,9,14,.7);z-index:50;display:none;align-items:flex-start;justify-content:center}.scrim.open{display:flex}
+  .palette{width:560px;max-width:92vw;margin-top:12vh;background:var(--panel);border:1px solid var(--line-bright);border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .palette input{width:100%;background:var(--ground-2);border:0;border-bottom:1px solid var(--line);color:var(--ink);font-size:15px;padding:15px 18px;outline:none;font-family:var(--sans)}
+  .palette .plist{max-height:340px;overflow:auto}
+  .pcmd{display:flex;align-items:center;gap:12px;padding:11px 18px;cursor:pointer;border-bottom:1px solid var(--line-faint)}
+  .pcmd:hover,.pcmd.sel{background:var(--panel-2)}
+  .pcmd .pv{font-family:var(--mono);font-size:12px;color:var(--signal);min-width:150px}
+  .pcmd .pd{font-size:12px;color:var(--ink-dim)}.pcmd .pg{margin-left:auto;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint)}
+  /* recall */
+  .recall{flex:none;border-top:1px solid var(--line);background:var(--ground-2);padding:11px 22px}
+  .recall-in{display:flex;align-items:center;gap:10px}
+  .recall-ops{display:flex;gap:4px}
+  .recall-ops button{font-family:var(--mono);font-size:10px;background:var(--panel);border:1px solid var(--line);color:var(--ink-faint);padding:5px 9px;border-radius:6px;cursor:pointer}
+  .recall-ops button.on{border-color:var(--gold);color:var(--gold)}
+  .recall-in .q{display:flex;align-items:center;gap:10px;flex:1;background:var(--panel);border:1px solid var(--line-bright);border-radius:22px;padding:8px 16px}
+  .recall-in input{flex:1;background:none;border:0;color:var(--ink);font-size:14px;outline:none}.recall-in input::placeholder{color:var(--ink-faint)}
+  .recall-in .scope{font-family:var(--mono);font-size:10px;color:var(--ink-faint);border-left:1px solid var(--line);padding-left:11px;cursor:pointer}
+  .recall-res{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;max-height:0;overflow:hidden;transition:max-height .25s}.recall-res.open{max-height:120px}
+  .rr{font-family:var(--mono);font-size:11px;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:7px 11px;cursor:pointer;display:flex;gap:9px;align-items:center}.rr:hover{border-color:var(--gold)}
+  .rr .sc{color:var(--gold);font-variant-numeric:tabular-nums}.rr .sc.text{color:var(--ink-faint)}
+  .flash{animation:flash 1.4s ease}@keyframes flash{0%,100%{box-shadow:0 0 0 rgba(240,182,90,0)}40%{box-shadow:0 0 0 4px rgba(240,182,90,.4)}}
+  /* ── memory (recollection) ── */
+  .mtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:15px;border-bottom:1px solid var(--line-faint);padding-bottom:13px}
+  .mtab{font-family:var(--mono);font-size:11px;background:var(--panel);border:1px solid var(--line);color:var(--ink-dim);padding:7px 12px;border-radius:8px;cursor:pointer}
+  .mtab.on{border-color:var(--gold);color:var(--gold);background:var(--panel-2)}
+  .kindchip{font-family:var(--mono);font-size:10.5px;border:1px solid var(--line);color:var(--ink-dim);padding:5px 11px;border-radius:20px;cursor:pointer}
+  .kindchip.on{background:var(--panel-2);border-color:var(--line-bright);color:var(--ink)}
+  .uitem{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--line-bright);border-radius:8px;padding:12px 14px;margin-bottom:10px}
+  .uitem .ut{display:flex;align-items:center;gap:9px;margin-bottom:5px;flex-wrap:wrap}
+  .uitem .uk{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:20px}
+  .uitem .ucl{font-size:14px;font-weight:500;margin:0}
+  .uitem .uv{font-family:var(--mono);font-size:11px;color:var(--ink-dim);margin-top:7px}.uitem .uv .vt{color:var(--ink-faint)}
+  .uitem .ulin{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);margin-left:auto}
+  .ladder{display:flex;flex-direction:column;align-items:center}
+  .lrung{display:flex;align-items:center;gap:13px;padding:12px 15px;border:1px solid var(--line);border-radius:9px;background:var(--panel);margin-bottom:9px}
+  .lrung .ls{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);width:58px;flex:none}
+  .lrung .lc{font-size:13px}.lrung .lc .le{font-size:11px;color:var(--ink-faint);font-family:var(--mono)}
+  .lrung .ln{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);margin-left:auto;flex:none}
+  .rlane{display:flex;gap:6px;margin:9px 0;font-family:var(--mono);font-size:9.5px;flex-wrap:wrap}
+  .rlane span{padding:3px 9px;border-radius:20px;border:1px solid var(--line);color:var(--ink-faint)}.rlane span.on{border-color:var(--gold);color:var(--gold);background:var(--panel-2)}
+  /* ── wave-3: ambient + connective tissue ── */
+  /* address chip — the through-line: every surface speaks the same addresses, click to trace */
+  .achip{font-family:var(--mono);font-size:10px;color:var(--signal);background:rgba(95,198,214,.08);border:1px solid rgba(95,198,214,.2);border-radius:5px;padding:1px 6px;cursor:pointer;white-space:nowrap}
+  .achip:hover{background:rgba(95,198,214,.16);color:var(--ink)}
+  /* trace popover — follow an address across surfaces */
+  .trace{position:fixed;z-index:45;background:var(--panel);border:1px solid var(--line-bright);border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.55);width:300px;overflow:hidden;display:none}
+  .trace.open{display:block}
+  .trace .th{padding:11px 13px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--signal);display:flex;align-items:center;gap:8px}
+  .trace .tr{display:flex;align-items:center;gap:10px;padding:10px 13px;border-bottom:1px solid var(--line-faint);cursor:pointer;font-size:12.5px}
+  .trace .tr:last-child{border:0}.trace .tr:hover{background:var(--panel-2)}
+  .trace .tr .ti{width:15px;height:15px;flex:none;opacity:.8}.trace .tr .tg{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em}
+  /* live ticker — the fabric breathing, top-of-stage */
+  .ticker{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);background:var(--ground-2);border:1px solid var(--line-faint);border-radius:8px;padding:7px 12px;margin-bottom:15px;overflow:hidden}
+  .ticker .lv{width:6px;height:6px;border-radius:50%;background:var(--whole);box-shadow:0 0 7px var(--whole);flex:none;animation:orbp 2.4s infinite}
+  .ticker .tk{white-space:nowrap;animation:tick 1.2s ease}@keyframes tick{from{opacity:0;transform:translateY(5px)}}
+  .ticker .src{color:var(--signal)}.ticker .age{margin-left:auto;color:var(--ink-faint);flex:none}
+  /* time scrubber — recollection's navigate(time) as a global control */
+  .scrubwrap{display:flex;align-items:center;gap:11px;margin-bottom:14px;font-family:var(--mono);font-size:10px;color:var(--ink-faint)}
+  .scrub{flex:1;height:30px;position:relative;cursor:pointer}
+  .scrub .track{position:absolute;top:14px;left:0;right:0;height:2px;background:var(--line-bright)}
+  .scrub .fill{position:absolute;top:14px;left:0;height:2px;background:var(--gold)}
+  .scrub .tick{position:absolute;top:9px;width:2px;height:12px;background:var(--line-bright)}
+  .scrub .tick.boundary{height:18px;top:6px;background:var(--violet)}
+  .scrub .knob{position:absolute;top:8px;width:14px;height:14px;border-radius:50%;background:var(--gold);margin-left:-7px;box-shadow:0 0 10px rgba(240,182,90,.5)}
+  /* confidence meter — recovery-quality gates autonomy */
+  .conf{display:flex;align-items:center;gap:10px}
+  .conf .meter{flex:1;height:8px;background:var(--panel);border:1px solid var(--line);border-radius:5px;overflow:hidden;display:flex}
+  .conf .meter i{height:100%}
+  .conf .gate{font-family:var(--mono);font-size:10px;padding:2px 9px;border-radius:20px}
+  /* cost dial (cascade economics as a body-state) */
+  .econ{display:flex;gap:3px;align-items:flex-end;height:28px}
+  .econ i{width:8px;border-radius:2px 2px 0 0}
+  /* toast */
+  .toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel-2);border:1px solid var(--line-bright);border-radius:9px;padding:11px 16px;font-size:13px;z-index:55;opacity:0;transition:.25s;display:flex;align-items:center;gap:10px;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast .ti2{width:18px;height:18px;border-radius:50%;background:var(--whole);flex:none}
+  .toast .un{font-family:var(--mono);font-size:11px;color:var(--gold);cursor:pointer;margin-left:6px;border-left:1px solid var(--line);padding-left:11px}
+  /* RHM next-move chips (it drives you) */
+  .nextmoves{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+  .nextmove{font-family:var(--mono);font-size:11px;border:1px solid var(--line-bright);background:var(--panel-2);color:var(--ink-dim);padding:7px 13px;border-radius:20px;cursor:pointer;display:flex;align-items:center;gap:7px}
+  .nextmove:hover{border-color:var(--gold);color:var(--ink)}.nextmove .arr{color:var(--gold)}
+  /* density of corroboration (a unit's "gold" shown as stacked marks) */
+  .corrob{display:inline-flex;gap:2px;vertical-align:middle;margin-left:6px}
+  .corrob i{width:3px;height:11px;border-radius:1px;background:var(--gold);opacity:.85}
+  /* ── wave-4: more features from the investigations ── */
+  /* the loop — autonomous build from a finding */
+  .gatestack{display:flex;flex-direction:column;gap:0;position:relative}
+  .gate-step{display:flex;align-items:center;gap:13px;padding:12px 15px;border:1px solid var(--line);border-radius:9px;background:var(--panel);margin-bottom:8px;position:relative;transition:border-color .3s,background .3s,opacity .3s}
+  .gate-step.active{border-color:var(--signal);background:var(--panel-2);box-shadow:0 0 14px rgba(95,198,214,.2)}
+  .gate-step.passed{border-color:var(--whole)}.gate-step.halted{border-color:var(--fray);background:rgba(221,106,94,.06)}
+  .gate-step .gn{width:24px;height:24px;border-radius:50%;border:1px solid var(--line-bright);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--ink-faint);flex:none}
+  .gate-step.passed .gn{background:var(--whole);color:#04140d;border-color:var(--whole)}.gate-step.active .gn{border-color:var(--signal);color:var(--signal)}.gate-step.halted .gn{background:var(--fray);color:#1a0e0c;border-color:var(--fray)}
+  .gate-step .gt{font-size:13px;font-weight:500}.gate-step .gd{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:1px}
+  .gate-step .gr{margin-left:auto;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint)}
+  .retrybar{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);margin-top:6px}
+  .retrybar .pip{width:9px;height:9px;border-radius:2px;background:var(--line-bright)}.retrybar .pip.used{background:var(--gold)}.retrybar .pip.cap{background:var(--fray)}
+  /* lens lab — multi-coordinate */
+  .lenslab{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px}
+  .lenscell{border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:11px;position:relative}
+  .lenscell .ll{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+  .lenscell canvas{width:100%;height:96px;display:block}
+  .lenscell .near{font-size:11px;color:var(--ink-dim);margin-top:7px}.lenscell .near b{color:var(--ink)}
+  /* capture sources */
+  .csrc{display:flex;align-items:center;gap:13px;padding:13px 15px;border:1px solid var(--line);border-radius:9px;background:var(--panel);margin-bottom:10px}
+  .csrc .ci{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none;font-family:var(--mono);font-size:11px;font-weight:700}
+  .csrc .cn{font-weight:600;font-size:13.5px}.csrc .cd{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin-top:2px}
+  .csrc .cstat{margin-left:auto;text-align:right;font-family:var(--mono);font-size:10px;color:var(--ink-dim)}
+  .freshpill{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:20px}
+  /* marks — the reading layer */
+  .mark-card{border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:13px 15px;margin-bottom:10px}
+  .mark-card .mh{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .mark-card .mkind{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:20px}
+  .goldbar{height:7px;border-radius:4px;background:var(--panel-2);overflow:hidden;margin:9px 0 4px;display:flex}
+  .goldbar i{height:100%}
+  .verdict{display:flex;gap:9px;align-items:baseline;font-size:12px;padding:5px 0;border-top:1px solid var(--line-faint);font-family:var(--mono)}
+  .verdict .vk{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);width:120px;flex:none}
+  /* ── mobile ── */
+  .mtop,.mobile-nav{display:none}
+  .msheet{position:fixed;inset:0;background:rgba(6,9,14,.72);z-index:60;display:none}
+  .msheet.open{display:block}
+  .msheet .panel{position:absolute;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line-bright);border-radius:15px 15px 0 0;padding:12px 12px max(22px,env(safe-area-inset-bottom));max-height:78vh;overflow:auto}
+  @media (max-width:760px){
+    .app{grid-template-columns:1fr}
+    .rail{display:none}.topbar{display:none}
+    .mtop{display:flex;align-items:center;gap:11px;height:54px;flex:none;padding:0 14px;border-bottom:1px solid var(--line);background:var(--ground-2)}
+    .mtop .o{width:25px;height:25px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold),#9a6a22 70%,#3a2a10);box-shadow:0 0 12px rgba(240,182,90,.4);flex:none;cursor:pointer}
+    .mtop .mt-title{font-weight:600;font-size:16px}.mtop .mt-r{margin-left:auto;display:flex;gap:7px}
+    .mtop .mt-btn{width:38px;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px}
+    .stage-pad{padding:15px 13px}
+    .room-head{flex-wrap:wrap;gap:8px}.room-head h2{font-size:19px}.room-head .k{display:none}.room-head .ask{font-size:9.5px;padding:5px 10px}
+    .room-sub{font-size:12.5px;margin-bottom:14px;max-width:none}
+    .grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr}
+    .loom,.cast-grid{grid-template-columns:1fr}
+    .loom .palette-n{display:none}
+    .mrow{grid-template-columns:1fr 64px 74px;gap:8px}.mrow .mvram{display:none}
+    .drill,.dock{width:100%}
+    .recall{padding:9px 13px}.recall-ops{display:none}.recall-in .scope{display:none}
+    .prize .cb{gap:11px}
+    .mobile-nav{display:flex;flex:none;border-top:1px solid var(--line);background:var(--ground-2);padding-bottom:env(safe-area-inset-bottom)}
+    .mobile-nav button{flex:1;background:none;border:0;color:var(--ink-faint);padding:9px 2px 9px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-family:var(--mono);font-size:9px;position:relative}
+    .mobile-nav button.on{color:var(--gold)}
+    .mobile-nav button svg{width:21px;height:21px}
+    .mobile-nav .mb-b{position:absolute;top:4px;right:50%;margin-right:-22px;background:var(--fray);color:#1a0e0c;font-size:8px;font-weight:700;border-radius:10px;padding:0 5px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  svg .edge{stroke:var(--line-bright);stroke-width:1.5;fill:none}svg .edge.flow{stroke:var(--signal);stroke-dasharray:4 4}
+</style>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand"><span class="orb pulse" id="brandorb" title="summon the right-hand-man"></span><div><h1>The Company</h1><div class="sub">operator console · mockup</div></div></div>
+    <nav id="nav"></nav>
+    <div class="rail-foot">
+      <div class="reg-toggle" id="reg"><button data-reg="tim" class="on">your words</button><button data-reg="machine">the machine</button></div>
+      <div class="kbd"><span>command palette</span><kbd>⌘K</kbd></div>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="crumb">corpus · <b id="corpus">the company, knowing itself</b></div>
+      <div class="legend"><span class="lab">cascade</span><span class="micro" style="margin-right:7px">cold</span>
+        <span class="tier-chip" style="background:var(--t-code)"></span><span class="tier-chip" style="background:var(--t-local)"></span><span class="tier-chip" style="background:var(--t-embed)"></span><span class="tier-chip" style="background:var(--t-claude)"></span><span class="tier-chip" style="background:var(--t-cloud)"></span><span class="tier-chip" style="background:var(--t-tim)"></span>
+        <span class="micro" style="margin-left:7px">you</span></div>
+      <div class="vram" title="16GB RTX 4080" id="vram"></div>
+      <div class="gstate" onclick="go('pulse')"><span class="dot" id="gdot"></span><span id="gtext">whole</span></div>
+    </header>
+    <div class="mtop"><span class="o" id="mtorb"></span><span class="mt-title" id="mttitle">The Map</span><div class="mt-r"><button class="mt-btn" id="mtsearch">⌕</button><button class="mt-btn" id="mtmenu">☰</button></div></div>
+    <section class="stage" id="stage"></section>
+    <div class="recall">
+      <div class="recall-in">
+        <div class="recall-ops" id="recallops"></div>
+        <div class="q">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="recall" placeholder="ask anything, by meaning…" autocomplete="off">
+          <span class="scope" id="scope">scope · everything</span>
+        </div>
+      </div>
+      <div class="recall-res" id="recallres"></div>
+    </div>
+    <nav class="mobile-nav" id="mobilenav"></nav>
+  </div>
+</div>
+<div class="msheet" id="msheet"></div>
+<div class="trace" id="trace"></div>
+<div class="toast" id="toast"></div>
+
+<!-- RHM dock -->
+<div class="dock" id="dock">
+  <div class="dh"><span class="o"></span><b>Right-hand-man</b><span class="x" onclick="toggleDock(false)">✕</span></div>
+  <div class="db" id="dockbody"></div>
+  <div class="voice" onclick="this.querySelector('.wave').classList.toggle('go')"><span class="wave"><i style="animation-delay:0s"></i><i style="animation-delay:.15s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.45s"></i><i style="animation-delay:.2s"></i></span><span class="micro">hold to speak · or just talk</span></div>
+</div>
+<!-- command palette -->
+<div class="scrim" id="scrim"><div class="palette"><input id="palin" placeholder="run a verb, jump to a surface…  (⌘K)"><div class="plist" id="plist"></div></div></div>
+
+<script>
+"use strict";
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+let RAFS=[];const raf=fn=>{const id=requestAnimationFrame(fn);RAFS.push(id);return id;};
+const killRafs=()=>{RAFS.forEach(cancelAnimationFrame);RAFS=[];};
+
+const state={room:"map",register:"tim",lens:"principle",inversion:false,openFindings:3,loom:"dragnet",loomSel:0,
+  recallOp:"find",scope:"everything",anticipation:"warm",stability:"workshop",dock:false,focus:null,
+  memTab:"units",memKind:"all",ratifyCount:2};
+const reg=(t,m)=>state.register==="tim"?t:m;
+
+const I={
+ map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="7" r="2"/><circle cx="18" cy="9" r="2"/><circle cx="11" cy="17" r="2"/><path d="M8 8l8 1M16 11l-4 5M9 9l2 7" opacity=".6"/></svg>',
+ theatre:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 19v-4M12 19v-7M19 19v-3M5 11V5M12 8V5M19 12V5"/><circle cx="5" cy="13" r="1.6"/><circle cx="12" cy="10" r="1.6"/><circle cx="19" cy="14" r="1.6"/></svg>',
+ cast:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3"/><circle cx="5" cy="16" r="2"/><circle cx="19" cy="16" r="2"/><path d="M9 10l-2.5 4M15 10l2.5 4" opacity=".6"/></svg>',
+ memory:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 7h14M7 12h10M9 17h6"/><circle cx="12" cy="3.6" r="1.3" fill="currentColor" stroke="none"/></svg>',
+ loop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v3.7h-3.7M6 21v-3.7h3.7"/></svg>',
+ bench:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h10M4 17h7"/><path d="M16 15l2 2 3-3.5" stroke-width="2"/></svg>',
+ loom:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="9" width="5" height="6" rx="1"/><rect x="16" y="9" width="5" height="6" rx="1"/><circle cx="12" cy="12" r="2.2"/><path d="M8 12h1.8M14.2 12H16"/></svg>',
+ pulse:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>',
+ models:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="16" height="6" rx="1.5"/><rect x="4" y="14" width="16" height="6" rx="1.5"/><circle cx="8" cy="7" r="1"/><circle cx="8" cy="17" r="1"/></svg>',
+ fabric:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="12" cy="12" r="2.4"/><path d="M8 7l2.5 3.5M16 7l-2.5 3.5M8 17l2.5-3M16 17l-2.5-3" opacity=".55"/></svg>'};
+
+const ROOMS=[
+ {g:"Look",id:"map",nm:"The Map",gloss:"see-by-meaning"},
+ {g:"Look",id:"theatre",nm:"The Theatre",gloss:"watch-it-climb"},
+ {g:"Look",id:"cast",nm:"The Cast",gloss:"concurrent-thinking"},
+ {g:"Remember",id:"memory",nm:"The Memory",gloss:"recollection",badge:"ratifyCount"},
+ {g:"Decide",id:"bench",nm:"The Bench",gloss:"your-decisions",badge:"openFindings"},
+ {g:"Decide",id:"pulse",nm:"The Pulse",gloss:"how-whole",badge:"openFindings",cool:true},
+ {g:"Operate",id:"loop",nm:"The Loop",gloss:"build-from-a-finding"},
+ {g:"Compose",id:"loom",nm:"The Loom",gloss:"compose-a-chain"},
+ {g:"Compose",id:"models",nm:"The Models",gloss:"the-loadout"},
+ {g:"Coordinate",id:"fabric",nm:"The Fabric",gloss:"live-sessions",live:true}];
+
+function renderNav(){
+ let html="",g=null;
+ ROOMS.forEach(r=>{if(r.g!==g){g=r.g;html+=`<div class="nav-eyebrow">${g}</div>`;}
+  let b="";if(r.badge&&state[r.badge]>0)b=`<span class="badge ${r.cool?'cool':''}">${state[r.badge]}</span>`;
+  if(r.live)b=`<span class="badge live">6</span>`;
+  html+=`<div class="navi ${state.room===r.id?'on':''}" data-room="${r.id}"><span class="ico">${I[r.id]}</span><span class="txt"><span class="nm">${r.nm}</span><span class="gloss">${r.gloss}</span></span>${b}</div>`;});
+ $("#nav").innerHTML=html;
+ $$("#nav .navi").forEach(el=>el.onclick=()=>go(el.dataset.room));
+ if(typeof renderMobileNav==="function")renderMobileNav();
+}
+function go(id){killRafs();state.room=id;state.focus=null;closeSheet();renderNav();renderRoom();updateMobileChrome();if(state.dock)renderDock();}
+/* mobile nav + sheet */
+const MOBILE_PRIMARY=["map","theatre","memory","bench","pulse"];
+function renderMobileNav(){const n=$("#mobilenav");if(!n)return;
+ n.innerHTML=MOBILE_PRIMARY.map(id=>{const r=ROOMS.find(x=>x.id===id),bd=r.badge&&state[r.badge]>0?`<span class="mb-b">${state[r.badge]}</span>`:"";
+  return `<button data-mroom="${id}" class="${state.room===id?'on':''}">${bd}${I[id]}${r.nm.replace('The ','')}</button>`;}).join("")
+  +`<button id="mmore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>more</button>`;
+ $$("[data-mroom]",n).forEach(b=>b.onclick=()=>go(b.dataset.mroom));
+ const more=$("#mmore");if(more)more.onclick=openSheet;}
+function openSheet(){const sh=$("#msheet");let g=null,h='<div class="panel"><div class="nav-eyebrow" style="padding:4px 8px 9px">All surfaces · ⌘K for verbs</div>';
+ ROOMS.forEach(r=>{if(r.g!==g){g=r.g;h+=`<div class="nav-eyebrow">${g}</div>`;}h+=`<div class="navi ${state.room===r.id?'on':''}" data-sroom="${r.id}"><span class="ico">${I[r.id]}</span><span class="txt"><span class="nm">${r.nm}</span><span class="gloss">${r.gloss}</span></span></div>`;});
+ sh.innerHTML=h+'</div>';sh.classList.add("open");
+ $$("[data-sroom]",sh).forEach(b=>b.onclick=()=>go(b.dataset.sroom));
+ sh.onclick=e=>{if(e.target.id==="msheet")closeSheet();};}
+function closeSheet(){const sh=$("#msheet");if(sh)sh.classList.remove("open");}
+function updateMobileChrome(){const r=ROOMS.find(x=>x.id===state.room),t=$("#mttitle");if(t&&r)t.textContent=r.nm;
+ $$("#mobilenav button").forEach(b=>b.classList.toggle("on",b.dataset&&b.dataset.mroom===state.room));}
+
+$$("#reg button").forEach(b=>b.onclick=()=>{state.register=b.dataset.reg;$$("#reg button").forEach(x=>x.classList.toggle("on",x===b));killRafs();renderRoom();if(state.dock)renderDock();});
+
+/* ════ DATA ════ */
+const CL={memory:"#5fc6d6",cognition:"#b48cf0",coherence:"#dd6a5e",dragnet:"#62b9b4",wizard:"#f0b65a",interface:"#7fb0e0"};
+const CLNAME={memory:"recollection",cognition:"cognition",coherence:"coherence",dragnet:"dragnet",wizard:"wizard-seed",interface:"interface"};
+const NODES=[
+ {id:"render",tim:"Render, don't judge",adr:"principle://render-not-judge",cl:"wizard",gold:.9,P:[.30,.34],V:[.20,.62],T:[.74,.22],M:[.18,.30],proj:{meaning:"the bottom pass distils what's there; judgement is a later, aggregate move",epistemic:"a discipline, stated as law",vocab:"coined: render-not-judge"},marks:["gold ·92","coined","corroborated 31×"]},
+ {id:"seq",tim:"Sequences in sequences",adr:"principle://sequences-in-sequences",cl:"wizard",gold:.85,P:[.36,.40],V:[.66,.30],T:[.20,.78],M:[.22,.40],proj:{meaning:"composition is recursive; a sequence is itself a step in a larger one",epistemic:"a core principle of the wizard — never names 'wizard'",vocab:"coined"},marks:["gold ·88","the inversion anchor"]},
+ {id:"invert",tim:"Relevance inverts face value",adr:"principle://relevance-inverts",cl:"wizard",gold:.8,P:[.33,.46],V:[.40,.50],T:[.55,.55],M:[.30,.36],proj:{meaning:"the thing that never says X is often its core",epistemic:"justifies the whole multi-space design"},marks:["gold ·80"]},
+ {id:"cascade",tim:"The cascade & its economics",adr:"principle://cascade-economics",cl:"wizard",gold:.7,P:[.44,.30],V:[.30,.40],T:[.62,.34],M:[.26,.50],proj:{meaning:"code+local lavish, cloud finite, Tim scarce — allocation follows cost"},marks:["gold ·71"]},
+ {id:"decision",tim:"The embedding-model decision",adr:"exchange://12c59b4e/114",cl:"memory",gold:.6,P:[.66,.60],V:[.72,.66],T:[.70,.60],M:[.80,.20],proj:{meaning:"pplx-4b chosen so voice fits the GPU",epistemic:"decided · recoverable across compaction"},marks:["decision","recovered-after-drift"]},
+ {id:"recall",tim:"Recall by meaning",adr:"recollection://recall",cl:"memory",gold:.5,P:[.72,.52],V:[.60,.74],T:[.66,.50],M:[.74,.30],proj:{meaning:"scoped by channel/source/project/lens → a joinable address"},marks:["built","live via CLI"]},
+ {id:"distill",tim:"Distill into typed units",adr:"recollection://distill",cl:"memory",gold:.55,P:[.62,.66],V:[.78,.58],T:[.60,.66],M:[.70,.40],proj:{meaning:"raw exchanges → decision/correction/principle units"},marks:["shape built","model stubbed"]},
+ {id:"navigate",tim:"Walk the crossings graph",adr:"recollection://navigate",cl:"memory",gold:.45,P:[.78,.62],V:[.66,.60],T:[.74,.56],M:[.84,.34],proj:{meaning:"move an address through time and scale"},marks:["built"]},
+ {id:"dragnet",tim:"The catch-all (Dragnet)",adr:"chain://dragnet",cl:"dragnet",gold:.65,P:[.52,.74],V:[.46,.80],T:[.40,.70],M:[.50,.66],proj:{meaning:"inverted: huge data up through small models into the brain"},marks:["one chain in the engine"]},
+ {id:"extract",tim:"Extract-once over everything",adr:"ops://dragnet_extract",cl:"dragnet",gold:.4,P:[.46,.80],V:[.40,.74],T:[.34,.78],M:[.44,.74],proj:{meaning:"every file, once, mapped upward"},marks:["built"]},
+ {id:"upward",tim:"One engine, run upward",adr:"concept://upward-engine",cl:"dragnet",gold:.75,P:[.42,.66],V:[.34,.66],T:[.30,.62],M:[.40,.60],proj:{meaning:"the company's compositional engine, inverted"},marks:["the unifying frame"]},
+ {id:"run_items",tim:"Map one role over many",adr:"cognition://run_items",cl:"cognition",gold:.5,P:[.20,.58],V:[.26,.34],T:[.24,.40],M:[.30,.66],proj:{meaning:"1 role × N units — the fan-out; landed"},marks:["built","the seam"]},
+ {id:"reduce",tim:"Join across all of it",adr:"cognition://run_reduce",cl:"cognition",gold:.55,P:[.24,.66],V:[.32,.30],T:[.28,.46],M:[.34,.74],proj:{meaning:"cross-unit synthesis — the smart half"},marks:["built"]},
+ {id:"roles",tim:"The cast that's listening",adr:"cognition://roles",cl:"cognition",gold:.4,P:[.16,.66],V:[.22,.42],T:[.18,.50],M:[.24,.72],proj:{meaning:"file-discovered roles, rule-routed"},marks:["registry"]},
+ {id:"swarm",tim:"Concurrent small models",adr:"cognition://run_swarm",cl:"cognition",gold:.45,P:[.28,.74],V:[.30,.48],T:[.22,.58],M:[.40,.80],proj:{meaning:"N roles × 1 context — the swarm"},marks:["built"]},
+ {id:"wired",tim:"Wired ∧ meaningless",adr:"finding://structural∧semantic",cl:"coherence",gold:.95,P:[.84,.40],V:[.84,.40],T:[.84,.34],M:[.62,.56],proj:{meaning:"called, green, but obsolete — only two layers find it",epistemic:"the highest-value finding"},marks:["the prize","needs-you"]},
+ {id:"burn",tim:"Burn-down to whole",adr:"coherence://burn_down",cl:"coherence",gold:.5,P:[.88,.48],V:[.88,.34],T:[.90,.42],M:[.66,.50],proj:{meaning:"a read-time fold — no maintained graph"},marks:["built"]},
+ {id:"orient",tim:"The terrain ledger",adr:"orienteering://INDEX",cl:"coherence",gold:.5,P:[.82,.54],V:[.80,.46],T:[.86,.50],M:[.58,.62],proj:{meaning:"what the company is + where it physically lives"},marks:["38 entries","drift-gated"]},
+ {id:"dispo",tim:"A disposition is a micro-ADR",adr:"coherence://disposition",cl:"coherence",gold:.6,P:[.90,.58],V:[.90,.52],T:[.92,.56],M:[.70,.62],proj:{meaning:"owned, re-derivable detection — the institutional memory"},marks:["built"]},
+ {id:"tldraw",tim:"The spatial canvas",adr:"surface://tldraw",cl:"interface",gold:.5,P:[.54,.20],V:[.54,.20],T:[.52,.18],M:[.52,.14],proj:{meaning:"the substrate the Map & Loom draw on"},marks:["in the back already"]},
+ {id:"rhm",tim:"The right-hand-man",adr:"surface://rhm",cl:"interface",gold:.6,P:[.62,.26],V:[.60,.16],T:[.58,.24],M:[.58,.20],proj:{meaning:"the two-way altitude transform"},marks:["the voice"]}];
+const EDGES=[["render","seq"],["render","invert"],["invert","seq"],["cascade","upward"],["upward","dragnet"],["dragnet","extract"],["run_items","reduce"],["roles","swarm"],["run_items","swarm"],["recall","navigate"],["recall","distill"],["distill","decision"],["burn","orient"],["burn","dispo"],["wired","burn"],["dragnet","run_items"],["upward","recall"],["upward","run_items"],["rhm","tldraw"]];
+
+const BENCH=[
+ {kind:"reconstruct",cls:"",posture:"CONFIRM",tim:"Reconstructed intent · the ElevenLabs Wizard",machine:"unit://wizard/intent · .82",
+  claim:{tim:"The wizard was never about voice — it's a universal agent-driven interface; voice was one face.",machine:"intent=universal-interface; surface=voice(1/N); status=as-if-final → discounted"},
+  ev:{tim:"From 5,052 files, render-not-judge. Coined-term density says 'interface' is yours; 'voice' is generic AI-echo.",machine:"proj: principle×244; coined-ratio .71; corroboration 38× cross-session"},
+  rhm:"This is the big one — your wizard project, read for what you actually meant, not what the files say. I'd bless the spine and correct 'voice' down to one face."},
+ {kind:"principle",cls:"",posture:"LOCKED · ratify",tim:"Principle staged for your blessing",machine:"candidate://principle · proposed",
+  claim:{tim:"“Relevance inverts face value” — the thing that never names X is often its core.",machine:"principle: relevance⊥surface; basis=sequences↔wizard zero-keyword link"},
+  ev:{tim:"You said this once about sequences-in-sequences. The system found 6 more cases that fit.",machine:"ratify gated; stronger-model-confirm pending; 6 supporting units"},
+  rhm:"A principle is a proposition until you bless it — I never write one for you. Six cases fit; want to hear them?"},
+ {kind:"find",cls:"find",posture:"SURFACE",tim:"A fray needs your eye",machine:"finding://structural∧semantic · /api/run-stats",
+  claim:{tim:"This route is called and green — but reading the code, it's obsolete. Wired, yet meaningless.",machine:"structural=WIRED(2 callers); semantic=VESTIGIAL"},
+  ev:{tim:"Structure can't see it's dead; meaning can't see it's called. Only both layers, disagreeing, caught it.",machine:"reachability ok; distill verdict superseded-by /api/runs .78"},
+  rhm:"The kind of thing that hides forever without two detectors. Safe to retire, but it's your call to confirm."},
+ {kind:"twin",cls:"twin",posture:"SURFACE",tim:"Built twice",machine:"finding://concept-coherence · mode-dial",
+  claim:{tim:"Two sessions built the 'mode dial' independently, with different names. One concept, two builds.",machine:"embedding cluster spans {rhm_mode, presence_dial}; cosine .91"},
+  ev:{tim:"Found by clustering meaning, not by name — they never used the same word.",machine:"D1 built-twice chain; unify-don't-duplicate"},
+  rhm:"This is the drift the no-human-developers problem causes. Worth unifying before it's three."},
+ {kind:"mark",cls:"mark",posture:"AUTO · review",tim:"Gold, by corroboration",machine:"mark://gold-likelihood · render-not-judge",
+  claim:{tim:"'Render, don't judge' recurs 31× across sessions and is idiosyncratically yours — high gold.",machine:"corroboration 31×; idiosyncratic; gold .92"},
+  ev:{tim:"Recurrence + your-coinage = gold. Generic recurrence would be an AI-tic to subtract instead.",machine:"positive-only; rare≠confabulation"},
+  rhm:"I read this as one of your load-bearing principles. Nothing to do — just confirming I see it that way."}];
+
+const SEAMS=[
+ {tim:"Memory recall circuit",machine:"recollection://recall",state:"whole",st:"wired"},
+ {tim:"The terrain ledger",machine:"orienteering://INDEX",state:"whole",st:"38/38 paths"},
+ {tim:"Route /api/run-stats",machine:"code://bridge/run-stats",state:"fray",st:"wired∧vestigial"},
+ {tim:"12 cognition endpoints",machine:"code://cognition/*",state:"open",st:"no UI"},
+ {tim:"Voice rerank :8008",machine:"service://rerank",state:"open",st:"down"}];
+
+const DETECTORS=[
+ {tim:"Route reachability",machine:"reachability()",tier:"exact",tc:"--whole",g:"structural · gate-able",p:".96"},
+ {tim:"Registry vs live",machine:"registry_vs_live()",tier:"exact",tc:"--whole",g:"structural · gate-able",p:"1.0"},
+ {tim:"Ledger path-exists",machine:"orienteering_drift",tier:"exact",tc:"--whole",g:"structural · BUILT this session",p:"1.0"},
+ {tim:"Built-but-no-caller",machine:"capability_no_consumer",tier:"candidate",tc:"--gold",g:"positive-only · propose",p:"—"},
+ {tim:"Hardcoding",machine:"hardcoding_candidates",tier:"candidate",tc:"--gold",g:"positive-only · propose",p:"—"},
+ {tim:"Orbit uncatalogued",machine:"orbit_coverage",tier:"candidate",tc:"--gold",g:"positive-only · propose",p:"—"},
+ {tim:"Half-migration",machine:"semantic://half-migration",tier:"semantic",tc:"--violet",g:"S3 · model + stronger-confirm",p:"design"},
+ {tim:"Concept built-twice",machine:"semantic://concept-coherence",tier:"semantic",tc:"--violet",g:"S2 · embed-cluster",p:"design"},
+ {tim:"Intent-drift",machine:"semantic://intent-vs-impl",tier:"semantic",tc:"--violet",g:"S2 · model-judged",p:"design"}];
+const CALIB=[
+ {cfg:"qwen3.5-4b · t0",p:".74",r:".91",cost:"$0",lat:"31s",win:false},
+ {cfg:"qwen3.5-4b · +rep-penalty 1.1",p:".83",r:".90",cost:"$0",lat:"33s",win:false},
+ {cfg:"+ stronger-model confirm",p:".96",r:".88",cost:"$0.04",lat:"48s",win:true},
+ {cfg:"deepseek-v4 · solo",p:".90",r:".79",cost:"$0.11",lat:"40s",win:false}];
+const ADRLOG=[
+ {who:"tim",when:"06-26",t:"~/foundation → company · move done"},
+ {who:"tim",when:"06-26",t:"separate-projects out of orbit (by-design)"},
+ {who:"catalogue",when:"06-26",t:"orphan /api/knobs → to_build_ui"},
+ {who:"lead",when:"06-22",t:"vi-visual-bridge aimed-at front interface"}];
+
+const CHAINS={
+ dragnet:{nm:"Dragnet",tg:"catch-all",ds:"huge data → layers → meaning",nodes:[{v:"corpus",l:"every file",c:"/mnt + sessions",t:"--t-code"},{v:"run_items",l:"map · 4B",c:"render-not-judge",t:"--t-local"},{v:"embed",l:"fingerprint",c:"pplx-4b :8007",t:"--t-embed"},{v:"run_reduce",l:"join",c:"cross-file",t:"--t-claude"},{v:"finding",l:"surface",c:"→ Bench",t:"--t-tim"}]},
+ distill:{nm:"Distill",tg:"recollection",ds:"transcripts → typed units",nodes:[{v:"corpus",l:"sessions",c:"~/.claude",t:"--t-code"},{v:"run_items",l:"extract",c:"unit-types",t:"--t-local"},{v:"ratify",l:"gate",c:"principle→you",t:"--t-tim"},{v:"recall",l:"index",c:"vec_space",t:"--t-embed"}]},
+ drift:{nm:"Drift detector",tg:"coherence · BUILT",ds:"ledger can't silently rot",nodes:[{v:"detect",l:"path-exists",c:"exact · gate",t:"--t-code"},{v:"reconcile",l:"known/new",c:"burn_down",t:"--t-embed"},{v:"dispose",l:"catalogue",c:"micro-ADR",t:"--t-cloud"},{v:"finding",l:"surface",c:"company coherence",t:"--t-tim"}]},
+ onboard:{nm:"Onboard",tg:"repo-QA",ds:"a true map of what exists",nodes:[{v:"corpus",l:"the repo",c:"~/company",t:"--t-code"},{v:"run_items",l:"summarize",c:"per-file",t:"--t-local"},{v:"run_reduce",l:"assemble",c:"orientation",t:"--t-cloud"}]}};
+const PALETTE_NODES=[{v:"corpus",t:"--t-code"},{v:"run_items",t:"--t-local"},{v:"run_swarm",t:"--t-local"},{v:"embed",t:"--t-embed"},{v:"run_reduce",t:"--t-claude"},{v:"ratify",t:"--t-tim"},{v:"navigate",t:"--t-embed"},{v:"finding",t:"--t-tim"}];
+
+const MODELS=[
+ {nm:"pplx-embed-context-4b",role:"the embedding lens",id:":8007 · embed",vram:4.2,state:"resident",sc:"resident"},
+ {nm:"qwen3.5-4b-awq",role:"local map · the swarm",id:":8000 · chat",vram:9.1,state:"resident",sc:"resident"},
+ {nm:"jina-rerank-v3",role:"recall reranker",id:":8008 · rerank",vram:0,state:"down",sc:"down"},
+ {nm:"kimi-k2.6",role:"dense cloud reduce",id:"ollama · cloud",vram:0,state:"cloud",sc:"cloud"},
+ {nm:"deepseek-v4-flash",role:"big-context build",id:"ollama · cloud",vram:0,state:"cloud",sc:"cloud"},
+ {nm:"claude (this session)",role:"the reduce-reasoner",id:"subprocess",vram:0,state:"cloud",sc:"cloud"}];
+const SESSIONS=[
+ {nm:"this session (lead)",cwd:"~/company",state:"whole",sc:"--whole",right:"live · converging",role:"interface + consolidation"},
+ {nm:"recollection-design",cwd:"~/company/recollection",state:"gold",sc:"--gold",right:"idle · oldest active",role:"the memory substrate"},
+ {nm:"dragnet-build",cwd:"~/company/ops",state:"whole",sc:"--whole",right:"live",role:"the catch-all chain"},
+ {nm:"company-build (cron)",cwd:"~/company",state:"cool",sc:"--signal",right:"*/10 · building",role:"the operable surface"},
+ {nm:"voice-build",cwd:"~/company/voice",state:"cool",sc:"--signal",right:"idle",role:"the voice circuit"},
+ {nm:"mockup-build (cron)",cwd:"~/company/design",state:"cool",sc:"--signal",right:"idle",role:"the design corpus"}];
+
+const RECALL_OPS=[["find","by meaning"],["decisions","what was chosen"],["open_loops","unresolved"],["catch_up","since away"],["timeline","its arc"],["drift","what I dropped"]];
+const RECALL_RES={
+ find:[{sc:".62",node:"decision",tim:"the embedding-model decision"},{sc:".58",node:"render",tim:"render-not-judge, the reframe"},{sc:".51",node:"invert",tim:"relevance inverts face value"},{sc:"·",node:"dragnet",tim:"“the dragnet” (exact match)",text:true}],
+ decisions:[{sc:".71",node:"decision",tim:"pplx-4b chosen so voice fits the GPU — the why"},{sc:".64",node:"orient",tim:"separate-spaces, one schema (the ledger)"}],
+ open_loops:[{sc:"!",node:"wired",tim:"the /api/run-stats fray — unresolved"},{sc:"!",node:"distill",tim:"distill model still stubbed (VRAM greenlight)"}],
+ catch_up:[{sc:"→",node:"orient",tim:"since you were away: drift detector built + verified"},{sc:"→",node:"dragnet",tim:"wizard moved in; upward-engine docs written"}],
+ timeline:[{sc:"1",node:"render",tim:"render-not-judge — first raised, wizard run-1"},{sc:"2",node:"upward",tim:"generalised to the upward engine — today"}],
+ drift:[{sc:"⟂",node:"decision",tim:"a decision the current self is weakly carrying → recover"}]};
+
+/* ════ RENDER ════ */
+const NEXTMOVES={
+ map:[["follow the wizard's core","memory"],["watch a pass climb","theatre"]],
+ theatre:[["see what it formed","memory"],["compose the chain","loom"]],
+ cast:[["what's awaiting me","bench"],["set the loadout","models"]],
+ memory:[["bless a principle","memory"],["recover my drift","memory"]],
+ bench:[["how whole am I","pulse"],["see it on the map","map"]],
+ pulse:[["build the fix, watch it","loop"],["the fray needs me","bench"]],
+ loop:[["where the finding came from","pulse"],["how whole now","pulse"]],
+ loom:[["run it, watch it","theatre"],["pick the models","models"]],
+ models:[["who's thinking now","cast"],["the live sessions","fabric"]],
+ fabric:[["my memory","memory"],["how whole","pulse"]]};
+function renderRoom(){
+ ({map:roomMap,theatre:roomTheatre,cast:roomCast,memory:roomMemory,bench:roomBench,loop:roomLoop,loom:roomLoom,pulse:roomPulse,models:roomModels,fabric:roomFabric}[state.room])($("#stage"));
+ startTicker($(".ticker"));wireChips();wireMoves();
+ syncGlobal();
+}
+function head(k,h,sub,showTicker){
+ const moves=(NEXTMOVES[state.room]||[]).map(([lbl,room])=>`<span class="nextmove" data-nm="${room}"><span class="arr">↳</span>${lbl}</span>`).join("");
+ return `<div class="stage-pad"><div class="room-head"><span class="k">${k}</span><h2>${h}</h2><span class="ask" onclick="toggleDock(true)">◆ ask the right-hand-man</span></div><p class="room-sub">${sub}</p>`
+  +(showTicker!==false?`<div class="ticker" id="ticker"></div>`:"")
+  +(moves?`<div class="nextmoves" id="nextmoves" style="margin-bottom:16px">${moves}</div>`:"");
+}
+function wireMoves(){$$("#nextmoves .nextmove").forEach(b=>b.onclick=()=>go(b.dataset.nm));}
+
+/* ── MAP ── */
+const M={nodes:[],raf:null};
+function lensKey(){return {principle:"P",vocabulary:"V",topic:"T",time:"M"}[state.lens];}
+function roomMap(s){
+ s.innerHTML=head("LOOK · see-by-meaning","The Map",
+  `Your corpus as a constellation — position <em>is</em> meaning, node size <em>is</em> gold-likelihood. Switch the lens and watch it re-arrange; toggle <b>inversions</b> for the hidden links keyword search can't find; click any point to drill into its projections, marks, and walk its neighbours.`)
+  +`<div class="canvas-wrap"><canvas id="mapcv" height="460"></canvas>
+     <div class="overlay-ui" style="top:12px;left:12px">
+       ${["principle","vocabulary","topic","time"].map(l=>`<button class="pill ${state.lens===l?'on':''}" data-lens="${l}">${l}</button>`).join("")}
+       <button class="pill warm ${state.inversion?'on':''}" id="invtog">⟂ inversions</button></div>
+     <div class="tip" id="maptip"></div>
+     <div class="drill" id="drill"></div></div>
+   <p class="micro" style="padding:11px 0 0">${reg("each point is a thing you've built or said · colour = sub-system · size = how 'gold' it reads","nodes=units · coords=vec_&lt;lens&gt; · r=gold-likelihood · edges=links")}</p></div>`;
+ const cv=$("#mapcv");fitCanvas(cv);initMap(cv);
+ $$("[data-lens]").forEach(b=>b.onclick=()=>{state.lens=b.dataset.lens;$$("[data-lens]").forEach(x=>x.classList.toggle("on",x===b));retarget();});
+ $("#invtog").onclick=function(){state.inversion=!state.inversion;this.classList.toggle("on",state.inversion);};
+}
+function initMap(cv){
+ const ctx=cv.getContext("2d"),W=()=>cv.width/devicePixelRatio,H=()=>cv.height/devicePixelRatio;
+ if(!M.nodes.length)M.nodes=NODES.map(n=>{const k=lensKey();return {...n,x:n[k][0],y:n[k][1],tx:n[k][0],ty:n[k][1]};});else retarget();
+ let hover=null;
+ cv.onmousemove=e=>{const r=cv.getBoundingClientRect(),mx=(e.clientX-r.left)/W(),my=(e.clientY-r.top)/H();hover=null;let best=.045;
+  M.nodes.forEach(n=>{const d=Math.hypot(n.x-mx,n.y-my);if(d<best){best=d;hover=n;}});
+  const tip=$("#maptip");if(hover){tip.style.opacity=1;tip.style.left=Math.min(e.clientX-r.left+14,W()-240)+"px";tip.style.top=(e.clientY-r.top+12)+"px";
+   tip.innerHTML=`<span class="a">${hover.adr}</span><b>${hover.tim}</b><div class="rel">${reg("click to drill in · "+CLNAME[hover.cl],"cluster="+hover.cl+" · click→focus")}</div>`;}else tip.style.opacity=0;};
+ cv.onmouseleave=()=>$("#maptip").style.opacity=0;
+ cv.onclick=e=>{const r=cv.getBoundingClientRect(),mx=(e.clientX-r.left)/W(),my=(e.clientY-r.top)/H();let best=.05,f=null;
+  M.nodes.forEach(n=>{const d=Math.hypot(n.x-mx,n.y-my);if(d<best){best=d;f=n;}});if(f)openDrill(f);};
+ function px(v){return 22+v*(W()-44);}function py(v){return 22+v*(H()-44);}
+ function draw(){ctx.clearRect(0,0,cv.width,cv.height);ctx.save();ctx.scale(devicePixelRatio,devicePixelRatio);
+  EDGES.forEach(([a,b])=>{const na=M.nodes.find(n=>n.id===a),nb=M.nodes.find(n=>n.id===b);if(!na||!nb)return;ctx.strokeStyle="rgba(58,70,92,.45)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(px(na.x),py(na.y));ctx.lineTo(px(nb.x),py(nb.y));ctx.stroke();});
+  if(state.inversion){[["seq","render"],["invert","decision"]].forEach(([i,j])=>{const a=M.nodes.find(n=>n.id===i),b=M.nodes.find(n=>n.id===j);
+    ctx.strokeStyle="rgba(240,182,90,.85)";ctx.lineWidth=2;ctx.setLineDash([6,5]);ctx.beginPath();ctx.moveTo(px(a.x),py(a.y));ctx.lineTo(px(b.x),py(b.y));ctx.stroke();ctx.setLineDash([]);
+    const mxp=(px(a.x)+px(b.x))/2,myp=(py(a.y)+py(b.y))/2;ctx.fillStyle="rgba(11,15,23,.92)";ctx.strokeStyle="rgba(240,182,90,.55)";roundRect(ctx,mxp-66,myp-12,132,24,6);ctx.fill();ctx.stroke();ctx.fillStyle="#f0b65a";ctx.font="10px ui-monospace,monospace";ctx.textAlign="center";ctx.fillText("hidden relation ⟂",mxp,myp+3.5);});}
+  M.nodes.forEach(n=>{n.x+=(n.tx-n.x)*.14;n.y+=(n.ty-n.y)*.14;const x=px(n.x),y=py(n.y),c=CL[n.cl],hot=hover===n,foc=state.focus===n.id,inv=state.inversion&&["seq","render","invert","decision"].includes(n.id),rad=4+n.gold*5;
+   ctx.beginPath();ctx.arc(x,y,hot||foc?rad+2:rad,0,7);ctx.fillStyle=c;ctx.globalAlpha=hot||foc?1:.9;ctx.fill();ctx.globalAlpha=1;
+   if(foc){ctx.beginPath();ctx.arc(x,y,rad+7,0,7);ctx.strokeStyle=c;ctx.lineWidth=2;ctx.stroke();}
+   if(inv){ctx.beginPath();ctx.arc(x,y,rad+9,0,7);ctx.strokeStyle="#f0b65a";ctx.lineWidth=2;ctx.stroke();}
+   ctx.fillStyle=hot||foc?"#e9e6dd":"rgba(151,160,178,.82)";ctx.font=(hot?"600 ":"")+"11px "+(state.register==="tim"?"-apple-system,system-ui,sans-serif":"ui-monospace,monospace");ctx.textAlign="left";
+   const lab=state.register==="tim"?n.tim:n.adr.split("://")[1];ctx.fillText(lab.length>24?lab.slice(0,23)+"…":lab,x+rad+5,y+3.5);});
+  ctx.restore();M.raf=raf(draw);}
+ draw();
+}
+function retarget(){const k=lensKey();M.nodes.forEach(n=>{n.tx=n[k][0];n.ty=n[k][1];});}
+function openDrill(n){state.focus=n.id;const d=$("#drill");if(!d)return;d.classList.add("open");
+ const rels=EDGES.filter(e=>e.includes(n.id)).map(e=>e[0]===n.id?e[1]:e[0]);
+ d.innerHTML=`<span class="close" onclick="closeDrill()">✕</span><h3>${reg(n.tim,n.adr.split('://')[1])}</h3><div class="da">${n.adr}</div>
+  <div class="sec">${reg("read at every altitude","projections")}</div>
+  ${Object.entries(n.proj).map(([k,v])=>`<div class="proj"><span class="pl">${k}</span><span>${v}</span></div>`).join("")}
+  <div class="sec">${reg("how to read it","marks")}</div><div>${n.marks.map(m=>`<span class="mk">${m}</span>`).join("")}</div>
+  <div class="sec">${reg("walk from here","navigate")}</div>
+  <div class="navbtns"><button onclick="walkTo('${rels[0]||n.id}')">← earlier</button><button onclick="walkTo('${rels[1]||rels[0]||n.id}')">later →</button><button onclick="walkTo('${rels[2]||rels[0]||n.id}')">↑ scale out</button><button onclick="walkTo('${rels[0]||n.id}')">↓ scale in</button></div>
+  <div class="sec">${reg("relates to","links")} · ${rels.length}</div><div>${rels.map(r=>{const m=NODES.find(x=>x.id===r);return `<span class="mk" style="cursor:pointer" onclick="openDrill(NODES_BY['${r}'])">${reg(m.tim,r)}</span>`;}).join("")}</div>`;}
+const NODES_BY={};NODES.forEach(n=>NODES_BY[n.id]=n);
+function walkTo(id){const n=NODES_BY[id];if(n)openDrill(n);}
+function closeDrill(){state.focus=null;const d=$("#drill");if(d)d.classList.remove("open");}
+
+/* ── THEATRE ── */
+const TH={raf:null,running:false,t:0,particles:[],counts:{mapped:0,units:0,failed:0},chain:"dragnet"};
+const TIERS=[{lab:r=>"Code",sub:"exact · free",c:"--t-code"},{lab:r=>"Local 4B",sub:"bulk map · free",c:"--t-local"},{lab:r=>"Embeddings",sub:"structure · :8007",c:"--t-embed"},{lab:r=>"Claude",sub:"reduce-reasoner",c:"--t-claude"},{lab:r=>"Cloud",sub:"dense reduce",c:"--t-cloud"},{lab:r=>r("You","Tim"),sub:"meaning · scarce",c:"--t-tim"}];
+function roomTheatre(s){
+ s.innerHTML=head("LOOK · watch-it-climb","The Theatre",
+  `The catch-all in motion — raw material enters cold at the bottom and climbs the tiers into meaning. Watch the fan-out fire, projections crystallise, the reduce pull it up. Cost is heat. A run that hits a snag fails <em>loud</em> — and the first move is always to look at the raw output.`)
+  +`<div class="canvas-wrap"><canvas id="thcv" height="460"></canvas>
+     <div class="overlay-ui" style="top:12px;left:12px"><button class="runbtn cool" id="runth">▶ run a pass</button>
+       <button class="pill" id="rawbtn">look at raw output</button></div>
+     <div class="hud" id="thhud"></div></div>
+   <p class="micro" style="padding:11px 0 0">${reg("each rising point is one of your files, read then condensed upward — nothing judged on the way up, only rendered","run_items → embed → run_reduce · finish_reason+tokens persisted per call")}</p></div>`;
+ const cv=$("#thcv");fitCanvas(cv);initTheatre(cv);
+ $("#runth").onclick=()=>{TH.running=true;TH.t=0;TH.counts={mapped:0,units:0,failed:0};TH.particles=[];$("#runth").disabled=true;$("#runth").textContent="◷ in flight…";};
+ $("#rawbtn").onclick=()=>{toggleDock(true);};
+}
+function initTheatre(cv){const ctx=cv.getContext("2d"),W=()=>cv.width/devicePixelRatio,H=()=>cv.height/devicePixelRatio;
+ function bandY(i){return H()-30-i*((H()-70)/5);}
+ function draw(){ctx.clearRect(0,0,cv.width,cv.height);ctx.save();ctx.scale(devicePixelRatio,devicePixelRatio);
+  TIERS.forEach((t,i)=>{const y=bandY(i),col=getCSS(t.c);ctx.fillStyle=col+"22";ctx.fillRect(0,y-26,W(),26);
+   ctx.fillStyle=col;ctx.font="600 12px ui-monospace,monospace";ctx.textAlign="left";ctx.fillText(t.lab(reg),16,y-9);
+   ctx.fillStyle="rgba(151,160,178,.6)";ctx.font="10px ui-monospace,monospace";ctx.fillText(t.sub,16,y+5);
+   const cost=[.05,.12,.10,.30,.55,1][i];ctx.fillStyle=col;ctx.globalAlpha=.5;ctx.fillRect(W()-92,y-19,72*cost,11);ctx.globalAlpha=1;ctx.strokeStyle=col+"55";ctx.strokeRect(W()-92,y-19,72,11);});
+  if(TH.running&&!reduce){TH.t++;
+   if(TH.t%4===0&&TH.counts.mapped<48){for(let j=0;j<2;j++){const fail=Math.random()<.04;TH.particles.push({x:W()*(.3+Math.random()*.4),y:bandY(0),tier:0,col:getCSS("--t-local"),v:.4+Math.random()*.4,fail});TH.counts.mapped++;}}
+   TH.particles.forEach(p=>{const tY=bandY(Math.min(5,p.tier+1));p.y-=p.v;
+    if(p.fail&&p.tier===1&&p.y<=bandY(2)+30){p.dead=true;TH.counts.failed++;return;}
+    if(p.y<=tY+2&&p.tier<5){p.tier++;if(p.tier===2){p.x=W()*(.42+Math.random()*.16);if(TH.counts.units<24)TH.counts.units++;}if(p.tier>=3)p.x+=(W()*.5-p.x)*.4;p.col=getCSS(["--t-code","--t-local","--t-embed","--t-claude","--t-cloud","--t-tim"][p.tier]);}});
+   TH.particles=TH.particles.filter(p=>!p.dead&&!(p.tier>=5&&p.y<bandY(5)+4));
+   if(TH.counts.mapped>=48&&TH.particles.filter(p=>p.tier<5).length===0){TH.running=false;const b=$("#runth");if(b){b.disabled=false;b.textContent="▶ run again";}}}
+  TH.particles.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,2.6,0,7);ctx.fillStyle=p.fail&&p.tier>=1?getCSS("--fray"):p.col;ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=6;ctx.fill();ctx.shadowBlur=0;});
+  ctx.restore();const hud=$("#thhud");if(hud)hud.innerHTML=
+   `<div class="row"><span>files mapped</span><b>${TH.counts.mapped}/48</b></div><div class="row"><span>units formed</span><b>${TH.counts.units}</b></div>
+    <div class="row"><span>degenerate-loop</span><b style="color:${TH.counts.failed?'var(--fray)':'var(--ink)'}">${TH.counts.failed} failed loud</b></div>
+    <div class="row" style="border-top:1px solid var(--line);margin-top:5px;padding-top:6px"><span>cost · local</span><b style="color:var(--t-local)">$0.00</b></div>
+    <div class="row"><span>cost · cloud</span><b style="color:var(--t-cloud)">$0.0${Math.min(9,Math.floor(TH.counts.units/3))}</b></div>
+    <div class="row"><span>your time</span><b style="color:var(--t-tim)">${TH.counts.units>20?'1 call':'reserved'}</b></div>`;
+  TH.raf=raf(draw);}
+ draw();
+}
+
+/* ── CAST (concurrent cognition) ── */
+const CASTROLES=[{nm:"catch_up",adr:"role://catch_up"},{nm:"open_loops",adr:"role://open_loops"},{nm:"interpret_file",adr:"role://interpret_file"},{nm:"atlas_linker",adr:"role://atlas_linker"},{nm:"corroborate",adr:"role://corroborate"},{nm:"the skeptic",adr:"role://verify_jury"},{nm:"recall_decision",adr:"role://decisions"},{nm:"model_of_tim",adr:"role://model_of_tim"}];
+function roomCast(s){
+ s.innerHTML=head("LOOK · concurrent-thinking","The Cast",
+  `Cognition isn't one model answering — it's a <em>cast</em> of small roles listening at once, rule-routed, their outputs staged into one reply that reads as a single voice. The <b>mode</b> is the dial: how present, how anticipatory. Fire a turn and watch the roles light up and the reply assemble.`)
+  +`<div class="cast-grid"><div>
+     <div class="card"><div class="ch"><span class="t">${reg("the cast that's listening","run_swarm · roles")}</span><span class="k" id="castk">idle</span></div>
+       <div class="cb"><div class="roles" id="roles"></div>
+       <button class="runbtn" style="margin-top:13px" id="castrun">▶ fire a turn</button></div></div>
+     <div class="card" style="margin-top:13px"><div class="ch"><span class="t">${reg("the reply, assembling","staged reply · C4.4 one-voice")}</span></div><div class="cb staged" id="staged"><p class="micro">fire a turn to watch the parts stream in, each carrying the last so it reads as one voice…</p></div></div>
+    </div>
+    <div><div class="card"><div class="ch"><span class="t">${reg("the dial","mode · presence")}</span></div><div class="cb">
+       <div class="dial"><div class="dl">${reg("anticipation","anticipation dial")}</div><div class="dial-opts">${["reactive","warm","hot"].map(o=>`<button class="${state.anticipation===o?'on':''}" data-ant="${o}">${o}</button>`).join("")}</div></div>
+       <div class="dial"><div class="dl">${reg("stability","stability dial")}</div><div class="dial-opts">${["museum","workshop","stage"].map(o=>`<button class="${state.stability===o?'on':''}" data-stab="${o}">${o}</button>`).join("")}</div></div>
+       <p class="micro" style="margin-top:6px">${reg("the dial selects the brain config — how much it anticipates, how settled vs exploratory","mode → swarm brain_config + reserve_r + role context budget")}</p></div></div>
+     <div class="card" style="margin-top:13px"><div class="ch"><span class="t">${reg("the floor","the invariant")}</span></div><div class="cb"><p style="font-size:12.5px;margin:0">${reg("No role can decide or dispatch — only you and the lead can. A role listens, renders, proposes. That floor is enforced, by construction.","no role path emits resolve/approve · FORBIDDEN_DESTINATION_VERBS · adversarially verified")}</p></div></div>
+    </div></div></div>`;
+ $$("[data-ant]").forEach(b=>b.onclick=()=>{state.anticipation=b.dataset.ant;$$("[data-ant]").forEach(x=>x.classList.toggle("on",x===b));});
+ $$("[data-stab]").forEach(b=>b.onclick=()=>{state.stability=b.dataset.stab;$$("[data-stab]").forEach(x=>x.classList.toggle("on",x===b));});
+ drawRoles("idle");
+ $("#castrun").onclick=fireTurn;
+}
+function drawRoles(stateName){const r=$("#roles");if(!r)return;r.innerHTML=CASTROLES.map((c,i)=>`<div class="role" id="role${i}"><span class="rs"></span><div class="rn">${reg(c.nm.replace(/_/g,' '),c.nm)}</div><div class="rr2">${c.adr}</div></div>`).join("");}
+function fireTurn(){
+ const fired=[0,2,3,4,6];$("#castk").textContent="firing…";$("#castrun").disabled=true;
+ const staged=$("#staged");staged.innerHTML="";
+ fired.forEach((i,k)=>setTimeout(()=>{const el=$("#role"+i);if(el)el.classList.add("firing");},k*240));
+ setTimeout(()=>{fired.forEach(i=>{const el=$("#role"+i);if(el){el.classList.remove("firing");el.classList.add("ran");}});const ck=$("#castk");if(ck)ck.textContent="ran · 5 roles";
+  const parts=[[reg("From what I'm holding of you","model_of_tim"),reg("you'd want the spine kept and 'voice' corrected to one face.","")],
+   [reg("Recalling the thread","decisions"),reg("the embedding-model decision still stands — pplx-4b.","")],
+   [reg("And one fray","open_loops"),reg("/api/run-stats reads wired but vestigial — worth your eye.","")]];
+  parts.forEach((p,k)=>setTimeout(()=>{const d=document.createElement("div");d.className="part";d.innerHTML=`<span class="pm">${p[0]}</span>${p[1]}`;const sg=$("#staged");if(sg){sg.appendChild(d);requestAnimationFrame(()=>d.classList.add("in"));}},k*500));
+  setTimeout(()=>{const b=$("#castrun");if(b){b.disabled=false;b.textContent="▶ fire again";}},parts.length*500);
+ },fired.length*240+300);
+}
+
+/* ── BENCH ── */
+function roomBench(s){
+ s.innerHTML=head("DECIDE · your-decisions","The Bench",
+  `Your tier. The cascade reserves you for the top — so only what needs your judgement surfaces, each with its evidence and the posture it's allowed to act under. Confirm, correct, send back. A blessing is what turns a proposal into truth.`)
+  +`<div class="scarce">◆ ${reg("your reasoning is the scarce thing — everything below is reserved for it, and nothing acts without you","tier=tim · scarce-reserve · ratify-gate · consent-floor")}</div><div id="benchlist"></div></div>`;
+ drawBench();
+}
+function drawBench(){const L=$("#benchlist");if(!L)return;
+ L.innerHTML=BENCH.map((b,i)=>`<div class="bench-item ${b._done?'done':''}" data-i="${i}">
+  <div class="bi-top"><span class="kind ${b.cls}">${b.kind}</span><span class="micro">${reg(b.tim,b.machine)}</span><span class="posture">${b.posture}</span></div>
+  <p class="bi-claim">${reg(b.claim.tim,b.claim.machine)}</p>
+  <div class="bi-ev"><span class="lbl">${reg("the evidence","basis")}</span>${reg(b.ev.tim,b.ev.machine)}</div>
+  ${state.register==="tim"?`<div class="rhm-bubble"><span class="o"></span><span>${b.rhm}</span></div>`:""}
+  ${b._done?`<div class="micro" style="color:var(--whole);margin-top:8px">✓ ${reg("blessed — it's truth now","disposition=resolved · by=tim")}</div>`:
+   `<div class="bi-acts"><button class="act go" data-act="ok">${reg("✓ bless it","confirm")}</button><button class="act" data-act="edit">${reg("correct","amend")}</button><button class="act no" data-act="no">${reg("send back","reject")}</button><button class="act" data-act="map" style="margin-left:auto">${reg("see on the Map →","→ map")}</button></div>`}</div>`).join("");
+ $$(".bench-item").forEach(el=>{const i=+el.dataset.i;$$(".act",el).forEach(a=>a.onclick=()=>{
+  if(a.dataset.act==="map"){go("map");return;}
+  if(a.dataset.act==="edit"){a.textContent=reg("correcting…","amend…");return;}
+  const verb=a.dataset.act==="ok"?reg("blessed","confirmed"):reg("sent back","rejected");
+  BENCH[i]._done=true;state.openFindings=Math.max(0,state.openFindings-1);renderNav();drawBench();syncGlobal();
+  toast(reg(`✓ ${verb} — a micro-ADR is written; it won't resurface`,`disposition recorded · ${a.dataset.act}`),
+        ()=>{BENCH[i]._done=false;state.openFindings++;renderNav();drawBench();syncGlobal();});});});
+}
+
+/* ── THE LOOP (autonomous build from a finding) ── */
+const GATES=[
+ {t:reg("Mint the intent","surface_intent_for_finding"),d:reg("a finding becomes a build job — locus + reason","the front-half · ≈ surface_intent_at")},
+ {t:reg("Bind it","three-part bind"),d:reg("principal → domain → the exact territory it may touch","resolve_scope · empty = DENY-ALL")},
+ {t:reg("Check the posture","governance gate"),d:reg("is this reversible/AUTO, or does it need you?","AUTO flows · else surface")},
+ {t:reg("Build it","claude -p, scoped"),d:reg("a headless agent fixes exactly that connection","dispatch · checkpoint · git-revertible")},
+ {t:reg("Prove by use","verify-by-use"),d:reg("run the real scenario — not 'no error', actually works","tests + curl the seam")},
+ {t:reg("Check the form","design-critic"),d:reg("a separate adversary grades the surface, not the builder","FORM gate · design-lint")},
+ {t:reg("Re-run the detector","closure ≠ build-done"),d:reg("the finding only closes when the detector agrees — gaming-proof","verification ≠ resolution")}];
+function roomLoop(s){
+ s.innerHTML=head("OPERATE · build-from-a-finding","The Loop",
+  `This is the autonomous half — where the system <em>acts</em> on what it finds, not just reports it. A fray becomes a build job that runs a gate stack and only closes when the detector itself agrees the fix is real. It burns down, or it <b>halts loud</b> with the reason. How far it runs unattended is set by your standing grant — and by how well your memory recovers your intent.`)
+  +`<div class="grid cols-2"><div class="card"><div class="ch"><span class="t">${reg("the job on the bench","finding → intent")}</span><span class="k">${achip('/api/run-stats')}</span></div><div class="cb">
+      <p style="margin:0 0 6px;font-size:13.5px">${reg("Retire the vestigial /api/run-stats route","finding://structural∧semantic")}</p>
+      <p class="micro" style="margin:0">${reg("wired ∧ meaningless — the prize finding. The loop will build the fix, prove it, and only mark it done when the detector confirms it's gone.","superseded-by /api/runs · .78")}</p>
+      <button class="runbtn cool" id="loopgo" style="margin-top:13px">▶ run the loop</button>
+      <button class="pill" id="loophalt" style="margin-top:13px">force a snag</button>
+      <div class="retrybar" id="retry"><span>retries</span><span class="pip" id="p0"></span><span class="pip" id="p1"></span><span class="pip" id="p2"></span><span style="color:var(--ink-faint)">cap 3 → blocked-on-you</span></div></div></div>
+     <div><div class="card"><div class="ch"><span class="t">${reg("convergence","burns down, or halts loud")}</span></div><div class="cb"><canvas id="convcv" height="120"></canvas>
+        <p class="micro" id="convread" style="margin:8px 0 0">${reg("net burn-down over a window — never a promise of 'always completes', only this or a loud stop","fix-monotone → converges; else halt + reason")}</p></div></div>
+       <div class="card" style="margin-top:13px"><div class="ch"><span class="t">${reg("your standing grant","the one consequential setting")}</span></div><div class="cb">
+        <div class="rlane">${["nothing alone","reversible only","reversible + low-risk","burn down unattended"].map((g,i)=>`<span class="${i===1?'on':''}">${g}</span>`).join("")}</div>
+        <p class="micro" style="margin:6px 0 0">${reg("you set how far it may go without asking — revocable, and it rises as your memory's recovery-quality proves out","COMPANY_WIRE_PERMISSION · scoped + revocable · gated by recall-quality")}</p></div></div></div></div>
+   <div class="card" style="margin-top:14px"><div class="ch"><span class="t">${reg("the gate stack","every job runs all of it")}</span><span class="k" id="loopstat">idle</span></div><div class="cb"><div class="gatestack" id="gatestack">
+     ${GATES.map((g,i)=>`<div class="gate-step" id="gs${i}"><span class="gn">${i+1}</span><div><div class="gt">${g.t}</div><div class="gd">${g.d}</div></div><span class="gr" id="gr${i}"></span></div>`).join("")}</div></div></div></div>`;
+ drawConv(false);
+ $("#loopgo").onclick=()=>runLoop(false);
+ $("#loophalt").onclick=()=>runLoop(true);
+}
+let loopTimers=[];
+function runLoop(snag){loopTimers.forEach(clearTimeout);loopTimers=[];
+ GATES.forEach((g,i)=>{const el=$("#gs"+i);if(el){el.className="gate-step";$("#gr"+i).textContent="";}});
+ ["p0","p1","p2"].forEach(p=>{const el=$(p);if(el)el.className="pip";});
+ const haltAt=snag?4:99;$("#loopstat").textContent="running…";$("#loopgo").disabled=true;
+ GATES.forEach((g,i)=>{
+  loopTimers.push(setTimeout(()=>{const el=$("#gs"+i);if(!el)return;
+   if(i===haltAt){el.classList.add("halted");$("#gr"+i).textContent="halted";$("#loopstat").textContent="halted loud";
+    $("#p0").classList.add("used");
+    const rd=$("#convread");if(rd)rd.innerHTML=`<span style="color:var(--fray)">${reg("the build didn't verify — re-queued (retry 1 of 3). Three strikes and it becomes a 'blocked-on-you' card, never an infinite burn.","verify-fail → retry-cap → blocked-on-human")}</span>`;
+    $("#loopgo").disabled=false;return;}
+   if(i>haltAt)return;
+   el.classList.add("active");$("#gr"+i).textContent="…";
+   loopTimers.push(setTimeout(()=>{el.classList.remove("active");el.classList.add("passed");$("#gr"+i).textContent="✓";
+    if(i===GATES.length-1){$("#loopstat").textContent="closed · verified by the detector";drawConv(true);
+     toast(reg("✓ the fray is gone — and the detector agrees, so it's truly closed","finding resolved · burn-down −1"));$("#loopgo").disabled=false;
+     state.openFindings=Math.max(0,state.openFindings-1);renderNav();}
+   },420));},i*620));});
+}
+function drawConv(done){const cv=$("#convcv");if(!cv)return;fitCanvas(cv);const ctx=cv.getContext("2d"),W=cv.width/devicePixelRatio,H=cv.height/devicePixelRatio;ctx.save();ctx.scale(devicePixelRatio,devicePixelRatio);
+ const data=done?[6,5,5,3,2,1,0]:[6,5,5,4,3,3,2],max=6,pad=7;ctx.strokeStyle="rgba(38,48,63,.6)";ctx.lineWidth=1;for(let i=0;i<3;i++){const y=pad+i*((H-pad*2)/2);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+ const px=i=>i*(W/(data.length-1)),py=v=>pad+(1-v/max)*(H-pad*2);
+ ctx.beginPath();ctx.moveTo(0,py(data[0]));data.forEach((v,i)=>ctx.lineTo(px(i),py(v)));ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+ const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,done?"rgba(95,192,154,.3)":"rgba(240,182,90,.25)");g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g;ctx.fill();
+ ctx.beginPath();ctx.moveTo(0,py(data[0]));data.forEach((v,i)=>ctx.lineTo(px(i),py(v)));ctx.strokeStyle=done?"#5fc09a":"#f0b65a";ctx.lineWidth=2;ctx.stroke();
+ const lx=px(data.length-1),ly=py(data[data.length-1]);ctx.beginPath();ctx.arc(lx,ly,4,0,7);ctx.fillStyle=done?"#5fc09a":"#f0b65a";ctx.fill();ctx.restore();}
+
+/* ── LOOM ── */
+function roomLoom(s){
+ s.innerHTML=head("COMPOSE · compose-a-chain","The Loom",
+  `Every system here is a chain in one engine — Dragnet, recollection's distill, the drift detector are the same shape, composed differently. Drag a verb from the palette, wire it, configure each node's model and lens, save it, fire it. This is the company's MCP made visual — every node is a verb an agent can call too.`)
+  +`<div class="loom">
+     <div class="palette-n"><div class="nav-eyebrow" style="padding:0 0 7px">${reg("verbs","palette")}</div>
+       ${PALETTE_NODES.map(p=>`<div class="pn"><span class="vd" style="background:var(${p.t})"></span>${p.v}()</div>`).join("")}</div>
+     <div><div class="shelf" style="display:flex;gap:8px;margin-bottom:11px;flex-wrap:wrap">
+       ${Object.entries(CHAINS).map(([k,c])=>`<div class="sh-item ${state.loom===k?'on':''}" data-chain="${k}" style="flex:1;min-width:120px"><div class="nm">${c.nm}</div><div class="tg">${c.tg}</div></div>`).join("")}</div>
+       <div class="loom-canvas" id="loomcv"><div class="loom-grid"></div><svg id="loomsvg" style="position:absolute;inset:0;width:100%;height:100%"></svg></div>
+       <button class="runbtn cool" id="loomrun" style="margin-top:11px">▶ run this chain</button>
+       <button class="act" style="margin-top:11px;margin-left:8px">save</button></div>
+     <div class="inspect" id="inspect"></div></div></div>`;
+ $$("[data-chain]").forEach(el=>el.onclick=()=>{state.loom=el.dataset.chain;state.loomSel=0;$$("[data-chain]").forEach(x=>x.classList.toggle("on",x===el));drawLoom();});
+ $("#loomrun").onclick=()=>go("theatre");
+ drawLoom();
+}
+function drawLoom(){const wrap=$("#loomcv");if(!wrap)return;$$(".lnode",wrap).forEach(n=>n.remove());
+ const c=CHAINS[state.loom],N=c.nodes.length,pad=34,gap=(wrap.clientWidth-pad*2-140)/Math.max(1,N-1),svg=$("#loomsvg");svg.innerHTML="";
+ c.nodes.forEach((nd,i)=>{const x=pad+i*gap,y=wrap.clientHeight/2-44+((i%2)?24:-24);
+  const el=document.createElement("div");el.className="lnode"+(i===state.loomSel?" sel":"");el.style.left=x+"px";el.style.top=y+"px";
+  el.innerHTML=`<div class="vrb">${nd.v}()</div><div class="lbl2">${nd.l}</div><div class="cfg">${nd.c}</div><div class="tband" style="background:var(${nd.t})"></div>`;
+  el.onclick=()=>{state.loomSel=i;drawLoom();};wrap.appendChild(el);nd._x=x+140;nd._y=y+38;
+  if(i>0){const prev=c.nodes[i-1],p=document.createElementNS("http://www.w3.org/2000/svg","path");p.setAttribute("d",`M${prev._x},${prev._y} C${prev._x+gap/2},${prev._y} ${x-gap/2},${y+38} ${x},${y+38}`);p.setAttribute("class","edge flow");svg.appendChild(p);}});
+ const nd=c.nodes[state.loomSel],ins=$("#inspect");
+ ins.innerHTML=`<div class="nav-eyebrow" style="padding:0 0 9px">${reg("this step","node config")}</div>
+  <h3 style="margin:0 0 3px;font-size:15px">${nd.v}()</h3><div class="micro" style="margin-bottom:11px">${nd.l} · ${nd.c}</div>
+  <div class="frow"><span class="fl">model</span><select class="val"><option>qwen3.5-4b (resident)</option><option>kimi-k2.6 cloud</option><option>deepseek-v4</option></select></div>
+  <div class="frow"><span class="fl">lens</span><select class="val"><option>pplx-ctx-4b</option><option>none</option></select></div>
+  <div class="frow"><span class="fl">output</span><span class="val">json_schema</span></div>
+  <div class="frow"><span class="fl">thinking</span><span class="val">off</span></div>
+  <div class="frow" style="border:0"><span class="fl">calibrated</span><span class="val" style="color:var(--whole)">.96 precision</span></div>
+  <p class="micro" style="margin-top:11px">${reg("swap the model and re-run against your real incidents — the winner is saved as this step's default","D2 experiment axis · calibrate → save-the-winner")}</p>`;
+}
+
+/* ── PULSE ── */
+function roomPulse(s){const open=SEAMS.filter(x=>x.state!=="whole").length;
+ s.innerHTML=head("DECIDE · how-whole","The Pulse",
+  `How whole the system is, at a glance — a standing model that burns toward zero, or halts loud with the reason. Detectors come in three tiers: <b>exact</b> (gate-able), <b>candidate</b> (positive-only, propose), <b>semantic</b> (model-judged). The prize is the disagreement only two layers can find.`)
+  +`<div class="grid cols-4" style="margin-bottom:15px">
+     <div class="card"><div class="cb"><div class="metric"><span class="big" style="color:var(--gold)">${open}</span><span class="ml">open seams</span></div></div></div>
+     <div class="card"><div class="cb"><div class="metric"><span class="big" style="color:var(--whole)">38/38</span><span class="ml">ledger paths</span></div></div></div>
+     <div class="card"><div class="cb"><div class="metric"><span class="big">.96</span><span class="ml">detector precision</span></div></div></div>
+     <div class="card"><div class="cb"><div class="metric"><span class="big" style="color:var(--signal)">11</span><span class="ml">net burned-down</span></div></div></div></div>
+   <div class="grid cols-2">
+     <div class="card"><div class="ch"><span class="t">Burn-down</span><span class="k">net → zero, or halt loud</span></div><div class="cb"><canvas id="burncv" height="140"></canvas></div></div>
+     <div class="card"><div class="ch"><span class="t">Seams</span><span class="k">click an address to trace it</span></div><div class="cb" style="padding-top:3px">${SEAMS.map(sm=>{const col=sm.state==="whole"?"--whole":sm.state==="fray"?"--fray":"--gold";return `<div class="seam"><span class="sd" style="background:var(${col})"></span><span>${reg(sm.tim,"")} ${achip(sm.machine)}</span><span class="st" style="background:rgba(255,255,255,.04);color:var(${col})">${sm.st}</span></div>`;}).join("")}</div></div></div>
+   <div class="card prize stripe gold" style="margin-top:15px"><div class="ch"><span class="t">◆ The prize — a disagreement only two layers could find</span></div>
+     <div class="cb"><div class="vs"><b style="color:var(--signal)">structural</b>WIRED<br><span class="micro">2 callers</span></div><div style="font-size:22px;color:var(--ink-faint)">∧</div><div class="vs"><b style="color:var(--fray)">semantic</b>MEANINGLESS<br><span class="micro">superseded</span></div>
+       <div style="flex:1;min-width:200px"><p style="margin:0">${reg("Called and green — so no test fails. But on reading, it's dead. Structure can't see that; meaning can't see it's wired. Only both, disagreeing, catch it.","finding://structural∧semantic · exists only because both detector classes feed one model")}</p><button class="act go" style="margin-top:9px" onclick="go('bench')">send to the Bench →</button></div></div></div>
+   <div class="grid cols-2" style="margin-top:15px">
+     <div class="card"><div class="ch"><span class="t">Detectors</span><span class="k">more types, not more tools</span></div><div class="cb" style="padding-top:4px">
+       ${DETECTORS.map(d=>`<div class="det-row"><span class="tierlab" style="background:rgba(255,255,255,.05);color:var(${d.tc})">${d.tier}</span><span>${reg(d.tim,d.machine)}</span><span class="micro" style="margin-left:auto">${d.g}${d.p!=="—"?" · "+d.p:""}</span></div>`).join("")}</div></div>
+     <div><div class="card"><div class="ch"><span class="t">${reg("Calibration","calibration harness")}</span><span class="k">experiment → save the winner</span></div><div class="cb" style="padding:6px 8px">
+       <table class="calib"><thead><tr><th>config</th><th>prec</th><th>rec</th><th>cost</th><th>lat</th></tr></thead><tbody>
+       ${CALIB.map(c=>`<tr class="${c.win?'win':''}"><td>${c.cfg}${c.win?' <span style="color:var(--whole)">◆ saved</span>':''}</td><td>${c.p}</td><td>${c.r}</td><td>${c.cost}</td><td>${c.lat}</td></tr>`).join("")}</tbody></table></div></div>
+       <div class="card" style="margin-top:13px"><div class="ch"><span class="t">${reg("Decisions made, kept","the disposition log · micro-ADRs")}</span></div><div class="cb adr-log">${ADRLOG.map(a=>`<div class="e"><span class="who">${a.who}</span> <span class="when">${a.when}</span> · ${a.t}</div>`).join("")}</div></div></div></div></div>`;
+ drawBurn();
+}
+function drawBurn(){const cv=$("#burncv");if(!cv)return;fitCanvas(cv);const ctx=cv.getContext("2d"),W=cv.width/devicePixelRatio,H=cv.height/devicePixelRatio;ctx.save();ctx.scale(devicePixelRatio,devicePixelRatio);
+ const data=[14,13,13,11,9,9,7,6,4,3,3,2],max=14,pad=8;ctx.strokeStyle="rgba(38,48,63,.6)";ctx.lineWidth=1;for(let i=0;i<4;i++){const y=pad+i*((H-pad*2)/3);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+ const px=i=>i*(W/(data.length-1)),py=v=>pad+(1-v/max)*(H-pad*2);
+ ctx.beginPath();ctx.moveTo(0,py(data[0]));data.forEach((v,i)=>ctx.lineTo(px(i),py(v)));ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+ const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"rgba(240,182,90,.28)");g.addColorStop(1,"rgba(240,182,90,0)");ctx.fillStyle=g;ctx.fill();
+ ctx.beginPath();ctx.moveTo(0,py(data[0]));data.forEach((v,i)=>ctx.lineTo(px(i),py(v)));ctx.strokeStyle="#f0b65a";ctx.lineWidth=2;ctx.stroke();
+ ctx.beginPath();ctx.arc(px(data.length-1),py(data[data.length-1]),4,0,7);ctx.fillStyle="#f0b65a";ctx.fill();ctx.restore();}
+
+/* ── MODELS ── */
+function roomModels(s){
+ s.innerHTML=head("COMPOSE · the-loadout","The Models",
+  `A brain is a role that resolves to a model — never a pinned model. This is the fabric: what's resident on the 16GB card, what's served, what's cloud, what's evicted. Load, swap, evict; pick which model a chain step resolves to. The embedding lens at <code>:8007</code> is load-bearing for recall.`)
+  +`<div class="grid cols-3" style="margin-bottom:15px">
+     <div class="card"><div class="cb"><div class="metric"><span class="big">13.3<span style="font-size:15px;color:var(--ink-faint)">/16 GB</span></span><span class="ml">VRAM resident</span></div></div></div>
+     <div class="card"><div class="cb"><div class="metric"><span class="big" style="color:var(--whole)">2</span><span class="ml">resident</span></div></div></div>
+     <div class="card"><div class="cb"><div class="metric"><span class="big" style="color:var(--fray)">1</span><span class="ml">down · rerank</span></div></div></div></div>
+   <div class="card"><div class="ch"><span class="t">${reg("the loadout","model registry · resolved per role")}</span><span class="k">company up · swap · evict</span></div><div class="cb">
+     ${MODELS.map(m=>`<div class="mrow"><div><div class="mn">${m.nm}</div><div class="mid">${reg(m.role,m.id)}</div></div>
+       <div class="mvram">${m.vram?`<i style="width:${m.vram/16*100}%;background:var(${m.state==='resident'?'--t-local':'--ink-faint'})"></i>`:""}</div>
+       <span class="micro" style="text-align:right">${m.vram?m.vram+'G':'—'}</span>
+       <span class="pillstate ${m.sc}">${m.state}</span>
+       <button class="act" style="font-size:10px;padding:4px 9px">${m.state==='resident'?reg('evict','evict'):m.state==='down'?reg('start','start'):reg('use','use')}</button></div>`).join("")}</div></div>
+   <p class="micro" style="padding:13px 2px 0">${reg("the same VRAM math the wizard hit by hand — 32K-4B + embeddings won't co-load on 16GB; the fabric schedules and evicts so a run never OOMs","SlotBudget.from_registry · reserve_r=2 · VramGate · the wizard's hard-won lesson, made a capability")}</p></div>`;
+}
+
+/* ── FABRIC ── */
+function roomFabric(s){
+ s.innerHTML=head("COORDINATE · live-sessions","The Fabric",
+  `You run many sessions at once — they're your Slack. The fabric shows every live and idle Claude Code session, what each is building, and the channel between them. This is how the work coordinates without you relaying between windows.`)
+  +`<div class="grid cols-2"><div class="card"><div class="ch"><span class="t">${reg("the sessions","the mesh · sessions()")}</span><span class="k">6 known · 4 live</span></div><div class="cb" style="padding-top:6px">
+     ${SESSIONS.map(se=>`<div class="sess"><span class="sdot" style="background:var(${se.sc})"></span><div><div class="snm">${reg(se.role,se.nm)}</div><div class="scwd">${se.nm} · ${se.cwd}</div></div><div class="sright">${se.right}</div></div>`).join("")}</div></div>
+     <div><div class="card"><div class="ch"><span class="t">${reg("the channel","channel://dragnet-development")}</span></div><div class="cb adr-log">
+       <div class="e"><span class="who">dragnet-build</span> <span class="when">12m</span><br>extract-once pass over corpora done — 52k chunks, minibatch-kmeans for the rollup</div>
+       <div class="e"><span class="who">recollection-design</span> <span class="when">1h</span><br>units recorded but not embedded yet — the keystone gap for the Map's multi-space view</div>
+       <div class="e"><span class="who">lead (you're here)</span> <span class="when">now</span><br>built the orienteering drift detector into the coherence substrate · verified</div>
+       <div class="e"><span class="who">company-build</span> <span class="when">3h</span><br>operable surface lane green; flagged 2 needs-tim</div></div></div>
+       <div class="card" style="margin-top:13px"><div class="ch"><span class="t">${reg("spin up a past self","session-time-travel")}</span></div><div class="cb"><p style="font-size:12.5px;margin:0 0 9px">${reg("Clone any session as it was at a past moment — talk to the self that held a thread before it drifted.","cc_clone @ a compaction/timestamp · the pre-drift context")}</p><button class="act">${reg("clone recollection-design @ its oldest self →","cc_clone →")}</button></div></div></div></div></div>`;
+}
+
+/* ── THE MEMORY (recollection) ── */
+const MEM_TABS=[["units","by kind"],["lenses","many spaces"],["marks","how to read it"],["ladder","the scale ladder"],["ratify","to bless"],["drift","recover drift"],["capture","what's flowing in"],["provenance","what touched what"],["across","across projects"]];
+const KCOL={decision:"--signal",correction:"--gold",principle:"--violet","needs-tim":"--gold",frustration:"--fray","bug-fix":"--whole","what-built":"--whole",pattern:"--signal"};
+const MEM_UNITS=[
+ {k:"decision",tim:"pplx-4b chosen so voice fits the GPU",adr:"exchange://12c59b4e/114",src:"claude-code",sess:"12c59b4e",proj:"company",corr:5,v:{t:"currency",val:"still stands",basis:"no later decision supersedes it"}},
+ {k:"correction",tim:"“Stop saying ‘accident’ — you can't determine that”",adr:"unit://correction/accident",src:"claude-code",sess:"d5fc8ad1",proj:"company",v:{t:"answers-vs-mentions",val:"a real correction",basis:"imperative + names the error — not a mention"}},
+ {k:"principle",tim:"Render, don't judge",adr:"unit://render-not-judge",src:"clone",sess:"wizard-run-1",proj:"wizard",corr:9,v:{t:"confidence",val:"ratified ✓",basis:"blessed by Tim · corroborated 31×"}},
+ {k:"needs-tim",tim:"The recall circuit is off — intentional?",adr:"unit://needs-tim/recall-off",src:"claude-code",sess:"d5fc8ad1",proj:"company",v:{t:"relevance",val:"open",basis:"timers inactive; not obviously intended"}},
+ {k:"frustration",tim:"“WHAT MCP IS IT USING” — go and find it",adr:"unit://frustration/which-mcp",src:"claude-code",sess:"d5fc8ad1",proj:"company",v:{t:"relevance",val:"a steer",basis:"signals I theorised instead of looking — a standing correction"}},
+ {k:"bug-fix",tim:"model_of_tim binding repointed after the foundation move",adr:"unit://bugfix/model-of-tim",src:"claude-code",sess:"d5fc8ad1",proj:"company",v:{t:"currency",val:"applied",basis:"verified by use"}},
+ {k:"what-built",tim:"The orienteering drift detector, into the coherence substrate",adr:"unit://what-built/orienteering-drift",src:"claude-code",sess:"d5fc8ad1",proj:"company",v:{t:"confidence",val:"verified",basis:"5/5 checks · gate green"}},
+ {k:"pattern",tim:"Scout existing code before building",adr:"unit://pattern/scout-first",src:"board",sess:"—",proj:"all",v:{t:"relevance",val:"standing",basis:"recurs across builds · idiosyncratic"}}];
+const MEM_KINDS=["all","decision","correction","principle","needs-tim","frustration","bug-fix","what-built","pattern"];
+const LADDER=[
+ {sc:"settled",tim:"the company's doctrine",ex:"the laws that don't change",adr:"foundation/system/principles",w:58},
+ {sc:"project",tim:"the company",ex:"everything built, across every session",adr:"project://company",w:70},
+ {sc:"session",tim:"this session",ex:"the consolidation + interface day",adr:"session://d5fc8ad1",w:82},
+ {sc:"unit",tim:"a typed distillation",ex:"“Render, don't judge”",adr:"unit://render-not-judge",w:91},
+ {sc:"atom",tim:"one raw event — nothing lost",ex:"the actual message you typed",adr:"exchange://d5fc8ad1/1142",w:100}];
+const CANDIDATES=[
+ {tim:"Relevance inverts face value",state:"proposed",basis:"the sequences↔wizard zero-keyword link; 6 more cases fit",done:false},
+ {tim:"The catch-all beats targeted search for full recall",state:"refined",basis:"the dragnet reframe — Tim-direct; the stronger-model confirm pending",done:false}];
+const DRIFTED=[
+ {tim:"The embedding-model decision (pplx-4b)",when:"dropped across compaction 7",rec:"the line is at exchange 255 — or spawn the pre-drift self @ compaction 6"},
+ {tim:"Why render-not-judge",when:"weakly carried after compaction 4",rec:"recoverable at exchange 99 — re-integrate, or clone the earlier self"}];
+const CROSSINGS={file:"runtime/orienteering_drift.py",
+ touched:[{rel:"produced_by",tim:"this session wrote it",adr:"exchange://d5fc8ad1/…"},{rel:"references",tim:"the acceptance test imports it",adr:"tests/orienteering_drift_acceptance.py"},{rel:"references",tim:"the coherence read surfaces it",adr:"ops/cli/app.py"}],
+ sessionTouched:[{tim:"foundation/ (moved in)",adr:"file://company/foundation"},{tim:"the orienteering ledger · 38 entries",adr:"file://company/orienteering"},{tim:"recollection (moved in)",adr:"file://company/recollection"}]};
+const ACROSS=[
+ {concept:"the upward engine",inn:[["wizard","the by-hand prototype"],["dragnet","the catch-all chain"],["recollection","distill into units"],["coherence","detection as a chain"]]},
+ {concept:"render-not-judge",inn:[["wizard","where it was coined"],["recollection","the distill discipline"],["dragnet","map-not-judge, upward"]]}];
+
+function roomMemory(s){
+ s.innerHTML=head("REMEMBER · recollection","The Memory",
+  `Your outer memory — every session distilled into typed units you can browse by meaning, climb by scale, and recover when a thread drifts. It's what lets an agent already know what you mean — and the better it recovers your intent, the more the system can be trusted to act on its own.`)
+  +`<div class="mtabs">${MEM_TABS.map(([t,d])=>`<button class="mtab ${state.memTab===t?'on':''}" data-mtab="${t}">${t}<span style="color:var(--ink-faint)"> · ${d}</span></button>`).join("")}</div><div id="membody"></div></div>`;
+ $$("[data-mtab]").forEach(b=>b.onclick=()=>{state.memTab=b.dataset.mtab;$$("[data-mtab]").forEach(x=>x.classList.toggle("on",x===b));drawMem();});
+ drawMem();
+}
+function drawMem(){const b=$("#membody");if(!b)return;
+ b.innerHTML=({units:memUnits,lenses:memLenses,marks:memMarks,ladder:memLadder,ratify:memRatify,drift:memDrift,capture:memCapture,provenance:memProv,across:memAcross}[state.memTab])();
+ if(state.memTab==="lenses")drawLensLab();
+ if(state.memTab==="units")$$("[data-kind]").forEach(c=>c.onclick=()=>{state.memKind=c.dataset.kind;drawMem();});
+ if(state.memTab==="ratify")$$("[data-bless]").forEach(x=>x.onclick=()=>{const i=+x.dataset.bless;CANDIDATES[i].done=true;state.ratifyCount=Math.max(0,state.ratifyCount-1);renderNav();drawMem();toast(reg("✓ committed — it's a principle now, and the system can trust it more","status=committed · recovery-quality ↑"),()=>{CANDIDATES[i].done=false;state.ratifyCount++;renderNav();drawMem();});});
+ if(state.memTab==="drift")initScrub();
+ wireChips($("#membody"));
+}
+function memUnits(){const list=state.memKind==="all"?MEM_UNITS:MEM_UNITS.filter(u=>u.k===state.memKind);
+ return `<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">${MEM_KINDS.map(k=>`<span class="kindchip ${state.memKind===k?'on':''}" data-kind="${k}">${k}${k!=="all"?` <span style="color:var(--ink-faint)">${MEM_UNITS.filter(u=>u.k===k).length}</span>`:''}</span>`).join("")}</div>`
+  +list.map(u=>{const corr=u.corr?`<span class="corrob" title="corroboration density">${Array(u.corr).fill('<i></i>').join('')}</span>`:"";
+   return `<div class="uitem" style="border-left-color:var(${KCOL[u.k]})"><div class="ut"><span class="uk" style="background:rgba(255,255,255,.05);color:var(${KCOL[u.k]})">${u.k}</span>${corr}<span class="ulin">${achip(u.adr,reg(u.proj+" · "+u.src,u.adr))}</span></div><p class="ucl">${u.tim}</p><div class="uv"><span class="vt">${reg("how to read it","verdict · "+u.v.t)}:</span> ${u.v.val} — <span style="color:var(--ink-faint)">${u.v.basis}</span></div></div>`;}).join("");
+}
+/* lenses — the multi-coordinate fingerprint (one thing in every space at once) */
+const LENS_SET=[["principle","what it's about, deep"],["vocabulary","the words — coined vs generic"],["topic","its surface subject"],["time","when it lived"],["structure","its shape"]];
+function memLenses(){return `<p class="micro" style="margin:-4px 0 14px">${reg("a thing isn't one point — it's a point in many spaces at once. 'Render, don't judge' sits dead-centre in principle-space but off in topic-space. The gap BETWEEN its positions is where the hidden relations live.","multi-lens fingerprints · vec_&lt;space&gt; per lens · the cross-lens inversion query")}</p>
+  <div class="card" style="margin-bottom:13px"><div class="cb"><div style="display:flex;align-items:center;gap:9px"><span style="font-weight:600">${reg("Render, don't judge","unit://render-not-judge")}</span><span class="corrob">${Array(9).fill('<i></i>').join('')}</span><span class="achip" data-trace="unit://render-not-judge" style="margin-left:auto">trace</span></div></div></div>
+  <div class="lenslab" id="lenslab">${LENS_SET.map((l,i)=>`<div class="lenscell"><div class="ll">${l[0]}</div><canvas id="lc${i}"></canvas><div class="near">${reg("nearest","nearest")}: <b>${["sequences-in-sequences","cascade-economics","the wizard run","the foundation move","decision-cards"][i]}</b></div></div>`).join("")}</div>
+  <div class="card prize stripe gold" style="margin-top:13px"><div class="cb" style="display:block"><div class="nav-eyebrow" style="padding:0 0 6px">${reg("the cross-lens query","near here ∧ far there")}</div><p style="margin:0 0 9px">${reg("Find things CLOSE in principle but FAR in topic — that's the inversion: deeply related, yet they never share a word. This is the link keyword and plain similarity both miss.","near(principle) ∧ far(topic) → the face-value-inverting relations")}</p><button class="act go">${reg("run it →","cross-lens →")}</button></div></div>`;
+}
+function drawLensLab(){LENS_SET.forEach((l,i)=>{const cv=$("#lc"+i);if(!cv)return;cv.width=cv.clientWidth*devicePixelRatio;cv.height=96*devicePixelRatio;
+  const ctx=cv.getContext("2d");ctx.scale(devicePixelRatio,devicePixelRatio);const W=cv.clientWidth,H=96;
+  // scattered points, with the focus near-centre in principle, off elsewhere
+  const seed=[[.5,.5],[.3,.6],[.7,.35]][0];const focus=i===0?[.5,.5]:[[.5,.5],[.28,.42],[.74,.66],[.4,.3],[.62,.7]][i];
+  ctx.fillStyle="rgba(58,70,92,.5)";for(let p=0;p<7;p++){const x=((p*53+i*31)%90+5)/100*W,y=((p*37+i*19)%80+10)/100*H;ctx.beginPath();ctx.arc(x,y,2.5,0,7);ctx.fill();}
+  ctx.beginPath();ctx.arc(focus[0]*W,focus[1]*H,5,0,7);ctx.fillStyle=i===0?"#f0b65a":"#5fc6d6";ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=8;ctx.fill();ctx.shadowBlur=0;
+  if(i===0){ctx.strokeStyle="rgba(240,182,90,.4)";ctx.beginPath();ctx.arc(focus[0]*W,focus[1]*H,11,0,7);ctx.stroke();}});}
+
+/* marks — the wizard reading layer */
+const MARKS=[
+ {kind:"gold-likelihood",col:"--gold",tim:"Render, don't judge",profile:.92,
+  read:[["corroboration","recurs 31× across sessions — high","--whole"],["idiosyncratic","your coinage, not generic AI prose","--gold"],["ai-fingerprint","NOT an AI-tic — survives the subtraction","--whole"]],
+  note:reg("recurrence + your-coinage = gold. The same recurrence on a GENERIC phrase would be an AI-tic to subtract, not signal.","positive-only · idiosyncratic-recurrence=gold; generic-recurrence=subtract")},
+ {kind:"ai-fingerprint",col:"--fray",tim:"“leverage the synergy of the holistic system”",profile:.15,
+  read:[["corroboration","recurs 47× — very high","--fray"],["generic","boilerplate; appears in every AI's prose","--fray"],["verdict","subtract — this is the echo, not you","--ink-dim"]],
+  note:reg("high recurrence but generic = the AI's fingerprint, not your meaning. The system subtracts it so your real voice shows.","ai-fingerprint = recurring ∧ generic → subtract")},
+ {kind:"flagged-for-you",col:"--signal",tim:"“sequences in sequences”",profile:.7,
+  read:[["corroboration","appears only 3× — RARE","--gold"],["rare≠confabulation","low recurrence is NOT discounted","--signal"],["verdict","flagged for your eye — never silently dropped","--signal"]],
+  note:reg("rare doesn't mean wrong. Positive-only: high recurrence is gold, but low recurrence is flagged for you — never thrown away as noise.","rare → flag for Tim, never discount")}];
+function memMarks(){return `<p class="micro" style="margin:-4px 0 14px">${reg("capture records WHAT'S there; marks record HOW TO READ it. These accrue from cheap passes — is this gold, an AI-echo to subtract, or something rare worth your eye — each proposed WITH its evidence, never a black-box score.","the marks layer · corroboration · ai-fingerprint · idiosyncratic-vs-generic · gold-likelihood · proposed-with-evidence, Tim-confirmed")}</p>`
+  +MARKS.map(m=>`<div class="mark-card"><div class="mh"><span class="mkind" style="background:rgba(255,255,255,.05);color:var(${m.col})">${m.kind}</span><span style="font-weight:500">${m.tim}</span></div>
+    <div class="goldbar"><i style="width:${m.profile*100}%;background:var(${m.col})"></i></div>
+    <div class="micro" style="margin-bottom:7px">gold-likelihood ${m.profile.toFixed(2)} — ${m.note}</div>
+    ${m.read.map(r=>`<div class="verdict"><span class="vk" style="color:var(${r[2]})">${r[0]}</span><span style="color:var(--ink-dim)">${r[1]}</span></div>`).join("")}</div>`).join("");
+}
+
+/* capture — what's flowing into memory + freshness */
+const CAPSRC=[
+ {tag:"CC",col:"--signal",nm:reg("your sessions","claude-code + codex"),d:"~/.claude · ~/.codex transcripts",stat:"4,123 captured",fresh:"stale · 06-16",fc:"--fray"},
+ {tag:"▤",col:"--gold",nm:reg("the noticeboard","board://"),d:"requests · issues · tips · guides",stat:"113 items",fresh:"live",fc:"--whole"},
+ {tag:"⧉",col:"--violet",nm:reg("era-clone reflections","clone://"),d:"what an earlier self held",stat:"62 reflections",fresh:"live",fc:"--whole"}];
+function memCapture(){return `<p class="micro" style="margin:-4px 0 14px">${reg("memory captures from more than your chats — the noticeboard and the reflections of earlier selves flow in too, each a source you can scope a recall to. And it stays fresh: when the embedder changes, everything re-embeds so old and new are comparable.","capture sources (registry rows) · board:// · clone:// · embedding-version migration · re-embed on change")}</p>`
+  +CAPSRC.map(c=>`<div class="csrc"><span class="ci" style="background:rgba(255,255,255,.05);color:var(${c.col})">${c.tag}</span><div><div class="cn">${c.nm}</div><div class="cd">${c.d}</div></div><div class="cstat">${c.stat}<br><span class="freshpill" style="background:rgba(255,255,255,.05);color:var(${c.fc})">${c.fresh}</span></div></div>`).join("")
+  +`<div class="card" style="margin-top:13px"><div class="cb"><div style="display:flex;align-items:center;gap:11px"><div style="flex:1"><div style="font-weight:600;font-size:13px">${reg("freshness","embedding-version migration")}</div><div class="micro" style="margin-top:3px">${reg("the sessions index hasn't run since 06-16 — the recall circuit's timers are off. Turning it on re-embeds the backlog so every memory is comparable.","stale · re-embed pending · EMBEDDING_VERSION bump → batch re-embed")}</div></div><button class="runbtn cool">${reg("re-embed now","reindex")}</button></div></div></div>`;
+}
+
+function memLadder(){return `<p class="micro" style="margin:-4px 0 14px">${reg("nothing is lost — raw events at the bottom distil upward into typed meaning, and any claim can be grounded back down to the exact words","atom ⊂ unit ⊂ session ⊂ project ⊂ settled · navigate(scale)")}</p>`
+ +`<div class="ladder">${LADDER.map((r,i)=>`<div class="lrung" style="width:${r.w}%;border-left:3px solid var(--gold)"><span class="ls">${r.sc}</span><span class="lc">${reg(r.tim,r.adr)}<span class="le"> · ${r.ex}</span></span><span class="ln">${i===0?'▲ distils up':i===LADDER.length-1?'grounds down ▼':''}</span></div>`).join("")}</div>`;
+}
+function memRatify(){
+ const qual=78+((2-state.ratifyCount)*7);  // recovery-quality rises as you bless
+ const gate=qual>=90?["fully — burn down unattended","--whole"]:qual>=82?["the reversible — surface the rest","--gold"]:["nothing yet — recover more first","--fray"];
+ return `<div class="card" style="margin-bottom:15px"><div class="cb"><div class="nav-eyebrow" style="padding:0 0 9px">${reg("the keystone","recovery-quality gates autonomy")}</div>
+   <p style="font-size:12.5px;margin:0 0 11px">${reg("How well your intent can be recovered is what decides how much the system may do on its own. Every principle you bless raises it — so blessing memory is, literally, what earns the system its autonomy.","recall-quality (pattern-level, cross-time, structure-not-text) → the fabric's self-approval ceiling")}</p>
+   <div class="conf"><span class="micro">recovery</span><div class="meter"><i style="width:${qual}%;background:linear-gradient(90deg,var(--t-local),var(--gold))"></i></div><span style="font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12px">${qual}%</span></div>
+   <div class="conf" style="margin-top:10px"><span class="micro">may act</span><span class="gate" style="background:rgba(255,255,255,.05);color:var(${gate[1]})">${gate[0]}</span></div></div></div>`
+  +`<p class="micro" style="margin:-4px 0 14px">${reg("a principle is a proposition until you bless it — the system stages it, a stronger model checks it, but only you commit it to truth","candidate: staged → proposed → refined → committed · gated · the ratify floor")}</p>`
+ +CANDIDATES.map((c,i)=>`<div class="uitem" style="border-left-color:var(--violet)"><p class="ucl">${c.tim}</p><div class="rlane">${["staged","proposed","refined","committed"].map(st=>`<span class="${c.done?(st==='committed'?'on':''):(st===c.state?'on':'')}">${st}</span>`).join("")}</div><div class="uv"><span class="vt">basis:</span> ${c.basis}</div>${c.done?`<div class="micro" style="color:var(--whole);margin-top:8px">✓ ${reg("committed — it's a principle now","status=committed · by=tim")}</div>`:`<div class="bi-acts" style="margin-top:9px"><button class="act go" data-bless="${i}">${reg("✓ bless it","commit")}</button><button class="act">${reg("hear the cases","refine")}</button></div>`}</div>`).join("");
+}
+function memDrift(){return `<p class="micro" style="margin:-4px 0 14px">${reg("a long session forgets — compaction is a lossy redraw. These are decisions an earlier you made that the current self is weakly carrying. Recover the line, or spawn the self that still holds it.","recall(op=drift) · session-time-travel · the pre-drift self")}</p>`
+ +`<div class="card" style="margin-bottom:14px"><div class="cb"><div class="nav-eyebrow" style="padding:0 0 4px">${reg("scrub back through this session","navigate(time) · point-in-time")}</div>
+   <div class="scrubwrap"><span id="scrubnow">now</span><div class="scrub" id="scrub"><div class="track"></div><div class="fill" id="scrubfill"></div><div class="knob" id="scrubknob"></div></div><span>start</span></div>
+   <p class="micro" id="scrubread" style="margin:2px 0 0">${reg("drag to a moment — the violet ticks are compactions, where things got lost","◆ = compaction boundary; clone the self at any point")}</p></div></div>`
+ +DRIFTED.map(d=>`<div class="uitem" style="border-left-color:var(--gold)"><p class="ucl">${d.tim}</p><div class="uv"><span class="vt">${d.when}</span> — ${d.rec}</div><div class="bi-acts" style="margin-top:9px"><button class="act go">${reg("recover the line","→ exchange")}</button><button class="act">${reg("spawn the earlier self →","cc_clone @ pre-drift")}</button></div></div>`).join("");
+}
+function memProv(){return `<p class="micro" style="margin:-4px 0 14px">${reg("the crossings graph — what touched what, as fact (no model, no guess). What produced a thing, what referenced it; and everything a session touched.","file:// exchange:// session:// project:// · produced_by · references · precedes · contains")}</p>`
+ +`<div class="grid cols-2"><div class="card"><div class="ch"><span class="t">${reg("what touched it","whatTouchedFile()")}</span><span class="k">${CROSSINGS.file}</span></div><div class="cb" style="padding-top:5px">${CROSSINGS.touched.map(t=>`<div class="seam"><span class="st" style="background:rgba(95,198,214,.1);color:var(--signal)">${t.rel}</span><span>${reg(t.tim,t.adr)}</span></div>`).join("")}</div></div><div class="card"><div class="ch"><span class="t">${reg("what this session touched","whatDidSessionTouch()")}</span><span class="k">session://d5fc8ad1</span></div><div class="cb" style="padding-top:5px">${CROSSINGS.sessionTouched.map(t=>`<div class="seam"><span>${reg(t.tim,t.adr)}</span></div>`).join("")}</div></div></div>`;
+}
+function memAcross(){return `<p class="micro" style="margin:-4px 0 14px">${reg("the cross-project view — a concept doesn't live in one project, it recurs across all of them. Pool it, see every place it appears, and merge two projects that turn out to be the same thing.","cross-project omniscience · concepts pooled across all time")}</p>`
+ +ACROSS.map(a=>`<div class="card" style="margin-bottom:13px"><div class="ch"><span class="t">${a.concept}</span><span class="k">${a.inn.length} projects</span></div><div class="cb"><div style="display:flex;gap:9px;flex-wrap:wrap">${a.inn.map(([p,d])=>`<div style="border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:var(--panel-2)"><div style="font-family:var(--mono);font-size:10px;color:var(--signal)">${p}</div><div style="font-size:12px;margin-top:2px">${d}</div></div>`).join("")}</div></div></div>`).join("")
+  +`<div class="card prize stripe gold"><div class="cb" style="display:block"><p style="margin:0 0 9px">${reg("These projects keep surfacing the same concepts. Want me to map where they're really one thing — and where they diverge?","merge-projects: concept-overlap across wizard ∩ dragnet ∩ recollection")}</p><button class="act go">${reg("merge wizard + dragnet →","merge_projects()")}</button></div></div>`;
+}
+
+function initScrub(){const sc=$("#scrub");if(!sc)return;
+ const moments=[["now","the interface wave — building this console"],["compaction 7","◆ lost: the embedding-model decision"],["the recollection deep-read","you asked what it actually does"],["compaction 4","◆ weakly carried: render-not-judge"],["the foundation move","repointed the live binding"],["start","\"move the folders into migration\""]];
+ const bounds=[1,3];// indices that are compaction boundaries
+ sc.querySelectorAll(".tick").forEach(t=>t.remove());
+ moments.forEach((m,i)=>{const t=document.createElement("div");t.className="tick"+(bounds.includes(i)?" boundary":"");t.style.left=(i/(moments.length-1))*100+"%";sc.insertBefore(t,$("#scrubknob"));});
+ function set(frac){frac=Math.max(0,Math.min(1,frac));$("#scrubknob").style.left=frac*100+"%";$("#scrubfill").style.width=frac*100+"%";
+  const idx=Math.round(frac*(moments.length-1));$("#scrubnow").textContent=moments[idx][0];
+  const rd=$("#scrubread");if(rd)rd.innerHTML=`<span style="color:${bounds.includes(idx)?'var(--violet)':'var(--ink-dim)'}">${moments[idx][1]}</span> — ${reg("clone the self here →","cc_clone @ this point")}`;}
+ set(0);let drag=false;
+ const move=e=>{if(!drag)return;const r=sc.getBoundingClientRect();const cx=(e.touches?e.touches[0].clientX:e.clientX);set((cx-r.left)/r.width);};
+ sc.onpointerdown=e=>{drag=true;const r=sc.getBoundingClientRect();set((e.clientX-r.left)/r.width);};
+ addEventListener("pointermove",move);addEventListener("pointerup",()=>drag=false);
+ sc.ontouchmove=move;sc.ontouchstart=e=>{drag=true;move(e);};addEventListener("touchend",()=>drag=false);}
+
+/* ── RHM dock ── */
+const DOCKSAY={
+ map:["You're looking at your corpus as meaning. The closer two things sit, the more alike — in whichever lens you've picked.","Want me to find the inversions for you — things that look unrelated but share a principle?","Show me only the gold","Walk me to the wizard's core"],
+ theatre:["This is the catch-all running. Cheap models do the bulk reading at the bottom; your attention is the scarce thing at the top, so I keep almost everything off your plate.","If a read fails, I'll stop and show you the raw output — never theorise first.","What did the last run cost?","Show me a unit it formed"],
+ cast:["This is me thinking out loud — a cast of small roles, not one model. The dial sets how present I am.","Nothing here can act on your behalf — a role only listens and proposes.","Turn anticipation to hot","Who's in the cast right now?"],
+ memory:["This is your memory — everything you've said and decided, distilled into typed units. I read it before every task so I already know what you mean.","Two principles are staged for your blessing — I'll never commit one without you.","Show me every decision","What did I drop across the last compaction?"],
+ bench:["This is your tier. I've put up only what genuinely needs you, each with why I think it.","The principle is staged — I won't ever write one into truth without you.","Bless the wizard reconstruction","Why do you think 'voice' is generic?"],
+ loom:["Every system you have is one of these chains. Pick a verb, wire it, and I'll calibrate the model choice against your real cases.","Dragnet, recall, the drift gate — same shape, different wiring.","Run the drift chain","Swap this step to the cloud model"],
+ pulse:["Here's how whole the system is. Green burns down; a fray that the build claims fixed but the detector denies stays red.","The disagreement card is the valuable one — wired, but meaningless.","Send the fray to my Bench","What's the riskiest open seam?"],
+ loop:["This is me building on my own — a finding becomes a job, runs the gates, and only closes when the detector agrees the fix is real. I never call it done by myself.","If a build won't verify, I stop and hand it back rather than loop forever.","How far can you go without me?","Show me a job that halted"],
+ models:["This is what's loaded on the card. I schedule and evict so a run never runs out of memory — the thing the wizard had to do by hand.","The rerank service is down — recall still works, just unranked.","Start the reranker","Free up VRAM for a big run"],
+ fabric:["These are your other sessions — your Slack. I coordinate with them so you don't relay between windows.","recollection-design is idle with its oldest self still alive — we could wake it.","Wake the recollection session","What's dragnet-build doing?"]};
+function toggleDock(open){state.dock=open;$("#dock").classList.toggle("open",open);if(open)renderDock();}
+function renderDock(){const d=DOCKSAY[state.room],b=$("#dockbody");if(!b)return;
+ const moves=(NEXTMOVES[state.room]||[]).map(([lbl,room])=>`<span class="nextmove" data-dnm="${room}"><span class="arr">↳</span>${lbl}</span>`).join("");
+ b.innerHTML=`<p class="say">${d[0]}</p>`
+  +(moves?`<div class="micro" style="margin-bottom:6px">${reg("where I'd take you next","next moves")}</div><div class="nextmoves" style="margin-bottom:16px">${moves}</div>`:"")
+  +`<div class="micro" style="margin-bottom:8px">${reg("you could ask","suggested")}</div>`+d.slice(1).map(x=>`<div class="sugg">${x}</div>`).join("");
+ $$("[data-dnm]",b).forEach(el=>el.onclick=()=>{toggleDock(false);go(el.dataset.dnm);});
+ $$(".sugg",b).forEach(el=>el.onclick=()=>{el.style.borderColor="var(--gold)";el.insertAdjacentHTML("afterend",`<div class="rhm-bubble" style="margin:0 0 8px"><span class="o"></span><span>${reg("— on it. (in the real thing, I'd answer here and act if you confirm.)","→ would dispatch the verb + surface the result")}</span></div>`);});
+}
+$("#brandorb").onclick=()=>toggleDock(!state.dock);
+
+/* ── command palette ── */
+const VERBS=[
+ ["run_items","map one role over many units","Theatre","theatre"],["run_reduce","join across all of it","Theatre","theatre"],["run_cascade","fire a saved chain","Loom","loom"],
+ ["recall","ask memory by meaning","—","_recall"],["navigate","walk the crossings graph","Map","map"],["session_recall","recall this session","—","_recall"],
+ ["coherence","how whole am I","Pulse","pulse"],["marks","the reading layer","Bench","bench"],["decisions","what awaits you","Bench","bench"],
+ ["dials","set the presence mode","Cast","cast"],["models","the loadout","Models","models"],["sessions","the live mesh","Fabric","fabric"],
+ ["project","the radial store map","Map","map"],["save_cascade","save this chain","Loom","loom"],["ratify","bless a principle","Memory","memory"],
+ ["units","browse typed memory","Memory","memory"],["drift","recover what I dropped","Memory","memory"],["distill","raw → typed units","Theatre","theatre"]];
+function openPalette(){$("#scrim").classList.add("open");$("#palin").value="";$("#palin").focus();fillPalette("");}
+function fillPalette(q){const list=VERBS.filter(v=>(v[0]+v[1]).toLowerCase().includes(q.toLowerCase()));
+ $("#plist").innerHTML=list.map((v,i)=>`<div class="pcmd ${i===0?'sel':''}" data-go="${v[3]}"><span class="pv">${v[0]}()</span><span class="pd">${v[1]}</span><span class="pg">${v[2]}</span></div>`).join("")||`<div class="pcmd"><span class="pd">no verb matches</span></div>`;
+ $$(".pcmd").forEach(el=>el.onclick=()=>runPalette(el.dataset.go));}
+function runPalette(g){$("#scrim").classList.remove("open");if(!g)return;if(g==="_recall"){$("#recall").focus();return;}go(g);}
+$("#palin").addEventListener("input",e=>fillPalette(e.target.value));
+$("#palin").addEventListener("keydown",e=>{if(e.key==="Enter"){const sel=$(".pcmd.sel")||$(".pcmd");if(sel)runPalette(sel.dataset.go);}if(e.key==="Escape")$("#scrim").classList.remove("open");});
+$("#scrim").onclick=e=>{if(e.target.id==="scrim")$("#scrim").classList.remove("open");};
+addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPalette();}});
+
+/* ── recall ── */
+function renderRecallOps(){$("#recallops").innerHTML=RECALL_OPS.map(([op,d])=>`<button class="${state.recallOp===op?'on':''}" data-op="${op}" title="${d}">${op}</button>`).join("");
+ $$("#recallops button").forEach(b=>b.onclick=()=>{state.recallOp=b.dataset.op;renderRecallOps();if($("#recall").value.trim().length>=2)doRecall();});}
+const ri=()=>$("#recall"),rr=()=>$("#recallres");
+function doRecall(){const res=RECALL_RES[state.recallOp]||RECALL_RES.find;rr().classList.add("open");
+ rr().innerHTML=res.map(r=>`<div class="rr" data-node="${r.node}"><span class="sc ${r.text?'text':''}">${r.sc}</span>${r.tim}</div>`).join("");
+ $$(".rr",rr()).forEach(el=>el.onclick=()=>{go("map");rr().classList.remove("open");ri().value="";
+  setTimeout(()=>{const n=M.nodes&&M.nodes.find(x=>x.id===el.dataset.node);if(n){state.lens="principle";retarget();openDrill(NODES_BY[el.dataset.node]);const cw=$(".canvas-wrap");if(cw){cw.classList.add("flash");setTimeout(()=>cw.classList.remove("flash"),1400);}}},90);});}
+$("#recall").addEventListener("input",function(){if(this.value.trim().length<2){rr().classList.remove("open");return;}doRecall();});
+$("#recall").addEventListener("keydown",e=>{if(e.key==="Enter"&&$(".rr"))$(".rr").click();});
+$("#scope").onclick=function(){const o=["everything","self","this project","the board"];const i=(o.indexOf(state.scope)+1)%o.length;state.scope=o[i];this.textContent="scope · "+state.scope;};
+
+/* ── helpers ── */
+function getCSS(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function fitCanvas(cv){const w=cv.parentElement.clientWidth||cv.clientWidth;let h=cv.height;if(innerWidth<760)h=Math.min(h,340);cv.width=w*devicePixelRatio;cv.height=h*devicePixelRatio;cv.style.width="100%";cv.style.height=h+"px";}
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function renderVram(){const segs=[["--t-local",9.1],["--t-embed",4.2]];const used=13.3;
+ $("#vram").innerHTML=`<span>VRAM</span><span class="bar">${segs.map(([c,v])=>`<i class="seg" style="width:${v/16*100}%;background:var(${c})"></i>`).join("")}</span><span style="font-variant-numeric:tabular-nums">${used}/16G</span>`;}
+function syncGlobal(){const o=state.openFindings;$("#gtext").textContent=o===0?"whole":`${o} open`;
+ $("#gdot").style.background=o===0?"var(--whole)":"var(--gold)";$("#gdot").style.boxShadow=`0 0 8px ${o===0?'var(--whole)':'var(--gold)'}`;}
+addEventListener("resize",()=>{if(["map","theatre","pulse","loom"].includes(state.room)){killRafs();renderRoom();}});
+
+/* mobile header buttons */
+$("#mtorb").onclick=()=>toggleDock(!state.dock);
+$("#mtmenu").onclick=openSheet;
+$("#mtsearch").onclick=()=>$("#recall").focus();
+
+/* ════ WAVE 3 — connective tissue ════ */
+/* the address trace: one address, seen across every surface that touches it (one brain) */
+const ADDR_TRACE={
+ "/api/run-stats":[["pulse","a frayed seam","fray"],["bench","awaiting your eye","gold"],["map","wired ∧ meaningless","map"]],
+ "unit://render-not-judge":[["memory","a ratified principle","whole"],["map","gold ·92, the wizard core","map"],["cast","model_of_tim reasons from it","violet"]],
+ "exchange://12c59b4e/114":[["memory","the embedding-model decision","signal"],["map","recoverable across drift","map"],["bench","—","gold"]],
+ "recollection://recall":[["memory","the outer memory layer","signal"],["fabric","recollection-design session","gold"],["models","embeds via :8007","whole"]],
+ "orienteering://INDEX":[["pulse","38/38 paths whole","whole"],["map","the terrain ledger","map"],["loom","the drift chain surfaces here","signal"]]};
+const TRACE_ICO={pulse:I.pulse,bench:I.bench,map:I.map,cast:I.cast,memory:I.memory,fabric:I.fabric,models:I.models,loom:I.loom,theatre:I.theatre};
+function achip(addr,label){return `<span class="achip" data-trace="${addr}">${label||addr}</span>`;}
+function wireChips(root=document){$$(".achip",root).forEach(c=>c.onclick=e=>{e.stopPropagation();openTrace(c.dataset.trace,c);});}
+function openTrace(addr,anchor){const t=$("#trace");const rows=ADDR_TRACE[addr]||[["map","seen on the map","map"]];
+ t.innerHTML=`<div class="th">⌖ ${addr}<span style="margin-left:auto;color:var(--ink-faint);cursor:pointer" onclick="$('#trace').classList.remove('open')">✕</span></div>`
+  +rows.map(([room,desc,col])=>`<div class="tr" data-go="${room}"><span class="ti" style="color:var(--${col==='map'?'signal':col})">${TRACE_ICO[room]}</span><span>${desc}</span><span class="tg">${ROOMS.find(r=>r.id===room).nm.replace('The ','')}</span></div>`).join("");
+ const r=anchor.getBoundingClientRect();t.style.left=Math.min(r.left,innerWidth-316)+"px";t.style.top=Math.min(r.bottom+6,innerHeight-220)+"px";
+ if(innerWidth<760){t.style.left="12px";t.style.right="12px";t.style.width="auto";}
+ t.classList.add("open");
+ $$(".tr",t).forEach(el=>el.onclick=()=>{t.classList.remove("open");go(el.dataset.go);toast(reg("followed the thread to ","traced → ")+ROOMS.find(x=>x.id===el.dataset.go).nm);});}
+document.addEventListener("click",e=>{const t=$("#trace");if(t.classList.contains("open")&&!t.contains(e.target)&&!e.target.classList.contains("achip"))t.classList.remove("open");});
+
+/* the live ticker — the fabric breathing */
+const TICKS=[["dragnet-build","extract-once pass done · 52k chunks","12m"],["company-build","operable lane green · 2 needs-tim","8m"],["recollection-design","units recorded, not embedded yet","1h"],["coherence","ledger re-scanned · 0 new frays","3m"],["mockup-build","12 views rendered · 4 quality-passed","20m"],["you (lead)","built the drift detector · verified","now"]];
+let tickI=0,tickTimer=null;
+function startTicker(el){if(!el)return;function step(){const[src,msg,age]=TICKS[tickI%TICKS.length];el.innerHTML=`<span class="lv"></span><span class="tk"><span class="src">${src}</span> · ${msg}</span><span class="age">${age}</span>`;tickI++;}step();clearInterval(tickTimer);if(!reduce)tickTimer=setInterval(step,3800);}
+
+/* toast + undo */
+let toastTimer=null;
+function toast(msg,undo){const t=$("#toast");t.innerHTML=`<span class="ti2"></span><span>${msg}</span>${undo?`<span class="un" id="undobtn">undo</span>`:""}`;t.classList.add("show");
+ clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),undo?5000:2600);
+ if(undo){$("#undobtn").onclick=()=>{undo();t.classList.remove("show");};}}
+
+/* mobile header buttons */
+$("#mtorb").onclick=()=>toggleDock(!state.dock);
+$("#mtmenu").onclick=openSheet;
+$("#mtsearch").onclick=()=>$("#recall").focus();
+
+renderNav();renderRecallOps();renderVram();renderMobileNav();renderRoom();updateMobileChrome();
+</script>

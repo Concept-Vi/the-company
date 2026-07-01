@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/AREA-4-autonomous-loop.md",
+  "model": "opus",
+  "what_it_does": "A research-findings markdown companion analyzing the existing decision->implementation wire (runtime/implement.py + suite.py) and answering whether a coherence finding-model could become an autonomous build loop's worklist; it concludes the wire's back half is built and proven but the front half (finding->intent origination, priority, burn-down governance) does not exist, and that convergence is defensible but not provable.",
+  "observations": [
+    "States its area in the header and explicitly declines to re-describe the well-documented wire, spending words on the delta and the convergence claim.",
+    "Uses marking convention [OBS] observed file:line, [INF] inferred, [IDEA] net-new proposal.",
+    "Key structural fact: drive_dispatchable reads operator resolve verdicts (implement.py:512-513 FIFO by seq), not findings; detectors are never consumed by the loop.",
+    "Reports grep findings: no detector auto-originates a build-intent (only operator doors at bridge.py:1021 and surface_intent_at); no priority field exists anywhere.",
+    "Enumerates the 10-step gate stack dispatch_decision must clear (three-part bind, build-intent discriminator, exactly-once claim, posture gate, make-live-and-refresh, verify-by-use, FORM gate, scope-diff, git checkpoint, guarded close).",
+    "Identifies surface_intent_at (suite.py:6740) as the ~80%-built template for finding->intent origination.",
+    "Names three concrete thrash/non-termination vectors: infinite-retry on unfixable findings (no attempt counter), re-mint duplication (exactly-once keyed on seq not finding), detector-flap.",
+    "Argues detectors are gameable: a build can flip an orphan to 'wired' by adding a trivial test that mentions the route string, passing every existing gate (verification != resolution).",
+    "Frames the consent floor (resolve_surfaced operator-only, off the MCP face) as blocking autonomous burn-down unless a standing pre-authorization exists, which it does not."
+  ],
+  "standouts": [
+    "The verification-is-not-resolution finding: the gate stack proves the build is sound but never re-runs the detector that raised the finding.",
+    "The detector-gaming attack (string-stuff a test -> orphan reads wired) that passes all current gates.",
+    "Reframing 'always completes' to 'burns down or halts loud' with a windowed burn-down governor, because provability requires empirical fix-monotonicity."
+  ],
+  "conventions": [
+    "Holds the repo evidence discipline ([OBS]/[INF]/[IDEA]) and the no-silent-green / no-false-completion stance.",
+    "Reuses existing verbs in every proposal (surface_intent_at, _drive_dispatchable_bg, governance.POLICY) rather than new mechanisms.",
+    "Explicitly downgrades an absolute claim to an honest instrumented one."
+  ],
+  "concerns": [
+    "Some claims are [INF] from reading rather than executed (e.g. the gameability path is reasoned, not demonstrated by a run).",
+    "Several dependencies (typed findings, accurate graph) are deferred to other areas, so the loop design is contingent on unbuilt substrate."
+  ],
+  "notes": "The wire's back half (dispatch->verify->commit->close, exactly-once, revertible) is excellent; the front half (originator, priority, retry-cap, closure-check, burn-down governor, standing pre-auth) is the net-new work, and convergence can only be 'burns down or halts loud'.",
+  "questions": [
+    "What is the ANCHOR.md whose sections (5, 7.1, 7.4) this file repeatedly engages and partly contradicts?",
+    "What are Areas B/C that own the typed-finding substrate and accurate connection graph this loop depends on?",
+    "Has the standing pre-authorization grant (the one consequential design call) been decided by the operator?"
+  ],
+  "purpose_vs_actual": "Matches: the header's question (how does a finding-model become the loop's worklist, and does always-completes hold) is answered directly, with the front-half-missing and convergence-not-provable conclusions.",
+  "apparent_themes": [
+    "Burns-down-or-halts-loud over false 'always completes'",
+    "Verification of build soundness != resolution of the finding",
+    "Consent floor as structural, autonomy requires explicit scoped grant",
+    "Reuse the proven back half; build the small front half"
+  ],
+  "intention_signals": "Trying to honestly assess the autonomous loop: credit the proven wire, expose the missing originator/governor/closure-check, surface the detector-gaming and infinite-retry risks, and downgrade the convergence promise to a defensible instrumented claim.",
+  "novelty": "The detector-gaming-passes-all-gates demonstration and the per-rule-readiness-style burn-down governor that converts an unprovable claim into a fail-loud non-convergence detector.",
+  "contribution": "Contributes the back-half/front-half decomposition, the surface_intent_at originator template, the three thrash vectors with fixes (retry-cap, idempotent-per-finding, debounce), the closure-check-as-detector-rerun, and the standing-pre-authorization consent analysis.",
+  "summary_for_embedding": "A coherence research companion analyzing runtime/implement.py's wire, finding its back half proven but the finding-driven front half (originator, priority, burn-down governor, retry-cap, closure-check) absent and convergence unprovable.",
+  "intention_for_embedding": "To determine whether the coherence model can drive an autonomous build loop and whether the loop provably completes, honestly bounding the answer."
+}

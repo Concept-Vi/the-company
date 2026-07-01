@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "components/component-library.html",
+  "model": "opus",
+  "what_it_does": "A static HTML showcase/catalog page that renders, in one document, every control of the design system using its `cv-*` classes: buttons (variants/sizes), cards, form fields, badges/pills/chips/tags, a comparison table, a dark-ground theme section, tabs/segmented/switch/avatar/tooltip, and a stepper/modal. It links `../styles.css` and uses design tokens (`var(--…)`) throughout for its own page chrome.",
+  "observations": [
+    "Opens with a `@dsCard` HTML comment carrying gallery metadata (group, name, subtitle, viewport 1280x1640) — consumed by an external gallery/catalog tool.",
+    "Page-chrome styles in a `<style>` block use tokens (`--zone-ground`, `--ink`, `--font-display`, `--accent-bronze`, `--accent-gold`, `--r-lg`, etc.), with a couple of literal fallbacks (`var(--weight-bold,700)`, `var(--bg-dark,#1F1A12)`).",
+    "Demonstrates button variants matching the documented set: primary, ink, outline+pill, soft, ghost, comm, plus disabled.",
+    "Includes a `data-theme=\"dark\"` wrapper labeled 'theme-invariant' showing controls on a dark ground.",
+    "Content is product-grounded real-estate/architecture copy ('Virtual Tour', 'Oakman Residences', '70+ Virtual Tours delivered', '$430B+ cost of rework', stages Design→Construction→Marketing).",
+    "Card header markup repeats the same inline `style=\"flex-direction:column;align-items:flex-start;gap:2px\"` that Card.jsx emits.",
+    "Shows many controls not covered by the four component files in this batch (fields, pills, chips, tags, table, tabs, segmented, switch, avatar, tooltip, stepper, modal) — i.e. the system is larger than these primitives.",
+    "Accessibility attributes present in places (aria-label, role=\"switch\", aria-checked, aria-invalid)."
+  ],
+  "standouts": [
+    "A single self-contained catalog of the whole control set on one page, including a deliberate dark-ground 'theme-invariant' proof section.",
+    "The `@dsCard` metadata comment integrates this page into an external gallery system."
+  ],
+  "conventions": [
+    "Uses tokens (`var(--…)`) for page chrome rather than raw values, consistent with the system's token discipline.",
+    "Uses the `cv-*` BEM classes the components emit, so the showcase mirrors actual component output.",
+    "Hand-written HTML duplicates structure the components generate (e.g. the card header), a catalog/demo convention but a potential drift source."
+  ],
+  "concerns": [
+    "Several hardcoded inline styles and literal fallback values (e.g. `#1F1A12`, repeated inline header flex styles, fixed px/max-width inline) sit outside the token system; given the design folder's hardcoded-literal check, these would register as hygiene flags.",
+    "Hand-authored markup mirrors component output (card header inline style), so component changes won't propagate here — demo drift risk."
+  ],
+  "notes": "A one-page static gallery of the entire cv-* control library (buttons through modal), token-styled and gallery-tagged, used to view all controls and prove theme-invariance.",
+  "questions": [
+    "Is this page generated/kept in sync with the components, or hand-maintained (and thus at risk of drifting from the real component output)?",
+    "What tool consumes the `@dsCard` comment and the `viewport=\"1280x1640\"` hint?"
+  ],
+  "purpose_vs_actual": "Match — the `@dsCard` subtitle and `<h1>`/intro state it is the component/control library showcase, and the body delivers exactly that catalog.",
+  "apparent_themes": [
+    "Token-pure, theme-aware presentation",
+    "Component catalog as a viewable artifact",
+    "Product-grounded demo content (no generic lorem)",
+    "Theme-invariance as a demonstrable property"
+  ],
+  "intention_signals": "Aims to give a single eyeball-able surface of the entire control system rendered through real tokens and classes, so a reviewer can see every control, its variants, and confirm it holds on a dark theme — turning the design system onto its own face for recognition.",
+  "novelty": "Pairs a gallery-metadata comment with a hand-built but token-driven full catalog including an explicit theme-invariance section, and grounds every demo in real product copy.",
+  "contribution": "Contributes the visual catalog/showcase of the full cv-* control set — the human-recognition surface for the whole component library, including the broader controls (fields, table, tabs, switch, stepper, modal) beyond the four primitive files, plus gallery integration metadata.",
+  "summary_for_embedding": "A static, token-styled HTML showcase page cataloging the entire cv-* control library (buttons, cards, fields, badges, pills, chips, table, tabs, switch, stepper, modal) with a dark-theme section and gallery metadata.",
+  "intention_for_embedding": "To provide a single viewable gallery of every design-system control rendered through real tokens, proving theme-invariance and serving human visual review."
+}

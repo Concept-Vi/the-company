@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/Explore.jsx",
+  "model": "opus",
+  "what_it_does": "Defines window.AcExplore, the React UI for the Explore surface. It renders a live product surface (Canvas — a real-estate listing card whose parts are selectable hotspots: card/button/price/badge/stat), lets the user select an element directly on canvas, then calls CV_EXPLORE.variations to generate distinct style directions, shows them as a strip of live-rendered chips with like/dislike voting and a focus, applies the focused recipe to the selected element in place, surfaces a taste profile + iteration buttons (More like these / Bolder / Quieter / Refine this), and promotes the keeper into the system via CV_EXPLORE.promote. It also shows a persisted gallery of previously promoted components. Includes a renderEl helper that paints a recipe onto each element kind.",
+  "observations": [
+    "Header states 'Selection-on-canvas is the core gesture' — pick an element on the live surface, restyle it right there, steer by taste, then promote.",
+    "All exploration logic is delegated to window.CV_EXPLORE (variations/styleFor/promote/tasteProfile/gallery/onGallery/forget); this file is the view layer.",
+    "Canvas renders a concrete listing card (Property Wizard / 14 Eclipse Boulevard / $1.84m / 360 tour / 23.8k views) with each region as an ex3-hot hotspot that calls onSelect and stops propagation so nested clicks target the right element.",
+    "The focused recipe's styleFor() output is applied to the selected element on the canvas (appliedStyle), so the change previews in context.",
+    "Voting: like adds to liked and removes from disliked and sets focus; dislike adds to disliked and removes from liked; taste profile recomputed from liked via useMemo.",
+    "Iteration buttons pass intent phrases ('lean into the liked directions and refine', 'go bolder, diverge hard', 'quieter, restrained, minimal', 'subtle variations around this exact direction' with a seed) into generate().",
+    "Promote sets a 'in your system' done state noting whether it was staged for review and pointing to Under the hood › Registries.",
+    "Gallery is reactive via onGallery + a force reducer; items render their stored recipe live and can be forgotten.",
+    "Errors from generation route to window.dsaToast; busy state drives 'Exploring…/Sketching…' affordances.",
+    "Uses window.AcKit.StateDot and CvIcon/ViShape shared primitives; reuses .ex2-* classes alongside .ex3-* (the two Explore styling generations coexist)."
+  ],
+  "standouts": [
+    "Selection-on-canvas: the user restyles a real fragment of the actual product surface in place, not an abstract swatch — the focused variant applies live to the clicked element.",
+    "The full divergent→steer→converge→promote loop is expressed as direct manipulation, with the promoted result landing back in the system registries.",
+    "Taste profile + a convergence bar make the steering visible and immediate."
+  ],
+  "conventions": [
+    "Pure view over the CV_EXPLORE engine — generation/promotion/persistence live in the engine, matching the project's separation (recipes are data, markup renders them).",
+    "Shared primitives (AcKit, CvIcon, ViShape) and the prefixed class namespaces (ex3-/ex2-).",
+    "window.AcExplore global registration consumed by Atlas.jsx's AcBody."
+  ],
+  "concerns": [
+    "Reuses both .ex2-* and .ex3-* class families in one component; from this file alone it's unclear which Explore generation is canonical, a minor coherence smell.",
+    "Canvas default styles for some hotspots are empty objects ({}), so an unselected price/badge/stat relies entirely on CSS classes — fine, but the def map's intent is only partly populated."
+  ],
+  "notes": "The Explore view — restyle a real element directly on a live listing card, vote to steer, watch the taste profile converge, then promote the keeper into the system; all heavy lifting is in CV_EXPLORE (explore-engine.js).",
+  "questions": [
+    "How does on-canvas selection coordinate with Inspect mode (⌘E) referenced in the hint — does CV_PICK/CV_MODE let the user select arbitrary on-screen elements beyond the demo card?",
+    "Why do both .ex2-* and .ex3-* style families appear — is .ex2 (gallery-of-variants) deprecated in favor of .ex3 (selection-on-canvas)?"
+  ],
+  "purpose_vs_actual": "Match — the header describes select-on-canvas → generate directions → like/dislike → iterate → promote, and the component implements exactly that flow over the CV_EXPLORE engine.",
+  "apparent_themes": [
+    "Direct manipulation of the real product surface",
+    "Divergent generation steered by taste into a single-sourced component",
+    "Make-it-real promotion back into the registries",
+    "View as a thin projection over an engine"
+  ],
+  "intention_signals": "Trying to make restyling feel like pointing at the actual product and saying 'make this look different', then converging by taste to a keeper that becomes a real component — turning an open creative act into a concrete addition to the system.",
+  "novelty": "Restyling by selecting parts of a live product card in place and previewing AI-generated directions directly on the clicked element, with the chosen one promotable into the architecture.",
+  "contribution": "Contributes the Explore interface: the selectable on-canvas product surface, the variant strip with voting/focus, the taste/iteration controls, the promote action, and the promoted-components gallery view — the human-facing half of the explore-to-component loop.",
+  "summary_for_embedding": "window.AcExplore — the React Explore surface where a user selects a part of a live product listing card, generates distinct AI style directions via CV_EXPLORE, votes/steers them with a visible taste profile, applies the focused recipe in place, and promotes the keeper into the system, alongside a persisted gallery of promoted components.",
+  "intention_for_embedding": "To let a person restyle a real element of the product by direct selection and converge by taste to a keeper that becomes a real component in the architecture."
+}

@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/landing-mockups.md",
+  "model": "opus",
+  "what_it_does": "Records the analysis of the 'landing-mockups' source folder (3 tall fixed-width web pages, 1223px wide) as the web-surface stress test of the design model, concluding that the containment-tree/zoning/atom grammar transfers to a scrolling web surface with no new grammar, only web-chrome atoms.",
+  "observations": [
+    "Header gives source provenance: ingest/landing-mockups/, 3 pages, dims 1223 x {4630,6967,7334}, fixed-width scrolling web surface, marked '4th folder'.",
+    "Verdict: the model transfers intact — a slide becomes a 'section band', the deck's vertical sequence becomes scroll, with the same Section/Zone/Group/Atom subtree inside each band.",
+    "Maps deck concepts to web equivalents: Slide->section band, Sequence->scroll, Zoning->alternating band backgrounds plus a dark footer band, Atoms transfer 1:1.",
+    "Lists genuinely-new web additions: persistent top nav + segmented audience toggle (Architects|Developers gold pills), hero band with down-chevron scroll cue, content-LOD placeholder/wireframe boxes, pricing comparison table, repeated CTA bands, dark footer.",
+    "Reads the grey placeholder boxes ('Guided tour here would be ideal') as direct evidence of the template-with-typed-slots model — the page authored at a structural LOD before assets land.",
+    "Confirms across 4 folders (marked four checkmarks): gold ramp, near-white zoning ladder, frame/footer signature, triangle bullets, thin icons, soft panels, narrative arc, negative space.",
+    "Extends AXES.md: surface axis now spans paged (slide) <-> scrolling (web); 'Slide' node generalises to a 'band/frame' that is paged or stacked; audience-variant unified as one {template + audience param} mechanism across surfaces.",
+    "Explicitly states 'No contradictions' — the web surface needed zero new grammar."
+  ],
+  "standouts": [
+    "The reframe of scroll as just the Deck->Slide level re-rendered as stacked bands: motion=temporal traversal becomes scroll=spatial traversal of the same tree.",
+    "Audience-variant unified across three forms: variant slides, variant pages, and a live toggle — all the same {template + audience param}.",
+    "Treating the wireframe placeholder boxes as evidence of a typed-slot LOD model rather than as incomplete artwork."
+  ],
+  "conventions": [
+    "evidence-diff discipline: marks each finding as confirms / extends (pencil) / new (plus) / contradicts (warning).",
+    "axis=f(content,position): surface is a generative axis (paged<->scrolling) not a separate design.",
+    "containment-tree as the invariant carried across surfaces.",
+    "single-mechanism reuse: one audience-variant mechanism spans slides, pages, and toggles."
+  ],
+  "concerns": [
+    "Findings rest on 3 fixed-width (1223px) pages; the doc itself notes width-fixed responsive, so mobile-reflow claims are inferred from the deck rules rather than observed on a narrow web viewport.",
+    "Multiple cross-folder confidence claims ('Confirmed across 4 folders') are summary assertions whose underlying per-folder evidence lives in other analysis docs, not here."
+  ],
+  "notes": "The folder analysis where the deck DNA is proven to survive a scrolling web page intact — slide becomes band, sequence becomes scroll, only web-chrome atoms are new.",
+  "questions": [
+    "How do the fixed-width 1223px pages actually reflow on a narrow mobile viewport — is that verified anywhere, or only predicted from the deck's responsive rules?",
+    "Is the 'content-LOD placeholder box' an intentional authored state in the source, or the analyst's interpretation of unfinished mockups?"
+  ],
+  "purpose_vs_actual": "Match — it is framed as the web-surface stress test and it executes that test, mapping each deck primitive to its web form and logging only additive web-chrome atoms.",
+  "apparent_themes": [
+    "axis=f(content,position)",
+    "surface-axis-paged-to-scrolling",
+    "containment-tree-invariant",
+    "single-mechanism-reuse",
+    "template-with-typed-slots",
+    "evidence-grounded-analysis"
+  ],
+  "intention_signals": "Inferred: the analysis is trying to prove the generative model is surface-agnostic — that a web landing page is not a different design language but the same containment tree traversed by scroll — so that the system can emit web and decks from one source, and to log only the truly new web-chrome atoms rather than reinvent grammar.",
+  "novelty": "Frames a scrolling web page as a re-rendering of a paged deck's top level (slide->band, page->scroll) and treats wireframe placeholders as proof of a typed-slot LOD model — an unusual structural reading of marketing mockups.",
+  "contribution": "Contributes the surface-axis extension (paged<->scrolling, Slide generalised to band/frame), the unification of audience-variant across slides/pages/toggle, and a logged set of web-chrome atoms (persistent nav, segmented toggle, comparison-pricing table, repeated CTA band, scroll-cue, content-LOD placeholder) that a fused system would keep.",
+  "summary_for_embedding": "Analysis of three tall fixed-width web landing mockups as the web-surface stress test, finding the deck's containment tree, zoning ladder, gold ramp, atoms and narrative arc transfer to a scrolling page (slide->band, sequence->scroll) with only additive web-chrome atoms.",
+  "intention_for_embedding": "Intended to prove the generative design model is surface-agnostic by mapping a scrolling web page onto the same containment tree as a paged deck, extending the surface axis to span paged and scrolling and unifying audience-variant across slides, pages and live toggles."
+}

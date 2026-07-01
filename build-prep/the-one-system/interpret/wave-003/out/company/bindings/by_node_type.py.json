@@ -1,0 +1,40 @@
+{
+  "project": "company",
+  "path": "bindings/by_node_type.py",
+  "model": "opus",
+  "what_it_does": "Declares a single BINDING dict named 'by_node_type' that configures a radial/wheel visualization so that its sectors are every node type in the node registry and the curved chords are the directional typed edges between those types (one type's output feeds another's input). angle_from='node-types', radius_from='time' (called a placeholder), order_by='edge', whole_set=True. Includes a 'meta' block with human-facing name/is/fills/why copy.",
+  "observations": [
+    "BINDING id 'by_node_type', label 'Connections — how things flow into each other'.",
+    "whole_set=True means sectors come from the registry STRUCTURE, not only rows present in event data.",
+    "Header comment quotes Tim: 'the only edges that get typed are the directional ones'.",
+    "States cycles among edges render AS cycles (nonsequential is valid).",
+    "radius_from='time' is explicitly labeled a placeholder axis since this view is about edges not radius.",
+    "Claims 'Registry-is-truth': dropping a node type into nodes/ makes it appear with no code edit here.",
+    "meta copy is marked TENTATIVE for Tim/DNA to ratify, avoids machine names."
+  ],
+  "standouts": [
+    "Treats the node registry as a directed typed-edge graph rendered as directional chords, including cycles.",
+    "Explicit registry-driven extensibility claim (new node type = new sector automatically)."
+  ],
+  "conventions": [
+    "Follows the shared bindings pattern: a BINDING dict with id/label/angle_from/radius_from/order_by plus a meta block (name/is/fills/why).",
+    "meta copy uses operator-facing language and is flagged TENTATIVE — consistent with sibling binding files."
+  ],
+  "concerns": [],
+  "notes": "A binding that renders the node-type registry as a directed type-flow chord wheel, sectors from registry structure not data.",
+  "questions": [
+    "Where are the directional typed edges actually sourced/computed (this file only declares the config, not the edge data)?",
+    "What does order_by='edge' resolve to when types have no sequencing edge?"
+  ],
+  "purpose_vs_actual": "Match — header comment and meta both describe a connections/type-flow view, and the BINDING fields encode exactly that (node-type sectors, edge ordering, whole-set).",
+  "apparent_themes": [
+    "Registry-as-truth / no-code-edit extensibility",
+    "Typed directional relationships as first-class content",
+    "Separation of human meaning (meta) from machine config"
+  ],
+  "intention_signals": "Trying to surface the Company's node registry as a legible map of how kinds of things flow into one another, with direction and cycles preserved, driven entirely by the registry so it stays current as nodes are added.",
+  "novelty": "Framing a visualization axis ('angle_from=node-types', 'order_by=edge') as directional typed chords with cycles allowed, while explicitly demoting radius to a placeholder.",
+  "contribution": "Contributes the connections/type-flow binding: the configuration that turns the node-type registry into a directional chord view ordered by typed edges, plus its operator-facing meaning copy.",
+  "summary_for_embedding": "A binding-config Python file declaring the 'by_node_type' radial view whose sectors are all node-registry types and whose chords are directional typed edges between them, with operator-facing meta copy.",
+  "intention_for_embedding": "To let an operator see how the kinds of things in the Company flow into one another, as a registry-driven directional connections map."
+}

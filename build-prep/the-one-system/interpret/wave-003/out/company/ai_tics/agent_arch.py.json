@@ -1,0 +1,29 @@
+{
+  "project": "company",
+  "path": "ai_tics/agent_arch.py",
+  "model": "opus",
+  "what_it_does": "Declares one AI-tic catalogue entry: a module-level AI_TIC dict with id 'agent_arch', label 'agent-arch', a markers list of phrase cues, and a desc — capturing the generic-AI tell of defaulting to agent-architecture (tools+autonomy+loop) when the work is actually content/dataflow.",
+  "observations": [
+    "Single module-level constant AI_TIC over the schema {id, label, markers, desc}.",
+    "markers list: 'the agent decides', 'autonomous agent', 'agent loop', 'tool-calling agent', 'the agent will then', 'agentic workflow'.",
+    "Docstring frames it as a named Tim distinction: agentic is supported but NEVER the default/assumption; cross-references runtime/ai_tics.py and ai_tics/AGENTS.md.",
+    "id 'agent_arch' equals the file stem, satisfying the registry's id==stem requirement."
+  ],
+  "standouts": [
+    "Encodes a content/dataflow-vs-agent-architecture distinction (resolve->work->persist->trigger; models = slot-values) as a matchable fingerprint."
+  ],
+  "conventions": [
+    "Follows the file-discovered registry pattern: add-a-row = add-a-FILE, one AI_TIC dict per file (mirrors roles/skills/projections/node-types).",
+    "Docstring cites the seam (runtime/ai_tics.py) and the folder constitution, consistent with the repo's self-describing style."
+  ],
+  "concerns": [],
+  "notes": "A seed AI-tic file declaring the 'defaulting to agent-architecture' generic-AI tell as a markers-based catalogue entry for the fingerprint pass.",
+  "questions": [],
+  "purpose_vs_actual": "Matches — the docstring says it declares the agent-arch AI-tic and the AI_TIC dict does exactly that.",
+  "apparent_themes": ["AI-tic registry", "content/dataflow over agent-architecture", "named Tim distinctions as data", "fingerprint markers"],
+  "intention_signals": "Turn Tim's named distinction (not-agent-architecture-by-default) into a discoverable, matchable catalogue entry the fingerprint pass can subtract.",
+  "novelty": "Captures the agent-architecture-by-default tell as a first-class data entry rather than a code branch.",
+  "contribution": "Contributes the 'agent_arch' tic definition and its specific marker phrases to the AI-tic catalogue.",
+  "summary_for_embedding": "A file-discovered AI-tic entry (AI_TIC dict) named agent_arch with marker phrases for the generic-AI tell of defaulting to agent-architecture over content/dataflow.",
+  "intention_for_embedding": "To register Tim's not-agent-architecture-by-default distinction as a fingerprint-matchable catalogue entry."
+}

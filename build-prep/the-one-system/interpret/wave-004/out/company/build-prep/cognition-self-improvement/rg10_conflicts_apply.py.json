@@ -1,0 +1,53 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10_conflicts_apply.py",
+  "model": "opus",
+  "what_it_does": "A Python script that applies conflict resolutions for the RG10 registry-generation run (Decision 2). It carries a hardcoded JUDGMENTS table of the lead's investigated decisions for the 12 needs-eyes address conflicts (each: winning maps_to_feature, grounding tag, optional multi-roles list, and a why-reason), while the 21 heuristic-clean drafts apply as drafted. It builds dossier entries from the winning variant, partitions out curated-overlap entries (held for their own pass), and writes the safe entries back through the gated registry_writeback path, returning a counts summary.",
+  "observations": [
+    "Docstring cites Tim's delegation (2026-06-10) and his MULTI-JOB insight that elements doing multiple jobs depending on context must be accounted for",
+    "JUDGMENTS dict maps 12 ui:// addresses to (feature, grounding, multi_roles, why) tuples with per-decision reasoning",
+    "Two entries are flagged genuine MULTI-JOB: ui://chat/walk (WALK-present + roles [WALK-present, WALK-session]) and ui://toolbar/layers (CAN-layers + roles [CAN-layers, NODE-layer, SM-revert]) — a primary feature plus an additive 'roles' field naming each contextual face",
+    "Several judgments overturn the draft pick with cited reality (e.g. ui://canvas/portal picks NODE-portal 'built' because nodes/portal.py exists, 'the draft's proposed pick lost to reality')",
+    "Some judgments downgrade to non-conflicts (variants agree) and one (ui://chat/utterance) demotes to 'proposed' because RHM-utterance is not a real inventory id",
+    "os.chdir + two sys.path.insert calls (repo root and design/_system) at module top",
+    "Imports registry_writeback as wb; reads .build/rg10/reconciled.json, conflict-drafts.json, candidates.json, addresses.json, and per-mockup rg10-batch artifacts",
+    "For each conflict entry it selects the winning variant's full dossier, sets maps_to_feature/grounding, adds the additive 'roles' field if multi-job, locates the source candidate via the batch artifact's cluster_members[0], and builds an entry record",
+    "Curated-overlap partition: any entry whose address is already registered with DIFFERENT content (region/represents/howto/capabilities/maps_to_feature) is held (curated_held) rather than folded in, to avoid the writeback refusing the whole batch",
+    "Calls wb.registry_writeback(safe, write=True, skip_already_stamped=True), updates reconciled.json class counts, returns {resolved, added, stamp_skipped, curated_held, multi_job, counts}"
+  ],
+  "standouts": [
+    "The MULTI-JOB pattern made concrete: a schema-additive 'roles' field names each contextual face while a PRIMARY feature is kept, so consumers reading known fields are untouched (Tim's multi-job insight implemented additively)",
+    "Each of the 12 manual judgments carries an investigated why-reason, several explicitly overturning the heuristic draft because the code reality (e.g. nodes/portal.py, idea_capture) contradicted the model's pick",
+    "The curated-overlap safety partition: a proposed change to already-registered curated truth is held for its own pass rather than folded in, because the gated writeback would otherwise refuse the whole batch"
+  ],
+  "conventions": [
+    "Follows the gated writeback / propose-then-write discipline (writes only through registry_writeback, the same path as Decision 1)",
+    "Follows schema-additive evolution (the 'roles' field is additive, not breaking)",
+    "Follows the grounding-tag vocabulary (built|proposed|uncertain)",
+    "Script-style absolute pathing (os.chdir, sys.path.insert)"
+  ],
+  "concerns": [
+    "The 12 conflict resolutions are hardcoded as a literal JUDGMENTS table in this file — a one-time investigated batch, not a reusable mechanism",
+    "Several lookups degrade silently to defaults when artifacts are missing (e.g. art = {} if the batch file does not exist, cand = None) — could produce empty outerHTML without a loud signal",
+    "The dossier['maps_to_feature'] line has an awkward conditional (feat if feat == 'proposed' or feat else 'proposed') that reads as defensive but obscure"
+  ],
+  "notes": "This is the one-time application of the lead's investigated judgments for RG10's 12 disputed addresses (plus the 21 clean drafts), introducing the additive multi-job 'roles' field and writing only non-curated-overlap entries through the gated writeback.",
+  "questions": [
+    "Were the curated_held addresses subsequently resolved in their own pass as the docstring promises?",
+    "Is the additive 'roles' multi-job field now an established part of the registry entry schema consumed elsewhere?",
+    "Why does dossier['maps_to_feature'] use the conditional expression rather than assigning feat directly?"
+  ],
+  "purpose_vs_actual": "Matches — the docstring states it applies the conflict resolutions (21 clean + 12 investigated, with two multi-job) through the gated writeback, and the code does exactly that with the curated-overlap held aside.",
+  "apparent_themes": [
+    "Operator/lead-investigated judgement over model heuristic",
+    "Multi-job elements (one address, contextual faces) via additive schema",
+    "Gated truth growth / propose-then-write",
+    "Grounding against code reality (overturning picks the code contradicts)",
+    "Safety partitioning to protect curated truth"
+  ],
+  "intention_signals": "Trying to finalize the RG10 conflict set by encoding the lead's investigated decisions (with reasons), introducing an additive multi-job representation for elements that play several roles, and writing the resolved non-curated entries back through the same gated path while protecting curated truth from accidental overwrite.",
+  "novelty": "The concrete additive 'roles' field for multi-job elements (a primary feature plus named contextual faces) and the curated-overlap held-aside partition that prevents a single curated conflict from refusing the whole batch.",
+  "contribution": "Contributes the applied RG10 conflict-resolution step with the lead's per-address investigated judgments, the additive multi-job roles representation, and the curated-overlap safety partition feeding the gated registry writeback.",
+  "summary_for_embedding": "A Python script applying RG10 conflict resolutions: 21 clean drafts plus 12 lead-investigated judgments (two multi-job with an additive 'roles' field), writing non-curated-overlap entries back through the gated registry_writeback and holding curated conflicts for a separate pass.",
+  "intention_for_embedding": "Built to finalize RG10's disputed address conflicts with the lead's investigated decisions, introduce an additive multi-job roles representation, and write the resolved entries back through the gated path while shielding curated truth."
+}

@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/G14.report.json",
+  "model": "opus",
+  "what_it_does": "A lane completion report for lane G14. It records a change to ops/cli/capabilities.py (the #50 actuator's GPU eviction-decision point) so that an unauthorized model load needing eviction now RETURNS a structured 'swap-approval' ASK (carrying the real largest-first eviction plan) instead of hard-blocking or silently evicting; the authorized path executes the same plan unchanged. files_written, a long how_verified narrative, status:built-verified, needs_tim, and detailed notes (two needed seams the lead must apply elsewhere) are recorded.",
+  "observations": [
+    "files_written are ops/cli/capabilities.py, ops/AGENTS.md, and this report itself.",
+    "The new ASK shape is exact: {swap_needed, would_load, would_evict, free_gb, needed_gb, approve, resident, evicted, message}; this is cited as Tim's 2026-06-09 spec implemented as specified.",
+    "Verification was against the live card with chat-4b + embed-bge resident (~5.3 GB free) without evicting or loading anything heavy.",
+    "Five verification cases documented: (1) needs-evict + no-auth returns the ASK with poisoned actuators never reached; (2) needs-evict + evict=True executes exactly the offered plan via recorder stubs; (3) fits → loads unchanged; (4) already-resident no-op via a fully real call; (5) impossible fit STILL RAISES EnsureResidentError under both evict=False and evict=True.",
+    "Design rationale: the raise is now reserved for the genuinely impossible (no local service / can't fit even after the full plan / failed start / never served); previously evict=False raised before computing the plan, so the change is described as strictly more truthful with the same exception type.",
+    "Reports that no existing test pinned the old raise-on-evict=False, so no caller contract broke; the new return is an additive 'swap-approval-needed' action.",
+    "Named existing suites pass post-change: model_capabilities_acceptance (172), model_catalog_acceptance (41), coherence_cli_acceptance (7), mcp_engine_acceptance (35).",
+    "Two NEEDED-SEAMs flagged for the lead (out of this lane's files): runtime/cognition.py ~282-285 (the run_role ensure= seam discards _ensure_embedder_resident's return; a tiny pass-through to surface the ASK) and ops/cli/app.py:215-224 (the `company ensure` face prints a check-mark + exit-0 on the ASK, which could mislead a script — proposed distinct exit code 3).",
+    "A test-drift follow-up flagged: a G14 case belongs in tests/model_capabilities_acceptance.py per C9.4, but tests/ wasn't in this lane's files.",
+    "Not committed (per lane instruction); the SYSTEM-GAPS.md G14 entry left for the lead to flip closed with the commit sha."
+  ],
+  "standouts": [
+    "The 'false offer' guard: an ASK whose approve would itself fail is rejected — the impossible-fit case raises under both authorization modes rather than offering an unsatisfiable swap.",
+    "Actuators were POISONED (gpu.teardown / systemd.control raise if reached) during the no-auth test to prove the ASK path never touches hardware."
+  ],
+  "conventions": [
+    "Conforms to the seam-lane report schema (lane, files_written, how_verified, status, needs_tim, notes).",
+    "Verify-by-use against the live GPU card with named suite counts and explicit before/after resident-set checks.",
+    "REUSE: computes the eviction plan via the one planner gpu.plan_eviction either way.",
+    "Additive / behaviour-preserving change framing (no caller contract broken); not committed (next beat / lead commits).",
+    "Self-description maintained: ops/AGENTS.md models/VRAM type-view sentence updated as the C9.4 home."
+  ],
+  "concerns": [],
+  "notes": "This is G14's done-report: the GPU eviction actuator now returns a swap-approval ASK instead of silently evicting or pre-emptively raising, verified live with poisoned actuators, with two cross-file seams flagged for the lead.",
+  "questions": [
+    "Will the two flagged needed-seams (cognition.py run_role pass-through, ops/cli/app.py exit-code) be picked up, and by whom — since they are outside this lane's files?",
+    "What is the C9.4 convention referenced as the self-description / test-drift home?",
+    "How does the MCP face surface the swap_needed dict to the operator with 'zero change' as claimed?"
+  ],
+  "purpose_vs_actual": "Matches: the report states G14 implements the swap-approval ASK at the eviction-decision point per Tim's spec, and the body documents exactly that change and its verification.",
+  "apparent_themes": [
+    "Ask-don't-act on resource changes needing approval (never silent evict, never hard-block)",
+    "Truthful failure: raise only for the genuinely impossible, after computing the real plan",
+    "Verification by use against live hardware with poisoned actuators",
+    "Additive, contract-preserving change",
+    "Honest cross-file seam flagging (work that belongs to other files/lanes)"
+  ],
+  "intention_signals": "It seems to be trying to make the GPU eviction decision honest and operator-consented — surfacing the exact plan that would be executed and the approval handle, while proving via live, actuator-poisoned tests that no eviction happens without authorization and that an unsatisfiable swap is never offered.",
+  "novelty": "Documents actuator-poisoning as a verification technique and a 'false offer' guard ensuring an ASK is only made when its approval would actually succeed.",
+  "contribution": "Contributes the verified completion record for the GPU swap-approval ASK: the exact ASK shape, the reuse of the single eviction planner both ways, the live actuator-poisoned verification, and the two precisely-located cross-file seams a fused system would keep as the implementation and follow-on map for G14.",
+  "summary_for_embedding": "A built-verified lane report for G14 documenting a change to ops/cli/capabilities.py so an unauthorized GPU load needing eviction returns a structured swap-approval ASK (with the real largest-first plan) instead of silently evicting or hard-blocking, verified live with poisoned actuators.",
+  "intention_for_embedding": "To record that the GPU eviction-decision actuator now asks for operator approval (surfacing the real plan) rather than silently evicting or pre-emptively failing, per Tim's spec, verified by use and with cross-file seams flagged for the lead."
+}

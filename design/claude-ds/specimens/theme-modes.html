@@ -1,0 +1,68 @@
+<!-- @dsCard group="Colors" name="Theme Modes · Light / Dim / Dark / Contrast" subtitle="One ground knob flips the whole zone system — gold discipline preserved" viewport="1180x760" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Theme Modes</title>
+<link rel="stylesheet" href="../styles.css"/>
+<style>
+  body { margin:0; background:#cfc7b6; font-family: var(--font-body); -webkit-font-smoothing:antialiased; padding: 28px; }
+  .grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 18px; max-width: 1120px; margin:auto; }
+  @media (max-width: 720px){ .grid { grid-template-columns: 1fr; } }
+  .pane { border-radius: 16px; overflow:hidden; box-shadow: var(--elev-4); background: var(--zone-base-surface); }
+  .pane .body { padding: 18px; }
+  .pane h3 { margin:0 0 3px; font: 700 14px/1 var(--font-display); color: var(--ink); display:flex; gap:8px; align-items:center; }
+  .pane h3 .gem { width:8px; height:8px; background: var(--accent-gold); transform:rotate(45deg); }
+  .pane .mode { font: 600 9px/1 var(--font-mono); color: var(--ink-4); letter-spacing:.08em; }
+  .zones { display:flex; gap:6px; margin:14px 0; }
+  .zones .z { flex:1; height:34px; border-radius:6px; border:1px solid; }
+  .card { background: var(--zone-content-surface); border:1px solid var(--zone-content-edge); border-radius:10px; padding:12px; box-shadow: var(--elev-1); }
+  .card .t { font:700 12px/1.2 var(--font-display); color: var(--ink); }
+  .card .d { font-size: 11px; color: var(--ink-3); margin-top:3px; }
+  .row { display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  .btn { font:600 11px/1 var(--font-body); padding:8px 13px; border-radius:8px; border:1px solid transparent; }
+  .btn.primary { background: var(--accent-gold); color:#1f1a12; }
+  .btn.secondary { background: var(--zone-panel-surface); border-color: var(--zone-panel-edge); color: var(--ink-2); }
+  .chip { font:600 9px/1 var(--font-body); padding:5px 9px; border-radius:999px; }
+  .chip.ready { background: var(--zone-success-surface); border:1px solid var(--zone-success-edge); color: var(--zone-success-ink); }
+  .chip.vi { background: var(--vi-strong); border:1px solid var(--vi-edge); color: var(--ink); }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <!-- each pane sets its own data-theme -->
+    <div class="pane" data-theme=""><div class="body" id="t-light"></div></div>
+    <div class="pane" data-theme="dim"><div class="body" id="t-dim"></div></div>
+    <div class="pane" data-theme="dark"><div class="body" id="t-dark"></div></div>
+    <div class="pane" data-theme="contrast"><div class="body" id="t-contrast"></div></div>
+  </div>
+
+<script>
+  const PANES = [
+    { id:'t-light', name:'Light', mode:'default · no attribute' },
+    { id:'t-dim', name:'Dim', mode:'data-theme="dim"' },
+    { id:'t-dark', name:'Dark', mode:'data-theme="dark"' },
+    { id:'t-contrast', name:'Contrast', mode:'data-theme="contrast"' },
+  ];
+  const ZONES = ['content','source','success','warning','reject'];
+  PANES.forEach(p => {
+    const z = ZONES.map(k => `<div class="z" style="background:var(--zone-${k}-surface);border-color:var(--zone-${k}-edge)"></div>`).join('');
+    document.getElementById(p.id).innerHTML = `
+      <h3><span class="gem"></span>${p.name}</h3>
+      <div class="mode">${p.mode}</div>
+      <div class="zones">${z}<div class="z" style="background:var(--vi-surface);border-color:var(--vi-edge)"></div></div>
+      <div class="card">
+        <div class="t">Selected candidate · frame 04</div>
+        <div class="d">The same zone tokens, recomputed against this theme's ground. Gold stays the only saturated voice.</div>
+        <div class="row">
+          <span class="chip ready">ready</span>
+          <span class="chip vi">◆ Vi pick</span>
+          <button class="btn secondary">Back</button>
+          <button class="btn primary">Approve</button>
+        </div>
+      </div>`;
+  });
+</script>
+</body>
+</html>

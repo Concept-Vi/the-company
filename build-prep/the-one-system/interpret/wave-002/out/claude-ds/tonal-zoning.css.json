@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "tonal-zoning.css",
+  "model": "opus",
+  "what_it_does": "The presentation stylesheet for the Tonal Zoning System deliverable page (Tonal Zoning System.html). It composes the canonical zone tokens into the page's layout: masthead, section scaffold, the zone-registry card grid, the component-role gallery, a shared component vocabulary (cvx-btn / cvx-chip / cvx-vi), and the applied Overview dashboard mock (nav / main / Vi rail) with a spatial grid/path layer. It explicitly invents no colour, only arranges zone roles.",
+  "observations": [
+    "body background layers a radial --zone-base-strong gradient over --zone-base-surface; a fixed body::before draws a faint architectural grid (64px) masked top-weighted and scaled by --spatial-opacity",
+    "Masthead styles (.tz-mast/-title/-lede/-key) with display font, italic bronze emphasis, and a gold-left-border 'key' callout on --vi-surface",
+    ".tz-registry is an auto-fill minmax(232px) grid of .tz-zone cards showing a wash chip + strong + edge + ink dot per zone; hover lifts the card",
+    "Shared component vocabulary: .cvx-btn (--primary gold, --secondary on panel surface, --reject on reject zone), .cvx-chip (ready/pending/source/reject zone-coloured pills with a currentColor dot), .cvx-vi (gold gem pill on --vi-strong)",
+    "Applied Overview: .ov is a fixed 1240px 3-col grid (232 / 1fr / 320) with transform-origin top-left for JS scaling; .ov-spatial / .ov-flow path layers gated by --spatial-opacity; .tz-ghost off-frame neighbour frames",
+    "Zoned blocks (.ov-block.content/.source/.package) take their zone surface+edge; stats use gold numerals, the flagged inbox stat takes the warning zone; nav active item gets a gold left-border + content-strong background; the Vi rail rides --vi-surface with gold gems",
+    "Stat/tile/feed cards use #fff backgrounds with faint borders and shadow tokens"
+  ],
+  "standouts": [
+    "Strict adherence to 'nothing here invents colour' — every surface/edge/ink comes from var(--zone-*-*) or --vi-* tokens",
+    "Gold concentrated exactly where the system reserves it: primary buttons, stat numerals, nav active marker, the entire Vi rail and its gems",
+    "Spatial-layer opacity (--spatial-opacity) threaded through the body grid, ghost frames, and both SVG path layers so the whole connective story toggles as one knob"
+  ],
+  "conventions": [
+    "var(--token) referencing throughout for color, radius (--r-*), shadow (--shadow-*), type (--font-*), tracking; consumes the canonical token homes",
+    "Zone-role composition pattern (surface + strong + edge + ink per zone) applied uniformly across cards, chips, buttons, blocks",
+    "BEM-ish cvx- component prefix and tz- page prefix separating shared vocabulary from page chrome"
+  ],
+  "concerns": [
+    "Repeated literal background:#fff on cards/stats/tiles/feed rows/pills rather than a token (e.g. a paper/surface var) — a small recurring hardcode in an otherwise token-pure file",
+    "The .ov fixed width 1240px and grid columns are duplicated knowledge with the host HTML's DESIGN_W=1240 scaling constant — two places to keep aligned",
+    "A handful of raw rgba/px values (e.g. the 0 40px 80px -40px rgba(31,26,18,.28) shadow on .tz-applied-frame) sit alongside shadow tokens"
+  ],
+  "notes": "The deliverable's presentation CSS: lays out the tonal-zoning specimen (masthead, zone-registry grid, component-role gallery, shared cvx- component vocabulary, and the applied Overview dashboard with its spatial layer) purely by composing canonical zone tokens.",
+  "questions": [
+    "Should the repeated #fff card backgrounds be a token (paper/surface) to stay fully single-sourced, or is white intentional for specimen cards?",
+    "Is the 1240px design width meant to live in one place shared with the host page's scaler rather than being restated in both?"
+  ],
+  "purpose_vs_actual": "Match — the header states it consumes canonical tokens and only composes zone roles for the deliverable presentation, and the file does exactly that for the specimen and the applied dashboard.",
+  "apparent_themes": [
+    "Compose-don't-invent (presentation as pure token composition)",
+    "Reserved-meaning gold concentrated in Vi / decision / active marks",
+    "Felt-not-seen spatial texture toggled by one opacity knob",
+    "Zone-role uniformity across every component and block"
+  ],
+  "intention_signals": "Trying to render the tonal-zoning language convincingly to the eye — a polished editorial specimen plus a believable re-skinned product dashboard — while proving discipline by sourcing every colour from the zone tokens and concentrating gold only where the system permits.",
+  "novelty": "The applied Overview re-skin that demonstrates zone roles in a real dashboard layout (zoned blocks, gold-only Vi rail, off-frame ghost neighbours, toggleable spatial path layer) entirely from composed tokens.",
+  "contribution": "Contributes the presentation/layout composition for the tonal-zoning specimen — the masthead, zone-registry grid, the shared cvx- component vocabulary (buttons/chips/Vi pills), and the fully zoned applied Overview dashboard — showing how the zone tokens assemble into real screens.",
+  "summary_for_embedding": "A ConceptV CSS stylesheet for the Tonal Zoning System deliverable page that composes canonical zone tokens into a masthead, zone-registry grid, a shared cvx- component vocabulary, and an applied Overview dashboard mock with a toggleable spatial path layer.",
+  "intention_for_embedding": "To present the tonal-zoning language to the eye as a polished specimen and a re-skinned product dashboard, composing every colour from the zone tokens and reserving gold for Vi and active decisions."
+}

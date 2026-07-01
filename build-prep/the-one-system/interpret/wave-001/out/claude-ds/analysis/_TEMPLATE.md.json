@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/_TEMPLATE.md",
+  "model": "opus",
+  "what_it_does": "A blank fill-in template for a per-folder design-deck analysis note: a structured checklist of sections (Frame, Grid & spatial structure, Tonal zoning, Type, Colour & brand, Atoms, Layout patterns, Sequence & rhythm, Construction, Responsive rules, Diff vs current system, Gaps to log) with empty slots an analyst fills when auditing an ingested source folder of design pages.",
+  "observations": [
+    "Header carries provenance placeholders: 'Source: ingest/<folder>/ · N pages · copied to _ingest/<folder>/' and a Status with checkbox states (in progress / complete).",
+    "Section 0 (Frame) asks for dimensions WxH, ratio, medium (presentation/print/web), and the native coordinate basis.",
+    "Section 1 frames all grid/spatial measurements as % of frame (margins, columns/gutters, header/footer bands, safe area, optical centering).",
+    "Section 2 (Tonal zoning) instructs sampling REAL pixels and recording hex + location, including hatch/texture angle/spacing/opacity and a 'blueprint ghost' presence check.",
+    "Section 3 (Type) records fonts, scale as % of frame height + step ratios, weights/roles, colour treatments, and special treatments like brand-mark-in-headline.",
+    "Section 4 (Colour & brand) records sampled golds/bronzes/brown-end, the tonal gradient range and where used, neutrals/inks.",
+    "Section 5 (Atoms) enumerates bullets, stat/number callouts, icons, interactive affordances (hotspots/menu/account/info), photo blocks.",
+    "Sections 6–9 capture recurring layout archetypes, page-by-page sequence + density, structural construction recipe per pattern, and responsive reflow rules per pattern across surfaces.",
+    "Closing sections: 'Diff vs current system' with a legend (✅ confirms · ➕ new · ✏️ generalises · ⚠️ contradicts) and '→ Gaps to log' (copy to SYSTEM-GAPS.md)."
+  ],
+  "standouts": [
+    "Every spatial/type measurement is specified as a PERCENTAGE of the frame, not pixels — encoding a resolution-independent, ratio-first reading discipline.",
+    "Mandates sampling real pixels (hex + coordinates) rather than describing impressions — an evidence-grounded audit method.",
+    "The 'Diff vs current system' legend forces each finding to be classified as confirms / new / generalises / contradicts against the existing system."
+  ],
+  "conventions": [
+    "Markdown analysis-note template with placeholder tokens (<folder>, #______, __%) to be filled.",
+    "Provenance-first (ingest path, page count, copy location, status checkboxes).",
+    "Findings routed downstream (→ SYSTEM-GAPS.md) — extract-and-route discipline.",
+    "Percentage-of-frame measurement convention throughout."
+  ],
+  "concerns": [
+    "Status uses two checkboxes both prefixed '☐' for 'in progress' and 'complete' — relies on the analyst to tick one, no enforced single-state.",
+    "References sibling files (SYSTEM-GAPS.md, _ingest/<folder>/) whose existence/upkeep is assumed but not guaranteed from this file alone."
+  ],
+  "notes": "The reusable skeleton each source-deck analysis is written against — a percentage-based, pixel-sampled audit checklist that ends by diffing findings against the current system and logging gaps.",
+  "questions": [
+    "Is SYSTEM-GAPS.md the live gap register findings get copied into, and who reconciles it?",
+    "What distinguishes ingest/<folder>/ from _ingest/<folder>/ (the two paths in the header)?"
+  ],
+  "purpose_vs_actual": "Matches — it is explicitly a template and provides exactly the structured slots a per-folder analysis would need.",
+  "apparent_themes": [
+    "evidence-grounded (sample real pixels)",
+    "ratio-first / resolution-independent (everything as % of frame)",
+    "axis=f(content,position) (frame → grid → zoning → atoms → patterns → responsive)",
+    "extract-and-route (gaps → SYSTEM-GAPS.md)",
+    "diff-against-current-system"
+  ],
+  "intention_signals": "Inferred: to make deck/source analysis systematic and comparable across folders — force every analyst to capture the same frame/grid/zoning/type/atom/pattern dimensions in the same units (% of frame, sampled hex) so the readings can be reconciled into one design DNA and diffed against what the system already encodes.",
+  "novelty": "Unusual in treating a design audit as a measured, percentage-of-frame, pixel-sampled protocol with a built-in confirms/new/generalises/contradicts diff legend — closer to a measurement instrument than a notes template.",
+  "contribution": "Contributes the standardized audit schema/protocol for reading a source design deck into structured DNA (frame, %-grid, sampled tonal zoning, type scale, atoms, layout archetypes, sequence, construction, responsive rules) plus the diff legend and gap-routing — the reusable lens a fused system would keep for turning raw decks into comparable findings.",
+  "summary_for_embedding": "Blank percentage-of-frame, pixel-sampled design-deck analysis template with sections for frame, grid, tonal zoning, type, colour, atoms, layout patterns, sequence, construction, responsive rules, plus a diff-vs-current-system legend and gap-logging.",
+  "intention_for_embedding": "Intended to make source-deck audits systematic and comparable across folders by capturing the same measured dimensions in the same units and diffing each finding against the existing design system."
+}

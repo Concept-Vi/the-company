@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/CC-4-reduce-engine.md",
+  "model": "opus",
+  "what_it_does": "A research-finding doc on the REDUCE stage of the corpus-chain: the strong layer that joins, adjudicates/verifies, composes, and decides-next. It reads the real engine end-to-end, measures the staging threshold against the real corpus and context windows, and concludes the reduce is the least-built stage, specifying what it must do, what it can reuse, and the one net-new seam it is blocked on.",
+  "observations": [
+    "Companion to CORPUS-CHAIN-ANCHOR.md; uses an OBS/VERIFIED/INF/EXT/idea evidence template grounded in file:lines (cognition.py, suite.py, roles/, verify_jury.py, services.json, transport.py).",
+    "Headline finding: the MAP (run_swarm) is proven but the REDUCE's central job, cross-unit JOIN, has no mechanism in the code; the reduce-tree archetype (suite.py:1474) is declared-but-dead (join/render_from never read at runtime, no reduce role file).",
+    "Argues run_jury is not the JOIN: it is N draws of one role on one input (intra-unit variance), and same-model draws cannot catch a systematically-wrong extraction (citing verify_jury.py:12-18 and SEM-3's keystone).",
+    "Notes what the live system calls 'reduce' is the deterministic INJECTION_RULE (cognition.py:160), routing a pre-computed field, not strong-model synthesis across units.",
+    "Identifies the blocking net-new seam shared with SEM-1: generalize run_role to build messages from role.input_addresses instead of the hardcoded ctx['utterance'].",
+    "Measures staging numbers: coherence-scan {contradicts,note} ~50-150 tok/unit (thousands fit one call); research-wave companions ~9-10K tok each (six already ~60K, overflowing the local synth), framing staging as a compile-time computation n_units x est_digest_tokens(map_schema) vs synth_context.",
+    "Argues hierarchical reduce is in tension with the JOIN (cross-cluster pairs meet only at summarized ancestors) and that clustering must be query-dependent, with ToM-style confidence-carrying structured ascent rather than lossy prose.",
+    "Frames decide-next as a declared rule over the reduce's status field (bounded by the compiler's pass-plan, run by AREA-4's loop), explicitly rejecting an agentic controller as the wrong idiom.",
+    "Proposes making followup-routing fail-safe by folding it into the adjudicate gate: no citable digest support implies a targeted re-map.",
+    "Cites external prior art (RAPTOR, ToM/Tree-oriented MapReduce, LLMxMapReduce, LangChain collapse, agentic RAG, Self-RAG)."
+  ],
+  "standouts": [
+    "The grounded claim that the reduce is the least-built stage and that its core JOIN has no engine behind it, with grep-level evidence that reduce-tree's keys are never read at runtime.",
+    "Reframing the staging decision as compile-time-derived from map_schema x unit-count vs synth context, surfaceable at the inspect-approve gate before any tokens spend.",
+    "The query-dependent clustering argument: similarity-cluster helps built-twice, structural-pairing sidesteps the tree for half-migration, generic RAPTOR only for join-free faces.",
+    "Citation-as-router: making the reduce ground its answer in named units turns followup-routing into a fail-safe byproduct of adjudication rather than a fragile classifier."
+  ],
+  "conventions": [
+    "Follows the repo evidence-tagging discipline and the verdict-first / yes-but-actually correction-list structure.",
+    "Composes over existing primitives rather than inventing orchestration, and explicitly honors the Company's not-agent-architecture-by-default principle.",
+    "Lists external sources at the end."
+  ],
+  "concerns": [
+    "Several digest-size figures are marked VERIFIED-estimated rather than fully measured per-face, so the exact staging thresholds are approximate."
+  ],
+  "notes": "A grounded REDUCE-stage analysis arguing the reduce (JOIN/adjudicate/compose/decide-next) is the unbuilt heavy lifter, blocked on the same run_role input-seam SEM-1 named, with a config-derived single/hierarchical/query-loop shape decidable at compile time.",
+  "questions": [
+    "What schema should the reduce/join and compose role files declare as their output shape for each face?",
+    "Where does the query-dependent clustering policy live and who emits it (the compiler) versus who executes it?"
+  ],
+  "purpose_vs_actual": "Match. The doc's allocated area is the reduce engine and it delivers a job-by-job build-state assessment, measured thresholds, and an ordered net-new build list.",
+  "apparent_themes": [
+    "The reduce as the strong/expensive layer in a cheap-map/expensive-reduce cost shape",
+    "Cross-unit reasoning (JOIN) as the value the map cannot provide",
+    "Config-derived shape over fixed pipelines",
+    "Stronger/different-tier adjudication over same-model variance",
+    "Fail-safe design via mandatory grounding/citation",
+    "Rejecting agent-as-default in favor of declared rules over model outputs"
+  ],
+  "intention_signals": "It is trying to redirect the build effort to where it is actually missing, proving with grep-level evidence that the reduce is unbuilt, and specifying a minimal-delta path (one real engine seam plus thin compositions) so the corpus-chain's heavy lifter becomes real without importing the agentic idioms the Company rejects.",
+  "novelty": "The compile-time staging predictor formula, the JOIN-vs-clustering tension analysis with query-dependent clustering, and citation-absence-as-remap-signal.",
+  "contribution": "Contributes a job-by-job build-state map of the reduce (JOIN/adjudicate/compose/decide-next), the grep-grounded finding that the reduce-tree archetype is dead and run_jury is not a join, the shared run_role input-seam, a measured compile-time staging formula, the query-dependent clustering and ToM-style ascent design, the cross-tier adjudicate panel, decide-next as a declared rule over a status field, and the fail-safe citation-as-router mechanism, plus an ordered net-new build list.",
+  "summary_for_embedding": "A grounded research finding (CC-4) showing the corpus-chain REDUCE stage is the least-built part of the engine (cross-unit JOIN has no mechanism, reduce-tree is declared-but-dead, run_jury is not a join), and specifying a config-derived single/hierarchical/query-loop reduce reusing existing primitives plus one shared run_role input-seam.",
+  "intention_for_embedding": "To redirect the corpus-chain build to the unbuilt reduce stage and specify, with measured thresholds and minimal-delta reuse, how the strong join/adjudicate/compose/decide-next layer should be built."
+}

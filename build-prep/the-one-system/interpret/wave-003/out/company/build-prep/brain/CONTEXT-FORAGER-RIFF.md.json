@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/CONTEXT-FORAGER-RIFF.md",
+  "model": "opus",
+  "what_it_does": "A vision-capture doc (2026-06-10) recording Tim's verbatim thinking-aloud about a 'Context Forager' search-canvas, then expanding it into what it is, its composition from existing parts, and a process directive; ends with Tim's 2026-06-11 correction rejecting the delivered v1.",
+  "observations": [
+    "Opens with Tim's load-bearing verbatim quotes about searching, seeing results as connected circle nodes, expanding/full-screening them, and selecting multiple into Claude Code's context.",
+    "Captures Tim's METHOD as foundational: 'I put context in front of you... and you produced all of this... That's how I work.'",
+    "Names the search facets: time period, topic, project, principle, language (his vocabulary/terms).",
+    "Expansion section defines the forager as SEARCH-AS-SCULPTING: search the corpus (1,400+ exchange-extracts, 584 repo files, transcripts, vault, mockups, registries) via a multi-projection substrate (vectors/structure/relations/time).",
+    "Maps progressive disclosure per node to the Pulse/River/Nodes altitude grammar.",
+    "Composition section asserts each piece exists: query_corpus + facet filters, tldraw NodeShape, find_relations, the S1 panel's context_block seam.",
+    "Process directive quotes Tim wanting the loop-prep + dynamic-workflow combo, queued as S7 in an overnight mandate.",
+    "A dated 2026-06-11 correction section (binding) says the delivered v1 is 'the most basic possible interpretation... not usable'.",
+    "v1 missed two requirements: (1) VECTORS AS COORDINATES (render the embedding space itself, clusters/sizes visible, via UMAP/PCA-class reduction); (2) a SUB-CANVAS with its own physics, with deliberate PROMOTION into the main graph.",
+    "States the S1 Claude Code integration as delivered 'is not what I meant and will need to be rebuilt'."
+  ],
+  "standouts": [
+    "Tim's method articulated verbatim: curate context -> think -> AI produces; the forager is the missing READ surface for his half-made-everything.",
+    "The v1 correction: circles weren't the point - vectors must be COORDINATES so semantic space renders by shape.",
+    "Sub-canvas-with-promotion model: a separate room to sculpt a working set before committing nodes to the main graph.",
+    "Views themselves proposed as REGISTRY ROWS (a forager-view = declared facet-combo + layout)."
+  ],
+  "conventions": [
+    "Follows build-prep/brain capture style: verbatim-quotes-first, then agent expansion, dated corrections appended in place.",
+    "Preserves Tim's transcription faithfully (bracketed repairs) per the barrier/anchor discipline."
+  ],
+  "concerns": [
+    "Composition claims pieces 'exist'/'built' (query_corpus, NodeShape, S1 seam) without verification in this doc; relations projection flagged as the weakest.",
+    "v1 was delivered and rejected, so 'everything exists; this is assembly' proved insufficient at least once."
+  ],
+  "notes": "If briefing someone: this is the captured spec for Tim's vector-coordinate search sub-canvas (the Context Forager) plus his binding rejection of the literal-circles v1.",
+  "questions": [
+    "What dimensionality-reduction approach was chosen for vectors-as-coordinates after the correction?",
+    "Was the rebuild (sub-canvas + promotion) actually done following the 2026-06-11 correction?",
+    "What is the deferred conversation that the S1 Claude Code rebuild details depend on?"
+  ],
+  "purpose_vs_actual": "Match: it states it is Tim's vision captured maximally plus expansion, and that is exactly its content, including the corrective phase boundary.",
+  "apparent_themes": [
+    "Search-as-sculpting / curate-context-then-think method",
+    "Render semantic space for cognition (read by shape)",
+    "Multi-projection corpus retrieval (vectors/structure/relations/time)",
+    "Sub-canvas working set with deliberate promotion",
+    "Selection -> builder's context handoff"
+  ],
+  "intention_signals": "Trying to give Tim a fast, visual, vector-laid-out surface to find and assemble the relevant context scattered across his corpus and hand it to Claude Code, externalizing the curation step currently trapped in his memory and the CLI.",
+  "novelty": "Vectors used directly as screen coordinates so clusters/sizes are legible, combined with a separate sculpting sub-canvas that promotes into the main graph.",
+  "contribution": "Contributes the Context Forager vision and its binding v1 correction: a vector-coordinate semantic-space sub-canvas for facet-searched, sculpted context selection feeding the builder.",
+  "summary_for_embedding": "A build-prep capture of Tim's Context Forager vision - a vector-coordinate search sub-canvas that lays the corpus out by meaning for facet-searching, sculpting a working set, and handing selected nodes to Claude Code - plus his rejection of the literal-circles v1.",
+  "intention_for_embedding": "To build the surface where Tim does his curate-context-then-think method at scale, rendering semantic space as coordinates and feeding sculpted selections into the AI builder."
+}

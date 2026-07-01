@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/AREA-6-crossstream-priorart.md",
+  "model": "opus",
+  "what_it_does": "A research-findings markdown companion covering two threads: whether the coherence model is the same kind of thing as the cognition stream's live model (concluding they share built machinery but differ in kind, resolved by an own/reflect split), and external prior art (fitness functions, code property graphs, agentic dev systems, ADRs) mapped to the deltas the coherence idea adds.",
+  "observations": [
+    "States its two-thread scope and a marking convention: [OBS] observed code, [INF] inferred, [PRIOR-ART] external, [IDEA] own proposal.",
+    "Headline: cognition is per-turn/ephemeral, coherence is whole-system/persistent; coherence should reflect-never-own its detection but own its disposition.",
+    "Grounds the cognition engine in code: file-discovered roles (roles.py:70-73), declared-AST rules with a closed RULE_OPS grammar (rules.py:65-88), run:// addressing, build_cognition_info as sibling of build_object_info.",
+    "Confirms _ORPHAN_ROUTES (suite.py:7017-7054) is an embryonic disposition store mapping to-build-ui/to-wire/voice-owned/backend-only onto the anchor's finish/defer/by-design.",
+    "Transfers two cognition mechanisms to solve loop problems: per-rule readiness (settled inputs, never timeout) as the anti-thrash/blocked-without-stalling mechanism, and determinism as the trust property.",
+    "Recommends building coherence as an explicit third sibling lens (build_coherence_info), citing the MERGE-COORDINATION 'mode dial built twice' incident as proof of the build-twice failure mode.",
+    "Maps prior art with deltas: fitness functions but stateful/held; CPGs but over intent+code with disposition; agentic verifier loops but worklist = self-derived incompleteness; ADRs but as substrate keyed by address.",
+    "Argues the recursion is already partly real (drift homes, self-excluding meta-gates) and proposes finding-types as a self-registering registry like roles/rules.",
+    "Includes a numbered summary of what to put in front of Tim and a sources list with external URLs."
+  ],
+  "standouts": [
+    "The own/reflect split: detection is re-derivable (reflect), disposition is a decision (own) and is the institutional-memory layer.",
+    "The disposition-is-a-micro-ADR synthesis tying prior art to the codebase's _ORPHAN_ROUTES.",
+    "Using a real in-build incident (mode dial built twice) to justify naming coherence a sibling lens from the start."
+  ],
+  "conventions": [
+    "Holds evidence labeling and clearly separates 'convergence is real in code' [OBS] from 'they could be one substrate' [IDEA].",
+    "Maps prior art to the delta the idea adds rather than summarizing, as a stated discipline.",
+    "Stays in its lane, flagging detection rigor / CPG as another area's territory."
+  ],
+  "concerns": [
+    "Thread 2 leans on external sources whose specifics are cited by URL but not independently verifiable from within the file.",
+    "Most recommendations are [IDEA] proposals built on [OBS] machinery, so the reader must keep the proposal/observation boundary."
+  ],
+  "notes": "Coherence and cognition share genuine built machinery but differ in kind on persistence; the resolving move is reflect-the-detection/own-the-disposition, making a disposition a micro-ADR and the burn-down history the institutional memory.",
+  "questions": [
+    "What is ANCHOR.md and which of its what-ifs (sections 4, 5, 9) this thread answers?",
+    "What are the sibling areas (Area C for detection rigor/CPG) it defers the make-or-break to?",
+    "Was coherence actually built as the third sibling lens (build_coherence_info), and were finding-types made a self-registering registry?"
+  ],
+  "purpose_vs_actual": "Matches: both stated threads (same-kind-as-cognition question and prior-art deltas) are delivered, with the own/reflect distinction as the load-bearing answer to thread 1.",
+  "apparent_themes": [
+    "Same machinery, different lenses (sibling not merge)",
+    "Reflect the detection, own the disposition",
+    "Disposition as micro-ADR / burn-down as institutional memory",
+    "More types, not more tools (finding-types as a registry)"
+  ],
+  "intention_signals": "Trying to settle whether coherence and cognition are one substrate (answer: shared pattern, separate data, build as a sibling), and to locate the coherence idea against external prior art so its genuine novelty (stateful, self-derived, address-keyed) is clear.",
+  "novelty": "The own/reflect split as the design axis and the framing of a disposition as a micro-ADR that constitutes the system's institutional memory in a no-human-developer context.",
+  "contribution": "Contributes the cross-stream convergence table, the own/reflect distinction, the readiness/determinism transfers, the third-sibling-lens recommendation grounded in a real build-twice incident, and the prior-art-delta mapping.",
+  "summary_for_embedding": "A coherence research companion concluding the coherence and cognition models share machinery but differ in kind (reflect detection / own disposition), with prior-art deltas (fitness functions, CPGs, agentic loops, ADRs).",
+  "intention_for_embedding": "To decide whether coherence is the same kind of thing as the cognition stream and to position the idea against external prior art on holding structural integrity over time."
+}

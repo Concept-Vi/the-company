@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/UNIVERSAL-PROJECTION.md",
+  "model": "opus",
+  "what_it_does": "A captured design note (2026-06-12 night) stating the purpose and corrected laws of Tim's 'universal projection' — a free, mechanical way to position every store record on a polar lattice where angle=kind, radius=time-from-now, and depth=nesting. It records two binding corrections, the root equation, the projection mapping, and an overnight build slate (S1-S5).",
+  "observations": [
+    "Attributes the object to Tim Geldard and notes he is asleep while 'the loop builds' from his steering words.",
+    "Correction 1: types are angular divisions (polygons of integer division), not tiled boxes; type birth/death globally re-divides all sectors evenly (the 'water law'), triggered around a ~20/80 threshold.",
+    "Correction 2: the timestamp itself is the time-address (not the journal), self-ordering and absolute, packed with nested modular cycles (year/month/day/hour/minute) — so the centre of the projection is NOW.",
+    "States the root equation x = 2*pi*n^-1: side-of-division equals arc-of-division, the circle as unity wrapped (circumference 1, radius 1/(2*pi)), invariant under recursive nesting.",
+    "Projection mapping: theta = kind (sector index of n registry types, 2*pi*i/n), r = time (distance from now, log-scaled), depth = nesting (recursive subdivision where a cell centre at depth k is a corner at depth k+1).",
+    "Asserts the projection is free/mechanical: a read of data each record already carries, no model calls and no layout engine.",
+    "Build slate S1-S5: backend /api/projection, FE polar lattice view (desktop+mobile), sector registry as rows, phase faces on time, wire to the forager seam.",
+    "Lists ratified/corrected/open items at the end (open for Tim: the 20/80 dial placement, semantic residual, promotion gesture)."
+  ],
+  "standouts": [
+    "The lock 2*pi/n = (1/n)^k binding angular type-growth and radial scale-growth as two faces of one re-division.",
+    "Centre-of-projection = NOW, derived from treating the timestamp as the absolute self-ordering time-address.",
+    "A layout that requires no model calls and no layout engine because position is purely a read of existing record fields (address, kind, ts, lineage).",
+    "The 'water law': adding a type triggers global even redistribution of all sectors rather than appending a slice."
+  ],
+  "conventions": [
+    "Captures Tim's words as binding law and marks each correction explicitly.",
+    "Distinguishes ratified vs corrected vs open items, consistent with the repo's honest-status discipline.",
+    "Build slate insists on both faces (desktop + mobile), registry-is-truth, and honest status — recurring repo build conventions.",
+    "Frames an equation as the seed and 'building something around it' as the implementation task."
+  ],
+  "concerns": [],
+  "notes": "The spec for a polar 'universal projection' lattice positioning every record by kind (angle), time-from-now (radius), and nesting (depth) via a single self-similar equation, with an overnight build slate.",
+  "questions": [
+    "What exactly triggers the 20/80 redistribution threshold and where does its dial live (left open for Tim)?",
+    "How is 'kind' resolved to a sector index when a record's type isn't in the declared registry (the pressure/no-legal-sector case)?"
+  ],
+  "purpose_vs_actual": "Matches — it states the seed's purpose and the corrected laws and then translates them into a concrete projection mapping and build slate, as the build mandate asks.",
+  "apparent_themes": [
+    "Self-similar / recursive geometry (one equation invariant at every scale)",
+    "Now as the centre of all coordinates",
+    "Registry-as-geometry (the type registry IS the angular layout)",
+    "Free mechanical rendering (position as a read, not a computation)",
+    "Global re-division over bolt-on growth"
+  ],
+  "intention_signals": "Trying to turn Tim's mathematical seed (a circle as unity wrapped, types as angular divisions, time as radius from now) into a buildable, model-free visualization where the store's own data dictates every record's position and the geometry re-divides as types are born or die.",
+  "novelty": "The angular-types / unity-wrapped-circle formulation and using the timestamp itself as an absolute time-address that makes NOW the projection centre are distinctive and unusual.",
+  "contribution": "Contributes the corrected laws, the root equation in mapped form (theta=kind, r=time, depth=nesting), the water-law redistribution rule, and a concrete S1-S5 build slate for a registry-driven polar projection of the corpus.",
+  "summary_for_embedding": "A Company brain note specifying a universal polar projection that positions every store record by kind (angle), time-from-now (radius from NOW), and nesting (depth) via the self-similar equation x=2*pi*n^-1, with types as angular divisions and an overnight S1-S5 build slate.",
+  "intention_for_embedding": "To convert Tim's mathematical seed for universal projection into a free, mechanical, registry-driven lattice visualization of the entire corpus."
+}

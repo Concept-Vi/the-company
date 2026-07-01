@@ -1,0 +1,27 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/.branches/_current_branch",
+  "model": "opus",
+  "what_it_does": "A Supabase CLI state file holding the name of the currently selected branch. Contains the single word 'main'.",
+  "observations": [
+    "Single line: 'main'",
+    "Lives under supabase/.branches, a CLI-managed state directory",
+    "The sibling .gitignore in this tree ignores .branches"
+  ],
+  "standouts": [],
+  "conventions": [
+    "Standard Supabase CLI local-state file (normally gitignored)"
+  ],
+  "concerns": [],
+  "notes": "A Supabase CLI marker file recording the current branch as 'main' — generated local state, not authored content.",
+  "questions": [],
+  "purpose_vs_actual": "n/a",
+  "apparent_themes": [
+    "CLI-managed local state"
+  ],
+  "intention_signals": "Records which Supabase branch the CLI currently targets.",
+  "novelty": "n/a",
+  "contribution": "Contributes the recorded current-branch pointer ('main') for the Supabase CLI workspace.",
+  "summary_for_embedding": "A Supabase CLI state file containing the current branch name 'main'.",
+  "intention_for_embedding": "To record the currently selected Supabase branch for the local CLI workspace."
+}

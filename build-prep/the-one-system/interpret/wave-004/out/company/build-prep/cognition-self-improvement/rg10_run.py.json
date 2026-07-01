@@ -1,0 +1,50 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/rg10_run.py",
+ "model": "opus",
+ "what_it_does": "RG10 full-scale runner: an incremental, resume-safe batch wrapper around registry_generation_run.run_registry_generation. It loads candidates.json, derives the set of mockups, adopts any mockup whose batch artifact already exists (with n_dossiers) as done, then for each not-yet-done, not-permanently-failed mockup within a time budget runs the full RG3-RG6 chain (GROUND -> MAP -> REDUCE cluster-dedup -> CONFIRM), writes the per-mockup artifact rg10-batch-<stem>.json, and records done/failed state in .build/rg10/state.json. Fail-loud: a chain that raises OR yields 0 dossiers from >0 candidates is recorded in state['failed'] with a reason and retried up to MAX_ATTEMPTS=2, never marked done. Proposes only — artifacts surface for Tim's approve; nothing writes addresses.json or the mockups.",
+ "observations": [
+  "Reuses the proven registry_generation_run module rather than parallelizing — 'reuse-don't-parallel' is stated explicitly, citing the three manual seams it already supplies.",
+  "Docstring cites proven-by-use numbers on C1-inbox-desktop: 43 candidates -> 43 dossiers -> 28 clusters -> 14 confirmed / 14 flagged.",
+  "_adopt_existing brings stranded/prior artifacts into 'done' so incomplete work is in-scope and not re-burned.",
+  "FAIL-LOUD lesson documented: the first draft read only .resolved and silently swallowed 940 .failed units; this version records failures explicitly.",
+  "MAX_ATTEMPTS=2 ('blocked-twice discipline'): retried once, then left loud in state for the surface step rather than retried forever.",
+  "State write is atomic-ish via _save after each mockup; resume-safe across bounded batches.",
+  "The per-mockup artifact shape matches what registry_generation_run's __main__ writes — 'one canonical shape'.",
+  "Time budget default 420s, overridable via argv.",
+  "Returns a rollup: ran_this_batch, mockups_done/total, failed, confirmed_total, flagged_total."
+ ],
+ "standouts": [
+  "The fail-loud-on-zero-dossiers rule (line 89) directly encodes a remembered prior bug where silent .failed swallowing hid 940 lost units.",
+  "Adoption of pre-existing artifacts makes the runner idempotent and respectful of prior compute.",
+  "Bounded time budget + per-mockup state = composable batches that drive the whole 23-mockup / 940-candidate set to completion across runs."
+ ],
+ "conventions": [
+  "Family pattern: os.chdir to repo root, .build/rg10 state/artifacts, 'THE FLOOR: this run PROPOSES' framing, nothing writes the live registry.",
+  "Resume-safe state file with done/failed dicts and setdefault guards.",
+  "Reuse of registry_generation_run as the single source of the generation chain."
+ ],
+ "concerns": [
+  "A permanently-failed mockup (attempts >= MAX_ATTEMPTS) is silently skipped on subsequent runs except for its presence in returned 'failed' — relies entirely on the surface step to notice it.",
+  "_adopt_existing only checks d.get('n_dossiers') truthiness; an artifact with n_dossiers>0 but a degenerate confirmed/flagged split would still be adopted as done.",
+  "No de-dup across mockups happens here (that is rg10_reconcile's job), so 'confirmed_total' here counts per-mockup confirmations, which the docstring of reconcile shows is inflated."
+ ],
+ "notes": "RG10 batch driver: resume-safe wrapper that runs the proven per-mockup generation chain across all mockups, adopts existing artifacts, fails loud on zero-dossier runs, and proposes per-mockup artifacts without touching the live registry.",
+ "questions": [
+  "What exactly does run_registry_generation return beyond the keys read here, and is the artifact shape guaranteed stable with its __main__?",
+  "How does the surface step consume state['failed'] to flag permanently-failed mockups to Tim?"
+ ],
+ "purpose_vs_actual": "Match — docstring describes a resume-safe incremental wrapper that runs the full chain per mockup, fails loud, and proposes artifacts, which is precisely the implementation.",
+ "apparent_themes": [
+  "Reuse-don't-reimplement (wrap the proven chain)",
+  "Fail-loud over silent swallowing (the remembered .failed bug)",
+  "Resume-safe, bounded, composable batches",
+  "Adopt stranded work rather than re-burn it",
+  "Propose-only; the live registry write stays behind approval"
+ ],
+ "intention_signals": "Scale a proven single-mockup generation chain to the full corpus safely and incrementally, ensuring no unit is silently lost and the human only ever approves proposed artifacts.",
+ "novelty": "The explicit codification of a past silent-failure bug into a fail-loud invariant (zero-dossier-from-nonzero-candidates is a recorded failure, not a done), plus the blocked-twice retry discipline.",
+ "contribution": "Contributes the corpus-scale orchestration entry point of the RG10 pipeline: it produces the per-mockup batch artifacts that reconcile and the repair passes downstream all consume.",
+ "summary_for_embedding": "A resume-safe incremental batch runner that wraps registry_generation_run to execute the full per-mockup generation chain across all mockups, adopts existing artifacts, fails loud on zero-dossier runs, and proposes per-mockup batch artifacts.",
+ "intention_for_embedding": "To scale the proven single-mockup registry-generation chain to the whole corpus incrementally and safely, never silently dropping units and never writing the live registry without approval."
+}

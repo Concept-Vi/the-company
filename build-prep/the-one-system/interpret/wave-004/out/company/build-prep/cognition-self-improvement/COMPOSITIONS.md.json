@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/COMPOSITIONS.md",
+  "model": "opus",
+  "what_it_does": "A design/spec markdown defining twelve 'compositions' — named chains built from the cognition engine's primitives that point the engine at the project's own work and at Claude Code's own process. Each composition is specified at chain grain: purpose, how-it-works, the models, the exact MCP tool-calls, and codebase file:line addresses, and each is designed to become a runnable stored graph via save_cascade/run_cascade. The doc frames the engine as an 'exocortex' that offloads broad/shallow/repetitive work to a free local swarm while reserving deep judgment for the premium model.",
+  "observations": [
+    "Twelve numbered compositions (① repo exocortex … ⑫ engine-improves-engine), each with a What-it-does / How-it-works / models / tool-calls / addresses structure.",
+    "A dependency-spine ASCII diagram shows the twelve as one circuit, with ① the floor that ②③④⑨⑫ read.",
+    "Two invariant safety laws stated: the floor is invariant (surface/mark/draft/propose, never auto-mutate or self-approve) and no-fiction/grounding-is-everything.",
+    "A shared-primitives table maps each primitive to its MCP tool signature and engine fn/address (run_items, run_reduce, run_role, capture, find_relations, mark, save_cascade, etc.).",
+    "Explicit GPU-honesty: which compositions need the bge-m3 embedder window (①⑤⑨) and which run on the resident 4B swarm today (⑥⑦⑩⑪⑫).",
+    "Each composition gives a stored-graph save_cascade form and the run_cascade call with template-input substitution.",
+    "Two honest needs-build items flagged in-line (per-step multi-variable prompt substitution; retrieve/similarity having no engine primitive yet).",
+    "A BUILD ORDER section sequences the twelve by dependency and GPU-honesty (⑥ first, then ①, then the serve-Tim layer).",
+    "Grounding claims with file:line refs (runtime/cognition.py:1085, runtime/suite.py:9633, coherence_actions.py:23, ops/services.json:44-59) and a status line claiming v1 grounded against live MCP schemas + floor 42/42."
+  ],
+  "standouts": [
+    "The asymmetry framing — the premium model is the scarce resource, the local swarm is free/concurrent/persistent, and every composition is one trade across that line — is the conceptual core that organizes all twelve.",
+    "⑫ engine-improves-engine plus the 'first-use friction is the ⑫ input' section makes the set self-advancing: using the compositions generates the list of how to improve them, fed back through the engine.",
+    "The two invariant laws (floor-invariant + no-fiction) are the explicit safety basis for turning the engine on itself, grounded in a 42/42 governance scan."
+  ],
+  "conventions": [
+    "Uniform chain-grain spec per composition (the GROUP-V bar), each ending in a stored-graph save_cascade form.",
+    "Floor-discipline framing in every composition (surfaces/marks/drafts; build-dispatch via claude -p stays gated).",
+    "Grounded with file:line addresses and live MCP tool signatures; honest needs-build items flagged not green-painted.",
+    "Registry-is-truth / model-binding-not-hardcoded for per-role model assignment."
+  ],
+  "concerns": [
+    "Several pieces are stated as REUSE/wiring (e.g. the ActionRegistry as the saved-cascade machinery) — within this file the cascade RUNNER is described as the GROUP-N runner riding existing primitives, but whether that runner is fully built is not self-evident from this file alone.",
+    "The grounded-status line asserts every tool-call block resolved against live schemas this session; that verification claim is not re-checkable from the file itself.",
+    "⑨ explicitly leaves an unresolved decision-for-Tim (which of three existing memory systems it complements vs extends) inside an otherwise build-ready spec."
+  ],
+  "notes": "If briefing someone: this is the twelve-composition catalogue turning the cognition engine on the project and on Claude Code's own work — read it as the exocortex playbook, each composition a runnable stored graph with safety floor + grounding laws.",
+  "questions": [
+    "Is the cascade runner that threads step output→input fully built, or is the GROUP-N runner itself part of the work these compositions assume?",
+    "Which of the three existing memory systems does ⑨ complement vs extend (the doc leaves this as Tim's decision)?",
+    "Are the per-role new roles (digest_for_index, verify_lens, scout, etc.) already authored, or net-new create_role calls these compositions require?"
+  ],
+  "purpose_vs_actual": "Matches. The 'What this is' header states it is the next phase — the engine turning on itself, twelve compositions at chain grain becoming stored graphs; the body delivers exactly twelve such specs with tool-calls, addresses, safety laws, and a build order.",
+  "apparent_themes": [
+    "Exocortex / asymmetry — offload broad-shallow to a free swarm, reserve deep judgment",
+    "Compositional reuse of engine primitives (wire-don't-rebuild)",
+    "Invariant floor + no-fiction grounding as the safety basis",
+    "Self-advancing loop (the engine improves and re-ingests itself)",
+    "Stored graphs / saved cascades as authored-once re-runnable units"
+  ],
+  "intention_signals": "Trying to operationalize the cognition engine as a practical force-multiplier on a strategic mind — a concrete, safe, grounded set of repeatable chains that push grunt work down and keep judgment up, closing into a self-improving loop.",
+  "novelty": "The twelve-as-one-circuit dependency spine and the explicit self-feeding mechanism (first-use friction becomes the ⑫ input) are distinctive — a composition catalogue designed to grow itself.",
+  "contribution": "Contributes the twelve concrete engine compositions (with tool-calls, addresses, models, and stored-graph forms) plus the exocortex/asymmetry framing and the floor+no-fiction safety basis for self-application. A fused system would keep this as the applied playbook for what the cognition engine is FOR.",
+  "summary_for_embedding": "A spec defining twelve cognition-engine compositions (exocortex, drift-radar, transcript-miner, scout-brief, verification-jury, spec-compiler, etc.) at chain grain with MCP tool-calls, file:line addresses, safety floor laws, and stored-graph save_cascade/run_cascade forms.",
+  "intention_for_embedding": "To operationalize the cognition engine as a self-advancing exocortex that offloads broad work to a free swarm and reserves deep judgment, via twelve safe grounded repeatable chains."
+}

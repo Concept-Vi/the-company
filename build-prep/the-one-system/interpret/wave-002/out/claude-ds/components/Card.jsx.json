@@ -1,0 +1,41 @@
+{
+  "project": "claude-ds",
+  "path": "components/Card.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React `Card` function component that renders a container (default `<div>`) with a computed `cv-card` className. Maps `variant`, `raised`, `interactive`, `pad` props to `cv-card--*` modifier classes. When `title`/`sub` are given it builds a header div (`cv-card__head` with title `<h3>` and sub `<p>`); when `footer` is given it builds a footer div; renders header, children, footer in order.",
+  "observations": [
+    "`pad` maps to `cv-card--pad-<pad>` (note the hyphen-before-value, differing from other modifiers).",
+    "Header is rendered only when `title != null || sub != null`; footer only when `footer != null`.",
+    "Header div uses inline `style={{flexDirection:'column', alignItems:'flex-start', gap:'2px'}}` — inline layout styling rather than a pure token class.",
+    "Uses `React.createElement` aliased to `h` (no JSX), `/* global React */`.",
+    "Children render between the header and footer.",
+    "Dual export (named + default), matching Badge/Button siblings.",
+    "Uses `key` props on header/sub/title/footer nodes."
+  ],
+  "standouts": [
+    "Inline style on the card header for column layout — a small deviation from the otherwise strict 'all visuals from tokens' discipline the sibling components follow."
+  ],
+  "conventions": [
+    "Follows the thin token-class wrapper pattern overall, with cv-card modifiers.",
+    "Mirrors Badge/Button structure (h alias, className idiom, dual export).",
+    "Partially breaks the 'no inline style / everything from tokens' convention via the header's inline flex styling."
+  ],
+  "concerns": [
+    "Inline style object on the header duplicates layout values (flexDirection/alignItems/gap) that the project's discipline would expect to live in a token/CSS class; the identical inline style also appears hand-written in component-library.html, a small drift risk."
+  ],
+  "notes": "The container primitive: maps variant/raised/interactive/pad to cv-card classes and builds optional title/sub header + footer; note the header carries an inline flex style.",
+  "questions": [
+    "Why is the header layout set via inline style rather than a `cv-card__head` token class — is the class missing the column layout it needs?"
+  ],
+  "purpose_vs_actual": "Mostly match — header comment ('token-class wrapper over .cv-card, optional title/sub header and footer') is accurate, though the inline header style is a minor departure from 'every visual comes from tokens'.",
+  "apparent_themes": [
+    "Single-source-of-truth styling via tokens (with a small inline-style exception)",
+    "Structured container with optional header/footer slots",
+    "Thin component-as-projection-of-CSS"
+  ],
+  "intention_signals": "Aims to provide one container primitive that renders any card surface from tokens and offers built-in header (title/sub) and footer regions so callers don't re-lay-out card chrome.",
+  "novelty": "Built-in optional title/sub/footer slot rendering inside an otherwise minimal class-mapping wrapper.",
+  "contribution": "Contributes the surface/container primitive's runtime: the variant/raised/interactive/pad class mapping plus the header (title/sub) and footer slot construction logic.",
+  "summary_for_embedding": "A React Card component that wraps the .cv-card token class, mapping variant/raised/interactive/pad to CSS modifiers and rendering optional title/sub header and footer regions around children.",
+  "intention_for_embedding": "To provide a thin, theme-aware container primitive with built-in header/footer slots whose visuals are token-driven."
+}

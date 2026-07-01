@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/ViShape.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React `ViShape` component that renders the Vi diamond mark as inline SVG: a white diamond polygon with a colored stroke, overlaid by a second diamond filled with a hatched <pattern> (thin diagonal-spaced lines); supports size, an optional color (default --accent-gold var), and an animated flag that pulses the hatch opacity. Exposes window.ViShape.",
+  "observations": [
+    "Generates a per-render unique pattern id via Math.random().toString(36).slice(2,7).",
+    "SVG viewBox 0 0 24 24; the diamond is polygon points '12,2 22,12 12,22 2,12'.",
+    "Pattern is a 3x3 userSpaceOnUse with a horizontal line strokeWidth 0.4; opacity 0.6 when animated else 0.3.",
+    "When animated, an <animate> tweens the line opacity values '0.2;0.7;0.2' over 1.6s, repeatCount indefinite.",
+    "Two stacked polygons: first white fill with colored stroke (strokeWidth 1.5, round joins), second filled with url(#id) hatch.",
+    "Wrapped in a <span className='vi-shape'> sized by inline width/height and position relative.",
+    "Defaults: size=16, animated=false, color='var(--accent-gold)'."
+  ],
+  "standouts": [
+    "Reuses the deck's signature gold hatch motif inside an entity mark, with an optional animated pulse.",
+    "color defaults to a CSS variable, so the mark inherits the design-system token by default."
+  ],
+  "conventions": [
+    "Window-global registration (window.ViShape) consistent with the app.",
+    "References design tokens via CSS var default (--accent-gold).",
+    "Uses .vi-shape class for the wrapper (matches deck.css entity-shape conventions)."
+  ],
+  "concerns": [
+    "Math.random() pattern id is not collision-proof and is not stable across re-renders (regenerated each render).",
+    "5-char random suffix gives a small but nonzero id-collision chance if many instances mount."
+  ],
+  "notes": "The reusable Vi diamond glyph: a hatched diamond mark, token-colored by default, optionally animated; drop <ViShape/> anywhere as logo/chip/button glyph.",
+  "questions": [
+    "Is the per-render random id intentional, or would a stable id (e.g. useId) be preferred to avoid churn?"
+  ],
+  "purpose_vs_actual": "Matches: header comment 'the Vi diamond mark, reusable as logo / chip / button glyph' is exactly the rendered, parameterized SVG mark.",
+  "apparent_themes": [
+    "Brand identity as a component",
+    "Design-token-driven color",
+    "Reuse of the signature hatch pattern"
+  ],
+  "intention_signals": "Aims to make the Vi diamond a single reusable, parameterized React mark (size/color/animation) so the brand glyph is defined once and dropped in anywhere, carrying the hatch DNA.",
+  "novelty": "Encodes the brand's diamond-plus-hatch identity as a small parametric SVG component with an opacity-pulse animation option.",
+  "contribution": "Contributes the canonical reusable Vi diamond glyph component (token-colored, hatch-patterned, optionally animated) that a fused system would keep as the single home for the brand mark.",
+  "summary_for_embedding": "React ViShape component rendering the Vi diamond brand mark as inline SVG with a diagonal hatch pattern, configurable size/color (default --accent-gold token) and an optional opacity-pulse animation.",
+  "intention_for_embedding": "To define the Vi diamond brand glyph once as a reusable, parameterized mark usable as logo, chip, or button glyph."
+}

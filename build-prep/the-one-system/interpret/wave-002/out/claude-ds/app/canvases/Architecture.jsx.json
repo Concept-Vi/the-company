@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Architecture.jsx",
+  "model": "opus",
+  "what_it_does": "A React canvas that visually explains the Universal Type Registry. It reads window.CV_REGISTRY live (subscribing for re-render) and renders an intro plus seven sections: the seven-layer ladder with per-layer counts and example TypeThumbs, a slot-composition example (showing system.widget.hybrid's slots as JSON + a live preview), an inheritance/lineage example (doc.wizard and its descendants), Types-vs-Templates, a consumers matrix listing which surfaces read the registry, the four entry points for creating Types, and a cross-embedding diagram. Exports window.Architecture.",
+  "observations": [
+    "Pulls everything from window.CV_REGISTRY: all(), query({layer}), get(id), descendants(id), LAYERS, LAYER_INFO — it is a pure read-projection of the registry.",
+    "counts is a useMemo over R.all() grouped by t.layer, recomputed on a subscribe-driven tick.",
+    "LayerLadder reverses R.LAYERS and renders rank/swatch/label/desc/example-thumb/count per layer, each clickable to navigate to 'registry'.",
+    "SlotExample, LineageExample, TypesVsTemplates, CrossEmbedDiagram each look up SPECIFIC type ids by string: 'system.widget.hybrid', 'doc.wizard', 'doc.widget', 'doc.deck', 'surface.deck-slide.content', 'block.callout' — and return null if the type is absent.",
+    "Renders real previews through window.TypeThumb (guarded by `window.TypeThumb &&`) rather than text cards — 'real type thumbs, not text cards' per the comment.",
+    "ConsumersMatrix is a HARDCODED array of 7 rows describing each surface's registry reads — descriptive prose, not derived from the registry.",
+    "EntryPoints is a hardcoded 4-item array (In-context/Standalone/Plan-level) with onNav/onOpenBuilder callbacks.",
+    "describeAccepts() formats a slot's accepts {layers,families,tags} into a 'layers · family:x · tag:y' string, defaulting to 'any'.",
+    "Uses shared components: CanvasHeader, ViShape, TypeCard, TypeLayerBadge, TypeThumb; hook aliases (useState_arch etc.).",
+    "Some inline styles (the variables badge, header meta) are written inline rather than via classes/tokens, though they reference var(--...) tokens."
+  ],
+  "standouts": [
+    "It is documentation that is ALSO a live projection: the layer counts, example thumbs, slot schemas, and lineage are read from the running registry, so the explanation can't drift from the actual catalogue (for the parts it derives).",
+    "Renders actual TypeThumb previews of real registered types to illustrate composition, embedding, and inheritance rather than mock graphics."
+  ],
+  "conventions": [
+    "UI-as-projection-of-the-registry (the project's core rule) for the derived parts.",
+    "Exports a window global for the router (consistent with the other canvases) instead of self-mounting.",
+    "Defensive null-returns when a referenced type id is missing (graceful, not loud) — and `window.TypeThumb &&` guards for load order."
+  ],
+  "concerns": [
+    "ConsumersMatrix and EntryPoints are hardcoded descriptive arrays — they can drift from the actual surfaces/registry consumers since they are hand-written, not derived.",
+    "Several components depend on specific type ids existing (system.widget.hybrid, doc.wizard, doc.deck, etc.); if the catalogue is re-keyed these sections silently render nothing (null) with no signal — soft failure rather than loud.",
+    "A few inline style objects (vars-badge, header meta) embed layout literals in JSX instead of classes."
+  ],
+  "notes": "The Architecture explainer canvas — a live, registry-driven walkthrough of the Universal Type Registry (layers, slots, inheritance, templates, consumers, entry points, cross-embedding), illustrated with real TypeThumb previews of registered types.",
+  "questions": [
+    "What is the full LAYER_INFO shape (rank/swatch/label/desc) and the fixed set of LAYERS the ladder reverses?",
+    "Are the hardcoded ConsumersMatrix rows meant to eventually be derived from registry query metadata, or kept as curated prose?"
+  ],
+  "purpose_vs_actual": "Matches: the header says it explains how the Universal Type Registry works via diagrams/layer overview/composition/lineage/consumers, and the code renders exactly those sections from the live registry.",
+  "apparent_themes": [
+    "One registry, every composable thing (universal Type abstraction)",
+    "Self-documenting system (explanation projected from the live model)",
+    "Composition by slots + single-parent inheritance + cross-family embedding"
+  ],
+  "intention_signals": "Trying to make the registry's architecture legible by showing it with its own real types — counts, schemas, lineage, and embeddings rendered live — so a reader sees that widgets, wizard steps, slide blocks, and templates are all one shape (a Type at a layer) and that every surface consumes the single source.",
+  "novelty": "An architecture explainer built as a live projection of the very registry it documents — layer counts, slot JSON, lineage trees, and cross-embedding chains rendered from actual registered types via TypeThumb, not mock diagrams.",
+  "contribution": "Contributes the canonical visual narrative of the Universal Type Registry — the seven-layer ladder, slot/inheritance/template/cross-embedding illustrations rendered from real types, and the consumers/entry-points framing that tells the reader how Types are produced and consumed across the app.",
+  "summary_for_embedding": "A React Architecture canvas that explains the Universal Type Registry by projecting it live: seven-layer ladder with counts, slot-composition and inheritance examples, Types-vs-Templates, a consumers matrix, creation entry points, and a cross-embedding diagram, illustrated with real TypeThumb previews.",
+  "intention_for_embedding": "To make the universal Type Registry legible by illustrating it with its own live types, showing that widgets, wizard steps, slide blocks, and templates are one composable shape and that every surface reads from the single source."
+}

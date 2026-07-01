@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/FloorplanOverlay.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React function component FloorplanOverlay that renders a modal floorplan view as a percent-positioned canvas of labelled rooms plus clickable navigation dots. Rooms and dots are defined as hardcoded arrays with percent left/top/width/height (rooms) and x/y (dots). Clicking the backdrop closes the overlay; clicking a dot calls onPick(id); the dot matching activeHub gets an 'active' class. It exposes itself on window.FloorplanOverlay.",
+  "observations": [
+    "rooms array: six rooms (entry, living/kitchen, bed1, bath, bed2, balcony) with percent geometry within the canvas",
+    "dots array: four navigation positions (entry, living, bed2, balcony) with percent x/y",
+    "Backdrop div has onClick={onClose}; inner card stops propagation with e.stopPropagation()",
+    "Dot button toggles 'active' class via activeHub === d.id and applies inline absolute positioning + translate(-50%,-50%) centering",
+    "Uses optional chaining onPick?.(d.id) so onPick is safe if undefined",
+    "An inline-styled paragraph gives the instruction 'Tap a position to jump there in the Hub.' using var() tokens for font/color",
+    "Close button is positioned inline (top:18,right:18) over the card",
+    "Registers on window.FloorplanOverlay"
+  ],
+  "standouts": [
+    "Percent-based room and dot layout makes the floorplan resolution-independent within its canvas",
+    "Active-dot highlighting tied to the externally-supplied activeHub prop"
+  ],
+  "conventions": [
+    "Follows the kit's window.<Component> registration and vh- class prefix",
+    "Uses design tokens via var() for the instruction text and dot border, consistent with hub.css",
+    "Backdrop-click-to-close with inner stopPropagation is a standard modal idiom"
+  ],
+  "concerns": [
+    "Room and dot positions are hand-tuned magic percentages with no source of truth beyond this file",
+    "Some inline styles duplicate what hub.css already defines for .vh-fp-dot (position:absolute, transform) — partial redundancy"
+  ],
+  "notes": "A modal floorplan with hardcoded percent-positioned rooms and clickable jump dots that report the picked room via onPick.",
+  "questions": [
+    "Where do the room/dot coordinates come from for a real apartment — is there a data source, or are they always hand-authored per floorplan?",
+    "What does onPick actually navigate to in production (the parent maps it to a panel switch in this mockup)?"
+  ],
+  "purpose_vs_actual": "n/a (no stated purpose beyond the filename); the component does render an interactive floorplan overlay as the name implies.",
+  "apparent_themes": [
+    "Spatial navigation of a property by plan view",
+    "Map-to-hub linking (dots jump to viewer positions)",
+    "Overlay/modal interaction over the main stage"
+  ],
+  "intention_signals": "Aims to let a buyer orient within an apartment by tapping rooms on a 2D plan to jump to the corresponding panoramic hub position.",
+  "novelty": "The plan-view dots that act as spatial jump links into a separate panoramic viewer state.",
+  "contribution": "Contributes a floorplan-as-navigation pattern: a percent-positioned room canvas with clickable jump dots that bind to an active position, reusable for any spatial map-to-view linking in a fused system.",
+  "summary_for_embedding": "A React modal overlay component rendering an apartment floorplan as percent-positioned labelled rooms with clickable navigation dots that report the picked room and highlight the active hub position.",
+  "intention_for_embedding": "Built to let a buyer navigate a property spatially by tapping rooms on a 2D plan to jump to the matching panoramic hub view."
+}

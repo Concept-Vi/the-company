@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/COHERENCE-SUBSTRATE.md",
+  "model": "opus",
+  "what_it_does": "A synthesis/grounding document for the 'Coherence Substrate' idea — the post-research-wave artefact that takes the anchor's 'what if' and grounds it against real repo code across six research areas, presenting the established findings, the load-bearing own/reflect conceptual split, the detection-rigor result, who runs the loop, safety gaps, the consent decision, and a sketched build order. It is explicitly framed as a shared understanding doc, not a spec or plan.",
+  "observations": [
+    "Self-describes as the synthesis layer over an ANCHOR.md + six findings/ companions, each citing file:line",
+    "Maps every field of a 'finding' {kind, address, state, disposition, evidence, since} onto an existing repo primitive (annotation store, append_event/_emit log, Inbox status-lane pin-overlay)",
+    "Introduces the central 'own/reflect split': detection is reflected/re-derivable (a view), disposition is owned/persisted (a micro-ADR with {decided_by, decided_at, reason, supersedes})",
+    "Reports measured numbers: regex and AST find identical 115 routes (zero divergence); the consumer-side substring test mis-states 3 of 82 'wired' routes (~3.7%) as connected",
+    "Names concrete real incidents as evidence: /status wrongly deleted (half-migration), mode dial built twice, /api/knobs, /api/mockup-feedback wrongly deleted",
+    "Specifies a three-leg directional hybrid detection method (AST static proposes dead; registry demotes; event log demotes) with a demote-only discipline",
+    "Section 3.5 corrects the loop-runner story: the loop's agent IS Claude Code (interactive lead now, wire-spawned `claude -p` later) — one design, two invocations",
+    "Section 7 is an explicit 'but actually' list cataloguing where the research corrected the anchor",
+    "Downgrades the convergence claim from 'always completes' to 'burns down or halts loud'"
+  ],
+  "standouts": [
+    "The own/reflect split (reflect detection, own disposition → a disposition is a micro-ADR / institutional memory) framed as the conceptual heart",
+    "The inverted detection-rigor result: extraction is already accurate; the entire live accuracy gap is the consumer-side substring test, measured at 3/82 false-wires",
+    "The three-leg demote-only discipline: static may over-call dead (safe); registry and log may only demote; nothing declares an edge dead from absence"
+  ],
+  "conventions": [
+    "Follows the repo's evidence discipline — claims cited to companions which cite file:line; uses 'Observed/measured' framing",
+    "Follows the build-prep working-doc tone (relational, dense, line-by-line) and the no-green-paint / fail-loud principles named in CLAUDE.md",
+    "Uses the project's vocabulary (reflects-never-owns, registry-is-truth, consent gate, surface_intent_at, RHM, altitude/fold)"
+  ],
+  "concerns": [],
+  "notes": "The grounded synthesis that turns the Coherence Substrate idea into established fact + one new conceptual move (own/reflect) + one hard core (the three-leg connection graph) + one human decision (the standing grant width).",
+  "questions": [
+    "Where exactly do ANCHOR.md and the six findings/ companions live relative to this file?",
+    "Has any of the sketched build order (§8) actually been built, or is this purely pre-build?",
+    "What is the precise on-disk shape of the disposition-overlay/finding-record store referenced as 'designed'?"
+  ],
+  "purpose_vs_actual": "Match — it states it is a grounded synthesis (not a spec) and delivers exactly that: cross-area reasoning, corrections to the anchor, and a non-binding build sketch.",
+  "apparent_themes": [
+    "build-on-not-beside / universal composition (every finding-field maps to an existing primitive)",
+    "reflects-never-owns and the own/reflect refinement",
+    "honesty over green-paint (downgraded claims, measured gaps, halt-loud)",
+    "self-knowledge machinery pointed at the system's own integrity",
+    "no-humans-hold-the-whole as the motivating constraint"
+  ],
+  "intention_signals": "Trying to give Tim and the cognition session a single grounded, trustworthy mental picture to reason over before any build — proving coherence is cheap (mostly unifying what exists), high-leverage (keystone for trusted autonomous builds), and honestly bounded (what can/can't be detected, halts loud).",
+  "novelty": "The own/reflect split applied to integrity findings — detection as a re-derivable view, disposition as the only net-new persisted thing and therefore the institutional memory that replaces 'the developer who remembers'.",
+  "contribution": "Contributes the grounded conceptual frame of the Coherence Substrate: the own/reflect split, the measured detection-rigor result (3/82 false-wire on the consumer-side substring test), the three-leg demote-only detection discipline, the loop-is-Claude-Code reframe, and the 'burns down or halts loud' convergence promise — the reasoning a fused system would keep about how to detect and hold system integrity.",
+  "summary_for_embedding": "A grounded research-synthesis design doc proposing the Coherence Substrate — a held integrity model built on existing repo primitives, with detection reflected/re-derivable and disposition owned as micro-ADRs, a measured three-leg connection-graph detection method, and a Claude-Code-run burn-down loop that halts loud.",
+  "intention_for_embedding": "To give Tim and the cognition session one shared, evidence-grounded understanding of whether and how to build a coherence/integrity substrate over the system's own self-knowledge machinery."
+}

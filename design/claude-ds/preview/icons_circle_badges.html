@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Icon — gold-circle badges" subtitle="Outline / filled / desaturated state-strength" viewport="700x320" --><html><head><meta charset="utf-8"><title>Icon — gold circle badges</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 22px 26px; min-height: 240px; }
+  .lead { font: 400 12px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 16px; max-width: 90%; }
+  .lead b { color: var(--fg-primary); }
+  .row { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .ent { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .name { font: 500 11px/1 var(--font-mono); color: var(--fg-secondary); }
+  .desat .ent + .ent { opacity: 1; }
+  .meta { display: flex; gap: 18px; font: 400 11px/1 var(--font-body); color: var(--fg-secondary); margin-top: 16px; }
+  .meta b { color: var(--fg-primary); font-weight: 600; }
+</style></head>
+<body><div class="card">
+  <p class="lead">The <b>gold-circle entity badge</b> — wrap any icon in a thin gold ring for diagram-level use. <code style="font-family:var(--font-mono);font-size:11px">&lt;CvIcon name="house" circle /&gt;</code></p>
+  <div class="row" id="row1"></div>
+  <p class="lead" style="margin-top:18px"><b>Filled variant</b> for active entities — <code style="font-family:var(--font-mono);font-size:11px">&lt;CvIcon name="house" circle filled /&gt;</code></p>
+  <div class="row" id="row2"></div>
+  <p class="lead" style="margin-top:18px"><b>State-strength gradient</b> — pass <code style="font-family:var(--font-mono);font-size:11px">desaturated={0…0.85}</code> for inactive states.</p>
+  <div class="row" id="row3"></div>
+</div>
+<script src="../assets/icons/cv-icons.js"></script>
+<script>
+function circleIcon(name, size, opts = {}) {
+  const body = window.CV_ICONS.data[name];
+  const tone = 'var(--accent-gold)';
+  const inner = Math.round(size * 0.56);
+  const ring = Math.max(1.5, size * 0.05);
+  const isFilled = opts.filled;
+  const opacity = opts.desaturated ? 1 - opts.desaturated : 1;
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;border:${ring}px solid ${tone};background:${isFilled?tone:'transparent'};color:${isFilled?'var(--fg-primary)':tone};opacity:${opacity}">
+    <svg viewBox="0 0 24 24" width="${inner}" height="${inner}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${body}</svg>
+  </span>`;
+}
+const ENT = [['person','User'],['file','File'],['browser-house','Listing'],['vr-headset','Hub'],['dollar-circle','Pricing'],['network','Vi'],['calendar','Event']];
+document.getElementById('row1').innerHTML = ENT.map(([n,l])=>`<div class="ent">${circleIcon(n,48)}<span class="name">${l}</span></div>`).join('');
+document.getElementById('row2').innerHTML = ENT.slice(0,5).map(([n,l])=>`<div class="ent">${circleIcon(n,48,{filled:true})}<span class="name">${l}</span></div>`).join('');
+document.getElementById('row3').innerHTML = [0,0.2,0.4,0.6,0.8].map(d=>`<div class="ent">${circleIcon('house',44,{desaturated:d})}<span class="name">${Math.round((1-d)*100)}%</span></div>`).join('');
+</script>
+</body></html>

@@ -1,0 +1,50 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/rg10_reconcile.py",
+ "model": "opus",
+ "what_it_does": "GC5 cross-mockup reconcile pass (pure deterministic, no model). Globs all rg10-batch-*.json artifacts, collects every proposal grouped by address. For each address: a single proposal keeps its own class (confirmed/floor/jury via classify_one); N proposals that AGREE on the truth-bearing fields (maps_to_feature and grounding) are merged to one representative (preferring a confirmed one) with sources recorded; N that DISAGREE become class='conflict' with all variants kept. Writes .build/rg10/reconciled.json with entries, counts, raw_proposals, distinct_addresses. Then resurface() posts a new aggregate review card with the true triage counts and moves the two superseded status cards (s94/s96) to 'requeue' (status lane only — never the operator's resolved field).",
+ "observations": [
+  "classify_one maps a confirm result to confirmed | floor (any refcheck reason) | jury (soft no-quorum).",
+  "Merge requires both feats set and grounds set to have len 1 (exact agreement on the two truth-bearing fields).",
+  "Conflict entries keep every variant's mockup, maps_to_feature, grounding, represents, and full dossier — the disagreement is preserved as the signal.",
+  "Docstring quantifies the discovery: 551 proposals are really 463 distinct addresses; 57 addresses proposed by up to 6 mockups; 'Tim's question-3 finding, 2026-06-10'.",
+  "resurface() has a dup guard that raises RuntimeError ('fail loud') if an unresolved reconciled card already exists.",
+  "SUPERSEDES = ('s94-review','s96-review'); superseded cards set to status 'requeue', with per-id error capture if not retired.",
+  "The review card title/summary translate raw counts into operator-facing triage language (block-approvable / your eyes / your decision / fabrication-caught).",
+  "__main__ runs reconcile() then resurface(), printing both.",
+  "Surface item declares kind='registry_proposal_batch', scope='reconciled', and points to the OUT artifact."
+ ],
+ "standouts": [
+  "Triage-by-condition rather than a flat 463-item list — classes drive what kind of human attention each entry needs.",
+  "Only the two truth-bearing fields (maps_to_feature, grounding) must agree for a silent merge; any other disagreement is escalated to Tim.",
+  "The dedup itself is the headline finding: it corrects an inflated count (within-mockup dedup missed cross-mockup duplicates)."
+ ],
+ "conventions": [
+  "Family pattern: os.chdir to root, .build/rg10 artifacts, 'THE FLOOR: only Tim resolves' framing, status-lane-only writes.",
+  "Pure-deterministic separation: reconcile() does no model calls; surfacing is split into its own function.",
+  "Fail-loud dup guard on the live card to prevent duplicate unresolved surfaces."
+ ],
+ "concerns": [
+  "Conflict-branch increments counts['conflict'] manually then `continue`s, while non-conflict branches increment via counts[entries[-1]['class']]; the two code paths for counting are asymmetric and could diverge if edited.",
+  "Merge representative preference is 'first confirmed else first proposal' — among agreeing proposals the choice of dossier prose is arbitrary beyond the confirmed preference.",
+  "resurface imports runtime/store modules and writes to .data/store, so reconcile.py is not purely a file transform despite the 'no model' framing."
+ ],
+ "notes": "GC5 reconcile: the deterministic cross-mockup dedup that turns per-mockup proposals into distinct-address entries classed for triage (merge agreements, escalate disagreements to conflict), then resurfaces one true-count review card superseding the inflated ones.",
+ "questions": [
+  "Where do the s94/s96 card ids come from — are they stable across environments or specific to this run's store?",
+  "Are 'floor' and 'jury' the only non-confirmed single-proposal classes, or can a single proposal also be 'conflict' (the code only assigns conflict to N-proposal disagreements)?"
+ ],
+ "purpose_vs_actual": "Match — docstring describes a deterministic cross-mockup reconcile producing reconciled.json plus a resurfaced true-count card superseding s94/s96, which is exactly the implementation.",
+ "apparent_themes": [
+  "Triage-by-condition over flat lists",
+  "Truth-bearing fields define agreement; disagreement is signal for the human",
+  "Deterministic-only reconcile (no model judgment)",
+  "Status-lane writes never touch the operator's resolved field (the floor)",
+  "Fail-loud against duplicate live surfaces"
+ ],
+ "intention_signals": "Correct an inflated proposal count by deduping across mockups, and present the human a small triage surface where merges are silent and only genuine cross-screen disagreements demand a decision.",
+ "novelty": "Treating six independent screens' differing descriptions of one address as a first-class 'conflict' object that preserves all variants for human adjudication, rather than auto-merging or dropping.",
+ "contribution": "Contributes the cross-mockup deduplication and class-assignment stage that produces the canonical reconciled.json the rest of the RG10 family consumes, plus the operator-facing true-count resurfacing.",
+ "summary_for_embedding": "A deterministic cross-mockup reconcile that groups all rg10 batch proposals by address, merges field-agreeing ones and escalates disagreements to 'conflict', writes reconciled.json with triage classes, and resurfaces a true-count review card.",
+ "intention_for_embedding": "To deduplicate inflated per-mockup proposals into distinct addresses and present the human a triage-by-condition surface where only real cross-screen disagreements require a decision."
+}

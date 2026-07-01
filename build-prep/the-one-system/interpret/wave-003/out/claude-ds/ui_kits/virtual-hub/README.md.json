@@ -1,0 +1,35 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/README.md",
+  "model": "opus",
+  "what_it_does": "Documents the ConceptV Virtual Hub UI kit — the buyer-facing, panotour-style immersive property viewer with a minimal dark overlay. Describes the photo-first layout, the placement of overlay UI elements, a component inventory table mapping each .jsx file to its role, and how the index.html demo mounts the full hub experience.",
+  "observations": [
+    "Frames the Virtual Hub as the buyer-facing side: end-users land here after a ConceptV customer publishes a project.",
+    "Layout section specifies positions: bottom-centre MENU, CLOSE in the Quick Menu, right-anchored 360px side panels, full-bleed Floorplan overlay, top-left brand bug + Hub switcher, floating comment-capture popup.",
+    "Component table lists eight files: HubFrame, HubBug, MenuButton, QuickMenu, InfoPanel, SharePanel, FloorplanOverlay, CaptureComment.",
+    "Demo section describes index.html interactions: open MENU, swap right-side panels, click photo to drop a capture comment."
+  ],
+  "standouts": [
+    "Names two components (HubFrame, HubBug, FloorplanOverlay, CaptureComment) beyond the batch's .jsx files — the kit's full surface inventory.",
+    "Specific 360px side-panel width and concrete hub-switcher examples (Entry / Apartment A / Apartment B)."
+  ],
+  "conventions": [
+    "Standard UI-kit README shape: purpose, layout, component table, demo.",
+    "Describes the vh-* overlay pattern the .jsx components implement."
+  ],
+  "concerns": [],
+  "notes": "The orientation doc for the Virtual Hub kit — buyer-facing immersive viewer with a dark overlay; read this to know how the eight components fit together.",
+  "questions": [],
+  "purpose_vs_actual": "Matches: it documents the kit and its components, and the described roles align with the InfoPanel/MenuButton/QuickMenu/SharePanel files in this batch.",
+  "apparent_themes": [
+    "Photo-first immersive property viewing",
+    "Minimal dark overlay UI",
+    "Buyer-facing publish-and-share flow",
+    "Spatial comment capture on the render"
+  ],
+  "intention_signals": "Aims to define a cohesive end-user viewing experience for published ConceptV projects — immersive render with unobtrusive controls, panel switching, sharing, and click-to-comment capture.",
+  "novelty": "The capture-comment-anchored-to-a-clicked-point interaction and the gyro/panotour immersive framing for real estate.",
+  "contribution": "Contributes the buyer-facing Virtual Hub concept and its component map: a photo-first immersive viewer with overlay menu, info/share panels, floorplan, hub switching, and spatial comment capture.",
+  "summary_for_embedding": "README documenting the ConceptV Virtual Hub UI kit — a buyer-facing immersive panotour property viewer with a dark overlay menu, info/share/floorplan panels, and click-to-drop comment capture.",
+  "intention_for_embedding": "To explain how the Virtual Hub presents published projects to end-users and how its eight overlay components fit together."
+}

@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-engine/IMPLEMENTATION-GUIDE.md",
+  "model": "opus",
+  "what_it_does": "A multi-part implementation guide for the Cognition Engine build: it maps each Completion-Criteria group (A-G) to HOW it gets built on top of existing systems, defines file territories and a parallel-lane cut (LANE-ENGINE/SUITE/SURFACE/NEWMOD/CONFIG/FE plus later BRIDGE/FABRIC/STORE), and across Parts 3-5 specifies the corpus/discovery pillar derived from a by-hand prototype, folds in adversarial-review corrections, and states two standing bars (agent-knowledge + self-describing-for-update).",
+  "observations": [
+    "Five governing principles stated up front: project-don't-hardcode, wire-don't-rebuild, one-surface-three-faces (MCP+/api+FE+CLI), each-change-preserves-the-rest, verify-by-use",
+    "Groups A-G each carry a STATUS, LANES tags, principle, per-criterion items (e.g. B1-B5, C1-C3, D1-D6, E2-E4, F1-F4), and explicit Files (NEW/MODIFY) plus CONNECT targets",
+    "Concrete file targets named throughout: runtime/cognition.py, runtime/suite.py, mcp_face/server.py, ops/services.json, runtime/corpus.py, store/fs_store.py, store/vector_index.py, fabric/transport.py, fabric/client.py, authoring.py",
+    "The parallel-lane cut asserts file-disjointness with one owner per hot file, and cross-lane ordering (NEWMOD contracts land first)",
+    "Part 3 maps a run-1 hand-coded prototype (~/wizard-run-1/) line-by-line to NEW|CHANGE|REUSE real-engine code",
+    "Part 4 is an explicit adversarial-review fold whose corrections are declared to SUPERSEDE earlier parts (e.g. cascade runner + cloud routing re-classified from REUSE to NET-NEW)",
+    "Specific code-reliability detail: json_object→json_schema response_format, a repetition_penalty ladder (1.1→1.2→fail-loud degenerate-loop), persisting finish_reason+tokens",
+    "Open Tim-decisions flagged in-file (rep_penalty vs legitimate enumeration, node-authoring line, pillar-vs-GroupD relationship)",
+    "References sibling docs: build-prep/coherence/CORPUS-CHAIN.md (called stale), build-prep/guided-review-surface/ RHM organ"
+  ],
+  "standouts": [
+    "Part 4's self-correction discipline: it openly resizes scope, says the criteria were honestly red, and labels earlier reuse claims as over-sold",
+    "The run-1→real-code mapping table is the declared 'spine of the build' — translating a prototype's tables into engine primitives",
+    "The lane-cut explicitly grew from 6 lanes to add LANE-BRIDGE/FABRIC/STORE as research/adversary review found unowned hot files (incl. fs_store wrongly banned then restored)",
+    "rep_penalty robustness fork is carried as a genuine unresolved Tim-decision with a stated lean (ladder + diff-against-source, never silent)"
+  ],
+  "conventions": [
+    "Heavy use of symbolic shorthand (→, ·, ✅/🔴, file:line refs, scheme:// addresses) compressing dense relational content",
+    "Follows the project's project-don't-hardcode / registry-is-truth law repeatedly",
+    "Marks status honestly (built #58 verify-only vs red criteria) rather than green-painting",
+    "Each group ties code changes to a CONNECT list of existing systems — wire-don't-rebuild discipline"
+  ],
+  "concerns": [
+    "Extremely dense and abbreviation-heavy; a fresh reader without the surrounding build-prep context would struggle to parse the shorthand",
+    "Internal layering of supersessions (Part 4 overrides Parts 1-3, §3.5/3.8 superseded by §4.1) means a reader must track which claims are still live"
+  ],
+  "notes": "A self-correcting, lane-partitioned implementation playbook for the Cognition Engine that maps a hand-coded prototype onto existing engine primitives and folds adversarial review back in as binding corrections.",
+  "questions": [
+    "What are the actual Completion-Criteria (this is the HOW guide; the criteria doc it references is not in this file)?",
+    "What is the current build state of the later-added lanes (BRIDGE/FABRIC/STORE) versus the original six?",
+    "Has json_schema response_format actually been verified on the resident 4B, given §4.7 says 'don't assert verified'?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is the HOW guide connecting criteria to existing systems, and that is what the body delivers across all five parts.",
+  "apparent_themes": [
+    "Registry-driven dynamism (add-a-row = a file, no code edit)",
+    "Reuse-don't-parallel / wire-don't-rebuild",
+    "One surface projected to three faces (reflects-never-owns)",
+    "Behaviour-preserving change (nothing dropped, no regression)",
+    "Honest status and adversarial self-correction"
+  ],
+  "intention_signals": "It is trying to make a large cognition/corpus build executable in parallel by file-disjoint lanes while staying faithful to Tim's compositional laws, and to keep itself honest by absorbing adversarial review as binding rather than cosmetic corrections.",
+  "novelty": "The explicit prototype-to-engine mapping table plus the in-document supersession mechanism (later parts formally overriding earlier over-claims) is an unusual way to keep an implementation guide truthful as understanding evolves.",
+  "contribution": "Contributes the detailed HOW-layer plan for the cognition/corpus engine: the lane partition with named hot-file owners, the run-1→real-code translation, the generation-robustness spec, and the catalogue of NET-NEW vs REUSE pieces a fused system would keep as the build's connective tissue.",
+  "summary_for_embedding": "A multi-part implementation guide mapping Cognition Engine completion-criteria groups to file territories, a parallel-lane cut, a run-1 prototype-to-engine mapping, and adversarial-review corrections.",
+  "intention_for_embedding": "To make a large registry-driven cognition and corpus-discovery build executable in file-disjoint parallel lanes while abiding by Tim's compositional laws and folding adversarial review in as binding corrections."
+}

@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "app/services/ai-presets.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that defines window.cvAIPresets, a localStorage-backed, observable store for AI Studio image presets and pipelines. Presets are named reusable GenerateOptions blobs (prompt body, model, size, quality, format, compression, background, moderation, n); pipelines are ordered step sequences (generate/edit/mask/filter/adopt) that operate on an image. Ships six seed presets and two seed pipelines, exposes CRUD (add/update/remove for presets and pipelines), snapshot/subscribe, findPreset, and materialize (resolve a preset into a GenerateOptions object for cvOpenAI.generateImage).",
+  "observations": [
+    "Namespace key 'cvstudio:cvAIPresets:v1' in localStorage",
+    "SEED includes 6 presets (warm interior, drone exterior, bronze line, stone texture, stakeholder portrait, moodboard) and 2 pipelines (hero+close-up pack, project listing kit)",
+    "All seed presets use model 'gpt-image-2' with concrete ConceptV-branded prompt bodies (Australian property/architecture, warm/gold/ink palette)",
+    "load() returns a deep clone of SEED when storage is empty or unparseable, merging presets/pipelines keys defensively",
+    "persist() writes to localStorage in try/catch and notifies a Set of listeners",
+    "uid(prefix) generates ids as prefix + '_' + random base36",
+    "Pipeline step kinds observed in seeds: generate (with presetId), edit (with prompt), adopt (with to:'system'/'project' and tags) — the header also documents mask and filter kinds",
+    "materialize maps a preset's body→prompt and copies the generation params into a GenerateOptions shape",
+    "API is the same store shape as other studio stores: snapshot/subscribe/list/add/update/remove"
+  ],
+  "standouts": [
+    "The seed prompt bodies hard-encode ConceptV brand aesthetics (cream/gold/ink, warm Australian light, sandstone) directly into preset content",
+    "Pipelines compose presets by reference (step.presetId) rather than duplicating their options — a reference, not a copy",
+    "materialize is the single bridge from a stored preset to the cvOpenAI.generateImage option shape"
+  ],
+  "conventions": [
+    "Observable localStorage store pattern (NS key, load/persist, listeners Set, snapshot/subscribe) shared with image-store.js and openai.js",
+    "Seeds provide useful defaults out of the box; user data overrides seeds",
+    "IIFE with a single window.* export",
+    "Deep-clones seeds via JSON parse/stringify to avoid shared mutable references"
+  ],
+  "concerns": [
+    "header documents 'mask' and 'filter' step kinds but no seed exercises them and this file does not validate step.kind — handling lives in the consumer",
+    "Brand aesthetic is encoded as literal prompt text in each seed rather than composed from a single brand-voice/style home (the openai.js BRAND_SUFFIX is a separate place the style also lives)"
+  ],
+  "notes": "The preset+pipeline store for AI Studio: six branded image presets, two pipelines, full CRUD over localStorage, and materialize() to turn a preset into generateImage options.",
+  "questions": [
+    "Where are pipeline steps (generate/edit/mask/filter/adopt) executed, and is step.kind validated there?",
+    "Should the per-preset brand styling be composed from the same single style home as openai.js BRAND_SUFFIX rather than inlined in each seed body?"
+  ],
+  "purpose_vs_actual": "Matches — header describes a store for presets and pipelines with the listed step kinds, and the file implements exactly that store plus seeds and materialize.",
+  "apparent_themes": [
+    "Single observable store per concern (localStorage + listeners)",
+    "Composition by reference (pipelines reference presets)",
+    "Useful-out-of-the-box seeding",
+    "Resolve/materialize a stored config into a runtime call shape"
+  ],
+  "intention_signals": "Trying to give AI Studio reusable, named generation recipes and multi-step pipelines so users start with branded presets and can chain generate/edit/adopt steps, with one observable store the UI subscribes to.",
+  "novelty": "The pipeline abstraction — ordered, typed steps (generate/edit/mask/filter/adopt) that reference presets and end in an 'adopt into system/project' move tying generation back into the shared image library.",
+  "contribution": "Contributes the AI image preset/pipeline data layer: the GenerateOptions preset shape, the typed multi-step pipeline model, six branded seed presets, two seed pipelines, CRUD+observable store, and materialize() into generateImage options.",
+  "summary_for_embedding": "A localStorage-backed observable store (cvAIPresets) of named image-generation presets and ordered multi-step pipelines, with CRUD, seeds, and a materialize() that resolves a preset into cvOpenAI.generateImage options.",
+  "intention_for_embedding": "To give AI Studio reusable branded generation recipes and chainable pipelines from one observable store, so generation parameters are defined once and referenced everywhere."
+}

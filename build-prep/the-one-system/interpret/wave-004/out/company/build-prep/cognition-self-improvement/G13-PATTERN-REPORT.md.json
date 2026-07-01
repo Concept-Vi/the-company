@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/G13-PATTERN-REPORT.md",
+  "model": "opus",
+  "what_it_does": "The human/lead-written report (the REDUCE) over the g13_cluster.py output. Records the 2026-06-10 mining pass over 1267 exchange extracts (884 distinct tags clustered at 0.78 into 717 clusters), reports signal density, lists the top weighted named patterns and whether each maps to a standing memory rule, surfaces two BORDERLINE-NEW patterns as drafted-but-not-minted rules, and explains the queryable loop the report closes.",
+  "observations": [
+    "explicitly marked 'Canonical, update-in-place'",
+    "headline is deliberately honest/anti-fabrication: the mining VALIDATES standing rules and did not find a new failure class",
+    "states this is the fourth independent mining pass (13 → 39 → 173 → 1267 extracts) with stable structure",
+    "signal density: 189/1267 exchanges carry a Tim correction (co-occurring with a named error), 30 frustration, 26 needs-tim, 21 bug-fix — ~1 in 7 is a teaching moment",
+    "top cluster is verify-by-use (weight 143, 16 variants merged), then verify-before-claiming (50)",
+    "table cross-references each pattern to an existing standing memory with checkmarks/warnings",
+    "two borderline-new patterns proposed with draft rule wording: describe-vs-request discrimination and build-and-show-don't-spec",
+    "quotes real corrections from the record verbatim",
+    "tail note: 700+ single-tag clusters are mostly flow vocabulary; conservative threshold under-merges by design"
+  ],
+  "standouts": [
+    "the anti-fabrication stance — reporting 'no new failure class' as the correct mirror result rather than inventing novelty",
+    "propose-don't-mint discipline for new rules: borderline patterns are drafted for Tim's gate, not auto-adopted",
+    "the verify-by-use / verify-before-claiming family is empirically the dominant pattern of the whole collaboration"
+  ],
+  "conventions": [
+    "follows the propose→gate shape described for everything else in the system",
+    "frames itself as a REDUCE over a live queryable history space",
+    "epistemic-humility tone: 'honest', 'NOT minted', 'logged, not blocking'"
+  ],
+  "concerns": [],
+  "notes": "The judgment-layer report companion to g13_cluster.py: a self-study confirming the collaboration's standing discipline rules empirically and drafting two new candidate rules for approval.",
+  "questions": [
+    "Where are the 'standing feedback memories' this report cross-references actually stored?",
+    "What is the GC7 'diverse-panel pass' machinery referenced as not-yet-built?"
+  ],
+  "purpose_vs_actual": "Match — it is the report that g13_cluster.py's docstring said the lead would write from clusters.json, and it does exactly that with cross-referencing and rule drafting.",
+  "apparent_themes": [
+    "empirical self-validation over fabrication",
+    "propose-then-gate governance of new rules",
+    "verify-by-use as the central collaboration discipline",
+    "mirror-not-inventor stance"
+  ],
+  "intention_signals": "Trying to close the self-study loop: turn the clustered mined history into an honest account of which discipline rules the record actually shows being taught, and to surface only genuinely-new patterns as gated drafts.",
+  "novelty": "A system reporting on its OWN failure/correction patterns across its full interaction history, explicitly choosing confirmation over invented novelty, and treating new-rule adoption as a gated proposal.",
+  "contribution": "Contributes the named weighted pattern taxonomy of the Tim-agent collaboration, the signal-density numbers, the mapping of patterns to standing memories, and two drafted candidate rules awaiting approval.",
+  "summary_for_embedding": "A canonical update-in-place report reducing the G13 clustered mining of 1267 interaction extracts into weighted named collaboration patterns mapped to standing rules, plus two drafted new-rule candidates.",
+  "intention_for_embedding": "To honestly self-study how the system works with Tim by confirming standing discipline rules empirically and proposing only genuinely-new patterns for his approval."
+}

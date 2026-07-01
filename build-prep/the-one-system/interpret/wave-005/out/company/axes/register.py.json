@@ -1,0 +1,32 @@
+{
+  "project": "company",
+  "path": "axes/register.py",
+  "model": "opus",
+  "what_it_does": "Declares the REGISTER/theme axis as a module-level AXIS dict: id/namespace 'register', a single discrete field 'theme', value_source 'live', and a description framing it as the mood/finish (the DNA language/theme) the renderer resolves through.",
+  "observations": [
+    "AXIS dict: id='register', namespace='register', fields={'theme':'discrete'}, value_source='live'",
+    "desc names a concrete theme example 'the dark observatory'",
+    "desc states the renderer resolves THROUGH this axis via archetype.language -> DNA's grammar/tokens/voice",
+    "desc claims re-resolving the register re-skins every surface (served-cascade onto color.primary)"
+  ],
+  "standouts": [
+    "Frames register as the finish the renderer resolves through, tying theme to a DNA language/archetype grammar"
+  ],
+  "conventions": [
+    "Follows an AXIS declaration pattern (id, namespace, fields, value_source, desc) parallel to axes/resolution.py",
+    "Pure declarative data module, no logic",
+    "fields uses field-name -> kind ('discrete') typing"
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the theme/mood axis declaration — choosing a register (e.g. dark-observatory) re-skins every served surface.",
+  "questions": [
+    "Where is the set of available themes defined and how does value_source 'live' resolve them?"
+  ],
+  "purpose_vs_actual": "Matches — module comment and AXIS dict both describe the register/theme/finish axis.",
+  "apparent_themes": ["axis-based composition", "theme/DNA-language finish", "live-resolved skinning"],
+  "intention_signals": "Tries to make visual mood/finish a single resolvable axis so re-resolving it re-skins all surfaces through the DNA grammar/tokens/voice.",
+  "novelty": "Treating 'register'/theme as a renderer-resolved axis whose change cascades a full re-skin via archetype language.",
+  "contribution": "Contributes the register/theme axis declaration — the mood/finish facet (theme, discrete, live) the renderer resolves through.",
+  "summary_for_embedding": "Python AXIS declaration for the register/theme axis: id register, discrete 'theme' field, live value_source, framed as the mood/finish the renderer resolves through via DNA language to re-skin all surfaces.",
+  "intention_for_embedding": "To define visual mood/finish (theme/DNA-language) as one live-resolved axis whose re-resolution re-skins every surface."
+}

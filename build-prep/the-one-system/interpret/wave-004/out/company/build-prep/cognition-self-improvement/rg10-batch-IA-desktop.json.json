@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-IA-desktop.json",
+  "model": "opus",
+  "what_it_does": "A large machine-generated grounding/confirmation report for the IA-desktop.html 'Commander's Bridge' mockup — a high-fidelity desktop layout where one subject (the 'ask' node) is managed simultaneously across a central board, a right inspector, and a bottom conversation pane. Records 104 candidate elements in 68 clusters as dossiers with jury verdicts, split into confirmed and flagged.",
+  "observations": [
+    "Same ground/confirmed/flagged dossier schema; counts n_candidates=104, n_dossiers=104, n_clusters=68 (the largest batch in this set).",
+    "Subject framing: color-coded status (gold=active, orange=awaiting, coral=failed) visualizing 'simultaneity' of one task across three zones.",
+    "Confirmed dossiers cover toolbar (run/layers), board subject node (model_of_tim / SM-node), codebase volatile node (ENG-volatile), join/merge ports (NODE-ports), rollup awaiting, inspector (ask/local/eng-memo), grow/extend (SM-extension), an address-help help-query family, inbox build-result (utterance/accept/diff) and decision (rollup/open/decision), walk/comment, rhm mode/ask, tune composition/record-reflect.",
+    "Rich node-kind vocabulary: NODE-codebase (volatile, always re-runs), NODE-cached, NODE-ports, NODE-portal, NODE-verbs, embed-corpus.",
+    "ENG-memo (the memo gate / decision-compiler) appears as a question-mark organ that compiles a raw re-run decision into a Commander-altitude value choice with 2-3 trade-off options and a recommendation, raw payload still drillable.",
+    "Flagged section (partially read; file is ~2506 lines) includes ui://toolbar/bridge (BRIDGE-bridge, 6-member, 0/3) and refcheck fabrications such as 'NODE-verbs' not in inventory.",
+    "Addresses span toolbar/, palette/, canvas/node/*, inspector/, grow/, address-help/, inbox/*, rhm/, tune/; how_to_change cites Toolbar.tsx, Board.tsx, NodeShape.tsx, Codebase.tsx, Inspector.tsx, NodeConfigForm.tsx, suite.py:coa/apply_node/present_current.",
+    "address-help cluster encodes operator-honesty notes (keep-local latency guard, pinned, chat-at-address, events count, self-changes)."
+  ],
+  "standouts": [
+    "The 'simultaneity' concept: a single ask node tracked across board/inspector/conversation with one shared status palette.",
+    "ENG-memo as a value-altitude decision-compiler — the operator decides on meaning/value, never the raw code fork, with the raw payload kept drillable.",
+    "NODE-codebase as a volatile node that always re-runs to reflect live repo reality.",
+    "address-help 'keep-local latency guard' — an honesty note that a decision must stay on the local model."
+  ],
+  "conventions": [
+    "ui:// addressing; 'proposed'/'built'/'defer' grounding sentinels.",
+    "Node visuals traced to NodeShape.tsx; logic to suite.py wires (coa, apply_node).",
+    "Shared batch dossier/jury structure; refcheck feature-fabrication reasons."
+  ],
+  "concerns": [
+    "Largest fabrication/duplication surface: many addresses (e.g., BRIDGE-bridge 6 members, help-query 6 members) and several refcheck fails (NODE-verbs) — high draft density.",
+    "Several 'built'-grounding canvas controls (canvas/run, ask/memo-gate) are flagged 0/3 by the jury.",
+    "The file is long (~2506 lines); this interpretation is based on the full ground/confirmed block and the leading portion of flagged — later flagged entries beyond the read window are not individually enumerated here."
+  ],
+  "notes": "Auto-generated audit of the flagship Commander's Bridge desktop mockup; the densest element ledger in the batch, anchoring the simultaneity layout, node-kind taxonomy, and the ENG-memo value-compiler.",
+  "questions": [
+    "What is the full set of flagged entries past the read window, and do additional refcheck fabrications appear there?",
+    "Is BRIDGE-bridge intended as a single canonical region given six members map to it?",
+    "Which node-kind addresses are inventory ids vs draft, given NODE-verbs failed refcheck while NODE-ports/NODE-portal pass?"
+  ],
+  "purpose_vs_actual": "Matches: declared a Commander's Bridge grounding report and delivers clustered dossiers + verdicts for that layout (within the read window).",
+  "apparent_themes": [
+    "Simultaneity — one subject managed across multiple zones at once",
+    "Commander-altitude decisions (value choices, not raw code forks)",
+    "Volatile vs cached node memoization (ENG-memo / NODE-codebase)",
+    "Operator honesty (local-latency guards, drillable raw payloads)",
+    "Self-extension via grow/extend"
+  ],
+  "intention_signals": "Trying to design and verify a flagship desktop bridge where a single task is coherently visualized across board, inspector, and conversation, with decisions raised to value-altitude and the system honestly grounded — flagging the heavy draft/fabricated remainder for scrutiny.",
+  "novelty": "The three-zone simultaneity visualization with a shared gold/orange/coral status palette, plus ENG-memo as an operator-altitude decision-compiler over the memo gate.",
+  "contribution": "Contributes the Commander's Bridge desktop element ledger: the simultaneity layout vocabulary, the node-kind taxonomy (codebase/cached/ports/portal/embed-corpus), ENG-memo value-compiler, address-help honesty notes, and the inbox build-result/decision/walk action families.",
+  "summary_for_embedding": "A large grounding/jury-confirmation report for the IA Commander's Bridge desktop mockup, clustering 104 UI elements of a three-zone simultaneity layout into confirmed and flagged dossiers with node-kind and wire mappings.",
+  "intention_for_embedding": "To verify the Commander's Bridge desktop honestly visualizes one task across board/inspector/conversation zones with value-altitude decisions grounded in real node and wire code."
+}

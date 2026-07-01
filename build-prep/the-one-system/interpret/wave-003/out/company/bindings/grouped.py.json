@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "bindings/grouped.py",
+  "model": "opus",
+  "what_it_does": "Declares a BINDING dict 'grouped' that renders activity with sectors being a handful of kind-FAMILIES rather than raw kinds: a 'groups' map assigns glob patterns of kind-ids (e.g. corpus.*, chat/voice, create/move/connect) to seven families (memory, conversation, making, operations, signals, decisions, field). angle_from='kind-group', radius_from='time', order_by='declared'. Also declares GROUP_META giving operator-facing name/is copy for each of the seven families.",
+  "observations": [
+    "BINDING id 'grouped', label 'Activity — grouped into families'.",
+    "Header comment frames this as 'ONE LENS' demoted from 'the instrument' to one binding among many per Tim's correction.",
+    "groups maps families to glob lists; 'field' uses ['*'] as the catch-all 'Everything else'.",
+    "order_by='declared' preserves the declared family order.",
+    "GROUP_META supplies {name, is} for all seven families, kept beside the groups so a new family + its meaning land together (no drift).",
+    "Comment notes projection.py reads GROUP_META for the 'kind-group' sector domain, which was previously unmapped (humanize-only).",
+    "Glob sets are described as grounding the meaning (not invented); copy is TENTATIVE."
+  ],
+  "standouts": [
+    "Self-documented demotion: explicitly recast from 'the instrument' to one binding among many.",
+    "Co-location discipline: GROUP_META kept beside groups specifically to prevent meaning/definition drift."
+  ],
+  "conventions": [
+    "Follows the BINDING-dict pattern but uses a 'meta' block for the view AND a separate GROUP_META for the sectors.",
+    "Glob-pattern grouping (corpus.*, voice.*, run.*) is the binding-specific mechanism.",
+    "Cross-references sibling legibility shape ({id:{name,is}}) used by kinds/raw.py and nodes/_meta.py.",
+    "Catch-all 'field' family using ['*'] is a deliberate fallback convention."
+  ],
+  "concerns": [],
+  "notes": "The grouped/families binding: collapses many activity kinds into seven globbed families with co-located human meaning, explicitly one lens not the default.",
+  "questions": [
+    "How are glob conflicts resolved when a kind matches both a specific family and the 'field' ['*'] catch-all (precedence by declared order)?",
+    "Who maintains the glob sets as new kinds are added so families stay accurate?"
+  ],
+  "purpose_vs_actual": "Match — comment promises a coarser families view of activity, and the groups+GROUP_META encode exactly seven globbed families with operator copy.",
+  "apparent_themes": [
+    "Coarser/calmer grain as a deliberate choice, not the default",
+    "Co-location to prevent drift between definition and meaning",
+    "Glob-based, extensible categorization",
+    "Separation of machine kind-ids from operator language"
+  ],
+  "intention_signals": "Trying to give the operator a calmer, easier-to-read view by gathering many event kinds into a few intuitive families, while explicitly signaling this is a choice among many bindings and keeping each family's meaning next to its definition.",
+  "novelty": "The explicit demotion narrative plus the discipline of binding glob definitions and human copy together in one file to prevent drift.",
+  "contribution": "Contributes the grouped/families binding: the seven-family glob map, the catch-all fallback, and the co-located GROUP_META operator copy for the kind-group sector domain.",
+  "summary_for_embedding": "A binding-config Python file declaring the 'grouped' activity view that maps event-kind globs into seven families (memory, conversation, making, operations, signals, decisions, field) with co-located GROUP_META human-meaning copy.",
+  "intention_for_embedding": "To let an operator read activity at a calmer, coarser grain by gathering many kinds into a handful of named families."
+}

@@ -1,0 +1,54 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Icons.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React canvas component `Icons` (window.Icons) that browses the icon library and generates/refines icons with Vi. It declares ICON_CATEGORIES (named glyphs grouped People/Files/Communication/Architecture/etc.), reads icon bodies from window.CV_ICONS.data, and renders a searchable, category-filtered, tone-switchable grid of SVG glyphs. A generation panel calls window.CV_AI.complete with a brand line-style prompt to propose 4 icon ideas (name + inner SVG body) the user can adopt into CV_ICONS.data. Per-icon hover affordances allow refine-by-message, duplicate-as-variant, and (for session-added icons) delete.",
+  "observations": [
+    "ICON_CATEGORIES hardcodes the category->glyph-name mapping (lines 4-14).",
+    "allNames is read live from Object.keys(window.CV_ICONS.data).",
+    "`generate()` prompt fixes the line style (24x24 viewBox, 1.5px stroke, rounded caps/joins, no fills, currentColor, geometric/architectural) and asks for 4 ideas as a JSON array of {name, body}.",
+    "Parses model reply as JSON array with a [...] regex fallback; filters to entries with name+body, caps at 8.",
+    "`adopt(p)` writes into window.CV_ICONS.data (mutating the shared store), de-dupes names with a random suffix, and notifies via addGenerated.",
+    "`renderIcon` colors by tone (gold/ink/bronze) and injects the body via dangerouslySetInnerHTML.",
+    "`refineIcon` revises one icon's body via CV_AI.complete and writes back; persists session icons via updateGenerated.",
+    "`duplicateIcon` creates a named variant; `deleteIcon` removes from CV_ICONS.data and removeGenerated.",
+    "Header links out to an external icon explorer at ../assets/icons/index.html.",
+    "Uses window.prompt() for the duplicate-variant description (line ~298).",
+    "Empty-search state offers a one-click path to generate the searched term with Vi."
+  ],
+  "standouts": [
+    "Adoption directly mutates the live window.CV_ICONS.data so generated icons become immediately usable across the system.",
+    "Per-glyph refine and duplicate-as-variant, generating new SVG bodies that keep the line-style constraints.",
+    "Search-to-generate fallback: a no-match search becomes a seeded generation prompt."
+  ],
+  "conventions": [
+    "Follows a generate -> proposals -> adopt flow.",
+    "Parses model JSON defensively (raw then [...] regex).",
+    "Routes generation through CV_AI.complete; never a raw model client.",
+    "Aliases React hooks with an `_ic` suffix for the shared bundle.",
+    "Holds icon glyph bodies in an external store (CV_ICONS.data) rather than inline."
+  ],
+  "concerns": [
+    "adopt/refine/duplicate/delete directly mutate window.CV_ICONS.data and rely on parent re-render via addGenerated/updateGenerated, mixing global mutation with React state.",
+    "SVG bodies are injected via dangerouslySetInnerHTML from model output without sanitization.",
+    "Uses the blocking window.prompt() for variant input, inconsistent with the inline RefinePop used elsewhere in the file."
+  ],
+  "notes": "The icon library browser: searchable/categorized glyph grid reading CV_ICONS.data, with Vi generation of 4 line-style icons and per-glyph refine/duplicate/delete.",
+  "questions": [
+    "Is mutating window.CV_ICONS.data in place the intended persistence model, and does it survive reload?",
+    "How does CV_ICONS.data relate to the static ../assets/icons explorer the header links to?",
+    "What component is RefinePop (used here in 'dot' mode)?"
+  ],
+  "purpose_vs_actual": "Matches. The header calls it an 'icon library with real AI generation' and the component browses CV_ICONS.data and generates/refines via CV_AI.",
+  "apparent_themes": [
+    "Brand line-style consistency enforced in prompts",
+    "Generate-refine-adopt of vector assets",
+    "Live shared asset store",
+    "Search as a launch point for generation"
+  ],
+  "intention_signals": "Trying to make the icon set both browsable and elastic: keep all glyphs in one consistent line style, let a user search or generate exactly the icons they need, and refine or branch any glyph while keeping the style invariants.",
+  "novelty": "Per-glyph refine and duplicate-as-variant generation plus search-becomes-generation, all writing into a live icon store.",
+  "contribution": "Contributes the Icons canvas: a searchable categorized glyph grid over CV_ICONS.data, tone switching, line-style-constrained Vi generation of 4 proposals, and per-icon refine/duplicate/delete.",
+  "summary_for_embedding": "A React canvas (window.Icons) browsing a categorized SVG icon library from CV_ICONS.data with search, tone switch, and Vi generation/refinement/duplication of line-style icons.",
+  "intention_for_embedding": "To let users browse, search, generate, refine, and branch brand-consistent line-style icons that adopt into a live shared icon store."
+}

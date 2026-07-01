@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "axes/motion/motion-axis.js",
+  "model": "opus",
+  "what_it_does": "Defines the 'motion' axis and registers it on window.CV_AXES. It declares motion as a first-class axis with typed values (none, breathe, float, pulse, glow, bob, tilt, spin) organised into groups (static, ambient, attention, interactive, process), where each value points at a CSS class name realised in motion.css.",
+  "observations": [
+    "IIFE guarded on window.CV_AXES existing; errors and returns if axis-core hasn't loaded.",
+    "Built via CV_AXES.make({id,label,description,groups,values,default}) then registered.",
+    "Five groups each with id/label/description; values carry id/label/group/css and optional meta ({loop:true} or {hover:true}).",
+    "'none' value has zero:true and css:'' (empty class).",
+    "Each non-none value's css is the class motion.css defines (mo-breathe, mo-float, mo-pulse, mo-glow, mo-bob, mo-tilt, mo-spin).",
+    "Header documents a resolveCSS(id) accessor returning the class name ('' for none) — the accessor itself is presumably on the axis core, not in this file.",
+    "default is 'none'.",
+    "Header explicitly states motion is NOT a glyphic-owned feature and that no consumer redefines motion; consumers subscribe to a subset and resolve the class here.",
+    "Header notes alignment with tokens/motion.css ('nothing teleports') for durations/easing."
+  ],
+  "standouts": [
+    "Explicit reframing of motion as a first-class shared axis rather than a feature owned by one component type (Glyphic).",
+    "Clean separation: this file owns 'which motions exist + their grouping', motion.css owns the actual keyframes/animation.",
+    "meta flags (loop vs hover) classify motion behaviour declaratively."
+  ],
+  "conventions": [
+    "Same CV_AXES.make/register pattern as the other axes (form, etc.).",
+    "Single-home discipline: class names point at motion.css; durations/easing align with tokens/motion.css.",
+    "Guard-and-return-on-missing-core idiom at the top of the IIFE.",
+    "Load-order discipline stated (after axis-core.js, with motion.css linked)."
+  ],
+  "concerns": [],
+  "notes": "The 'motion' axis = the typed catalogue of available animations grouped by intent (ambient/attention/interactive/process), each mapping to a class that motion.css implements; consumers resolve classes here and never redefine motion.",
+  "questions": [
+    "resolveCSS(id) is documented in the header — is it provided by axis-core for every axis, or expected to be defined specifically for motion?",
+    "The 'glow' value is in the 'attention' group but glow can also read as ambient — is the grouping purely advisory for consumers or does it gate which values a consumer may subscribe to?"
+  ],
+  "purpose_vs_actual": "Match — the header declares motion a first-class axis with grouped typed values each pointing at a motion.css class, and the code defines exactly that structure.",
+  "apparent_themes": [
+    "Motion as a generative axis/dial, not a per-component feature.",
+    "Single source of truth (animation lives once in motion.css).",
+    "Intent-based grouping of behaviour (ambient/attention/interactive/process)."
+  ],
+  "intention_signals": "Elevates animation to a shared, queryable axis so any surface (glyphic, card, node, panel) can dial motion from one catalogue, keeping the actual keyframes in a single CSS home and preventing each component from inventing its own motion.",
+  "novelty": "Treating motion as a typed, grouped axis with behaviour-classifying meta (loop/hover) alongside geometric and structural axes in the same generative model.",
+  "contribution": "Contributes the 'motion' dimension of the axis model — a grouped, intent-classified enumeration of animations each bound to a single CSS class home, with a zero ('none') value and behaviour meta.",
+  "summary_for_embedding": "A JS IIFE registering the 'motion' axis on window.CV_AXES with typed values (breathe/float/pulse/glow/bob/tilt/spin/none) grouped by intent, each mapping to a CSS class realised in motion.css.",
+  "intention_for_embedding": "To make animation a first-class shared axis so any consumer dials motion from one catalogue while keyframes live in a single CSS home."
+}

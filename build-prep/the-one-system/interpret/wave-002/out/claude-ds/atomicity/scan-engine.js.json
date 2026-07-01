@@ -1,0 +1,52 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/scan-engine.js",
+  "model": "opus",
+  "what_it_does": "Defines window.CV_SCAN, an IIFE 'Scanner registry' that builds live indexes of the system's self-knowledge by running registered EXTRACTORS (regexes) over registered SOURCES (lists of {path,text}). Sources resolve files from the live CSSOM, the manifest-referenced files, curated extra app/kit stylesheets, and (when a CV_HOST runtime allows fs/MCP) a real repo tree walk. Extractors pull token usage (var(--x)), @dsCard/@template tags, and TODO/FIXME notes. Runs on load, on an interval, and on tab-focus regain; exposes query helpers (usage/todos/tags) plus describe/stats/report.",
+  "observations": [
+    "scan-index = f(sources × extractors), continuously — the stated organizing equation",
+    "registerSource/registerExtractor throw on malformed input (loud), but per-file fetch misses are collected into REPORT.errors not swallowed",
+    "run() de-dupes files by path across sources via a seen Set, rebuilds all indexes fresh each run, and only notifies listeners when an index signature changes",
+    "Regex execution force-adds the 'g' flag and guards against zero-width-match infinite loops (if m.index === re.lastIndex) re.lastIndex++",
+    "CACHE stores content hash+text per path using a djb2-style hash",
+    "host-tree source walks the real repo (depth cap 6, skips node_modules/_archive/_ds_bundle/dotfiles) only when CV_HOST.best('list'/'read') exists — dormant in sandbox",
+    "cssom source defensively skips cross-origin sheets whose cssRules throw",
+    "usage() aggregates a token's hits by file with counts and pulls matching CSSOM selectors (capped at 8/12)",
+    "start() polls every 45s only when document is visible; onVis re-runs if stale >10s"
+  ],
+  "standouts": [
+    "Treats the system's self-knowledge (real token usage graph, tags, TODOs) as a fifth registry built by scanning rather than hand-authored",
+    "Self-growing coverage: the manifest source auto-expands as the DS grows, and host-tree gives full repo coverage once exported with file access"
+  ],
+  "conventions": [
+    "Same register/resolve/query/subscribe registry contract as the other shapes (explicitly the 'fifth-shape registry')",
+    "Loud on missing source/extractor; best-effort tolerant on discovery fetches (errors reported, not thrown)",
+    "Extend-by-registration: add a source or extractor to scan more / look for more",
+    "IIFE + window global pattern shared across atomicity layer"
+  ],
+  "concerns": [
+    "Regex-based extraction over source text is approximate (e.g. token-usage counts string occurrences, can miss/over-count vs real CSSOM resolution)",
+    "fetchUnit hardcodes a '../' path prefix, coupling it to a specific directory layout",
+    "extra-styles source carries a hardcoded curated path list that must be maintained by hand",
+    "Several empty catch blocks (cross-origin sheets, host read failures) silently drop in a few spots"
+  ],
+  "notes": "The self-scanner: register what files to read and what patterns to find, and it keeps live, auto-refreshing indexes of real token usage, specimen/template tags, and open TODOs across the whole project — including the real repo tree when file access is available.",
+  "questions": [
+    "What is CV_HOST and when is it present (export/MCP) to activate the full host-tree coverage?",
+    "What consumes the query API (usage/todos/tags) — the inspector, Vi, or a dashboard panel?",
+    "Is window.ATLAS.manifest the same manifest referenced elsewhere in the design system?"
+  ],
+  "purpose_vs_actual": "Match — docstring describes a continuously-refreshing scanner registry of self-knowledge with registered sources/extractors; the code implements exactly that, including the loud-vs-best-effort error policy it states.",
+  "apparent_themes": [
+    "Registry-as-truth extended to discovered (not authored) knowledge",
+    "Continuous self-indexing",
+    "Extend-by-registration",
+    "Best-effort discovery with reported, not hidden, failures",
+    "Self-describing (describe/stats/report)"
+  ],
+  "intention_signals": "Tries to give the design system a live, self-maintaining picture of how it actually uses itself — real token-usage graph, where specimens/templates live, what work is open — without manual rebuilds, scaling from sandbox (CSSOM+manifest) to full repo coverage when file access exists.",
+  "novelty": "Generalizing the registry pattern to scanned self-knowledge, with a single engine that spans live CSSOM, manifest files, and a real repo walk under one source/extractor model, is the distinct move.",
+  "contribution": "Contributes the self-knowledge indexing engine: a continuously-refreshing scanner registry that derives the real token-usage graph, specimen/template tags, and open TODOs from sources ranging from live CSSOM to the actual repo tree, with extend-by-registration sources/extractors and a reported (not swallowed) error log.",
+  "summary_for_embedding": "A JS IIFE (window.CV_SCAN) scanner registry that runs registered regex extractors (token-usage, dscard, template, todo) over registered sources (live CSSOM, manifest files, curated stylesheets, real repo tree via CV_HOST) to keep live, auto-refreshing self-knowledge indexes.",
+  "intention_for_embedding": "To give the design system a continuously self-maintaining index of how it actually uses itself (real token usage, tags, open work) with no manual rebuild."
+}

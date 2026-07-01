@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/Pano360.jsx",
+  "model": "opus",
+  "what_it_does": "An equirectangular 360-degree panorama viewer that lazy-loads three.js from a CDN, maps the source image onto the inside of a sphere, and supports drag-to-look, wheel-to-zoom, touch, and (when editable) double-click to add lon/lat hotspots via raycast. Hotspots render as DOM overlays whose positions are projected from 3D each frame and updated directly on the DOM elements.",
+  "observations": [
+    "loadThree() memoizes a single CDN script-injection promise (unpkg.com/three@0.160.0) on window.THREE; returns immediately if already loaded.",
+    "Builds a THREE scene: PerspectiveCamera at near-origin, SphereGeometry(50,64,32) scaled (-1,1,1) inside-out, TextureLoader with SRGBColorSpace, MeshBasicMaterial.",
+    "Interaction state (lon/lat/dragging/fov) kept in closure vars; mouse + touch handlers on the canvas and window; wheel adjusts fov 30..100.",
+    "project(lon,lat) maps a hotspot's spherical coords to screen x/y and an inFront flag via camera projection.",
+    "Double-click raycasts against the sphere to derive new lon/lat and calls onAddHotspot.",
+    "Two render approaches present: an unused animate() that does a no-op setHovering nudge each frame (commented as forcing overlay re-render), and the actually-called tick() that renders + updateOverlay() which mutates hotspot DOM transforms directly (avoiding per-frame React re-render).",
+    "ResizeObserver re-sizes renderer/camera on mount resize; cleanup cancels rAF, disconnects observer, removes listeners, disposes renderer.",
+    "On three.js load failure (offline) sets ready=false; JSX shows a 'Loading 360 engine' fallback with ViShape when not ready.",
+    "Attaches to window.Pano360."
+  ],
+  "standouts": [
+    "Direct-DOM overlay updates in tick() instead of React state per frame — a deliberate perf choice, explicitly noted in comments, leaving the React-nudge animate() function defined but unused.",
+    "editable mode turns the same viewer into a hotspot authoring tool (double-click raycast to place, remove buttons)."
+  ],
+  "conventions": [
+    "Follows browser-React no-build pattern (suffixed hook aliases useState_p etc., window attach).",
+    "Uses .cv-pano-* class vocabulary and ViShape.",
+    "BREAKS the project CSP/self-contained and single-source expectations by loading three.js from an external CDN at runtime and hardcoding borderRadius:'12px' / background:'#1F1A12' literals instead of tokens."
+  ],
+  "concerns": [
+    "External CDN dependency (unpkg three@0.160.0) injected at runtime — fails offline (handled with a static fallback) and is an external network dependency.",
+    "Dead code: animate() is defined but never invoked; only tick() runs — confusing to a reader and a maintenance smell.",
+    "Hardcoded literals (borderRadius 12px, background #1F1A12) bypass the token system.",
+    "useEffect depends on JSON.stringify(hotspots), so any hotspot change tears down and rebuilds the entire three.js scene (re-fetch/re-decode texture), a potentially heavy re-init on every hotspot edit."
+  ],
+  "notes": "A three.js (CDN lazy-loaded) equirectangular 360 viewer + hotspot authoring tool; renders hotspot overlays via direct DOM mutation per frame, and rebuilds the whole scene whenever hotspots change.",
+  "questions": [
+    "Is the unused animate() leftover/dead, or intended as a fallback path?",
+    "Is rebuilding the entire scene on every hotspots change acceptable, or should hotspot updates avoid the texture reload?",
+    "Does loading three.js from a CDN conflict with the corpus's self-contained/CSP constraints, or is this app context exempt?"
+  ],
+  "purpose_vs_actual": "Match — header describes an on-demand-three.js equirectangular viewer with drag/wheel/hotspots and a static fallback, which the code implements (with internal dead code).",
+  "apparent_themes": [
+    "Lazy-loading heavy 3D dependency on demand",
+    "Performance-conscious rendering (direct DOM over per-frame React)",
+    "One component serving both viewing and authoring (editable)",
+    "Graceful degradation when the 3D engine can't load"
+  ],
+  "intention_signals": "Aims to provide an immersive 360 property/scene viewer that doubles as a hotspot-authoring surface, deferring the costly three.js payload until needed and degrading to a static preview offline.",
+  "novelty": "Equirectangular WebGL panorama with raycast-placed lon/lat hotspots rendered as projected DOM overlays, in a no-build browser-React component.",
+  "contribution": "Contributes the 360 panorama viewing + hotspot-authoring capability — three.js sphere rendering, drag/zoom/touch navigation, raycast hotspot placement, and projected DOM overlays.",
+  "summary_for_embedding": "Browser-React equirectangular 360 viewer that CDN-lazy-loads three.js, supports drag/wheel/touch navigation and double-click raycast hotspot authoring, rendering hotspots as per-frame projected DOM overlays.",
+  "intention_for_embedding": "To provide an immersive, optionally-editable 360 panorama viewer with placeable hotspots, loading the 3D engine on demand and degrading gracefully offline."
+}

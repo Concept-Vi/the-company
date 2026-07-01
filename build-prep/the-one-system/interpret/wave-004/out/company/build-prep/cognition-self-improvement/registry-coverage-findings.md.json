@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/registry-coverage-findings.md",
+  "model": "opus",
+  "what_it_does": "A findings document reporting the result of a by-use experiment: using small models to scan the whole repo for vocabulary that is hardcoded but should be registry-driven. It records the multi-tier composition that worked (deterministic extract -> deterministic overlap set-compare -> a single 4B model kind-call -> escalate-to-Tim candidacy), what the test proved about model unreliability, the concrete TIER-1 deterministic violations found, UNIFICATION duplicate findings, the TIER-3 items escalated to Tim, and the backlog this produced.",
+  "observations": [
+    "Frames the experiment as Tim's test (2026-06-09) with his warning that small models can't make judgement/subjective calls freely",
+    "Documents a four-tier composition: TIER-1 deterministic extract (39 candidate literals), TIER-2a deterministic set-compare overlap (the fix), TIER-2b a single 4B kind-call (vocabulary vs incidental), TIER-3 escalate-to-Tim candidacy",
+    "Reports the loose model-overlap run hallucinated 7 overlaps; the tightened deterministic set-compare gave 3 findings with zero hallucination",
+    "Reports the 4B kind-call labelled 34/39 literals 'vocabulary' including field-name tuples, method pairs, CLI verbs, booleans — concluding the model tier adds noise and the deterministic tier carries the signal",
+    "TIER-1 findings cite specific file:line violations: runtime/suite.py:2231 and :5653 (sampling-keys subset), runtime/authoring.py:494 (subset of SCHEMES)",
+    "UNIFICATION findings list built-twice/thrice vocabulary: sampling-keys x3, ('plan','apply') x2, ('propose','panel','extend') x2, framed against LAW-0",
+    "TIER-3 escalation lists genuine domain-vocabulary candidates (origin polarity, status lifecycles, run-states, reduce-modes, op-axis) and dismisses field-name tuples / CLI verbs / booleans as incidental",
+    "Ends with a backlog: fix the 3 deterministic violations + 3 dups, and a SYSTEM-GAPS composition lesson"
+  ],
+  "standouts": [
+    "The earned lesson is explicit and counterintuitive: in registry-coverage the model's contribution is marginal and the deterministic set-compare carries the signal — recommends possibly dropping the model kind-call for deterministic shape-heuristics",
+    "Two independent confirmations of the thesis that small models can't make these calls: deterministic overlap beat model overlap (zero vs 7 hallucinations), and the narrow binary kind-call was still unreliable (34/39 mislabeled)",
+    "Concrete cited file:line evidence for each TIER-1 violation rather than abstract claims"
+  ],
+  "conventions": [
+    "Uses the repo's registry-is-truth / no-hardcoding framing and LAW-0 unification language",
+    "Separates deterministic-confidence findings from model-noise and from operator-escalation explicitly (a tiered honesty convention)",
+    "Marks the operator-only candidacy call as Tim's, not the agent's"
+  ],
+  "concerns": [],
+  "notes": "This is the evidence file proving that, for finding hardcoded-but-should-be-registry vocabulary, the deterministic set-compare is the reliable signal and the small-model judgement call is near-worthless — plus a concrete list of cited violations to fix.",
+  "questions": [
+    "Have the 3 cited TIER-1 violations and 3 duplicates been fixed since this was written, or are they still open in the backlog?",
+    "Did Tim make the TIER-3 candidacy calls on the escalated domain-vocabulary candidates?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is the by-use result plus the composition lesson earned, and the body delivers exactly that (the working composition, the proofs, the cited findings, the escalations, the backlog).",
+  "apparent_themes": [
+    "Deterministic gates over small-model judgement",
+    "Registry-is-truth / no-hardcoding",
+    "Unification / anti-fragmentation (LAW-0)",
+    "Operator-owned subjective calls (candidacy escalation)",
+    "Evidence-grounded findings with cited file:line"
+  ],
+  "intention_signals": "Trying to empirically settle where model judgement helps versus harms in a registry-coverage scan, and to convert that into a reusable composition rule (push judgement to deterministic set-compare, keep candidacy with the operator) plus an actionable list of cited violations.",
+  "novelty": "The dual-proof framing that even a narrowed binary model call is unreliable, and the resulting design recommendation to demote/drop the model tier in favor of deterministic shape-heuristics for vocabulary detection.",
+  "contribution": "Contributes the empirical composition lesson for registry-coverage scanning (deterministic-overlap-primary, model-kind-call-marginal, operator-candidacy) plus a cited inventory of specific hardcoded-vocabulary violations and duplicates to remediate.",
+  "summary_for_embedding": "A findings document from a whole-repo scan for hardcoded-but-should-be-registry vocabulary, reporting that deterministic set-compare overlap carries the signal (3 findings, zero hallucination) while the small-model kind-call is noise (34/39 mislabeled), with cited TIER-1 violations and unification duplicates.",
+  "intention_for_embedding": "Written to empirically determine where small-model judgement helps versus harms in registry-coverage detection and to record the reusable composition lesson plus the concrete cited violations to fix."
+}

@@ -1,0 +1,52 @@
+/* ============================================================
+   ConceptV · PROVENANCE  —  who made this?
+   ------------------------------------------------------------
+   In an agentic workspace, the line between human-made, Vi-made and
+   Vi-suggested work must be legible everywhere — it's a trust signal.
+   This extends the source/provenance zone into a consistent marking
+   language: a small authorship badge + an optional edge treatment on
+   the object itself.
+
+   Apply on the object:  data-author="human" | "vi" | "suggested"
+   Or drop a <span class="by by-vi">…</span> badge inline.
+   ============================================================ */
+:root {
+  --author-vi:        var(--accent-gold);
+  --author-human:     var(--zone-source-ink, #3a5780);
+  --author-suggested: var(--accent-bronze);
+}
+
+/* edge treatment — a quiet left marker, not a loud border */
+[data-author] { position: relative; }
+[data-author]::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  border-radius: 2px; opacity: 0.8;
+}
+[data-author="vi"]::before        { background: var(--author-vi); }
+[data-author="human"]::before     { background: var(--author-human); }
+[data-author="suggested"]::before { background: repeating-linear-gradient(180deg, var(--author-suggested) 0 4px, transparent 4px 8px); }
+
+/* the badge */
+.by {
+  display: inline-flex; align-items: center; gap: 5px;
+  font: 700 9px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase;
+  padding: 4px 8px 4px 6px; border-radius: 999px;
+  border: 1px solid transparent;
+}
+.by::before { content: ""; width: 8px; height: 8px; flex: none; }
+.by-vi {
+  color: var(--ink); background: var(--vi-strong); border-color: var(--vi-edge);
+}
+.by-vi::before { background: var(--author-vi); transform: rotate(45deg); border-radius: 1px; } /* gold gem */
+.by-human {
+  color: var(--zone-source-ink); background: var(--zone-source-surface); border-color: var(--zone-source-edge);
+}
+.by-human::before { background: var(--author-human); border-radius: 50%; }
+.by-suggested {
+  color: var(--accent-bronze); background: transparent; border: 1px dashed var(--accent-gold-soft, var(--vi-edge));
+}
+.by-suggested::before { background: var(--author-suggested); border-radius: 50%; }
+
+/* "Vi generated this" wash — a subtle full-object tint for AI output
+   awaiting human review. Combine with data-author="vi". */
+.vi-authored { background: var(--vi-surface); }

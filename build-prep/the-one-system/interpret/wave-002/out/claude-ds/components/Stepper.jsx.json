@@ -1,0 +1,35 @@
+{
+  "project": "claude-ds",
+  "path": "components/Stepper.jsx",
+  "model": "opus",
+  "what_it_does": "Implements the Stepper as a function component using React.createElement (h). Renders a div with class cv-stepper-line, mapping each step to a div.cv-step whose state class is is-done (index < active), is-active (index === active), or empty (upcoming). Each step contains a span.cv-step__dot showing a checkmark for done steps or the 1-based number otherwise, and a span.cv-step__label with the step's label. Steps may be strings or {label} objects.",
+  "observations": [
+    "active defaults to 0",
+    "state = i < active ? 'is-done' : i === active ? 'is-active' : '' — three-way classification by index",
+    "dot content: i < active ? '✓' : String(i + 1) (1-based numbering)",
+    "label derived from object.label or the raw string",
+    "key={i} uses the array index",
+    "className merges caller class via filter(Boolean).join(' '); spreads ...rest onto the wrapper",
+    "Uses global React with const h = React.createElement (no JSX)"
+  ],
+  "standouts": [
+    "Visual states (done/active/upcoming, gold dots) are entirely expressed through token CSS classes; the JS only computes which class and whether the dot is a check or a number"
+  ],
+  "conventions": [
+    "Token-class wrapper carrying no inline styles or literals (one-home design discipline)",
+    "Defensive defaults (steps = [], active = 0, props || {})",
+    "Buildless React.createElement authoring"
+  ],
+  "concerns": [
+    "key={i} (array index) rather than a stable id — acceptable for a static step list but would mis-key if steps reorder"
+  ],
+  "notes": "A token-class-only linear stepper; index versus active drives done/active/upcoming classes and check-vs-number dots.",
+  "questions": [],
+  "purpose_vs_actual": "Match — implements the done/active/upcoming model the header comment and .d.ts describe.",
+  "apparent_themes": ["token-class wrapper", "linear progress indicator", "state-by-index", "no-literals design discipline"],
+  "intention_signals": "To render a numbered linear progress trail as a structural shell over design-system CSS, with the gold-dot/done semantics living in tokens and the JS only deciding per-step state.",
+  "novelty": "Buildless React.createElement authoring with the checkmark/number dot logic inline.",
+  "contribution": "Contributes the structural implementation of the linear Stepper, including the three-way index-based state classification and the check-vs-number dot rule, delegated to .cv-stepper-line/.cv-step token classes.",
+  "summary_for_embedding": "React.createElement implementation of a linear Stepper rendering token-class steps with done/active/upcoming states by index and check-or-number dots.",
+  "intention_for_embedding": "To provide the buildless, token-class-only numbered linear stepper whose visual states live in design-system CSS."
+}

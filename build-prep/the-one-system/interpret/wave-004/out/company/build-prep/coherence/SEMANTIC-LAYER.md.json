@@ -1,0 +1,54 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/SEMANTIC-LAYER.md",
+  "model": "opus",
+  "what_it_does": "The grounded synthesis of the semantic-layer research wave: it consolidates the anchor plus six SEM-* companions into a corrected, evidence-backed understanding of whether a cheap 4B-model swarm can add a semantic detector class to the coherence substrate, what it can and cannot be trusted for, how the trust stack actually works, and how it joins the structural round into one model and loop.",
+  "observations": [
+    "Opens with a one-line verdict: a 4B CAN add semantic detection but is a high-recall candidate-generator never an adjudicator; trust rests on a stronger model confirming before anything reaches Tim; it clears the bar only for surface-consistency, conditionally for single-module intent, never for deep-reasoning/lifecycle/dataflow.",
+    "Section 1 reports a live empirical probe (marked Verified this session) running the resident 4B on the /api/mockup-feedback half-migration incident: temp-0 ×3 bit-identical correct, jury 5/5 true on the real bug, but ~25% false-positive on a cosmetic rename and malformed JSON 2-in-6 at temp>0.",
+    "Section 2 corrects the anchor's trust mechanisms in a table: schema-decoding kills malformed output not falsehood; same-model jury smooths variance not systematic error; determinism is a category error; self-reported confidence is verified-useless; stronger-model confirm is THE keystone; positive-only is the floor against auto-action but doesn't reduce noise volume.",
+    "Cites the codebase's own verify_jury.py:12-18 ('N draws on ONE model are N CORRELATED samples … variance, not error') as having pre-stated the load-bearing truth, with its verdict-rule signature already built to accept a 2nd-model/cloud tiebreak.",
+    "Section 3 establishes the chain: STRUCTURAL finds the candidate → its flag becomes the semantic read-unit → SEMANTIC adjudicates the pair (its strong mode) → STRONGER MODEL confirms; notes run_swarm is a map not a join so the 4B can't discover pairs, only judge handed ones; built-twice discovery blocked on embedding-clustering with no in-Company home (flagged as a real gap).",
+    "Section 4 gives an explicit S1/S2/S3 tiering: S1 surface-consistency clears on the 4B alone, S2 single-module intent clears only with stronger-model confirm, S3 deep/cross-file/dataflow/lifecycle never clears even as candidates.",
+    "Section 5 corrects the capability numbers: ~2,241 tok/s aggregate at concurrency 32 (plateaus), ~14 concurrent on real source files not 32, whole-repo sweep ~1-2 minutes not seconds; suite.py (716KB ≈180K tokens) doesn't fit the 65K context and needs chunk-and-compose; locates cry-wolf at the confirm tier's economics not the 4B throughput.",
+    "Section 6 reframes the layer as literally being run_swarm (repo artifact as utterance, finding-schema as output), with roles/check.py as template; identifies the one net-new seam: run_role hardcodes ctx['utterance'] so a file-reading role needs a generalized ctx→messages mapping (input_addresses field exists but descriptive-only).",
+    "Section 7 says the composition costs +1 field (source: structural|semantic) plus a derived confidence; semantic 'looks fine' is discarded never recorded, semantic can never demote structural, the loop discriminates by disposition not source, and semantic findings close only by the confirming authority and dedup coarse on (type,target,source).",
+    "Identifies the prize finding neither layer makes alone: structural-says-WIRED ∧ semantic-says-MEANINGLESS; sections 8-10 recommend building a calibration harness first from the system's own labelled incidents and list the decisions for Tim and the cognition session (co-ownership, confirm-tier cascade shape, sequencing)."
+  ],
+  "standouts": [
+    "An actual empirical probe of the 4B with real measured numbers, not reasoning — including a documented ~25% FP and malformed-JSON rate.",
+    "The correction that the anchor's trust stack was mostly wrong, grounded in the codebase's own pre-existing verify_jury.py comment.",
+    "The chain (find → adjudicate → confirm) replacing the anchor's mere coexistence, justified by run_swarm being a map not a join.",
+    "The wired-but-meaningless cross-layer finding named as the single highest-value output of the whole two-round effort.",
+    "Hard, honest re-pricing of throughput/concurrency/context limits against the anchor's optimistic claims."
+  ],
+  "conventions": [
+    "Follows the research-wave synthesis convention (anchor + companions → one grounded artefact), explicitly mirroring COHERENCE-SUBSTRATE.md for the structural round.",
+    "Labels claims as Observed / Verified and cites companions (SEM-1..6) and file:line evidence (verify_jury.py, roles/check.py, run_role).",
+    "Uses ASCII diagrams and tables to carry the trust stack, the chain, the tiering, and the joined two-round picture.",
+    "Frames itself as shared understanding for Tim and the cognition session to shape, ending with explicit decisions-to-Tim rather than a unilateral spec."
+  ],
+  "concerns": [
+    "Very dense and acronym-heavy (SEM-1..6, S1/S2/S3, C0.2, Area 3/4); full meaning requires the companion findings.",
+    "Asserts a built-twice-discovery gap (no embedding-clustering home) that the file flags but cannot itself resolve."
+  ],
+  "notes": "This is the corrected, probe-grounded conclusion of the semantic-layer round — read it as the authoritative summary that overrides the anchor's optimism and joins semantic detection to the structural coherence model.",
+  "questions": [
+    "Was the generalized ctx→messages seam in run_role actually built, and did the cognition session co-own it?",
+    "Did the calibration harness get built and what thresholds did Tim set per check-class?",
+    "Where, if anywhere, did embedding-clustering land to enable built-twice discovery?"
+  ],
+  "purpose_vs_actual": "Match — it declares itself the grounded synthesis (no longer 'what if') and the body delivers exactly that: a tested verdict, corrections to the anchor, tiering, composition, and decisions.",
+  "apparent_themes": [
+    "Candidate-generator vs adjudicator (high recall, not authority)",
+    "Stronger-model confirm as the only systematic-error gate",
+    "Same-model variance is not error (jury limits)",
+    "Honest tiering and measured calibration over assertion",
+    "Cross-layer disagreement (wired ∧ meaningless) as the prize"
+  ],
+  "intention_signals": "It is trying to ground and de-risk the semantic-layer idea by testing it empirically, correcting the anchor's mistaken trust assumptions, drawing a hard line on what the 4B can be trusted for, and specifying the minimal composition and first build step so Tim and the cognition session can decide and build it correctly.",
+  "novelty": "The empirically-tested verdict that a same-model jury measures variance not error, the find→adjudicate→confirm chain, and the wired-but-meaningless cross-layer finding-type are distinctive grounded contributions.",
+  "contribution": "Contributes the trust architecture and tiering for semantic coherence detection: the candidate-generator-not-adjudicator boundary, the stronger-model-confirm keystone, the S1/S2/S3 trust tiers, the +1-field composition into the finding model, the calibration-harness-first recommendation, and the cross-layer wired-meaningless finding — all of which a fused system would keep as the design law of its semantic detection subsystem.",
+  "summary_for_embedding": "A grounded, empirically-probed synthesis concluding a 4B swarm is a high-recall candidate-generator (never adjudicator) for semantic coherence detection, trustworthy only with a stronger-model confirm, tiered S1/S2/S3, joined to structural detection in one finding model whose highest-value output is wired-but-meaningless.",
+  "intention_for_embedding": "To ground, correct, and de-risk the semantic-layer idea with real measurements and codebase evidence so Tim and the cognition session can decide whether/when/how to build self-watching semantic coherence detection."
+}

@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/glyphic-type.js",
+  "model": "opus",
+  "what_it_does": "Registers the Glyphic into CV_REGISTRY as the reference universal component demonstrating the parts/slots/sockets/declarations grammar. It defines three part sub-types (glyphic-ring, glyphic-symbol, glyphic-fill) and the parent Glyphic Type, declaring STRUCTURE only — slot vocabularies are resolved live from axes (CV_AXES) and CV_GLYPHIC.facets, never copied. It registers the parts and the parent (provenance built-in), then exposes R.glyphic with a live slot-vocabulary resolver.",
+  "observations": [
+    "IIFE, 'use strict'; guards on window.CV_REGISTRY (console.error-returns if missing); reads window.CV_GLYPHIC as G.",
+    "Helper sub(axisId, extra) builds a value-slot as a subscription to an axis: it looks up the axis default via window.CV_AXES.resolve(axisId).default() and returns {axis, default, ...extra} — vocabulary resolved live, not copied.",
+    "glyphic-ring: form/color/texture subscribe to axes; thickness uses axis:null with vocab:'CV_SHAPES.markBox.stroke'; has innerSpace/outerSpace sockets accepting fill (and glyphic); condition 'texture requires fill != none'.",
+    "glyphic-symbol: symbol/color/texture slots; described as the one facet whose meaning is intrinsic (never profile-governed).",
+    "glyphic-fill: layer 'token'; fill + color slots; zero is α-0 (none).",
+    "Parent Glyphic: layer atom, classification ['glyphic','mark','atom']; whole-unit slots size/motion/depth (axis subs) + value (axis:null, vocab CV_MEANING.valuesFor('color'), optional) driving colour via the active meaning profile.",
+    "Parent sockets ring/symbol with accepts + address to the part-types; parts tree inlined ({ring:{type:'glyphic-ring'},symbol:{type:'glyphic-symbol'}}).",
+    "defaults pulled from CV_GLYPHIC.defaults; condition 'symbol meaning is intrinsic (never profile-governed)'.",
+    "Registers partTypes then the glyphicType (silent), then sets R.glyphic = {type(), valuesFor(facet)} delegating to CV_GLYPHIC."
+  ],
+  "standouts": [
+    "The Glyphic positioned as the first worked example of a grammar all other component kinds will share.",
+    "Slot vocabularies declared purely as axis/vocab subscriptions resolved live — explicit refusal to duplicate forms/fills/textures.",
+    "The 'value' slot that maps an allocated value (state/type/category) to colour via the active meaning profile — semantic colour binding.",
+    "intrinsic-meaning condition on the symbol part marking it exempt from profile governance."
+  ],
+  "conventions": [
+    "Strictly follows 'declare structure, resolve vocabulary from the single source' and 'no second list' principles.",
+    "Documents required load order (types-core → shapes/icons/glyphics → this).",
+    "Parts/slots/sockets terminology drawn from the Glyphic spec (glyphic-system.html §5c–§5e) cited in comments."
+  ],
+  "concerns": [
+    "Guard-and-return on missing CV_REGISTRY (console.error) rather than throwing — softer than the loud-fail mandate; CV_GLYPHIC (G) is read without an explicit guard and used defensively ((G && ...)), so a missing glyphic system degrades silently to empty defaults.",
+    "Mixed vocabulary sourcing — some slots use axis subs, others use string vocab paths ('CV_SHAPES.markBox.stroke', 'CV_MEANING.valuesFor(\"color\")') resolved by string, a stringly-typed reference."
+  ],
+  "notes": "The canonical worked example of the universal-component grammar: the Glyphic and its ring/symbol/fill parts, structure-only with axis/vocab-resolved slots and an intrinsic-meaning symbol.",
+  "questions": [
+    "How are the string vocab paths (CV_SHAPES.markBox.stroke, CV_MEANING.valuesFor) resolved/validated by editors at runtime?",
+    "What consumes R.glyphic.valuesFor — the foundry, an editor, both?"
+  ],
+  "purpose_vs_actual": "Matches: header says it registers the Glyphic as the reference universal component declaring structure only with live-resolved vocabularies, and the code does exactly that.",
+  "apparent_themes": [
+    "Reference exemplar establishing a shared grammar",
+    "Structure declared, vocabulary referenced (single source)",
+    "Semantic colour via meaning profiles",
+    "Intrinsic vs profile-governed facets"
+  ],
+  "intention_signals": "Trying to anchor the whole universal-component system with one fully-worked example — the Glyphic — proving that any component can be declared as parts/slots/sockets where slot values subscribe to axes and meaning profiles rather than holding copies.",
+  "novelty": "A compositional mark modeled as ring/symbol/fill parts where colour can be driven by an allocated semantic 'value' through the active meaning profile, and the symbol's meaning is declared intrinsic and exempt from profile governance.",
+  "contribution": "Contributes the Glyphic's registry definition — the reference universal component with its ring/symbol/fill parts, axis-subscribed slots, semantic value binding, and live vocabulary resolver.",
+  "summary_for_embedding": "A JS module registering the Glyphic and its ring/symbol/fill parts into CV_REGISTRY as the reference universal component, declaring structure-only with axis- and meaning-profile-resolved slot vocabularies.",
+  "intention_for_embedding": "To establish the universal-component parts/slots/sockets grammar with one worked example whose slot values subscribe to single-source axes and meaning profiles."
+}

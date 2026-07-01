@@ -1,0 +1,36 @@
+{
+  "project": "company",
+  "path": "board_edges/promoted_from.py",
+  "model": "opus",
+  "what_it_does": "Defines a single RELATION_TYPE dict for the 'promoted_from' board edge: a directed provenance edge recording that a board item was promoted from another board item (e.g. a request promoted from an idea), with inverse 'promoted_to'.",
+  "observations": [
+    "Module-level RELATION_TYPE constant only.",
+    "directed=True, inverse='promoted_to', label='promoted-from'.",
+    "desc gives example: a request promoted-from an idea (item -> board://<id>).",
+    "desc argues the FLAT board://<id> address means an item's identity survives its type changing."
+  ],
+  "standouts": [
+    "Design claim that a flat address lets identity persist across type changes, with promotion provenance carried by the edge."
+  ],
+  "conventions": [
+    "Follows the board_edges RELATION_TYPE pattern (id/directed/label/inverse/desc).",
+    "Uses the flat board://<id> address scheme."
+  ],
+  "concerns": [],
+  "notes": "The promotion/provenance edge; an item changing type keeps its identity (flat address) while the edge records where it came from.",
+  "questions": [
+    "What process performs a promotion and writes this edge?",
+    "How is item 'type' represented separately from the flat board:// identity?"
+  ],
+  "purpose_vs_actual": "Match: desc describes a promotion-provenance edge and the dict declares exactly that.",
+  "apparent_themes": [
+    "Provenance preserved through transformation",
+    "Flat addressing decoupling identity from type",
+    "Lifecycle of board items (idea -> request)"
+  ],
+  "intention_signals": "Trying to let board items evolve (be promoted to a different type) while keeping a stable identity and an explicit trail of where each item originated.",
+  "novelty": "Pairing promotion provenance with the flat-address 'identity survives type change' rationale is the distinctive note.",
+  "contribution": "Contributes the promotion-provenance edge and its promoted_to inverse, encoding item-lifecycle transformation while preserving identity.",
+  "summary_for_embedding": "A board relation-type definition for 'promoted_from', a directed provenance edge (inverse promoted_to) recording that one board item was promoted from another.",
+  "intention_for_embedding": "To record the lineage of a board item promoted from another so identity persists across a type change via the flat address and the edge."
+}

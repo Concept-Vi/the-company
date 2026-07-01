@@ -1,0 +1,54 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/ANCHOR.md",
+  "model": "opus",
+  "what_it_does": "An anchor exploration document for a research wave on a proposed 'Coherence Substrate' — a live, central, continuously-maintained model of the system's own connectedness (every element + the state of every connection) that humans and agents read from and write to. It frames the problem (AI-built systems drift apart at the seams with no human holding the whole), proposes coherence as a first-class substrate, sketches its shape (graph of nodes/edges/states, typed addressed findings with dispositions), grounds it in existing machinery, describes the autonomous build loop it would feed, the desired interface, the hard parts, and open questions. It is explicitly the shared reading for parallel research agents.",
+  "observations": [
+    "Opens with a how-to-read preamble: this is the shape of an idea caught early, not a plan/spec/decision, meant as the shared anchor for a research wave with an expansion-ratio-greater-than-one goal",
+    "Reaffirms the no-humans rule: no developer to fill gaps, no reviewer to hold the picture; everything must work with AI agents as the only builders",
+    "Section 1 gives concrete recent failures: ~30 backend routes with no front-end caller, twelve cognition authoring endpoints with no UI, a half-migrated feedback system where the status lifecycle was silently dropped and an agent then deleted the orphaned route (Tim caught it)",
+    "Names three point-detector gates built this session: drift (self-description vs reality), all-green/suite_health (every acceptance test passes standalone), reachability (every /api route reaches a caller)",
+    "Section 2 insight: shift from catching drift (point detectors that forget) to holding integrity (a standing substrate the system maintains); findings become typed addressed living records with state and disposition",
+    "Section 3 sketches the model as a graph the system keeps of itself: nodes (routes, methods, surfaces, suites, addresses, migrations, mockups, engines), edges (called-by, exposed-at, registered-at, migrated-to, covers), states (wired/unwired/half-migrated/orphan/stale/by-design/covered/uncovered)",
+    "Introduces the finding as a typed object with kind/at/state/owner/disposition/since/evidence, where disposition (finish | defer-with-reason | by-design) turns a nag into a tool",
+    "Section 4 grounds the idea in existing machinery: the address system, the registry, typed structured-record substrate, self-description with refresh_self_description+drift, event log + SSE stream (reflects-never-owns), capabilities(), the three gates, the autonomous build loop + reviewer gate, the RHM organ, and the Concurrent Cognition live view",
+    "Section 5 gives the convergence loop: read model → pick highest-priority incompleteness → dispatch agent → reviewer verifies → detectors re-run → repeat until no open finish findings; reframes 'done' as a measurable live property",
+    "Section 7 honestly lists hard parts: detection rigor (grep-based gates already produced false positives, AST-level needed), dispositions-or-nag, build-on-not-beside, the convergence promise, trust/legibility for a non-developer, cost/cadence",
+    "Section 8 cites real anchors: runtime/suite.py methods (doc_drift, suite_health, reachability, refresh_self_description, capabilities), reachability's hand-kept disposition tags, 116+ acceptance suites, design/_system/addresses.json (~79 ui:// entries), runtime/bridge.py (~112 /api routes, ~32 with no caller), runtime/implement.py, the RHM organ in suite.py, CognitionView.tsx, and MERGE-COORDINATION.md"
+  ],
+  "standouts": [
+    "The reframe: turn the holding-together that a human team normally provides into a substrate the machine maintains itself — coherence as the keystone that makes large-scale autonomous building converge",
+    "The half-migrated-feedback-then-deleted-orphan story as the whole problem in miniature: an incomplete migration made worse by a reasonable-looking cleanup",
+    "Disposition as the difference between a model that cries wolf and one that guides; the by-design set quietly becoming the documented architecture",
+    "The recursion question: the coherence model watching the integrity of the very mechanisms that maintain coherence",
+    "Build-on-not-beside as a hard law: it must BE a lens over the existing address+registry+event substrate, not a parallel system"
+  ],
+  "conventions": [
+    "Follows the research-wave anchor pattern: a deliberately-open shared-reading doc whose agents write companion files beside it",
+    "Marks observed vs inferred vs idea, and asks agents to do the same in their companions",
+    "Anchors claims to file:line / real route names where possible",
+    "Invokes the project's stated laws repeatedly: no-humans, reflects-never-owns, one-substrate / more-types-not-more-tools, introspective-data-building",
+    "Written in a 'what if…?' open-question tone by design, not as assertions"
+  ],
+  "concerns": [],
+  "notes": "This is the shared anchor for a Coherence Substrate research wave — read it first to hold the same partial picture: coherence as a live addressed self-model of the system's connectedness that feeds an autonomous convergent build loop.",
+  "questions": [
+    "Which research areas (A/B/C…) were allocated, given the doc references 'Area C' but the allocation is external?",
+    "Has the AST-level connection-graph extraction (the named make-or-break) been proven feasible on this codebase since this anchor was written?"
+  ],
+  "purpose_vs_actual": "Match — it states its purpose as the open shared anchor for a research wave and delivers exactly that: a deliberately-incomplete, stress-test-invited shape of the idea with grounded anchors and explicit hard parts.",
+  "apparent_themes": [
+    "coherence/integrity as a first-class continuously-held substrate",
+    "the no-humans constraint as the entire reason the idea matters",
+    "convergence of autonomous builds via a worklist that is the system's own incompleteness",
+    "build-on-not-beside / one substrate, more types not more tools",
+    "reflects-never-owns live addressed self-models",
+    "dispositions as the judgment layer that turns detection into guidance",
+    "legibility at a non-developer's altitude via the RHM organ"
+  ],
+  "intention_signals": "It tries to seed a research wave toward a substrate that replaces 'the developer who remembers' — making the system continuously know where it is whole and where it is frayed, so a fully-autonomous build loop can finish its own incompleteness and refuse to call itself done while gaps remain, all built on the existing address+registry+event machinery rather than beside it.",
+  "novelty": "Pointing the project's existing introspective-data-building law at integrity itself as the instrumented thing, and proposing that 'done' for the whole system become a measurable live property (the coherence model at zero open findings) rather than a human judgment.",
+  "contribution": "Contributes the framing and shape of the Coherence Substrate concept: the drift-vs-integrity reframe, the typed-addressed-dispositioned finding model, the convergent build-loop engine, the grounded inventory of existing machinery it would build on, and the honest hard-parts list that scopes the research wave.",
+  "summary_for_embedding": "An open anchor exploration proposing a Coherence Substrate — a live, addressed, continuously-maintained graph model of the system's own connectedness with typed dispositioned findings — that feeds an autonomous build loop so AI-only builds converge and stay whole, grounded in the existing address/registry/event substrate and gates.",
+  "intention_for_embedding": "To anchor a research wave around making coherence/integrity a first-class substrate the system holds itself, replacing the human who normally keeps the whole picture together, so fully-autonomous large-scale builds can converge."
+}

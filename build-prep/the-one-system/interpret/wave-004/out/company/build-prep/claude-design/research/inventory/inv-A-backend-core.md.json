@@ -1,0 +1,40 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/inventory/inv-A-backend-core.md",
+  "model": "opus",
+  "what_it_does": "A fast read-only census (2026-06-08) of the backend-core region — runtime/, store/, fabric/, contracts/, plus root markdown — recording each file's apparent purpose from docstrings/headings (no logic trace), assigning deep-read priority stars, and producing a top-10 deep-read list. It maps the directory tree, then gives file-by-file tables per subsystem, a summary, notable observations, and a not-yet-scanned list.",
+  "observations": [
+    "Has YAML frontmatter declaring type:inventory, region, scope:fast census (no deep comprehension, coverage priority)",
+    "Annotated directory tree spanning runtime (13 py + 1 md), store (2 py), fabric (4 py), contracts (10 pydantic), plus mcp_face/voices/nodes/roles/ops/design/canvas/panels/build-prep/tests",
+    "Per-file tables with a PRIORITY column (⭐⭐/⭐/✓) and one-line notes; suite.py and bridge.py marked ⭐⭐ as the heart and interface face",
+    "Maps contracts C1–C8 to files: address.py (C1 grammar), node_record.py (C3 two-graph split, schema v2 Edge.kind), node_type.py (C2), bridge_msgs.py (C8), resolver.py (C4), etc.; notes ui_info.py registers 77 addressed elements",
+    "Top-10 deep-read priority list led by suite.py, bridge.py, fs_store.py, address.py, node_record.py",
+    "Notable observations: self-describing repo, cross-process concurrency (fcntl + RLock + fsync), schema-additive Pydantic discipline, live governance postures, no hardcoding, system runs on its own codebase, two concurrent builds live",
+    "Honest not-yet-scanned list: full 130-test suite, canvas TypeScript, nodes/roles internals, design system, build-prep vault (flagged as possibly inaccessible from WSL agent)"
+  ],
+  "standouts": [
+    "The PRIORITY-star triage that turns a raw census into a deep-read ranking (top-10 list)",
+    "The contract→file mapping (C1–C8) anchoring the census to the contract spine",
+    "Honesty about scope limits: explicit not-yet-scanned list and 'no logic trace' caveat"
+  ],
+  "conventions": [
+    "Frontmatter + scope caveat ('from docstrings/headings only, no logic trace') keeping claims within what was actually read",
+    "Consistent PRIORITY star vocabulary across every file table",
+    "Coverage checklist (✅/⚠️) per directory marking full vs sampled vs not-this-pass"
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the backend-core census and deep-read priority list — read it to know what each runtime/store/fabric/contracts file is and which ten to read deeply, but note it is purpose-from-headings only, not a logic trace.",
+  "questions": [],
+  "purpose_vs_actual": "Match — declares itself a fast coverage-priority census without deep comprehension and delivers exactly that with priority flags and a deferred-work list.",
+  "apparent_themes": [
+    "coverage-first census feeding a prioritized deep read",
+    "the contract spine (C1–C8) as the organizing axis of the backend",
+    "self-describing, registry-driven, schema-additive discipline observed at census level",
+    "epistemic honesty about what was and wasn't read"
+  ],
+  "intention_signals": "Trying to give the deep-read planning layer a complete, honestly-scoped inventory of the backend core with priority flags, so expensive comprehension reads target the right files (the inv-A input to INVENTORY-MAP's cluster plan).",
+  "novelty": "n/a",
+  "contribution": "Contributes the backend-core file census: the annotated tree, per-file purpose-and-priority tables, the contract→file map, and the top-10 deep-read list — the structural index a fused system would keep to navigate runtime/store/fabric/contracts.",
+  "summary_for_embedding": "A fast read-only census of ~/company's backend core (runtime, store, fabric, contracts, root markdown) recording each file's apparent purpose and deep-read priority, with a contract→file map and a top-10 deep-read list.",
+  "intention_for_embedding": "To give the deep-read planning layer an honestly-scoped, priority-flagged inventory of the backend core so comprehension reads target the right files."
+}

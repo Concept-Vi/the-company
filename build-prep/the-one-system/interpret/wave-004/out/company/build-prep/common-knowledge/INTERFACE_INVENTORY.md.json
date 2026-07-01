@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/INTERFACE_INVENTORY.md",
+  "model": "opus",
+  "what_it_does": "A cross-session inventory authored by 'recollection' that locates the company's full real interface: what it is, where each piece lives, and its state. It asserts the real interface already exists and is live (surface/app, the Instrument), enumerates seven interface loci with owners and states, names the actual gap (coherent curated presentation + a whole-surface see->comment->update->happy loop), and proposes a division of labor across members.",
+  "observations": [
+    "States Tim's realigned goal (2026-06-17): get the FULL real interface assembled where he can SEE -> COMMENT -> it updates -> repeat until HAPPY -> then it ships; frozen demos are not the real interface.",
+    "Headline: the real interface already exists and is live — it's surface/app (canvas/app), NOT the gallery demos; served on :5173 and on Tim's phone at a Tailscale :8443 URL with <title>Instrument</title>.",
+    "Locus 1 (THE LIVE INTERFACE, surface/app = /home/tim/company/canvas/app): ~24 named regions (Activity, ClaudeChat, CognitionView, Fleet, Inbox, Inspector, LatticeView, Review, RhmChat, Walkthrough, Workshop, etc.) plus components and the FACE drill-in via sync-gallery.",
+    "Locus 2 (THE LOOK/RENDERER, DNA in counterpart/design/ui): unit-view.js, organisms.js, phone.css, the V-expand 90-degree wheel (vee:socket seam), the self-teaching explainer; copied into surface/app each build.",
+    "Locus 3 (THE REVIEW SURFACE, the gallery in counterpart/design): 52 pieces including ~20 frozen Application.* demos — the demos are FORM-specs, not the real interface (Tim's named gap).",
+    "Locus 4 (asset+composition, composition in vi-visual-dev): the V asset + recolor variants, mode-cascade, the socket registry (socket->function as data), drawer-layouts.js generic layout engine.",
+    "Locus 5 (address spine + host, projection): the bridge API on :8770, the Instrument, GalleryMount/sync-gallery, projection:select + vee:socket events.",
+    "Locus 6 (recall/relations, recollection): the common_knowledge corpus, /api/cognition/neighbours, corpus_rerank.",
+    "Locus 7 (design ground, relative-difference, Tim-authored): session-3 artefacts articulating the self-build interface (UI = generated projection over substrate; AI as elicitation-composer; the click->talk->generate->addressed-registry circuit) — design-only.",
+    "Names the gap precisely: not 'build the interface' but a coherent curated presentation of surface/app's regions as one reviewable whole, plus the whole-surface comment loop; access was resolved by the lead's :8443 serve.",
+    "Proposes a division (assemble/curate, comment loop, ship-as-promote) and notes the lead holds the final plan."
+  ],
+  "standouts": [
+    "The reframe that the interface is not missing — it exists and is live (surface/app); the missing thing is coherent curation plus the whole-surface see->comment->update loop.",
+    "The seven-loci map with explicit owners and live/design states — a single cross-session locator for every interface piece.",
+    "Locus 7 naming Tim's own design ground (UI = generated projection over substrate; AI as elicitation-composer) as the WHY the live interface realizes."
+  ],
+  "conventions": [
+    "Grounded by direct filesystem + live-state checks this session (not from memory), per the repo's evidence discipline.",
+    "Cross-session inventory framing (recollection synthesizes for DNA's assemble-into-review-loop goal and the lead's unified picture).",
+    "Owner-and-state-per-locus structure consistent with the wave's member-division convention."
+  ],
+  "concerns": [
+    "Live-state and served-URL claims (:5173, :8443, on Tim's phone) are point-in-time and will drift.",
+    "The ~24 region list and 52-piece gallery count are snapshots that may not match the current surface/app.",
+    "The division of labor is recollection's read with the lead holding the final plan — proposed, not authoritative."
+  ],
+  "notes": "recollection's cross-session map of the whole interface — the real interface is live (surface/app); the gap is curation + a whole-surface comment loop, with seven owned loci and a proposed division.",
+  "questions": [
+    "Has the coherent curated presentation of surface/app's regions and the whole-surface comment loop been assembled since this inventory?",
+    "Which of the seven loci' live-state claims still hold at read time?"
+  ],
+  "purpose_vs_actual": "Matches: it states its purpose as a cross-session interface locate for Tim's see->comment->update loop and the lead's picture, and delivers exactly that map.",
+  "apparent_themes": [
+    "The real interface already exists and is live; demos are FORM-specs, not it.",
+    "One operable surface assembled from many owned loci (look, assets, address spine, recall, design ground).",
+    "UI as generated projection over substrate; the click->talk->generate->addressed-registry circuit.",
+    "The remaining work is curation + a whole-surface comment loop, not building the interface.",
+    "Ship = promote the reviewed-happy curation to the default surface."
+  ],
+  "intention_signals": "recollection is dissolving the 'build the interface' framing by proving the interface is already live and locating every piece, so the team's effort focuses on curating surface/app into one reviewable whole and assembling the whole-surface see->comment->update->happy loop Tim actually wants.",
+  "novelty": "The explicit headline that the real interface is live (not to be built) plus a single seven-loci ownership/state map spanning four repos, reframing the goal as curation + comment loop.",
+  "contribution": "Contributes the cross-session locator for the entire interface: the seven owned loci (live interface, look/renderer, gallery review surface, asset/composition, address spine, recall/relations, Tim-authored design ground) with where each lives and its state, plus the precise gap statement and proposed division — the orientation map a fused system would keep to know what the interface is and where every piece lives.",
+  "summary_for_embedding": "recollection's cross-session interface inventory asserting the real company interface is already live (surface/app, the Instrument) and mapping seven owned loci (look, gallery, assets, address spine, recall, design ground) with states, naming the gap as coherent curation plus a whole-surface comment loop.",
+  "intention_for_embedding": "To prove the interface already exists and locate every piece so the team curates surface/app into one reviewable whole and assembles the see-comment-update-happy loop instead of rebuilding the interface."
+}

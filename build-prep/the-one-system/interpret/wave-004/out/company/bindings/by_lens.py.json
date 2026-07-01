@@ -1,0 +1,40 @@
+{
+  "project": "company",
+  "path": "bindings/by_lens.py",
+  "model": "opus",
+  "what_it_does": "Defines a single radial-view BINDING dict named 'by_lens' whose sectors are the rows of the `projections` registry (the corpus lenses), plus a PROJECTION_SPACE_META dict that gives operator-facing human names and one-line 'is' descriptions for each projection space (common_knowledge, history, principles, topics, worldview, repo, operators, what, claimed_status, and the '—' remainder).",
+  "observations": [
+    "BINDING has id 'by_lens', label, a meta block (name/is/fills/why), angle_from='projections', radius_from='time', order_by='count'.",
+    "order_by='count' is explicitly documented as an honest fallback because the projection rows have no inter-row edges to define a real sequence.",
+    "PROJECTION_SPACE_META maps 9 named spaces plus '—' (Unfiled) to {name, is} pairs.",
+    "'operators' is deliberately displayed as 'Roles' so a human operator does not read the sector as being about themselves (name != id).",
+    "Long header comments explain why the meta lives here in bindings/ rather than in projections/_meta.py (a sys.path collision with runtime/projections.py would make projections._meta import silently fail)."
+  ],
+  "standouts": [
+    "The 'registry-is-truth' claim: dropping a projections/<id>.py file makes a new sector appear with no code edit.",
+    "The naming subtlety where 'operators' renders as 'Roles' to avoid misreading by the human operator.",
+    "The documented sys.path collision rationale for co-locating PROJECTION_SPACE_META with the binding."
+  ],
+  "conventions": [
+    "Follows the {id: {name, is}} legibility shape it cites in kinds/raw.py, nodes/_meta.py, bindings/grouped.py.",
+    "Marks human-meaning text as TENTATIVE draft pending Tim/DNA ratification.",
+    "Operator-law: avoids machine vocabulary like 'lens / embed / vector space' in operator-facing strings."
+  ],
+  "concerns": [],
+  "notes": "A view-binding that turns the projections registry's own rows into sectors, with co-located operator-friendly labels and a documented import-collision reason for keeping them here.",
+  "questions": [
+    "When (if ever) will inter-row edges exist for projection rows so order_by can be something other than 'count'?",
+    "Who or what is 'DNA' in the 'Tim/DNA ratify' ratification step?"
+  ],
+  "purpose_vs_actual": "Matches: the file states it is an angle-from-a-registry binding over the projections lenses and that is exactly what it declares.",
+  "apparent_themes": [
+    "Registry-as-source-of-truth (data drives sectors, no code edits)",
+    "Operator-legibility / translation away from machine vocabulary",
+    "Honest representation (count fallback declared rather than faking an order)"
+  ],
+  "intention_signals": "Trying to render the system's own set of viewing-lenses as a first-class navigable view, where adding a lens to the registry automatically surfaces it, while keeping every label readable to a non-technical operator.",
+  "novelty": "The self-referential move of treating the projection registry's rows as the sectors of a view, plus the deliberate id-vs-display divergence ('operators'->'Roles').",
+  "contribution": "Contributes the lens-of-lenses binding and the operator-facing translation table for projection spaces, including the documented co-location rationale and the count-fallback honesty note.",
+  "summary_for_embedding": "A Python binding definition that renders the rows of the projections registry as sectors of a radial 'ways of looking' view, with operator-friendly name/is descriptions for each corpus lens.",
+  "intention_for_embedding": "To let the system display and switch between its own set of viewing lenses as a registry-driven, operator-legible map without code changes when lenses are added."
+}

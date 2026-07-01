@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/finds/ch-2mnxl9j0-composition.md",
+  "model": "opus",
+  "what_it_does": "The composition member's (channel ch-2mnxl9j0) append-only per-member finds file from the fabric discovery effort. Logs individual finds (F5-F19) about interface/substrate artifacts that exist or were designed across vi-visual-dev, counterpart/design, and the company repo, each with a where/verbatim/verification-state/shape format, plus a SHAPE-READ zoom-out and convergence flags to other members.",
+  "observations": [
+    "Each find uses a strict template: WHERE (file paths), VERIFICATION-STATE (design-only / built-unverified / verified-by-use), SHAPE (what whole it points at).",
+    "F5/F6 surface a designed FRONT-HALF interface corpus in vi-visual-dev/docs/v-symbol-build/ (front-half-architecture.md, THE_FULL_SYSTEM_UI.md, scenario library, LIVE-RESOLUTION-INTEGRATION) and 14 named surface-mode primitives (Possibility Cloud, Contrast Board, Branch Map, etc.).",
+    "F8 lists BUILT-but-mostly-unverified interface shadow modules in overlay/src (radial-wheel.js, factory-cockpit.js, agent-orchestration-panel.js, ai-surface.js, connection-mount.js, brand-icon.js) — only 'the V' verified by use on device.",
+    "F13 claims OmniFile's coordinate-system ≡ MAP ≡ slots-as-data ≡ fork's address-grammar = one addressed/typed coordinate-system in 4 media; medium is incidental.",
+    "F14 disclaims visual-design-corpus as composition's substrate, reclassifying it as a knowledge-base vault + pre-company synthesis hub + a 5th interface sketch ('virtual intelligence' wizard) + cartography-method convergence; flags a SEPARATE 'vspokes' Supabase (gctunhsuwpaxeatwlmuv).",
+    "F16/F17 read actual code: counterpart/design/ui/surface.js:213 DNA.story = (content-tree, address)→node-views; contracts/address.py 16-scheme spine; runtime/cognition.py:842 resolve_address scheme-dispatch — proposing 'meet at the address' source-pluggable-per-scheme bindings.",
+    "F18 maps Tim's self-build surface (click→talk→generate→write-to-addressed-registry→re-render) onto code-confirmed circuit in overlay (ai-surface.js→ai-tool-bridge.js→factory-ops→registry.register→definition-renderer).",
+    "F19 reads counterpart/design/ui/gallery/drawer-layouts.js as a generic data-driven layout engine ('renders ANY archetype record from dna/layouts.json, nothing per-archetype'), with an honest caveat that it fills slots with specimen placeholders today.",
+    "Includes a STILL-TO-DIG section honestly naming undug territory (wider vi-visual-dev: agent/, graphs/, ui/, workflows/) and own session-history."
+  ],
+  "standouts": [
+    "F18's mapping of Tim's first-intention self-build circuit directly onto code-confirmed wiring in the overlay shadow, with generate+mutate both reportedly built.",
+    "F19's discriminator test — does a screen = a data-driven composition-spec? — answered YES at the layout level, gated by an honest 'specimen placeholder' caveat that the real-data slot-fill join is the unverified discriminator.",
+    "The 'meet at the ADDRESS' contract (F16): renderGallery(address) made source-pluggable per scheme so multiple sources feed one render — binding, not building."
+  ],
+  "conventions": [
+    "Append-only per-member file to avoid races on a shared DISCOVERY_LOG; explicit dedup note to the lead.",
+    "Rigorous verification-state tagging and the 'litellm-lesson' insistence on reading actual code with line numbers before claiming.",
+    "Finds-not-conclusions discipline; uses ★ for high-signal finds and explicit cross-member convergence flags (to DNA, fork, recollection, projection)."
+  ],
+  "concerns": [],
+  "notes": "This is composition's primary evidence log — rich with concrete file paths and line numbers for the type-builder / slot-socket / gallery-layout side of the interface; the strongest code-grounded finds are F16-F19.",
+  "questions": [
+    "Are the F8 built-unverified overlay modules still present and runnable, or stale at read time (only 'the V' is verified)?",
+    "Is the F19 specimen-placeholder caveat resolved anywhere — has the real-data slot-fill join been proven since?",
+    "Is composition's Factory catalog a distinct address scheme or should it feed the existing ui:// scheme (F17 flags this as fork's open call)?"
+  ],
+  "purpose_vs_actual": "Match — it declares itself a per-member append-only finds file (finds not conclusions, honest verification-state) and delivers exactly that across F5-F19.",
+  "apparent_themes": [
+    "One addressed/typed coordinate-system across many media",
+    "Binding designed faces to built substrates ('meet at the address')",
+    "Universal composition / one keystone retargeted by address",
+    "Code-grounded verification over pattern-matching",
+    "Honest verification-state and disclaiming non-substrate"
+  ],
+  "intention_signals": "Trying to inventory, with file-level evidence and honest verification states, what interface/substrate already exists in composition's territory so the lead can synthesize the shape and so the first build is binding rather than new construction.",
+  "novelty": "The code-grounded 'meet at the address / source-pluggable per scheme' binding proposal (F16) and the layout-engine-is-already-generic discriminator (F19) — concrete reference implementations rather than designs.",
+  "contribution": "Contributes composition's territory evidence: the type-builder/slot-socket grammar, the designed front-half corpus and 14 surface primitives, the gallery's generic layout engine, and the code-grounded address-binding proposals — the type-and-render side of the substrate inventory.",
+  "summary_for_embedding": "Composition member's append-only fabric-discovery finds file (F5-F19) cataloging designed and built interface/substrate artifacts across vi-visual-dev, counterpart/design, and the company repo, with code-grounded verification states and address-binding proposals.",
+  "intention_for_embedding": "To inventory, with file-level evidence and honest verification states, the existing interface/substrate in composition's territory so the fabric's shape can be synthesized and the first build is binding, not from-scratch."
+}

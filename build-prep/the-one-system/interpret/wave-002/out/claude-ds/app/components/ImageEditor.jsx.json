@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/ImageEditor.jsx",
+  "model": "opus",
+  "what_it_does": "A full-screen modal image editor with three modes (Adjust, Crop & rotate, AI edit). Adjust applies CSS filters (brightness/contrast/saturation/hue) plus seven named filter presets; Crop offers draggable-corner crop, aspect-ratio presets, and 90deg/fine rotation plus flips; AI edit sends the baked image to OpenAI via CV_AI and shows returned variants. A canvas 'bake' pipeline composites crop+rotation+flip+filter into a JPEG data URL passed to onSave.",
+  "observations": [
+    "FILTERS array defines seven named presets (Original, Warm paper, Cool dawn, Bronze line, Gold-cast, Mono ink, Soft fade) as CSS filter strings.",
+    "bake() builds a rotation-aware target canvas (swaps width/height on 90/270deg), applies crop source-rect, ctx.filter = filterCss, flips via ctx.scale, exports image/jpeg at 0.92 quality.",
+    "Crop overlay implemented with clipPath polygon mask and four draggable corner handles + a move region, with clamp()-bounded drag math in image-normalized 0..1 coordinates.",
+    "aspectCrop(ratio) computes a centered crop for a target aspect ratio against the image's natural aspect.",
+    "runAiEdit() guards on window.cvOpenAI.isConfigured(), bakes the image to a blob, then calls window.CV_AI.resolveProvider('openai-image').editImage({prompt, imageBlob}).",
+    "Uses CvIcon, ViShape, and a local Slider subcomponent; mode tabs render different side panels.",
+    "Error handling uses window.dsaToast?.() for user-facing failures; save() swallows the bake error into a toast.",
+    "Comment notes it is used by 'every imagery surface (System, Projects, AI Studio)'.",
+    "Attaches to window.ImageEditor."
+  ],
+  "standouts": [
+    "Routes AI image edits through CV_AI.resolveProvider('openai-image').editImage rather than calling OpenAI directly — honors the project's single-AI-registry rule.",
+    "The filter presets are brand-flavored (Warm paper, Bronze line, Gold-cast) tying the editor to the ConceptV palette identity.",
+    "Rotation-aware bake canvas correctly handles quarter-turn dimension swapping."
+  ],
+  "conventions": [
+    "Follows browser-React no-build pattern (suffixed React hook aliases useState_ed etc., window attach).",
+    "Uses .cv-ed-* and .dsa-btn class vocabulary; AI calls go through CV_AI per the project's AI-registry non-negotiable.",
+    "AI configured-check uses window.cvOpenAI.isConfigured() directly (a global) for gating, while the actual edit goes through CV_AI."
+  ],
+  "concerns": [
+    "bake() applies ctx.filter for canvas compositing — CSS filter support on canvas 2D contexts is uneven across browsers, so baked output may diverge from the on-screen preview on some browsers (file-local risk, unverified here).",
+    "The hue 'filter' preset combination concatenates preset css with brightness/contrast/etc — ordering/interaction of doubled sepia/saturate functions could compound unexpectedly."
+  ],
+  "notes": "The shared modal image editor for all imagery surfaces — local canvas adjust/crop/rotate plus an OpenAI-backed AI edit tab, all baked through one canvas pipeline.",
+  "questions": [
+    "Why does the AI configured-check use window.cvOpenAI.isConfigured() directly while the edit call routes through CV_AI.resolveProvider — are these two views of the same provider config?",
+    "What shape does editImage return (the code maps r.src), and where does onSave's data URL get stored?"
+  ],
+  "purpose_vs_actual": "Match — header comment describes a modal canvas editor doing crop/adjust/filter/rotate plus OpenAI routing, which the code implements.",
+  "apparent_themes": [
+    "One shared component reused across many surfaces (System, Projects, AI Studio)",
+    "AI routed through the single registry (CV_AI), never the raw provider",
+    "Brand identity expressed through named filter presets",
+    "Canvas-based deterministic baking of a visual edit pipeline"
+  ],
+  "intention_signals": "Aims to give every imagery surface one consistent, brand-flavored editor that does both manual edits and AI edits, with the AI path disciplined through the central registry rather than ad-hoc provider calls.",
+  "novelty": "Combines a self-contained canvas crop/rotate/filter pipeline with an AI-edit tab in one modal, with brand-named filter presets and registry-routed image AI.",
+  "contribution": "Contributes the reusable full-modal image editing surface — the manual canvas adjust/crop/rotate/bake pipeline and the registry-routed AI-edit tab — that imagery features across the app share.",
+  "summary_for_embedding": "Full-screen React modal image editor with adjust (CSS filters + presets), crop/rotate/flip, and an OpenAI-via-CV_AI edit tab, baking edits through a canvas to a JPEG data URL.",
+  "intention_for_embedding": "To provide one shared, brand-styled image editor for all imagery surfaces, doing manual canvas edits and registry-routed AI edits."
+}

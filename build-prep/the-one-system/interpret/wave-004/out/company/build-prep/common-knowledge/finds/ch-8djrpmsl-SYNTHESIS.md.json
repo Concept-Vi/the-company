@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/finds/ch-8djrpmsl-SYNTHESIS.md",
+  "model": "opus",
+  "what_it_does": "The fork member's (channel ch-8djrpmsl) union synthesis of its area: the COMPANY-layer RESOLUTION SUBSTRATE. Produced from 4 parallel scan sub-agents arbitrated against fork's first-hand build knowledge. Describes the substrate as one floor with three faces (address resolution, model resolution, brain/clone/fabric loading), the laws it obeys (Tim's plus ones sharpened in-stream), the unbroken circuit, the outputs, the seams to other areas, and the honest open gaps.",
+  "observations": [
+    "Defines its area as the resolution substrate — the floor DNA/factory/gallery resolve THROUGH — with three faces of 'resolve a pointer into the thing it names': resolve_address (16-scheme grammar → territory_for), resolve_model(intent), and brain-loading + clone fleet + fabric.",
+    "Quotes Tim's frame: '#71 + the address spine = THE COMPANY layer — the floor everything resolves through.'",
+    "Lists Tim's standing laws (registry-is-truth, one resolver not many, met-at-the-address/file-disjoint, fail-loud no silent fallback, verify-by-use/no-green-paint, extraction-vs-judgment, clone model pick by context size).",
+    "Lists laws sharpened in-stream (advisor-caught): the FLOOR + 'satisfied' (resolve_binding returns a default with satisfied=False rather than raising → assert satisfied not truthiness); registry-is-truth over spec-prose; brain loadable per scale (FOCUS at altitude, PANEL at drill, SPAWN dropped); addressed-state = one projection; the address is bidirectional; the degrade contract has three failure cases; model backend = ollama-native :11434 not litellm :4100.",
+    "Renders THE SHAPE as an ASCII unbroken circuit: address → resolve_address (9 resolvable + 6 deferred + bare-name) → territory_for (per-leg degrade-clean) → territory_prose; INTENT → resolve_model; the brain round-trip (drill→talk→write); clone lifecycle; fabric dispatch.",
+    "Enumerates outputs (territory_for dict shape, resolve_model dict, the 49-model catalog, re-tiered roles, the /api/claude/turn NDJSON stream, the clone fleet, the marks route-back vocabulary).",
+    "Seams: gallery (primary, mostly assemblable from built+verified pieces + 3 proposed bridge diffs + FE listener), DNA (owns look, fork owns wire), factory (registries resolved through the company), company-internal.",
+    "Open gaps honestly stated: #71 Phase 2 not started/lead-gated; kimi-cloud-for-cognition filed; 3 proposed bridge diffs not yet applied (projection's hot file); content-markdown = the one missing scheme (vi-visual's element-walker is a running reference impl, mdel://); the half-circuit (agent-facing built, Tim-facing renderer missing); a wire-reconcile note that the click→talk PANEL wire differs from the fabric/clone transport."
+  ],
+  "standouts": [
+    "The 'assert satisfied, not truthiness' law — an advisor-caught no-green-paint subtlety where a re-tier can look resolved while silently floored to the 4B.",
+    "The address-is-bidirectional law: because every element/section/mode is an address in one grammar, the brain navigates the interface through the EXACT grammar Tim does — 'AI addressable-WITH-Tim,' not embedded-in.",
+    "The three-failure-case degrade contract and the explicit ollama-native :11434 vs litellm :4100 backend distinction (kimi via :4100 → 401)."
+  ],
+  "conventions": [
+    "Opens with a trust/author/date/purpose/method frontmatter block citing Tim's scan-before-build law.",
+    "Verification states are fork's own, not the sub-agents'; verify-by-use / no-green-paint enforced.",
+    "Met-at-the-address / file-disjoint discipline: fork PROPOSES diffs, owners apply — bridge handoffs are proposed diffs, not fork edits.",
+    "Ends with a fork-commits ledger (commit hashes for the area's work)."
+  ],
+  "concerns": [
+    "The honest open gaps are real coordination risks: 3 bridge diffs unapplied in another stream's hot file, #71 Phase 2 lead-gated, the wire-reconcile where the lead's convergence 'conflated' two real-Claude-Code transports.",
+    "Several laws are explicitly advisor-corrected from earlier mistaken states (the floor/satisfied, registry-over-prose) — signals the area's claims evolved under review."
+  ],
+  "notes": "Fork's authoritative map of the resolution substrate — read for the address/model/brain three-faces, the in-stream-sharpened laws (especially 'assert satisfied'), and the honest seams/gaps to the gallery and projection.",
+  "questions": [
+    "Were the 3 proposed bridge diffs (territory_prose composer-swap, /api/territory/write, COMPANY_SESSION_ID injection) ever applied by the hot-file owner?",
+    "Was the wire-reconcile resolved — are the click→talk PANEL wire and the clone/fabric transport unified or kept distinct?",
+    "Did #71 Phase 2 (resolve= into run_swarm/run_role) proceed past the lead gate?"
+  ],
+  "purpose_vs_actual": "Match — declares itself fork's stream-scan posted for the lead to assemble into the union, and delivers a structured substrate map (area/laws/shape/outputs/seams/gaps/trajectory) in exactly that role.",
+  "apparent_themes": [
+    "One resolver, not many (no second router)",
+    "Registry-is-truth; re-tiering is a data edit",
+    "Fail-loud, no silent fallback; assert satisfied not truthiness",
+    "Addressed-state as one projection; the address is bidirectional",
+    "Met-at-the-address / file-disjoint coordination"
+  ],
+  "intention_signals": "Trying to establish the company layer as the single floor everything resolves through — one address grammar, one model resolver, one loadable brain — and to make the gallery↔company binding (the first slice) assemblable mostly from already-built-and-verified pieces.",
+  "novelty": "The in-stream-sharpened laws, especially 'assert satisfied not truthiness' and the bidirectional-address claim that the brain navigates the interface through Tim's exact grammar — co-location rather than embedding.",
+  "contribution": "Contributes the resolution-substrate map: the address/model/brain three-faces, the unbroken-circuit diagram, the full law set (Tim's + in-stream-sharpened), the output shapes, and the honest gallery/DNA/factory seams and open bridge-diff gaps.",
+  "summary_for_embedding": "Fork member's union synthesis of the company-layer resolution substrate — one floor with three faces (address resolution, model resolution, loadable brain/clone/fabric), its governing laws, the unbroken resolve circuit, outputs, seams, and honest open gaps.",
+  "intention_for_embedding": "To establish the company as the single floor everything resolves through (one address grammar, one model resolver, one loadable brain) and make the gallery↔company first-slice binding assemblable from already-built verified pieces."
+}

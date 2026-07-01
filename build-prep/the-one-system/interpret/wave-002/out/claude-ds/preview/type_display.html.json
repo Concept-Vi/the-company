@@ -1,0 +1,33 @@
+{
+  "project": "claude-ds",
+  "path": "preview/type_display.html",
+  "model": "opus",
+  "what_it_does": "A standalone HTML preview card specimen for the display typeface (Sora 700): renders a 76px hero line with one word in gold accent, plus a metadata strip stating the font, weight, tracking, and usage.",
+  "observations": [
+    "Carries a @dsCard annotation: group='Brand', name='Display — Sora 700', subtitle='Hero specimen with gold accent', viewport='700x240'.",
+    "Links shared _card.css; local <style> uses var(--font-display), --fg-primary, --accent-gold, --font-body.",
+    "Specimen line: 'The mathematics of operation.' with 'operation' wrapped in .a (gold accent).",
+    "Type set at 700 weight, 76px, line-height 0.98, letter-spacing -0.025em.",
+    "Meta strip: 'Sora', 'Display · 700', 'Tracking −2.5%', 'Used for: hero, screen titles'."
+  ],
+  "standouts": [
+    "Specimen copy 'The mathematics of operation' reflects ConceptV's framing rather than placeholder text.",
+    "Demonstrates the gold-accent-on-one-word display pattern inline."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery convention and var()-token discipline (font + colour tokens).",
+    "Hardcodes the display size/tracking (76px, -0.025em) in local CSS as specimen values rather than via scale tokens."
+  ],
+  "concerns": [],
+  "notes": "Sora 700 display-type specimen card; a 76px hero line with a gold accent word and metadata declaring tracking -2.5% and hero/title usage.",
+  "questions": [
+    "Is the -2.5% tracking value defined as a token applied to real display headings, or only shown here?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard names it the Sora 700 display specimen and that is what renders.",
+  "apparent_themes": ["typographic specimens", "display typeface (Sora)", "gold accent system", "self-describing previews", "brand voice in sample copy"],
+  "intention_signals": "Intended as a recognisable hero-type specimen so the display typeface, tracking, and gold-accent treatment can be judged by eye.",
+  "novelty": "The gold-accented single word as a demonstrated display pattern, paired with brand-flavoured specimen copy.",
+  "contribution": "Contributes the canonical display-typeface specimen (Sora 700) with its tracking value, gold-accent treatment, and hero/screen-title usage role.",
+  "summary_for_embedding": "An HTML @dsCard preview specimen for Sora 700 as the design system's display typeface, showing a 76px hero line with a gold accent word and tracking/usage metadata.",
+  "intention_for_embedding": "To give an eye-recognisable reference for the display typeface, its tracking, gold-accent treatment, and hero/title role."
+}

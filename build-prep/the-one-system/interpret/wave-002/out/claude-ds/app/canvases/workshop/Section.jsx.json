@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/workshop/Section.jsx",
+  "model": "opus",
+  "what_it_does": "Defines two React components attached to window globals: WSSection wraps each workshop block with a control toolbar (select, move up/down, lock, refine, vary, remove) and renders the block via its registered definition's render(); WSAddDivider is an insert-between-sections control that opens a block picker, supports drag-drop from a Library, and offers a 'Vi' action to auto-suggest blocks.",
+  "observations": [
+    "Looks up block definitions from window.WS_BLOCKS by section.kind; returns null if undefined",
+    "Per-block toolbar: move up/down (disabled at bounds), lock toggle (🔒/🔓), refine popover, vary (3 variations), remove with confirm() dialog",
+    "Locked sections get a 'locked' class with title text 'Vi won't change'",
+    "Variations UI shows Original + v1..vN chips only when section is selected and variations exist",
+    "AddDivider parses 'application/x-cv-library' drag payload, resolves it via window.WS_resolveLibraryPayload, inserts if kind==='section'",
+    "Block picker popover uses inline styles with CSS vars (--bg-surface, --accent-gold, --r-md, --shadow-pop) in a 4-column grid",
+    "Aliases useState as useState_s via destructuring from React"
+  ],
+  "standouts": [
+    "Lock semantics are framed around the AI: locking means 'Vi won't change' this block",
+    "Drag-drop insertion from a Library uses a custom MIME type 'application/x-cv-library' with a resolver indirection"
+  ],
+  "conventions": [
+    "Attaches components to window (window.WSSection, window.WSAddDivider) rather than ES exports — the project's global-registry pattern",
+    "Uses CSS var() tokens for the popover styling (follows the token discipline)",
+    "Some layout values are inline hardcoded (padding 4px 0 / 20px 24px, marginTop 36, zIndex 20, minWidth 80) rather than tokens"
+  ],
+  "concerns": [
+    "Inline pixel literals (padding, marginTop:36, zIndex:20, minWidth:80, gap:4) are hardcoded rather than token vars, against the project's no-raw-px rule",
+    "Uses native confirm() for delete — blocking browser dialog"
+  ],
+  "notes": "The per-block control chrome + the between-block inserter for the workshop canvas; everything resolves blocks through window.WS_BLOCKS and exposes lock/refine/vary as AI-aware actions.",
+  "questions": [
+    "Where is window.WS_BLOCKS populated and what shape does a block def have (label, icon, render)?",
+    "What does WS_resolveLibraryPayload return for non-section payloads?",
+    "What is RefinePop's 'chip' mode versus other modes?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment says it wraps every block with controls (selection, drag-reorder, refine, variations, lock, delete) and the code does exactly that.",
+  "apparent_themes": [
+    "Registry-driven rendering (blocks resolved by kind from a global catalogue)",
+    "AI-as-collaborator surfaced in the UI (refine/vary/lock-from-Vi)",
+    "Direct-manipulation editing (drag-reorder, drag-drop insert, in-place variations)"
+  ],
+  "intention_signals": "Aims to give every workshop block a uniform, reusable control surface where editing and AI moves (refine, generate variations, lock) sit directly on the block, and where new blocks can be inserted both manually and via drag from a library.",
+  "novelty": "The 'lock = Vi won't change this' affordance and the Original/vN variation-chip switcher tie generative-AI moves directly into block-level UI.",
+  "contribution": "Contributes the block-level editing chrome pattern for a workshop canvas — a per-section toolbar exposing reorder/lock/refine/vary/remove plus an insert-divider with library drag-drop and an AI-suggest action.",
+  "summary_for_embedding": "React components WSSection and WSAddDivider providing per-block toolbar controls (reorder, lock, refine, vary, remove) and an insert-between-sections divider with library drag-drop and Vi-suggest for a workshop block editor.",
+  "intention_for_embedding": "To give every workshop block a uniform control surface combining manual editing with AI moves (refine, variations, lock-from-Vi) and to let new blocks be inserted manually or by dragging from a library."
+}

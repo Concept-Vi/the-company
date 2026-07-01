@@ -1,0 +1,53 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/REMOTE-MCP-EXPOSURE-DESIGN.md",
+  "model": "opus",
+  "what_it_does": "A security-sensitive design draft for exposing the company MCP server REMOTELY so Claude Design (Anthropic's no-code design tool) can connect as a custom connector. It restates the mission, surveys the current system (mcp_face, bridge, session supervisor, capability posture, tool annotations, channel fabric), proposes a target architecture (remote MCP gateway → same Suite as bridge+mcp_face), defines a remote-posture tool-classification with two non-negotiable guards (fail-closed/deny-by-default, mandatory-audit), gives an initial whitelist and an explicit not-exposed list, specifies an OAuth 2.1 + Supabase Auth model with scopes, the Streamable HTTP transport, a local Supabase plan, production deployment hardening, an 8-step build sequence, and a table of rulings received.",
+  "observations": [
+    "Marked 'Draft for channel review. Security-sensitive: no build until Tim + lead approve the exposure boundary.'",
+    "Surveys current pieces with locations: mcp_face/server.py (~64 verbs, stdio), runtime/bridge.py:8770, session_supervisor.py:8771 (127.0.0.1 only by law), introspection/registry.py capability posture, contracts/tools.py annotations.",
+    "Design principle: reuse existing mcp_face verbs but gate the remote face with a remote-posture whitelist; do not fork a second engine — gateway is transport+auth+scoping only.",
+    "Two non-negotiable guards: (1) FAIL-CLOSED deny-by-default (no explicit safe/design posture => not exposed), (2) MANDATORY AUDIT (audit-write failure => call fails loud).",
+    "Posture table: safe / design / consent (deferred) / hazard (never) / locked (operator-only, never).",
+    "Initial whitelist includes introspection, object_info, corpus, chat, sessions(read), cc_channel.send (design), and a NEW claude_design module (ingest_bundle/submit_seed/walk_decision).",
+    "Explicit NOT-exposed list: node create/delete/apply, connect, set_config, cc_clone, cc_gate, session_post wake/consult, resolve/approve/dispatch, checkpoint/revert, run_graph.",
+    "Auth: OAuth 2.1 + PKCE with Supabase Auth AS the authorization server; JWT with audience = MCP resource; scopes company:design:read / write, operator:* never issued remotely.",
+    "Transport: MCP Streamable HTTP (2025-06-18), single POST/GET /mcp endpoint, Mcp-Session-Id header, Origin validation; dev gateway on :8772, prod as Supabase Edge Function behind a custom domain.",
+    "Local Supabase plan includes a connector_audit Postgres schema logging who/what/when/address with fail-loud audit.",
+    "Production: public endpoint APPROVED with hard bar 'secure and private'; hardening list (zero pre-auth leak, PKCE, tight scopes, rate-limiting, HTTPS, fail-closed, mandatory audit).",
+    "Has a decisions table of rulings (port :8772, consent write scope limited, run_graph not exposed, Supabase Auth direct, public hosting approved, Face Pipeline priority order).",
+    "Numbers two subsections '4.1' (Posture table and Proposed whitelist both labeled 4.1)."
+  ],
+  "standouts": [
+    "The fail-closed deny-by-default + mandatory-fail-loud-audit pair as the two hard guards on remote exposure.",
+    "Operator/destructive/clone-spawning verbs structurally excluded from the remote face — the operator scope is never issued remotely.",
+    "The 'one brain, three faces' framing (bridge + mcp_face + remote gateway all over the same runtime.suite.Suite)."
+  ],
+  "conventions": [
+    "Follows a deny-by-default security posture and allow-list-only exposure.",
+    "Reuses the existing verb engine rather than forking — gateway is a transport/auth/scoping layer.",
+    "Cites sources at the foot (server.py, bridge.py, supervisor, registry, tools.py, MCP specs, oracle reply, lead rulings) per the repo's evidence discipline.",
+    "Has a duplicate section number (two '4.1' headings) — a minor numbering break."
+  ],
+  "concerns": [
+    "Two distinct subsections are both numbered 4.1 (posture table and proposed whitelist), which could confuse cross-references."
+  ],
+  "notes": "This is the gated security design for making the company MCP remotely reachable by Claude Design under OAuth, with deny-by-default posture filtering and mandatory audit — approved in principle, build-gated on lead verification of fail-closed + audit + scopes.",
+  "questions": [
+    "What exactly does the NEW claude_design module's ingest_bundle/submit_seed/walk_decision do internally beyond calling the Face Pipeline machinery?",
+    "Is the legacy HTTP+SSE fallback actually implemented or only conditionally considered?"
+  ],
+  "purpose_vs_actual": "Matches — it is a design draft for remote MCP exposure and delivers architecture, posture classification, auth, transport, deployment, and a build sequence consistent with that purpose.",
+  "apparent_themes": [
+    "Deny-by-default / fail-closed security",
+    "Mandatory auditability before action",
+    "Single engine behind multiple faces (transport/auth as a thin layer)",
+    "Operator-only governance floor preserved across faces",
+    "Prove-local-before-prod"
+  ],
+  "intention_signals": "Trying to let an external no-code design tool participate safely in the company system — reading state and submitting design intent — while making it structurally impossible for it to reach destructive, operator-only, or session-spawning verbs.",
+  "novelty": "Adding a remote-posture dimension on top of the existing readonly/destructive/idempotent annotations, and using Supabase Auth directly as the OAuth authorization server for both company users and the connector.",
+  "contribution": "Contributes the remote-exposure boundary design: the posture-filter model (safe/design/consent/hazard/locked), the explicit whitelist/blacklist of verbs, the OAuth+Supabase auth stack, the :8772 gateway plan, and the build sequence — the connector inlet for the Face Pipeline.",
+  "summary_for_embedding": "Security design draft for exposing the company MCP remotely to Claude Design via an OAuth 2.1 Streamable-HTTP gateway with a deny-by-default posture filter, mandatory audit, and operator verbs structurally excluded.",
+  "intention_for_embedding": "To let Claude Design connect as a remote MCP connector that can read state and submit design intent while never reaching destructive, operator-only, or clone-spawning verbs."
+}

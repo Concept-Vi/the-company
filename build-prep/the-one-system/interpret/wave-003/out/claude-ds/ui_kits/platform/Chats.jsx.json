@@ -1,0 +1,32 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/Chats.jsx",
+  "model": "opus",
+  "what_it_does": "A tiny global-window React component rendering a floating bottom-right 'Chats' pill — a speech-bubble SVG icon, the word 'Chats', and an unread count badge — for the platform dashboard.",
+  "observations": [
+    "Single function Chats({count = 21}) defaulting the badge to 21",
+    "Two overlapping speech-bubble SVG paths (one transformed/translated) form a layered chat glyph",
+    "Markup carries role=\"button\" but no onClick handler",
+    "Class cv-chats and child .count are styled in platform.css (fixed position, pill shape, red count badge)",
+    "Registers itself as window.Chats"
+  ],
+  "standouts": [],
+  "conventions": [
+    "Global-window component registration matching the kit's Babel-in-browser pattern",
+    "Presentation delegated to cv-* classes in platform.css; no inline styles",
+    "Uses role=\"button\" for the pill"
+  ],
+  "concerns": [
+    "role=\"button\" with no keyboard handler or onClick — non-functional affordance",
+    "Default count of 21 is a hardcoded placeholder value"
+  ],
+  "notes": "If briefing someone: this is the static floating Chats pill in the dashboard's corner — purely visual, count is a prop with a placeholder default.",
+  "questions": ["Is the Chats pill meant to open a panel/route when clicked, or is it decorative in this kit?"],
+  "purpose_vs_actual": "Matches — header says 'floating bottom-right pill' and that is exactly what it renders.",
+  "apparent_themes": ["presentational UI-kit component", "persistent corner affordance with unread badge", "inline SVG glyph"],
+  "intention_signals": "Aims to depict a persistent chat/messaging entry point with an unread indicator in the platform dashboard corner.",
+  "novelty": "n/a",
+  "contribution": "Contributes the floating Chats-pill component (icon + label + unread count badge) for the platform dashboard corner.",
+  "summary_for_embedding": "A global-window React Chats component rendering a fixed bottom-right pill with a speech-bubble icon, label, and unread-count badge in the platform UI kit.",
+  "intention_for_embedding": "To provide a persistent corner chat entry point with an unread-count badge for the creator-side platform dashboard."
+}

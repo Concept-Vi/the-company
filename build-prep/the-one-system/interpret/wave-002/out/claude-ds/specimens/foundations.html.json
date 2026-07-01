@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "specimens/foundations.html",
+  "model": "opus",
+  "what_it_does": "A standalone design-system specimen page that visually demonstrates the system's 'functional spine': canonical device surfaces (desktop/tablet/mobile portrait/landscape mockup frames), the fluid type scale, the 'nothing teleports' motion language (animated tiles), the elevation ramp, and an overflow-safe pill group. Links ../styles.css for tokens and uses a small inline script to build the motion tiles and trigger their replay on hover/load.",
+  "observations": [
+    "Opens with an HTML comment directive @dsCard group=\"Spacing\" name/subtitle/viewport — metadata consumed by an external gallery/card harness.",
+    "Links ../styles.css and styles every element via CSS custom properties (var(--zone-base-surface), --ink, --font-body, --fs-h2, --elev-2, --accent-gold, etc.) rather than hardcoded values.",
+    "Renders four device frames at captioned dimensions (desktop 1440x900, tablet 834x1112, mobile portrait 390x844, mobile landscape 844x390).",
+    "Demonstrates fluid type tokens --fs-display/--fs-h1/--fs-h3/--fs-body inline.",
+    "Motion section is data-driven from a JS array MO with classes enter-up/down/left/scale and easing tokens (--ease-entrance/exit/emphasized/spring), replaying on mouseenter and staggered on load.",
+    "Elevation ramp shows e0..e5 plus a glow-active state; uses utility-looking classes (.e0../.glow-active) that must be defined in styles.css.",
+    "Includes an 'overflow-safe pill group' demo with an intentionally over-long label to test wrapping/truncation.",
+    "A few literal values appear in the local <style> (#fff backgrounds, fixed px widths/heights for the demo frames) alongside the token references."
+  ],
+  "standouts": [
+    "The motion tiles are interactive (hover-to-replay, staggered auto-play) — a live demonstration rather than a static swatch.",
+    "Deliberate stress-test case: a pill labelled 'this label is intentionally far too long to fit' to prove overflow handling."
+  ],
+  "conventions": [
+    "Follows the specimen/card pattern: @dsCard comment header + self-contained HTML linking the shared stylesheet.",
+    "References design tokens via var() for nearly all colour/type/elevation values (the single-source discipline).",
+    "Section headers use the recurring h2 treatment (uppercase bronze label with a rotated gold gem ::before).",
+    "Uses #fff and fixed px in local demo styles — minor literals inside a specimen, consistent with other specimens in the set."
+  ],
+  "concerns": [
+    "Relies on token/utility classes (e0..e5, glow-active, enter-*, pill-group, --vi-strong, --zone-panel-strong) defined elsewhere in styles.css; if those names drift this page silently shows wrong/blank states (var fallbacks are mostly absent)."
+  ],
+  "notes": "A self-contained gallery specimen proving the system's surfaces, fluid type, motion easings, and elevation ramp work from tokens — useful as both a visual reference and a smoke-test of the stylesheet's named tokens/utilities.",
+  "questions": [
+    "Are the easing/elevation/zone utility class names used here (enter-up, glow-active, e0..e5, --vi-strong) guaranteed to exist in styles.css, or could this specimen render incompletely if a token is renamed?"
+  ],
+  "purpose_vs_actual": "Matches: the subtitle promises multi-surface frames, fluid type, and the motion language, and the page demonstrates exactly those plus elevation and an overflow case.",
+  "apparent_themes": [
+    "Tokens-as-truth (everything via var())",
+    "Calm-but-not-static motion ('nothing teleports')",
+    "Multi-surface awareness (device frames)",
+    "Specimen-as-living-demonstration"
+  ],
+  "intention_signals": "Trying to make the abstract token system tangible to the eye — a single page where someone can see the surfaces, type scale, motion feel, and elevation depth working together and replay the motions.",
+  "novelty": "The interactive, replayable motion tiles and the intentional overflow stress-case make this more than a passive swatch sheet.",
+  "contribution": "Contributes a live visual+interactive specimen of the foundational dimensions (surfaces, fluid type, motion easings, elevation, overflow safety) bound to the shared tokens — a renderable reference and smoke-test of those tokens.",
+  "summary_for_embedding": "A ConceptV design-system specimen HTML page demonstrating canonical device surfaces, the fluid type scale, the 'nothing teleports' motion easings (interactive tiles), the elevation ramp, and an overflow-safe pill group, all driven by shared CSS tokens.",
+  "intention_for_embedding": "To visually and interactively prove the system's foundational surfaces, type, motion, and depth tokens render correctly and feel right to the eye."
+}

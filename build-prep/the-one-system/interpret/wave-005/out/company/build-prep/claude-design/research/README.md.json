@@ -1,0 +1,34 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/README.md",
+  "model": "opus",
+  "what_it_does": "A single-sentence README declaring this directory the evidence base for the claude-design pack, and establishing a precedence rule: where BACKEND-SEAM-PACK.md covers the same seam/placement findings as the deep-reads here, the seam pack is the single source and the deep-reads must not be updated independently.",
+  "observations": [
+    "One line, no frontmatter, no headings.",
+    "Names a sibling artifact BACKEND-SEAM-PACK.md as the authority for overlapping seam/placement findings.",
+    "States a do-not-update-independently rule for the deep-reads when they overlap the seam pack."
+  ],
+  "standouts": [
+    "Encodes a single-source-of-truth precedence rule in one sentence: seam pack wins over the deep-reads on overlapping findings."
+  ],
+  "conventions": [
+    "Follows the repo's single-source / one-source-of-truth discipline by explicitly naming which artifact governs overlapping content.",
+    "Departs from the vault-conventions frontmatter schema (no frontmatter) — acceptable as a working-doc directory README."
+  ],
+  "concerns": [],
+  "notes": "A one-liner declaring this dir the claude-design evidence base and pointing overlapping seam/placement findings to BACKEND-SEAM-PACK.md as the authority.",
+  "questions": [
+    "Where does BACKEND-SEAM-PACK.md live relative to this directory?",
+    "Which specific deep-reads in this directory overlap the seam pack's findings?"
+  ],
+  "purpose_vs_actual": "Matches — it states what the directory is and the precedence rule, which is exactly its content.",
+  "apparent_themes": [
+    "Single source of truth for overlapping findings",
+    "Evidence base / provenance for a design pack"
+  ],
+  "intention_signals": "Intends to prevent divergence between the deep-read research notes and the consolidated seam pack by fixing which one governs when they overlap.",
+  "novelty": "n/a",
+  "contribution": "Contributes the precedence rule for this research directory — that BACKEND-SEAM-PACK.md is the source for overlapping seam/placement findings and the deep-reads defer to it.",
+  "summary_for_embedding": "A one-line README declaring this directory the claude-design evidence base and stating that BACKEND-SEAM-PACK.md is the single source for any seam/placement findings shared with the deep-reads here.",
+  "intention_for_embedding": "To prevent divergence by fixing the seam pack as the authority over the deep-read research notes on overlapping findings."
+}

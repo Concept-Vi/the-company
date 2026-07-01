@@ -1,0 +1,48 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/rg10_redescribe.py",
+ "model": "opus",
+ "what_it_does": "Re-describe pass over panel-flagged dossiers (class 'panel') in reconciled.json. For each, it rebuilds the real element unit, feeds the panel seats' named content dissents back to register_element as a correction, generates a corrected dossier, then re-gates it through refcheck (refloor), check_prose (deterministic prose floor), and two model seats (confirm_registration + element_fit_lens). An entry becomes 'confirmed' only if refcheck passes, prose passes, and at least 2 of the 3 seats are grounded; otherwise it stays flagged with named seat dissents. Entry-idempotent (redescribed flag), prior dossier kept, proposes only.",
+ "observations": [
+  "Targets CONTENT defects (mis-described elements) where both content lenses dissented — distinct from rg10_reask's fact-fabrication target.",
+  "element_of caches loaded artifacts per mockup and resolves the element unit via cluster_members[0] into the candidates filtered by mockup_file.",
+  "Correction string injects the per-seat dissents and instructs: describe only what the element shows, do not invent interactions.",
+  "ok requires rc.passed AND pc.passed AND >=2 grounded seats (quorum 2).",
+  "Time-budgeted (default 1800s); checkpoints reconciled.json every 10 processed; final write at end.",
+  "Records 'element-unrebuildable' or an error string into the redescribed field on failure — never silent.",
+  "Builds the same extended-input register_element Role variant as rg10_reask."
+ ],
+ "standouts": [
+  "Three-layer re-gate combining a deterministic refcheck floor, a deterministic prose floor, and two model lenses — only passing EVERYTHING confirms.",
+  "The dissent-to-correction feedback loop aimed specifically at over-claiming descriptions ('claims it pauses the tour; the text says it opens the workshop').",
+  "Idempotent + checkpointed so bounded batches compose without re-burning work."
+ ],
+ "conventions": [
+  "refine-before-gating: exhaust buildable refinements before the human gate.",
+  "Propose-only; reconciled.json updated in place.",
+  "Same bootstrap (chdir, sys.path inserts) and Role-variant pattern as the sibling passes.",
+  "Fail-loud per-entry recording in the redescribed field."
+ ],
+ "concerns": [
+  "Line 97 `e['prior_dossier'], e['dossier'] = e.get('prior_dossier', e['dossier']), new_d` preserves only the FIRST prior dossier across repeated redescribes (idempotency guards against re-running, but the assignment is subtle).",
+  "Broad `except Exception` swallows any failure into a string field — robust for batch composition but hides error types.",
+  "Mixes deterministic and model gating in one loop with multiple model calls per entry — cost/latency per entry is high and time-bounded rather than count-bounded."
+ ],
+ "notes": "Re-describe: feeds panel seats' content dissents back to the describer, regenerates the dossier, and confirms only if it clears refcheck + prose + 2-of-3 lenses.",
+ "questions": [
+  "What introduces class 'panel' entries — is it rg10_rejury.py's verdict-False branch that produces them?",
+  "What does check_prose (prose_check) flag as a hit, and what does element_fit_lens evaluate?"
+ ],
+ "purpose_vs_actual": "Match — the docstring's content-defect re-describe with refloor + re-prose + re-panel and pass-everything confirmation is exactly implemented.",
+ "apparent_themes": [
+  "Refine-before-gating.",
+  "Multi-floor gating (deterministic + model, all must pass).",
+  "Dissent-driven correction targeting over-claiming.",
+  "Idempotent, checkpointed, composable batches."
+ ],
+ "intention_signals": "Tries to repair dossiers that describe elements inaccurately by feeding the reviewers' specific complaints back to the describer and only accepting a rewrite that survives every floor and a seat quorum, reducing what reaches the human gate.",
+ "novelty": "Combining two deterministic floors (fact + prose) with two model lenses under a single pass-everything-plus-quorum rule, driven by named seat dissents, is a distinctive multi-floor re-description design.",
+ "contribution": "Contributes the content-defect repair stage — the dissent-fed re-describe that regenerates mis-describing dossiers and re-gates them through fact, prose, and lens floors before confirming.",
+ "summary_for_embedding": "A time-budgeted Python pass that re-describes panel-flagged registry dossiers by feeding seat dissents back to register_element, then confirms only those passing refcheck, prose, and a 2-of-3 lens quorum.",
+ "intention_for_embedding": "To repair inaccurately-described element dossiers by feeding reviewers' complaints back to the describer and accepting only rewrites that clear every floor."
+}

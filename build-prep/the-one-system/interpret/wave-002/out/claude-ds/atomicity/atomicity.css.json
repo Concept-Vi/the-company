@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/atomicity.css",
+  "model": "opus",
+  "what_it_does": "The full stylesheet for the AtomiCity interface — top bar, two-column body (tree rail + detail pane), hero band, section tiles, per-kind detail renderers (tokens, cards, key-value, code blocks), the Vi console (FAB, slide-in panel, message feed, composer, modes), a command bar, AcKit primitives (state gems, tiles, fields, bottom sheets, color/range controls), and surface-specific layouts for Foundations (.fz2/.fzp), Ingest (.ig), Home (.hm), Explore (.ex2/.ex3), and Voice (.vo), plus view-transition animations and reduced-motion handling.",
+  "observations": [
+    "Header comment asserts AtomiCity is 'built FROM the ConceptV system, not merely styled to match it' — every value a token (--elev-*, grain/blueprint texture, --ease-*/.enter-*/.stagger motion, gold/bronze ramp, vi-surface washes, tonal zoning, Sora/DM Sans), with 'No raw colour/shadow/easing literals — only layout geometry'.",
+    "Almost all visual properties use var() tokens; the few raw literals are layout geometry (px sizes, %), rgba(255,255,255,...) overlays on dark surfaces, and a fallback hex (--ink, #1F1A12 / #b3261e status-error fallback) and #fff for iframe backgrounds.",
+    "Grain texture is inlined as a data: URI SVG feTurbulence filter, reused on the rail and the detail canvas at scaled opacity.",
+    "Defines layout custom props at :root (--ac-rail, --ac-vi, --ac-top) for the three-zone shell.",
+    "Inspect mode is a global cue: :root[data-mode=\"inspect\"] tints selectable surfaces and disables the rail.",
+    "Extensive Vi console styling implies a chat surface with user/vi message bubbles, action chips, follow-ups, suggestion pills, shot-memory counter, and mode toggles.",
+    "Two distinct Explore layouts coexist (.ex2 gallery-of-variants and .ex3 selection-on-canvas with hotspots/tags), suggesting an evolution kept side by side.",
+    "Uses modern CSS: color-mix(in srgb,...), :has() selectors, view-transition-name + ::view-transition-old/new keyframes, mask-image for the hero blueprint/hatch signature.",
+    "Comprehensive responsive breakpoints per surface (1040/820/760/720/520 px etc.) and a prefers-reduced-motion block that neutralizes animations.",
+    "Comment notes ViShape styles are duplicated here because AtomiCity does not load app.css."
+  ],
+  "standouts": [
+    "Token-purity discipline stated and largely upheld: design values are var() refs, only geometry is literal — the single-source doctrine enforced in CSS form.",
+    "The hero 'frame signature' (blueprint grid mask + gold hatch baseline) and inlined grain SVG give the surface a distinctive built-from-the-system identity.",
+    "View transitions + reduced-motion handling show motion is a first-class, accessible concern."
+  ],
+  "conventions": [
+    "Follows the project non-negotiable 'no raw hex/px in consumers' — design properties reference tokens, with documented exceptions for geometry and dark-surface overlays.",
+    "BEM-ish prefixed class namespaces per surface (ac-, fz2-, fzp-, ig-, hm-, ex2-, ex3-, vo-, k-) keep the large sheet navigable.",
+    "Fallback values in var(--x, fallback) form for theme-dependent tokens (e.g. var(--vi-surface, var(--accent-gold-faint)))."
+  ],
+  "concerns": [
+    "A few raw literals remain (rgba(255,255,255,.06/.12), #fff iframe bg, #1F1A12 / #b3261e fallbacks) which technically deviate from the stated 'no raw colour' rule, though they are overlay/fallback cases — file-local note only.",
+    "Two parallel Explore layouts (.ex2 and .ex3) both present; from this file alone it's unclear which is live, a minor risk of dead styles."
+  ],
+  "notes": "The single stylesheet for the entire AtomiCity app — token-driven shell + Vi console + per-surface layouts (Foundations/Ingest/Home/Explore/Voice); it pairs with Atlas.jsx and the Ac* surface components and assumes the ConceptV token set is loaded.",
+  "questions": [
+    "Are both Explore variants (.ex2 and .ex3) live, or is one superseded?",
+    "Where are the design tokens (--elev-*, --accent-gold, --font-display, --ease-*, grain/blueprint vars) defined — this file consumes but does not declare them?"
+  ],
+  "purpose_vs_actual": "Match — the header claims a token-built, no-raw-literals stylesheet for AtomiCity, and the file is overwhelmingly var()-driven with only geometry and documented overlay/fallback exceptions; it styles exactly the surfaces the JSX components render.",
+  "apparent_themes": [
+    "Built-from-the-system (tokens not copies)",
+    "A distinctive visual signature (grain + blueprint + gold/bronze + hatch)",
+    "Motion as a designed, accessible layer",
+    "One sheet, many surfaces, prefixed namespaces"
+  ],
+  "intention_signals": "Trying to make the design-system's own interface a demonstration of the system: every color/shadow/motion value pulled from the shared token registry so the app visibly proves the single-source doctrine while carrying a recognizable warm, blueprint-grained brand identity.",
+  "novelty": "An app stylesheet that treats itself as a consumer of its own token system (near-zero raw design literals), with an inlined grain-noise texture, a blueprint+hatch hero signature, and full view-transition choreography.",
+  "contribution": "Contributes the complete visual layer for the AtomiCity surface — the token-driven shell, the Vi conversational console styling, the AcKit control primitives, and the per-surface layouts (Foundations workbench, Ingest, Home, Explore, Voice) with motion and responsive behavior.",
+  "summary_for_embedding": "The full token-driven stylesheet for the AtomiCity design-system interface — shell (top bar, tree rail, detail pane), Vi console, AcKit primitives, and per-surface layouts for Foundations, Ingest, Home, Explore, and Voice, with grain/blueprint signature, view transitions, and reduced-motion support.",
+  "intention_for_embedding": "To style AtomiCity entirely from the ConceptV token registry so the app's own look is computed from the system it presents, while carrying a distinct warm blueprint-grained brand identity."
+}

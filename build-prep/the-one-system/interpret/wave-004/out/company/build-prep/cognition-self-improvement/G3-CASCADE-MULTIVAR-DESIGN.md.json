@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/G3-CASCADE-MULTIVAR-DESIGN.md",
+  "model": "opus",
+  "what_it_does": "A tentative design document (G3) proposing how to extend the cascade engine so that committed code-chains (like flows/registry_generation) can become declared data-chains. It identifies four 'seams' that the manual registry_generation_run.py supplies by hand — keyed per-unit context (S1), resolve-once shared inputs (S2), judgment+check step kinds (S3), and the decision that partition/resume stay in the flow layer (S4) — and gives a design and a build order for closing them.",
+  "observations": [
+    "explicitly marked TENTATIVE, written 2026-06-10 from the lived RG10 build, not reviewed by Tim, assumptions marked",
+    "frames the goal as collapsing the two chain-kinds toward 'declare the chain, never code it' — registry-is-truth for processes",
+    "S1: proposes a step field unit_ctx with {field} substitution from the unit dict and an optional per_unit_ctx resolver in run_items, additive/byte-identical when absent",
+    "S2: proposes a cascade-level shared: block resolved once; resolver vocabulary left as an open question/assumption (reuse code:// and run:// rather than mint file://, possibly corpus-query:)",
+    "S3: proposes three additive step kinds — jury, panel, and check — with check requiring a new checks/ registry (checks/<id>.py) embodying 'the model raises, the floor decides'",
+    "S4: a DECISION (not assumption) that partition/retry/resume stay in the flow layer; flows wrap cascades",
+    "gives a value ordering (S3-check highest) and a 5-step build order gated on greenlight",
+    "references GC1, GC13, GC14, G4, RG10 as related pieces"
+  ],
+  "standouts": [
+    "the principle 'declare the chain, never code it' as the strongest form of registry-is-truth for processes",
+    "the recurring 'the model raises, the floor decides' law, generalized to suggest the floor itself (checks) become registry data",
+    "careful epistemic discipline: each seam labeled assumption vs decision, with reversal cost stated for S4"
+  ],
+  "conventions": [
+    "assumption-marking and tentativeness convention (matches Tim's epistemic-humility preference)",
+    "additive-change discipline: extensions must leave today's path byte-identical when the new field is absent",
+    "node-id naming (G3, S1-S4, GC1/GC13/GC14) tying into a larger plan graph",
+    "address-scheme reuse over new-scheme invention (code://, run://)"
+  ],
+  "concerns": [],
+  "notes": "A design-only spec naming the four engine gaps that keep the registry chain as code, with a build order to make it a pure declared cascade.",
+  "questions": [
+    "What is the resolver vocabulary decision for S2's shared block (the explicitly-open question)?",
+    "What is the exact interface of run_items today that the per_unit_ctx extension would augment?"
+  ],
+  "purpose_vs_actual": "Match — it states it is the design-first half of G3 with nothing built, and it delivers exactly that: named seams, designs, assumptions, and a build order.",
+  "apparent_themes": [
+    "code-chains becoming declared data-chains (registry-is-truth)",
+    "additive, non-breaking engine evolution",
+    "model-raises / floor-decides separation",
+    "keeping statefulness in the flow layer, purity in cascades",
+    "proof-by-use as the final build step"
+  ],
+  "intention_signals": "Trying to identify exactly what the cascade engine lacks (by reading what the manual code does by hand) so that complex chains can be declared as data and an accepted proposal can later dispatch its build recipe as pure data.",
+  "novelty": "Treating hand-written seams in a manual module as the literal spec for engine features, and proposing a checks registry that makes deterministic gates declarable repo data.",
+  "contribution": "Contributes the four-seam analysis (S1 keyed per-unit ctx, S2 resolve-once shared inputs, S3 jury/panel/check step kinds + checks registry, S4 flow/cascade split decision) and the value-ordered build sequence for declarable chains.",
+  "summary_for_embedding": "A tentative design doc proposing four cascade-engine extensions (per-unit context, shared inputs, jury/panel/check step kinds with a checks registry, and keeping partition/resume in flows) to turn coded chains into declared cascades.",
+  "intention_for_embedding": "To let committed code-chains become pure declared data-chains by closing the specific engine gaps the manual registry-generation module fills by hand."
+}

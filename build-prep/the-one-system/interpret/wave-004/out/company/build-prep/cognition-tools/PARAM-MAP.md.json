@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-tools/PARAM-MAP.md",
+  "model": "opus",
+  "what_it_does": "A status-tracking design map that classifies six cognition-call parameters Tim named (structured output, prompt, context resolution, output location, think/reasoning, tools) as BUILT+WIRED / BUILT-but-UNWIRED / ABSENT, each grounded in cited evidence from real code (runtime/cognition.py, fabric/transport.py, mcp_face/server.py). It documents a budget bug, provider-reality differences, a build plan for a provider-translation layer, and several already-built+verified pieces (think, budget-retry, resolved prompt-slots).",
+  "observations": [
+    "Opens with a Tim directive (2026-06-20): everything settable regardless of provider — schema, prompts, context resolution, output locations, think, tools — as a value/param the code handles in the back",
+    "THE SIX PARAMS table: context resolution is the only one BUILT+WIRED with per-call settability; schema/prompt/output-location are role-authored only (per-call override absent); think and tools have mechanisms that exist but are unwired",
+    "Documents THE BUDGET BUG: reasoning cloud models spend all max_tokens on hidden reasoning then emit empty content (finish_reason=length), proven with kimi-k2.6:cloud (256 tokens→empty, 600→clean JSON at 462 completion tokens)",
+    "PROVIDER REALITY table: /v1 does structured-output but ignores think-control; ollama native /api/chat honours think but was inconsistent on structured format; local vLLM does both",
+    "States the design intent: structured extraction → local no-think models; cloud reasoning models → big-context agent work, not schema extraction",
+    "Records think param BUILT+VERIFIED (f9305d7, 2026-06-21) via new ollama_native_transport — think=False→2 tokens clean, think=True→400 tokens empty (200× collapse)",
+    "Records budget-retry net BUILT+VERIFIED (757942e, 2026-06-21): doubles max_tokens (cap 4096) on finish_reason=length failures",
+    "Records resolved prompt-slots BUILT+VERIFIED (881fb9f, 2026-06-21): one role → 3 prompts across 3 coordinates via resolve_slot against turn coordinate",
+    "Includes a RECALL-BEFORE-BUILD section citing live extraction-asset records (29,406 records) for resolver design grounding, with bracketed record IDs like [full/91037]",
+    "Documents the schema-vs-prompt asymmetry: prompt_template becomes a resolve_slot; output_schema stays a rich superset class with grain projection happening read-side"
+  ],
+  "standouts": [
+    "Default-to-wrong discipline: every claim grounded in a read or live test with cited line numbers and commit hashes, never the docstring",
+    "The proven token-collapse evidence (1304→43, 400→2) as the verification standard for the think param",
+    "The extract-once / determine-many resolution principle: bake the rich superset once, project the grain on read",
+    "The honest provider-limitation finding stated rather than papered over: think-off + structured-output together is not cleanly achievable on a cloud reasoning model"
+  ],
+  "conventions": [
+    "Uses ★ markers to flag critical findings and status milestones",
+    "Tags claims with commit hashes and dates for provenance (committed≠live distinction noted repeatedly)",
+    "Cites code by file:line throughout as evidence",
+    "Distinguishes BUILT+WIRED / BUILT-but-UNWIRED / ABSENT as a consistent status vocabulary",
+    "Follows the additive / byte-identical-default discipline for hot-path edits (bake-resume safe)"
+  ],
+  "concerns": [],
+  "notes": "This is the evidence-grounded ledger of which cognition-call params are actually wired vs merely built vs missing — read it to know what run_role can and cannot do today and the proven reasons why.",
+  "questions": [
+    "Have the remaining gaps (vLLM enable_thinking, tools wiring, per-call schema/prompt/output-location overrides) been built since 2026-06-21?",
+    "Is the provider-translation layer (one param → right mechanism per provider) complete, or still partial after the think template?"
+  ],
+  "purpose_vs_actual": "Match — it states its purpose as the map classifying everything-settable against real code and delivers exactly that, with status, evidence, and a running record of built+verified pieces.",
+  "apparent_themes": [
+    "everything settable regardless of provider via a translation layer",
+    "default-to-wrong / evidence-grounded verification over docstrings",
+    "extract-once, determine/project-many resolution",
+    "provider asymmetry as an honest constraint, not papered over",
+    "additive, bake-resume-safe hot-path edits",
+    "the address/coordinate as the universal resolution primitive"
+  ],
+  "intention_signals": "It tries to give an honest, code-grounded accounting of the gap between Tim's everything-settable vision and the actual wired surface, then sequence the build of a provider-translation layer (think first as the template, then tools, per-call overrides, and a budget-retry safety net), verifying each by real behaviour.",
+  "novelty": "Treating provider differences as a first-class design problem requiring a translation layer, and proving param wiring via token-count collapse rather than presence-of-output, plus the extract-once/project-on-read reconciliation of grain-variable schemas.",
+  "contribution": "Contributes the grounded param-status ledger for cognition calls, the budget-bug diagnosis and proof, the provider-reality matrix, the think-param build template + verified results, and the resolved-slots resolution-mechanism design with extract-once/determine-many grounding.",
+  "summary_for_embedding": "An evidence-grounded status map classifying six cognition-call params (structured output, prompt, context resolution, output location, think, tools) as wired/unwired/absent against real code, documenting the cloud-reasoning budget bug, provider differences, and the built+verified think param, budget-retry net, and resolved prompt-slots.",
+  "intention_for_embedding": "To honestly account for which of Tim's everything-settable cognition params are actually wired and to sequence building a provider-translation layer that makes schema, prompt, think, tools, and output-location settable regardless of provider."
+}

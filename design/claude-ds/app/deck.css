@@ -1,0 +1,456 @@
+/* ============================================================
+   deck.css — reusable primitives extracted from the ConceptV
+   pitch deck. These are the *building blocks* every surface in
+   the studio should use to stay on-brand and consistent.
+
+   Import order matters: load AFTER colors_and_type.css but
+   BEFORE any canvas-specific stylesheets.
+   ============================================================ */
+
+/* ============================================================
+   1. SURFACES — page, panel, card hierarchy
+   ============================================================ */
+
+/* Page-level surface — the "paper" of the deck. Almost-white. */
+.cv-paper {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* A panel is a soft cream wash sitting on the paper. No border,
+   no shadow, just a tone shift. This is the deck's primary
+   container — see how each comparison column or stat box uses it. */
+.cv-panel {
+  background: var(--paper-2);
+  border-radius: var(--r-xl);
+  padding: var(--s-6) var(--s-7);
+}
+.cv-panel--tight  { padding: var(--s-4) var(--s-5); }
+.cv-panel--loose  { padding: var(--s-7) var(--s-8); }
+
+/* A card is white on the paper — used when you want crisp content
+   (an image, a dashboard chrome) to stand out from the panel wash. */
+.cv-card {
+  background: var(--bg-surface);
+  border-radius: var(--r-lg);
+  padding: var(--s-4);
+  box-shadow: var(--shadow-card);
+}
+
+/* Plate = white card without shadow — used for inline metric blocks
+   like the "$500k" mini-tile in the funding slide. */
+.cv-plate {
+  background: var(--bg-surface);
+  border-radius: var(--r-md);
+  padding: var(--s-3) var(--s-4);
+}
+
+/* ============================================================
+   2. PATTERNS — the diagonal hatch + blueprint background
+   ============================================================ */
+
+/* The signature hatched strip used at the bottom of every deck slide.
+   Apply to a 12-24px tall element pinned bottom-of-section. */
+.cv-hatch {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--accent-gold-dashed) 0 1px,
+    transparent 1px 7px
+  );
+  opacity: 0.55;
+  height: 10px;
+}
+.cv-hatch--soft {
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--accent-gold) 35%, transparent) 0 1px,
+    transparent 1px 8px
+  );
+  opacity: 0.6;
+}
+
+/* The very faint blueprint pattern that sits behind the deck. */
+.cv-blueprint-bg {
+  background:
+    radial-gradient(
+      ellipse at top right,
+      rgba(152, 128, 88, 0.06),
+      transparent 60%
+    ),
+    var(--paper);
+  position: relative;
+}
+.cv-blueprint-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 47px, rgba(152,128,88,0.04) 47px 48px),
+    repeating-linear-gradient(90deg, transparent 0 47px, rgba(152,128,88,0.04) 47px 48px);
+  z-index: 0;
+}
+.cv-blueprint-bg > * { position: relative; z-index: 1; }
+
+/* ============================================================
+   3. TYPOGRAPHY — deck headings, body, accents
+   ============================================================ */
+
+.cv-deck-title {
+  font: 700 28px/1.15 var(--font-display);
+  color: var(--ink);
+  letter-spacing: var(--tracking-snug);
+  margin: 0 0 var(--s-3);
+}
+.cv-deck-title--lg { font-size: 36px; line-height: 1.1; }
+.cv-deck-title--xl { font-size: 44px; line-height: 1.05; letter-spacing: var(--tracking-tight); }
+
+.cv-deck-section {
+  font: 600 14px/1.2 var(--font-display);
+  color: var(--accent-bronze);
+  letter-spacing: var(--tracking-snug);
+  text-align: center;
+  margin: 0 0 var(--s-4);
+}
+
+.cv-deck-eyebrow {
+  font: 700 11px/1 var(--font-body);
+  color: var(--accent-bronze);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  margin: 0 0 var(--s-2);
+}
+
+.cv-deck-body {
+  font: 400 14px/1.6 var(--font-body);
+  color: var(--ink-2);
+}
+.cv-deck-caption {
+  font: 400 12px/1.4 var(--font-body);
+  color: var(--ink-3);
+}
+
+/* The big-gold-number-with-small-label motif from the stats panels.
+   <div class="cv-stat">
+     <span class="cv-stat-num">$430B+</span>
+     <span class="cv-stat-label">in rework</span>
+   </div>
+*/
+.cv-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.cv-stat-num {
+  font: 700 28px/1 var(--font-display);
+  color: var(--accent-gold);
+  letter-spacing: var(--tracking-tight);
+  white-space: nowrap;
+}
+.cv-stat-num--sm { font-size: 22px; }
+.cv-stat-num--lg { font-size: 36px; }
+.cv-stat-num--xl { font-size: 48px; }
+.cv-stat-label {
+  font: 500 12px/1.3 var(--font-body);
+  color: var(--ink-2);
+  text-wrap: balance;
+}
+.cv-stat--stacked { flex-direction: column; align-items: flex-start; gap: var(--s-1); }
+
+/* A horizontal strip of stats with the signature gold-hatched wash.
+   <div class="cv-stat-row">
+     <div class="cv-stat">…</div>
+     <div class="cv-stat">…</div>
+   </div>
+*/
+.cv-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-around;
+  gap: var(--s-4) var(--s-7);
+  padding: var(--s-4) var(--s-6);
+  background:
+    repeating-linear-gradient(135deg, rgba(224,192,16,.10) 0 1px, transparent 1px 9px),
+    var(--paper);
+}
+
+/* ============================================================
+   4. LISTS — gold ▶ bullets and gold ✓ checks
+   ============================================================ */
+
+/* <ul class="cv-bullets"><li>…</li></ul> */
+.cv-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex; flex-direction: column;
+  gap: var(--s-3);
+}
+.cv-bullets > li {
+  position: relative;
+  padding-left: 26px;
+  font: 500 14px/1.5 var(--font-body);
+  color: var(--ink-2);
+}
+.cv-bullets > li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0.5em;
+  width: 0; height: 0;
+  border-left: 8px solid var(--accent-gold);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+}
+.cv-bullets--tight > li { font-size: 13px; gap: var(--s-2); }
+
+.cv-checks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex; flex-direction: column;
+  gap: var(--s-3);
+}
+.cv-checks > li {
+  position: relative;
+  padding-left: 30px;
+  font: 500 14px/1.5 var(--font-body);
+  color: var(--ink-2);
+}
+.cv-checks > li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0.15em;
+  width: 18px; height: 18px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--accent-gold);
+  border-radius: var(--r-xs);
+}
+.cv-checks > li::after {
+  content: '';
+  position: absolute;
+  left: 4px; top: 0.5em;
+  width: 11px; height: 6px;
+  border-left: 2px solid var(--accent-gold);
+  border-bottom: 2px solid var(--accent-gold);
+  transform: rotate(-45deg);
+}
+
+/* ============================================================
+   5. PILLS & TAGS — the gold-outline pill from the deck
+   ============================================================ */
+
+.cv-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 8px 16px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--accent-bronze);
+  background: transparent;
+  color: var(--accent-bronze);
+  font: 600 13px/1 var(--font-body);
+  cursor: pointer;
+  transition: all 140ms var(--ease-out);
+}
+.cv-pill:hover {
+  background: var(--paper-2);
+  color: var(--ink-2);
+}
+.cv-pill--gold {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+.cv-pill--filled {
+  background: var(--accent-gold);
+  color: var(--ink);
+  border-color: var(--accent-gold);
+}
+.cv-pill--filled:hover { background: var(--accent-gold-hover); border-color: var(--accent-gold-hover); }
+
+/* Small tag — used for capability badges, status, metadata */
+.cv-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 3px 8px;
+  border-radius: var(--r-xs);
+  font: 600 10px/1.2 var(--font-body);
+  background: var(--paper-2);
+  color: var(--ink-3);
+  letter-spacing: 0.01em;
+}
+.cv-tag--gold  { background: var(--accent-gold-soft); color: var(--ink); }
+.cv-tag--ai    { background: var(--bg-dark); color: var(--accent-gold); }
+.cv-tag--ink   { background: var(--ink); color: var(--ink-inverse); }
+
+/* ============================================================
+   6. CONNECTORS — dashed gold lines used in process flows
+   ============================================================ */
+
+.cv-rule       { height: 1px; background: var(--border-soft); border: 0; margin: var(--s-4) 0; }
+.cv-rule-dashed{ height: 0; border: 0; border-top: 1px dashed var(--accent-gold-soft); margin: var(--s-4) 0; }
+.cv-rule-gold  { height: 2px; background: var(--accent-gold); border: 0; margin: var(--s-3) 0; width: 32px; }
+
+/* ============================================================
+   7. WATERMARK — the V octagon, bottom-right of every deck slide
+   ============================================================ */
+
+.cv-watermark {
+  position: absolute;
+  right: var(--s-6);
+  bottom: var(--s-6);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-gold);
+  font: 700 16px/1 var(--font-display);
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* ============================================================
+   8. TWO-COLUMN COMPARISON — left/right panels with optional
+      connector arrow in the middle. The deck uses this pattern
+      again and again (current vs solution, 3D vs 2D, etc).
+   ============================================================ */
+
+.cv-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-7);
+  align-items: stretch;
+  position: relative;
+}
+.cv-compare--narrow { gap: var(--s-4); }
+.cv-compare > .cv-panel { display: flex; flex-direction: column; }
+.cv-compare-arrow {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--paper);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-bronze);
+  pointer-events: none;
+}
+
+/* ============================================================
+   9. SECTION HEADER — center-aligned bronze title with thin
+      dashed gold rules either side. The deck uses this above
+      grouped content like "Development Partners and Incubators".
+   ============================================================ */
+
+.cv-section-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin: 0 0 var(--s-4);
+}
+.cv-section-head::before,
+.cv-section-head::after {
+  content: '';
+  flex: 1;
+  border-top: 1px dashed var(--accent-gold-soft);
+}
+.cv-section-head > * { flex: none; }
+.cv-section-head--start { justify-content: flex-start; }
+.cv-section-head--start::before { display: none; }
+
+/* Variant: just a label, left-aligned, with bronze color and a thin gold
+   rule below — used inside panels above content groups. */
+.cv-panel-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  padding-bottom: var(--s-2);
+  margin-bottom: var(--s-3);
+  border-bottom: 1px dashed var(--accent-gold-soft);
+}
+.cv-panel-head > h4 {
+  font: 600 13px/1.2 var(--font-display);
+  color: var(--accent-bronze);
+  margin: 0;
+  letter-spacing: var(--tracking-snug);
+}
+.cv-panel-head > .meta {
+  font: 400 11px/1 var(--font-body);
+  color: var(--ink-4);
+}
+.cv-panel-head > .right {
+  margin-left: auto;
+  display: flex;
+  gap: var(--s-2);
+}
+
+/* ============================================================
+   10. ENTITY SHAPES — Property Wizard (hexagon), Vi (diamond),
+       Virtual Hub (octagon), User Portal (circle). These appear
+       inline in the deck as small inline marks.
+   ============================================================ */
+
+.cv-shape {
+  display: inline-block;
+  position: relative;
+  width: 48px; height: 48px;
+  flex: none;
+}
+.cv-shape svg { display: block; width: 100%; height: 100%; }
+.cv-shape--sm { width: 32px; height: 32px; }
+.cv-shape--lg { width: 64px; height: 64px; }
+
+/* ============================================================
+   11. UTILITY HELPERS
+   ============================================================ */
+
+.cv-stack       { display: flex; flex-direction: column; gap: var(--s-4); }
+.cv-stack-tight { display: flex; flex-direction: column; gap: var(--s-2); }
+.cv-stack-loose { display: flex; flex-direction: column; gap: var(--s-6); }
+.cv-row         { display: flex; align-items: center; gap: var(--s-3); }
+.cv-row-tight   { display: flex; align-items: center; gap: var(--s-2); }
+.cv-spacer      { flex: 1; }
+
+.cv-muted     { color: var(--ink-4); }
+.cv-bronze    { color: var(--accent-bronze); }
+.cv-gold      { color: var(--accent-gold); }
+.cv-ink       { color: var(--ink); }
+
+.cv-mono      { font-family: var(--font-mono); }
+
+/* ============================================================
+   12. RESIZABLE PANE GUTTERS — used by the ResizablePanels
+       React component to grab between panels.
+   ============================================================ */
+
+.cv-gutter {
+  position: relative;
+  width: 5px;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 5;
+  flex: none;
+}
+.cv-gutter::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1px;
+  height: 36px;
+  background: var(--border-soft);
+  transition: background 140ms var(--ease-out), height 140ms var(--ease-out);
+}
+.cv-gutter:hover::after,
+.cv-gutter.dragging::after {
+  background: var(--accent-gold);
+  height: 60px;
+  width: 2px;
+}
+.cv-gutter.dragging { background: color-mix(in oklch, var(--accent-gold) 12%, transparent); }

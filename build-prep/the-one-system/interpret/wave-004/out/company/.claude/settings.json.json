@@ -1,0 +1,30 @@
+{
+  "project": "company",
+  "path": ".claude/settings.json",
+  "model": "opus",
+  "what_it_does": "Configures the Claude Code harness for this repo: sets worktree background isolation to 'none' and registers a single SessionStart hook that runs ops/hooks/cc_registry_freshness_check.sh as a shell command at the start of every session.",
+  "observations": [
+    "worktree.bgIsolation set to 'none'",
+    "One SessionStart hook of type 'command' invoking an absolute-path bash script: /home/tim/company/ops/hooks/cc_registry_freshness_check.sh",
+    "No permissions, env, or other hook events declared"
+  ],
+  "standouts": [
+    "A registry-freshness check is wired to fire automatically at session start — orientation is enforced by the harness, not left to the agent"
+  ],
+  "conventions": [
+    "Uses an absolute path to the hook script rather than a relative one"
+  ],
+  "concerns": [],
+  "notes": "The repo's Claude Code config — its only active behavior is a session-start registry freshness check via a bash hook.",
+  "questions": [
+    "What does cc_registry_freshness_check.sh check and what happens on a stale registry?",
+    "Why is bgIsolation set to 'none' — what isolation behavior is being opted out of?"
+  ],
+  "purpose_vs_actual": "n/a (no stated purpose in-file; behavior is self-evident config)",
+  "apparent_themes": ["enforced orientation at session start", "registry-is-truth discipline"],
+  "intention_signals": "Make every session begin by checking the live registry is fresh, so agents orient before acting rather than working from a stale self-model.",
+  "novelty": "Tying a registry-freshness gate to the SessionStart hook event is a deliberate orientation enforcement mechanism.",
+  "contribution": "Contributes the harness-level wiring that auto-runs a registry freshness check at session start and disables worktree background isolation.",
+  "summary_for_embedding": "Claude Code settings.json registering a SessionStart bash hook for registry freshness and setting worktree bgIsolation to none.",
+  "intention_for_embedding": "To enforce registry-freshness orientation automatically at the start of every Claude Code session in this repo."
+}

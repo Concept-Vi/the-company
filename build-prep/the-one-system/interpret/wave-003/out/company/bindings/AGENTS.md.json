@@ -1,0 +1,39 @@
+{
+  "project": "company",
+  "path": "bindings/AGENTS.md",
+  "model": "opus",
+  "what_it_does": "Folder constitution for bindings/ — the lenses of a variable instrument. Defines that one file per binding (bindings/<id>.py, file-discovered) declares a filling of the equation's slots (centre / angle_from / radius_from / k), states the instrument default resolves from raw data kinds, and specifies the BINDING row shape and the allowed values of angle_from.",
+  "observations": [
+    "a BINDING is a filling of slots, NOT the sectors themselves — sectors resolve from angle_from against live data + registries",
+    "BINDING row schema given: {id, label, angle_from, radius_from, order_by?, groups?}",
+    "angle_from values: 'kind' (data-driven, one sector per distinct kind), 'kind-group' (declared groups, never the default), or a <registry-name>",
+    "states 'Nothing hardcoded is valid, only what occupies that variable at that point' — adding a lens = adding a file",
+    "attributes the instrument to 'Tim Geldard'; calls it 'Pure data (the floor)'"
+  ],
+  "standouts": [
+    "the variability principle: only what occupies the variable at that point is valid; no hardcoded sectors",
+    "adding a lens is adding a file (file-discovery), not editing code",
+    "angle_from over a <registry-name> resolves once the event->row edge is formalized"
+  ],
+  "conventions": [
+    "follows the repo's AGENTS.md folder-constitution convention",
+    "one row per file, file-discovered registry pattern"
+  ],
+  "concerns": [],
+  "notes": "Constitution for the lens registry: each bindings/<id>.py declares how to fill the instrument's equation slots; sectors are never hardcoded, they resolve from angle_from against live data and registries.",
+  "questions": [
+    "What is 'k' in the equation slots and where is it set (the row schema lists no k field)?",
+    "What formalizing the 'event->row edge' entails before a <registry-name> angle_from resolves"
+  ],
+  "purpose_vs_actual": "Match — it is a folder constitution and it defines the binding/lens model and row schema as stated.",
+  "apparent_themes": [
+    "nothing-hardcoded / variable-occupancy as validity",
+    "registry-is-truth and file-discovery",
+    "an instrument whose lenses are swappable data rows"
+  ],
+  "intention_signals": "Trying to establish that all lenses (sectors of a radial instrument) are data-driven fillings of a fixed equation — so the system grows by adding files, never by hardcoding sectors.",
+  "novelty": "Framing UI lenses as algebraic slot-fillings (centre/angle_from/radius_from/k) of one equation, with a default that resolves from raw kinds.",
+  "contribution": "Contributes the governing definition and row schema for the bindings/lens registry — what a binding is, the allowed angle_from sources, and the no-hardcoded-sectors law.",
+  "summary_for_embedding": "The bindings/ folder constitution defining a binding as a file-discovered filling of an instrument equation's slots (centre/angle_from/radius_from/k) with the BINDING row schema and allowed angle_from values.",
+  "intention_for_embedding": "To mandate that all lenses are data-driven slot-fillings resolved from live data and registries, added by file, never hardcoded."
+}

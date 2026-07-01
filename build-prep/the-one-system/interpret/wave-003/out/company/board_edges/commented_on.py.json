@@ -1,0 +1,37 @@
+{
+  "project": "company",
+  "path": "board_edges/commented_on.py",
+  "model": "opus",
+  "what_it_does": "Defines a single RELATION_TYPE dict for the 'commented_on' board edge: a directed edge from a comment/feedback board item to any addressed target (image://, board://, code://, decision://), with inverse 'has_comment' and a label 'commented-on'.",
+  "observations": [
+    "Module-level RELATION_TYPE constant only; no functions or classes.",
+    "directed=True, inverse='has_comment'.",
+    "desc encodes the usage workflow: file a board item whose body is the comment plus links=[{kind:'commented_on', target:'image://<id>'}], then reverse_traverse the target to gather every comment on it.",
+    "Names a concrete use case: the image-review workflow (compare + annotate)."
+  ],
+  "standouts": [
+    "The desc carries an operational recipe (how to file and how to reverse-traverse), not just a definition.",
+    "Targets are address-scheme-agnostic (image://, board://, code://, decision://)."
+  ],
+  "conventions": [
+    "Follows the board_edges relation-type pattern: a flat RELATION_TYPE dict with id/directed/label/inverse/desc.",
+    "Uses the addressed-resource URI scheme (scheme://<id>) consistently."
+  ],
+  "concerns": [],
+  "notes": "A one-dict edge definition declaring the review/critique relation linking a comment item to whatever it comments on.",
+  "questions": [
+    "Where is reverse_traverse implemented and how does it consume 'inverse'?",
+    "What enforces that the link kind string matches the relation id?"
+  ],
+  "purpose_vs_actual": "Match: the docstring-style desc describes a comment->target review edge and the dict declares exactly that.",
+  "apparent_themes": [
+    "First-class typed relations on a board",
+    "Address-based linking across resource kinds",
+    "Reverse traversal as the gather mechanism"
+  ],
+  "intention_signals": "Trying to make 'comment about X' a queryable graph edge so all feedback on an artifact can be collected by traversing back from the target.",
+  "novelty": "The directed comment edge spans heterogeneous address schemes and pairs an explicit forward/inverse name for review-collection.",
+  "contribution": "Contributes the typed comment/critique edge and its has_comment inverse, plus the documented reverse-traverse review-gathering pattern for any addressed artifact.",
+  "summary_for_embedding": "A board relation-type definition for 'commented_on', a directed comment-to-target edge (inverse has_comment) used to attach and gather feedback on any addressed artifact.",
+  "intention_for_embedding": "To represent review/critique comments as first-class graph edges so all comments on an artifact can be collected via reverse traversal."
+}

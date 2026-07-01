@@ -1,0 +1,37 @@
+{
+  "project": "company",
+  "path": "attachment_types/images.py",
+  "model": "opus",
+  "what_it_does": "Defines a single ATTACHMENT_TYPE dict declaring an 'images' attachment type: an image bound to a channel addressed as image://<id>, target_kind='address', multi=True; desc explains the manifest projects channel → [images] so a channel becomes the addressed/hierarchical home for its visual artifacts.",
+  "observations": [
+    "target_kind is 'address' with scheme image://<id>.",
+    "Inline comment notes the address is opaque and resolved by stripping the scheme then calling cc_images.get_image.",
+    "desc lists the operations enabled: store, generate-into, read, comment, cross-reference.",
+    "Frames the channel as the hierarchical home for its images via a manifest projection channel → [images]."
+  ],
+  "standouts": [
+    "Documents the resolution path (strip scheme → cc_images.get_image) for the opaque image address.",
+    "Enumerates the verbs (store/generate-into/read/comment/cross-reference) the channel-as-image-home supports."
+  ],
+  "conventions": [
+    "Same single-dict descriptor pattern as siblings.",
+    "Inline comment goes beyond labeling target_kind to specify the actual resolver call."
+  ],
+  "concerns": [],
+  "notes": "Registry entry for 'images': opaque image://<id> attachments resolved via cc_images.get_image, making the channel the hierarchical home for its visual artifacts.",
+  "questions": [
+    "What is cc_images.get_image and how does the manifest projection channel → [images] get built?"
+  ],
+  "purpose_vs_actual": "Match — declares the images attachment type and its channel-as-home semantics per the docstring.",
+  "apparent_themes": [
+    "Declarative type registry",
+    "Addressed visual artifacts",
+    "Channels as hierarchical homes",
+    "Opaque-address resolution"
+  ],
+  "intention_signals": "Aims to make a channel the addressed, hierarchical home for images so visual artifacts can be stored, generated, read, commented on, and cross-referenced within it.",
+  "novelty": "Treating a channel as the hierarchical place where images live, with an opaque image:// address and a named resolver.",
+  "contribution": "Contributes the declarative definition of the images attachment type, its image:// address scheme, resolver path, and the channel-as-image-home projection.",
+  "summary_for_embedding": "A descriptor module declaring the 'images' channel attachment type: opaque image://<id> addresses resolved via cc_images.get_image, multi=True, making the channel the home for its images.",
+  "intention_for_embedding": "To register images as channel-bound addressed attachments so a channel becomes the hierarchical home for its visual artifacts."
+}

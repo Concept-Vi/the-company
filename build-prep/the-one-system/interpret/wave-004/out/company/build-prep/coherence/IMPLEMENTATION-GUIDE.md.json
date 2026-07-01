@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/IMPLEMENTATION-GUIDE.md",
+  "model": "opus",
+  "what_it_does": "Loop-prep document 2 of 3 for the 'coherence lane' build: it specifies the HOW — the build sequence, dos/don'ts, file territory, and dependency-first build order — for an automated build loop (cron-picked) that constructs a coherence/detection/disposition substrate inside the Company codebase.",
+  "observations": [
+    "Names itself doc 2 of 3, pairing with COMPLETION-CRITERIA.md (the WHAT) and a Research Synthesis triad (COHERENCE-SUBSTRATE.md / SEMANTIC-LAYER.md / CORPUS-CHAIN.md plus findings/).",
+    "Lists 'Standing laws' that bind every step: registry-is-truth/no-hardcoding, additive (bump schema_ver), fail-loud, reflects-never-owns, own/reflect, positive-only (proposes never auto-acts), operator-only floor, verify-by-use, claim shared files in WORK-SPLIT.md before editing, 'company suites' green before shared-file commit.",
+    "Declares a read-vs-mutate boundary: this lane builds detectors/gates/substrate but never touches the engine (cognition.py / run_items / run_reduce) or the FE.",
+    "Enumerates explicit file territory: runtime/coherence_detect.py, runtime/suite.py gate methods (~7025-7174), several new *_acceptance.py tests, design/_system registries, and store/fs_store.py finding/disposition methods.",
+    "Organized into Groups A-F; A is 'already built', B assembles a shared pre-commit suite, C the disposition store + finding model, D the calibration harness, E chains/graphs as saveable actions, F the convergence-round lens.",
+    "Group C distinguishes DETECTION (re-derivable, never owned) from DISPOSITION (a decision, the one genuinely persisted thing — 'a micro-ADR'), and reuses existing primitives: append_event/_emit, pin-overlay-last-wins, run_stats read-time-rollup, Inbox status-lane shape.",
+    "Group D frames the calibration harness as 'experiment with the LLM layer + save what works' (attributed to Tim): run a detector under N model configs against a labelled eval set → precision/recall/cost/latency → save winning config.",
+    "Group E builds only the SAVING side of chains/graphs-as-actions (declare/validate/save/register), handing the runner seam to cognition; warns against deciding the Action schema unilaterally and to co-design it in a 'coordination home'.",
+    "Ends with an explicit build order for the cron and an 'engine-independent prefix' list of what is buildable now versus what waits on cognition's engine."
+  ],
+  "standouts": [
+    "The own/reflect distinction: detection rides existing machinery (re-derivable), only disposition is persisted as a mutable overlay keyed by finding-id rather than mutating the append-only record.",
+    "Calibration harness reframed as turning trust-tiering 'from assertion into a measured number per class'.",
+    "C6 'the recursion' — migrating the declared _ORPHAN_ROUTES registry into finding-records so the catalogue becomes the system's own first findings.",
+    "Heavy reuse mandate: every new field/behavior is mapped to an existing primitive rather than building new storage or a second pre-commit mechanism."
+  ],
+  "conventions": [
+    "Follows a loop-prep triad convention (criteria + guide + synthesis) and references file:line evidence kept in the synthesis rather than duplicated here.",
+    "Uses status markers (✅ built, 🟡 net-new/pending) and AREA/SEM/CC/criterion codes (AREA-6, SEM-3, SEM-4, CC-1, C6, D4, E2) as cross-references into companion docs.",
+    "Per-criterion workflow convention: build in territory → verify by use → suites green → claim-release + commit per criterion → mark criterion.",
+    "Adheres to the repo's registry-is-truth / additive / fail-loud / verify-by-use standing laws explicitly."
+  ],
+  "concerns": [
+    "Extremely dense and reference-heavy (codes like AREA-6/SEM-4/CC-1, commit hashes) that are opaque without the companion docs — meaning lives outside this file.",
+    "Group A status is asserted as built with commit hashes but the document itself cannot confirm current build-state."
+  ],
+  "notes": "This is the procedural playbook for an autonomous coherence-substrate build loop — read it as the sequencing/boundaries doc, with the actual reasoning and evidence living in its companion synthesis files.",
+  "questions": [
+    "What exactly are the structural vs semantic detectors, and what does coherence_detect.py currently contain?",
+    "What is the 'coordination home' where the Action schema is to be co-designed?",
+    "What is the precise current ✅/🟡 state of each group, given the doc asserts A is built?"
+  ],
+  "purpose_vs_actual": "Match — it states it is the HOW/build-sequence loop-prep doc and its body is exactly that: laws, file territory, per-group sequences, and a dependency-ordered build order.",
+  "apparent_themes": [
+    "Separation of re-derivable detection from persisted decision (own/reflect)",
+    "Reuse-over-rebuild against existing primitives",
+    "Positive-only / proposes-never-auto-acts safety posture",
+    "Lane discipline and co-design boundaries between parallel build loops",
+    "Calibration as measurement replacing assertion"
+  ],
+  "intention_signals": "It is trying to make a complex, multi-lane build executable by an autonomous loop without contaminating sibling lanes — by hard-bounding file territory, encoding standing laws, and ordering work dependency-first so the cron can pick the next buildable criterion safely.",
+  "novelty": "The 'disposition as micro-ADR' framing and the recursion of migrating a hardcoded orphan-routes registry into the very finding-store it is building are distinctive structural moves.",
+  "contribution": "Contributes the coherence lane's build methodology: the detection/disposition substrate design, the reuse-mapping of new behaviors onto existing store primitives, the calibration-harness-as-measurement concept, and the lane-boundary/build-order discipline a fused system would keep as the coherence subsystem's implementation playbook.",
+  "summary_for_embedding": "A loop-prep implementation guide specifying the build sequence, file territory, standing laws, and dependency order for the Company's coherence detection/disposition substrate, calibration harness, and saveable-action declaration layer.",
+  "intention_for_embedding": "To let an autonomous build loop construct the coherence substrate safely and reuse-first, without touching the engine or FE, by encoding boundaries, per-group sequences, and a dependency-first build order."
+}

@@ -1,0 +1,39 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/ActionToolbar.jsx",
+  "model": "opus",
+  "what_it_does": "A small global-window React component rendering a horizontal action toolbar — Select, Filter, Sort buttons, a search input, a Clear Filters button, and right-aligned Create New / Upload buttons — built from inline SVG path icons and a generic button helper.",
+  "observations": [
+    "Defines a terse single-letter icon component I({d, fill}) that maps an array of path 'd' strings into <path> elements",
+    "Icons object holds path-data arrays for select/filter/sort/clear/plus/upload/search",
+    "ToolbarBtn switches between cv-btn--primary and cv-btn--outline classes by a 'primary' prop",
+    "Search field renders its own inline magnifier SVG (circle + path) separate from Icons.search",
+    "Props (showSelect, showCreate, showUpload, search, onSearch) toggle visibility and wire the controlled input",
+    "Only the search input is wired to a handler; the other buttons have no onClick behaviour",
+    "Registers itself as window.ActionToolbar"
+  ],
+  "standouts": [
+    "All iconography is inline SVG path data rather than an icon font or asset, keeping the component dependency-free"
+  ],
+  "conventions": [
+    "Global-window component registration (no imports/exports) consistent with the Babel-in-browser kit pattern",
+    "Styling delegated entirely to cv-* classes (defined in platform.css) — no inline style except one stroke color via var(--fg-muted)",
+    "Uses CSS custom property var(--fg-muted) for the search icon stroke, respecting the token system"
+  ],
+  "concerns": [
+    "Filter/Sort/Clear/Create/Upload buttons are inert (no onClick) — presentational only in this kit",
+    "Two near-duplicate search-magnifier SVGs exist (Icons.search vs the inline one used in render)"
+  ],
+  "notes": "If briefing someone: this is the presentational toolbar row for the platform dashboard kit — only search is interactive; the rest are visual placeholders styled by platform.css.",
+  "questions": [
+    "Are the non-search buttons meant to stay inert in this kit, or wired up by a consumer?",
+    "Why does Icons.search exist if the render uses a separately inlined magnifier SVG?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment lists Select/Filter/Sort/Search/Clear/Create/Upload and the component renders exactly those.",
+  "apparent_themes": ["presentational UI-kit component", "inline SVG icon system", "token-styled via external CSS classes", "prop-toggled feature visibility"],
+  "intention_signals": "Aims to provide a reusable, configurable toolbar row for list/gallery screens in the creator-side platform dashboard, depicting the standard actions a content collection needs.",
+  "novelty": "n/a",
+  "contribution": "Contributes the platform dashboard's action-toolbar component and its set of inline SVG action icons (select/filter/sort/clear/plus/upload/search).",
+  "summary_for_embedding": "A global-window React ActionToolbar component for the platform UI kit with inline SVG icons for select, filter, sort, search, clear, create, and upload.",
+  "intention_for_embedding": "To give creator-side dashboard list/gallery screens a reusable, prop-configurable toolbar of standard collection actions."
+}

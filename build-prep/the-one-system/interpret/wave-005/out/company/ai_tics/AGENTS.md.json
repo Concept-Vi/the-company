@@ -1,0 +1,39 @@
+{
+  "project": "company",
+  "path": "ai_tics/AGENTS.md",
+  "model": "opus",
+  "what_it_does": "Module constitution (prescriptive folder-note) for the ai_tics/ directory: defines what an AI-tic is (a catalogued generic-AI fingerprint to subtract), the file-discovered registry pattern (one self-registering ai_tics/<id>.py per tic), the required AI_TIC dict schema, the live seeded set of tics, and the rules for adding/extending them.",
+  "observations": [
+    "Frontmatter: type constitution, register prescriptive, module ai_tics, governs [P1, M4], status living, typed relates-to links",
+    "Defines AI-tic as a declared generic-AI fingerprint matched by the M4 fingerprint pass producing ai-fingerprint marks with direction 'subtract'",
+    "States the denoising principle: generic+recurring = subtract; idiosyncratic+recurring = gold",
+    "Mandates directory-discovery (file-per-entry) over a python AI_TICS = {...} dict, citing PART 4.3",
+    "Schema: module-level AI_TIC dict {id, markers, label, desc}; id MUST equal file stem; markers a non-empty list of non-empty strings; malformed entry fails loud at discovery",
+    "Lists 7 live seeded tics: framework_imposition, versioning, false_finality, silent_fallback, agent_arch, closure_form, mvp — each tied to a NAMED Tim frustration",
+    "Floor rule: a tic is declared DATA (catalogue entry), reads only via all_markers()/as_records(), never resolve/dispatch",
+    "Seam: discovered by runtime/ai_tics.py:AiTicRegistry mirroring ProjectionRegistry/RoleRegistry/NodeRegistry; create_ai_tic authoring flagged as a separate coordinated pass",
+    "Acceptance test tests/ai_tics_acceptance.py asserts each live tic is reflected here"
+  ],
+  "standouts": [
+    "The 7 tics are explicitly seeded from Tim's named frustrations, encoding personal anti-patterns as a machine-checkable catalogue",
+    "Denoising-as-subtraction: surfacing meaning by subtracting generic-AI tells, with an explicit 'subtract' mark direction",
+    "Registry-is-truth + fail-loud discipline: add-a-file un/registers on rediscover; this doc must be updated or acceptance fails"
+  ],
+  "conventions": [
+    "Follows the repo's folder-note/constitution schema (frontmatter + Is/Why/Guarantees/Seam/Never/Relates to/Read next)",
+    "Mirrors the established file-discovered registry pattern used by roles/skills/projections/node-types",
+    "Uses aliased wikilinks and typed relations per vault conventions"
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the rulebook for the ai_tics registry — a file-per-entry catalogue of generic-AI 'tells' (seeded from Tim's frustrations) that the M4 fingerprint pass subtracts to denoise content.",
+  "questions": [
+    "What is the exact matching algorithm the fingerprint pass uses against markers (substring, token, regex)?"
+  ],
+  "purpose_vs_actual": "Matches — it is a constitution and reads as one, fully describing the module's contract and rules.",
+  "apparent_themes": ["file-discovered registry pattern", "denoising via subtraction", "fail-loud / registry-is-truth", "encoding named frustrations as a catalogue", "data-not-action floor"],
+  "intention_signals": "Tries to make 'generic-AI tells' a first-class, extensible, agent-authorable catalogue so the cognition engine can subtract machine-fingerprint noise and surface Tim-meaning, while keeping it pure data discovered from files.",
+  "novelty": "The concept of an AI-tic as a subtractable fingerprint, and seeding the catalogue directly from a user's named frustrations to invert denoising direction.",
+  "contribution": "Contributes the definition, schema, live seeded set, and discipline of the AI-tic catalogue and its M4 fingerprint/subtract semantics.",
+  "summary_for_embedding": "Prescriptive module constitution defining the file-discovered ai_tics registry — catalogued generic-AI fingerprints (AI_TIC dicts with id+markers) the M4 fingerprint pass matches to emit subtract-direction ai-fingerprint marks.",
+  "intention_for_embedding": "To specify how generic-AI 'tells', seeded from Tim's named frustrations, are catalogued as extensible file-discovered data and subtracted to denoise content and surface meaning."
+}

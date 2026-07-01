@@ -1,0 +1,35 @@
+{
+  "project": "company",
+  "path": "board_edges/authored_by.py",
+  "model": "opus",
+  "what_it_does": "Declares one RELATION_TYPE dict registering the 'authored_by' board edge-kind: a directed item->session://<id> provenance link with inverse 'authored'.",
+  "observations": [
+    "id='authored_by', directed=True, label='authored-by', inverse='authored'.",
+    "desc: the board item was authored by this session (item -> session://<id>).",
+    "desc calls it a cross-registry provenance edge — the first exercise of the relation-type registry across registries (board item row pointing at a session row)."
+  ],
+  "standouts": [
+    "Self-described as 'the first exercise of the relation-type registry across registries'."
+  ],
+  "conventions": [
+    "Single module-level RELATION_TYPE constant, id matching filename.",
+    "Includes inverse ('authored') using optional schema fields.",
+    "Target expressed as an address scheme (session://<id>)."
+  ],
+  "concerns": [],
+  "notes": "The 'authored_by' edge: a board item points to the session that authored it (cross-registry provenance).",
+  "questions": [
+    "Is the inverse 'authored' registered/used anywhere, or only declared here?"
+  ],
+  "purpose_vs_actual": "Match — registers exactly the authored_by edge-kind the board_edges constitution describes.",
+  "apparent_themes": [
+    "Cross-registry provenance edges",
+    "Address-referenced targets (session://)",
+    "Typed edges over flat fields"
+  ],
+  "intention_signals": "Tries to record who/what authored a board item as a typed link into the session registry, demonstrating relation edges spanning different registries.",
+  "novelty": "Framed as the inaugural cross-registry relation edge, pointing from a board item row to a session row.",
+  "contribution": "Contributes the 'authored_by' edge-kind row linking a board item to its authoring session as typed provenance.",
+  "summary_for_embedding": "A board_edges row declaring the directed 'authored_by' edge-kind linking a board item to the session that authored it, with inverse 'authored'.",
+  "intention_for_embedding": "To record board-item authorship as a typed cross-registry provenance edge pointing to a session."
+}

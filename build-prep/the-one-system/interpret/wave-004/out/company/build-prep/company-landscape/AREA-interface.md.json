@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/company-landscape/AREA-interface.md",
+  "model": "opus",
+  "what_it_does": "An exhaustive read-only dragnet of the Company's interface layer: the MCP face (FastMCP server + tool definitions + access-control registries), contracts/ (the C1-C8 + C-CAP/C-PLAT shape spine), ui-contract/ (the purpose-free machine-checked UI contract corpus), schemas/vi-vision/v1/ (decision-surface + archetype JSON schemas), and store/ (the addressed store + resolver + vector index). Carries frontmatter and tags each major gap.",
+  "observations": [
+    "MCP face: FastMCP server.py (1115 lines) with a _LazySuite proxy and build_mcp() factory; MCP-DESIGN-PRINCIPLE = one parameterized tool per resource with an op selector; _guard_tools passes ValueError/KeyError as teaching errors; ~66+ live tools (server.py direct ~35, pkgutil submodules ~31+).",
+    "Two-door access control: remote_exposure.json governs the untrusted CONNECTOR (fail-closed, postures safe/design/consent/hazard/locked), tool_operator_overlay.json governs the trusted OPERATOR (PHASE 1 reads widened = 29 tools, PHASE 2 consequential writes deferred); 'never widen the connector to widen the operator'.",
+    "contracts/ described as the spine that imports nothing in-repo: C1 address grammar (18 SCHEMES + Provenance), C2 NodeType, C3 NodeRecord (SCHEMA_VER=2, EDGE_KINDS), C4 Resolver Protocol (the only fs->Supabase seam), C5 object_info+cognition_info, C6 ui_info (UnionAddressRecord), C7 tools (25-verb TOOLS dict), C8 bridge_msgs, plus C-CAP CapabilityEntry (13 EntryKinds) and C-PLAT PlatformEntry with F-FIX-12 typed Literals.",
+    "ui-contract/ is the FROZEN purpose-free contract a UI-building AI consumes instead of reading the repo: resource-oriented spine, uniform op verbs (list/get/create/update/delete/act/watch/search), 31 resource files, validator V1-V26, generated coverage.json/reality.json/load.jsonl/drops.jsonl, no-versioning law.",
+    "schemas/vi-vision/v1/ (14 files): decision.schema.json, option, legibility, archetype + 10 archetype instances (decision-card, graph, diagram, selector, instrument, spatial-material, lanes, zones, session-card); state NOT authored (resolved from decision_take marks); SLOT-SHAPE LAW; decision-card 390px hard gate.",
+    "store/ implements C1+C4: cas:// immutable, ext4-only, provenance on every write, cross-process fcntl+RLock locking, fsync-before-rename; space-keyed vectors (vec://<item>#space=<projection>), marks store (marks.jsonl), agent-session registry + mailbox; echo-guard tags chat source operator|twin.",
+    "store/vector_index.py (X12) persists an incremental index because repo (865k) outgrew whole-repo context-stuffing (codebase node fails at 600k); degrade-with-warning on embed failure, never fabricates vectors.",
+    "Section 6 catalogues 11 explicit gaps: stale TOOLS dict, skeleton remote.py, legacy shapes.py shim, in-progress vi-vision migration, deferred operator PHASE 2, unbuilt 4-of-5 InvocationKind adapters, partial store/fs_store read."
+  ],
+  "standouts": [
+    "The C7 TOOLS dict (25 verbs) vs the live server (66+ tools) divergence is explicitly called a GAP with no maintaining mechanism — the contract-layer and live server have drifted.",
+    "Two-door architecture with the explicit invariant 'never widen the connector to widen the operator' separates remote-untrusted exposure from local-operator exposure as independent allow-lists.",
+    "decision.schema.json's 'meaning' field is required to be human terms (Tim's words), never a machine name; state is resolved from marks (registry-is-truth) rather than stored on the row."
+  ],
+  "conventions": [
+    "Carries the strict vault frontmatter (type/area/covers/captured/status) the repo's vault-conventions require.",
+    "Tags every IS-vs-SHOULD-BE and every gap explicitly; honest about coverage (e.g. 'store/fs_store.py only first 100 lines read', 'ui-contract resources not individually read').",
+    "Embodies the one-tool-per-resource-with-op MCP principle and the uniform-op-verb ui-contract convention as documented patterns."
+  ],
+  "concerns": [
+    "Self-flagged coverage gaps: 31 ui-contract resource files listed but not read; fs_store full method inventory reconstructed from AGENTS.md not verified from source — some claims are inferred not observed.",
+    "Records active drift/dual-source hazards (stale TOOLS dict, vi-vision migration in progress, two parallel principal flows) as current state.",
+    "remote.py is a skeleton (dispatch proxy pending) — the documented connector inlet is not fully live."
+  ],
+  "notes": "If briefing someone: this is the map of how the Company is talked TO and how it persists — the MCP tool surface and its two-door access control, the C1-C8 contract spine, the purpose-free ui-contract a UI AI builds against, the vi-vision decision/archetype schemas, and the cas://-immutable addressed store.",
+  "questions": [
+    "What (if anything) is meant to keep the C7 TOOLS dict in sync with the live 66+ tool server, or is the dict being retired?",
+    "When PHASE 2 operator widening lands, which of the 37 deferred tools become operator-safe?",
+    "Is the ui-contract resource corpus (31 files) the authority the live tool inputSchemas are validated against, or a parallel description?"
+  ],
+  "purpose_vs_actual": "Matches. Stated as an exhaustive first-pass dragnet of the interface layer; delivers section-by-section capture of mcp_face/contracts/ui-contract/schemas/store with explicit coverage caveats and a gaps section.",
+  "apparent_themes": [
+    "Contracts as the import-nothing spine (everything composes against shapes)",
+    "Two-door / fail-closed access control",
+    "Purpose-free, machine-checked, embedding-ready UI contract",
+    "Registry-is-truth (decision state from marks, not rows)",
+    "Immutable addressed storage with provenance + fail-loud degrade",
+    "Honest coverage / gap-surfacing"
+  ],
+  "intention_signals": "Trying to hand an agent the full contract and interface picture — what tools exist and who can call them, what shapes everything obeys, what a UI builder consumes, and how data durably persists — so the agent works against the seam (contracts) rather than the implementation, and knows which parts are live vs skeleton vs drifted.",
+  "novelty": "The purpose-free ui-contract (a frozen, validator-enforced, embedding-ready surface a UI AI consumes instead of reading the repo) and the explicit two-door connector/operator access split are distinctive interface-layer ideas.",
+  "contribution": "Contributes the consolidated map of the interface/contract/storage layer: the ~66-tool MCP surface and its two-door postures, the C1-C8+C-CAP+C-PLAT shape inventory with field-level detail, the ui-contract format and resource list, the 14 vi-vision schemas, and the store's locking/provenance/vector-index guarantees — the talk-to-and-persist counterpart to the runtime capture.",
+  "summary_for_embedding": "Exhaustive landscape capture of the Company's interface layer: the FastMCP server and its ~66 tools, two-door connector/operator access registries, the C1-C8 contract spine, the purpose-free ui-contract corpus, 14 vi-vision decision/archetype schemas, and the cas:// addressed store with resolver and vector index.",
+  "intention_for_embedding": "To give an agent the full contract, MCP-tool-surface, access-control, UI-contract, schema, and storage picture so it builds against the seam and knows which parts are live, skeleton, or drifted."
+}

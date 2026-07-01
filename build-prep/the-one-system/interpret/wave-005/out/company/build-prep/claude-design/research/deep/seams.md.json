@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/deep/seams.md",
+  "model": "opus",
+  "what_it_does": "A read-only deep-mine document characterizing the backend HTTP integration seams (routes + suite.py methods) of the Company application as of commit-state 2026-06-08. For each seam it states the suite.py/bridge.py file:line location, the route, the input/output contract, events emitted, guarantees, and a BUILT/DESIGNED status, with a headline correcting the parent task's assumption that several seams were net-new (proving 4 of 5 are already built).",
+  "observations": [
+    "Opens with a HEADLINE that overturns the task's premise: I2 /api/act, I4 tier-gate, R1 backend-held locus, and L1 /api/intent-at are already BUILT+REACHABLE; only the standalone GET /api/context?address= route and an R2-knob setter route are genuinely DESIGNED-NOT-BUILT.",
+    "Documents the address grammar from contracts/address.py: run://, cas://, blob://, vec://, ui://, code:// schemes, and the scheme(addr) fail-loud gate.",
+    "Details the focus->locus->context-at-address channel with exact suite.py line numbers (2012, 2031, 2061, 2701, 2892) showing how focus.selected sets self._current_locus (last-wins) and R2 consumes current_locus().",
+    "Gives the verified R2 scoring formula (suite.py:2411-2443): recency=exp(-LAMBDA*age), proximity tree-distance, semantic cosine, pin_bonus, capped to R2_BUDGET.",
+    "Provides a 15-row built-seam contract table (method, route, inputs, outputs, event emitted, surface need) and a net-new status table.",
+    "Closes with 5 key findings for Claude Design: focus->locus is load-bearing, R2 has no standalone GET, /api/act is the clean click seam, every addressed write emits an addressed SSE event, /api/address-help is the single what-can-I-do-here endpoint."
+  ],
+  "standouts": [
+    "The headline correction: the document's primary signal is that the task framed already-built seams as net-new, with file:line proof for each.",
+    "The two identified real gaps: GET /api/context?address= (call R2 without a chat turn) and an R2-knob setter (composition_config is read-only).",
+    "The fully-traced focus->locus->context pipeline with line numbers and the R2 scoring formula as code."
+  ],
+  "conventions": [
+    "Uses an explicit status legend (BUILT+REACHABLE / BUILT-NO-FE / DESIGNED-NOT-BUILT) consistently.",
+    "Cites file:line for every claim (suite.py:XXXX, bridge.py:XXXX), matching the repo's evidence-grounded discipline.",
+    "Describes fail-loud gates (S0 grammar gate raising on malformed ui://, empty-scope DENY-ALL) consistent with the repo's Rule 4 and Rule 8."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the authoritative seam-by-seam contract sheet for the address/RHM backend, and its main message is that the surface work is mostly FE-wiring of existing routes, not new backend building.",
+  "questions": [
+    "The commit-state is pinned to 2026-06-08; are the cited line numbers still valid against current main?",
+    "Is the GET /api/context?address= gap still open, or was it closed in a later session?"
+  ],
+  "purpose_vs_actual": "Match. Stated as a deep mine of backend seams that the capability-map was thin on, and it delivers per-seam contracts with line-level proof plus a corrected build-status picture.",
+  "apparent_themes": [
+    "Address-keyed everything (every element, event, comment, chat, context resolves at a ui:// address)",
+    "Evidence-grounded verification (file:line proof, no speculation)",
+    "Fail-loud governance (S0 gates, DENY-ALL on empty scope, tier-based dispatch)",
+    "Reflect-never-own FE (surface re-renders from the SSE stream at the address an event carries)"
+  ],
+  "intention_signals": "Trying to give the Claude Design effort an accurate, proof-backed map of which integration seams already exist so it wires the front-end to them rather than redesigning or rebuilding backend capability that is already shipped.",
+  "novelty": "The focus->locus->context channel traced as a single backend-held-locus mechanism (R1 sets, R2 consumes) and the explicit identification that the task's net-new list was mostly wrong.",
+  "contribution": "Contributes a verified, route-level contract catalog of the address/RHM backend seams (inputs, outputs, events, status, line numbers) plus the precise R2 scoring formula and the two true backend gaps; a fused system keeps this as the integration-seam reference for any surface that talks to the suite.",
+  "summary_for_embedding": "A 2026-06-08 read-only deep-mine of the Company backend HTTP seams (chat, act, annotate, address_help, resolve_scope, R2 context, SSE stream) giving per-seam route/input/output/event contracts with suite.py and bridge.py line numbers and BUILT-vs-DESIGNED status.",
+  "intention_for_embedding": "To give the design effort a proof-backed map of which address/RHM integration seams are already built so it wires the front-end to existing routes instead of rebuilding backend capability."
+}

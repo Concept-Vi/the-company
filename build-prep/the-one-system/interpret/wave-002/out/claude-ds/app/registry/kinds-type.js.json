@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/kinds-type.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that registers three additional universal-component KIND Type declarations into window.CV_REGISTRY: a 'panel.composition-menu' panel, a 'kind.graph' graph generator pointing at the DiagramSolver engine, and a 'kind.slide-system' pointing at the Slide engine. Each def carries id/name/kind/layer/family/classification/icon/description plus valueSlots and sockets, and they are registered via R.registerMany with provenance 'built-in'.",
+  "observations": [
+    "Guards on window.CV_REGISTRY existing; logs an error and returns if missing.",
+    "composition-menu declares a socket 'items' that accepts ['glyphic','atom','control'] with multiple:true and onPick:'insert' — the headline demo of declarative socket acceptance.",
+    "composition-menu also has an event-socket 'onItemClick' (kind:'event', event:'click') accepting ['action','panel','surface'].",
+    "kind.graph declares runtime { kind:'engine', key:'DiagramSolver' } and sockets for nodes (glyphic/atom/block) and edges (relationship, optional).",
+    "kind.slide-system declares runtime { kind:'engine', key:'Slide' } and a valueSlot 'archetype' as a ref querying CV_REGISTRY.query({family:'deck-slide'}).",
+    "valueSlots use varied kinds: text, enum (with values+default), an axis-based 'density' (axis:'space', groups:['inner']), ref.",
+    "Comments state load order: after types-core.js + glyphic-type.js + components-type.js.",
+    "registerMany is called with { silent: true }."
+  ],
+  "standouts": [
+    "The composition-menu socket accepting 'glyphic' classification is explicitly framed as proof that the grammar is universal — acceptance is declarative so candidatesForSocket resolves matching libraries with no bespoke wiring.",
+    "Graph and slide kinds are declared as thin Type pointers at pre-existing engines (DiagramSolver, Slide) rather than reimplementing them, making every kind registry-reachable through one registry."
+  ],
+  "conventions": [
+    "Follows the registry-as-single-source pattern: extend by registering a Type, never forking a parallel list.",
+    "IIFE with 'use strict' and a hard guard that errors loudly if the registry is absent.",
+    "Stamps provenance:'built-in' on every def via Object.assign.",
+    "Uses 'means' annotations on slots/sockets to document intent inline."
+  ],
+  "concerns": [],
+  "notes": "This file widens the universal-component grammar to four kinds by registering a composition-menu panel plus thin Type pointers at the existing graph/slide engines.",
+  "questions": [
+    "Are 'glyphic-type.js' and 'components-type.js' (named as required predecessors) actually loaded before this file in the runtime order?",
+    "Does CV_REGISTRY.candidatesForSocket exist and behave as the comments claim, or is that asserted only here?"
+  ],
+  "purpose_vs_actual": "Match — the header comment says it adds the missing composition-menu and registers thin declarations pointing at existing graph/slide engines so every kind is registry-reachable, and the code does exactly that.",
+  "apparent_themes": [
+    "Registry-as-truth / extend-by-registration",
+    "Declarative socket acceptance over bespoke wiring",
+    "Universal component grammar (parts/slots/sockets) covering the whole interface"
+  ],
+  "intention_signals": "Trying to demonstrate that one registry with a uniform parts/slots/sockets grammar can express every interface kind, including ones backed by separate engines, by pointing at them declaratively rather than special-casing.",
+  "novelty": "The event-socket concept (a socket with kind:'event' / event:'click' that accepts actions/panels/surfaces) and the explicit framing of socket acceptance as the proof of grammar universality.",
+  "contribution": "Contributes the composition-menu panel kind and the declarative pattern that wires graph and slide engines into the unified kind registry via thin Type pointers with engine runtime keys.",
+  "summary_for_embedding": "A CV_REGISTRY registration module declaring three universal-component kinds — a composition-menu panel with glyphic-accepting sockets, plus graph and slide kinds that point at the DiagramSolver and Slide engines.",
+  "intention_for_embedding": "To prove the universal component grammar covers the whole interface by registering the missing menu panel and making graph/slide kinds reachable through one registry via declarative socket acceptance."
+}

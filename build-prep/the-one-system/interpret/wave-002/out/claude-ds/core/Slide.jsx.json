@@ -1,0 +1,55 @@
+{
+  "project": "claude-ds",
+  "path": "core/Slide.jsx",
+  "model": "opus",
+  "what_it_does": "The archetype-layer implementation. It defines tiny node constructors (band/section/zone/cluster/atom/diagram/note) and helpers (bullets, metrics) that turn content data into a plain CVNode tree, then an ARCHETYPES registry where each entry is a pure function content -> tree (13 corpus archetypes + stepper/diagram/section + 12 capital-raise archetypes incl. 5 diagram sub-types). buildSlide() looks up an archetype and throws loudly on unknown. It exposes the Archetypes handle (list/build/register) and the Slide React component, which delegates to the RenderType bridge (window.__cvRenderType) as the deck-slide case of one render path.",
+  "observations": [
+    "Node constructors build plain-data trees; children are .filter(Boolean) so falsy slots drop out cleanly.",
+    "bullets() coerces string|object items, defaults bullet:'dot', and auto-assigns priority 1 to the first two items else 2.",
+    "metrics() maps items to metric/hero-number atoms, first item priority 1.",
+    "ARCHETYPES holds the 13 numbered corpus archetypes (cover, split, statement, compare, modes, triptych, metric-band, checklist, timeline, profile, terms, gallery, closing) plus stepper, diagram, section.",
+    "Capital-raise (slice 28) archetypes: product-cover, product-closing, photo-divider (full-bleed overlay+frosted, bleed:true), logo-wall, team, dashboard, reasons, and diagram sub-types orbital/stacked/spectrum/manifold/fidelity.",
+    "Many capital-raise atoms carry edit/editTitle/editText keys (e.g. 'logos.0', 'cards.0.title') — addressing into the content for in-place editing.",
+    "Alias keys: ARCHETYPES.title = cover, ARCHETYPES.content = statement (app-registry deck-slide Types).",
+    "buildSlide throws on unknown archetype listing all known keys — loud-fail, no silent fallback to statement.",
+    "Slide component throws if window.__cvRenderType is absent ('unification broken'), then renders RT with a synthesized type id 'surface.deck-slide.'+archetype, layer surface, family deck-slide, runtime kind core-archetype.",
+    "Threads axis props (lod/surface default 'slide'/density/motion/register/loading) into RenderType.",
+    "JSX-free (uses h = React.createElement); attaches window.__cvSlide and window.__cvArchetypes; exports Slide + Archetypes."
+  ],
+  "standouts": [
+    "Each archetype is a pure content->tree function with no literals — token-purity by construction, generated output 'cannot drift'.",
+    "buildSlide and the Slide component both fail LOUD (unknown archetype / missing bridge) rather than degrading.",
+    "Slide is explicitly the deck-slide case of RenderType — one unified render path, not a parallel renderer.",
+    "The edit/editTitle/editText address keys wire content slots to in-place editing."
+  ],
+  "conventions": [
+    "Follows single-catalogue + extend-by-registration (one ARCHETYPES object, register() adds more).",
+    "Loud-fail non-negotiable (throw, not silent default) per the system's rules.",
+    "Trees are plain data; styling/tokens are emitted later by the solvers (separation of structure and look).",
+    "JSX-free module read via the namespace, matching the bundle convention."
+  ],
+  "concerns": [
+    "Default fiction strings inside builders (e.g. image label 'full-bleed product surface (panotour viewer)', 'Title', 'Section') are placeholder content baked into the builder rather than passed in.",
+    "Wide content-shape assumptions (c.cards/c.panels/c.zones/c.core etc.) are undocumented here beyond inline comments; mis-shaped content silently yields empty clusters."
+  ],
+  "notes": "The heart of the archetype layer: ~28 pure content->CVNode-tree builders in one registry, rendered through the RenderType bridge as the deck-slide case, loud-failing on unknown archetype or missing bridge.",
+  "questions": [
+    "What does RenderType do with runtime {kind:'core-archetype', key} — does it call buildSlide, or a separate path?",
+    "Which atom roles/cluster flows (overlay, wall, ramp-card, chart, hatch) are implemented by the solvers downstream?",
+    "Where are the capital-raise default contents (the catalogue defaults the demo page reads) defined, given builders here only supply minimal fallbacks?"
+  ],
+  "purpose_vs_actual": "Match — the docstring describes archetypes as pure content->tree functions rendered via the block/graph solvers through one path, and the code implements exactly that registry plus the unified Slide component.",
+  "apparent_themes": [
+    "Content-as-data / design = f(content, axis)",
+    "Single catalogue, extend-by-registration",
+    "Token-purity by construction (no literals in builders)",
+    "Loud-fail over silent fallback",
+    "One unified render path (Slide as RenderType case)",
+    "Addressable editable content slots"
+  ],
+  "intention_signals": "Encode the corpus + capital-raise slide grammar as a single registry of pure tree-builders so every slide is computed, token-pure, extensible by registration, editable by address, and rendered through the one RenderType/solver path.",
+  "novelty": "The capital-raise grammar (slice 28) as first-class builders — full-bleed frosted overlays, logo-wall, team with alternating tints, dashboard panels, ramp-bordered reasons, and five diagram sub-types (orbital/stacked/spectrum/manifold/fidelity) — plus inline edit-address keys on content atoms.",
+  "contribution": "Contributes the actual archetype builder registry (the content->tree functions), the loud buildSlide dispatch, the Archetypes register/list/build handle, and the Slide-as-RenderType-case wiring that a fused system would keep as the slide grammar.",
+  "summary_for_embedding": "A JSX-free module defining the ARCHETYPES registry of ~28 pure content->CVNode-tree slide builders (corpus + capital-raise + diagram sub-types), a loud-failing buildSlide dispatch, the Archetypes list/build/register handle, and the Slide component that renders via the RenderType bridge.",
+  "intention_for_embedding": "To encode the entire slide-archetype grammar as single-sourced, token-pure, extend-by-registration tree-builders rendered through one unified RenderType path."
+}

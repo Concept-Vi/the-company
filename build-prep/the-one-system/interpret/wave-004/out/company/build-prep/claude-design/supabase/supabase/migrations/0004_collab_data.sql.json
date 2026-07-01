@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0004_collab_data.sql",
+  "model": "opus",
+  "what_it_does": "Creates the three shared collab-data tables for the Face Pipeline inlet: public.dna_tokens (token slot id, group_id, value, note, updated_at/by — the design-token library Claude Design snaps styles to), public.design_seeds (uuid, label, partial_description, dna_ref, target_area, created_by, status open|designed|translated|registered, timestamps — the half-description seed Tim reacts to), and public.design_submissions (uuid, seed_id FK set-null, submitted_by, bundle jsonb, readme, status ingested→registered, ingest_notes, indexes on seed_id/status — the INGEST inlet for Claude Design's export bundle). Adds all three to the supabase_realtime publication (duplicate-guarded), enables RLS on each, grants ALL to service_role+postgres and SELECT to authenticated (no anon), and ensures pgcrypto.",
+  "observations": [
+    "Maps to a documented 6-stage pipeline (INGEST→TAG→COMPOSE→VALIDATE→RECONCILE→REGISTER, board://item-c0a2d591); this migration owns stage ① INGEST + the context reads.",
+    "design_submissions.bundle is jsonb holding a framework-neutral HTML/CSS export tree.",
+    "design_submissions.status enumerates the six pipeline stages as text values.",
+    "Claude Design's writes are stated to go through the Edge Function (service_role), scoped by client-registry posture, NOT direct client writes.",
+    "Same C-1 no-anon / no-broad-using(true) rationale as 0003; policies deferred to 0005/0006.",
+    "design_seeds.dna_ref is nullable and references a DNA variant/branch id (not a FK).",
+    "Header notes these tables are reusable + model-independent (stand regardless of channel-sync sequencing)."
+  ],
+  "standouts": [
+    "The three tables encode the design collaboration loop: token library (shared identity), seeds (half-description react loop), submissions (the export inlet).",
+    "Explicit stage-to-table mapping linking the schema to the named 6-stage Face Pipeline.",
+    "Both sides read/write the SAME rows — the same-data participation goal made concrete."
+  ],
+  "conventions": [
+    "Idempotent create-if-not-exists, duplicate-guarded realtime publication add.",
+    "RLS enabled here, scoped policies deferred to 0005/0006 (this file only grants privileges).",
+    "Heavy provenance comments tying tables to pipeline stages and design intent.",
+    "create extension if not exists pgcrypto repeated (also in 0003)."
+  ],
+  "concerns": [
+    "status fields on design_seeds/design_submissions are free-text with conventions only in comments (no CHECK/enum).",
+    "dna_ref is a soft reference (text, no FK) so a seed can point at a non-existent DNA branch.",
+    "RLS enabled with no policy created in this file — authenticated cannot read until 0005/0006 run.",
+    "bundle jsonb is unvalidated at the DB layer; structural correctness of the export tree relies on the ingest stage."
+  ],
+  "notes": "The Face Pipeline inlet substrate — dna_tokens (token library), design_seeds (seed-react loop), design_submissions (the INGEST bundle landing), all shared, realtime, RLS-scaffolded.",
+  "questions": [
+    "What enforces the status transition order (ingested→…→registered), or is it free progression?",
+    "Should dna_ref be a FK to a DNA table that this migration does not create?"
+  ],
+  "purpose_vs_actual": "Matches: stated as the shared collab-data / Face Pipeline inlet; the DDL creates exactly the token/seed/submission tables and the INGEST landing it describes.",
+  "apparent_themes": [
+    "same-data collaboration (both sides on identical rows)",
+    "staged pipeline with the inlet owned here",
+    "shared identity layer (system-owned token names, aesthetic values)",
+    "writes mediated through the Edge Function, not direct client writes"
+  ],
+  "intention_signals": "Provide the concrete shared rows where Claude Design reads context (DNA tokens + seeds) and submits a design bundle, anchoring stage ① of a six-stage translate pipeline on Supabase.",
+  "novelty": "The seed-react (half-description) loop table and the framework-neutral export bundle inlet as first-class DB rows mapped to named pipeline stages.",
+  "contribution": "Brings the design-collaboration data substrate — the token library, seed inputs, and submission inlet that the Face Pipeline reads from and writes results back into.",
+  "summary_for_embedding": "SQL migration creating dna_tokens, design_seeds, and design_submissions tables (the Face Pipeline INGEST inlet + context) with realtime publication and RLS scaffolding.",
+  "intention_for_embedding": "To give Claude Design and the company shared Supabase rows for design tokens, seed prompts, and submitted export bundles as the inlet of a six-stage translate pipeline."
+}

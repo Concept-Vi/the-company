@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/.temp/pgdelta/catalog-local-migrations-5553d687518b450f9a80f72047e3e92a69f867f2b23d079742725a55e0abe792-1781752155312.json",
+  "model": "opus",
+  "what_it_does": "A ~1.5MB machine-generated pgdelta catalog snapshot — a full structural dump of a local Supabase Postgres database (server version 170006) serialized to JSON. It enumerates every database object (schemas, tables, columns, enums, extensions, procedures, indexes, roles, triggers, event triggers, publications, sequences, composite types) plus a 2412-entry dependency graph, used by pgdelta to compute migration diffs.",
+  "observations": [
+    "Lives in a .temp/pgdelta directory; filename is catalog-local-migrations-<64-hex-hash>-<epoch-ms timestamp> — clearly tooling cache output, not hand-authored.",
+    "Top-level keys cover the standard Postgres object taxonomy: aggregates, collations, compositeTypes, domains, enums, extensions, procedures, indexes, materializedViews, subscriptions, publications, rlsPolicies, roles, schemas, sequences, tables, triggers, eventTriggers, rules, ranges, views, foreignDataWrappers, servers, userMappings, foreignTables, depends.",
+    "12 schemas present, almost all Supabase-managed: _realtime, auth, extensions, graphql, graphql_public, pgbouncer, public, realtime, storage, supabase_functions, supabase_migrations, vault.",
+    "49 tables total but only ONE is in the public schema: public.connector_audit. The rest belong to auth.*, realtime.*, storage.*, _realtime.* and other Supabase internals.",
+    "public.connector_audit columns: id (text, NN), ts (timestamptz, NN), subject (text, NN), scope (text, NN), tool (text, NN), args_preview (text), outcome (text, NN), detail (text) — an audit-log shape.",
+    "6 extensions: uuid-ossp, pg_net, pg_stat_statements, pgcrypto, plpgsql, supabase_vault.",
+    "12 enums, all Supabase-internal (auth.aal_level, auth.factor_type, realtime.action, storage.buckettype, etc.); 44 procedures; 142 indexes; 16 roles; 5 triggers; 6 event triggers.",
+    "rlsPolicies, views, materializedViews, domains, aggregates, foreignTables are all empty.",
+    "depends is a flat list of 2412 dependency edges between catalog objects.",
+    "Column metadata is verbose: each column carries is_custom_type, custom_type_type/category/schema/name, identity flags, generated flag, collation, default, comment."
+  ],
+  "standouts": [
+    "Despite 49 tables, the entire application footprint is a single table: public.connector_audit — the database this snapshot was taken against had essentially nothing built into it yet beyond Supabase defaults.",
+    "The connector_audit shape (subject/scope/tool/args_preview/outcome/detail) records who-did-what-tool-call-with-what-result — a connector/MCP-style audit trail."
+  ],
+  "conventions": [
+    "Follows pgdelta's catalog serialization format and Postgres object-naming conventions exactly.",
+    "Generated-artifact convention: hashed+timestamped filename under a .temp/ cache directory."
+  ],
+  "concerns": [
+    "A 1.5MB generated tooling cache file is committed/tracked under build-prep — .temp/ artifacts are normally transient and gitignored.",
+    "Mostly noise: ~98% of the content describes Supabase's own managed schemas, not any project-authored schema."
+  ],
+  "notes": "Generated pgdelta full-catalog snapshot of a near-empty local Supabase DB whose only app table is public.connector_audit; treat as disposable tooling cache, not design.",
+  "questions": [
+    "Was this .temp catalog meant to be tracked, or did it slip past gitignore?",
+    "Is public.connector_audit the actual intended application schema at the time of this snapshot, or was the DB simply un-migrated?"
+  ],
+  "purpose_vs_actual": "n/a — no stated purpose in-file; its de facto role is a pgdelta migration-diff input snapshot, which is consistent with its content.",
+  "apparent_themes": [
+    "database schema introspection / migration diffing",
+    "auditability (the lone app table logs connector tool invocations)",
+    "Supabase as the persistence substrate"
+  ],
+  "intention_signals": "Captures a complete point-in-time picture of a local database's structure so a migration tool can compute the delta against another state; the presence of connector_audit signals an intent to log connector/tool activity in Postgres.",
+  "novelty": "n/a — standard pgdelta catalog format; the only project-specific datum is the connector_audit table definition.",
+  "contribution": "Contributes a verifiable structural record that, at this snapshot, the local DB held exactly one application table (public.connector_audit) atop a default Supabase install — a ground-truth schema reference and a definition of the connector audit-log shape (id, ts, subject, scope, tool, args_preview, outcome, detail).",
+  "summary_for_embedding": "A 1.5MB generated pgdelta JSON catalog snapshot of a local Supabase Postgres (v170006) listing all 12 schemas, 49 mostly-internal tables (only public.connector_audit is app-level), enums, extensions, procedures, indexes and a 2412-edge dependency graph.",
+  "intention_for_embedding": "Serialized full-database catalog produced by pgdelta as input for computing schema migration diffs of the local Supabase database."
+}

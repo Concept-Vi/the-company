@@ -1,0 +1,37 @@
+{
+  "project": "company",
+  "path": "ai_tics/mvp.py",
+  "model": "opus",
+  "what_it_does": "Declares a module-level AI_TIC dict for the 'MVP' tic: MVP framing / impact-prioritization / scope-cutting. Carries id, label, markers, and description.",
+  "observations": [
+    "Docstring frames MVP as a named Tim frustration with the rule 'no-MVP: don't filter by impact, stack ALL work, all-or-nothing is business reality.'",
+    "AI_TIC keys: id ('mvp'), label ('MVP'), markers (7 phrases), desc.",
+    "markers: \"MVP\", \"minimum viable\", \"for now we can\", \"prioritize by impact\", \"phase 1 only\", \"good enough for now\", \"nice to have\".",
+    "Largest marker set among the sibling tics (7 phrases).",
+    "References runtime/ai_tics.py and ai_tics/AGENTS.md."
+  ],
+  "standouts": [
+    "Encodes the 'all-or-nothing / stack all work' stance directly as a detectable tic.",
+    "Marker 'nice to have' captures soft deprioritization language."
+  ],
+  "conventions": [
+    "Same seed-as-data dict shape as sibling ai_tics files.",
+    "label here is uppercase ('MVP') rather than the kebab style used by siblings."
+  ],
+  "concerns": [],
+  "notes": "A seed file defining the 'MVP' tic — flagging scope-cutting and impact-prioritization language Tim rejects.",
+  "questions": [
+    "Is the bare marker 'MVP' acceptable as a literal substring match given it can appear in neutral references?"
+  ],
+  "purpose_vs_actual": "Match — declares the MVP seed tic exactly as the docstring describes.",
+  "apparent_themes": [
+    "all-or-nothing / no scope-cutting",
+    "stack all work, no impact filtering",
+    "full feature completeness as requirement"
+  ],
+  "intention_signals": "Encodes Tim's anti-MVP stance as detectable markers so corpus text proposing scope cuts or phased prioritization can be flagged.",
+  "novelty": "Treating MVP/prioritization vocabulary as a machine tell to subtract rather than a methodology to follow.",
+  "contribution": "Contributes the 'MVP' tic definition and its scope-cutting/prioritization markers to a fused tic catalogue.",
+  "summary_for_embedding": "A Python seed file defining the 'MVP' AI-tic dict with markers for MVP framing, impact-prioritization, and scope-cutting.",
+  "intention_for_embedding": "To detect and subtract MVP/scope-cutting language, enforcing the all-or-nothing, stack-all-work stance."
+}

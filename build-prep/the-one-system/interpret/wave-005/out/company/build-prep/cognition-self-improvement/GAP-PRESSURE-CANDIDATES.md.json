@@ -1,0 +1,51 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/GAP-PRESSURE-CANDIDATES.md",
+ "model": "opus",
+ "what_it_does": "A design-capture document stating the 'gap pressure' law (every constrained operation against a declared registry is also a sensor for that registry — gaps surface as recorded leakage/pressure, not as queryable absence), its four preconditions and known limits, three independent evidence instances where the law was already operating, a catalog of intentional uses, and seven build candidates (C1-C7, all unbuilt) in recommended order plus open questions for a builder.",
+ "observations": [
+  "Frontmatter: type design-capture, module cognition-self-improvement, status 'candidates — NOT built, awaiting a builder session', captured 2026-06-10, relations to REGISTRY-FILLING-PATTERN, SYSTEM-GAPS, MCP-DESIGN-PRINCIPLE, Company Build Hub.",
+  "Carries Tim's verbatim directive about wanting it captured as candidates with learnings for another session to pick up.",
+  "Naming explicitly OPEN: gap pressure / misfit residue / the drop ledger / constrained operation is a sensor.",
+  "Four preconditions, each named as an existing Company law (closed vocabulary, grounded operation, fail-loud, residue-recorded), with the failure each prevents; removing any one kills the sensor.",
+  "Three evidence instances: the atlas_linker fan (135 OOV drops, 115 being 6 spelling variants of one missing 'MCP Servers' concept -> a 9th domain note), RG10's gc9_gap_intake insistence-under-correction, and the hand-maintained SYSTEM-GAPS.md.",
+  "Intentional-uses catalog: taxonomy bootstrapping, drift monitoring, starvation (inverse read), shadow-pass field sensing, cross-model triangulation, canary categories, MCP-face misuse as API pressure, retrieval-side pressure, operator corrections as drops.",
+  "C1-C7 candidates: engine drops + inline envelope; drops event kind + query face; registry_load starvation projection; cluster_drops rollup into the gate; op='sense' shadow-pass; MCP-face misuse ledger; constitution + capabilities surfacing.",
+  "Adjacent candidate: evidence-in-error for parse failures (raw content head/tail in FabricError); documents a 40-minute stale-server-process incident.",
+  "Open questions on C4 threshold semantics, dedupe-per-source vs per-occurrence, vocabulary-mode location, and G24 schema-decoding interaction; plus an update protocol (flip the red marker, link the commit, accumulate new evidence)."
+ ],
+ "standouts": [
+  "Central reframe: gaps are detected as PRESSURE, not absence — 'you cannot query for what's missing, but a constrained system under real load leaks at exactly the missing places'.",
+  "The law is presented as an emergent PROPERTY composed from four existing laws, not a designed feature — 'every constrained operation the Company ever runs is already a sensor, if the residue is kept'.",
+  "Concrete zero-cost evidence: 115/135 drops converging on one missing concept from a 36s tagging fan, harvested as exhaust."
+ ],
+ "conventions": [
+  "Full vault note discipline: frontmatter, status, relations, evidence pointers (event seqs, job paths), update protocol with red-marker flips.",
+  "Tentative-capture discipline: nothing built unless marked, builder told to verify every claim against evidence pointers, naming left open.",
+  "Candidates ordered for independent provability-by-use before the next stands on it."
+ ],
+ "concerns": [
+  "Heavy reliance on point-in-time external evidence pointers (job tmp paths, event seqs ~4434-4437) that may not survive — a builder may be unable to re-verify instance 1.",
+  "Broad surface (9 intentional uses + 7 candidates + adjacent items) in one capture; without the gating decisions resolved, scope is large for a single builder session."
+ ],
+ "notes": "The 'gap pressure' law + evidence + 7 unbuilt build candidates: constrained operations against registries leak at missing entries, and recording the leakage turns every operation into a free gap-sensor feeding registry growth.",
+ "questions": [
+  "Have any of C1-C7 been built since 2026-06-10 (the doc says all red/unbuilt)?",
+  "Which naming did Tim ultimately choose among the four candidates?",
+  "What exactly does atlas_linker emit today, and is its allowed-list still in prompt prose + a consumer-side filter (C7's migration target)?"
+ ],
+ "purpose_vs_actual": "Match — it declares itself a candidates capture awaiting a builder, and delivers the law, evidence, uses, ordered candidates, and open questions accordingly without building anything.",
+ "apparent_themes": [
+  "Constrained operation as a sensor (gaps as pressure, not absence)",
+  "Emergent property from composed existing laws",
+  "Fail-loud / never-coerce (silent coercion eats the evidence)",
+  "Introspective-data (record the residue)",
+  "Registry-is-truth and registry growth (intake half of the filling pattern)",
+  "Tentative capture / verify-before-standing-on-it"
+ ],
+ "intention_signals": "Trying to name and operationalize an observed emergent property — that constrained, grounded, fail-loud operations automatically leak evidence of registry gaps — into an engine-native, automatic intake that feeds the registry-filling pipeline, captured richly enough for a future builder to pick up and verify.",
+ "novelty": "The 'gaps as pressure not absence' framing and the realization that gap detection is a free byproduct/property of existing laws rather than a feature, plus the inverse reads (starvation, shadow-pass, retrieval-side) from one ledger.",
+ "contribution": "Contributes the gap-pressure law, its precondition analysis, the three evidence instances, the intentional-uses catalog, and the C1-C7 ordered build candidates — the conceptual + roadmap layer for engine-native registry-gap sensing.",
+ "summary_for_embedding": "A design-capture stating the gap-pressure law (constrained registry operations are sensors that leak gaps as recorded pressure) with three evidence instances and seven unbuilt build candidates for engine-native gap intake.",
+ "intention_for_embedding": "To name and roadmap turning the emergent property of constrained-operation leakage into an automatic, engine-native sensor that surfaces registry gaps as a free byproduct of normal grounded work."
+}

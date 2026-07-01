@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/types-core.js",
+  "model": "opus",
+  "what_it_does": "Defines window.CV_REGISTRY, the universal Type Registry for ConceptV Studio. An IIFE that establishes the seven-layer model (token→atom→block→system→surface→doc→template), stores built-in Types in memory and user/vi/template Types in localStorage, and exposes register/registerMany/update/remove/get/all/query plus inheritance resolution (resolve/lineage/children/descendants), socket/slot acceptance logic (accepts/candidatesForSlot/candidatesForSocket/slotEnabled/socketInfo), a normalize() that fills the full Type schema, and a subscribe/notify pub-sub.",
+  "observations": [
+    "LAYERS array and LAYER_INFO map (label/rank/swatch/desc) define the ordered layer model used for sorting (byLayerThenName).",
+    "Storage split: BUILTIN Map (memory), USER Map and TEMPLATES Map (persisted to localStorage keys 'cv:registry:user-types' and 'cv:registry:templates'); all storage reads/writes wrapped in empty-catch try blocks.",
+    "register routes by provenance/layer (built-in→BUILTIN, template→TEMPLATES, else USER) and persists + notifies unless silent; registerMany suppresses notify and persists once.",
+    "update() forks a built-in into user space on edit (provenance:'user', forkedFrom set), bumping version; remove() refuses to delete built-ins.",
+    "resolve() flattens a Type with its ancestors via reduceRight (leaf wins), deep-merging defaults/slots, merging variables by key, unioning tags, and attaching a lineage array.",
+    "accepts() supports classification-based acceptance (array form or acc.classification/forbid), plus layers/families/tags filters, and evaluates slot.conditions through a shared window.CV_COND.testAll evaluator.",
+    "normalize() documents and fills a rich schema: kind, classification (defaults to [kind,family]), slots/sockets as mutual aliases, valueSlots, parts, conditions, axis/axisValue, defaults, variables, runtime, timestamps, version, forkedFrom.",
+    "candidatesForSocket is an alias for candidatesForSlot; socketInfo normalizes a socket into kind('slot'|'event')/event/address/onPick/multiple/optional/accepts/conditions.",
+    "notify() guards on suppressNotify and swallows subscriber errors in empty catch; loadFromStorage runs at the end."
+  ],
+  "standouts": [
+    "This is the single-source-of-truth registry the whole system mirrors — same register/resolve/lineage/query/subscribe API the charter says the AI and other registries deliberately echo.",
+    "The vocabulary reconciliation in normalize: slots and sockets are mutual aliases, valueSlots vs type-accepting slots are distinguished, and a token can name an axis+value so 'tokens ARE the value-units of an axis' — one model spanning tokens, axes, and components.",
+    "Built-in edit safety: editing a built-in forks it into user space (forkedFrom) rather than mutating the built-in, and built-ins cannot be removed."
+  ],
+  "conventions": [
+    "Embodies the project's one-home/extend-by-registration law as the actual mechanism.",
+    "Single-inheritance via 'extends' with leaf-wins merge, matching the charter's stated model.",
+    "Diagnostics-only direct access exposed as _builtin/_user/_templates.",
+    "Deviates from loud-fail in places: storage and subscriber errors are swallowed in empty catch blocks; register logs a warn and returns null on missing id rather than throwing."
+  ],
+  "concerns": [
+    "Multiple empty catch {} blocks (storage load/save, notify subscribers) silently swallow errors, which conflicts with the project's loud-fail non-negotiable.",
+    "register on a non-built-in always writes to USER unless layer==='template'; there is no provenance distinction kept between 'user'/'vi'/'imported' at the storage-bucket level (all share USER), so the schema's provenance values are only metadata.",
+    "lineage cycle guard exists (seen set) but resolve assumes a usable chain; a self-extending or broken extends would still resolve to a partial merge."
+  ],
+  "notes": "This is the core single-source Type registry — the seven-layer composition model, inheritance resolution, and socket acceptance that every picker and the Vi composer read from.",
+  "questions": [
+    "Where is window.CV_COND defined and what does testAll evaluate (conditions vocabulary)?",
+    "How is the 'vi' provenance distinguished from 'user' downstream if both live in the USER map and the same localStorage key?"
+  ],
+  "purpose_vs_actual": "Match — the header declares it the single source of truth with an atomic-composition layered model, one node shape driving all pickers and the composer, and the implementation provides exactly that schema, storage, inheritance, and acceptance machinery.",
+  "apparent_themes": [
+    "Single source of truth / one node shape everywhere",
+    "Atomic composition across seven layers with single-inheritance",
+    "Universal-component grammar (sockets/valueSlots/parts/classification)",
+    "Tokens and axes unified as value-units",
+    "Interface as a projection of the registry"
+  ],
+  "intention_signals": "Trying to make one registry the entire composable vocabulary of the studio — every definition from a design token to a re-runnable template lives here, extends others, and embeds others through declarative sockets, so the interface is just a view of it.",
+  "novelty": "The reconciliation of three vocabularies (registry slots, Glyphic-spec sockets/valueSlots/parts, and tokens-as-axis-value-units) into one normalized schema, plus event-sockets (socketInfo with kind:'event'/onPick) as first-class.",
+  "contribution": "Contributes the canonical Type schema and the registry API (register/resolve/lineage/query/subscribe), the layer model, localStorage persistence for user/template Types, built-in fork-on-edit safety, and the classification-based socket acceptance engine.",
+  "summary_for_embedding": "The CV_REGISTRY universal Type registry: a seven-layer (token→template) single-inheritance composition model with localStorage persistence, inheritance resolution, classification-based socket acceptance, and a subscribe/notify API.",
+  "intention_for_embedding": "To be the one source of truth for every composable definition in ConceptV Studio so all pickers and the Vi composer render from a single layered, extensible, self-describing registry."
+}

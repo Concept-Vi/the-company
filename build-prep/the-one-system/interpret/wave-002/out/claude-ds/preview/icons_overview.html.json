@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "preview/icons_overview.html",
+  "model": "opus",
+  "what_it_does": "A single preview card (HTML) for the ConceptV design system that displays an overview of the icon library: a grid of ~36 selected SVG glyphs rendered from a shared icon data object, plus a lead paragraph stating the library has 99 single-stroke 1.5px 24x24 icons and how to render them in React.",
+  "observations": [
+    "Opens with a @dsCard HTML comment carrying card metadata (group='Brand', name='Icon library — overview', subtitle, viewport='700x320') — a structured annotation consumed by a gallery tool.",
+    "Links _card.css for shared card styling and uses CSS custom properties throughout (--font-body, --fg-secondary, --accent-gold, --accent-bronze, --font-mono).",
+    "Loads icon data from ../assets/icons/cv-icons.js exposing window.CV_ICONS.data keyed by icon name.",
+    "A hardcoded SHOW array lists ~36 icon names; script iterates and injects inline SVGs (viewBox 0 0 24 24, stroke=var(--accent-bronze), stroke-width 1.5).",
+    "Skips any name not present in CV_ICONS.data (if (!body) return) rather than erroring.",
+    "References a separate explorer page at ../assets/icons/index.html and the React component <CvIcon name='…'/>.",
+    "A meta row names icon categories: People, Files, Comms, Architecture, Browser, Actions, System, Logic, Platform."
+  ],
+  "standouts": [
+    "States '99 individual icons' as a single source of truth in assets/icons/svg/.",
+    "Renders glyphs by reading a shared CV_ICONS.data object rather than embedding SVG markup — consistent with the design system's reference-not-copy principle."
+  ],
+  "conventions": [
+    "Follows the @dsCard annotation + _card.css + CSS-variable conventions used across preview cards.",
+    "Uses var() tokens for colour/type rather than literals in the styled rules (though some inline styles repeat font/size literals)."
+  ],
+  "concerns": [
+    "The SHOW list of icon names is hand-maintained and can silently fall out of sync with the actual icon set (missing names are silently skipped).",
+    "Inline style attributes in the lead paragraph repeat font-family/size/color literals rather than classes."
+  ],
+  "notes": "A brand/preview card that showcases a curated subset of the 99-icon library by pulling glyphs from the shared cv-icons.js data object.",
+  "questions": [
+    "Is the SHOW subset meant to stay representative as icons are added, or is drift expected?",
+    "Where is the count '99' authoritatively derived — is it validated against assets/icons/svg/?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard says 'Icon library — overview / 99 SVG icons, single source of truth' and the file renders an overview grid sourced from the single icon data object.",
+  "apparent_themes": [
+    "Single source of truth (icons defined once, referenced everywhere)",
+    "Self-describing preview cards consumed by a gallery",
+    "Token-driven styling"
+  ],
+  "intention_signals": "Aims to give a visual at-a-glance proof that the icon library exists, is unified (one stroke style/grid), and is consumable from both React and a data object — a showcase of the icon registry's coherence.",
+  "novelty": "The card renders live SVGs by reading a shared JS data object at runtime rather than hardcoding markup, demonstrating the reference-not-copy discipline in a preview surface.",
+  "contribution": "Contributes a brand-level overview preview of the icon library and the convention of rendering icons from the shared CV_ICONS data object within a @dsCard gallery card.",
+  "summary_for_embedding": "An HTML preview card rendering a curated grid of SVG icons from the ConceptV design system's shared cv-icons.js data object, with a lead describing the 99-icon single-source library.",
+  "intention_for_embedding": "To visually showcase the unified icon library as a single source of truth, renderable in React and from one icon data object."
+}

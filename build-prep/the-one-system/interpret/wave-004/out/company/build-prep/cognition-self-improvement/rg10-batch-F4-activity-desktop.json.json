@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-F4-activity-desktop.json",
+  "model": "opus",
+  "what_it_does": "A machine-generated grounding/confirmation report for the F4-activity-desktop.html mockup, the central Activity Dashboard — a live 'now-view' with status tiles plus a scrolling feed of recent events. Records 35 candidate elements in 29 clusters as dossiers with jury verdicts, split into confirmed (9) and flagged (16).",
+  "observations": [
+    "Same ground/confirmed/flagged dossier schema; counts n_candidates=35, n_dossiers=35, n_clusters=29.",
+    "Subject screen: top tiles show current state (pending approval / resolved / awaiting), a scrolling log below shows recent actions.",
+    "Confirmed entries span canvas controls (wire/run/content), activity feed messages (registry-fallback, connected-constant, registry proposal), and the live legend/warning (both ENG-volatile).",
+    "Multiple EVT-now dossiers: ui://activity/status, /heartbeat, /sum, /now — the now-view head reads runtime/suite.py:now (live state) while the feed reflects the captured trajectory.",
+    "ENG-volatile appears for both the live legend and a 'fail loudly, never silent' warning banner.",
+    "WALK-next (walkthrough advanced) and WIRE-review (build-result review card) tie the activity feed to the review/walk organs.",
+    "Addresses split across ui://canvas/* and ui://activity/*; how_to_change cites Toolbar.tsx, NodeShape.tsx, App.tsx shell, runtime/suite.py:now.",
+    "ui://activity/now is a 4-member cluster (22,24,26,32) representing NOW-present, flagged 0/3."
+  ],
+  "standouts": [
+    "The now-view / feed split: head = live state (suite.py:now), feed = captured trajectory — a clear live-vs-recorded distinction.",
+    "ENG-volatile 'fail loudly, never silent' warning banner as an explicit design law surfaced in UI.",
+    "The connected-constant 'permanent Text->Text bridge to the LLM' framed as an unchanging system link."
+  ],
+  "conventions": [
+    "ui:// addressing; 'proposed'/'built' grounding sentinels.",
+    "Live tiles traced to suite.py:now; visual shells to NodeShape.tsx / App.tsx.",
+    "Shared batch dossier/jury structure."
+  ],
+  "concerns": [
+    "EVT-now is reused as maps_to_feature across several distinct addresses (status, heartbeat, sum, now), blurring which is the canonical now-view element.",
+    "Many 'built'-grounding dashboard tiles are flagged 0/3 by the jury despite declared built grounding.",
+    "ui://activity/sum maps_to_feature EVT-now but represents SUM-memo, a feature/representation mismatch."
+  ],
+  "notes": "Auto-generated audit of the central activity/now dashboard; confirms the canvas act controls, several feed event messages, and the live legend/warning, while flagging most now-view tiles for scrutiny.",
+  "questions": [
+    "Which single address is the canonical EVT-now now-view, given four map to it?",
+    "Why is ui://activity/sum mapped to EVT-now while representing SUM-memo?",
+    "Are the canvas/* and activity/* duplications of run/review intentional cross-surfacing?"
+  ],
+  "purpose_vs_actual": "Matches: declared an activity-dashboard grounding report and delivers clustered dossiers + verdicts for that now-view.",
+  "apparent_themes": [
+    "Live now-view vs captured event trajectory",
+    "Volatile/loud-failure engine state (ENG-volatile)",
+    "Event stream as append-only log with sequence/reconnect status",
+    "Adversarial grounding of dashboard claims"
+  ],
+  "intention_signals": "Trying to give the operator one live glanceable dashboard of system state plus a recent-event feed, distinguishing live state from recorded history, and to verify each tile/control is honestly grounded.",
+  "novelty": "The explicit head=live(suite.py:now) / feed=captured-trajectory split and the loud-failure warning banner surfaced as a first-class UI law.",
+  "contribution": "Contributes the activity/now-view surface's element ledger: the EVT-now tiles (status/heartbeat/sum/now), EVT-stream footer, ENG-volatile legend/warning, and activity-feed event-message vocabulary tied to suite.py:now.",
+  "summary_for_embedding": "A grounding/jury-confirmation report for the F4 central Activity Dashboard, clustering 35 UI elements of the live now-view and event feed into confirmed and flagged dossiers with feature mappings and code locations.",
+  "intention_for_embedding": "To verify the central activity/now-view dashboard honestly shows live system state and a recorded event feed grounded in suite.py:now."
+}

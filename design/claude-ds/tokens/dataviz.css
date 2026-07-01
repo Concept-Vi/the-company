@@ -1,0 +1,73 @@
+/* ============================================================
+   ConceptV · DATA-VISUALISATION LANGUAGE
+   ------------------------------------------------------------
+   "Show, don't tell" extended to numbers. Charts use a palette
+   derived from the surface zones (so a chart reads as part of the
+   system), quiet hairline gridlines, and GOLD reserved for the key
+   series / the number that matters — the same discipline as the rest
+   of the system. Primitives below cover the common small cases
+   (sparkline, bar track, gauge, stat); richer charts are a later
+   generative component that draws from these tokens.
+   ============================================================ */
+:root {
+  /* categorical series — zone inks, ordered for contrast.
+     Series 1 is gold ONLY when it's the key/primary series. */
+  --viz-key:    var(--accent-gold);
+  --viz-1:      var(--zone-source-ink,  #3a5780);
+  --viz-2:      var(--zone-success-ink, #3c6b2e);
+  --viz-3:      var(--zone-package-ink, #8a6a30);
+  --viz-4:      var(--zone-panel-ink,   #6b6357);
+  --viz-5:      var(--zone-reject-ink,  #9a3a44);
+  --viz-6:      var(--zone-review-ink,  #8a6a1e);
+
+  --viz-track:    color-mix(in oklch, var(--ink) 8%, transparent);  /* unfilled bar/gauge */
+  --viz-grid:     color-mix(in oklch, var(--ink) 9%, transparent);  /* gridlines */
+  --viz-axis:     var(--ink-4);
+  --viz-label:    var(--ink-3);
+  --viz-bar-radius: 3px;
+  --viz-stroke:   2px;
+}
+
+/* STAT — the big key number, gold, with a label + delta. */
+.viz-stat { display: flex; flex-direction: column; gap: 4px; }
+.viz-stat .num {
+  font: 700 var(--fs-h1) / 1 var(--font-display);
+  color: var(--viz-key); letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.viz-stat .label { font-size: var(--fs-caption); letter-spacing: .08em; text-transform: uppercase; color: var(--viz-label); }
+.viz-stat .delta { font-size: var(--fs-meta); color: var(--zone-success-ink); }
+.viz-stat .delta.down { color: var(--zone-reject-ink); }
+
+/* BAR TRACK — horizontal proportion. Set --val (0–100). */
+.viz-bar { height: 8px; border-radius: 999px; background: var(--viz-track); overflow: hidden; }
+.viz-bar > .fill {
+  height: 100%; width: calc(var(--val, 0) * 1%);
+  background: var(--bar-color, var(--viz-key)); border-radius: inherit;
+  transition: width var(--dur-move) var(--ease-emphasized);
+}
+
+/* GAUGE — radial ring via conic-gradient. Set --val (0–100). */
+.viz-gauge {
+  --size: 64px;
+  width: var(--size); height: var(--size); border-radius: 50%;
+  display: grid; place-items: center;
+  background:
+    radial-gradient(closest-side, var(--zone-ground, #fff) 72%, transparent 73%),
+    conic-gradient(var(--gauge-color, var(--viz-key)) calc(var(--val, 0) * 1%), var(--viz-track) 0);
+  font: 700 var(--fs-meta)/1 var(--font-display); color: var(--ink-2);
+}
+
+/* SPARKLINE — inline <svg class="viz-spark"> with a polyline. */
+.viz-spark { display: inline-block; width: 88px; height: 24px; vertical-align: middle; overflow: visible; }
+.viz-spark polyline, .viz-spark path { fill: none; stroke: var(--spark-color, var(--viz-key)); stroke-width: var(--viz-stroke); stroke-linecap: round; stroke-linejoin: round; }
+.viz-spark .area { fill: color-mix(in oklch, var(--spark-color, var(--viz-key)) 14%, transparent); stroke: none; }
+
+/* gridlines + axis text for hand-built or generated SVG charts */
+.viz-grid-line { stroke: var(--viz-grid); stroke-width: 1; }
+.viz-axis-text { fill: var(--viz-axis); font-family: var(--font-mono); font-size: 9px; }
+
+/* legend */
+.viz-legend { display: flex; flex-wrap: wrap; gap: var(--d-3); font-size: var(--fs-caption); color: var(--viz-label); }
+.viz-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.viz-legend i { width: 9px; height: 9px; border-radius: 2px; background: currentColor; }

@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/UNCONVENTIONAL-EMBEDDING-USES.md",
+  "model": "opus",
+  "what_it_does": "A conversation-capture document (2026-06-11) listing fifteen unconventional uses of embeddings to resolve the Company's lack of consistency, specifications, and shared memory. It opens with a framing inversion (utterances are truth, code is the decaying echo) and groups the fifteen ideas into six kinds, ending with a thread statement and a named structural-three.",
+  "observations": [
+    "Captures Tim's ask verbatim: generate heaps of different ideas for resolving the no-spec/no-consistency scenario.",
+    "Load-bearing framing inversion: conventionally code is truth and docs decay; here Tim's utterances are truth and code is the decaying echo, so the primary embedding axis is utterance<->artifact, not doc<->code.",
+    "Fifteen numbered ideas grouped into six kinds: dissolving inconsistency, reuniting intent with implementation, warming cold sessions, verification without specs, speaking at Tim's altitude, and self-growing structure.",
+    "Names a 'promise ledger' (#4): per Tim-utterance-of-wanting, find its implementation; no match = an undelivered promise; called likely the single highest-value sweep.",
+    "Intent triangulation (#5): embed all lossy echoes of one idea; cluster centroid approximates true intent, outliers = distortions.",
+    "Boot-by-similarity (#7): a session declares its task in a sentence and the briefing assembles from nearest code/decisions/corrections/mockups.",
+    "Semantic addressing (#12): point by description ('the breathing circle thing' -> ui://cognition/pulse) rather than canonical names.",
+    "Closes by naming a STRUCTURAL THREE: #4 promise ledger, #7 boot-by-similarity, #9 collision detection, as the ones that attack 'no one knows everything built' head-on."
+  ],
+  "standouts": [
+    "The framing inversion that utterances are truth and code is the decaying echo, making utterance<->artifact the primary embedding axis.",
+    "The promise ledger: a sweep that mechanically produces the undone-list nobody can remember.",
+    "Intent triangulation via cluster centroid as a mechanization of Tim's own patterned-visibility method.",
+    "The embedding layer framed as connective tissue replacing a long-tenured engineer's familiarity that never leaves and covers everything at once."
+  ],
+  "conventions": [
+    "Cross-references prior framework artifacts in parentheses (built-twice radar, M3 corroboration, ai_tics inversion, the wire's scope-derivation, the incomplete-work law).",
+    "Grounds the round in Tim's quoted ask and his stated working methods.",
+    "Idea-round / generative format — many candidates, no commitment, consistent with sibling brain docs."
+  ],
+  "concerns": [],
+  "notes": "A brainstorm capture of fifteen embedding-powered sweeps to fight the Company's no-spec/no-memory problem, anchored on the inversion that utterances are truth and code is the echo.",
+  "questions": [
+    "Which of these fifteen ideas were carried forward into the TOTAL-PROCESSING-PIPELINES design versus left as raw candidates?",
+    "How is a 'Tim-utterance-of-wanting' detected for the promise ledger (#4) — what classifies an utterance as a promise?"
+  ],
+  "purpose_vs_actual": "Matches — it is explicitly the ideas round responding to Tim's ask for many varied ideas, and delivers a grouped catalogue of fifteen.",
+  "apparent_themes": [
+    "Utterances as truth, code as decaying echo",
+    "Embeddings as connective tissue / institutional memory",
+    "Reuniting intent with implementation",
+    "Verification by proximity in the absence of specs",
+    "Pointing by meaning rather than canonical names"
+  ],
+  "intention_signals": "Trying to enumerate the widest possible space of embedding applications that could substitute for the missing familiarity, specs, and shared memory — generating candidates rather than committing, so the strongest can be selected later.",
+  "novelty": "The promise ledger and intent-triangulation-by-centroid framings are distinctive; so is treating the embedding layer explicitly as a replacement for a senior engineer's tacit knowledge.",
+  "contribution": "Contributes a catalogued idea space of fifteen embedding uses across six kinds, the utterance<->artifact inversion, and the named structural-three (promise ledger, boot-by-similarity, collision detection) that target the core no-one-knows-everything problem.",
+  "summary_for_embedding": "A Company brain idea-round capture listing fifteen unconventional embedding uses across six kinds (unification, intent-recovery, cold-session warming, spec-less verification, altitude-speaking, self-growing structure), anchored on utterances-as-truth.",
+  "intention_for_embedding": "To brainstorm the full space of embedding-based mechanisms that could resolve the Company's lack of specs, consistency, and shared memory."
+}

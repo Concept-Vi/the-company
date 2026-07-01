@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/surfaces.css",
+  "model": "opus",
+  "what_it_does": "Defines the canonical SURFACES (viewport frames) the design system designs against and the responsive machinery to render one source on each: breakpoint numbers, a frame TYPE system (aspect-ratio + width, height derived), ratio-invariant percentage grid rules, device safe-area insets, mobile chrome heights, adaptive gutters, a [data-surface] switching scheme, orientation/visibility helpers, container-query convention classes, and a reusable mobile shell.",
+  "observations": [
+    "Breakpoints declared as CSS vars (--bp-mobile 480 … --bp-wide 1440) noted as a source-of-truth to mirror in @media/@container since vars can't drive @media",
+    "Frames declared as a type: each surface gives -ar (aspect ratio via calc) and -w, with -h derived by calc(w / ar); adding a surface = declare ar + w",
+    "Frame set covers desktop, tablet, mobile portrait/landscape, deck 16x9, deck 3x2, A4 portrait/landscape, and web (ar=0 sentinel meaning fixed-width, content height)",
+    "Ratio-invariant grid percentages (--grid-margin 12%, --grid-title-y 7.5%, --grid-band 76%, --grid-split 46%) described as percentage TYPES measured across the corpus",
+    "Safe-area insets via env() with 0px fallback; mobile chrome heights with --touch-min 44px touch target",
+    "Adaptive gutters per surface; --gutter defaults to mobile and is raised by [data-surface] selectors",
+    "Orientation/visibility helpers ([data-orient], [data-desktop-only], [data-mobile-only]) work INSIDE a surface so they apply in framed previews, not just real devices",
+    "Container-query classes .cq (inline-size) and .cq-size (size); .surface-shell reserves top/tab bars and safe areas, zeroed on desktop/tablet"
+  ],
+  "standouts": [
+    "Frames modelled as a derive-by-calc TYPE system (ratio is the type, height auto-computed) rather than flat px pairs — adding a surface needs no hand-set height",
+    "ar=0 sentinel for the web surface to mean 'fixed width, scroll height'",
+    "Author-once/present-many model: one responsive source framed simultaneously at every canonical viewport by a MultiSurface harness",
+    "data-surface branches reserved only for genuine structural differences (rail ↔ bottom tab bar); fluid sizing + container queries preferred to avoid branching"
+  ],
+  "conventions": [
+    "Heavy use of calc() with var() for derived dimensions; references --s-* spacing scale for gutters",
+    "Every magic-number token carries /* @kind other */ (or @kind color) annotations consistent with corpus token tagging",
+    "Cites external sources in comments (analysis/AXES.md surface axis, REQUIREMENTS C1)",
+    "data-attribute knob pattern ([data-surface], [data-orient]) matching the system's axis-dial convention"
+  ],
+  "concerns": [
+    "Breakpoint vars and the @media/@container numbers must be kept in sync by hand — the file itself notes vars can't drive @media, so drift is possible",
+    "Frame -ar/-w/-h tokens are declared but this file does not show what consumes them (the harness is referenced, not present here)"
+  ],
+  "notes": "The surfaces/orientation registry: the canonical viewport frames (as a derive-by-ratio type system) plus the responsive plumbing — breakpoints, percentage grid, safe areas, gutters, [data-surface] switching, container-query classes, and a mobile shell.",
+  "questions": [
+    "Where is the MultiSurface harness that stamps [data-surface] and frames the source at each viewport defined?",
+    "Are the breakpoint vars actually mirrored in @media/@container elsewhere, and what guards that mirror against drift?"
+  ],
+  "purpose_vs_actual": "Match — the header declares 'the canonical surfaces the whole system designs against, plus rules to render one responsive source on each,' and the file provides exactly the frame types, grid rules, switching, and shell to do so.",
+  "apparent_themes": [
+    "Author once, present many across surfaces",
+    "Surfaces as a computed type system (ratio-derived), not flat constants",
+    "Functional dimensions separated from aesthetics ('visual DNA pours into later')",
+    "Explicit, declared layout branches over guesswork; container-queries over viewport-queries"
+  ],
+  "intention_signals": "Trying to make responsiveness deterministic and surface-complete — every design provably renders on desktop, tablet, both phone orientations, decks, and print from a single source, with structural branches explicit and most adaptation handled by fluid sizing + container queries.",
+  "novelty": "Frames as a calc-derived aspect-ratio type system with an ar=0 sentinel for content-height web, and orientation helpers scoped inside a surface so they work in framed previews as well as real devices.",
+  "contribution": "Contributes the surface/responsiveness foundation — the canonical frame registry (as a ratio-derived type system), ratio-invariant grid percentages, safe-area/gutter/touch tokens, [data-surface] switching, and container-query conventions that let one source render across every device and document format.",
+  "summary_for_embedding": "A ConceptV design-system CSS file defining canonical viewport surface frames as a ratio-derived type system plus breakpoints, percentage grid rules, safe-area insets, adaptive gutters, [data-surface] switching, container-query classes, and a reusable mobile shell.",
+  "intention_for_embedding": "To let a single responsive source render correctly on every canonical surface (desktop, tablet, both phone orientations, decks, print, web) with explicit structural branches and container-query-driven adaptation."
+}

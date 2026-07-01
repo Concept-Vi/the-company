@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/override.js",
+  "model": "opus",
+  "what_it_does": "Defines window.CV_OVERRIDE, an IIFE that makes live style edits to any on-screen element persist across React re-renders. Instead of mutating inline styles (which React wipes), it stamps the element with a stable data-cv-ov=\"ovN\" attribute and writes a real CSS rule keyed by that attribute into a dedicated <style id=cv-override-sheet> with !important. Exposes apply/clear/clearAll/get/list plus snapshotStyles and diff. Accepts either a CSS-prop map or a Vi shorthand recipe (bg/fg/radius/shadow/border/weight/font/tracking).",
+  "observations": [
+    "RULES Map keyed by ovId tracks {el, styles, index, selectorText}",
+    "apply() merges incoming styles cumulatively into the element's existing rule (additive edits)",
+    "tok() resolves a leading -- value into var(--token) so token names can be passed directly",
+    "toStyleMap() supports a curated direct prop allowlist AND a Vi recipe alias set (bg→background, fg→color, radius→border-radius, etc.)",
+    "reindex() rebuilds the map's stored rule indices after every delete/insert because CSSOM indices shift",
+    "snapshotStyles() reads getComputedStyle over a fixed key set; diff() returns from/to per changed key for plain-language reporting",
+    "list() reports each rule's connected state via el.isConnected"
+  ],
+  "standouts": [
+    "The attribute-plus-dedicated-sheet-with-!important technique to defeat the 'screen shivers, nothing changes' React re-render wipe",
+    "Stated as the single mechanism every live edit flows through (Vi, inspector, Explore)"
+  ],
+  "conventions": [
+    "Single-mechanism design: one path for all live edits (no second home)",
+    "Token-aware values via var() resolution",
+    "IIFE + window global registry pattern shared across the atomicity layer",
+    "Reversible/inspectable (clear/list/diff) — self-describing state"
+  ],
+  "concerns": [
+    "insertRule/deleteRule with manual index bookkeeping plus full reindex() on every op is O(n) per edit; could get costly with many overrides",
+    "The direct-prop allowlist in toStyleMap is hardcoded — adding a CSS property requires editing this list",
+    "No try/catch around insertRule, which can throw on invalid declaration strings"
+  ],
+  "notes": "The override engine: any element you click can be restyled and it sticks through React renders, because edits become attribute-keyed !important rules in a private stylesheet, not inline styles.",
+  "questions": [
+    "What produces the Vi 'recipe' shape (bg/fg/radius...) that toStyleMap consumes — which caller feeds it?",
+    "Is there an upper bound on how many override rules accumulate before reindex cost matters?"
+  ],
+  "purpose_vs_actual": "Match — docstring claims a persistence-surviving, reversible, any-element live override mechanism; the code implements exactly that with attribute-keyed sheet rules and clear/list/diff reversibility.",
+  "apparent_themes": [
+    "Single mechanism for live edits",
+    "Persistence against framework re-renders",
+    "Reversibility and inspectability",
+    "Token-awareness",
+    "Universality (works on any element)"
+  ],
+  "intention_signals": "Tries to make 'change every part of whatever I click' real and durable, by routing all live restyling through one CSSOM-based override layer that React cannot undo and that can be cleared, listed, and diffed.",
+  "novelty": "The specific anti-React-wipe pattern (stable data attribute + dedicated !important sheet + index-rebuilding CSSOM bookkeeping) plus dual CSS-map/Vi-recipe input is the distinctive contribution.",
+  "contribution": "Contributes the durable live-restyle substrate: a CSSOM override layer that lets any element be restyled persistently (surviving React renders), with cumulative merges, token resolution, and reversible/inspectable state (clear/list/snapshot/diff) for Vi and inspector consumers.",
+  "summary_for_embedding": "A JS IIFE (window.CV_OVERRIDE) that applies persistent, reversible live style overrides to any DOM element by stamping a data-cv-ov attribute and writing attribute-keyed !important rules into a dedicated stylesheet, surviving React re-renders.",
+  "intention_for_embedding": "To make live restyling of any clicked element stick through framework re-renders via one reversible CSSOM-based override mechanism."
+}

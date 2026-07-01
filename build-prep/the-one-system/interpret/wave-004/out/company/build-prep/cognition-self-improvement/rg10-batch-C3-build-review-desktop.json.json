@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-C3-build-review-desktop.json",
+  "model": "opus",
+  "what_it_does": "Records the grounding-batch result for the C3-build-review-desktop.html mockup (a focused review screen for a completed 'sentiment' build): a 'ground' summary, counts (28/28/17), and 10 confirmed vs 7 flagged UI-element dossiers, each with a ui:// address, capabilities, grounding state, plain-language howto, feature mapping, and accuracy-jury (plus occasional refcheck) verdict.",
+  "observations": [
+    "Screen reviews a finished self-build that added a 'sentiment' feature: a 'Show me it working' demo button and a 'For the record' changed-files section.",
+    "Dossiers cover toolbar controls (presence light, layers, wire, force), the build-review surface, show-me demo, send-back, derived-source provenance, agent-guard, status/footer.",
+    "An agent-guard dossier encodes the rule: an agent cannot self-approve its own build.",
+    "A derived-source dossier shows build provenance as three wires: decision, intent, proposal.",
+    "send-back dossier re-queues the build to the wire with a reason (WIRE-requeue).",
+    "One refcheck feature-fabrication failure: ui://inbox/build-review/foot maps_to_feature 'WIRE-status' (not an inventory id nor 'proposed').",
+    "A 6-member flagged cluster (ui://inbox/build-review/process) is unanimously voted ungrounded (0 of 3).",
+    "howto.how_to_change names Toolbar.tsx, Canvas.tsx, NodeShape.tsx, runtime/suite.py:review_verdicts, suite.py:inbox_lanes; some are mockup-only with no built path.",
+    "Grounding values include built, proposed, and defer (presence light is 'defer')."
+  ],
+  "standouts": [
+    "Agent-guard: 'an agent cannot self-approve its own build' captured as an addressable UI element.",
+    "Provenance shown as a decision/intent/proposal wire-triple on the review card.",
+    "send-back-with-a-reason as a distinct re-queue action separate from approve."
+  ],
+  "conventions": [
+    "Same confirmed/flagged + two-layer grading as sibling rg10 files.",
+    "ui:// addressing across toolbar, canvas, inbox/build-review namespaces.",
+    "Plain-language howto triad; mockup-only elements explicitly say 'no built code path maps to it yet'."
+  ],
+  "concerns": [
+    "Feature fabrication for the footer element ('WIRE-status').",
+    "The 6-member 'process' cluster is the screen's main review label yet is unanimously ungrounded.",
+    "maps_to_feature 'RUN-run' is attached to elements as varied as a presence light, a toolbar strip, and a show-me demo button."
+  ],
+  "notes": "The build-review screen inventory for a completed 'sentiment' build — 10 confirmed, 7 flagged — carrying the agent-self-approval guard and a decision/intent/proposal provenance triple.",
+  "questions": [
+    "Why is the central 'process' review label unanimously ungrounded while the surrounding review actions confirm?",
+    "Is 'WIRE-status' meant to be a real feature id or should it be 'proposed'?",
+    "What distinguishes grounding:'defer' (presence light) from 'proposed' for review purposes?"
+  ],
+  "purpose_vs_actual": "Matches: declared as a grounding result for the build-review desktop mockup and that is its content.",
+  "apparent_themes": [
+    "Verify-before-live build review (show-me + changed-files record)",
+    "No self-approval: human verdict on agent-built work",
+    "Provenance traceability (decision/intent/proposal wires)"
+  ],
+  "intention_signals": "It appears to be verifying which build-review controls are grounded in built code, while capturing the review discipline — demonstrate it working, show the changed files, forbid agent self-approval — as addressable elements, flagging uncertain mappings.",
+  "novelty": "Encodes the self-approval prohibition and a three-wire build provenance directly into the review surface's element inventory.",
+  "contribution": "Contributes the build-review screen element inventory — show-me demo, send-back-with-reason, changed-files record, agent self-approval guard, decision/intent/proposal provenance — with addresses, howtos, and two-layer grounding verdicts.",
+  "summary_for_embedding": "Grounding-batch JSON for the build-review desktop mockup of a completed 'sentiment' build, listing 28 clustered UI dossiers (show-me, send-back, provenance, agent-guard) with 10 confirmed and 7 flagged via refcheck-plus-jury grading.",
+  "intention_for_embedding": "To check whether build-review controls are grounded in built code and capture the verify-before-live, no-self-approval review discipline, flagging uncertain mappings for review."
+}

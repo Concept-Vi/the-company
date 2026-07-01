@@ -1,0 +1,115 @@
+/* ============================================================
+   ConceptV · TEXTURE — diagonal hatch + blueprint ghost
+   ------------------------------------------------------------
+   The low-opacity background textures the source decks use (and
+   that `app/canvases/workshop/Layouts.jsx` already implements with
+   the same values: blueprint linework in bronze @ ~0.18, gold grid
+   @ ~0.12). Tokenised here so every surface can summon them
+   consistently instead of re-drawing per file. Reconciles
+   AUDIT-INDEX tension #1 ("flat ivory, no textures" was the narrow
+   read) and REQUIREMENTS A5. All effects stay low-opacity — felt,
+   not seen.
+   ============================================================ */
+:root {
+  /* diagonal gold hatch — bands behind metrics + bottom baseline rule */
+  --hatch-angle:   45deg;  /* @kind other */
+  --hatch-gap:     6px;    /* @kind other */
+  --hatch-weight:  0.6px;  /* @kind other */
+  --hatch-color:   color-mix(in srgb, var(--accent-gold) 35%, transparent); /* @kind color */
+  --hatch-opacity: 0.5;    /* @kind other */
+
+  /* blueprint ghost — faint architectural linework (top-weighted) */
+  --blueprint-color:   color-mix(in srgb, var(--accent-bronze) 100%, transparent); /* @kind color */
+  --blueprint-opacity: 0.16; /* @kind other */
+  /* faint gold construction grid (matches Layouts.jsx grid overlay) */
+  --blueprint-grid:    color-mix(in srgb, var(--accent-gold) 100%, transparent); /* @kind color */
+  --blueprint-grid-opacity: 0.10; /* @kind other */
+  --blueprint-grid-size: 24px; /* @kind other */
+}
+
+/* HATCH BAND — a full-width metric band ground. */
+.hatch-band {
+  background-image: repeating-linear-gradient(
+    var(--hatch-angle),
+    var(--hatch-color) 0 var(--hatch-weight),
+    transparent var(--hatch-weight) var(--hatch-gap));
+  background-color: var(--zone-content-surface);
+}
+.hatch-band > * { position: relative; }
+
+/* HATCH RULE — the thin bottom baseline mark (left-weighted, ~60%). */
+.hatch-rule {
+  height: 10px;
+  background-image: repeating-linear-gradient(
+    var(--hatch-angle),
+    var(--hatch-color) 0 var(--hatch-weight),
+    transparent var(--hatch-weight) var(--hatch-gap));
+  -webkit-mask-image: linear-gradient(90deg, #000 55%, transparent);
+          mask-image: linear-gradient(90deg, #000 55%, transparent);
+  opacity: var(--spatial-opacity, 1);
+}
+
+/* BLUEPRINT GHOST — drop on any surface that wants the technical substrate.
+   The faint gold grid; author real linework as low-opacity SVG over it
+   (see Layouts.jsx for the canonical floor-plan / section / iso set). */
+.blueprint {
+  position: relative;
+  isolation: isolate;
+}
+.blueprint::before {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: var(--blueprint-grid-opacity);
+  background-image:
+    linear-gradient(var(--blueprint-grid) 0.4px, transparent 0.4px),
+    linear-gradient(90deg, var(--blueprint-grid) 0.4px, transparent 0.4px);
+  background-size: var(--blueprint-grid-size) var(--blueprint-grid-size);
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000, transparent 75%);
+          mask-image: radial-gradient(120% 90% at 50% 0%, #000, transparent 75%);
+}
+.blueprint > * { position: relative; }
+
+/* ============================================================
+   BULLET KINDS — the glyph carries meaning (analysis pitch-deck §5,
+   recent-pitches): ▶ = plain list item · → = "leads-to"/causal flow.
+   Use .bullet with data-kind; the marker is a ::before so text
+   hangs-indents (wrapped lines align to text, not under the marker).
+   ============================================================ */
+.bullet {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--s-3, 12px);
+  align-items: start;
+  color: var(--ink-2, #3A3026);
+}
+.bullet::before {
+  content: "\25B6";                 /* ▶ plain (default) */
+  color: var(--accent-gold);
+  font-size: 0.7em;
+  line-height: 1.7;
+}
+.bullet[data-kind="flow"]::before { content: "\2192"; font-size: 1em; line-height: 1.4; } /* → leads-to */
+.bullet[data-kind="check"]::before { content: "\2713"; color: var(--status-success, #5A8A4A); } /* ✓ done */
+
+/* ============================================================
+   FRAME SIGNATURE — the per-page binding present on ~every analytical
+   slide: a left-weighted bottom hatch rule + the gold V mark bottom-right,
+   inside the 12% margins. Drop .frame-signature on a slide/band root.
+   ============================================================ */
+.frame-signature { position: relative; }
+.frame-signature::after {
+  content: "";
+  position: absolute; left: var(--grid-margin, 12%); bottom: 2.5%;
+  width: 48%; height: 8px;
+  background-image: repeating-linear-gradient(
+    var(--hatch-angle), var(--hatch-color) 0 var(--hatch-weight),
+    transparent var(--hatch-weight) var(--hatch-gap));
+  -webkit-mask-image: linear-gradient(90deg, #000 60%, transparent);
+          mask-image: linear-gradient(90deg, #000 60%, transparent);
+  opacity: var(--spatial-opacity, 1);
+  pointer-events: none;
+}
+/* the V mark itself is the logo asset / CvIcon — placed bottom-right by the
+   layout; this utility supplies only the hatch rule half of the signature. */

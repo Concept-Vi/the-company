@@ -1,0 +1,50 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/gc9_gap_intake.py",
+ "model": "opus",
+ "what_it_does": "A fully deterministic (no-model) intake that reads the 18 stubborn-floor entries from .build/rg10/reconciled.json, derives a prefix->area map from the real feature inventory (design/register.json), and for each gap proposes a feature row {id, area, label, code:''} — flagging rows that fail the floor checks (id shape, area derivable, no collision with a real id, non-empty label). It merges within-batch duplicates (same id from multiple surface elements -> one feature carrying multiple ui_addresses), writes each gap's proposed_feature back into reconciled.json in place, and returns counts plus the proposed rows. It proposes only; register.json is untouched.",
+ "observations": [
+  "DETERMINISTIC end-to-end, framed in the docstring as 'the strongest form of the no-fiction floor: every field derives from data that exists'.",
+  "prefix->area map is DERIVED from the real inventory (registry-is-truth): an ambiguous prefix (top area not 100% of occurrences) maps to None and FLAGS rather than guessing.",
+  "Floor checks: id regex ^[A-Z]+-[a-z][a-z_-]*$, no collision with real_ids (a collision is flagged as 'a reconcile miss'), area resolvable, label non-empty.",
+  "label is the at-altitude prose (howto.what), falling back to represents only when it is real prose and not the id echo — with an inline note that the first run mislabelled every row with its own id, caught by look-at-output.",
+  "Within-batch merge: same id from multiple elements collapses to one proposed feature with sorted unique ui_addresses; representative label is the longest (most specific) prose.",
+  "Writes reconciled.json in place (the walk's stop-3 artifact is the truth the surface reads); PROPOSES ONLY — Tim's stop-3 verdict authorizes any inventory growth.",
+  "Returns gaps count, proposed_features count, flagged list with reasons, by_area counter, and the merged rows.",
+  "Described as GC9, the registry-filling pattern's SECOND instance, pointed at the feature inventory itself."
+ ],
+ "standouts": [
+  "No model anywhere — every proposed field is derived from existing data, making it the no-fiction floor in its purest form.",
+  "Ambiguity flags, never guesses: an unknown/ambiguous prefix yields area=None and a FLAGGED status with an explicit reason ('an invented area would be fiction').",
+  "Encodes a caught past bug as a comment (every row labelled with its own id, caught by look-at-output) and the fix (prose-over-id-echo label rule)."
+ ],
+ "conventions": [
+  "Registry-is-truth (prefix->area derived from the live inventory), propose->gate (writes proposals, never the inventory), fail-loud/flag-don't-guess.",
+  "Update-in-place into the walk's stop-3 artifact (reconciled.json).",
+  "dict return + json.dumps(main()) in __main__ — the standard script-as-callable shape."
+ ],
+ "concerns": [
+  "Reads reconciled.json and writes it back wholesale (json.dump after mutating in place) — no backup/atomicity, so a crash mid-write could corrupt the stop-3 artifact the surface reads.",
+  "The prefix->area derivation requires 100% purity for a confident map; a single mis-areaed real feature under a prefix forces that whole prefix to None (flags otherwise-valid gaps)."
+ ],
+ "notes": "Deterministic, no-model intake that turns RG10's stubborn-floor gaps into proposed feature rows (area derived from the real inventory, ambiguity flagged not guessed), merged by id and written back into reconciled.json as proposals only.",
+ "questions": [
+  "What produces the 18 stubborn-floor entries and the 'maps_to_feature' the model insisted on (the upstream RG10 reconcile step)?",
+  "How does the stop-3 surface consume the proposed_feature fields, and how is Tim's verdict applied to promote them into register.json?",
+  "Is there any guard against concurrent writers to reconciled.json given the wholesale rewrite?"
+ ],
+ "purpose_vs_actual": "Match — docstring promises a deterministic, proposes-only, registry-derived intake that flags rather than guesses, and the code implements exactly that with no model call.",
+ "apparent_themes": [
+  "No-fiction floor (every field derives from existing data)",
+  "Registry-is-truth (area map derived from the inventory)",
+  "Flag, never guess (ambiguity = FLAGGED)",
+  "Propose->gate (Tim's verdict authorizes growth)",
+  "Insistence-under-correction as the gap signal (the gap-pressure law's instance 2)",
+  "Look-at-output discipline encoded as a fix"
+ ],
+ "intention_signals": "Trying to convert real gap signals (feature ids the model insisted on through correction) into well-formed, inventory-consistent feature proposals entirely deterministically, so the inventory can grow from evidence with zero fabrication and only Tim's verdict authorizing the actual addition.",
+ "novelty": "A registry-growth intake that uses zero model inference — deriving the classification (area) purely from the existing registry's own prefix distribution and refusing to proceed where that derivation is ambiguous.",
+ "contribution": "Contributes the deterministic gap->proposed-feature intake for the feature inventory: the registry-derived area resolution, the flag-don't-guess floor, the same-id merge into multi-address features, and the in-place reconciled.json proposal writes.",
+ "summary_for_embedding": "A deterministic no-model Python intake that turns RG10 stubborn-floor gaps into proposed feature rows with inventory-derived areas, flagging ambiguous ones, merging duplicate ids, and writing proposals back into reconciled.json.",
+ "intention_for_embedding": "To grow the feature inventory from real gap signals without fabrication — proposing inventory-consistent feature rows deterministically and flagging anything not derivable, leaving the actual addition to Tim's verdict."
+}

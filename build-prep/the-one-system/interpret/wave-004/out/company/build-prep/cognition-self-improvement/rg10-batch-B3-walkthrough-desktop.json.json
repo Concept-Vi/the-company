@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-B3-walkthrough-desktop.json",
+  "model": "opus",
+  "what_it_does": "A grounding/confirmation result for the B3-walkthrough-desktop.html mockup (a guided 'Walkthrough' view that auto-focuses one canvas item and dims the rest for a verdict). Holds 44 candidate dossiers reduced to 30 clusters, each with a ui:// address, capabilities, grounding flag, the what/what-you-can-do/how-to-change triple, a maps_to_feature id, and a 3-draw jury verdict sorting them into confirmed (9) and flagged (21).",
+  "observations": [
+    "ground block describes the Walkthrough: system focuses attention on one item; operator can approve/reject/decide/comment/skip or speak a voice command.",
+    "Counts: n_candidates 44, n_dossiers 44, n_clusters 30 — the most clusters in the batch.",
+    "Confirmed: chat/run (unanimous), node-palette, process-11 spotlight, the memo-gate grounded-answer, walkthrough/force, walkthrough/camera (focus), verdict/approve (INB-resolve, unanimous, cluster_size 5), verdict/next, chat/inbox.",
+    "How-to text cites RhmChat.tsx, Walkthrough.tsx, runtime/suite.py:present_current, suite.py:resolve_surfaced, suite.py:walk_session, runtime/scheduler.py, and the /api/resolve wire.",
+    "Refcheck fabrications flagged: RHM-utterance, WALK-utterance, RHM-portal.",
+    "Distinct walkthrough verbs appear: force (bypass), ship-as-is, hold (pause to read), ask (pause-and-answer), idempotent (resolve once is safe), ground-check, operator-only verdict.",
+    "Address ui://chat/utterance appears on three separate dossiers; ui://chat/walk and ui://chat/toolbar each appear twice.",
+    "The idempotency dossier states resolving an item once is sufficient and safe."
+  ],
+  "standouts": [
+    "A rich verb vocabulary for review: approve/reject/decide/comment/skip plus ship-as-is, hold, ask, force, next — the walkthrough as a structured verdict loop.",
+    "Idempotency guarantee surfaced as a UI affordance (resolve-once is safe).",
+    "Operator-only verdict gating — the verdict row is an operator-exclusive surface.",
+    "Memo-gate verdict shown with its own code reference (runtime/scheduler.py) as the skip justification."
+  ],
+  "conventions": [
+    "Same audit schema as the rest of the batch (ground / counts / confirmed / flagged, howto triple, verdict object).",
+    "Mixed addressing: ui://chat/<x>, ui://walkthrough/<x>, ui://run/demo/ask/<x>.",
+    "Closed capability + grounding vocabularies."
+  ],
+  "concerns": [
+    "ui://chat/utterance reused across three dossiers and other addresses doubled — high address-collision risk in this surface.",
+    "21 of 30 clusters flagged; several 'built' controls (chat/toolbar, chat/walk) get 0-of-3 jury grounding.",
+    "RHM-utterance, WALK-utterance, RHM-portal all fail refcheck as non-inventory ids — multiple aspirational features the inventory lacks."
+  ],
+  "notes": "The desktop Walkthrough slice of the UI-grounding audit; captures a structured operator-verdict review loop (approve/reject/decide/comment/skip + hold/ask/ship/force) with idempotency, but carries heavy address collisions and the most flagged clusters.",
+  "questions": [
+    "How should the triply-reused ui://chat/utterance address be disambiguated across its three dossiers?",
+    "Should WALK-utterance / RHM-portal be added to the inventory or remapped to WALK-present / RHM-chat?"
+  ],
+  "purpose_vs_actual": "Matches: an honest grounding audit of the guided-walkthrough verdict surface.",
+  "apparent_themes": [
+    "Guided attention / focus-one-item review",
+    "Structured operator-verdict loop with idempotency",
+    "Operator-only decision gating",
+    "Voice-pushable commands during review",
+    "UI grounding with two-layer adjudication"
+  ],
+  "intention_signals": "Aims to ground the guided-review walkthrough honestly — confirming the verdict and navigation controls that map to real resolve/present code while flagging the aspirational utterance/portal features and the unverifiable focus/state displays.",
+  "novelty": "The walkthrough verb set (ship-as-is, hold, ask-mid-tour, force-with-bypass-prompt) and the idempotent resolve-once guarantee expressed as grounded UI affordances.",
+  "contribution": "Contributes the walkthrough-desktop grounding-audit record: the guided-review verb inventory, idempotent/operator-only verdict semantics, and the confirmed/flagged verdicts a fused system would keep as the walkthrough grounding evidence.",
+  "summary_for_embedding": "A UI-grounding audit result for the B3 desktop guided-Walkthrough mockup, clustering 44 dossiers into 9 confirmed and 21 flagged via refcheck and a 3-draw soft jury, covering a structured operator-verdict review loop.",
+  "intention_for_embedding": "To verify each guided-walkthrough verdict and navigation control is truthfully grounded in real resolve/present code and flag aspirational features and address collisions for operator review."
+}

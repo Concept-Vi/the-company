@@ -1,0 +1,54 @@
+{
+  "project": "claude-ds",
+  "path": "_archive-v1/tonal-zoning.css",
+  "model": "opus",
+  "what_it_does": "An archived (v1) presentation stylesheet that consumes the zone tokens from colors_and_type.css to style a 'tonal zoning' deliverable page: it styles the body with a radial-gradient ground plus a faint masked architectural grid, a masthead (eyebrow/title/lede/key), section scaffolding, a zone-registry card grid (each card showing a wash chip + role/name/desc/token list), a component-role demo row (buttons/chips/Vi pill vocabulary), and a full 'Overview dashboard' mock (left nav + main canvas with stats/canvas tiles/activity feed + right gold Vi rail) with ghosted off-frame continuation and spatial path layers.",
+  "observations": [
+    "Header explicitly states 'Nothing here invents colour; it only composes the zone roles' — strict separation from the token layer.",
+    "All colors/spacing/radii/shadows/fonts are referenced via var(--…) tokens; no raw hex defined here.",
+    "Body background layers a radial-gradient of --zone-base-strong over --zone-base-surface; a fixed ::before draws a 64px dual-axis grid from --spatial-faint, masked by a radial gradient and scaled by --spatial-opacity.",
+    "Reuses the zone vocabulary: .ov-block.content/source/package, .cvx-chip--ready/pending/source/reject, .cvx-btn--primary/secondary/reject all map to zone-*-surface/edge/ink tokens.",
+    "The Overview mock is a fixed 1240px-wide, 3-column grid (232px nav / 1fr main / 320px Vi rail) with transform-origin top-left (built to be scaled).",
+    "Gold (--vi-surface/strong/edge, --accent-gold) is used for the Vi rail, active nav item, stat values, and the diamond 'gem' motif — consistent with gold-as-Vi-voice.",
+    "Spatial/connective layers (.ov-spatial, .ov-flow, .tz-ghost) are pointer-events:none decorative path/ghost layers driven by --spatial-opacity.",
+    "Uses CSS fallback custom-prop pattern e.g. var(--zone-ink, var(--accent-bronze)) so cards can be themed by setting --zone-ink locally.",
+    "Stat values rendered big and gold (font-display, --accent-gold), matching the deck observation noted in the token file."
+  ],
+  "standouts": [
+    "A self-contained demonstration surface that renders the zone registry as a catalog (wash chips + token lists) AND applies it in a realistic dashboard mock in the same sheet.",
+    "Ghosted off-frame continuation panels (.tz-ghost) and connective path layers, signalling a spatial/branching workspace metaphor beyond a single screen.",
+    "Local --zone-ink / --zone-edge / --zone-surface override pattern lets a generic card pick up any zone's accent by setting one variable."
+  ],
+  "conventions": [
+    "Compose-only: consumes tokens, never defines color (clean token-vs-presentation separation).",
+    "Token-driven: every value is a var() reference.",
+    "Zone vocabulary reuse: component states map to named zone roles, not ad-hoc colors.",
+    "Decorative layers are pointer-events:none and opacity-gated by a single --spatial-opacity knob."
+  ],
+  "concerns": [
+    "Hardcoded geometry: many raw px sizes/positions and the fixed 1240px .ov width and 760px min-height are literal (presentation-mock dimensions, but not tokenised).",
+    "A few literal rgba()/percentage values in box-shadow composites (e.g. the extra 0 40px 80px -40px rgba(31,26,18,.28)) sit outside the token system.",
+    "Archived (_archive-v1) — superseded; a maintained consumer would need the v2 equivalent.",
+    "Large amount of mock-specific styling (.ov-*) tightly coupled to one demo dashboard layout rather than reusable components."
+  ],
+  "notes": "The v1 (archived) presentation sheet that demonstrates the tonal-zoning system — it renders the zone registry as a catalog and applies it in a full Overview-dashboard mock, composing only from the tokens and never inventing color.",
+  "questions": [
+    "Is the 1240px Overview mock meant to be a one-off demo or a template that later became real components?",
+    "What does the spatial/ghost/flow path layer represent semantically (branching workspaces? navigation continuity?) — it's drawn but its data source isn't shown here.",
+    "Why archived — did the zoning presentation move into the React component layer in v2?"
+  ],
+  "purpose_vs_actual": "Matches: header declares it a deliverable-presentation sheet that composes zone roles, and the file does exactly that (catalog + applied dashboard mock) using only tokens.",
+  "apparent_themes": [
+    "token-driven",
+    "composition-not-definition (clean layer separation)",
+    "semantic-zoning",
+    "gold-as-the-one-voice",
+    "spatial/branching-workspace metaphor",
+    "registry-as-catalog (self-demonstrating)"
+  ],
+  "intention_signals": "Inferred: this is the showcase/proof surface for the tonal-zoning language — it exists to demonstrate that the nine functional zones, the gold Vi voice, and the spatial connective layers actually compose into a coherent real-looking product screen, validating the token model by applying it end-to-end in a dashboard with nav, content zones, a source/activity feed, and a Vi recommendation rail.",
+  "novelty": "Combining a token-catalog view and a fully applied dashboard mock in one composition-only sheet, with ghosted off-frame continuation and connective path layers expressing a spatial workspace, is more than ordinary demo CSS.",
+  "contribution": "Brings the applied vocabulary layer: how zone tokens render as catalog cards, the shared component vocabulary (.cvx-btn/.cvx-chip/.cvx-vi mapped to zone roles), and a concrete dashboard composition (nav / zoned content / source feed / gold Vi rail) plus the spatial-continuation and grid-ground motifs — a reference for how the tonal-zoning model becomes a real screen.",
+  "summary_for_embedding": "Archived v1 tonal-zoning presentation CSS that composes the design system's zone tokens into a masthead, a zone-registry card catalog, a shared button/chip/Vi-pill vocabulary, and a full 1240px Overview-dashboard mock (nav, zoned content blocks, source activity feed, gold Vi rail) with masked grid ground and ghosted off-frame continuation layers.",
+  "intention_for_embedding": "Demonstrate and validate the tonal-zoning language by composing its tokens end-to-end into a realistic product dashboard, proving the nine zones, the gold Vi voice, and the spatial connective layers cohere as a real screen."
+}

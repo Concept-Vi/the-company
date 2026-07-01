@@ -1,0 +1,47 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/rg10_rejury.py",
+ "model": "opus",
+ "what_it_does": "Panel re-jury of jury-flagged registry entries in reconciled.json. For each class 'jury' entry, it rebuilds the real element unit (cluster_members into candidates order) and runs the registration_confirm panel (three lenses: grounding, voice, element-fit; quorum 2/3, temperature-0). Verdict True reclassifies the entry to 'confirmed'; verdict False reclassifies to 'panel' (stays flagged with named seat dissents). Entry-idempotent (entries already carrying 'panel' are skipped), time-budgeted, checkpointed, fail-loud per entry. Proposes classes only; reconciled.json updated in place.",
+ "observations": [
+  "Uses PanelRegistry().discover().get('registration_confirm') and C.run_panel with a resolve_role callback into the suite's role registry.",
+  "element_of resolves the unit via the source mockup's artifact, cluster_members[0], and candidates filtered by mockup_file.",
+  "The rationale: jury-class means floor already passed; the old no-quorum was draw-variance, and the temperature-0 panel supersedes the old same-role draw-jury.",
+  "Records {'error':..., 'verdict': None} into the panel field when the element is unrebuildable or the panel raises — never silent.",
+  "Default time budget 600s; checkpoints reconciled.json and prints progress every 10 judged.",
+  "Recounts all classes at the end and reports judged/failed/remaining/counts."
+ ],
+ "standouts": [
+  "The conceptual claim that a temperature-0 multi-lens panel resolves the prior jury's variance (no-quorum was noise, not judgment).",
+  "Verdict-False produces the 'panel' class that rg10_redescribe.py then consumes — an explicit hand-off between passes.",
+  "Strict context law: the fit-lens is given the real element, because a fit-lens without the element would rightly dissent."
+ ],
+ "conventions": [
+  "Propose-only; in-place reconciled.json updates.",
+  "Idempotent + checkpointed + time-budgeted, matching the redescribe sibling.",
+  "Fail-loud per-entry recording.",
+  "Same chdir/sys.path bootstrap as the other rg10 passes (no design/_system path here, since no register_element re-fire)."
+ ],
+ "concerns": [
+  "element_of duplicates almost verbatim the same helper in rg10_redescribe.py and rg10_reask.py — three near-identical copies of the artifact/cluster resolution logic.",
+  "Broad `except Exception` around run_panel collapses error detail into a 200-char string.",
+  "Reclassification depends entirely on the panel's verdict field shape (verdict/grounded_seats/quorum/seats) — tight coupling to run_panel's return contract."
+ ],
+ "notes": "Re-jury: runs the temperature-0 registration_confirm panel on jury-flagged entries, promoting agreeing ones to confirmed and demoting disagreeing ones to the 'panel' class for re-describe.",
+ "questions": [
+  "What are the three registration_confirm lenses' exact pass criteria and how is quorum 2/3 computed in run_panel?",
+  "Why does this pass not re-fire register_element while redescribe does — is the jury class assumed content-correct already?"
+ ],
+ "purpose_vs_actual": "Match — the docstring's panel re-jury, confirmed/panel reclassification, idempotency, and propose-only behavior are all implemented.",
+ "apparent_themes": [
+  "Variance-vs-judgment distinction (temperature-0 panel over draw-jury).",
+  "Context law (the lens must see the real element).",
+  "Smallest-refined-set-to-the-gate (autonomous refinement before Tim).",
+  "Explicit class hand-off between pipeline passes."
+ ],
+ "intention_signals": "Tries to rescue entries the original jury couldn't agree on by re-judging them with a deterministic temperature-0 panel that sees the real element, promoting the agreeable ones and routing the rest to the re-describe stage, so Tim's gate receives the smallest refined set.",
+ "novelty": "Reframing prior no-quorum results as variance and re-adjudicating with a temperature-0 element-grounded panel — distinguishing judgment from sampling noise — is a distinctive re-jury rationale.",
+ "contribution": "Contributes the panel re-jury stage — the temperature-0, element-grounded re-adjudication of jury-flagged entries that promotes confirms and emits the 'panel' class consumed downstream.",
+ "summary_for_embedding": "A time-budgeted Python pass that re-juries jury-flagged registry entries with a temperature-0 three-lens registration_confirm panel, promoting agreeing entries to confirmed and demoting the rest to the panel class.",
+ "intention_for_embedding": "To re-adjudicate entries the original jury couldn't agree on using a deterministic element-grounded panel, separating real judgment from sampling variance."
+}

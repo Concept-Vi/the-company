@@ -1,0 +1,58 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/deep/fe-structure.md",
+  "model": "opus",
+  "what_it_does": "A deep-read of the frontend structure (read 2026-06-08, read-only, BUILT/PARTIAL/DESIGNED labels verified against running code). It corrects the region count to 18 files, maps the App.tsx grid shell and CSS grid areas with pointer-events layering, catalogues all 18 regions with their grid cell / data-ui-ref / one-line contract / status, documents the core component contracts (AppContext/useApp, useAppController state shape, api.ts I/O boundary, registryStore, kit.tsx primitives, PanelErrorBoundary, StudioKit), the FE conventions (where things go), the data-ui-ref→addresses.json registration chain, a concrete recipe for adding a new region, the hard rules a new surface must never break, and ten key structural facts for Claude Design.",
+  "observations": [
+    "Region-count correction: ls regions/ shows 18 files; CognitionView.tsx does NOT exist on disk and is not imported in App.tsx; Review.tsx DOES exist; ProposeAffordance is in regions/ but rendered inside RhmChat (App.tsx imports 17 regions directly)",
+    "Full App.tsx component tree drawn: Tldraw fills viewport, Hud builds the controller once and provides AppContext, the .app-shell 2-row×3-col grid (158px/1fr/330px), a view-switch toggle between canvas and Review workspace",
+    "CSS grid areas verified against app.css:1086-1105 with a pointer-events table; .as-canvas is pointer-events:none passthrough to tldraw; tabbar is fixed-positioned (not a grid area), shown only <699px; .as-sheet drives mobile bottom-sheets via data-mtab",
+    "18 regions tabulated by mount type: grid-placed, in-canvas overlay, view-switch workspace (Review = STRUCTURE-BUILT/LOOK-PENDING), full-viewport modals (Workshop/Settings), plus ProposeAffordance as a sub-region",
+    "AppController is the INFERRED ReturnType<typeof useAppController> — adding a field to the return object adds it to the type automatically; regions call useApp() with zero prop-drilling",
+    "useAppController return shape enumerated in full: state values, settings/voice/model state, nav/UI state, review/studio state, refs, setters, and a large handler list",
+    "api.ts is the sole I/O boundary; jr() normalizes HTTP errors to a returned {error} (not a throw); tts/voiceStream bypass jr; full grouped API surface tabulated",
+    "registryStore.ts exists because NodeShape renders inside tldraw below React context — external store via useSyncExternalStore holds OINFO/MODEL_OPTIONS/UI_INFO/NODE_STATES plus module-scope function handles",
+    "kit.tsx five token-only primitives (SectionHead/LaneHead/Badge/Surface/EmptyState) with a Tone vocabulary (sig/await/fail/wire/dim); Surface.dataUiRef is load-bearing for resolveUiTarget",
+    "StudioKit.tsx (Card/Rail/Stage/Composer/RhmPanel) is the one place explicitly built as an empty socket for Claude Design — STRUCTURE-BUILT/LOOK-PENDING; everything else has the gold look already applied",
+    "FE conventions table (where things go) + confirmed patterns: kit-first, tokens-only, data-ui-ref addressing, PanelErrorBoundary wrapping, single useAppController+AppContext, api.ts sole I/O, reflects-never-owns, registry-is-truth",
+    "Step-by-step recipe to add a region (create file, mount in App.tsx, wire controller state, register addresses, run design-lint, register mockup) and a 'must never do' hard-rules list",
+    "NOTE: directly contradicts the sibling angles-delta.md by stating CognitionView.tsx is absent — this file confirms absence empirically (ls + no import)"
+  ],
+  "standouts": [
+    "CognitionView.tsx confirmed absent empirically (ls regions/ + no App.tsx import) — directly contradicts the sibling angles-delta.md claim it was merged",
+    "AppController type is inferred from the return object, not declared — adding a return field auto-extends the type",
+    "StudioKit.tsx is the single explicit empty-socket for Claude Design (wiring BUILT, look PENDING) while the rest of the FE already wears the gold look",
+    "reflects-never-owns: the canvas never holds authoritative state; backend truth flows in via loadGraph + SSE",
+    "Surface.dataUiRef must be used (not raw data-ui-ref in JSX) because resolveUiTarget queries by [data-ui-ref]"
+  ],
+  "conventions": [
+    "Honest evidence labels with explicit definitions (BUILT = present+exported+mounted; structural Observation not functional Verification; absence confirmed empirically)",
+    "Documents the FE's sole-I/O-boundary, single-controller, kit-first, tokens-only, reflects-never-owns, registry-is-truth patterns",
+    "Per-panel PanelErrorBoundary + shell backstop as a non-optional pattern"
+  ],
+  "concerns": [
+    "Direct cross-file contradiction (visible within the corpus): this file says CognitionView.tsx is absent; angles-delta.md (same read date) says it was added by the cognition merge — unresolved between the two reads",
+    "Several regions carry unregistered data-ui-ref (History, SelfChanges, Versions marked '—'), and one explicitly-deferred registration (ui://inbox/deferred-offers) — flagged as tolerated-short-term orphans",
+    "BUILT labels for skim-only regions rest on present+exported+mounted+header-read, not execution (the file states this honestly)"
+  ],
+  "notes": "If briefing someone: this is the authoritative FE structure map for designing into the real app — the App.tsx grid shell, the 18 regions, the single useAppController/AppContext + api.ts boundary, the kit + StudioKit primitives, the add-a-region recipe and never-do rules, and the empirically-confirmed absence of CognitionView.tsx with StudioKit as the one empty socket awaiting Claude Design's look.",
+  "questions": [
+    "Does CognitionView.tsx exist or not? This file says no (empirically); the sibling angles-delta.md says yes — the corpus is internally inconsistent on this",
+    "Have the unregistered data-ui-ref orphans (History/SelfChanges/Versions, deferred-offers) since been registered?",
+    "Has StudioKit/Review's look (the LOOK-PENDING deliverable) been supplied since this read?"
+  ],
+  "purpose_vs_actual": "Matches — it aims to map the FE structure with honest build labels for design-into-it work and delivers a thorough, code-verified account including the add-a-region recipe and the empty-socket for Claude Design.",
+  "apparent_themes": [
+    "sockets-and-plugs (structure BUILT, look PENDING)",
+    "single source of state (one controller) + sole I/O boundary (api.ts)",
+    "reflects-never-owns / registry-is-truth",
+    "addressability via data-ui-ref",
+    "honest, empirically-verified status labels",
+    "kit-first, tokens-only composition"
+  ],
+  "intention_signals": "Trying to give Claude Design (and any FE builder) the exact, verified structure to design into — where every region mounts, how state and I/O flow through one controller and one api boundary, which primitives to compose from, and precisely which socket (StudioKit/Review) is the empty look-deliverable — so new surfaces plug in without violating the FE's invariants.",
+  "novelty": "The inferred-AppController-type pattern, the explicit single-empty-socket (StudioKit) framing, and the empirical contradiction-resolution on CognitionView's absence are distinctive findings of this read.",
+  "contribution": "Contributes the verified FE structure reference — the grid shell + 18-region map, the controller/context/api/registryStore/kit/StudioKit component contracts, the conventions and add-a-region recipe, the never-do rules, and the identification of StudioKit/Review as the empty socket for Claude Design — which a fused system would keep as the description of how the frontend composes and where new look/surfaces plug in.",
+  "summary_for_embedding": "A deep-read of the company frontend structure: the App.tsx tldraw grid shell and CSS grid areas, all 18 regions with mount points and status, the single useAppController/AppContext + api.ts I/O boundary, registryStore, kit and StudioKit primitives, FE conventions, the data-ui-ref→addresses.json chain, an add-a-region recipe, and the empirically-confirmed absence of CognitionView.tsx with StudioKit as the look-pending socket for Claude Design.",
+  "intention_for_embedding": "To give Claude Design the verified frontend structure to design into — where regions mount, how state/I/O flow through one controller and one api boundary, which primitives to compose from, and which socket is the empty look-deliverable."
+}

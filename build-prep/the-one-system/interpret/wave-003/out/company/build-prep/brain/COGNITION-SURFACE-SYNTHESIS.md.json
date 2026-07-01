@@ -1,0 +1,53 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/COGNITION-SURFACE-SYNTHESIS.md",
+  "model": "opus",
+  "what_it_does": "A research-synthesis design doc (Track-1 round 4, dated 2026-06-10) recording what is true on disk about concurrent cognition, the resolution spine, the canvas, and Claude Code integration, then proposing a 'thinking frame' for how to display cognition so Tim can interact at his level, plus a Slice-1 build plan for a Claude Code side-chat.",
+  "observations": [
+    "Status block frames the current UI as AI-built scaffolding to test that surfaces connect: plumbing survives, face does not.",
+    "Section 1 inventories concrete files with line counts: runtime/cognition.py (2555), runtime/rules.py (587), useAppController.ts (2567), CognitionView.tsx, contracts/ui_info.py.",
+    "States one resident 4B model runs concurrent rule-routed roles at 32 optimal width (serving max_num_seqs=34), and explicitly flags an earlier ~12-14 figure as a removed AI error.",
+    "Describes rules as renderable data-ASTs with a closed grammar (and/or/not/eq/field/lit; no now/random/call) and FIVE non-consequential destinations: inject, chain, address, surface, lane.",
+    "MODE_REGISTRY presented as the one source uniting presence/resolution/staging/budget across 8 modes; claims 'No if mode== anywhere'.",
+    "Section 2 proposes the THREE QUESTIONS frame: 'What are you doing?' (now), 'What do you know here?' (point at anything), 'Why did you do that?' (self-explaining elements).",
+    "Proposes ONE altitude grammar everywhere: Pulse (glance) -> River (inspect) -> Nodes (depth).",
+    "Distinguishes TWO chats: Viv/RHM (the entity, voice-first companion) and Claude Code (the builder/contractor on call).",
+    "Section 3 specifies Slice 1: runtime/ui_claude_session.py (~150 ln Agent SDK wrapper), /api/claude/start and /continue ndjson routes, a sidebar kit region, and the intent-at handoff seam.",
+    "Cites a vault Atlas doc for the Agent SDK embed recipe (ClaudeSDKClient, ClaudeAgentOptions, can_use_tool, resume=session_id).",
+    "Section 4 lists open threads including Agent SDK availability check as step 0."
+  ],
+  "standouts": [
+    "The THREE QUESTIONS frame as the claimed complete interaction set (now / point-here / why).",
+    "The 'display the RESOLUTIONS not the machinery' principle: the screen shows what the resolver produced at Tim's position.",
+    "Pulse/River/Nodes asserted as the universal altitude grammar across every subsystem, not just cognition.",
+    "Explicit plumbing-vs-presentation split: 65 /api seams, EventSource, resolveUiTarget survive; all region styling is discardable."
+  ],
+  "conventions": [
+    "Follows build-prep/brain working-doc style: dated status header, 'what is actually true on disk' grounding before design.",
+    "Heavy file-path-and-line-count citation to keep claims falsifiable.",
+    "Self-corrects a prior numeric error inline rather than versioning."
+  ],
+  "concerns": [
+    "Many capability claims are stated as fact ('built', 'real', 'proven by use') without verification traces in this doc; a reader must trust the round-4 grounding.",
+    "Dense compression and many cross-references (C7.3-C7.5, F1, R2, S0) assume a reader already holding the round-0..3 context."
+  ],
+  "notes": "If briefing someone: this is the round-4 cognition-surface synthesis that grounds the 'three questions / three altitudes' display frame and lays out the Claude-Code-side-chat Slice-1 build, all asserted against named on-disk parts.",
+  "questions": [
+    "Which of the 'built'/'real' claims are verified by execution vs. inferred from code presence?",
+    "Was Slice 1 (ui_claude_session.py + the two routes) actually built after this doc, or is it still proposal?",
+    "What are THINKING-MEMORY-IDENTITY-PRESENCE.md rounds 0-3 that this is a companion to?"
+  ],
+  "purpose_vs_actual": "Match: it states it is a research synthesis plus a thinking frame, and it delivers an on-disk inventory, a display frame, and a build slice exactly as framed.",
+  "apparent_themes": [
+    "Surface as the resolver's face, not a machinery dashboard",
+    "Universal altitude grammar (Pulse/River/Nodes)",
+    "Point-and-talk as the native interaction loop",
+    "Plumbing-permanent / presentation-disposable architecture",
+    "Two conversational partners: the entity (Viv) and the builder (Claude Code)"
+  ],
+  "intention_signals": "Trying to answer Tim's ask 'display the cognition so I can interact at my level' by reframing the surface as showing resolved answers at three altitudes governed by three questions, and to give the build a concrete shortest-honest-path first slice.",
+  "novelty": "The reduction of the whole interface to THREE QUESTIONS answered at THREE ALTITUDES, and the explicit framing of Claude Code as an in-app briefed contractor wired to the build circuit.",
+  "contribution": "Contributes the cognition-surface display doctrine (resolutions-not-machinery, three-questions, Pulse/River/Nodes), the on-disk parts inventory with line counts, and the Slice-1 Claude-Code-side-chat build spec.",
+  "summary_for_embedding": "A Track-1 round-4 build-prep synthesis grounding the on-disk cognition/resolution/canvas/Claude-Code parts and proposing a three-questions, three-altitude (Pulse/River/Nodes) display frame plus a Claude Code side-chat Slice-1 build.",
+  "intention_for_embedding": "To design how the Company surfaces cognition so Tim can interact at his level, by showing resolver answers at three altitudes and wiring an in-app Claude Code builder to the change circuit."
+}

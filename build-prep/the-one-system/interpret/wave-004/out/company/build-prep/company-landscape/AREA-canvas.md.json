@@ -1,0 +1,53 @@
+{
+  "project": "company",
+  "path": "build-prep/company-landscape/AREA-canvas.md",
+  "model": "opus",
+  "what_it_does": "An exhaustive read-only dragnet landscape (2026-06-21, evidence paths per claim) of the canvas-and-data-flow area: the canvas/ frontend (tldraw + React + Vite @ :8080), nodes/ (node-type library), projections/ (corpus lens registry), bindings/ (instrument equation-slot fillers), flows/ (production-line registry), axes/ (coordinate-axis registry), and dials/ (character-trait registry). It documents structure, contracts, full registry inventories, the map-computation pipeline, and cross-cutting gaps/patterns.",
+  "observations": [
+    "Documents canvas/ as a browser SPA (Tauri anticipated in AGENTS.md but not present in the tree) with a reflects-never-owns contract (backend authoritative, round-trip via /api/*)",
+    "One generic ai-node shape (NodeShape.tsx) serves all node-types; a new nodes/ file needs ZERO frontend code; registry store uses React 18 useSyncExternalStore with 6 module-scope fields",
+    "LatticeView.tsx (1154 lines) is THE universal projection: theta=kind/sector, r=time-from-NOW by default, color IS angle; driven by 9 bindings; live via SSE /api/stream",
+    "Full inventories given: 16+2 node-types, 11 projection lenses, 9 bindings, 8 flows, 7 axes, 2 dials — each with row-shape schema and per-row notes",
+    "Names the system's universal law: file-discovered self-registration everywhere (drop a file = add a registry entry; id MUST equal file stem)",
+    "Records render-NOT-judge (K3) for projections, fail-loud everywhere (zero-vector ZeroDivisionError, overflow ValueError), selective-emission for the gate node (branching = absence-of-write), VOLATILE marking for nodes reading mutable state",
+    "Cross-cutting gaps catalogued with file:line: viewer axis value_source pending, both dials have no consumers, common_knowledge space EMPTY, floor_walk hardcodes canvas component dir, four flows sys.path into build-prep/, ts_backfill hardcodes transcript dir, stale zz_probe pyc",
+    "Documents the map-computation pipeline end-to-end (store -> projection endpoint resolves sectors/radius -> LatticeView renders -> axes coordinate the resolver)",
+    "Notes the retrieve node got a numpy fast-path 2026-06-21 (per-item loop timed out on 44k x 2560 corpus ~112M mults)",
+    "Notes embed node is bge-m3 1024-dim @ :8001 (vs the pplx switch in sibling files — point-in-time divergence)"
+  ],
+  "standouts": [
+    "The single universal law made concrete across six independent registries (nodes/projections/bindings/flows/axes/dials) all following the same file-discovered shape",
+    "Color-IS-geometry in LatticeView: hue = sector midpoint angle, so a new registry row re-colors the screen by geometry, never by hand",
+    "Per-claim evidence paths and file:line citations throughout, making the gap list directly actionable"
+  ],
+  "conventions": [
+    "Follows the area-landscape dragnet format with What/Structure/Contracts/Gaps per module, shared with sibling AREA-*.md files",
+    "Follows registry-is-truth (add-a-row = a FILE, no code edit) as the verified bar",
+    "Follows fail-loud-everywhere and render-NOT-judge as stated invariants",
+    "Includes a cross-cutting gaps-and-surprises section with precise locations"
+  ],
+  "concerns": [
+    "Single 2026-06-21 snapshot; the fast-moving canvas/registry state could drift from this map",
+    "Documents real technical debt it cannot fix here (build-prep sys.path hardcodes in four flows, hardcoded transcript/component dirs, stale pyc)",
+    "The embed node's bge-m3 1024-dim description may already be stale given the pplx-2560 switch noted in sibling docs"
+  ],
+  "notes": "The canvas+dataflow terrain map: tldraw/React SPA over a backend-authoritative runtime, with six file-discovered registries (nodes/projections/bindings/flows/axes/dials), the LatticeView universal projection, and a precise file:line gap list.",
+  "questions": [
+    "Has the embed node been updated to the pplx-2560 layer, or is it still bge-1024 @ :8001?",
+    "Have the four flows' build-prep sys.path hardcodes been migrated to proper modules?",
+    "Has the common_knowledge projection space been populated by recollection's pilot publish yet?"
+  ],
+  "purpose_vs_actual": "Match: it sets out to exhaustively map the canvas/nodes/projections/bindings/flows/axes/dials area with evidence, and it delivers full inventories, schemas, the computation pipeline, and a located gap list.",
+  "apparent_themes": [
+    "Registry-is-truth / file-discovered self-registration as universal law",
+    "Reflects-never-owns (frontend mirrors a backend-authoritative runtime)",
+    "Render-NOT-judge separation of description from judgement",
+    "Fail-loud over silent-degradation",
+    "Color/geometry derived from registry data, not hand-set"
+  ],
+  "intention_signals": "It is trying to give builders a complete, evidence-grounded mental model of the canvas and its data-flow registries — every contract, every registry's full set and schema, the render pipeline, and exactly where the seams are wired-but-unread or hardcoded — so changes compose with the existing universal patterns.",
+  "novelty": "The LatticeView universal projection itself (one canvas equation theta=kind, r=time/semantic/separator/nucleation, color=angle, driven by swappable bindings) and the nucleation 20/80 water-law binding (cross-instance non-circular type-birth) are distinctive mechanisms documented here.",
+  "contribution": "Contributes a complete schema-and-inventory reference for the six canvas-side file-discovered registries, the LatticeView universal-projection mechanism and its binding set, the end-to-end map-computation pipeline, and a precisely located cross-cutting gap list.",
+  "summary_for_embedding": "An exhaustive evidence-grounded 2026-06-21 dragnet of the Company canvas area: a tldraw/React SPA over a backend-authoritative runtime, six file-discovered registries (16 nodes, 11 projection lenses, 9 bindings, 8 flows, 7 axes, 2 dials), the LatticeView universal projection (theta=kind, r=time/semantic, color=angle), the map-computation pipeline, and a located cross-cutting gap list.",
+  "intention_for_embedding": "To give builders a complete, located mental model of the canvas frontend and its file-discovered data-flow registries so changes compose with the universal registry-is-truth, fail-loud, render-not-judge patterns."
+}

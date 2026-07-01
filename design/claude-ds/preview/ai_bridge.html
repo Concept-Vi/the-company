@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<!-- @dsCard group="AI" name="CV_HOST — the Bridge" subtitle="Where Vi reaches the repo — pluggable runtimes, a serializer, a reviewable change queue" viewport="820x560" --><html><head><meta charset="utf-8"><title>CV_HOST — the Bridge</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 24px 28px 28px; }
+  h4 { font: 600 14px/1.3 var(--font-display); margin: 0 0 4px; color: var(--fg-primary); }
+  .lead { font: 400 12.5px/1.55 var(--font-body); color: var(--fg-secondary); margin: 0 0 16px; max-width: 66ch; }
+  .lead code, code.m { font-family: var(--font-mono); font-size: 11.5px; color: var(--accent-bronze); }
+  .env { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-radius: var(--r-lg, 12px); background: var(--bg-dark, #1F1A12); color: var(--fg-inverse, #FBF7EC); margin-bottom: 16px; }
+  .env .lbl { font: 500 10px/1 var(--font-mono); opacity: .6; letter-spacing: .08em; }
+  .env .mode { font: 700 18px/1.1 var(--font-display); }
+  .caps { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .cap { font: 600 10px var(--font-mono); padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.5); }
+  .cap.on { background: var(--accent-gold, #E0C010); color: var(--bg-dark, #1F1A12); }
+  .rt { display: grid; grid-template-columns: 14px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid color-mix(in oklab, var(--fg-primary) 9%, transparent); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 4px; }
+  .rt-name { font: 600 12.5px var(--font-body); color: var(--fg-primary); }
+  .rt-caps { font: 500 10.5px var(--font-mono); color: var(--fg-muted); margin-left: 7px; }
+  .rt-desc { font: 400 11px/1.45 var(--font-body); color: var(--fg-secondary); margin-top: 2px; }
+  .foot { margin-top: 16px; font: 400 11px/1.55 var(--font-body); color: var(--fg-muted); border-top: 1px solid color-mix(in oklab, var(--fg-primary) 9%, transparent); padding-top: 12px; }
+  .foot b { color: var(--fg-secondary); font-weight: 600; }
+  .err { font: 500 12px/1.5 var(--font-body); color: var(--status-error, #b3261e); }
+</style></head>
+<body><div class="card">
+  <h4>CV_HOST — the environment layer</h4>
+  <p class="lead">The bridge between Vi and the repository, built in the same shape as <code>CV_AI</code>: a registry of pluggable <b>runtimes</b> resolved by capability, a <b>serializer</b> that turns any registry mutation into exact source for its one home file, and a reviewable <b>change queue</b>. <code>capability-available = f(environment, runtime)</code>. Sandbox stages for review; a connected runtime writes to disk. This card is a live projection of <code>CV_HOST.describe()</code>.</p>
+  <div class="env" id="env"></div>
+  <div id="rts"></div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<script src="../app/ai/ai-registry.js"></script>
+<script src="../app/ai/ai-seed.js"></script>
+<script src="../app/ai/ai-capabilities-canvas.js"></script>
+<script src="../app/ai/host-runtime.js"></script>
+<script src="../app/ai/host-serializer.js"></script>
+<script>
+(function () {
+  var HOST = window.CV_HOST, AI = window.CV_AI;
+  var env = document.getElementById('env'), rts = document.getElementById('rts'), foot = document.getElementById('foot');
+  if (!HOST) { env.innerHTML = '<p class="err">CV_HOST failed to load.</p>'; return; }
+  var d = HOST.describe();
+  var CAP = { read: 'read', write: 'write', list: 'list', exec: 'compile', tools: 'tools' };
+
+  env.innerHTML = '<div><div class="lbl">ENVIRONMENT</div><div class="mode">' + d.modeLabel + '</div></div>' +
+    '<div class="caps">' + Object.keys(d.capabilities).map(function (k) {
+      return '<span class="cap ' + (d.capabilities[k] ? 'on' : '') + '">' + CAP[k] + '</span>';
+    }).join('') + '</div>';
+
+  rts.innerHTML = d.runtimes.map(function (r) {
+    var caps = Object.keys(r.caps).filter(function (k) { return r.caps[k]; }).map(function (k) { return CAP[k]; }).join(' · ') || 'staging only';
+    return '<div class="rt"><span class="dot" style="background:' + (r.available ? 'var(--status-success,#2E7D32)' : 'var(--border-strong,#c9bfa8)') + '"></span>' +
+      '<div><span class="rt-name">' + r.label + '</span><span class="rt-caps">' + caps + (r.available ? ' · ACTIVE' : '') + '</span>' +
+      '<div class="rt-desc">' + r.description + '</div></div></div>';
+  }).join('');
+
+  var caps = AI.query({ family: 'repo' }).map(function (c) { return c.id; });
+  foot.innerHTML = '<b>Serializers:</b> ' + d.serializers.map(function (s) { return '<code class="m">' + s.kind + '</code>→' + s.target; }).join(' · ') +
+    '<br><b>Vi repo capabilities:</b> ' + caps.map(function (c) { return '<code class="m">' + c + '</code>'; }).join(' · ') +
+    '<br>Add a runtime, serializer, or repo move = one registration. The Bridge canvas in Studio is the interactive surface; this is its read-only projection.';
+})();
+</script>
+</body></html>

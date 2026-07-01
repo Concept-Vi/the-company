@@ -1,0 +1,38 @@
+{
+  "project": "claude-ds",
+  "path": "components/Input.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration file for a React form-field component named Input. Declares the InputProps interface (extending React.InputHTMLAttributes<HTMLInputElement>) and exports the Input function component plus a default export.",
+  "observations": [
+    "Adds four props on top of the standard input attributes: as ('input' | 'textarea' | 'select', default 'input'), label, hint, and error (all React.ReactNode).",
+    "Docstring states a text input is rendered by default with a 'gold focus ring from the source composer'.",
+    "Providing label/hint/error wraps the control in a labelled .cv-field stack; omitting them yields a bare control.",
+    "error is documented to set aria-invalid and apply 'reject' styling."
+  ],
+  "standouts": [
+    "Single component covers input/textarea/select via the as prop rather than three components.",
+    "Accessibility built into the contract: error sets aria-invalid."
+  ],
+  "conventions": [
+    "Polymorphic 'as' prop pattern for choosing the rendered element.",
+    "References shared CSS classes (.cv-field) and tokens (gold focus ring) rather than inline styling — consistent with the design-system single-source model.",
+    "JSDoc on the interface and each prop."
+  ],
+  "concerns": [],
+  "notes": "The .d.ts contract for the ConceptV form-field Input — one polymorphic control (input/textarea/select) with optional label/hint/error that triggers a labelled .cv-field wrapper.",
+  "questions": [
+    "What is 'the source composer' that provides the gold focus ring (referenced, not defined here)?",
+    "How are textarea/select-specific attributes typed given the interface extends only InputHTMLAttributes<HTMLInputElement>?"
+  ],
+  "purpose_vs_actual": "Match — the docstring describes a polymorphic labelled form field and the interface declares exactly those props.",
+  "apparent_themes": [
+    "Polymorphic form control (one component, three element kinds)",
+    "Accessibility-by-contract (aria-invalid on error)",
+    "Shared-class / token styling"
+  ],
+  "intention_signals": "Aims to provide one typed, accessible form-field abstraction that can render any of the three control kinds and optionally self-wrap with label/hint/error.",
+  "novelty": "n/a",
+  "contribution": "Contributes the typed contract for the unified form field — the as union plus the label/hint/error props that drive the .cv-field wrapper and reject/aria-invalid styling.",
+  "summary_for_embedding": "TypeScript .d.ts declaring InputProps and the Input React component, a ConceptV form field that renders input, textarea, or select with optional label, hint, and error that trigger a labelled .cv-field wrapper and aria-invalid styling.",
+  "intention_for_embedding": "To define the typed contract for a single polymorphic, accessible form-field component in the design system."
+}

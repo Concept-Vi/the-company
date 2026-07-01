@@ -1,0 +1,62 @@
+[redo] start 00:14:46
+cleared 0 stale scratch files
+[redo] producing company 00:14:46
+  25/59 ok=25 fail=0 skip=0
+  50/59 ok=49 fail=1 skip=0
+{
+  "backend": "ollama",
+  "total": 59,
+  "ok": 58,
+  "fail": 1,
+  "skip": 0,
+  "fails": [
+    "guides/using-skills.py: read:[Errno 2] No such file or directory: '/home/tim/company/guides/using-skills.py'"
+  ]
+}
+[redo] producing counterpart-design 00:21:22
+  25/59 ok=22 fail=3 skip=0
+  50/59 ok=47 fail=3 skip=0
+{
+  "backend": "ollama",
+  "total": 59,
+  "ok": 56,
+  "fail": 3,
+  "skip": 0,
+  "fails": [
+    "reference/ConceptV Design System-handoff/conceptv-design-system/project/_ds_bundle.js: ollama:HTTP Error 400: Bad Request",
+    "reference/Counterpart-handoff/counterpart/project/_ds/conceptv-design-system-c8f43c46-ed08-42df-9a4e-3a23e4697262/_ds_bundle.js: ollama:HTTP Error 400: Bad Request",
+    "reference/ConceptV Design System-handoff/conceptv-design-system/project/app/canvases/Build.jsx: bad-json"
+  ]
+}
+[redo] producing claude-ds 00:27:36
+{
+  "backend": "ollama",
+  "total": 15,
+  "ok": 15,
+  "fail": 0,
+  "skip": 0,
+  "fails": []
+}
+{
+  "ingested_files": 129,
+  "bad": 0
+}
+[redo] GATE:
+{
+  "claude-ds": {
+    "remaining": 0,
+    "total": 295,
+    "done": 295
+  },
+  "company": {
+    "remaining": 1,
+    "total": 3461,
+    "done": 3460
+  },
+  "counterpart-design": {
+    "remaining": 3,
+    "total": 859,
+    "done": 856
+  }
+}
+[redo] end 00:32:15

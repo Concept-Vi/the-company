@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Pitch Deck" description="Investor/sales deck computed from the generative core — the narrative arc as content-as-data, recomputed live by the LOD / density / theme axis-dials." -->
+<helmet>
+<script src="./ds-base.js?v=3"></script>
+<style>@keyframes deckSlideIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }</style>
+</helmet>
+<div data-theme="{{ theme }}" style="background: var(--zone-ground); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; min-height: 100vh; padding: 40px clamp(16px, 4vw, 64px) 80px;">
+
+  <div style="max-width: 1280px; margin: 0 auto;">
+
+    <header style="display: flex; align-items: baseline; gap: 14px; margin: 0 0 24px; flex-wrap: wrap;">
+      <span style="font: var(--weight-semibold,600) var(--fs-caption)/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-bronze); display: inline-flex; align-items: center; gap: 8px;">
+        <span style="width: 7px; height: 7px; background: var(--accent-gold); transform: rotate(45deg); border-radius: 1px;"></span>
+        ConceptV
+      </span>
+      <span style="font: var(--weight-medium,500) var(--fs-meta)/1 var(--font-body); color: var(--ink-3);">Investor deck · computed from the generative core</span>
+      <span style="margin-left: auto; font: var(--weight-medium,500) var(--fs-caption)/1 var(--font-mono); color: var(--ink-3);">lod = {{ lod }} · density = {{ density }}</span>
+    </header>
+
+    <sc-for list="{{ slides }}" as="slide" hint-placeholder-count="4">
+      <div data-deck-slide="" data-screen-label="{{ slide.no }}" class="cv-slide-frame" style="border: 1px solid var(--zone-base-edge); box-shadow: var(--elev-2); margin-bottom: 28px;">
+        <div class="cv-slide-stage">
+          <x-import component-from-global-scope="ConceptVDesignSystem_c8f43c.Slide" archetype="{{ slide.archetype }}" content="{{ slide.content }}" register="{{ register }}" lod="{{ lod }}" density="{{ density }}" surface="slide" style="display:block;width:100%;" hint-size="1280px,720px">Loading slide…</x-import>
+        </div>
+        <span style="position: absolute; right: 16px; bottom: 12px; z-index: 3; font: var(--weight-medium,500) var(--fs-caption)/1 var(--font-mono); color: var(--ink-3); letter-spacing: 0.04em;">{{ slide.no }}</span>
+      </div>
+    </sc-for>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;register&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;custom&quot;,&quot;presenter&quot;,&quot;reader&quot;],&quot;default&quot;:&quot;custom&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;lod&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;summary&quot;,&quot;pitch&quot;,&quot;full&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;compact&quot;,&quot;comfortable&quot;,&quot;spacious&quot;],&quot;default&quot;:&quot;comfortable&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dim&quot;,&quot;dark&quot;,&quot;contrast&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  // The narrative arc as DATA (pitch-deck §7). Each slide picks an archetype
+  // and supplies its content; the generative core computes the layout. Editing
+  // the deck = editing this data — the archetype subtrees stay invariant.
+  get DECK() {
+    return [
+      { archetype: "cover", content: {
+        title: "Virtual Hubs for stakeholder-rich projects",
+        kicker: "ConceptV", image: "warm coastal-luxury interior render",
+        subtitle: "We turn architectural design files into interactive panotour experiences — built on Universal Mechanics, the engine for multi-stakeholder projects." } },
+
+      { archetype: "split", content: {
+        title: "Property design and construction is a complex undertaking",
+        visual: "stakeholder mesh → friction",
+        heading: "The problem",
+        bullets: [
+          { title: "Numerous stakeholders", text: "designers, developers, agents, suppliers, contractors.", bullet: "dot", priority: 1 },
+          { title: "Information quality drives collaboration", text: "and most of it is fragmented.", bullet: "dot", priority: 2, detail: "support" },
+          { title: "Persistent friction", text: "every handoff loses fidelity.", bullet: "leads", priority: 2, detail: "support" } ],
+        note: "The cost of that friction is enormous." } },
+
+      { archetype: "metric-band", content: {
+        title: "The consequences compound across the industry",
+        metrics: [
+          { value: "$430B", label: "per year in rework", priority: 1 },
+          { value: "30%", label: "of global construction waste", priority: 1 },
+          { value: "9.4 hrs", label: "wasted weekly per professional", priority: 2 } ],
+        note: "Median across multi-stakeholder builds." } },
+
+      { archetype: "diagram", content: {
+        title: "Vi re-routes the tangle through one hub",
+        lede: "The same entities, re-ordered: chaos becomes a clean radial system.",
+        graph: { type: "hub", center: "Vi", nodes: [
+          { id: "Vi", shape: "diamond", tone: "active" },
+          { id: "Portal", label: "User Portal", shape: "circle" },
+          { id: "Wizard", label: "Property Wizard", shape: "hex" },
+          { id: "Hubs", label: "Virtual Hubs", shape: "octagon" },
+          { id: "Files", label: "Design files", shape: "square" } ],
+          edges: ["Portal", "Wizard", "Hubs", "Files"].map(t => ({ from: "Vi", to: t, kind: "flow" })) },
+        note: "One source of truth, shaped by entity." } },
+
+      { archetype: "compare", content: {
+        title: "Current practice vs Virtual Hubs",
+        left: { title: "Current practice", bullets: [
+          "Files emailed around", "Versions drift apart", "Sign-off takes weeks" ] },
+        right: { title: "Virtual Hubs", bullets: [
+          { text: "A single live source of truth", bullet: "done" },
+          { text: "Every stakeholder sees the same thing", bullet: "done" },
+          { text: "Decisions captured in place", bullet: "done", priority: 2, detail: "support" } ] },
+        note: "Same inputs — a calmer, faster process." } },
+
+      { archetype: "stepper", content: {
+        title: "A strategic rollout, discipline by discipline",
+        steps: ["Design", "Marketing", "Sales", "Construction"], active: 1,
+        lede: "We lead with design and marketing; the accent slides along the gold→bronze ramp as each stage activates." } },
+
+      { archetype: "metric-band", content: {
+        title: "Our innovation is science-based",
+        metrics: [
+          { value: "6 years", label: "research & development", priority: 1 },
+          { value: "$1.5M+", label: "invested in IP", priority: 1 },
+          { value: "70+", label: "Virtual Hubs delivered", priority: 2 },
+          { value: "41,500+", label: "unique users", priority: 2 } ],
+        note: "100% of clients reported improved communication." } },
+
+      { archetype: "profile", content: {
+        title: "Grant brings financial and strategic support",
+        name: "Grant Plummer", role: "Chief Sales Officer", initials: "GP", shape: "circle",
+        heading: "Track record",
+        stats: [ { value: "25+", label: "years experience" }, { value: "$3B+", label: "residential sales" } ],
+        bullets: [
+          { text: "$100k invested to date", bullet: "dot", priority: 1 },
+          { text: "$800k committed by July, plus $400k ARR through GAP", bullet: "dot", priority: 2, detail: "support" } ] } },
+
+      { archetype: "terms", content: {
+        title: "$800k committed to fuel our growth",
+        panels: [
+          { title: "This round", hero: { value: "91×", label: "multiple from investing this round" },
+            bullets: ["5-year exit event goal", "$6.5M buy-back valuation in 12 months"] },
+          { title: "Series A", hero: { value: "$50M", label: "target valuation at Series A" },
+            bullets: ["$5M planned raise", "within 2 years"] } ],
+        note: "Capped cash-out option available in 12 months." } },
+
+      { archetype: "closing", content: {
+        title: "Let's talk",
+        subtitle: "Book a walkthrough of a live Virtual Hub.",
+        lines: [
+          { label: "Phone", value: "0421 849 615" },
+          { label: "Email", value: "t.geldard@conceptv.com.au" },
+          { label: "Website", value: "conceptv.com.au" },
+          { label: "Office", value: "Level 1, 235 Boundary Street, West End QLD" } ],
+        actions: ["Schedule a call", "See a hub"],
+        note: "Revit → Enscape → ConceptV." } },
+    ];
+  }
+
+  componentDidMount() {
+    // per-slide deck-active gating (REQUIREMENTS E3): each slide animates on
+    // entry, not all on mount. Base stays visible (print / no-JS / reduced-motion).
+    if (typeof IntersectionObserver === "undefined") return;
+    const reduce = !window.matchMedia || !window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
+    this._io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting && !e.target.dataset.revealed) {
+          e.target.dataset.revealed = "1";
+          if (!reduce) e.target.style.animation = "deckSlideIn .5s cubic-bezier(.16,1,.3,1) both";
+          this._io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    const attach = () => document.querySelectorAll("[data-deck-slide]").forEach((el) => this._io.observe(el));
+    requestAnimationFrame(attach); setTimeout(attach, 400);
+  }
+  componentWillUnmount() { if (this._io) this._io.disconnect(); }
+
+  renderVals() {
+    const slides = this.DECK.map((s, i) => ({
+      archetype: s.archetype,
+      content: s.content,
+      no: String(i + 1).padStart(2, "0"),
+    }));
+    const custom = (this.props.register || "custom") === "custom";
+    return {
+      slides,
+      register: custom ? undefined : this.props.register,   // presenter/reader drives lod+density+motion
+      lod: custom ? (this.props.lod || "full") : "",
+      density: custom ? (this.props.density || "comfortable") : "",
+      theme: this.props.theme || "light",
+    };
+  }
+}
+</script>
+</body>
+</html>

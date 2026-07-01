@@ -1,0 +1,47 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/G13-PATTERN-REPORT.md",
+ "model": "opus",
+ "what_it_does": "The human/lead-authored narrative report over the G13 clustering data: it summarizes the full-history mining pass (1267 exchange extracts, 100% tagged, 884 distinct tags clustered at 0.78), states that the mining validated existing standing rules rather than finding a new failure class, reports signal density (189 corrections/errors, 30 frustrations, 26 needs-tim, 21 bug-fixes), tables the top weighted patterns mapped to standing memories, and drafts two borderline-new patterns for Tim's review.",
+ "observations": [
+  "Declared 'Canonical, update-in-place'; this pass dated 2026-06-10 over the complete mined history.",
+  "Frames this as the fourth independent mining pass (13 → 39 → 173 → 1267 extracts) and reports the dominant structure stable across all four.",
+  "Top patterns table: verify-by-use (143), verify-before-claiming (50), session-limit-encounter (35), autonomous-build-wave (27), expand-dont-echo (26), build-on-existing (18), etc., each mapped to a standing memory.",
+  "Includes verbatim sample corrections from the record (e.g. 'stop sending prose updates or guessing on merge status; investigate the built work first').",
+  "Proposes (NOT mints) two patterns: 'describe-vs-request discrimination' and 'build-and-show, don't spec', each with a draft rule and a note on what existing note partially covers it.",
+  "Explains the closed loop: the history space is live/queryable, this report is the REDUCE over it, future minings update the file in place and surface new patterns as drafted rules via propose->gate.",
+  "Tail note: 700+ single-tag clusters are flow vocabulary, conservative threshold under-merges by design; suggests a future diverse-panel pass (GC7)."
+ ],
+ "standouts": [
+  "Honest headline: the mining validated standing rules and explicitly did NOT fabricate a new failure class — framed as the correct result for a mirror.",
+  "verify-by-use + verify-before-claiming are named THE dominant pattern of the collaboration by a wide weight margin.",
+  "Two borderline-new patterns are drafted but explicitly not minted, deferring to Tim's approval (propose->gate discipline)."
+ ],
+ "conventions": [
+  "Follows the vault note discipline: status line up top, dated pass, data pointer (.build/g13/clusters.json), update-in-place declaration.",
+  "Uses the propose->gate shape (draft rules awaiting Tim) rather than asserting new rules.",
+  "Cross-references standing memories and other GC components by name."
+ ],
+ "concerns": [
+  "Weight table cites '717 clusters' in the heading while the tail note references '700+ single-tag clusters' and the body says 884 distinct tags — the cluster/tag counts are stated in slightly different places and could confuse a reader skimming.",
+  "Numbers (1267, 189, weights) are point-in-time and the file is declared update-in-place, so a stale read risks treating old figures as current."
+ ],
+ "notes": "The interpretive REDUCE over G13's clusters.json — says the full mining confirmed standing rules, ranks the collaboration's patterns by weight, and drafts two new candidate rules for Tim.",
+ "questions": [
+  "How is 'update-in-place' enforced across passes — does a later mining overwrite the figures and table, or append?",
+  "What distinguishes the 717 vs 884 counts referenced here (clusters after merge vs distinct tags before)?"
+ ],
+ "purpose_vs_actual": "Match — it is the human-authored report the companion script (g13_cluster.py) explicitly defers to, and it does exactly that interpretive cross-referencing work.",
+ "apparent_themes": [
+  "Mirror that confirms rather than invents (no-fiction)",
+  "Empirical self-study of the collaboration",
+  "Propose->gate for any new rule",
+  "Pattern recurrence as evidence of taught discipline",
+  "The verify family as the central collaboration discipline"
+ ],
+ "intention_signals": "Trying to give Tim an honest, evidence-grounded picture of how the agent has been failing and being corrected, validating the standing rule set against the full record and surfacing only genuinely-new candidates for approval.",
+ "novelty": "A self-authored failure-pattern report that proudly reports NO new class found, treating non-novelty as the correct mirror outcome — and quantifies the teaching-moment density (~1 in 7 exchanges).",
+ "contribution": "Contributes the interpretive layer over the clustering data: the weighted-pattern-to-standing-memory mapping, the verbatim correction samples, the two drafted candidate rules, and the articulation of the mine->reduce->propose->gate loop.",
+ "summary_for_embedding": "A canonical update-in-place report interpreting the G13 full-history clustering (1267 extracts) that maps the collaboration's top failure patterns to standing rules and drafts two new candidate rules for Tim.",
+ "intention_for_embedding": "To honestly summarize what the complete mining of the dialogue history reveals about how the agent works with Tim, confirming existing discipline rules and proposing only genuinely-uncovered patterns for approval."
+}

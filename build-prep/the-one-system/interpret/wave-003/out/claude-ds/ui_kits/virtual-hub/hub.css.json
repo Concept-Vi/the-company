@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/hub.css",
+  "model": "opus",
+  "what_it_does": "Stylesheet for the Virtual Hub viewer kit — overlay UI layered over a full-bleed photo. It styles the full-viewport stage (with a CSS-gradient placeholder 'architectural render' background and fake floorboard/glass pseudo-elements), a vignette, a top-left brand bug + hub switcher capsule, a bottom MENU button and pop-up quick menu, a right-side info panel, a share panel, a floorplan overlay with rooms and pulsing dots, and the capture-comment popup with its tap marker. It also defines the vh-pulse keyframe animation.",
+  "observations": [
+    "Resets box-sizing globally and locks html/body/#app to full height with overflow hidden (single-screen app)",
+    ".vh-stage background is a multi-layer radial+linear gradient explicitly commented as a placeholder 'architectural render' to be replaced with a real <img> in production",
+    "::before fakes floorboards via repeating-linear-gradient; ::after fakes a glass/column shadow — both decorative cheats",
+    "Heavy use of design tokens (var(--accent-gold), var(--bg-surface), var(--r-lg), var(--shadow-modal), var(--font-display), etc.) alongside many raw rgba() literals for glassmorphism (rgba(31,26,18,.7), rgba(251,247,236,.08))",
+    "Glassmorphism throughout: backdrop-filter blur on bug, switcher, menu button, quick menu, floorplan backdrop",
+    "z-index ladder is explicit: info-panel 9, floorplan 8, bug/menu 10, quickmenu/tap-marker 11, capture 12",
+    "vh-pulse keyframe animates the active floorplan dot (opacity + scale)",
+    "Active tab and CTA use --accent-gold; bronze (--accent-bronze) used for titles/icons",
+    "Capture popup is fixed 320px wide; floorplan card 720px with max-width 90vw"
+  ],
+  "standouts": [
+    "Pure-CSS gradient 'architectural render' placeholder with fake floorboards and glass — a self-contained mockup background needing no image asset",
+    "Consistent glassmorphism token-plus-rgba treatment across all floating chrome",
+    "Explicit, documented z-index stacking order for the overlay layers"
+  ],
+  "conventions": [
+    "vh- prefix namespacing for every class; element/modifier sub-classes (.tab.active, .vh-attachment.pdf)",
+    "Follows the design-token system via var() for color/radius/shadow/type — but mixes in many raw rgba literals for translucency that have no token",
+    "Single-screen, overflow-hidden full-viewport app convention"
+  ],
+  "concerns": [
+    "Many raw rgba() literals (translucent backgrounds, borders) are not tokenised, inconsistent with the var()-based theming and a drift risk if the palette changes",
+    "Fixed pixel widths (320px capture, 360px info-panel, 720px floorplan) plus the absolute positioning may not adapt to small/mobile viewports",
+    "Decorative pseudo-element hacks (fake floorboards/glass) are presentation-only and tied to the placeholder background"
+  ],
+  "notes": "The full styling for a glassmorphic photo-overlay property viewer, including a CSS-only placeholder render background meant to be swapped for a real image.",
+  "questions": [
+    "Should the translucent rgba glass values become tokens, or are they intentionally local to this kit?",
+    "Is there a mobile/responsive variant intended given the fixed-pixel panel widths?"
+  ],
+  "purpose_vs_actual": "Header comment 'overlay UI over a full-bleed photo' matches: the file styles exactly that, with a placeholder standing in for the photo.",
+  "apparent_themes": [
+    "Glassmorphic overlay chrome over immersive media",
+    "Single-screen immersive viewer",
+    "Design-token-driven theming (partial)",
+    "Mockup self-sufficiency (no external image needed)"
+  ],
+  "intention_signals": "Aims to deliver the look-and-feel of a premium property panotour viewer — warm bronze/gold palette, frosted-glass controls floating over an architectural render — entirely in CSS for a self-contained kit.",
+  "novelty": "The fully CSS-synthesised architectural-render placeholder (gradients + fake floorboards + fake glass) substituting for a real photo in a mockup.",
+  "contribution": "Contributes the complete visual language for a glassmorphic media-overlay viewer — stacking order, frosted-glass chrome recipes, the warm bronze/gold token usage, and a CSS-only render placeholder — that a fused system could reuse for any full-bleed-media overlay surface.",
+  "summary_for_embedding": "A CSS stylesheet for a Virtual Hub property viewer rendering glassmorphic overlay chrome (brand bug, hub switcher, MENU + quick menu, info/share panels, floorplan with pulsing dots, capture-comment popup) over a CSS-gradient placeholder architectural render.",
+  "intention_for_embedding": "Built to give a premium immersive property-panotour viewer its frosted-glass, bronze/gold visual language in a self-contained, image-free kit."
+}

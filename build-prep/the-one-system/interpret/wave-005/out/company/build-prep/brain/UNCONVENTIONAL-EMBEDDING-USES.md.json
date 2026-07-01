@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/UNCONVENTIONAL-EMBEDDING-USES.md",
+  "model": "opus",
+  "what_it_does": "A conversation-capture 'ideas round' note (2026-06-11) enumerating fifteen unconventional uses of an embedding layer, grouped into six kinds, to resolve the inconsistency and intent-loss problems of a context-less, spec-less codebase. It opens with a framing inversion (Tim's utterances are truth, code is the decaying echo) and ends by naming the three highest-value sweeps.",
+  "observations": [
+    "Opens with Tim's verbatim ask for 'heaps of ideas, different kinds.'",
+    "States a load-bearing framing inversion: conventionally code is truth and docs decay; HERE Tim's utterances are truth and code is the decaying echo, so the primary embedding axis is utterance<->artifact, not doc<->code.",
+    "Organizes 15 numbered ideas under six 'Kinds': dissolving inconsistency, reuniting intent with implementation, cold sessions stop being cold, verification without specifications, speaking at Tim's altitude, structure that grows itself.",
+    "Kind 2 is flagged 'the deepest vein' and includes #4 THE PROMISE LEDGER (Tim-utterance-of-wanting with no implementation match = undelivered promise), called 'likely the single highest-value sweep available.'",
+    "Several ideas reference existing system patterns parenthetically (built-twice radar, M3 corroboration, incomplete-work law, ai_tics inversion, the wire's scope-derivation).",
+    "#12 semantic addressing example: 'the breathing circle thing' -> ui://cognition/pulse, pointing by description not canonical names.",
+    "Closing 'thread' names the embedding layer as connective tissue replacing a long-tenured engineer's familiarity, and identifies a STRUCTURAL THREE: #4 promise ledger, #7 boot-by-similarity, #9 collision detection."
+  ],
+  "standouts": [
+    "The framing inversion that utterances are truth and code is the decaying echo, making utterance<->artifact the primary embedding axis.",
+    "The PROMISE LEDGER (#4) — embedding wants against implementations to emit the undelivered-promise list.",
+    "The STRUCTURAL THREE called out as the head-on attack on 'no one knows everything built.'"
+  ],
+  "conventions": [
+    "Follows the conversation-capture note style: Tim's ask quoted up front, a bold load-bearing framing, numbered ideas with parenthetical links to prior system concepts.",
+    "Uses the vault habit of naming a small high-priority subset at the end rather than ranking the whole list.",
+    "Very terse — a brainstorm capture, not an expanded spec; companion to TOTAL-PROCESSING-PIPELINES.md."
+  ],
+  "concerns": [],
+  "notes": "A compact brainstorm of 15 embedding-powered sweeps (across six kinds) for a spec-less, inconsistent estate, anchored by the utterances-are-truth inversion and the promise ledger as the top sweep.",
+  "questions": [
+    "Which of these 15 ideas were carried into the TOTAL-PROCESSING-PIPELINES spec versus left as raw ideas?",
+    "Has the promise ledger (#4) actually been built or run?",
+    "What threshold/method governs the auto-proposed relations (#14)?"
+  ],
+  "purpose_vs_actual": "Matches — it is an explicit ideas round and delivers a wide spread of distinct embedding-use ideas without committing to implementation, exactly as the ask requested.",
+  "apparent_themes": [
+    "Utterances-as-truth, code-as-echo",
+    "Reuniting intent with implementation via meaning-search",
+    "Embeddings as connective tissue replacing institutional familiarity",
+    "Speaking/pointing at Tim's altitude (semantic addressing)",
+    "Self-growing structure (auto-proposed relations, idea genealogies)"
+  ],
+  "intention_signals": "Trying to generate the full breadth of ways an embedding layer can compensate for the absence of specs, plans, shared context, and human review — surfacing candidates so the highest-value ones (the structural three) can be prioritized.",
+  "novelty": "The promise ledger and idea-genealogy framings, and the inversion making Tim's utterances the embedding ground truth rather than code or docs.",
+  "contribution": "Contributes a catalogued idea-space of fifteen embedding uses across six kinds, the utterances-are-truth framing, and the named structural-three priority set (promise ledger, boot-by-similarity, collision detection).",
+  "summary_for_embedding": "A brainstorm note listing fifteen unconventional embedding uses across six kinds (concept unification, promise ledger, intent triangulation, boot-by-similarity, done-ness-as-proximity, semantic addressing, auto-proposed relations, idea genealogies) to resolve a spec-less inconsistent estate, framed on utterances-as-truth.",
+  "intention_for_embedding": "To enumerate, without ranking the whole set, the many ways an embedding layer can replace missing specs and institutional memory and to flag the three highest-value sweeps."
+}

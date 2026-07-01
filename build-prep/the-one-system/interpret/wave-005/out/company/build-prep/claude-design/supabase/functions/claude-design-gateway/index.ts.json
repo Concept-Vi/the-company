@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/functions/claude-design-gateway/index.ts",
+  "model": "opus",
+  "what_it_does": "A Supabase Deno edge function acting as a thin OAuth-facing MCP gateway: it serves OAuth protected-resource discovery, returns 401 with a WWW-Authenticate pointing at its own discovery when no Bearer token is present, and forwards authenticated /mcp POST requests verbatim to the backend box (remote.py over a Tailscale Funnel), passing the box's response straight back.",
+  "observations": [
+    "Reads SUPABASE_URL (auto-injected) and an overridable COMPANY_BACKEND_URL, defaulting to a Tailscale Funnel host (workstation001.tail777bc2.ts.net) with trailing slashes stripped.",
+    "Handles four path suffixes: /.well-known/oauth-protected-resource (discovery JSON), /healthz (status), /mcp (the forwarder), and a 404 fallback for unknown paths.",
+    "Discovery returns resource = this gateway's /mcp URL, authorization_servers = origin/auth/v1, bearer_methods_supported = ['header'].",
+    "For /mcp: GET returns 405, non-POST returns 404, missing/invalid Bearer returns 401 with WWW-Authenticate resource_metadata.",
+    "Forwards request body and Authorization header to BACKEND_URL/mcp; on fetch failure returns 502 with the error message.",
+    "If the upstream box returns 401, the gateway rewrites WWW-Authenticate to re-point at its own discovery URL so the app re-auths against the correct resource.",
+    "Comments explicitly state the gateway does NO tool logic, holds NO tool list, makes NO access decision; the box re-validates the JWT and owns the tool registry and posture filter.",
+    "Comments note deletion of clients.allowed_tools (15-tool column) and the gateway's own dispatch(), to avoid duplicated menu/auth.",
+    "Serves via Deno.serve with configurable PORT (default 8000) and HOST (default 127.0.0.1)."
+  ],
+  "standouts": [
+    "Explicit single-brain architecture: the gateway is deliberately a forwarder while the box (remote.py) owns auth, the tool registry, and the identity-to-posture access filter.",
+    "401 re-pointing on upstream 401 keeps the app's OAuth bound to the stable cloud resource even though real validation happens at the box."
+  ],
+  "conventions": [
+    "Uses small helper functions (json, publicOrigin) and a single handler dispatched by pathname suffix.",
+    "Treats the backend Funnel URL as a public address, not a secret, so no extra gateway secrets are needed.",
+    "Documents a deliberate de-duplication: removing duplicated tool list and auth decision from the gateway layer."
+  ],
+  "concerns": [
+    "Routing matches on url.pathname.endsWith(...), which could match unintended longer paths that happen to end with these suffixes.",
+    "publicOrigin() returns SUPABASE_URL directly with no fallback validation; if SUPABASE_URL is empty the discovery and 401 URLs would be malformed."
+  ],
+  "notes": "A deliberately brainless OAuth/MCP cloud door: serves discovery, demands a Bearer token, and forwards everything to the box which does the real auth, tool listing, and dispatch.",
+  "questions": [
+    "What posture/identity rules does the box apply (the comment mentions operator gets all 66 tools, other valid users get a posture-safe subset) — those rules are not in this file?",
+    "Is the trailing-suffix path matching ever a risk given Supabase's function URL prefixing?"
+  ],
+  "purpose_vs_actual": "Matches: the header describes a thin OAuth-facing forwarder that holds no tool logic or auth decision, and the code implements exactly discovery, 401-bootstrap, and verbatim forwarding.",
+  "apparent_themes": [
+    "One brain / single source of truth for auth and tools",
+    "Stable cloud OAuth resource decoupled from the real backend",
+    "Eliminating duplicated authorization decisions and tool menus"
+  ],
+  "intention_signals": "Tries to satisfy the OAuth requirement that the resource live at a stable cloud URL while keeping all real logic (JWT validation, tool registry, posture filtering, dispatch) in one place on the box, so the cloud layer can never drift into a second, conflicting authority.",
+  "novelty": "The intentional reduction of an edge function to a pure forwarder, with comments documenting what was deleted to prevent duplication, is unusual and architecturally explicit.",
+  "contribution": "Contributes the stable cloud OAuth resource endpoint and the discovery + 401-bootstrap + verbatim-forwarding behavior that bridges the app's OAuth to the box backend without holding any auth or tool state.",
+  "summary_for_embedding": "A Supabase Deno edge function that serves OAuth protected-resource discovery and forwards authenticated MCP POST requests verbatim to a Tailscale-Funnel backend box, holding no tool logic or auth decision itself.",
+  "intention_for_embedding": "To provide a stable cloud OAuth resource door for the Claude Design connector while keeping all real authentication, tool registry, and access decisions on the single backend box."
+}

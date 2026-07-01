@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-B6-twin-desktop.json",
+  "model": "opus",
+  "what_it_does": "Records the grounding-batch result for the B6-twin-desktop.html mockup (the 'Twin' / 'Model of Tim' dashboard): a 'ground' summary, counts (56 candidates/56 dossiers/31 clusters), and 6 confirmed vs 25 flagged UI-element dossiers, each with a ui:// address, capabilities, grounding state, plain-language howto, feature mapping, and accuracy-jury verdict.",
+  "observations": [
+    "Screen is a Twin technical dashboard centered on the 'Model of Tim' content node treated as a volatile real-time grading reference.",
+    "Recurring concepts in dossiers: volatile content node, provenance grading, echo-guard, single-origin, cold-start, no-confidence-by-law.",
+    "An echo-guard element encodes the rule 'source must never equal twin' so the model never trains on its own output.",
+    "A 'no confidence' element encodes a principle: no confidence score is shown by law, the meter is deliberately absent.",
+    "A 'cold-start' element states the mechanism is live but the twin does not yet predict Tim's decisions, pending corpus ingestion (D8).",
+    "Only 6 of 56 confirmed; the large majority (25 clusters incl. a 15-member grading cluster and an 11-member set) flagged.",
+    "One dossier (ui://chat/status) hits a Layer-1 deterministic refcheck failure: maps_to_feature 'RHM-status' is not an inventory id nor 'proposed' (feature fabrication).",
+    "howto.how_to_change points at suite.py:training_signal, suite.py:chat, NodeShape.tsx, RhmChat.tsx, App.tsx.",
+    "Two dossiers share the address ui://twin/addresses.json with different represents and grounding.",
+    "Grading dossier notes every chat turn the operator writes is graded gold and feeds the training signal."
+  ],
+  "standouts": [
+    "Echo-guard (source != twin) is the strongest self-distinct contribution: a hard rule against self-training, modeled as a UI element.",
+    "'No confidence by law' — deliberate absence of a confidence meter as a stated principle.",
+    "Heavily flagged (25 of 31 clusters), the lowest confirm ratio in this batch.",
+    "A Layer-1 refcheck (feature fabrication) appears here, distinct from the soft accuracy-jury flags."
+  ],
+  "conventions": [
+    "Same confirmed/flagged + two-layer (refcheck floor, accuracy jury) grading as sibling rg10 files.",
+    "ui:// addressing across toolbar/presence, chat, canvas, twin, system, run, tabbar namespaces.",
+    "Some maps_to_feature values are literally 'proposed' rather than an inventory id, which the refcheck explicitly permits."
+  ],
+  "concerns": [
+    "Duplicate address ui://twin/addresses.json with two different dossiers within the same file.",
+    "Feature fabrication detected for ui://chat/status ('RHM-status' not in inventory).",
+    "Very high flag rate suggests many described twin elements are not yet grounded in built code.",
+    "maps_to_feature 'RHM-twin' spans many distinct represents values (grading, digest, voice, guards, single-origin, no-train)."
+  ],
+  "notes": "The most-flagged file in this batch: a Twin/Model-of-Tim dashboard inventory where only 6 of 56 elements pass the jury and one element fails the deterministic feature-fabrication check.",
+  "questions": [
+    "Is the duplicate ui://twin/addresses.json address intentional (two views) or a collision to dedupe?",
+    "Why is the bulk of the twin dashboard ungrounded — is the twin mostly proposed/not-yet-built at this point?",
+    "What inventory defines valid maps_to_feature ids that the refcheck validates against?"
+  ],
+  "purpose_vs_actual": "Matches: declared as a grounding result for the twin desktop mockup and that is its content.",
+  "apparent_themes": [
+    "A self-model ('Model of Tim') as a volatile grading reference",
+    "Provenance discipline: single-origin, echo-guard, no self-training",
+    "Epistemic humility encoded in UI (no confidence meter, explicit cold-start)"
+  ],
+  "intention_signals": "It appears to be verifying which parts of the Twin dashboard are actually grounded in built code versus aspirational, while capturing the twin's governing rules (echo-guard, single-origin, no-confidence, cold-start) as addressable elements.",
+  "novelty": "Models a learning self-twin with explicit anti-self-training guards and a lawful refusal to display confidence, and grades the whole dashboard for code-grounding.",
+  "contribution": "Contributes the Twin/Model-of-Tim dashboard element inventory — volatile grading node, echo-guard, single-origin, cold-start, no-confidence — with addresses, howtos, and two-layer grounding verdicts including a feature-fabrication catch.",
+  "summary_for_embedding": "Grounding-batch JSON for the Twin/Model-of-Tim desktop mockup, listing 56 clustered UI dossiers (volatile grading node, echo-guard, single-origin, cold-start) with 6 confirmed and 25 flagged via a two-layer refcheck-plus-jury grading.",
+  "intention_for_embedding": "To determine which Twin-dashboard controls are grounded in built code and to capture the twin's provenance rules, flagging ungrounded or fabricated mappings for review."
+}

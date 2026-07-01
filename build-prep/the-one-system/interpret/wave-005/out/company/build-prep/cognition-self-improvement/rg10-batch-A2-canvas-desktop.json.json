@@ -1,0 +1,44 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-A2-canvas-desktop.json",
+  "model": "opus",
+  "what_it_does": "A grounding-confirmation result record for the 'A2-canvas-desktop.html' mockup (the 'Running Chain' canvas workspace). It lists 31 candidate UI-element dossiers clustered into 17 clusters, then sorts representative dossiers into 'confirmed' (7) and 'flagged' (11) by a multi-layer verdict pipeline (refcheck floor + a 3-draw accuracy jury). Each dossier carries an addressable ui:// id, capabilities, grounding state, a how-to/what/what-you-can-do triple, a maps_to_feature inventory id, and a represents label.",
+  "observations": [
+    "Top-level 'ground' block gives a plain-language 'what_this_is' / 'what_you_can_do' summary of the whole screen.",
+    "Counts: n_candidates=31, n_dossiers=31, n_clusters=17; clustering reduces candidates into representative dossiers with cluster_members index lists.",
+    "Two verdict layers are named in 'reasons': Layer 1 'refcheck (deterministic floor)' and Layer 2 'accuracy jury (SOFT — variance not error)' with a 3-draw grounded/ungrounded vote.",
+    "refcheck flags 'feature fabrication' when maps_to_feature is neither an inventory id nor 'proposed' (e.g. RUN-force, CAN-modes).",
+    "ui://canvas/tabbar passed the jury unanimously (3/0) yet is FLAGGED solely on the refcheck floor for fabricated feature 'CAN-modes' — shows the deterministic floor can override a passing jury.",
+    "Each dossier distinguishes grounding 'built' (points to real code regions like Toolbar.tsx, Footer.tsx, NodeShape.tsx) vs 'proposed' (mockup-only, no code path).",
+    "Addresses use a ui:// scheme with region paths like ui://toolbar/presence, ui://canvas/memo-gate."
+  ],
+  "standouts": [
+    "The SOFT-jury framing: 'variance not error' — non-quorum is treated as something for operator scrutiny rather than a failure.",
+    "A unanimous jury pass can still be FLAGGED by the deterministic refcheck floor (tabbar/CAN-modes case).",
+    "memo-gate and force recur as the conceptual spine — caching/skip-on-unchanged-hash and force-past-memo."
+  ],
+  "conventions": [
+    "Follows the dossier schema: address, capabilities[], grounding, howto{how_to_change,what,what_you_can_do}, maps_to_feature, represents.",
+    "Capability vocabulary is consistent across files: pointable, spotlit, presentable, openable, driven.",
+    "Feature ids namespaced by domain prefix (RUN-, CAN-, NODE-, INB-, WIRE-, ENG-).",
+    "Every confirmed/flagged entry repeats the parent 'mockup' filename."
+  ],
+  "concerns": [],
+  "notes": "This is one mockup's element-grounding ledger: which addressable UI dossiers passed the floor+jury (confirmed) vs need operator eyes (flagged), with code-region pointers for the built ones.",
+  "questions": [
+    "What inventory defines the legal maps_to_feature ids that refcheck validates against?",
+    "Why is the SOFT jury quorum threshold set where a 1-of-3 grounded vote fails but a 2-of-3 passes?"
+  ],
+  "purpose_vs_actual": "Matches: the file is a confirmation-batch output and its contents are exactly clustered dossiers with confirm verdicts.",
+  "apparent_themes": [
+    "Addressable UI elements (ui:// scheme) as first-class grounded objects",
+    "Multi-layer verification: deterministic floor + probabilistic jury",
+    "Honesty about built-vs-proposed grounding",
+    "Operator-in-the-loop scrutiny for low-confidence items"
+  ],
+  "intention_signals": "Trying to verify, element by element, that each mockup affordance is truthfully grounded in real code/features (or honestly marked proposed), and to surface anything uncertain for human review rather than silently asserting it.",
+  "novelty": "The dual-gate verdict where a hard refcheck floor can veto a unanimously-passed soft jury; the 'variance not error' framing of jury disagreement.",
+  "contribution": "Contributes the per-element grounding verdicts and code-region pointers for the canvas-desktop 'Running Chain' surface, plus the dual-layer confirm schema (refcheck floor + soft jury) that a fused system would keep for adjudicating UI-element groundedness.",
+  "summary_for_embedding": "Grounding-confirmation batch for the A2 canvas-desktop 'Running Chain' mockup: 31 candidate UI dossiers clustered to 17, sorted into confirmed vs flagged by a refcheck floor plus a 3-draw accuracy jury.",
+  "intention_for_embedding": "To verify that each addressable UI element of the canvas-desktop mockup is honestly grounded in real code/features and to flag uncertain ones for operator review."
+}

@@ -1,0 +1,54 @@
+{
+  "project": "claude-ds",
+  "path": "DESIGN-LANGUAGE.md",
+  "model": "opus",
+  "what_it_does": "The codified design-language document for the ConceptV Design System — the cross-cutting rules every screen obeys, the intent behind the tokens. It states ~18 numbered laws covering multi-surface authoring, responsive/computed sizing, choreographed motion, visual-first design, depth/texture, colour discipline (two saturated voices), theme modes, density, composition primitives, loading-as-resolve, authorship legibility, exports-as-surfaces, the one-home anti-drift law, AI-as-registry, the CV_HOST repo bridge, narrative title-chain architecture, universal components (slots/sockets), and the Axes registry.",
+  "observations": [
+    "Section numbering is irregular (jumps 16 then 18 then 17 at the end) suggesting append-as-discovered growth.",
+    "Section 1: three canonical surfaces (desktop 1440x900, mobile portrait 390x844, mobile landscape 844x390, optional tablet), 'author once present many', 44px touch-min, safe-area insets.",
+    "Section 2 bans content-only sizing: fluid type clamps, .min0 + .truncate/.line-clamp, .pill-group, .auto-grid, .measure.",
+    "Section 3 motion: enter/exit/move via View Transitions or FLIP, .stagger waves, gated by prefers-reduced-motion.",
+    "Section 6 colour discipline: exactly two saturated voices — gold (--accent-gold/--vi-* = active/decision) and sage-green (--accent-communication/--comm-* = communication/relationship), structure is bronze, success is a state not a voice; clean<->warm ground knob (data-ground).",
+    "Section 9 composition: layouts are content-as-data, pure function content->CVNode tree via Slide/Archetypes and the block solver; new atom is a registered renderer (ContainmentTree.registerAtom).",
+    "Section 13 the anti-drift law: four single-source registries (tokens, types via CV_REGISTRY, engine solvers, AI via CV_AI), one home per concept.",
+    "Section 14 AI-as-registry: providers/behaviours/skills/capabilities/context; ai = f(capability, context, params) mirroring design = f(content, axis); 43 capabilities across 14 families.",
+    "Section 15 the Bridge CV_HOST: fifth registry, runtimes review/fsapi/native, a serializer turning mutations into exact source, repo.*/ds.propose/ds.apply as CV_AI capabilities, sandbox-review staging.",
+    "Section 16 narrative title-chain: slide titles chain into one running sentence via leading connectives, deck Type carries titleChain intent, section breaks full-bleed photo dividers, cover/closing are the live product surface.",
+    "Section 18 universal components: Type declares parts/value-slots/sockets/conditions via CV_COND; candidatesForSocket; interface is a projection; 94 Types live.",
+    "Section 17 (last) Axes: sixth registry CV_AXES (Colour/Space/Size/Motion/Texture/Depth/Fill/Form/Symbol + Meaning over them); tokens ARE the axis value-units; components subscribe to axes."
+  ],
+  "standouts": [
+    "design = f(content, axis), ai = f(capability, context, params), capability-available = f(environment, runtime) — the same generative shape applied across six registries.",
+    "The one-home anti-drift law as the central organizing principle binding tokens/types/engine/AI/host/axes.",
+    "The corpus-proven narrative title-chain rule (titles parse as one paragraph: problem->thesis->mechanism->proof->moat->ask).",
+    "Exactly two saturated voices (gold, sage-green) with bronze as structure — a strict semantic colour discipline."
+  ],
+  "conventions": [
+    "Self-describing doc kept in lockstep with code (CLAUDE.md mandates DESIGN-LANGUAGE.md updated when a rule is added).",
+    "No-versioning/grows-in-place style; sections appended as principles are discovered.",
+    "Every rule pointed at its token/registry home and its spec/analysis companion doc.",
+    "No ranking language; principles named, not ordered."
+  ],
+  "concerns": [
+    "Section numbering is out of order (16, 18, 17 at the end) which can mislead a reader scanning by number.",
+    "States 'this layer — done' for foundation tokens and '43 capabilities'/'94 Types' as point-in-time counts that can drift from the live registries."
+  ],
+  "notes": "The intent-behind-the-tokens charter: ~18 cross-cutting laws making the whole system one generative, single-sourced, multi-surface, anti-drift design language across six registries.",
+  "questions": [
+    "Why does the section numbering jump (16 then 18 then 17) — is the order significant or an artifact of growth?",
+    "Are the stated counts (43 capabilities, 94 Types, 'done' foundation layer) kept in sync with the live registries or snapshots?"
+  ],
+  "purpose_vs_actual": "Match — the doc states it is the how-we-design intent behind the tokens and delivers exactly that as a set of binding cross-cutting laws.",
+  "apparent_themes": [
+    "One home per concept / anti-drift",
+    "Generative f(content, axis) shape repeated across registries",
+    "Multi-surface, computed, never hand-laid-out",
+    "Visual-first, motion-choreographed, semantic colour",
+    "Self-describing system kept in lockstep with code"
+  ],
+  "intention_signals": "Codify the entire ConceptV design philosophy as a coherent, single-sourced, generative system of registries so that every screen, deck, and AI move is computed from one home and nothing drifts — and so a fresh agent inherits the intent, not just the tokens.",
+  "novelty": "The unification of six same-shaped registries (tokens, types, engine, AI, host bridge, axes) under one generative function form, plus the corpus-proven narrative title-chain law and the two-voice colour discipline.",
+  "contribution": "Contributes the authoritative statement of the design-language laws and the registry/axis vocabulary that a fused system would keep as its design intent and anti-drift contract.",
+  "summary_for_embedding": "A design-language markdown codifying ~18 cross-cutting ConceptV rules — multi-surface authoring, computed layout, choreographed motion, two-voice colour, six single-source registries (tokens/types/engine/AI/host/axes), narrative title-chains, and universal slot/socket components.",
+  "intention_for_embedding": "To codify the intent behind the tokens as a single generative, single-sourced, anti-drift design system so every surface and AI move is computed from one home."
+}

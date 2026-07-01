@@ -1,0 +1,101 @@
+/* ============================================================
+   ConceptV · MOTION LANGUAGE  —  "nothing teleports"
+   ------------------------------------------------------------
+   Core rule: elements MOVE on and off — they never flash in or
+   snap away. A state or page change is a choreographed exit +
+   entrance, not a refresh. Things travel; they don't blink.
+
+   Three primitives cover almost everything:
+     • ENTER  — arrive from off-frame / collapsed, decelerating in
+     • EXIT   — leave toward off-frame, accelerating out
+     • MOVE   — reposition smoothly between two states (FLIP / VT)
+
+   All values are tokens so the "feel" is tunable in one place, and
+   everything is gated behind prefers-reduced-motion.
+   ============================================================ */
+:root {
+  /* ---- Durations (extends colors_and_type.css dur-fast/base/slow) */
+  --dur-instant:    90ms; /* @kind other */
+  --dur-quick:     160ms; /* @kind other */
+  --dur-move:      280ms; /* @kind other */
+  --dur-enter:     360ms; /* @kind other */
+  --dur-exit:      240ms; /* @kind other */
+  --dur-page:      480ms; /* @kind other */
+
+  /* ---- Easings — entrances decelerate, exits accelerate ----- */
+  --ease-entrance:  cubic-bezier(0.16, 1, 0.30, 1); /* @kind other */
+  --ease-exit:      cubic-bezier(0.55, 0, 1, 0.45); /* @kind other */
+  --ease-emphasized:cubic-bezier(0.2, 0, 0, 1); /* @kind other */
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1); /* @kind other */
+
+  /* ---- Travel distances — how far things move ----------------*/
+  --move-xs:  8px;
+  --move-sm: 16px;
+  --move-md: 32px;
+  --move-lg: 64px;
+  --move-off: 120%;        /* fully off its own frame */
+
+  /* ---- Stagger — for lists/grids arriving as a wave ----------*/
+  --stagger-step: 55ms; /* @kind other */
+  --stagger-max:  10; /* @kind other */
+}
+
+/* ============================================================
+   ENTER / EXIT PRIMITIVES
+   Add an .enter-* class as content mounts; .exit-* before it
+   unmounts (remove on animationend). Direction suffix = where it
+   comes FROM (enter) or goes TO (exit).
+   ============================================================ */
+@keyframes cvEnterUp   { from { opacity: 0; transform: translateY(var(--move-md)); }  to { opacity: 1; transform: none; } }
+@keyframes cvEnterDown { from { opacity: 0; transform: translateY(calc(-1 * var(--move-md))); } to { opacity: 1; transform: none; } }
+@keyframes cvEnterLeft { from { opacity: 0; transform: translateX(var(--move-md)); }  to { opacity: 1; transform: none; } }
+@keyframes cvEnterRight{ from { opacity: 0; transform: translateX(calc(-1 * var(--move-md))); } to { opacity: 1; transform: none; } }
+@keyframes cvEnterScale{ from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+
+@keyframes cvExitDown  { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(var(--move-md)); } }
+@keyframes cvExitUp    { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(calc(-1 * var(--move-md))); } }
+@keyframes cvExitLeft  { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(calc(-1 * var(--move-md))); } }
+@keyframes cvExitRight { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(var(--move-md)); } }
+
+.enter-up    { animation: cvEnterUp    var(--dur-enter) var(--ease-entrance) both; }
+.enter-down  { animation: cvEnterDown  var(--dur-enter) var(--ease-entrance) both; }
+.enter-left  { animation: cvEnterLeft  var(--dur-enter) var(--ease-entrance) both; }
+.enter-right { animation: cvEnterRight var(--dur-enter) var(--ease-entrance) both; }
+.enter-scale { animation: cvEnterScale var(--dur-enter) var(--ease-entrance) both; }
+
+.exit-down   { animation: cvExitDown   var(--dur-exit) var(--ease-exit) both; }
+.exit-up     { animation: cvExitUp     var(--dur-exit) var(--ease-exit) both; }
+.exit-left   { animation: cvExitLeft   var(--dur-exit) var(--ease-exit) both; }
+.exit-right  { animation: cvExitRight  var(--dur-exit) var(--ease-exit) both; }
+
+/* Stagger — set --i (0-based index) on each child of a .stagger row. */
+.stagger > * { animation-delay: calc(min(var(--i, 0), var(--stagger-max)) * var(--stagger-step)); }
+
+/* ============================================================
+   MOVE (reposition) — never teleport between layouts
+   ------------------------------------------------------------
+   Two supported mechanisms:
+   1. View Transitions API (best): give persistent elements a
+      view-transition-name and wrap state changes in
+      document.startViewTransition(() => { …mutate DOM… }).
+   2. FLIP fallback: measure first/last rects, set a reversed
+      transform, then transition it to none with --ease-emphasized
+      over --dur-move. (A helper component will wrap this.)
+   The .moves class marks elements that participate in MOVE. */
+.moves { transition: transform var(--dur-move) var(--ease-emphasized),
+                     opacity   var(--dur-move) var(--ease-emphasized); }
+
+::view-transition-group(*) { animation-duration: var(--dur-page); }
+::view-transition-old(root),
+::view-transition-new(root) { animation-timing-function: var(--ease-emphasized); }
+
+/* ============================================================
+   ACCESSIBILITY — honour reduced motion. Content still appears;
+   it just doesn't travel.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .enter-up,.enter-down,.enter-left,.enter-right,.enter-scale,
+  .exit-down,.exit-up,.exit-left,.exit-right { animation-duration: 1ms; }
+  .moves { transition-duration: 1ms; }
+  ::view-transition-group(*) { animation-duration: 1ms; }
+}

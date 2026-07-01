@@ -1,0 +1,65 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/AXIS-REFACTOR.md",
+  "model": "opus",
+  "what_it_does": "The master-scope plan (and status log) for the universal axis-system refactor: it states the principle that every primary visual axis (colour, space, size, motion, texture, depth, fill, form, symbol, meaning) becomes its own first-class typed registry, that tokens ARE the value-units on each axis, and that every component slot becomes a SUBSCRIPTION to an axis. It defines the shared CV_AXIS shape and the CV_AXES registry, lists the axes and their planned homes/status, gives a build order, records do-not-lose carried scope, an autonomy note, and a detailed reverse-chronological STATUS LOG of what was built and verified.",
+  "observations": [
+    "Principle: each primary axis is a dedicated hierarchical typed registry of values; everything resolves its value of that axis from that system — no axis is owned by a consumer (Motion is not 'glyphic motion'; a Glyphic is one consumer subscribing to the Motion axis).",
+    "Generalises the Glyphic facet model: a facet was already 'an axis value resolved from a single source'; now each source becomes a first-class Axis with one shared shape, and slot declarations become subscriptions (+ value subset, under conditions).",
+    "Tokens ARE the value-units (attributed to Info, slice 60): an axis does not wrap over tokens — the tokens are the typed units of value; a value's `token` is its canonical identity, resolveCSS() returns var(--token), the literal stays in its stylesheet home.",
+    "Anti-drift mandate applied to axes: one home per axis; consumers hold references/subscriptions never copies; no hardcoded per-consumer value tables; loud fail on missing axis/value; the interface is a projection of the axis registries.",
+    "Shared CV_AXIS shape mirrors CV_REGISTRY/CV_AI/CV_MEANING: register/resolve/list/query/subscribe, hierarchy (group→subgroup→value via parent/group), values(), groups(), resolveCSS(), default, meta; each axis registered in a top-level CV_AXES registry; a subscription is {axis, values?|groups?, default, conditions?} with candidates(subscription) → allowed values.",
+    "Axis table lists homes/sources/status: foundation axis-core.js (CV_AXIS/CV_AXES), Motion, Colour, Space, Size, Form (CV_SHAPES.geom), Texture, Depth (--elev-*), Fill, Symbol (CV_ICONS), Meaning (reconcile CV_MEANING) — Symbol carries intrinsic meaning, Meaning is the contextual/loadable layer.",
+    "Build order (8 steps): axis-core factory → Motion axis first (live pain point, port 8 glyphic motions, delete hardcoded ownership) → refactor Glyphic to subscriber → stand up other axes wrapping existing single sources → update slot declarations → directory restructure into axes/ → reconcile consumers + load order (check_design_system clean each time) → docs in lockstep.",
+    "DO-NOT-LOSE carried scope: Foundry conversational UI (propose→feedback→click→iterate→Save) + glyphic.generate/save capabilities; consumer convergence (brand_shapes/brand_vi/components_box_variants → CV_GLYPHIC.render); §7 open questions awaiting Info/Tim (naming, facet set, Form-axis ends, meaning vocabularies, taxonomy depth); event-sockets/addresses/conditions partially declared, no full condition engine yet; slot/socket conditions as strings with no evaluator yet.",
+    "Autonomy note: Info/Tim will not comment until fully implemented; the author adds to scope anything found that needs merging (else it becomes 'a part of the system that is not part of the system'); use the questions tool only to BATCH genuinely-blocking options.",
+    "STATUS LOG (newest first) records slice 61 (universal grammar completion + total component coverage: CV_COND condition evaluator, event-sockets+addresses, all 10 UI components + Glyphic registered as Types with axis-subscription slots, type-system.html projection of 94 Types, glyphic-foundry.html conversational UI verified generate→render→save 126→127, check clean) and slice 60 (axes/ foundation + all 9 axes built & verified: motion glow→mo-glow, color gold→var(--accent-gold), size md→var(--size-md)+40px, symbol 126 values; motion de-owned from Glyphic; slots→subscriptions; meaning reconciled; legacy value-source libs kept in assets/icons rather than moved).",
+    "Records a deliberate non-move: legacy cv-shapes/cv-icons/cv-glyphics/cv-meaning stay in assets/icons/ because moving them breaks ~20 card refs for no single-source gain (they are already the one home) — documented, not drift."
+  ],
+  "standouts": [
+    "Promotes 'a facet' to 'a first-class Axis' and 'a component slot' to 'a subscription to an axis' — a generalisation that makes the whole engine resolve every visual value through an axis.",
+    "The clarification that tokens ARE the value-units of an axis (not wrapped by it) — keeping the token system core rather than superseded.",
+    "Anti-drift mandate restated for axes: one home, subscriptions not copies, loud fail on missing axis/value, interface = projection.",
+    "Explicit reasoning to NOT move legacy libs because it would break ~20 refs for no single-source gain — a drift/churn trade-off decided and documented.",
+    "An autonomy note that the author proceeds without sign-off and absorbs found scope so nothing becomes 'part of the system that is not part of the system'."
+  ],
+  "conventions": [
+    "Registry-is-truth / one-home-per-axis (mirrors CV_REGISTRY / CV_AI / CV_MEANING APIs deliberately).",
+    "Subscriptions not copies (consumers reference axis values; no per-consumer value tables).",
+    "Tokens as canonical value identity (resolveCSS → var(--token)).",
+    "Loud-fail on missing axis/value.",
+    "Verify-by-use each step (check_design_system clean; concrete resolve checks like motion glow→mo-glow).",
+    "Docs in lockstep (README + DESIGN-LANGUAGE + FINDINGS-LOG).",
+    "Append-newest-first status log."
+  ],
+  "concerns": [
+    "Multiple capabilities explicitly NOT yet built: full condition engine, socket/slot condition evaluator (conditions stored as strings), event-sockets/addresses only partially built — load-bearing gaps named as owed.",
+    "Several §7 design decisions (naming, v1 facet set, Form-axis ends, meaning vocabularies, taxonomy depth) blocked awaiting Info/Tim sign-off.",
+    "Axis count drifts within the doc/log (table lists ~9 axes + meaning; log says 'all 9 axes built') and against the broader 'every primary axis' principle — count is fluid.",
+    "References slice numbers (59/60/61) and external speakers (Info/Tim) whose context lives outside this file."
+  ],
+  "notes": "The plan + build-log for turning every visual dimension into its own first-class typed axis registry (CV_AXIS/CV_AXES) where tokens are the value-units and component slots are subscriptions — Motion de-owned from Glyphic first; foundation + 9 axes + full component coverage logged as built and verified.",
+  "questions": [
+    "How many axes are canonical — the table/log say 9 (+meaning), but the principle says 'every primary axis we discover'?",
+    "Is the condition/event-socket engine now built or still the declared-string-only state recorded here?",
+    "Are the §7 naming/vocabulary questions still open awaiting Tim, or resolved in a later slice not in this file?"
+  ],
+  "purpose_vs_actual": "Matches — it is the durable home for the axis-refactor plan and its status, and it delivers principle, shared shape, axis table, build order, carried scope, and a verified status log for exactly that.",
+  "apparent_themes": [
+    "registry-is-truth",
+    "one-home-per-axis (anti-drift)",
+    "tokens-are-the-value-units",
+    "slots-are-subscriptions",
+    "fail-loud",
+    "interface-is-a-projection",
+    "generalise-the-facet-to-an-axis",
+    "verify-by-use",
+    "docs-in-lockstep",
+    "autonomy-with-batched-blocking-questions"
+  ],
+  "intention_signals": "Inferred: to eliminate per-consumer ownership of visual values by making every visual dimension a first-class typed axis registry with one shared API, so a component declares which axis values it subscribes to rather than holding copies — killing drift (e.g. Glyphic's hardcoded motion set becomes a Motion-axis subscription), keeping tokens as the canonical units, and making editors/foundries mere projections of the axis registries; built incrementally with verify-by-use and the engine resolving every visual value through an axis.",
+  "novelty": "Distinctive in treating EVERY visual dimension (colour, space, size, motion, texture, depth, fill, form, symbol, meaning) as instances of one generic typed-axis factory with subscriptions, and in explicitly separating intrinsic-meaning Symbol from contextual/loadable Meaning — a uniform axis algebra over the whole visual language rather than per-feature systems.",
+  "contribution": "Contributes the universal axis architecture: the CV_AXIS/CV_AXES generic factory and shared API, the subscription model for component slots, the tokens-are-value-units rule, the axis roster with homes/sources, the build order, the carried do-not-lose scope, and the verified status log — the structural blueprint a fused system would keep to make every visual value resolve from one typed home rather than from consumers.",
+  "summary_for_embedding": "Master plan and status log for the ConceptV universal axis refactor: every visual dimension (colour, space, size, motion, texture, depth, fill, form, symbol, meaning) becomes a first-class typed CV_AXIS registry under a CV_AXES catalogue, tokens are the value-units, component slots become subscriptions, with foundation + 9 axes + full component coverage logged as built and verified.",
+  "intention_for_embedding": "Intended to end per-consumer ownership of visual values by making every visual dimension a uniform typed axis registry where components subscribe to axis values instead of copying them, keeping tokens canonical and making editors projections of the registries."
+}

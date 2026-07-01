@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/studio-fe-wiring.patch",
+  "model": "opus",
+  "what_it_does": "A git diff patch that adds a top-level view switch to the canvas frontend (canvas/app/src/App.tsx) toggling between the tldraw 'canvas' workspace and a new 'review' workspace, and extends the Vite dev proxy (vite.config.ts) to forward /mockups and /design-system.css to the API target.",
+  "observations": [
+    "Imports a new Review region component and renders it conditionally when view==='review'.",
+    "Introduces useState<'canvas'|'review'>('canvas') as the single source of truth for which workspace renders.",
+    "Adds a 'view-switch' chip with two buttons (canvas / review) carrying data-ui-ref=\"ui://view-switch\".",
+    "Hides the .app-shell via inline style display:none when in review mode rather than unmounting it.",
+    "Wraps the Review render in a PanelErrorBoundary named 'review'.",
+    "Vite proxy now forwards /api, /mockups, and /design-system.css all to VITE_API_TARGET (default http://localhost:8770).",
+    "Heavy inline comments explain the design intent, attributing decisions to Tim with a date (2026-06-08)."
+  ],
+  "standouts": [
+    "Both workspaces share the SAME AppContext.Provider so the right-hand-man machinery is identical across views.",
+    "Deliberately 'no router, just a mode + a switch chip' — minimal structural addition.",
+    "The tldraw board keeps running underneath both views; review just covers it."
+  ],
+  "conventions": [
+    "Follows the codebase pattern of data-ui-ref addressable element IDs (ui://view-switch).",
+    "Follows the PanelErrorBoundary wrapping convention used elsewhere in the shell.",
+    "Comments cite Tim quotes and dates as decision provenance — a convention visible in this repo."
+  ],
+  "concerns": [
+    "Hiding .app-shell with inline display:none rather than conditional render keeps the canvas chrome mounted; could carry hidden state/cost (file-local observation only).",
+    "Proxy entries duplicate the same VITE_API_TARGET expression three times rather than sharing a constant."
+  ],
+  "notes": "A surgical patch adding a canvas/review mode toggle to the frontend shell plus dev-proxy routes for serving the mockup review corpus same-origin.",
+  "questions": [
+    "What does the Review region component actually render, since it is imported but not defined here?",
+    "What serves /mockups and /design-system.css on the API target (port 8770)?"
+  ],
+  "purpose_vs_actual": "n/a (a patch file with no separate stated purpose; the inline comments match the diff's actual changes)",
+  "apparent_themes": [
+    "Same machinery across modes (shared context)",
+    "Minimalism (mode + chip, no router)",
+    "Addressable UI elements",
+    "Defensive boundaries (error boundaries)"
+  ],
+  "intention_signals": "Trying to add a second workspace (design-mockup review with the right-hand-man) alongside the operating canvas without forking the app's brain — reuse the same AppContext so review and canvas are the same system in two modes.",
+  "novelty": "The pattern of toggling whole workspaces inside one shared context provider while keeping the tldraw board live underneath, with addressable switch chip.",
+  "contribution": "Contributes the canvas↔review view-switch mechanism and the dev-proxy wiring that lets a mockup review workspace stage mockups same-origin through the bridge.",
+  "summary_for_embedding": "A git patch adding a canvas/review view-switch to the frontend App shell (shared AppContext) and extending the Vite dev proxy to serve /mockups and /design-system.css.",
+  "intention_for_embedding": "To give the canvas app a separate design-mockup review workspace driven by the same right-hand-man machinery, reachable by an in-shell toggle."
+}

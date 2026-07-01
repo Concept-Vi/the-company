@@ -1,0 +1,38 @@
+{
+  "project": "company",
+  "path": "axes/state.py",
+  "model": "opus",
+  "what_it_does": "Declares a single AXIS dict named 'state' — the time/state axis. It has id/namespace 'state', two discrete fields ('phase' = pending|decided, 'frozen' = live|frozen), value_source 'live', and a desc explaining a surface resolves its treatment against where it is in time.",
+  "observations": [
+    "phase is described as composed from a 'decision_take' mark with 'registry-is-truth'",
+    "frozen models a scrubber / point-in-time (live vs frozen)",
+    "value_source is 'live' (the axis pulls a current value)",
+    "two distinct semantic distinctions (pending/decided vs live/frozen) are bundled into one 'state' axis"
+  ],
+  "standouts": [
+    "phase value is mark-composed from decision_take, not stored directly — registry is the source of truth",
+    "a scrubber/point-in-time notion (frozen) is treated as a first-class axis field"
+  ],
+  "conventions": [
+    "follows the same AXIS = {id, namespace, fields, value_source, desc} shape as sibling axes files",
+    "fields use 'discrete' as the value-kind marker",
+    "inline comment annotates the enum values for each field"
+  ],
+  "concerns": [],
+  "notes": "The 'when' axis: bundles pending-vs-decided (from the decision_take mark) and live-vs-frozen (scrubber) so a surface can resolve treatment by its position in time.",
+  "questions": [
+    "What consumes value_source 'live' and how is the decision_take mark read into 'phase'?",
+    "Why are two separable distinctions (phase, frozen) collapsed into one axis rather than two?"
+  ],
+  "purpose_vs_actual": "Match — the module docstring says 'STATE/time axis (when)' and the dict encodes exactly that.",
+  "apparent_themes": [
+    "registry-is-truth (derive state, don't store it)",
+    "time/point-in-time as a resolvable surface dimension",
+    "declarative axis catalog"
+  ],
+  "intention_signals": "Trying to make 'when in time' a uniform, declared axis that surfaces resolve against — so pending/decided treatment and time-travel/freezing are handled by the same composition machinery rather than ad-hoc per surface.",
+  "novelty": "Treating a temporal scrubber position (live/frozen) as an axis field alongside decision-phase.",
+  "contribution": "Contributes the time/state axis declaration — the named slot that lets surfaces resolve their treatment by decision-phase and by point-in-time, with phase derived from the decision_take mark.",
+  "summary_for_embedding": "A declarative AXIS dict 'state' encoding the time dimension with discrete fields phase (pending|decided, composed from the decision_take mark) and frozen (live|frozen scrubber).",
+  "intention_for_embedding": "To give surfaces a uniform 'when' axis so they resolve their treatment by decision-phase and point-in-time position."
+}

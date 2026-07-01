@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-A2-canvas-mobile.json",
+  "model": "opus",
+  "what_it_does": "A grounding/confirmation result for the A2-canvas-mobile.html mockup (a mobile 'running chain' view). Holds 21 candidate UI-element dossiers reduced to 12 clusters, each with a ui:// address, capability tags, grounding flag, the what/what-you-can-do/how-to-change triple, a maps_to_feature id, and a 3-draw jury verdict sorting them into confirmed (4) and flagged (8).",
+  "observations": [
+    "ground block frames the screen as a mobile live data-flow map with zoom and a bottom 'Run' button.",
+    "Counts: n_candidates 21, n_dossiers 21, n_clusters 12.",
+    "Confirmed items include the memo-gate node card (unanimous), the Run toolbar button (cluster_size 5), an instructions overlay, and the Canvas tabbar entry.",
+    "Refcheck fabrications flagged: CAN-brand and RUN-chain (maps_to_feature not an inventory id nor 'proposed').",
+    "Several proposed/built elements flagged purely on the soft jury with 0-of-3 grounded (brand, context, legend, chain, inbox tab).",
+    "Same schema as the desktop sibling: capabilities vocabulary, grounding built/proposed, two-layer judging (refcheck floor + accuracy jury).",
+    "tabbar entries split across canvas/inbox/rhm addresses each mapped to distinct features (CAN-compose, INB-surface, RHM-modes)."
+  ],
+  "standouts": [
+    "The RUN-run toolbar button absorbs 5 candidate indices into one confirmed dossier, showing heavy clustering of repeated detections.",
+    "RHM tabbar dossier 'represents' value is the literal glyph 'RHM ◈', carrying mockup iconography into the record."
+  ],
+  "conventions": [
+    "Mirrors the canvas-desktop file's schema exactly (ground / counts / confirmed / flagged).",
+    "ui://<region>/<element> addressing; closed capability + grounding vocabularies.",
+    "howto triple on every dossier; verdict object with votes/unanimous/quorum."
+  ],
+  "concerns": [
+    "Built-grounded elements (zoomhint, legend) flagged with 0-of-3 jury agreement — the 'built' claim and the jury disagree within the same dossier.",
+    "RHM tabbar maps to RHM-modes but its how-to describes a 'running chain' state, a description/feature mismatch internal to the dossier."
+  ],
+  "notes": "The mobile-canvas slice of the same UI-grounding audit; fewer elements than desktop, same confirmed/flagged adjudication producing 4 confirmed and 8 flagged clusters.",
+  "questions": [
+    "Why do several 'built'-grounded elements still receive 0-of-3 jury grounding — is the jury judging the description or the code link?",
+    "Is the mobile candidate set a subset/re-detection of the desktop one, or independently extracted?"
+  ],
+  "purpose_vs_actual": "Matches: a per-element grounding audit of the mobile canvas mockup, as stated.",
+  "apparent_themes": [
+    "Mobile-surface UI grounding",
+    "Two-layer truthful adjudication",
+    "Built-vs-proposed honesty",
+    "Cross-surface schema consistency"
+  ],
+  "intention_signals": "Aims to apply the same honest grounding audit to the mobile canvas variant, verifying that mobile element descriptions and feature claims are code-backed and flagging the doubtful ones.",
+  "novelty": "Mobile-specific element set (tabbar navigation entries, bottom Run, legend) judged under the same verdict machinery as desktop.",
+  "contribution": "Contributes the mobile-canvas grounding-audit record: the mobile element inventory, their feature mappings, and the confirmed/flagged verdicts a fused system would keep as the canvas-mobile grounding evidence.",
+  "summary_for_embedding": "A UI-grounding audit result for the A2 canvas-mobile running-chain mockup, clustering 21 element dossiers into 4 confirmed and 8 flagged via refcheck and a 3-draw soft jury.",
+  "intention_for_embedding": "To verify each mobile canvas element is truthfully grounded in real code and flag fabricated or unsupported feature mappings for operator review."
+}

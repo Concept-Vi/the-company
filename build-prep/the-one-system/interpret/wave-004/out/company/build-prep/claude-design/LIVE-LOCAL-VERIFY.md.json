@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/LIVE-LOCAL-VERIFY.md",
+  "model": "opus",
+  "what_it_does": "A by-use acceptance gate (authored by lead, 2026-06-18) to verify the Claude Design connector's integrated round-trip on the LOCAL Supabase stack before the production flip. It lists preconditions, four functional round-trip checks (A-D), five security checks (E-I), a pass condition, two pre-flip hardening items, and a note on FORM.",
+  "observations": [
+    "Insists every line is verified BY USE on the local stack (a real call, a watched result) — 'No error' is not a pass; the PURPOSE must be observed",
+    "Preconditions: local Supabase up (API/Auth :15421, DB :15432), all 5 tables in supabase_realtime, boundary principal + design_client (CD) creds, a seed 'design' shared channel, a CONTROL internal-only channel, fork's boundary Realtime sub connected with the principal JWT",
+    "A-D prove: BOX->SHARED publish, SHARED->BOX inject with skip-origin (no echo), CD->SHARED participation via the Edge Function, SHARED->CD read of the same data",
+    "E proves private-stays-dark (internal channel never published; 403 on internal and non-granted shared channels)",
+    "F is the crux: no impersonation / no service_role bypass — a forged from_session must 403 through the Edge Function, proving the EF forwards the CD user's JWT for writes and reserves service_role for audit-insert + client-registry-read only",
+    "G fail-closed tools (dangerous/no-posture tools refused), H mandatory audit (every call writes a connector_audit row; induced audit failure fails loud), I internal lifeline intact",
+    "Pass condition: ALL boxes observed by use; any red = re-run the whole gate, not just the failed line",
+    "Pre-flip hardening A (audit-BEFORE-execute) marked RESOLVED with a by-use verification (5->5 count unchanged on induced audit failure); B (audience binding) accepted for first flip with a custom-access-token-hook fast-follow"
+  ],
+  "standouts": [
+    "Check F names the worst-case threat explicitly: service_role bypasses RLS, so if the EF used it for CD writes a forged from_session would silently succeed (silent impersonation) — the 403 proves that path is dead, corroborated by grepping that service_role touches only audit + client lookup",
+    "Hardening A's by-use proof: revoking service_role INSERT on connector_audit makes a write return 'AUDIT PENDING FAILED — call refused' and leaves channel_posts count unchanged (5->5), proving audit-before-dispatch",
+    "The whole-gate-rerun rule (integration regressions hide) rather than re-checking only the failed line"
+  ],
+  "conventions": [
+    "Verification-before-completion: by-use observation of PURPOSE, not 'no error'",
+    "Checkbox gate format with isolation-then-integration framing (RLS pieces proven in isolation, this proves the integrated round-trip)",
+    "Fail-closed / deny-by-default security posture and mandatory-audit invariants",
+    "Explicit deferral of FORM assessment to when participation is live and visible"
+  ],
+  "concerns": [
+    "Hardening B (audience defaults to generic 'authenticated' rather than an MCP-resource-bound audience) is knowingly accepted for the first flip, leaving cross-resource token replay mitigated only by the scope+policy gates until the fast-follow lands"
+  ],
+  "notes": "The local by-use acceptance gate that must be fully green (A-I, plus the audit-before and audience hardening) before the connector can be flipped to production — re-run the whole gate on any red.",
+  "questions": [
+    "Was this gate ever fully executed to all-green on the local stack, and were the results recorded?",
+    "Did the audience-binding fast-follow (custom-access-token hook stamping aud=MCP-resource) ever land?"
+  ],
+  "purpose_vs_actual": "Match — it states it is the by-use acceptance gate before the flip and the body is exactly an executable checklist of preconditions, functional and security checks, a pass condition and hardening items, all framed as observe-the-result.",
+  "apparent_themes": [
+    "Verify by use, observe purpose (no green-paint)",
+    "Fail-closed, deny-by-default security with mandatory audit",
+    "No impersonation / no service_role bypass as the crux of a public surface",
+    "Isolation-proven then integration-proven before going public"
+  ],
+  "intention_signals": "Trying to ensure the public connector is only flipped after its integrated round-trip and full security posture (private-stays-dark, no impersonation, fail-closed tools, mandatory fail-loud audit, intact internal lifeline) are each observed working on the local stack — catching the silent-impersonation failure mode that would be the worst outcome of a public surface.",
+  "novelty": "The explicit naming and by-use killing of the service_role-bypass impersonation threat, and the demonstrated audit-before-dispatch proof via inducing an audit-insert failure and watching the post count stay unchanged.",
+  "contribution": "Contributes the concrete local acceptance gate for the Claude Design connector: the precondition list, the A-D functional and E-I security by-use checks (with the impersonation threat and its corroboration), the whole-gate-rerun pass rule, and the two documented pre-flip hardening items with their resolution status.",
+  "summary_for_embedding": "A by-use local-stack acceptance gate for the Claude Design Supabase connector verifying the integrated box<->shared<->CD round-trip and the full security posture (private-stays-dark, no impersonation/service_role bypass, fail-closed tools, mandatory fail-loud audit, intact internal lifeline) before the production flip.",
+  "intention_for_embedding": "To gate the public connector flip on observing, by real calls on the local stack, that the integrated round-trip works and every security invariant holds — especially that a forged from_session cannot bypass RLS via service_role."
+}

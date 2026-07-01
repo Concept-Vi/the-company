@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/TOTAL-PROCESSING-PIPELINES.md",
+  "model": "opus",
+  "what_it_does": "A design document stating a class of mechanisms ('total-processing pipelines') to resolve the constraint that nobody can know what the Company's estate contains and that question-based mechanisms structurally cannot fix it. It lays out the constraints as axioms, the core insight (embeddings + cheap local models make total reads affordable), two corrected framings, seven concrete pipelines (P1-P7), an axiom-by-axiom resolution table, and open tests.",
+  "observations": [
+    "Written 2026-06-11 from a live design conversation with Tim, expanded for cold readers who are told to READ and discuss, not act.",
+    "States constraints as axioms in Tim's words: no assumptions reliable, conflicts are unenumerated, no human reads/reviews, no spec ever, all building is parallel multi-agent.",
+    "Core insight: questions are selective reads; total processing reads everything and leaves unknown-unknowns as RESIDUE rather than answering them into existence.",
+    "Describes a cost pyramid: vectors (cents) -> resident 4B swarm (32 concurrent roles, max_num_seqs=34, ~2,700 tok/s) -> reranker (88M CPU) -> Claude-class models for synthesis only.",
+    "Cites the RG10 registry pipeline as existing proof: 940 raw extractions -> embedding-dedup -> floors -> jury -> 483 verified entries, run overnight.",
+    "Documents two corrected errors: retrieval-shaped thinking (assumes an agent knows its task) and utterances-as-specs (Tim's messages are a gradient field, not acceptance criteria).",
+    "Seven pipelines: P1 total extraction (connection-surface registry), P2 fusion (synonym ledger + contradiction ledger), P3 expectation join (broken-assumptions + orphan lists), P4 merge (three lists for integrating other sessions' work), P5 visual join (images as citizens), P6 residue (unknown-unknowns), P7 staying-true (commit-triggered re-extraction).",
+    "Names specific embedding models with caveats: LateOn-Code-130M, nomic-embed-code quant ~5-6GB, Qwen3-VL-Embedding-2B for visual, with warnings about pooling/prefix traps.",
+    "Defines 'correctness without an oracle = coherence' (internally consistent, agreed across derivations, expectations met, behaviorally unsurprising, aligned with the gradient field).",
+    "Section 6 lists named open tests deliberately left unanswered, including whether coherence-convergence can be gamed by consistently-confident nonsense."
+  ],
+  "standouts": [
+    "The residue concept (P6): unknown-unknowns are not answered into existence but left over when everything else pairs up — a mechanical answer to 'you can't ask about what you don't know'.",
+    "Coherence as the correctness standard in the absence of any oracle/spec — truth-by-convergence because truth-by-checking is impossible.",
+    "Conflicts defined as failed merges, so deduplication itself emits the contradiction ledger without anyone asking where conflicts are.",
+    "The map knows its own coverage (chunks-processed / chunks-existing as a number with a named worklist of the unprocessed remainder)."
+  ],
+  "conventions": [
+    "Grounds claims in Tim's quoted words and in already-running pipelines (RG10, the 1,460 exchange-extracts).",
+    "Uses an axiom -> resolution table to map each constraint to a pipeline.",
+    "Explicitly corrects prior AI errors inline (e.g., the 12-14 vs 32 concurrent-roles figure).",
+    "Names open questions as 'open tests' to be pushed on rather than asserting closure — consistent with the repo's no-false-completeness discipline."
+  ],
+  "concerns": [],
+  "notes": "The mechanism manifesto for self-inventorying a context-less, spec-less estate via total embedding + cheap-model sweeps, with seven concrete pipelines and coherence (not a spec) as the correctness standard.",
+  "questions": [
+    "Which of P1-P7 are actually built versus only specified here (only RG10 is cited as proven)?",
+    "What policy governs the dual embedding-space transitions (the doc calls this the open bit)?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is the full statement of a mechanism class for cold readers, and delivers axioms, insight, framings, pipelines, and open tests at that level.",
+  "apparent_themes": [
+    "Total processing over selective questioning",
+    "Unknown-unknowns as residue, not as answers",
+    "Coherence/convergence as correctness without an oracle",
+    "Cheap local compute (vectors + small models) reserving scarce models for synthesis",
+    "The map as a standing organ identical to the work-queue"
+  ],
+  "intention_signals": "Trying to give the Company a way to know itself without anyone being able to read, spec, or interrogate it — by industrializing questionless embedding sweeps so structure, conflicts, broken assumptions, and unknown-unknowns all fall out mechanically and stay fresh.",
+  "novelty": "The reframing of verification as 'avoid known wrongness + move with known direction' (since rightness is unspecifiable) and the residue-as-unknown-unknowns mechanism are distinctive.",
+  "contribution": "Contributes the seven-pipeline architecture (P1-P7), the cost pyramid, the gradient-field/wrongness-learning verification model, coherence-as-correctness, and the axiom-to-resolution mapping for a context-less parallel-built estate.",
+  "summary_for_embedding": "A Company brain design document defining total-processing pipelines (P1-P7) that use embeddings plus cheap local models to read the whole estate unconditionally, emitting inventory, conflicts, broken assumptions, merges, and unknown-unknowns as residue, with coherence as correctness.",
+  "intention_for_embedding": "To resolve the nobody-can-know-the-estate constraint by replacing question-based mechanisms with questionless total-read sweeps that mechanically surface what no one knew to ask."
+}

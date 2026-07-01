@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "preview/brand_icons_gold.html",
+  "model": "opus",
+  "what_it_does": "A static preview card showing the gold-circle icon family as a single reference image (icon-library-gold-circles.jpg), with copy explaining its use (entity badges that 'count' as system components) and a metadata row specifying ring stroke (1.5–2px gold), inner glyph colour, badge sizes (32/48/64), and the asset path.",
+  "observations": [
+    "No @dsCard annotation comment (like its bronze sibling, unlike the live AI/nav cards).",
+    "Displays a JPG sheet (../assets/icons/icon-library-gold-circles.jpg) rather than live SVG.",
+    "Describes each glyph as sitting inside a thin gold ring at a uniform size, used for entity badges in architecture diagrams and marketing collateral.",
+    "Notes the top desaturation row is 'the canonical state-strength gradient'.",
+    "Metadata row hardcodes spec values: Ring 1.5–2px gold, Inner matching gold glyph, Sizes 32/48/64.",
+    "Card chrome uses tokens (var(--bg-surface), var(--r-md), var(--font-body))."
+  ],
+  "standouts": [
+    "Introduces the semantic notion that a gold-circle icon 'counts' as a system component (entity badge), distinguishing it from a plain glyph.",
+    "Names a 'canonical state-strength gradient' (the desaturation row) — a documented visual scale."
+  ],
+  "conventions": [
+    "Uses _card.css and design tokens for card chrome.",
+    "Omits the @dsCard annotation used by the live preview cards.",
+    "States icon spec values as literal copy rather than token references (documentation card, not a styled consumer)."
+  ],
+  "concerns": [
+    "Spec values (ring width, sizes) are literal copy; if the canonical icon spec changes this card must be updated by hand to stay true."
+  ],
+  "notes": "A static image-sheet card documenting the gold-circle entity-badge icon family, its ring/size spec, and the canonical state-strength desaturation gradient.",
+  "questions": [
+    "What exactly does the 'state-strength gradient' (desaturation row) encode, and where is it consumed?",
+    "Is the gold here the same value as the --accent-gold token used by the live nav active state?"
+  ],
+  "purpose_vs_actual": "Match — it documents the gold-circle icon family and its spec via an image and a metadata row, as stated.",
+  "apparent_themes": [
+    "Brand reference / icon library documentation",
+    "Entity badges as system components ('icons that count')",
+    "State-strength gradient (desaturation scale)",
+    "Gold brand identity"
+  ],
+  "intention_signals": "Trying to define the gold-circle badge family as the canonical way to depict an icon that represents a system component, with a fixed ring/size spec and a state-strength gradient for showing component strength/state.",
+  "novelty": "The 'icon that counts as a system component' concept plus a named canonical state-strength desaturation gradient for badges.",
+  "contribution": "Contributes the gold-circle entity-badge icon family, its ring/size spec (1.5–2px gold ring, sizes 32/48/64), and the canonical state-strength desaturation gradient.",
+  "summary_for_embedding": "A claude-ds preview card documenting the gold-circle entity-badge icon family via a reference image and spec row (1.5–2px gold ring, sizes 32/48/64) plus a canonical state-strength desaturation gradient.",
+  "intention_for_embedding": "To define the gold-circle badge family as the canonical depiction of an icon that represents a system component, with a fixed spec and a state-strength gradient."
+}

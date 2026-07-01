@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/deep/surface-intent.md",
+  "model": "opus",
+  "what_it_does": "The surface design-intent layer of the application-structure pack: it assembles the per-surface skeletons and their designed intent from the vault build-prep narrative. Depth-first on the Interactive Addressed Surface (criterion-by-criterion S0–S5, F0–F9, I1–I7, R1–R2, B1–B3, L1–L10 with BUILT/DESIGNED-☐ status checked against code-truth), then an architecture survey of the other surfaces, the Sequences primitive as universal substrate, and the surface relationship map (the IA as the parent that places the others).",
+  "observations": [
+    "Carries an explicit honesty contract with four tags: DESIGNED, BUILT (with suite.py/bridge.py path), DESIGNED-☐ (named in a Completion Criteria but not on main), INFERRED",
+    "Critical methodology note: the Completion Criteria marks every line ☐ but that is the worktree-loop view, not main's reality; status is taken from intent-studio §5 code-truth reads, not from the ☐ markers",
+    "Per-criterion tables for GROUP 0–6 with test names (e.g. address_grammar_acceptance.py, click_tier_acceptance.py) and code-truth status",
+    "Resolves a source conflict explicitly: S3 was NET-NEW in the 2026-06-04 Synthesis but BUILT by the 2026-06-08 intent-studio §5 read — flagged as time-staleness, trust the newer source",
+    "BUILT-on-main cut: I6/I7 (annotate/attach_chat), F1-presentation (set_presentation_pref), S3 (resolve_scope), L4 (ingest_comment), L3/L5 substrate, address_help, up_translate, _registry_ui_target",
+    "Part 4 frames the Information Architecture as the parent co-resolution surface: the same ui://canvas/node/ask visible on board + inspector + RHM pane at once (simultaneity), rendering R1/R2 as spatial layout",
+    "Part 3 frames the Sequences primitive as one loop resolve→present/work→persist→next recurring across the engine, the walkthrough/review organ, and the collective cognition",
+    "Source ledger (Part 5) names which sources backed each section and flags a naming distinction between Collective Cognition (this doc) and Concurrent Cognition (a distinct backend system, out of scope)"
+  ],
+  "standouts": [
+    "The honesty contract + methodology note that explicitly distrusts the ☐ markers and re-derives status from code-truth reads",
+    "The IA-as-parent / co-resolution-surface insight: the same locus visible in all three zones at once is the structural meaning of 'parent'",
+    "The Sequences primitive recurrence argument (engine = walkthrough = cognition), grounding 'register a new station, don't build a new pipeline'"
+  ],
+  "conventions": [
+    "Every claim tagged per the four-tag honesty contract; sources named per-section",
+    "Cross-references intent-studio §5 as the code-truth arbiter over the Criteria ☐ markers, following verify-before-claiming",
+    "ASCII grid/relationship diagrams to express the IA layout and the surface placement graph (relational rendering)"
+  ],
+  "concerns": [
+    "Self-flags that many individual mockup file contents were NOT read (2.4/2.5/2.6/2.9/2.11–2.16 are DESIGNED from the GROUPS list and narratives, not verified), so several surface skeletons rest on secondary mention"
+  ],
+  "notes": "If briefing someone: this is the per-surface intent map with the IA as the parent container and the Sequences loop as the substrate — read Part 1 for the criterion-level built-vs-designed cut and Part 4 for how every surface co-resolves one locus.",
+  "questions": [
+    "Does the rebuilt in-app studio (superseding the standalone HTML portal) exist yet on any branch beyond the supersession note?",
+    "What is IA-mobile's actual layout (inferred here, not read in full)?"
+  ],
+  "purpose_vs_actual": "Match — declares itself the surface design-intent layer depth-first on the Interactive Addressed Surface plus a survey, and delivers that with honesty tags and a code-truth-checked status cut.",
+  "apparent_themes": [
+    "click INDICATES + CONSENTS, not click=execute (address-keyed governance)",
+    "compose on built primitives rather than reinvent them (the studio's disconnect)",
+    "simultaneity / threaded address as the reason the IA is a parent",
+    "the Sequences loop as one universal substrate across engine, organ, and cognition",
+    "verify-before-claiming via the four-tag honesty contract"
+  ],
+  "intention_signals": "Trying to give a design session an accurate, source-honest map of every surface's intent and skeleton — what is genuinely built vs merely specified — so it designs the parent IA that co-resolves one locus across zones and composes on the existing attach-context primitives instead of rebuilding them.",
+  "novelty": "The co-resolution-surface framing of the IA (same locus in all zones = the meaning of parent) and the explicit time-staleness conflict-resolution method between two dated research sources.",
+  "contribution": "Contributes the surface-intent layer: the per-criterion built-vs-designed status cut for the Interactive Addressed Surface, the per-surface skeletons, the IA-as-parent placement map, and the Sequences-primitive substrate frame — the design-intent ground a fused system would keep to know what each surface is for and how they assemble into one instrument.",
+  "summary_for_embedding": "The surface design-intent layer assembling per-surface skeletons from the vault: a code-truth-checked criterion-by-criterion built-vs-designed cut of the Interactive Addressed Surface, a survey of the other surfaces, the Sequences primitive as universal substrate, and the IA-as-parent co-resolution map.",
+  "intention_for_embedding": "To give a design session a source-honest map of every surface's intent and skeleton so it designs the parent IA and composes on built primitives rather than reinventing them."
+}

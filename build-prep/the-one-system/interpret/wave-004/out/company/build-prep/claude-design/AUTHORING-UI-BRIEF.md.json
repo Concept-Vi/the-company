@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/AUTHORING-UI-BRIEF.md",
+  "model": "opus",
+  "what_it_does": "A Claude-Design-ready brief for the Company's cognition AUTHORING UI — the operator screen for creating/editing the roles and rules of the concurrent-cognition system. It states what the screen is, the proposed information architecture (role authoring, rule authoring, preview-a-turn, approval loop), the exact backend contract (endpoints with file:line citations and response shapes), the propose->approve->apply UX flow, the design bar, nine hard laws, and open questions for Tim.",
+  "observations": [
+    "Explicitly addressed to Claude Design and grounded in the real repo with file:line citations for verifiability.",
+    "No-fiction note: the backend is built/tested/live but NO authoring front-end exists; the only living cognition surface is the read-only CognitionView.tsx (the VIEW).",
+    "Explains the cognition model: an utterance fires roles in parallel emitting structured output to run://<turn>/<role>, rules read resolved values and route to one of five destinations, the reply assembles in staged parts.",
+    "Proposes one Authoring region (sibling of canvas regions) with role/rule/preview panels coexisting beside CognitionView, reusing NodeConfigForm/Inspector/Inbox/ProposeAffordance patterns.",
+    "Corrects an endpoint-count error from the originating task: there is no /api/cognition/role/apply; apply rides the existing operator-only /api/apply. Counts 12 cognition authoring endpoints (9 POST + 3 GET) plus 2 reads plus 2 shared operator endpoints.",
+    "Tabulates the full backend contract: READ (cognition_info, SSE stream), WRITE roles (propose/edit/delete, propose-not-apply), TEST role (dry_run), WRITE/TEST rules (validate/dry_run/attach/detach), PREVIEW (preview_turn), SELECT dropdown sources, and APPLY via existing /api/resolve + /api/apply.",
+    "Defines data shapes: RoleFieldSpec, RuleAST (a closed 16-op grammar, no now/random/call/IO op, depth-capped at MAX_RULE_DEPTH=6), RuleDecl, and the 5 destination_kinds (inject, chain, address, surface, lane).",
+    "States the governance floor: authoring never writes live state; every write surfaces a proposal carrying the rendered .py source; apply without prior approve is refused HTTP 400 GovernanceError.",
+    "Specifies the design bar: gold living-instrument aesthetic (--acc #e6ab5c, warm charcoal base, Fraunces + IBM Plex Mono), status-by-colour, recognition-by-sight, responsive desktop+mobile, reuse kit.tsx/NodeConfigForm/CognitionView.",
+    "Lists 9 hard laws (reflects-never-owns, propose-not-apply, closed renderable registry-driven grammar, claude-p/dispatch floor is lead-only with surface-destination kept distinct, run:// addressing, author-from-registry, fail-loud, protected roles, operator-only off the MCP face).",
+    "Notes no cognition mockups exist in design/mockups/; CognitionView.tsx is the only living aesthetic reference.",
+    "Closes with five open questions for Tim framed as options (one vs two approve gestures, one region vs split, under-specified lane destination, unbuilt directory-scan source, persona theming) plus next-step options."
+  ],
+  "standouts": [
+    "The closed, renderable, registry-driven rule grammar (16 ops, 5 destinations, depth cap 6, no IO/now/random op) — determinism is structural, and forbidden destinations (resolve/approve/dispatch) are refused so authoring can never self-dispatch.",
+    "Propose-not-apply enforced in the backend: apply without a prior operator approve returns HTTP 400 GovernanceError, proven by use.",
+    "The endpoint-count correction with verified-absent /api/cognition/role/apply, showing the brief re-verified the originating task against bridge.py.",
+    "preview_turn fires a REAL staged turn (emits to live SSE, writes CAS) without touching chat history — surfaced honestly as intended, not a bug."
+  ],
+  "conventions": [
+    "Every claim carries file:line citations and verified-live curl examples; no-fiction notes flag what does not exist.",
+    "Frames open questions as options (not binary), consistent with Tim's stated preference, including next-step options at the end.",
+    "Author-from-registry / reflects-never-owns / fail-loud / propose-not-apply restated and enforced as laws.",
+    "Distinguishes the 'surface' destination kind (an inbox escalation) from the propose-surfaces-for-approval flow to prevent conflation."
+  ],
+  "concerns": [],
+  "notes": "The grounded build brief for the cognition authoring screen: roles and rules authored through forms, validated against a closed renderable grammar, surfaced as proposals carrying rendered source, and only made live through the operator approve->apply governance floor.",
+  "questions": [
+    "Should approve and apply be one gesture or two (the brief flags this as genuinely unspecified)?",
+    "What is the surface/UX for the under-specified lane destination and the unbuilt directory-scan source node?"
+  ],
+  "purpose_vs_actual": "Matches — it is explicitly a build brief for Claude Design and delivers the screen definition, backend contract, UX flow, design bar, laws, and open questions at the grounded, citable level it promises.",
+  "apparent_themes": [
+    "Author cognition through a screen, not by editing files",
+    "Governance floor: propose-not-apply, operator approval required",
+    "Closed renderable grammar (determinism by construction)",
+    "Registry-as-truth (every dropdown derived from an endpoint)",
+    "Recognition-by-sight rendering for Tim"
+  ],
+  "intention_signals": "Trying to give Claude Design everything it needs to build the right authoring screen on existing conventions — the exact endpoints, data shapes, reuse components, aesthetic, and the governance laws it must not violate — so the operator can edit the system's thinking visually and safely.",
+  "novelty": "Authoring a thinking system's roles and rules through a closed, renderable, registry-driven grammar with a hard propose-not-apply floor (and forbidden self-dispatch verbs) is a distinctive design.",
+  "contribution": "Contributes the cognition authoring screen definition, the verified 12-endpoint backend contract with shapes, the propose->approve->apply UX flow, the gold design bar tied to tokens, and the 9 enforced laws plus open questions for Tim's steer.",
+  "summary_for_embedding": "A Claude-Design-ready brief for the Company's cognition authoring UI: forms to create/edit roles and rules over a closed 16-op renderable grammar, a 12-endpoint backend contract with file:line citations, a propose->approve->apply governance flow, a gold living-instrument design bar, and nine hard laws.",
+  "intention_for_embedding": "To specify and ground the cognition authoring screen so it can be built on existing conventions without violating the cognition system's governance floor."
+}

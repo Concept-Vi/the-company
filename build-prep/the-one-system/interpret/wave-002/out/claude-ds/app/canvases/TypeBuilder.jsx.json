@@ -1,0 +1,58 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/TypeBuilder.jsx",
+  "model": "opus",
+  "what_it_does": "Implements the Universal Type Builder canvas: a React component to author or edit any registry Type at any layer. Holds a mutable draft Type (fresh or a deep-cloned fork of an existing one), provides patch helpers for fields/slots/variables, three Vi-assisted moves (propose a Type from a brief, suggest slots, materialize), and save/reset/delete against CV_REGISTRY. Offers three layouts (split/wizard/canvas) and four editing modes (visual/form/vi/json). Defines the layout shells (BuilderSplit, BuilderWizard, BuilderCanvas) and an initializeDraft helper; the inner panels live in TypeBuilder2.jsx. Exposes TypeBuilder on window.",
+  "observations": [
+    "Aliased React hook destructuring (useState_tb etc.) to avoid bundle-scope collisions.",
+    "draft is initialized via initializeDraft(id, R): deep-clones an existing Type (JSON parse/stringify) or seeds a new draft with id 'new.<base36 timestamp>' at layer 'block', family 'general', provenance 'user'.",
+    "patch/patchSlot/removeSlot/addSlot and patchVariable/removeVariable/addVariable provide immutable update helpers for the draft.",
+    "addSlot auto-names slots 'slot<N>' with accepts {layers:['block']}; addVariable auto-names 'var_<N>' kind 'text'.",
+    "viPropose calls window.CV_TYPES_VI.proposeType({brief,parentId,layerHint,familyHint}) and preserves a user-typed non-'new.' id over the proposed one.",
+    "viSuggestSlots requires the Type be saved first, calls CV_TYPES_VI.suggestSlots(id), and merges results without overwriting existing slot names.",
+    "save() registers the draft via R.register and handles built-in forking: editing a built-in Type prompts to fork it into user space, setting provenance 'user' and forkedFrom.",
+    "removeType confirms then R.remove(draft.id); reset re-initializes from sourceRef.",
+    "parentCandidates is computed via R.query({layer}) filtered to exclude self — extends only same-layer Types.",
+    "Header exposes mode segment (visual/form/vi/json) and layout segment (split/wizard/canvas) plus Revert/Save/Delete buttons.",
+    "BuilderWizard defines a fixed 6-step rail: Basics, Lineage, Vi, Slots, Vars, Review.",
+    "Comment states BuilderLibrary/Preview/Inspector live in TypeBuilder2.jsx.",
+    "All Vi failures and validation gaps route to window.dsaToast (loud user-facing messages)."
+  ],
+  "standouts": [
+    "Built-in Types are immutable-by-fork: editing one explicitly forks into user space with forkedFrom provenance rather than mutating the built-in.",
+    "extends candidates are constrained to the same layer — encoding the registry's single-inheritance/layer rule directly in the UI.",
+    "One builder serves every layer (token→...→template) and every authoring style (visual/form/Vi/JSON) through one draft model — a universal authoring surface."
+  ],
+  "conventions": [
+    "Registry-as-truth: all reads/writes go through CV_REGISTRY (get/query/register/remove); the UI is a projection of the registry.",
+    "Loud-fail/toast pattern for validation and Vi errors rather than silent degradation.",
+    "window-global component pattern (CanvasHeader, sub-components) and window.TypeBuilder export, no ES imports.",
+    "Immutable state updates throughout via spread; deep clone of source Type to isolate the draft.",
+    "Provenance/forkedFrom convention preserves lineage when forking built-ins."
+  ],
+  "concerns": [
+    "Depends on window.CV_TYPES_VI being present; viPropose/viSuggestSlots would throw on a missing global (only the try/catch in viPropose guards it; viSuggestSlots has no catch around the call).",
+    "Uses native confirm() for destructive actions (delete, fork) — blocking and unstyled.",
+    "Split of sub-components into TypeBuilder2.jsx means this file alone cannot render; correctness depends on companion file load order.",
+    "initializeDraft id uses Date.now() so two new drafts created in the same ms could collide (low-probability)."
+  ],
+  "notes": "The universal Type authoring/editing canvas — one draft model edited via three layouts and four modes, saved to CV_REGISTRY with built-in→user forking; its inner panels live in TypeBuilder2.jsx.",
+  "questions": [
+    "What is the API surface of window.CV_TYPES_VI (proposeType/suggestSlots return shapes)?",
+    "Where are SlotBrowserModal, BasicsForm, LineageForm, ViForm, SlotsEditor, VariablesEditor, ReviewPanel, BuilderPreview/Inspector/Library defined (this file references them but only some are here)?",
+    "Does R.register return the normalized stored Type used in the save toast and onSaved callback?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment (universal Type builder, tweakable layout split/wizard/canvas, modes visual/form/Vi/json) is exactly what the component implements.",
+  "apparent_themes": [
+    "Universal authoring: one builder for any Type at any layer.",
+    "Registry-as-truth and UI-as-projection.",
+    "Immutable built-ins via fork-on-edit lineage.",
+    "Multiple modalities (visual/form/Vi/JSON) and layouts over one draft model.",
+    "Vi-assisted authoring as an optional accelerant, not a requirement."
+  ],
+  "intention_signals": "Aims to give a single, layer-agnostic surface for creating and editing Types that enforces the registry's inheritance/layer rules, protects built-ins by forking, and lets the author choose how to work (hand, form, Vi, or raw JSON) while keeping the registry the single home for every Type.",
+  "novelty": "A single draft model wired to three swappable layout shells AND four editing modes, plus the fork-on-edit-of-built-in lineage handling, in one builder.",
+  "contribution": "Contributes the Universal Type Builder component, its draft state model and patch helpers, the three layout shells (split/wizard/canvas) and 6-step wizard rail, the Vi-assisted propose/suggest-slots flows, and the built-in→user fork-on-save logic.",
+  "summary_for_embedding": "A React canvas implementing a universal Type builder/editor over CV_REGISTRY with split/wizard/canvas layouts, visual/form/Vi/JSON modes, slot/variable editing, and built-in fork-on-edit lineage.",
+  "intention_for_embedding": "To provide one layer-agnostic authoring surface for creating and editing registry Types that enforces inheritance rules, forks built-ins, and supports hand, form, Vi, and JSON workflows."
+}

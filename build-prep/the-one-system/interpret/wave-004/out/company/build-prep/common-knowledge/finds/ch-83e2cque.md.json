@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/finds/ch-83e2cque.md",
+  "model": "opus",
+  "what_it_does": "The recollection member's (channel ch-83e2cque, 'Index Chief') append-only finds file from the fabric discovery effort. Logs finds R1-R10 covering the per-member session-history recall index, an infrastructure diagnosis of the bge→pplx embedding migration, the comprehension pilot, a rerank precision stage, count-reconcile bugs, the search for Tim's 'decomposition 1' self-build artifact, the neighbour-field HTTP route, the forms/lifters wiring gap, and the live-session index lag.",
+  "observations": [
+    "R1: vector recall over ~1,200 backfilled session histories (~4,342 exchanges) in ~/.recollection is verified-by-use, returning interface-relevant ranked hits with provenance.",
+    "R3: detailed infra diagnosis — the corpus/cognition core still defaults to bge-m3 @ :8001 (DOWN, connection refused) while only session-fabric surfaces got the :8007/pplx upgrade; the re-embed is ALREADY done (2919 pplx-2560 vectors keyed #emb=pplx) but the config half never switched; a fail-loud dim-mismatch hazard if config is flipped without threading emb='pplx' into the read path; notes a stale-server restart on the critical path and a walker gap (repo_ingest walks only .py/.md, missing recollection's 140 .ts).",
+    "R4: comprehension pilot complete and verified-by-use — 102/113 recollection files digested+captured into common_knowledge via the live MCP, queryable by meaning (top hit src/backfill.ts 0.56), GPU RSS flat at 2.56G.",
+    "R5: rerank precision stage (ops/rerank.py @ :8008, jina-v3) proven to sharpen corpus retrieval; recall-under-unit mechanism feasible and lens-independent.",
+    "R6: honest self-report of a dupe-mess — ingest paths= keys relative while roots= keys absolute, creating 10 dead vectorless duplicate .md records; flagged as a canonical-key design+migration, not a quick patch.",
+    "R7: exhaustive sweep for Tim's 'decomposition 1' — no literal artifact; the strongest match is the Relative-difference universal-mechanics session-3 artefacts (context-resolution-projection-dynamic-wizard-surface.md, application-composition-operational-mode.md, typed-surface-materialisation.md).",
+    "R8: GET /api/cognition/neighbours route live and verified-by-use over HTTP (the FACE's real consumption path), returning a drillable neighbour node-field.",
+    "R9: verified that forms/lifters are BUILT-BUT-UNWIRED — no capture/ingest path calls form_registry.route, so coverage produces flat digests (working≠useful).",
+    "R10: discovered-by-use limitation — the index lags live sessions; backfilled sessions pin via recall, live sessions only via raw-transcript grep; fix = continuous/live backfill."
+  ],
+  "standouts": [
+    "R3's reframe that the heavy re-embed is already done (pplx vectors exist) and the remaining work is config + read-path emb-threading + restart, plus the coupling hazard that a config-flip alone causes a fail-loud dim mismatch.",
+    "R6's honest no-green-paint self-report: acted too fast on a minor item, created a small dupe-mess, surfaced it accurately, and traced the deeper canonical-key contract bug behind it.",
+    "R9's working≠useful finding: the forms/lifters output-shaping system is fully built but never connected to the capture path."
+  ],
+  "conventions": [
+    "Append-only per-member file (no shared-DISCOVERY_LOG races); strict what/where/verbatim/verification-state/why-it-matters/shape format.",
+    "Rigorous verification states (verified-by-use over HTTP vs in-process, design-only, code-trace) and explicit provenance (commit hashes, ports, dims, counts).",
+    "Honest-status / no-green-paint discipline, including self-reporting a mistake (R6)."
+  ],
+  "concerns": [
+    "Surfaces real defects (not in this file, but logged here): the bge config/data split causing corpus-query DOWN, the paths-vs-roots id-spelling divergence creating dead duplicates, and the unwired forms/lifters path — all flagged as coordinated fixes.",
+    "Several finds depend on per-session /mcp reconnect to pick up the config switch, a mechanical-but-easy-to-miss residual."
+  ],
+  "notes": "Recollection's evidence log — the memory/index/embedding-infrastructure side of the fabric; read R3 for the embedding-migration state and R9 for the forms/lifters working-not-useful gap.",
+  "questions": [
+    "Did the config half of the bge→pplx switch and the server restart actually land everywhere, or only in the lead's applied commit (1f88727) pending per-session reconnects?",
+    "Was the canonical-key design+migration (R6) ever done, leaving the 10 dead dupes cleaned?",
+    "Has the forms/lifters capture-path wire (R9) been adopted, or does coverage still produce flat digests?"
+  ],
+  "purpose_vs_actual": "Match — declares itself recollection's append-only finds file (finds not conclusions, honest verification-state) and delivers R1-R10 in exactly that form, including an honest mistake report.",
+  "apparent_themes": [
+    "One queryable memory across all sessions/time as the finding substrate",
+    "Data/config seam — upgraded storage, un-upgraded read path",
+    "Verify-by-use over HTTP, no green paint, honest self-correction",
+    "Built-but-unwired (working≠useful) gaps",
+    "Continuous/live capture vs backfilled-only index"
+  ],
+  "intention_signals": "Trying to make the company's memory/recall substrate actually work end-to-end (embed→capture→query→neighbours→rerank) on real histories and codebases, while honestly surfacing the seams (config, canonical keys, forms-wiring, live-lag) that block the working ability Tim asked for.",
+  "novelty": "The diagnosis that the re-embed is already done and the blocker is purely the read-path config seam (with a fail-loud coupling hazard), and the recall-under-unit neighbour-field proven over the FACE's real HTTP path.",
+  "contribution": "Contributes the memory/index/embedding-infrastructure evidence: the verified recall index, the bge→pplx migration diagnosis and fix, the comprehension pilot, the rerank stage, the neighbour-field HTTP route, the forms/lifters wiring gap, and the live-session lag limitation.",
+  "summary_for_embedding": "Recollection member's append-only fabric-discovery finds file (R1-R10) covering the verified session-history recall index, the bge→pplx embedding migration diagnosis, the comprehension pilot, rerank, the neighbour-field HTTP route, and built-but-unwired memory/forms gaps.",
+  "intention_for_embedding": "To make the company's memory/recall substrate work end-to-end on real histories while honestly surfacing the config, canonical-key, forms-wiring, and live-lag seams that block the working ability."
+}

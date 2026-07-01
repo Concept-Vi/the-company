@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "preview/brand_emoji_nav.html",
+  "model": "opus",
+  "what_it_does": "A preview card demonstrating the sidebar navigation icon convention: it renders a 12-item nav grid where each row uses a CV line icon (pulled from window.CV_ICONS.data by key) stroked in the bronze nav-glyph token colour, with the active row stroked in gold. It states the rule that the sidebar must use token-coloured CV line icons and never emoji.",
+  "observations": [
+    "Carries a @dsCard annotation: group=Brand, name='Sidebar emoji convention', subtitle 'Bronze CV line icons as nav glyphs — never emoji', viewport='700x240'.",
+    "Loads ../assets/icons/cv-icons.js and reads CV_ICONS.data for the SVG path markup keyed by icon name.",
+    "Blurb states the rule: CV line icons stroked in --accent-bronze by default, active row in --accent-gold, never emoji, because glyphs must theme/recolour/stay on-brand.",
+    "ITEMS array maps 12 nav labels to icon keys (e.g. Projects→files-stack, Gallery→image marked active).",
+    "Active row styled with a 1.5px dashed --border-dashed border and gold-stroked glyph.",
+    "SVG glyphs are 17x17, fill:none, stroke via var(--accent-bronze), stroke-width 1.7, rounded caps/joins.",
+    "Falls back to empty string for any missing icon key (D[it[1]] || '')."
+  ],
+  "standouts": [
+    "Encodes a named brand law ('never emoji — use token-coloured CV line icons') as a rendered, demonstrable card.",
+    "Active state changes the stroke from a bronze to a gold token, showing the theming rationale for the rule in situ."
+  ],
+  "conventions": [
+    "Follows the @dsCard + _card.css preview-card convention.",
+    "Icons sourced from a single registry (CV_ICONS.data) rather than inline SVG copies.",
+    "Stroke colours are token vars (--accent-bronze / --accent-gold), never literals — the very point of the rule.",
+    "Uses spacing/radius/border tokens (--r-md, --border-faint, --border-dashed)."
+  ],
+  "concerns": [],
+  "notes": "A brand-convention card asserting and demonstrating that the platform sidebar uses token-coloured CV line icons (bronze default, gold active) and never emoji, with glyphs pulled from the CV_ICONS registry.",
+  "questions": [
+    "What is the full set of icon keys available in CV_ICONS.data, and do all 12 referenced keys resolve?"
+  ],
+  "purpose_vs_actual": "Match — the card both states the never-emoji icon rule and demonstrates it by rendering CV line icons from the registry in token colours.",
+  "apparent_themes": [
+    "Brand consistency / on-brand glyphs over emoji",
+    "Token-driven recolourable icons (theme-ability)",
+    "Single-source icon registry (CV_ICONS)",
+    "Active-state via token swap"
+  ],
+  "intention_signals": "Trying to codify and visibly justify the rule that navigation glyphs must be themeable token-coloured line icons (not emoji), so the sidebar recolours and stays on-brand under any theme.",
+  "novelty": "Encoding an icon/brand convention as a live demonstration card that proves the themeability rationale by swapping stroke tokens for the active state.",
+  "contribution": "Contributes the sidebar nav icon convention (token-coloured CV line icons, never emoji; bronze default / gold active) and a registry-driven glyph rendering pattern keyed by icon name.",
+  "summary_for_embedding": "A claude-ds Brand preview card rendering a 12-item sidebar nav with CV line icons from the CV_ICONS registry, stroked in bronze (active row gold), asserting the never-emoji icon convention.",
+  "intention_for_embedding": "To codify and demonstrate that sidebar navigation must use themeable token-coloured CV line icons rather than emoji so glyphs recolour and stay on-brand."
+}

@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "templates/pitch-deck/PitchDeck.dc.html",
+  "model": "opus",
+  "what_it_does": "A Design Component page (.dc.html) defining the ConceptV investor/sales 'Pitch Deck'. The <x-dc> template renders a themed page header (ConceptV mark, 'lod = · density =' meta) and an sc-for over `slides`, each slide rendered by an <x-import> of a global Slide component (ConceptVDesignSystem_c8f43c.Slide) fed archetype/content/register/lod/density. The <script data-dc-script> defines `class Component extends DCLogic` whose `DECK` getter holds the entire pitch as DATA — 11 slides (cover, problem split, metric-band, hub diagram, compare, stepper, metrics, profile, terms, closing) — and renderVals() computes per-slide numbers + the lod/density/theme axis values from props. data-props declares enum editor controls for register/lod/density/theme.",
+  "observations": [
+    "Includes ./support.js (the dc-runtime) in <head> and ./ds-base.js?v=3 via <helmet>, plus a deckSlideIn keyframe.",
+    "The deck is 'content-as-data': each slide is {archetype, content}; the generative core (Slide) computes the layout — comment says editing the deck = editing this data, archetypes stay invariant.",
+    "Real business content embedded: ConceptV pitch — Virtual Hubs, Universal Mechanics, $430B rework, 70+ hubs, 41,500+ users, Grant Plummer CSO, $800k committed, 91× multiple, Series A $50M target, contact details (phone/email/website/office), 'Revit → Enscape → ConceptV'.",
+    "Archetypes used: cover, split, metric-band (x2), diagram (hub graph with shaped nodes + computed edges), compare, stepper, profile, terms, closing.",
+    "componentDidMount wires an IntersectionObserver to animate each slide on entry (deckSlideIn), respects prefers-reduced-motion, leaves base visible for print/no-JS (cites REQUIREMENTS E3).",
+    "renderVals() implements a 'register' concept: custom register passes lod/density through; presenter/reader register drives lod+density+motion instead (custom → undefined register, else pass register and blank lod/density).",
+    "Axis-dial props declared via data-props as enums: register(custom/presenter/reader), lod(summary/pitch/full), density(compact/comfortable/spacious), theme(light/dim/dark/contrast).",
+    "x-import targets a hashed global name 'ConceptVDesignSystem_c8f43c.Slide' with hint-size 1280px,720px and 'Loading slide…' fallback."
+  ],
+  "standouts": [
+    "An entire investor pitch expressed as a data array of archetype+content, recomputed live by lod/density/theme axis-dials — the narrative arc as content-as-data.",
+    "Per-slide IntersectionObserver reveal that degrades to fully-visible base for print/no-JS/reduced-motion (animation is additive, not load-bearing).",
+    "The 'register' axis (custom vs presenter vs reader) reframes the same deck for different consumption modes by switching which axis values are author-driven."
+  ],
+  "conventions": [
+    "Follows the DS one-engine pattern: no hand-laid-out slides; archetypes render through the shared Slide/generative core under axis-dials.",
+    "Uses the dc-runtime template language (sc-for, x-import, {{}}, helmet) and the DCLogic class + data-props editor metadata.",
+    "Styling via tokens only (var(--zone-ground), --ink, --accent-bronze, --fs-*, --elev-2) — no raw colors in the markup.",
+    "Print/no-JS resilience and reduced-motion respect baked into the reveal logic."
+  ],
+  "concerns": [
+    "The x-import global name carries a build hash 'ConceptVDesignSystem_c8f43c.Slide' inline in the template — couples this deck to a specific bundle build id (file-local smell).",
+    "Large amounts of specific financial/contact claims live in template data ($800k, 91×, phone/email) — accuracy depends on this file staying current."
+  ],
+  "notes": "The ConceptV investor pitch deck as a Design Component: the slide narrative is a data array of archetype+content rendered by the shared Slide engine under register/lod/density/theme dials, with scroll-reveal that degrades gracefully.",
+  "questions": [
+    "Where is the Slide component / 'ConceptVDesignSystem_c8f43c' global defined, and what does the hash track?",
+    "What consumes the data-props enum metadata — an external editor that renders the lod/density/theme controls?",
+    "Is the embedded financial/contact content the source of truth or a sample fixture?"
+  ],
+  "purpose_vs_actual": "Matches: @template description says 'Investor/sales deck computed from the generative core … recomputed live by the LOD/density/theme axis-dials' and the file is exactly that.",
+  "apparent_themes": [
+    "content-as-data / design = f(content, axis)",
+    "generative core with invariant archetypes",
+    "axis-dials (lod/density/theme/register) as the single knobs",
+    "graceful degradation (print/no-JS/reduced-motion)",
+    "token-pure presentation"
+  ],
+  "intention_signals": "Built to prove the DS thesis on a real artifact: an investor deck where the whole narrative is editable data and the layout/density/theme/consumption-mode are computed by the one generative engine, so the same deck recomposes for presenter/reader/custom use without bespoke per-slide code.",
+  "novelty": "A real pitch deck implemented as a single DCLogic data array rendered through a shared archetype engine with live axis-dials and a register-mode concept — a deck that is content-as-data rather than hand-built slides.",
+  "contribution": "Contributes the concrete pitch-deck template instance: the ConceptV narrative content (problem/metrics/diagram/compare/stepper/team/terms/closing), the archetype vocabulary it exercises, the register/lod/density/theme axis-prop schema, and the IntersectionObserver scroll-reveal that degrades for print/no-JS.",
+  "summary_for_embedding": "ConceptV investor Pitch Deck as a .dc.html Design Component: an 11-slide narrative held as a data array of {archetype,content} rendered by the shared Slide engine under register/lod/density/theme axis-dials, with scroll-reveal that degrades for print/no-JS/reduced-motion.",
+  "intention_for_embedding": "To present ConceptV's investor/sales pitch as content-as-data computed by the generative design engine, recomposable live by axis-dials and consumption mode."
+}

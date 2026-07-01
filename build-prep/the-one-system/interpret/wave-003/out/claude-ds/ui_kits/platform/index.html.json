@@ -1,0 +1,36 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/index.html",
+  "model": "opus",
+  "what_it_does": "The HTML entry page for the Platform UI kit: it links the shared color/type stylesheet plus the local platform.css, pulls React 18, ReactDOM, and Babel-standalone from a CDN, and loads the kit's JSX components and screens as type=text/babel scripts that mount into #app.",
+  "observations": [
+    "A @dsCard HTML comment annotates the card metadata: group 'UI Kit — Platform', name, subtitle (Gallery/Calendar/Brand Kit/Hub Settings), viewport 1440x720",
+    "Links ../../colors_and_type.css (the shared token stylesheet) then platform.css (local)",
+    "Loads React 18.3.1, ReactDOM 18.3.1, and @babel/standalone 7.29.0 from unpkg with SRI integrity hashes and crossorigin",
+    "Component load order: PlatformSidebar, TopBar, ActionToolbar, Chats, then screens (Gallery, Calendar, BrandKit, HubSettings, Stub), then PlatformApp last",
+    "All component scripts are type=text/babel (in-browser transpilation)",
+    "Single <div id=\"app\"></div> mount point"
+  ],
+  "standouts": [
+    "Uses the .development.js builds of React/ReactDOM (not production), consistent with a prototype/kit",
+    "SRI integrity + crossorigin on every CDN script is a careful touch for a prototype page"
+  ],
+  "conventions": [
+    "@dsCard comment convention so the kit registers in the design-system gallery with metadata",
+    "Babel-in-browser kit pattern: dependencies via CDN, components as text/babel scripts, PlatformApp loaded last to consume the globally-registered pieces",
+    "Links the shared colors_and_type.css token stylesheet (token discipline) before local overrides"
+  ],
+  "concerns": [
+    "External CDN dependencies (unpkg React/ReactDOM/Babel) — won't run offline or under a strict CSP; in-browser Babel is slow/unsuitable for production",
+    "Load-order is implicit and fragile: PlatformApp must come after all component registrations or globals will be undefined"
+  ],
+  "notes": "If briefing someone: this is the boot page that assembles the whole Platform dashboard kit from CDN React + Babel and the local JSX files; load order is load-bearing and the @dsCard comment wires it into the gallery.",
+  "questions": ["Are TopBar.jsx, PlatformSidebar.jsx, the screens/*.jsx, and PlatformApp.jsx present alongside this file (this batch only includes ActionToolbar and Chats)?"],
+  "purpose_vs_actual": "Matches — the title and @dsCard describe a creator-side Platform dashboard kit and the page assembles exactly the sidebar/topbar/toolbar/chats + four screens to that end.",
+  "apparent_themes": ["Babel-in-browser prototype assembly", "design-system gallery card metadata", "shared-token stylesheet then local CSS", "global-window component composition"],
+  "intention_signals": "Aims to be a runnable, no-build showcase of the full creator-side platform dashboard (Gallery/Calendar/Brand Kit/Hub Settings) wiring together the kit's components on the shared design tokens.",
+  "novelty": "n/a",
+  "contribution": "Contributes the assembly/entry page that composes the Platform dashboard kit and declares its gallery card (group, screens, viewport) on the shared token stylesheet.",
+  "summary_for_embedding": "The Platform UI kit's index.html that loads CDN React/Babel and the kit's JSX sidebar, topbar, toolbar, chats and four screens into a single mount on the shared design tokens.",
+  "intention_for_embedding": "To provide a runnable no-build showcase of the creator-side platform dashboard composed from the kit's components on the shared design system."
+}

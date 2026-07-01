@@ -1,0 +1,55 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/INTEGRATION.md",
+  "model": "opus",
+  "what_it_does": "Documents the wiring/anti-drift contract for the ConceptV design system: it specifies four single-source registries (Tokens, Types, the generative Engine, AI), gives each one home, and lays out the rules by which consumers reference (never copy) those homes so a change at the home propagates everywhere.",
+  "observations": [
+    "Opens by naming the failure mode it defends against: adding capability as a parallel system that drifts; the defence is 'one home per concept; everything else references it.'",
+    "Section 0 is a table mapping each of four registries to its home file and the API consumers use (var(--token)/data-*; CV_REGISTRY.resolve; window.__cvRenderType; CV_AI.execute/.complete/.resolveProvider).",
+    "States all four registries share the same API shape on purpose: register/resolve/lineage/query/subscribe, plus layers and single-inheritance.",
+    "Section 1 diagrams the token layering: styles.css imports colors_and_type.css + tokens/*.css, with L0 primitives -> L1 semantic roles -> L2 component tokens -> consumers, and the rule 'a value is defined once at its lowest valid layer.'",
+    "Section 2 gives entry points for each kind of new thing (colours as L0 primitives then L1 roles; atoms into existing tokens/*.css; axes via data-* knob pattern; generative core consuming L0-L2 only).",
+    "Section 4 names concrete guardrails: the check_design_system compiler, an adherence lint (_adherence.oxlintrc.json) turning the ABSENT-list into lint rules, specimen cards, and deprecate-don't-delete.",
+    "Section 6 generalises the token rule to Types (CV_REGISTRY composition graph) and AI (CV_AI: 43 capabilities across 14 families today, voice lives once at voice.conceptv, providers as the only model binding).",
+    "Closes with the system's compressed formula: design = f(content, axisPosition) and ai = f(capability, context, params), both from registries with no duplicated literals."
+  ],
+  "standouts": [
+    "The four-registries-one-shared-API framing: tokens, types, engine, and AI all expose register/resolve/lineage/query/subscribe so learning one teaches the others.",
+    "The 'defined inside its token graph, not attached to the system' phrasing — new parts have no literals so nothing can drift.",
+    "Voice-as-data: voice.conceptv is sourced (CV_AI.get('voice.conceptv').text), never inlined into prompts.",
+    "Loud-never-silent rule applied to AI: missing capability/provider/runtime must throw, not return a degraded default."
+  ],
+  "conventions": [
+    "registry-is-truth: one home per concept, consumers hold references not copies.",
+    "fail-loud: missing capability/provider/runtime/type throws; no swallowing in catch.",
+    "token-layering: lowest-valid-layer definition, higher layers var() it, no raw hex/px in consumers.",
+    "extend-by-registration: add a colour/atom/axis/type/capability by registering at the right layer, never a parallel file.",
+    "deprecate-don't-delete to protect external consumers.",
+    "axis-as-data-knob: new axes are data-* attributes + CSS vars, mirroring data-theme/--density."
+  ],
+  "concerns": [
+    "States '43 today across 14 families' as a specific count that will silently age as capabilities are added — a number embedded in prose that consumers cannot reference.",
+    "Asserts the four registries 'share the same API shape on purpose' as a claim this doc cannot itself verify; it is a design intent statement, not checked here."
+  ],
+  "notes": "This is the constitution for how the design system stays drift-free: four registries, one home each, consumers reference — read it before adding any value, type, archetype, or AI move.",
+  "questions": [
+    "Is the shared register/resolve/lineage/query/subscribe API actually implemented identically across all four registries, or is the uniformity aspirational?",
+    "What enforces that a consumer references the L1 role rather than the L0 primitive directly — is that lint-checked or convention-only?"
+  ],
+  "purpose_vs_actual": "Match — it states it is 'the wiring contract' covering all four single-source registries and it delivers exactly that: homes, reference mechanisms, entry-by-layer rules, and guardrails.",
+  "apparent_themes": [
+    "registry-is-truth",
+    "single-source-of-truth",
+    "anti-drift",
+    "fail-loud",
+    "token-driven",
+    "axis=f(content,position)",
+    "extend-by-registration",
+    "reference-not-copy"
+  ],
+  "intention_signals": "Inferred: the doc is trying to encode a single organising principle — 'one home per concept, reference everywhere' — and prove it generalises beyond CSS tokens to types, the render engine, and every AI/model touch, so that the system can grow new capability without forking into a parallel drifting subsystem.",
+  "novelty": "Treats four very different subsystems (CSS tokens, a type/composition graph, a render engine, and an AI capability/provider catalogue) as instances of one identical registry pattern, and frames the entire design+AI system as two parallel f(...) functions computed from drift-free registries.",
+  "contribution": "Contributes the explicit cross-subsystem anti-drift contract — the mapping of each registry to its single home plus the per-layer entry rules and the design=f(content,axis)/ai=f(capability,context,params) framing — a fused system would keep as its statement of how new capability connects without forking.",
+  "summary_for_embedding": "Wiring/anti-drift contract for the ConceptV design system specifying four single-source registries (tokens, types, generative engine, AI), each with one home that consumers reference rather than copy, with layered token rules and guardrails so changes propagate without drift.",
+  "intention_for_embedding": "Intended to establish that every value, type, archetype, AI capability, provider and the voice has exactly one home referenced from everywhere, generalising the token single-source rule across all subsystems so new capability never forks into a drifting parallel system."
+}

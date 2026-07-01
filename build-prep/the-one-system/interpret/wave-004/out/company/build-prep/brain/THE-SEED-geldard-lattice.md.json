@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/THE-SEED-geldard-lattice.md",
+  "model": "opus",
+  "what_it_does": "A 'cold-reader rendering' (a sibling capture) of Tim Geldard's geometric seed stated 2026-06-11. It restates his construction (square box, centre, dyadic grid subdivision, concentric circles, cardinal/diagonal coincidence points, the forbidden corner circle, the law 2pi/n=(1/n)^k), performs a math check, and then amplifies the seed into seven system mappings (address=quadtree path, radius=relevance, angle=relation type, n=scale, the equation as binding law, coincidence points=valid states, renderer=lattice unfolding).",
+  "observations": [
+    "Attributes the idea to Tim Geldard and frames itself as amplification, not separate invention.",
+    "Records the doubling pattern 4->8->16 = 2^2,2^3,2^4 as 'the load-bearing pattern' (dyadic/quadtree subdivision).",
+    "Math check confirms 45deg=pi/4 (not pi/2), the 5-points-per-edge count, and the cardinal-vs-diagonal asymmetry (radius 2u vs 2sqrt2 u) as the sqrt2 incommensurability between Cartesian and polar structure.",
+    "Derives a clean form of the law: n^(1-k)=2pi, i.e. k = 1 - ln(2pi)/ln(n).",
+    "Seven numbered amplifications map the figure to Company concepts including a Morton/Z-order address reading replacing string paths like memory://a/b/c.",
+    "Reads k as a fractal/Hausdorff-style dimension exponent and the figure as the discrete skeleton of log-polar space / the complex exponential e^(i theta).",
+    "Reads the forbidden corner circle as the unrepresentable/lossy boundary where the gate lives.",
+    "Closes with named 'open growth fronts' (mode-to-sector mapping, k global vs per-region, embedding-to-lattice registration, the conformal-map reading)."
+  ],
+  "standouts": [
+    "The Morton/Z-order address reading: 'the address is where the thing sits in the recursively subdivided box' — hierarchy IS coordinate IS position.",
+    "The sqrt2 incommensurability framed as 'the ancient root-tension between Cartesian and polar structure; the reason a grid and a circle never perfectly reconcile.'",
+    "k read as a single dimension knob (k->1 as n->infinity) tuning how the space fills as it grows."
+  ],
+  "conventions": [
+    "Separates 'his construction' (verbatim shape) and 'math check' from 'the growth (amplification)', keeping attribution explicit.",
+    "Uses the repo altitude grammar (Pulse->River->Nodes as three values of n) and gate/spine/forbidden vocabulary.",
+    "Expand-before-harden: lists open growth fronts rather than asserting completion."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the lattice/encoding sibling reading of Tim's seed — the quadtree/Morton address derivation, k-as-dimension-knob, log-polar framing, and the sqrt2-incommensurability gate boundary.",
+  "questions": [
+    "Were the seven amplifications (esp. quadtree/Morton addressing replacing string paths) adopted into the actual store, or do they remain a reading?",
+    "Which of the open growth fronts (mode-to-sector mapping, k global-vs-per-region, embedding-to-lattice registration) were later resolved in the sibling captures?"
+  ],
+  "purpose_vs_actual": "Match — it states it is a cold-reader rendering plus amplification of the seed and delivers a faithful restatement, a math check, and seven mappings.",
+  "apparent_themes": [
+    "One generator (n) and one equation unfolding two coordinate systems (square+circle)",
+    "Address as position (quadtree/Morton path)",
+    "Coincidence points as the real/addressable; forbidden corner as the gate/limit",
+    "k as the fractal dimension knob binding angle to scale",
+    "Scale=zoom=altitude (Pulse/River/Nodes as n-values)"
+  ],
+  "intention_signals": "To independently grow Tim's compact geometric seed into a concrete encoding for the Company's coordinate/address/memory layer — showing how addresses, relevance, relation-types, scale, the binding law, valid states, and the renderer all fall out of one parameter and one equation.",
+  "novelty": "The explicit quadtree/Morton-path = address = coordinate derivation, the log-polar / e^(i theta) and conformal-map (z->z^k branch points at the corners) readings, and the clean algebraic form k = 1 - ln(2pi)/ln(n).",
+  "contribution": "Contributes the encoding-face reading of the seed: the Morton/Z-order addressing scheme, the k-as-dimension-knob and clean law form, the log-polar/conformal framing, and the sqrt2-incommensurability gate boundary — distinct geometric machinery a fused system could keep.",
+  "summary_for_embedding": "A sibling cold-reader rendering and amplification of Tim Geldard's geometric seed that derives quadtree/Morton-path addressing, reads k as a fractal dimension knob in n^(1-k)=2pi, frames the figure as log-polar space, and locates the gate at the sqrt2-incommensurable forbidden corner.",
+  "intention_for_embedding": "To grow Tim's geometric seed into a concrete coordinate/address/memory encoding for the Company where position, hierarchy, and meaning all unfold from one parameter and one equation."
+}

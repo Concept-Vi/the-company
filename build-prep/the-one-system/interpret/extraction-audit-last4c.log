@@ -1,0 +1,7 @@
+auditing 4 code files (resume on) | concurrency=4 | engine=http://127.0.0.1:8770/api/cognition/run_items
+final persist: CREATE TABLE
+CREATE TABLE
+COPY 4
+INSERT 0 4
+
+DONE: 4/4 ok | 0 flagged | 0 err | 5s

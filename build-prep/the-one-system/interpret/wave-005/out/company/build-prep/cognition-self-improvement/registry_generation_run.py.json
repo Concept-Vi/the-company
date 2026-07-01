@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/registry_generation_run.py",
+  "model": "opus",
+  "what_it_does": "Runs a manual registry-generation convergence over ONE mockup file: grounds via run_role(screen_reader), maps register_element over candidate UI elements, reduces by clustering/dedup, then confirms each cluster representative with run_jury + a deterministic refcheck, returning {confirmed, flagged} dossiers and persisting a batch artifact JSON.",
+  "observations": [
+    "Docstring frames this as the REUSABLE MANUAL form of design/_system/registry-generation.cascade.json, paralleling exocortex_ingest.py",
+    "Explicitly supplies three engine seams the cascade spec flags as not end-to-end runnable: resolve-once shared exemplars/inventory ctx, the {mockup}-keyed screen_reader ground wiring, and the confirm jury+refcheck firing",
+    "Builds an in-memory Role variant (reg_v) adding 'ground' as a bare-name shared input to register_element's input_addresses",
+    "Loads confirm_status via importlib from roles/confirm_registration.py",
+    "_grounding_payload assembles exemplars from addresses.json, feature ids from register.json, and a fixed capability vocab (pointable, spotlit, presentable, openable, driven)",
+    "register_element emits a `grounding` TAG (built|proposed|uncertain|defer) rather than a confidence float (cited as G16)",
+    "FLAG-don't-drop policy: floor-fail or non-built grounding marks for operator scrutiny, never dropped",
+    "Chain is GROUND -> MAP(run_items) -> REDUCE(run_reduce cluster mode, threshold 0.85) -> CONFIRM(per-cluster representative)",
+    "Hardcodes EXEMPLAR_KEYS for ui:// inbox/toolbar surfaces and chdir to /home/tim/company in __main__",
+    "Persists rg10-batch-<mockup>.json described as a readable batch, NOT a registry write"
+  ],
+  "standouts": [
+    "States the bounded manual run IS the executable spec/reference for what the engine seam must later auto-thread",
+    "Two-layer confirm combining a stochastic jury verdict with a deterministic refcheck floor",
+    "Distinction that the floor PROPOSES only — never resolve/approve/dispatch (operator-gated path comes after)"
+  ],
+  "conventions": [
+    "sys.path.insert + relative file opens assume cwd is the repo root",
+    "verbose progress printing with [GROUND]/[MAP]/[REDUCE]/[OK]/[FLAG] phase tags",
+    "References labelled steps (RG3-RG6, RG8, RG9, G16, V-A/RG10) tying code to an external numbering scheme",
+    "Uses runtime.cognition (C) helpers run_role/run_items/run_reduce/run_jury as the composition primitives"
+  ],
+  "concerns": [
+    "Many bare open() calls without context managers or explicit encoding",
+    "Truncations (mockup[:8000], outerHTML[:600], max_tokens caps) are silent and could drop content",
+    "importlib dynamic load of confirm_registration.py duplicates a module that may already be importable"
+  ],
+  "notes": "A self-described manual reference implementation of the registry-generation cascade that hand-threads three unbuilt engine seams to prove the convergence over a single mockup.",
+  "questions": [
+    "What downstream step (RG8 PROPOSE / RG9 WRITE-BACK) consumes the persisted rg10-batch artifact?",
+    "Where is the cluster_threshold 0.85 value justified?",
+    "What defines the candidates.json schema and how is it generated?"
+  ],
+  "purpose_vs_actual": "Match: the docstring's stated purpose — manually supplying the three engine seams as an executable reference and producing a confirmed/flagged set — matches the code's GROUND/MAP/REDUCE/CONFIRM structure and artifact output.",
+  "apparent_themes": [
+    "Convergence-by-composition of role primitives",
+    "Grounding via real inventory/exemplars rather than free generation",
+    "FLAG-don't-drop and operator-gated write-back as safety discipline",
+    "Tags over confidence floats for grounding status"
+  ],
+  "intention_signals": "Trying to make an as-yet-unrunnable cascade spec concretely executable by hand-wiring its open seams, so the bounded run doubles as both a proof and the reference for what the engine should later automate.",
+  "novelty": "The explicit framing of a manual script as the live specification for future engine auto-threading, plus the dedup-then-confirm-representative pattern combining jury and deterministic floor.",
+  "contribution": "Contributes an executable, seam-by-seam manual realization of the registry-generation convergence (ground/map/reduce/confirm over one mockup) with a two-layer jury+refcheck confirm and FLAG-don't-drop output — the hand-threaded form of three engine seams a fused system would keep.",
+  "summary_for_embedding": "A Python script that manually runs the registry-generation convergence over one mockup — grounding, mapping register_element across UI candidates, clustering, and jury+refcheck confirming into confirmed/flagged dossiers.",
+  "intention_for_embedding": "To make an otherwise non-runnable registry-generation cascade executable by hand-supplying its three open engine seams, serving as both convergence proof and the reference for future automation."
+}

@@ -1,0 +1,37 @@
+{
+  "project": "company",
+  "path": "axes/viewer.py",
+  "model": "opus",
+  "what_it_does": "Declares a single AXIS dict named 'viewer' — the viewer/principal axis (who). id/namespace 'viewer', one discrete field 'expertise' (novice | pilot), value_source 'pending' because no operator-mode/settings state exists yet, and a desc framing it as the control-density seam against which expert knobs resolve.",
+  "observations": [
+    "field 'expertise' has values novice | pilot, described as a render-family/density pick",
+    "value_source is 'pending' — explicitly noted that no operator-mode state is built yet, slot wired, value pending",
+    "desc lists principals: Tim, the RHM, a client (each translated-for)",
+    "docstring stresses knobs resolve against expertise rather than a hardcoded advanced panel"
+  ],
+  "standouts": [
+    "value_source 'pending' — the axis is deliberately wired ahead of its data source ('resolves the moment a source exists')",
+    "control density (novice->plain, pilot->full knob-row) is made an axis, not a UI toggle"
+  ],
+  "conventions": [
+    "same AXIS = {id, namespace, fields, value_source, desc} shape as sibling axes files",
+    "uses value_source 'pending' (sibling state.py/type.py use 'live') to mark an unwired source"
+  ],
+  "concerns": [],
+  "notes": "The 'who' axis: control density / expertise (novice|pilot) against which knobs resolve; wired but value_source is pending until operator-mode state exists.",
+  "questions": [
+    "What component will eventually supply the operator-mode/expertise value?",
+    "How do the three named principals (Tim/RHM/client) map onto the two-value novice|pilot field?"
+  ],
+  "purpose_vs_actual": "Match — docstring says 'VIEWER/principal axis (who)' and the dict encodes expertise/control-density; it candidly states the value source is not yet built.",
+  "apparent_themes": [
+    "control density as a resolvable axis, not a hardcoded panel",
+    "translate-for-the-viewer (per-principal rendering)",
+    "wire-the-slot-before-the-source (forward-declared axis)"
+  ],
+  "intention_signals": "Trying to make audience/expertise drive how much control a surface exposes, declaratively, so the moment an operator-mode source exists the density resolves without new branching code.",
+  "novelty": "An axis intentionally shipped with value_source 'pending' — a forward-wired slot awaiting its data source.",
+  "contribution": "Contributes the viewer/principal axis declaration — the control-density seam keyed on expertise (novice|pilot) and the pending-source wiring pattern.",
+  "summary_for_embedding": "A declarative AXIS dict 'viewer' encoding the principal/control-density dimension with a discrete 'expertise' field (novice|pilot) and value_source 'pending' until operator-mode state exists.",
+  "intention_for_embedding": "To make viewer expertise the seam that resolves how much control a surface exposes, wired ahead of its data source."
+}

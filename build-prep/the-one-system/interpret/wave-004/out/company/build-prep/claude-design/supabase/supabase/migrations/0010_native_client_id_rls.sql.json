@@ -1,0 +1,41 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0010_native_client_id_rls.sql",
+  "model": "opus",
+  "what_it_does": "Redefines client_id() and is_design_client() to resolve identity from the OAuth token's native server-set top-level client_id (matched against clients.oauth_client_id for the active claude-design row) instead of from hook-stamped app_metadata claims, taking the Custom Access Token Hook out of the claims path while keeping the existing 0006 design_client policies working unchanged.",
+  "observations": [
+    "Header titled GO NATIVE, motivated by zero blast radius on the 16 live OAuth connectors on the shared project.",
+    "client_id() now selects clients.id where oauth_client_id = auth.jwt()->>'client_id' and status='active' limit 1 — returns the ROW id (e.g. 'claude-design'), not the native client id.",
+    "is_design_client() now checks existence of an active client row whose oauth_client_id matches the native client_id, replacing the 0006 app_metadata.role check.",
+    "Both functions are SECURITY DEFINER with set search_path=public and re-asserted via explicit ALTER statements; both carry descriptive comments.",
+    "Header documents the key mapping: native client_id is the Vi OAuth CLIENT id; RLS scoping uses the client ROW id; the Edge Function mirrors this lookup.",
+    "channel_granted() is noted as unchanged (made SECURITY DEFINER in 0009) and picks up the new client_id() automatically.",
+    "Header notes the boundary principal (0005) still reads app_metadata.role set at user creation — a clean split: CD=native client_id, boundary=app_metadata-at-creation."
+  ],
+  "standouts": [
+    "The pivot from hook-stamped app_metadata claims to the native, server-set, non-forgeable OAuth client_id as the identity source — and the explicit ROW-id-vs-native-client-id mapping it depends on."
+  ],
+  "conventions": [
+    "create or replace + explicit ALTER to re-assert SECURITY DEFINER/search_path (same pattern as 0006).",
+    "Function comments documenting semantics and the empty-string fallback.",
+    "Leaves downstream 0006 policies untouched by only changing the helper functions they reference."
+  ],
+  "concerns": [],
+  "notes": "This is the 'go native' switch: identity now derives from the verified OAuth client_id mapped to a clients row, so the hook becomes inert for claims while the 0006 policies keep gating unchanged.",
+  "questions": [
+    "Is auth.jwt()->>'client_id' reliably present and server-set for all the OAuth connectors on this shared project?",
+    "After this migration, is the 0007 hook fully removed from the active-hook slot, or only inert for claims while still staged for aud-binding?"
+  ],
+  "purpose_vs_actual": "Match: header says identity moves to the native client_id with no change to channel_granted or the 0006 policies, and the two redefined functions do exactly that.",
+  "apparent_themes": [
+    "Native/server-set identity over user-forgeable claims",
+    "Zero blast radius on a shared multi-connector project",
+    "Registry-is-truth (clients.oauth_client_id mapping)",
+    "Clean separation of connector vs boundary identity"
+  ],
+  "intention_signals": "Trying to derive the design_client identity from the OAuth server's verified client_id rather than a custom hook, so the shared project's other connectors are untouched and identity cannot be forged via metadata.",
+  "novelty": "The ROW-id-vs-native-client-id indirection — RLS scoping uses the clients row id resolved from the native client id, with the Edge Function mirroring the same lookup.",
+  "contribution": "Contributes the native-client-id identity resolution for client_id()/is_design_client(), mapping a verified OAuth client to a clients row id without any token-mutating hook.",
+  "summary_for_embedding": "Supabase migration redefining client_id() and is_design_client() to resolve the design_client identity from the OAuth token's native server-set client_id mapped to clients.oauth_client_id, removing the hook from the claims path.",
+  "intention_for_embedding": "To base the design connector's RLS identity on a verified, non-forgeable native OAuth client_id with zero blast radius on the other connectors of a shared Supabase project."
+}

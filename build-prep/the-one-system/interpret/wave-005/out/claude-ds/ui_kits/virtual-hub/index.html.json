@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/index.html",
+  "model": "opus",
+  "what_it_does": "The HTML entry page for the Virtual Hub UI kit viewer. It sets up a single `#app` mount node, loads React 18.3.1 + ReactDOM + Babel-standalone from unpkg CDN (with SRI integrity hashes), links two stylesheets (`../../colors_and_type.css` and local `hub.css`), and then loads eight `text/babel` JSX component scripts in order (HubBug, MenuButton, QuickMenu, InfoPanel, SharePanel, FloorplanOverlay, CaptureComment, HubApp).",
+  "observations": [
+    "Carries a `@dsCard` HTML comment with group/name/subtitle/viewport metadata describing it as 'Buyer-side panotour overlay · MENU · Info · Floorplan · Capture'.",
+    "Declared viewport in the dsCard is 1280x720.",
+    "Loads React, ReactDOM, and Babel from `unpkg.com` with explicit `integrity` SRI hashes and `crossorigin=\"anonymous\"`.",
+    "Uses `@babel/standalone` to transpile JSX in the browser (no build step).",
+    "Eight component scripts loaded via `<script type=\"text/babel\" src=...>`, with HubApp.jsx last (the composing root).",
+    "Links `../../colors_and_type.css` (shared design tokens) plus a local `hub.css`.",
+    "Single `<div id=\"app\"></div>` mount point."
+  ],
+  "standouts": [
+    "The `@dsCard` metadata comment, which lets the design-system gallery catalogue this page.",
+    "CDN-loaded React + browser Babel transpilation — a no-bundler prototype delivery.",
+    "Pinned dependency versions with SRI integrity hashes."
+  ],
+  "conventions": [
+    "Follows the dsCard cataloguing convention used by the design corpus gallery.",
+    "Links the shared `colors_and_type.css` token sheet, aligning with the 'define once, reference everywhere' design-system rule.",
+    "Script load order is explicit and deliberate (components first, HubApp root last)."
+  ],
+  "concerns": [
+    "External CDN dependencies (unpkg) contradict self-contained delivery and would fail offline or under a strict CSP.",
+    "Browser-side Babel transpilation is a prototype/dev pattern, not production-grade.",
+    "Loads `react.development.js` / `react-dom.development.js` (dev builds)."
+  ],
+  "notes": "The viewer shell that assembles eight JSX overlay components into a buyer-side panotour 'virtual hub' demo, transpiled in-browser via CDN React+Babel.",
+  "questions": [
+    "Where is the React root actually mounted onto `#app` — presumably inside HubApp.jsx, not shown here?",
+    "Is the unpkg/Babel-in-browser approach intended only for prototype viewing, with a separate production build elsewhere?"
+  ],
+  "purpose_vs_actual": "Matches — the dsCard subtitle (panotour overlay with MENU/Info/Floorplan/Capture) lines up with the component set being loaded.",
+  "apparent_themes": [
+    "Buyer-side virtual tour / panotour overlay",
+    "No-bundler in-browser React prototyping",
+    "Design-system gallery cataloguing via dsCard metadata",
+    "Shared token stylesheet reuse"
+  ],
+  "intention_signals": "To provide a runnable, catalogue-able viewer page that wires together the virtual-hub overlay's eight UI components against the shared design tokens, without a build pipeline.",
+  "novelty": "The combination of dsCard gallery metadata, SRI-pinned CDN React, and ordered browser-Babel JSX loading as a single self-describing kit entry page.",
+  "contribution": "Contributes the composition/entry contract for the virtual-hub kit — the exact component set, their load order, the shared+local stylesheet wiring, and the gallery dsCard descriptor for this overlay.",
+  "summary_for_embedding": "An HTML viewer page mounting a Virtual Hub panotour overlay UI kit by loading eight JSX components via CDN React and browser Babel, with shared design tokens and dsCard gallery metadata.",
+  "intention_for_embedding": "To run and catalogue the buyer-side virtual-hub panotour overlay demo by composing its eight UI components against the shared design system without a build step."
+}

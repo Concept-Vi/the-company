@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/inventory/inv-C-nodes-roles-voice.md",
+  "model": "opus",
+  "what_it_does": "A fast-coverage inventory note cataloguing four subsystem regions of the Company codebase — nodes/, roles/, mcp_face/, and voice/ — listing folder structure, a per-file purpose table with priority ratings, a summary of counts, top-10 deep-read priorities, architecture insights, and legacy/experimental notes.",
+  "observations": [
+    "Frontmatter declares type: research, source: fast-inventory, region covering nodes/+roles/+mcp_face/+voice/, scan_date 2026-06-08, method: coverage (not deep).",
+    "Reproduces directory trees for mcp_face/, nodes/ (19 node-types), roles/ (8 role files + AGENTS), and voice/ including ears/, engines/, ops/systemd, models/, ref/.",
+    "Inventory table assigns each file a PRIORITY of YES / Maybe / No with a one-line note.",
+    "Records concrete operational details: VRAM figures (Canary ~10.06 GB, Granite ~4.66 GB, Parakeet ~3.05 GB, Qwen3-TTS ~6 GB at 2700 tok/s) and port assignments (ears :2031-2033, engines :4124-4128).",
+    "States totals: 68 files scanned, 19 node-types (7 core), 9 cognition roles, STT registry + Kokoro TTS + 5 trial engines.",
+    "Architecture Insights section names self-registering patterns (C2), fabric guards, swappable registries (PROVIDER_LIST, ENGINE_REGISTRY, ROLE_REGISTRY), a VRAM convergence point (2026-06-06), and universal layers (speakable, Suite).",
+    "Uses context/section codes throughout (C2, C2.1-C2.5, C7, S6, G2-G4) to tie files to a numbered framework."
+  ],
+  "standouts": [
+    "The VRAM convergence note: voice lifecycle unified VRAM authority with ops/cli/gpu.py (the keeper) on 2026-06-06, closing a dual-authority bug.",
+    "The recurring self-registration-by-file-presence pattern applied uniformly to nodes, roles, and voice engines/ears (no central registry).",
+    "Concrete measured engine metrics embedded in an inventory note (port + VRAM + throughput)."
+  ],
+  "conventions": [
+    "Follows the research/inventory frontmatter convention (type, source, region, scan_date, method).",
+    "Uses a priority-tagged table (YES/Maybe/No) as the inventory backbone.",
+    "References the codebase's numbered context/framework codes (C2, C7, S6, G2-G4) rather than re-explaining them."
+  ],
+  "concerns": [],
+  "notes": "A 2026-06-08 coverage-only map of the nodes/roles/mcp_face/voice regions with per-file priorities — a navigation index, not a deep read.",
+  "questions": [
+    "What do the context codes (C2.3, C7, S6, G2-G4) resolve to — where is the framework these reference defined?",
+    "Is the 'fast coverage (not deep)' status still accurate, or have deep-reads since superseded this?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is a fast coverage scan and delivers exactly a coverage-level inventory with explicit non-deep caveats.",
+  "apparent_themes": [
+    "Self-registration / file-discovery over central registries",
+    "Swappable provider catalogs for STT/TTS/roles",
+    "Resource (VRAM) authority convergence",
+    "Universal/shared layers across UI and agent faces"
+  ],
+  "intention_signals": "Aims to give a future deep-reader a prioritized map of four subsystems — what exists, where, how important, and which 10 files to read first — without claiming completeness.",
+  "novelty": "The uniform application of one self-registration pattern across nodes, roles, and voice engines, surfaced as a cross-region insight from a coverage scan.",
+  "contribution": "Contributes a prioritized, port/VRAM-annotated map of the nodes/roles/mcp_face/voice subsystems and the cross-cutting patterns (self-registration, fabric guards, swappable catalogs, VRAM convergence) that bind them.",
+  "summary_for_embedding": "A fast-coverage inventory note mapping the Company codebase's nodes/, roles/, mcp_face/, and voice/ subsystems with per-file priorities, port/VRAM details, and cross-region architecture insights.",
+  "intention_for_embedding": "To give deep-readers a prioritized navigation map of four cognition/voice subsystems and the patterns connecting them, without asserting deep coverage."
+}

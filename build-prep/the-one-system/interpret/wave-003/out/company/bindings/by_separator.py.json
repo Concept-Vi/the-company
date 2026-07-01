@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "bindings/by_separator.py",
+  "model": "opus",
+  "what_it_does": "Declares a BINDING dict 'by_separator' configuring a radial view where each item's radius is its signed LEAN between two poles (pull toward A vs B), while angle_from still divides the wheel by kind. The two poles are declared variables (pole_a/pole_b) overridable per request, defaulting to two clustering-separated regions of the 'topics' lens. The docstring frames this as a general two-gravity field and names pollution (origin vs AI-corner) as one instance, not its purpose.",
+  "observations": [
+    "BINDING id 'by_separator', label 'Two gravities — what each thing leans toward'.",
+    "radius_from='separator' sets radius to a signed lean; angle_from='kind' divides the wheel independently.",
+    "Poles are VARIABLES, overridable via ?pole_a=&pole_b=.",
+    "Default poles are cluster://topics/k8/6 (worldview/conceptual) and cluster://topics/k8/4 (sessions/runtime).",
+    "Comment cites measured separation: 1-cos≈0.19 (widest of 28 centroid pairs), Spearman≈−0.18 opposed ordering.",
+    "References a separation_report / discriminator that honestly witnesses whether the poles actually separate.",
+    "space='topics' — cosines are computed within ONE space.",
+    "Pollution (origin vs AI-corner) named as a deferred application instance using a planted anchor:// vector."
+  ],
+  "standouts": [
+    "Generalizes a two-pole resolution into a reusable mechanism, with pollution-detection as just one named instance.",
+    "Carries concrete measured separation statistics (1-cos≈0.19, Spearman≈−0.18) and an honest separation_report witness."
+  ],
+  "conventions": [
+    "Follows the shared BINDING-dict pattern with id/label/angle_from/radius_from/order_by + meta.",
+    "Adds extra keys (pole_a/pole_b plus label fields) specific to this lens.",
+    "meta copy is TENTATIVE and operator-facing, consistent with siblings."
+  ],
+  "concerns": [],
+  "notes": "The two-gravity separator binding: radius = signed lean between two operator-chosen poles, defaulting to the two most-distinct topics clusters.",
+  "questions": [
+    "How are cluster://topics/k8/N pole references resolved to vectors at render time?",
+    "What happens to the default poles if a pyramid rebuild shifts the clusters (does it fail or just re-witness via separates)?"
+  ],
+  "purpose_vs_actual": "Match — docstring describes a general variable two-pole radius mechanism and the BINDING encodes exactly that (radius_from='separator', declared overridable poles, single space).",
+  "apparent_themes": [
+    "General mechanism over specific application (pollution as one instance)",
+    "Everything-is-a-drivable-variable (poles overridable per request)",
+    "Honest self-witnessing (separation_report tells the truth if poles stop separating)",
+    "Composability (separator owns only radius; any angular division composes)"
+  ],
+  "intention_signals": "Trying to provide a reusable two-pole field that places each thing by which of two operator-chosen gravities it leans toward, designed so the specific (pollution detection) is just a parameterization and the system honestly reports whether the chosen poles really separate.",
+  "novelty": "Signed-lean radius between two arbitrary, runtime-overridable vector poles, paired with a discriminator that audits whether the poles genuinely separate.",
+  "contribution": "Contributes the two-gravity/separator binding: the config for a signed two-pole lean radius with overridable poles and a separation witness, composable with any angular division.",
+  "summary_for_embedding": "A binding-config Python file declaring the 'by_separator' radial view whose radius is each item's signed lean between two overridable vector poles (defaulting to two distinct topics clusters), with a separation-report witness.",
+  "intention_for_embedding": "To let an operator see what each thing leans toward between two ends they choose, as a general two-gravity field with pollution detection as one instance."
+}

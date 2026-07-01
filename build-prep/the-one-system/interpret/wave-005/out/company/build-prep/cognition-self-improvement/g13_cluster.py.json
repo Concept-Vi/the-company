@@ -1,0 +1,46 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/g13_cluster.py",
+ "model": "opus",
+ "what_it_does": "Reads the full mined history corpus (find_corpus projection='history'), tallies the pattern_tag of each exchange record plus signal fields (tim_correction, my_error, frustration, bug_fix, needs_tim), embeds the distinct tags via the fabric embeddings transport, greedily clusters them by cosine >= 0.78 weighted by recurrence count, attaches a representative correction/error example per cluster, and writes the top clusters to .build/g13/clusters.json. Returns a summary with the top-10 named patterns.",
+ "observations": [
+  "Operates on records persisted under projection 'history' via Suite.find_corpus; pulls output dict from store.get_content(r['cas']).",
+  "THRESHOLD = 0.78 with an inline comment that it is conservative ('under-merge > over-merge').",
+  "Hand-rolled cosine similarity function (cos) rather than a library.",
+  "Greedy weight-ordered clustering: heaviest tag seeds a cluster, later tags join the first cluster whose seed vector clears the threshold.",
+  "Collects per-cluster examples only from tags that carry a tim_correction or my_error, truncated to 160 chars.",
+  "chdir + sys.path.insert to /home/tim/company; embeds via DEFAULT_EMBED_MODEL from fabric.config.",
+  "Output JSON caps the persisted clusters at top 30; return value caps at top 10.",
+  "Docstring frames the script as 'THE FLOOR: read + embed + cluster — proposes/reports only' and explicitly defers the report (G13-PATTERN-REPORT.md) to the lead as judgment work."
+ ],
+ "standouts": [
+  "Self-described as 'the system's first complete self-study of how-I-work-with-Tim' — clustering the collaboration's own failure patterns.",
+  "Deliberate separation: the script produces data only; the human/lead writes the narrative report — explicit floor-vs-judgment boundary."
+ ],
+ "conventions": [
+  "Follows the Suite/NodeRegistry/FsStore construction idiom for entering the runtime from a standalone script.",
+  "Returns a dict and prints json.dumps(main()) in __main__ — the repeated script-as-callable pattern.",
+  "Uses the corpus/projection abstraction rather than reading files directly (substrate-is-truth)."
+ ],
+ "concerns": [
+  "Greedy single-seed clustering is order-dependent and only compares against each cluster's seed vector (not centroid/all members), so merge quality hinges on the seed; the docstring acknowledges conservatism but not this asymmetry.",
+  "Embeds short kebab-case tags (not the underlying exchange text), so cosine clustering operates on terse labels — sensitivity noted only as 'spot-checked'."
+ ],
+ "notes": "Deterministic tally + embed + greedy-cluster of pattern_tags over the mined history corpus; emits clusters.json, leaves the interpretive report to a human lead.",
+ "questions": [
+  "Where do pattern_tag and the signal fields get written into the history records (which role/miner produces them)?",
+  "What is DEFAULT_EMBED_MODEL concretely, and is the 0.78 threshold tuned to it specifically?"
+ ],
+ "purpose_vs_actual": "Match — docstring states read+embed+cluster as a propose/report-only floor, and the code does exactly that, writing data and explicitly not the report.",
+ "apparent_themes": [
+  "Self-study / introspection of the agent-operator collaboration",
+  "Floor-vs-judgment separation (deterministic data work vs interpretive reporting)",
+  "Substrate-is-truth (corpus as the source, not a parallel state file)",
+  "Pattern recurrence as weight"
+ ],
+ "intention_signals": "Trying to turn the mined dialogue history into a weighted map of recurring collaboration patterns/failures so the system can see, empirically, how it works with Tim — without fabricating the interpretation in code.",
+ "novelty": "Clustering of an agent's own conversational failure-pattern tags, weighted by recurrence, framed as a self-mirror that confirms rather than invents.",
+ "contribution": "Contributes the clustering engine that condenses the mined history corpus into weighted named pattern groups, plus the explicit floor/report boundary that keeps interpretation out of the deterministic step.",
+ "summary_for_embedding": "A Python script that tallies, embeds, and greedily cosine-clusters the pattern_tags of mined history-corpus exchanges into weighted named collaboration-pattern groups written to clusters.json.",
+ "intention_for_embedding": "To produce a deterministic, weighted self-study of recurring how-the-agent-works-with-Tim patterns from the full mined dialogue history, leaving the narrative interpretation to a human lead."
+}

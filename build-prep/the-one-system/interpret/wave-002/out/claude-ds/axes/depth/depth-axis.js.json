@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "axes/depth/depth-axis.js",
+  "model": "opus",
+  "what_it_does": "Defines the depth (elevation/shadow) axis via `CV_AXES.make` and registers it. It mirrors the `--elev-*` token ramp (flat=0 → d6=deep) plus a 'normal' renderer-default value, grouped into flat/raised/system. Raised values carry both an `elev-*` token and shadow-geometry meta (dy/blur/opacity) for the polygon-accurate Glyphic shadow. Flat is marked `zero`, default is 'normal'.",
+  "observations": [
+    "Guards for `window.CV_AXES`, else console.error + return.",
+    "Groups: flat, raised, system (system default).",
+    "Values flat(zero, token elev-0), d1..d5 (token elev-1..elev-5 + meta dy/blur/opacity), d6 (meta only, NO token), normal (no token/meta, group system).",
+    "Each raised value's meta encodes drop-shadow geometry: dy, blur, opacity, increasing with elevation.",
+    "Header states the SVG drop-shadow geometry lives in CV_GLYPHIC (must follow the polygon, not a CSS box) but the scale+tint single-source here / tokens/depth.css.",
+    "Default value 'normal' (the renderer default)."
+  ],
+  "standouts": [
+    "Carries per-value shadow geometry in `meta` (dy/blur/opacity) alongside the token, so the polygon-accurate Glyphic shadow can be computed rather than using a CSS box-shadow.",
+    "A 'normal' system-default value with no payload coexists with the explicit ramp — the renderer default is itself an axis value.",
+    "d6 ('Deep') has meta but no token, unlike d1..d5 which pair a token with meta."
+  ],
+  "conventions": [
+    "Single-sources the elevation scale to tokens/depth.css via the `token` field; meta supplements with geometry.",
+    "`zero: true` on flat marks the axis's zero value (used by the core's `zero()` helper).",
+    "Same guard-and-return-on-missing-core + IIFE/window pattern as the colour axis."
+  ],
+  "concerns": [
+    "d6 ('Deep') lacks a `token` (unlike d1..d5) so `resolveCSS('d6')` returns null (only meta) — an asymmetry that may be intentional (no elev-6 token) but means d6 has no CSS payload, only geometry.",
+    "Missing-core handling is console.error + silent return, softer than the core's loud-fail throw."
+  ],
+  "notes": "The depth axis: an elevation ramp (flat→d6) mirroring --elev-* tokens, each raised value also carrying dy/blur/opacity shadow geometry for Glyphic's polygon-accurate shadow; default 'normal'.",
+  "questions": [
+    "Is the absence of a token on d6 intentional (no --elev-6 defined) and is that an expected null resolveCSS?",
+    "How does CV_GLYPHIC consume the meta (dy/blur/opacity) to build the polygon shadow?",
+    "Does any consumer rely on the 'normal' value resolving to null, or is it handled specially by the renderer?"
+  ],
+  "purpose_vs_actual": "Matches: the header describes a typed view over elevation mirroring the --elev-* ramp with geometry meta and a system 'normal' default, with shadow polygon realisation in Glyphic — the code is that registration.",
+  "apparent_themes": [
+    "Axis mirrors a token ramp (single-sourced scale)",
+    "Structure (token) + computed geometry (meta) coexisting on a value",
+    "Polygon-accurate depth (shadow follows shape, not a box)",
+    "The renderer default expressed as an axis value"
+  ],
+  "intention_signals": "Trying to make elevation a typed, subscribable dimension whose numeric scale lives once in tokens while carrying the extra geometry a shape-accurate shadow needs, so Glyphic can render depth that follows the polygon.",
+  "novelty": "Pairing each elevation value with explicit drop-shadow geometry meta for polygon-following shadows, rather than relying on CSS box-shadow.",
+  "contribution": "Contributes the concrete depth-axis instance: the flat→deep elevation ramp mapped to tokens plus the per-step shadow geometry meta that Glyphic uses for shape-accurate shadows.",
+  "summary_for_embedding": "A JavaScript registration of the ConceptV depth axis: an elevation ramp (flat/zero → d1..d6 → normal) mirroring --elev-* tokens, with raised values carrying dy/blur/opacity shadow geometry meta for polygon-accurate Glyphic shadows, registered into CV_AXES.",
+  "intention_for_embedding": "To model elevation as a typed axis whose scale is single-sourced in tokens while carrying the geometry needed for shape-following shadows."
+}

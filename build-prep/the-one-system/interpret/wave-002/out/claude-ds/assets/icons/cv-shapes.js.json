@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "assets/icons/cv-shapes.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that defines the ConceptV SHAPE SYSTEM as window.CV_SHAPES (and a CommonJS export). It builds regular n-gon geometry (3-8 sides + circle) on a 100x100 box, a registry of eight typed shapes each carrying a semantic meaning (Entity/Action/Object/Decision/Feature/System/Specialised/Gateway), a compat layer of brand entities, token-based default treatments, and a single renderer markSVG(spec, opts) that produces an SVG vessel with a rounded fitted outline, optional pattern overlay, drop shadow, and an inner icon/wordmark/label.",
+  "observations": [
+    "ngon() computes regular polygon vertices on a radius-50 circle; poly() stores INSET points (r=46) for stroked rendering and a FULL-BLEED clip-path (r=50).",
+    "geom map covers circle, triangle, square (rotated 45), diamond, pentagon, hex, heptagon, octagon (rotated 22.5); 'hexagon' aliased to 'hex' for back-compat.",
+    "shapeTypes array binds each shape to a type name, side count, default icon, meaning text, and optional pattern/ink overrides.",
+    "entities array maps brand instances (userPortal, propertyWizard, virtualHubs, vi, generic) to shape types; vi carries wordmark:true instead of an icon.",
+    "markBox holds the shared sizing rule (span 86) so every shape anchors HEIGHT to one circle and lets WIDTH compute.",
+    "markDefaults resolves stroke/fill/ink/shadow/pattern from CSS tokens (var(--...)); markPalette is a pixel-sampled hardcoded preset for exact reproduction.",
+    "rp()/roundedFit() round polygon corners with quadratic curves, then fit/scale the rounded outline to the shared span; centroidInradius() finds the area centroid + inscribed radius for icon placement.",
+    "viWordmark() pulls window.CV_VI_GLYPH path or falls back to a text 'Vi'; iconLayer() pulls glyph body from window.CV_ICONS and centres it at the centroid.",
+    "markSVG resolves spec (shape key | type id | entity id) then cascades default -> type/entity -> opts (+ optional 'sampled' preset); supports label > wordmark > icon content priority and frameOnly/stretch/flat options.",
+    "A unique id suffix (Math.random) namespaces gradient/shadow/pattern defs per render."
+  ],
+  "standouts": [
+    "Shapes are TYPED MEANING, not decoration: a sided-polygon-count-to-semantic-class mapping (circle=Entity ... octagon=Gateway, circle as the limit of infinite sides).",
+    "Everything is a parameter with a documented cascade: markDefaults (tokens) <- shapeType overrides <- markSVG(opts).",
+    "Geometry, semantics, brand entities, and rendering all live in one module declared 'the single home for the shape system'."
+  ],
+  "conventions": [
+    "Token-pure defaults (var(--...)) with an optional sampled hex preset — follows the single-source design-token discipline.",
+    "Header comment lists 'Connected systems' wiring (cv-icons.js, CvIcon.jsx, ContainmentTree.jsx, colors_and_type.css, brand_shapes.html).",
+    "IIFE + window global + module.exports dual-publish pattern.",
+    "Explicit 'never more than 8 sides' rule encoded in both geometry and prose."
+  ],
+  "concerns": [
+    "markSVG shadows the outer markPalette name P with a local pattern-config const P inside the pattern block, a readability hazard.",
+    "Unique id uses Math.random() rather than a counter, so collisions are improbable but not impossible across many renders.",
+    "geom has no 'rect' kind but markSVG handles a g.kind==='rect' branch that no geom entry produces (square is a rotated poly, not rect)."
+  ],
+  "notes": "The one home for ConceptV's typed-shape vessels: regular polygon geometry + semantic shape registry + a single token-driven SVG renderer.",
+  "questions": [
+    "Where is the 'rect' shape kind ever produced, given geom never sets kind:'rect'?",
+    "What populates window.CV_ICONS and window.CV_VI_GLYPH that this module depends on at render time?"
+  ],
+  "purpose_vs_actual": "Matches — the docstring claims to be the single home for the shape system (geometry + typed meaning + one renderer) and the code delivers exactly that.",
+  "apparent_themes": [
+    "Typed meaning over decoration",
+    "Single source of truth / define-once-reference-everywhere",
+    "Everything-is-a-parameter cascading defaults",
+    "Token-driven styling with optional exact-reproduction preset"
+  ],
+  "intention_signals": "Trying to make brand geometry semantically meaningful and fully parametric — a shape carries a class, every visual property resolves from tokens, and one renderer produces all vessels so the look never drifts and a consumer can override any field per call.",
+  "novelty": "The polygon-side-count-to-semantic-class taxonomy (more sides = more specialised/boundary, circle = whole entity) and the rounded-fit-then-anchor-to-shared-circle sizing rule for keeping mixed regular polygons aligned and undistorted.",
+  "contribution": "Contributes a self-contained typed-shape geometry + semantic registry + token-driven SVG vessel renderer, with the rounded-corner fitting math and centroid/inradius icon placement.",
+  "summary_for_embedding": "A JavaScript module (window.CV_SHAPES) defining ConceptV's typed-shape system: regular n-gon geometry, an eight-shape semantic registry, brand entity mappings, token-based default treatments, and a single markSVG renderer producing rounded, shadowed SVG vessels with inner icons or the Vi wordmark.",
+  "intention_for_embedding": "To be the single home for ConceptV's brand shapes so geometry carries semantic meaning and every visual property is a token-driven parameter rendered through one function."
+}

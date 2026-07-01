@@ -1,0 +1,41 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-STUDIO.json",
+  "model": "opus",
+  "what_it_does": "A grounding-confirmation artifact for the STUDIO.html mockup (the Mockup Studio design-review portal). It records a 'ground' description, counts (18 candidates, 18 dossiers, 5 clusters), and confirmed vs flagged lists of addressable UI elements. Each entry holds a dossier (ui:// address, capabilities, grounding, a howto with what/how_to_change/what_you_can_do, maps_to_feature, represents), the cluster size and member indices, and a confirm block with a 3-draw jury verdict (grounded vs ungrounded votes, unanimity, quorum) and reasons.",
+  "observations": [
+    "The 'ground' block describes the Mockup Studio as a portal to view mockup files and give conversational feedback to the RHM agent, with a left gallery, center stage, and right feedback panel.",
+    "Most candidates (12 of 18) collapse into one large cluster mapped to ui://studio/mockup-studio representing 'The Mockup Studio portal' itself.",
+    "All four confirmed entries carry maps_to_feature:'proposed' with how_to_change notes like 'Mockup-only; no built code path maps to this yet.'",
+    "Only one entry is flagged (ui://mockup/phone), by the accuracy jury (Layer 2, SOFT) for lacking grounding quorum (1 of 3 draws agreed grounded).",
+    "No refcheck (Layer 1) feature-fabrication failures appear in this file — every maps_to_feature is the literal 'proposed'.",
+    "Capabilities use the fixed vocabulary (pointable, presentable, spotlit)."
+  ],
+  "standouts": [
+    "A single dominant cluster (12 members) collapses most of the screen's candidates into the portal-itself dossier, leaving few distinct controls.",
+    "Every feature mapping here is 'proposed' — the file records a mockup with no built-code groundings at all."
+  ],
+  "conventions": [
+    "Same dossier/cluster/jury schema as the other rg10 confirm-batches: ui:// addresses, what/how_to_change/what_you_can_do howto triple, confirmed vs flagged split.",
+    "Operator-facing plain-language descriptions in howto fields.",
+    "Two-layer verification labels preserved (refcheck = Layer 1 deterministic floor; accuracy jury = Layer 2 SOFT)."
+  ],
+  "concerns": [],
+  "notes": "This is the grounding-confirmation output for the Mockup Studio mockup — a small set (5 clusters), all proposed, with a single jury-flagged element.",
+  "questions": [
+    "Why do 12 of 18 candidates collapse into the portal-itself cluster rather than resolving to distinct controls — is the mockup sparse, or is the clusterer coarse here?",
+    "What threshold of grounded votes constitutes quorum (the flagged phone entry had 1 of 3)?"
+  ],
+  "purpose_vs_actual": "Matches: it presents and contains a per-element grounding confirmation of the STUDIO.html mockup.",
+  "apparent_themes": [
+    "Grounding mockup elements to proposed-vs-built features",
+    "Soft-jury verification with operator-scrutiny flagging",
+    "Addressable surface with ui:// addresses and operator howtos",
+    "Self-referential tooling: a studio for reviewing mockups, itself grounded as a mockup"
+  ],
+  "intention_signals": "It appears to be trying to confirm that the Mockup Studio's clickable surface grounds honestly, and — since everything is 'proposed' — to record that this screen is design-only with no code path yet, while still surfacing one low-confidence element for review.",
+  "novelty": "A grounding-confirmation record of a meta-tool (the mockup-review studio) where the screen under review is itself a mockup, and where nearly all candidates fold into the screen-as-portal dossier.",
+  "contribution": "Contributes the populated grounding-confirmation record for the Mockup Studio screen: its cluster structure (one large portal cluster plus a few controls), its all-proposed feature mappings, and the single soft-flag example that a fused system would keep as this screen's element-confirmation evidence.",
+  "summary_for_embedding": "A grounding-confirmation output for the STUDIO.html (Mockup Studio) mockup recording 18 candidate UI elements in 5 clusters, all mapped to 'proposed' features, with one element soft-flagged by the accuracy jury for lacking grounding quorum.",
+  "intention_for_embedding": "To certify the Mockup Studio mockup's clickable surface as design-only (all proposed, no built code path) while flagging a low-confidence element for operator review."
+}

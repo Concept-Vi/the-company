@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="AtomiCity — the system, navigable + Vi" subtitle="A standalone browser for the whole design system, with a resident agent that knows it, acts on it, and learns" viewport="1440x860" -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AtomiCity — ConceptV Design System</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="atomicity.css">
+</head>
+<body>
+<div id="atomicity"><div class="ac-loading"><div class="ac-spin"></div>Assembling the system map…</div></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Icon library + a small alias shim so AtomiCity's semantic icon names resolve
+     to existing glyphs (the library has 100; these map the names we use). -->
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script type="text/babel" src="../assets/icons/CvIcon.jsx"></script>
+
+<!-- Type registry (CV_REGISTRY) — needed for the System section + Types -->
+<script src="../app/registry/types-core.js"></script>
+<script src="../core/archetype-catalog.js"></script>
+<script src="../app/registry/types-seed.js"></script>
+
+<!-- CV_AI — the AI registry (providers · behaviours · skills · capabilities · context) -->
+<script src="../app/ai/ai-registry.js"></script>
+<script src="../app/ai/ai-seed.js"></script>
+<script src="../app/ai/ai-capabilities-canvas.js"></script>
+
+<!-- CV_HOST — the Bridge (runtimes · serializer · change queue) -->
+<script src="../app/ai/host-runtime.js"></script>
+<script src="../app/ai/host-serializer.js"></script>
+
+<!-- Compiled component bundle — for live component mounts -->
+<script src="../_ds_bundle.js"></script>
+
+<!-- Shared brand atoms -->
+<script type="text/babel" src="../app/components/ViShape.jsx"></script>
+<script type="text/babel" src="../app/components/Toast.jsx"></script>
+
+<!-- AtomiCity — the projection model + Vi's brain (plain JS), then the UI -->
+<script src="atlas-model.js"></script>
+<script src="scan-engine.js"></script>
+<script src="ingest.js"></script>
+<script src="explore-engine.js"></script>
+<script src="picker.js"></script>
+<script src="override.js"></script>
+<script src="shot.js"></script>
+<script src="mode-engine.js"></script>
+<script src="vi-brain.js"></script>
+<script type="text/babel" src="kit.jsx"></script>
+<script type="text/babel" src="Home.jsx"></script>
+<script type="text/babel" src="Atlas.jsx"></script>
+<script type="text/babel" src="Foundations.jsx"></script>
+<script type="text/babel" src="Ingest.jsx"></script>
+<script type="text/babel" src="Explore.jsx"></script>
+<script type="text/babel" src="VoiceSurface.jsx"></script>
+<script type="text/babel" src="ViConsole.jsx"></script>
+<script type="text/babel" src="AtomiCity.jsx"></script>
+
+<!-- Boot: build the Atlas from the live system, then mount. Loud on failure. -->
+<script type="text/babel">
+(async () => {
+  try {
+    // Map AtomiCity's semantic icon names onto existing glyphs (the library has
+    // 100; CvIcon reads data live, so applying before mount covers all renders).
+    (function () {
+      var d = window.CV_ICONS && window.CV_ICONS.data; if (!d) return;
+      var alias = {
+        'chevron-right':'play','arrow-right':'play','sparkles':'star','crosshair':'eye',
+        'dot':'tag','file-plus':'brochure','ruler':'adjustments','layers':'files-stack',
+        'square':'adjustments','type':'document','sliders':'adjustments','box':'3d-cube',
+        'server':'database','feather':'edit','wand':'star','droplet':'color-swatches',
+        'grid':'dashboard','check-circle':'check-square-fill','circle':'check-square',
+        'user':'person','component':'3d-cube','folder-open':'folder',
+        'shuffle':'swap','plus-square':'plus','filter':'sort','hierarchy':'network','crosshair':'eye','house':'home','globe':'world','chat':'message','cursor':'edit',
+      };
+      for (var k in alias) if (!d[k] && d[alias[k]]) d[k] = d[alias[k]];
+    })();
+    await window.ATLAS.init();
+    window.ATLAS._wire();
+    window.CV_SCAN && window.CV_SCAN.start();
+    ReactDOM.createRoot(document.getElementById('atomicity')).render(React.createElement(window.AtomiCity));
+  } catch (e) {
+    document.getElementById('atomicity').innerHTML =
+      '<div class="ac-loading"><div style="color:var(--status-error);font:600 14px var(--font-mono)">AtomiCity failed to boot</div><div style="max-width:520px;text-align:center">' + (e && e.message || e) + '</div></div>';
+    console.error('[AtomiCity boot]', e);
+  }
+})();
+</script>
+</body>
+</html>

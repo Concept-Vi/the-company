@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/vi/ViMark.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the ViMark React component: Vi's diamond avatar/brand mark. Renders an SVG diamond (polygon) with a white fill, a gold (#E0C010) stroke, and a horizontal-line pattern fill; when `animated` is true the pattern lines animate opacity (the 'thinking' line-fill). Optionally overlays the 'Vi' glyph (with a smaller subscript 'i'). Sizable via `size`. Exposed on window.",
+  "observations": [
+    "Props: size (default 32), animated (default false), showGlyph (default true).",
+    "Generates a per-instance random SVG pattern id (`vi-pat-` + random base36) to avoid <defs> id collisions when multiple marks render.",
+    "Pattern lines use opacity 0.55 when animated else 0.35; when animated an <animate> element pulses opacity 0.2->0.7->0.2 over 1.6s indefinitely.",
+    "Diamond drawn as polygon points '50,8 92,50 50,92 8,50' on a 0 0 100 100 viewBox, twice — once white-filled with gold stroke, once filled with the line pattern.",
+    "Hardcodes the gold colour #E0C010 directly in the SVG (stroke + pattern line) rather than using a CSS token.",
+    "fontSize for the overlaid glyph is set to size * 0.42; the 'i' is rendered at 0.62em.",
+    "Assigns window.ViMark (browser-global pattern, global React, no imports/exports)."
+  ],
+  "standouts": [
+    "The animated line-fill pattern is the visual signal for 'Vi is thinking' — motion encodes agent activity in the brand mark itself.",
+    "Per-instance random pattern id is a deliberate guard so multiple marks on one page don't share/clobber an SVG defs id."
+  ],
+  "conventions": [
+    "Browser-global component pattern (window.ViMark, global React), consistent with the rest of the Vi kit.",
+    "Breaks the design-system token discipline by hardcoding the gold #E0C010 in the SVG (vi.css/README treat gold as --accent-gold / a brand token elsewhere)."
+  ],
+  "concerns": [
+    "Math.random() pattern id is regenerated on every render, so the id changes each render (works, but not memoised — minor churn).",
+    "Hardcoded #E0C010 means a palette/token change to the brand gold would not propagate to this SVG mark."
+  ],
+  "notes": "Vi's diamond brand mark as a sizable SVG with an optional pulsing line-fill ('thinking') and an optional 'Vi' glyph; gold is hardcoded inline rather than tokenised.",
+  "questions": [
+    "Should the gold be sourced from the --accent-gold token (used elsewhere) rather than the inline #E0C010 literal?"
+  ],
+  "purpose_vs_actual": "Matches: the comment ('the Vi diamond avatar') matches the diamond SVG mark with optional animation and glyph it renders.",
+  "apparent_themes": [
+    "Brand identity as a reusable component (one mark, many sizes/contexts)",
+    "Motion-as-state (animated line-fill = thinking)",
+    "Collision-safe SVG (per-instance pattern id)"
+  ],
+  "intention_signals": "Tries to provide a single reusable Vi avatar that can stand in for Vi anywhere it 'speaks' and visibly indicate when Vi is actively working via the animated fill.",
+  "novelty": "Encoding 'thinking' as an animated line-fill inside a diamond brand mark, with a per-instance pattern id to keep many instances independent, is a distinctive touch.",
+  "contribution": "Contributes the canonical Vi avatar component — the diamond mark with its thinking-animation and optional wordmark — reused across the kit (e.g. inside the status pill and chat avatars).",
+  "summary_for_embedding": "React ViMark component rendering Vi's diamond brand avatar as a gold-stroked SVG with a line-fill pattern that pulses when animated ('thinking') and an optional 'Vi' glyph, sizable and exposed on window.",
+  "intention_for_embedding": "To give Vi a single reusable avatar mark that signals identity everywhere it speaks and indicates active thinking via animated fill."
+}

@@ -1,0 +1,53 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-engine/COMPLETION-CRITERIA.md",
+  "model": "opus",
+  "what_it_does": "A completion-criteria document for the Cognition Engine: a truth-table of what must be TRUE for the engine to be 'done', verifiable-by-use, with honest per-criterion status (proven-by-use / built-not-proven / gap). It organizes criteria into lettered groups (A direct authoring, B composition surface, C concurrency/loadout, D corpus/output sink, E run discovery/chaining, F robustness at scale, G the two faces) across Part 1, then Part 2 no-regression (foundation G0-G9 plus carried-forward and mode-reach groups H/I/J), Part 3 the corpus/discovery pillar (groups K-Q), Part 4 adversarial-fold corrections, and Part 5 two standing bars (agent-knowledge and self-describing-for-update).",
+  "observations": [
+    "Status legend uses checkmark (proven-by-use), yellow (built-not-proven/designed), red (gap) markers throughout.",
+    "Stated method: criteria were discovered BY USING the engine (dogfooding MCP across 8 uses, mapping the repo's own 427 files), encoding a use->assess->reason->improve->write loop as the method itself.",
+    "Group A claims direct authoring works (create_role/skill/context apply live, no approval) with a commit ref; A4 enforces a build-dispatch floor (no path emits dispatch_decision or launches claude -p).",
+    "Group B (composition surface) is flagged as the active gap: every select/param must project from a registry with zero hardcoding; B2 makes field_types a richer type registry (the net-new keystone).",
+    "Group C: found the real concurrency ceiling — max_num_seqs:16 - R:2 = 14 is the binding cap while KV supports 44; the make is raising chat-4b swarm max_num_seqs to 34.",
+    "Group D: the scale test digested 427 files and DISCARDED them — the corpus sink (persist, embed-on-write, retrieve-as-input/RAG, cluster, queryable, purposeful chains) is largely a gap.",
+    "Group F: verified bugs caught at scale — F1 :// classification (address only if it STARTS with a registered scheme; 16% of files broke), F2 one poison unit discards the whole batch, F3 over-context files need chunk-and-compose.",
+    "Part 2 insists this is no-regression continuation, not a pivot (Tim mandate 2026-06-09), with an explicit no-regression coverage statement accounting for every prior item.",
+    "Part 5 defines two cross-cutting standing bars verified by a FRESH agent/session: BAR 1 agent-knowledge (discovery/per-tool descriptions/per-workflow skills/saved cascades) and BAR 2 self-describing-for-update (module constitutions/registry drift-homes/inline-why/tool-code traceability).",
+    "Open decisions are captured for Tim (e.g. rep_penalty vs legitimate enumeration, node-authoring line, pillar relationship)."
+  ],
+  "standouts": [
+    "The no-green-paint discipline: honest status with gaps that stay gaps, status found by use rather than asserted.",
+    "Concrete measured findings embedded as criteria (the 14-vs-32 concurrency knee; the 427-file discard; the :// classification bug).",
+    "The two standing bars framing AI-operable-with-no-human-devs: agents must know how to USE it (BAR 1) and how to EVOLVE it (BAR 2), each verified by a fresh agent.",
+    "The doc encodes its own construction method (use->critically assess->reason->improve->write) as the bar-keeping mechanism."
+  ],
+  "conventions": [
+    "Verifiable-by-use criteria with explicit FUNCTION vs FORM grading (Form is half of done where a surface exists).",
+    "Registry-is-truth / reflects-never-owns / file-discovered / no-hardcoding as recurring laws.",
+    "Carry-forward discipline (nothing dropped; every prior item mapped into a group).",
+    "Dense, compressed prose with inline status markers and commit/file references."
+  ],
+  "concerns": [
+    "Very dense and acronym-heavy (lane/group/criterion codes, abbreviations) — hard to parse cold without the surrounding build-prep context.",
+    "Many criteria reference external artifacts (other criteria docs, commits, file paths) that this file alone cannot resolve."
+  ],
+  "notes": "This is the honest, use-discovered truth-table of what 'done' means for the cognition engine, spanning authoring, a registry-projected composition surface, concurrency ceiling, a corpus sink, robustness, two faces, and the two standing bars for AI-only operation and evolution.",
+  "questions": [
+    "What is the current real status of the many red gaps (the doc is a snapshot dated around 2026-06)?",
+    "Where are the referenced sibling docs (IMPLEMENTATION-GUIDE, Research Synthesis, the concurrent-cognition criteria) that this triad supersedes-by-reference?"
+  ],
+  "purpose_vs_actual": "Match — it states it is the verifiable-by-use truth-table of done for the cognition engine and the body is exactly that across all parts.",
+  "apparent_themes": [
+    "Verifiable-by-use, no-green-paint honesty",
+    "Registry-is-truth / reflects-never-owns / no-hardcoding",
+    "Found-by-use method as the bar-keeping loop",
+    "No-regression / carry-everything-forward",
+    "AI-operable-with-no-human-devs (use it AND evolve it)",
+    "Corpus as the missing production sink (outputs->inputs)"
+  ],
+  "intention_signals": "Trying to hold the cognition engine to a real, honestly-graded, use-discovered completion bar that covers function, form, robustness at scale, a registry-projected composition surface, a durable corpus, and the self-knowledge needed for agents to both use and evolve it with no human developers.",
+  "novelty": "Criteria literally discovered by dogfooding the engine on its own repo (427-file map) plus the two standing bars verified by a fresh, hand-holding-free agent — completion defined by an autonomous agent's ability to use and evolve the system.",
+  "contribution": "Contributes the structured, honestly-statused completion definition for the cognition engine — the groups A-Q, the no-regression mapping, and the agent-knowledge + self-describing-for-update standing bars.",
+  "summary_for_embedding": "A verifiable-by-use completion-criteria truth-table for the Cognition Engine, grouped across authoring, registry-projected composition, concurrency ceiling, corpus sink, robustness, two faces, no-regression carry-forward, a corpus/discovery pillar, and two standing bars for AI use and evolution.",
+  "intention_for_embedding": "To define and honestly track what must be true for the cognition engine to be done, discovered by dogfooding and gated on a fresh agent's ability to both use and evolve it with no human developers."
+}

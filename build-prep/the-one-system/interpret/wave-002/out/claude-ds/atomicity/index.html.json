@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/index.html",
+  "model": "opus",
+  "what_it_does": "The HTML entry point for the AtomiCity app — a standalone browser for the whole ConceptV design system. It loads React/Babel via CDN, the icon library, the type/AI/host registries, the compiled component bundle, the AtomiCity model and engine scripts, and all the .jsx UI files, then boots by initializing the Atlas model and mounting the AtomiCity React root.",
+  "observations": [
+    "Carries a @dsCard HTML comment annotation (group/name/subtitle/viewport) describing it as a navigable browser of the design system with a resident agent.",
+    "Loads React 18.3.1, ReactDOM, and Babel standalone from unpkg CDN with SRI integrity hashes and crossorigin.",
+    "Links ../styles.css (the system) plus a local atomicity.css.",
+    "Loads registries in a deliberate order: types-core → archetype-catalog → types-seed, then ai-registry → ai-seed → ai-capabilities-canvas, then host-runtime → host-serializer.",
+    "Loads plain-JS engine layer (atlas-model, scan-engine, ingest, explore-engine, picker, override, shot, mode-engine, vi-brain) before the Babel-compiled .jsx UI files.",
+    "Boot script defines an icon-alias map (e.g. 'chevron-right'->'play', 'sparkles'->'star') to resolve AtomiCity's semantic icon names onto the library's existing 100 glyphs.",
+    "Boot is async with try/catch that renders a visible 'AtomiCity failed to boot' error using token vars and logs to console — loud-fail per the project rule.",
+    "Mounts via ReactDOM.createRoot into #atomicity after ATLAS.init(), ATLAS._wire(), and CV_SCAN.start()."
+  ],
+  "standouts": [
+    "Explicit, commented script load order encoding the dependency contract (registries before consumers, plain JS before JSX).",
+    "Inline icon-alias shim that bridges semantic icon names to the existing glyph set without editing the icon library.",
+    "Loud, styled boot-failure fallback rather than a silent blank page."
+  ],
+  "conventions": [
+    "Uses CDN React + Babel standalone in-browser compilation (text/babel scripts) — the project's prototype/mockup pattern.",
+    "Follows the documented load-order rule (ai-registry before seed before capabilities; registries before resolvers).",
+    "Loud-fail on boot, styled with design tokens — consistent with the non-negotiable 'loud fail, never silent' rule."
+  ],
+  "concerns": [
+    "Depends on external unpkg CDN at runtime; offline or CDN failure breaks the whole app.",
+    "In-browser Babel compilation of every .jsx on load is slow and is a development/prototype mode, not production.",
+    "Long flat list of script tags with implicit ordering dependencies — fragile if reordered."
+  ],
+  "notes": "The AtomiCity boot page: CDN React/Babel, ordered registry+engine+JSX loads, an icon-alias shim, then an async ATLAS.init + mount with a loud styled failure fallback.",
+  "questions": [
+    "Is the unpkg-CDN + in-browser-Babel setup intended only for the design corpus/prototype, with a compiled production path elsewhere?",
+    "Why is the icon library missing the semantic names natively, requiring the alias shim rather than adding glyphs to cv-icons.js?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard subtitle calls it a standalone browser for the whole design system with a resident agent that knows/acts/learns, and the page wires the registries, the Atlas model, the Vi brain, and the full UI to deliver that.",
+  "apparent_themes": [
+    "Registry-as-truth wiring with explicit dependency ordering",
+    "A self-contained, navigable view of the whole design system",
+    "Loud-fail boot discipline"
+  ],
+  "intention_signals": "Trying to assemble the entire design system (tokens, types, AI registry, host bridge, scanning, ingest, explore, Vi brain, UI) into one bootable in-browser app where an agent can know and act on the system.",
+  "novelty": "The single page composes the full stack — type registry, AI capability registry, host bridge, a live scanner, and a resident agent — into one design-system browser, with an icon-alias shim and ordered loads making it self-bootstrapping.",
+  "contribution": "Contributes the AtomiCity application shell: the exact load order and wiring that assembles registries, the Atlas projection model, the scan engine, the Vi brain, and every UI surface into one bootable design-system browser, including the icon-alias bridge and loud boot-failure handling.",
+  "summary_for_embedding": "The HTML boot page for AtomiCity, loading CDN React/Babel, the type/AI/host registries, the Atlas model and engines, the Vi brain, and all UI .jsx files, then initializing the Atlas and mounting the app with a loud failure fallback.",
+  "intention_for_embedding": "To assemble the entire ConceptV design system into one self-contained in-browser app with a resident agent that knows and acts on it, wiring all registries and engines in dependency order before mounting."
+}

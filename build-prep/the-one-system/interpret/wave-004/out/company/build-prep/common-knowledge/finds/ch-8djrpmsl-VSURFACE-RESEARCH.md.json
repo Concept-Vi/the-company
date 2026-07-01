@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/finds/ch-8djrpmsl-VSURFACE-RESEARCH.md",
+  "model": "opus",
+  "what_it_does": "Fork member's V-surface research report (dated 2026-06-17) covering its domain: the RHM brain, channels/fabric, the keystone resolution wire, and BEYOND. Produced by 4 research agents arbitrated against fork's build knowledge. Maps the decision-surface resolution chain (address→type→archetype→render→RHM-explain→take→write-back→re-resolve) as mostly live, names the small needed pieces, the key union findings, and 4 unlocking BEYOND gaps.",
+  "observations": [
+    "Uses explicit verification tags: V=verified-by-use, BU=built-unverified, DO=designed-only, DNE=doesn't-exist-yet.",
+    "WHAT EXISTS (mostly V): resolve_address (cognition.py:842, 10/17 schemes), territory_for/prose/label (territory.py), territory_write→suite.mark + fork-brain-core.writeDirections (9/9 V), run_turn / /api/claude/turn (the PANEL brain), resolve_surfaced + Inbox.surface_review (the floor-correct operator-verdict path), decision_memory.recall_for_decision (new, the RHM explain-context), MODE_REGISTRY (suite.py:2138, 13 axes/8 modes driving 5 wired arms).",
+    "THE SMALL NEEDED: decision:// scheme (~15 LOC, identical to board://), the keystone generate-router (~1 function: if generative → run_turn→territory_write(kind=generated) else mark), the TAKE = resolve_surfaced (reuse not a new mark).",
+    "Key union finding: the TAKE reuses resolve_surfaced (its consent records ARE the decision-artifacts), resolving the spec's territory_write-vs-reuse question.",
+    "Key union finding: THREE DISJOINT FABRIC SUBSTRATES (cc_channels live-injection _mail.jsonl, the supervisor mailbox agent_sessions/mail.jsonl, the surfaced-decision/ask store) that don't converge — 'channel-native decisions' means unifying them (DNE).",
+    "Key union finding: common-memory gap — supervised members reach mcp__company but interactive channel members cannot (channels/channel.mcp.json has only company-channel); fix = add mcp__company to channel.mcp.json.",
+    "Mode→colour is persona-keyed not mode-keyed (tokens.json persona families; App.tsx never sets data-persona/data-mode); mode has 2 unreached axes (brain_config per-mode VRAM loadout, consent act/offer/none hardcoded as if mode=='decide-for-me').",
+    "BEYOND reduces to one shape: resolve(address × frame × mode) → surface, retargeted by argument; the 4 unlocking gaps (all fork's domain): (a) mode/frame not threaded into resolution/render, (b) keystone generate-rung + trigger/hook registry DNE (trigger:// unallocated), (c) #71 Phase 2 mind-routing lead-gated, (d) the self/COMPANY_SESSION_ID reflexive edge (task #69).",
+    "Lists latent capabilities riding those gaps (command-bridge as type rows, bidirectional aim, the 5 unwired V verbs, RHM-as-channel-member, external-pilot, nested sub-surfaces, N+1 concurrent cognition) and a key-files list."
+  ],
+  "standouts": [
+    "The 'three disjoint fabric substrates' finding — the biggest channel-integration gap, naming exactly why a pending decision doesn't announce into the channel.",
+    "The cross-cutting shape: one circuit retargeted by argument (mode re-resolves OR swaps the mind; type is anything; aim flows both ways; driver can be Tim/brain/external pilot; write can record/generate/fire-from-event; node nests with concurrent cognition).",
+    "The honest through-line of missing reduced to exactly four fork-domain gaps (a/b/c/d) that unlock the rest."
+  ],
+  "conventions": [
+    "trust/author/date/purpose/method frontmatter citing Tim's research-first directive.",
+    "Verification tags (V/BU/DO/DNE) on nearly every claim; reuse-don't-rebuild framing (TAKE reuses resolve_surfaced).",
+    "Explicit lane ownership (which gaps are fork's vs DNA/composition's render side) and a key-files index for downstream agents."
+  ],
+  "concerns": [
+    "Surfaces real architecture gaps (the three non-converging fabric substrates, the interactive-member mcp__company gap, the hardcoded consent branch) — defects in the wider system, flagged not fixed.",
+    "Heavy reliance on file:line citations whose currency is not re-verified here (the report is research, not a live test of every line)."
+  ],
+  "notes": "Fork's RHM/decision-surface research — read for the resolution chain's live-vs-missing breakdown, the TAKE-reuses-resolve_surfaced decision, the three-disjoint-fabric-substrates gap, and the 4 BEYOND unlocking gaps.",
+  "questions": [
+    "Were the three disjoint fabric substrates ever unified into channel-native decisions, or does the gap persist?",
+    "Was mcp__company added to channel.mcp.json so interactive channel members reach common memory?",
+    "Did the keystone generate-rung and trigger:// registry get built, turning 'record what I said' into 'do what I said' at any address?"
+  ],
+  "purpose_vs_actual": "Match — declares itself research-first per Tim's directive (research all parts and BEYOND, code-grounded) and delivers a tagged what-exists/small-needed/union-findings/BEYOND map in exactly that role.",
+  "apparent_themes": [
+    "One circuit retargeted by argument: resolve(address × frame × mode) → surface",
+    "Reuse the floor-correct paths (TAKE = resolve_surfaced)",
+    "Unify the disjoint fabric substrates (channel-native decisions)",
+    "Mode as an argument that re-resolves or swaps the mind, not just re-tints",
+    "Verify-by-use tagging; lane-disjoint ownership"
+  ],
+  "intention_signals": "Trying to show the decision-surface resolution chain is mostly live and that the whole BEYOND collapses to four fork-domain gaps, so the build is small, targeted, and reuse-first rather than a from-scratch decision system.",
+  "novelty": "The reduction of the entire BEYOND to one retargetable circuit plus exactly four unlocking gaps, and the concrete 'three disjoint fabric substrates' diagnosis behind 'channels aren't decision-aware.'",
+  "contribution": "Contributes the RHM/decision-surface evidence: the verification-tagged resolution-chain inventory, the small-needed pieces (decision:// scheme, generate-router, TAKE-reuse), the fabric-unification and common-memory gaps, and the four BEYOND unlocking gaps with latent capabilities and a key-files index.",
+  "summary_for_embedding": "Fork member's V-surface research report on the RHM brain, channels/fabric, and keystone resolution wire — a verification-tagged inventory of the mostly-live decision-surface resolution chain, the small missing pieces, fabric-unification gaps, and four BEYOND unlocking gaps.",
+  "intention_for_embedding": "To show the decision-surface chain is mostly live and the whole BEYOND collapses to four fork-domain gaps, making the build small, targeted, and reuse-first rather than a from-scratch decision system."
+}

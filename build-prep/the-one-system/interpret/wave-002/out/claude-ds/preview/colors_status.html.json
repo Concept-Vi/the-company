@@ -1,0 +1,37 @@
+{
+  "project": "claude-ds",
+  "path": "preview/colors_status.html",
+  "model": "opus",
+  "what_it_does": "A standalone @dsCard preview (group 'Brand') showing the five status colours — success, warning, error, info, pending — each as a soft-fill chip with a coloured status dot and a labelled pill, plus name and hex.",
+  "observations": [
+    "Comment header `@dsCard group=\"Brand\" name=\"Status colors\" subtitle=\"Warm-shifted success / warning / error / info / pending\" viewport=\"700x220\"`.",
+    "Five statuses: success #5A8A4A (Approved), warning #E5A547 (Review), error #C24A3C (Rejected), info #4A78B8 (Info), pending #E5C547 (Pending).",
+    "Each chip pairs a soft tinted background (e.g. #E6EFDB) with a saturated dot and a darker-toned pill label.",
+    "Lead text: 'Status — warm-shifted, desaturated to sit inside the ivory palette. Pending uses gold, not amber.'",
+    "Pill labels show domain-flavoured states (Approved/Review/Rejected) tying colours to workflow semantics."
+  ],
+  "standouts": [
+    "The deliberate rule 'Pending uses gold, not amber' distinguishes pending (#E5C547) from warning (#E5A547).",
+    "Each status carries three coordinated tones: soft bg, dot, and pill text — a small per-status palette."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery convention.",
+    "Hardcodes all status hexes inline (expected for a colour-definition card) while using tokens for layout chrome."
+  ],
+  "concerns": [],
+  "notes": "A swatch card defining the five warm-shifted status colours, each with bg/dot/pill tones and a workflow label.",
+  "questions": [
+    "Are the per-status soft-bg and pill-text shades (e.g. #E6EFDB, #3D6431) themselves tokenised, or derived only here?"
+  ],
+  "purpose_vs_actual": "Matches — metadata names the five warm-shifted statuses and the body shows each with its coordinated tones.",
+  "apparent_themes": [
+    "Warm/desaturated status palette tuned to the ivory surface family",
+    "Status as a small per-colour set (bg + dot + label)",
+    "Workflow semantics bound to colour (approved/review/rejected)"
+  ],
+  "intention_signals": "Aims to define a status colour system that reads as part of the warm palette rather than generic traffic-light colours, and to separate gold-pending from amber-warning.",
+  "novelty": "The pending-is-gold-not-amber distinction and the warm-shifted, palette-integrated status colours.",
+  "contribution": "Contributes the canonical status-colour set (five states, each with bg/dot/pill tones and workflow labels) that a fused system would keep as its status-semantics reference.",
+  "summary_for_embedding": "A Brand-group design-system preview card showing the five warm-shifted status colours (success, warning, error, info, pending) each with soft background, dot, and pill-label tones and hex values.",
+  "intention_for_embedding": "To define warm, palette-integrated status colours and their workflow meanings, distinguishing gold pending from amber warning."
+}

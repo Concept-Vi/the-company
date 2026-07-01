@@ -1,0 +1,39 @@
+{
+  "project": "claude-ds",
+  "path": "system/system-map.json",
+  "model": "opus",
+  "what_it_does": "A generated data blob that models the entire design-system directory as a graph: a `nodes` array (one entry per file/folder with id, name, path, parent, type, ext, role, size, defines[], uses[]) and an `edges` array (relationships keyed by `kind`/`type`, including 'contains' tree edges and the loads/uses resolution edges). It is the single data source consumed by system/system-map.html to draw the treemap and wiring.",
+  "observations": [
+    "Oversized generated blob — the on-disk file is exactly 262144 bytes (256KB) and the view ends mid-string inside the edges array, indicating it is capped/truncated at read time; not hand-authored",
+    "Each node carries: id, name, path, parent (null for root), type (file|folder), ext, role (doc/card/token/archive/ingest/folder/...), size (bytes or null for folders), defines[], uses[]",
+    "Edges seen are 'contains' relations (e.g. screenshots → screenshots/atomicity-vi.png) with both kind and type set to 'contains'; the consumer also expects loads and uses:<global> edges",
+    "Roles observed in the sample: doc, card, token, archive, ingest, folder — matching the role vocabulary in system-map.html's RC/ROLE tables",
+    "Top-level entries include CLAUDE.md, DESIGN-LANGUAGE.md, README.md, SKILL.md, colors_and_type.css, styles.css, tonal-zoning.css, plus _archive-v1, _ingest, screenshots folders",
+    "system-map.html notes this file is the OUTPUT of system/build-system-map.js and is polled for regeneration; it may also carry an `encoding` block (DATA.encoding) the visualiser reads for live colours"
+  ],
+  "standouts": [
+    "It is the materialised model behind the visualiser: a flat node list plus typed edges that encode both directory containment and code resolution in one document"
+  ],
+  "conventions": [
+    "Generated artifact (build-system-map.js output), not edited by hand — matches the design folder's 'edit data/source, not generated files' rule",
+    "Role + size metadata on every node lets downstream lenses size/colour nodes without re-reading source"
+  ],
+  "concerns": [
+    "The file as stored is 256KB and appears truncated mid-edge in this view; if the on-disk artifact is actually cut off it would be invalid JSON and fail the consumer's JSON.parse (cannot confirm truncation is real vs a read cap from this file alone)"
+  ],
+  "notes": "The generated graph model (nodes + contains/loads/uses edges with role/size metadata) that system-map.html renders; produced by build-system-map.js, not hand-edited.",
+  "questions": [
+    "Is the 256KB file genuinely complete valid JSON, or is it truncated (the visible tail ends mid-string)?",
+    "Does this file include the `encoding`/`globals` blocks the HTML consumer references, and what is their shape?"
+  ],
+  "purpose_vs_actual": "Matches its role as the data source: it is exactly the node/edge model system-map.html indexes and draws.",
+  "apparent_themes": [
+    "Codebase-as-data / self-model (the directory expressed as a queryable graph)",
+    "Generated single source feeding a projection (data vs view separation)"
+  ],
+  "intention_signals": "It exists to capture the whole repository's structure and wiring as machine-readable data so a separate view can project it many ways without re-parsing the source tree.",
+  "novelty": "n/a",
+  "contribution": "Contributes the concrete graph representation of a codebase — files/folders as nodes with role+size, and containment+resolution as typed edges — that a fused system would keep as the data substrate for any directory/dependency visualisation.",
+  "summary_for_embedding": "Generated JSON graph model of the ConceptV design-system directory: nodes (files/folders with role, size, defines/uses) and edges (contains/loads/uses), consumed by system-map.html.",
+  "intention_for_embedding": "To represent the entire codebase's structure and wiring as machine-readable data so the system-map view can render and re-project it."
+}

@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "app/index.html",
+  "model": "opus",
+  "what_it_does": "The single HTML entry point for the ConceptV Studio (Design System Manager) app. It links the stylesheets, loads React/ReactDOM/Babel from unpkg, then loads (in a deliberate order) the core engine, axes, icon/glyphic stack, the Universal Type Registry, AI registry (CV_AI), Host layer, shared components, and every canvas, mounting App.jsx into #app.",
+  "observations": [
+    "Carries a @dsCard HTML comment with group/name/subtitle/viewport metadata describing it as 'Studio — design system manager'.",
+    "Links six stylesheets: ../styles.css, deck.css, app.css, workshop.css, registry.css, imagery.css.",
+    "Loads React 18.3.1, ReactDOM 18.3.1, and @babel/standalone 7.29.0 from unpkg.com with SRI integrity hashes and crossorigin.",
+    "An inline async IIFE (window.__coreReady) fetches core/{DiagramSolver,ContainmentTree,Slide,RenderType}.jsx, strips their export statements via regex, Babel-transforms them, and evals them via new Function so the app renders Types through 'the one engine'; throws loudly if window.__cvRenderType is not set.",
+    "Heavy commenting documents load-order requirements (icons → vi-glyph → shapes → meaning → glyphics; axis-core before form/symbol axes; ai-registry → ai-seed → ai-capabilities-canvas).",
+    "Loads ~12 axis scripts (color, space, size, motion, texture, depth, fill, form, symbol + axis-core).",
+    "Registry scripts loaded in sequence: conditions.js, types-core.js, archetype-catalog.js, types-seed/hooks/vi/adapter, glyphic-type.js, components-type.js, kinds-type.js, plus jsx UI/thumb/modal.",
+    "Loads CV_HOST layer (host-runtime.js, host-serializer.js) after CV_AI so host providers register into the one AI catalogue.",
+    "Many scripts are type='text/babel' (JSX compiled in-browser at runtime)."
+  ],
+  "standouts": [
+    "The inline core-loader that fetches .jsx source, strips exports, and evals it to share the exact same engine code the DS bundle compiles ('ONE ENGINE — UNIFICATION W4'), failing loudly if the global is absent.",
+    "Explicit, comment-documented script load order with throw-on-missing globals — load order is treated as a correctness contract.",
+    "Browser-side Babel transform of all canvases/components (no build step for the app entry)."
+  ],
+  "conventions": [
+    "Follows the project's 'one engine / one registry' principle by sourcing core solvers from ../core and registering everything into CV_REGISTRY / CV_AI.",
+    "Honors 'loud fail, never silent' — the core loader throws on fetch failure or missing __cvRenderType.",
+    "Single #app mount point; App.jsx loaded last."
+  ],
+  "concerns": [
+    "External CDN dependencies (unpkg.com for React/ReactDOM/Babel) — runtime network dependency for the app to boot.",
+    "Regex-stripping of export statements before eval is fragile to export-syntax variations.",
+    "In-browser Babel transform of dozens of scripts has a runtime performance/startup cost.",
+    "react.development.js / react-dom.development.js (dev builds) are loaded rather than production builds."
+  ],
+  "notes": "The Studio's bootstrap page — establishes the strict script load order and the in-browser core-engine loader that wires every registry/axis/canvas before mounting App.jsx.",
+  "questions": [
+    "Is this entry intended only for local/dev use (dev React builds, unpkg, in-browser Babel), with a compiled bundle for production?",
+    "What is the DS bundle that 'compiles the same code' and how does it relate to this runtime path?"
+  ],
+  "purpose_vs_actual": "Matches: the @dsCard says it manages colors/icons/voice/components with Vi chat + generation, and the script manifest wires exactly those subsystems (registry, AI, canvases for Colors/Icons/Voice/Components).",
+  "apparent_themes": [
+    "One engine / one registry, referenced not copied",
+    "Load order as a correctness contract",
+    "Loud failure over silent degradation",
+    "Self-documenting bootstrap"
+  ],
+  "intention_signals": "Trying to boot the entire unified design-system app from a single page where the core engine, axes, type registry, AI registry, and host layer all load in dependency order and the app renders Types through the very same engine code the bundle compiles.",
+  "novelty": "Fetching .jsx core files at runtime, stripping their exports, and eval-ing them to guarantee the app and the compiled bundle share identical engine code.",
+  "contribution": "Contributes the app's entry/bootstrap: the exact stylesheet + script load manifest and the runtime core-engine loader that wires all registries and canvases.",
+  "summary_for_embedding": "The single-page HTML entry for the ConceptV Studio that links stylesheets, loads React/Babel, runtime-loads the core engine, and registers all axes/types/AI/canvases before mounting App.jsx.",
+  "intention_for_embedding": "To bootstrap the unified design-system Studio in dependency order so the app renders through the one shared engine and registries."
+}

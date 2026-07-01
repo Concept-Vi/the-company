@@ -1,0 +1,40 @@
+{
+  "project": "claude-ds",
+  "path": "components/Button.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript type declarations for the `Button` component: declares a `ButtonProps` interface extending `React.ButtonHTMLAttributes`, the `Button` function signature, and the default export. Documents each prop (variant, size, pill, block, icon, as, href) via JSDoc.",
+  "observations": [
+    "`variant` union: 'primary' | 'ink' | 'outline' | 'ghost' | 'soft' | 'comm' | 'default', annotated with a per-variant 'voice' mapping (primary=gold decision, ink=dark panotour, outline=gold stroke pill, ghost=text-only, soft=gold-tint, comm=sage relationship).",
+    "`size` is 'sm' | 'lg' (default = standard control height).",
+    "Boolean modifiers: `pill` (described as the 'Virtual Tour'/'Click to View' treatment), `block`, `icon` (square icon-only).",
+    "`as?: any` for polymorphic rendering; `href?: string` triggers inferred `<a>` rendering.",
+    "Extends `React.ButtonHTMLAttributes<HTMLButtonElement>`, inheriting standard button DOM props.",
+    "Header JSDoc ties variants to 'the source's button vocabulary'."
+  ],
+  "standouts": [
+    "Each visual variant is documented with a semantic 'voice' drawn from the source product (gold decision voice, sage relationship, panotour), tying the type to product meaning."
+  ],
+  "conventions": [
+    "Standard `.d.ts` companion pattern alongside a `.jsx` implementation.",
+    "Uses JSDoc to attach product-semantic meaning to each variant — consistent with the design system's 'voices' vocabulary."
+  ],
+  "concerns": [
+    "`as?: any` loosens type safety for the polymorphic element (no constraint to valid element/component types)."
+  ],
+  "notes": "The type contract for Button: a variant union annotated with product 'voices' plus size/pill/block/icon/as/href, extending React button attributes.",
+  "questions": [
+    "Does the .jsx implementation actually honor every declared prop and default (e.g. does it map all variant values)?",
+    "What is 'panotour' — a product-specific surface referenced by the 'ink' variant?"
+  ],
+  "purpose_vs_actual": "Match — it is exactly a type-declaration companion describing the Button's props with documentation.",
+  "apparent_themes": [
+    "Typed component contracts",
+    "Variants as semantic product 'voices' not generic styles",
+    "Polymorphic rendering (as/href)"
+  ],
+  "intention_signals": "Aims to give consumers an IDE-discoverable, documented type surface for Button where each variant carries its intended product meaning.",
+  "novelty": "Encoding product-specific voice semantics (decision/relationship/panotour) directly into a button's type documentation.",
+  "contribution": "Contributes the typed prop vocabulary for the action primitive — the variant→voice taxonomy plus pill/block/icon/as/href contract — usable as the canonical interface description for buttons.",
+  "summary_for_embedding": "A TypeScript .d.ts declaration for a Button component defining a variant union (primary/ink/outline/ghost/soft/comm), size/pill/block/icon/as/href props, extending React button attributes.",
+  "intention_for_embedding": "To provide a typed, JSDoc-documented contract for the Button primitive, tying each visual variant to a product 'voice'."
+}

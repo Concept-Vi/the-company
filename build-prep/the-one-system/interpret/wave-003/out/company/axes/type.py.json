@@ -1,0 +1,37 @@
+{
+  "project": "company",
+  "path": "axes/type.py",
+  "model": "opus",
+  "what_it_does": "Declares a single AXIS dict named 'type' — the archetype/render_kind axis. id/namespace 'type', one discrete field 'kind' enumerating decision-card | graph | selector | instrument | diagram | spatial-material, value_source 'live', and a desc stating render_kind selects the renderer.",
+  "observations": [
+    "the 'kind' field is the catalog of render archetypes (six values in the comment)",
+    "desc names this the 'content compositionality' axis",
+    "desc cites 'Tim's law' that type is 'n' not a ranked axis — the kind a surface resolves its archetype from",
+    "value_source 'live'"
+  ],
+  "standouts": [
+    "render_kind selects the renderer — the archetype is data, not branching code",
+    "explicit framing that 'type' is unranked ('n'), not an ordinal axis"
+  ],
+  "conventions": [
+    "same AXIS = {id, namespace, fields, value_source, desc} shape as sibling axes files",
+    "single discrete field with enum values listed in an inline comment"
+  ],
+  "concerns": [],
+  "notes": "The 'what it IS' axis: a surface's render archetype (decision-card/graph/selector/instrument/diagram/spatial-material) is resolved as data and picks the renderer.",
+  "questions": [
+    "Where is the render_kind -> renderer mapping implemented?",
+    "Is the six-value enum closed, or extended by adding more archetypes elsewhere?"
+  ],
+  "purpose_vs_actual": "Match — docstring says 'TYPE axis (what it IS — the archetype)' and the dict encodes the render-kind catalog.",
+  "apparent_themes": [
+    "content compositionality (archetype as data)",
+    "unranked categorical axis (Tim's 'n' law)",
+    "renderer selection by declared kind"
+  ],
+  "intention_signals": "Trying to make the surface's archetype a resolvable axis value rather than hardcoded UI branching — so adding a render kind extends a catalog and the renderer is picked by value.",
+  "novelty": "Explicitly marking the type axis as unranked ('n'), distinguishing categorical archetype-selection from ordinal axes.",
+  "contribution": "Contributes the type/archetype axis declaration — the catalog of render_kinds and the rule that this value selects the renderer.",
+  "summary_for_embedding": "A declarative AXIS dict 'type' encoding the render archetype with a discrete 'kind' field over decision-card/graph/selector/instrument/diagram/spatial-material, where render_kind selects the renderer.",
+  "intention_for_embedding": "To make a surface's content archetype a declared, unranked axis value that drives renderer selection."
+}

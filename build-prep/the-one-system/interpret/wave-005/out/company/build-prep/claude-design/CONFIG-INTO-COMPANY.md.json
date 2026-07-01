@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/CONFIG-INTO-COMPANY.md",
+  "model": "opus",
+  "what_it_does": "Records Tim's requirement (verbatim-in-meaning) and a provisional design direction for folding the remote-MCP gateway's CONFIGURATION and client-onboarding INTO the Company itself, rather than the gateway owning a private config. It states four design directions (remote-exposure config becomes a company registry; client registration/channel-joining/capability-discovery become company-native discoverable actions; one control surface; per-client scoping as data), the laws this rests on, an OPEN list of pointers for an oracle clone to supply, and ownership/relations.",
+  "observations": [
+    "Captures Tim's requirement as a quoted block: configurations written INTO the company, one easy place to change allowed tools/approvals, clients knowing how to register and join channels — explicitly not Claude-Design-specific but for ANY client",
+    "Proposes mcp_face/remote_exposure.json (a private file today) becomes a file-discovered company registry resolved by the gateway at startup/refresh, not owned privately",
+    "Names concrete connection points: #69 (self-registration / COMPANY_SESSION_ID), the capability registry (posture), the channel registry (join)",
+    "Asserts the company CLI / company action surface as the single control point; the gateway is one consumer never a parallel control point",
+    "Lists OPEN questions for an oracle clone (clone-c9f6db2d) to supply: where a config becomes a registry, the CLI entry points, how a client registers/joins, the approvals surface",
+    "Names the owner builder (ch-eyzitp9p / builder-remote-mcp), the oracle, and the lead holding the security gate",
+    "Dated Tim 2026-06-18; marked as provisional design"
+  ],
+  "standouts": [
+    "The verbatim-in-meaning quote of Tim's requirement ('I don't want different places to start different things')",
+    "The framing that onboarding a new client = a registry edit + an OAuth client, not new code (per-client scoping as data)"
+  ],
+  "conventions": [
+    "Applies the Company's own laws by name: registry-is-truth, resolution-first, one control surface, unions-not-bridges, no-hardcoding",
+    "Uses vault [[wikilink]] relations and # channel-issue references",
+    "Marks itself provisional and defers concrete internals to an oracle clone (epistemic humility convention)"
+  ],
+  "concerns": [],
+  "notes": "The design intent for making remote-MCP config and any client's onboarding company-native registries/actions through one control surface — provisional, with concrete internals deferred to an oracle clone.",
+  "questions": [
+    "Did the oracle clone (clone-c9f6db2d) ever supply the OPEN pointers, and were they captured anywhere?",
+    "Which concrete registry mechanism (file-discovered registry / _CORPUS_REGISTRIES / create() / a config registry) was chosen for remote_exposure?"
+  ],
+  "purpose_vs_actual": "Matches. It states a requirement and a provisional design direction with explicit open items, and the body delivers exactly that — directions, laws, opens, owners.",
+  "apparent_themes": [
+    "registry-is-truth / config-as-data (changing allowed-tools is a row edit, not code)",
+    "one control surface (the company CLI/actions as single start/configure point)",
+    "unions-not-bridges (config lives in the centre, gateway resolves from it)",
+    "client-agnostic onboarding reused per client"
+  ],
+  "intention_signals": "Trying to prevent config/onboarding fragmentation across clients by making the gateway a consumer of company-native registries and actions, so any client (not just Claude Design) registers, joins channels, and discovers tools through one discoverable path.",
+  "novelty": "Generalizes the connector design beyond Claude Design to ANY client and treats remote-exposure config as just another file-discovered company registry the gateway resolves from.",
+  "contribution": "Contributes the design principle and requirement that remote-MCP gateway configuration and client onboarding fold into Company registries/actions through one control surface, with per-client scoping as data — a fused system would keep this as the rule for how external clients are configured and admitted.",
+  "summary_for_embedding": "A provisional design note folding the remote-MCP gateway's configuration and any client's registration/channel-joining/capability-discovery into Company-native registries and actions behind one control surface, with per-client scoping as data and an open list for an oracle clone to supply internals.",
+  "intention_for_embedding": "Written to keep client configuration and onboarding from fragmenting across separate control points, by making the gateway resolve its config from a company registry and any client onboard through company-native discoverable actions."
+}

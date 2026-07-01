@@ -1,0 +1,44 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/KitPreviews.jsx",
+  "model": "opus",
+  "what_it_does": "Renders three miniature, stylized thumbnails of real product surfaces (Platform dashboard, Virtual Hub viewer, Vi workspace) inside the Colors canvas, built entirely from CSS custom properties so that any token edit cascades into the previews live. Optionally accepts a tokens map to override CSS variables inline (for compare/snapshot mode).",
+  "observations": [
+    "KitPreviews maps an optional tokens prop ({name: hex}) into inline CSS-variable overrides, with special-case aliasing (e.g. 'gold' also sets --accent-gold, --accent-gold-hover, --accent-gold-soft, --accent-gold-50; 'canvas' sets --bg-canvas, etc.).",
+    "Three thumb components: PlatformThumb (sidebar nav + Gallery toolbar + image grid), HubThumb (gradient panorama with logo bug, info panel, MENU pill), ViThumb (chat/tasks/output three-pane).",
+    "Shared ThumbFrame wrapper gives each a labeled header with a 'link' caption.",
+    "Helper subcomponents: PreviewBtn, ViBubble (Vi vs user shaped marker), TaskMini (done/active/idle states).",
+    "Several gradient backgrounds use hardcoded hex stops (e.g. #4A3E2E, #6B5A3F, #C9A86E) and rgba literals for overlays/bugs.",
+    "Brand identity rendered inline: ConceptV wordmark with gold V, diamond-rotated Vi bubble marker.",
+    "Attaches to window.KitPreviews."
+  ],
+  "standouts": [
+    "The whole point is live token cascade — thumbnails are vectors of real surfaces built from var() so editing a color token instantly reflows all three previews; the tokens-override path enables side-by-side current-vs-snapshot comparison.",
+    "Manual alias mapping from short token names (gold, canvas, surface) to the full --accent-*/--bg-* variable families."
+  ],
+  "conventions": [
+    "Follows browser-React no-build pattern (window attach, function components, no imports).",
+    "Mostly token-driven via var(), but breaks the no-raw-hex rule in the gradient stops and rgba overlays — these are decorative miniature renderings, not consumer surfaces.",
+    "Uses inline-style objects throughout rather than CSS classes (atypical for components that emit .cv-*/.dsa-* classes elsewhere in this batch)."
+  ],
+  "concerns": [
+    "Hardcoded hex gradient stops (#4A3E2E, #6B5A3F, #C9A86E, etc.) and rgba(31,26,18,.x) literals mean those gradient previews will NOT cascade with token edits — partially defeating the 'responds to live token edits' premise for the Hub/output gradients specifically.",
+    "The tokens->override alias mapping is hand-maintained; adding a new role token requires editing this list, a drift risk."
+  ],
+  "notes": "Three live, token-driven mini mockups of real surfaces used in the Colors canvas to show palette edits in context — token-cascading except for some hardcoded gradient stops.",
+  "questions": [
+    "Are the hardcoded gradient hex values intentional (representing imagery/photo content that wouldn't be tokenized) or drift that should reference tokens?",
+    "Where is the tokens-override (compare/snapshot) mode invoked from, and what produces the snapshot tokens map?"
+  ],
+  "purpose_vs_actual": "Mostly match — header says thumbnails 'render from CSS custom properties, so any token edit cascades'; true for most elements but the gradient stops are hardcoded and would not cascade.",
+  "apparent_themes": [
+    "Token cascade / single-source-of-truth made visible (edit once, see everywhere)",
+    "Showing design changes in real product context, not abstract swatches",
+    "Brand identity embedded in miniature"
+  ],
+  "intention_signals": "Aims to make abstract palette edits legible by previewing them inside recognizable product surfaces, so a token change is judged by sight in context rather than as isolated swatches.",
+  "novelty": "Tiny hand-built vector replicas of three distinct product surfaces wired to live CSS variables, with a snapshot-override path for compare mode.",
+  "contribution": "Contributes the in-context live-preview surface for the Colors canvas — three recognizable product-surface miniatures that react to token edits and support current-vs-snapshot comparison.",
+  "summary_for_embedding": "React component rendering three miniature token-driven mockups (Platform dashboard, Virtual Hub viewer, Vi workspace) that reflow live with CSS-variable token edits, with an optional snapshot-override mode.",
+  "intention_for_embedding": "To let users see palette/token edits applied live inside recognizable product surfaces for in-context judgment and comparison."
+}

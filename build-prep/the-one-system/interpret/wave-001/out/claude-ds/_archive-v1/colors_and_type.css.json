@@ -1,0 +1,59 @@
+{
+  "project": "claude-ds",
+  "path": "_archive-v1/colors_and_type.css",
+  "model": "opus",
+  "what_it_does": "An archived (v1) CSS token sheet for the ConceptV design system: it imports the three webfonts and defines, on :root, the full token set — paper/surface colors, warm ink scale, gold/bronze brand accents, semantic status colors, borders, shadows, radii, an 8px spacing scale, type fonts/tracking, motion, and layout primitives — then defines semantic type-preset classes (.cv-*) and a compositional SURFACE-ZONE REGISTRY where each functional zone's surface/strong/edge/ink roles are mixed from a named pigment toward white via color-mix scaled by a single --zone-intensity knob.",
+  "observations": [
+    "Lives under _archive-v1/, marking it as a superseded version of the token sheet.",
+    "Imports Sora, DM Sans, JetBrains Mono from Google Fonts via @import URL.",
+    "Explicitly labels several tokens 'Legacy aliases — DO NOT REMOVE' because canvases depend on them.",
+    "Comments anchor color/shadow/type choices to observations of an actual pitch deck ('calibrated to the pitch deck', 'deck-quiet' shadows, 'sampled from the real logo').",
+    "Spacing scale comments call deviating from the 8px rhythm 'a smell'; note some duplicate values (--s-7 and --s-8 both 32px, --s-9 and --s-10 both 40px).",
+    "Zone roles are computed: each --zone-<x>-surface/strong/edge is color-mix(in oklch, pigment calc(N% * --zone-intensity), white); ink is pigment mixed toward --ink.",
+    "Three global knobs (--zone-intensity, --gold-intensity, --spatial-opacity) re-tune the whole zoning language; comment says overridden live by a Tweaks panel.",
+    "Gold (--vi-*) is reserved as 'the only saturated voice' for Vi / active decisions / selection / primary actions, never the default background.",
+    "Two palette-variant classes (.zone-palette-cooler / -warmer) recolour the whole system by overriding only the raw pigments.",
+    "Zone helper classes (.zone-base … .zone-vi) apply surface + edge in one class.",
+    "A few tokens carry inline '@kind other' annotations (motion/intensity tokens)."
+  ],
+  "standouts": [
+    "The pigment→white color-mix model with a single --zone-intensity multiplier: re-tune the whole tonal language by moving one knob, recolour it by overriding pigments only.",
+    "Nine semantically-named functional zones (base, content, panel, review, source, package, success, warning, reject) each exposing four derived roles (surface/strong/edge/ink).",
+    "Gold reserved as the single saturated 'voice' for Vi/decisions — a deliberate semantic restriction baked into the token layer."
+  ],
+  "conventions": [
+    "Token-driven single-source-of-truth: comment says import once at the top of every surface.",
+    "Compose-from-pigment (derived roles), don't hand-pick each wash.",
+    "Strict 8px spacing rhythm; deviation flagged as a smell.",
+    "Warm-never-pure: ink is near-black with warmth, not #000; status colors are warm-shifted.",
+    "Legacy aliases preserved deliberately to avoid breaking consumers.",
+    "Color values are raw hex here because this IS the token definition layer (the place raw hex is legitimate)."
+  ],
+  "concerns": [
+    "Duplicate spacing values (--s-7/--s-8 = 32px, --s-9/--s-10 = 40px) — looks like scale aliasing that could confuse which token to reach for.",
+    "Webfonts loaded via remote Google Fonts @import — an external network dependency in the token sheet.",
+    "Archived (_archive-v1) so likely superseded; consumers still referencing it would be on an old token home.",
+    "'Legacy aliases — DO NOT REMOVE' indicates accumulated backward-compat debt carried in the canonical layer."
+  ],
+  "notes": "The v1 (archived) token + type + tonal-zoning source sheet — defines all design tokens and the pigment-driven zone registry that the rest of the system var()s; superseded but documents the deck-calibrated origin of the look.",
+  "questions": [
+    "What replaced this in v2, and which tokens/zones changed (since it's archived under _archive-v1)?",
+    "Are the duplicate spacing values intentional aliases or leftovers?",
+    "Is the remote Google Fonts @import still used, or do later versions self-host the fonts?"
+  ],
+  "purpose_vs_actual": "Matches: header states it is the source-of-truth color & type tokens; the file defines exactly those plus the zone registry it advertises.",
+  "apparent_themes": [
+    "token-driven",
+    "single-source-of-truth",
+    "axis=f(content,position) via one --zone-intensity knob",
+    "compose-from-primitive (pigment→role)",
+    "semantic-zoning",
+    "deck-calibrated grounding",
+    "gold-as-the-one-voice"
+  ],
+  "intention_signals": "Inferred: the idea is a paper-first, warm, quiet design language calibrated from a real pitch deck, where the whole interface is differentiated by subtle tonal undertones rather than color blocks, and the entire palette is parametric — one intensity knob and a handful of named pigments control everything, so the look can be retuned or recolored from a single place without touching consumers.",
+  "novelty": "The oklch pigment→white color-mix with a global intensity multiplier, plus the explicit semantic reservation of gold for one actor (Vi/decisions), is a distinctive parametric tonal-zoning model rather than a flat palette list.",
+  "contribution": "Brings the deck-grounded warm paper palette, the full named token vocabulary (colors/shadows/radii/8px spacing/type/motion/layout), and especially the compositional zone registry (nine pigment-derived functional zones with surface/strong/edge/ink roles, intensity knobs, and recolor-by-pigment palette variants) that a fused system could adopt as its tonal-semantics layer.",
+  "summary_for_embedding": "Archived v1 ConceptV design-system CSS defining all root tokens (paper colors, warm ink scale, gold/bronze accents, status colors, shadows, radii, 8px spacing, type, motion, layout) plus semantic .cv- type presets and a pigment→white color-mix SURFACE-ZONE registry of nine functional zones controlled by a single --zone-intensity knob.",
+  "intention_for_embedding": "Define a paper-first warm design language, calibrated from a real pitch deck, as a fully parametric token layer where one intensity knob and named pigments retune/recolor the whole tonal-zoning system from a single source."
+}

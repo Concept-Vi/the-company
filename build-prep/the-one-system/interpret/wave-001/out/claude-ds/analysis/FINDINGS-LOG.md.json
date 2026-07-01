@@ -1,0 +1,58 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/FINDINGS-LOG.md",
+  "model": "opus",
+  "what_it_does": "The running build-memory of the design system: a newest-first append-only log of 78 numbered 'slices', each recording what a scoped audit found, what it changed about the plan, what was built, how it was verified, and the next steps — so autonomous sessions don't repeat or contradict prior work.",
+  "observations": [
+    "2394 lines, newest-first; each slice is a self-contained build episode (Slice 78 down to Slice 1)",
+    "Heavily dominated by a long System Map sub-thread (slices ~62-78) iterating on a codebase-visualization canvas across many furious-user rejections and rebuilds",
+    "Records concrete verification probes and exact numbers (1106 files/63 folders, 652 drawn edges, 499 tokens, treemap cell counts)",
+    "Captures root-cause debugging narratives, e.g. slice 69's unit-mismatch bug (folders weighted in importance units, files in bytes) and slice 70's FLIP-morph determinism fix",
+    "Each slice ends with check_design_system results and a NEXT section; many cite specific files and globals (CV_AXES, CV_GLYPHIC, CV_MEANING, CV_REGISTRY)",
+    "Records scope CORRECTIONS where audits flip the planned action (slice 1b de-hardcode reframed; slice 1c retune became a migration)",
+    "Documents the registry-projection principle gate repeatedly ('the canvas is a projection of the registries, not a parallel list')",
+    "Slice 1 anchors the whole system on a sampled logo gold #E0C010 vs the applied ramp gold #d6bf57"
+  ],
+  "standouts": [
+    "The System Map saga is an unusually candid record of repeated user fury and wrong attempts ('Lesson, 5th time: the RELATIONSHIPS must be the visible content') — design memory that preserves failure, not just success",
+    "Root-cause debugging discipline visible inline: slice 69 dumps RECT geometry to prove a 0.24x1.25px collapse, slice 70 proves a transition-dependent race and fixes it with authoritative-instant geometry + FLIP transform",
+    "The PRINCIPLE GATE recurs as a hard rule: every layout/edge-type/encoding/facet must live in ONE registry projected into the UI",
+    "Audits routinely surface already-built capabilities (Layouts.jsx textures, --status-* set) that must be reconciled rather than rebuilt — 'never assume the plan is complete before auditing'"
+  ],
+  "conventions": [
+    "Append-every-slice, newest-first (stated build discipline)",
+    "Evidence-grounded verification: every slice states what was verified by DOM probe / inline-style / headless run, with exact counts",
+    "Single-source / registry-projection gate enforced per slice (no parallel lists)",
+    "Audit-before-touch: scoped audit of one content type, map keep/recalibrate/deprecate, defer churn",
+    "Fail-loud and prove-by-use: claims backed by run output, console-clean noted",
+    "check_design_system run and reported at the end of each slice"
+  ],
+  "concerns": [
+    "Two different slices are both numbered 'Slice 68' and two numbered 'Slice 69' (duplicate slice numbers), which undermines the log's role as a non-contradicting memory",
+    "The System Map thread shows many full rebuilds of the same artifact, indicating significant churn/rework that the log itself flags as repeated misses",
+    "Some 'NEXT' items recur across slices unresolved (Rings/Sunburst deferred multiple times, extends/defines edge types pending type-graph parsing)",
+    "Several deferred items depend on user/Tim decisions (value vocabularies, bound live model) that block completion"
+  ],
+  "notes": "The append-only newest-first build memory of the design system across 78 slices — read this to know what was already built, debugged, corrected, and deferred before touching anything; the System Map saga and the registry-projection principle gate dominate.",
+  "questions": [
+    "Why are there duplicate slice numbers (two 68s, two 69s) — is the numbering authoritative or just chronological?",
+    "Are the many-times-deferred items (Rings/Sunburst, extends edge types, live foundry model) still open, or resolved in slices not shown here?",
+    "Which slices' verification was DOM-probe-only because the screenshot/preview pane glitched, and were those later visually confirmed?",
+    "What is the relationship between this log and HANDOFF.md (referenced as 'the complete briefing this log feeds into')?"
+  ],
+  "purpose_vs_actual": "Matches — stated as the per-slice audit/action log that is the running build memory, and it is exactly that across 78 slices with findings, plan-changes, actions, and verification.",
+  "apparent_themes": [
+    "registry-is-truth",
+    "single-source-projection",
+    "fail-loud",
+    "prove-by-use",
+    "audit-before-touch",
+    "root-cause-over-symptom",
+    "design-memory-preserves-failure"
+  ],
+  "intention_signals": "Inferred: the log is the durable shared memory that lets autonomous sessions build a mature single-sourced design system without repeating or contradicting prior work — every slice is written so the next agent boots into the true state. The System Map thread reveals an intent to give a non-developer (the user) spatial/visual cognition of the whole codebase as a queryable, editable canvas that is itself a projection of the system's registries.",
+  "novelty": "An honestly-recorded chain of rejected attempts and lessons (not just successes), inline root-cause debugging with measured proof, and the recurring registry-projection principle gate make this a richer build memory than an ordinary changelog.",
+  "contribution": "Contributes the durable per-slice build memory itself — the audit-before-touch discipline, the registry-projection principle gate, root-cause debugging narratives with measured evidence, the logo-gold-vs-ramp-gold anchoring, and the full System Map evolution (treemap -> region board -> resolution wiring -> living editable canvas with layouts/edges/encodings registries).",
+  "summary_for_embedding": "A newest-first append-only 78-slice build log of the design system recording per-slice audit findings, plan corrections, what was built, verification with exact counts, and next steps, dominated by the System Map canvas saga and the single-source registry-projection principle.",
+  "intention_for_embedding": "To keep durable shared build memory so autonomous sessions never repeat or contradict prior work, and to give a non-developer spatial cognition of the codebase via a registry-projected editable canvas."
+}

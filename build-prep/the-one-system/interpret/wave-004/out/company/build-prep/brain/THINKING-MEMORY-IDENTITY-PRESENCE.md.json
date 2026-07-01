@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/THINKING-MEMORY-IDENTITY-PRESENCE.md",
+  "model": "opus",
+  "what_it_does": "A long-form thinking document (explicitly labeled THINKING, not spec) exploring memory, identity, presence, and persistence for the Company system. It frames these four as one mechanism (resolution) seen at four timescales, inventories existing memory-touching layers as a gradient, and records three rounds of Tim's confirmations/extensions plus open threads.",
+  "observations": [
+    "Self-labeled 'Status: THINKING, not spec' written 2026-06-10 as a seed corpus to 'get the juices flowing'.",
+    "Central claim: memory/identity/presence/persistence are one mechanism (resolution) at four timescales; identity loads unconditionally, memory conditionally, presence is now, persistence is the cross-gap guarantee.",
+    "Defines a six-layer 'refinement gradient' table from record -> meaning -> recurring -> standing -> self -> identity, each with where-it-lives and gate-to-next.",
+    "States memory formation is the same circuit as registry filling: generate -> ground -> floor -> propose -> approve.",
+    "Memory primitive = content + three addresses: where (space, built), when (time-as-activity, designed GC14), who (audience, named/undesigned).",
+    "Introduces the 'asymmetry law': Tim may misremember the system but the system must never misremember Tim; cites evidence-required on operator_memory as an identity boundary.",
+    "Proposes a 'NOW-ORGAN' that answers 'what is now' serving two consumers (Tim's presence experience and memory injection triggers).",
+    "Forgetting design: supersession + de-ranking never deletion; Tim-sourced memory sacred, system-derived replaceable.",
+    "Round 2/3 record Tim's confirmations: context resolves rather than appends; who-axis is a parameter; reuse the concurrent-cognition rules engine as the condition language; write-once-project-many; retrieval as a chain run in reverse; anticipatory resolution; UI as resolver wearing a face.",
+    "Cites concrete numbers: 483 addresses, 76 features, 1,400+ mined extracts, 25 operator_memory rows (18 awaiting confirm).",
+    "Ends with an updated open-threads list, marking several resolved (garden question, anticipation dials)."
+  ],
+  "standouts": [
+    "The asymmetry law: system must never misremember Tim, framed as an existential identity boundary not hygiene.",
+    "The 'switch-flip test': boot a cold agent from substrate alone and measure the gap against a warm Claude Code instance; the gap list is the remaining schedule.",
+    "The reuse-catch insisting the rules engine IS the memory-condition language (no new DSL) — one evaluator, multiple consumers (routing, memory-conditions, layout).",
+    "The 'interface is the resolver wearing a face' — UI resolved from the same axes as injected agent context, two output formats."
+  ],
+  "conventions": [
+    "Quotes Tim's own words inline to ground threads, a stated discipline of the doc.",
+    "Uses gradient/layer tables and an ASCII diagram of the resolver over three axes.",
+    "Frames everything as 'universal composition' / reuse of one mechanism — a recurring framework motif.",
+    "Marks build-state of each idea (BUILT / DESIGNED / NAMED / undesigned), consistent with the repo's status discipline."
+  ],
+  "concerns": [],
+  "notes": "A generative seed corpus, not a blueprint — it unifies memory/identity/presence/persistence under 'resolution' and records Tim's live confirmations across three conversation rounds.",
+  "questions": [
+    "Which of the proposed organs (now-organ, relation/link projection, identity charter) are actually built versus still only named here?",
+    "Is 'GC14' (the time-as-activity design) defined elsewhere, since it's referenced as designed-not-built?"
+  ],
+  "purpose_vs_actual": "Matches — it is explicitly framed as generative thinking to seed the brain/blueprint conversation, and it delivers exactly that: exploratory unification plus recorded confirmations and open threads.",
+  "apparent_themes": [
+    "Resolution over storage (context as a view, not a store)",
+    "Universal composition / one mechanism reused everywhere",
+    "Identity vs memory as return-condition (always vs when)",
+    "No-fiction about the operator as an existential boundary",
+    "Substrate persistence (the entity is the files; models are rented compute)"
+  ],
+  "intention_signals": "Trying to show that the Company already contains all the pieces of a memory/identity/presence system and that the work is assembly-with-intent, not invention — by re-reading every existing organ as a facet of one resolution engine governed by Tim's gate.",
+  "novelty": "The four-words-one-mechanism framing and the asymmetry law (never misremember the operator) are distinctive; so is treating the UI as the same resolution pipeline that feeds agents, rendered spatially.",
+  "contribution": "Contributes the conceptual unification (memory/identity/presence/persistence = resolution at four timescales), the asymmetry law, the now-organ idea, the switch-flip test, and a documented record of Tim's confirmations that ground later memory/identity design.",
+  "summary_for_embedding": "A Company brain thinking-document unifying memory, identity, presence and persistence as one resolution mechanism at four timescales, with a record gradient, the never-misremember-Tim asymmetry law, a now-organ, and three rounds of Tim's confirmations.",
+  "intention_for_embedding": "To seed the Company's memory/identity blueprint by showing its pieces already exist as facets of one resolution engine and capturing Tim's directions on how it should work."
+}

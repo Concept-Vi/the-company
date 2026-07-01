@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/PlatformApp.jsx",
+  "model": "opus",
+  "what_it_does": "Defines PlatformApp, the root React component for a platform UI kit. It holds an `active` screen-id in state (default 'gallery'), switches on it to render one of four real screens (Gallery, CalendarScreen, BrandKit, HubSettings) or else a generic Stub fed a title and note, inside a shell layout with a sidebar, top bar, and chats widget. It then attaches PlatformApp to window and mounts it into the #app element if present.",
+  "observations": [
+    "STUB_NOTES maps six unbuilt screen ids (projects, dashboard, landing, files, templates, pricing) to descriptive placeholder notes shown via the Stub component",
+    "Only four screens are real (gallery, calendar, brandkit, hubsettings); everything else falls through to Stub",
+    "Uses React via global `React`/`ReactDOM` and destructures useState as `useState_app` (aliased to avoid bundle collisions)",
+    "titleFor() returns a human title for stub ids, falling back to the id itself",
+    "Renders TopBar with notifications={7} and Chats with count={21} as hardcoded literals",
+    "DOM-guards the mount: `if (_mountApp) ReactDOM.createRoot(...).render(...)`"
+  ],
+  "standouts": [
+    "The stub-vs-real split: descriptive STUB_NOTES strings document intended screens that don't exist yet, doubling as inline design notes"
+  ],
+  "conventions": [
+    "Follows the project's no-self-mounting-poison guard (DOM-guards createRoot per CLAUDE.md trap)",
+    "Aliases useState to a unique name, consistent with sharing one bundle namespace",
+    "Attaches component to window for the global-script consumption pattern"
+  ],
+  "concerns": [
+    "Hardcoded notification (7) and chat (21) counts inline rather than via state or props from a source",
+    "Screen routing is an if/else chain rather than a registry/map, so adding a screen means editing this file"
+  ],
+  "notes": "The platform UI kit's root router: four working screens plus stubbed placeholders for the rest, mounted into #app.",
+  "questions": [
+    "Where do TopBar's notifications count and Chats' count come from in a real build, given they are hardcoded here?",
+    "Are the six STUB_NOTES screens planned for this kit or just documentation?"
+  ],
+  "purpose_vs_actual": "Matches — comment says 'root app with screen routing' and that is exactly what it does.",
+  "apparent_themes": [
+    "Prototype/mockup-grade UI kit",
+    "Screen routing via single-state selection",
+    "Self-documenting stubs for not-yet-built screens"
+  ],
+  "intention_signals": "Aims to be a runnable platform shell demonstrating navigation across product screens, with placeholders standing in for screens not yet implemented so the whole nav is walkable.",
+  "novelty": "The STUB_NOTES pattern that turns unbuilt screens into documented placeholders inside the router itself.",
+  "contribution": "Contributes a platform-shell root composition (sidebar + main + topbar + chats) and an explicit screen-id catalogue covering projects, dashboard, landing, files, templates, pricing, plus the four built screens.",
+  "summary_for_embedding": "Root React component PlatformApp that routes between four built screens and stubbed placeholders inside a sidebar/topbar/chats shell, mounted to #app.",
+  "intention_for_embedding": "To provide a runnable platform UI shell with walkable navigation across all product screens, real ones rendered and unbuilt ones documented as stubs."
+}

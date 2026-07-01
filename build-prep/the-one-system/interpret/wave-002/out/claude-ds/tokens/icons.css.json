@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/icons.css",
+  "model": "opus",
+  "what_it_does": "Defines the icon language for the ConceptV design system: CSS custom properties for icon sizes (xs-xl), stroke weights, line caps/joins, and ink/accent colours, plus an `.icon` base class and modifiers (size, bold, muted, accent), a two-tone `.ic-accent` rule, and an `.icon-box` chip wrapper that places a glyph in a tinted square or circle.",
+  "observations": [
+    "Icon size scale: --icon-xs 14px through --icon-xl 32px, with md (20px) as the default inline size",
+    "Stroke weights given as unitless numbers (1.6 default, 2.2 bold) intended for a 24-unit SVG grid",
+    "Authoring contract stated in the header comment: inline <svg class=\"icon\"> on a 24 grid, fill=none, stroke=currentColor",
+    "Two-tone treatment: neutral stroke plus a gold-filled accent sub-path via class=\"ic-accent\"",
+    "--icon-box-bg uses color-mix(in oklch, currentColor 11%, transparent) for a tint derived from inherited ink",
+    ".icon-box inherits zone ink via --zone-ink with --accent-bronze fallback; child .icon set to color:inherit",
+    "Tokens reference upstream vars (--ink-2, --ink-4, --accent-gold) defined elsewhere"
+  ],
+  "standouts": [
+    "color-mix(oklch) used to derive the box tint from currentColor rather than a fixed value",
+    "Header comment frames gold as 'the decision colour' giving the accent a semantic meaning beyond aesthetics"
+  ],
+  "conventions": [
+    "Follows token-then-class pattern: :root custom properties, then classes that var() them",
+    "Carries @kind other annotations on unitless/non-length token values",
+    "References roles (--ink-2, --accent-gold) rather than raw values, per the design system's single-home rule"
+  ],
+  "concerns": [],
+  "notes": "The single home for inline-icon sizing, stroke weight, two-tone gold accent, and the boxed-icon chip; SVGs must be authored on a 24 grid with currentColor stroke.",
+  "questions": [
+    "Where are the referenced upstream tokens (--ink-2, --ink-4, --accent-gold, --accent-bronze, --zone-ink, --r-sm) defined?",
+    "Is --icon-box (used as the box dimension fallback 32px) defined anywhere or always defaulted?"
+  ],
+  "purpose_vs_actual": "Matches — header states an icon language with consistent grid/stroke/two-tone, and the file delivers exactly those tokens and classes.",
+  "apparent_themes": [
+    "single-source design tokens",
+    "currentColor-driven theming",
+    "semantic colour (gold = decision/accent)",
+    "consistency of hand-drawn icon feel"
+  ],
+  "intention_signals": "Trying to make every glyph look uniform (one grid, one stroke weight, one cap style) while letting size and colour flow from context, and to give the accent fill a single semantic colour tied to decisions.",
+  "novelty": "The oklch color-mix tint derived from currentColor and the explicit 'gold = decision colour' framing for the accent.",
+  "contribution": "Contributes the inline-icon sub-scale and stroke/cap conventions plus the two-tone accent and boxed-icon chip primitives — the glyph-within-chrome sizing layer distinct from whole-element sizing.",
+  "summary_for_embedding": "ConceptV design-system CSS defining icon size/stroke/cap tokens, an .icon base class with size/bold/muted/accent modifiers, a two-tone gold accent rule, and an .icon-box tinted-chip wrapper.",
+  "intention_for_embedding": "To enforce a consistent hand-drawn icon language (24-grid, currentColor stroke, gold accent) sized and coloured from context via single-source tokens."
+}

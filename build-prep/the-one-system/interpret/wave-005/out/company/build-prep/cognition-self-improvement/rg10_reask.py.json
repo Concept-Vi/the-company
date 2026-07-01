@@ -1,0 +1,49 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/rg10_reask.py",
+ "model": "opus",
+ "what_it_does": "GC4 floor-triggered re-ask pass. For each entry in reconciled.json classed 'floor' (the deterministic fact-checker caught a fabrication), it rebuilds the original element unit, re-fires the register_element role with the same grounding context plus the floor's named rejection reasons as an explicit correction, then re-runs the floor (refcheck) + jury (confirm_registration) + confirm_status to reclassify it. Updates reconciled.json in place, preserving the prior dossier and stamping reasked:true. Then retires the prior STATUS card and surfaces a final reconciled card.",
+ "observations": [
+  "Loads register_element and confirm_registration from the role registry; builds a Role variant reg_v with input_addresses extended to (utterance, ground, exemplars, inventory).",
+  "Loads confirm_registration via importlib spec_from_file_location to get confirm_status directly from roles/confirm_registration.py.",
+  "Groups floor entries by source mockup so the shared grounding context is resolved once per group.",
+  "Filters floor reasons to only those starting with 'refcheck' and injects a verbatim correction: maps_to_feature must be copied verbatim or be the literal 'proposed', capabilities must use only allowed words.",
+  "Runs register_element via C.run_items, then per-item runs C.run_jury for confirmation; reclassifies to confirmed / floor / jury based on confirmed flag and whether refcheck reasons reappear.",
+  "Skips entries with no artifact or an unresolvable cluster rep, recording the reason.",
+  "Recounts all classes and persists in place (no-versioning law).",
+  "Imports sys but does not appear to use it beyond path insertion."
+ ],
+ "standouts": [
+  "The core idea: the deterministic floor's rejection reason IS the corrective feedback fed back for one bounded re-fire — closing the loop between detection and repair.",
+  "Maximal-capture history: prior_dossier kept, reask_failed recorded, reasked stamped — nothing silently overwritten.",
+  "A re-asked dossier passes only by passing the SAME floor + jury — the gate is not relaxed for the second attempt."
+ ],
+ "conventions": [
+  "Follows the propose-only floor discipline (operator's resolved field never touched).",
+  "In-place update honoring the stated no-versioning law.",
+  "Same sys.path / chdir bootstrapping as siblings rg10_redescribe/rg10_rejury.",
+  "Builds a role variant by copying spec and extending input_addresses — a recurring pattern across this pipeline."
+ ],
+ "concerns": [
+  "Two different mechanisms load confirm_registration: rr.get('confirm_registration') for jury and importlib for confirm_status — two handles to one role, easy to drift.",
+  "Bounded to ONE re-fire by design; stubborn fabrications stay floor with no further automated recovery (intended, but a hard ceiling).",
+  "The live-card retire/surface side effects are coupled into the same script as the reclassification pass."
+ ],
+ "notes": "GC4 re-ask: feeds the fact-checker's own rejection reasons back to register_element for one bounded retry, re-gates, and reclassifies floor-caught fabrications in place.",
+ "questions": [
+  "Where is the s97 STATUS card retire / final-card surface logic referenced in the docstring — the visible main() doesn't show that surfacing step?",
+  "What exactly does confirm_status return (status/confirmed/jury/reasons) and how does its jury differ from C.run_jury's verdict?"
+ ],
+ "purpose_vs_actual": "Mostly match — the re-ask, re-gate, in-place reclassification, and history capture are all present; the docstring's final live-card retire/surface step is described but not visible in the shown main(), so that part may live elsewhere or be omitted.",
+ "apparent_themes": [
+  "Detection reason as repair signal (the floor's no is the feedback).",
+  "Bounded autonomous refinement before the human gate.",
+  "Maximal capture / fail-loud history.",
+  "Gate is never relaxed for retries."
+ ],
+ "intention_signals": "Tries to recover fixable fabrications automatically by treating the deterministic fact-check's complaint as a precise correction prompt, so the operator's eventual gate receives fewer flagged items while stubborn cases stay loudly flagged.",
+ "novelty": "Feeding a deterministic checker's rejection reasons back into the generative role as an explicit verbatim correction, then re-gating through the identical floor, is a distinctive self-repair loop.",
+ "contribution": "Contributes the closed-loop re-ask repair stage — the mechanism that turns floor-caught fabrications into a bounded corrective re-fire and reclassifies them in place with full history.",
+ "summary_for_embedding": "A Python pass that re-fires the register_element role on fabrication-flagged registry entries using the fact-checker's own rejection reasons as a verbatim correction, re-gates them, and reclassifies in place.",
+ "intention_for_embedding": "To automatically repair fixable fabricated registry dossiers by feeding the deterministic floor's reasons back for one bounded retry, shrinking the human review set."
+}

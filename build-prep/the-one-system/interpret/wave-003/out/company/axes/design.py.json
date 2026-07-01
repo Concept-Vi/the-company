@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "axes/design.py",
+  "model": "opus",
+  "what_it_does": "Declares the 'design' coordinate axis — the DESIGN-LANGUAGE context a visual resolves against. Exports a module-level AXIS dict with id/namespace 'design', four sub-fields (line=discrete, opacity=continuous, colour_role=discrete, shape=discrete), value_source='asset', and a desc. The docstring frames it as DNA criterion-5 'context-resolution': a visual-dna asset declares its design-context and a visual resolves against it to select a treatment.",
+  "observations": [
+    "Four sub-fields with declared resolve types: line (discrete), opacity (continuous, 'realised-ness'), colour_role (discrete), shape (discrete, typed geometry octagon=core/hexagon=engine).",
+    "value_source = 'asset' — sourced from the visual-dna asset's LOCKED `resolution` field, described as a list of '<dim>:<context> -> <value>' entries keyed by these 4 field-keys; the read SPLITS each entry on its dim-key into coordinate.design.<dim>.",
+    "Inline comments tie each sub-field's MEANING to a specific visual-identity decision (line-language, opacity-meaning, figure-gold-value, core-shape).",
+    "Docstring flags a NAMING-COLLISION: this 'design' axis is explicitly NOT axes/resolution.py despite both informally being called 'context-resolution'/'resolution'.",
+    "Docstring cites a recollection id (385fa4b) + 'lead's go' as the lock for the 4 dimensions and the one-axis structure (said to mirror device=w/h/orient).",
+    "States populates as recollection's bounded 10,568 re-bake lands — i.e. value-source not yet live.",
+    "Leaves one open read-side detail explicit: the context-point ENCODING (does the string carry 'dim:value' or is the parse positional/tagged), called the read map not the axis-row.",
+    "Flags a contingency: DNA may prefer 4 separate axis-rows over one."
+  ],
+  "standouts": [
+    "The explicit naming-collision guard against axes/resolution.py — keeping a same-named-but-different concept as its OWN coordinate.",
+    "'The SPINE-TIE': visual-identity decisions populate the axis's sub-field meanings, and the axis resolves visuals against it (one invariant visual, never variants; the coordinate selects the treatment).",
+    "The continuous opacity sub-field as 'realised-ness' (faded = less realised) — a semantic, not merely visual, dimension."
+  ],
+  "conventions": [
+    "Follows the AXIS-dict row shape defined by axes/AGENTS.md (id, namespace, fields, value_source, desc).",
+    "Mirrors the structure of axes/device.py (one axis, multiple sub-fields) by its own statement.",
+    "Uses ★ markers and a long explanatory docstring, consistent with sibling axis files and repo AGENTS notes.",
+    "Marks its own provisional status (TENTATIVE: DNA owns exact dimensions + value-source; composition owns the row)."
+  ],
+  "concerns": [
+    "value_source='asset' depends on a not-yet-landed re-bake (10,568 entries) and an unresolved encoding format — the read parse is described but not finalized in this file."
+  ],
+  "notes": "The visual design-language coordinate axis (line/opacity/colour-role/shape); deliberately kept separate from the grain 'resolution' axis despite the shared name; value-source pending the DNA re-bake.",
+  "questions": [
+    "What is the actual encoding of the visual-dna asset's `resolution` list entries — 'dim:value' strings, positional, or tagged?",
+    "Will DNA keep this as one axis with 4 sub-fields or split into 4 separate axis-rows?",
+    "What is the full vocabulary of discrete values for line, colour_role, and shape beyond the examples given?"
+  ],
+  "purpose_vs_actual": "Matches — declared as the design-language context axis and the AXIS dict implements exactly that; the docstring is explicit that exact dimensions/value-source are still DNA-owned and tentative.",
+  "apparent_themes": [
+    "Resolve(invariant, coordinate) applied to visuals — one invariant visual, coordinate selects treatment",
+    "Decisions populate axis vocabulary (the spine-tie between visual-identity decisions and the resolver)",
+    "Naming-collision discipline / keeping distinct concepts as distinct coordinates",
+    "Provisional, source-pending design"
+  ],
+  "intention_signals": "Trying to give visual identity a resolver coordinate: instead of producing visual variants, declare one invariant visual and let a design-context coordinate (line/opacity/colour-role/shape, meanings set by identity decisions) select its treatment — wiring DNA's context-resolution into the same resolve mechanism as the other axes.",
+  "novelty": "Modeling design-language context as a formal resolver coordinate with mixed continuous/discrete sub-fields, and the deliberate guard separating it from the identically-named grain axis.",
+  "contribution": "Contributes the 'design' coordinate dimension and its 4 sub-fields with semantics tied to visual-identity decisions, plus the explicit collision-guard distinguishing design-context from grain, and a documented (if pending) asset-backed value-source.",
+  "summary_for_embedding": "Axis-registry file declaring the 'design' coordinate (line/opacity/colour-role/shape) that visuals resolve against to select a treatment, sourced from the visual-dna asset's resolution field, kept distinct from the grain resolution axis.",
+  "intention_for_embedding": "To wire visual identity into the resolver as a design-language coordinate so one invariant visual resolves to a treatment, with sub-field meanings set by the visual-identity decisions."
+}

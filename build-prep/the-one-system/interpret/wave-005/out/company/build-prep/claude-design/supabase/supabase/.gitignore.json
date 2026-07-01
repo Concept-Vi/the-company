@@ -1,0 +1,28 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/.gitignore",
+  "model": "opus",
+  "what_it_does": "A .gitignore for the Supabase project directory that excludes CLI-generated state (.branches, .temp) and local secret/env files (.env.keys, .env.local, .env.*.local) from version control.",
+  "observations": [
+    "Two grouped sections with comments: '# Supabase' (.branches, .temp) and '# dotenvx' (.env.keys, .env.local, .env.*.local).",
+    "Matches the default ignore patterns the Supabase CLI scaffolds.",
+    "Explicitly ignores .branches, which is consistent with the sibling _current_branch file being CLI state rather than tracked config."
+  ],
+  "standouts": [],
+  "conventions": [
+    "Follows the standard Supabase CLI .gitignore template, including dotenvx env-key exclusions."
+  ],
+  "concerns": [],
+  "notes": "Standard Supabase-scaffolded .gitignore keeping CLI state and dotenvx secrets out of git.",
+  "questions": [],
+  "purpose_vs_actual": "n/a",
+  "apparent_themes": [
+    "Keeping generated state and secrets out of version control",
+    "Supabase CLI project hygiene"
+  ],
+  "intention_signals": "Aims to prevent committing transient CLI state and sensitive environment/key files for the Supabase project.",
+  "novelty": "n/a",
+  "contribution": "Contributes the version-control exclusion rules for the Supabase project's generated state and secret env files.",
+  "summary_for_embedding": "A Supabase project .gitignore excluding CLI state directories (.branches, .temp) and dotenvx secret/env files from version control.",
+  "intention_for_embedding": "To keep transient Supabase CLI state and local secret env files out of git for this project."
+}

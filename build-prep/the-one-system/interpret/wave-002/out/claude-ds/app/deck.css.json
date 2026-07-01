@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "app/deck.css",
+  "model": "opus",
+  "what_it_does": "A stylesheet of reusable CSS primitives extracted from the ConceptV pitch deck, organized into 12 numbered sections: surfaces (paper/panel/card/plate), patterns (gold hatch, blueprint background), typography (deck titles/eyebrow/body, gold stat numbers, stat rows), gold bullet/check lists, pills and tags, dashed connectors, the V watermark, two-column comparison, section/panel headers, entity shapes, utility helpers, and the resizable pane gutter styles. Every value references CSS custom properties.",
+  "observations": [
+    "Header states import order: load AFTER colors_and_type.css but BEFORE canvas-specific stylesheets.",
+    "All sizing/color/spacing flows from CSS vars (--paper, --ink, --accent-gold, --s-*, --r-*, --tracking-*, --ease-out, --font-*).",
+    "Signature gold diagonal hatch via repeating-linear-gradient at 135deg, in .cv-hatch and inline in .cv-stat-row.",
+    "Blueprint background uses radial-gradient + a ::before with two repeating-linear-gradients (47px/48px grid) and re-stacks children at z-index 1.",
+    "Class-comment usage examples embedded (cv-stat, cv-stat-row, cv-bullets, cv-checks).",
+    "Gold bullets (▶ via border triangle) and gold checks (box + rotated tick via ::before/::after) drawn purely in CSS.",
+    "A few raw rgba(152,128,88,.06) / rgba(224,192,16,.10) literals appear in blueprint and stat-row gradients despite the var-driven convention.",
+    "Section 12 .cv-gutter / .cv-gutter::after styles are the counterpart to the Resizable.jsx component's gutter markup.",
+    "Comments tie classes back to specific deck slides (funding slide $500k plate, '$430B+' stat, Development Partners section head)."
+  ],
+  "standouts": [
+    "Explicitly documents itself as the brand's building-block layer with import-order rules and per-class deck provenance.",
+    "Pure-CSS rendering of bullets, checkmarks, and the entity-shape/watermark motifs from the deck.",
+    "color-mix(in oklch, ...) used for soft hatch and the dragging gutter wash."
+  ],
+  "conventions": [
+    "Strong var()-everything discipline and a cv- class prefix throughout.",
+    "Numbered, commented section structure with usage examples — self-documenting.",
+    "Modifier-class pattern (--tight/--loose/--sm/--lg/--gold/--filled) consistent across primitives."
+  ],
+  "concerns": [
+    "Several hardcoded rgba() literals (blueprint grid lines, stat-row hatch) break the otherwise strict var-driven rule and would be drift candidates.",
+    "Section 12 comment references 'ResizablePanels' but the actual component is named Resizable — a naming mismatch."
+  ],
+  "notes": "The deck-derived primitive layer: paper/panel/card surfaces, gold hatch + blueprint bg, deck typography, gold lists, pills/tags, watermark, compare grid, and the resizer gutter — all token-driven, with a few stray rgba literals.",
+  "questions": [
+    "Should the hardcoded rgba() values in the blueprint and stat-row gradients be promoted to tokens to match the var-everything convention?",
+    "Is the 'ResizablePanels' name in the section-12 comment stale relative to the Resizable component?"
+  ],
+  "purpose_vs_actual": "Matches: the header declares these are the deck's reusable building blocks 'every surface in the studio should use', and the file delivers exactly that catalog of primitives.",
+  "apparent_themes": [
+    "Design tokens / single-source values via CSS vars",
+    "Brand consistency from the pitch deck",
+    "Self-documenting, provenance-annotated primitives"
+  ],
+  "intention_signals": "Aims to lift the pitch deck's visual language into a reusable on-brand primitive layer so every studio surface stays consistent by composing these classes rather than restyling, with explicit provenance to keep designers anchored to the deck.",
+  "novelty": "Carries deck-slide provenance in comments and renders the brand's signature hatch, blueprint grid, gold lists, and entity-shape/watermark motifs entirely in token-driven CSS.",
+  "contribution": "Contributes the deck-derived, token-driven CSS primitive vocabulary (surfaces, hatch/blueprint patterns, deck typography, gold lists, pills/tags, watermark, compare grid, gutter) that a fused system would keep as the on-brand building-block layer.",
+  "summary_for_embedding": "CSS stylesheet of 12 sections of reusable, CSS-var-driven primitives extracted from the ConceptV pitch deck — surfaces, gold hatch/blueprint patterns, deck typography, gold bullet/check lists, pills/tags, watermark, comparison grid, and resizer gutters.",
+  "intention_for_embedding": "To codify the pitch deck's visual language as on-brand reusable primitives every studio surface composes for consistency."
+}

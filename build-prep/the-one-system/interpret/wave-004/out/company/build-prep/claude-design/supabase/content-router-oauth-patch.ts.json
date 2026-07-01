@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/content-router-oauth-patch.ts",
+  "model": "opus",
+  "what_it_does": "Documents and supplies an additive patch to an existing content-router edge function: a one-line if-check that intercepts /oauth/consent before existing routes, plus a serveConsent(req) function that returns an HTML+JS OAuth consent page. The consent page loads supabase-js from a CDN, lets the user sign in via email or phone OTP, then calls sb.auth.oauth.approveAuthorization(authId) and redirects to the returned redirect_url.",
+  "observations": [
+    "Top comment gives precise insertion instructions: BLOCK 1 after the pathParts split, BLOCK 2 after Deno.serve's closing })",
+    "Asserts existing /r/, /p/, /app/ routes and the 'Invalid URL format' fallback are untouched",
+    "serveConsent builds an inline HTML page titled 'Authorize Vi' branded 'Vi (Claude Design)' requesting access to the user's 'design' channel and design submissions",
+    "Reads SUPABASE_ANON_KEY from env; references supabaseUrl as an outer-scope variable (not defined in this file)",
+    "Supports two login methods (email/phone) via signInWithOtp and verifyOtp, with a 6-digit code flow",
+    "approve() calls sb.auth.oauth.approveAuthorization(authId) and assigns data.redirect_url",
+    "Consent HTML pulls @supabase/supabase-js@2 from cdn.jsdelivr.net",
+    "Response sent with Cache-Control: no-store"
+  ],
+  "standouts": [
+    "It is a patch-as-documentation file: the actual injected if-check lives only inside comments (BLOCK 1), while BLOCK 2 is live code",
+    "Implements the OAuth consent/approval UI for the Supabase-as-Authorization-Server flow"
+  ],
+  "conventions": [
+    "Follows an additive-patch discipline (intercept before existing routes, leave fallbacks intact)",
+    "Inlines all CSS/JS into a single HTML string served from an edge function",
+    "Depends on an external CDN script rather than bundling supabase-js"
+  ],
+  "concerns": [
+    "References supabaseUrl which is not declared in this file — only valid when pasted into the content-router that defines it",
+    "BLOCK 1 exists only as commented text, so this file alone is not directly runnable as the full patch",
+    "Loads supabase-js from a third-party CDN inside an auth consent page"
+  ],
+  "notes": "An additive OAuth-consent patch for the content-router: a commented if-check plus a live serveConsent() that renders an email/phone-OTP 'Authorize Vi' approval page.",
+  "questions": [
+    "Where is supabaseUrl defined in the target content-router file?",
+    "Has BLOCK 1 actually been applied to the live content-router, or is this still pending?"
+  ],
+  "purpose_vs_actual": "Matches — the header states it is the approved additive consent patch and the file delivers exactly the consent interception and serveConsent function described.",
+  "apparent_themes": [
+    "OAuth consent/authorization UX",
+    "additive, non-destructive patching",
+    "first-party connector branding (Vi / Claude Design)"
+  ],
+  "intention_signals": "Aims to give the Supabase OAuth Authorization Server a user-facing consent screen so a user can sign in and explicitly approve Vi's access to their design channel, slotted into the existing router without disturbing other routes.",
+  "novelty": "The patch is self-describing via comments specifying exact insertion points; the consent page combines dual email/phone OTP login with OAuth approval in one inline page.",
+  "contribution": "Contributes the OAuth consent-screen UI and the approveAuthorization handoff for the Claude Design connector, plus the precise additive-insertion recipe into content-router.",
+  "summary_for_embedding": "An additive content-router patch providing an /oauth/consent interceptor and a serveConsent() function that renders an inline email/phone-OTP 'Authorize Vi' page calling Supabase oauth.approveAuthorization.",
+  "intention_for_embedding": "To add a user consent/approval screen to the Supabase OAuth flow so users can sign in and authorize Vi's access to their design channel via the existing edge router."
+}

@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-C1-inbox-desktop.json",
+  "model": "opus",
+  "what_it_does": "Records the grounding-batch result for the C1-inbox-desktop.html mockup (the Chief-of-Staff Inbox triage dashboard): a 'ground' summary, counts (43/43/28), and 14 confirmed vs 15 flagged UI-element dossiers, each with a ui:// address, capabilities, grounding state, plain-language howto, feature mapping, and accuracy-jury (plus occasional refcheck) verdict.",
+  "observations": [
+    "Screen is a three-lane triage Inbox: live escalations awaiting decision, resolved-for-you (audit), and a batched lane.",
+    "Dossiers cover wire/force/run actions, decision cards, build-review cards, CoA (course-of-action) controls, idea/propose cards, lane headers, counters and footers.",
+    "Decision-card dossier encodes a principle: the operator decides on value (Commander-altitude: 2-3 options + trade-offs + recommendation), never the raw code fork; compiler is suite.py:coa.",
+    "An 'excluded' counter element shows items filtered by a test_origin tag, visible only as a count (cites suite.py:965-967).",
+    "build-review cards encode 'demonstrate-first': read the instruction / see it working before accept or send-back-with-a-why.",
+    "Three Layer-1 refcheck feature-fabrication failures: INB-focus, INB-excluded, INB-propose (not inventory ids nor 'proposed').",
+    "Two flagged items (decision-focus, excluded) have jury verdict=true yet are FLAGGED solely due to the deterministic refcheck floor.",
+    "The address ui://inbox/idea appears in three distinct dossiers (one confirmed, two flagged) with different represents/grounding.",
+    "howto.how_to_change names Inbox.tsx, suite.py:inbox_lanes, suite.py:coa, suite.py:review_verdicts, Toolbar.tsx."
+  ],
+  "standouts": [
+    "Encodes the 'decide on value not on code' principle as a first-class decision card (INB-decision, 4-member cluster, unanimously confirmed).",
+    "'Demonstrate-first' review discipline appears as an addressable remark.",
+    "Refcheck floor here flips two would-be-confirmed (jury-true) items to flagged on a hard feature-id check."
+  ],
+  "conventions": [
+    "Same confirmed/flagged + two-layer grading as sibling rg10 files.",
+    "ui:// addressing across inbox, inbox/coa, inbox/build-review namespaces.",
+    "Plain-language howto triad with a concrete code location per dossier.",
+    "Some maps_to_feature values are 'proposed' (permitted) while several fabricated ids are caught."
+  ],
+  "concerns": [
+    "Address reuse: ui://inbox/idea maps to three different dossiers in one file.",
+    "Multiple feature-fabrication failures (INB-focus, INB-excluded, INB-propose) suggest the dossiers invent feature ids outside the inventory.",
+    "jury-true-but-flagged cases show the two grading layers can disagree, leaving verdict interpretation non-obvious from the file alone."
+  ],
+  "notes": "The inbox triage dashboard inventory — 14 confirmed, 15 flagged — notable for three fabricated feature-ids caught by the deterministic refcheck and the 'decide on value not code' principle.",
+  "questions": [
+    "When jury verdict is true but a refcheck fails, what is the final disposition for that element?",
+    "Should the three distinct ui://inbox/idea dossiers be merged or are they genuinely different elements?",
+    "What is the authoritative feature-inventory that INB-focus / INB-excluded / INB-propose failed against?"
+  ],
+  "purpose_vs_actual": "Matches: declared as a grounding result for the inbox desktop mockup and that is its content.",
+  "apparent_themes": [
+    "Decision triage at Commander altitude (value, not code)",
+    "Auditable, demonstrate-first review",
+    "Two-layer grounding: a hard feature-id floor plus a soft accuracy jury"
+  ],
+  "intention_signals": "It appears to be verifying which inbox-triage controls are grounded in built code while enforcing that each element maps to a real feature id, catching fabricated mappings and flagging uncertain groundings for the operator.",
+  "novelty": "Shows the deterministic refcheck floor actively overriding a positive jury vote on a feature-id fabrication, demonstrating the two grading layers in tension.",
+  "contribution": "Contributes the Chief-of-Staff inbox element inventory — three-lane triage, value-altitude decision cards, build-review and CoA controls, exclusion counters — with addresses, howtos, and two-layer grounding verdicts including feature-fabrication catches.",
+  "summary_for_embedding": "Grounding-batch JSON for the inbox-triage desktop mockup, listing 43 clustered UI dossiers (decision cards, build-review, CoA, lanes) with 14 confirmed and 15 flagged via refcheck-plus-jury grading and three caught fabricated feature ids.",
+  "intention_for_embedding": "To check whether inbox-triage controls are grounded in built code and map to real features, flagging uncertain or fabricated mappings for operator review."
+}

@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "system/system-atlas.html",
+  "model": "opus",
+  "what_it_does": "An interactive directory-map card. It fetches system-map.json, builds an expandable file/folder tree where each folder is annotated with the system it holds and colour-coded by role, and a detail pane that, on click, shows what a node is and — for files — its real live contents by role (an axis's values, the symbol library, shapes, live glyphics, registry types, a component's slots/sockets, every token parsed from a CSS file, etc.). A search box filters the tree.",
+  "observations": [
+    "Declared @dsCard (group 'Glyphic System', viewport 1340x940); subtitle: 'Where everything lives… click any folder or file to see what it is and its complete live contents.'",
+    "Loads the full live stack: axes, icon/shape/meaning assets, CV_GLYPHIC, and the registry chain (conditions.js, types-core.js, archetype-catalog.js, types-seed.js, glyphic-type.js, components-type.js, kinds-type.js).",
+    "Fetches system-map.json (the build-system-map.js output) and reconstructs NODES + CONTAIN from contains edges; auto-expands the architecture folders (axes, tokens, assets, app, app/registry, app/ai, core, system).",
+    "ROLE_COLORS maps each role to a hex; FOLDER_ANN gives plain-language annotations per path; ROLE_DESC explains each role in the detail pane.",
+    "Detail rendering is role-dispatched in addLiveContent(): axis → its live values via axPrev(); axis-core → all axes it powers; value-source (cv-icons) → every symbol; value-source (cv-shapes) → its shapes; glyphic-core → live glyphics; meaning → its facets; registry files → the specific types each registers (filtered by id prefix); component → its valueSlots/sockets; token css → fetch+regex-parse every --token; ai → a link to the foundry.",
+    "axPrev() renders a per-axis preview swatch (color/size/space/depth/motion/texture/form/fill/symbol), mirroring the axis-system card's preview idiom.",
+    "Empty/stat view shows counts of files, folders, axes (CV_AXES), and types (CV_REGISTRY).",
+    "Links to system-map.html as a 'Guided tour'; the AI section links to glyphic-foundry.html.",
+    "Search uses matchTree() recursion to keep a node if it or any descendant matches the query."
+  ],
+  "standouts": [
+    "A directory browser whose leaf detail is the actual live system state (real tokens parsed from disk, real axis values, real registry types) — not static documentation.",
+    "Token CSS files are read on demand and regex-parsed to list every --token with colour swatches for colour-like values.",
+    "Single coordinated reading of the structural model (system-map.json) AND the live registries, joining 'where it lives' to 'what it currently contains'."
+  ],
+  "conventions": [
+    "Consumes the generated system-map.json rather than re-scanning — respects the single-source-model split.",
+    "Reads the live registries/axes for contents (projection rule); tokens-only styling.",
+    "Role colours/annotations are centralised maps, echoing build-system-map.js's classifyRole roles."
+  ],
+  "concerns": [
+    "ROLE_COLORS, FOLDER_ANN, and ROLE_DESC are hardcoded literals here that parallel the role set defined in build-system-map.js's classifyRole; if roles change in the generator these maps could drift (descriptive, not resolved from the model).",
+    "Relies on system-map.json existing and being current; a stale or missing file degrades the page (it does show a load-error message).",
+    "Registry detail filters types by id-prefix string matching (e.g. 'component.', 'panel.', 'glyphic-'), which couples this view to id-naming conventions."
+  ],
+  "notes": "If briefing someone: this is the clickable map of the whole design folder — tree on the left (folders labelled with the system they hold), and a detail pane that shows a file's real live contents (axis values, symbols, tokens, registry types, component slots).",
+  "questions": [
+    "Are the role-colour/annotation maps meant to be kept in sync with classifyRole by hand, or generated?",
+    "Who keeps system-map.json fresh for this page (manual run_script vs a watcher)?"
+  ],
+  "purpose_vs_actual": "Match — the subtitle promises an expandable directory map with live per-file contents, and the script delivers exactly that tree + role-dispatched live-content detail pane.",
+  "apparent_themes": [
+    "Self-describing system / map-of-itself",
+    "Projection of the live registries and the generated structural model",
+    "Where-it-lives joined to what-it-contains",
+    "Role-based classification as the organising lens"
+  ],
+  "intention_signals": "Trying to give Tim one navigable surface that answers 'what is this folder/file and what does it actually hold right now', by fusing the structural map with the live registry/token state so the system explains itself.",
+  "novelty": "Role-dispatched live-content rendering — clicking a file shows its current real contents (parsed tokens, live axis values, registered types, rendered glyphics) inside a directory browser.",
+  "contribution": "Contributes the interactive atlas that joins the generated directory/structure model to the live registry and token state, making the whole design system browsable and self-explaining file-by-file.",
+  "summary_for_embedding": "Interactive directory-atlas HTML card that loads system-map.json into an annotated, role-coloured expandable tree and shows each file's live contents (axis values, symbols, tokens, registry types, component slots) on click.",
+  "intention_for_embedding": "To make the entire design system navigable and self-explaining by fusing its generated structure map with its live registry and token state in one clickable surface."
+}

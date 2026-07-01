@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/spec-map.report.json",
+  "model": "opus",
+  "what_it_does": "Seam-lane report (JSON record) for the spec-compiler MAP roles: roles/decompose_seed.py (splits a seed idea into groups) and roles/expand_criterion.py (expands each group into a two-faced FUNCTION+FORM criterion). Records verification by use on the resident chat-4b, the schemas, the governance floor, and the cascade-wiring plan for a later beat.",
+  "observations": [
+    "files_written: decompose_seed.py, expand_criterion.py; new_role_ids both; both op=generate, mode_scope={spec}.",
+    "Discovery: both live; the 'spec' cast = {decompose_seed, expand_criterion, ground_criterion} (ground_criterion from a concurrent lane); listening cast remains the canonical six.",
+    "Schemas: DecomposeSeedOut.groups=list[Group{group_id,what,systems_touched(prose str)}]; ExpandCriterionOut{id,function,form,files_touched:list[str],reuse_or_netnew,preserves}.",
+    "By-use harness /tmp/spec_map_byuse.py: decompose_seed produced 4 groups from a seed; run_items(expand_criterion, 4 groups) -> 4 units, 0 failed, concurrent finish_order, every output validated.",
+    "Both faces present on every criterion: FUNCTION and FORM non-empty (real FORM bar for surface groups, literal 'n/a' for backend-only group).",
+    "Floor: cognition_governance_acceptance 42/42; roles_acceptance passes every structural check then reds only at line 174 drift listing the four spec-compiler roles.",
+    "Honest caveat: the model's reuse:<file> cites are PRELIMINARY/proposed and some exact paths are not real repo files; expand_criterion deliberately defers authoritative no-fiction grounding to the other lane's ground_criterion.",
+    "Documents the next-beat cascade wiring (save_cascade spec-compiler: decompose -> expand -> ground -> triad_synth) and that input_addresses stays default ('utterance',)."
+  ],
+  "standouts": [
+    "Two-faced criterion schema enforcing both FUNCTION and FORM (FORM as half of done), with honest 'n/a' for backend-only groups.",
+    "Explicit deferral of no-fiction reuse-grounding to a downstream role, with the proof framed as MECHANISM not criterion quality.",
+    "Concurrent lane awareness: the shared 'spec' cast and drift list reflect a sibling lane's ground_criterion/triad_synth landing in parallel."
+  ],
+  "conventions": [
+    "Mirror-existing-role and nested-submodel patterns (register_element/HowTo).",
+    "Cast-beyond-listening (mode_scope={spec}); pure ROLE dict + Pydantic, floor by construction.",
+    "Default input_addresses=('utterance',) with unit fields as keys, not declared inputs, to avoid the net-new compose path.",
+    "Expected-red-on-drift acknowledged; file-disjoint with the concurrent ground+synth lane."
+  ],
+  "concerns": [
+    "The report itself flags that proposed reuse:<file> paths are not real repo files (by design, grounded later) — a reader could mistake them for ground truth without the docstring deferral."
+  ],
+  "notes": "Builds the spec-compiler's first two MAP roles (decompose seed into groups, expand each into a two-faced criterion) and proves the mechanism, deferring reuse-grounding and criterion quality to a downstream cascade.",
+  "questions": [
+    "When does the next beat assemble the full spec-compiler cascade (decompose->expand->ground->triad_synth) and add the CONFIRM jury vs the seed?",
+    "How is the corpus-grounded per-unit retrieve (embedder enhancement) supplied once the embedder window is available?"
+  ],
+  "purpose_vs_actual": "Matches — it is the spec-map lane report and documents the two MAP roles plus mechanism verification, explicitly scoping out criterion-quality and reuse-grounding.",
+  "apparent_themes": [
+    "Spec compilation from seed idea into grounded two-faced criteria",
+    "FUNCTION+FORM as both halves of done",
+    "Deferred no-fiction grounding (propose now, ground downstream)",
+    "Concurrent file-disjoint lane composition into a shared cast"
+  ],
+  "intention_signals": "Documents building the front of a spec-compiler that turns a one-line seed into structured FUNCTION+FORM criteria, with truthful reuse-vs-net-new grounding handed to a later role.",
+  "novelty": "The two-faced criterion (FUNCTION+FORM, FORM honestly 'n/a' when backend-only) and the explicit propose-then-ground separation across sibling roles.",
+  "contribution": "Contributes the decompose_seed and expand_criterion roles, the two-faced criterion schema, and the documented cascade-wiring plan tying them to ground_criterion/triad_synth — the MAP front of the spec compiler.",
+  "summary_for_embedding": "Seam-lane report building the spec-compiler MAP roles decompose_seed and expand_criterion (op=generate, mode_scope=spec) that turn a seed idea into two-faced FUNCTION+FORM criteria, verified by use on the resident 4B.",
+  "intention_for_embedding": "To build the front of a spec-compiler that decomposes a seed into groups and expands each into a two-faced criterion, deferring authoritative reuse-grounding to a downstream role."
+}

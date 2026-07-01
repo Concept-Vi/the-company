@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "axes/motion/motion.css",
+  "model": "opus",
+  "what_it_does": "The CSS realisation of the motion axis values — defines each .mo-* class and its @keyframes (breathe, pulse, bob, tilt, spin, float, glow), so applying a class returned by CV_AXES.css('motion', value) animates the element. It is the single home for HOW each motion looks, complementing motion-axis.js which owns WHICH motions exist.",
+  "observations": [
+    "Header states the split: the axis JS is the source of which motions exist, this CSS is the source of how each looks; consumers apply CV_AXES.css('motion', value).",
+    "[class*=\"mo-\"] sets transform-origin:center on any motion-carrying element.",
+    "Looping animations (breathe, pulse, bob, tilt, spin, float, glow) are wrapped in @media (prefers-reduced-motion: no-preference) so reduced-motion users get the settled end-state, never a loop.",
+    "Durations vary per motion (breathe 3.6s, pulse 1.8s, bob 2.4s, tilt 4s, spin 2.2s, float 4.2s, glow 2.6s); easing uses var(--ease-soft, ease-in-out) with spin using linear.",
+    "mo-tilt:hover is deliberately kept OUTSIDE the reduced-motion guard (comment: user-initiated, brief), pausing the loop and applying a rotate+scale transition.",
+    "glow keyframe uses color-mix(in srgb, var(--accent-gold) …) for a drop-shadow halo.",
+    "Keyframe names are cvmo-* prefixed; class names mo-* — matching the css fields in motion-axis.js."
+  ],
+  "standouts": [
+    "Reduced-motion accessibility built in: loops gated, settled end-state default, hover-intent kept as a brief user-initiated exception.",
+    "Easing/durations reference tokens (var(--ease-soft), var(--accent-gold)) rather than hardcoded values where it matters.",
+    "Explicit articulation that this file is the 'HOW' home and the axis JS is the 'WHICH' home."
+  ],
+  "conventions": [
+    "Single-home discipline: animation definitions live here once; the axis JS references class names.",
+    "References design tokens (--ease-soft, --accent-gold) with fallbacks rather than raw values.",
+    "Accessibility-first prefers-reduced-motion gating, per tokens/motion.css 'nothing teleports'.",
+    "cvmo-/mo- naming consistent with the axis value css fields."
+  ],
+  "concerns": [],
+  "notes": "The animation home for the motion axis — each mo-* class + cvmo-* keyframe realises one axis value, all loops gated behind prefers-reduced-motion with hover-intent (tilt) as the brief exception, easing/colour drawn from tokens.",
+  "questions": [
+    "The durations (3.6s, 1.8s, etc.) are hardcoded here rather than token-referenced — is that intentional (per-motion tuning) or a candidate for tokenisation under the no-raw-values rule?"
+  ],
+  "purpose_vs_actual": "Match — the header claims this is the single CSS home realising each motion axis value, and it defines exactly the .mo-* classes and matching keyframes, with the reduced-motion discipline it promises.",
+  "apparent_themes": [
+    "Single source of truth (animation defined once, referenced by class).",
+    "Accessibility (reduced-motion respected, settled end-state default).",
+    "Token-referenced styling over hardcoded values for easing/colour.",
+    "Separation of 'which' (axis JS) from 'how' (this CSS)."
+  ],
+  "intention_signals": "To give the motion axis a single, accessible CSS home where each named motion is implemented once with token-aligned easing/colour and reduced-motion safety, so any consumer animates by applying a class without owning the animation.",
+  "novelty": "Pairing each axis value with a keyframe in a dedicated 'how' file, and treating hover-intent motion as a deliberate exception to the reduced-motion guard.",
+  "contribution": "Contributes the concrete animation implementations for the motion axis — the keyframes, durations, easing, reduced-motion gating, and hover-intent handling that realise each motion value.",
+  "summary_for_embedding": "A CSS file defining the .mo-* classes and cvmo-* @keyframes (breathe/pulse/bob/tilt/spin/float/glow) that realise the motion axis values, gated behind prefers-reduced-motion with token-referenced easing.",
+  "intention_for_embedding": "To be the single CSS home for how each motion axis value looks, implementing each animation once with accessibility and token alignment."
+}

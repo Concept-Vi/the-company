@@ -1,0 +1,44 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-SCENARIO-PLAYER.json",
+  "model": "opus",
+  "what_it_does": "A grounding-confirmation artifact for the SCENARIO-PLAYER.html mockup. It records a 'ground' description of the screen, counts (41 candidates, 41 dossiers, 26 clusters), and two lists: 'confirmed' and 'flagged' addressable UI elements. Each entry holds a dossier (address like ui://chat/reply, capabilities, grounding, a howto with what/how_to_change/what_you_can_do, maps_to_feature, represents), the cluster size and member indices it stands for, and a confirm block carrying a jury verdict (votes_grounded vs votes_ungrounded out of n=3, unanimity, quorum) plus reasons.",
+  "observations": [
+    "The 'ground' block frames the screen as a warm gold-themed control room for stepping through a live simulation, switching personas (Vi/Atlas/Nova), and toggling phone/desktop frames.",
+    "Confirmation runs in two layers: a deterministic 'refcheck' (Layer 1, called the deterministic floor) and an 'accuracy jury' (Layer 2, labelled SOFT — variance not error).",
+    "Several flagged entries carry the reason 'feature fabrication: maps_to_feature <X> is not an inventory id nor proposed' (e.g. RHM-identity, RHM-thinking, RHM-persona, RHM-listen, RHM-utterance, RHM-status).",
+    "The accuracy jury flags many entries for lacking quorum that the dossier is grounded in the element (e.g. 0-of-3 or 1-of-3 draws agreed grounded), explicitly 'for operator scrutiny'.",
+    "Some entries can pass the jury (3-of-3 grounded) yet still be flagged solely by the refcheck floor (e.g. ui://chat/listen and ui://chat/utterance with RHM-utterance).",
+    "Addresses use a ui:// scheme and map to feature ids such as RHM-verbs, RHM-decide, RHM-chat, RUN-run, INB-lanes, ENG-memo; maps_to_feature is often 'proposed' meaning no built code path yet.",
+    "Clusters collapse multiple candidate indices into one dossier (e.g. the 'step' control clusters 8 members, the 'title' nameplate clusters 4).",
+    "A few dossiers carry grounding:'built' (ui://chat/toolbar, ui://chat/status) while most carry grounding:'proposed'."
+  ],
+  "standouts": [
+    "The two-layer confirm model: a hard deterministic refcheck floor (feature-id must be an inventory id or 'proposed') sitting under a soft probabilistic accuracy jury described as variance-not-error.",
+    "The 'feature fabrication' refcheck reason names a specific failure mode — a dossier inventing a feature id that is neither in inventory nor the literal token 'proposed'."
+  ],
+  "conventions": [
+    "Follows a dossier/cluster/jury schema with ui:// addresses and a what/how_to_change/what_you_can_do howto triple on every element.",
+    "Uses plain-language operator-facing descriptions in the howto fields rather than developer terms.",
+    "Capabilities drawn from a fixed vocabulary (pointable, openable, driven, presentable, spotlit)."
+  ],
+  "concerns": [],
+  "notes": "This is the machine output of grounding-and-confirming every clickable element on the Scenario Player mockup, split into confirmed vs flagged with jury and refcheck reasons.",
+  "questions": [
+    "What is the full inventory of valid feature ids that the refcheck floor checks maps_to_feature against?",
+    "Why does an entry that the jury found 3-of-3 grounded still land in 'flagged' purely on a refcheck failure — is refcheck strictly dominant over jury agreement?",
+    "What downstream consumer reads the confirmed vs flagged split, and what does 'operator scrutiny' resolve to?"
+  ],
+  "purpose_vs_actual": "Matches: the file presents itself (via the 'ground' and confirm structure) as a per-element grounding confirmation of the Scenario Player mockup, and its contents are exactly that.",
+  "apparent_themes": [
+    "Grounding UI elements to real or proposed system features",
+    "Two-tier verification (deterministic floor + soft jury)",
+    "Anti-fabrication: features must trace to an inventory id or be explicitly 'proposed'",
+    "Addressable surface: every element gets a ui:// address and an operator-facing howto"
+  ],
+  "intention_signals": "It appears to be trying to certify, element by element, that a mockup's clickable surface honestly maps to the system's feature inventory — catching invented features deterministically and surfacing low-confidence groundings for human review rather than silently accepting them.",
+  "novelty": "The explicit jury vote tallies (votes_grounded/votes_ungrounded, quorum, unanimous) combined with a deterministic floor reason string, applied per UI element of a single mockup.",
+  "contribution": "Contributes a concrete, populated example of the per-element grounding-confirmation record for one mockup (Scenario Player): the confirmed/flagged split, the cluster-to-dossier collapse, and the exact two-layer reason vocabulary a fused system would keep as its element-confirmation evidence.",
+  "summary_for_embedding": "A grounding-confirmation output for the SCENARIO-PLAYER.html mockup recording 41 candidate UI elements clustered into dossiers, each with a ui:// address, howto, feature mapping, and a two-layer (refcheck floor + accuracy jury) confirmed-or-flagged verdict.",
+  "intention_for_embedding": "To certify that each clickable element of the Scenario Player mockup honestly grounds to a real or proposed system feature, flagging fabricated feature ids and low-confidence groundings for operator review."
+}

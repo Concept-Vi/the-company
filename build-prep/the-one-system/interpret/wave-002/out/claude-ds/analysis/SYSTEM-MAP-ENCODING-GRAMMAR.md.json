@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/SYSTEM-MAP-ENCODING-GRAMMAR.md",
+  "model": "opus",
+  "what_it_does": "The draft/handoff spec for the System Map's visual-encoding grammar: it defines how a file/folder's metadata facets are bound to visual channels (colour, size, texture, border, glow, opacity) via single-sourced 'encoding sets' stored in CV_MEANING.encodings('system-map'), baked into system-map.json by the generator, and projected (not copied) into the map UI.",
+  "observations": [
+    "Names the single home: CV_MEANING.encodings('system-map') in assets/icons/cv-meaning.js, baked into system/system-map.json; the map HTML is a projection.",
+    "The one idea: a facet (metadata) -> channel (visual property) binding called an encoding set, offloading recognition to spatial/visual cognition.",
+    "Channels table reserves each visual property for a purpose (colour=primary anchor, size=magnitude relative to siblings in same folder, texture=second categorical facet, border=depth/state, glow=liveness only, opacity=de-emphasis).",
+    "Facets list: role, ext, roleGroup, links, usedBy, bytes, depth, state — extensible by computing on the node.",
+    "Gives a JSONC set schema supporting discrete (values + fallback + optional folderColour) and scale (stops interpolated) kinds.",
+    "Distinguishes live sets (role-colour, type-colour, link-heat, the size selectors) from draft:true sets to be built (depth-border, kind-texture, state-glow).",
+    "Notes the size SIZERS currently mirror the sets 1:1 and should resolve from the registry once unified.",
+    "Specifies the projection: build-system-map.js writes encoding to model.encoding; system-map.html reads ENC and resolves colours from it, falling back to inline tables only if absent.",
+    "Closes with a principle gate: writing a colour/size/texture value inside system-map.html is drift — move it into the profile and read it."
+  ],
+  "standouts": [
+    "Glow reserved strictly for liveness/attention only — a disciplined channel budget.",
+    "Encoding vocabulary is itself a CV_MEANING profile (surface-scoped), so it round-trips to JSON and is authored without code.",
+    "Recognition offloaded to visual cognition so reasoning stays free for meaning — an explicit cognitive-ergonomics rationale."
+  ],
+  "conventions": [
+    "Single-source / one-home discipline: the map holds references not copies; drift = a literal in the UI.",
+    "Extend-by-registration: add a set entry and it appears in the selector with zero UI code.",
+    "Draft:true flag marks data+intent-only sets awaiting a channel renderer.",
+    "Numbered 'Piece N' framing within the living-codebase-canvas series.",
+    "Each channel reserved for a single semantic purpose (channel budgeting)."
+  ],
+  "concerns": [
+    "Acknowledged transitional duplication: the size SIZERS mirror the sets 1:1 and are not yet unified to resolve from the registry."
+  ],
+  "notes": "A facet-to-visual-channel encoding grammar, single-sourced as a CV_MEANING profile and projected into the System Map, so the codebase canvas's appearance is data not hardcoded UI.",
+  "questions": [
+    "Have the draft channels (depth-border, kind-texture, state-glow) been implemented in the map yet, or are they still data-only?",
+    "Has the SIZERS/sets unification noted as pending actually happened in the code?"
+  ],
+  "purpose_vs_actual": "Matches — declares itself a draft + handoff spec for the visual encoding and delivers the channels, facets, schema, current sets, projection wiring, and extension rules.",
+  "apparent_themes": [
+    "Single-source / projection (UI reflects registry, never parallels it)",
+    "Facet-to-channel visual grammar",
+    "Channel budgeting (each visual property reserved for one meaning)",
+    "Recognition offloaded to visual cognition",
+    "Extend-by-registration"
+  ],
+  "intention_signals": "Trying to make the look of the codebase-canvas a single-sourced, data-driven grammar of facet-to-channel bindings so categories and magnitudes read at a glance, and so new encodings appear in the UI by registration rather than by editing the map.",
+  "novelty": "Treating the visual-encoding vocabulary itself as a surface-scoped CV_MEANING profile, and the deliberate per-channel semantic reservation (glow=liveness only, size=sibling-relative magnitude).",
+  "contribution": "Contributes the channel/facet vocabulary, the discrete-and-scale encoding-set schema, the live-vs-draft set inventory, and the projection-from-registry wiring that a fused system would keep as its codebase-visualization grammar.",
+  "summary_for_embedding": "Spec for the System Map's visual-encoding grammar binding file metadata facets to visual channels (colour/size/texture/border/glow/opacity) via single-sourced encoding sets in a CV_MEANING profile, projected into the map.",
+  "intention_for_embedding": "To make the codebase-canvas's appearance a single-sourced, data-driven facet-to-channel grammar so categories and magnitudes are readable at a glance and extensible by registration."
+}

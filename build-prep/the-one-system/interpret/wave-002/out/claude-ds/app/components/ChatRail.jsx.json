@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/ChatRail.jsx",
+  "model": "opus",
+  "what_it_does": "Defines ChatRail, the persistent right-side Vi conversation panel. It holds scope-keyed suggested prompts and labels, a SYSTEM_CONTEXT brand brief, and a send() pipeline that: routes clear image requests through cvOpenAI/CV_AI image generation; in Workshop scope classifies edit intent and proposes an inline applyable diff card; otherwise sends recent history + system context to CV_AI.complete and renders the reply. It manages messages (user/vi, plus image and diff message kinds), thinking state, apply/discard of diffs, and a composer with scope-aware placeholder/hints.",
+  "observations": [
+    "SUGGESTED maps each canvas scope (overview/build/inbox/icons/colors/type/logos/imagery/patterns/components/templates/voice) to starter prompts; SCOPE_LABEL maps scope→display name",
+    "SYSTEM_CONTEXT is a large inline brand brief embedding exact hex values (#FBF7EC, #1F1A12, #E0C010, #988058), the Sora/DM Sans type, the 99-icon library spec, the canonical entity shapes, and the voice rules",
+    "Image route: cvOpenAI.classifyIntent + getSettings().enableForVi gate; warns if no key (links to Settings); brand-enriches the prompt with the palette before generateImage via CV_AI.resolveProvider('openai-image'); persists to cvImageStore",
+    "Workshop route: WS_AI.bridge.getActive() supplies the live doc; WS_AI.classifyIntent → if 'edit', WS_AI.generateEdit → renders a WSDiffCard the user can apply/discard via the bridge",
+    "Renders message text with dangerouslySetInnerHTML and intercepts clicks on [data-nav] links to call window.cvNav",
+    "formatReply does light markdown→HTML after escaping; escapeHtml used for interpolated error/summary text",
+    "Sends only the last 6 messages as history, stripping HTML tags from stored text",
+    "Vi name rendered as V + styled 'i' throughout"
+  ],
+  "standouts": [
+    "Three-way send routing in one pipeline: image-generation intent, Workshop edit-as-diff proposal, or plain chat — the rail is context-aware of which canvas it's on and whether a doc is live",
+    "Edit instructions become an inline applyable/undoable diff card rather than prose, wired through WS_AI.bridge",
+    "SYSTEM_CONTEXT hardcodes the full brand spec (palette hex, type, icon grid, shapes, voice) as a prompt string"
+  ],
+  "conventions": [
+    "Routes model and image calls through CV_AI (resolveProvider/complete) per the AI-registry rule",
+    "Exposes the component on window.ChatRail",
+    "Breaks single-source: the brand palette/voice/type are inlined as literal hex and prose in SYSTEM_CONTEXT and again in the image-enrich string, rather than sourced from the token/voice registries"
+  ],
+  "concerns": [
+    "Brand spec duplicated and hardcoded: palette hex (#FBF7EC etc.), voice rules, and type names live inline in SYSTEM_CONTEXT and the enrich string — a second/third home for values the project says must be single-sourced (voice.conceptv + tokens)",
+    "dangerouslySetInnerHTML on model output: formatReply escapes first, but image/diff/error messages build HTML via template strings with only escapeHtml on some interpolations (proposal.summary, error.message escaped; nav links are literal) — XSS surface depends on every path escaping",
+    "Several intent/edit failures are swallowed in empty catch blocks (the Workshop classify/generate try/catch{})"
+  ],
+  "notes": "The persistent Vi chat rail — a scope-aware, three-route (image / workshop-diff / chat) assistant; note the brand palette and voice are hardcoded inline in the system prompt rather than pulled from the registries.",
+  "questions": [
+    "Why is the brand spec inlined here instead of composed from voice.conceptv and the token values?",
+    "What shape does WS_AI.generateEdit's proposal.diff take (batch vs diffs[])?",
+    "Does cvOpenAI.classifyIntent share logic with WS_AI.classifyIntent or are they separate classifiers?"
+  ],
+  "purpose_vs_actual": "Matches — the comment says persistent AI conversation on the right, and the file implements exactly that plus image and workshop-edit routing.",
+  "apparent_themes": [
+    "AI-as-pervasive-collaborator (Vi present on every canvas, context-aware)",
+    "Intent routing (one input, multiple resolved behaviours)",
+    "Edit-as-diff (proposals are reviewable/undoable, not blind applies)",
+    "Scope-awareness (suggestions, labels, placeholders adapt to the canvas)"
+  ],
+  "intention_signals": "Aims to make Vi an always-present assistant that understands which canvas the user is on and what doc is open, and can answer, generate an image, or propose a concrete editable change — turning conversation into direct manipulation of the design system.",
+  "novelty": "The unified send() that disambiguates between image generation, a live-doc edit proposed as an inline diff card, and plain chat — all from one composer, scoped to the current canvas.",
+  "contribution": "Contributes the persistent context-aware assistant rail: scope-keyed suggestions/labels, a three-way intent router (image / workshop edit-diff / chat), inline applyable/undoable diff and image message types, and bridge-mediated application to the live doc.",
+  "summary_for_embedding": "A persistent right-rail Vi chat component that routes input to image generation, an inline applyable edit-diff against the live Workshop doc, or plain scoped chat via CV_AI, with scope-keyed suggestions and a hardcoded brand system prompt.",
+  "intention_for_embedding": "To make Vi an always-present, canvas-aware assistant that can answer, generate images, or propose concrete editable changes to the open document directly from the conversation."
+}

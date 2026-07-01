@@ -1,0 +1,40 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/INVENTORY-MAP.md",
+  "model": "opus",
+  "what_it_does": "A Layer-1 consolidation document that merges five Haiku coverage inventory reports into a single terrain overview of the Company codebase (~600 source files) and then proposes the Layer-2 deep-read plan: seven prioritized clusters (MUST-HAVE, CONTEXT, LOWER) each assigned a model tier, keyed to what the Claude Design application-structure pack needs.",
+  "observations": [
+    "Gives a 4-region terrain table (backend core ~75 files, FE+design 106, nodes/roles/voice 68, self-desc/tests/ops ~185) naming the spine files for each.",
+    "States two tractability facts: the repo self-describes (16 AGENTS.md + MAP + STATE + a drift-check) and is registry-not-hardcoding + schema-additive everywhere.",
+    "Provides an angle map of branches (main, concurrent-cognition, interactive-surface-build, operable-interface-build, night-build) plus the vault build-prep (252 files) as where the design intent disproportionately lives.",
+    "Proposes 7 deep-read clusters with model assignments: 1 FE structure (Sonnet), 2 address/organ seams (Sonnet), 3 design substrate/token-slots (Sonnet), 4 surface design-intent (Opus), 5 contracts/registry/governance (Sonnet), 6 self-description/ops (Sonnet), 7 angles/merge delta (Sonnet).",
+    "States a coverage guarantee: every Layer-1 priority place maps to a cluster or an explicit lower-defer, and Layer-3 Opus synthesis runs a completeness critic that tops up if not dry."
+  ],
+  "standouts": [
+    "The cluster plan is the planning artifact that drove the deep-read documents (the seams, selfdesc-ops, and surface-intent files map directly onto clusters 2, 6, and 4).",
+    "The observation that the design intent is disproportionately in the 252-file vault, the angle a shallow pass misses, with cluster 4 scoped to surface docs to manage volume risk.",
+    "Explicit model-tier assignment per cluster (Opus for the large surface-intent pack, Sonnet for the rest)."
+  ],
+  "conventions": [
+    "Frames everything in the repo's own vocabulary (self-describing, registry-not-hardcoding, schema-additive, drift-check).",
+    "Uses priority tiers (MUST-HAVE / CONTEXT / LOWER) and a coverage guarantee, consistent with a planned multi-layer research methodology."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the planning hub for the Claude Design research effort, the terrain-at-a-glance plus the cluster-by-cluster deep-read plan that the deeper documents in this folder were produced from.",
+  "questions": [
+    "Did Layer-3's completeness critic find gaps the seven clusters missed, and were they topped up?",
+    "Were the LOWER-tier areas (voice internals, node-type skeletons) ever deep-read, or do they remain inventory-only?"
+  ],
+  "purpose_vs_actual": "Match. Stated as the merged Layer-1 terrain plus the Layer-2 deep-read plan for Tim to steer before the expensive layer fires, and it delivers exactly that with a coverage guarantee.",
+  "apparent_themes": [
+    "Layered research methodology (cheap broad census -> prioritized deep-read -> synthesis critic)",
+    "Surface the already-disciplined structure as the thing Claude Design designs into",
+    "Coverage accountability (every priority place maps to a cluster or an explicit defer)",
+    "Model-tier allocation by cluster importance and size"
+  ],
+  "intention_signals": "Trying to convert five shallow census reports into a steerable, prioritized deep-read plan so the design effort spends expensive model time exactly where the application-structure pack needs depth, with explicit coverage guarantees.",
+  "novelty": "The per-cluster model-tier allocation tied to pack-need priority and the explicit coverage-guarantee + completeness-critic mechanism for a research wave.",
+  "contribution": "Contributes the terrain map of the whole codebase and the prioritized deep-read plan (seven clusters, model tiers, coverage guarantee) that organizes the rest of the research folder; a fused system keeps this as the index/plan that links the inventory layer to the deep-read layer.",
+  "summary_for_embedding": "A Layer-1 consolidation merging five inventory reports into a terrain map of the ~600-file Company codebase plus a Layer-2 deep-read plan of seven prioritized clusters with model-tier assignments and a coverage guarantee, produced to steer the Claude Design research wave.",
+  "intention_for_embedding": "To turn shallow census reports into a steerable, prioritized deep-read plan so expensive model time is spent where the application-structure design pack needs depth."
+}

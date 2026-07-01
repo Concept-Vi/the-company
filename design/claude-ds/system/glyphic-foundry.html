@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Glyphic System" name="Glyphic Foundry — AI symbol generation" subtitle="The conversational mark-foundry: describe a symbol, Vi proposes candidates (live-rendered as glyphics), give feedback, iterate, and Save into the icon library. Routes through CV_AI.execute(glyphic.generate/save); demo fallback when no model is bound." viewport="1180x860" -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glyphic Foundry</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../axes/motion/motion.css">
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<!-- CV_AI stack so generation routes through CV_AI.execute, never raw window.claude -->
+<script src="../app/ai/ai-registry.js"></script>
+<script src="../app/ai/ai-seed.js"></script>
+<script src="../app/ai/ai-glyphic.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--zone-ground, #FCFAF2); color: var(--fg-primary); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .foundry { display: grid; grid-template-columns: 340px 1fr; height: 860px; }
+  .rail { border-right: 1px solid var(--border-faint); background: var(--paper); display: flex; flex-direction: column; }
+  .rail header { padding: 20px 22px 14px; border-bottom: 1px solid var(--border-faint); }
+  .rail .kk { font: 600 10px/1 var(--font-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--accent-bronze); }
+  .rail h1 { margin: 8px 0 4px; font: 800 22px/1.05 var(--font-display); letter-spacing: -0.015em; }
+  .rail .sub { font: 400 12px/1.5 var(--font-body); color: var(--fg-secondary); }
+  .thread { flex: 1; overflow-y: auto; padding: 16px 22px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { font: 400 12.5px/1.5 var(--font-body); padding: 10px 13px; border-radius: 12px; max-width: 92%; }
+  .msg.you { align-self: flex-end; background: var(--accent-gold-50); color: var(--ink); border: 1px solid color-mix(in srgb, var(--accent-gold) 30%, transparent); }
+  .msg.vi { align-self: flex-start; background: var(--bg-muted); color: var(--fg-primary); }
+  .msg .who { font: 600 9px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; opacity: .6; margin-bottom: 4px; }
+  .composer { padding: 14px 18px 18px; border-top: 1px solid var(--border-faint); display: flex; flex-direction: column; gap: 9px; }
+  .composer textarea { width: 100%; min-height: 60px; resize: vertical; border: 1px solid var(--border-strong); border-radius: 10px; padding: 10px 12px; font: 400 13px/1.45 var(--font-body); color: var(--ink); background: var(--bg-surface); outline: none; }
+  .composer textarea:focus { border-color: var(--accent-gold); box-shadow: 0 0 0 3px var(--accent-gold-50); }
+  .crow { display: flex; gap: 8px; align-items: center; }
+  .btn { font: 600 12px/1 var(--font-body); padding: 10px 16px; border-radius: 9px; border: 0; cursor: pointer; background: var(--accent-gold); color: var(--on-gold); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--accent-bronze); border: 1px solid var(--border-strong); }
+  .count-sel { font: 500 12px/1 var(--font-body); color: var(--fg-secondary); }
+  .count-sel select { font: inherit; padding: 6px 8px; border-radius: 7px; border: 1px solid var(--border-strong); background: var(--bg-surface); }
+
+  .stage { padding: 24px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+  .stage-head { display: flex; align-items: center; gap: 12px; }
+  .stage-head h2 { margin: 0; font: 700 16px/1.1 var(--font-display); }
+  .mode { margin-left: auto; font: 600 9px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; }
+  .mode.live { background: color-mix(in srgb, var(--accent-communication) 16%, transparent); color: color-mix(in srgb, var(--accent-communication) 85%, var(--ink)); }
+  .mode.demo { background: color-mix(in srgb, var(--status-warning) 18%, transparent); color: color-mix(in srgb, var(--status-warning) 88%, var(--ink)); }
+  .cands { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 14px; }
+  .cand { border: 1px solid var(--border-faint); border-radius: 14px; background: var(--paper); padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; transition: box-shadow .15s, border-color .15s, transform .15s; }
+  .cand:hover { box-shadow: var(--shadow-pop); transform: translateY(-2px); }
+  .cand.sel { border-color: var(--accent-gold); box-shadow: 0 0 0 2px var(--accent-gold-50); }
+  .cand .nm { font: 700 13px/1.15 var(--font-display); text-align: center; }
+  .cand .meta { font: 500 9.5px/1.3 var(--font-mono); color: var(--fg-muted); text-align: center; }
+  .cand .tags { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .cand .tag { font: 500 8.5px/1.2 var(--font-mono); padding: 2px 6px; border-radius: 5px; background: color-mix(in srgb, var(--accent-bronze) 9%, transparent); color: var(--fg-secondary); }
+  .cand .save { margin-top: 2px; font: 600 10px/1 var(--font-body); padding: 7px 12px; border-radius: 7px; border: 1px solid var(--accent-gold); background: transparent; color: var(--accent-gold-deep); cursor: pointer; }
+  .cand .save.saved { background: var(--accent-communication); border-color: var(--accent-communication); color: #fff; }
+  .empty { color: var(--fg-muted); font: 400 13px/1.6 var(--font-body); max-width: 52ch; }
+  .empty b { color: var(--fg-secondary); }
+  .ring { width: 200px; }
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--paper); font: 600 12px/1 var(--font-body); padding: 12px 18px; border-radius: 999px; opacity: 0; transition: all .25s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .saved-strip { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-top: 6px; }
+  .saved-strip .lbl { font: 600 9px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-muted); }
+</style>
+</head>
+<body>
+<div class="foundry">
+  <aside class="rail">
+    <header>
+      <div class="kk">ConceptV · Vi</div>
+      <h1>Glyphic Foundry</h1>
+      <div class="sub">Describe a symbol you need. Vi proposes candidates — refine by talking, click to select, Save into the library.</div>
+    </header>
+    <div class="thread" id="thread"></div>
+    <div class="composer">
+      <textarea id="brief" placeholder="e.g. a symbol for ‘drone capture’ — an aerial camera over a house"></textarea>
+      <div class="crow">
+        <span class="count-sel">Options <select id="count"><option>3</option><option selected>4</option><option>6</option></select></span>
+        <button class="btn" id="go">Generate</button>
+      </div>
+    </div>
+  </aside>
+  <main class="stage">
+    <div class="stage-head">
+      <h2>Candidates</h2>
+      <span class="mode" id="mode"></span>
+    </div>
+    <div id="cands" class="cands"></div>
+    <div id="empty" class="empty">Describe a symbol on the left and press <b>Generate</b>. Candidates render as live glyphics here; click one to select, Save to add it to the icon library (it appears instantly in the Icon explorer + Symbol axis).</div>
+    <div class="saved-strip" id="savedStrip"></div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  var GL = window.CV_GLYPHIC, ICONS = window.CV_ICONS, AI = window.CV_AI;
+  var thread = [];           // {role, text}
+  var candidates = [];
+  var selected = null;
+  var saved = [];
+  var tmpSeq = 0;
+
+  var elThread = document.getElementById('thread');
+  var elCands = document.getElementById('cands');
+  var elEmpty = document.getElementById('empty');
+  var elMode = document.getElementById('mode');
+  var elGo = document.getElementById('go');
+  var elBrief = document.getElementById('brief');
+  var elSaved = document.getElementById('savedStrip');
+
+  // is a live model reachable? (CV_AI claude provider → window.claude.complete)
+  var live = !!(window.claude && typeof window.claude.complete === 'function');
+  elMode.className = 'mode ' + (live ? 'live' : 'demo');
+  elMode.textContent = live ? 'Live · CV_AI' : 'Demo mode';
+
+  function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 1900); }
+
+  function addMsg(role, text) {
+    thread.push({ role: role, text: text });
+    var d = document.createElement('div');
+    d.className = 'msg ' + (role === 'user' ? 'you' : 'vi');
+    d.innerHTML = '<div class="who">' + (role === 'user' ? 'You' : 'Vi') + '</div>' + text;
+    elThread.appendChild(d);
+    elThread.scrollTop = elThread.scrollHeight;
+  }
+
+  // preview a candidate AS a glyphic: temp-register its svg in CV_ICONS (persist:false)
+  function previewGlyphic(rec) {
+    var tmpId = '__foundry_' + (tmpSeq++) + '_' + rec.id;
+    try { ICONS.data[tmpId] = rec.svg; ICONS.facets[tmpId] = { domain: (rec.facets && rec.facets.domain) || 'feature', kind: (rec.facets && rec.facets.kind) || 'object', provenance: 'vi', name: rec.name }; } catch (e) {}
+    return GL ? GL.render({ form: 'circle', symbol: tmpId, fill: 'paper' }, { size: 88 }) : ('<svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="#988058" stroke-width="1.5">' + rec.svg + '</svg>');
+  }
+
+  function renderCandidates() {
+    elEmpty.style.display = candidates.length ? 'none' : 'block';
+    elCands.innerHTML = candidates.map(function (rec, i) {
+      var f = rec.facets || {};
+      var tags = (f.tags || []).slice(0, 4).map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('');
+      var isSaved = saved.indexOf(rec.id) >= 0;
+      return '<div class="cand' + (selected === i ? ' sel' : '') + '" data-i="' + i + '">' +
+        '<div class="ring">' + previewGlyphic(rec) + '</div>' +
+        '<div class="nm">' + rec.name + '</div>' +
+        '<div class="meta">' + (f.domain || '—') + ' · ' + (f.kind || '—') + '</div>' +
+        '<div class="tags">' + tags + '</div>' +
+        '<button class="save' + (isSaved ? ' saved' : '') + '" data-save="' + i + '">' + (isSaved ? '✓ Saved' : 'Save to library') + '</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  // ---- DEMO generator: compose plausible candidates from existing symbols ----
+  // (used when no model is bound, so the foundry is always demonstrable)
+  function demoCandidates(brief, n) {
+    var pool = Object.keys(ICONS.data).filter(function (k) { return k.indexOf('__foundry') !== 0; });
+    var words = (brief || 'symbol').toLowerCase().split(/\s+/).filter(Boolean);
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var base = pool[(i * 7 + brief.length) % pool.length];
+      var body = ICONS.get(base) || '<circle cx="12" cy="12" r="7"/>';
+      var w = words[i % words.length] || ('sym' + i);
+      out.push({
+        id: (w.replace(/[^a-z0-9]+/g, '-') + '-' + (i + 1)).replace(/^-|-$/g, '') || ('candidate-' + (i + 1)),
+        name: (w.charAt(0).toUpperCase() + w.slice(1)) + ' ' + (i + 1),
+        description: 'Demo candidate from “' + brief + '”',
+        svg: body,
+        facets: { domain: ['capture', 'property', 'data', 'people'][i % 4], kind: ['object', 'action', 'state'][i % 3], tags: words.slice(0, 3) },
+      });
+    }
+    return out;
+  }
+
+  async function generate() {
+    var brief = elBrief.value.trim();
+    if (!brief) { elBrief.focus(); return; }
+    var n = parseInt(document.getElementById('count').value, 10) || 4;
+    addMsg('user', brief);
+    elBrief.value = '';
+    elGo.disabled = true; elGo.textContent = 'Generating…';
+    try {
+      var results;
+      if (live && AI && AI.execute) {
+        // ROUTE THROUGH THE REGISTRY — never raw window.claude
+        var parsed = await AI.execute('glyphic.generate', { surface: 'glyphics', params: { brief: brief, count: n, thread: thread.slice(0, -1) } });
+        results = (parsed || []).map(function (p) { return p.record; });
+      } else {
+        await new Promise(function (r) { setTimeout(r, 350); });
+        results = demoCandidates(brief, n);
+      }
+      candidates = results;
+      selected = null;
+      renderCandidates();
+      addMsg('vi', 'Proposed ' + candidates.length + ' candidate' + (candidates.length === 1 ? '' : 's') + '. Click one to select, refine by describing changes, or Save the one you like.');
+    } catch (e) {
+      addMsg('vi', 'Generation failed: ' + e.message + ' — falling back to demo candidates.');
+      candidates = demoCandidates(brief, n); selected = null; renderCandidates();
+    } finally {
+      elGo.disabled = false; elGo.textContent = 'Generate';
+    }
+  }
+
+  function saveCandidate(i) {
+    var rec = candidates[i];
+    if (!rec) return;
+    try {
+      if (AI && AI.execute && live) { AI.execute('glyphic.save', { params: { record: rec } }); }
+      else { ICONS.add(Object.assign({ provenance: 'vi' }, rec)); }
+      if (window.CV_AXES && window.CV_AXES.has('symbol')) { var sym = window.CV_AXES.resolve('symbol'); if (sym.rebuild) sym.rebuild(); }
+      saved.push(rec.id);
+      saved = saved.filter(function (v, k, a) { return a.indexOf(v) === k; });
+      renderCandidates();
+      renderSaved();
+      toast('Saved “' + rec.name + '” to the library');
+    } catch (e) { toast('Save failed: ' + e.message); }
+  }
+
+  function renderSaved() {
+    if (!saved.length) { elSaved.innerHTML = ''; return; }
+    elSaved.innerHTML = '<span class="lbl">Saved this session</span>' + saved.map(function (id) {
+      return GL ? GL.render({ form: 'none', symbol: id }, { size: 30 }) : '';
+    }).join('');
+  }
+
+  elGo.onclick = generate;
+  elBrief.addEventListener('keydown', function (e) { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') generate(); });
+  elCands.addEventListener('click', function (e) {
+    var sv = e.target.closest('[data-save]');
+    if (sv) { e.stopPropagation(); saveCandidate(parseInt(sv.getAttribute('data-save'), 10)); return; }
+    var c = e.target.closest('.cand');
+    if (c) { selected = parseInt(c.getAttribute('data-i'), 10); renderCandidates(); }
+  });
+})();
+</script>
+</body>
+</html>

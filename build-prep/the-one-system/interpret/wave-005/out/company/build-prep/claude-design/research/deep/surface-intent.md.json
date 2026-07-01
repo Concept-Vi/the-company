@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/deep/surface-intent.md",
+  "model": "opus",
+  "what_it_does": "A deep-read document assembling the per-surface design-intent layer for the Company's application: a criterion-by-criterion depth pass on the Interactive Addressed Surface (the studio end-state spec), an architecture-level survey of the other surfaces (canvas, IA, inbox, walkthrough, twin, settings, etc.), a treatment of the Sequences primitive, and a surface relationship map placing the Information Architecture as the parent container. Every claim is tagged DESIGNED / BUILT / DESIGNED-checkbox / INFERRED.",
+  "observations": [
+    "Part 1 walks every Interactive-Addressed-Surface criterion (S0-S5, F0-F9, I1-I7, R1-R2, B1-B3, L1-L10, L2) with designed shape, test name, and status verified against intent-studio.md section 5 (code-truth on main) rather than the Completion Criteria checkboxes.",
+    "States the load-bearing interaction model: click INDICATES + CONSENTS (not click=execute); the RHM proposes in chat; action runs only through governance + see-and-approve, with tier resolved by address (I4) not verb.",
+    "Gives a BUILT-on-main vs DESIGNED summary cut: I6/I7 (annotate/attach_chat), F1-presentation (set_presentation_pref), S3 (resolve_scope), L4 (ingest_comment), L3/L5 substrate, address_help, up_translate, _registry_ui_target are BUILT; the spine (S0/S1/S2/F4), FORM rebuild (F0-F9), interaction loop (I1-I4), R1/R2, and L1/L2 wire are net-new.",
+    "Part 2 surveys ~17 surfaces (studio, IA, canvas, portals, workshop, RHM presence, walkthrough, presence dial, twin, inbox, build review, replay, wire states, self-mod, model fleet, activity/SSE, settings) with intent + built reality + how each composes the primitives.",
+    "Part 3 frames the Sequences primitive as one relational loop resolve->present/work->persist->next/trigger recurring across the engine, the walkthrough organ, and the collective cognition, with three citations.",
+    "Part 4 maps the Information Architecture as the parent container that places every other surface, with an ASCII grid layout and a relationship graph; the threading principle is simultaneity (the same ui:// address visible on board, inspector, and RHM pane at once).",
+    "Part 5 is a source ledger; includes an explicit honesty note distinguishing Collective Cognition (the context-resolution spine, used here) from Concurrent Cognition (the staged-stream runtime, out of scope, no doc in this corpus)."
+  ],
+  "standouts": [
+    "The methodology correction: it maps each criterion against code-truth (intent-studio section 5) not the all-checkbox Completion Criteria, and flags a resolved source-conflict where the 4-day-newer reading supersedes the Research Synthesis on S3.",
+    "The IA-as-parent / co-resolution-surface insight: the IA is not a navigation shell but a surface where every zone re-resolves to the same locus simultaneously (R1/R2 rendered as spatial layout).",
+    "The Sequences primitive as the single mechanic underlying engine, human-review organ, and cognition, so new capability is registering a station on the existing loop rather than building a new pipeline.",
+    "The honesty contract with four tags and the explicit Collective-vs-Concurrent Cognition disambiguation."
+  ],
+  "conventions": [
+    "Uses a four-level honesty tag system (DESIGNED / BUILT / DESIGNED-checkbox / INFERRED) and present-tense claims only for BUILT, matching Tim's verify-before-claiming law.",
+    "Cites file:line (suite.py) for BUILT claims and names the acceptance test for each criterion.",
+    "Names sources per-section and carries a source ledger plus an explicit not-verified list flagged for a next wave."
+  ],
+  "concerns": [
+    "Self-flags that many surface rows (replay, twin, and mockups 2.4/2.5/2.6/2.9/2.11-2.16) are DESIGNED from secondary mention with the underlying mockup files not actually read; the per-surface intent for those is lighter than Part 1."
+  ],
+  "notes": "If briefing someone: this is the design-intent atlas for the whole surface layer, deepest on the Interactive Addressed Surface, and its load-bearing claims are the click-indicates-consents model, the IA-as-parent co-resolution layout, and the Sequences-as-universal-loop frame.",
+  "questions": [
+    "Has the rebuilt in-app studio (superseding the standalone HTML portal) been built on any branch yet, or does only the supersession note exist?",
+    "Do the secondary-mention surfaces (replay C5, twin B6, the unread mockups) have their own intent docs that would refine the lighter rows here?"
+  ],
+  "purpose_vs_actual": "Match. Stated as the per-surface skeletons + designed intent pack at full scope, and it delivers per-criterion intent for the keystone surface, a survey of the rest, the underlying primitive, and the relationship map.",
+  "apparent_themes": [
+    "Click indicates and consents, never executes; governance by address-tier",
+    "Address-keyed co-resolution (the same locus threaded simultaneously through all zones)",
+    "Compose on already-built primitives rather than reinventing them (the studio's whole disconnect)",
+    "One recurring loop (Sequences) as the universal substrate for engine, review, and cognition",
+    "Assemble surfaces from registries, never author against them"
+  ],
+  "intention_signals": "Trying to give the Claude Design effort an evidence-tagged, code-checked map of what each surface is meant to be and how they relate, so the design composes on the built primitives and the IA-as-parent structure rather than rebuilding capability or authoring bolt-on surfaces.",
+  "novelty": "The synthesis that the IA is a co-resolution surface (not a menu) and that the Sequences primitive is simultaneously the engine, the human-review organ, and cognition, making capability-addition a matter of registering a station on one loop.",
+  "contribution": "Contributes the per-criterion designed-intent + verified build-status for the Interactive Addressed Surface, a composed survey of every other surface, the Sequences-primitive frame, and the IA-as-parent relationship map with layout; a fused system keeps this as the surface-design-intent reference that names what each surface is for and how it relates to the rest.",
+  "summary_for_embedding": "A deep-read design-intent atlas for the Company's surfaces: a per-criterion code-verified pass on the Interactive Addressed Surface, a survey of the canvas/IA/inbox/walkthrough/twin/settings surfaces, the Sequences-primitive frame, and a relationship map placing the Information Architecture as the parent co-resolution container, with DESIGNED/BUILT/INFERRED honesty tags.",
+  "intention_for_embedding": "To give the design effort an evidence-tagged map of each surface's intent and their relationships so it composes on built primitives and the IA-as-parent structure instead of reinventing or bolting on surfaces."
+}

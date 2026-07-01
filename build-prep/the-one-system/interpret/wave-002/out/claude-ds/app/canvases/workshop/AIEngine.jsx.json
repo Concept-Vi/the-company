@@ -1,0 +1,55 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/workshop/AIEngine.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the Workshop generation engine for ConceptV Studio: a pure immutable diff system (applyDiff/invertDiff over block/page/doc/widget/wizard ops), a set of per-target Vi generation functions (insert block, alternate block, insert page, doc transform, theme/layout generate, widget alternate, KPI regen, wizard step ops, field alternate), an intent classifier and edit generator for the chat rail, smart-template extraction/materialization, a heuristic+Vi suggestion engine, several React preview/gallery/diff-card UI components, a global BRIDGE so other surfaces act on the live doc, a cross-doc DOCS_STORE, a workspace-VARS_STORE with {{key}} substitution, a per-field regen toolbar, and a 60s prompt cache. It registers all generative moves as CV_AI capabilities and exposes a window.WS_AI public API.",
+  "observations": [
+    "applyDiff is a pure switch over ~14 diff kinds (block.insert/replace/update/remove, page.insert/update, doc.update, widget.update/data, wizard.step.insert/update/remove, batch) that clones the doc via JSON round-trip",
+    "BRAND_VOICE and aiComplete are single-sourced from window.CV_AI (voice.conceptv behaviour, resolveProvider('claude')) and throw loudly if the registry/provider is absent",
+    "generateCandidates dispatches purely through CV_AI.execute(target.kind) — no per-target switch lives in the dispatcher; the capability catalogue IS the dispatch",
+    "11 capabilities are registered at load time (insert.block, alternate.block, insert.page, doc.transform, theme.generate, layout.generate, widget.alternate, widget.kpis.regen, wizard.step.insert/alternate, field.alternate) with id == target.kind",
+    "invertDiff produces an inverse for every diff kind (batch walks forward capturing intermediate docs) enabling undo/redo independent of React state",
+    "generateCandidatesStream fires N parallel single-shot Vi calls for PARALLEL_TARGETS with seed angles (practical/bold/minimal/specific), falling back to a single batched call otherwise",
+    "Smart templates: extractTemplate asks Vi to parameterise a doc into {{key}} placeholders; materializeTemplate stringifies/replaces/re-parses and re-stamps fresh IDs",
+    "PROMPT_CACHE is a hand-rolled hash map with 60s TTL bounded to 200 entries; a separate cachedComplete helper duplicates the get/resolveProvider/set path",
+    "classifyIntent, viSuggest, auditWorkspaceVariables, and viFieldAlternate reference an undefined free variable `provider` via `typeof provider !== 'undefined' ? provider : null`",
+    "RenderedBlockPreview/RenderedPagePreview render real block renderers (window.WS_BLOCKS[kind].render) at CSS scale with a no-op setter and pointerEvents:none"
+  ],
+  "standouts": [
+    "The capability catalogue as dispatch: generateCandidates has no switch — registering a CV_AI capability with id==target.kind is the only way to add a generative move",
+    "Full diff/inverse-diff algebra over five document shapes (block/page/doc/widget/wizard) makes generation, preview, apply, and undo one mechanism",
+    "Transform menu and suggestion targets are projections of the CV_AI skill registry (query layer:skill family:transform), so adding a skill surfaces UI with no edit"
+  ],
+  "conventions": [
+    "Follows the project's single-source rule: voice, provider, and dispatch all resolved from CV_AI; loud-throw on missing registry per the non-negotiables",
+    "Uses aliased React hook destructuring (useState_ai etc.) — the shared-bundle pattern for canvases",
+    "Every prompt embeds BRAND_VOICE and asks for ONLY JSON, parsed by a loose extractor (parseJsonLoose)",
+    "Breaks the loud-fail rule in several generators: parseJsonLoose failures return [] or null rather than throwing, despite 'Loud:' comments claiming otherwise"
+  ],
+  "concerns": [
+    "Free variable `provider` referenced in classifyIntent, generateEdit, viSuggest, extractTemplate, viFieldAlternate, viThemeGenerate via `typeof provider !== 'undefined'` — `provider` is never a parameter or in scope there, so it is always null; this is a likely copy-paste artifact that silently disables provider passthrough",
+    "Several functions carry 'Loud: surface failures' comments but still return []/null on parse failure, contradicting the stated intent",
+    "applyDiff handles 'page.remove' nowhere but invertDiff emits it — page.insert's inverse {kind:'page.remove'} would hit the default warn branch in applyDiff",
+    "cachedComplete duplicates the cache-then-complete logic already in aiComplete(cache=true); two slightly different completion paths exist",
+    "clone() uses JSON.parse(JSON.stringify) so functions/undefined/Dates in a doc would be dropped silently"
+  ],
+  "notes": "This is the brain of Workshop: a pure diff algebra + a registry-dispatched set of Vi generators + the gallery/diff/preview UI and global stores that wire it to the live doc.",
+  "questions": [
+    "Is the free `provider` variable an intentional optional global or a bug that disables provider passthrough in the chat-rail and audit paths?",
+    "Where is the 'page.remove' diff kind handled in applyDiff, given invertDiff produces it?",
+    "Is cachedComplete still used, or has aiComplete(cache=true) superseded it?"
+  ],
+  "purpose_vs_actual": "Matches: the header comment says it centralises everything Vi can DO inside Workshop (generate diffs, apply them, render galleries, bridge chat) and the file does exactly that, plus templates/vars/field-regen that the header understates.",
+  "apparent_themes": [
+    "Registry-as-dispatch (the catalogue is the switch)",
+    "Immutable diff algebra with inverses for free undo/redo",
+    "Single-sourced voice/provider; loud-fail on missing infrastructure",
+    "Interface as a projection of the AI/skill registry",
+    "Live cross-surface stores (bridge, docs, vars) with subscribe/notify"
+  ],
+  "intention_signals": "Trying to make every generative action a uniform, addressable, reversible operation that one engine produces, previews, applies, and undoes — and to keep the UI a thin projection of the AI registry so new moves and transforms appear without UI edits.",
+  "novelty": "The diff-with-inverse algebra spanning five document shapes plus a parallel-seeded streaming-candidate generator and CV_AI-capability-as-dispatch is an unusually complete generation/edit substrate for a slide/brochure/widget/wizard composer.",
+  "contribution": "Contributes the canonical Workshop generation+edit engine: the diff schema and pure applyDiff/invertDiff, the per-target Vi prompt builders, the streaming/seeded candidate generator, template extraction/materialization, the suggestion engine, the bridge/docs/vars global stores, and the gallery/diff-card/field-toolbar UI — the operational layer a fused system would keep for doc-editing-by-diff.",
+  "summary_for_embedding": "Workshop generative engine for ConceptV Studio: pure diff/inverse-diff algebra over block/page/doc/widget/wizard docs, registry-dispatched Vi candidate generators, template/variable/suggestion engines, and gallery/diff/preview React UI wired to live-doc bridge and stores.",
+  "intention_for_embedding": "To centralise every Vi generative move as a uniform, reversible, registry-dispatched diff operation and keep the editing UI a thin projection of the AI/skill catalogue."
+}

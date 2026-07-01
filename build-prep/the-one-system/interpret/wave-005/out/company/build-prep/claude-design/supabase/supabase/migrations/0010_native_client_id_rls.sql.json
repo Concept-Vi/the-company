@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0010_native_client_id_rls.sql",
+  "model": "opus",
+  "what_it_does": "Redefines the RLS helper functions client_id() and is_design_client() to read the OAuth token's NATIVE server-set top-level claims.client_id (instead of hook-stamped app_metadata) and match it against clients.oauth_client_id for an active client row. client_id() returns the client ROW id (e.g. 'claude-design') of the matching row; is_design_client() returns whether any active row matches. This drops the Custom Access Token Hook from the claims path, leaving it inert/staged for aud-binding only.",
+  "observations": [
+    "Header rationale: GO NATIVE for zero blast radius on the 16 live OAuth connectors — the hook is removed from the claims path.",
+    "Distinguishes the native OAuth CLIENT id (e.g. 'vi-...') from the client ROW id ('claude-design'); client_id() maps native id -> row id via clients.oauth_client_id, NOT the native id itself.",
+    "Notes the Edge Function mirrors this: looks up by oauth_client_id and writes from_session/submitted_by = the row id.",
+    "Both functions are SECURITY DEFINER, set search_path=public, with explicit re-ALTER for security definer and search_path.",
+    "is_design_client() replaces the 0006 app_metadata.role check (no hook stamps role now).",
+    "Says the boundary principal (0005, is_company_boundary()) is unchanged — it reads app_metadata.role set at user creation (password login, no native client_id), giving a clean split: CD=native client_id, boundary=app_metadata-at-creation.",
+    "Closing comment: channel_granted (made SECURITY DEFINER in 0009) and the 0006 policies are unchanged and pick up the new client_id() automatically."
+  ],
+  "standouts": [
+    "The shift from hook-stamped app_metadata claims to the OAuth server's native, non-forgeable top-level client_id as the identity source.",
+    "The explicit native-client-id -> row-id mapping via clients.oauth_client_id, decoupling OAuth identity from registry row id.",
+    "The clean split between native-client-id (connectors) and app_metadata-at-creation (boundary principal)."
+  ],
+  "conventions": [
+    "create or replace + explicit re-ALTER security definer / search_path (same defensive pattern as 0006).",
+    "Functions stable, SECURITY DEFINER to bypass RLS on the clients lookup.",
+    "Heavy inline why-commentary; updates function comments to describe the new behavior."
+  ],
+  "concerns": [
+    "Security now hinges on claims.client_id being server-set by the OAuth 2.1 server and not user-forgeable — asserted in comments but not enforced by this file."
+  ],
+  "notes": "This re-points the design-connector RLS identity from the staged claims-hook to the OAuth server's native client_id, mapping it to the registry row id, and sidelines the hook to aud-binding only.",
+  "questions": [
+    "What guarantees that claims.client_id is server-set and immutable for these tokens (the file asserts but does not verify it)?",
+    "Why was the hook approach (0007) abandoned for claims — purely the 16-connector blast-radius concern?"
+  ],
+  "purpose_vs_actual": "Match — header describes going native on client_id for RLS and the function redefinitions implement exactly that.",
+  "apparent_themes": [
+    "Use the OAuth server's verified native identity rather than a custom hook",
+    "Zero blast radius on shared/live connectors",
+    "Registry mapping (native client id -> client row id)",
+    "Clean separation of connector vs boundary principal identity"
+  ],
+  "intention_signals": "Trying to make the design-connector RLS gate on a trustworthy, server-set OAuth client identity without a custom hook, so it is safe on a project shared with many live connectors.",
+  "novelty": "Resolving client_id() to the registry ROW id by matching the token's native OAuth client_id against clients.oauth_client_id — identity indirection through the registry.",
+  "contribution": "Contributes the native-client-id RLS identity model and the native-id-to-row-id mapping that replaces the hook-stamped claims path for the design connector.",
+  "summary_for_embedding": "A Supabase migration redefining the design-connector RLS helpers to resolve identity from the OAuth token's native client_id mapped to a clients row id, dropping the custom-token hook from the claims path.",
+  "intention_for_embedding": "To base design-connector RLS on the OAuth server's verified native client identity with zero blast radius on other live connectors, instead of a custom claims hook."
+}

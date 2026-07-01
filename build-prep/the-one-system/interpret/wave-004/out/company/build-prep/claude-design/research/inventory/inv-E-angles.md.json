@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/inventory/inv-E-angles.md",
+  "model": "opus",
+  "what_it_does": "A fast coverage-scan inventory (Layer 1, INV-E) of 'the angles' — the four scattered places work lives: in-repo build-prep/, the external vault build-prep (two paths), the deltas of 5 non-main git branches, and the company-interface worktree. Maps WHERE design/build work resides and what each angle adds, including a triads pattern, a surfaces hierarchy, code-location table, top deep-reads, and 'angle surprises'.",
+  "observations": [
+    "Angle 1 (in-repo build-prep/): only concurrent-cognition/ present; declared FULLY BUILT with 13 completion criteria verified by use; COMPOSABLE-CONCURRENCY-SURFACE.md flagged as the unifying surface design.",
+    "Angle 2 (vault): the counterpart vault has 252 markdown files; names three design triads (Interactive Addressed Surface, Decision-to-Implementation Wire + Product Surface, Operable Composition Surface), a context-00..context-16 narrative, and contract docs; a second canonical vault holds ~50 architecture docs.",
+    "Identifies 'Sequences as Universal Substrate' and 'Fractal Composition Across All Layers' as foundational patterns in the canonical vault.",
+    "Angle 3 (branch deltas): concurrent-cognition BUILT/stable; interactive-surface-build ACTIVE, unmerged, ~217 files changed (~3.5k ins / ~31.5k del) with X1-X17 staged-feature commits; night-build is the consolidation base; overnight-20260605 and operable-interface-build are STALE.",
+    "Angle 4 (worktree /home/tim/company-interface, branch operable-interface-build): ~107 files changed, holds the visual redesign (gold-primary 'living-instrument' sweep), the mockup studio review portal, voice auto-listen/barge-in/speakable layer.",
+    "Documents a branch-naming confusion: the worktree's operable-interface-build (visual truth) ≠ the in-repo interactive-surface-build (active build); live work migrated.",
+    "States the three triads compose fractally (not sequentially) and that merging interactive-surface-build does NOT capture the worktree's visual redesign."
+  ],
+  "standouts": [
+    "The scale surprise: vault build-prep is ~252 files with a context-00..16 architectural opus likened to a PhD thesis.",
+    "X1-X17 as a DELIVERY SEQUENCE (not normal feature branching) — each commit a tested, addressable feature that must be walked in order to merge.",
+    "The visual redesign living in a separate worktree, not the active branch — so the form/aesthetic truth and the code-feature truth are in different git locations.",
+    "Form/aesthetic explicitly held on Tim's A/B/C decision, not yet in code."
+  ],
+  "conventions": [
+    "Follows the layered research method's Layer 1 census, specifically the INV-E 'angles' partition (per RESEARCH-METHOD.md).",
+    "Uses PRIORITY flags and per-angle tables.",
+    "Frames work via the loop-prep triad pattern (Completion Criteria / Implementation Guide / Research Synthesis)."
+  ],
+  "concerns": [
+    "Branch/worktree status and line-change counts are point-in-time and git-state-dependent — likely stale soon after 2026-06-08.",
+    "References external vault paths under /mnt/c (Windows) which the repo's own conventions warn against for fsync — and which an agent without that mount cannot verify.",
+    "STALE/DISCARD judgments on branches (e.g. operable-interface-build, overnight-20260605) edge toward recommendation rather than neutral census."
+  ],
+  "notes": "The cross-angle map showing that Company work is scattered across in-repo build-prep, a 252-file external vault, 5 branches, and a worktree — with the three composing triads and the warning that the visual redesign and the feature build live in different git locations.",
+  "questions": [
+    "Are the external vault paths still mounted/current, and which vault is canonical for which artifact?",
+    "Has interactive-surface-build been merged since this scan, and was the worktree redesign folded in?",
+    "Which A/B/C form aesthetic did Tim choose (the doc says it's held, not decided)?"
+  ],
+  "purpose_vs_actual": "Match — states it is a four-angle coverage census of where things live and delivers per-angle tables, a location map, and deep-read priorities across repo/vault/branches/worktree.",
+  "apparent_themes": [
+    "Work scattered across many angles (the orienteering problem)",
+    "Fractal / composing surfaces rather than sequential phases",
+    "Sequences as the universal command substrate",
+    "The loop-prep triad as the unit of design work",
+    "Git branches/worktrees as parallel build lineages"
+  ],
+  "intention_signals": "To ensure the architecture-visibility research misses nothing by enumerating every place work lives across repo, vault, branches, and worktree — Tim's explicit caution 'don't underestimate the research; a lot was built from many angles'.",
+  "novelty": "The explicit reconciliation of confusingly-named parallel git lineages and the finding that visual-truth and feature-truth diverge into different worktrees/branches is a distinctive cross-angle insight.",
+  "contribution": "Contributes the cross-angle location map (repo/vault/branches/worktree), the three-triad + surfaces-hierarchy framing, the X1-X17 delivery-sequence observation, and the branch-vs-worktree divergence finding that a fused system would keep to locate and reconcile its scattered design corpus.",
+  "summary_for_embedding": "A 2026-06-08 four-angle coverage inventory mapping where Company work lives — in-repo build-prep, a 252-file external vault, 5 non-main branches, and the company-interface worktree — with the three composing design triads and the branch-vs-worktree divergence in visual vs feature truth.",
+  "intention_for_embedding": "To enumerate every angle where Company design/build work resides so the architecture research covers the full, scattered corpus without missing any branch, worktree, or vault."
+}

@@ -1,0 +1,52 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/ingest.js",
+  "model": "opus",
+  "what_it_does": "Defines CV_SOURCE, the ingestion registry (plain JS IIFE): it accepts uploaded source material, recognizes its type/context via pluggable recognizers, analyzes it for design DNA (palette, type, voice, structure, values, motifs) via pluggable analyzers (local canvas palette extraction, optional vision-model read, and a deep text read via CV_AI.complete), and brings each finding forward as a single-sourced proposal staged through CV_HOST. It registers four CV_AI capabilities for these operations.",
+  "observations": [
+    "IIFE that throws immediately if window.CV_AI hasn't loaded first (loud-fail dependency check).",
+    "Persists a sources corpus in localStorage ('atomicity:sources'), truncating text to 24000 chars and dropping image dataUrls on save.",
+    "Pub/sub listener set with on()/subscribe() and emit() that also saves; per-listener errors are caught and logged.",
+    "Recognizer registry seeded with a 'by-shape' heuristic detector keying off filename and content (image/css/brand/voice/deck/data/notes) returning {type, context, confidence}.",
+    "Three analyzers: 'palette' (local canvas pixel bucketing, no model), 'vision-read' (vision provider, returns [] silently if unavailable), and 'deep-read' (CV_AI.complete with a vocabulary-aware prompt).",
+    "DEEP_PROMPT embeds the system's vocabulary (css.token, ai.entry behaviour, types/archetypes; warm paper+gold+bronze, Sora/DM Sans, sentence-case voice) and requests at most 6 high-signal JSON findings with evidence and proposals.",
+    "salvage() is a hand-rolled tolerant JSON extractor that parses findings object-by-object via brace/quote/escape tracking when full JSON.parse fails.",
+    "extractPalette downsamples the image to 64px wide on a canvas, buckets colors into 16-level bins, and returns the top 6 averaged hex colors.",
+    "bringForward/bringAll route a finding's proposal into window.CV_HOST.commit with provenance 'vi' and a rationale citing the source name.",
+    "Registers source.recognize, source.analyze, source.synthesize, and vision.read as CV_AI capabilities (silent), with vision.read throwing a guidance error when no vision runtime is connected."
+  ],
+  "standouts": [
+    "The model prompt is vocabulary-aware: findings map directly to real system change-kinds (css.token, ai.entry), so analysis output is already actionable proposals.",
+    "Layered analyzer fallback: local canvas palette always runs as the sandbox-safe floor; vision/deep model reads add depth when available and degrade quietly.",
+    "Hand-written salvage() JSON recovery that extracts findings even from malformed/fenced model output.",
+    "dna-signal = f(source, recognizers, analyzers) framing mirrors the other registries' generative-function style."
+  ],
+  "conventions": [
+    "Follows the project's register/resolve/subscribe registry shape (registerRecognizer/registerAnalyzer, on/subscribe, describe) matching CV_AI/CV_REGISTRY.",
+    "Routes all model calls through CV_AI.complete/execute and providers through resolveProvider — never a direct model call, per the project rule.",
+    "Loud-fail on missing CV_AI; but several model-availability paths intentionally return [] (documented as the sandbox floor)."
+  ],
+  "concerns": [
+    "save() swallows localStorage errors silently (empty catch) — a quota or serialization failure would be invisible.",
+    "Several recognizer/analyzer catch blocks are empty (recognizeLocal's r.detect, vision-read's execute), so per-analyzer detection failures are silently dropped rather than surfaced.",
+    "parseJson is defined but appears unused within this file (salvage is the active parser).",
+    "Token name generation 'ingested-' + i + 1 concatenates strings (e.g. 'ingested-01' style) due to operator precedence, possibly not the intended numeric increment."
+  ],
+  "notes": "CV_SOURCE: upload material, heuristically recognize its type, mine it for design DNA via local-palette + optional vision + a vocabulary-aware deep model read, and stage each finding as a CV_HOST proposal.",
+  "questions": [
+    "Is the token-name expression 'ingested-' + i + 1 intended to produce 'ingested-01' / 'ingested-11' rather than a numeric index, and is that acceptable as a token name?",
+    "Where is CV_HOST.commit defined and what does staging a proposal ultimately do (file write, change queue)?",
+    "Is parseJson dead code or kept for a planned consumer?"
+  ],
+  "purpose_vs_actual": "Matches — the header describes a recognize→analyze→bring-forward ingestion registry mirroring the other registries with a vocabulary-aware deep read and a local palette floor, and the code implements exactly that pipeline plus the four CV_AI capabilities.",
+  "apparent_themes": [
+    "Pluggable, extend-by-registration analysis pipeline",
+    "Findings as single-sourced, actionable proposals into one change queue",
+    "Graceful degradation: deterministic local floor, model depth on top"
+  ],
+  "intention_signals": "Trying to turn arbitrary uploaded inspiration into structured, evidence-backed design-DNA proposals that map to the system's real change-kinds, so a user can review and stage them into the brand from one place.",
+  "novelty": "A recognizer/analyzer registry whose model prompt is aware of the design system's own vocabulary, producing findings that are already shaped as css.token/ai.entry proposals, with a sandbox-safe local palette floor and tolerant JSON salvage.",
+  "contribution": "Contributes the full ingestion subsystem: the source corpus with localStorage persistence, the recognizer/analyzer registries, the canvas palette extractor, the vocabulary-aware deep-read prompt, the salvage JSON recovery, the bring-forward proposal staging, and the four registered CV_AI ingest capabilities.",
+  "summary_for_embedding": "CV_SOURCE, a JavaScript ingestion registry that recognizes uploaded source material, mines it for design DNA via canvas palette extraction, an optional vision read, and a vocabulary-aware deep model read, and stages each finding as a CV_HOST proposal.",
+  "intention_for_embedding": "To convert uploaded inspiration into evidence-backed, single-sourced design proposals mapped to the system's real change-kinds, reviewable and stageable into the brand from one registry."
+}

@@ -1,0 +1,38 @@
+{
+  "project": "company",
+  "path": "axes/mode.py",
+  "model": "opus",
+  "what_it_does": "Declares the 'mode' coordinate axis — how a surface behaves. Exports an AXIS dict with id/namespace 'mode', one discrete sub-field 'current' (pilot | inspect | dev | autopilot), value_source='live', and a desc. The mode-selector and a mode->colour cascade resolve against it; driving a mode re-resolves.",
+  "observations": [
+    "Single discrete sub-field 'current' with enum pilot/inspect/dev/autopilot, described as a behaviour/render-family pick.",
+    "value_source='live'.",
+    "desc names two consumers: the mode-selector and the mode->colour cascade; states 'drive a mode -> re-resolve'.",
+    "Calls the axis 'the stability dial'."
+  ],
+  "standouts": [
+    "Frames the four modes as a single 'stability dial' — a render-family / behaviour selector.",
+    "The mode->colour cascade tie: changing mode re-resolves downstream colour."
+  ],
+  "conventions": [
+    "Follows the AXIS-dict row shape from axes/AGENTS.md.",
+    "Minimal single-discrete-field structure shared with register.py and resolution.py.",
+    "value_source='live' consistent with sibling live axes."
+  ],
+  "concerns": [],
+  "notes": "The behaviour/render-family axis with four modes (pilot/inspect/dev/autopilot); changing it re-resolves a mode->colour cascade.",
+  "questions": [
+    "What concretely distinguishes the four modes (pilot vs inspect vs dev vs autopilot) in behaviour or render-family?",
+    "Where is the mode->colour cascade defined?"
+  ],
+  "purpose_vs_actual": "Matches — declared as the behaviour axis and the AXIS dict implements exactly that.",
+  "apparent_themes": [
+    "Mode as a single behaviour/render-family coordinate",
+    "Re-resolution on coordinate change (cascade)",
+    "Live value-source"
+  ],
+  "intention_signals": "Trying to make a surface's operating mode a resolver coordinate so that selecting a mode re-resolves behaviour and downstream styling (the mode->colour cascade) uniformly, rather than branching per-mode in code.",
+  "novelty": "n/a",
+  "contribution": "Contributes the 'mode' coordinate dimension and its pilot/inspect/dev/autopilot vocabulary, plus the mode->colour cascade tie that re-resolves on change.",
+  "summary_for_embedding": "Axis-registry file declaring the 'mode' coordinate (discrete current: pilot/inspect/dev/autopilot) that the mode-selector and mode->colour cascade resolve against.",
+  "intention_for_embedding": "To make operating mode a resolver coordinate so changing it re-resolves behaviour and downstream colour uniformly."
+}

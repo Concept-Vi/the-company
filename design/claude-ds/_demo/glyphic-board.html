@@ -1,0 +1,113 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relational glyphic — look & meaning</title>
+<style>
+  :root{
+    --paper:#FCFAF2; --paper-2:#F8F3E1; --paper-3:#F2EAD0; --white:#FFFFFF;
+    --ink:#1F1A12; --ink-3:#6B5F47; --ink-4:#9C8C6E;
+    --gold:#E0C010; --gold-deep:#9F772C; --gold-soft:#F4E89A; --gold-50:#FBF4C8; --gold-dashed:#D8C040;
+    --bronze:#988058; --bronze-2:#7A6A48; --bronze-warm:#C09D5D;
+    --border:#E8DFC5; --border-faint:#F0E9D2;
+    --font-d:"Sora",ui-sans-serif,system-ui,sans-serif; --font-b:"DM Sans",ui-sans-serif,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-b);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:32px 20px 80px}
+  h1{font-family:var(--font-d);font-weight:700;font-size:30px;letter-spacing:-.02em;margin:0 0 4px;color:var(--bronze)}
+  .lede{color:var(--ink-3);font-size:14.5px;margin:0 0 6px;max-width:60ch}
+  .flag{font-size:12px;color:var(--gold-deep);background:var(--gold-50);border:1px solid var(--gold-dashed);border-radius:8px;padding:7px 11px;margin:14px 0 30px;display:inline-block}
+  h2{font-family:var(--font-d);font-weight:600;font-size:19px;letter-spacing:-.01em;color:var(--ink);margin:34px 0 4px}
+  .sub{color:var(--ink-3);font-size:13.5px;margin:0 0 16px}
+  .row{display:flex;flex-wrap:wrap;gap:16px}
+  .card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px;flex:1;min-width:240px;box-shadow:0 1px 2px rgba(31,26,18,.03),0 6px 18px rgba(31,26,18,.04)}
+  .card .tag{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--bronze);margin-bottom:14px}
+  .marker{display:flex;align-items:center;gap:8px;min-height:54px}
+  .note{font-size:12.5px;color:var(--ink-3);margin-top:14px}
+  .vrow{display:flex;align-items:center;gap:16px;padding:13px 0;border-bottom:1px dashed var(--border-faint)}
+  .vrow:last-child{border-bottom:none}
+  .vglyph{flex:none;width:64px;display:flex;justify-content:center}
+  .vmean b{color:var(--ink);font-weight:600}
+  .vmean{font-size:14px;color:var(--ink-3)}
+  .reads .vrow{align-items:center}
+  .reads .vglyph{width:150px}
+  /* the gold "page" pill (the original) */
+  .pill{display:inline-flex;align-items:center;gap:5px;background:var(--gold-50);border:1px solid var(--gold-dashed);border-radius:999px;padding:5px 11px;font:600 12px/1 var(--font-b);color:var(--gold-deep)}
+  .open{font:700 12px/1 var(--font-b);color:var(--gold-deep)}
+  .foot{margin-top:36px;font-size:13px;color:var(--ink-3);background:var(--paper-2);border:1px solid var(--border-faint);border-radius:10px;padding:14px 16px}
+  .foot b{color:var(--bronze-2)}
+  svg{display:block}
+</style></head><body><div class="wrap">
+
+<h1>Relational glyphic — look &amp; meaning</h1>
+<p class="lede">Comparing the original page-marker with the current generated one, and laying out the meaning-vocabulary you described — so we can decide the look before building the missing parts.</p>
+<div class="flag">PROPOSAL to react to. The variants below are hand-drawn to show the <b>concept + meanings</b>; once you pick, they become real Glyphics facets the engine generates.</div>
+
+<h2>The page marker — then &amp; now</h2>
+<p class="sub">Same idea (a thing → its page), different parts available.</p>
+<div class="row">
+  <div class="card">
+    <div class="tag">First version — you liked this</div>
+    <div class="marker">
+      <!-- solid bronze box -->
+      <svg width="26" height="26" viewBox="0 0 26 26"><rect x="4" y="4" width="18" height="18" rx="3" fill="#988058"/></svg>
+      <!-- dashed line -->
+      <svg width="30" height="18" viewBox="0 0 30 18"><line x1="2" y1="9" x2="22" y2="9" stroke="#C09D5D" stroke-width="1.6" stroke-dasharray="4 3" stroke-linecap="round"/><polygon points="22,5 28,9 22,13" fill="#C09D5D"/></svg>
+      <span class="pill">▦ page</span>
+    </div>
+    <div class="note"><b>Solid brown box</b> (no icon) · dashed line · a <b>rounded gold “page” pill</b>. Flat, crisp, “solid feel” — and the box felt like it would pin to anything.</div>
+  </div>
+  <div class="card">
+    <div class="tag">Now — generated glyphic</div>
+    <div class="marker">
+      <!-- hex + palette -->
+      <svg width="30" height="30" viewBox="0 0 100 100"><polygon points="50,8 88,29 88,71 50,92 12,71 12,29" fill="none" stroke="#E0C010" stroke-width="3.5"/><g stroke="#7A6A48" stroke-width="5" fill="none" stroke-linecap="round"><path d="M38 56c-6-2-9-9-6-16 4-9 16-12 24-7 6 4 7 11 2 15-3 3-8 1-9 4-1 2 2 4 0 6"/><circle cx="42" cy="40" r="2.5" fill="#7A6A48" stroke="none"/><circle cx="54" cy="38" r="2.5" fill="#7A6A48" stroke="none"/></g></svg>
+      <svg width="30" height="18" viewBox="0 0 30 18"><line x1="2" y1="9" x2="22" y2="9" stroke="#E0C010" stroke-width="1.8" stroke-dasharray="4 3" stroke-linecap="round"/><polygon points="22,5 28,9 22,13" fill="#E0C010"/></svg>
+      <!-- square + browser -->
+      <svg width="30" height="30" viewBox="0 0 100 100"><rect x="14" y="14" width="72" height="72" rx="7" fill="none" stroke="#E0C010" stroke-width="3.5"/><g stroke="#7A6A48" stroke-width="5" fill="none"><rect x="34" y="36" width="32" height="26" rx="2"/><line x1="34" y1="44" x2="66" y2="44"/></g></svg>
+    </div>
+    <div class="note"><b>Hexagon + palette icon</b> → dashed gold arrow → <b>square + browser icon</b>. Typed + iconned + dimensional — but the pill, the “solid” feel, and the label are gone.</div>
+  </div>
+</div>
+
+<h2>Your idea — the node’s FILL carries the meaning</h2>
+<p class="sub">Same box, three fill-states, three meanings. (“present / type / potential”.)</p>
+<div class="card">
+  <div class="vrow"><div class="vglyph">
+    <svg width="28" height="28" viewBox="0 0 28 28"><rect x="5" y="5" width="18" height="18" rx="3" fill="#988058"/></svg>
+  </div><div class="vmean"><b>Solid fill, no icon</b> — “<b>this</b> thing, here, present.” Pins to anything; the generic marker you liked.</div></div>
+  <div class="vrow"><div class="vglyph">
+    <svg width="28" height="28" viewBox="0 0 28 28"><rect x="5" y="5" width="18" height="18" rx="3" fill="none" stroke="#988058" stroke-width="2"/></svg>
+  </div><div class="vmean"><b>Outline only</b> — “<b>any</b> of this kind.” A type / class, not a specific instance.</div></div>
+  <div class="vrow"><div class="vglyph">
+    <svg width="28" height="28" viewBox="0 0 28 28"><rect x="5" y="5" width="18" height="18" rx="3" fill="none" stroke="#988058" stroke-width="2" stroke-dasharray="3.5 3"/></svg>
+  </div><div class="vmean"><b>Dashed outline</b> — “a thing of this kind <b>could be added here</b>.” A potential / open slot.</div></div>
+</div>
+
+<h2>The edge carries meaning too</h2>
+<p class="sub">The line-style and the arrow direction are facets, same as fill.</p>
+<div class="card">
+  <div class="vrow"><div class="vglyph">
+    <svg width="40" height="16" viewBox="0 0 40 16"><line x1="2" y1="8" x2="30" y2="8" stroke="#988058" stroke-width="1.8" stroke-dasharray="4 3" stroke-linecap="round"/><polygon points="30,4 38,8 30,12" fill="#988058"/></svg>
+  </div><div class="vmean"><b>Dashed →</b> — a <b>potential</b> path: “can go to / can become.”</div></div>
+  <div class="vrow"><div class="vglyph">
+    <svg width="40" height="16" viewBox="0 0 40 16"><line x1="2" y1="8" x2="30" y2="8" stroke="#988058" stroke-width="2" stroke-linecap="round"/><polygon points="30,4 38,8 30,12" fill="#988058"/></svg>
+  </div><div class="vmean"><b>Solid →</b> — an <b>actual, asserted</b> relationship that holds right now.</div></div>
+</div>
+
+<h2>Same three things — the value changes the meaning</h2>
+<p class="sub">Two nodes + one edge. The page relation, read three ways.</p>
+<div class="card reads">
+  <div class="vrow"><div class="vglyph">
+    <svg width="120" height="30" viewBox="0 0 120 30"><rect x="4" y="6" width="18" height="18" rx="3" fill="#988058"/><line x1="28" y1="15" x2="58" y2="15" stroke="#C09D5D" stroke-width="1.8" stroke-dasharray="4 3" stroke-linecap="round"/><polygon points="58,11 64,15 58,19" fill="#C09D5D"/><rect x="70" y="6" width="44" height="18" rx="9" fill="#FBF4C8" stroke="#D8C040"/><text x="92" y="19" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" font-weight="600" fill="#9F772C">page</text></svg>
+  </div><div class="vmean">this thing here <b>can link to / become</b> a page</div></div>
+  <div class="vrow"><div class="vglyph">
+    <svg width="120" height="30" viewBox="0 0 120 30"><rect x="4" y="6" width="18" height="18" rx="3" fill="#988058"/><line x1="28" y1="15" x2="58" y2="15" stroke="#9F772C" stroke-width="2" stroke-linecap="round"/><polygon points="58,11 64,15 58,19" fill="#9F772C"/><rect x="70" y="6" width="44" height="18" rx="9" fill="#FBF4C8" stroke="#D8C040"/><text x="92" y="19" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" font-weight="600" fill="#9F772C">page</text></svg>
+  </div><div class="vmean">this thing <b>IS the face of</b> a page (asserted, live)</div></div>
+  <div class="vrow"><div class="vglyph">
+    <svg width="120" height="30" viewBox="0 0 120 30"><rect x="4" y="6" width="18" height="18" rx="3" fill="none" stroke="#988058" stroke-width="2" stroke-dasharray="3.5 3"/><line x1="28" y1="15" x2="58" y2="15" stroke="#C09D5D" stroke-width="1.8" stroke-dasharray="4 3" stroke-linecap="round"/><polygon points="58,11 64,15 58,19" fill="#C09D5D"/><rect x="70" y="6" width="44" height="18" rx="9" fill="none" stroke="#D8C040" stroke-dasharray="3 2.5"/><text x="92" y="19" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" font-weight="600" fill="#9F772C">page</text></svg>
+  </div><div class="vmean">a page <b>could be added here</b> (both ends potential)</div></div>
+</div>
+
+<div class="foot"><b>To make this real, Glyphics needs parts it doesn’t have yet:</b> a solid-colour fill + an icon-optional node (the “this thing” box) · a ring <b>stroke-style</b> facet (solid vs dashed = present vs potential) · and the <b>edge joining the meanings registry</b> so line-style + direction mean by profile, like fill already does. Then the engine generates every reading above from facet values — meaning = f(source · edge · target).</div>
+
+</div></body></html>

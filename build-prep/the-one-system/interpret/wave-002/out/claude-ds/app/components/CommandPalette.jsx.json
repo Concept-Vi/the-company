@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/CommandPalette.jsx",
+  "model": "opus",
+  "what_it_does": "Defines CommandPalette, a Cmd+K overlay that builds a unified searchable index across canvases, actions, every icon in the library, base colors, and voice rules, then fuzzy-filters and ranks results by query, supports keyboard navigation (arrows/enter/esc), and runs each item's action (navigate, copy a name/hex, open export). Exposed on window.CommandPalette.",
+  "observations": [
+    "Index combines: 12 canvases (id/label/icon), 3 actions, all keys of window.CV_ICONS.data, 8 base colors with hex literals, and 7 voice rules",
+    "Scoring: exact label match 100, startsWith 80, includes 50, other-field match 20; results capped at 40 and sorted",
+    "Keyboard handler bound to window while open (Esc/ArrowDown/ArrowUp/Enter); selection resets on query change; input auto-focused after 30ms",
+    "Renders items with an icon glyph, color swatch, or fallback CvIcon depending on item type; shows kind tag and ↵ on the active row",
+    "Footer shows nav hints and 'N of total' count",
+    "Entirely inline-styled overlay (modal scrim, blur, card) using CSS var tokens plus a few raw px",
+    "Base colors and the scrim color (rgba(31,26,18,.35)) are hardcoded hex"
+  ],
+  "standouts": [
+    "One unified index spanning structural navigation AND content entities (icons, colors, voice rules) — the palette searches the design system's contents, not just routes",
+    "Pulls the live icon set from window.CV_ICONS.data so the icon search reflects the actual library"
+  ],
+  "conventions": [
+    "Window-global component export pattern; uses CvIcon and CSS var tokens",
+    "Breaks single-source: the 8 base colors are re-listed with literal hex here (and the scrim uses raw rgba) rather than read from the token registry — and the 7 voice rules are re-listed inline rather than from voice.conceptv"
+  ],
+  "concerns": [
+    "Color hex values (gold #E0C010, canvas #FBF7EC, dark #1F1A12, etc.) and voice rules are duplicated inline — a second home for values the project mandates be single-sourced; if the tokens change, this list drifts",
+    "Scrim color rgba(31,26,18,.35) is a raw literal rather than a token"
+  ],
+  "notes": "The Cmd+K command palette — a fuzzy-ranked unified search over canvases, actions, all library icons, base colors, and voice rules; note the colors and voice rules are hardcoded here rather than sourced from the registries.",
+  "questions": [
+    "Why aren't the base colors and voice rules read from the token/voice registries that the project treats as single sources?",
+    "Where is CV_ICONS.data populated and is its key set the canonical icon name list?"
+  ],
+  "purpose_vs_actual": "Matches — comment says a Cmd+K cross-canvas search overlay and the file builds exactly that, indexing more than canvases (icons/colors/voice/actions).",
+  "apparent_themes": [
+    "Unified search/index over the whole system",
+    "Keyboard-first navigation",
+    "Projection of the system's contents into a searchable surface"
+  ],
+  "intention_signals": "Aims to give one fast keyboard-driven entry point to everything in the studio — jump to any canvas, copy any icon name or color, recall any voice rule — by indexing the system's own contents into a ranked palette.",
+  "novelty": "Indexing content entities (icons, colors, voice rules) alongside navigation/actions in the same Cmd+K palette, with the icon set drawn live from the library.",
+  "contribution": "Contributes the cross-canvas command-palette surface: a unified fuzzy-ranked index of canvases, actions, live library icons, base colors, and voice rules with full keyboard control.",
+  "summary_for_embedding": "A Cmd+K command-palette React component building a fuzzy-ranked unified search index over canvases, actions, live library icons, base colors, and voice rules with keyboard navigation, on window.CommandPalette.",
+  "intention_for_embedding": "To provide one fast keyboard-driven entry point to navigate canvases and recall/copy the design system's own contents (icons, colors, voice rules) from a single searchable palette."
+}

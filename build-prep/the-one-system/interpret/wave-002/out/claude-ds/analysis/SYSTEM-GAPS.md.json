@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/SYSTEM-GAPS.md",
+  "model": "opus",
+  "what_it_does": "A long running log cataloguing everything the analysed source material exhibits that the design system does not yet implement, organized by confidence (confirmed across 2 then 3 folders, deep comparative findings, seeded-from-first-samples, and multi-pass per-folder additions), with each entry giving what it is, its evidence (folder/page), and its proposed home in the system.",
+  "observations": [
+    "Tracks confirmation across folders explicitly: a confirmed-across-2 section (pitch-deck + deck1-2026), a confirmed-across-3 section (+recent-pitches), and deep comparative findings derivable only from diffing two cuts.",
+    "Records exact sampled hex values (zoning near-white ladder, gold-bronze-tan ramp, dataviz multi-hue palette) with the precise tokens to recalibrate.",
+    "Introduces the REGISTER/PURPOSE dimension: terse/presented vs verbose/leave-behind as two cuts of one source, driving a register switch over copy content-model + density + motion-slot.",
+    "Articulates the space-time complexity trade-off: a slide has a fixed complexity budget spendable in space (dense static) OR time (animation); motion and density are one control.",
+    "Names LOD as an axis orthogonal to surface size, and the invariant-skeleton vs flexible-muscle principle (numbers/diagrams never change, prose flexes).",
+    "Builds toward the containment-tree capstone: every parametric axis (surface, motion, LOD, interactive, depth, theme, invariants) operates on one nested-container tree; atoms/components/archetypes are templates at different tree depths.",
+    "Lists a large inventory of new motifs/atoms to tokenise: blueprint ghost, diagonal gold hatch, frame signature, V-mark, frosted glass, embossed chip, stat callout, profile block, status traffic-light, interactive hotspots, connector vocabulary.",
+    "Closes with finest-grain rules: modular type scale (~1.25/step), colour-role logic, latent-motion cues, and a restraint-guardrails anti-pattern list to encode as adherence rules.",
+    "Each entry routes to a proposed home (a specific token file or component)."
+  ],
+  "standouts": [
+    "Space-time complexity budget: dense static and simple-frame-plus-GIF are register variants of one component, swappable — motion and density unified as one control.",
+    "Containment-tree synthesis: every axis is an operation on one shared nested-container tree, including the live app's nav-panel-table-row.",
+    "Invariant skeleton as a node-TYPE property: numbers are 'sacred', prose is LOD-variable.",
+    "Restraint guardrails as explicit refused anti-patterns to encode in adherence rules."
+  ],
+  "conventions": [
+    "Each entry follows what-it-is / evidence / proposed-home structure.",
+    "Confidence sectioning by number of confirming folders before anything graduates to a token.",
+    "Star-headed section markers for confirmed/synthesis-ready clusters.",
+    "Routes every finding to a concrete token file or component candidate.",
+    "Append/running-log growth; nothing built until cross-folder confirmed."
+  ],
+  "concerns": [
+    "The same near-white hex values appear in several sections with minor variations (e.g. #faf9f7 vs #fdfcf7), which could read as inconsistent if not reconciled before tokenising."
+  ],
+  "notes": "The raw evidence ledger behind the design system — every sampled value, motif, and cross-cut principle the system must absorb, each with provenance and a proposed home, graduated by cross-folder confirmation.",
+  "questions": [
+    "Which near-white hex set is authoritative once the minor cross-section variations are reconciled?",
+    "When will a product-UI-heavy folder be mined to confirm the embedded app-chrome vocabulary?"
+  ],
+  "purpose_vs_actual": "Matches — titled as the gap log between material and system, and it is exactly an evidence-routed, confidence-graded gap inventory.",
+  "apparent_themes": [
+    "Evidence-graded confirmation before tokenising",
+    "Provenance on every finding (folder/page)",
+    "One containment tree as the spine of every axis",
+    "Unification of seemingly separate controls (motion+density, surface+LOD)",
+    "Definition by refusal (restraint guardrails)"
+  ],
+  "intention_signals": "Trying to accumulate, with provenance and confidence, every concrete thing the real design system is missing, so synthesis can graduate only multiply-confirmed values into tokens and components rather than acting on a single sample.",
+  "novelty": "The repeated derivation of deep principles from the DIFF between two cuts of one source (space-time budget, conserved ink-budget, invariant skeleton), and the unification of all parametric axes onto one containment tree.",
+  "contribution": "Contributes the sampled token values, the new-motif/atom inventory with proposed homes, the register/LOD/space-time/containment-tree principles, and the restraint anti-pattern list that a fused system would keep as its grounded backlog and DNA rules.",
+  "summary_for_embedding": "A confidence-graded running log of every motif, sampled value, and cross-cutting principle the analysed material has that the ConceptV design system lacks, each with provenance and a proposed token/component home.",
+  "intention_for_embedding": "To accumulate with evidence and provenance every gap between source material and the real design system so only multiply-confirmed findings graduate into tokens and components."
+}

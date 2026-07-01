@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/CORPUS-CHAIN-ANCHOR.md",
+  "model": "opus",
+  "what_it_does": "The anchor exploration document for a research wave on the 'corpus-chain' primitive — a map-reduce-over-a-corpus with an LLM at each stage. It frames, in deliberate 'what if' tone, the idea that the research-wave, the semantic coherence layer, and the onboard/repo-QA faculties are all the same primitive, lays out a COMPILE→MAP→REDUCE pipeline with a declared typed Chain object, configurable model tiers, the coverage-certainty argument, the hard parts to research, real code anchors to verify, and open what-ifs. It explicitly instructs research agents to stress-test rather than confirm it.",
+  "observations": [
+    "Self-describes as an anchor (not a plan/spec) for a research wave, to be contradicted and grounded; expansion-ratio > 1 ('leave the idea bigger and more real')",
+    "Headline claim: three separately-built things (research-wave, semantic coherence layer, onboard/repo-QA) are one primitive — a corpus-chain — and become configs of it ('more types, not more tools')",
+    "Defines a three-stage pipeline COMPILE (smart, freeform intent→inspectable chain config) → MAP (cheap, parallel, per-unit structured extraction) → REDUCE (smart, join/adjudicate/compose/decide-next) with a conditional loop back to MAP",
+    "Defines the Chain as a declared typed object {unit_selector, map_schema, map_prompt, passes, reduce_prompt, worker_model, synth_model}",
+    "Shows the 'faces' as saved chains: research-wave, coherence-scan, onboard/map, repo-QA, doc-staleness",
+    "Cost-shape argument: the smart model never reads the raw corpus, only the freeform intent and the structured digest; cheap parallel layer touches every byte",
+    "Coverage-certainty insight: certainty = coverage + provenance (every unit gets a focused pass), not per-unit correctness (correctness is the reduce's job)",
+    "Cites real code anchors: runtime/cognition.py run_swarm/run_role/run_jury, fabric/transport.py json_schema branch, runtime/roles.py + roles/check.py, ops/cli/ (app.py, models.py, gpu.py, services.json)",
+    "Names the make-or-break hard part: compiler reliability (freeform intent → valid runnable law-abiding chain config)",
+    "Carries prior-round numbers forward: ~2,241 tok/s @ conc-32, ~14 concurrent on real files, SEM-3 trust ladder",
+    "Includes an explicit evidence-tagging instruction for agents: Observed (file:line) / Inferred / External-prior-art / Your-idea"
+  ],
+  "standouts": [
+    "The unification claim: research-wave + coherence-scan + onboarder + repo-QA are all configs of one declared corpus-chain primitive (universal-composition at the orchestration layer)",
+    "The cost shape — smart model only ever touches small things (intent + structured digest), never the raw corpus; cheap parallel map is the only layer touching every byte",
+    "The coverage-certainty argument that two stages beat one big call: the map gives guaranteed per-unit attention (completeness+provenance), the reduce gives correctness"
+  ],
+  "conventions": [
+    "Follows the research-wave skill methodology it references (anchor → fan out area-agents → synthesize) — and is recursively the wave applied to building the wave's own primitive",
+    "Uses the repo's evidence-tagging discipline (Observed/Inferred/External/Your-idea, cite file:line) and the no-humans-hold-the-whole framing",
+    "Uses the project vocabulary (run_swarm, registry-is-truth, own/reflect, the CLI verb chain, vec://|cas:// addresses, path-of-least-resistance law)"
+  ],
+  "concerns": [],
+  "notes": "The 'what if' anchor for the corpus-chain primitive — a declared map-reduce-over-a-corpus that, if real, collapses research-wave/coherence-scan/onboard/repo-QA into configs of one tool; written to be stress-tested, not confirmed.",
+  "questions": [
+    "Was the research wave actually run on this anchor, and where do its companions live?",
+    "Does run_role really hardcode ctx['utterance'] (the named net-new seam) — needs verification against the cited file?",
+    "Is the compiler-reliability make-or-break ever empirically tested, or only posed here as the open question?"
+  ],
+  "purpose_vs_actual": "Match — it is explicitly an anchor exploration in 'what if' tone, and it delivers exactly that: the idea's shape, the hard parts to research, code anchors to verify, and open questions, with instructions to contradict not confirm.",
+  "apparent_themes": [
+    "universal composition / more-types-not-more-tools at the orchestration layer",
+    "cheap-map + smart-reduce separation (completeness vs correctness)",
+    "declared typed configurable objects (the Chain as a registry-discovered instance)",
+    "path-of-least-resistance / make-the-correct-use-the-easiest-use",
+    "self-hosting institutional memory (a faculty that generates grounded understanding on demand)",
+    "recursion (researching the research-wave by using it)"
+  ],
+  "intention_signals": "Trying to seed a research wave that proves (or refutes) that one configurable corpus-chain primitive underlies and could replace three separately-designed faculties — reordering the roadmap so the primitive is built first and the faces become declared configs.",
+  "novelty": "Framing the corpus-chain as a declared, NL-compilable, model-tier-configurable object whose COMPILE stage turns freeform intent into an inspectable runnable chain — and the recursive twist of researching the primitive by using the very process it would productize.",
+  "contribution": "Contributes the corpus-chain primitive concept and its declared-typed-object shape, the COMPILE→MAP→REDUCE pipeline with conditional decide-next loop, the cost-shape and coverage-certainty arguments, the faces-as-saved-chains catalogue, and the enumerated hard parts/code-anchors — the orchestration-layer abstraction a fused system would keep for corpus-wide LLM processing.",
+  "summary_for_embedding": "A research-wave anchor proposing the 'corpus-chain' primitive: a declared, NL-compilable, model-tier-configurable map-reduce-over-a-corpus (COMPILE→MAP→REDUCE) that unifies the research-wave, semantic coherence scan, onboarder, and repo-QA into configs of one tool, with cost-shape and coverage-certainty arguments and enumerated hard parts.",
+  "intention_for_embedding": "To anchor a research wave that grounds and stress-tests whether one configurable corpus-chain primitive can replace several separately-built corpus-processing faculties, reordering the build roadmap around it."
+}

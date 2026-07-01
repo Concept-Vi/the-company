@@ -1,0 +1,56 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/DESIGN.md",
+  "model": "opus",
+  "what_it_does": "The central design-base document for 'common knowledge' — the prerequisite gate before any interface build: it defines the law that no build proceeds without full-scope understanding of everything already built across all projects, and designs how to compose the Company's own capabilities (4B model, embedder, substrate-mcp, recollection, clone-fleet, channel) into a queryable, trust-typed map of every built thing.",
+  "observations": [
+    "Opens with a dated (2026-06-16) Tim course-correction: a build without full-scope understanding of every member's project would be a GUARANTEED FAILURE; much is already built but not necessarily right; front-interface/BUILD_PLAN.md is PARKED until common knowledge exists.",
+    "States THE LAW in three parts: scout-before-build at project scale; what exists ≠ what's right (built state is observed not verified, 'confident code is not correct code'); no member knows its whole project.",
+    "Catalogs THE CAPABILITIES to compose: embedding (:8007 pplx-embed-context-4b resident), the local 4B (:8000), substrate-mcp (indexes 10 vaults), recollection (recall + crossings graph), the clone-fleet, the channel.",
+    "Records a key architectural decision: SPLIT STRUCTURAL FROM INTERPRETIVE — deterministic facts (size/type/lang/imports) extracted cheaply first, meaning (notable/role/built-vs-stub) comprehended second; cites wildcard's AI-only run failing because 35% of findings had zero structural data.",
+    "Defines 'not necessarily right' as a TYPED FIELD {trust_tier, provenance, verified?}, reusing the existing trust-typing of the law-registry, board lifecycle-state, and commit trust-tags rather than paralleling it.",
+    "Defines UNIT OF KNOWLEDGE as a TYPE→OBSERVATION contract (a code file's worthwhile observations differ from a doc's or config's), mining wildcard's .discovery/taxonomies/.",
+    "Documents a CONVERGED DESIGN agreed by multiple fabric members (composition, fork, recollection, wildcard): the unit = addressed built-thing + provenance + verification-state field; a converged VERIFICATION-STATE enum {verified-by-use, built-unverified, stub/patchwork, suspect, design-only} defaulting to built-unverified.",
+    "Specifies THE ASSIGNMENT LAW (keystone): Layer-1 structural asserts only existence; Layer-2 4B interpretive may DOWNGRADE (to stub/suspect with evidence) but CANNOT upgrade to verified-by-use; ONLY execution upgrades; suspect is sticky; every state is evidence-stamped.",
+    "Notes THE PIPELINE MOSTLY ALREADY EXISTS — reuse wildcard's .discovery/, composition's overlay/MAP/, recollection's DISTILL + verification-grade schema — composing them rather than building new.",
+    "Lays out a GPU-sequenced QUEUE (P0 substrate re-index on :8007 → P1 pilot one project → P2 per-project → P3 per-member history → P4 propagate) and Tim's sequence (recollection pilots → proven/verified/peer-examined → propagated), with recollection as the Index chief.",
+    "Project SCOPES section profiles vi-visual-bridge (wildcard) in detail: ~30K lines real circuit, stub/partial modes, 1,377 md of unverified session talk, a hidden asset of 7,141 slide snapshots, and a boundary to a larger designed-empty Vi system."
+  ],
+  "standouts": [
+    "The keystone assignment law making mislabelling structurally impossible: an LLM reading code as 'looks correct' is explicitly NOT verification; only execution upgrades to verified-by-use.",
+    "The converged five-state verification enum agreed by multiple fabric members in different clothes mapped to one design.",
+    "Scout-before-build realized concretely: three members already built pieces of the comprehension pipeline, so common knowledge = composing them, not reinventing.",
+    "The structural-then-interpretive two-layer architecture grounded in a documented prior failure (35% findings with zero structural data).",
+    "This document is itself the design rationale for the very neutral-structural-plus-interpretive comprehension pipeline this interpretation pass implements."
+  ],
+  "conventions": [
+    "Follows a collaborative central-design-base convention: provisional, every member contributes/rechecks/adds, marked with ★/★★/★★★ emphasis tiers.",
+    "Adheres to repo laws it names: observed-vs-verified, no-green-paint, confident≠correct, gap-pressure, registry/address grammar, reuse-don't-parallel.",
+    "Uses the contracts.address grammar and the shared trust-typing rather than introducing new schemas.",
+    "Attributes decisions to specific fabric members (composition, fork, recollection, wildcard) and to Tim verbatim."
+  ],
+  "concerns": [
+    "Dense with member-codenames and cross-references (wildcard ch-piffgfxv, fork, DNA) opaque without fabric context.",
+    "Many capability/state claims (e.g. ~9,600 files in ~9s, 30K lines real circuit) are reported from members and not independently verified within the doc.",
+    "Self-admittedly provisional and collaborative — the converged design may still shift under Tim's refinement."
+  ],
+  "notes": "This is the gating constitution for common knowledge — read it to understand WHY interpretation is split structural/interpretive, WHY verification-state is a typed field only execution can upgrade, and WHY the interface build is parked behind it.",
+  "questions": [
+    "Did the P0 substrate re-index on :8007 and the P1 recollection pilot actually complete?",
+    "Which member ultimately owns/runs the queue as Index chief, and is the converged verification-state enum now implemented in schema?",
+    "Were the other project scopes (composition, fork, DNA, recollection, ~/company) ever filled in?"
+  ],
+  "purpose_vs_actual": "Match — it declares itself the central design base / prerequisite gate and the body is exactly that: the law, the capabilities, the converged unit + verification-state design, the reuse inventory, and the queue/sequence.",
+  "apparent_themes": [
+    "Scout-before-build at project scale",
+    "What exists ≠ what's right (observed vs verified)",
+    "Structural-then-interpretive two-layer comprehension",
+    "Trust/verification as a typed, evidence-stamped field only execution can upgrade",
+    "Compose existing capabilities rather than build new"
+  ],
+  "intention_signals": "It is trying to prevent a guaranteed-failure blind build by first designing a trust-typed, capability-composed map of everything already built — with mislabelling made structurally impossible — so the interface build can later proceed on verified full scope rather than confident assumption.",
+  "novelty": "The structurally-enforced assignment law (only execution upgrades to verified-by-use, interpretive can only downgrade) and the multi-member converged verification-state enum are distinctive, as is the meta-fact that this doc designs the pipeline that produced this very interpretation.",
+  "contribution": "Contributes the foundational design of the common-knowledge layer: the scout-before-build law, the structural/interpretive split, the converged verification-state enum and its evidence-only-upgrade assignment law, the type→observation unit contract, and the reuse-existing-pipelines inventory — all of which a fused system would keep as the constitution governing how it builds and trusts knowledge of itself.",
+  "summary_for_embedding": "The central design-base document defining the law and architecture for 'common knowledge' — composing the 4B, embedder, substrate-mcp and recollection into a queryable, trust-typed, structural-then-interpretive map of every built thing, with a converged verification-state enum only execution can upgrade.",
+  "intention_for_embedding": "To gate any build behind a full-scope, trust-typed comprehension of everything already built, designing how the Company's own capabilities compose that map so mislabelling unverified code as working is structurally impossible."
+}

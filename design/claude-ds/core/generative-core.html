@@ -1,0 +1,134 @@
+<!-- @dsCard group="Components" name="Generative Core — Block & Graph Solvers" subtitle="One content spec computed across LOD; diagrams computed from relationships" viewport="1280x1480" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Generative Core</title>
+<link rel="stylesheet" href="../styles.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: var(--zone-ground, #fff); color: var(--ink);
+         font-family: var(--font-body); -webkit-font-smoothing: antialiased; padding: 36px 38px 60px; }
+  h1 { font: var(--weight-bold,700) var(--fs-h2)/1 var(--font-display); letter-spacing: -.02em; margin: 0 0 4px; }
+  .sub { color: var(--ink-3); font-size: var(--fs-meta); margin: 0 0 28px; max-width: 74ch; }
+  h2 { font: 700 12px/1 var(--font-body); letter-spacing:.12em; text-transform:uppercase;
+       color: var(--accent-bronze); margin: 40px 0 6px; display:flex; align-items:center; gap:10px; }
+  h2::before { content:""; width:8px; height:8px; background: var(--accent-gold); transform:rotate(45deg); }
+  .note { color: var(--ink-3); font-size: var(--fs-caption); margin: 0 0 18px; max-width: 70ch; }
+  .lod-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
+  .lod-col > .cap { font: 700 10px/1 var(--font-mono); color: var(--accent-bronze); letter-spacing:.08em; margin-bottom: 8px; display:block; }
+  /* each LOD frame is a slide artboard scaled to fit the column — so the
+     band's fluid type renders at slide scale and the whole slide is visible */
+  .frame { position: relative; border: 1px solid var(--zone-base-edge); border-radius: 10px; overflow: hidden; box-shadow: var(--elev-2); background: var(--zone-ground); }
+  .artboard { width: 1100px; transform-origin: top left; }
+  .dgm-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .dgm-cell { border:1px solid var(--hairline); border-radius:12px; padding:14px; background: color-mix(in oklch, var(--pig-content) calc(2% * var(--zone-intensity)), var(--zone-ground)); }
+  .dgm-cell .t { font: 700 11px/1 var(--font-mono); color:var(--accent-bronze); letter-spacing:.06em; margin-bottom: 4px; display:block; }
+  .dgm-cell .d { font: 400 11px/1.4 var(--font-body); color: var(--ink-3); margin-bottom: 12px; display:block; }
+  .morph { display:flex; flex-direction:column; gap:12px; align-items:center; }
+  .morph-btn { font: 600 12px/1 var(--font-body); padding: 9px 16px; border-radius: 999px; cursor:pointer;
+               background: var(--accent-gold); color: var(--ink); border: none; box-shadow: var(--elev-1); }
+</style>
+</head>
+<body>
+  <h1>The Generative Core</h1>
+  <p class="sub">One type system, one rule engine, two layout solvers. The <b>block solver</b> lays out a content tree by nesting + flow (zone wash computed from depth); the <b>graph solver</b> computes positions from relationships. The dials — LOD, surface, density — compute the concrete output. Nothing below is hand-laid-out: every frame is the <i>same spec</i> run through the engine.</p>
+
+  <h2>Block solver · one spec, three LOD levels</h2>
+  <p class="note">The identical content tree, computed at summary / pitch / full. LOD prunes by narrative priority and drops "support" detail — it adds sections and atom depth, never clutter (analysis: recent-pitches).</p>
+  <div class="lod-row" id="lod-row"></div>
+
+  <h2>Graph solver · positions computed from relationships</h2>
+  <p class="note">Each is a <code>{type, nodes, edges}</code> spec rendered in the diagram vocabulary — shapes, edge kinds, gold flow arrows, depth-keyed fills.</p>
+  <div class="dgm-row" id="dgm-row"></div>
+
+  <h2>The morph · network → hub (animatable transform)</h2>
+  <p class="note">Same node-set, edges re-routed through a centre. <code>state: before ↔ after</code> tweens node positions via the motion tokens — the "nothing teleports" rule. Click to morph.</p>
+  <div class="morph"><button class="morph-btn" id="morph-btn">Morph →</button><div id="morph-mount" style="width:100%;max-width:440px"></div></div>
+
+<script>
+  const { ContainmentTree, DiagramSolver } = window.ConceptVDesignSystem_c8f43c;
+  const e = React.createElement;
+
+  // ---- one content tree (a "Why ConceptV" slide) -----------------
+  const spec = {
+    kind: "band", title: "Why teams switch to ConceptV",
+    children: [
+      { kind: "section", title: "The shift", priority: 1, children: [
+        { kind: "cluster", flow: "grid", children: [
+          { kind: "zone", children: [ { kind: "atom", role: "metric", value: "3.2×", label: "faster handoff", priority: 1 } ] },
+          { kind: "zone", children: [ { kind: "atom", role: "metric", value: "−68%", label: "review cycles", priority: 1 } ] },
+          { kind: "zone", tone: "neutral", children: [ { kind: "atom", role: "metric", value: "12k", label: "assets governed", priority: 2 } ] },
+        ] },
+      ] },
+      { kind: "section", title: "What changes", priority: 2, children: [
+        { kind: "zone", children: [
+          { kind: "atom", role: "bullet", bullet: "leads", title: "One source of truth", text: "tokens flow to every surface automatically.", priority: 1, detail: "support" },
+          { kind: "atom", role: "bullet", bullet: "dot", title: "Computed, not hand-set", text: "the same spec renders desktop, mobile and print.", priority: 2, detail: "support" },
+          { kind: "atom", role: "bullet", bullet: "done", title: "Nothing drifts", text: "every value resolves to a registered token.", priority: 3, detail: "support" },
+        ] },
+      ] },
+    ],
+  };
+
+  const lods = [["summary","SUMMARY"],["pitch","PITCH"],["full","FULL READ"]];
+  const lodRow = document.getElementById("lod-row");
+  const DESIGN_W = 1100;
+  lods.forEach(([lod, cap]) => {
+    const col = document.createElement("div"); col.className = "lod-col";
+    const c = document.createElement("span"); c.className = "cap"; c.textContent = cap + " · lod=\"" + lod + "\"";
+    const frame = document.createElement("div"); frame.className = "frame";
+    const art = document.createElement("div"); art.className = "artboard";
+    frame.appendChild(art);
+    col.appendChild(c); col.appendChild(frame); lodRow.appendChild(col);
+    ReactDOM.createRoot(art).render(e(ContainmentTree, { node: spec, lod, surface: "slide", density: "compact", DiagramSolver }));
+    // scale the fixed-width artboard to fit the column, lock frame height to scaled content
+    const fit = () => {
+      const s = frame.clientWidth / DESIGN_W;
+      art.style.transform = "scale(" + s + ")";
+      frame.style.height = (art.offsetHeight * s) + "px";
+    };
+    requestAnimationFrame(fit);
+    new ResizeObserver(fit).observe(frame);
+    setTimeout(fit, 300);
+  });
+
+  // ---- diagrams across types -------------------------------------
+  const N = (ids) => ids.map((id) => ({ id, label: id }));
+  const diagrams = [
+    ["hub", "HUB", "radial — spokes to a centre", { type:"hub", center:"Vi", nodes:N(["Vi","Decks","Web","Print","App","Brand"]), edges:["Decks","Web","Print","App","Brand"].map(t=>({from:"Vi",to:t,kind:"flow"})) }],
+    ["pipeline", "PIPELINE", "left→right stages", { type:"pipeline", nodes:N(["Design","Review","Approve","Ship"]), edges:[{from:"Design",to:"Review",kind:"flow"},{from:"Review",to:"Approve",kind:"flow"},{from:"Approve",to:"Ship",kind:"flow"}] }],
+    ["quadrant", "QUADRANT", "positioning map", { type:"quadrant", axes:["Effort","Value"], nodes:[{id:"A",label:"Quick win",x:0.2,y:0.8},{id:"B",label:"Bet",x:0.8,y:0.85},{id:"C",label:"Fill-in",x:0.2,y:0.25},{id:"D",label:"Money pit",x:0.8,y:0.2}] }],
+  ];
+  const dgmRow = document.getElementById("dgm-row");
+  diagrams.forEach(([t, cap, desc, graph]) => {
+    const cell = document.createElement("div"); cell.className = "dgm-cell";
+    const ct = document.createElement("span"); ct.className = "t"; ct.textContent = cap;
+    const cd = document.createElement("span"); cd.className = "d"; cd.textContent = desc;
+    const mount = document.createElement("div");
+    cell.appendChild(ct); cell.appendChild(cd); cell.appendChild(mount); dgmRow.appendChild(cell);
+    ReactDOM.createRoot(mount).render(e(DiagramSolver, { graph }));
+  });
+
+  // ---- morph -----------------------------------------------------
+  const morphNodes = N(["Vi","Decks","Web","Print","App","Brand"]);
+  const morphEdgesAfter = ["Decks","Web","Print","App","Brand"].map(t=>({from:"Vi",to:t,kind:"flow"}));
+  const morphEdgesBefore = [];
+  for (let i=0;i<morphNodes.length;i++) for (let j=i+1;j<morphNodes.length;j++) morphEdgesBefore.push({from:morphNodes[i].id,to:morphNodes[j].id,kind:"dependency"});
+  let state = "before";
+  const morphMount = ReactDOM.createRoot(document.getElementById("morph-mount"));
+  function drawMorph() {
+    morphMount.render(e(DiagramSolver, { graph: { type:"morph", state, center:"Vi", nodes: morphNodes, edges: state==="after"?morphEdgesAfter:morphEdgesBefore } }));
+  }
+  document.getElementById("morph-btn").addEventListener("click", (ev) => {
+    state = state === "before" ? "after" : "before";
+    ev.target.textContent = state === "before" ? "Morph →" : "← Reset";
+    drawMorph();
+  });
+  drawMorph();
+</script>
+</body>
+</html>

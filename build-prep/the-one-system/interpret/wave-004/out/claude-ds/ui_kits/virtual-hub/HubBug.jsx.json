@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/HubBug.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React functional component HubBug that renders a top-left brand bug (ConceptV logo image) plus a hub switcher: a 'STAGE' label and a row of tab buttons built from a hubs array, marking the active one and calling onSwitch(id) on click. Attaches the component to window.HubBug.",
+  "observations": [
+    "Component takes three props: hubs (array), activeHub (id), onSwitch (callback)",
+    "Renders an img from a relative path '../../assets/logos/conceptv-v-yellow.png' with alt 'ConceptV'",
+    "Maps hubs to <button> tabs keyed by h.id, conditionally adding an 'active' class when h.id === activeHub",
+    "Click handler is an inline arrow calling onSwitch(h.id)",
+    "Uses className strings tied to a 'vh-' prefixed CSS namespace (vh-bug, vh-bug-logo, vh-hubsw)",
+    "Final line assigns the function to window.HubBug rather than using module exports",
+    "Hardcoded literal label text 'STAGE'"
+  ],
+  "standouts": [
+    "window.HubBug = HubBug global attachment — the integration mechanism instead of ES modules",
+    "Template-literal className with conditional 'active' toggle"
+  ],
+  "conventions": [
+    "Follows a 'vh-' CSS class namespace shared across the virtual-hub kit",
+    "Babel-transpiled-in-browser JSX with global window attachment (matches the index.html loader pattern)",
+    "Relative asset path resolution from the component's directory depth (../../)",
+    "Breaks the claude-ds 'no second home / registry projection' charter: this is a standalone hand-written component with literals, not a CV_REGISTRY type"
+  ],
+  "concerns": [
+    "Hardcoded image path and 'STAGE' label are inline literals rather than tokenised/registered values",
+    "No prop validation or defaults; missing hubs would throw on .map"
+  ],
+  "notes": "A small presentational React component for the virtual-hub overlay's brand+hub-switcher, wired in via window.HubBug.",
+  "questions": [
+    "Where does the hubs array and onSwitch handler originate (presumably HubApp.jsx)?",
+    "Is the 'vh-' styling defined in hub.css referenced by the kit's index.html?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment 'top-left brand + hub switcher' accurately describes what the component renders.",
+  "apparent_themes": [
+    "Presentational component composition for a tour/overlay UI",
+    "Global-window wiring for a Babel-in-browser prototype kit",
+    "Brand-forward chrome (logo + stage switcher)"
+  ],
+  "intention_signals": "Aims to give the buyer-side virtual-hub overlay a persistent top-left identity element and a way to switch between hubs/stages, kept as a simple standalone JSX building block in the UI kit.",
+  "novelty": "n/a",
+  "contribution": "Contributes the brand-bug + hub/stage-switcher UI pattern for the virtual-hub overlay — a reusable top-left header element with active-tab switching that a fused system would keep as the hub navigation affordance.",
+  "summary_for_embedding": "A React component (HubBug) rendering a ConceptV logo bug and a STAGE hub-switcher tab row, attached to window.HubBug for a Babel-in-browser virtual-hub UI kit.",
+  "intention_for_embedding": "To provide the virtual-hub overlay's persistent top-left brand identity and hub/stage switching control."
+}

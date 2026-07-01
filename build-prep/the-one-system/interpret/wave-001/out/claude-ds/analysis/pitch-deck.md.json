@@ -1,0 +1,60 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/pitch-deck.md",
+  "model": "opus",
+  "what_it_does": "The baseline material-analysis of the 17-page pitch-deck folder that sets the vocabulary all other folders are tested against: across three deepening passes it extracts the deck's generative design DNA — frame/grid ratios, the near-white tonal zoning ladder, the gold->bronze->tan ramp, the type system, the atom catalogue, layout archetypes, narrative architecture, texture/depth z-stack, the rules between elements, and the deliberate ABSENT-list — as ratios and relationships rather than fixed pixels.",
+  "observations": [
+    "Declares itself the baseline folder and is content-agnostic: the property subject is incidental; everything is recorded as universal structural grammar with property nouns replaced by generic roles.",
+    "Section 0-1 measures the frame as 1930x1085 (16:9) with coordinates as % of frame, 12% side margins (~76% content band), title top at 7.5%, a bottom gold hatch rule + circular V mark as a persistent 'frame signature', and two macro-layouts CENTERED and SPLIT.",
+    "Section 2 is flagged as THE key recalibration: zoning is near-imperceptible (~1-3% warm-vs-neutral undertone, not hue), with a sampled hex table (warm ivory #fdfcf7, neutral grey #f8f8f8 as the 'odd-one-out' surface, etc.), and recommends recalibrating the over-saturated --zone-* tokens.",
+    "Section 4 samples the brand as a RAMP (#dad364 -> #d6bf57 -> #c09d5d -> #b98664 -> deep brown) and recommends softening --accent-gold from #E0C010 toward #d6bf57 and adding the ramp.",
+    "Section 5 catalogues atoms (triangle bullet, soft stat panel, hairline gold outline callout, embossed hero-metric chip, number+label pair, ramp-bordered outlined pill, icon-flow row, badges, profile block, interactive affordance dots/MENU pill) and section 6 lists 13 layout archetypes as candidate templates.",
+    "Deep pass (10-14) covers narrative architecture (visual rhyme chaos->order, italic-bronze connective captions, the frame signature as binding), reading order, constant-vs-variable DNA, a layered soft z-stack (blueprint ghost -> white -> panels -> frosted glass -> floating affordances), and previously-unnamed findings including a green/amber/red status traffic-light set and an embedded product-UI component vocabulary.",
+    "Third pass (15-21) extracts the rules between elements: a ~1.25 modular type scale with a ~1.9 display jump, text-wrap:balance titles, hanging-indent bullets, a number-formatting convention (gold+tabular nums, grey label), colour-role logic (ink=content / gold=active / bronze=structural), contrast-as-hierarchy, an invisible 4-corner frame, a latent-motion directional-cue set, the ABSENT-list as guardrails (no pure black, no gradients, no left-accent-border cards, no emoji), and a copy content-model.",
+    "Each pass ends by routing findings into SYSTEM-GAPS.md."
+  ],
+  "standouts": [
+    "Zoning is built from undertone + texture + emboss, not hue — the warm/neutral pairing IS the semantic signal, 'felt not seen'; the odd-one-out card is rendered neutral grey while siblings are warm ivory.",
+    "Colour-role logic ties ramp position to loudness: ink=content (loud), gold=active/decision (numbers, bullets, never body), bronze=structural/quiet connective tissue — contrast itself is a hierarchy tool.",
+    "The deck 'encodes its own motion' while static: arrows cross the split divider, off-frame bleed = spatial continuation, implied entrance order = reading order = a natural animation stagger.",
+    "The ABSENT-list (no pure black, no hard shadows, no gradients outside photos, no left-accent-border cards, no emoji) is captured as explicit guardrails / anti-patterns.",
+    "Two product-system tells: pixel-consistent margins across 17 slides imply a master template, and the embedded screenshots quietly carry the real app's component vocabulary (status pills, nav, detail panels)."
+  ],
+  "conventions": [
+    "ratios-not-pixels: everything measured as % of frame so it recomputes at any size.",
+    "content-agnostic extraction: subject nouns replaced by generic roles to capture universal grammar.",
+    "evidence-grounded: sampled real hex values via hue clustering, measured positions, marked confirms/new/generalises/contradicts.",
+    "axis=f(content,position): constant DNA vs variable expression separated explicitly.",
+    "token-recalibration discipline: recommends editing token values in place (soften gold, recalibrate zone ladder) toward sampled reality.",
+    "fail-loud-on-drift sibling: routes gaps to SYSTEM-GAPS.md rather than silently absorbing them."
+  ],
+  "concerns": [
+    "Sampled hex values (#fdfcf7, #d6bf57, etc.) are read off rendered images via hue clustering, so they are approximations of source intent, not authoritative token definitions.",
+    "Recommends recalibrating live system tokens (--accent-gold, --zone-*) based on this single baseline folder; the doc itself defers final promotion to multi-folder confirmation, so acting on this file alone would be premature.",
+    "The '13 archetypes' and atom catalogue are derived from one 17-page deck and may over-fit the baseline before cross-folder testing."
+  ],
+  "notes": "The baseline DNA-extraction that defines the whole vocabulary: zoning is undertone-not-hue, gold is a ramp, colour-roles map to loudness, and there is an explicit ABSENT-list — every other folder analysis is tested against this one.",
+  "questions": [
+    "How accurate are the hue-clustered sampled hexes versus the original source files' true colour values?",
+    "Are the recommended token recalibrations (soften gold to #d6bf57, recalibrate --zone-*) meant to be applied from this baseline, or only after the cross-folder confirmations referenced in PROGRESS.md?",
+    "Is the green/amber/red status set actually a defined semantic set in the source, or inferred from a few embedded UI screenshots?"
+  ],
+  "purpose_vs_actual": "Match — it states it is the baseline folder that 'sets the vocabulary all others are tested against' and it delivers an exhaustive three-pass extraction of that vocabulary, including the recalibration recommendations and the guardrail/ABSENT list.",
+  "apparent_themes": [
+    "DNA-extraction",
+    "ratios-not-pixels",
+    "axis=f(content,position)",
+    "zoning-as-undertone-not-hue",
+    "colour-role=loudness",
+    "ramp-encodes-sequence",
+    "latent-motion=reading-order",
+    "restraint-as-guardrails",
+    "master-template-single-source",
+    "content-agnostic-grammar"
+  ],
+  "intention_signals": "Inferred: the doc is trying to reverse-engineer the single generative system behind a polished deck — to capture WHY it feels coherent (one master template, undertone zoning, a single accent ramp, role-coded contrast, deliberate restraint) as recomputable rules, so those confirmed universals can later be promoted into the design system's tokens, primitives, and components rather than copied as a style.",
+  "novelty": "Unusually deep for a design analysis: it samples real pixel values to correct existing tokens, names zoning as a sub-perceptual undertone signal, maps ramp-position to perceived loudness, reads static slides as encoding their own motion, and codifies what is deliberately ABSENT as a guardrail set.",
+  "contribution": "Contributes the foundational extracted vocabulary a fused system would keep: the near-white zoning ladder (with sampled values), the gold->bronze->tan ramp, the ink/gold/bronze colour-role logic, the 13 layout archetypes, the atom catalogue, the modular type scale, the frame-signature/invisible-4-corner-frame, the latent-motion cue set, and the ABSENT-list guardrails.",
+  "summary_for_embedding": "Baseline three-pass material analysis of a 17-page pitch deck extracting its generative design DNA as ratios and sampled values: frame/grid (12% margins, 7.5% title, frame signature), near-white undertone zoning ladder, gold-to-bronze-to-tan ramp, type scale, atom catalogue, 13 layout archetypes, layered soft z-stack, colour-role logic, latent-motion cues, and an ABSENT-list of guardrails.",
+  "intention_for_embedding": "Intended to reverse-engineer the one master-template generative system behind a coherent deck into recomputable ratio-and-relationship rules so confirmed universals can be promoted into the design system as recalibrated tokens, pattern primitives, and components rather than copied as a visual style."
+}

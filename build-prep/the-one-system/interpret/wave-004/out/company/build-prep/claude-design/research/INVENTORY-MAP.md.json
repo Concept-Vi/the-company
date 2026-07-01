@@ -1,0 +1,41 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/INVENTORY-MAP.md",
+  "model": "opus",
+  "what_it_does": "A Layer-1 consolidation (2026-06-08) merging five Haiku coverage reports (inv-A..E) into a terrain map of the ~600-file application, plus the proposed Layer-2 deep-read plan. It gives the terrain at a glance (four regions with file counts and spines), an angle map of the branches/worktrees and the vault, and seven prioritized deep-read clusters (MUST-HAVE / CONTEXT / LOWER) keyed to what the application-structure pack needs, with a coverage guarantee.",
+  "observations": [
+    "Terrain table of four regions: backend core (~75), FE+design (106), nodes/roles/voice (68), self-desc/tests/ops (~185), each with its spine files",
+    "States two tractability facts: the repo self-describes (16 AGENTS.md + MAP + STATE + drift-check) and is registry-not-hardcoding + schema-additive everywhere",
+    "Angle map shows main plus branches: concurrent-cognition (~74 files), interactive-surface-build, operable-interface-build (the working worktree), night-build/overnight, and the 252-file vault build-prep as the design-intent narrative",
+    "Seven deep-read clusters with assigned model (Sonnet/Opus) and the layer (①②③④⑤) each feeds; clusters 1-4 are MUST-HAVE, 5-7 CONTEXT, voice/node-skeletons LOWER",
+    "Notes the design intent is disproportionately in the vault (252 files) — the angle a shallow pass misses",
+    "Includes a coverage guarantee: every PRIORITY-flagged place from Layer 1 maps to a cluster or an explicit defer, and Layer 3 runs a completeness critic"
+  ],
+  "standouts": [
+    "The angle map distinguishing main from the concurrent-cognition / interactive-surface / operable-interface branches and the vault as separate angles",
+    "The observation that design intent lives disproportionately in the 252-file vault, the thing a shallow census misses",
+    "The coverage-guarantee + completeness-critic design that makes the deep-read plan auditable"
+  ],
+  "conventions": [
+    "Tags clusters by which read-layer (①②③④⑤) and model tier they serve",
+    "Frames the whole plan around 'what the application-structure pack needs', keeping prioritization purpose-driven",
+    "Calls out coordination points (cognition's seam-pack ownership, the merge) rather than assuming sole ownership"
+  ],
+  "concerns": [
+    "Flags its own volume risk: the 252-file vault is the main volume risk and cluster 4 is scoped to surface docs only — completeness rests on the Layer-3 critic catching anything left"
+  ],
+  "notes": "If briefing someone: this is the planning hub that turned five coverage reports into a prioritized, layered deep-read plan — read it to see the terrain, the branch angles, and which clusters feed which structure layer.",
+  "questions": [],
+  "purpose_vs_actual": "Match — declares itself the merged Layer-1 terrain plus the Layer-2 deep-read plan for Tim to steer, and delivers the terrain map, angle map, and prioritized clusters with a coverage guarantee.",
+  "apparent_themes": [
+    "the repo is coherent and self-describing — the best news for making it visible to a design session",
+    "registry-not-hardcoding + schema-additive as the disciplines that make it tractable",
+    "design intent lives in the vault, not just the code",
+    "layered research: cheap broad coverage then prioritized smart deep reads with a completeness critic"
+  ],
+  "intention_signals": "Trying to convert a broad census into a steerable, prioritized deep-read plan so the expensive Layer-2 reads fire only where the application-structure pack needs them, with coverage made auditable before committing model spend.",
+  "novelty": "The angle map treating branches and the vault as distinct research angles, and the explicit coverage-guarantee + completeness-critic protocol bridging cheap census and expensive deep reads.",
+  "contribution": "Contributes the terrain-and-plan layer: the four-region map, the branch/vault angle map, and the seven prioritized deep-read clusters keyed to the structure layers — the orientation index a fused system would keep to know the shape of the whole codebase and where its design intent lives.",
+  "summary_for_embedding": "A Layer-1 consolidation merging five coverage reports into a four-region terrain map of the ~600-file ~/company app, an angle map of branches and the 252-file vault, and seven prioritized Layer-2 deep-read clusters with a coverage guarantee.",
+  "intention_for_embedding": "To convert a broad census into a steerable, prioritized, auditable deep-read plan so expensive deep reads fire only where the application-structure pack needs them."
+}

@@ -1,0 +1,44 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/judge.report.json",
+  "model": "opus",
+  "what_it_does": "Records the outcome and by-use verification of the JUDGE build lane, which added roles/judge_mining.py — the confirm-gate validator for the mining composition (③). Reports the single file written, the new role id, a discovery/floor/adversarial/faithful verification narrative, status, and design notes.",
+  "observations": [
+    "files_written: roles/judge_mining.py; new_role_ids: ['judge_mining'].",
+    "Discovery shows judge_mining live with exactly three output fields ['grounded','unsupported','confidence'], mode_scope={'mining'}, input_addresses=('utterance',), op=generate, in the mining cast and not the listening cast.",
+    "Floor: cognition_governance_acceptance 42/42 PASS; the AST scan confirms it is pure-declarative (no resolve/approve/dispatch, no claude -p).",
+    "Adversarial fire: an extract fabricating a tim_correction over an unrelated GPU-residency Q&A returned grounded:false, naming the exact ungrounded field, confidence 1.0.",
+    "Faithful fire: an extract whose every non-empty field is supported returned grounded:true, empty unsupported, confidence 1.0, with no spurious failure on empty fields.",
+    "Design: mirrors verify_lens.py as a single-generate validator (deliberately NOT a draws:N jury, distinct from confirm_registration/verify_jury siblings); the {extract, raw_exchange} pair rides in the unit at ctx['utterance'].",
+    "Prompt posture biases toward FAIL (false-negative is the dangerous error for a no-fiction gate) and explicitly exempts empty '' fields from being counted unsupported.",
+    "needs_tim flags honest limits: it is a single-4B soft judgement (variance, not independent error), same caveat as verify_lens; the binding accepts a stronger-model bind as an enhancement.",
+    "Notes roles/AGENTS.md (drift home) not yet updated so roles_acceptance will red on drift until the next beat — described as expected, not a defect.",
+    "Self-classifies status as built-verified."
+  ],
+  "standouts": [
+    "Adversarial-vs-faithful fire both at confidence 1.0, with the fabrication case naming the exact ungrounded field.",
+    "The deliberate choice of a single-generate validator over a draws:N jury, distinguishing it from its quorum-jury siblings.",
+    "The empty-field exemption rule that prevents faithful extracts from spuriously failing on schema-default '' fields."
+  ],
+  "conventions": [
+    "Follows the seam-lane report schema (with a findings field); mirrors roles/verify_lens.py exactly in shape.",
+    "Closed three-field output with a fail-biased posture, matching verify_lens's adversarial-disprove default-to-fail convention.",
+    "File-disjoint respected (only roles/judge_mining.py), not committed."
+  ],
+  "concerns": [],
+  "notes": "A build-lane status record: JUDGE added judge_mining as the ③ no-fiction confirm-gate, verified to distinguish a fabricated extract from a grounded one on the resident 4B at confidence 1.0.",
+  "questions": [
+    "Would binding judge_mining to a stronger/independent model materially change the gate's discrimination, or is the 4B sufficient for the mining floor?"
+  ],
+  "purpose_vs_actual": "Matches — a build report recording the validator role built and how the no-fiction gate was proven by use.",
+  "apparent_themes": [
+    "No-fiction gate as a floor before clustering/drafting memory",
+    "Fail-biased validator (false-negative is the dangerous error)",
+    "Advisory soft judgement with an honest monoculture caveat"
+  ],
+  "intention_signals": "Aims to build the confirm step of the mining pipeline so fabricated extract fields are caught and named before any extract becomes a feedback memory file, while being honest that a single model measures variance not independent error.",
+  "novelty": "The empty-field exemption combined with a fail-biased single-generate validator, and the explicit positioning as distinct from the draws:N jury siblings.",
+  "contribution": "Contributes the judge_mining validator definition, its fail-biased no-fiction posture and empty-field exemption rule, and the single-4B monoculture caveat, which a fused system would keep as the provenance of the mining confirm-gate.",
+  "summary_for_embedding": "A seam-lane JSON report documenting the JUDGE lane's judge_mining role, a single-generate no-fiction confirm-gate for mining extracts, verified to catch fabrication on the resident 4B.",
+  "intention_for_embedding": "To build the mining pipeline's confirm-gate that flags fabricated extract fields before they become durable feedback memory."
+}

@@ -1,0 +1,38 @@
+{
+  "project": "claude-ds",
+  "path": "components/Segmented.jsx",
+  "model": "opus",
+  "what_it_does": "Implements the Segmented control as a function component using React.createElement (aliased as h). Renders a div with role='tablist' and class cv-segmented, mapping each option to a button with role='tab', type='button', aria-selected, and class cv-segmented__opt. Options may be strings or {value,label} objects; the active option is the one whose id matches value, defaulting to the first option (index 0) when value is null.",
+  "observations": [
+    "Uses global React (/* global React */) and const h = React.createElement instead of JSX",
+    "Derives id and label from each option: object → op.value (or op.label as fallback) / op.label; string → the string itself",
+    "active = value != null ? value === id : i === 0 — first option is active when value is unset",
+    "onClick is only attached when onChange is provided (conditional handler)",
+    "className composed as ['cv-segmented', className].filter(Boolean).join(' ') to merge a caller-supplied class",
+    "Spreads ...rest onto the wrapper div via Object.assign",
+    "key={id} on each button"
+  ],
+  "standouts": [
+    "All visual behaviour is delegated to token CSS classes (.cv-segmented, .cv-segmented__opt) — the component carries no inline styles or literals",
+    "id falls back to label when an object option omits value, so key/value can silently become the label text"
+  ],
+  "conventions": [
+    "Follows the design-system rule that components are thin token-class wrappers carrying no raw values (the 'one home' / no-second-place directive)",
+    "ARIA tablist/tab roles for accessibility",
+    "Defensive defaults (options = [], props || {})"
+  ],
+  "concerns": [
+    "When an object option has no value, id and label collapse to the same string; two options sharing a label would collide on key and on active-matching"
+  ],
+  "notes": "A token-class-only segmented control; active state is value-controlled with first-option fallback, and clicks emit (id, event) only if onChange is given.",
+  "questions": [
+    "Is the value-defaults-to-first-option behaviour intended for uncontrolled use, or should callers always pass value?"
+  ],
+  "purpose_vs_actual": "Match — implements the audience toggle the header comment and .d.ts describe.",
+  "apparent_themes": ["token-class wrapper", "controlled segmented toggle", "accessibility via ARIA roles", "no-literals design discipline"],
+  "intention_signals": "To express a segmented audience toggle purely as a structural + ARIA shell over design-system CSS classes, so the look lives entirely in tokens and the JS only handles option normalization and selection.",
+  "novelty": "Uses React.createElement directly (no JSX/build step) while still presenting a typed component — a deliberately buildless authoring style.",
+  "contribution": "Contributes the structural/ARIA implementation of the segmented audience toggle, including string-or-object option normalization and first-option-default active logic, all delegated to .cv-segmented token classes.",
+  "summary_for_embedding": "React.createElement implementation of a Segmented tablist control rendering token-class buttons, with string-or-object options, value-controlled active state defaulting to the first option.",
+  "intention_for_embedding": "To provide the buildless, token-class-only segmented audience toggle whose visual behaviour lives entirely in design-system CSS."
+}

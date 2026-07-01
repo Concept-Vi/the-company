@@ -1,0 +1,35 @@
+{
+  "project": "company",
+  "path": "ai_tics/silent_fallback.py",
+  "model": "opus",
+  "what_it_does": "Declares a module-level AI_TIC dict for 'silent-fallback': silently routing around a problem (switch engine/model, swallow an error, pretend success) instead of failing loud. Carries id, label, markers, and description.",
+  "observations": [
+    "Docstring names the rules 'no-silent-failures' and 'make-each-thing-work'.",
+    "AI_TIC keys: id ('silent_fallback'), label ('silent-fallback'), markers (6 phrases), desc.",
+    "markers: \"falls back to\", \"as a fallback\", \"if that fails, use\", \"just use a different\", \"silently\", \"best-effort\".",
+    "References runtime/ai_tics.py and ai_tics/AGENTS.md."
+  ],
+  "standouts": [
+    "Markers capture both error-swallowing ('silently', 'best-effort') and engine-switching ('just use a different') fallback language."
+  ],
+  "conventions": [
+    "Same seed-as-data dict shape as sibling ai_tics files.",
+    "label uses kebab style ('silent-fallback')."
+  ],
+  "concerns": [],
+  "notes": "A seed file defining the 'silent-fallback' tic — flagging fail-quiet / route-around language in favor of failing loud.",
+  "questions": [
+    "Could 'best-effort' as a marker flag legitimate qualified-effort statements?"
+  ],
+  "purpose_vs_actual": "Match — declares the silent-fallback seed tic exactly as described.",
+  "apparent_themes": [
+    "no-silent-failures / fail loud",
+    "make-each-thing-work",
+    "no routing around problems"
+  ],
+  "intention_signals": "Encodes Tim's no-silent-failures stance as detectable markers so corpus text describing fallbacks or error-swallowing can be flagged.",
+  "novelty": "Naming fallback/best-effort phrasing as a catalogued anti-pattern rather than resilient engineering.",
+  "contribution": "Contributes the 'silent-fallback' tic definition and its fail-quiet/route-around markers to a fused tic catalogue.",
+  "summary_for_embedding": "A Python seed file defining the 'silent-fallback' AI-tic dict with markers for fallback, error-swallowing, and route-around language.",
+  "intention_for_embedding": "To detect and subtract silent-fallback behavior, enforcing fail-loud and make-each-thing-work."
+}

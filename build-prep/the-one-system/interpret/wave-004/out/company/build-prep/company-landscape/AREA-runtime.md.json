@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/company-landscape/AREA-runtime.md",
+  "model": "opus",
+  "what_it_does": "An exhaustive read-only landscape of the Company's runtime/ engine core (77 .py files + 1 json): the HTTP bridge, cognition engine, Suite, reactive scheduler, governance, rule engine, resolver, the decision stack, the session fabric organs, universal projection, voice/activation, the Claude-Code fabric, the implement wire, brain router, and every file-discovered registry loader. Includes the full ~130-route /api table, a per-file inventory, data files read/written, seams/env-vars/ports, and a 22-item gaps/stale/surprising list.",
+  "observations": [
+    "bridge.py (3370 lines) is the operator console: one SUITE singleton, BRIDGE_ROUTES single-source table (~130 routes, 48 GET + 3 static + ~80 POST incl. streaming), drift-guarded by tests/bridge_routes_acceptance.py via coherence_detect.extract_routes.",
+    "cognition.py (2778 lines) holds run_role/run_items/run_reduce/run_chunked/run_swarm/resolve_address; SlotBudget reads services.json for VRAM/seqs (never hardcoded 32); RESIDENT_MODEL Qwen3.5-4B at :8000; INJECTION_RULE is the first declared data-AST rule.",
+    "suite.py is ONE brain two faces (bridge + MCP share it); defines CONTENT_KINDS, THOUGHT_SHAPES, loads corpus addresses from design/_system/addresses.json; _gate_extension imports candidate role modules in a temp dir before accepting (malformed role.py would take down all discovery).",
+    "The four core primitives: scheduler.py (reactive, blake2b memo, VOLATILE-only re-run, per-node error isolation), governance.py (AUTO/SURFACE/CONFIRM + LOCKED set), rules.py (closed RULE_OPS grammar, pure evaluate, never eval/exec), resolver.py (80 lines, the 4th primitive resolve(invariant,coordinate)).",
+    "Decision stack: decision_registry.py (compose_state fold from marks, decision_inbox GPU-free), decision_memory.py (explanation_grounding, never-assert THEOREM_FORK caveats, _CTX_FLOOR=0.5 cross-encoder floor), decision_subtypes.py (subtype->card_variant+explanation_policy+required_elements).",
+    "Session fabric: session_supervisor.py (127.0.0.1:8771 only, SINGLE WRITER of agent_sessions events, DELIVER/WAKE/CONSULT, concurrency 3 / timeout 900), plus session_channels/scan/recall/pointintime/search/lineage/lens — structural rows + semantic recall over past transcripts; cc_* modules for live injection, clones, per-step gate, board, attachments.",
+    "~25 file-discovered registry loaders all share one mechanism (os.listdir->importlib, fail-loud, id==filename, dict-like); lifter_registry.py renamed from lifters.py 2026-06-18 to fix a namespace-shadowing bug.",
+    "Dormant/gated posture across the engine: activation_driver (COMPANY_ACTIVATION_LOOP off), implement wire (wire_armed only when COMPANY_WIRE_PERMISSION=acceptEdits), ui_claude_session (COMPANY_PANEL_PERMISSION plan) — autonomy is operator-greenlit, not default-on."
+  ],
+  "standouts": [
+    "BRIDGE_ROUTES drift-gate: tests/bridge_routes_acceptance.py runs an AST route-extractor against bridge.py to prove no declared route is missing from code and vice versa — a live runtime-enforced gap-pressure guard between a registry and its implementation.",
+    "model_routing.py resolve_model() unifies three scattered model-selection paths but is Phase-1-only (nothing wired through it yet) AND carries a FLOOR NOTE that roles.resolve_binding silently floors to the resident 4B when no provider matches — a role re-tier can look resolved but used the wrong model.",
+    "scale.py documents an evidence-forced design reversal: the planned lineage pyramid was KILLED by a per-space probe (the session axis is capture-batch, not a semantic nest); cluster-centroid Ward-nesting rungs replaced it."
+  ],
+  "conventions": [
+    "Registry-is-truth and one-source throughout (BRIDGE_ROUTES single table, SlotBudget from registry, ~25 file-discovered registries with identical mechanism).",
+    "Fail-loud / no-silent-drop discipline (render_declaration UnknownEvent, corpus refuses missing lineage, session_recall teaching error when embedder down, governance LOCKED set).",
+    "Honest coverage: the doc itself notes it read only part of large files and labels gaps/stale/surprising explicitly; dormant-by-default autonomy is documented not hidden."
+  ],
+  "concerns": [
+    "Records concrete engine-level gaps as current state: model_routing Phase-1-only with a silent-floor hazard; activation substrate (G5/H/I) inert unless env-armed; context_variables budgeting unbuilt; dials condition-overrides stored-not-evaluated; brain_router recall source is a declared hook routing to model.",
+    "Machine-specific hardcodes: SlotBudget._MEASURED_KV_BY_UTIL and decision_memory._CTX_FLOOR=0.5 are constants not registry values (4080-16GB specific / require code edit to tune).",
+    "Dual-source / drift hazards: vi_vision.py still on inline principal code (should migrate to supabase_principal.py); generate_mockup.py deliberately duplicates a bridge read to avoid Suite-at-import coupling; possible stale `from runtime.lifters` imports after the rename."
+  ],
+  "notes": "If briefing someone: this is the Company's engine core — the 3370-line bridge with ~130 routes, the cognition engine, the ONE Suite shared by bridge+MCP, the four primitives (scheduler/governance/rules/resolver), the decision stack, the session fabric, and ~25 identical file-discovered registry loaders; note autonomy paths are dormant-by-default and gated on env permission.",
+  "questions": [
+    "When Phase 2 wires model_routing, does that also close the resolve_binding silent-floor-to-4B hazard, or is that a separate fix?",
+    "Are the machine-specific constants (_MEASURED_KV_BY_UTIL, _CTX_FLOOR) intended to become registry/dial values?",
+    "Does anything still import `from runtime.lifters` under the old (shadowing) name after the 2026-06-18 rename?"
+  ],
+  "purpose_vs_actual": "Matches. Stated as an EXTRACTOR pass capturing more and filtering nothing over runtime/; delivers the full /api route table, a per-file inventory, data-file map, seams/env/ports, and a 22-item gaps list — comprehensive as scoped (and honest that some large files were only partially read).",
+  "apparent_themes": [
+    "One brain, two faces (Suite shared by bridge + MCP)",
+    "Four pure primitives (scheduler/governance/rules/resolver) under everything",
+    "Registry-is-truth via ~25 identical file-discovered loaders",
+    "Fail-loud, no-silent-drop, drift-gated registries",
+    "Operator-greenlit autonomy (dormant-by-default, env-gated wires)",
+    "Evidence-forced design (probe killed the lineage pyramid)"
+  ],
+  "intention_signals": "Trying to hand an agent the complete engine mental model — every route, every core mechanism, every registry loader, every env gate and seam — so it can navigate the 77-file engine without reading it all, and so the dormant/gated/Phase-1/silent-floor hazards are explicit before the agent trusts a path as live.",
+  "novelty": "The route drift-gate (AST extractor proving table-vs-code parity), the documented evidence-forced pyramid reversal, and the uniform ~25-loader registry mechanism with the lifter rename war-story make this a distinctive engine portrait.",
+  "contribution": "Contributes the consolidated map of the runtime engine: the ~130-route bridge surface, the cognition/Suite/scheduler/governance/rules/resolver core, the decision stack, the full session-fabric organ set, the ~25 file-discovered registry loaders, and the env-gate/seam/port reference — the engine-core counterpart to the design/interface/memory/ops/registries captures.",
+  "summary_for_embedding": "Exhaustive landscape capture of the Company's runtime/ engine core (77 files): the 3370-line bridge with ~130 /api routes, the cognition engine, the Suite shared by bridge and MCP, the scheduler/governance/rules/resolver primitives, the decision stack, the session fabric organs, voice/activation, the implement wire, and ~25 identical file-discovered registry loaders.",
+  "intention_for_embedding": "To give an agent the complete engine model — every route, mechanism, registry loader, env gate, and seam — so it navigates the 77-file engine without reading it all, with dormant/gated/Phase-1/silent-floor hazards made explicit."
+}

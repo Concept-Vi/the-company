@@ -1,0 +1,57 @@
+{
+  "project": "claude-ds",
+  "path": "system/glyphic-system.html",
+  "model": "opus",
+  "what_it_does": "A long living-specification card that documents and demonstrates the 'Glyphic' compositional model — the idea that the icon system is really a stack of independent, meaning-bearing facets (form, symbol, fill, colour, texture, motion, size, depth). It reproduces Tim's two verbatim briefs, decomposes them into precise terms, maps where each piece already exists in the codebase, lays out a universal-component grammar (slots/sockets/declarations), a build plan with BUILT markers, schemas, open questions, and an axis-convergence section. Script tags render live facet specimens and a cumulative facet-walk matrix from the real CV_GLYPHIC/CV_SHAPES renderers.",
+  "observations": [
+    "Declared @dsCard (group 'Glyphic System', viewport 1180x4400) — a very tall document page.",
+    "Sections: 00 orientation, 01 + 01b verbatim briefs, 02 decomposition, 03 facet model, 03b cumulative walk, 04 codebase research, 05/05b/05c/05d/05e architecture+slots/sockets/anatomy/declarations, 06 plan (with BUILT badges), 07 open questions, 08 universal-axes convergence.",
+    "Reproduces two long verbatim messages from Tim (the original icon-system brief and the universal-component addendum) as the source seed.",
+    "States the multiplicative-meaning claim numerically: 8 facets × ~8 values ≈ 8^7 ≈ two million distinct glyphics; 'meaning is multiplicative, not additive'.",
+    "§3 renders live specimens via GL.render / CV_SHAPES.markSVG ('proof the composition is real, not a mock').",
+    "§3b builds a cumulative-walk matrix in JS: each row varies ONE facet, its end value locks for all rows below, accumulating to a fully composed glyphic.",
+    "§04 research cards cite real files (analysis/INTEGRATION.md, AXES.md, cv-shapes.js, cv-icons.js, tokens/*.css, ai-capabilities-canvas.js, provenance.css).",
+    "§05c maps the coined terms slot (a value) and socket (a typed/event attachment) onto CV_REGISTRY.slots/accepts()/candidatesForSlot().",
+    "§05d revises anatomy: fill is the ring's inner space, not a third equal part; the element is a perfect square with ring + symbol sockets; includes a hand-drawn SVG diagram.",
+    "§05e shows a draft universal-component Type declaration (id/kind/layer/classification/parts/slots/sockets/conditions) and a panel that declares a glyphic-accepting socket.",
+    "§06 plan steps carry status badges (· BUILT, · CAPABILITIES BUILT · UI NEXT) and reference concrete homes (CV_GLYPHIC in cv-glyphics.js, glyphic-type.js, ai-glyphic.js, cv-meaning.js).",
+    "§08 announces nine live axes in CV_AXES and that a glyphic is a subscriber to axes, not an owner; points to analysis/AXIS-REFACTOR.md."
+  ],
+  "standouts": [
+    "Doubles as Tim's primary-source brief archive (two verbatim messages) AND the system's design rationale — a spec that records its own origin.",
+    "Explicitly frames the Glyphic as the atom of a self-similar grammar: glyphic = f(facet-spec) is design = f(content, axis) 'at its smallest radius'.",
+    "Live, registry-driven specimens and the locking cumulative-walk matrix demonstrate the composition rather than illustrating it with static art.",
+    "Coins/keeps Tim's vocabulary (Glyphic, slot, socket, attachment) and maps each to existing registry mechanisms."
+  ],
+  "conventions": [
+    "All visuals resolve from single sources (CV_GLYPHIC, CV_SHAPES, CV_ICONS, token graph) — no hand-drawn art for specimens.",
+    "Tokens-only styling; verbatim briefs preserved exactly (no quiet editing of Tim's intent).",
+    "Uses BUILT/PENDING status markers and links to companion analysis docs, matching the folder's self-describing discipline.",
+    "data-screen-label on every section for the addressed-surface convention."
+  ],
+  "concerns": [
+    "BUILT badges are author-asserted in prose; this file alone cannot confirm the referenced implementations (glyphic-type.js, ai-glyphic.js, cv-meaning.js) actually exist or work.",
+    "Very large single HTML file (661 lines) mixing spec prose, verbatim source, inline CSS and two non-trivial render scripts — heavy to maintain in one place.",
+    "Some meaning vocabularies/value sets are explicitly drafts/proposals (e.g. the 8 shape-types), flagged as open in §07 — the model is partly provisional."
+  ],
+  "notes": "If briefing someone: this is THE spec for the Glyphic — Tim's verbatim briefs, a facet decomposition, a codebase map of where it already lives, the slots/sockets universal-component grammar, a build plan with status, schemas, and open questions, with live rendered specimens.",
+  "questions": [
+    "Which §06 'BUILT' items are verified working vs aspirationally marked?",
+    "Are the open §07 decisions (v1 facet set, Form-axis ends, meaning vocabularies, value variable, taxonomy depth) settled anywhere, or still pending Tim?",
+    "Is analysis/AXIS-REFACTOR.md the authoritative scope this card is summarising?"
+  ],
+  "purpose_vs_actual": "Match — it states it is the brief + decomposition + model + research + plan written for markup, and the file is exactly that multi-section living spec with live demonstrations.",
+  "apparent_themes": [
+    "One generative grammar at every scale (document/block/graph/glyphic) — self-similarity",
+    "Orthogonal facets / multiplicative meaning",
+    "Single source of truth + projection of registries",
+    "Universal component grammar (types declare slots/sockets)",
+    "Loadable, context-dependent meaning separated from geometry",
+    "Spec-as-collaboration-surface (verbatim brief + open questions for markup)"
+  ],
+  "intention_signals": "Trying to take Tim's intuition that 'the icons are more than icons, it's a system' and crystallise it into a precise, codebase-grounded, single-grammar model — and to host that model where Tim can see, comment on and steer it, with live proof the composition is real.",
+  "novelty": "The Glyphic-as-atom-of-the-whole-grammar framing, the cumulative facet-walk visualization that locks one facet per row, and the slot/socket/declaration mapping of Tim's coined terms onto an existing type registry.",
+  "contribution": "Contributes the canonical narrative model and rationale for the compositional Glyphic and the universal-component (slots/sockets/declarations) grammar, with verbatim source briefs, a codebase map, schemas, and live demonstrations.",
+  "summary_for_embedding": "Living-spec HTML card defining the compositional 'Glyphic' (independent facets: form/symbol/fill/colour/texture/motion/size/depth) and the universal-component slots/sockets/declarations grammar, with verbatim briefs, codebase research, a build plan, schemas, and live registry-driven specimens.",
+  "intention_for_embedding": "To decompose Tim's icon-system brief into a precise single-grammar model, ground it in the existing codebase, and host it as a steerable, live-demonstrated specification for the Glyphic and the universal component architecture."
+}

@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/synthesis/ch-piffgfxv-wildcard-SYNTHESIS.md",
+  "model": "opus",
+  "what_it_does": "A stream-synthesis document (session ch-piffgfxv, 'wildcard', territory = vi-visual-bridge) for the union assembly. It defines the area as 'the direction circuit' (how Tim STEERS as opposed to layers that BUILD), states its tier-tagged principles/law-fragments, its honest build-shape (live/built/stub/suspect), its outputs to the union, its seams to the other layers, and the one thing to carry. Built from a 4-month genesis-order read of the territory plus code digs and the interaction record.",
+  "observations": [
+    "Uses an explicit trust-tier scheme: T1=Tim verbatim, T2=shape recurring across sessions, T3=author synthesis, tagging nearly every claim",
+    "Core generating function: Tim's cognition is recognition-based and relational; he directs by recognizing and pointing at rendered territory, not specifying in advance",
+    "Principles include THE CIRCUIT (push content -> direct at any granularity -> route back -> adapt -> loop), recognition-over-generation, every-element-an-anchor, modes-are-projections-of-one-system, everything-is-a-claim/provenance-load-bearing, rendered-collapse-state (kappa/root-4), law-not-value, zero-load, scan-before-build",
+    "Cites empirical figures: 100% of 1,878 annotations element-bound; 674 slides with multiple elements directed in one pass; 7,141 slide snapshots; 6,371 channels",
+    "Honest verification-state shape: slide mode LIVE (~30K lines, server.py 24,357 incl embedded JS/CSS/HTML/SQL + index.ts 4,760); addressable-element substrate BUILT; graph/document/team modes STUB/PARTIAL; ~1,377 md PATCHWORK/SUSPECT",
+    "Outputs to the union: wildcard-gallery-binder.js (use-verified portable interaction binder), SPEC-direction-to-generate-wire.md (the 'one wire' router spec), the interaction vocabulary + empirical direction data, the law-fragments",
+    "Seams: GALLERY (binder mounts, render+direct end, live), COMPANY (route-back = mutation-at-address via resolve_address + territory_write, live), FACTORY (steer the type-builder), DNA (steer the identity registry)",
+    "Flags TRUTH-OF-ATTRIBUTION as sacred: paraphrase-as-verbatim = 'the WORST KIND OF FAILURE'"
+  ],
+  "standouts": [
+    "The reframe: the area is not a box in the generative flow but the cross-cutting STEERING AXIS that lets Tim command every box",
+    "Rigorous trust-tiering (T1/T2/T3) applied per-claim, operationalizing the provenance-load-bearing principle within the doc itself",
+    "Concrete empirical grounding (100% of 1,878 annotations element-bound) backing the every-element-an-anchor law"
+  ],
+  "conventions": [
+    "Follows the shared union stream-synthesis layout (WHAT IT IS / PRINCIPLES / SHAPE / OUTPUTS / SEAMS / THE ONE THING)",
+    "Follows scan-before-build and the explicit provisional/'nothing final' framing",
+    "Practices the provenance discipline it preaches via trust tiers",
+    "Reports honest verification-state (live vs built vs stub vs suspect) rather than uniform 'done'"
+  ],
+  "concerns": [
+    "Self-reported large line counts (server.py 24,357 lines including embedded JS/CSS/HTML/SQL) signal a monolithic file; flagged here only as observed scale",
+    "Much of the supporting corpus is described by the author as PATCHWORK/SUSPECT session-talk (high-value principles, low-trust status)",
+    "Some seams (DNA's unbuilt-feedback-system possibly being this same circuit) are explicitly unconfirmed"
+  ],
+  "notes": "Wildcard's self-synthesis: vi-visual-bridge is the DIRECTION CIRCUIT / steering axis — one recognition-driven point-and-redirect mechanism, retargeted by address, cross-cutting all four generative layers.",
+  "questions": [
+    "Is SPEC-direction-to-generate-wire.md (the 'one wire') built, or still spec-only awaiting Tim's call?",
+    "What is the merge/build status of the stub modes (graph, document, team)?",
+    "Is the DNA seam (direction-as-DNA-feedback-system) actually the same circuit, or only conjectured?"
+  ],
+  "purpose_vs_actual": "Match: it aims to give the union a tier-tagged account of the vi-visual-bridge area's identity, laws, shape, outputs and seams, and it delivers precisely that with explicit provisionality.",
+  "apparent_themes": [
+    "Recognition-over-generation / direction as the primary act",
+    "Universal composition: one direction mechanism retargeted by address across all layers",
+    "Every element is an anchor; structure creates granularity",
+    "Provenance load-bearing; truth-of-attribution sacred",
+    "Honest verification-state; scan before build"
+  ],
+  "intention_signals": "It is trying to convince the union that direction/steering is a distinct cross-cutting dimension (not a layer), to contribute its empirically-grounded law-fragments and a portable binder + wire spec, and to model the provenance discipline it advocates by tier-tagging every claim.",
+  "novelty": "The framing of direction as a STEERING AXIS orthogonal to the DNA/Factory/Gallery/Company generative stack, plus the rendered-collapse-state (kappa / root-4) idea that epistemic state is rendered (proposals shimmer, Tim's touch collapses to solid), not merely stored.",
+  "contribution": "Contributes the direction-circuit framing, the tier-tagged law-fragments (the circuit, recognition-over-generation, every-element-an-anchor, modes-as-projections, rendered-collapse-state, zero-load), the empirical direction-behavior dataset, and the concrete outputs (wildcard-gallery-binder.js, the one-wire spec) that a fused system would keep.",
+  "summary_for_embedding": "A trust-tiered union stream synthesis for the vi-visual-bridge 'wildcard' area, defining it as the cross-cutting direction/steering circuit by which Tim recognizes and points at rendered territory, with empirically grounded law-fragments, honest build-shape (slide mode live ~30K lines), and outputs including a portable interaction binder and a direction-to-generate wire spec.",
+  "intention_for_embedding": "To establish direction/steering as a distinct cross-cutting axis of the system and contribute its laws, empirical data, and portable mechanisms to the union assembly."
+}

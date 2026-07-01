@@ -1,0 +1,57 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/RegistryInspector.jsx",
+  "model": "opus",
+  "what_it_does": "Provides the inspector + Vi-rail + quick-adder companion components for the Registry canvas. TypeInspector slides in to inspect/edit one CV_REGISTRY Type (rename, edit description, duplicate, make variant, delete, edit slots and variables visually); SlotZones/SlotZone/AcceptsQuickEdit edit a Type's slots and what they accept; VariableTags edit template variables; ViChatScoped and ViStudioRail run scoped/global Vi conversations that propose registry updates or new Types; AIRegistryPanel projects window.CV_AI; QuickAdder is a modal that asks Vi to draft a new Type from a plain-English brief.",
+  "observations": [
+    "All editing is done in place against window.CV_REGISTRY via R.update/register/remove/children/lineage/resolve, with subscribe-driven re-render (tick).",
+    "Built-in Types are read-only (isBuiltIn): name/desc inputs and slot/variable edits disabled; user is steered to Duplicate (fork) or + Variant (child extends parent).",
+    "duplicate() registers a copy with provenance:'user' and forkedFrom; makeVariant() registers a child with extends set to the parent id and provenance:'user'.",
+    "SlotZone shows live candidatesForSlot matches as thumbnails and an AcceptsQuickEdit that toggles accepted layers using R.LAYERS / R.LAYER_INFO (excludes 'template').",
+    "runViAction builds a structured prompt forcing the model to choose ONE of three JSON intents (update / create-variant / answer), resolves the 'claude' provider via CV_AI.resolveProvider, and throws loudly if CV_AI is absent.",
+    "Vi update/variant results are returned as PROPOSALS requiring an explicit Apply click before R.update/register run (gated application).",
+    "JSON parsing uses try/catch with a regex {…} fallback; an unparseable reply degrades to a 'try rewording' message (model-quality outcome, not swallowed error).",
+    "runStudioAction and QuickAdder delegate type drafting to window.CV_TYPES_VI.proposeType / suggestSlots; AIRegistryPanel groups CV_AI items by AI.LAYERS and shows the active surface.",
+    "AIRegistryPanel uses inline styles with CSS-var fallbacks (var(--accent-gold, #E0C010), var(--ink-2, #5b4628)) rather than pure tokens.",
+    "Exports all components via Object.assign(window, {...}) at the end."
+  ],
+  "standouts": [
+    "Three-intent forced-JSON Vi action (update / create-variant / answer) with explicit brand voice instructions baked into the prompt, and provider resolution through CV_AI (loud-fail) per the project's AI-registry law.",
+    "Proposal-then-apply gating: Vi never mutates the registry directly; the user confirms each proposed update/variant.",
+    "Built-in protection: editing a built-in is impossible; the UI offers fork (duplicate) or extend (variant) instead — preserving the registry's inheritance model.",
+    "AIRegistryPanel makes the AI catalogue inspectable as a live projection of CV_AI alongside the type registry — same register/query/subscribe idea on one screen.",
+    "Visual slot editing with live candidate-match thumbnails (candidatesForSlot) makes composition tangible."
+  ],
+  "conventions": [
+    "Strongly follows the project's non-negotiables: interface as a projection of the registries (subscribe + query), loud-fail on missing CV_AI, model access routed through CV_AI.resolveProvider rather than a raw endpoint.",
+    "Window-global registration and React-via-globals; rs-* class namespace for the workshop UI.",
+    "Provenance and lineage are first-class (forkedFrom, extends, lineage breadcrumbs).",
+    "AIRegistryPanel breaks the pure-token convention by using inline CSS-var-with-hex fallbacks instead of class/var-only styling."
+  ],
+  "concerns": [
+    "runStudioAction comment 'For now: any open-ended brief becomes a proposeType call' signals a known stub/simplification — global Vi only ever proposes new Types.",
+    "AIRegistryPanel's inline hex fallbacks (#E0C010, #5b4628) are a second place those values appear, a drift risk the project explicitly warns against.",
+    "Several effects call R.subscribe / AI.subscribe with [] deps and return the unsubscribe; correct, but multiple components subscribing independently multiplies re-renders.",
+    "ViChatScoped.applyProposal compares x.proposal === p by reference to mark applied; works only because the same object is threaded through, fragile if proposals are cloned.",
+    "Variable/slot keys are free-text inputs with no uniqueness/validation, so duplicate keys are possible.",
+    "Many capabilities depend on window.CV_TYPES_VI being loaded; if absent, several actions silently no-op (return early) rather than failing loud."
+  ],
+  "notes": "The full inspect-and-edit half of the workshop registry: in-place visual editing of one Type (slots, variables, lineage), proposal-gated Vi actions routed through CV_AI, built-in protection via fork/variant, plus a global Vi rail and a live CV_AI projection panel.",
+  "questions": [
+    "What is the contract of window.CV_TYPES_VI (proposeType, suggestSlots) and where is it defined/seeded?",
+    "Is the 'For now' single-intent global studio action intended to grow into the same three-intent dispatch as the scoped chat?",
+    "Should AIRegistryPanel's inline hex fallbacks be removed in favor of pure tokens per the no-second-home rule?"
+  ],
+  "purpose_vs_actual": "Match — the header comment (side-panel inspector + persistent Vi rail + quick adder, visual editing, Vi always present) accurately describes the implemented components, with the noted 'for now' simplification in the global studio action.",
+  "apparent_themes": [
+    "Registry-as-truth with the UI as its live projection",
+    "AI as a proposal engine gated by explicit user apply",
+    "Inheritance discipline (built-in protection, fork vs variant, lineage)",
+    "Single-source AI access (CV_AI) with loud failure"
+  ],
+  "intention_signals": "Aims to make editing the type registry feel like direct, visual manipulation with Vi as an ever-present, proposal-making collaborator — while strictly preserving the registry's inheritance/provenance model and routing every model touch through one catalogue.",
+  "novelty": "Combines visual slot/variable editing with live candidate-match thumbnails, a forced three-intent JSON Vi dispatch gated by apply, built-in fork/variant protection, and an inline live projection of the AI catalogue (CV_AI) next to the type registry.",
+  "contribution": "Contributes the registry's editing surface: TypeInspector with in-place rename/desc/duplicate/variant/delete, visual SlotZones/VariableTags editors with candidate matching, scoped + global Vi proposal flows routed through CV_AI, and the AIRegistryPanel projection of CV_AI.",
+  "summary_for_embedding": "React inspector/Vi-rail/quick-adder components for the CV_REGISTRY type registry: in-place visual editing of slots and variables, built-in fork/variant protection, proposal-gated Vi actions via CV_AI, and a live AIRegistryPanel projection of CV_AI.",
+  "intention_for_embedding": "To let the user inspect and edit registry Types by direct visual manipulation with an ever-present Vi that proposes (never silently applies) updates and new Types, all routed through the single AI catalogue."
+}

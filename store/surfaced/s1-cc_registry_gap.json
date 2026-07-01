@@ -1,0 +1,50 @@
+{
+  "id": "s1-cc_registry_gap",
+  "action": "cc_registry_gap",
+  "payload": {
+    "added": [
+      "flag/--add-dir",
+      "flag/--cd",
+      "flag/--color",
+      "flag/--config",
+      "flag/--dangerously-bypass-approvals-and-sandbox",
+      "flag/--dangerously-bypass-hook-trust",
+      "flag/--disable",
+      "flag/--enable",
+      "flag/--ephemeral",
+      "flag/--help",
+      "flag/--ignore-rules",
+      "flag/--ignore-user-config",
+      "flag/--image",
+      "flag/--json",
+      "flag/--local-provider",
+      "flag/--model",
+      "flag/--oss",
+      "flag/--output-last-message",
+      "flag/--output-schema",
+      "flag/--profile",
+      "flag/--sandbox",
+      "flag/--skip-git-repo-check",
+      "flag/--strict-config",
+      "flag/--version"
+    ],
+    "changed": [],
+    "vanished": [],
+    "unclassified": [
+      "flag/--enable",
+      "flag/--disable",
+      "flag/--strict-config",
+      "flag/--profile",
+      "flag/--ephemeral",
+      "flag/--ignore-user-config",
+      "flag/--ignore-rules",
+      "flag/--color",
+      "flag/--help",
+      "flag/--version"
+    ],
+    "version_from": "",
+    "version_to": "0.142.3"
+  },
+  "default": "reject",
+  "resolved": null
+}

@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/Sidebar.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React `Sidebar` component: a left navigation aside built from a static NAV_SECTIONS data structure (grouped nav items with id/label/icon and optional shortcut/count/new-dot keys). Renders a brand wordmark with a collapse button, the grouped nav buttons (highlighting the active id, routing the search action separately), and a system-health footer. Exposes window.Sidebar.",
+  "observations": [
+    "NAV_SECTIONS is a hardcoded array of 5 groups: Workspace, System, Foundations, Build with, AI & settings.",
+    "Each item has id/label/icon; some carry countKey (e.g. typeCountTotal, colorCount), newKey (inboxNew, needsAI), shortcut ('⌘K'), or isAction.",
+    "The '__search' item is an isAction that calls onOpenSearch instead of onSelect.",
+    "Icons rendered via a CvIcon component (not defined here) with tone='bronze' size=16; brand uses an <img> wordmark at ../assets/logos/conceptv-wordmark-black.png.",
+    "Counts and new-dots are driven by a `counts` prop looked up by countKey/newKey.",
+    "Footer renders counts.healthScore% coverage and counts.gaps with singular/plural 'gap'/'gaps'.",
+    "One inline style object on the shortcut badge (font/color/background via CSS vars); most styling is via className.",
+    "Props: active, onSelect, counts, onOpenSearch, onCollapse — onCollapse/onOpenSearch optional-chained."
+  ],
+  "standouts": [
+    "Navigation is fully data-driven from NAV_SECTIONS, so adding a nav entry is a data edit.",
+    "Single search item is special-cased as an action rather than a selectable view."
+  ],
+  "conventions": [
+    "Window-global component pattern (window.Sidebar) consistent with the app.",
+    "Depends on external globals CvIcon and (in JSX) the broader DS conventions.",
+    "Uses CSS-var-based inline style for the shortcut badge rather than a class."
+  ],
+  "concerns": [
+    "The shortcut badge uses a long inline style object instead of a className, a small inconsistency with the otherwise class-driven styling.",
+    "Hardcoded asset path to the wordmark image; no fallback if missing.",
+    "useEffect_sb is destructured at top but not used in the visible body."
+  ],
+  "notes": "A data-driven left nav: edit NAV_SECTIONS to change navigation; counts/badges come from a counts prop and search is a special action item.",
+  "questions": [
+    "Where are the countKey values (typeCountTotal, colorCount, etc.) populated and kept in sync with real data?",
+    "Why is useEffect_sb imported but not used here?"
+  ],
+  "purpose_vs_actual": "Matches: header comment 'left nav of asset classes' aligns with the rendered grouped navigation.",
+  "apparent_themes": [
+    "Data-driven UI / config-as-source",
+    "Design-system asset taxonomy (colors, type, icons, components, templates, voice)",
+    "Coverage/health surfacing"
+  ],
+  "intention_signals": "Aims to be the spine of the design-system studio: one nav listing every asset class and system view, with live counts and a coverage/gaps health readout so the sidebar doubles as a completeness dashboard.",
+  "novelty": "The nav mirrors a design-system's own taxonomy (Foundations / Build with / System) and folds a health-coverage metric into the chrome.",
+  "contribution": "Contributes a config-driven sidebar whose item list encodes the studio's asset taxonomy plus count/new/health bindings that a fused system would keep as the navigation source.",
+  "summary_for_embedding": "React Sidebar component rendering a left nav from a static NAV_SECTIONS taxonomy with active-state, count badges, new-dots, a search action, and a coverage/gaps health footer.",
+  "intention_for_embedding": "To give the design-system studio a single data-driven navigation that lists every asset class and reflects coverage/health."
+}

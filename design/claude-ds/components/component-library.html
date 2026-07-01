@@ -1,0 +1,187 @@
+<!-- @dsCard group="Components" name="Component Library — controls" subtitle="Buttons, cards, fields, badges, pills, chips, tables — token-pure, theme-aware, source-grounded" viewport="1280x1640" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Component Library</title>
+<link rel="stylesheet" href="../styles.css"/>
+<style>
+  body { margin: 0; background: var(--zone-ground); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; padding: 36px 40px 64px; }
+  h1 { font: var(--weight-bold,700) var(--fs-h2)/1 var(--font-display); letter-spacing: -.02em; margin: 0 0 4px; }
+  .sub { color: var(--ink-3); font-size: var(--fs-meta); margin: 0 0 30px; max-width: 80ch; }
+  h2 { font: 700 11px/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--accent-bronze); margin: 36px 0 14px; display: flex; align-items: center; gap: 10px; }
+  h2::before { content: ""; width: 7px; height: 7px; background: var(--accent-gold); transform: rotate(45deg); border-radius: 1px; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .cap { font: 700 10px/1 var(--font-mono); color: var(--ink-4); margin: 0 0 8px; letter-spacing: .04em; }
+  .stack { display: flex; flex-direction: column; gap: 8px; }
+  .darkwrap { background: var(--bg-dark, #1F1A12); border-radius: var(--r-lg); padding: 20px; }
+</style>
+</head>
+<body data-ground="warm">
+  <h1>Component Library</h1>
+  <p class="sub">The foundational controls, defined once in <code>tokens/controls.css</code> and exposed as the <code>Button</code> / <code>Card</code> / <code>Input</code> / <code>Badge</code> primitives. Every value resolves to a design token, so these recalibrate with the palette and work on any theme/ground. Shown here via the <code>cv-*</code> classes the components render.</p>
+
+  <h2>Buttons</h2>
+  <p class="cap">VARIANTS — the source's button voices</p>
+  <div class="row">
+    <button class="cv-btn cv-btn--primary">Schedule a call</button>
+    <button class="cv-btn cv-btn--ink">Menu</button>
+    <button class="cv-btn cv-btn--outline cv-btn--pill">Virtual Tour</button>
+    <button class="cv-btn cv-btn--soft">Download brochure</button>
+    <button class="cv-btn cv-btn--ghost">Skip</button>
+    <button class="cv-btn cv-btn--comm">Share</button>
+    <button class="cv-btn cv-btn--primary" disabled>Disabled</button>
+  </div>
+  <p class="cap" style="margin-top:18px">SIZES</p>
+  <div class="row">
+    <button class="cv-btn cv-btn--primary cv-btn--sm">Small</button>
+    <button class="cv-btn cv-btn--primary">Default</button>
+    <button class="cv-btn cv-btn--primary cv-btn--lg">Large</button>
+    <button class="cv-btn cv-btn--outline cv-btn--icon" aria-label="Add">+</button>
+  </div>
+
+  <h2>Cards</h2>
+  <div class="grid3">
+    <div class="cv-card cv-card--soft">
+      <div class="cv-card__head" style="flex-direction:column;align-items:flex-start;gap:2px">
+        <h3 class="cv-card__title">Soft panel</h3>
+        <p class="cv-card__sub">The cream deck panel — warm undertone over the ground.</p>
+      </div>
+      <p style="margin:0;font:var(--fs-caption)/1.5 var(--font-body);color:var(--ink-2)">Used for grouped content and zones.</p>
+    </div>
+    <div class="cv-card cv-card--surface cv-card--raised">
+      <div class="cv-card__head" style="flex-direction:column;align-items:flex-start;gap:2px">
+        <h3 class="cv-card__title">Surface card</h3>
+        <p class="cv-card__sub">White content card that lifts off the paper.</p>
+      </div>
+      <p style="margin:0;font:var(--fs-caption)/1.5 var(--font-body);color:var(--ink-2)">For images, dashboards, data.</p>
+    </div>
+    <div class="cv-card cv-card--outline">
+      <div class="cv-card__head" style="flex-direction:column;align-items:flex-start;gap:2px">
+        <h3 class="cv-card__title">Outline</h3>
+        <p class="cv-card__sub">Stroke-only panel, no fill.</p>
+      </div>
+      <div class="cv-card__foot"><button class="cv-btn cv-btn--soft cv-btn--sm">Action</button></div>
+    </div>
+  </div>
+
+  <h2>Fields</h2>
+  <div class="grid2">
+    <div class="stack">
+      <div class="cv-field">
+        <label class="cv-label" for="f1">Project name</label>
+        <input class="cv-input" id="f1" placeholder="e.g. Oakman Residences"/>
+        <span class="cv-hint">Shown to every stakeholder.</span>
+      </div>
+      <div class="cv-field">
+        <label class="cv-label" for="f2">Stage</label>
+        <select class="cv-select" id="f2"><option>Design</option><option>Construction</option><option>Marketing</option></select>
+      </div>
+      <label class="cv-search" style="max-width:280px"><span style="color:var(--ink-4)">⌕</span><input placeholder="Search projects…"/></label>
+    </div>
+    <div class="stack">
+      <div class="cv-field">
+        <label class="cv-label" for="f3">Notes</label>
+        <textarea class="cv-textarea" id="f3" placeholder="Annotate in 3D context…"></textarea>
+      </div>
+      <div class="cv-field">
+        <label class="cv-label" for="f4">Budget (required)</label>
+        <input class="cv-input" id="f4" aria-invalid="true" value="—"/>
+        <span class="cv-hint cv-hint--error">Enter a value to continue.</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Badges · pills · chips · tags</h2>
+  <div class="row" style="margin-bottom:16px">
+    <span class="cv-badge">Neutral</span>
+    <span class="cv-badge cv-badge--gold">Featured</span>
+    <span class="cv-badge cv-badge--success cv-badge--dot">Delivered</span>
+    <span class="cv-badge cv-badge--warning cv-badge--dot">In review</span>
+    <span class="cv-badge cv-badge--error cv-badge--dot">Blocked</span>
+    <span class="cv-badge cv-badge--comm cv-badge--dot">Shared</span>
+  </div>
+  <div class="row" style="margin-bottom:16px">
+    <span class="cv-pill"><span class="cv-pill__v">$430B+</span><span class="cv-pill__l">cost of rework</span></span>
+    <span class="cv-pill"><span class="cv-pill__v">70+</span><span class="cv-pill__l">Virtual Tours delivered</span></span>
+    <span class="cv-pill"><span class="cv-pill__v">100%</span><span class="cv-pill__l">would recommend</span></span>
+  </div>
+  <div class="row">
+    <span class="cv-chip">Revit</span>
+    <span class="cv-chip cv-chip--active">Enscape</span>
+    <span class="cv-chip">SketchUp</span>
+    <span class="cv-tag">v3.0</span>
+    <span class="cv-tag">SaaS</span>
+  </div>
+
+  <h2>Comparison table</h2>
+  <table class="cv-table cv-table--striped" style="max-width:620px">
+    <thead><tr><th>Capability</th><th class="cv-table__num">Renders</th><th class="cv-table__num">Virtual Tours</th></tr></thead>
+    <tbody>
+      <tr><td>Stakeholder access</td><td class="cv-table__num">1</td><td class="cv-table__num cv-table__feature">All</td></tr>
+      <tr><td>Updated at project stages</td><td class="cv-table__num">No</td><td class="cv-table__num cv-table__feature">Yes</td></tr>
+      <tr><td>Average cost</td><td class="cv-table__num">$1.5–5k</td><td class="cv-table__num cv-table__feature">½ price</td></tr>
+    </tbody>
+  </table>
+
+  <h2>On a dark ground (theme-invariant)</h2>
+  <div class="darkwrap" data-theme="dark">
+    <div class="row">
+      <button class="cv-btn cv-btn--primary">Primary</button>
+      <button class="cv-btn cv-btn--outline cv-btn--pill">Outline</button>
+      <button class="cv-btn cv-btn--ghost">Ghost</button>
+      <span class="cv-badge cv-badge--gold">Featured</span>
+      <span class="cv-chip cv-chip--active">Active</span>
+    </div>
+  </div>
+  <h2>Tabs · segmented · switch · avatar · tooltip</h2>
+  <div class="row" style="gap:32px;align-items:flex-start">
+    <div class="stack" style="gap:14px">
+      <div class="cv-tabs">
+        <button class="cv-tab is-active">Screenshot</button>
+        <button class="cv-tab">Captures</button>
+        <button class="cv-tab">Archive</button>
+        <button class="cv-tab">Files</button>
+      </div>
+      <div class="cv-segmented">
+        <button class="cv-segmented__opt is-active">Buyers</button>
+        <button class="cv-segmented__opt">Investors</button>
+        <button class="cv-segmented__opt">Agents</button>
+      </div>
+    </div>
+    <div class="row" style="gap:18px">
+      <button class="cv-switch is-on" role="switch" aria-checked="true" aria-label="On"></button>
+      <button class="cv-switch" role="switch" aria-checked="false" aria-label="Off"></button>
+      <span class="cv-avatar">TG</span>
+      <span class="cv-avatar cv-avatar--gold">JN</span>
+      <span class="cv-tooltip">Annotate in 3D context</span>
+    </div>
+  </div>
+
+  <h2>Stepper · modal</h2>
+  <div class="row" style="gap:40px;align-items:flex-start">
+    <div class="cv-stepper-line" style="flex:1;max-width:460px">
+      <div class="cv-step is-done"><span class="cv-step__dot">✓</span><span class="cv-step__label">Design</span></div>
+      <div class="cv-step is-done"><span class="cv-step__dot">✓</span><span class="cv-step__label">Approvals</span></div>
+      <div class="cv-step is-active"><span class="cv-step__dot">3</span><span class="cv-step__label">Construction</span></div>
+      <div class="cv-step"><span class="cv-step__dot">4</span><span class="cv-step__label">Marketing</span></div>
+      <div class="cv-step"><span class="cv-step__dot">5</span><span class="cv-step__label">Sales</span></div>
+    </div>
+    <div class="cv-modal" style="position:relative;max-width:340px;box-shadow:var(--shadow-pop)">
+      <div class="cv-modal__head">
+        <h2 class="cv-modal__title">Publish Virtual Tour?</h2>
+        <button class="cv-modal__close" aria-label="Close">×</button>
+      </div>
+      <p style="margin:0;font:var(--fs-caption)/1.5 var(--font-body);color:var(--ink-2)">All stakeholders will be notified and the live link will update.</p>
+      <div class="cv-modal__foot">
+        <button class="cv-btn cv-btn--ghost cv-btn--sm">Cancel</button>
+        <button class="cv-btn cv-btn--primary cv-btn--sm">Publish</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

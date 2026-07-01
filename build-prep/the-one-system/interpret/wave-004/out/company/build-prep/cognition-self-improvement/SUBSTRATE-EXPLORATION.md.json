@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/SUBSTRATE-EXPLORATION.md",
+  "model": "opus",
+  "what_it_does": "A dated (2026-06-10) findings document from the 'G17-REDIRECT' exploration run against a substrate-mcp corpus (8 vaults, 5,486 files, 65k chunks, 1,413 types). It reports three findings — the Wizard lineage of the Surface, how the substrate models the Company's 'axes' as registry data, and independent convergences between the old corpus and the Company — plus a recommendation to reference-and-selectively-lift rather than merge, and a health note on a broken collection.",
+  "observations": [
+    "Frames the old corpus as LOSSY UNVERIFIED EVIDENCE of Tim's intent under a 'recency-supersedes' law: intent is reconstructed, never copied as authority; where old and recent diverge, recent wins",
+    "FINDING 1 traces a three-generation 'Wizard lineage': a years-old canvas node literally named Vi → the 115-file ElevenLabs-Wizard build → the 2026-06 Live Intent Resolution Surface docs",
+    "Identifies candidate lifts from the old corpus: capability-check-before-flow-generation, user-owned vs agent-owned step types, and 'tool design is not only technical function' as long-standing doctrine",
+    "FINDING 2 says the substrate models axes as per-vault registry data: typed frontmatter (incl. epistemic certainty/truth_class the Company lacks), a named state_axis with open_seam_count, temporal_fields, and typed relation_kinds (SEQUENCE/HIERARCHY/DEPENDENCY incl. ripples_back_to)",
+    "Notes the Company's relation_types registry has only 4 kinds (contradicts/fragment_of/principle_beneath/sibling) — same mechanism, thinly populated — and proposes extending it file-per-kind plus adding certainty as a projection lens",
+    "FINDING 3 tabulates six independent convergences (EM-431, EM-610, EM-557, EM-1252, XP-010, EM-939) between the unification-vault and Company concepts, arguing independent convergence proves necessity",
+    "Recommendation: reference (keep substrate as a separate self-indexed corpus queried live via substrate-mcp) plus selective provenance-marked lifts, NOT a merge of 65k chunks (reuse-don't-parallel)",
+    "Health note filed via the substrate's own issue system: ulm-inventory has chunks_embedded=1,415 but chroma_count=0 — a broken/empty collection causing the all-vault '*' semantic-search error"
+  ],
+  "standouts": [
+    "The claim that the Surface's one-line definition existed years early in a canvas node literally named Vi, making the Live Intent Resolution Surface 'Project Vi's founding pattern'",
+    "Six documented independent convergences argued as 'doubly-proven load-bearing laws' — the strongest evidence class for the Company's constitution",
+    "Concrete small move: extend relation_types with sequence/hierarchy/dependency vocabularies via create(kind='relation_type') and add certainty as a projection lens"
+  ],
+  "conventions": [
+    "Applies the repo's epistemic discipline: marks lifts as RECONSTRUCTED INTENT for Tim's confirmation, not authority",
+    "Uses 'reuse-don't-parallel' and 'registry-is-truth' as decision rules against re-embedding/merging",
+    "Cites prior IDs (G16, G17, EM-*/XP-*) and frames findings as evidence rather than directives"
+  ],
+  "concerns": [],
+  "notes": "A G17 exploration report mapping the Surface's lineage and the substrate's richer axis/relation schema, recommending live reference plus selective provenance-marked lifts over a corpus merge.",
+  "questions": [
+    "Has the recommended relation_types extension (sequence/hierarchy/dependency) and the certainty projection lens actually been built since this dated finding?",
+    "Was the ulm-inventory broken-collection (chroma_count=0) health issue resolved?",
+    "Which of the three candidate lifts has Tim confirmed, given they are marked as reconstructed intent awaiting confirmation?"
+  ],
+  "purpose_vs_actual": "Matches: it presents three findings plus a merge-vs-reference recommendation exactly as the header states.",
+  "apparent_themes": [
+    "lineage/provenance tracing of a design pattern across generations",
+    "recency-supersedes and reconstructed-intent epistemics",
+    "independent convergence as proof of necessity",
+    "registry-as-schema vs prose (axes modeled as typed data)",
+    "reference-don't-merge to avoid duplicating working infrastructure"
+  ],
+  "intention_signals": "Trying to mine an older self-indexed corpus for the genealogy and richer modeling of the Company's current Surface/axes concepts, extract a few confirmable lifts, and decide architecturally to keep the old corpus as a queryable reference rather than absorbing it.",
+  "novelty": "The convergence table reframing six old-corpus notes as doubly-proven constitutional laws, and the discovery that the Surface pattern predates the Company under the literal name Vi.",
+  "contribution": "Contributes the lineage map, the substrate's richer axis/relation vocabulary as a reference model, the convergence evidence elevating certain laws, and the explicit reference-not-merge architectural decision that a fused system would keep as provenance and integration policy.",
+  "summary_for_embedding": "A 2026-06-10 exploration report mapping the Surface's three-generation Wizard lineage, the substrate's registry-modeled axes/relations, and six independent convergences, recommending live reference plus selective lifts over a corpus merge.",
+  "intention_for_embedding": "To recover the genealogy and richer modeling of the Company's Surface/axes concepts from an older corpus and decide how to relate to that corpus without merging it."
+}

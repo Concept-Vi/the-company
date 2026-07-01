@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "core/generative-core.html",
+  "model": "opus",
+  "what_it_does": "A standalone demo/card HTML page that showcases the generative core: it loads React UMD + the compiled DS bundle, defines one content tree spec and renders it through ContainmentTree at three LOD levels (summary/pitch/full) in scaled slide artboards, renders three diagram types (hub/pipeline/quadrant) through DiagramSolver, and provides an interactive network→hub morph button that re-renders the DiagramSolver with state before/after.",
+  "observations": [
+    "Top comment is a @dsCard directive (group/name/subtitle/viewport) so the design-system gallery can pick it up as a card.",
+    "Loads React 18.3.1 + ReactDOM from unpkg via <script> with SRI integrity hashes, plus the local ../_ds_bundle.js.",
+    "Destructures { ContainmentTree, DiagramSolver } from window.ConceptVDesignSystem_c8f43c — a hashed bundle namespace.",
+    "Defines ONE spec (a 'Why teams switch to ConceptV' band with sections, clusters, zones, metric and bullet atoms with priority/detail) and renders it at all three LODs from the same object.",
+    "Scales a fixed 1100px artboard to each column via transform:scale and a ResizeObserver, locking frame height to scaled content.",
+    "Diagrams built with a small N(ids) helper; quadrant nodes carry x/y; edges are kind:'flow'.",
+    "Morph demo builds before-edges (all-pairs dependency) and after-edges (spokes from Vi) and toggles state on button click, re-rendering via a persisted React root.",
+    "All page CSS uses design tokens (var(--zone-ground), --accent-gold, --fs-*, etc.).",
+    "Inline copy in the spec restates the system's own thesis: 'One source of truth', 'Computed, not hand-set', 'Nothing drifts'."
+  ],
+  "standouts": [
+    "Demonstrates the core thesis literally: the SAME spec object renders at three LOD levels with no per-level markup, and the morph shows positions re-computed from re-routed edges.",
+    "The artboard scale-to-fit with ResizeObserver lets a fixed-width slide design preview responsively inside narrow columns.",
+    "Self-referential content — the demo slide's bullets describe the very single-source/computed/no-drift properties the system embodies."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery-card convention and the window.<NS> bundle consumption pattern.",
+    "Token-pure page styling (no raw colours/sizes except a fallback in body background).",
+    "Consumes the compiled bundle rather than the raw .jsx, matching the project's load-order rules."
+  ],
+  "concerns": [
+    "Loads React from an external CDN (unpkg) — fine for a demo card but is an external dependency, not self-contained.",
+    "Hard-codes the hashed bundle namespace ConceptVDesignSystem_c8f43c, which will break if the bundle hash changes (a known stale-bundle hazard in this project)."
+  ],
+  "notes": "The live proof-of-concept card for the generative core — one spec rendered across LOD, three diagram types, and an interactive morph, all from the compiled bundle.",
+  "questions": [
+    "Is the hashed namespace ConceptVDesignSystem_c8f43c stable across rebuilds, or does this file need regenerating when the bundle hash changes?",
+    "Does the gallery serve this with the bundle present, or could the CDN React load fail offline?"
+  ],
+  "purpose_vs_actual": "Matches: subtitle says 'One content spec computed across LOD; diagrams computed from relationships' and the page does exactly that with one spec across LOD plus relational diagrams and a morph.",
+  "apparent_themes": [
+    "design = f(content, axis) shown live",
+    "one spec, many surfaces/LODs",
+    "computed not hand-set",
+    "the system demonstrating its own properties"
+  ],
+  "intention_signals": "Trying to make the generative core's claims visible and tangible — proving that one content tree yields summary/pitch/full automatically and that diagrams are positioned from relationships, including an animated network→hub morph as evidence nothing teleports.",
+  "novelty": "A demo that doubles as an argument: it renders the identical spec across LOD side-by-side and animates a relational morph, so the page is both a gallery card and a falsifiable proof of the engine's behaviour.",
+  "contribution": "Contributes the runnable demonstration/gallery card wiring that exercises ContainmentTree and DiagramSolver from the compiled bundle — the visible proof and example-of-use of the generative core.",
+  "summary_for_embedding": "Standalone HTML gallery card that renders one content spec across three LOD levels and three diagram types plus an interactive network→hub morph using the compiled ConceptV design-system bundle.",
+  "intention_for_embedding": "To demonstrate live that one content spec is computed across LOD and that diagrams are positioned from relationships, proving the generative core's design=f(content,axis) thesis."
+}

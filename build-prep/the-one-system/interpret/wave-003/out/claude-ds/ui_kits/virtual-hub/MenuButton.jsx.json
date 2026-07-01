@@ -1,0 +1,30 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/MenuButton.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a tiny React MenuButton component: the bottom-centre dark 'MENU' pill for the Virtual Hub. Renders a chevron glyph and the MENU label, toggles an 'open' class based on the open prop, and fires onClick. Registered as window.MenuButton.",
+  "observations": [
+    "Takes two props: open (boolean toggling the 'open' class) and onClick (handler).",
+    "Uses a ⌃ unicode chevron span and a plain 'MENU' label.",
+    "className composed as `vh-menu-btn ${open ? 'open' : ''}`.",
+    "Attaches to window.MenuButton rather than module export."
+  ],
+  "standouts": [],
+  "conventions": [
+    "Follows the vh-* class naming and global-window registration patterns of the kit.",
+    "Purely presentational, state lifted to parent (controlled via open/onClick)."
+  ],
+  "concerns": [],
+  "notes": "The bottom-centre MENU toggle pill for the Virtual Hub overlay — controlled, presentational, one-liner.",
+  "questions": [],
+  "purpose_vs_actual": "Matches the README's row: MenuButton.jsx is the bottom-centre dark MENU pill.",
+  "apparent_themes": [
+    "Minimal dark-overlay control",
+    "Controlled presentational component"
+  ],
+  "intention_signals": "Provides the single entry-point control that reveals the Quick Menu over the immersive viewer.",
+  "novelty": "n/a",
+  "contribution": "Contributes the toggle-pill control pattern (open-state class + parent-controlled click) that opens the Virtual Hub's Quick Menu.",
+  "summary_for_embedding": "React MenuButton component rendering a bottom-centre dark MENU pill with a chevron and an open-state class for the Virtual Hub.",
+  "intention_for_embedding": "To give the immersive viewer a single minimal control that reveals the Quick Menu."
+}

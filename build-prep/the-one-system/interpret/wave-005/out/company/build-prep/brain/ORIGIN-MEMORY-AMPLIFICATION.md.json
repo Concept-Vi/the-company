@@ -1,0 +1,53 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/ORIGIN-MEMORY-AMPLIFICATION.md",
+  "model": "opus",
+  "what_it_does": "A twelve-part 'amplification' document that renders Tim's verbatim 2026-06-11 articulation of the Origin and Common Memory into shareable language — explicitly reaction material, not a specification — for Tim to ratify or correct part by part, and orientation for any session working on the memory system.",
+  "observations": [
+    "Opens by stating the directive: amplify, not build/answer/specify; nothing here is a spec, only the current best rendering of Tim's mental model.",
+    "Part 1 (Origin): the system has a single Origin (Tim) as an axis of the coordinate system, an egocentric frame; operator-memory registry is the seed of the origin-model.",
+    "Part 2 (Inverse cognition): the system is the external/addressable/parallel half complementary to Tim's internal half, with common memory as the bridge (corpus-callosum analogy; 'extended mind' but going further).",
+    "Part 3 (Identity): identity is invariant under substitution — swap every model/session/line of code and if it still feels like IT, identity held (Ship of Theseus); carried by common memory, laws/dials, origin-model.",
+    "Part 4 (Typed relations): relations carry dimensional meaning (contains/precedes/scales-to/is-state-of/instantiates); adding a relation type adds a dimension; notes convergence with knowledge-graph-embedding research.",
+    "Part 5 (Memory that reorganizes): records permanent/append-only, geometry alive; overnight big-embedder re-indexing named 'sleep'/consolidation.",
+    "Part 6 (Body as memory): code as crystallized understanding, the estate as the system's current draft of its own understanding, reframing 'messy codebase' as a developing mind mid-thought.",
+    "Part 7 (Spatial brain): maps Tim's intuition to place cells/grid cells, cognitive map, predictive processing.",
+    "Part 8 (Three tiers): surfaces=body, 4B swarm=subconscious, Claude-class minds=conscious; each role an instrument measuring one dimension.",
+    "Part 9 (Digital presence): system as Tim's extension into digital reality, not a digital twin.",
+    "Part 10 (Renderer): UI as viewport/projection of one n-dimensional space; position=meaning; escape from the CLI.",
+    "Part 11 (Definition is position): a thing's identity is its full coordinate tuple across spaces; inversion of specification — no canonical definition, only canonical position-set.",
+    "Part 12 (Amplification): describes the construction process itself — Tim curates context, amplifier renders, Tim reacts, recognition ratifies, ratified enters common memory; 'sessions are vantage points he places.'",
+    "Status: awaiting Tim's per-part reactions; ratified parts become founding material for the memory-system design."
+  ],
+  "standouts": [
+    "'Definition is position' — identity as a full coordinate tuple across spaces, framed as the inversion of specification (why specs were never possible).",
+    "'Learning is reorganization of the space over an unchanging past' with the nightly re-index named 'sleep'/consolidation.",
+    "The amplification meta-process (curate -> render -> react -> ratify) named as the system's primary construction mechanism.",
+    "Identity-invariant-under-substitution as the resolution of Ship of Theseus, carried by memory not parts."
+  ],
+  "conventions": [
+    "Working-doc register under build-prep/brain/ — twelve numbered parts mirroring twelve threads of Tim's message.",
+    "Repeated discipline: explicitly NOT a spec, awaiting human ratification (expand-before-harden).",
+    "Each part links Tim's intuition to an established external concept (extended mind, place/grid cells, predictive processing, KG embeddings)."
+  ],
+  "concerns": [],
+  "notes": "A deep, non-binding twelve-part rendering of Tim's Origin/Common-Memory mental model, meant for his ratification and to orient memory-system work.",
+  "questions": [
+    "Which of the twelve parts has Tim since ratified or corrected?",
+    "How do the named primitives (operator-memory registry, relation_types registry, event log) concretely realize the coordinate-tuple identity claim?"
+  ],
+  "purpose_vs_actual": "Match — it declares itself an amplification/reaction material and delivers exactly twelve amplified threads with a status note.",
+  "apparent_themes": [
+    "egocentric coordinate frame centered on the Origin",
+    "dual/complementary cognition bridged by common memory",
+    "identity as continuity of memory across changing parts",
+    "everything-is-coordinate-space / position-is-meaning",
+    "code/estate as living, reorganizing understanding",
+    "amplification (recognition-ratification) as the construction process"
+  ],
+  "intention_signals": "Trying to translate Tim's inarticulable mental model of the system into language he can recognize and ratify, establishing a shared conceptual foundation for the memory-system and UI design without prematurely specifying anything.",
+  "novelty": "The unified framing that ties identity, memory, code, UI, and the build process itself to a single coordinate-space ontology, with 'definition is position' as the organizing inversion.",
+  "contribution": "Contributes the full conceptual charter of the Origin/Common-Memory model — the twelve principles (Origin axis, inverse cognition, identity-under-substitution, dimensional relations, reorganizing memory, code-as-draft, spatial brain, three tiers, digital extension, renderer-as-viewport, definition-is-position, amplification-as-construction).",
+  "summary_for_embedding": "A twelve-part amplification of Tim's Origin and Common-Memory mental model, framing the system as an egocentric coordinate space, a complementary half of his cognition, with identity carried by memory and meaning read as position.",
+  "intention_for_embedding": "To render Tim's deepest articulation of the memory system into shareable, ratifiable language as founding material for the memory-system and UI design."
+}

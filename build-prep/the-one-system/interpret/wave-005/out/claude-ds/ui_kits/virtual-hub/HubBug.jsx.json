@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/HubBug.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a single React function component HubBug that renders a top-left brand bug: a ConceptV logo image plus a 'STAGE' labelled hub switcher whose tabs are mapped from a `hubs` array. Each tab button gets an 'active' class when its id matches `activeHub`, and clicking it calls `onSwitch(h.id)`. The component is exported by attaching it to `window.HubBug`.",
+  "observations": [
+    "Pure presentational component taking three props: `hubs`, `activeHub`, `onSwitch`.",
+    "Maps over `hubs` to render `<button>` tabs, keyed by `h.id`, labelled by `h.label`.",
+    "Active state computed inline via template string `tab ${h.id === activeHub ? 'active' : ''}`.",
+    "Logo sourced from a relative path `../../assets/logos/conceptv-v-yellow.png`.",
+    "Uses `vh-` prefixed class names (vh-bug, vh-bug-logo, vh-hubsw) plus generic `tabs`/`tab`.",
+    "Exposed globally via `window.HubBug = HubBug` rather than ES module export.",
+    "No imports, no JSX `import React` — relies on React being a global (Babel-in-browser setup)."
+  ],
+  "standouts": [
+    "Global window-attachment export pattern (`window.HubBug = HubBug`) instead of module exports.",
+    "Literal string 'STAGE' as the hub-switcher label."
+  ],
+  "conventions": [
+    "Follows the `vh-` (virtual-hub) class-name namespace.",
+    "Stateless props-driven component with an `onSwitch` callback — standard controlled-child pattern.",
+    "Global-export pattern matches the sibling index.html which loads JSX via Babel script tags rather than a bundler/module system."
+  ],
+  "concerns": [
+    "Hardcoded relative asset path and the literal label 'STAGE' are inline rather than passed/configured."
+  ],
+  "notes": "A tiny stateless React brand-bug + hub-switcher tab strip, exported onto window for Babel-in-browser consumption.",
+  "questions": [
+    "What is the shape of a `hub` object beyond `id` and `label`?",
+    "Why 'STAGE' specifically — is it a fixed label for this overlay or one of several hub categories?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment ('top-left brand + hub switcher') exactly describes what the component renders.",
+  "apparent_themes": [
+    "Buyer-side virtual-tour UI overlay chrome",
+    "Controlled presentational components",
+    "Browser-native (no-bundler) React via global attachment"
+  ],
+  "intention_signals": "A small, self-contained UI-kit piece for a virtual-hub/panotour overlay — the persistent brand mark and the control that lets a viewer switch between hubs/stages.",
+  "novelty": "The window-attachment export combined with a relative-path logo signals a deliberately bundler-free, script-tag-loaded prototype kit.",
+  "contribution": "Contributes a concrete brand-bug + hub/stage switcher UI pattern for the virtual-hub overlay, including the active-tab toggling and onSwitch callback contract.",
+  "summary_for_embedding": "A stateless React HubBug component rendering a ConceptV logo and a STAGE hub-switcher tab strip, exported via window for browser-Babel loading.",
+  "intention_for_embedding": "To provide the top-left brand mark and hub/stage switching control for a buyer-side virtual-hub panotour overlay UI kit."
+}

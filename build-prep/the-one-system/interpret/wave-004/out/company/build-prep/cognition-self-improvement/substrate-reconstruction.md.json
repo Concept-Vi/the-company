@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/substrate-reconstruction.md",
+  "model": "opus",
+  "what_it_does": "A reconstructed-intent document that mines the (oldest, never-reviewed) substrate-mcp corpus to recover two things for the Company: a multi-axis coordinate model of how a unit's 'place' is described, and the named ancestry ('Virtual Intelligence / adaptive wizard') of the Live Intent Resolution Surface. It cites real retrieved chunks, reconstructs underlying intent for Tim to confirm, and lands a merge-vs-reference-vs-content decision leaning toward reference.",
+  "observations": [
+    "Opens with a strong caveat: RECONSTRUCTED INTENT, NOT GROUND TRUTH; the substrate is the oldest work, never reviewed, AI-presented as certain when it isn't; recency supersedes (the 3 Surface files outrank it on conflict)",
+    "Section A tabulates ten axes (Tim's terms) against how the substrate modeled each: HIERARCHY, SEQUENCE (logical not clock), SCALE/altitude, TEMPORAL (rich temporal_fields), TYPE-GRAPH (1,413 types on axes), STATE (state_axis=status), STRUCTURAL, SEMANTIC, ADDRESS/reference, and ITERATION (a 'round' axis)",
+    "Cites get_vault_landscape(['unification-vault','relative-difference']) as the source and lists concrete relation-kinds as candidate vocabulary",
+    "Reconstructs the intent that a unit's PLACE is a multi-axis coordinate, evidence for making hierarchy/sequence/scale/state first-class alongside temporal (G16) — but says DESIGN FRESH, don't import the schema",
+    "Flags a 'certainty' axis as an axis-VALUE (enum/tag) not a confidence FLOAT, consistent with the Company's no-confidence law",
+    "Section B traces the Surface's lineage through cited chunks: 'Virtual Intelligence', 'wizard' glossary entries, EM-064 'Schema Cascade' (one schema row → StructuredOutput fields + MCP tool defs + graph edge rules + triggers), configure-through-conversation + live-preview, and EM-867 wizard-engine crossover as architecture validation",
+    "Argues EM-064 prototypes both the Surface's schema-rendered UI and the Company's registry-is-truth/projection principle (one source → all consumers)",
+    "Section C decides: NOT a content-merge (oldest, unreviewed, AI-falsely-complete, separate embedder nomic vs bge-m3 so vectors don't transfer); REFERENCE/intent-archaeology is the value; leaves open a per-need content pull for Tim",
+    "STATUS: bounded first reconstruction (2 of 8 vaults' schema + one Wizard search), feeds G17 (the AXES principle doc) and the Surface FRAME"
+  ],
+  "standouts": [
+    "The ten-axis comparison table mapping Tim's axis vocabulary to concrete cited relation-kinds and fields in the substrate",
+    "EM-064 Schema Cascade as evidence the projection law was already Tim's instinct — one schema row projecting to many consumers",
+    "The explicit no-fiction reasoning that merging would violate the floor AND is technically moot due to differing embedders"
+  ],
+  "conventions": [
+    "Rigorously labels everything as cited-vs-reconstructed and marks reconstructed intent for Tim's confirmation",
+    "Applies recency-supersedes, no-fiction floor, no-confidence (tags/counts not scores), and reuse-don't-parallel as decision rules",
+    "Cites real tool calls and addresses (get_vault_landscape, file paths, EM-/XP- ids) as evidence"
+  ],
+  "concerns": [],
+  "notes": "An intent-archaeology reconstruction recovering the Company's axis coordinate-model and the Surface's Virtual-Intelligence/wizard ancestry from the oldest unreviewed corpus, recommending reference over merge.",
+  "questions": [
+    "Has Tim confirmed the reconstructed axis coordinate-model and the certainty-as-tag reading?",
+    "Was the deferred find_relations substrate↔~/company comparison (gated on a system coming online after G18) ever run?",
+    "Which specific content (relative-difference math-verification, visual-DNA corpora) did Tim decide to pull, if any?"
+  ],
+  "purpose_vs_actual": "Matches: the header promises an axes model plus the Wizard/Virtual-Intelligence lineage and a merge decision, and all three sections deliver exactly that.",
+  "apparent_themes": [
+    "intent-archaeology over an unreviewed corpus with strict epistemic hygiene",
+    "a unit's place as a multi-axis coordinate space",
+    "schema-cascade / projection (one source → many consumers) as a deep-rooted instinct",
+    "design-fresh-not-import",
+    "reference over content-merge"
+  ],
+  "intention_signals": "Trying to prove that the Company's current axis and Surface concepts have deep, independently-reached roots in Tim's oldest work, recover the vocabulary and theses worth re-designing fresh, and decide to keep the old corpus as a reference rather than absorb it.",
+  "novelty": "Casting the substrate's schema as a ten-axis coordinate model aligned to Tim's exact axis terms, and naming 'Virtual Intelligence / adaptive wizard' as the upstream-of-the-upstream of the Surface with cited glossary chunks.",
+  "contribution": "Contributes the candidate axis-vocabulary as a coordinate space, the cited Surface lineage and schema-cascade precedent, and the no-merge/reference decision with its embedder-incompatibility rationale — provenance and design inputs a fused system would keep for the axes and Surface work.",
+  "summary_for_embedding": "A reconstructed-intent doc mining the oldest substrate corpus for a ten-axis coordinate model and the Surface's Virtual-Intelligence/wizard lineage, recommending reference over merge.",
+  "intention_for_embedding": "To recover the axis coordinate-model and Surface ancestry from Tim's oldest unreviewed corpus as confirmable intent to design fresh, without importing its content."
+}

@@ -1,0 +1,44 @@
+{
+  "project": "claude-ds",
+  "path": "specimens/spacing-radius-elevation.html",
+  "model": "opus",
+  "what_it_does": "A design-system specimen page that visually enumerates the dimensional tokens: the density-aware spacing scale (--d-1..--d-12), the radius scale (--r-xs..--r-2xl), and the elevation/shadow ramp (--shadow-xs..--shadow-modal plus --elev-2). Links ../styles.css and uses a small inline script to generate a labelled bar per spacing token, a rounded box per radius token, and a shadowed box per elevation token.",
+  "observations": [
+    "Carries the @dsCard group=\"Spacing\" comment header with name/subtitle/viewport metadata for the gallery harness.",
+    "Spacing rows are generated from a JS array mapping token names to nominal px ([--d-1,4]...[--d-12,48]); each bar's width is set via var(<token>,0) so the actual rendered width comes from the live token.",
+    "Radius demo iterates --r-xs/--r-sm/--r-md/--r-lg/--r-xl/--r-2xl, applying each as border-radius on a box.",
+    "Elevation demo iterates --shadow-xs/--shadow-sm/--shadow-card/--shadow-pop/--shadow-modal/--elev-2, applying each as box-shadow.",
+    "Subtitle states spacing is density-aware (--d-* scale with data-density) while radii and elevation are fixed ramps.",
+    "Uses color-mix(in oklch, var(--pig-content) 6%, var(--zone-ground)) for the radius box fill — references the pigment/zone token model.",
+    "The px numbers in the JS array are display-nominal only and unused for sizing (the [v] destructure ignores the second element)."
+  ],
+  "standouts": [
+    "Bar widths are driven by var(--d-*) directly, so the specimen reflows live with data-density rather than showing static px.",
+    "Uses oklch color-mix against pigment/zone tokens for the swatch fills, tying even the demo chrome to the token model."
+  ],
+  "conventions": [
+    "Follows the specimen pattern: @dsCard header + self-contained HTML linking the shared stylesheet, content built by a short inline script.",
+    "Section headers reuse the uppercase-bronze-label + rotated-gold-gem ::before treatment seen in sibling specimens.",
+    "References tokens via var() throughout; mixes pigment via color-mix rather than a literal fill.",
+    "Mirrors foundations.html structure (rowlist/grid + JS generation)."
+  ],
+  "concerns": [
+    "The nominal px values in the spacing array (e.g. '4','8') are carried but unused; if the real --d-* tokens diverge from these labels the array comment value could mislead a reader (the bars themselves stay correct since they read the token)."
+  ],
+  "notes": "A specimen that draws the spacing/radius/elevation tokens straight from the stylesheet so they can be eyeballed and verified; spacing bars are density-reactive while radius/elevation are fixed ramps.",
+  "questions": [
+    "Do the named tokens (--d-*, --r-*, --shadow-*, --elev-2, --pig-content, --zone-ground) all exist in styles.css so every row renders, and are the array's nominal px still accurate to the tokens?"
+  ],
+  "purpose_vs_actual": "Matches: the subtitle promises the dimensional tokens (density spacing, radius scale, elevation ramp) and the page renders exactly those three families.",
+  "apparent_themes": [
+    "Tokens-as-truth (values read live via var())",
+    "Density-aware spacing as a dial",
+    "Fixed ramps for radius and depth",
+    "Specimen-as-verifiable-reference"
+  ],
+  "intention_signals": "Trying to make the dimensional token system legible and checkable at a glance — proving that spacing responds to density and that radius/elevation form coherent ramps.",
+  "novelty": "Driving the spacing bars from the live --d-* tokens (so they react to data-density) rather than drawing static px gives the specimen a self-verifying quality.",
+  "contribution": "Contributes a renderable reference/smoke-test of the spacing, radius, and elevation token families bound to the live stylesheet, showing the density-reactivity of spacing distinctly from the fixed radius/elevation ramps.",
+  "summary_for_embedding": "A ConceptV design-system specimen HTML page enumerating the density-aware spacing scale (--d-*), the radius scale (--r-*), and the elevation/shadow ramp, each rendered live from the shared CSS tokens.",
+  "intention_for_embedding": "To visually verify the dimensional tokens — that spacing reacts to density and radius/elevation form coherent fixed ramps — straight from the live stylesheet."
+}

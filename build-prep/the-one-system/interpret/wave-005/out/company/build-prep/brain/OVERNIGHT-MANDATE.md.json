@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/OVERNIGHT-MANDATE.md",
+  "model": "opus",
+  "what_it_does": "A dated (2026-06-10) mandate document written for an autonomous overnight agent loop. It states a goal function (paraphrased from Tim's literal words into a 'best version'), defines a concrete target morning experience in five numbered bars, enumerates a six-item work queue (S1-S6) with file paths and patterns, and lays out 'loop laws' that bind every loop fire.",
+  "observations": [
+    "Quotes Tim's literal goal verbatim ('the real goal is to blow my fricking mind') then restates it as a composition mandate: fuse engine, memory, resolver, wire, mining, transcripts into one felt system.",
+    "Five-bar morning experience: greeting/caught-up-in-one-glance, builder-in-the-surface (Claude Code side panel), a memory returning by itself (deferred condition GC14 firing), the night presenting itself (organs not a markdown file), the night's ideas entering the lifecycle as proposed rows.",
+    "Work queue items name exact files/patterns: runtime/ui_claude_session.py as a subprocess stream-json wrapper, bridge routes /api/claude/start|continue|history, now() organ upgrade, operator_memory as an R2 stratum, inbox triage of ~38 stale items.",
+    "Loop laws: one bounded beat per fire, lock or exit (loop.lock <25min), commit per coherent unit with '[overnight]' prefix and NO Co-Authored-By, verify by USE, fail-loud, no green-paint (feel/aesthetics -> needs-tim), GPU-aware, don't delete the cron.",
+    "State persistence is file-based (.build/overnight/state.json, MESSAGES.md, MORNING.md); compaction is expected and the loop carries across it.",
+    "Hard floor constraints: panel launches claude only operator-initiated in plan mode, /api/claude/* never on the MCP face, nothing auto-resolves, the loop never self-dispatches builds."
+  ],
+  "standouts": [
+    "Bars are honestly scoped with explicit partial-credit caveats ('Honestly scoped: the condition partially fires - the panel exists, the full UI doesn't').",
+    "The 'no green-paint, ever' / fail-loud discipline and the 'FLOOR UNCHANGED' safety envelope are stated as binding laws, not aspirations.",
+    "The deliverable is framed as a changed morning that is FELT not reported - an experience target rather than a task checklist."
+  ],
+  "conventions": [
+    "Follows the repo's evidence/honesty discipline (no green-paint, verify by USE, honest scoping of partial completion).",
+    "Uses dense relational shorthand (build-this -> intent-at -> the wire's gate) consistent with Tim's compressed style.",
+    "Commit convention here deviates from the global repo commit law: '[overnight]' prefix and explicitly NO Co-Authored-By."
+  ],
+  "concerns": [],
+  "notes": "This is the operating charter for one specific overnight autonomous build loop - goal function, the five-bar morning target, the S1-S6 queue, and the binding loop laws all in one place.",
+  "questions": [
+    "What is the current state of .build/overnight/state.json relative to this floor (which S-items were reached)?",
+    "Is GC14 / the 'deferred-27' condition referenced here defined elsewhere, since this file only names it?"
+  ],
+  "purpose_vs_actual": "Match - it declares itself an overnight mandate and its content is exactly a goal function plus scoped queue plus loop laws for an overnight agent.",
+  "apparent_themes": [
+    "Composition over enumeration (fuse what exists into one system)",
+    "Felt experience as the deliverable bar",
+    "Honesty/no-green-paint discipline",
+    "File-based state surviving compaction",
+    "A bounded, lock-guarded, safety-floored autonomous loop"
+  ],
+  "intention_signals": "It is trying to translate an unspecifiable founder intent ('do good things for me, blow my mind') into a runnable, honest, bounded overnight agent loop that produces a felt morning experience rather than a report - encoding both what to aim at and the guardrails that keep it safe and truthful.",
+  "novelty": "Defining success as a specific lived 'morning experience' with per-bar honesty caveats, and a commit/loop discipline tuned for unattended overnight autonomy with an explicit unchangeable floor.",
+  "contribution": "Contributes a concrete autonomous-overnight-loop charter: the morning-experience success bars, the S1-S6 work queue with file-level handles, and the loop-laws guardrail set (lock, fail-loud, no-green-paint, floor-unchanged, file-state-across-compaction).",
+  "summary_for_embedding": "A dated overnight-agent mandate defining a five-bar 'felt morning experience' goal, a six-item file-level work queue, and binding loop laws (lock, verify-by-use, no green-paint, unchangeable floor) for an autonomous build loop.",
+  "intention_for_embedding": "To convert Tim's unspecifiable 'make things good for me / blow my mind' intent into a runnable, honest, bounded overnight build loop aimed at a changed morning rather than a task report."
+}

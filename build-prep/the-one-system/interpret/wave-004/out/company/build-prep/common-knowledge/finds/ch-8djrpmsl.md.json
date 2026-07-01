@@ -1,0 +1,56 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/finds/ch-8djrpmsl.md",
+  "model": "opus",
+  "what_it_does": "A per-member append-only 'finds' log owned by the session 'fork' (channel ch-8djrpmsl) during a multi-session research-and-build wave. It chronologically records what fork discovered and built around an addressable 'graph of minds' substrate, the loadable-brain / V (RHM) operator surface, address-resolution (territory_for / resolve_address), the vi-vision:// and decision:// resolvers, a channels-to-Supabase external-edge boundary for Claude Design participation, the click-to-talk spotlight ('point at the thing'), and the tool-face invoke layer. Each entry follows the format what / where(path:line) / verification-state / what-shape-it-points-at, and explicitly tracks verification states (VERIFIED-BY-USE, BUILT-UNVERIFIED, INFERENCE, etc.) plus commit hashes.",
+  "observations": [
+    "Header states the discipline: append-only per-member file to avoid concurrent-edit races on a shared DISCOVERY_LOG; the lead synthesizes across all finds/*.md; 'finds not conclusions; honest verification-state; nothing final'.",
+    "Catalogs a 'graph-of-minds' substrate as built-but-unrendered: address schemes clone:// mind:// session:// run:// board://, edges, projections (8 session lenses), control (R15 gate/abort/rewind), with cited file paths and line numbers (e.g. runtime/cognition.py:842-1029).",
+    "Heavy use of explicit verification-state tags per entry (VERIFIED-BY-USE vs BUILT-UNVERIFIED vs INFERENCE) and repeated 'falsify-first' / 'measure-don't-infer' discipline notes.",
+    "Records a root-caused PEP-420 namespace shadow bug: runtime/lifters.py shadowed the top-level lifters/ package, killing the bridge relations leg; fixed by git mv to runtime/lifter_registry.py (commit 86cd7c4).",
+    "Documents a multi-stage security posture for vi-vision: anon read-only key + RLS over service_role, a _brain_env() denylist scrub of SUPABASE_*/VI_VISION_* from the claude -p subprocess, and read/write principal split.",
+    "Tracks a decision-data contamination incident: verification clicks wrote real decision_take marks onto Tim's live decisions; fork built a decision_retract primitive and cleared 2 named targets, then declined to retract a second batch on peer-relay authorization.",
+    "Records the authorization-scope ruling: lead-weight equals Tim-weight only for BUILD/COORDINATION; mutating decision DATA Tim sees past a safety guard is Tim-direct-only.",
+    "The 'point at the thing' spotlight lane is documented end-to-end: a point(token) MCP verb, run_turn pointables, fork-brain-core token-to-ui:// mapping, cold-stranger verified across both viewports.",
+    "Tool-face invoke layer (GAPS 1-3) recorded as DONE: a _LazySuite proxy removes a second-Suite-at-import anti-pattern, build_mcp(suite), /api/tools GET, and a security-critical /api/tools/invoke gate mirroring remote.py _is_allowed plus operator-face deltas.",
+    "Repeatedly invokes wiki-style memory links like [[feedback-confident-not-correct]], [[feedback-islands-join-mainland]], [[feedback-lead-authorization-carries-tim-weight]] as named lessons.",
+    "Distinguishes request-time-fresh (decision records via _load_module, marks via marks_for) from import-time-frozen (bridge routes, PANEL_BRIEFING, compose_state) to reason about what a bridge restart activates."
+  ],
+  "standouts": [
+    "The operator-law discipline: the brain context must never echo raw scheme:// addresses to the operator; territory_prose renders human meaning only and the raw address survives only as a labeled internal handle.",
+    "The authorization-scope boundary (lead-weight=Tim-weight scoped to build/coordination, NOT to mutating Tim's decision data) — an explicit refusal to 'launder' an under-authorized mutation one hop over.",
+    "The PEP-420 namespace-shadow root cause (regular module beats namespace-package portion regardless of sys.path order) found only via the service ExecStart, invisible to import-checks.",
+    "The unified gate floor: one attribution floor (per-session operator token) covers decision-take, territory-write, and consequential tool-run; reads run free."
+  ],
+  "conventions": [
+    "Follows the stated finds format strictly (what / where / verification-state / what-shape-it-points-at) and a vault discipline of citing path:line and commit hashes.",
+    "Honest verification-state labeling per the repo's evidence-classification convention (Observed / Inferred / Verified equivalents).",
+    "Append-only journaling with dated entries and ★-marked headline items; uses fabric thread/broadcast ids (t-... / g-...) as cross-references.",
+    "Uses repo memory-link aliases ([[feedback-...]]) as the lesson vocabulary."
+  ],
+  "concerns": [
+    "Very long single append-only file (264 lines, ~40K tokens) mixing dozens of distinct lanes — hard to scan; navigability relies entirely on chronological order and ★ markers.",
+    "Many entries reference state (live bridge, seeded overlays, pending restarts) that is time-sensitive and may be stale relative to any later reader.",
+    "Several 'DONE' claims are explicitly gated on a bridge restart or on another member's live verification, so 'done' is conditional and could be misread as fully shipped."
+  ],
+  "notes": "This is fork's running build-and-discovery journal for the operator-surface/loadable-brain wave — read it as a verification-state-tagged change log, not a spec.",
+  "questions": [
+    "What is the current live state of the items marked 'LIVE-PENDING-RESTART' — has the bridge restart that activates #1a, the voice wire, and the tool-face routes happened?",
+    "Did Tim give the direct nod to retract the second ghost-take batch (cluster-identity / event-streams) that fork stood down on?",
+    "Has the vi-vision LIVE end-to-end resolve landed now that it was held on the lead provisioning the read-only anon cred?"
+  ],
+  "purpose_vs_actual": "Matches: the header states a per-member append-only finds log feeding the lead's synthesis, and the body is exactly that — chronological, verification-state-tagged finds and build records.",
+  "apparent_themes": [
+    "Everything is an addressed node in one coordinate system; modes/views are projections of it.",
+    "Faces are designed and substrates built separately; the interface IS the binding act.",
+    "Reuse-don't-parallel (extend existing seams rather than build a second path).",
+    "Honest verification-state and falsify-first; committed code is not the same as live-active.",
+    "Operator-law (never leak machine addresses to the human) and a unified gated floor for consequential acts.",
+    "Authorization discipline distinct from capability (don't route an under-authorized mutation through a more-capable context)."
+  ],
+  "intention_signals": "fork is trying to bind the already-built addressable substrate to a live operator-facing renderer (the V/RHM 'click on stuff and talk to Claude Code'), making every surface aim resolve to operator-meaningful context and every consequential act pass through one attribution-gated floor — while keeping an honest, peer-readable record so the lead can synthesize convergences across members.",
+  "novelty": "The combination of a strict per-member append-only finds discipline with commit-hash-anchored, verification-state-tagged build records, plus the explicit authorization-vs-capability boundary and the unified consequential-act gate floor.",
+  "contribution": "Contributes a detailed, evidence-tagged ground-truth record of the address-resolution / loadable-brain / operator-surface build (territory_for, resolve_address, decision:// and vi-vision:// resolvers, the channels-Supabase external edge, the spotlight lane, the tool-face gate) including the specific bugs found and the operator-law and authorization disciplines — the build memory a fused system would keep to know how these seams actually work and were verified.",
+  "summary_for_embedding": "fork's append-only finds log (channel ch-8djrpmsl) recording verification-state-tagged discoveries and builds for the addressable graph-of-minds substrate, the loadable-brain V/RHM operator surface, address resolution, decision:// and vi-vision:// resolvers, a channels-to-Supabase boundary, the click-to-talk spotlight, and the tool-face invoke gate.",
+  "intention_for_embedding": "To bind the already-built addressable substrate to a live operator-facing renderer and a unified gated floor for consequential acts, while keeping an honest peer-readable record for the lead's cross-member synthesis."
+}

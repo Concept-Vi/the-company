@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/texture.css",
+  "model": "opus",
+  "what_it_does": "Tokenises and provides the low-opacity background textures and small typographic marks the source decks use: a diagonal gold hatch (band + thin baseline rule), a blueprint ghost (faint bronze linework + gold construction grid), meaning-carrying bullet glyphs, and a per-page frame signature (left-weighted hatch rule). Declares texture tokens under :root and utility classes (.hatch-band, .hatch-rule, .blueprint, .bullet, .frame-signature).",
+  "observations": [
+    "Hatch tokens: angle 45deg, gap 6px, weight 0.6px, color = gold at 35% via color-mix, opacity 0.5; rendered with repeating-linear-gradient",
+    ".hatch-band uses --zone-content-surface as base; .hatch-rule is a 10px baseline mark masked to ~55% with a linear-gradient mask (left-weighted)",
+    "Blueprint ghost: bronze linework color and a faint gold construction grid (opacity 0.10, size 24px) drawn as ::before with crossed linear-gradients and a radial mask (top-weighted)",
+    ".bullet uses a grid + ::before marker so wrapped lines hang-indent; data-kind switches the glyph: ▶ plain (default), → flow/leads-to, ✓ check/done",
+    ".frame-signature::after places a left-weighted 48%-wide hatch rule at 12% margin / 2.5% bottom; comment notes the gold V mark itself is supplied by the layout/CvIcon, not this file",
+    "Effects gated by --spatial-opacity (default 1) and respect a felt-not-seen low-opacity intent"
+  ],
+  "standouts": [
+    "Explicit reconciliation note: this resolves AUDIT-INDEX tension #1 ('flat ivory, no textures' was the narrow read) and cites that app/canvases/workshop/Layouts.jsx already implements the same values (bronze ~0.18, gold ~0.12)",
+    "Bullet glyphs are semantic — the marker carries meaning (plain vs causal-flow vs done), not mere decoration",
+    "frame-signature encodes a recurring per-slide binding (hatch rule bottom-left + V mark bottom-right inside 12% margins)"
+  ],
+  "conventions": [
+    "Tokenise-once-summon-everywhere instead of re-drawing textures per file (the system's single-home rule)",
+    "color-mix(in srgb, accent N%, transparent) and /* @kind color | other */ annotations on every token",
+    "Uses ::before/::after pseudo-elements with mask-image for weighted fades; references corpus tokens (--accent-gold, --accent-bronze, --grid-margin, --s-3, --ink-2)",
+    "Cites concrete source provenance (Layouts.jsx, REQUIREMENTS A5, pitch-deck §5) in comments"
+  ],
+  "concerns": [
+    "Comment claims parity with Layouts.jsx values (~0.18 bronze, ~0.12 gold) but --blueprint-grid-opacity here is 0.10 and --blueprint-opacity 0.16 — a minor stated-vs-token mismatch worth noting (file-local observation only)",
+    "Hardcoded fallback hexes appear in a couple of var() fallbacks (--ink-2 #3A3026, --status-success #5A8A4A) inside utility classes"
+  ],
+  "notes": "The texture/marks token file: diagonal gold hatch (band, baseline rule, frame signature) + a blueprint ghost grid + semantic bullet glyphs, all low-opacity and tokenised so any surface summons the deck's technical substrate from one home.",
+  "questions": [
+    "Is the blueprint grid opacity (0.10) meant to match Layouts.jsx's stated ~0.12, or is the comment approximate?",
+    "Where is the gold V mark / CvIcon that completes the frame-signature placed by the layout?"
+  ],
+  "purpose_vs_actual": "Match — the header promises tokenised low-opacity deck textures (hatch + blueprint ghost) plus reconciliation of the no-textures audit read, and the file delivers those tokens/classes plus bullet and frame-signature utilities.",
+  "apparent_themes": [
+    "Felt-not-seen low-opacity texture as part of the visual identity",
+    "Architectural/blueprint metaphor (linework, construction grid, technical substrate)",
+    "Single-home tokenisation over per-file redrawing",
+    "Meaning carried in form (semantic bullets, the recurring frame signature)"
+  ],
+  "intention_signals": "Trying to give the system a consistent, summonable 'technical-document' atmosphere — the bronze/gold blueprint substrate and hatch marks from the decks — so any surface can wear the same subtle texture from one token home instead of agents redrawing it inconsistently.",
+  "novelty": "Treating background texture and even bullet markers as tokenised, semantically-typed design assets, plus an explicit audit-tension reconciliation embedded in the file's own comments.",
+  "contribution": "Contributes the texture/atmosphere layer — gold hatch (band/rule/frame-signature), the bronze blueprint ghost grid, and semantic bullet glyphs — as reusable low-opacity tokens that give surfaces the decks' technical-document substrate.",
+  "summary_for_embedding": "A ConceptV design-system CSS file tokenising low-opacity deck textures — a diagonal gold hatch (band, baseline rule, frame signature), a bronze/gold blueprint ghost grid, and semantic bullet glyphs — as reusable utility classes.",
+  "intention_for_embedding": "To give every surface a consistent, felt-not-seen technical-document atmosphere (hatch + blueprint linework + meaning-carrying bullets) summonable from one tokenised home rather than redrawn per file."
+}

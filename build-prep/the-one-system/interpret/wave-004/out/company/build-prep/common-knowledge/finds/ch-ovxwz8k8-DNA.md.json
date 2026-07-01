@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/finds/ch-ovxwz8k8-DNA.md",
+  "model": "opus",
+  "what_it_does": "A per-member append-only 'finds' log owned by the session 'DNA' (channel ch-ovxwz8k8) during the same research wave. It records DNA's discoveries about a built spatial-navigation shell ('Rooms') and its underlying registry engine in counterpart/design, plus a structural-only dig across three substrate vaults (visual-design-corpus, vi-context-design, visual-dna), capturing folder counts, relation-kinds, and top-referenced notes without yet reading note contents (the semantic pass deferred for GPU/embedder reasons).",
+  "observations": [
+    "Same header discipline as the other finds files: append-only per-member, lead synthesizes across all, finds-not-conclusions, honest verification-state, format what/where/verbatim/verification-state/what-shape-it-points-at.",
+    "Documents 'Rooms' in counterpart/design (ui/rooms/shell.js, rooms.css): four rooms (Gallery, Bench, Map, Almanac) plus an Atlas overlay, as overlays over one canvas with the gallery as room 1 that never moves; deep-linkable via #room=<id>.",
+    "Quotes shell.js verbatim: rooms are PLACES (spatial_persistence); slide direction comes from where you came from (a transition is a property of the EDGE); the gallery is room 1 and never moves.",
+    "Names the engine under the rooms as the '18 registries' in dna/ (roles, types/edges, dials, grammar, tokens, layouts, application, invariants) plus ui/surface.js as the resolver.",
+    "Structural dig of three vaults via GPU-free landscape calls: visual-design-corpus (1244 files, 1127 in a Spaces folder, 7498 chunks, DB/Supabase validation schema axes); vi-context-design (140 files, 37 open seams, surface-oriented relation kinds); visual-dna (727 files, 0 open seams, DNA's own vault).",
+    "Lists visual-dna's top-referenced notes with ref counts: Meta/rules-governance.md (473), Theory/universal-mechanics-of-relativistic-coherence.md (191), Architecture/architecture-canonical.md (158), Build/content-workbench-source-of-truth.md (129).",
+    "Flags visual-design-corpus as likely CROSS-DOMAIN (reads as composition's substrate, not pure DNA) and routes it to the lead / composition to claim.",
+    "Notes a GPU-free unlock: a known filesystem:// note address can be read directly as a file/DB read; only open-ended search_semantic needs the embedder (deferred to the lead's :8007 window).",
+    "Explicitly separates structural-map-verified from contents-not-yet-read, and marks the semantic pass as deferred to avoid competing with recollection's backfill on the embedder."
+  ],
+  "standouts": [
+    "The verbatim Rooms law: 'a transition is a property of the EDGE' and 'the gallery is room 1 and never moves' — spatial-navigation as overlays on one canvas with direction derived from arrival path.",
+    "The cross-domain flag on visual-design-corpus (1127 'Spaces' as data with validation-contracts and a 'specifies-resolution-of' relation), routed to composition rather than claimed by DNA.",
+    "The GPU-free reading discipline: read known addresses directly, defer open-ended semantic search to the embedder window."
+  ],
+  "conventions": [
+    "Follows the shared finds format and append-only discipline; uses substrate-vault and filesystem:// addressing.",
+    "Honest verification-state labeling (structural-only vs verified-by-use vs contents-not-read).",
+    "Routes cross-domain finds to the responsible member/lead rather than over-claiming (the lead-synthesizes convention)."
+  ],
+  "concerns": [
+    "Most of the vault dig is explicitly structural-only with contents unread, so the 'what shape it points at' inferences are provisional and could be revised after a semantic pass.",
+    "Reference counts and folder tallies are point-in-time snapshots that may drift as the vaults change."
+  ],
+  "notes": "DNA's finds log — a built spatial-navigation shell (Rooms) over a registry engine, plus a structural (not yet semantic) map of three design vaults with one big cross-domain flag for composition.",
+  "questions": [
+    "Has the deferred semantic pass over visual-dna's 727 notes (Augmented-Canvas-System, ElevenLabs-Wizard, older interface/canvas/voice notes) been run yet?",
+    "Did composition claim/confirm visual-design-corpus as the live 'central database' Tim referenced for content?",
+    "What is the per-registry verification state of the 18 registries under surface.js (marked TBD here)?"
+  ],
+  "purpose_vs_actual": "Matches: header declares a per-member append-only finds log feeding the lead's synthesis; the body delivers DNA-side structural finds and shape-pointers exactly in that form.",
+  "apparent_themes": [
+    "Spatial navigation: one addressed canvas, places as projections, transition as a property of the edge.",
+    "Presentation/content as data held in typed registries and a central database.",
+    "Convergence across independent sources onto a shared spatial-navigation and registry-resolver shape.",
+    "GPU-aware, honest discovery (structural now, semantic when the embedder is free)."
+  ],
+  "intention_signals": "DNA is mapping where the LOOK/renderer and its typed substrate actually live (the running Rooms shell + the 18 registries + the design vaults), so the convergent spatial-navigation/registry shape can be extended rather than re-found, and so cross-domain substrates (the Spaces corpus) get routed to their owner.",
+  "novelty": "The articulation of 'transition = a property of the EDGE' tied to a running rooms shell, and the framing of a 1244-file DB-backed 'Spaces' corpus with a 'specifies-resolution-of' relation as a content-as-data central database.",
+  "contribution": "Contributes DNA's structural map of the renderer/registry side: the running Rooms spatial shell and its registry engine, plus a catalog of three design vaults (file counts, relation-kinds, top-referenced load-bearing notes, and the cross-domain Spaces-corpus flag) — the terrain map a fused system would keep to locate the look/render layer and its design knowledge.",
+  "summary_for_embedding": "DNA's append-only finds log (channel ch-ovxwz8k8) documenting a running spatial-navigation Rooms shell over an 18-registry engine in counterpart/design, plus a structural map of three design vaults including a cross-domain DB-backed Spaces corpus.",
+  "intention_for_embedding": "To map where the look/renderer and its typed registry substrate live and route cross-domain design substrates to their owners, so the convergent spatial-navigation/registry shape can be extended rather than rediscovered."
+}

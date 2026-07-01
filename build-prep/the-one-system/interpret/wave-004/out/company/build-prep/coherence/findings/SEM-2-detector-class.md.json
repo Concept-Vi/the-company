@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/SEM-2-detector-class.md",
+  "model": "opus",
+  "what_it_does": "A companion findings doc that tiers the candidate semantic detectors a 4B swarm could run (half-migration, intent-vs-implementation drift, concept/vocabulary coherence, doc contradiction/staleness, semantic coverage mapping). For each it specifies the read-unit, the real artifacts read, a Pydantic schema/prompt shape, the false-positive risk under positive-only discipline, and an honest verdict of feasible-now / candidate-only / not-reliable. It stress-tests against two named incidents (the /status half-migration and the mode-dial-built-twice).",
+  "observations": [
+    "Central thesis: a 4B is a good adjudicator of a candidate pair but a poor discoverer of one, so relational detectors need a two-stage pairing-then-adjudication architecture.",
+    "Grounds the engine's shape in cognition.py:554-558 — run_swarm fires independent roles each reading only ctx.utterance, a map over independent units, not a join.",
+    "Provides concrete Pydantic output_schema + ROLE dicts per detector, modeled on roles/check.py.",
+    "Tiers the detectors: doc-staleness and shallow intent-drift FEASIBLE-NOW; deep intent-drift NOT-RELIABLE; concept-coherence CANDIDATE-ONLY-and-gated; half-migration CANDIDATE-ONLY; semantic coverage NOT-RELIABLE.",
+    "Corrects the /status framing: the /api/mockup-feedback/status handler still exists at bridge.py:1564 with the full pending|applied|dismissed lifecycle; it is a live coexistence + lifecycle-asymmetry, not a deletion.",
+    "Notes the fabric can call embeddings (transport.py:196-217) but no embedder is registered and no clustering primitive exists, so the concept-coherence pre-filter has no in-Company home.",
+    "Cites verify_jury.py:12-14 that N draws on one model are correlated samples measuring variance not independent error."
+  ],
+  "standouts": [
+    "The two-stage diagram: a cheap deterministic pairing pre-stage curates read-units, the swarm adjudicates them; relational detectors are gated on the pre-stage.",
+    "The correction that framing the half-migration as coexistence (not deletion) makes the detector MORE buildable since it needs no git/history awareness.",
+    "The confidence-self-declaration field routing low-confidence dataflow judgments to candidate-only by construction."
+  ],
+  "conventions": [
+    "Uses the repo's evidence marking (Verified/Observed/Inferred/External-prior-art/my-idea).",
+    "Anchors every detector to real file:line artifacts and a closed-vocabulary schema.",
+    "Holds the positive-only law as the backstop and notes its inverted failure mode (false-wrong/cry-wolf) vs the structural layer's false-dead."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the per-detector honesty table — two of five feasible now, two candidate-only-and-gated, one not-reliable — built on the insight that the structural layer's flag is the semantic layer's read-unit.",
+  "questions": [
+    "Where does the net-new embedding-clustering pairing primitive live, given the doc says it has no in-Company home?",
+    "How is the generalized run_role ctx-to-messages mapping implemented to feed a file pair instead of an utterance?"
+  ],
+  "purpose_vs_actual": "Matches its stated area: it enumerates and tiers the §4① detectors with read-units, schemas, FP-risk and verdicts, stress-tested against the two named incidents.",
+  "apparent_themes": [
+    "Adjudicate-don't-discover (the 4B's structural ceiling)",
+    "Two-stage architecture: structural/pairing feeds semantic/adjudication",
+    "Positive-only / candidate-only discipline against cry-wolf",
+    "Honest tiering over monolithic capability claims"
+  ],
+  "intention_signals": "It is trying to convert a list of hoped-for detectors into a buildable, honestly-tiered design, making explicit which detectors ride the flat swarm directly and which require a pairing pre-stage the swarm cannot provide.",
+  "novelty": "The distinct pairing/adjudication split and the coexistence-not-deletion correction to the /status incident are particular contributions, as is the inverted-failure-mode framing of positive-only.",
+  "contribution": "Contributes the per-detector tiering, concrete schemas/prompts, the pairing-pre-stage requirement for relational detectors, and the grounded re-reading of both named incidents as live coexistence rather than deletion.",
+  "summary_for_embedding": "A findings doc tiering five candidate 4B semantic detectors by feasibility with read-units, schemas, and FP-risk, arguing relational detectors need a candidate-pairing pre-stage the flat swarm cannot supply.",
+  "intention_for_embedding": "To determine which meaning-level coherence checks a 4B swarm can feasibly run and how far each can be trusted."
+}

@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/VoiceSurface.jsx",
+  "model": "opus",
+  "what_it_does": "Defines `AcVoice`, a React surface for generating product microcopy in the ConceptV house voice. On load it idempotently registers a `voice.write` capability into CV_AI (composing the `voice.conceptv` behaviour). The UI lets the user pick a 'product moment' (CTA, headline, insight, empty-state, error), optionally add a brief, generate 4 options via the capability, preview each rendered in its real moment shape, and save a chosen line back as a voice example via CV_HOST.commit.",
+  "observations": [
+    "IIFE `registerVoice()` registers `voice.write` (layer:capability, family:voice, provider:claude, behaviours:['voice.conceptv'], surfaces:['voice','atomicity']) with a `run` that builds a prompt and calls `AI.complete`.",
+    "`run` prompt requests 4 options as JSON within a char max; parses a JSON object substring, falls back to line-splitting if parse fails.",
+    "`AI.complete` is tried first with `{messages:[...], max_tokens:700}`, falling back to a plain string prompt on error.",
+    "`MOMENTS` array hard-codes 5 product moments with kind/label/hint/max/sample (real-estate domain samples: listings, User Portal, Bayside, suburbs).",
+    "`save(line)` calls `window.CV_HOST.commit` with kind 'ai.entry' to persist the line as a voice example behaviour entry.",
+    "`renderMoment` renders each option in its moment-appropriate shape (button, headline, Vi insight with gem, body).",
+    "Exposes `window.AcVoice`; uses `window.dsaToast` for errors."
+  ],
+  "standouts": [
+    "Self-registers its own capability on file load so the generative move lives in the one CV_AI catalogue rather than being inlined in the component.",
+    "Generated options are previewed inside their actual UI shape (the moment's render), not as plain text.",
+    "Saving a chosen line feeds it back as a voice example — closing a generate-then-teach loop on the house voice."
+  ],
+  "conventions": [
+    "Sources the voice from the `voice.conceptv` behaviour rather than inlining tone strings, per the project rule.",
+    "Routes the model call through CV_AI (register + execute/complete) rather than calling a provider directly.",
+    "Globals-on-window pattern (CV_AI, CV_HOST, CvIcon, dsaToast) and window.AcVoice export.",
+    "Idempotent registration guard (`AI.get('voice.write')`) before registering."
+  ],
+  "concerns": [
+    "The `MOMENTS` list is hard-coded in the component rather than sourced from a registry — a second place product moments live (mild drift relative to the project's single-home ethos).",
+    "JSON parsing of model output relies on a regex substring + try/catch fallback; malformed output silently degrades to a line-split heuristic."
+  ],
+  "notes": "The voice copy generator: pick a product moment, Vi writes 4 house-voice options previewed in shape, save the chosen one back as a voice example — capability self-registered into CV_AI.",
+  "questions": [
+    "Where is `voice.conceptv` defined and how does the behaviour compose into the prompt at execute time?",
+    "What does `CV_HOST.commit` do with an 'ai.entry' kind — does it stage a repo change, register live, or both?",
+    "Should the MOMENTS list be registry-driven so it propagates rather than being hard-coded here?"
+  ],
+  "purpose_vs_actual": "Matches: the header describes a generative copy surface that writes in the sourced house voice and saves examples back, registering a voice.write capability — the code does exactly this.",
+  "apparent_themes": [
+    "Single-source voice (behaviour sourced, not inlined)",
+    "Capability self-registration into one catalogue",
+    "Generate-preview-in-shape-then-teach loop",
+    "AI moves as registry entries, not ad-hoc calls"
+  ],
+  "intention_signals": "Trying to make house-voice copywriting a first-class, catalogued AI move whose outputs are seen in their true UI context and whose good results are folded back into the voice's reference set.",
+  "novelty": "Previewing generated microcopy in its actual moment shape and the save-back-as-voice-example feedback path, combined with on-load capability self-registration.",
+  "contribution": "Contributes a product-moment microcopy generator pattern, the `voice.write` capability definition, and a save-to-voice feedback mechanism that grows the house-voice reference set.",
+  "summary_for_embedding": "A React voice/microcopy surface that self-registers a `voice.write` CV_AI capability, generates 4 house-voice options for a selected product moment, previews each in its real UI shape, and saves chosen lines back as voice examples via CV_HOST.commit.",
+  "intention_for_embedding": "To make house-voice copywriting a catalogued AI capability whose outputs are previewed in context and fed back to enrich the voice reference set."
+}

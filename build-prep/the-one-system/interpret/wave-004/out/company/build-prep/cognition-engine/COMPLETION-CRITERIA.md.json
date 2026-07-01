@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-engine/COMPLETION-CRITERIA.md",
+  "model": "opus",
+  "what_it_does": "A completion-criteria specification document for the Cognition Engine: an exhaustive, status-tagged truth-table of what must be verifiably TRUE (by use, not by code existing) for the engine to be done, organized into lettered groups (A-Q) across five parts covering authoring, composition surface, concurrency, corpus/output, run discovery, robustness, the two faces, no-regression of the prior build, corpus/discovery pillar, adversarial-fold corrections, and two standing cross-cutting bars.",
+  "observations": [
+    "Each criterion carries an honest status marker: green proven-by-use, yellow built-not-proven/designed, red gap/not-built, with commit hashes cited for proven items (e.g. 5fcc47b, a823f90, d85f9f6).",
+    "Part 1 Groups A-G cover direct authoring, the composition surface (registry-is-truth, the active gap), concurrency/loadout ceiling (~32 vs 14), corpus/output sink, run discovery/chaining, scale robustness, and the two faces (MCP + FE).",
+    "Part 2 is an explicit no-regression section: the original G0-G9 build is the proven base by reference, with still-open prior items carried forward (Groups H activation drivers, I mode auto-detector, J cognition-resolution feedback loop).",
+    "Part 3 (Groups K-Q) defines the corpus/discovery pillar: multi-projection capture, multi-space embedding/inversion-finder, the marks layer, tiered cascade, generation robustness, everything-registry, and patterned-visibility render.",
+    "Part 4 is adversarial-fold corrections that supersede earlier over-claims (restored items C7.3/C7.4/G8, re-sized claims like cascade runner is net-new, decisions resolved with one open).",
+    "Part 5 defines two standing bars: BAR 1 agent-knowledge (discovery, per-tool descriptions, per-workflow skills, saved cascades) and BAR 2 self-describing-for-update (module self-description, registry drift-homes, inline why, tool-code traceability), each with a fresh-agent VERIFY test.",
+    "The document states its own method: criteria discovered by dogfooding (8 uses + a 427-file whole-repo map), use-assess-reason-improve-write loop.",
+    "Open decisions are explicitly captured for Tim (rep_penalty vs enumeration, node-authoring line, pillar relationship)."
+  ],
+  "standouts": [
+    "The self-described method 'use -> critically assess -> reason -> improve -> write it into the criteria' is presented as the load-bearing discipline that keeps the bar real instead of green-painted.",
+    "Two cross-cutting standing bars (agent-knowledge + self-describing-for-update) each verified by a FRESH agent/session with no hand-holding — framed as the self-hosting spine for an AI-operated, no-human-developer system.",
+    "Concrete measured findings drive criteria: the 'max_num_seqs:16 - R:2 = 14 binding cap, KV supports 44' concurrency ceiling, and '16% of repo files broke the map' robustness bugs."
+  ],
+  "conventions": [
+    "Verifiable-by-use criteria with separate FUNCTION and FORM grading, honest-status-only, no-green-paint — aligns with the repo's loop-prep methodology.",
+    "Explicit no-regression coverage statement enumerating every prior item and where it folded.",
+    "Markdown spec with grouped criteria, priority ordering, and a stated verification bar."
+  ],
+  "concerns": [
+    "Extremely dense and acronym-heavy (R2, _r2_gather, KV, max_num_seqs, brain_config, cas://, run://, #50/#54/#55) — readable only with substantial surrounding context; high onboarding cost as a standalone file.",
+    "The vast majority of Part 1 B/D and Parts 3 groups are red/not-built, so the document is largely a forward plan with a small proven core."
+  ],
+  "notes": "This is the master, self-revising acceptance bar for the Cognition Engine — read the group letters and the green/yellow/red status markers to know what is proven vs planned, and the two Part-5 bars to understand the AI-self-hosting requirement.",
+  "questions": [
+    "Which document is the companion IMPLEMENTATION-GUIDE referenced throughout (Part 3/Part 4) that maps these criteria to real code?",
+    "What is the current overall pass-state — how many criteria are green vs red as of the latest dated mandate (2026-06-09)?"
+  ],
+  "purpose_vs_actual": "Match: it states it is the verifiable-by-use truth-table of done for the cognition engine with honest status, and the body delivers exactly that across five parts.",
+  "apparent_themes": [
+    "Verification by use, never by code-reading (no green paint)",
+    "Registry-is-truth / reflects-never-owns composition",
+    "AI-operated system with no human developers (self-using + self-evolving)",
+    "Discovery-by-dogfooding as the criteria-generating method",
+    "No-regression: extension, not pivot"
+  ],
+  "intention_signals": "Trying to hold the cognition engine to a real, use-proven bar that cannot be faked by asserting code exists, while guaranteeing nothing from the prior build is dropped and the system can be both used and evolved by AI agents alone.",
+  "novelty": "The two standing bars (agent-knowledge + self-describing-for-update) verified by a fresh no-context agent, and the explicit encoding of the criteria-discovery loop as part of the criteria themselves.",
+  "contribution": "Contributes the complete, status-tracked acceptance specification for the cognition engine — the grouped criteria, the no-regression carry-forward map, the corpus/discovery pillar plan, the adversarial corrections, and the two AI-self-hosting bars.",
+  "summary_for_embedding": "A dense, status-tagged completion-criteria spec for the Cognition Engine defining verifiable-by-use criteria across authoring, composition, concurrency, corpus, robustness, the two faces, no-regression, a corpus/discovery pillar, and two AI-self-hosting standing bars.",
+  "intention_for_embedding": "To define an honest, use-proven, no-green-paint bar for when the cognition engine is done, carrying forward all prior work and requiring the system be usable and evolvable by AI agents with no human developers."
+}

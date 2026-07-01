@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/vi/ViKitApp.jsx",
+  "model": "opus",
+  "what_it_does": "The top-level Vi Workspace demo app (the file's header calls it App.jsx). Implements a scripted, step-driven brochure-builder: a single ViKitApp component holds a `step` state (0-4) and derives the task-tree layer states, the brochure's filled fields, the chat messages, and the status pill from that step. The user sends an initial prompt, then supplies two missing fields (price, agent contact), advancing the steps; a Reset returns to start. Renders the sidebar shell plus the three-pane workspace (ChatPanel, TaskTree, OutputPreview) and mounts to #app.",
+  "observations": [
+    "Defines a NAV array (Workspace, History, Templates, Connected sources, Vi settings) with glyphs; only 'workspace' is marked active.",
+    "buildLayers() constructs the three layers with fixed copy: Layer 1 'Plan brochure build', Layer 2 four 'Read · <entity>' nodes (Brand Kit/Master Info/Gallery/Analytics) with meta like '4 colours · 2 logos', Layer 3 four execute nodes (Hero+palette / Stats grid / Description copy / Finalize & export).",
+    "Step transitions are time-driven via setTimeout (send -> step1 then auto step2 after 1800ms; submitPrice -> step3 after 600ms; submitAgent -> step4 after 600ms).",
+    "At step 2 the layer-3 states are ['done','done','active','blocked'] — i.e. one execute node is shown 'blocked', tying to the two missing fields Vi then asks for.",
+    "Chat messages are built imperatively into an array gated by `step >=` conditions, using Message, ReadCard, MissingPrompt, and ApproveCard components (defined elsewhere).",
+    "Hardcoded demo content: project 'Tower East', a default price '$2,450,000', timestamps array, example agent 'Sam Lin · sam@conceptv.io'.",
+    "Status pill text varies by step ('Vi is reading 4 entities…', 'Vi found 2 missing fields', etc.).",
+    "Aliases useState as useState_v from a global React; mounts via ReactDOM.createRoot on #app only if the element exists (DOM-guarded).",
+    "References an external logo asset ../../assets/logos/conceptv-wordmark-black.png."
+  ],
+  "standouts": [
+    "Single `step` integer is the whole state machine — chat, task tree, output, and pill are all pure derivations of it, making the demo a clean snapshot-per-step model.",
+    "The 'blocked' layer-3 node at step 2 visually links the agent's stall to the exact missing fields the user is then asked to fill."
+  ],
+  "conventions": [
+    "Browser-global React component pattern (no imports; relies on window-scoped React/ViMark/ViStatusPill/TaskTree/etc.), consistent with the rest of the Vi kit.",
+    "DOM-guarded mount (if (_mountApp)) — matches the claude-ds trap-avoidance rule about self-mounting jsx poisoning a shared bundle.",
+    "Derives all view state from one source (step) rather than scattering independent flags — aligns with the single-source ethos."
+  ],
+  "concerns": [
+    "Filename mismatch: the file is ViKitApp.jsx but its header comment and the README both call it App.jsx — a naming drift between doc and file.",
+    "Heavily hardcoded demo copy/values (entities, metas, price, agent) — expected for a demo but not data-driven from any registry.",
+    "setTimeout-driven step advances are not cancelled on reset; rapid reset/send could in principle queue stale transitions."
+  ],
+  "notes": "The scripted demo driver for Vi Workspace — one `step` state machine derives chat, task tree, brochure fill, and pill for a Tower East brochure build; despite the filename it is the kit's App.jsx.",
+  "questions": [
+    "Is the canonical filename App.jsx (per README + header) or ViKitApp.jsx (the actual file)? Which does index.html load?",
+    "Are Message, ChatPanel, ReadCard, MissingPrompt, ApproveCard, OutputPreview defined in files not in this batch (e.g. ChatPanel.jsx / OutputPreview.jsx)?"
+  ],
+  "purpose_vs_actual": "Matches its stated purpose (Vi Workspace brochure-builder demo), with a minor naming inconsistency (App.jsx vs the actual file name ViKitApp.jsx).",
+  "apparent_themes": [
+    "Snapshot-per-step state machine driving multiple coordinated panes",
+    "Demonstrating the entity-read / gap-ask / consolidate loop end-to-end",
+    "Making agent progress and blockers legible alongside live output"
+  ],
+  "intention_signals": "Tries to demonstrate, in a self-contained scripted flow, how Vi reads connected entities, surfaces and resolves the gaps via the chat, and fills the brochure live — turning the README's three-pane concept into a runnable narrative.",
+  "novelty": "Coordinating chat, a live agent task tree (including a blocked node), and a skeleton-filling output preview from a single step integer is a distinctive demo construction.",
+  "contribution": "Contributes the runnable orchestration that wires the Vi kit's pieces (mark, pill, task tree, chat, output) into one coordinated, step-driven brochure-build narrative.",
+  "summary_for_embedding": "Top-level Vi Workspace demo React app driving a step-based brochure-builder where one `step` state derives the chat, three-layer task tree, live brochure fill, and status pill for a Tower East build.",
+  "intention_for_embedding": "To demonstrate end-to-end how Vi reads project entities, asks for missing fields, and consolidates a brochure live across the three-pane workspace."
+}

@@ -1,0 +1,56 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/memory_proposals.py",
+  "model": "opus",
+  "what_it_does": "A Python script that turns mined self-study clusters into proposed operator-memory rows. It loads weighted correction-pattern clusters from .build/g13/clusters.json, keeps only strong, evidenced clusters, embeds them and the existing operator-memory rows, and for each strong cluster whose meaning is NOT already covered (cosine below a threshold) writes a status='proposed' operator_memory/<id>.py file awaiting Tim's confirmation. It reports clusters that were already covered as validation of existing memory.",
+  "observations": [
+    "Module docstring frames this as GC15's grow-half / the ③ pattern-cluster consumer: mining proposes, Tim confirms; a proposed row is visible but never standing.",
+    "Three tuned constants: MIN_WEIGHT=8, COVERED_T=0.62, MAX_PROPOSALS=3, with the design rationale 'a spammed registry is worse than a slow one'.",
+    "chdir + sys.path.insert pin the working directory and import root to /home/tim/company.",
+    "Imports OperatorMemoryRegistry, fabric client/transport, and DEFAULT_EMBED_MODEL; uses an OpenAI-embeddings transport.",
+    "Strong-cluster filter requires weight >= MIN_WEIGHT AND a real example correction/error (evidence-required: no quotable moment, no proposal).",
+    "Embeds strong cluster texts plus existing rows in one batch, then splits the vectors; defines an inline cosine similarity with a divide-by-zero guard (|| 1).",
+    "Coverage skip: if best similarity to any existing row >= COVERED_T, the cluster is recorded as covered/validated and skipped rather than proposed.",
+    "Generates a safe id via regex sanitisation truncated to 40 chars; skips if the id already exists in the registry or as a file.",
+    "Written rows carry id/rule/why/evidence(quote+source)/scope/status='proposed', with rule/why text explicitly labelled MINED and awaiting Tim's confirmation, including the occurrence count and best similarity.",
+    "Caps at MAX_PROPOSALS per run via a break.",
+    "After writing, re-runs OperatorMemoryRegistry().discover() as a fail-loud gate so a malformed write refuses here.",
+    "Returns a dict {proposed, covered_validated, note}; main() is printed as JSON when run as a script."
+  ],
+  "standouts": [
+    "Conservative-by-design: weight floor + evidence-required + coverage-skip + per-run cap, with the explicit stance that validating existing memory (covered) is the expected dominant outcome.",
+    "Honours the FLOOR: writes only status='proposed' declarative data rows; confirmation is Tim's alone.",
+    "Post-write discover() as a fail-loud integrity gate that refuses malformed writes.",
+    "Embedding-based de-duplication against existing memory by MEANING rather than string match."
+  ],
+  "conventions": [
+    "Returns a structured dict and prints JSON — the company's report-as-JSON pattern.",
+    "Self-describing generated file: each written operator_memory/<id>.py carries its own provenance docstring (MINED proposal, awaits Tim, not standing).",
+    "Uses the registry-is-truth pattern (OperatorMemoryRegistry().discover()) rather than hardcoded memory lists."
+  ],
+  "concerns": [
+    "Hardcoded absolute paths (/home/tim/company) make the script environment-specific and non-portable.",
+    "Loads existing rows once into evecs; if two strong clusters are near-duplicates of each other (not of existing rows) both could be proposed in one run — no intra-batch dedup.",
+    "Thresholds (8 / 0.62 / 3) are magic numbers with rationale in prose but not externally configurable."
+  ],
+  "notes": "The mining→proposed-row half of the operator-memory grow loop: strong evidenced correction-patterns that existing memory doesn't already cover become proposed rows for Tim to confirm.",
+  "questions": [
+    "What writes .build/g13/clusters.json and what is its full schema (top[].name/weight/example)?",
+    "How is COVERED_T=0.62 calibrated for the DEFAULT_EMBED_MODEL's similarity distribution?",
+    "Where does Tim's confirmation step live that flips status='proposed' to standing?"
+  ],
+  "purpose_vs_actual": "Match — the docstring describes a conservative mining→proposed-row circuit gated by weight/evidence/coverage/cap with Tim-only confirmation, and the code implements exactly those gates and the proposed-row write.",
+  "apparent_themes": [
+    "Evidence-required proposals",
+    "Conservative growth (spam-avoidance)",
+    "FLOOR / human-in-the-loop confirmation",
+    "Meaning-based coverage de-duplication via embeddings",
+    "registry-is-truth and fail-loud integrity gates",
+    "Self-improvement from the conversation record"
+  ],
+  "intention_signals": "Trying to let the system propose new operator-memory rules from recurring corrections it sees in its own record, while structurally preventing it from asserting them — only Tim can make a mined pattern standing.",
+  "novelty": "Treating 'covered' (mining validating existing memory) as the honest expected outcome and reporting it, plus the post-write discover() as a fail-loud acceptance gate for generated rows.",
+  "contribution": "Contributes the operator-memory proposal generator: the evidence+weight+coverage+cap gating, the proposed-row schema with provenance, the embedding-based de-dup against existing rules, and the Tim-confirms lifecycle enforcement.",
+  "summary_for_embedding": "A Python script that converts strong evidenced mined correction-pattern clusters into status='proposed' operator-memory rows awaiting Tim's confirmation, skipping patterns already covered by existing memory.",
+  "intention_for_embedding": "To grow the operator-memory registry conservatively from the conversation record by proposing (never asserting) new rules for recurring, uncovered, evidenced correction patterns."
+}

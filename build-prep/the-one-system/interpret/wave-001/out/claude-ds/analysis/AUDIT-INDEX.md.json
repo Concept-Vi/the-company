@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/AUDIT-INDEX.md",
+  "model": "opus",
+  "what_it_does": "A read-only whole-system audit index for the existing ConceptV Design System: a content-TYPE map (what kinds of content exist and where, with the audit slice that owns each) plus ten enumerated 'reconciliation tensions' between what the v1 docs codify and what the source design decks actually show, each with a stated resolution, followed by vigilance notes and a next-step.",
+  "observations": [
+    "Opens with the governing rule for conflicts: SOURCE material is authoritative for the DNA; v1 docs are authoritative for what was built.",
+    "States the original brief diagnosis: the current system 'interpreted the decks too narrowly'.",
+    "Content-TYPE map table: Source-of-truth tokens, App chrome CSS, App React, UI kits, Icon library (99 glyphs, window.CV_ICONS), Logos, Illustrations, Reference screenshots, DS-tab cards, Docs, Compiler outputs, My analysis, Archive — each with location and owning slice.",
+    "Ten tensions, each formatted 'what v1 says → what source shows → resolution' with a REQUIREMENTS/section ref: (1) backgrounds flat-ivory vs subtle diagonal hatch/blueprint-ghost; (2) 'system feels still, no motion' vs motion-ready decks; (3) single gold #E0C010 vs a gold→bronze→tan ramp + softer working gold; (4) saturated ivory/soft-gold panels vs near-white 1–3% ladder; (5) one warm wash vs multi-undertone containment-depth ladder; (6) bronze almost-never-UI vs bronze as structural quiet type voice; (7) flat hand-authored tokens vs a computed/parametric system.",
+    "Tensions 8–10 are marked KEEP (✅): shape system (circle/hex/octagon/diamond), 99-icon bronze library + gold-circle badge + desaturated state-gradient, warm-shifted status dots.",
+    "Vigilance notes: the system is 'documented-deep but applied-flat'; the fix is the computed core + texture + depth + motion + ramp wired through consumers, not more docs; README rules are v1 narrow-reads to rewrite as DNA lands; keep what's genuinely right.",
+    "Next step: slice-1 scoped audit of every token in colors_and_type.css + tokens/*.css and every consumer, tag keep/recalibrate/deprecate against tensions 3–6."
+  ],
+  "standouts": [
+    "The explicit conflict-resolution rule (source = DNA authority; v1 docs = built-state authority) — a clean separation of 'what it should be' from 'what it is'.",
+    "The recurring diagnosis 'documented-deep but applied-flat' names the core failure mode: depth lives in docs, not in computed/wired output.",
+    "Tensions are not just complaints — each carries a concrete resolution and a section reference, making this a reconciliation worklist not a critique."
+  ],
+  "conventions": [
+    "Read-only audit / territory-map discipline (this maps; slices then deep-audit per type).",
+    "Authority hierarchy stated up front (source vs docs).",
+    "KEEP-vs-change classification with ✅ markers for genuine DNA to preserve.",
+    "Cross-references to companion docs (REQUIREMENTS A1–A5, E1–E3, AXES, DIAGRAMS.md) — single-home pointers rather than restating."
+  ],
+  "concerns": [
+    "Heavy reliance on companion files (REQUIREMENTS, AXES, DIAGRAMS.md, SYSTEM-GAPS.md) — this index is only meaningful alongside them.",
+    "Line counts cited for docs (README 242L, SKILL.md 75L) will drift as those files change — a coupling that can go stale."
+  ],
+  "notes": "The whole-system reconciliation map: where every content type lives + the ten v1-docs-vs-source-DNA tensions (with resolutions) that drive the recalibration, governed by 'source is authoritative for the DNA'.",
+  "questions": [
+    "Are REQUIREMENTS.md and SYSTEM-GAPS.md the binding companion specs these tension-resolutions feed into?",
+    "Who arbitrates when 'source DNA' and 'what was built' genuinely cannot be reconciled in place?"
+  ],
+  "purpose_vs_actual": "Matches — it announces itself as a whole-system content-type map plus reconciliation tensions and delivers exactly that.",
+  "apparent_themes": [
+    "source-is-authoritative-for-DNA",
+    "documented-deep-but-applied-flat (the failure mode)",
+    "registry/type-map (everything has one home)",
+    "computed-core-over-handwritten",
+    "keep-what-is-right (don't churn genuine DNA)",
+    "reconcile-don't-fork"
+  ],
+  "intention_signals": "Inferred: to catch and correct the original failure that the design system read the source decks too narrowly — by mapping every content type to an owning audit slice and listing exactly where the v1 docs under-read the DNA (flat backgrounds, no motion, single gold, saturated panels, one wash, narrow bronze, hand-authored tokens), so the rebuild deepens those toward the computed parametric core while preserving the parts (shapes, icons, status dots) that were already right.",
+  "novelty": "Distinct in framing a design-system overhaul as an explicit ledger of doc-vs-source tensions with a resolution per tension and a KEEP set, rather than a redesign brief — auditing the gap between what was documented and what the source actually demanded.",
+  "contribution": "Contributes the authoritative content-type inventory (what kinds of content exist and where) and the enumerated reconciliation tensions with resolutions and KEEP markers — the diagnostic ledger a fused system would keep to know which parts are genuine DNA to preserve and which were narrow v1 reads to deepen.",
+  "summary_for_embedding": "Read-only whole-system audit index for the ConceptV Design System mapping every content type to its location and owning slice, plus ten tensions between v1 docs and source-deck DNA (backgrounds, motion, gold ramp, panel saturation, zoning-as-depth, bronze role, computed tokens) each with a resolution and a KEEP set.",
+  "intention_for_embedding": "Intended to correct the system's too-narrow reading of the source decks by ledgering where docs under-read the DNA and which parts are genuine and must be kept, driving a deepening toward the computed parametric core."
+}

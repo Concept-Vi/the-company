@@ -1,0 +1,112 @@
+/* ============================================================
+   ConceptV · DIAGRAM VOCABULARY
+   ------------------------------------------------------------
+   The brief wants a "language" for diagrams — icons + lines +
+   shapes — and eventually a GENERATIVE component that renders a
+   small spec into a diagram in that language. This file defines the
+   vocabulary that generator (and any hand-built diagram) draws from,
+   so every diagram across the system looks like it came from the
+   same hand.
+
+   The generator itself is a later build (it's a component, and
+   components come after the language). What's tokenised now:
+   stroke weights, node shapes/sizes, connector + arrowhead styles,
+   and the fills — which reuse the surface-zone roles so a "source"
+   node and a "decision" node carry their semantic colour for free.
+
+   ── Intended spec shape (for the future generator) ──
+     nodes: [{ id, label, shape, zone, icon }]
+     edges: [{ from, to, kind, label }]
+     kind ∈ flow | dependency | reference | rejected
+   ============================================================ */
+:root {
+  /* ---- Stroke weights -------------------------------------- */
+  --dgm-stroke-hair:    1px;
+  --dgm-stroke-regular: 1.5px;
+  --dgm-stroke-bold:    2.5px;
+  --dgm-stroke-color:       var(--hairline-strong, color-mix(in srgb, var(--ink) 30%, transparent));
+  --dgm-stroke-color-faint: var(--hairline, color-mix(in srgb, var(--ink) 14%, transparent));
+
+  /* ---- Nodes ----------------------------------------------- */
+  --dgm-node-radius:    var(--r-md, 10px);   /* rounded-rect default */
+  --dgm-node-pad:       var(--s-3) var(--s-4);
+  --dgm-node-min-w:     128px;
+  --dgm-node-gap:       var(--space-fluid-md);
+  --dgm-node-fill:      #ffffff;
+  --dgm-node-edge:      var(--hairline-strong);
+
+  /* node icon slot — keep glyphs consistent */
+  --dgm-icon-size:      18px;
+  --dgm-icon-box:       32px;
+
+  /* ---- Connectors ------------------------------------------ */
+  --dgm-connector:        var(--dgm-stroke-color);
+  --dgm-connector-w:      var(--dgm-stroke-regular);
+  --dgm-connector-dash:   none; /* @kind other */
+  --dgm-connector-dash-ref:  2 7; /* @kind other */
+  --dgm-connector-dash-dep:  6 5; /* @kind other */
+  --dgm-arrow-size:       8px;         /* diamond/arrowhead       */
+  --dgm-corner-radius:    12px;        /* elbow rounding          */
+
+  /* ---- Edge-kind colour map (reuses zone inks) ------------- */
+  --dgm-edge-flow:      var(--accent-gold);          /* active path  */
+  --dgm-edge-dependency:var(--zone-panel-ink, #6b6357);
+  --dgm-edge-reference: var(--zone-source-ink, #3a5780);
+  --dgm-edge-rejected:  var(--zone-reject-ink, #9a3a44);
+  --dgm-edge-communication: var(--comm-line, #7CA85B); /* relationship / positive flow (the green legend) */
+}
+
+/* ============================================================
+   STATIC DIAGRAM PRIMITIVES
+   Hand-buildable now; the generator will emit the same markup.
+   Nodes are .dgm-node (+ a .zone-* class for semantic fill);
+   connectors are drawn in an <svg class="dgm-layer"> behind them.
+   ============================================================ */
+.dgm {
+  position: relative;
+  display: grid;
+  gap: var(--dgm-node-gap);
+}
+.dgm-layer {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 0;
+}
+.dgm > *:not(.dgm-layer) { position: relative; z-index: 1; }
+
+.dgm-node {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: var(--dgm-node-min-w);
+  padding: var(--dgm-node-pad);
+  border-radius: var(--dgm-node-radius);
+  background: var(--dgm-node-fill);
+  border: var(--dgm-stroke-hair) solid var(--dgm-node-edge);
+  box-shadow: var(--elev-1);
+  font-size: var(--fs-meta);
+  line-height: 1.2;
+}
+.dgm-node[data-active] { box-shadow: var(--glow-active); border-color: var(--vi-edge); }
+
+.dgm-node .ic {
+  flex: none;
+  width: var(--dgm-icon-box); height: var(--dgm-icon-box);
+  display: grid; place-items: center;
+  border-radius: var(--r-sm, 6px);
+  color: var(--zone-ink, var(--accent-bronze));
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.dgm-node .ic svg { width: var(--dgm-icon-size); height: var(--dgm-icon-size); }
+.dgm-node .label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* connector stroke presets for the SVG layer */
+.dgm-edge        { fill: none; stroke: var(--dgm-connector); stroke-width: var(--dgm-connector-w); stroke-linecap: round; stroke-linejoin: round; }
+.dgm-edge--flow  { stroke: var(--dgm-edge-flow); }
+.dgm-edge--dep   { stroke: var(--dgm-edge-dependency); stroke-dasharray: var(--dgm-connector-dash-dep); }
+.dgm-edge--ref   { stroke: var(--dgm-edge-reference);  stroke-dasharray: var(--dgm-connector-dash-ref); }
+.dgm-edge--rej   { stroke: var(--dgm-edge-rejected);   stroke-dasharray: var(--dgm-connector-dash-dep); }
+.dgm-edge--comm  { stroke: var(--dgm-edge-communication); }   /* communication / relationship — the green voice */
+.dgm-edge--bi    { stroke: var(--dgm-edge-flow); }            /* bidirectional ↔ — markers on both ends (set in the solver) */

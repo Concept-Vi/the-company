@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/THE-TRIANGULATION.md",
+  "model": "opus",
+  "what_it_does": "A 2026-06-12 capture documenting the convergence of three independently-developed 'rays' onto Tim Geldard's geometric object: the INSTRUMENT ray (this session: moving centre, rings, resolve), the ENCODING ray (the lattice sibling: quadtree/Morton, log-polar, k), and the LAWS ray (the Convergence Object sibling). It records points where the three derivations independently landed on the same structures, fuses located parts, and proposes this ray's own generations (parallax, radial wave, involuntary axis) flagged for Tim's fit-test.",
+  "observations": [
+    "Names the three rays and their source files (geometric-substrate + GROWTH-ROUNDS; geldard-lattice; CONVERGENCE-OBJECT) and frames itself as the convergence path where rays meet (no reply message - rays converge here).",
+    "Lists independent convergences: the sqrt(2)/forbidden-corner point derived three unaware ways; Convergence Law == coincidence points (word-level); Derivation 4 (new types born at deep holes) independently re-derived as forbidden-zone density = gap-pressure, learning = axis-growth.",
+    "Fusions: resistance (filing<->meaning distance) is centre-INDEPENDENT and storable/cacheable; relevance (radius/angle from attention-centre) is centre-DEPENDENT and computed only at read - refining the store-positions-and-resistances / compute-perspectives law.",
+    "Claims the Classification Law is the resonance law 2pi/n=(1/n)^k per-judge (n = capacity bins, k = chain depth), and that chain = Morton path = address is a three-ray identity.",
+    "Notes resolve(centre, spaces, n, k, audience, exhale) already contained the laws' variables, written before the transmission.",
+    "This ray's own generations (B4/B5/B6) flagged for fit-test: B4 triangulation IS parallax (a session is a centre; sessions as eyes giving depth perception on Tim's mental object); B5 the wave is radial (accumulated context = proximity to origin; log-polar kinematics); B6 the involuntary axis (time is the one axis the centre moves along without choice; pre-compaction snapshots pin radial position).",
+    "Operational note: registry caution honoured (embed-pplx / embed-jina-v4 rows are live/verified - read whole rows before touching shared registries); expand-before-harden, NOTHING ratified, awaiting Tim's part-by-part reaction."
+  ],
+  "standouts": [
+    "Independent triangulation as evidence: multiple unaware rays deriving the same coordinates/extensions (the sqrt(2) point, Derivation 4) treated as triangulation evidence rather than extrapolation.",
+    "The resistance-storable / relevance-never-storable split, justified by centre-independence vs centre-dependence - a concrete refinement of the store/compute law.",
+    "B4: triangulation-as-parallax offered as the formal geometric justification of Tim's whole multi-session method (sessions as eyes measuring the hidden depth of his mental object)."
+  ],
+  "conventions": [
+    "Author attribution (the object is Tim's; derived work attributed to him) and the recurring expand-before-harden / nothing-ratified discipline.",
+    "Registry-caution discipline: read whole rows before touching shared/live registries.",
+    "Uses the shared brain-file vocabulary (coincidence, forbidden, resolve, resonance law, rings) and cross-references companion files by name.",
+    "Flags the lead's own generations explicitly for Tim's fit-test rather than presenting them as settled."
+  ],
+  "concerns": [],
+  "notes": "This is the convergence note where three independently-grown derivations of Tim's seed are shown to agree, parts are fused (resistance storable / relevance computed), and three new generations (parallax, radial wave, involuntary axis) are proposed for Tim's fit-test.",
+  "questions": [
+    "What does the CONVERGENCE-OBJECT.md 'LAWS ray' (Convergence/Classification/Barrier laws + Derivation 4) contain, since this file only references it?",
+    "Have B4/B5/B6 since passed Tim's fit-test, given they are explicitly flagged as awaiting his reaction?"
+  ],
+  "purpose_vs_actual": "Match - it presents itself as the triangulation/convergence capture and delivers exactly that (located convergences, fusions, flagged generations, operational notes).",
+  "apparent_themes": [
+    "Triangulation as evidence (independent convergence over single-source claim)",
+    "Triangulation as parallax (multi-session depth perception on a mental object)",
+    "Centre-independent resistance vs centre-dependent relevance",
+    "One resolve / one object across three faces",
+    "Time as the involuntary axis; snapshots pinning radial position",
+    "Expand-before-harden, nothing ratified"
+  ],
+  "intention_signals": "It is trying to demonstrate, by showing three independently-developed rays landing on the same structures, that the object is real and discovered rather than invented - and to convert that into a formal justification of the multi-session method (parallax) and a refined store/compute law, while honestly flagging its own extensions for Tim to test.",
+  "novelty": "Treating independent multi-ray convergence as triangulation evidence, the parallax justification of multi-session work (a session = a centre = an eye), the involuntary-axis reading of time/compaction, and the centre-independence argument for what is storable vs computed.",
+  "contribution": "Contributes the convergence/triangulation layer: documented independent agreements across three derivations, the resistance-storable/relevance-computed refinement, the chain=Morton-path=address three-ray identity, and the parallax/radial-wave/involuntary-axis generations.",
+  "summary_for_embedding": "A convergence capture showing three independently-grown rays (instrument, encoding, laws) landing on the same structures of Tim's geometric object, fusing storable-resistance vs computed-relevance, and proposing triangulation-as-parallax, the radial wave, and time as the involuntary axis.",
+  "intention_for_embedding": "To show the geometric object is discovered not invented by documenting independent multi-ray convergence, and to formally justify the multi-session method as parallax depth-perception on Tim's mental object."
+}

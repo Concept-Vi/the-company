@@ -1,0 +1,35 @@
+{
+  "project": "company",
+  "path": "attachment_types/docs.py",
+  "model": "opus",
+  "what_it_does": "Defines a single ATTACHMENT_TYPE dict declaring a 'docs' attachment type: a documentation file/path bound to a channel (the §3 manifest 'docs' bucket), target_kind='path', multi=True; desc notes such docs are loaded as context for members on join.",
+  "observations": [
+    "target_kind is 'path' — the target is a filesystem path.",
+    "References the '§3 manifest docs bucket', tying this to a larger manifest spec.",
+    "desc states docs are loaded as context for members on join.",
+    "multi=True allows multiple doc paths per channel."
+  ],
+  "standouts": [
+    "Docs are framed as join-time context for channel members, not just static attachments."
+  ],
+  "conventions": [
+    "Same single-dict descriptor pattern as sibling attachment_types modules.",
+    "Inline comment annotates target_kind meaning."
+  ],
+  "concerns": [],
+  "notes": "Registry entry for the 'docs' channel-attachment type: a filesystem path loaded as member join context, many-per-channel.",
+  "questions": [
+    "Where is the §3 manifest defined, and what loads these paths as context on member join?"
+  ],
+  "purpose_vs_actual": "Match — declares the docs attachment type as the docstring states.",
+  "apparent_themes": [
+    "Declarative type registry",
+    "Channel-bound context provisioning",
+    "Manifest-driven configuration"
+  ],
+  "intention_signals": "Aims to let channels carry documentation paths that auto-load as context for anyone joining, declared as data.",
+  "novelty": "Join-time context loading semantics attached to a plain path target.",
+  "contribution": "Contributes the declarative definition of the 'docs' attachment type with path target and on-join context-loading semantics.",
+  "summary_for_embedding": "A descriptor module declaring the 'docs' channel attachment type: a filesystem path (manifest docs bucket) loaded as member join context, multi=True.",
+  "intention_for_embedding": "To register documentation paths as channel-bound attachments that load as context for members on join."
+}

@@ -1,0 +1,53 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/PROGRESS.md",
+  "model": "opus",
+  "what_it_does": "A resumable progress tracker for the design-DNA analysis effort: one table row per source folder (pages, ratio, type, status, analysis-doc link) plus a chronological session log recording what each analysis and build session found, ending with the corpus declared fully analysed (12/12) and a record of subsequent build/unification sessions.",
+  "observations": [
+    "Top table tracks 12 folders with columns Folder/Pages/Ratio/Type/Status/Analysis-doc; all 12 are marked analysed (checked box).",
+    "Legend defines a status ladder: not-started / in-progress / analysed / synthesised-into-system.",
+    "Session log entries s1-s6 narrate the analysis arc: baseline pitch-deck, deck1-2026 confirmation, recent-pitches density stress test, landing-mockups web stress test, mid-LOD confirmation, and capital-raise as the deepest-LOD closer.",
+    "Records concrete findings inline: zoning ladder #fdfcf7 exact match promoted to CONFIRMED, gold ramp #d6bf57/#c09d5d identical, ratio shown independent of density and LOD, LOD gaining a third rung, proof slides confirmed as templates.",
+    "s3 introduces register/purpose as a new dimension (terse motion-ready cut vs verbose static leave-behind of the same content) and names deck1-2026 the canonical master.",
+    "s6 logs new grammar surfaced by capital-raise: running-sentence titles, product-surface bookends + frosted overlay, clean-white ground sub-mode, sage-green communication accent, 5 new diagram sub-types, with builds of those sub-types queued.",
+    "A separate 'Build sessions' section records post-analysis work (build s1-s3 token recalibration + generative core; s4a archetype/template layer; s4b UNIFICATION welding two disconnected halves with three parallel archetype lists into a single catalogue via RenderType + archetype-catalog).",
+    "Repeatedly references sibling docs as the detail home: analysis/*.md, FINDINGS-LOG.md, AXES.md, UNIFICATION.md, SYNTHESIS-PLAN.md, SYSTEM-GAPS.md."
+  ],
+  "standouts": [
+    "ratio is independent of density and LOD — stated as resolving an AXES open question, meaning surface size, content density, and detail level are three orthogonal axes.",
+    "register/purpose as a discovered dimension: the same content exists as a terse motion-ready cut and a verbose static leave-behind, implying templates need a register switch.",
+    "The s4b unification finding: the type system + Vi generator and the rule engine + solvers had ZERO references between them with THREE parallel archetype lists — drift that was then welded into one catalogue.",
+    "Cross-folder colour confirmation by exact hex match (#fdfcf7, #d6bf57) used to promote tokens from provisional to CONFIRMED."
+  ],
+  "conventions": [
+    "resumable-tracker: one row per unit, updated after each session, with a status ladder.",
+    "evidence-before-synthesis: folders are analysed and confirmed across multiple folders before any token is promoted.",
+    "registry-is-truth / anti-drift: the unification session exists specifically to collapse parallel archetype lists into one home.",
+    "append-newest narrative log alongside the structured table.",
+    "axis=f(content,position): explicitly separates ratio, density, LOD, and register as orthogonal axes."
+  ],
+  "concerns": [
+    "Status is hand-maintained prose/checkmarks, so it can drift from the actual state of sibling analysis docs (this is a tracker, not a generated index).",
+    "Different sessions report slightly different sampled ramp hexes (#d6bf57/#c09d5d in s3 vs #cdbf5a/#af8b4f/#a77146 in s6) without reconciliation here, leaving which values are canonical to be resolved elsewhere.",
+    "All 12 rows show the same analysed status with no in-progress/synthesised entries, so the ladder's finer states are unused in the table."
+  ],
+  "notes": "The resumable index of the whole analysis effort — read it to see which of the 12 source folders are done and the session-by-session story of how the DNA was confirmed, then welded into one catalogue.",
+  "questions": [
+    "Which sampled ramp values are canonical given s3 (#d6bf57/#c09d5d) and s6 (#cdbf5a/#af8b4f/#a77146) differ — is that reconciled in SYNTHESIS-PLAN or FINDINGS-LOG?",
+    "Is this tracker maintained by hand (and thus drift-prone), or generated from the analysis docs' actual statuses?"
+  ],
+  "purpose_vs_actual": "Match — it presents itself as a 'resumable tracker, one row per folder, update after each session' and it is exactly that, plus the session narrative log it promises.",
+  "apparent_themes": [
+    "resumable-progress-tracking",
+    "evidence-before-synthesis",
+    "axis-orthogonality",
+    "registry-is-truth",
+    "anti-drift-unification",
+    "cross-folder-confirmation"
+  ],
+  "intention_signals": "Inferred: the tracker is trying to make a long multi-session analysis survivable across context resets — a single place a fresh agent can read to know exactly what has been analysed, what was found and promoted to confirmed, and what build/unification work followed, so the effort builds additively instead of restarting.",
+  "novelty": "Distinct in that its session log doubles as a research narrative — it records not just status but the actual findings and the moment provisional tokens were promoted to confirmed and parallel systems were unified, making the tracker a memory substrate rather than a checklist.",
+  "contribution": "Contributes the corpus-completion ledger and the orthogonal-axes record (ratio vs density vs LOD vs register) plus the unification history a fused system would keep as provenance — the map of which 12 folders grounded the model and how the two halves were welded into one catalogue.",
+  "summary_for_embedding": "Resumable progress tracker for the design-DNA analysis: a per-folder status table over 12 source folders plus a session log recording findings (zoning/gold confirmations, ratio independent of density/LOD, register dimension, new diagram sub-types) and subsequent build/unification sessions that welded parallel archetype lists into one catalogue.",
+  "intention_for_embedding": "Intended to make a long multi-session design-DNA analysis resumable across context resets by recording per-folder status and the session-by-session findings, confirmations, and unification work so the effort accumulates additively rather than restarting."
+}

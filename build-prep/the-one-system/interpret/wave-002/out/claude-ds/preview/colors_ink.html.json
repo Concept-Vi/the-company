@@ -1,0 +1,37 @@
+{
+  "project": "claude-ds",
+  "path": "preview/colors_ink.html",
+  "model": "opus",
+  "what_it_does": "A standalone @dsCard preview (group 'Brand') showing the 'Ink' text-colour scale — four tiers of warm near-black — as 'Aa' specimen chips with name, hex, and usage description for each.",
+  "observations": [
+    "Comment header `@dsCard group=\"Brand\" name=\"Ink scale\" subtitle=\"Four tiers of warm near-black\" viewport=\"700x200\"`.",
+    "Links shared `_card.css`; card uses --bg-canvas background and tokens for fonts/colours.",
+    "Four tiers: primary #1F1A12 (body & headlines), secondary #6B5F47 (helper text), muted #A89678 (placeholders/captions), inverse #FBF7EC (on dark surfaces).",
+    "Each chip renders an 'Aa' specimen in --font-display; first three on white, the inverse tier on the #1F1A12 ink background.",
+    "Lead text: 'Ink — near-black with warm undertone, never pure black.'"
+  ],
+  "standouts": [
+    "Explicit rule 'never pure black' — warm undertone is a deliberate brand choice.",
+    "Pairs each colour with a concrete usage role (body, helper, placeholder, on-dark)."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery convention.",
+    "Hardcodes the literal hex values inline (expected for a colour-definition card) while using tokens for the surrounding chrome."
+  ],
+  "concerns": [],
+  "notes": "A swatch card defining the four warm near-black text-colour tiers and where each is used.",
+  "questions": [
+    "How do these ink hexes map to the --fg-primary/secondary/muted/inverse tokens used elsewhere in this same file?"
+  ],
+  "purpose_vs_actual": "Matches — metadata promises four tiers of warm near-black and the body delivers exactly that with usage notes.",
+  "apparent_themes": [
+    "Warm-toned ink instead of pure black",
+    "Text-colour roles mapped to usage (primary/secondary/muted/inverse)",
+    "Self-describing colour documentation"
+  ],
+  "intention_signals": "Aims to document the foreground/text colour ramp and enforce the warm-near-black rule, giving each tier a named role rather than a raw value.",
+  "novelty": "The warm-undertone, never-pure-black ink doctrine paired with explicit per-tier usage.",
+  "contribution": "Contributes the canonical text/foreground colour scale (four warm-ink tiers with roles and hexes) that a fused system would keep as its typography-colour reference.",
+  "summary_for_embedding": "A Brand-group design-system preview card showing the four-tier warm near-black 'Ink' text-colour scale (primary, secondary, muted, inverse) with hex values and usage roles.",
+  "intention_for_embedding": "To define the brand's foreground/text colour tiers as warm near-black and assign each a usage role."
+}

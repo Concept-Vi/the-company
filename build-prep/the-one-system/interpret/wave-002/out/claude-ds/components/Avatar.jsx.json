@@ -1,0 +1,41 @@
+{
+  "project": "claude-ds",
+  "path": "components/Avatar.jsx",
+  "model": "opus",
+  "what_it_does": "Implements the Avatar React component as a thin token-class wrapper over a span. It destructures src/alt/gold/size/className/children and the rest of props, sets a --avatar-size CSS custom property from size (appending px for numbers), composes the class list (cv-avatar plus cv-avatar--gold when gold), and renders a span containing an <img> when src is given, else children, else nothing.",
+  "observations": [
+    "Uses const h = React.createElement and a /* global React */ pragma — no JSX transform, manual createElement",
+    "size handling: numbers get '+px', strings used as-is, set as --avatar-size custom property merged with any incoming rest.style",
+    "className composed via [..].filter(Boolean).join(' ') from cv-avatar, conditional cv-avatar--gold, and passed className",
+    "Spreads ...rest onto the span (pass-through of arbitrary attributes), with style overridden by the computed style",
+    "Render fallback chain: src → img; else children (if non-null); else null",
+    "Both named and default export"
+  ],
+  "standouts": [
+    "Styling is entirely delegated to .cv-avatar / .cv-avatar--gold and a --avatar-size variable — the component holds no literal sizing/colour, matching the no-literals-in-consumers rule"
+  ],
+  "conventions": [
+    "Token-class wrapper pattern: behaviour from props, appearance from DS classes + a CSS var — adheres to the project's 'no raw values in consumers' law",
+    "React.createElement instead of JSX (suits the shared-bundle / no-build constraint noted in CLAUDE.md)",
+    "Pass-through of native attributes via ...rest, consistent with the .d.ts extending HTMLAttributes"
+  ],
+  "concerns": [
+    "rest.style is read before rest is spread but the computed style overrides it on the span; the merge handles this, though the size? ternary leaves style undefined when size is absent (relies on the spread's style) — minor, works"
+  ],
+  "notes": "A literal-free Avatar wrapper: span + cv-avatar classes + a --avatar-size var, rendering an img for src or initials/children otherwise.",
+  "questions": [
+    "Where are .cv-avatar / .cv-avatar--gold and the --avatar-size consumption defined (presumably a tokens/component CSS not in this batch)?"
+  ],
+  "purpose_vs_actual": "Match — the header comment ('circular initials/photo holder ... token-class wrapper over .cv-avatar') matches the implementation exactly, and it conforms to the declared .d.ts contract.",
+  "apparent_themes": [
+    "No literals in consumers (appearance from tokens/classes)",
+    "Thin composable component wrappers",
+    "Build-less React via createElement for the shared bundle",
+    "Native attribute pass-through"
+  ],
+  "intention_signals": "To provide a minimal, single-sourced Avatar that carries no design literals — all look comes from DS classes and a CSS variable — so it inherits the design DNA by construction.",
+  "novelty": "n/a (a conventional thin wrapper, distinctive only in its strict delegation to CSS vars/classes)",
+  "contribution": "Contributes the Avatar implementation: the prop→class/CSS-var mapping (gold variant, size as --avatar-size, img/children/null fallback) that a fused system would keep as the working Avatar.",
+  "summary_for_embedding": "The Avatar.jsx React component — a literal-free span wrapper applying cv-avatar/cv-avatar--gold classes and a --avatar-size CSS var, rendering an img for src or initials/children otherwise.",
+  "intention_for_embedding": "To implement a circular avatar that holds no design literals, drawing all appearance from design-system classes and a size CSS variable so it stays single-sourced."
+}

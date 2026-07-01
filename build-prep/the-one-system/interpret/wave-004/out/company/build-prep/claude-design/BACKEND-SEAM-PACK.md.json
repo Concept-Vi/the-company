@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/BACKEND-SEAM-PACK.md",
+  "model": "opus",
+  "what_it_does": "Documents the full FE-facing contract surface of the unified Company backend so a front-end design tool (Claude Design) generates code that lands in the right shapes. It enumerates 102 /api/* HTTP routes grouped by subsystem (RHM, interface/address, wire, settings/models/voice, graph/canvas, cognition), specifies the SSE event contract, the address/resolution substrate, the registry projections, nine FE laws, the FE structure/placement map, and four read-the-code gaps.",
+  "observations": [
+    "Each route row marks its provenance as either (curled live) or (from code), with file:line citations into runtime/bridge.py and runtime/suite.py",
+    "Claims to be read from live unified code on branch concurrent-cognition (== unified main 49debc4) and cites AGENTS.md rule 8 (nothing invented)",
+    "Cross-references AUTHORING-FE-HANDOFF.md for the 12 cognition authoring endpoints rather than re-documenting them",
+    "Defines a conceptual spine: Principal -> Domain -> Intent -> Proposal -> Approval -> Execution mapped to specific route families",
+    "Documents the SSE transport tailing a shared events.jsonl, gapless resume via ?since= / Last-Event-ID, and a FE dispatch-by-kind table",
+    "Specifies six cognition.* lifecycle event kinds with payload fields and their firing order (turn.start -> role.fire xN -> part -> role.ran xN -> inject -> part -> turn.done)",
+    "Lists five address schemes (run/cas/blob/vec/ui/code) and how the FE resolves ui:// targets (canvas->camera, chrome/field/panel/ext->DOM)",
+    "Section 7 reports concrete gaps: /api/roles returns HTTP 400 (ModelMetaclass not JSON serializable), several event kinds hit the default else branch, node_states served in two shapes"
+  ],
+  "standouts": [
+    "Section 7 gap #1: /api/roles is BROKEN live, returning 400 with TypeError: Object of type ModelMetaclass is not JSON serializable from Suite.roles() at suite.py:4439 (Pydantic class left in a dict json.dumps cannot serialize)",
+    "The fail-loud convention: every handler wrapped in try/except returning HTTP 400 with {error: ExcType: message}; 404 with {} means unknown path",
+    "Empty scope = DENY-ALL invariant: orphan/stale/unregistered addresses never fabricate reach",
+    "The operator-only floor: resolve/act/apply/checkpoint/revert/pin/approve-reach/build-intent/intent-at are off the MCP/agent face, and a rule destination is NEVER resolve/approve/dispatch"
+  ],
+  "conventions": [
+    "Follows the repo's evidence discipline: every shape labelled observed-via-curl vs read-from-code, with line citations",
+    "Follows registry-is-truth / reflects-never-owns by framing the FE as reading projections and driving via addresses+verbs",
+    "Markdown tables per subsystem with columns Route/Method/Request/Response/Law (or Notes)",
+    "Honest-empty convention noted repeatedly ([] if none) and fail-loud surfacing of the error string"
+  ],
+  "concerns": [
+    "Self-reported route count of 102 is asserted via an arithmetic line; the per-section header counts in parentheses (13/16/5/22/11/14) do not all match the section titles (e.g. 1.1 titled 13 but table lists more rows incl. the defer/revive pair), a minor internal-count inconsistency",
+    "Section 1.4 title says (22) but the master route-count line says settings/models/voice = 30 — the two figures disagree within the same doc"
+  ],
+  "notes": "The single precise map of every backend route, event, address scheme and law the FE must honor — start here to know what shape generated FE code must produce, and read section 7 first for the live-broken /api/roles.",
+  "questions": [
+    "Has the /api/roles ModelMetaclass serialization bug been fixed since this was written, or is it still live?",
+    "Do the discrepant route counts (102 vs the per-section sums; 22 vs 30 for settings/voice) reflect a stale edit or different counting rules?"
+  ],
+  "purpose_vs_actual": "Match — it states it is a documentation deliverable describing the FE-facing contract surface, and the body is exactly that: an exhaustive, citation-backed route/event/address/projection/law reference plus FE placement map and gaps.",
+  "apparent_themes": [
+    "Backend as single source of truth (reflects-never-owns)",
+    "Propose-not-apply / operator-only approval floor",
+    "Registry-as-data generic-renderer pattern (author-from-the-registry)",
+    "Fail-loud, evidence-grounded documentation (curled vs from-code provenance)"
+  ],
+  "intention_signals": "Trying to make the backend's contract legible enough that an external design tool can auto-generate front-end code that integrates correctly, by giving one authoritative, verified map of routes, events, addresses, projections and the non-negotiable laws — so generated FE never owns state, always surfaces for approval, and always reads from registries.",
+  "novelty": "The dual-provenance marking (curled-live vs from-code) on every contract row, plus a dedicated 'genuine gaps found' section that flags a currently-broken endpoint rather than papering over it.",
+  "contribution": "Contributes the consolidated, line-cited inventory of the unified backend's entire FE-facing contract: the 102-route catalog with request/response shapes, the SSE kind->reaction dispatch table, the cognition.* lifecycle payloads, the address-scheme grammar, the five registry projections, the nine FE laws, and the FE file/placement map — plus the named live defects.",
+  "summary_for_embedding": "An exhaustive, citation-backed reference documenting the unified Company backend's FE-facing contract surface: 102 /api routes, the SSE event contract, the address/resolution substrate, five registry projections, nine FE laws, the FE placement map, and four read-the-code gaps including a live-broken /api/roles.",
+  "intention_for_embedding": "To give an external front-end design tool one authoritative, verified description of the backend's routes, events, addresses, projections and laws so generated FE code integrates in the correct shapes and honors the reflects-never-owns and propose-not-apply invariants."
+}

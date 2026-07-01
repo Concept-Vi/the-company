@@ -669,6 +669,15 @@
       ]
     },
     {
+      "region": "tray",
+      "component": null,
+      "status": "planned",
+      "note": "region in addresses.json with no component mapping",
+      "addresses": [
+        "ui://tray"
+      ]
+    },
+    {
       "region": "tune",
       "component": null,
       "status": "planned",

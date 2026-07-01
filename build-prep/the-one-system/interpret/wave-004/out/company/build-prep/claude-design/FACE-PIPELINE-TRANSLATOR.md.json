@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/FACE-PIPELINE-TRANSLATOR.md",
+  "model": "opus",
+  "what_it_does": "Designs a resolution-first translator (composition's JOB-B) that turns a Claude Design export bundle into typed archetype-catalog instances and records that resolve through the one engine, instead of landing it as bespoke React. It specifies the input (the unchanged JOB-A bundle), a six-stage pipeline (ingest, tag, compose, validate, reconcile, register), two net-new typed contracts (translation-candidate, composed-asset), the unification with existing machinery, and status/next.",
+  "observations": [
+    "Frames itself as composition-owned and resolution-first: a design becomes a typed ROW that resolves across the device axis, not hand-written React",
+    "Input is JOB-A's bundle unchanged (design intent + component structure + styling tokens; a framework-neutral HTML/CSS export + README), arriving in-channel via the Claude Design connector",
+    "Stage 1 INGEST (code): parse bundle HTML/CSS into a raw element tree",
+    "Stage 2 TAG (light models, the #71 4B swarm): per element emit a typed translation-candidate with source_ref, candidate_archetype, candidate_component, token_snaps (law-aware snap-to-DNA), legibility name/is",
+    "Stage 3 COMPOSE (big cloud-judge model): candidates -> a valid archetype instance/component definition reusing existing registry types, with an explicit candidate->catalog mapping (node-graph->graph, pick-list->selector, dial->instrument, flow->diagram, material->spatial-material, decision->decision-card, composed box->organism)",
+    "Stage 4 VALIDATE (code): registry.validate + archetype schemas + DECORATION-BAN + legibility-required, fail loud",
+    "Stage 5 RECONCILE (RHM + Tim): ambiguities become decision-cards the RHM walks through, reusing the decision-surface",
+    "Stage 6 REGISTER (code): vi-vision:// address + corpus + resolution + persist -> live",
+    "Claims ~80% reuse; the only net-new is the TRANSLATOR (ingest parser + candidate type + the mapping)",
+    "Status: design/contract now, render-independent, ahead of Tim adopting Claude Design; the build lands when a real bundle exists; prove-on-one round-trip is the smallest test"
+  ],
+  "standouts": [
+    "The core idea: a design becomes a typed resolvable ROW (renderArchetype + the resolver) rather than frozen bespoke React, so it re-resolves on any token/axis change",
+    "The explicit candidate->catalog mapping table is the heart of the translation contract",
+    "Law-aware token-snapping in stage 2 (gold-budget, foreign-hue-quarantine, equal-lightness) rather than nearest-value-only",
+    "Reconcile IS the decision-surface — one mechanism doing two jobs (operator-cycle reuse)"
+  ],
+  "conventions": [
+    "Reuse-first / dedup / unions-not-parallel discipline stated repeatedly (match an existing type before minting)",
+    "Grounded-not-speculative: schemas authored only when the translator builds against a real bundle",
+    "Resolution-first composition framing (typed rows that resolve, the one engine)",
+    "Fail-loud validation and decoration-ban / legibility-required gates"
+  ],
+  "concerns": [
+    "Largely design-ahead-of-implementation: the translation-candidate schema and the tag/compose prompts are explicitly deferred until a real bundle exists, so the contract is not yet validated against real data"
+  ],
+  "notes": "The contract for translating a Claude Design export into resolvable typed archetype/component rows via a six-stage pipeline that reuses ~80% existing machinery — the only net-new part is the ingest-parse-and-map TRANSLATOR.",
+  "questions": [
+    "Has a real Claude Design bundle yet been produced to ground the translation-candidate schema and the tag/compose prompts?",
+    "What exactly is the vi-vision:// address scheme referenced in stage 6, and where is it defined?"
+  ],
+  "purpose_vs_actual": "Match — it states it is the design/contract for a resolution-first JOB-B translator (render-independent, ahead of adoption) and the body delivers the pipeline, typed contracts, mapping and unification at the contract level, explicitly deferring the build.",
+  "apparent_themes": [
+    "Everything compositional (designs as resolvable typed rows, not frozen code)",
+    "Resolution-first over bespoke integration",
+    "Reuse/unification over parallel machinery",
+    "Operator-cycle reuse (reconcile as the decision-surface) and fail-loud validation"
+  ],
+  "intention_signals": "Trying to make Tim's design work become the system's PRIMARY input compositionally: rather than hand-merging each designed face as React, translate the same export bundle into typed catalog instances that resolve through the existing engine, wear the DNA token language, and re-resolve on any change — building only the minimal translator and reusing the catalog, schemas, validator, decision-surface and corpus.",
+  "novelty": "The resolution-first reframing of design-bundle integration: a model-staged translator (light extraction + big compose) that produces a conformant, resolvable typed row instead of bespoke React, with reconcile riding the existing decision-surface.",
+  "contribution": "Contributes the six-stage translation pipeline and its two net-new typed contracts (translation-candidate, composed-asset), the explicit candidate->archetype-catalog mapping, the reuse/unification accounting (~80% existing machinery), and the prove-on-one round-trip as the minimal build test.",
+  "summary_for_embedding": "A design/contract note for a resolution-first translator that turns a Claude Design export bundle into typed, resolvable archetype-catalog instances via a six-stage pipeline (ingest, tag, compose, validate, reconcile, register), reusing ~80% existing machinery with the only net-new part being the translator.",
+  "intention_for_embedding": "To make designed faces become the system's primary input compositionally by translating the design export into typed resolvable rows that resolve through the existing engine and DNA token language, rather than freezing each design as hand-written bespoke React."
+}

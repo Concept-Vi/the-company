@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/types-hooks.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that defines and globally exposes React hooks over window.CV_REGISTRY: useTypes(filter), useType(id), useResolvedType(id), useLineage(id), useChildren(id), and useRegistryActions(). Each query hook subscribes to registry changes and re-runs its query via a tick counter so components re-render whenever a Type is registered/updated/removed.",
+  "observations": [
+    "Destructures useState/useEffect/useMemo/useCallback from global React (useCallback is imported but unused).",
+    "Guards on CV_REGISTRY existing; console.error and return if missing.",
+    "The reactivity pattern is uniform: a tick state + useEffect(() => R.subscribe(() => setTick(t=>t+1)), []) + a useMemo keyed on tick (and id/filter).",
+    "useTypes keys its memo on JSON.stringify(filter || null) so object-literal filters don't cause infinite re-query.",
+    "useResolvedType returns R.resolve(id) (flattened ancestry); useLineage returns the self→root array; useChildren returns direct extenders.",
+    "useRegistryActions returns a stable memoized object of register/update/remove/candidates/accepts wrappers.",
+    "All six hooks are assigned onto window."
+  ],
+  "standouts": [
+    "These hooks are the bridge that makes the interface a live projection of the registry — any registry mutation re-renders every subscribed view, which is the charter's 'interface is a projection, synchronised by construction' principle in practice.",
+    "useTypes' JSON.stringify(filter) memo key is the small but load-bearing detail that prevents re-render loops from inline filter objects."
+  ],
+  "conventions": [
+    "Follows the project's registry-as-source pattern: components read state only through these hooks, never a parallel store.",
+    "Consistent subscribe-and-tick idiom across all hooks.",
+    "Loud-ish fail (console.error + return) when the registry is absent, matching the other registry-dependent IIFEs in this folder."
+  ],
+  "concerns": [
+    "useEffect subscribes with an empty dependency array but the subscribe call is inside the effect body returning R.subscribe's unsubscribe — correct, though the repeated identical boilerplate across six hooks is duplication that could itself drift.",
+    "useCallback is destructured but never used (dead import)."
+  ],
+  "notes": "These are the reactive React hooks that let any component read and act on CV_REGISTRY and auto-re-render on registry changes.",
+  "questions": [
+    "Is the per-hook re-subscribe (one subscription per mounted hook instance) a concern at scale, or is the listener Set small enough that it never matters?"
+  ],
+  "purpose_vs_actual": "Match — the header says these are reactive React hooks for the universal Type Registry that re-render on register/update/remove, and the code implements exactly that.",
+  "apparent_themes": [
+    "Interface as a live projection of the registry",
+    "Reactive single-source-of-truth consumption",
+    "Uniform API mirroring across the registries"
+  ],
+  "intention_signals": "Trying to give React components a thin, uniform, reactive window onto the one registry so the UI always reflects the current Types without any parallel state.",
+  "novelty": "n/a — standard reactive-store hook adapters; the only distinctive touch is the stringified-filter memo key.",
+  "contribution": "Contributes the React reactivity layer over CV_REGISTRY (useTypes/useType/useResolvedType/useLineage/useChildren/useRegistryActions) that keeps consuming components synchronised with registry mutations.",
+  "summary_for_embedding": "A set of global React hooks (useTypes, useType, useResolvedType, useLineage, useChildren, useRegistryActions) that read CV_REGISTRY reactively and re-render on any Type change.",
+  "intention_for_embedding": "To let React components consume and mutate the universal Type registry reactively so the interface stays a live projection of the single source of truth."
+}

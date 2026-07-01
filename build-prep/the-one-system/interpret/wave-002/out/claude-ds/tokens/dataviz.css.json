@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/dataviz.css",
+  "model": "opus",
+  "what_it_does": "Defines a data-visualisation design language as CSS custom properties and a small set of chart primitive classes. Sets categorical series colours derived from zone inks, track/grid/axis/label colours, bar radius and stroke width, then provides styled primitives for a stat number, a horizontal bar track, a radial conic-gradient gauge, an inline SVG sparkline, gridline/axis-text helpers, and a legend.",
+  "observations": [
+    "Series colours (--viz-1..--viz-6) reference --zone-*-ink variables with hex fallbacks; --viz-key maps to --accent-gold and is reserved for the key/primary series only",
+    "--viz-track, --viz-grid use color-mix(in oklch, var(--ink) N%, transparent) for tints",
+    ".viz-stat .num uses font-variant-numeric: tabular-nums and --fs-h1; .delta colours from zone-success-ink, .delta.down from zone-reject-ink",
+    ".viz-bar fill width is calc(var(--val,0)*1%) with a width transition using --dur-move and --ease-emphasized",
+    ".viz-gauge composites a radial-gradient mask over a conic-gradient driven by --val for a ring effect",
+    ".viz-spark targets inline <svg> polyline/path with stroke from --spark-color and an .area fill via color-mix",
+    "All instance values (--val, --bar-color, --gauge-color, --spark-color) are caller-set CSS vars with fallbacks to --viz-key"
+  ],
+  "standouts": [
+    "Gold (--viz-key/--accent-gold) is explicitly reserved for the key series / the number that matters, mirroring a system-wide emphasis discipline",
+    "Charts intentionally draw their palette from surface zone inks so a chart reads as part of the system rather than a foreign element"
+  ],
+  "conventions": [
+    "Follows the token-layering discipline: every colour/size references a higher-level token (--ink, --zone-*-ink, --accent-gold, --fs-*, --dur-move, --ease-emphasized) rather than raw literals",
+    "Uses caller-supplied instance vars (--val, --*-color) with fallbacks, a knob pattern",
+    "Header comment frames the file as a language with primitives, deferring richer charts to a later generative component"
+  ],
+  "concerns": [],
+  "notes": "A self-contained dataviz token + primitive layer: chart palette from zone inks, gold reserved for the key series, with stat/bar/gauge/sparkline/legend CSS primitives driven by caller-set vars.",
+  "questions": [
+    "Where is the later generative chart component that is said to draw from these tokens?",
+    "Are the --zone-*-ink and --accent-gold tokens defined elsewhere in the token set this file assumes?"
+  ],
+  "purpose_vs_actual": "Matches: the header states a dataviz language with primitives for common small cases, and the file delivers exactly those tokens and primitive classes.",
+  "apparent_themes": [
+    "single-source token referencing / no raw literals in consumers",
+    "system coherence (charts read as part of the surface)",
+    "reserved emphasis colour (gold for the one thing that matters)",
+    "primitives now, generative richness later"
+  ],
+  "intention_signals": "Aims to make charts feel native to the design system by deriving their palette and quiet gridlines from the same zone/ink/gold discipline as everything else, while keeping the surface area small and deferring complex charting to a future generative layer.",
+  "novelty": "The explicit reservation of gold for the key series only, and deriving the categorical palette from surface zone inks, ties dataviz colour directly to the system's emphasis and zoning semantics.",
+  "contribution": "Contributes a dataviz vocabulary (series/track/grid/axis/label tokens) and lightweight chart primitives (stat, bar, gauge, sparkline, legend) expressed entirely in the system's tokens, plus the rule that gold marks the key series.",
+  "summary_for_embedding": "A CSS file defining data-visualisation tokens (zone-derived series colours, track/grid/axis tokens, gold-reserved key colour) and chart primitive classes for stat, bar track, gauge, sparkline, and legend.",
+  "intention_for_embedding": "To make charts read as part of the design system by deriving their palette from zone inks and reserving gold for the key series, providing small reusable primitives while deferring richer charting to a later generative component."
+}

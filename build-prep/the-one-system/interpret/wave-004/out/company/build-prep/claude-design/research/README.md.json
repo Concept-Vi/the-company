@@ -1,0 +1,37 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/README.md",
+  "model": "opus",
+  "what_it_does": "A two-line README for the claude-design research directory. States the directory is the evidence base for the claude-design pack, and gives a precedence rule: where BACKEND-SEAM-PACK.md covers the same seam/placement findings as the deep-reads here, the seam pack is the single source and the deep-reads must not be updated independently.",
+  "observations": [
+    "Only one sentence of content (plus an implied second clause); extremely terse.",
+    "Names a sibling/related file BACKEND-SEAM-PACK.md not in this batch.",
+    "Establishes a one-source precedence rule to prevent divergent updates between the seam pack and the deep-reads."
+  ],
+  "standouts": [
+    "Encodes a conflict-resolution / one-source-of-truth rule in a README rather than just describing contents."
+  ],
+  "conventions": [
+    "Follows the repo's one-source-of-truth discipline (avoid duplicate authoritative copies).",
+    "Lacks the frontmatter that the other inventory docs in this pack carry."
+  ],
+  "concerns": [
+    "No frontmatter (type/register/status), unlike the inventory files in the same directory.",
+    "References BACKEND-SEAM-PACK.md without a path, so the precedence target is unresolvable from this file alone."
+  ],
+  "notes": "A two-line README declaring this directory the evidence base for claude-design and giving the precedence rule that BACKEND-SEAM-PACK.md wins on shared seam/placement findings.",
+  "questions": [
+    "Where does BACKEND-SEAM-PACK.md live, and what exactly counts as a shared 'seam/placement finding'?",
+    "Why does this README lack the frontmatter the inventory docs use?"
+  ],
+  "purpose_vs_actual": "Match — it is a README and it briefly orients the reader plus states a precedence rule, which is all it claims.",
+  "apparent_themes": [
+    "One-source-of-truth / avoid divergent authoritative copies",
+    "Evidence-base framing for a design pack"
+  ],
+  "intention_signals": "To prevent two documents (the seam pack and these deep-reads) from drifting apart by declaring which one governs shared findings.",
+  "novelty": "n/a",
+  "contribution": "Contributes the precedence rule that BACKEND-SEAM-PACK.md is the one source for shared seam/placement findings, and the framing of this directory as the claude-design evidence base — a coordination instruction a fused system would keep to avoid duplicate-authority drift.",
+  "summary_for_embedding": "A two-line README declaring the claude-design research directory the evidence base for the pack and giving precedence to BACKEND-SEAM-PACK.md over the deep-reads for shared seam/placement findings.",
+  "intention_for_embedding": "To orient readers to the claude-design evidence base and stop the seam pack and deep-reads from drifting by naming which document governs overlapping findings."
+}

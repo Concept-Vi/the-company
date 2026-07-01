@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/SYNTHESIS-PLAN.md",
+  "model": "opus",
+  "what_it_does": "The bridge plan that maps confirmed design-analysis findings to concrete changes in the real ConceptV design system, ordered by readiness and dependency (foundation tokens before container structure before template library), with a readiness key and a CAPSTONE section describing the unified build after all 12 ingest folders were analysed.",
+  "observations": [
+    "States nothing is built yet — this is a plan that maps findings to changes.",
+    "Section 1 lists token recalibrations (zone ladder near-white values, soften gold #E0C010 to #d6bf57, warm bronze, add a 4-step brand ramp) with explicit deprecate-don't-rename and keep-the-color-mix-machinery guidance.",
+    "Section 2 adds new tokens: hatch, blueprint ghost, frame signature, two bullet semantics, status traffic-light, and 3:2 + web frame ratios.",
+    "Section 3 is the central structural build: a recursive typed-container library (Band/Section/Zone/Panel/Cluster/atoms) each with role + spacing rhythm + collapse rule + depth-keyed wash, serving decks AND the app from one model.",
+    "Sections 4-7 cover template library, axis controls, motion/space-time, and the deck-to-app bridge, each gated on the prior structural decision.",
+    "Suggests a concrete first execution slice (token recalibration, refresh zone specimen, then pause for the container-library decision).",
+    "CAPSTONE reduces the whole system to one type system + one rule engine + two layout solvers (block flow-stacking, graph relational) computed by axis-dials over an invariant DNA core, with a consolidated dependency-ordered build order and a doc index.",
+    "Uses a readiness legend: green ready now, yellow ready after a structural decision, blue confirm with more folders."
+  ],
+  "standouts": [
+    "The capstone reduction: one type system + one rule engine + two layout solvers (block + graph) under axis-dials over an invariant DNA core.",
+    "One container model deliberately serving both presentation decks AND the live app (nav/panel/table/row is the same mutable tree).",
+    "Explicit dependency ordering: foundation (values) -> structure (containers) -> library (templates)."
+  ],
+  "conventions": [
+    "Readiness-emoji legend tied to evidence and risk.",
+    "Each section names a concrete WHERE (file or directory) for the change.",
+    "Deprecate-don't-rename / keep-old-as-legacy guidance to avoid breaking consumers.",
+    "Cross-references sibling analysis docs as the source of confirmed findings."
+  ],
+  "concerns": [],
+  "notes": "The execution roadmap that turns the analysis corpus into a single generative core, foundation-first, with the container library called out as the deliberate keystone decision.",
+  "questions": [
+    "Are the specific near-white hex targets here reconciled with the slightly different values quoted in REQUIREMENTS.md / recent-pitches.md?",
+    "Which product-UI-heavy ingest folder is intended to de-risk the deck-to-app bridge (section 7)?"
+  ],
+  "purpose_vs_actual": "Matches — titled a synthesis plan and it is a readiness-ordered, dependency-aware mapping from findings to concrete build steps.",
+  "apparent_themes": [
+    "Foundation-before-structure-before-library build ordering",
+    "One generative core serving every surface (deck and app)",
+    "Parameters/tokens over one-off layouts",
+    "Deliberate structural decisions gated, not rushed",
+    "Single-source token recalibration with backward-compatible deprecation"
+  ],
+  "intention_signals": "Trying to sequence the move from analysis into a real build so the riskiest piece (the recursive container library) is a deliberate, well-supported decision, while the low-risk fidelity gains (tokens) land first.",
+  "novelty": "The explicit reduction of the entire design system to one type system + one rule engine + two layout solvers (block and graph) under axis-dials, and using the same container tree for both decks and the app.",
+  "contribution": "Contributes the readiness/dependency-ordered build sequence, the token-recalibration target values, the recursive container architecture, and the capstone unified-core formulation that a fused system would keep as its build map.",
+  "summary_for_embedding": "A readiness- and dependency-ordered plan mapping confirmed design findings to concrete builds (token recalibration, a recursive typed-container library, template library, axis controls, motion, deck-to-app bridge) culminating in a unified generative core.",
+  "intention_for_embedding": "To sequence the transition from design analysis into a real build so the unified generative core is constructed foundation-first with the container library as a deliberate keystone decision."
+}

@@ -1,0 +1,52 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/types-seed.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that seeds CV_REGISTRY with the built-in Types mirroring every existing surface: design tokens (colours/type/shapes), atoms (icon/status-dot/stamp/shape-glyph), blocks (mirroring WS_BLOCKS), widget systems (kpi/media/hybrid), surfaces (widget kinds, wizard step kinds, deck-slide layouts), docs (deck/brochure/widget/wizard) and wizard sub-kinds. It bulk-registers these plus the canonical archetypes pulled from window.CV_ARCHETYPE_CATALOG, then hydrates block defaults from WS_BLOCKS when Babel loads it, and exposes seed counts.",
+  "observations": [
+    "builtIn() helper stamps provenance:'built-in' and createdAt/updatedAt on each def.",
+    "Tokens carry axis/axisValue (e.g. token.color.gold → axis 'color', value 'gold'; shapes → axis 'form') with concrete defaults like hex values and font families.",
+    "Block Types deliberately omit a render function — runtime:{kind:'ws-block', key} points at the renderer in Blocks.jsx; defaults are pulled at lookup time.",
+    "Widget systems declare slots with classification-style accepts ({layers,tags}), multiple, optional, and default counts; runtime keys map to existing widget-system implementations.",
+    "Deck-slide kinds title/content are declared as ALIASES via extends onto canonical archetypes (surface.deck-slide.cover / .statement) — reconciliation through inheritance, not a parallel definition (cited UNIFICATION.md W2).",
+    "Throws loudly if window.CV_ARCHETYPE_CATALOG is missing (core/archetype-catalog.js must load first) — a hard load-order assertion.",
+    "deckSampleSlides/brochureSampleSlides are single-sourced from the archetype catalogue via archSample(key).",
+    "hydrateBlockDefaults() fills empty block defaults from WS_BLOCKS, registers any WS_BLOCK not already present, and skips embedWidget/embedWizard cross-doc embeds; retries via setInterval up to 5s if WS_BLOCKS isn't loaded yet.",
+    "A 'CV_HOST:types' marker comment reserves the insertion point for Vi-authored Types (via ds.propose).",
+    "Exposes window.CV_REGISTRY_SEED.counts per layer for the Registry canvas."
+  ],
+  "standouts": [
+    "The slide-kinds-as-aliases pattern: named app slide kinds extend canonical archetypes so existing references resolve while the archetype list stays single-sourced — drift prevented by the registry's own inheritance.",
+    "Hard fail-loud on a missing archetype catalogue is the one place this file strictly enforces the load-order / no-silent-degrade rule.",
+    "The CV_HOST:types marker is a code-as-substrate hook: Vi writes new Type declarations directly above a sentinel line in this source file."
+  ],
+  "conventions": [
+    "Upholds single-source-of-truth: archetypes come from CV_ARCHETYPE_CATALOG (the same catalogue RenderType reads), not duplicated here.",
+    "Built-ins live in memory and are seeded silently (registerMany {silent:true}).",
+    "Runtime pointers (kind/key) link a registry Type to its existing renderer/implementation rather than re-implementing it.",
+    "Defensive retry on Babel-loaded WS_BLOCKS, matching the documented Babel-trickle load order."
+  ],
+  "concerns": [
+    "Mixed failure discipline: a missing archetype catalogue throws, but a never-loading WS_BLOCKS just gives up silently after 5s (block defaults stay empty) with no warning — inconsistent with loud-fail.",
+    "Block Types are registered with empty defaults relying on later hydration; if hydration fails, those Types resolve with no defaults and consumers may render empty.",
+    "Seed counts for 'block' use blocks.length (the static blockSeeds set), not counting any extra WS_BLOCKS added during hydration, so the displayed count can understate the real block catalogue."
+  ],
+  "notes": "This file populates the registry with every built-in token/atom/block/system/surface/doc Type, aliasing app slide kinds onto canonical archetypes and hydrating block defaults from WS_BLOCKS.",
+  "questions": [
+    "When WS_BLOCKS never loads, should block Types with empty defaults be considered an error rather than a silent give-up?",
+    "Do the extends-aliases (surface.deck-slide.title → .cover) assume those canonical archetypes are always present in CV_ARCHETYPE_CATALOG?"
+  ],
+  "purpose_vs_actual": "Match — the header says it seeds the registry so every widget/system/wizard/step/block becomes a first-class Type readable from one source, and the code registers all of those plus archetypes and hydrates block defaults accordingly.",
+  "apparent_themes": [
+    "Single source of truth / one catalogue",
+    "Reconciliation via inheritance rather than duplication",
+    "Runtime pointers linking registry Types to existing renderers",
+    "Code-as-substrate (Vi writes Types into this file at a marker)",
+    "Tokens-as-axis-value-units"
+  ],
+  "intention_signals": "Trying to fold every pre-existing surface, widget, wizard, step, block and slide kind into the one registry as built-in Types — so the legacy app and the new generative engine read from the same catalogue and user/Vi additions sit alongside them in the same queries.",
+  "novelty": "Aliasing named slide kinds onto canonical archetypes via extends to reconcile two definitions without duplicating; the CV_HOST:types source-file insertion marker for Vi-authored Types; pulling sample slides and block defaults from the same single-sourced catalogues.",
+  "contribution": "Contributes the complete built-in seed corpus of the registry (tokens, atoms, blocks, systems, surfaces, docs, wizard kinds) plus the archetype-catalogue integration, the WS_BLOCKS default-hydration bridge, and per-layer seed counts.",
+  "summary_for_embedding": "A registry seed module that registers all built-in ConceptV Types (tokens, atoms, blocks, widget systems, surfaces, slide layouts, docs, wizard kinds), single-sourcing archetypes from CV_ARCHETYPE_CATALOG and hydrating block defaults from WS_BLOCKS.",
+  "intention_for_embedding": "To make every existing surface, widget, wizard, step, block and slide a first-class built-in Type so the whole studio reads from one registry and user/Vi additions extend it in the same queries."
+}

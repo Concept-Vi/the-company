@@ -1,0 +1,56 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/deep/design-substrate.md",
+  "model": "opus",
+  "what_it_does": "A deep-read of design/ (read 2026-06-08) that extracts the STRUCTURE of the design substrate Claude Design fills: the token-slot contract (seven slot categories from tokens.json plus identified slot gaps), the addresses registry (ui:// / run:// / code:// schemes, entry shape, data-ui-ref join, the 45 registered addresses across 15 regions), the blueprint build-to-schema contract and surface-spec shape with the tree/web journey tension, the where-design-goes conventions (edit data not generated files, status ladder, mockup rules), and the lint/drift tooling (check.py two modes, refcheck.py, symbols.py, codeedges.py, mechanisms.json), with an evidence note that the design-lint fires only through the build wire.",
+  "observations": [
+    "Critical framing up front: extract slot NAMES/categories/conventions (the contract), not current values (the provisional fill) — Claude Design's lane is to supply new values for the same slots",
+    "Seven token-slot categories tabulated: surface tiers, signal+semantic, ink-on-bright, node-type visual language, typography, living instrument (personas), shape (space/radius/elevation)",
+    "Identifies five slot GAPS not yet tokenised: motion/animation, breakpoints, z-index stack, opacity scale, icon sizing — motion flagged as the most significant gap",
+    "Persona note: Vi is the canonical primary fill; Atlas and Nova are defined as tokens but NOT-LIVE (App.tsx sets no data-persona) — slot-ready, not wired",
+    "Address scheme documented: ui://<region>/<element>[/<sub>][@<state>], run:// pattern-based (infinite cardinality, not enumerated), code://<file-stem>/<symbol>; entry fields region/capabilities/represents/code/howto",
+    "data-ui-ref is the DOM↔address join key; parse.py joins refs to addresses.json producing element-map.json with bidirectional orphan lists",
+    "45 registered ui:// addresses tabulated across 15 regions; component status split built vs planned",
+    "Blueprint = build-to-schema contract handing the builder five things (look/addresses/state-registry/component-specs/connection-contract); surface-spec JSON shape with home_journey vs journeys vs cross_journeys and address_gap honesty field",
+    "Tree/web tension: directory tree gives one home per view, cross_journeys[] carries the web; navgraph.py reconstructs and proves against register.json sequences",
+    "Conventions law (one sentence): edit data not generated files, extend by registration; canonical data sources (tokens.json/addresses.json/register.json) with their generators; generated files never hand-edited; status ladder planned→drafting→drafted→quality-passed→approved(Tim)",
+    "Lint tooling: check.py mode A (mockup scan) and mode B (--target design-lint, the FORM gate); refcheck.py (code-ref drift), symbols.py (reverse index code-symbols.json), codeedges.py (code-edges.json structural deps), mechanisms.json (the analysis registry)",
+    "Observed (grep-verified): design-lint fires EXCLUSIVELY inside Suite._design_critic() during build dispatch, per-changed-file — no CI, no pre-commit hook, no npm lint script, no Makefile; fail-safe returns (False, reason) if it cannot run"
+  ],
+  "standouts": [
+    "Slots-are-the-contract, values-are-provisional: the whole framing separates the durable slot names from the swappable aesthetic fill",
+    "The five identified slot gaps (motion/breakpoints/z-index/opacity/icon) as the concrete to-tokenise backlog",
+    "address_gap as an honest signal field: a view can declare it represents features with no registered ui:// address rather than inventing one",
+    "Empirically-verified gate location: design-lint is build-wire-only (no standing CI), with a documented bespoke-element-detection stub returning []"
+  ],
+  "conventions": [
+    "Honest evidence labels — separates Observed (grep-verified) from structural reads",
+    "Documents the repo's edit-data-not-generated-files / extend-by-registration law and the generated-files-never-hand-edited rule",
+    "Role-named typographic scale (fs-micro..fs-display) instead of px numbers — intent over magnitude"
+  ],
+  "concerns": [
+    "The five token gaps mean some design dimensions (motion, breakpoints, z-index) are currently scattered as CSS literals rather than assembling from the registry — flagged by the file as gaps, not file-local smells",
+    "Bespoke-element detection in check.py is a documented STUB returning [] — the FORM gate does not yet catch bespoke elements",
+    "Address inventory counts (45 addresses / 15 regions) are read-time snapshots and may drift"
+  ],
+  "notes": "If briefing someone: this is the structural map of the design substrate Claude Design plugs into — the seven token-slot categories (plus five gaps), the ui:// address registry and data-ui-ref join, the build-to-schema blueprint, the edit-data-not-files law, and the fact the design-lint only fires inside the build wire.",
+  "questions": [
+    "Have any of the five token gaps (motion/breakpoints/z-index/opacity/icon) since been tokenised?",
+    "Has the bespoke-element-detection stub in check.py graduated (it returns [] today, said to graduate with F4/F1)?",
+    "Are Atlas/Nova personas still unwired (no data-persona in App.tsx)?"
+  ],
+  "purpose_vs_actual": "Matches — it explicitly aims to extract the structure (slot names, categories, conventions) Claude Design fills and delivers exactly that, with the values-are-provisional framing held throughout.",
+  "apparent_themes": [
+    "slots-as-contract / values-as-provisional",
+    "edit-data-not-generated-files, extend-by-registration",
+    "addressability via data-ui-ref join keys",
+    "build-to-schema (deterministic build from registries, not prose)",
+    "honest gaps (address_gap, slot gaps, stub disclosure)",
+    "single-source generated artefacts (tokens→css, addresses→element-map)"
+  ],
+  "intention_signals": "Trying to hand Claude Design a precise styling/addressing interface — the durable slot names and registries it fills, the data-it-edits-not-files discipline, and the exact gate behaviour — so a new aesthetic can be supplied as values into stable slots without touching generated files or inventing addresses.",
+  "novelty": "The clean separation of slot-contract from aesthetic-fill plus the enumerated token gaps and the empirical proof that the design-lint is build-wire-only (no CI/pre-commit) are distinctive contributions of this read.",
+  "contribution": "Contributes the structural specification of the design substrate — the seven token-slot categories and their gaps, the ui:// address registry shape and data-ui-ref join, the build-to-schema blueprint and surface-spec schema, the edit-data law, and the verified design-lint gate behaviour — which a fused system would keep as the description of how look and addressing are supplied and enforced.",
+  "summary_for_embedding": "A deep-read of the company design substrate: the seven token-slot categories from tokens.json (plus five untokenised gaps), the ui:// address registry and data-ui-ref join to element-map.json, the build-to-schema blueprint and surface-spec shape with journey tree/web resolution, the edit-data-not-generated-files conventions, and the lint/drift tooling that fires only inside the build wire.",
+  "intention_for_embedding": "To hand Claude Design the durable slot names, address registries, and edit-data discipline it fills, so a new aesthetic plugs into stable slots without touching generated files or inventing addresses."
+}

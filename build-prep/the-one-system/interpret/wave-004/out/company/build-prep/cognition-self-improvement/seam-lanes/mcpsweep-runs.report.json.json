@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/mcpsweep-runs.report.json",
+  "model": "opus",
+  "what_it_does": "Seam-lane report (JSON record) for the `runs` tool in mcp_face/tools/runs.py, folding flat tools list_runs/find_runs into one tool with op=list|find over the run index. Records verification, the deliberate decision NOT to fold get_results/get_state/get_events, and a recommendation for completing the audit's 5→~2 reduction.",
+  "observations": [
+    "Ops [list, find]; flat_tools_to_remove lists list_runs and find_runs.",
+    "how_verified: throwaway FastMCP plus real Suite, schema params [limit, op, role, run_kind, run_op, since], fired list (35 records) and find (role-filtered), confirmed run_kind narrowing and teaching errors; read-only, no model/GPU.",
+    "Explains list_runs and find_runs are the same resource (the #54 run index, a projection over the op.run event log keyed by run:// addresses); find_runs literally calls list_runs plus a role filter.",
+    "Deliberately did NOT fold get_results/get_state (keyed by graph_id, a GRAPH noun) or get_events (the global trajectory log with no run/graph key), honoring the don't-god-tool / distinct-nouns rule.",
+    "Flags that the lane spec wrote op='results' -> get_results(address) but get_results actually takes `graph`, treating the misnamed param as evidence these were never run-scoped.",
+    "Renames the selector to `op`=list|find and exposes the engine-run-op filter as `run_kind` to avoid collision with the verb `run_op`; keeps `since` cursor for pagination.",
+    "run_kind validated against live suite.ENGINE_RUN_OPS by the Suite (teaching ValueError), not a hardcoded enum."
+  ],
+  "standouts": [
+    "Restraint as a design act: argues from resource-identity (graph noun vs run noun vs trajectory) for NOT folding state/events/results.",
+    "Uses a misnamed spec param (address vs graph) as positive evidence that the split is correct.",
+    "Recommends landing get_state/get_results under a separate `graph`/`read` resource and get_events under a trajectory resource in a future lane."
+  ],
+  "conventions": [
+    "Same seam-lane report schema.",
+    "One file = one resource model from tools/__init__.py invoked explicitly.",
+    "Registry-is-truth validation (run_kind against live ENGINE_RUN_OPS), verify-in-isolation, file-disjoint."
+  ],
+  "concerns": [],
+  "notes": "A runs-lane report that folds only the two genuinely-same run-index tools and argues on resource-identity grounds against god-tooling state/events/results into it.",
+  "questions": [
+    "Will the recommended `graph`/`read` and trajectory resource files be created in a follow-up lane, and is that tracked anywhere?",
+    "Does renaming the flat tools' `op` (engine-run-op) to `run_kind` while reusing `op` for the selector risk confusing existing callers?"
+  ],
+  "purpose_vs_actual": "Matches — it is the runs-lane report and documents the fold of list_runs/find_runs plus the reasoned scope boundary.",
+  "apparent_themes": [
+    "Tool consolidation bounded by resource identity (distinct nouns)",
+    "Anti-god-tool restraint",
+    "Registry-is-truth validation",
+    "File-disjoint, one-file-one-resource hygiene"
+  ],
+  "intention_signals": "Documents folding only what is truly one resource and resisting the pressure to compress the audit's count by merging unrelated read verbs.",
+  "novelty": "The explicit resource-identity argument (graph_id vs run:// vs keyless trajectory) used to draw the fold boundary, and reading a misnamed spec param as evidence.",
+  "contribution": "Contributes the `runs` tool's op surface and param renaming (op selector + run_kind filter + since cursor), plus the documented boundary and recommendation for placing state/results/events in separate resource files.",
+  "summary_for_embedding": "Seam-lane report folding list_runs and find_runs into one op=list|find `runs` MCP tool over the run index, deliberately excluding get_state/get_results/get_events as distinct resources.",
+  "intention_for_embedding": "To consolidate the two run-index tools while resisting god-tooling and documenting where the other read verbs should separately live."
+}

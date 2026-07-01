@@ -1,0 +1,38 @@
+{
+  "project": "claude-ds",
+  "path": "components/Button.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React `Button` function component that renders `<button>` by default (or `<a>` when given `href`, or a custom element via `as`) with a computed `cv-btn` className. Maps `variant`, `size`, `pill`, `block`, `icon` props to `cv-btn--<modifier>` classes, merges caller className, spreads remaining props, renders children.",
+  "observations": [
+    "`variant` defaults to 'primary'; the 'default' value is treated as no modifier class (skipped).",
+    "Tag selection: `as` if provided, else `<a>` when `rest.href` is set, else `<button>`.",
+    "Uses `React.createElement` aliased to `h` (no JSX), with `/* global React */`.",
+    "Header comment: 'thin token-class wrapper over .cv-btn — every visual comes from design tokens, so it themes and recalibrates for free.'",
+    "Class list assembled then `.filter(Boolean).join(' ')`.",
+    "Dual export (named + default), matching Badge/Card siblings."
+  ],
+  "standouts": [
+    "Element inference: presence of `href` automatically switches rendering from `<button>` to `<a>`, a small polymorphism baked in."
+  ],
+  "conventions": [
+    "Follows the project's thin-wrapper / token-class pattern (no styling in JS).",
+    "Mirrors Badge.jsx and Card.jsx structure exactly (same h alias, className idiom, dual export) — strong intra-folder consistency.",
+    "BEM-ish `cv-btn--<modifier>` naming."
+  ],
+  "concerns": [],
+  "notes": "The action primitive: ~25-line wrapper turning variant/size/pill/block/icon props into cv-btn classes, auto-rendering <a> when href is present.",
+  "questions": [
+    "The .d.ts documents 'comm' and 'ink' variants; this file passes any variant string through generically — is the variant set validated anywhere or purely CSS-defined?"
+  ],
+  "purpose_vs_actual": "Match — header comment accurately states it is a thin token-class wrapper over .cv-btn rendering button/a.",
+  "apparent_themes": [
+    "Single-source-of-truth styling via tokens",
+    "Thin component-as-projection-of-CSS",
+    "Polymorphic element rendering (button/a/as)"
+  ],
+  "intention_signals": "Aims to provide a single button primitive whose every visual is a design token, so all buttons theme/recalibrate centrally, while still rendering semantically correct elements (a vs button).",
+  "novelty": "Automatic <a>-vs-<button> inference from href within an otherwise purely class-mapping wrapper.",
+  "contribution": "Contributes the action primitive's runtime: the variant/size/pill/block/icon → cv-btn class mapping and the button/a/as polymorphism logic.",
+  "summary_for_embedding": "A React Button component that wraps the .cv-btn token class, mapping variant/size/pill/block/icon props to CSS modifiers and rendering <button>, <a> (when href), or a custom element.",
+  "intention_for_embedding": "To provide a thin, theme-aware action button primitive whose visuals are fully token-driven while rendering the semantically correct element."
+}

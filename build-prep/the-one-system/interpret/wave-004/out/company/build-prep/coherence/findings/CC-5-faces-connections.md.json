@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/CC-5-faces-connections.md",
+  "model": "opus",
+  "what_it_does": "A research-finding doc on the integration/cartography lane of the corpus-chain: it presses each of the five faces (coherence-scan, onboard, repo-QA, doc-staleness, research-wave) through the Chain schema field-by-field, maps everywhere the primitive connects in the real code, and gives an honest assessment that the roadmap-collapse is partial rather than total.",
+  "observations": [
+    "Companion to CORPUS-CHAIN-ANCHOR.md; uses OBS/INF/PRIOR-ART/IDEA tags grounded in file:lines (cognition.py, transport.py, roles.py, app.py, address.py, cognition_info.py, suite.py).",
+    "Builds a field-by-field faces table for all five faces with an added 'where it leaks' column the anchor's table lacks.",
+    "Finding 1: the topology (map -> reduce -> decide-next) generalizes to all five faces, but the cost-shape (cheap map, small reduce-input) holds for only three-and-a-half; the research-wave face inverts both halves (expensive strong-model workers and large companion reduce-inputs).",
+    "Notes the recursion: this very research wave is the research-wave face, the worst-fitting config to the primitive's own cost-shape (six Opus subagents mapping, a reduce reading six large companions).",
+    "Finding 2: three faces need a declared reduce SIDE-INPUT the map never produced (the structural graph for the wired-and-meaningless join, owned dispositions for onboard, the question for repo-QA), motivating a reduce_inputs field on Chain.",
+    "Finding 3: a saved chain is a self-registering chains/<name>.py file, the third/fourth instance of the system's universal-composition law alongside roles and node-types; roles/check.py is already a one-unit semantic detector in the role shape.",
+    "Finding 4: the roadmap-collapse is partial; it collapses the LLM-read half of three roadmaps into one engine but does NOT subsume the structural three-leg graph, the own/reflect disposition store, the loop front-half/safety, or the calibration harness.",
+    "Finding 5: the model registry feeds the worker tier (resident 4B via SlotBudget.from_registry) but not the synth tier (cloud Opus has no services.json row; resolve_binding is resident-only, roles.py:265), needing the not-yet-existing G8 capability catalog.",
+    "Maps eight connection seams (run_swarm, the prior-rounds substrate, the registry tiers, the CLI verbs, the coherence finding-log, up_translate('finding') whose kind is already declared at suite.py:5854, self-hosting, the projection-sibling pattern) and includes an ASCII connection diagram.",
+    "Produces an ordered 8-item what-needs-building punch-list and explicitly names out-of-lane pieces so the synthesis doesn't double-count."
+  ],
+  "standouts": [
+    "The faces table with a leak column, turning 'five configs of one primitive' into a field-by-field artifact that shows exactly where each face escapes the clean model.",
+    "Downgrading the anchor's cost-shape elegance from a primitive invariant to a saved-chain property, evidenced by the research-wave inversion the round is itself living.",
+    "Isolating reduce_inputs as the single real schema-extension, forced by the highest-value face (the structural-wired-and-semantic-meaningless join).",
+    "The exact partition of the roadmap-collapse: one engine plus four named orthogonal pieces, refusing a breathless total-collapse claim."
+  ],
+  "conventions": [
+    "Follows the repo evidence-tagging discipline and verdict-first / yes-but-actually correction-list structure.",
+    "Grounds new architecture proposals in existing self-registering precedents (roles, node-types) rather than inventing forks.",
+    "Carefully scopes out-of-lane work to sibling findings (Area-3 compile trust, Coherence structural graph/disposition/loop, Semantic calibration harness) and inherits SEM-1's measured numbers rather than re-deriving."
+  ],
+  "concerns": [
+    "Most build-items and the reduce_inputs/chains-registry proposals are marked IDEA (not in the repo today), so they are grounded proposals rather than verified mechanisms."
+  ],
+  "notes": "A cartography-lane finding: a field-by-field faces table with a leak column, the reduce_inputs schema-extension, the partial-collapse partition (one engine + four orthogonal pieces), the worker-yes/synth-no registry gap, and an 8-seam connection map with a punch-list.",
+  "questions": [
+    "What is the concrete shape of the G8 capability catalog that would let synth_model be bound by capability query?",
+    "Should compiled chains be auto-promoted to saved chains on reuse, and what governs that promotion?"
+  ],
+  "purpose_vs_actual": "Match. The doc's allocated area is faces + compositionality + everywhere-it-connects, and it delivers the faces table, the connection map, and an honest partial-collapse take, explicitly declining to merely confirm the anchor.",
+  "apparent_themes": [
+    "One primitive, many configs (universal composition)",
+    "Distinguishing topology from economics",
+    "Declared, inspectable inputs over hidden ones",
+    "Self-registering files as the extension pattern",
+    "Honest partial-collapse over breathless unification",
+    "Cartography: mapping every connection seam to the real code"
+  ],
+  "intention_signals": "It is trying to stress-test the 'everything is a config' claim until it leaks, surface the real schema-extension and binding gaps, and give the build an accurate map of what the primitive collapses versus what stays orthogonal, so the roadmap reordering is honest and the synthesis doesn't double-count.",
+  "novelty": "The leak-column faces table, the cost-shape-is-a-saved-chain-property reframing via the self-referential research-wave inversion, and the exact one-engine-plus-four-orthogonal-pieces partition.",
+  "contribution": "Contributes a field-by-field faces config table with leak analysis, the reduce_inputs side-input schema-extension forced by the highest-value face, the saved-chain-as-self-registering-file precedent, the partial-collapse partition naming four orthogonal pieces, the worker-vs-synth registry binding gap grounded at roles.py:265, an 8-seam connection map with an ASCII diagram, and an ordered seam-tied build punch-list with out-of-lane exclusions.",
+  "summary_for_embedding": "A cartography research finding (CC-5) that presses all five corpus-chain faces through the Chain schema field-by-field, shows the topology generalizes but the cost-shape does not (research-wave inverts it), isolates a reduce_inputs side-input extension, and maps every connection seam concluding the roadmap-collapse is partial (one engine plus four orthogonal pieces).",
+  "intention_for_embedding": "To stress-test the corpus-chain's everything-is-a-config and roadmap-collapse claims against the real code, surfacing the schema-extension, registry binding gap, and exact connection seams the build must address."
+}

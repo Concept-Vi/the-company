@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/CC-3-map-tiers.md",
+  "model": "opus",
+  "what_it_does": "A research-finding doc on the MAP stage of the corpus-chain: the configurable cheap-parallel worker tier and the contained-unit mechanics. It reads the real run_swarm/run_role engine, model registry, and strong-tier subprocess channel, and corrects the anchor's model of worker tiers, concurrency governors, and what 'unit = a file' actually requires to build.",
+  "observations": [
+    "Companion to CORPUS-CHAIN-ANCHOR.md; uses the Observed/Inferred/External/Your-idea evidence template and grounds claims in specific file:lines (cognition.py, transport.py, implement.py, roles.py, services.json, capabilities.py, gpu.py, models.py).",
+    "Central correction: the three worker tiers are TWO invocation substrates (OpenAI-compatible HTTP for local 4B and Ollama Cloud; a subprocess for Claude Code) plus THREE distinct concurrency governors (VRAM/KV knee, plan quota, safety cap).",
+    "Argues SlotBudget/VramGate is a local-tier-only mechanism and that _one() in run_swarm gates on a VRAM slot unconditionally, which is wrong for a cloud worker holding zero local VRAM.",
+    "Verifies live Ollama Cloud specs from the web (Free 1 / Pro 3 / Max 10 concurrent, queued beyond, usage-metered) and flags that Ollama 0.18 likely closed the catalog's json_schema gap, recommending a pre-flight probe before binding schema-enforced output to a cloud worker.",
+    "Measures the real corpus (272 first-party py/ts/tsx files, 48,035 Python LOC) and notes suite.py at 716,125 bytes ~180K tokens, 2.75x the 65,536 window.",
+    "Identifies two net-new seams behind 'unit = a file': a ctx->messages generalization (run_role hardcodes 'Utterance: {utterance}') and an intra-file chunk-and-compose tier, and insists chunk-compose is distinct from the reduce's cross-file pairing/join.",
+    "Takes a position that the canonical contained unit for the coherence/onboard faces is a file plus its self-description (AGENTS.md/docstring), because it bundles the artifact and its own yardstick.",
+    "Closes with an 8-item net-new build list in dependency order and a builder bottom-line."
+  ],
+  "standouts": [
+    "The two-substrates-three-governors reframing that turns 'worker_model is one knob' into 'choosing strong workers means a different runner, not a model-param swap'.",
+    "Tier selection as a contention lever, not only a capability/cost ladder: binding the sweep's map-role to cloud leaves the local KV pool free.",
+    "The hard distinction between intra-file chunk-compose (MAP) and cross-file pairing/join (REDUCE), with the explicit warning a builder could ship a gap by conflating them.",
+    "The tier-fit rule pairing per-unit task difficulty with unit-count (local 4B for ~400 files; Claude Code subprocess for ~6 areas; Ollama Cloud as the mid rung)."
+  ],
+  "conventions": [
+    "Follows the repo evidence-tagging discipline and verdict-first / TL;DR-table structure.",
+    "Frames itself relative to sibling findings (SEM-1, SEM-2, SEM-3) as companions and inherits their measured numbers, while grounding fresh measurements this session.",
+    "Lists external web sources at the end for the cloud-tier claims."
+  ],
+  "concerns": [
+    "Some per-tier latency/cost figures for Ollama Cloud are marked Inferred or have no local measurement, so the cloud rung's speed comparison is reasoned rather than measured."
+  ],
+  "notes": "A grounded MAP-stage analysis: the fan-out engine is built, but 'configurable worker tier' is a wire+runner-switch away (two substrates, three governors) and 'unit = a file' hides a ctx->messages seam and an intra-file chunk-compose tier.",
+  "questions": [
+    "Which Ollama Cloud plan (Free/Pro/Max) is provisioned, since the concurrency governor and cost depend on it?",
+    "Will the strong MAP tier reuse implement.py's subprocess channel (a read-only variant) or get a separate read-only fan-out runner?"
+  ],
+  "purpose_vs_actual": "Match. The doc's stated area is the MAP stage's worker tier and contained-unit mechanics, and it delivers exactly that with corrections, measurements, and a build list.",
+  "apparent_themes": [
+    "Shape-ready-but-not-wired (the 80/20 net-new pattern)",
+    "Capability-driven binding (requires subset of provides)",
+    "Coverage-certainty and provenance by construction",
+    "Contention management across shared resources",
+    "Evidence over speculation; measure the real corpus"
+  ],
+  "intention_signals": "It is trying to give a builder an honest, grounded map of what is already built in the MAP layer versus what is genuinely net-new, correcting an anchor that under-counts the substrate/governor differences and the contained-unit seams, so the cheap parallel layer can be wired correctly rather than assumed present.",
+  "novelty": "The substrate/governor decomposition of the worker tier and the explicit MAP-vs-REDUCE boundary between intra-file chunk-compose and cross-file join, plus tier-as-contention-lever.",
+  "contribution": "Contributes a grounded model of the MAP stage: the two-substrate/three-governor worker-tier reframing, the local-only nature of SlotBudget, the corpus measurement and concurrency reality (8-14 file-size-dependent), the ctx->messages and chunk-compose net-new seams, the file+self-description unit position, the registry-slice selector, and an ordered net-new build list with cloud-tier specs verified externally.",
+  "summary_for_embedding": "A grounded research finding (CC-3) on the corpus-chain MAP stage that recasts the worker tier as two invocation substrates with three concurrency governors, measures the real corpus, and names the ctx->messages and chunk-compose seams that 'unit = a file' actually requires.",
+  "intention_for_embedding": "To give builders an honest present-state vs net-new map of the cheap parallel MAP layer so the configurable worker tier and contained-unit mechanics can be wired correctly."
+}

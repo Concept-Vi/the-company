@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/EMBEDDING-CONVERSATION-RECOVERED.md",
+  "model": "opus",
+  "what_it_does": "A long-form, ordered reconstruction of the actual multi-day Claude Code conversation Tim had about the Company's embedding/memory architecture, recovered from raw transcript .jsonl files rather than from summary docs. It quotes Tim verbatim across 12 parts, traces how a 'which embedding models' question was steered into the founding design conversation for the memory/cognition system, and ends with a distilled-decisions list and a source-map table back to the transcript line ranges.",
+  "observations": [
+    "Names the primary source session f609942f-fc17-47f5-a739-966343e5a54c.jsonl (2026-06-08 to 06-14) plus two foundational pre-context sessions, with exact dates/times.",
+    "Inventories ten on-disk embedding-family models grouped by role (resident, text-quality ladder, specialists) with disk and VRAM figures.",
+    "Records 'the golden rule': a vector can only be matched against an index built by the same model — searching needs the maker model loaded, but viewing/inspecting needs no model at all.",
+    "Documents 'the three great rejections' where Tim rejects the agent's answer three times, naming the hidden oracle assumption, until 'total enumeration instead of selective inquiry' emerges.",
+    "Lays out seven total-processing pipelines (P1 Extraction through P7 Staying-true) in explicit embeddings+models terms, grounded in the RG10 940-element registry build (483 verified entries).",
+    "Captures the densest transmission (Part 10): origin as egocentric zero-point/parameter, inverse cognition, typed relations as dimensions, records-permanent/geometry-alive, the spatial brain, three tiers, UI-as-renderer, definition-is-position, the amplification loop.",
+    "Ends with formal registry-row definitions: a 13-row model fleet, 8 spaces, 13 chains, loadouts, and gates.",
+    "Includes a concurrency correction: 32 is optimal for the swarm model, an earlier 12-14 figure was an AI-inserted error.",
+    "Carries a source-map table mapping each Part to session/line-range/timestamp, and a closing note that the other brain docs are lossy artefacts derived FROM this conversation."
+  ],
+  "standouts": [
+    "The golden rule (vectors only match their own maker) stated as a first principle the rest of the architecture rests on.",
+    "The three rejections as the intellectual spine — the move from 'understand the corpus (impossible)' to 'enumerate it (mechanical)'.",
+    "The 12-part 'memory as architecture' transmission with Tim's verbatim quotes (origin, inverse cognition, definition-is-position, amplification).",
+    "The explicit 13-row model fleet definition with serve-config + query-discipline per row, closing the 'silent config-garbage' class at the registry."
+  ],
+  "conventions": [
+    "Uses evidence-grounding discipline: verbatim quotes with transcription quirks intact, line-number citations (L20361 etc.), and a source-map table for re-reading.",
+    "Explicitly distinguishes itself as the conversation-itself versus the lossy summary docs in the same folder.",
+    "Working-doc register under build-prep/, narrative rather than the strict self-description frontmatter schema."
+  ],
+  "concerns": [
+    "Very long single document; no frontmatter despite the repo's vault-convention emphasis (though build-prep working docs are exempt from the strict schema).",
+    "Many model/VRAM/size figures are point-in-time snapshots (mid-2026) that will silently age."
+  ],
+  "notes": "This is the verbatim, line-cited reconstruction of the founding embedding-and-memory conversation — the primary source the other brain docs were summarized from.",
+  "questions": [
+    "Are the quoted line ranges still valid against the live transcript files, or have those .jsonl files been compacted/moved since?",
+    "Which of the 13 fleet rows / 8 spaces / 13 chains were actually implemented versus remaining designed-not-built at the time of writing?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is a faithful ordered reconstruction of the embedding conversation recovered from transcripts, and the body delivers exactly that across 12 parts plus distilled decisions and a source map.",
+  "apparent_themes": [
+    "Memory and cognition as coordinate space",
+    "Educate-through-dialogue / amplification over specification",
+    "Total enumeration over selective inquiry",
+    "Configurable swappable model fleet with per-maker spaces",
+    "Recognition-gate as the only source of ratified truth"
+  ],
+  "intention_signals": "Trying to preserve a high-value design conversation against context loss — to create a single durable artefact other sessions/agents can be pointed at to understand how the embedding and memory architecture was actually arrived at, in Tim's own words, without the distortion of summarization.",
+  "novelty": "The recovered-from-raw-transcript provenance plus the inversion ideas (utterance-vs-artifact, the promise ledger, definition-is-position, the three-corpus estate) framed as the founding memory architecture.",
+  "contribution": "Contributes the verbatim primary-source record of the embedding/memory design decisions and Tim's vocabulary, including the formal fleet/spaces/chains/loadouts definitions and the golden-rule + total-enumeration principles — the grounding evidence layer behind the brain docs.",
+  "summary_for_embedding": "A transcript-recovered, line-cited 12-part reconstruction of the Company's founding embedding-and-memory architecture conversation, ending in distilled decisions and a formal model-fleet/spaces/chains/loadouts registry definition.",
+  "intention_for_embedding": "To durably preserve, in Tim's verbatim words and with source citations, the conversation that settled the Company's embedding model fleet and its memory/cognition architecture so other sessions can read and discuss it."
+}

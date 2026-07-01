@@ -1,0 +1,52 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Templates.jsx",
+  "model": "opus",
+  "what_it_does": "Renders the Templates canvas: a gallery of saved Build/Workshop runs treated as reusable parameterised templates. Decorates each saved template with its parent Type from CV_REGISTRY, groups them by parent Type (or shows a flat grid), and for each renders a TemplateCard with editable parameter/variable inputs and a Run button. resolveBrief substitutes {{key}} placeholders in a brief pattern with the entered values. Exposes Templates on window.",
+  "observations": [
+    "Top-level destructures useState/useMemo/useEffect from React into aliased names (useState_tp etc.) to avoid bundle-scope collisions.",
+    "Subscribes to CV_REGISTRY changes via subscribe() and bumps a tick to re-decorate when the registry updates.",
+    "Maps each saved template to a parent Type id of form `doc.${t.doc.type}` and resolves it from CV_REGISTRY.",
+    "Two layouts: 'flat' (one grid) and default 'grouped' (sections per parent Type with a TypeLayerBadge and description).",
+    "Empty state instructs the user to save from Build or Workshop and explains Templates are children of Types.",
+    "TemplateCard distinguishes two kinds: workshop-doc (uses t.variables, materialized via WS_AI.materializeTemplate) vs brief templates (uses t.params + briefPattern resolved by resolveBrief).",
+    "Builds a 'fauxType' merging parent Type defaults with the template's doc to drive a TypeThumb preview.",
+    "isDirty compares current values against defaults to label the run button 'Run with edits'.",
+    "Delete uses window.confirm; failures route to window.dsaToast.",
+    "Heavy use of inline style objects referencing CSS custom properties (var(--font-display), var(--accent-gold-faint), etc.) rather than classes."
+  ],
+  "standouts": [
+    "Templates are explicitly modeled as instances/children of registry Types — every filled parameter is framed as a registered Variable on the parent.",
+    "resolveBrief leaves unresolved {{key}} placeholders intact (returns the literal placeholder if no value) rather than blanking them.",
+    "fauxType construction lets a saved template render a live thumbnail through the same TypeThumb engine used for real Types."
+  ],
+  "conventions": [
+    "Follows the project's registry-projection principle: the UI reads template grouping and Types from CV_REGISTRY rather than a parallel list.",
+    "Uses window-global components (CanvasHeader, TypeLayerBadge, TypeThumb, ViShape) and exposes Templates on window — consistent with the bundle's no-import pattern.",
+    "Deviates from the token/class discipline by embedding many inline style objects (though they reference design tokens via var()).",
+    "Aliased React hook destructuring to keep top-level names unique across the shared bundle."
+  ],
+  "concerns": [
+    "Large volume of inline style objects duplicates styling that could live in CSS classes — values are tokenised but the layout/typography is hand-set per element.",
+    "Relies on several optional globals (WS_AI, TypeThumb, TypeLayerBadge, CV_REGISTRY) with optional chaining; if absent, cards silently render without thumbnails or fail to materialize with only a toast.",
+    "useEffect subscribe returns the subscribe() result directly as cleanup — correctness depends on CV_REGISTRY.subscribe returning an unsubscribe function."
+  ],
+  "notes": "The Templates gallery: saved runs become re-runnable parameterised templates, grouped under their parent registry Type, each card letting you edit variables and re-run to fork a new variant.",
+  "questions": [
+    "Does CV_REGISTRY.subscribe return an unsubscribe function (used as the effect cleanup)?",
+    "What is the shape of a saved template object (params vs variables vs briefPattern vs doc), and who writes them?",
+    "Where is WS_AI.materializeTemplate defined and what does it return on success?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment (saved Build runs as reusable parameterised templates, grouped by parent Type, with a Types mode) describes exactly what the component implements.",
+  "apparent_themes": [
+    "Registry-as-truth: templates derive structure and grouping from the Type Registry.",
+    "Parameterised reuse: every saved run becomes a template forkable by editing variables.",
+    "Types→Templates lineage (template is a child of a doc Type).",
+    "UI as a projection of the registry."
+  ],
+  "intention_signals": "Aims to turn ad-hoc generative runs into a structured, reusable library where each template is a registered child of a Type, editable by its declared variables, so re-running with new values composes fresh variants while preserving lineage to the parent Type.",
+  "novelty": "The fauxType merge that gives a saved template a live registry-style thumbnail, and the explicit framing of saved runs as parameterised Type-children with editable Variables.",
+  "contribution": "Contributes the Templates canvas UI and its model: grouping saved runs by parent Type, the TemplateCard with per-variable inputs and dirty-state run labeling, the workshop-doc vs brief-template branching, and the resolveBrief {{key}} substitution helper.",
+  "summary_for_embedding": "A React canvas that lists saved Build/Workshop runs as reusable parameterised templates, grouped by their parent registry Type, with editable-variable cards, live thumbnails, and a brief-placeholder resolver.",
+  "intention_for_embedding": "To make generative runs reusable as Type-anchored templates whose declared variables can be re-edited and re-run to compose fresh variants while keeping lineage to the parent Type."
+}

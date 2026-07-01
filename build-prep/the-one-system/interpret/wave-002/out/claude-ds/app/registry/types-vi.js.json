@@ -1,0 +1,52 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/types-vi.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that registers window.CV_TYPES_VI with three Vi (AI) helpers operating over the Type registry: proposeType (given a brief + optional parent/layer/family hints, prompts Vi to design a new Type schema and returns a normalized draft Type with a unique id and provenance:'vi'), promoteInstance (turns an existing doc/widget/wizard instance into a reusable Type, extracting variables and storing the instance as defaults/sample data), and suggestSlots (asks Vi to propose 2-4 additional useful slots for an existing Type). All AI calls go through window.CV_AI.execute with named capability ids.",
+  "observations": [
+    "Bails immediately if window.CV_REGISTRY is absent (early return from the IIFE)",
+    "LAYERS_DOC is a shared multi-line description of the seven layers (token→template) embedded once and inlined into every prompt",
+    "parseJsonLoose tries JSON.parse then falls back to extracting the first {...} block — tolerant parsing of model output",
+    "kebab() slugifies names with a random suffix fallback; uniqueId() appends -2,-3… until an unused registry id is found",
+    "proposeType builds a compact catalogue (first 80 non-template Types) so Vi can reference real ids in slot.accepts",
+    "proposeType prompt embeds explicit brand voice rules (sentence case, second person, no exclamation/emoji) and ConceptV vocabulary",
+    "proposeType honours locked layerHint/familyHint over the model's choice and normalizes all returned fields with type guards (Array.isArray, typeof object)",
+    "promoteInstance deep-clones the instance, strips id/createdAt, slices the JSON to 6000 chars in the prompt, and stores the slimmed instance as defaults",
+    "suggestSlots is wrapped in try/catch returning [] on failure (the one helper that swallows errors)",
+    "Capability ids used: 'type.propose', 'type.materialize', 'type.suggest-slots', all via CV_AI.execute(..., {surface:'registry'})",
+    "proposeType throws if Vi returns no parsable Type with name+layer"
+  ],
+  "standouts": [
+    "All three helpers route model calls through CV_AI.execute capability ids rather than calling a model client directly — the catalogue-as-dispatch pattern",
+    "The LAYERS_DOC taxonomy is single-sourced and injected into all three prompts so Vi reasons about the same layer model the engine uses",
+    "promoteInstance encodes a clear distinction: variables = what changes between runs (proper nouns, big numbers, dates, URLs); skip structural strings and brand terms"
+  ],
+  "conventions": [
+    "Routes every model touch through CV_AI.execute (project rule: never call a model client directly)",
+    "IIFE with a single window.* export and an early guard if the registry is missing",
+    "Returns normalized Type objects with provenance:'vi' and type-guarded fields",
+    "Brand voice and vocabulary are stated in the prompt rather than left to the model"
+  ],
+  "concerns": [
+    "suggestSlots swallows errors and returns [] (a silent-degrade) which sits against the project's loud-fail rule, unlike proposeType which throws",
+    "The 80-Type catalogue and 6000-char instance slices are silent truncations the model never learns about",
+    "Brand-voice rules are inlined in this prompt rather than sourced from the AI behaviour voice home (voice.conceptv) the project mandates"
+  ],
+  "notes": "Vi's authoring helpers for the Type registry: propose a new Type from a brief, promote a live instance into a reusable Type, and suggest extra slots — all through CV_AI capabilities.",
+  "questions": [
+    "Are the 'type.propose'/'type.materialize'/'type.suggest-slots' capabilities registered in CV_AI, and what providers back them?",
+    "Should the inlined brand-voice rules instead compose the voice.conceptv behaviour the project says is the single home for voice?"
+  ],
+  "purpose_vs_actual": "Matches — the header says Vi helpers to propose schemas, suggest slots/defaults, and promote instances; the file delivers proposeType, suggestSlots, and promoteInstance.",
+  "apparent_themes": [
+    "AI as a registry capability (catalogue-as-dispatch)",
+    "Single-sourced taxonomy injected into prompts",
+    "Tolerant parsing of model output",
+    "Promotion of concrete instances into reusable abstractions (variable extraction)"
+  ],
+  "intention_signals": "Trying to let Vi author and extend the Type registry conversationally — turning a brief or an existing instance into a well-formed, registry-compatible Type with extracted variables — while keeping every model call inside the AI registry and grounded in the real layer model and catalogue.",
+  "novelty": "promoteInstance's instance→Type promotion with explicit variable-extraction heuristics, and the practice of feeding Vi the live catalogue of real Type ids so its slot.accepts references resolve.",
+  "contribution": "Contributes the Vi-driven authoring layer for the Type registry: brief→Type proposal, instance→Type promotion with variable extraction, and slot suggestion, with the shared LAYERS_DOC taxonomy and loose-JSON parsing — the generative bridge between Vi and CV_REGISTRY.",
+  "summary_for_embedding": "A browser-global module (CV_TYPES_VI) of three AI helpers — proposeType, promoteInstance, suggestSlots — that author and extend CV_REGISTRY Types via CV_AI capabilities using a shared layer taxonomy and tolerant JSON parsing.",
+  "intention_for_embedding": "To let Vi conversationally design new Types, promote existing instances into reusable Types, and suggest slots, all routed through the AI registry and grounded in the real layer model and catalogue."
+}

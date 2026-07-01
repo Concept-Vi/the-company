@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/conditions.js",
+  "model": "opus",
+  "what_it_does": "Defines CV_COND, a shared condition evaluator that gates whether a slot is enabled, a socket accepts something, or a declaration applies, evaluated against a context object. Conditions may be expressed three ways — structured ({field,op,value} and boolean trees all/any/not), a string DSL ('fill != none', 'size >= md', 'texture requires fill != none', 'A and B', 'A or B'), or a predicate function — all normalized to one evaluation. Exposes test, testAll, failures, normalize, and OPS on window.CV_COND and module.exports.",
+  "observations": [
+    "IIFE, 'use strict'; defines OPS map: == != > >= < <= in !in exists !exists truthy falsy (numeric comparisons coerce via Number).",
+    "getField walks a dotted path through ctx, null-safe.",
+    "lit() coerces DSL literals: numbers to Number, true/false to boolean, quoted strings unquoted, pipe-delimited to arrays.",
+    "parseSimple handles 'A requires B' as sugar (present(A) implies B → {any:[{field:A,op:'!exists'},parse(B)]}), 'field op value', 'field exists/!exists/truthy/falsy', and bare 'field' as truthy.",
+    "normalize handles function (→{fn}), string (splits top-level ' and '/' or ' into all/any, else parseSimple), array (→all), and structured all/any/not trees.",
+    "evalOne short-circuits all/any/not, wraps fn in try/catch returning false on throw, and treats an unknown op as permissive (returns true).",
+    "CV_COND.failures returns the list of conditions that fail (stringified) for editor/loud-validation use.",
+    "Dual export: window.CV_COND and module.exports for CommonJS."
+  ],
+  "standouts": [
+    "Three interchangeable condition representations all normalizing to one eval (structured / string DSL / predicate).",
+    "The 'A requires B' implication sugar built into the DSL parser.",
+    "failures() returning which conditions fail, supporting both UI gating and loud validation from the same source."
+  ],
+  "conventions": [
+    "Single-sourced rule evaluator used in both validation and editor UI (per the header), matching the project's 'one home for a thing' principle.",
+    "Pure module loadable before consumers; no external deps.",
+    "Comment explicitly notes the unknown-op permissiveness is meant to be caught loudly elsewhere."
+  ],
+  "concerns": [
+    "Permissive defaults swallow problems: unknown op returns true, predicate throw returns false, malformed string falls back to bare-field truthy — these silently mask malformed conditions rather than failing loud here.",
+    "String-DSL boolean handling does not support nesting (comment notes 'simple, no nesting in strings'), so complex precedence must use structured trees."
+  ],
+  "notes": "The one shared condition engine (CV_COND) every slot/socket/declaration uses, accepting structured/DSL/predicate forms and able to explain failures.",
+  "questions": [
+    "Where is the 'loud elsewhere' handling for unknown ops actually enforced?",
+    "Is the 'requires' sugar the only multi-clause shorthand, or are there other DSL extensions used by callers?"
+  ],
+  "purpose_vs_actual": "Matches: header describes one evaluator for slots/sockets/declarations in three forms, and the code implements exactly that with test/testAll/failures.",
+  "apparent_themes": [
+    "Single-sourced rules used identically in validation and UI",
+    "Multiple expression forms collapsing to one normalized evaluation",
+    "Explainable validation (failures)"
+  ],
+  "intention_signals": "Trying to give the whole registry one condition language so gating logic is authored once (in whichever form is convenient) and evaluated the same way everywhere, with failure explanations for editors.",
+  "novelty": "The tri-modal condition spec (structured tree, human-readable DSL with 'requires' sugar, escape-hatch predicate) unified under one normalize/eval.",
+  "contribution": "Contributes the shared condition evaluator (CV_COND) that gates slots/sockets/declarations and explains failures across the registry.",
+  "summary_for_embedding": "A shared JS condition evaluator (CV_COND) that gates registry slots/sockets/declarations via structured trees, a string DSL, or predicates, with failure explanation.",
+  "intention_for_embedding": "To single-source the registry's gating logic so conditions are authored once and evaluated identically in validation and the editor."
+}

@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/RESEARCH-METHOD.md",
+  "model": "opus",
+  "what_it_does": "Describes the layered method (Tim's steer, 2026-06-08) for making the whole application architecture visible so Claude Design and other agents can design into and integrate with it. Defines a three-layer pipeline (cheap coverage/inventory → smart deep-read/report → smart synthesis with a completeness critic), states a coverage guarantee, gives the Layer-1 five-agent partition (INV-A..INV-E), and records status.",
+  "observations": [
+    "Goal stated up front: make the WHOLE architecture visible/understandable; Tim's caution 'a lot was built, from many angles (6 branches + worktree + vault) — don't underestimate the research.'",
+    "Layer 1 = CHEAP models (Haiku) broad parallel fan-out producing research/inventory/<region>.md — location not comprehension, with a PRIORITY flag and ANGLE per file.",
+    "Layer 2 = SMART models (Sonnet/Opus) targeted deep-reads keyed off Layer 1, output research/deep/<cluster>.md, covering what it does/contracts/components/seams/public surface/state/connections.",
+    "Layer 3 = SMART (Opus) synthesis into the keystone APPLICATION-STRUCTURE-PACK.md plus a COMPLETENESS CRITIC that loops-until-dry on missing angles.",
+    "Coverage guarantee: Layer 1 maps every dir across all angles, Layer 2 must cover every PRIORITY-flagged place, Layer 3's critic asks what angle/place/claim was missed.",
+    "Layer-1 partition named: INV-A (runtime/store/fabric/contracts/root), INV-B (canvas/design/panels), INV-C (nodes/roles/mcp_face/voice), INV-D (tests/docs/ops/self-description), INV-E (the angles).",
+    "Status: Layer 1 launched 2026-06-08 (Haiku ×5); the studio scaffold runs in parallel as the proving slice that proves the pack's USE while this produces its INPUT."
+  ],
+  "standouts": [
+    "The cheap→smart→synthesis tiering: use cheap models for broad coverage, smart models for comprehension, reserving the strongest for synthesis + a completeness critic.",
+    "The explicit completeness critic with loop-until-dry as a guard against missing angles.",
+    "Running the proving slice (studio) in parallel so the pack's USE is validated while its INPUT is still being produced."
+  ],
+  "conventions": [
+    "Defines the very method that the inventory files in this directory (INV-C, INV-D, INV-E) instantiate — this is their governing spec.",
+    "Carries no frontmatter, unlike the inventory outputs it specifies.",
+    "Uses a blockquote for Tim's steer/goal and a code block for the layer diagram."
+  ],
+  "concerns": [
+    "No frontmatter despite the pack's vault conventions on self-description notes.",
+    "Status section is a point-in-time snapshot (Layer 2 'dispatches when inventory lands') that will not reflect later progress."
+  ],
+  "notes": "The governing spec for this research pack: a three-layer cheap→smart→synthesis method with a coverage guarantee and a completeness critic, plus the five-agent Layer-1 partition the inventory files implement.",
+  "questions": [
+    "Did Layer 2 and Layer 3 (and APPLICATION-STRUCTURE-PACK.md) actually get produced, and where do they live?",
+    "Did the completeness critic find missing angles requiring a top-up round?"
+  ],
+  "purpose_vs_actual": "Match — it sets out a research method and delivers exactly the layered method, coverage guarantee, partition, and status it promises.",
+  "apparent_themes": [
+    "Coverage-before-comprehension research discipline",
+    "Model-tier-appropriate work (cheap for breadth, smart for depth/synthesis)",
+    "Make-the-architecture-visible as a precondition for clean integration",
+    "Completeness as an explicit, critic-enforced property"
+  ],
+  "intention_signals": "To guarantee thorough, unbiased, coverage-complete understanding of a large system built from many angles, so a design agent can integrate cleanly — by partitioning the work and forcing a completeness check rather than trusting a single broad pass.",
+  "novelty": "The explicit cheap→smart→synthesis layering with a loop-until-dry completeness critic and a parallel proving slice is a distinctive, reusable research-methodology pattern.",
+  "contribution": "Contributes the layered research method itself (the three tiers, the coverage guarantee, the INV-A..E partition, the completeness critic, the parallel proving-slice idea) — the governing recipe a fused system would keep for thoroughly mapping a large multi-angle codebase.",
+  "summary_for_embedding": "A 2026-06-08 research-method spec defining a three-layer cheap-inventory → smart-deep-read → smart-synthesis pipeline with a coverage guarantee, a five-agent Layer-1 partition (INV-A..E), and a completeness critic, aimed at making the whole Company architecture visible.",
+  "intention_for_embedding": "To define a thorough, coverage-guaranteed method for mapping a large multi-angle codebase so a design agent can understand and integrate into it cleanly."
+}

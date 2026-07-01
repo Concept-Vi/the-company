@@ -1,0 +1,32 @@
+{
+  "project": "claude-ds",
+  "path": "components/Segmented.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration file for the Segmented component: declares a SegmentedOption interface ({value?, label}), a SegmentedProps interface extending div HTMLAttributes (omitting onChange) with options (array of option-objects or strings), value, and an onChange callback, and declares the Segmented function plus a default export.",
+  "observations": [
+    "options accepts a heterogeneous array: Array<SegmentedOption | string>",
+    "onChange signature is (value: string, e: React.MouseEvent) => void, passing both the chosen value and the click event",
+    "Extends React.HTMLAttributes<HTMLDivElement> with Omit on 'onChange' so the native handler doesn't clash with the custom one",
+    "Doc comment frames it as 'the audience toggle' for 2-3 options, with the active option lifting onto a surface"
+  ],
+  "standouts": [
+    "The doc comment ties the component to a specific product use ('the landing audience toggle') rather than a generic description"
+  ],
+  "conventions": [
+    "Follows the paired .d.ts/.jsx convention for typing untyped React.createElement components",
+    "Uses JSDoc block comments on the interface for editor surfacing",
+    "Default export alongside named export"
+  ],
+  "concerns": [],
+  "notes": "Type contract for a 2-3 option segmented toggle; options can be strings or {value,label}, onChange returns the value plus the event.",
+  "questions": [
+    "What does 'lifts onto a surface' mean concretely in the CSS that this type doesn't show?"
+  ],
+  "purpose_vs_actual": "Match — declares exactly the props the .jsx implements.",
+  "apparent_themes": ["typed component contract", "design-system audience toggling", "controlled-component pattern"],
+  "intention_signals": "Gives the runtime-created (React.createElement) Segmented control a typed surface so consumers get autocomplete and type-checking despite the implementation using no JSX.",
+  "novelty": "n/a",
+  "contribution": "Contributes the public type signature of the Segmented audience-toggle control, including the string-or-object option shape and the (value, event) onChange contract.",
+  "summary_for_embedding": "TypeScript declaration for a Segmented control component with string-or-object options, a value prop, and a (value, event) onChange callback over a div.",
+  "intention_for_embedding": "To provide a typed contract for the design-system's segmented audience-toggle so consumers get type-safe props."
+}

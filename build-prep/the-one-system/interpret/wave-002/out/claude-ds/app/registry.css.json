@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry.css",
+  "model": "opus",
+  "what_it_does": "Stylesheet for the Universal Type Registry surfaces and related canvases: layer badges, provenance pills, type chips/cards, lineage strips, slot lists, the type filter bar, the type tree rail, the Registry landing layout, the Type Builder (split panes, previews per archetype, Vi-led panel, inspector form, slot/var rows, wizard, canvas, modal), the Architecture canvas (ladder, slot/lineage/types-vs-templates/consumers/entry-point/cross-embed diagrams), and the Universal TypeThumb visual previews per layer/family (token/atom/block/system/surface/...).",
+  "observations": [
+    "~2139 lines; reads as one large CSS file covering many registry-related views, all on the same warm-ivory/gold token set per its header.",
+    "Class families: cv-type-* (layer/prov/chip/card/lineage/slot/filter/tree), cv-reg-* (registry landing), tb-* (Type Builder), cv-arch-* (Architecture canvas), cv-thumb-* (TypeThumb previews).",
+    "Provenance variants encoded as classes: cv-type-prov-built-in / -user / -vi / -imported and cv-prov-vi / cv-prov-user (colored left borders on cards).",
+    "TypeThumb section renders mini-mockups per layer: token (color/type/shape/generic), atom (icon/status/shape/stamp), block, system, surface (widget/step variants with dashboards, hubs, embeds, form/capture/choice/review steps).",
+    "Architecture canvas styling includes a dark code-schema block with syntax-coloring spans (.bracket/.key/.str/.hint) using a few raw hex literals (#C9A742, #E0C010, #D8C394, #B0CFAE).",
+    "Uses var() tokens throughout (--bg-surface, --fg-primary, --accent-gold*, --r-*, --font-*, --status-*); some raw hex (#fff) and rgba overlays appear.",
+    "Wizard rail shows step state (active/done/dot) and the Type Builder has sticky left/right panes."
+  ],
+  "standouts": [
+    "The cv-thumb-* system: CSS-only schematic previews of each registry layer (a tiny dashboard, a browser hub, a multi-step surface) used as type thumbnails.",
+    "The Architecture canvas's syntax-highlighted dark schema block with its own color spans.",
+    "Provenance-driven visual encoding (built-in/user/vi/imported) carried as a styling concern."
+  ],
+  "conventions": [
+    "Token-referenced styling consistent with the project's single-source rule; header states it builds on the same warm-ivory/gold tokens.",
+    "Subsystem-prefixed class naming with banner-comment section dividers.",
+    "Provenance and layer expressed as modifier classes rather than inline styles."
+  ],
+  "concerns": [
+    "A few raw hex literals in the Architecture schema block (#C9A742, #E0C010, #D8C394, #B0CFAE, #fff) and rgba overlays rather than tokens.",
+    "Very large single file mixing five distinct surface families; section boundaries rely on comments.",
+    "Some hardcoded pixel dimensions (e.g. cv-thumb-block-host width:600px min-height:380px) for preview staging."
+  ],
+  "notes": "The visual layer for the whole Type Registry experience — cards, builder, architecture diagrams, and the per-layer thumbnail previews — all token-driven.",
+  "questions": [
+    "Are the Architecture schema hex colors deliberate code-syntax accents outside the token system, or drift?",
+    "Is the cv-im-ai legacy/v3 split mirrored anywhere here, or is this file solely registry/builder/architecture?"
+  ],
+  "purpose_vs_actual": "Matches: header says 'Universal Type Registry — visuals for shared primitives + the new canvases', and the file delivers registry primitives, builder, architecture, and thumbnails.",
+  "apparent_themes": [
+    "Registry-as-truth made visible (cards/tree/thumbnails project the registry)",
+    "Layer/lineage/provenance as first-class visual concepts",
+    "Token-referenced single-source styling"
+  ],
+  "intention_signals": "Trying to give the Universal Type Registry a complete, self-explaining visual surface — so the type hierarchy, lineage, slots, provenance, and architecture are all directly seeable, with CSS-rendered previews standing in for each registry layer.",
+  "novelty": "CSS-only schematic 'TypeThumb' previews that depict each registry layer (token through surface) as a tiny live mockup used as the registry's thumbnails.",
+  "contribution": "Contributes the styling for the Type Registry, Type Builder, Architecture canvas, and per-layer TypeThumb previews.",
+  "summary_for_embedding": "A large token-driven CSS stylesheet styling the Universal Type Registry's cards, builder, architecture diagrams, and per-layer TypeThumb previews in the warm-ivory/gold theme.",
+  "intention_for_embedding": "To give the Universal Type Registry a complete self-explaining visual surface where layers, lineage, slots, and provenance are directly seeable."
+}

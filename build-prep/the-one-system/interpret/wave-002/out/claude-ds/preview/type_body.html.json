@@ -1,0 +1,33 @@
+{
+  "project": "claude-ds",
+  "path": "preview/type_body.html",
+  "model": "opus",
+  "what_it_does": "A standalone HTML preview card specimen for the body typeface (DM Sans): shows large/medium/small text samples, an uppercase+lowercase+numeral glyph set, and a metadata strip listing weights, optical sizing, and usage.",
+  "observations": [
+    "Carries a @dsCard annotation: group='Brand', name='Body — DM Sans', subtitle='UI default with glyph specimen', viewport='700x270'.",
+    "Links shared _card.css; local <style> uses tokens var(--font-body), --fg-primary/secondary/muted.",
+    "Two-column layout: left = three text specimens (22/16/13px), right = glyph rows A-Z, a-z, digits + & @ ↗.",
+    "Sample copy is company-specific: 'Operationalising multi-stakeholder projects', 'novel theoretical model of how all systems work, developed internally over ten years', and a conceptv.io URL preview.",
+    "Meta strip declares weights 400·500·600·700, 'Optical sizing 9-40', 'UI default · everywhere body'."
+  ],
+  "standouts": [
+    "Specimen copy is drawn from ConceptV's actual positioning (ten-year theoretical model, multi-stakeholder projects, conceptv.io domain) rather than lorem ipsum.",
+    "Declares DM Sans as the universal body/UI default."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery convention and var()-token discipline.",
+    "Font sizes/weights are hardcoded px/numeric in local CSS rather than referencing type-scale tokens — illustrative specimen values."
+  ],
+  "concerns": [],
+  "notes": "DM Sans body-type specimen card; shows text at three sizes, full glyph set, and weight/optical-sizing/usage metadata, using real ConceptV copy.",
+  "questions": [
+    "Are the four weights and 9-40 optical sizing range actually wired into the font loading, or only asserted in this card's metadata?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard names it the DM Sans body specimen and that is exactly what renders.",
+  "apparent_themes": ["typographic specimens", "brand body typeface (DM Sans)", "self-describing previews", "real-content grounding"],
+  "intention_signals": "Intended as a recognisable specimen so the body typeface, its weights, and intended usage can be judged by eye in the gallery.",
+  "novelty": "Using authentic company positioning text as the specimen copy, embedding brand voice into the type sample.",
+  "contribution": "Contributes the canonical body-typeface specimen (DM Sans) with its weight set, optical-sizing range, glyph coverage, and 'UI default everywhere body' role declaration.",
+  "summary_for_embedding": "An HTML @dsCard preview specimen for DM Sans as the design system's body/UI typeface, showing sized samples, a glyph set, and weight/optical-sizing metadata.",
+  "intention_for_embedding": "To give an eye-recognisable reference for the body typeface, its weights, and its role as the universal UI default."
+}

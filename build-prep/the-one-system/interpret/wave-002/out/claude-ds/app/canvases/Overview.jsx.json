@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Overview.jsx",
+  "model": "opus",
+  "what_it_does": "Defines an Overview React canvas — a system-health dashboard that shows stat tiles (colors, icons, components, inbox) with counts and deltas, a grid of clickable canvas tiles, and a recent-activity feed. Header actions provide Search (cmdK), Reset, Export to disk, and a 'Build something' AI action; every tile/stat calls onNav to route to its sub-canvas.",
+  "observations": [
+    "Receives counts, onNav, recentActivity, onExport, onReset, onSearch as props — purely presentational, no internal state.",
+    "stats array has hardcoded delta strings ('+2 this week', '+12 new', '3 to triage') except inbox, whose delta is computed from counts.inboxNew.",
+    "deltaKind values ('up'/'gap') drive CSS class styling of the delta badge.",
+    "canvases grid mixes count-derived subs (counts.colorCount + ' tokens') with static descriptive subs ('Rules, examples, rewriter').",
+    "recentActivity rows render an icon (tone gold if a.color set, else bronze), text, by-line, and time.",
+    "Uses CvIcon and ViShape components, dsa-* classes, and CSS-var styling throughout.",
+    "Registers itself globally as window.Overview.",
+    "'Live · last updated 1m ago' is a static string, not computed."
+  ],
+  "standouts": [
+    "The 'Build something' AI action routes to the build canvas, positioning generation as a first-class entry point from the dashboard.",
+    "Inbox stat delta dynamically signals 'needs you' vs 'clear' based on counts.inboxNew, the one live-reactive stat."
+  ],
+  "conventions": [
+    "Follows window-global registration (window.Overview = Overview) and React-via-globals.",
+    "Tokenized look via CSS vars and dsa-* classes, consistent with the design-system folder.",
+    "Presentational/container split — all data and handlers injected as props."
+  ],
+  "concerns": [
+    "Several delta strings and 'last updated 1m ago' are hardcoded placeholder copy, not derived from real data — can drift from actual state.",
+    "recentActivity rows keyed by array index (key={i}), fragile under reordering/insertion.",
+    "logoCount referenced in canvases but not present in the stats array's counts usage, suggesting the counts shape must include it."
+  ],
+  "notes": "A read-only dashboard surface that aggregates system counts and recent activity into navigable tiles; some metrics are still placeholder copy rather than live values.",
+  "questions": [
+    "Are the static deltas ('+2 this week') intended placeholders to be wired to real metrics later?",
+    "What is the full shape of the counts prop (it must supply colorCount, iconCount, componentCount, inboxCount, inboxNew, logoCount)?",
+    "Where does onExport ('Export to disk') write, and what does onReset clear?"
+  ],
+  "purpose_vs_actual": "Match — header copy ('Everything ConceptV owns, at a glance') matches the implemented at-a-glance stat/canvas/activity dashboard.",
+  "apparent_themes": [
+    "Single overview surface as the system's home",
+    "Navigation-by-tile into specialized canvases",
+    "AI generation reachable from the top level"
+  ],
+  "intention_signals": "Aims to give one glanceable home that summarizes everything the design system owns, flags where the user is needed (inbox), and routes into every sub-canvas including a generation entry point.",
+  "novelty": "Treats 'Build something' (AI generation) as a peer dashboard action alongside Search/Export, rather than burying generation inside a sub-tool.",
+  "contribution": "Contributes the dashboard/home canvas: a stat-tile + canvas-grid + activity-feed layout with header actions (search, reset, export, build) and navigation routing into the rest of the system.",
+  "summary_for_embedding": "A React Overview dashboard canvas showing count stat-tiles, a grid of navigable canvas tiles, and a recent-activity feed, with header actions for search/reset/export/AI-build.",
+  "intention_for_embedding": "To provide one at-a-glance home that summarizes everything the design system owns and routes the user into every sub-canvas and into AI generation."
+}

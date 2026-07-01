@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/mode-engine.js",
+  "model": "opus",
+  "what_it_does": "Defines window.CV_MODE, an IIFE-wrapped registry of interaction MODES. Each mode declares what a click does, hover hints, cursor, accent, behaviour config flags, and lifecycle hooks (onEnter/onExit/onPick). Activating a mode reflects it onto document (data-mode attr, body cursor), pushes its behaviours to CV_AI as the active set, and runs setup/teardown. Ships two built-in modes: 'operator' (normal click navigates/edits) and 'inspect' (click any element to select it and hand to Vi). Defaults to operator on DOM ready.",
+  "observations": [
+    "Same register/resolve/query/activate/subscribe API shape stated to mirror other registries",
+    "api object exposes levers to mode hooks: pick, stopPick, toast, openVi, setPicked — all guarded against missing globals (CV_PICK, dsaToast, ATOMICITY)",
+    "activate() throws on unknown mode id (loud fail), runs prev.onExit then next.onEnter",
+    "inspect mode re-arms pick in a 60ms setTimeout loop so selection is persistent until mode changes",
+    "config flags (clicksSelect, navTree, viContext) are declared as the single source for 'what's on'",
+    "describe() returns active id + modes list (id/label/config) for introspection",
+    "emit() wraps each listener in try/catch logging to console.error"
+  ],
+  "standouts": [
+    "interaction = f(mode) — the stated organizing equation: the interaction layer is a function of the active mode",
+    "Entering a mode pushes its behaviours into CV_AI so Vi's tone/permissions follow the mode (mode drives AI)"
+  ],
+  "conventions": [
+    "Follows the project's register/resolve/query/activate/subscribe registry contract",
+    "Loud-fail on unknown mode (throws) per the non-negotiables",
+    "Defensive optional-chaining guards for cross-module globals",
+    "Extend-by-registration: new modes drop in as data without touching the shell"
+  ],
+  "concerns": [
+    "Empty catch blocks (catch {}) around CV_AI.setActiveBehaviours and listener emit swallow errors silently, which is in tension with the loud-fail rule",
+    "setTimeout re-arm loop in inspect mode has no explicit cancellation token beyond the active()-id check"
+  ],
+  "notes": "The mode registry: pick OPERATOR or INSPECT (or register your own); the active mode decides what clicks do and reconfigures Vi's behaviour set.",
+  "questions": [
+    "Where are CV_PICK, CV_AI, and ATOMICITY defined and what is their load-order relative to this file?",
+    "Are additional modes (annotate, measure, compare mentioned in the header) registered elsewhere?"
+  ],
+  "purpose_vs_actual": "Match — header docstring describes a mode registry driving interaction and Vi behaviours; code implements exactly that with the two stated built-ins.",
+  "apparent_themes": [
+    "Registry-as-truth",
+    "Single source for 'what's on' via config flags",
+    "Mode as a function over interaction",
+    "Self-describing (describe())",
+    "Loud-fail on the unknown"
+  ],
+  "intention_signals": "Tries to make interaction modal and data-driven so the meaning of a click is governed by one active mode, and to bind the AI assistant's tone/permissions to that same mode — one lever changes both interaction and AI.",
+  "novelty": "Coupling an interaction-mode registry to an AI behaviour set (entering a mode reconfigures Vi) is the distinct move.",
+  "contribution": "Contributes the modal-interaction layer: a registry that defines what a click means per mode and synchronizes the AI assistant's active behaviours to the active mode, with built-in operator/inspect modes and a document-level data-mode reflection for CSS.",
+  "summary_for_embedding": "A JS IIFE registry (window.CV_MODE) of interaction modes — operator and inspect built-ins — where the active mode governs click behaviour, cursor, config flags, and the AI assistant's active behaviour set.",
+  "intention_for_embedding": "To make interaction modal and single-sourced so one active mode decides what clicks do and simultaneously sets Vi's tone and permissions."
+}

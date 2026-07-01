@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/EMERGING_SHAPE.md",
+  "model": "opus",
+  "what_it_does": "A 'lead's running synthesis' note that states the distance-view 'SHAPE' the fabric's many partial finds triangulate toward: that the company is ONE addressed/typed projection-agnostic content substrate, and that 'building the interface' = binding already-designed faces to already-built substrates. Enumerates the five things the finds converge on, how a user would live in it, the meta-shape (the finding-method is itself a regenerated shape), the running list of 5+ independent interface sketches, and open decisions carried up for Tim to arbitrate.",
+  "observations": [
+    "Explicitly framed as provisional and held loosely — 'NOT a spec, NOT adopted parts'; states repeatedly that Tim is the ONLY judge of whether this IS the shape.",
+    "Five convergence points: (1) one addressed/typed projection-agnostic substrate built 5+ times as independent sketches; (2) 'no modes — only projections'; (3) the scale axis selects both projection and brain; (4) the interface is the binding act fabric-wide; (5) the half-circuit (agent-facing built, Tim-facing partly rendered).",
+    "Marks one find as a RUNNING SLICE (★ F13b): vi-visual's document-mode DOM-walk assigns element_ids to markdown, persists per-element direction to ~/.vi-visual/annotations/file/{file_hash}/{element_id}.json, and orphan-detects on file change.",
+    "Quotes Tim verbatim (Feb): 'graph templates and section slides are different projections of the same underlying system.'",
+    "Names a META-SHAPE: the finding-method (read for the GENERATING FUNCTION; find-the-shape never-adopt-the-part) is itself one of Tim's regenerated shapes, with a built prototype (visual-design-corpus) to mine.",
+    "Carries open items for Tim: D1 (graph-of-minds fold-in), D2 (resolved: scale-axis-selects-brain), POLARITY (DNA signed-axis vs FRD), the four axes, and the meta-judgment of whether this is the shape.",
+    "References a separate 'vspokes' Supabase (gctunhsuwpaxeatwlmuv / api.vspokes.com) as a distinct prototype, not the Factory DB."
+  ],
+  "standouts": [
+    "The core thesis stated as one sentence: the company is ONE addressed/typed substrate, the interface is that substrate PROJECTED, and building = binding not from-scratch.",
+    "The recursive meta-claim that the discovery method is itself a shape Tim laid down, making the fabric 'on-method by construction.'",
+    "The 'half-circuit' framing: the gaps are not failures but the UNRENDERED PROJECTIONS of an already-complete interaction grammar."
+  ],
+  "conventions": [
+    "Follows the fabric's finds-not-conclusions discipline: provisional, verification-tagged, Tim-as-judge.",
+    "Uses ★ to mark the highest-signal finds and a wildcard/member attribution style.",
+    "References finds by member channel ids (F13b, D2, CAND-13) and cross-member convergence."
+  ],
+  "concerns": [],
+  "notes": "This is the lead's one-page distance-view synthesis of an entire multi-member discovery effort — read it first to understand the 'one substrate projected, interface = binding' thesis everything else elaborates.",
+  "questions": [
+    "Has Tim actually judged this to BE the shape, or is it still entirely provisional at the time of writing?",
+    "What concretely happens when 'Tim lifts the hold' — is there a build trigger or is this purely a finding-phase artifact?",
+    "Which of the 5+ interface sketches, if any, is intended as the binding seed versus pure reference?"
+  ],
+  "purpose_vs_actual": "Match — it states its purpose (a provisional distance-view synthesis, not a spec) and delivers exactly that: a held-loosely shape statement with convergence points and open Tim-decisions.",
+  "apparent_themes": [
+    "One addressed/typed substrate; interface as projection",
+    "Binding over building; reuse over from-scratch",
+    "Convergence of independent sketches as evidence of an intended whole",
+    "Recognition-over-generation; steer-by-reaction",
+    "The finding-method as itself a regenerated shape (meta-recursion)"
+  ],
+  "intention_signals": "Trying to compress a sprawling, multi-session fabric discovery into a single legible 'this is what it all points at' artifact that Tim can judge in one read, while scrupulously not overclaiming or pre-committing the build.",
+  "novelty": "The explicit meta-shape move — treating the discovery method itself as one of the patterns being discovered — and the 'no modes, only projections' framing applied across slide/graph/document/graph-of-minds.",
+  "contribution": "Contributes the synthesized distance-view thesis (one substrate projected; interface = binding act) plus the structured enumeration of convergence points, the running-slice flags, and the carried-up Tim-decisions — the high-altitude orienting frame that ties the per-member finds together.",
+  "summary_for_embedding": "A lead's provisional synthesis note stating the 'emerging shape' the fabric's finds converge on: the company as one addressed/typed projection-agnostic substrate whose interface is that substrate projected, with building reframed as binding faces to substrates.",
+  "intention_for_embedding": "To compress a multi-session multi-member discovery effort into one held-loosely distance-view that Tim can judge, naming the convergence points, running slices, and open decisions without pre-committing a build."
+}

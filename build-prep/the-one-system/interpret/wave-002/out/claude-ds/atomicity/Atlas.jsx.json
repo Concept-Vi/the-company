@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/Atlas.jsx",
+  "model": "opus",
+  "what_it_does": "React (no-JSX-transform, React.createElement + JSX-via-Babel) components that render the AtomiCity Atlas browser: a collapsible tree rail (AcTree/AcTreeNode) on the left and a detail pane (AcDetail/AcBody plus per-kind leaf renderers) on the right, both driven entirely by the window.ATLAS projection model. The detail pane dispatches on node.kind to render tokens, cards (iframed specimens), components (live-mounted with an error boundary), templates (iframed), themes, fonts, AI entries (with lineage), Types, runtimes, serializers, and staged changes; every detail view ends with a 'What Vi can do here' chip row sourced from window.VI_BRAIN.suggestions. Also defines EnvCheck, a live read of CV_HOST/CV_SCAN capabilities showing what is autonomous now vs only on export. Exposes window.AcTree, window.AcDetail, window.EnvCheck.",
+  "observations": [
+    "Header comment states both panes render purely from the ATLAS model so they 'can't drift from the system' and that 'the agent and the browser are welded'.",
+    "Foundations is treated as one workbench page: token-group/token-file children are hidden in the tree (hideKids) and clicking a token node opens window.AcFoundations rather than deep-drilling.",
+    "AcBody routes special sections (foundations, home, ingest, explore, voice) to dedicated window.Ac* surfaces, falls back to a tile grid for sections/groups, then to per-kind leaf renderers.",
+    "AcMount is a class component with componentDidCatch error boundary; if a component needs props to render standalone it degrades to an explanatory message pointing to the specimen card.",
+    "AcCard and AcTemplate render the real artifact via <iframe src='../'+path> with viewport-derived heights.",
+    "AcToken always asserts 'This is its single home' and tells the user to reference var(--name) — reinforcing the single-source doctrine in the UI copy itself.",
+    "AcAiEntry calls window.CV_AI.lineage(e.id) and renders the inheritance chain; AcChange renders the serialized source diff in a <pre>.",
+    "Aliased hook imports (useState_at etc.) to avoid collisions in the shared global React bundle.",
+    "EnvCheck derives capability rows (read/write/list/exec/scan) from CV_HOST.describe().capabilities with no hand-written status; copy explains export-with-file-access unlocks autonomous write/scan/build.",
+    "Detail pane hard-depends on window.VI_BRAIN, window.ATLAS, and (for AI lineage) window.CV_AI being present."
+  ],
+  "standouts": [
+    "Every node's detail ends with agent affordances ('What Vi can do here'), structurally welding the browser to the AI rather than treating them as separate panes.",
+    "Live component mounting with an error-boundary fallback to the specimen card, so even un-mountable components stay inspectable.",
+    "EnvCheck makes the runtime's own capability surface (read/write/scan/exec) visible and honest about what only works on export."
+  ],
+  "conventions": [
+    "Pure projection of the ATLAS model — no hand-written navigation or per-page status, matching the project's 'interface is a projection of the registries' rule.",
+    "window.Ac* global component registration; React.createElement for cross-component composition with globals.",
+    "data-driven kind→renderer dispatch in AcBody."
+  ],
+  "concerns": [
+    "AcBody and AcDetail assume window.VI_BRAIN / window.ATLAS / window.CV_AI exist with no guards in some paths (e.g. window.VI_BRAIN.suggestions called unconditionally in AcDetail); a missing global would throw rather than degrade — file-local observation only."
+  ],
+  "notes": "The Atlas browser UI — a tree + kind-dispatched detail pane rendered entirely from window.ATLAS, where every inspected thing also shows its agent actions; pair with atlas-model.js (the model) and the Ac* surface components it delegates to.",
+  "questions": [
+    "What is window.VI_BRAIN.suggestions and where is it defined — it supplies the per-node agent actions but is not in this file?",
+    "Where do AcFoundations/AcHome/AcIngest/AcExplore/AcVoice live, and what is the AcKit.Tile / CvIcon / ViShape component set this depends on?"
+  ],
+  "purpose_vs_actual": "Match — the header promises a tree + detail pane rendered purely from ATLAS that always shows what Vi can do, and the code implements exactly that with kind-based dispatch and the trailing agent-action chips.",
+  "apparent_themes": [
+    "Browser-as-projection (no drift from the system)",
+    "Agent and interface welded (inspect = also act)",
+    "Honest runtime capability disclosure",
+    "Single-source doctrine surfaced in UI copy"
+  ],
+  "intention_signals": "Trying to make exploring the design system and acting on it the same act — every entity is rendered live from its source of truth and immediately offers the AI moves available on it, so the human and Vi operate on one shared model.",
+  "novelty": "A registry-projected explorer whose every detail view both renders the real artifact (live mount or iframe) and ends with context-resolved agent actions, plus a self-reporting environment-capability widget.",
+  "contribution": "Contributes the human-facing rendering and interaction layer over the ATLAS projection: the tree, the kind-dispatched detail renderers (live component mount, iframed cards/templates, token/AI/type/change views), and the EnvCheck capability disclosure.",
+  "summary_for_embedding": "React components rendering the AtomiCity Atlas browser — a collapsible tree and a kind-dispatched detail pane (tokens, cards, live-mounted components, templates, AI entries, types, staged changes) plus an EnvCheck widget, all driven purely by the window.ATLAS projection and ending every view with context-resolved 'what Vi can do here' actions.",
+  "intention_for_embedding": "To let a person browse and act on the design system through one projection-driven UI where inspecting any entity also exposes the AI moves available on it."
+}

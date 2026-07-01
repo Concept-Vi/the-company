@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/MCP-DESIGN-PRINCIPLE.md",
+  "model": "opus",
+  "what_it_does": "States the standing design law for the company MCP tool surface: every capability in ~/company must be reachable through mcp__company__* tools (coverage) and the server must be intuitive enough for an agent to use unaided (intuitiveness). It distills Anthropic's 'Writing effective tools for AI agents' principles, defines a company-specific law (a tool per resource noun + small verb/selector op param mirroring the engine's resource×op×space×by axes), presents a 2026-06-09 audit consolidating ~61 flat tools to ~25-30, and lays out the eval-driven intuitiveness bar and execution plan.",
+  "observations": [
+    "Two non-negotiable objectives: COVERAGE (drive everything through the MCP; each drop to direct is a gap to expose) and INTUITIVENESS (eval-driven, not author-asserted).",
+    "Six distilled Anthropic principles: fewer workflow-shaped tools, namespacing, meaningful context not low-level IDs, token-efficiency, helpful steering errors, prompt-engineered descriptions.",
+    "Company-specific law: a tool per resource noun + a small verb/selector param (op/by/kind); a new need = a new op value, not a new tool; flat sprawl framed as a 'built-twice/drift' from the company's own registry-is-truth and reuse-don't-parallel laws.",
+    "Explicit anti-god-tool trade-off: parameterise only where params are mostly shared; keep CQRS (reads split from consequential writes); keep the run_role/run_items/run_reduce/run_cascade compute primitives.",
+    "An audit table maps flat clusters to consolidated tools with deltas (e.g. 8 create_* -> create(kind=), 4 corpus tools -> corpus(op=...)), plus an explicit KEEP-as-is list.",
+    "Intuitiveness bar is verification by fresh agent: spawn a context-free agent on real cognition tasks and measure errors/redundant calls/wrong-tool selection; acceptance = a fresh agent completes core workflows unaided.",
+    "Whole-application awareness section enumerates the company laws applying to every tool (registry-is-truth, fail-loud-no-silent-fallback, reflects-never-owns, the FLOOR, NO Gemini, etc.).",
+    "THREE CONSUMERS design constraint: external cold agents (FLOOR as hard security boundary), internal crew agents, and the RHM human surface; design for the coldest consumer.",
+    "TWO ENGINES feed the backlog: FLOOR (eval-driven friction, via mcp-compose-eval.workflow.js) and CEILING (opportunity-generation, learning from substrate-mcp's suggest_tool/get_type_graph/etc.)."
+  ],
+  "standouts": [
+    "The single law: 'never ADD a flat tool — add an op', with op/kind enums DERIVED from live registries rather than hardcoded.",
+    "Design-for-the-coldest-consumer (external agent) framing, where the FLOOR is a hard security boundary against escalation.",
+    "Two faces one composability — getting the MCP right makes the human UI intuitive by nature."
+  ],
+  "conventions": [
+    "Markdown design-law doc with dated rationale lines attributed to Tim and a cited external source (Anthropic engineering post).",
+    "Uses the company's own vocabulary (registry-is-truth, CQRS, the FLOOR, reflects-never-owns, drift-radar, G-numbered gaps).",
+    "Cross-references sibling files (mcp-compose-eval.workflow.js, FRAME-the-two-halves.md)."
+  ],
+  "concerns": [],
+  "notes": "The standing constitution for the MCP tool face: consolidate flat tools into resource+op tools, cover every capability, and prove intuitiveness by fresh-agent eval.",
+  "questions": [
+    "Has the audit's ~61->~25-30 consolidation actually been applied to mcp_face/server.py, or does this remain the plan?",
+    "Where is the FRAME-the-two-halves.md referenced doc, and the G-numbered gap register (G8/G18/G20/G21)?"
+  ],
+  "purpose_vs_actual": "Match — it declares itself the standing law for the tool face and delivers exactly that: principles, a company-specific consolidation law, an audit, an eval-driven acceptance bar, and an execution plan.",
+  "apparent_themes": [
+    "MCP as the single agent face of the whole company",
+    "Consolidation via resource+op parameterisation over flat sprawl",
+    "Registry-is-truth applied to the tool surface",
+    "Eval-driven (fresh-agent) verification",
+    "Security boundary (the FLOOR) for cold external consumers"
+  ],
+  "intention_signals": "Trying to establish a durable, agent-followable law that prevents tool-surface sprawl, guarantees full capability coverage through one intuitive composable face, and ties acceptance to empirical fresh-agent use rather than author familiarity.",
+  "novelty": "Reframing tool-surface design itself as subject to the system's own composition laws (registry-is-truth, reuse-don't-parallel) and deriving tool op/kind enums from live registries.",
+  "contribution": "Contributes the governing principles, the resource+op consolidation law, the audit-to-target mapping, and the fresh-agent acceptance bar that define how the company's MCP face is shaped and verified.",
+  "summary_for_embedding": "A standing design-law document for the company MCP that mandates full capability coverage and fresh-agent intuitiveness, distills Anthropic tool-design principles into a resource+op consolidation law deriving enums from live registries, and tables a 61->25-30 tool audit.",
+  "intention_for_embedding": "To set the binding law and acceptance bar for shaping the company's MCP tool face so every capability is reachable and an unaided agent can compose with it."
+}

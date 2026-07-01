@@ -1,0 +1,44 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/provenance.css",
+  "model": "opus",
+  "what_it_does": "Defines an authorship/provenance marking language: colour tokens for vi/human/suggested authors, a quiet left-edge marker applied via [data-author] ::before, an inline `.by` badge with author variants (.by-vi/.by-human/.by-suggested) each with a distinct glyph and styling, and a `.vi-authored` full-object tint for AI output awaiting review.",
+  "observations": [
+    "Author colour tokens: --author-vi = --accent-gold, --author-human = --zone-source-ink (fallback #3a5780), --author-suggested = --accent-bronze",
+    "[data-author]::before draws a 2px rounded left marker; vi is solid gold, human solid, suggested a dashed repeating-linear-gradient",
+    ".by badge: pill-shaped, 700 9px uppercase with letter-spacing, a ::before glyph 8x8",
+    "by-vi uses a gold gem (rotated 45deg square), by-human a round dot, by-suggested a dashed-border transparent pill with a round dot",
+    ".vi-authored applies --vi-surface as a subtle full-object wash for AI output awaiting human review",
+    "Usage documented: data-author on the object, or a <span class=\"by by-vi\"> badge inline",
+    "References upstream tokens: --accent-gold, --accent-bronze, --vi-strong, --vi-edge, --vi-surface, --ink, --font-body, --zone-source-* and --accent-gold-soft"
+  ],
+  "standouts": [
+    "Provenance framed in the header as a trust signal — making human-made vs Vi-made vs Vi-suggested legible everywhere in an agentic workspace",
+    "Three distinct visual languages (gold gem / round dot / dashed) so author is readable by shape, not only colour",
+    "Suggested author uses a dashed/repeating gradient to read as tentative/proposed"
+  ],
+  "conventions": [
+    "Token-then-rule pattern with role tokens referencing accent/zone primitives",
+    "Data-attribute-driven styling ([data-author]) plus an inline badge class family",
+    "Many fallbacks provided for referenced tokens (e.g. #3a5780, --accent-gold-soft fallback --vi-edge)"
+  ],
+  "concerns": [],
+  "notes": "The single home for authorship marking — edge markers + badges that distinguish human / Vi / Vi-suggested work, a trust signal for the agentic workspace.",
+  "questions": [
+    "Where are the vi-specific tokens (--vi-strong, --vi-edge, --vi-surface) and --zone-source-* defined?",
+    "Is --accent-gold-soft defined, or always relying on the --vi-edge fallback?",
+    "What sets data-author / adds .vi-authored in the live app — a renderer or a manual annotation?"
+  ],
+  "purpose_vs_actual": "Matches — header promises a consistent authorship marking language (badge + edge treatment) for human/vi/suggested; the file delivers exactly those markers, badges, and the awaiting-review wash.",
+  "apparent_themes": [
+    "provenance as a trust signal",
+    "human vs AI vs AI-suggested legibility",
+    "shape-encoded meaning (gem/dot/dashed)",
+    "single-source author tokens"
+  ],
+  "intention_signals": "Trying to make the origin of any piece of work visible everywhere in an agentic workspace — distinguishing human-made, Vi-made, and Vi-suggested as a constant, quiet trust cue, with AI output awaiting review visibly tinted.",
+  "novelty": "Provenance as a dedicated design-token domain — encoding authorship in both colour and glyph shape, with a distinct 'suggested/tentative' dashed treatment and an awaiting-review wash.",
+  "contribution": "Contributes the authorship marking vocabulary — author colour tokens, edge markers, the .by badge family, and the .vi-authored awaiting-review tint.",
+  "summary_for_embedding": "ConceptV design-system CSS defining an authorship/provenance marking language: author colour tokens, a left-edge marker via [data-author], a .by badge family (vi/human/suggested) with distinct glyphs, and a .vi-authored awaiting-review tint.",
+  "intention_for_embedding": "To make work-origin (human vs Vi vs Vi-suggested) legible everywhere in an agentic workspace as a consistent trust signal."
+}

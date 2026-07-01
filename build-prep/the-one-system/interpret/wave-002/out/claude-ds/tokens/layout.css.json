@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/layout.css",
+  "model": "opus",
+  "what_it_does": "Defines layout primitives and a z-index layering scale: a :root z-index token ladder (base through max), plus Every-Layout-style composable classes — .stack, .cluster, .sidebar, .center, .cover, .reel, .frame-ratio, .grid-fit, and .switcher — each responsive by construction and tunable via per-instance custom properties.",
+  "observations": [
+    "Z-index ladder: base 0, raised 10, sticky 100, nav 200, overlay 300, modal 400, popover 500, toast 600, command 700, max 9999",
+    "Header comment names the z-scale 'the only legal stacking order'",
+    ".stack — vertical flex with --gap (default --d-4), zeroed margin-block on children, min-height 0",
+    ".cluster — wrapping horizontal flex with --gap/--align/--justify",
+    ".sidebar — flex-wrap rail+content that collapses to a stack with no media query (rail --side 280px, content wrap threshold --content-min 60%)",
+    ".center — measure-capped centered column with content-box and --gutter padding",
+    ".cover — vertically centered region via margin-block:auto on .cover-main",
+    ".reel — single-row horizontal scroller with scroll-snap x proximity",
+    ".grid-fit — auto-fit grid with minmax(min(--col-min 240px,100%),1fr)",
+    ".switcher — quantity-query: items in a row until --threshold (460px), then all snap to a column together via flex-basis:calc((threshold - 100%) * 999)",
+    "References spacing tokens (--d-2/--d-3/--d-4, --space-fluid-md, --measure)"
+  ],
+  "standouts": [
+    "The .switcher flex-basis calc trick that flips the whole set to a column at once (a CSS quantity query, no media query)",
+    "The z-index scale declared as the single legal stacking order with named semantic tiers (overlay/modal/popover/toast/command)"
+  ],
+  "conventions": [
+    "Explicitly credits Every-Layout as the source of the primitive set",
+    "Per-instance tuning via custom properties documented per class",
+    "@kind other annotations on the z-index integer tokens",
+    "References spacing/measure tokens rather than raw values"
+  ],
+  "concerns": [],
+  "notes": "The single home for responsive layout primitives (Every-Layout style) plus the semantic z-index ladder; compose these classes instead of writing bespoke flex/grid per component.",
+  "questions": [
+    "Where are the spacing tokens (--d-2/--d-3/--d-4, --space-fluid-md) and --measure defined? (--measure and --space-fluid-md appear in sizing.css; --d-* are referenced but not defined there)",
+    "What defines the --d-* spacing scale that several primitives default to?"
+  ],
+  "purpose_vs_actual": "Matches — header promises composable, media-query-free responsive primitives plus a z-index scale, and the file delivers exactly that set.",
+  "apparent_themes": [
+    "responsive by construction (no media queries)",
+    "composition over bespoke layout",
+    "Every-Layout methodology",
+    "single legal stacking order"
+  ],
+  "intention_signals": "Trying to make 'responsive & computed' automatic by giving components a small set of intrinsic-responsive primitives to compose, eliminating ad-hoc flex/grid and z-index conflicts.",
+  "novelty": "The container-driven .switcher and .sidebar collapse behaviour achieved with flex-basis math rather than breakpoints, and the named command/toast z-tiers.",
+  "contribution": "Contributes the Every-Layout primitive set (stack/cluster/sidebar/center/cover/reel/frame/grid-fit/switcher) and the semantic z-index ladder as composable, single-source building blocks.",
+  "summary_for_embedding": "ConceptV design-system CSS defining a semantic z-index scale and Every-Layout-style composable, media-query-free responsive layout primitives (stack, cluster, sidebar, center, cover, reel, grid-fit, switcher).",
+  "intention_for_embedding": "To make layout responsive-by-construction through a small set of composable intrinsic primitives and a single legal z-index stacking order."
+}

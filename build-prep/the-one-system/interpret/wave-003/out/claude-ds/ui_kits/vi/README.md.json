@@ -1,0 +1,39 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/vi/README.md",
+  "model": "opus",
+  "what_it_does": "Documents the Vi UI kit: describes Vi as ConceptV's internal AI framework that reads project-connected entities (Brand Kit, Master Info, Files, Analytics), finds missing fields, asks the user for gaps, and consolidates a finished asset (brochure, landing page, hub). Specifies the canonical 'Vi Workspace' three-pane layout, the Vi brand mark, the component file roster, and how the demo behaves.",
+  "observations": [
+    "Defines a three-pane layout: left Conversation (chat where Vi shows its work), centre Task tree (the three-layer agent architecture, live), right Output preview (the asset built in real time).",
+    "Describes Vi's three-layer agent architecture: Layer 1 plans, Layer 2 spawns clones that analyse and break down sub-tasks, Layer 3 executes and saves to file.",
+    "References two illustration assets the layout mirrors: assets/illustrations/vi_brochure_flow.png and assets/illustrations/vi_layers.jpg.",
+    "Specifies Vi's brand mark as a diamond with line-fill used as the avatar, and a 'Vi' wordmark with a gold (#E0C010) subscript 'i'.",
+    "Lists six components with one-line roles: ViMark.jsx, ViStatusPill.jsx, ChatPanel.jsx, TaskTree.jsx, OutputPreview.jsx, App.jsx.",
+    "Describes the demo (index.html) opening mid-task building a 'Tower East' brochure, with Continue and Reset controls."
+  ],
+  "standouts": [
+    "The three-layer agent architecture (plan / spawn-clones / execute-and-save) is named explicitly as the centre pane's content.",
+    "Vi reads connected entities and fills/flags gaps as the core product loop, surfaced live in the conversation pane."
+  ],
+  "conventions": [
+    "Uses a markdown table to map panes to content and another to map component files to roles.",
+    "Inline HTML (<sub style=...>) used inside markdown to render the gold subscript wordmark."
+  ],
+  "concerns": [],
+  "notes": "The spec/orientation doc for the Vi UI kit — read it to understand the three-pane Workspace, the three-layer agent visualisation, and which file does what.",
+  "questions": [
+    "Are vi_brochure_flow.png and vi_layers.jpg present at the referenced asset paths?",
+    "ChatPanel.jsx and OutputPreview.jsx are listed here but not in this batch — do they exist as described?"
+  ],
+  "purpose_vs_actual": "Matches: the file states it is the UI kit README and it describes the kit's layout, brand, components, and demo.",
+  "apparent_themes": [
+    "Entity-driven asset generation (read connected entities -> fill -> flag gaps -> consolidate)",
+    "Live visibility of agent work (Vi shows its reasoning/steps)",
+    "Three-layer agent architecture as a first-class UI surface"
+  ],
+  "intention_signals": "Tries to establish a single canonical screen ('Vi Workspace') that makes Vi's hidden agent work visible — conversation, agent task tree, and output preview side by side — so the AI's process is legible to the user.",
+  "novelty": "Surfacing a multi-layer agent execution tree as a live centre pane alongside chat and output preview is a distinctive product framing for an AI asset-builder.",
+  "contribution": "Contributes the conceptual spec and vocabulary for the Vi product face: the three-pane Workspace, the entity-read/gap-fill/consolidate loop, the three-layer agent model, and the diamond brand mark.",
+  "summary_for_embedding": "README for the ConceptV Vi UI kit describing a three-pane Vi Workspace (conversation, live three-layer agent task tree, output preview) for an AI that reads project entities, fills gaps, and consolidates assets like brochures.",
+  "intention_for_embedding": "To define and orient agents to the canonical Vi Workspace interface and its entity-driven, three-layer-agent asset-building loop."
+}

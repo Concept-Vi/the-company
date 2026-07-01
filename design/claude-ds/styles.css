@@ -1,0 +1,55 @@
+/* ============================================================
+   ConceptV Design System — root stylesheet
+   ------------------------------------------------------------
+   Single entry point for consumers. Link this one file:
+
+       <link rel="stylesheet" href="styles.css">
+
+   IMPORT ORDER (matters — later files reference earlier tokens):
+     1. colors_and_type.css  — colour, surface-zone registry, type,
+                                spacing (--s-*), base motion, layout
+     2. tokens/surfaces.css  — breakpoints, canonical frames,
+                                orientation, container-query convention
+     3. tokens/sizing.css    — fluid type/space, overflow-safe utils
+     4. tokens/depth.css     — elevation ramp, texture/grain
+     5. tokens/motion.css    — "nothing teleports" motion language
+     6. tokens/diagram.css   — diagram vocabulary (uses zones + depth)
+     7. tokens/theme.css     — light / dim / dark / contrast modes
+     8. tokens/density.css   — compact / comfortable / spacious knob
+     9. tokens/layout.css    — layout primitives + z-index layering
+    10. tokens/states.css    — loading/resolve, empty/error, interaction
+    11. tokens/focus.css     — attention / dim-the-rest
+    12. tokens/icons.css     — icon language
+    13. tokens/dataviz.css   — chart palette + viz primitives
+    14. tokens/imagery.css   — aspect-ratio, blur-up, art direction
+    15. tokens/canvas.css    — spatial canvas scaffold
+    16. tokens/provenance.css— human / Vi / suggested authorship
+    17. tokens/export.css    — export surfaces + lifecycle tags
+    18. tokens/texture.css   — diagonal hatch + blueprint ghost (low-opacity)
+    19. core/containers.css  — the typed containment ladder (generative core)
+    20. tokens/controls.css   — the component layer (buttons, cards, fields,
+                                badges, pills, chips, tables, dividers)
+
+   App- and kit-specific chrome (app/*.css, ui_kits/*.css, preview/*)
+   are implementation details loaded by their own surfaces — NOT here.
+   ============================================================ */
+@import url("colors_and_type.css");
+@import url("tokens/surfaces.css");
+@import url("tokens/sizing.css");
+@import url("tokens/depth.css");
+@import url("tokens/motion.css");
+@import url("tokens/diagram.css");
+@import url("tokens/theme.css");
+@import url("tokens/density.css");
+@import url("tokens/layout.css");
+@import url("tokens/states.css");
+@import url("tokens/focus.css");
+@import url("tokens/icons.css");
+@import url("tokens/dataviz.css");
+@import url("tokens/imagery.css");
+@import url("tokens/canvas.css");
+@import url("tokens/provenance.css");
+@import url("tokens/export.css");
+@import url("tokens/texture.css");
+@import url("core/containers.css");
+@import url("tokens/controls.css");

@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/config.toml",
+  "model": "opus",
+  "what_it_does": "The Supabase CLI configuration file for the claude-design local development project. Declares project_id and configures every Supabase subsystem: API (ports/exposed schemas/max_rows), DB (Postgres 17, ports, pooler, migrations enabled, seed file), realtime, Studio, inbucket email testing, storage (50MiB limit, S3 protocol on, vector buckets on), a large auth block (site_url, JWT expiry, signup/anon rules, rate limits, email/SMS, MFA, external OAuth providers all disabled, third-party providers, OAuth server), edge_runtime (Deno 2, per_worker hot reload), analytics (off), and experimental (S3/OrioleDB, pgdelta diff engine enabled).",
+  "observations": [
+    "project_id = 'gctunhsuwpaxeatwlmuv' ties this local config to a specific remote Supabase project",
+    "Non-default ports throughout (api 15421, db 15432, shadow 15433, studio 15423, inbucket 15424) — shifted off the standard 543xx range, likely to avoid a port clash",
+    "api.tls.enabled = false with commented-out cert/key paths pointing at ../certs/",
+    "auth.enable_anonymous_sign_ins = false; auth.email.enable_confirmations = false; minimum_password_length = 6",
+    "All external OAuth (apple) and third-party providers (firebase/auth0/aws_cognito/clerk) and web3/solana are enabled = false",
+    "experimental.pgdelta.enabled = true (newer schema-diff engine over legacy migra)",
+    "storage.vector.enabled = true with max_buckets 10 / max_indexes 5; storage.s3_protocol enabled = true",
+    "Secrets consistently referenced via env() substitution (OPENAI_API_KEY, SENDGRID, twilio token, S3 keys) with DO-NOT-commit comments"
+  ],
+  "standouts": [
+    "Hardcoded project_id binding this dev config to a named remote project",
+    "Deliberate non-standard port range across all services"
+  ],
+  "conventions": [
+    "Follows the standard Supabase-generated config.toml template (extensive reference comments kept inline)",
+    "Follows the secret-via-env() convention rather than inline secrets",
+    "Most blocks left at defaults; only ports, db major_version, and a few toggles are customised"
+  ],
+  "concerns": [],
+  "notes": "Standard Supabase CLI config for the claude-design dev stack, pinned to remote project gctunhsuwpaxeatwlmuv and shifted onto a non-default 154xx port range.",
+  "questions": [
+    "Why the non-default 154xx port range — is another Supabase stack running on the same host on 543xx?",
+    "Is the bound remote project gctunhsuwpaxeatwlmuv the production design connector home referenced in the migrations?"
+  ],
+  "purpose_vs_actual": "n/a (no separately stated purpose; it is itself the config)",
+  "apparent_themes": [
+    "local-dev-first then push to a named remote project",
+    "fail-closed defaults (anon sign-in off, external providers off)",
+    "secrets kept out of git via env substitution"
+  ],
+  "intention_signals": "Configures a self-contained local Supabase stack for the claude-design connector work, pinned to a specific remote project and arranged so it can coexist with another local stack via shifted ports.",
+  "novelty": "The non-default port range and pgdelta-enabled diff engine are the distinct local choices; otherwise template-standard.",
+  "contribution": "Brings the concrete environment binding for the claude-design Supabase stack — the project_id, the port map, and the subsystem toggles (vector storage, S3, realtime, auth posture) the rest of the migrations assume.",
+  "summary_for_embedding": "Supabase CLI config.toml for the claude-design local dev stack, pinned to remote project gctunhsuwpaxeatwlmuv with non-default 154xx ports and customised db/auth/storage/experimental subsystem settings.",
+  "intention_for_embedding": "To define and pin the local-then-remote Supabase environment for the claude-design connector project."
+}

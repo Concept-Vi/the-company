@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/THE-TRIANGULATION.md",
+  "model": "opus",
+  "what_it_does": "A capture (2026-06-12) recording where three independent 'rays' (three sibling seed-capture documents/sessions) converge on Tim Geldard's geometric object. It lists located independent convergences, the fusions formed by joining the located parts, this session's own generated extensions (B4-B6, flagged for Tim's fit-test), and operational notes — all under an expand-before-harden, nothing-ratified discipline.",
+  "observations": [
+    "Names the three rays: the INSTRUMENT (geometric-substrate + growth-rounds), the ENCODING (geldard-lattice), and the LAWS (CONVERGENCE-OBJECT), framing itself as the designed convergence path.",
+    "Located convergences include three independent derivations of the sqrt2/(1,1) forbidden point and a claim that 'new types are born at deep holes' was independently re-derived (corroboration, marked with a star).",
+    "Fusions include 'Resistance is storable; relevance never is' (resistance is centre-independent -> compute+cache; relevance is centre-dependent -> read-time only), refining the store-positions/compute-perspectives law.",
+    "Fuses chain=Morton-path=address across all three rays ('store-path and recall-path = one tree, opposite directions').",
+    "Claims resolve(centre, spaces, n, k, audience, exhale) already contained the laws' variables, written days before the transmission.",
+    "This ray's own generations: B4 triangulation-is-parallax (sessions as eyes measuring the object's depth), B5 the-wave-is-radial (log-polar kinematics, approach to centre), B6 the-involuntary-axis (time as the one axis the centre moves along without choice).",
+    "Operational section notes registry caution: embed-pplx / embed-jina-v4 rows are LIVE and verified — read whole rows before touching shared registries.",
+    "Closes reaffirming nothing is ratified and B4/B5/B6 are explicitly flagged for Tim's fit-test."
+  ],
+  "standouts": [
+    "B4: 'TRIANGULATION IS PARALLAX' — a session is a centre, one centre cannot perceive depth, so differences between rays are the only instrument that can measure the object's depth; offered as the formal justification of the multi-session method.",
+    "The resistance-vs-relevance storability distinction (centre-independent caches, centre-dependent reads) as a concrete refinement of the store law.",
+    "The corroboration claim: two unaware rays generating the same extension ('type-birth and axis-birth are the same mechanism') treated as triangulation evidence rather than extrapolation."
+  ],
+  "conventions": [
+    "Maintains attribution to Tim Geldard and an explicit mine-vs-his / flagged-for-fit-test discipline.",
+    "Uses the repo's resolve/centre/rings, resistance/temperature, registry, and forbidden/coincidence vocabulary; honors live-registry caution.",
+    "Expand-before-harden: nothing ratified, extensions flagged."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the convergence document where three independent seed-readings (instrument / encoding / laws) are shown to land on the same object, with fusions (storable resistance, chain=Morton=address) and three new flagged extensions (parallax, radial wave, involuntary time axis).",
+  "questions": [
+    "Did Tim subsequently fit-test and accept/reject B4 (parallax), B5 (radial wave), and B6 (involuntary axis)?",
+    "Were the fusions (storable resistance + temperature rollup, chain-path addressing) implemented, given the file says they are 'computable now' but unratified?"
+  ],
+  "purpose_vs_actual": "Match — it states it is the instrument-session's ray returned through the substrate documenting convergence, and it delivers located convergences, fusions, and flagged generations.",
+  "apparent_themes": [
+    "Independent convergence as evidence (triangulation, not extrapolation)",
+    "Parallax: multiple centres/sessions as the only way to perceive depth",
+    "Store the centre-independent (resistance), compute the centre-dependent (relevance)",
+    "Chain = Morton path = address (one tree, two directions)",
+    "Time as the involuntary axis; two orthogonal presents for conditional memory",
+    "Expand-before-harden / flagged-for-fit-test"
+  ],
+  "intention_signals": "To demonstrate that several independently-grown readings of Tim's seed agree without coordination (raising confidence the object is real and not invented), to fuse their compatible parts into sharper design law, and to offer a geometric justification for the multi-session/parallel-agent method itself.",
+  "novelty": "The parallax argument (sessions as eyes, differences-between-rays as the depth-measuring instrument), the resistance-storable/relevance-not distinction, and the explicit treatment of independent re-derivation as triangulation evidence.",
+  "contribution": "Contributes the cross-ray synthesis layer: documented independent convergences, the storable-resistance/read-time-relevance refinement of the store law, the chain=Morton=address identity, and the parallax/radial-wave/involuntary-axis extensions — a meta-layer (including a geometric rationale for multi-session work) a fused system could keep.",
+  "summary_for_embedding": "A 2026-06-12 convergence capture showing three independent readings of Tim Geldard's geometric object (instrument, encoding, laws) landing on the same coordinates, fusing them into refinements like storable-resistance/read-time-relevance and chain=Morton=address, and adding flagged extensions (triangulation-as-parallax, radial wave, time as the involuntary axis).",
+  "intention_for_embedding": "To show that independently-grown readings of Tim's seed converge (evidence of a real object), to fuse their compatible parts into sharper design law, and to justify the multi-session method as parallax depth-perception."
+}

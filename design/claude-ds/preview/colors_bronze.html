@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Colors" name="Bronze & tan" subtitle="The structural bronze→tan scale, sampled from the source brand vectors" viewport="780x360" --><html><head><meta charset="utf-8"><title>Bronze &amp; tan scale</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 22px 26px; display: flex; flex-direction: column; gap: 16px; }
+  .lead { font: 400 12px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0; max-width: 100%; }
+  .lead b { color: var(--fg-primary); }
+  .lead code { font: 500 11px/1 var(--font-mono); color: var(--accent-bronze); }
+
+  .scale { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .sw { display: flex; flex-direction: column; gap: 6px; }
+  .chip { height: 72px; border-radius: var(--r-md); border: 1px solid var(--border-faint); }
+  .name { font: 600 11px/1.1 var(--font-body); color: var(--fg-primary); }
+  .name b { color: var(--accent-gold); }
+  .hex { font: 400 10.5px/1 var(--font-mono); color: var(--fg-muted); }
+  .src { font: 400 9.5px/1 var(--font-mono); color: var(--accent-bronze-soft); }
+  .desc { font: 400 10.5px/1.3 var(--font-body); color: var(--fg-muted); }
+
+  .foot { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid var(--border-faint); }
+  .title-demo {
+    background: var(--accent-bronze); color: #FBF7EC;
+    display: flex; align-items: center; justify-content: center;
+    font: 700 18px/1 var(--font-display); letter-spacing: -0.01em;
+    padding: 10px 20px; border-radius: var(--r-md);
+  }
+  .foot .lbl { font: 400 11px/1.4 var(--font-body); color: var(--fg-secondary); }
+  .foot .lbl b { color: var(--fg-primary); }
+  .ramp-note { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .ramp-note .dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--border-faint); }
+  .ramp-note span { font: 400 10.5px/1.3 var(--font-body); color: var(--fg-muted); }
+</style></head>
+<body><div class="card">
+  <p class="lead">Bronze is the <b>structural / quiet voice</b> — line-drawn illustrations, section headers and connective italic captions. The scale below is sampled directly from the <b>source brand vectors</b> (<code>_ingest/src-all/*.svg</code>): the dominant stroke is <code>#99885e</code> (≈ bronze, used 42×), the deep line/shadow is <code>#7b7055</code>, and the applied "deck" bronze is <code>#c7a961</code> (≈ bronze-warm). Ink stays content; gold stays active.</p>
+
+  <div class="scale">
+    <div class="sw"><div class="chip" style="background:var(--accent-bronze-deep)"></div><span class="name">bronze-deep</span><span class="hex">#7B7055</span><span class="src">src ×8</span><span class="desc">deep illustration line · shadow</span></div>
+    <div class="sw"><div class="chip" style="background:var(--accent-bronze)"></div><span class="name">bronze <b>★</b></span><span class="hex">#988058</span><span class="src">src #99885e ×42</span><span class="desc">primary stroke · section heads</span></div>
+    <div class="sw"><div class="chip" style="background:var(--accent-bronze-warm)"></div><span class="name">bronze-warm</span><span class="hex">#C09D5D</span><span class="src">src #c7a961 ×7</span><span class="desc">applied deck bronze · captions</span></div>
+    <div class="sw"><div class="chip" style="background:var(--accent-bronze-soft)"></div><span class="name">bronze-soft</span><span class="hex">#C9B58A</span><span class="src">&nbsp;</span><span class="desc">borders · dividers</span></div>
+    <div class="sw"><div class="chip" style="background:var(--accent-tan)"></div><span class="name">tan</span><span class="hex">#D0C098</span><span class="src">&nbsp;</span><span class="desc">illustration soft fills</span></div>
+    <div class="sw"><div class="chip" style="background:var(--accent-bronze-2)"></div><span class="name">bronze-2</span><span class="hex">#7A6A48</span><span class="src">&nbsp;</span><span class="desc">deep bronze for <b>text</b> contrast</span></div>
+  </div>
+
+  <div class="foot">
+    <div class="title-demo">Brand Kit</div>
+    <span class="lbl">Screen titles set bronze at <b>36 px display</b>.</span>
+    <div class="ramp-note">
+      <span class="dot" style="background:var(--ramp-1)"></span>
+      <span class="dot" style="background:var(--ramp-2)"></span>
+      <span class="dot" style="background:var(--ramp-3)"></span>
+      <span class="dot" style="background:var(--ramp-4)"></span>
+      <span>continues into the gold→bronze ramp</span>
+    </div>
+  </div>
+</div></body></html>

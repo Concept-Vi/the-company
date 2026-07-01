@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/types-thumb.jsx",
+  "model": "opus",
+  "what_it_does": "Defines TypeThumb, a universal thumbnail renderer for any Type in the CV_REGISTRY. It dispatches by layer/family/runtime to a specific preview renderer (token color/type/shape, atom icon/status/shape/stamp, block, system widget, surface widget/wizard-step/slide, doc widget/wizard/deck/brochure, template), and uses a ScaledThumb helper that renders children at native size then transform-scales them to fit a target box. Block/system/slide/deck/brochure previews render THROUGH the shared engine (window.__cvRenderType) gated on window.__coreReady; other previews are hand-drawn mock chrome. Exposes TypeThumb, ScaledThumb, RenderShape, ThumbPlaceholder on window.",
+  "observations": [
+    "ScaledThumb computes a uniform scale = min(sx,sy) and translate to center (or top-align) native content inside the box, with pointerEvents:none on the scaled layer",
+    "pickRenderer is a layer→family dispatch table returning a render function; returns null (→ ThumbPlaceholder) for unknown layers",
+    "Block/System/Slide/Deck/Brochure renderers each carry the same ready-gate pattern: useState seeded from window.__cvRenderType, useEffect awaiting window.__coreReady then setReady",
+    "Cross-doc embed blocks (embedWidget/embedWizard) intentionally bypass the core engine and use window.WS_BLOCKS[key].render or window.WidgetRender instead",
+    "MOCK_WIDGET_DOC is a shared inline fixture (Tower East dashboard: kpis, rows, media, spark chart, cta) reused by system/surface/doc widget previews",
+    "RenderShape draws hexagon/octagon/diamond/circle as inline SVG using var(--accent-gold) / var(--accent-gold-soft)",
+    "isLightHex computes perceived luminance (r*299+g*587+b*114)/1000 > 150 to pick readable text color over a swatch, expanding 3-digit hex first",
+    "TemplateThumb recursively renders the parent Type's thumbnail plus a variable-count badge",
+    "DocWizardThumb resolves steps via explicit defaults > legacy window.WIZARD_KINDS lookup > a hardcoded 5-step fallback (Capture/Enrich/Audience/Review/Publish)",
+    "React hooks are aliased with _th suffix (useMemo_th etc.) destructured from global React"
+  ],
+  "standouts": [
+    "Inline comments tie renderers to named program axes: UNIFICATION W3 (render through the one engine), REQUIREMENTS F2 (product UI = containment tree), W7 (dataviz atom pending)",
+    "The async readiness gate is explicitly described as 'readiness, not a fallback' — the preview waits for the real engine rather than substituting a fake",
+    "Deck/brochure previews render the actual FIRST slide through the engine on a stacked-card affordance, single-sourced from archetype defaults"
+  ],
+  "conventions": [
+    "Follows the project rule that previews render through the one engine (window.__cvRenderType) rather than a hand-drawn copy where possible",
+    "Reads everything from window.CV_REGISTRY / window globals rather than imports (browser-global module style)",
+    "Uses var(--token) for all colors/elevation/zones, no raw hex in chrome (hex only appears as live swatch data)",
+    "Attaches public API via Object.assign(window, {...}) at end of file"
+  ],
+  "concerns": [
+    "Hardcoded fallback wizard steps and MOCK_WIDGET_DOC are inline literal fixtures living in this preview file rather than referenced from a single home",
+    "The ready-gate useEffect is duplicated verbatim across five renderers (Block/System/Slide/Deck/Brochure) with [ready] deps",
+    "TokenColorThumb default hex '#E0C010' is a raw literal in a consumer rather than a token reference"
+  ],
+  "notes": "The universal Type→preview dispatcher: real engine output for block/system/slide/deck/brochure (gated on core readiness), hand-drawn chrome for tokens/atoms/wizards.",
+  "questions": [
+    "Where is window.__cvRenderType / window.__coreReady set, and what guarantees the gate resolves?",
+    "Are the inline fallback wizard steps and MOCK_WIDGET_DOC intentionally local fixtures or should they reference a shared sample-data home?"
+  ],
+  "purpose_vs_actual": "Matches — the header states a layer-aware universal thumbnail renderer used in TypeCard everywhere, and the file delivers exactly that dispatch-plus-scale system.",
+  "apparent_themes": [
+    "Render-through-the-one-engine (preview IS engine output, single source of truth)",
+    "Layer/family/runtime dispatch over a typed registry",
+    "Readiness-gating instead of silent fallbacks",
+    "Scale-to-fit native rendering"
+  ],
+  "intention_signals": "Trying to make every Type previewable from one place so a built-in OR Vi-proposed Type shows a faithful preview, with the preview being the actual engine output rather than a separate mock that could drift.",
+  "novelty": "The deliberate split — engine-rendered previews for composable layers vs. hand-drawn mock chrome for tokens/atoms/wizards — plus the 'readiness not fallback' async gate and the recursive template-thumbnail-with-parent pattern.",
+  "contribution": "Contributes a complete universal Type-to-thumbnail rendering system: the ScaledThumb fit-to-box mechanic, the full layer/family dispatch table, the readiness-gated engine-rendering pattern, the inline preview fixtures, and SVG shape/luminance helpers — the visual preview face of the Type registry.",
+  "summary_for_embedding": "A React/browser-global universal thumbnail renderer (TypeThumb) that dispatches any registry Type by layer/family to engine-rendered or hand-drawn previews, scaled to fit, with an async core-readiness gate.",
+  "intention_for_embedding": "To give every Type in the registry one faithful preview surface so previews are the real engine output and cannot drift from what the Type actually renders."
+}

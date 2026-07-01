@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "bindings/semantic.py",
+  "model": "opus",
+  "what_it_does": "Defines a single BINDING dict named 'semantic' for a radial view where the radius encodes meaning-distance (1 - cosine, normalized) from a chosen centre item, read from persisted per-space vectors, with angle from kind and the embedding space set to 'topics', plus operator-facing meta copy.",
+  "observations": [
+    "BINDING fields: id='semantic', label, angle_from='kind', radius_from='semantic', space='topics', order_by='count'.",
+    "Comments state radius_from='semantic' computes r as meaning-distance: 1 - cosine, normalized for legibility.",
+    "The centre is an item with a vector in `space`; the bridge resolves vectors via store.get_vector and passes them to a pure project() function.",
+    "`space` selects which embeddable lens space the cosine reads (topics/principles/worldview/repo), described as registry-is-truth.",
+    "A space with no vectors yet yields an empty meaning-ring.",
+    "Comments attribute the CIRCLE (radius) to Group 6 and the ANGLE (order-from-edges) to Group 10.",
+    "meta provides operator-facing name/is/fills/why strings, marked TENTATIVE for Tim/DNA ratification."
+  ],
+  "standouts": [
+    "The pure/impure split: the bridge resolves vectors, a pure project() does the geometry.",
+    "registry-is-truth for the choice of embedding space."
+  ],
+  "conventions": [
+    "Same name/is/fills/why legibility field-set as bindings/raw.py and bindings/by_lens.py.",
+    "Operator-law: avoids machine vocabulary in operator-facing copy ('never machine names').",
+    "Marks copy TENTATIVE pending ratification."
+  ],
+  "concerns": [],
+  "notes": "The semantic-radius radial view binding: distance-from-centre = meaning distance via cosine over the 'topics' vector space.",
+  "questions": [
+    "Why is 'topics' chosen as the default space versus principles/worldview/repo, and is that operator-selectable?",
+    "How is the normalization 'for legibility' computed beyond 1 - cosine?"
+  ],
+  "purpose_vs_actual": "Matches: declared as a semantic-distance radial view and that is the binding it provides.",
+  "apparent_themes": [
+    "Semantic / meaning-based spatial arrangement",
+    "Pure-core / impure-shell separation (bridge resolves vectors, project is pure)",
+    "Registry-as-source-of-truth for embedding spaces",
+    "Operator-legibility"
+  ],
+  "intention_signals": "Trying to let an operator pick a centre item and see everything else arranged by how related in meaning it is, using persisted embeddings, while keeping the geometry computation pure and data-true.",
+  "novelty": "Using cosine meaning-distance as a literal radial coordinate in an operator-facing view, with graceful empty-ring behavior for unvectored spaces.",
+  "contribution": "Contributes the semantic-radius binding that maps embedding cosine distance to a radial 'closeness in meaning' view over a selectable lens space.",
+  "summary_for_embedding": "A Python binding defining a radial view where distance from a chosen centre encodes semantic (cosine) meaning-distance read from persisted topic-space vectors.",
+  "intention_for_embedding": "To let the operator find what is most related in meaning to a chosen item by arranging everything by embedding distance."
+}

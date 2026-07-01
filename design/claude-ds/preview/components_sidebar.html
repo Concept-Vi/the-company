@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Sidebar nav states" subtitle="Default · hover · dashed-gold active — coloured CV icons" viewport="700x320" --><html><head><meta charset="utf-8"><title>Sidebar nav</title>
+<link rel="stylesheet" href="_card.css">
+<script src="../assets/icons/cv-icons.js"></script>
+<style>
+  .card { padding: 22px 26px; min-height: 320px; display: grid; grid-template-columns: 230px 1fr; gap: 24px; align-items: start; }
+  .nav { display: flex; flex-direction: column; gap: 6px; background: var(--bg-muted); border-radius: var(--r-lg); padding: 12px 10px; }
+  .menu-h { font: 600 11px/1 var(--font-body); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-bronze); text-align: center; margin: 2px 0 6px; }
+  .item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 12px;
+    border-radius: var(--r-md);
+    font: 500 13px/1 var(--font-body);
+    color: var(--fg-primary);
+    cursor: pointer;
+  }
+  .item.default { background: transparent; }
+  .item.hover   { background: var(--bg-surface); box-shadow: var(--shadow-xs); }
+  .item.active  { background: var(--bg-surface); border: 1.5px dashed var(--border-dashed); padding: 7.5px 10.5px; }
+  .glyph { width: 18px; height: 18px; flex: none; display: grid; place-items: center; }
+  .glyph svg { width: 18px; height: 18px; display: block; }
+  .legend { display: flex; flex-direction: column; gap: 14px; }
+  .legend h4 { font: 600 12px/1 var(--font-body); color: var(--fg-muted); letter-spacing: .08em; text-transform: uppercase; margin: 0 0 4px; }
+  .legend p { font: 400 13px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0; }
+</style></head>
+<body><div class="card">
+  <div class="nav" id="nav"><div class="menu-h">Menu</div></div>
+  <div class="legend">
+    <div><h4>Icons</h4><p>The product sidebar uses the <b>CV icon library</b> (line icons, ~1.7px), each tinted to its section colour — not emoji.</p></div>
+    <div><h4>Default</h4><p>Transparent — no fill, no border. Text in --fg-primary.</p></div>
+    <div><h4>Hover</h4><p>White card surfaces under the cursor. Subtle xs-shadow. No colour shift.</p></div>
+    <div><h4>Active</h4><p>White fill + <b>dashed gold</b> outline — the brand's signature selection treatment.</p></div>
+  </div>
+</div>
+<script>
+  // Coloured sidebar icons, sampled from the product dashboard (assets/reference):
+  // each section glyph carries its own hue, on white pill rows.
+  var ITEMS = [
+    { label: "Projects",          icon: "files-stack",    color: "#2BA39A", state: "default" }, // teal
+    { label: "Dashboard Updates", icon: "dashboard",      color: "#3A3026", state: "default" }, // charcoal
+    { label: "Landing Pages",     icon: "globe",          color: "#3B7DD8", state: "hover"   }, // blue
+    { label: "Files",             icon: "folder",         color: "#C8AB0E", state: "default" }, // gold
+    { label: "Gallery",           icon: "image",          color: "#3A3026", state: "active"  }, // charcoal (selected)
+    { label: "Brand Kit",         icon: "color-swatches", color: "#D8568A", state: "default" }  // pink
+  ];
+  var D = (window.CV_ICONS && window.CV_ICONS.data) || {};
+  var nav = document.getElementById("nav");
+  ITEMS.forEach(function (it) {
+    var row = document.createElement("span");
+    row.className = "item " + it.state;
+    var body = D[it.icon] || "";
+    row.innerHTML =
+      '<span class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="' + it.color +
+      '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg></span>' +
+      it.label;
+    nav.appendChild(row);
+  });
+</script>
+</body></html>

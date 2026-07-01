@@ -1,0 +1,58 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/TOTAL-PROCESSING-PIPELINES.md",
+  "model": "opus",
+  "what_it_does": "A design document (2026-06-11) defining a class of 'total-processing pipelines' meant to resolve the constraint that nobody can know what the system contains and no question-based mechanism can fix that. It states the constraints as axioms, gives the core insight (embeddings + cheap local models make total reads affordable), corrects two framing errors, specifies seven pipelines (P1-P7), and maps each pipeline back to the axiom it resolves.",
+  "observations": [
+    "Written for COLD READERS — other sessions/agents are pointed here to READ and discuss, not to act.",
+    "Section 1 lists the constraints as axioms in Tim's own words, including 'the only assumption that can be relied on is that no assumptions can be relied on.'",
+    "Establishes that question-based mechanisms are 'structurally disqualified for this class' because you can't ask about what you don't already suspect.",
+    "Core insight: 'Questions are selective reads. Embeddings plus cheap local models make TOTAL reads affordable.' Unknown-unknowns are left over as RESIDUE, not answered into existence.",
+    "Describes a cost pyramid: vectors (cents) -> resident 4B swarm (32 concurrent roles, max_num_seqs=34, ~2,700 tok/s) -> 88M reranker on CPU -> Claude-class models only for synthesis of already-judged clusters.",
+    "Cites the RG10 registry pipeline as proof: 940 raw extractions -> embedding-dedup -> floors -> jury/panel -> 483 verified registry entries, run overnight.",
+    "Corrects two errors readers will repeat: 'retrieval-shaped thinking' (assumes an agent knows its task) and 'utterances-as-specs' (Tim's messages are a gradient field, not acceptance criteria).",
+    "Introduces 'wrongness is learnable even when rightness is unspecifiable' — a correction corpus trains a rejection-predictor; the twin (model-of-Tim) pre-filters volume.",
+    "Defines correctness-without-an-oracle as COHERENCE (consistent, agreed across derivations, expectations met, behaviorally unsurprising, gradient-aligned).",
+    "P1 TOTAL EXTRACTION emits a connection-surface registry from every code chunk via a 4B role producing {EXPOSES, EXPECTS, STATE, EVENTS, INPUTS/OUTPUTS}; notes it 'knows its own coverage' as a metric.",
+    "P2 FUSION yields a synonym ledger and a CONTRADICTION LEDGER (a conflict = a failed merge).",
+    "P3 EXPECTATION JOIN produces broken-assumptions and orphan lists via EXPECTS-vs-EXPOSES embedding join.",
+    "P4 THE MERGE solves Tim's FE test case as a join into the same coordinate space, falling out as MATCHED / PRINCIPLE-WITHOUT-SURFACE / SURFACE-WITHOUT-PRINCIPLE lists.",
+    "P5 VISUAL JOIN uses Qwen3-VL-Embedding-2B to embed mockup regions and screenshots into the same space; measures visual drift.",
+    "P6 THE RESIDUE collects everything matching nothing as the unknown-unknowns set.",
+    "P7 STAYING TRUE makes the map a commit-triggered standing organ; agents boot from rows not code; the map and work-queue are the same circuit.",
+    "Section 5 is an axiom-to-resolution table; section 6 lists four open tests deliberately left unanswered (e.g. 'can coherence-convergence be gamed by consistently-confident nonsense?')."
+  ],
+  "standouts": [
+    "The central inversion: total processing leaves unknown-unknowns as RESIDUE rather than answering questions about them.",
+    "'Wrongness is learnable even when rightness is unspecifiable' plus coherence-as-correctness in the absence of an oracle.",
+    "The seven-pipeline architecture (P1-P7) each mapped to a specific axiom it resolves.",
+    "Concrete hardware/model grounding (32 concurrent 4B roles, 2,700 tok/s, named embedders) and the RG10 run as empirical proof."
+  ],
+  "conventions": [
+    "Follows the vault design-note voice: dated provenance, Tim's words as axioms, companion-file cross-references at the top.",
+    "Reuses system vocabulary (registry-filling MAP step, floors arc, drift radar, content-hash refresh, proposal lifecycle, the twin, the gate).",
+    "Uses an axiom-to-resolution mapping table and a 'named, deliberately unanswered' open-tests section as living-doc patterns.",
+    "Labels pipelines P1-P7 with a one-line italic subtitle stating which problem each directly answers."
+  ],
+  "concerns": [],
+  "notes": "The mechanism-class doc arguing that embeddings + a cheap local-model swarm enable TOTAL (questionless) processing of the whole estate, with seven pipelines that emit the inventory, conflicts, broken assumptions, merges, visual drift, and residue.",
+  "questions": [
+    "Have any of P1-P7 been built beyond the cited RG10 precedent, or are they all still design?",
+    "What is the actual prioritization rule chosen for ordering 10,000 findings (open test 2)?",
+    "Which embedder loadout policy was settled for standing-map vs deep-space re-indexing (open test 4)?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is the full statement of a mechanism class for cold readers to read and discuss, and delivers exactly that: axioms, core insight, corrected framings, seven specified pipelines, and an axiom-resolution map, while explicitly leaving tests open.",
+  "apparent_themes": [
+    "Total/unconditional processing over selective questioning",
+    "Unknown-unknowns surfaced as residue",
+    "Cost-tiered intelligence (spend the scarce model only on synthesis)",
+    "Coherence/convergence as correctness without a spec or oracle",
+    "Learning wrongness from a correction corpus + the twin",
+    "The map as a standing self-updating organ identical to the work queue"
+  ],
+  "intention_signals": "Trying to give the Company a mechanical, non-question-based way to know itself and to merge unknown work into an unknown estate — converting 'nobody can know' into measured coverage, ledgers, and joins, so building can proceed off the substrate rather than off any mind.",
+  "novelty": "The reframing of unknown-unknowns as the residue of total processing, and of conflicts as 'failed merges' detected by deduplication itself — plus correctness defined as coherence-by-convergence across context-less parallel sessions.",
+  "contribution": "Contributes the total-processing axioms, the cost-pyramid argument, the two corrected framings (gradient-field, coherence-as-correctness), and a concrete seven-pipeline specification (extraction, fusion, expectation join, merge, visual join, residue, freshness) each tied to the constraint it dissolves.",
+  "summary_for_embedding": "A design document specifying seven 'total-processing' pipelines that use embeddings and a cheap local-model swarm to read the entire code/design estate unconditionally, emitting an inventory, contradiction ledger, broken-assumption/orphan lists, merge plans, visual drift, and an unknown-unknowns residue, with coherence as the correctness standard.",
+  "intention_for_embedding": "To resolve the constraint that nobody can enumerate or verify the system by replacing question-based mechanisms with total reads that emit findings mechanically and stay fresh as a standing organ."
+}

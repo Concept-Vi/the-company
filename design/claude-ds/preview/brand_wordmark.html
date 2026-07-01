@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Wordmark — on canvas + dark" subtitle="Real wordmark file; on dark, switch to the V mark" viewport="700x260" --><html><head><meta charset="utf-8"><title>Logo wordmark</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  body { background: var(--bg-canvas); }
+  .card { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 0; min-height: 260px; }
+  .pane { display: flex; align-items: center; justify-content: center; padding: 40px; position: relative; }
+  .pane.dark { background: var(--bg-dark); }
+  .pane.light { background: var(--bg-canvas); border-right: 1px solid var(--border-faint); }
+  .pane img { max-width: 75%; height: auto; max-height: 76px; }
+  /* For the dark pane we replace the wordmark via CSS — show black-on-cream inverted to cream on dark */
+  .tag { position: absolute; top: 14px; left: 16px; font: 600 10px/1 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; }
+  .tag.lt { color: var(--fg-muted); }
+  .tag.dk { color: rgba(251,247,236,.5); }
+</style></head>
+<body><div class="card">
+  <div class="pane light"><span class="tag lt">On canvas · primary</span><img src="../assets/logos/conceptv-wordmark-black.png" alt="ConceptV"></div>
+  <div class="pane dark">
+    <span class="tag dk">On dark · use V mark</span>
+    <img src="../assets/logos/conceptv-v-yellow.png" alt="V" style="filter:none;width:auto;height:96px;max-height:96px;">
+  </div>
+</div></body></html>

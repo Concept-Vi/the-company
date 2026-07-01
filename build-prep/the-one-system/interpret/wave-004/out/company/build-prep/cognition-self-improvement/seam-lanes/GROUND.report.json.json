@@ -1,0 +1,44 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/GROUND.report.json",
+  "model": "opus",
+  "what_it_does": "Records a GROUND lane beat that RE-VERIFIED (rather than re-authored) an existing deliverable, build-prep/cognition-self-improvement/organ-map-grounded.md. Reports the single file written, a re-check narrative against source, findings, status, and needs_tim decisions.",
+  "observations": [
+    "files_written: build-prep/cognition-self-improvement/organ-map-grounded.md (an update-in-place re-verification, not a re-author).",
+    "Re-checked every cite resolves to a real line via grep over runtime/cognition.py, runtime/suite.py, store/vector_index.py, store/fs_store.py, and ls roles/.",
+    "Reports grounded built-% = ~65% (8.5/13), versus the FRAME doc's lean of ~80%; breakdown given as 5 full, 7 half, 1 zero.",
+    "Identifies three FRAME rows OVERCLAIMED as done that it downgrades to half: no-confidence is not a law (mark() accepts a confidence splat), no first-class Decision-Ledger/Assumption-Shelf/Missing-Info objects, and the §20.4 extractor roles absent.",
+    "One hard not-built: the schema-rendered generative surface (§19), with a grep for generativ|schema.render in canvas/app/src finding none.",
+    "Corpus re-queried this beat: list_corpus(project='company') -> 0; whole-store -> 1 stray digest; find_corpus(projection='repo') -> 0 — the empty-corpus / ingest-never-ran finding stands.",
+    "New operational fact: embed-bge is now resident (4.9GB co-resident with chat-4b), unblocking the repo-ingest backlog item #8.",
+    "Lists a net-new backlog of 8 items (generative surface, extractor roles, durable cross-session memory, progressive-type-resolution wiring, schema->UI render, first-class ledger objects, no-confidence-as-invariant, run the repo ingest).",
+    "Self-classifies status as built-verified; emphasizes read-only on all code, FRAME doc not edited, not committed.",
+    "Notes a section-number labeling looseness in the FRAME map as a notes inaccuracy, not a status correction."
+  ],
+  "standouts": [
+    "Re-verification rather than re-authoring: a no-versioning, adopt-existing-work beat.",
+    "The grounded 65% vs FRAME 80% gap, with three specific overclaimed-done rows downgraded against source.",
+    "The persistent empty-corpus finding plus the embed-bge-now-resident fact unblocking the ingest."
+  ],
+  "conventions": [
+    "Follows the seam-lane report schema (with a findings field); leans heavily on grep/ls/file:line evidence.",
+    "Distinguishes a module's own status legend (full/half/none) from a completeness claim, and warns against reading an EXIT=0 from a piped tail as a pass.",
+    "Honors read-only scope and not-committed instruction."
+  ],
+  "concerns": [],
+  "notes": "A build-lane status record: a GROUND beat that re-verified the organ-map-grounded.md deliverable, re-confirmed ~65% grounded built, the still-empty corpus, three overclaimed rows, and that embed-bge residency now unblocks the repo ingest.",
+  "questions": [
+    "Why has the repo ingest never populated the corpus despite the store/vector/embed code being present — config, trigger, or an unran step?"
+  ],
+  "purpose_vs_actual": "Matches — a GROUND verification beat that records grounded status and corrections against source.",
+  "apparent_themes": [
+    "Ground claims in resolvable cites, not inference",
+    "Re-verify and adopt existing work over re-authoring",
+    "Surface overclaims honestly (built-% lower than the FRAME's lean)"
+  ],
+  "intention_signals": "Aims to keep the organ map honestly grounded against actual source, correct earlier overclaims, and track which backlog items are now unblocked (the repo ingest, given embed-bge residency).",
+  "novelty": "The explicit re-verification-not-re-author posture and the per-row overclaim corrections traced to specific lines, plus the residency-unblocks-ingest observation.",
+  "contribution": "Contributes the re-grounded built-% audit, the three downgraded-overclaim corrections, the standing empty-corpus finding, and the net-new backlog, which a fused system would keep as the verified ground-truth snapshot of the cognition organ map.",
+  "summary_for_embedding": "A seam-lane JSON report of a GROUND beat re-verifying the cognition organ map deliverable, re-confirming ~65% grounded built, an empty corpus, three overclaimed rows downgraded, and embed-bge residency unblocking the repo ingest.",
+  "intention_for_embedding": "To re-ground the cognition organ map against source, correct overclaims, and record which backlog items the new model residency unblocks."
+}

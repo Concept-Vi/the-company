@@ -1,0 +1,39 @@
+{
+  "project": "claude-ds",
+  "path": "components/Badge.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration file for the Badge component. Declares a BadgeProps interface extending React.HTMLAttributes<HTMLSpanElement> with optional tone (a union of 'gold' | 'success' | 'warning' | 'error' | 'comm'), dot (a leading status dot), and as (polymorphic element). Declares the Badge function returning JSX.Element with named and default exports.",
+  "observations": [
+    "tone is a closed union mapping to system voices/states: gold (attention), success/warning/error (status), comm (sage relationship); no tone = neutral ink label",
+    "dot?: boolean — a leading status dot in the current colour",
+    "as?: any — polymorphic 'render as' escape hatch (loosely typed as any)",
+    "Extends React.HTMLAttributes<HTMLSpanElement>; named and default exports",
+    "JSDoc explains the tone-to-voice mapping"
+  ],
+  "standouts": [
+    "The tone union ties the component directly to the design system's semantic voice vocabulary (gold / status colours / comm sage), not arbitrary colours"
+  ],
+  "conventions": [
+    "Co-located .d.ts mirroring the component, same pattern as Avatar.d.ts",
+    "Tone values map to the documented system voices/states (consistent with the colour token roles: gold voice, status-*, comm sage)",
+    "as?: any departs from strict typing (a common but loose polymorphic-component shortcut)"
+  ],
+  "concerns": [
+    "as?: any forfeits polymorphic type safety; a generic element type would be stricter"
+  ],
+  "notes": "The type contract for Badge: a span-based status/label chip whose tone is a closed union of system voices (gold/success/warning/error/comm) with an optional leading dot and a polymorphic as.",
+  "questions": [
+    "Why is 'comm' included but not the other zone voices (source/package/review) — is the badge intentionally limited to attention+status+relationship?"
+  ],
+  "purpose_vs_actual": "Match — a declaration file that accurately describes the Badge component's typed surface and ties tone to the system's semantic voices.",
+  "apparent_themes": [
+    "Typed component contracts",
+    "Semantic voice vocabulary (tone maps to system meaning, not raw colour)",
+    "Polymorphic components (as prop)"
+  ],
+  "intention_signals": "To expose Badge's props as a precise contract where colour is chosen by semantic tone (a system voice/state) rather than by raw value, keeping the component single-sourced to the token roles.",
+  "novelty": "n/a",
+  "contribution": "Contributes the typed public interface for Badge — the closed tone union mapping to system voices/states, the dot flag, and the polymorphic as — that a fused system would keep as Badge's contract.",
+  "summary_for_embedding": "TypeScript declarations for the Badge component: a BadgeProps interface with a semantic tone union (gold/success/warning/error/comm), a dot flag, and a polymorphic as, extending span HTML attributes.",
+  "intention_for_embedding": "To provide a type contract for a status/label badge whose colour is chosen by semantic system tone rather than raw value, keeping it tied to the design-system voices."
+}

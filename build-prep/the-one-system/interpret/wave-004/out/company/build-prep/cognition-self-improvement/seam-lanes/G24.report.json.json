@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/G24.report.json",
+  "model": "opus",
+  "what_it_does": "Records the outcome and by-use verification narrative of the G24 build lane, which fixed a schema-passthrough defect in the fabric transport (fabric/client.py, transport.py) so that role output schemas reach the vLLM guided-decode path. Lists files written, status, needs_tim, and a detailed root-cause/notes block.",
+  "observations": [
+    "files_written: fabric/client.py, fabric/transport.py, fabric/AGENTS.md, and the report itself.",
+    "Root cause traced: run_role passed schema=role.output_schema into complete() as a NAMED param, so it never reached the transport's **opts; _apply_response_format only saw json=True and produced unconstrained json_object decode.",
+    "Reproduced first: 3 known-failing files (bridge.py, roles/check.py, nodes/portal.py) deterministically failed with FabricError unparseable JSON, each burning ~15s of retries.",
+    "Fix: complete() now derives opts['json_schema'] from its schema= param (name + model_json_schema()) unless json_schema is explicitly passed; characterizes the change as finishing the already-built L-transport seam rather than new code.",
+    "Re-fired regression set: all three files return schema-conformant digests in 0.5-0.7s with no retries.",
+    "Lists ~15 test suites reported green (json_schema_transport 17, cascade_acceptance 26, coa_acceptance 27, mcp_engine_acceptance 35, etc.).",
+    "Self-classifies status as built-verified; states it was run against a resident 4B (cyankiwi/Qwen3.5-4B-AWQ) with GPU floor confirmed before and after.",
+    "needs_tim notes a non-blocking flag: the coa framing call now also rides guided decode, which degrades via existing loud-degrade path if the brain is rebound to a cloud endpoint that 400s on json_schema."
+  ],
+  "standouts": [
+    "The traced root cause: a named param silently not reaching **opts, reproduced deterministically before fixing.",
+    "Frames the fix as completing a half-built seam (L-transport) with zero new transport code paths.",
+    "Flags a forward risk (coa on a cloud model that rejects json_schema) without it gating the lane."
+  ],
+  "conventions": [
+    "Follows the seam-lane report schema: lane, files_written, how_verified, status, needs_tim, notes.",
+    "Heavy reproduce-then-fix-then-re-verify narrative with cited file:line and suite counts, matching the repo's evidence discipline.",
+    "Notes files not committed per lane instruction and distinguishes its own files from other lanes' in-flight files."
+  ],
+  "concerns": [],
+  "notes": "A build-lane status record: the G24 lane's self-report that the fabric schema-passthrough fix landed and was verified by re-firing the previously failing ingest set.",
+  "questions": [
+    "Was fabric/AGENTS.md's update reflected in the wider self-description registry, or only locally?"
+  ],
+  "purpose_vs_actual": "Matches — it is a build report and it records a build outcome with verification evidence.",
+  "apparent_themes": [
+    "Reproduce-before-fix evidence discipline",
+    "Finish-the-seam over fork-a-new-path",
+    "Fail-loud / no-silent-downgrade posture"
+  ],
+  "intention_signals": "Aims to prove a transport-layer fix was the missing hand-off (schema never reaching opts), verified end-to-end against a live model, while flagging a downstream cloud-model degrade risk so it is not a surprise.",
+  "novelty": "The specific named-param-never-reaches-opts root cause and the framing of the fix as completing a previously proven-but-unwired transport branch.",
+  "contribution": "Contributes a documented, evidence-traced account of the fabric schema-passthrough fix and the guided-decode wiring decision, plus the coa-on-cloud-400 degrade flag, that a fused system would keep as the provenance for that transport behavior.",
+  "summary_for_embedding": "A seam-lane JSON report documenting the G24 fix that routes role output schemas through the fabric transport into vLLM guided decoding, with reproduce/fix/re-verify evidence.",
+  "intention_for_embedding": "To record and justify completing the L-transport schema-passthrough seam so role schemas constrain decoding, verified by-use against the resident 4B."
+}

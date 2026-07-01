@@ -1,0 +1,35 @@
+{
+  "project": "company",
+  "path": "board_edges/attached_to.py",
+  "model": "opus",
+  "what_it_does": "Declares one RELATION_TYPE dict registering the 'attached_to' board edge-kind: a directed item->channel/Space link with a label and description.",
+  "observations": [
+    "id='attached_to', directed=True, label='attached-to'.",
+    "desc states the item is attached to a channel/Space (item -> channel).",
+    "desc notes it mirrors the CHANNEL-LAYER-SEAM attachments manifest one level down.",
+    "desc emphasizes the binding is a typed edge, not a flat field."
+  ],
+  "standouts": [
+    "Description frames the edge as the noticeboard analogue of the channel-layer attachments manifest."
+  ],
+  "conventions": [
+    "Single module-level RELATION_TYPE constant with id matching the filename (attached_to.py).",
+    "Provides only the required keys (id, directed) plus optional label/desc; no inverse/near/far."
+  ],
+  "concerns": [],
+  "notes": "One row file: the 'attached_to' typed edge binding a board item to a channel/Space.",
+  "questions": [
+    "What is the CHANNEL-LAYER-SEAM attachments manifest it mirrors, and where is it defined?"
+  ],
+  "purpose_vs_actual": "Match — it registers exactly the attached_to edge-kind the board_edges constitution lists.",
+  "apparent_themes": [
+    "Typed edges over flat fields",
+    "Row-as-data registry entry",
+    "Cross-registry provenance links"
+  ],
+  "intention_signals": "Tries to make 'item is attached to a channel' a first-class typed, validated relationship rather than an implicit field value.",
+  "novelty": "n/a",
+  "contribution": "Contributes the 'attached_to' edge-kind row that lets a board item declare a typed attachment to a channel/Space.",
+  "summary_for_embedding": "A board_edges row declaring the directed 'attached_to' edge-kind linking a noticeboard item to a channel/Space.",
+  "intention_for_embedding": "To register attaching a board item to a channel as a typed validated edge rather than a flat field."
+}

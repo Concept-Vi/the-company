@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "axes/device.py",
+  "model": "opus",
+  "what_it_does": "Declares the 'device' coordinate axis — where & in what medium a surface renders. Exports an AXIS dict with id/namespace 'device', four sub-fields (w=continuous, h=continuous, orient=discrete, kind=discrete), value_source='live', and a desc. w/h are the continuous root of layout derivation; orient and kind are discrete picks.",
+  "observations": [
+    "Sub-fields: w (continuous), h (continuous), orient (discrete: portrait/landscape, h>w), kind (discrete: native-mobile/desktop).",
+    "value_source='live' = the window dims; comment notes kind is browser-DERIVED (size/pointer bucket), NOT authoritative.",
+    "desc asserts 'desktop' = landscape + a size threshold, NOT a third enum — orthogonal axes.",
+    "Docstring calls device 'the axis Tim NAMED — a spoke, not the hub' and 'the ROOT of the continuous layout derivations (screen size)'.",
+    "References RESOLVER-CONTRACT §1 as the device-axis resolver's coordinate."
+  ],
+  "standouts": [
+    "The orthogonality claim: desktop is derived from landscape + size threshold rather than being its own enum value (a design stance against conflating axes).",
+    "w/h declared continuous and called the root of all layout derivation — connects this axis to the continuous=DERIVE-via-relationship-AST mechanism.",
+    "Self-framing as 'a spoke, not the hub' — explicitly demoting the one axis Tim named."
+  ],
+  "conventions": [
+    "Follows the AXIS-dict row shape from axes/AGENTS.md.",
+    "Consistent value_source='live' usage with mode/register/resolution sibling axes.",
+    "Cited as the structural template ('mirrors device=w/h/orient') by axes/design.py."
+  ],
+  "concerns": [],
+  "notes": "The where/medium coordinate; w/h are the continuous root of layout derivation, orient and kind are derived discrete picks, and desktop is intentionally NOT a separate enum.",
+  "questions": [
+    "What is the exact size threshold that, with landscape, yields kind='desktop'?",
+    "What is the full enum of `kind` beyond native-mobile/desktop?",
+    "Where is the size/pointer bucket derivation of `kind` actually computed?"
+  ],
+  "purpose_vs_actual": "Matches — declared as the device/medium axis and the AXIS dict implements exactly that, with the desc clarifying the orthogonality and live source.",
+  "apparent_themes": [
+    "Orthogonal coordinate axes (no conflated enums)",
+    "Continuous-root layout derivation from screen size",
+    "Live value-source",
+    "Demoting the named axis to one spoke among many"
+  ],
+  "intention_signals": "Trying to make physical rendering context a clean orthogonal coordinate: screen w/h as the continuous root that drives layout derivation, with orientation and device-kind as derived discrete picks rather than hard-coded device categories.",
+  "novelty": "Treating 'desktop' as a derived combination of orthogonal axes (landscape + size threshold) rather than a first-class device enum.",
+  "contribution": "Contributes the 'device' coordinate dimension — the continuous w/h layout root plus derived discrete orient/kind — and the orthogonality stance that desktop is not its own enum.",
+  "summary_for_embedding": "Axis-registry file declaring the 'device' coordinate (continuous w/h root, discrete orient/kind) with a live window-dims source, the root of layout derivation.",
+  "intention_for_embedding": "To model rendering medium as an orthogonal coordinate whose continuous screen size drives layout, avoiding conflated device-category enums."
+}

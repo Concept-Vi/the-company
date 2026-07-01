@@ -1,0 +1,38 @@
+{
+  "project": "claude-ds",
+  "path": "preview/components_buttons.html",
+  "model": "opus",
+  "what_it_does": "A self-contained design-system preview card that renders the button component family (primary/outline/dashed/ghost/dark, plus sm/lg sizes and disabled state) styled entirely from CSS custom properties, for visual inspection in the gallery.",
+  "observations": [
+    "Carries a @dsCard HTML comment with group/name/subtitle/viewport metadata that the gallery presumably parses.",
+    "Links shared _card.css and defines all button styling inline in a <style> block.",
+    "Five button variants: primary (layered gold gradient + inset highlights), outline (paper-tinted hairline), dashed (soft optional), ghost (transparent), dark (ink).",
+    "Heavy use of layered box-shadows (inset highlights + warm drop shadows) to give depth; transitions on background/box-shadow/border/color/transform at 220ms.",
+    ":focus-visible uses a gold-tinted 3px ring; :active nudges transform by 0.5px.",
+    "Disabled state via [disabled] and .is-disabled with opacity 0.45 and neutralized transform/hover.",
+    "Inline SVG icons (1.6 stroke) and a small currentColor dot for the dark MENU button."
+  ],
+  "standouts": [
+    "All colour/radius/easing pulled from var(--…) tokens; only the shadow rgba values are hardcoded literals.",
+    "The 'gold earns attention once per surface' lead text encodes a usage discipline, not just visuals."
+  ],
+  "conventions": [
+    "Follows the token-reference convention for colour/radius/motion (var(--accent-gold), var(--r-md), var(--ease-out)).",
+    "Departs by hardcoding rgba shadow values inline rather than via shadow tokens.",
+    "Uses the @dsCard metadata-comment convention shared across these preview files."
+  ],
+  "concerns": [
+    "Many bespoke rgba() shadow/highlight literals are hand-set rather than tokenised, which is the drift the project warns against."
+  ],
+  "notes": "A standalone gold-on-paper button gallery card; tokens drive colour/radius but the layered shadow recipes are inline literals.",
+  "questions": [
+    "Should the inset-highlight / warm-shadow rgba recipes be promoted to shadow tokens rather than living inline here?"
+  ],
+  "purpose_vs_actual": "Matches — metadata declares a Buttons preview card and the file renders exactly that.",
+  "apparent_themes": ["token-referenced styling", "warm paper aesthetic with depth", "restraint discipline (gold used sparingly)", "self-describing preview card"],
+  "intention_signals": "To showcase the full calibrated button vocabulary as a single inspectable surface so the variants can be judged by eye against the paper/gold brand.",
+  "novelty": "The explicit 'softer fills, warm shadows, inset highlights' depth recipe and the one-gold-per-surface usage rule baked into a preview.",
+  "contribution": "Contributes the concrete button-variant styling vocabulary (five variants, sizes, states) and its layered-depth shadow recipe expressed against the token system.",
+  "summary_for_embedding": "A token-driven HTML preview card rendering the design system's button variants (primary/outline/dashed/ghost/dark, sizes, disabled) with layered warm shadows and gold accents.",
+  "intention_for_embedding": "To present the calibrated button component family for visual review within the ConceptV design-system gallery."
+}

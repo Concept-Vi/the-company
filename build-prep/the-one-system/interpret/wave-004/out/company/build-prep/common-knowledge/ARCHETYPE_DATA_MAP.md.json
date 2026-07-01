@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/ARCHETYPE_DATA_MAP.md",
+  "model": "opus",
+  "what_it_does": "A recollection/mapping note that catalogs the Company's UI 'archetypes' (reusable screen-renderer types), and for each one records its renderer build-status, its data source (the bridge API routes / corpus spaces it pulls from), and whether a LIVE region implementation already exists in surface/app to converge against rather than rebuild.",
+  "observations": [
+    "Frames the central discriminator (attributed to 'DNA'): a surface screen is data-driven within an archetype, so the reuse unit is the ARCHETYPE (~5-7 renderers built once, instances cheap), not per-screen adapters.",
+    "Lists 8 screen-archetypes: single-unit immersive, piece-in-focus, canvas/board, ledger/list, dashboard cards+grid, compare, compose/build, home/landing — with codes like scr-piece, app-canvas, scr-compose.",
+    "For each archetype gives renderer-status (renderUnit and renderPiece marked BUILT/proven; the other 6 NOT built), the concrete data routes (e.g. /api/cognition/corpus, /api/graph, /api/cognition/list_runs, /api/build-intent), and a ★ marker where a live region already exists.",
+    "Separates three CROSS-CUTTING layers that are not screen-archetypes: controls (knobs/config), states (node-state-by-colour status layer), flows (the multi-screen walkthrough/sequence layer).",
+    "Includes a 'SCALE-TO-19' budget section: ~8 archetypes, 2 built, 6 to build, but 5 of the 6 already have live regions so the work is CONVERGE not greenfield.",
+    "Defines archetype per Tim's direction as factory(structure: slots/sockets) + DNA(render: visual) in one jointly-built codebase, so the 6 are built jointly with composition not by DNA alone.",
+    "Notes 'recollection's data under it' — corpus units, neighbours/pins, and recall to locate any screen's authoring intent."
+  ],
+  "standouts": [
+    "The archetype-as-reuse-unit thesis: build ~5-7 renderers once, instances are data-driven and cheap.",
+    "The CONVERGE-not-greenfield insight: 5 of 6 unbuilt renderers already have live region implementations to reconcile against.",
+    "The archetype = factory(structure) + DNA(render) one-codebase formula attributed to Tim.",
+    "Explicit data-source-to-route grounding for every archetype, sourced from surface/app/src/api.ts."
+  ],
+  "conventions": [
+    "Follows a recollection/data-layer-input note convention feeding 'the lead's interface catalog' and 'DNA's assembly'.",
+    "Uses ✅ for built renderers and ★ to mark existing live regions; references concrete /api/ routes and region/component names (NodeShape, registryStore, GreetingCard).",
+    "Frames itself as descriptive input (data-layer) for a downstream catalog, not the catalog itself."
+  ],
+  "concerns": [
+    "Heavily shorthand and role-coded (DNA, the lead, recollection, scr-*/app-* codes) — opaque without the surrounding project vocabulary.",
+    "Renderer build-status and live-region existence are asserted but the note itself cannot verify current state of surface/app."
+  ],
+  "notes": "This is the archetype→data-source→live-region crosswalk — read it to know which screen renderers exist, where each one's data comes from, and which are converge-vs-build.",
+  "questions": [
+    "Who/what are 'DNA', 'the lead', and 'recollection' as roles in this build?",
+    "What is the SCALE-TO-19 target (19 screens?) and how do 8 archetypes scale to it?",
+    "Are the renderUnit/renderPiece 'BUILT/proven' claims still current?"
+  ],
+  "purpose_vs_actual": "Match — it states it is the data-layer input mapping archetypes to data sources and live regions, and the body is exactly that crosswalk.",
+  "apparent_themes": [
+    "Data-driven reuse via archetypes over per-screen code",
+    "Converge with existing live implementations rather than rebuild",
+    "Separation of structure (factory) from render (DNA)",
+    "Cross-cutting layers vs screen archetypes",
+    "Grounding UI plans in concrete API routes"
+  ],
+  "intention_signals": "It is trying to bound and de-risk a UI build by proving most screen renderers reduce to a small set of archetypes whose data already flows to live regions, so the build is a finite converge effort jointly with composition rather than open-ended greenfield work.",
+  "novelty": "The archetype taxonomy paired with a per-archetype live-region/converge marker and explicit route grounding is a distinctive organizing artifact.",
+  "contribution": "Contributes the screen-archetype taxonomy and the archetype→data-route→live-region crosswalk that a fused system would keep as the map of which renderers exist, what data each consumes, and which UI regions to converge versus build.",
+  "summary_for_embedding": "A mapping note cataloging the Company's ~8 UI screen-archetypes with each one's renderer status, data-source API routes, and existing live-region implementation, plus three cross-cutting layers and a converge-not-greenfield build budget.",
+  "intention_for_embedding": "To supply the data-layer input for the interface catalog by showing most screens reduce to a few reusable data-driven archetypes whose data already flows to live regions, making the UI build a finite converge effort."
+}

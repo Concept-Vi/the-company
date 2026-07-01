@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0001_connector_audit.sql",
+  "model": "opus",
+  "what_it_does": "Creates the public.connector_audit table — the append-only audit log for the remote MCP gateway. Each row records one remote tool call: id (the call_id uuid), ts, subject (authed principal), scope, tool, args_preview (truncated), outcome (OK/DENY/TEACHING-ERROR/DISPATCH-ERROR), and detail. Adds three indexes (ts desc, tool, outcome), a table comment, and grants ALL to service_role/postgres plus SELECT to anon/authenticated.",
+  "observations": [
+    "id is text primary key holding the call_id (a uuid stored as text)",
+    "outcome is a free-text column with an enumerated set documented in a comment, not a CHECK/enum constraint",
+    "RLS is intentionally left OFF — the header comment explains it is a system audit log gated by JWT role, not row policies",
+    "Both anon and authenticated get SELECT (the operator UI reads via these roles); the gateway writes via service_role which bypasses RLS",
+    "Header comment states audit-write failure causes the call to fail loud (mandatory-audit guard, attributed to a 'lead ruling')",
+    "All DDL is idempotent (create table/index if not exists)"
+  ],
+  "standouts": [
+    "The mandatory-audit-or-fail-loud invariant declared in the comment (write must succeed or the tool call fails)",
+    "Deliberate RLS-OFF decision with documented rationale (append-only system log)"
+  ],
+  "conventions": [
+    "Idempotent DDL with if-not-exists throughout",
+    "Heavy explanatory header comment + table comment (self-description discipline)",
+    "Grant pattern: service_role/postgres ALL, read roles SELECT"
+  ],
+  "concerns": [
+    "outcome and scope are free text with values only enforced by comment, not by a DB constraint — drift possible",
+    "anon SELECT exposes the full audit log to the public anon key (intentional per comment, but worth noting)"
+  ],
+  "notes": "The mandatory append-only audit table for the remote MCP gateway; RLS off by design, write-or-fail-loud, read by operator UI.",
+  "questions": [
+    "Is the args_preview truncation length enforced anywhere, or only by the writer?",
+    "Why anon SELECT rather than restricting reads to authenticated only?"
+  ],
+  "purpose_vs_actual": "Matches — stated purpose (mandatory audit table for the remote MCP gateway) is exactly what the DDL implements.",
+  "apparent_themes": [
+    "mandatory auditing / accountability for remote calls",
+    "outbound-only architecture (prod table lives in Tim's Supabase, gateway reaches out)",
+    "role-gated rather than row-gated access"
+  ],
+  "intention_signals": "Establishes a non-bypassable record of every remote tool call as the accountability spine of the connector, so an unaudited call cannot succeed.",
+  "novelty": "The explicit write-or-fail-loud audit contract and the conscious choice to disable RLS in favour of JWT-role gating.",
+  "contribution": "Brings the audit-log substrate and its access model for the remote MCP gateway — the who/scope/tool/outcome record that the gateway and operator UI depend on.",
+  "summary_for_embedding": "SQL migration creating public.connector_audit, an RLS-off append-only audit table logging every remote MCP gateway tool call (subject/scope/tool/outcome) with indexes and role-based grants.",
+  "intention_for_embedding": "To make every remote MCP tool call accountable via a mandatory, fail-loud audit log read by the operator UI."
+}

@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/sizing.css",
+  "model": "opus",
+  "what_it_does": "Defines fluid sizing and overflow-safe rhythm: a clamp-based modular type scale (caption→display) with matched line-heights, fluid spacing tokens, measure caps, and an element/mark size ramp; plus overflow-safe utilities (.truncate, .line-clamp, .min0, .wrap-anywhere, .measure*), a .pill/.pill-group group that wraps as a set, and a responsive .auto-grid.",
+  "observations": [
+    "Fluid type scale via clamp(min, vw-preferred, max): --fs-caption through --fs-display, with --scale-ratio 1.25 and --scale-base 16px stated as the modular rule",
+    "Matched line-heights: --lh-tight 1.04, snug 1.18, body 1.55, loose 1.7",
+    "Fluid spacing: --space-fluid-sm/md/lg/xl as clamp(...vw...) values",
+    "Measure caps: --measure 66ch, tight 46ch, wide 78ch",
+    "Element/mark size ramp --size-xs 16px..--size-hero 96px, explicitly the SIZE AXIS value-units (axes/size/size-axis.js), distinct from the inline --icon-* sub-scale",
+    ".truncate single-line ellipsis requiring min-width:0; .line-clamp multi-line via --lines (default 2)",
+    ".min0/.min0-col fix the flex/grid auto-min-width overflow bug; .wrap-anywhere for long unbroken strings",
+    ".pill-group wraps as a set with .scroll opt-in single-row scroller (scrollbar hidden); .pill max-width --pill-max 22ch, flex 0 1 auto, label truncates",
+    ".auto-grid auto-fill grid with minmax(min(--col-min 240px,100%),1fr)",
+    "Header states the rule: nothing is sized by content alone; comment cites 'analysis REQUIREMENTS B3'"
+  ],
+  "standouts": [
+    "Two explicitly separated size domains: --size-* (whole element/mark, the SIZE AXIS) vs --icon-* (glyph within chrome) — a deliberate 'one home for how big a thing is' decision",
+    "The modular scale rule (×1.25 with a ~1.9 display jump) made explicit as derivation, with the clamp pairs as its responsive expression",
+    "Direct framing of two named recurring bugs (text spilling, pills grouped by text length) the file exists to solve"
+  ],
+  "conventions": [
+    "clamp()-based fluid tokens throughout; @kind other annotations on type/line-height/measure/size tokens",
+    "Token-then-utility pattern; utilities reference the 8px --s-* scale for fixed innards and fluid tokens for breathing gaps",
+    "Ties tokens to a code axis (axes/size/size-axis.js) — links the design token to the generative SIZE AXIS",
+    "Cites an external requirements doc (REQUIREMENTS B3) in a comment"
+  ],
+  "concerns": [
+    ".pill uses --s-1/--s-3 and .pill-group uses --s-2 (the fixed 8px scale) which are referenced but not defined in this file — relies on the --s-* scale existing in another token file (unverified from this file alone)"
+  ],
+  "notes": "The single home for fluid type/space/measure tokens, the whole-element SIZE-AXIS ramp, and the overflow-safe utilities (truncate, clamp, min0, pill-group) that stop text spilling and pills mis-grouping.",
+  "questions": [
+    "Where is the fixed 8px --s-* spacing scale (--s-1/--s-2/--s-3) defined that the pill rules consume?",
+    "How does --size-* connect at runtime to axes/size/size-axis.js — does the JS read these CSS vars or mirror them?",
+    "Where is 'analysis REQUIREMENTS B3' so the modular-scale rule's source can be checked?"
+  ],
+  "purpose_vs_actual": "Matches — header promises fluid sizing and overflow-safe rhythm to solve text-spill and pill-grouping; the file delivers the fluid scales, the SIZE ramp, and the overflow-safe utilities including .pill-group.",
+  "apparent_themes": [
+    "nothing sized by content alone",
+    "fluid type/space via clamp",
+    "overflow safety / honest truncation",
+    "single-source modular scale",
+    "design token tied to a generative axis"
+  ],
+  "intention_signals": "Trying to make every surface read correctly across desktop/tablet/mobile from one source by making type and space fluid and every text element shrink/truncate honestly, while giving whole elements a single canonical size ramp tied to the SIZE axis.",
+  "novelty": "The explicit split between the whole-element SIZE AXIS ramp (--size-*) and the glyph-within-chrome icon sub-scale, and the modular-scale rule encoded as derivation rather than hardcoded steps.",
+  "contribution": "Contributes the fluid type/space/measure token scales, the whole-element SIZE-AXIS size ramp, and the overflow-safe utility set (truncate/line-clamp/min0/wrap-anywhere/pill-group/auto-grid).",
+  "summary_for_embedding": "ConceptV design-system CSS defining a clamp-based fluid type scale, fluid spacing, measure caps, a whole-element SIZE-AXIS ramp, and overflow-safe utilities (truncate, line-clamp, min0, pill-group, auto-grid).",
+  "intention_for_embedding": "To make nothing sized by content alone — fluid, single-source type/space across surfaces with honest truncation and a canonical whole-element size ramp tied to the SIZE axis."
+}

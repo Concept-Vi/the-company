@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/THE-SEED-geometric-substrate.md",
+  "model": "opus",
+  "what_it_does": "The root seed-capture document (originated by Tim Geldard 2026-06-11). It records the geometric construction (box, centre, reciprocal-partition grid, concentric circles, axial coincidence points, the forbidden corner circle, the law 2pi/n=(1/n)^k), a math check, what the object encodes (centre=origin, square=structure, circle=meaning, radius=relevance, angle=kind, scale=zoom, coincidence=ratified, forbidden=residue), the named central tension, the resonance law, and how it generates the renderer/memory/coordinate-space/chains/types/actions. Sections 8-11 add the invariant law (everything is a variable, the centre moves) and Tim's assignment of each primitive to circle/square/angle/time/nodes/edges, the operational meaning of 'forbidden', and what lives in discrete vs continuous.",
+  "observations": [
+    "Framed as the moment Tim gave the seed, captured verbatim where load-bearing then amplified; calls it 'the answer to every part of the Company'.",
+    "Section 1 reconstructs the construction with grid doublings 4x4,8x8,16x16 and the inscribed vs forbidden (circumscribed corner) circles.",
+    "Math check confirms 45deg=pi/4 and notes minor slips as non-load-bearing; affirms the incommensurability 'is the point'.",
+    "Section 2 maps the figure: centre=origin (Tim), square/grid=structure/addresses (the nameable), circle/polar=meaning/embeddings (the felt-but-unnameable), radius=relevance, angle=kind, coincidence points=the real/ratified, forbidden zones=residue/translation-loss.",
+    "Section 3 names the fundamental tension: square=world's representations vs circle=Tim's inarticulable meaning; recognition rotates a forbidden-diagonal point onto a coincidence point.",
+    "Section 4 reads 2pi/n=(1/n)^k as a conservation/resonance relation trading angular resolution (types) against radial depth (scale).",
+    "Section 8 states the invariant law: the invariant is the relationship (square/circle duality + the resonance law, holding at every n); everything filling it is variable, including the centre.",
+    "Section 9 assigns primitives per Tim's request: embeddings=circle, paths=square, type registries=angular sectors + axis vocabulary, timestamps=privileged axis, nodes=populated points, edges=typed vectors/moves, registries=the discrete lattice.",
+    "Section 10 defines three operational kinds of 'forbidden' (circle-without-square=gate's inbox, square-without-circle=drift/decay list, the corner=architecture-growth signal).",
+    "Section 11 defines discrete=addressable/gated/exact/shared vs continuous=felt/searched/relative, with discrete as samples of the continuous field at the current n and the gate as permanent promotion."
+  ],
+  "standouts": [
+    "Recognition framed geometrically as rotating an inarticulable (forbidden-diagonal) point onto a coincidence point — 'Tim's one irreplaceable act'.",
+    "The invariant law (section 8): law = invariant relationship over variable content, which is what makes the instrument agnostic across domains.",
+    "The three operational kinds of forbidden mapped to concrete system functions (gate inbox / drift list / architecture-growth signal) — 'the system's to-do list IS its forbidden zones'."
+  ],
+  "conventions": [
+    "Keeps Tim's verbatim words quoted and labeled, separating his statements from amplification.",
+    "Uses the repo's gate/spine/coincidence/forbidden and altitude (Pulse->River->Nodes) vocabulary; ties to GC14 conditional memory.",
+    "Expand-before-harden: section 7 lists deliberately-unresolved open tensions (which two axes, what forbidden means, discrete/continuous seam)."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the foundational geometric-seed document — the construction, the square=structure/circle=meaning duality about a moving centre, the resonance law, and Tim's own assignment of every Company primitive to a part of the figure.",
+  "questions": [
+    "Section 7 leaves 'what are the two axes exactly' open; was that resolved later (the sibling captures suggest time is the only privileged axis)?",
+    "How much of the section 9 assignment was Tim's direct word vs the agent's 'you tell me' fill-in he later ratified?"
+  ],
+  "purpose_vs_actual": "Match — it presents itself as the root seed capture plus amplification and delivers the construction, math check, primitive mapping, invariant law, and assignments.",
+  "apparent_themes": [
+    "One geometric object encoding every Company primitive",
+    "Square=structure/nameable vs circle=meaning/felt, agreeing only on the axes",
+    "The egocentric moving centre (attention = origin-selection)",
+    "Recognition as rotation onto a coincidence point; the gate as commensuration",
+    "Law as invariant relationship over variable content (domain-agnostic instrument)",
+    "Forbidden zones as the work (gate inbox / drift / architecture growth)",
+    "Discrete sampled from continuous at the current n; gate = permanent promotion"
+  ],
+  "intention_signals": "To capture and grow Tim's claim that a single square-and-circle-with-a-centre figure plus one equation is the generative substrate of the entire Company — renderer, memory, addressing, types, operations — and to assign each existing primitive (embeddings, paths, registries, time, nodes, edges) a precise place in that figure.",
+  "novelty": "The unification of structure and meaning as two coordinate systems over one origin whose tension (sqrt2/pi incommensurability) localizes the gate, the invariant-law-over-variable-content formulation, and the three operational readings of 'forbidden' as the system's own to-do list.",
+  "contribution": "Contributes the root geometric substrate: the square=structure/circle=meaning duality about a moving centre, the resonance law, the full primitive-to-figure assignment, recognition-as-rotation, and the forbidden-zones-as-work taxonomy — the foundational vocabulary the sibling captures build on and a fused system could keep as its conceptual spine.",
+  "summary_for_embedding": "The root capture of Tim Geldard's geometric seed: a square (structure) and circle (meaning) sharing one moving centre under the law 2pi/n=(1/n)^k, with each Company primitive (embeddings, paths, registries, time, nodes, edges) assigned to the figure, coincidence points as the ratified-real, and forbidden zones as the gate/drift/architecture-growth work.",
+  "intention_for_embedding": "To establish a single geometric figure plus one equation as the generative substrate of the entire Company and to map every existing primitive onto it."
+}

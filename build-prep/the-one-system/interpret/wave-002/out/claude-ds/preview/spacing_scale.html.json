@@ -1,0 +1,33 @@
+{
+  "project": "claude-ds",
+  "path": "preview/spacing_scale.html",
+  "model": "opus",
+  "what_it_does": "A standalone HTML preview card that visualises the design system's spacing scale: an 8-px base grid rendered as 11 horizontal gold bars, each labelled with its token name (--s-1 through --s-24) and its pixel value (4 to 96).",
+  "observations": [
+    "Carries a @dsCard HTML-comment annotation declaring group='Brand', name='Spacing scale', subtitle='8-px base grid · 11 steps', viewport='700x280' — gallery metadata in a comment.",
+    "Links a shared _card.css then adds local <style> using design tokens via var(): --font-body, --font-mono, --fg-primary/secondary/muted, --accent-gold.",
+    "Bar widths are hardcoded inline px (e.g. style='width:4px') matching the labelled value, so the bar literally is the spacing it names.",
+    "Token names skip steps (--s-1,2,3,4,5,6,8,10,12,16,24) — the scale is non-contiguous past --s-6.",
+    "Lead text states the usage rule: component padding 16-24, section gutters 32-48."
+  ],
+  "standouts": [
+    "The visual bar width equals the actual spacing value, making the card self-demonstrating.",
+    "Embeds the spacing usage convention (padding 16-24 / gutter 32-48) directly in the preview."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery-annotation convention and the var()-everything token discipline of the design system.",
+    "Uses inline px on the .bar widths — these are illustrative data, not styling drift, but they are literal px in markup."
+  ],
+  "concerns": [],
+  "notes": "A self-demonstrating gallery card for the 11-step 8px spacing scale; tokens named, values shown as proportional gold bars.",
+  "questions": [
+    "Are the spacing token names (--s-1…--s-24) actually defined in the token registry, or only depicted here?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard names it 'Spacing scale' and the file renders exactly that.",
+  "apparent_themes": ["token-driven design", "8px grid system", "self-describing/self-demonstrating previews", "single-source-of-truth via var()"],
+  "intention_signals": "Intended as a human-eye reference card so the spacing scale can be recognised at a glance in a gallery, grounding spacing tokens visually.",
+  "novelty": "The bar's pixel width directly equalling the spacing value it labels — the visualisation IS the measurement.",
+  "contribution": "Contributes a visual, gallery-ready rendering of the spacing scale plus the encoded usage rule (padding vs gutter ranges) tied to named tokens.",
+  "summary_for_embedding": "An HTML @dsCard preview rendering the design system's 11-step 8px spacing scale as proportional gold bars labelled by token name and pixel value.",
+  "intention_for_embedding": "To give a recognisable at-a-glance gallery reference for the spacing token scale and its padding/gutter usage conventions."
+}

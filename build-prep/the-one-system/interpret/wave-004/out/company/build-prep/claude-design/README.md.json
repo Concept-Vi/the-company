@@ -1,0 +1,41 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/README.md",
+  "model": "opus",
+  "what_it_does": "Index file for the claude-design directory: prescribes a canonical reading order for four core docs, a doc-ownership table (who owns what / what each does NOT own), a one-source note declaring BACKEND-SEAM-PACK.md canonical for the backend contract, a division of docs by session type (cognition vs interface), and pointers to the research/ evidence base and two studio reconcile patches.",
+  "observations": [
+    "Names a 3-step canonical reading order: BACKEND-SEAM-PACK.md → AUTHORING-FE-HANDOFF + AUTHORING-UI-BRIEF → APPLICATION-STRUCTURE-PACK.md",
+    "Doc-ownership table has explicit 'Owns' and 'Does NOT own' columns for four docs",
+    "Declares BACKEND-SEAM-PACK.md as the single source of truth for the backend contract; structure pack cross-references rather than restates",
+    "Splits work by session type: cognition session reads seam pack + authoring docs; interface session reads structure pack",
+    "Points at research/ as the bounded-read corpus, listing deep/ distillations (fe-structure, surface-intent, seams, contracts-governance, design-substrate, selfdesc-ops, angles-delta) and inventory/ reads inv-A through inv-E",
+    "Lists two studio patch files (studio-fe-wiring.patch, studio-suite-mockup-focus.patch) as studio-reconcile material applied during the interface session",
+    "References a board address (board://item-c0a2d591 is in the sibling doc, not here) — this README references research/README.md for where the seam pack supersedes deep-reads"
+  ],
+  "standouts": [
+    "Explicit 'Does NOT own' column per doc — encodes anti-duplication boundaries as data",
+    "One-source rule stated as a tie-breaker: if the same content appears in two docs, the seam pack wins",
+    "Reading order is keyed to session role (cognition vs interface), not just sequence"
+  ],
+  "conventions": [
+    "Follows a documentation-as-navigable-corpus pattern: an index note that routes readers rather than restating content",
+    "Uses a doc-ownership table to assign single-ownership of each contract area — mirrors the repo's one-source enforcement principle"
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the table-of-contents and ownership map for the claude-design design corpus — read it first to know which of the four docs answers which question and that the seam pack is authoritative for the backend.",
+  "questions": [
+    "The deep/ list names seven files but the directory may contain fewer/more — does this README's listing stay in sync with the actual directory?",
+    "Are the two studio patches still pending application, or already applied? (the README describes them as material 'applied during the interface session' without a status)"
+  ],
+  "purpose_vs_actual": "Matches — it states itself as 'reading order + doc ownership' and delivers exactly a reading order, an ownership table, a one-source note, and pointers to evidence.",
+  "apparent_themes": [
+    "single-source-of-truth / anti-duplication",
+    "documentation as a navigable, ownership-partitioned corpus",
+    "session-role-scoped reading paths"
+  ],
+  "intention_signals": "Trying to prevent the claude-design doc set from drifting into duplicated, contradictory contract descriptions by assigning each doc a clear ownership lane and naming one canonical backend source, so a fresh agent knows exactly where to look and which doc wins on overlap.",
+  "novelty": "The explicit per-doc 'Does NOT own' column and the session-type division of reading paths are an unusual, disciplined way to structure a docs index.",
+  "contribution": "Contributes the routing/ownership map for the claude-design design corpus — the index that assigns single-ownership of each contract area and the canonical-source tie-breaker, which a fused system would keep as the navigational spine over the four design docs.",
+  "summary_for_embedding": "An index README for the claude-design directory defining a canonical reading order, a doc-ownership table with explicit non-ownership boundaries, a one-source rule naming BACKEND-SEAM-PACK.md authoritative, session-type reading divisions, and pointers to the research evidence base and studio patches.",
+  "intention_for_embedding": "To route a fresh agent through the claude-design design docs without duplication or ambiguity by assigning each doc an ownership lane and naming the canonical backend contract source."
+}

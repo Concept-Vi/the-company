@@ -1,0 +1,31 @@
+{
+  "project": "company",
+  "path": "ai_tics/closure_form.py",
+  "model": "opus",
+  "what_it_does": "A single AI-tic registry entry declaring the module-level AI_TIC dict for the 'closure_form' tic: the generic-AI tell of closure-form/summarizing writing, with id, label, a list of marker phrases, and a description.",
+  "observations": [
+    "Module docstring explains the tic as a named Tim frustration (open-future-writing vs closure-form, expansion-ratio<1)",
+    "AI_TIC dict has id='closure_form' (matches file stem), label='closure-form'",
+    "markers: ['in conclusion','to summarize','in summary','to wrap up','final thoughts',\"that's everything\"]",
+    "desc restates the closure-form definition and 'kills institutional memory' rationale",
+    "Docstring references runtime/ai_tics.py + ai_tics/AGENTS.md as the seam/spec"
+  ],
+  "standouts": [
+    "Markers are concrete closure phrases the fingerprint pass matches — the catalogue data, not a code branch"
+  ],
+  "conventions": [
+    "Follows the AI_TIC schema mandated by ai_tics/AGENTS.md (id equals file stem, non-empty markers list)",
+    "Pure declarative data module with no logic — honors the 'declared DATA, not action' floor",
+    "Docstring cross-references the registry and constitution"
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is one catalogue file — a self-registering declaration of the 'closure-form writing' AI tell with six trigger phrases.",
+  "questions": [],
+  "purpose_vs_actual": "Matches — docstring states it is a seed AI-tic and the file is exactly that declaration.",
+  "apparent_themes": ["declarative catalogue entry", "open-future vs closure-form writing", "file-per-entry registry"],
+  "intention_signals": "Tries to encode the closure-form writing pattern as detectable data so the fingerprint pass can subtract it, preserving open-future institutional-memory writing.",
+  "novelty": "Treating summarizing/closing phrases as a denoisable AI fingerprint to subtract.",
+  "contribution": "Contributes the concrete marker set and metadata for the closure_form tic in the catalogue.",
+  "summary_for_embedding": "AI-tic registry file declaring the closure_form AI_TIC dict — id, label, six closure-phrase markers, and a description of closure-form writing as a generic-AI tell.",
+  "intention_for_embedding": "To catalogue closure-form/summarizing writing as a subtractable generic-AI fingerprint and protect open-future institutional-memory writing."
+}

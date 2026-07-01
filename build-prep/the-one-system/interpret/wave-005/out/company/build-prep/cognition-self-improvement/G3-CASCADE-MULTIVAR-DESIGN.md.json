@@ -1,0 +1,50 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/G3-CASCADE-MULTIVAR-DESIGN.md",
+ "model": "opus",
+ "what_it_does": "A tentative design document for extending the cascade engine so that committed code-chains can become declared data-chains. It names four 'seams' the manual registry_generation_run.py supplies by hand (S1 keyed per-unit context, S2 resolve-once shared inputs, S3 judgment/check step kinds, S4 partition/resume staying in the flow layer) and proposes additive engine changes, including a new checks registry, with an explicit build order for when greenlit.",
+ "observations": [
+  "Status banner: TENTATIVE, written 2026-06-10 from the RG10 build, not reviewed by Tim, assumptions marked, nothing built.",
+  "Frames the goal as collapsing two chain-kinds toward one: 'declare the chain, never code it' (registry-is-truth for processes), aligned with the GC13 lifecycle where an accepted proposal dispatches a declared chain.",
+  "S1: a step field unit_ctx with {field} substitution from the unit dict; run_items gains an optional per_unit_ctx resolver; additive (absent field = byte-identical to today).",
+  "S2: a cascade-level shared: block of named inputs resolved once at cascade start; resolver vocabulary is an open question (reuse code:// and run:// vs a new file://; a corpus-query: form for top-k exemplars).",
+  "S3: three additive step kinds — jury (run_jury), panel (run_panel), check (a deterministic gate by name requiring a new checks/ registry); 'the model raises, the floor decides'.",
+  "S4: declared a DECISION (not assumption) — partition, retry budgets, resume state stay in the flow layer; cascades express one pure batch.",
+  "Each seam is named by the manual code that proves the need ('those seams ARE the spec for what the cascade engine lacks').",
+  "Build order: checks/ registry + check step kind first (smallest, highest reuse), then panel/jury, then S1, then S2, then re-express registry_generation as a saved cascade (proof by use)."
+ ],
+ "standouts": [
+  "Core thesis: the hand-written manual module's seams literally constitute the specification for what the cascade engine is missing.",
+  "'declare the chain, never code it' as the end-state — the strongest form of registry-is-truth applied to processes.",
+  "Explicitly distinguishes a hard DECISION (S4) from marked ASSUMPTIONS (S2 resolver vocab, S3 checks-registry unification)."
+ ],
+ "conventions": [
+  "Follows the tentative-artifact discipline: status banner, assumptions flagged, 'not reviewed by Tim', epistemic humility throughout.",
+  "Names each design element against existing executors/registries (run_jury, run_panel, verdict_panels, confirm_status's declared AND).",
+  "Build order ordered by reuse value and provability-by-use."
+ ],
+ "concerns": [
+  "Several load-bearing decisions are left open (S2 resolver vocabulary, whether checks registry is the right unification) — a builder must resolve them before S2/S3 can stand.",
+  "The G24 schema-guided-decoding interaction and the checks-registry's later role for GC14 condition-clauses are asserted as fits but not verified."
+ ],
+ "notes": "Tentative spec for making cascades multi-variable (per-unit ctx, shared inputs, jury/panel/check step kinds) so the registry-filling chain becomes declarable data instead of committed code; S4 keeps statefulness in flows.",
+ "questions": [
+  "What does registry_generation_run.py actually do at each of the four seams (the manual code this design abstracts)?",
+  "What is the resolver-vocabulary decision for S2 (corpus-query: vs file:// vs reuse code://run://) — who decides and when?",
+  "Has any of this been greenlit/built since 2026-06-10, or is it still all unbuilt?"
+ ],
+ "purpose_vs_actual": "Match — declares itself a tentative, unbuilt, unreviewed design and delivers exactly that: a seam analysis with marked assumptions and a conditional build order.",
+ "apparent_themes": [
+  "Registry-is-truth extended to processes (declare, don't code)",
+  "The model raises, the floor decides (deterministic checks)",
+  "Additive, backward-compatible engine evolution",
+  "Manual code as the spec for missing abstraction",
+  "Tentative-artifact / epistemic humility",
+  "Layer separation (cascades = pure batch, flows = statefulness)"
+ ],
+ "intention_signals": "Trying to identify exactly what the cascade engine lacks (by reading what the hand-written chain does by hand) and propose the minimal additive seams that would let process-chains be declared as data, unifying code-chains and data-chains toward the GC13 declared-dispatch lifecycle.",
+ "novelty": "Deriving the engine's missing-feature spec directly from the manual workaround code, and the 'check' deterministic step kind requiring a new checks/ registry as the third instance of model-raises/floor-decides.",
+ "contribution": "Contributes the seam-level design for cascade multi-variable support — the four named gaps, the additive step-kind proposals (jury/panel/check + checks registry), the cascade/flow layer boundary decision, and the reuse-ordered build sequence.",
+ "summary_for_embedding": "A tentative design doc proposing four additive cascade-engine seams (per-unit ctx, shared inputs, jury/panel/check step kinds, flow-layer statefulness) to turn committed code-chains into declared data-chains.",
+ "intention_for_embedding": "To specify, from the manual registry-generation code's seams, the minimal cascade-engine extensions that would let process chains be declared as data rather than coded, advancing registry-is-truth for processes."
+}

@@ -1,0 +1,44 @@
+{
+  "project": "company",
+  "path": "bindings/by_nucleation.py",
+  "model": "opus",
+  "what_it_does": "Declares a BINDING dict 'by_nucleation' configuring a radial view that types items of a content store against a registry of type-centroids and reads where the registry under-covers its content: fitting items sit inside a type's square, non-fitting items pile outside, and a coherent outside pile past a birth threshold is a candidate new type. The module docstring explains the underlying '20/80 water-law' (attributed to Tim Geldard) and the four drivable axes (types_space, rung, space, dial). Includes a TENTATIVE meta block.",
+  "observations": [
+    "Long docstring frames a 'TYPE-NUCLEATION lens' with the 20/80 water-law, attributing the growth law to Tim Geldard.",
+    "Describes accumulate→birth and thin→candidacy as the invariant laws; thresholds bend to situation.",
+    "States there is NO objective and NO purpose — a pure read of registry↔content fit.",
+    "Four declared variables: types_space='topics', rung=8, space='repo', dial=0.2, all described as drivable per request.",
+    "Default is deliberately CROSS-INSTANCE (types from topics, items from repo) to make misfit non-circular.",
+    "Notes an HONEST BOUNDARY: this is semantic nucleation over embedded stores; symbolic pile-outside for code-declared registries is Group 10's '—' remainder.",
+    "dial=0.2 is the 20/80 birth threshold; moves born/forming, not the inside/outside membership split.",
+    "angle_from='nucleation' resolves sectors to registry types plus one outer ZONE per candidate."
+  ],
+  "standouts": [
+    "Encodes an original named growth law (20/80 water-law) with explicit attribution and stated invariants.",
+    "Deliberate cross-instance default to keep the misfit genuine and non-circular.",
+    "Explicit scope/honesty boundary distinguishing semantic vs symbolic nucleation."
+  ],
+  "conventions": [
+    "Follows the shared BINDING-dict pattern (id/label/angle_from/radius_from/order_by + meta).",
+    "Carries far more prose (module docstring) than sibling bindings, which use short header comments.",
+    "meta copy is TENTATIVE and operator-facing, consistent with siblings."
+  ],
+  "concerns": [],
+  "notes": "The nucleation binding: types a content store against a type-registry, surfacing candidate new types that form in the outside-pile past a 20/80 threshold.",
+  "questions": [
+    "How are the type-centroids ('scale-pyramid centroids of types_space at rung') actually built, and where?",
+    "What component resolves a coherent outside pile into a 'candidate new type' zone?"
+  ],
+  "purpose_vs_actual": "Match — the docstring describes registry↔content fit with birth/dissolution candidacy, and the BINDING fields (types_space/space/rung/dial, angle_from='nucleation') encode exactly that read.",
+  "apparent_themes": [
+    "Emergence/birth of new types from misfit (20/80 water-law)",
+    "Registry-vs-content fit as a pure descriptive read (no objective)",
+    "Non-circularity and honest scoping",
+    "Everything-is-a-drivable-variable / universal law over any registry+store"
+  ],
+  "intention_signals": "Trying to operationalize Tim's growth law as a live lens: show where the current type registry fails to cover its content and where new kinds are nucleating, in a way that generalizes to any registry/store and stays honest about being semantic-only.",
+  "novelty": "The 20/80 water-law as a concrete visualization binding with a birth-threshold dial and inside/outside square geometry; the named honest boundary against symbolic remainders.",
+  "contribution": "Contributes the nucleation/new-kinds-forming binding: the config and law-prose for reading registry-vs-content misfit and surfacing candidate new types, with cross-instance non-circular defaults.",
+  "summary_for_embedding": "A binding-config Python file declaring the 'by_nucleation' radial view that types a content store against a type-registry to surface candidate new types forming in the misfit pile, governed by a 20/80 birth-threshold dial.",
+  "intention_for_embedding": "To let an operator see where new kinds of things are being born out of items that fit no existing type, per Tim's 20/80 growth law."
+}

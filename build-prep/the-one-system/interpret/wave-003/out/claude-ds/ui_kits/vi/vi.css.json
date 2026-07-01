@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/vi/vi.css",
+  "model": "opus",
+  "what_it_does": "The full stylesheet for the Vi UI kit / Vi Workspace. Styles the shell (sidebar + main grid), the three-pane workspace, the Vi diamond mark, the status pill, the chat panel (messages, entity-read cards, missing-field prompts, approval cards, composer), the centre task tree (layers, nodes with idle/active/done/blocked states, connectors), and the right-pane brochure output preview (hero, sections, skeleton loaders, stats grid, footer formats).",
+  "observations": [
+    "Heavily token-driven: nearly all colours/spacing reference CSS custom properties (var(--font-body), --bg-canvas, --accent-gold, --border-faint, --r-md, --ease-out, etc.) defined elsewhere.",
+    "Defines several keyframe animations: vi-stripe, vi-pulse-pill, vi-dot (pulsing active node), vi-skel (skeleton shimmer).",
+    "Task-tree node states are styled by class: .vi-node.idle (dimmed), .active (gold border + pulsing dot), .done (success dot), .blocked (red border + #FBEEEC background).",
+    "Layer node grids differ by layer: layer-1 single column, layer-2 two columns, layer-3 four columns.",
+    "Brochure hero uses a hardcoded multi-stop linear-gradient (#4A3E2E -> #E4CC9E ...) and .blocked uses a hardcoded #FBEEEC; a few rgba(224,192,16,...) literals appear in animation shadows.",
+    "Sets body overflow:hidden and uses height:100vh grids, designed for a fixed full-viewport app layout, not a scrolling page.",
+    "Entity-read cards have a .done variant; missing-field prompts use dashed borders; approval and composer use accent-gold buttons."
+  ],
+  "standouts": [
+    "The four task-node states (idle/active/done/blocked) with a pulsing-dot animation make agent progress visible at a glance.",
+    "Skeleton-shimmer (.skel) on brochure values renders the 'still being filled' state of the live output preview."
+  ],
+  "conventions": [
+    "Follows a single-source token discipline (the claude-ds 'define once, reference everywhere' rule) for almost all values via var().",
+    "Breaks that discipline in a few spots: the brochure-hero gradient stops, the #FBEEEC blocked background, and rgba(224,192,16,...) shadow literals are hardcoded rather than tokenised."
+  ],
+  "concerns": [
+    "Hardcoded colour literals (the hero gradient, #FBEEEC, the rgba gold-shadow values) are off-token and would not reflow if the token palette changed — the kind of drift the design-system check flags.",
+    "An empty @keyframes vi-stripe is defined but no rule in this file appears to use it (possible dead animation)."
+  ],
+  "notes": "The complete look of the Vi Workspace — token-driven shell/panes/tree/preview styling; watch the few hardcoded gradient/colour literals if reconciling to tokens.",
+  "questions": [
+    "Where are the referenced CSS custom properties (--accent-gold, --r-md, --font-body, etc.) defined — a shared design-system.css/tokens file?",
+    "Is the vi-stripe keyframe used anywhere, or is it leftover/dead?"
+  ],
+  "purpose_vs_actual": "Matches: the header comment ('Vi UI kit — three-pane workspace') matches the comprehensive shell/workspace/tree/preview styling it contains.",
+  "apparent_themes": [
+    "Token-referenced styling (single source of truth via CSS vars)",
+    "Visible agent state through node-state classes and animation",
+    "Live-output affordances (skeleton loaders, pending sections)"
+  ],
+  "intention_signals": "Tries to give the Vi Workspace a coherent, token-driven appearance where agent progress and in-progress output are legible through state classes and motion, while fitting a fixed full-viewport three-pane app.",
+  "novelty": "The combination of agent-task-state styling (pulsing active/blocked nodes) with live brochure skeleton-fill in one kit is a distinctive presentation of an AI building an asset.",
+  "contribution": "Contributes the complete visual language of the Vi Workspace: pane/shell layout, the four agent-node states with motion, chat/entity-card/prompt/composer styling, and the live skeleton-filling brochure preview.",
+  "summary_for_embedding": "CSS stylesheet for the Vi Workspace UI kit: token-driven shell, three-pane layout, diamond mark, status pill, chat/entity/prompt/composer, four-state agent task tree with animations, and a skeleton-filling brochure output preview.",
+  "intention_for_embedding": "To give Vi's three-pane workspace a coherent token-based look where agent progress and in-progress output are visually legible."
+}

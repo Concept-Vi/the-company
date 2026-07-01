@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "preview/ai_registry.html",
+  "model": "opus",
+  "what_it_does": "A standalone preview card that renders the CV_AI registry as data — iterating AI.LAYERS (provider, behaviour, skill, capability, context), querying entries per layer via AI.query({layer}), and showing each layer's label, swatch dot, entry count, description, and a chip per entry id (with its description as a title tooltip). It loads ai-registry.js, ai-seed.js, and ai-capabilities-canvas.js to read the catalogue without a React/model runtime.",
+  "observations": [
+    "Carries a @dsCard annotation: group=AI, name='CV_AI — the AI registry', subtitle listing the five layers, viewport='820x520'.",
+    "Lead copy states 'Everything Vi can do is a parametric, resolvable, inheritable entry — the same shape as CV_REGISTRY' and the formula 'ai = f(capability, context, params)'.",
+    "Asserts the interface is a projection of the catalogue and calls go through CV_AI.execute(id) / CV_AI.complete(), never a raw endpoint.",
+    "Reads AI.LAYERS, AI.LAYER_INFO (label/swatch/desc), and AI.query({layer}) from the loaded registry object.",
+    "Flags provider and behaviour layer chips with a bronze accent (.chip.flag).",
+    "Sums a running total of entries and reports it in the footer ('N entries across M layers').",
+    "Footer notes that the composer's block-level capabilities and image moves register at app runtime from AIEngine.jsx, and the live inspector is AIRegistryPanel.",
+    "Footer shows the extension idiom CV_AI.register({layer:'capability', …, run}) as a chip and states it appears in both this card and the UI with no edit to either.",
+    "Comment in source: 'Load the AI registry as data (no React / model runtime needed to read the catalogue).'",
+    "Error fallback 'CV_AI failed to load.' if window.CV_AI is absent."
+  ],
+  "standouts": [
+    "Treats the registry as data readable without the app runtime — the card is a pure projection of CV_AI.query.",
+    "States the same-shape-as-CV_REGISTRY claim, reinforcing the unified register/resolve/query API across the four registries.",
+    "Calls out that registering a capability surfaces it in both the projection and the UI with no edit — interface-as-projection made concrete."
+  ],
+  "conventions": [
+    "Follows the @dsCard + _card.css preview-card convention.",
+    "Token-driven styling via var(--font-display), var(--accent-bronze), color-mix(...), with literal fallbacks.",
+    "Reads from the registry rather than embedding the catalogue (interface-as-projection).",
+    "Respects the documented script load order: ai-registry → ai-seed → ai-capabilities-canvas."
+  ],
+  "concerns": [],
+  "notes": "A read-only preview card that visualises the CV_AI registry's five layers and all their entries by querying the loaded catalogue — the projection counterpart to the in-app AIRegistryPanel.",
+  "questions": [
+    "How many entries appear per layer at load (the count is computed from the seed/canvas, not visible in this file)?",
+    "Does this card miss the AIEngine.jsx-runtime-registered capabilities (the footer says those register only at app runtime)?"
+  ],
+  "purpose_vs_actual": "Match — the annotation and lead describe a projection of the CV_AI catalogue, and the script renders exactly that by iterating layers and querying entries.",
+  "apparent_themes": [
+    "Registry-as-truth / one catalogue of every model touch",
+    "Interface-as-projection",
+    "Parametric, resolvable, inheritable entries (shared register/resolve/query API)",
+    "Single-registration extensibility",
+    "Token-driven styling"
+  ],
+  "intention_signals": "Trying to make the entire AI surface of Vi legible as a single layered catalogue — providers, behaviours, skills, capabilities, context — so that every model touch is one resolvable entry and adding a move is one register() call that surfaces everywhere.",
+  "novelty": "Rendering the whole AI capability surface as a layered, queryable registry projection (counted, swatch-coded, chip-per-entry) that can be read as plain data without the model runtime.",
+  "contribution": "Contributes a projection-card pattern for the AI registry that reads CV_AI.LAYERS / LAYER_INFO / query as data, and a concrete demonstration of the unified five-layer AI catalogue and its single-registration extension idiom.",
+  "summary_for_embedding": "A claude-ds preview card rendering the CV_AI registry's five layers (provider, behaviour, skill, capability, context) and every entry as queried-from-catalogue chips, the read-only projection of the in-app AIRegistryPanel.",
+  "intention_for_embedding": "To present Vi's entire AI surface as one layered, parametric registry where every model touch is a resolvable entry and adding a capability is a single register() call that appears everywhere."
+}

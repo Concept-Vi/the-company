@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/registry_generation_run.py",
+  "model": "opus",
+  "what_it_does": "A standalone Python module that runs the registry-generation convergence over ONE mockup file manually, threading three engine seams by hand that the registry-generation.cascade.json spec flags as not yet end-to-end runnable. It chains GROUND (run_role on screen_reader over the mockup) -> MAP (run_items register_element over per-mockup element candidates with a shared grounding context) -> REDUCE (run_reduce cluster dedup at threshold 0.85) -> CONFIRM (per-cluster representative via run_jury confirm_registration plus a deterministic confirm_status floor), returning {confirmed, flagged} dossiers and persisting a readable batch artifact JSON.",
+  "observations": [
+    "Module docstring explicitly labels itself COMPOSITION (V-A / RG10) and the REUSABLE MANUAL form of design/_system/registry-generation.cascade.json, parallel to exocortex_ingest.py",
+    "Names the three open [C] engine seams it supplies manually: (1) resolve-once shared exemplars/inventory ctx, (2) {mockup}-keyed screen_reader ground wiring, (3) confirm jury+refcheck firing",
+    "EXEMPLAR_KEYS hardcodes five ui:// addresses (inbox, inbox/coa, inbox/build-review, inbox/walk, toolbar) as the voice exemplars",
+    "_grounding_payload reads design/_system/addresses.json, design/register.json features, and emits a closed ALLOWED CAPABILITIES list (pointable, spotlit, presentable, openable, driven) plus ALLOWED FEATURE IDS with a copy-verbatim-or-say-proposed instruction",
+    "Builds an in-memory Role variant (reg_v) that adds 'ground' as a bare-name shared input alongside utterance/exemplars/inventory — the manual form of the unbuilt run://<turn>/screen_reader/{mockup} chaining",
+    "Loads confirm_status by importlib from roles/confirm_registration.py rather than via the role registry",
+    "register_element emits a 'grounding' TAG (built|proposed|uncertain|defer), never a float (cited as G16 / NO-CONFIDENCE)",
+    "FLAG-don't-drop: floor-fail or non-built grounding marks for extra operator scrutiny, never drops the entry",
+    "__main__ takes mockup filename and optional max_candidates as argv, defaults to C1-inbox-desktop.html, writes rg10-batch-<mockup>.json"
+  ],
+  "standouts": [
+    "The module is self-described as the executable reference spec for what an engine seam must later auto-thread — the manual run IS both the convergence proof and the seam's reference implementation",
+    "Explicit floor discipline in the docstring: pure run:// computation PROPOSES; never resolve/approve/dispatch — operator-only, with RG8 PROPOSE / RG9 WRITE-BACK as the gated path after this",
+    "Dedup-then-confirm ordering: clusters first, then confirms only the cluster representative (cluster[0]), carrying cluster_size and cluster_members forward"
+  ],
+  "conventions": [
+    "Follows the closed-vocabulary / copy-verbatim-or-proposed grounding pattern for small models",
+    "Follows the propose-only floor convention (no writes from this module; persists a readable artifact, not a registry write)",
+    "Uses verbose print logging with [GROUND]/[MAP]/[REDUCE]/[OK]/[FLAG] tags and flush=True",
+    "Hardcodes sys.path.insert and os.chdir to /home/tim/company (script-style absolute pathing)"
+  ],
+  "concerns": [
+    "EXEMPLAR_KEYS and the ALLOWED CAPABILITIES list are hardcoded literals inside this file rather than sourced from a registry (the repo's own registry-is-truth value)",
+    "mockup file content is truncated to [:8000] chars and outerHTML to [:600] — silent truncation that could drop relevant context",
+    "Loads confirm_status via importlib from a file path instead of the role registry, a fragile coupling to roles/confirm_registration.py's location"
+  ],
+  "notes": "This is the hand-threaded, runnable proof of the registry-generation chain over a single mockup — it manually supplies the three cascade seams the engine cannot yet auto-thread, and proposes-only (never writes the registry).",
+  "questions": [
+    "Why is confirm_status imported by importlib path rather than obtained from the role registry like the other roles?",
+    "Are the hardcoded EXEMPLAR_KEYS and ALLOWED CAPABILITIES list intended to migrate to a registry source later?",
+    "What downstream consumes the persisted rg10-batch-<mockup>.json artifact (RG8 surface)?"
+  ],
+  "purpose_vs_actual": "Matches — the docstring states it is the manual/reusable form of the cascade convergence proving three seams, and the code implements exactly that GROUND->MAP->REDUCE->CONFIRM chain ending in confirmed/flagged with no writes.",
+  "apparent_themes": [
+    "Floor/no-fiction discipline (deterministic gates over model judgement)",
+    "Operator-gated truth growth (propose-only, never self-writing)",
+    "Manual code as executable spec for a future engine seam",
+    "Grounding small models with designed context packages (exemplars + closed vocabularies)",
+    "Flag-never-drop honesty"
+  ],
+  "intention_signals": "Trying to prove a registry-generation chain end-to-end by manually wiring the parts the cascade engine cannot yet auto-thread, so the bounded manual run doubles as the convergence proof and the reference for the future engine seam — while strictly proposing, never writing, the registry.",
+  "novelty": "The deliberate stance of writing a manual module AS the spec for an engine seam, with the docstring naming each [C] seam it supplies, and the dedup-then-confirm-representative pattern combining cluster dedup with a deterministic confirm floor plus a model jury.",
+  "contribution": "Contributes a concrete, runnable single-mockup registry-generation convergence with the exact GROUND/MAP/REDUCE/CONFIRM threading, the in-memory bare-name 'ground' input variant technique, and the propose-only artifact persistence — the executable reference for the cascade seams.",
+  "summary_for_embedding": "A Python module that manually runs the registry-generation convergence (screen_reader ground -> register_element map -> cluster reduce -> jury+floor confirm) over one mockup, threading three unbuilt cascade engine seams by hand and persisting a propose-only confirmed/flagged batch artifact.",
+  "intention_for_embedding": "Built to prove the registry-generation chain end-to-end over a single mockup and serve as the executable reference spec for the cascade engine seams it manually supplies, while strictly proposing rather than writing the registry."
+}

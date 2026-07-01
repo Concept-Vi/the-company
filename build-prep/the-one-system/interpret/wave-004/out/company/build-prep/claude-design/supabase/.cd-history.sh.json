@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/.cd-history.sh",
+  "model": "opus",
+  "what_it_does": "A bash script implementing 'Gate D' of the claude-design connector verification: it mints a design_client JWT for the throwaway design-test user and calls the Edge Function's `channels` history op on the 'design' channel, then pretty-prints each post's from_session, sender_kind, and text. The purpose is to confirm that RLS lets the design client read both its own posts and the fork/company-side posts in the shared channel, proving two-way participation on the same data.",
+  "observations": [
+    "Header marks it as GATE D, to be run AFTER the fork posts a company message to 'design' from a non-claude-design session",
+    "Local endpoints: API 127.0.0.1:15421, Edge Function 127.0.0.1:8773/mcp",
+    "Embeds the anon JWT (iss supabase-demo) and the test creds design-test@company.local / TestPass123!",
+    "Mints token via password grant, fails fast if empty",
+    "Calls tools/call name=channels op=history channel=design via JSON-RPC 2.0",
+    "Inline python3 parses the result content text, JSON-decodes the rows, and prints from_session | sender_kind | text[:60] per post",
+    "Expectation stated: BOTH from_session=claude-design (CD) and from_session=<company session> (fork) appear"
+  ],
+  "standouts": [
+    "Frames the test as proving 'same data, two-way participation' — both principals see the same channel rows via RLS",
+    "A single Edge Function history call drives the whole verification"
+  ],
+  "conventions": [
+    "Lettered gate labeling (Gate D), complementing gates A–H in .cd-drive.sh",
+    "JSON-RPC tools/call envelope for the MCP Edge Function",
+    "Throwaway-creds + gitignored discipline stated in header",
+    "set -u for safety"
+  ],
+  "concerns": [
+    "Embeds the test password and anon JWT in plaintext (mitigated by local demo stack, gitignored per header)",
+    "The inline python parsing has a complex ternary expression that is hard to read/maintain"
+  ],
+  "notes": "Gate-D companion script: reads the shared 'design' channel history as the design client to prove RLS grants two-way visibility of both CD and fork posts.",
+  "questions": [
+    "Which company session posts the fork-side message that this gate expects to see?",
+    "What is sender_kind and what values distinguish CD vs fork posts?"
+  ],
+  "purpose_vs_actual": "Matches: header describes reading design-channel history as the design client to prove two-way visibility, and the body performs exactly that.",
+  "apparent_themes": [
+    "RLS-scoped shared visibility (same rows, two principals)",
+    "Verification by USE against a live stack",
+    "Two-way cross-principal participation in a shared channel",
+    "Test isolation via throwaway creds"
+  ],
+  "intention_signals": "Trying to empirically prove that the design client and the company-side fork participate in the same 'design' channel and see the same posts, by reading history through the RLS-scoped Edge Function.",
+  "novelty": "The cross-principal same-data proof — reading as one party to confirm the other party's post is visible in the same shared channel row set.",
+  "contribution": "Contributes the Gate-D verification step: an executable check that the design client can read the shared 'design' channel history including fork-side posts via RLS.",
+  "summary_for_embedding": "Bash Gate-D script reading the shared 'design' channel history as the design_client to prove RLS-scoped two-way post visibility.",
+  "intention_for_embedding": "To verify that the design client and the company fork see the same posts in the shared design channel through RLS."
+}

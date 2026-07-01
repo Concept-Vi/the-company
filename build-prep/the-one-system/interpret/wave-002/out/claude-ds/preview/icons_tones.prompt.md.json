@@ -1,0 +1,32 @@
+{
+  "project": "claude-ds",
+  "path": "preview/icons_tones.prompt.md",
+  "model": "opus",
+  "what_it_does": "An essentially empty Markdown file containing only a single '#' header line with no title text and no body.",
+  "observations": [
+    "File is one line: '# ' with no heading text and no content following it.",
+    "Named as a companion '.prompt.md' to icons_tones.html, suggesting it was meant to hold the generation prompt for that preview card."
+  ],
+  "standouts": [
+    "Empty placeholder despite its name implying it should carry the prompt that produced icons_tones.html."
+  ],
+  "conventions": [
+    "Follows a '<card>.prompt.md' naming convention pairing a prompt file with a preview card, but is unpopulated."
+  ],
+  "concerns": [
+    "Empty/stub file — carries no prompt content, so the convention it implies (a recorded prompt per card) is unfulfilled here."
+  ],
+  "notes": "An empty .prompt.md stub paired with icons_tones.html — the prompt that would belong here was never written.",
+  "questions": [
+    "Was a prompt intended to live here, and is its absence intentional or an unfinished stub?"
+  ],
+  "purpose_vs_actual": "Cannot confirm a stated purpose — the file is empty; its name implies it should hold the icons_tones generation prompt, which it does not.",
+  "apparent_themes": [
+    "Per-card prompt provenance (by naming convention only)"
+  ],
+  "intention_signals": "Appears intended to record the prompt used to generate the paired icons_tones preview card, supporting reproducibility/provenance — but is currently a placeholder.",
+  "novelty": "n/a",
+  "contribution": "Contributes (by name) the convention of a per-card prompt-provenance file, though this instance is empty.",
+  "summary_for_embedding": "An empty Markdown file containing only a bare '#' header, named as the prompt companion to the icons_tones preview card.",
+  "intention_for_embedding": "To hold the generation prompt for the icons_tones preview card as provenance, though left empty."
+}

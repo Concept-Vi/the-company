@@ -1,0 +1,49 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/rg10_rejury.py",
+ "model": "opus",
+ "what_it_does": "Panel re-jury of jury-flagged registry entries. For each class=='jury' entry in reconciled.json that has no 'panel' yet, it rebuilds the real element unit (cluster_members[0] -> candidates.json order) and runs the registration_confirm panel (seats: grounding, voice, element-fit; quorum 2/3, temperature-0 lenses) via C.run_panel. On verdict True the entry becomes class='confirmed'; on False it becomes class='panel' (stays flagged, now with named seat dissents). Entry-idempotent (entries already carrying 'panel' skip), time-budgeted, with periodic checkpointing. Recounts classes and persists reconciled.json in place. Proposes classes only — the registry write stays behind Tim's approve.",
+ "observations": [
+  "Uses PanelRegistry().discover().get('registration_confirm') and C.run_panel with resolve_role pointing at the suite's role registry.",
+  "Docstring rationale: jury-class entries are floor-clean but failed the OLD same-role draw-jury whose no-quorum was variance not judgment; the panel supersedes it.",
+  "element_of returns None when no mockup, no artifact, or cluster rep unresolvable; a None element records panel={'error': 'element unrebuildable ...', 'verdict': None} and appends to failed — never silent.",
+  "Per-entry try/except around run_panel records the error into panel and continues.",
+  "Checkpoints reconciled.json every 10 judged and prints progress.",
+  "Default time budget 600s, overridable via argv.",
+  "Recomputes counts over all entries and writes in place; returns judged_this_batch, failed, remaining, counts.",
+  "Docstring: 'I was not happy with being given 222 things' — the gate should receive the smallest refined set."
+ ],
+ "standouts": [
+  "Replaces a noisy same-role draw-jury (whose disagreement was variance) with a multi-seat temperature-0 panel — distinguishing variance from real judgment.",
+  "Insists the element be rebuilt before judging: 'a fit-lens without the element rightly dissents' — context law made explicit.",
+  "Idempotent and bounded so batches compose toward the full set."
+ ],
+ "conventions": [
+  "Family pattern: os.chdir, sys.path inserts, in-place reconciled.json updates, 'PROPOSES classes only / registry write behind Tim's approve'.",
+  "Element-rebuild via shared _unit_of and candidates.json ordering — same context-law mechanism as reask/redescribe.",
+  "Fail-loud per entry with error captured into the panel object."
+ ],
+ "concerns": [
+  "element_of is duplicated almost verbatim across rg10_rejury and rg10_redescribe (and partially rg10_reask) — three copies of the same artifact/cluster resolution logic.",
+  "Broad except Exception folds all panel failures into a string, which could hide systemic panel errors as per-entry failures.",
+  "Outcome class 'panel' is shared with rg10_redescribe's input class, so the two passes' ordering is a cross-file contract not enforced here."
+ ],
+ "notes": "Re-jury pass: re-adjudicates jury-flagged entries with a 2/3 temperature-0 panel over the rebuilt element, confirming clear cases and demoting the rest to class='panel' with named dissents for the downstream re-describe pass.",
+ "questions": [
+  "What are the three registration_confirm seats' exact roles and how is quorum 2/3 computed inside run_panel?",
+  "Is rg10_rejury intended to run strictly before rg10_redescribe (which consumes the 'panel' class it produces)?"
+ ],
+ "purpose_vs_actual": "Match — docstring describes re-jurying jury-class entries via registration_confirm panel into confirmed/panel, idempotently and in place, which the code does.",
+ "apparent_themes": [
+  "Variance vs judgment: a real panel supersedes a noisy same-role draw-jury",
+  "Context law: rebuild the element before judging it",
+  "Give the human the smallest refined set (refine-before-gating)",
+  "Idempotent, bounded, composable batches",
+  "Propose-only; registry write stays behind approval"
+ ],
+ "intention_signals": "Shrink the human review set by re-judging soft no-quorum entries with a stronger multi-seat panel, confirming the genuinely-grounded ones and forwarding the rest with named dissents for content repair.",
+ "novelty": "Explicitly reframing the previous jury's no-quorum as variance and replacing it with a temperature-0 multi-seat panel that requires the rebuilt element to judge fairly.",
+ "contribution": "Contributes the panel re-adjudication stage that converts soft-flagged jury entries into confirmed or named-dissent panel entries, feeding the downstream re-describe pass.",
+ "summary_for_embedding": "A re-jury pass that re-adjudicates jury-flagged registry entries with the registration_confirm 2/3 temperature-0 panel over the rebuilt element, confirming or demoting them to 'panel' with named dissents and updating reconciled.json in place.",
+ "intention_for_embedding": "To replace a noisy same-role no-quorum with a stronger multi-seat panel so the human gate receives the smallest set of genuinely-uncertain entries."
+}

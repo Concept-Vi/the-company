@@ -1,0 +1,37 @@
+{
+  "project": "claude-ds",
+  "path": "components/Modal.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration file for a React Modal dialog component. Declares the ModalProps interface (extending React.HTMLAttributes<HTMLDivElement>) and exports the Modal function component (returning JSX.Element | null) plus a default export.",
+  "observations": [
+    "ModalProps fields: open (boolean), onClose (() => void), title (React.ReactNode), footer (React.ReactNode).",
+    "Docstring describes a warm-dim backdrop plus a raised panel, controlled via the open prop.",
+    "Closes on backdrop click, Escape key, or the close button (per docstring).",
+    "Return type is JSX.Element | null — implying it renders nothing when closed."
+  ],
+  "standouts": [
+    "Controlled-component contract (open + onClose) with three documented close paths.",
+    "'warm-dim backdrop' framing ties the dialog's appearance to the design system's warm palette."
+  ],
+  "conventions": [
+    "Controlled-component pattern (open/onClose) rather than internal state.",
+    "Extends standard div HTMLAttributes; minimal additive prop surface.",
+    "JSDoc documents behaviour the type alone cannot express (close triggers)."
+  ],
+  "concerns": [],
+  "notes": "The .d.ts contract for the Modal dialog — a controlled (open/onClose) warm-dim backdrop with a raised panel, title, and footer slots.",
+  "questions": [
+    "Where is focus-trapping/portal behaviour defined (not expressed in the type)?"
+  ],
+  "purpose_vs_actual": "Match — the docstring describes a controlled modal dialog and the interface declares exactly the open/onClose/title/footer props that supports.",
+  "apparent_themes": [
+    "Controlled overlay component",
+    "Multiple close affordances (backdrop/Escape/button)",
+    "Slot-based composition (title/footer)"
+  ],
+  "intention_signals": "Aims to give the design system a small, controlled modal contract with title and footer slots and conventional close behaviour.",
+  "novelty": "n/a",
+  "contribution": "Contributes the typed contract for the design system's modal dialog — the open/onClose controlled surface and the title/footer slots.",
+  "summary_for_embedding": "TypeScript .d.ts declaring ModalProps and the Modal React component, a controlled warm-dim-backdrop dialog with title and footer slots that closes on backdrop click, Escape, or close button.",
+  "intention_for_embedding": "To define the typed contract for a controlled modal dialog component in the design system."
+}

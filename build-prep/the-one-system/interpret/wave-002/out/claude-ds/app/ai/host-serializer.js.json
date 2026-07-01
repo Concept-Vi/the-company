@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "app/ai/host-serializer.js",
+  "model": "opus",
+  "what_it_does": "Registers, into the CV_HOST/CV_AI registries, (1) a set of serializers that render a change payload of a given kind into exact source text for the one file it belongs in (ai.entry, type, css.token, card, file), and (2) host capabilities/providers in CV_AI (host-fs, native-model, mcp-tools providers; repo.read, repo.list, ds.propose, ds.apply capabilities) so that 'touch the repository' is dispatched through the same CV_AI.execute() path as every other move. Includes a js() pretty-printer that turns JS values — including functions via toString — into readable source.",
+  "observations": [
+    "Guards at load: throws if window.CV_HOST or window.CV_AI is absent, naming the file to load first and the required order.",
+    "js() serializer-to-source handles null, functions (toString + reindent), strings (incl. 'ƒ'-prefixed function-smuggled-through-JSON revival matching CV_HOST.safeClone), numbers/booleans, arrays (compact when all primitive), and objects (keys with undefined values filtered out).",
+    "reindent re-bases a function body's indentation by finding the minimum leading whitespace and re-anchoring under the target indent.",
+    "Five serializers, each declaring kind/target/strategy/anchor/describe/render; targets can be functions of payload (css.token, card, file).",
+    "Anchors are sentinel comments ('// CV_HOST:ai-entries', '// CV_HOST:types') that new entries insert before; host-runtime falls back to EOF if absent.",
+    "ai.entry renders 'AI.register({...}, { silent: true });' into ai-seed.js; type renders 'CV_REGISTRY.register({...});' into types-seed.js.",
+    "Three extra providers registered as export-only model/tool endpoints that resolve to live runtimes only when window.CV_HOST_NATIVE exists.",
+    "ds.propose is described as the keystone — its run() calls provider.commit() with provenance 'vi'.",
+    "ds.apply delegates directly to window.CV_HOST.changes.apply.",
+    "All registrations pass { silent: true }; console.info at end confirms registration."
+  ],
+  "standouts": [
+    "Serializers let Vi author real diffs (literal CV_AI.register / token line / @dsCard file) rather than vague suggestions — each is the single home for 'how an X is written to source.'",
+    "Repository access is modelled as ordinary CV_AI capabilities (repo.*, ds.*), so 'what Vi can do' uniformly includes editing its own source.",
+    "Function-value round-trip: payload functions survive JSON cloning as 'ƒ'+source and are revived to executable-looking source on render — letting Vi author a capability with a real run()/build()."
+  ],
+  "conventions": [
+    "IIFE, 'use strict', registers into pre-existing globals; mirrors host-runtime.js style.",
+    "Each serializer is single-source for one change kind's file format (the no-second-home rule from project CLAUDE.md).",
+    "Loud-fail load guards naming the missing dependency and load order.",
+    "Capabilities carry an inline run(a) co-located with the move, per the project's capability convention."
+  ],
+  "concerns": [
+    "js() emits raw function source via toString — if a payload function closes over outer variables, the rendered source would reference unbound names and not work when written into the target file (no closure capture).",
+    "card serializer interpolates p.name/group/subtitle directly into an HTML comment attribute without escaping quotes, so a name containing a double-quote would break the @dsCard tag."
+  ],
+  "notes": "The serializer layer + repo capabilities — turns a registry-mutation descriptor into exact source for its one home file and exposes repo.read/list and ds.propose/apply as normal CV_AI moves so Vi can edit its own source.",
+  "questions": [
+    "Are the anchor sentinel comments ('// CV_HOST:ai-entries', '// CV_HOST:types') actually present in ai-seed.js and types-seed.js, or do additions fall through to EOF?",
+    "How is a payload function's closure handled when it is rendered to source and written into a different file?"
+  ],
+  "purpose_vs_actual": "Matches: header states two single-source jobs (serializers + host capabilities) and the code registers exactly those, with loud failure on missing serializer/writer.",
+  "apparent_themes": [
+    "Single home per change-kind source format",
+    "Self-editing system (the app authors its own real source)",
+    "Capability-as-dispatch (repo edits routed through the one CV_AI.execute path)",
+    "Export-aware degradation (providers declared but resolving only when a native host connects)"
+  ],
+  "intention_signals": "Trying to make Vi able to author and commit real, single-sourced source diffs to its own registries from inside the running app — so a proposed token/capability/type/card is literal ready-to-write source landing in its one home file, dispatched like any other capability and staged review-first.",
+  "novelty": "A JS-value-to-source emitter that round-trips functions (toString + reindent + 'ƒ' revival) so generated capabilities carry executable run()/build() bodies, combined with anchor-sentinel append strategies that make a browser app a generator of its own source code.",
+  "contribution": "Contributes the change-kind serializer set (ai.entry/type/css.token/card/file with target+strategy+anchor+render), a function-aware JS-to-source emitter, and the repo.* / ds.* CV_AI capabilities + host-fs/native-model/mcp-tools providers that make repository editing a first-class registry move.",
+  "summary_for_embedding": "A module registering per-change-kind serializers (renders payloads to exact source for one home file) and CV_AI host capabilities/providers (repo.read/list, ds.propose/apply, host-fs/native-model/mcp-tools) so the running app can author and commit single-sourced diffs to its own registries.",
+  "intention_for_embedding": "To let Vi author real, single-sourced source diffs to its own token/type/capability/card homes from inside the app, dispatched through the same capability path as every other move and staged review-first."
+}

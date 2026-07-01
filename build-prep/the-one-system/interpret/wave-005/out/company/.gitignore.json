@@ -1,0 +1,38 @@
+{
+  "project": "company",
+  "path": ".gitignore",
+  "model": "opus",
+  "what_it_does": "Git ignore file listing paths excluded from version control: virtualenvs, build caches, node_modules, runtime store/data, telemetry logs, several secret credential/cert files, Obsidian per-user state, and the-one-system scratch dirs.",
+  "observations": [
+    "Ignores multiple venvs: .venv/, .litellm-venv/, .voice-venv/",
+    "Ignores runtime store dirs: store-data/, .data/, /recollection/, /.recollection/",
+    "Ignores generated CLI telemetry ops/cli/telemetry.jsonl, .adv.log, .loop.log",
+    "Heavy emphasis on secrets: .secrets, .boundary.env, *.boundary.env, .cd-drive/.cd-history scripts+env, Tailscale TLS *.ts.net.key/.crt with explicit named host workstation001.tail777bc2.ts.net.*",
+    "Obsidian section: tracks shared settings but ignores workspace.json, workspace-mobile.json, cache, graph.json",
+    "Ignores build-prep/the-one-system/discovery/ and fusion-scope/ as regenerable scratch",
+    "Comments explain rationale inline (e.g. live EC private key managed on the box, not git)"
+  ],
+  "standouts": [
+    "Explicit named secret host workstation001.tail777bc2.ts.net.key/.crt called out as a live EC private key kept out-of-tree",
+    "Comments narrate WHY each secret class is ignored, not just what"
+  ],
+  "conventions": [
+    "Follows Obsidian-vault convention of tracking shared .obsidian settings while ignoring per-user workspace/cache",
+    "Annotates ignore groups with explanatory comments (secrets, runtime, scratch)",
+    "Distinguishes code from runtime-written data explicitly ('written by the live system, never code')"
+  ],
+  "concerns": [
+    "Hardcoding a specific Tailscale hostname in .gitignore couples the ignore rules to one machine; the generic *.ts.net.key/.crt globs already cover it"
+  ],
+  "notes": "If briefing someone: this gitignore doubles as a security boundary map — it enumerates where the repo's secrets and runtime data live out-of-tree.",
+  "questions": [
+    "Are the named credential files (.boundary.env, *.ts.net.key) generated/rotated by a documented process elsewhere?"
+  ],
+  "purpose_vs_actual": "n/a — standard gitignore; content matches its evident purpose",
+  "apparent_themes": ["secret/credential exclusion discipline", "code-vs-runtime-data separation", "Obsidian vault co-existence", "regenerable scratch isolation"],
+  "intention_signals": "Tries to keep all secrets and live runtime artifacts out of version control while keeping shared config tracked, treating the gitignore as documented security/boundary hygiene.",
+  "novelty": "Inline comments turning a gitignore into a narrated map of the system's secrets and runtime boundaries.",
+  "contribution": "Contributes the project's exclusion boundary: which venvs, runtime stores, telemetry, secrets/certs, Obsidian state, and scratch dirs stay out of git.",
+  "summary_for_embedding": "Git ignore file for the company repo excluding venvs, runtime store/data, telemetry logs, named secret credentials and TLS certs, per-user Obsidian state, and the-one-system scratch directories.",
+  "intention_for_embedding": "To keep secrets, live runtime data, and regenerable scratch out of version control while tracking shared configuration."
+}

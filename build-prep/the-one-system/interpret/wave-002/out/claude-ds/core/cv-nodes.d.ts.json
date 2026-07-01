@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "core/cv-nodes.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration file defining the shared node type system that both layout solvers consume: a CVAxis (lod/surface/density dials), a CVNode tree (kinds band·section·zone·cluster·atom·diagram with rich per-node attributes), and a graph side (CVGraph/CVGraphNode/CVGraphEdge) handed to the graph solver when a node is kind:'diagram'.",
+  "observations": [
+    "Header comment states the governing principle: 'one type system, one rule engine, two solvers' (analysis/AXES.md).",
+    "CVAxis has three orthogonal dials: lod (summary|pitch|full), surface (desktop|tablet|mobile-portrait|mobile-landscape|slide|print|web), density (compact|comfortable|spacious).",
+    "CVKind union: band | section | zone | cluster | atom | diagram.",
+    "CVNode carries authorship marking (author: human|vi|suggested) tied to DESIGN-LANGUAGE §11, and narrative-priority pruning (priority 1..n, detail always|support) that drives LOD behaviour.",
+    "Shape vocabulary maps entities to product concepts in the doc comments: circle=User Portal, hex=Property Wizard, octagon=Virtual Hubs, diamond=Vi.",
+    "flow:'split' references a specific 46/54 working layout; cluster mode can be 'space' (all at once) or 'time' (play one at a time).",
+    "CVGraphType lists 10 graph types: network·hub·morph·pipeline·timeline·quadrant·tree·compare·stack·stepper.",
+    "morph state before↔after is documented as the network↔hub transform; stepper has an active index.",
+    "Comments note role is extensible via ContainmentTree.registerAtom (open atom vocabulary)."
+  ],
+  "standouts": [
+    "Heavily annotated declaration file — nearly every field has a doc comment tying it to a design rule or product concept, so the type file doubles as a spec of the design language.",
+    "Authorship-as-data (author field) and narrative-priority/detail pruning fields encode behavioural axes directly into the node shape.",
+    "Shape→product-entity mapping (circle/hex/octagon/diamond) is baked into the comments as a fixed brand vocabulary."
+  ],
+  "conventions": [
+    "Follows the system's single-source idea: one node type consumed by both solvers, no parallel type list.",
+    "Optional fields with JSDoc explanations rather than terse types — self-describing.",
+    "Open vocabularies (role as string, shape unions) extensible by registration."
+  ],
+  "concerns": [],
+  "notes": "This is the contract every renderer reads from — the shared CVNode/CVGraph shape with the design-language semantics annotated inline; change here ripples to both solvers.",
+  "questions": [
+    "CVKind includes 'band' but CVGraphType and CVGraphNode are separate — how does a band node host a diagram beyond the graph field? (clarified only by the solvers, not this file)",
+    "Several documented graph types (compare, stack, stepper) and shapes appear here as enums — are all of them implemented downstream or aspirational from this file alone?"
+  ],
+  "purpose_vs_actual": "Matches: states it is the shared type system both solvers consume, and the content is exactly that — a node tree type plus a graph spec type.",
+  "apparent_themes": [
+    "one type system / single source of truth",
+    "orthogonal dials (axes) computing the output",
+    "design = f(content, axis)",
+    "self-describing types annotated with design-language rules"
+  ],
+  "intention_signals": "Trying to give the whole generative system one shared, richly-documented vocabulary so that content authored once renders through two layout strategies and all behavioural axes (LOD pruning, authorship, focus, density) are first-class fields rather than ad-hoc props.",
+  "novelty": "A .d.ts file that simultaneously functions as the design-language specification — encoding narrative-priority pruning, authorship washes, and a fixed shape→entity brand mapping as typed, commented fields.",
+  "contribution": "Contributes the canonical node/graph vocabulary (CVNode, CVAxis, CVGraph and their semantic field set) that both solvers and the bridge type against — the shared substrate a fused system would keep as the definition of 'a piece of content'.",
+  "summary_for_embedding": "TypeScript declaration of the shared CVNode tree, CVAxis dials, and CVGraph spec that the ConceptV block and graph solvers both consume.",
+  "intention_for_embedding": "To define one richly-annotated content type system whose nodes render through two layout solvers under orthogonal LOD/surface/density axes."
+}

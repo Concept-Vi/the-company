@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/finds/ch-2mnxl9j0-VSURFACE-RESEARCH.md",
+  "model": "opus",
+  "what_it_does": "Composition member's V-surface research report (dated 2026-06-17), produced by 4 code-grounded research agents across vi-visual-dev (overlay), the company repo, and counterpart/design. Maps what exists, how it works, and the gaps for the V slot/socket system, the mode→colour system, and the type-builder/archetype layer, then names the genuinely-unbuilt frontier and the seams to other members.",
+  "observations": [
+    "Net headline: the full V-surface is ~70% structurally present in composition's lane; the frontier is RECURSION + RESOLUTION + PERSISTENCE, not new grammar.",
+    "Names the 4-layer placement (THE_FACTORY.md:458-470): DNA=identity, FACTORY/vi-visual-dev=type-builder, GALLERY=content+scenes, COMPANY/~/company=address-resolution+models+substrate.",
+    "Distinguishes three composition primitives precisely: SLOTS (child component composition, accepts-validated), SOCKETS (addressable value inputs, cascade-resolved), CONNECTIONS (a socket binding holding a child component as an emerging sub-surface) — with file/line citations (renderer/slots.js, v-symbol-sockets.js, connection-mount.js mountConnection:71).",
+    "Identifies the KEYSTONE: definition-renderer.js renderDefinition:595, composition-generic (dispatches only on definition.component), with a reactive rerender at :705.",
+    "Key persistence gap: source-of-truth TODAY is localStorage not Supabase; visual_dev_component_registry table is the designed home; company-side runtime/vi_vision.py already reads/writes it for real.",
+    "Mode→colour section: 19-theme palette + served-cascade.js whole-UI re-resolve engine exist, but the mode tint dead-ends at --vi-mode-primary (2 consumers) instead of color.primary (68 consumers); 'normal=company gold #E3C421' is UNMET because seeded Vi DS primary = legacy blue #0066ff.",
+    "Type-builder section: only 4 atomic types exist; no render-archetype concept; proposes adding an optional 'archetype' field + a loud-lookup archetype registry above the keystone (render_declaration.py exact→family→bare→UNDECLARED-LOUD pattern).",
+    "States no slide/deck/carousel renderer exists in either repo; proposes modeling a slide as a sequence/flow archetype over an ordered list of addresses.",
+    "Lists the 6-verb gallery contract (navigate/drive/open-source/ask/annotate/generate) and a 'smallest path to prove-on-one' build sequence."
+  ],
+  "standouts": [
+    "The precise three-way distinction (slots vs sockets vs connections) with the connection-as-emerging-sub-surface named as the spine of the V-surface vision.",
+    "The diagnosis that the mode-tint is an additive parallel layer writing 2 consumers instead of routing through the proven served-cascade onto color.primary's 68 consumers — 'two writers, unreconciled'.",
+    "The frontier reduction to RECURSION (lift dispatch into the keystone) + RESOLUTION (route mode through the one cascade) + PERSISTENCE (localStorage→Supabase) rather than new grammar."
+  ],
+  "conventions": [
+    "Code-grounded with file:line citations throughout; verification states noted (just-shipped/verified vs designed).",
+    "Extend-don't-fork / reuse-the-existing-law framing for every recommendation (e.g. backward-compatible optional archetype field).",
+    "Seams section enumerates what composition needs/provides to DNA, fork, projection, recollection — 'meet at the data, no cross-repo import'."
+  ],
+  "concerns": [
+    "Multiple precise but unverified-against-current-code claims (e.g. line numbers, 'just shipped'); the report itself flags some joins as the unverified discriminator (the slot→real-data binding).",
+    "The persistence gap (localStorage as source of truth) is a real file-local-adjacent smell it surfaces: the loop is plumbed but live durability is localStorage."
+  ],
+  "notes": "Composition's deepest single technical map of the V-surface — read for the slots/sockets/connections distinction, the keystone renderer, the mode→colour mis-wire, and the archetype-field proposal.",
+  "questions": [
+    "Have the 'just-shipped' socket-materials and the served-cascade engine been verified together since this write, or only individually?",
+    "Is the localStorage→Supabase setDurableStore thread the agreed fix, and who owns applying it?",
+    "Does the proposed archetype registry actually get adopted, or does DNA's layout engine (F19 in the sibling file) already cover the archetype role?"
+  ],
+  "purpose_vs_actual": "Match — it states it is research feeding the lead's synthesis (not a build), and delivers a structured what-exists/how/gaps/beyond map with explicit 'build only after the lead assembles' framing.",
+  "apparent_themes": [
+    "Recursion, resolution, persistence as the real frontier",
+    "One generic keystone renderer, composition over per-screen code",
+    "Mode as an argument to one cascade (re-resolve, not re-tint)",
+    "Registry-is-truth / source-of-truth migration to Supabase",
+    "Extend existing laws rather than fork"
+  ],
+  "intention_signals": "Trying to prove that the V-surface is mostly already present and that the remaining work is continuations of existing laws (recursive dispatch, cascade routing, durable registry, optional archetype layer), giving the lead a concrete buildable-now smallest path.",
+  "novelty": "The crisp slots/sockets/connections taxonomy and the served-cascade-as-the-one-true-mode-path diagnosis — a specific re-wire ('re-point the mode signal onto the proven whole-UI path, seed default to gold') rather than a redesign.",
+  "contribution": "Contributes the detailed V-surface technical inventory: the composition-primitive taxonomy, the keystone renderer location, the mode→colour mis-wire diagnosis, the persistence gap, the archetype-field mechanism, the 6-verb contract, and the smallest-path build sequence.",
+  "summary_for_embedding": "Composition member's V-surface research report mapping the existing slot/socket/connection grammar, the keystone renderer, the mode→colour cascade, the type-builder/archetype layer, the gaps (recursion/resolution/persistence), and the seams to other fabric members.",
+  "intention_for_embedding": "To prove the V-surface is ~70% structurally present and that remaining work is continuations of existing laws, giving the lead a code-grounded what-exists/how/gaps/beyond map and a smallest buildable path."
+}

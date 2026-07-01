@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Buttons" subtitle="Softer fills, warm shadows, inset highlights" viewport="700x280" --><html><head><meta charset="utf-8"><title>Buttons</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 26px 30px 28px; min-height: 240px; }
+  .lead {
+    font: 400 12.5px/1.55 var(--font-body);
+    color: var(--fg-secondary);
+    margin: 0 0 22px;
+    max-width: 56ch;
+  }
+  .row {
+    display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .row:last-child { margin-bottom: 0; }
+  .label {
+    font: 600 10px/1 var(--font-body);
+    color: var(--fg-muted);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    width: 96px;
+    flex: none;
+    opacity: .9;
+  }
+
+  /* ---------- base button ---------- */
+  .btn {
+    position: relative;
+    font: 500 13px/1 var(--font-body);
+    letter-spacing: .002em;
+    padding: 11px 18px;
+    border-radius: var(--r-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition:
+      background-color 220ms var(--ease-out),
+      box-shadow       220ms var(--ease-out),
+      border-color     220ms var(--ease-out),
+      color            220ms var(--ease-out),
+      transform        220ms var(--ease-out);
+    will-change: transform, box-shadow;
+    -webkit-font-smoothing: antialiased;
+  }
+  .btn:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 3px rgba(224, 192, 16, 0.22),
+      0 1px 2px rgba(31, 26, 18, 0.04);
+  }
+  .btn:active { transform: translateY(0.5px); }
+
+  /* ---------- primary (gold, layered) ---------- */
+  .btn.primary {
+    color: #1F1A12;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0) 55%),
+      var(--accent-gold);
+    border-color: rgba(165, 144, 10, 0.28);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      inset 0 -1px 0 rgba(165, 144, 10, 0.18),
+      0 1px 1.5px rgba(31, 26, 18, 0.06),
+      0 6px 16px rgba(165, 144, 10, 0.18);
+  }
+  .btn.primary:hover {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0) 55%),
+      var(--accent-gold-hover);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(165, 144, 10, 0.22),
+      0 2px 3px rgba(31, 26, 18, 0.06),
+      0 10px 22px rgba(165, 144, 10, 0.22);
+    transform: translateY(-0.5px);
+  }
+  .btn.primary:active {
+    background: var(--accent-gold-press);
+    box-shadow:
+      inset 0 1px 2px rgba(165, 144, 10, 0.35),
+      0 1px 1.5px rgba(31, 26, 18, 0.05);
+  }
+
+  /* ---------- outline (paper-tinted, hairline) ---------- */
+  .btn.outline {
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--fg-primary);
+    border: 1px solid var(--border-strong);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 1px 1px rgba(31, 26, 18, 0.025),
+      0 2px 6px rgba(31, 26, 18, 0.03);
+  }
+  .btn.outline:hover {
+    background: rgba(244, 232, 154, 0.35);
+    border-color: var(--accent-gold);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 1px 1.5px rgba(31, 26, 18, 0.03),
+      0 6px 14px rgba(165, 144, 10, 0.10);
+  }
+  .btn.outline:active {
+    background: var(--accent-gold-50);
+    box-shadow: inset 0 1px 2px rgba(165, 144, 10, 0.12);
+  }
+
+  /* ---------- dashed (soft, optional) ---------- */
+  .btn.dashed {
+    background: transparent;
+    color: var(--fg-secondary);
+    border: 1px dashed var(--border-dashed);
+    opacity: 0.85;
+    box-shadow: none;
+  }
+  .btn.dashed:hover {
+    background: var(--accent-gold-faint);
+    color: var(--fg-primary);
+    border-color: var(--accent-gold-dashed);
+    opacity: 1;
+    box-shadow: 0 2px 8px rgba(165, 144, 10, 0.06);
+  }
+
+  /* ---------- ghost ---------- */
+  .btn.ghost {
+    background: transparent;
+    color: var(--fg-primary);
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .btn.ghost:hover {
+    background: rgba(31, 26, 18, 0.04);
+  }
+  .btn.ghost:active {
+    background: rgba(31, 26, 18, 0.07);
+  }
+
+  /* ---------- dark (ink) ---------- */
+  .btn.dark {
+    color: var(--fg-inverse);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0) 60%),
+      var(--bg-dark);
+    border-color: rgba(0, 0, 0, 0.4);
+    letter-spacing: .04em;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 1px 1.5px rgba(31, 26, 18, 0.10),
+      0 8px 20px rgba(31, 26, 18, 0.18);
+  }
+  .btn.dark:hover {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0) 60%),
+      var(--bg-dark-2);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.10),
+      0 2px 3px rgba(31, 26, 18, 0.12),
+      0 12px 26px rgba(31, 26, 18, 0.22);
+    transform: translateY(-0.5px);
+  }
+
+  /* ---------- sizes ---------- */
+  .btn.sm { padding: 8px 12px; font-size: 12px; border-radius: var(--r-sm); }
+  .btn.lg { padding: 13px 22px; font-size: 14px; border-radius: var(--r-md); }
+
+  /* ---------- disabled ---------- */
+  .btn[disabled],
+  .btn.is-disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      0 1px 1px rgba(31, 26, 18, 0.02);
+    transform: none;
+  }
+  .btn[disabled]:hover,
+  .btn.is-disabled:hover {
+    transform: none;
+  }
+
+  .icon { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; opacity: 0.55; }
+</style></head>
+<body><div class="card">
+  <p class="lead">
+    Five variants, calibrated for paper. Soft warm shadows, inset highlights, and
+    layered fills lend depth without weight — gold earns attention once per surface.
+  </p>
+
+  <div class="row">
+    <span class="label">Primary</span>
+    <button class="btn primary"><svg class="icon" viewBox="0 0 14 14"><path d="M7 2.5 V11.5 M2.5 7 H11.5"/></svg>Create New</button>
+    <button class="btn primary">Publish</button>
+  </div>
+
+  <div class="row">
+    <span class="label">Outline</span>
+    <button class="btn outline"><svg class="icon" viewBox="0 0 14 14"><path d="M2.5 3.5 H11.5 L8.25 7.5 V11 L5.75 11 V7.5 Z"/></svg>Filter</button>
+    <button class="btn outline">Preview</button>
+    <button class="btn outline">Deactivate</button>
+  </div>
+
+  <div class="row">
+    <span class="label">Dashed</span>
+    <button class="btn dashed">Favourited options appear here</button>
+    <button class="btn dashed">Add Style Switch</button>
+  </div>
+
+  <div class="row">
+    <span class="label">Ghost / Dark</span>
+    <button class="btn ghost">Manage</button>
+    <button class="btn dark"><span class="dot"></span>MENU</button>
+  </div>
+
+  <div class="row">
+    <span class="label">Sizes</span>
+    <button class="btn primary sm">Save</button>
+    <button class="btn outline">Save</button>
+    <button class="btn primary lg">Save changes</button>
+    <button class="btn outline" disabled>Disabled</button>
+  </div>
+</div></body></html>

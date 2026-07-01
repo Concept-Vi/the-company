@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "AGENTS.md",
+  "model": "opus",
+  "what_it_does": "Root constitution for the company repo (the Vi composition suite): the prescriptive 'read-this-first' document that states the orientation order, source of truth, the ten non-negotiable rules, the 'where does this go?' routing table, the AGENTS.md/vault convention, and the orienteering terrain ledger.",
+  "observations": [
+    "Frontmatter declares type: constitution, register: prescriptive, module: root, status: living, with typed relations to Map/State/Vault Conventions/Orienteering Index.",
+    "States there are no human developers — the codebase is built and grown entirely by AI — and gives orientation order: AGENTS.md -> MAP.md -> STATE.md -> module AGENTS.md, with HANDOFF.md for live/voice/ops work.",
+    "Source of truth = specs in the vault under build-prep/ (Company Build Hub.md), with contracts C1-C8 and engine S1-S7; the repo implements, not redefines.",
+    "Ten numbered rules: build against contracts; schema-additive never breaking (bump schema_ver, new version side-by-side); one source (node-type defined once, C2); fail loud; storage on ext4 not /mnt/c (WSL fsync corruption); NO Gemini ever; stage-gated (D7); author from registry never invent (path-of-least-resistance law, Suite.capabilities()); review-not-free and FORM is half of done (design-critic + design-lint, two-faced done); commit to main NO feature branches.",
+    "Rule 9 is unusually long: defines 'done' as two-faced (FUNCTION and FORM), mandates design-system components/tokens, a separate design-critic, machine-checkable design-lint gating, and that 'implemented' means done-AND-surfaced-for-review with a decision.surfaced_for_review event, plus reflects-never-owns (wire writes status, never operator resolved).",
+    "Rule 10 explains the commit-to-main law via parallel sessions, allows worktrees over branches, and overrides any inherited build-skill 'never commit to main' convention.",
+    "A routing table maps 'want to add X' to a destination folder + how (node-type self-registers via auto-discovery, VOLATILE flag for mutable-truth nodes; model->fabric/config.py; storage->Resolver Protocol C4; RHM verb->RHM_VERB_SPECS single-source registry; presence mode; panels/extensions via RHM; canvas; new operation->mcp_face + suite; new contract; ops console).",
+    "A 'Gap pressure' section (dated 2026-06-10, awaiting a builder) states a discovered law — every operation constrained against a registry is also a sensor for it — proven three times, needing four composed laws, with build candidates C1-C7 in GAP-PRESSURE-CANDIDATES.",
+    "Documents the per-folder AGENTS.md constitution convention and the Obsidian-vault nature, and the orienteering/ terrain ledger for things living outside ~/company, now enforced by runtime/orienteering_drift.py."
+  ],
+  "standouts": [
+    "Rule 9 (FORM is half of done): a strong, detailed mandate that no implementation is done until surfaced for review AND its form passes a separate design-critic plus machine design-lint — encoding a product bar into the constitution.",
+    "Rule 10 (commit to main, no feature branches) with explicit reasoning about parallel sessions and stranded work, and an override of inherited conventions.",
+    "Rule 8 path-of-least-resistance law: author from the registry, fabricating a value is a failure equal to inaction, and it binds the system's own self-coding brain.",
+    "The Gap pressure discovered-law: constrained operations double as sensors for their registries (residue-as-data)."
+  ],
+  "conventions": [
+    "Follows the repo's own vault convention: frontmatter with type/register/aliases/tags/relations, wikilink relations, status: living.",
+    "Self-referential — it defines the very conventions it follows and instructs every change to update the self-description.",
+    "Uses a one-obvious-answer routing table, a stated discipline of the repo."
+  ],
+  "concerns": [
+    "The source-of-truth path points to /mnt/c/Users/Workstation001/... which rule 5 in the same file warns against for storage (specs vs storage are different, but the path coupling is notable)."
+  ],
+  "notes": "The root constitution: ten non-negotiable rules (incl. fail-loud, author-from-registry, FORM-is-half-of-done, commit-to-main) plus the routing table and vault/orienteering conventions that govern every change in the repo.",
+  "questions": [
+    "Are contracts C1-C8 and engine S1-S7 fully enumerated elsewhere, since this file references but doesn't list them?",
+    "Has the Gap pressure law (awaiting a builder since 2026-06-10) been built since?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is the read-first constitution and delivers exactly the rules, routing, and conventions an agent needs to orient and act.",
+  "apparent_themes": ["AI-built/AI-navigable codebase", "fail loud", "single source of truth", "schema-additive evolution", "FORM and FUNCTION both required", "author from registry never invent", "self-description as part of every change", "commit to main / parallel sessions", "registry-as-sensor (gap pressure)"],
+  "intention_signals": "Encode a complete, binding operating discipline so any AI agent can orient and act correctly without re-deriving the rules, and so the system's evolution stays additive, grounded, loud-on-failure, and reviewed on both function and form.",
+  "novelty": "An entire codebase constitution written FOR AI agents (no human developers), embedding original laws — path-of-least-resistance, FORM-is-half-of-done, registry-as-sensor, reflects-never-owns — as enforceable rules.",
+  "contribution": "Contributes the repo's foundational rule set, the where-does-this-go routing table, the FORM-half-of-done product bar, and the orienteering/vault self-description discipline.",
+  "summary_for_embedding": "The root prescriptive constitution of the AI-built company/Vi composition repo: ten non-negotiable rules, a where-does-this-go routing table, and the vault + orienteering self-description conventions.",
+  "intention_for_embedding": "To give every AI agent the binding rules and routing needed to orient and act correctly in an AI-built, contract-grounded, fail-loud, additively-evolving codebase."
+}

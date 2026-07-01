@@ -1,0 +1,54 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Settings.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the Settings canvas — system-wide configuration focused on the OpenAI image-generation surface. It lets the user enter/save/test OpenAI credentials (API key, org id, optional proxy), pull and pick from a live list of image models grouped by tier, set capability-aware image defaults (size/quality/style/n), toggle Vi image-gen and safe mode, and view/clear local browser storage. All state is read from and written to window.cvOpenAI / window.cvImageStore / window.cvStudioStorage.",
+  "observations": [
+    "Reads settings via window.cvOpenAI.getSettings() and subscribes to cvOpenAI (and subscribeModels) for live updates.",
+    "On mount, auto-fetches the model list only if configured and no API-sourced cache exists (avoids needless fetch).",
+    "Credentials are kept in pending* state and committed on Save via cvOpenAI.updateSettings; key is masked (first 6 + bullets + last 4) with a reveal toggle.",
+    "Test connection calls cvOpenAI.testConnection() and reports model counts; the test refreshes the model cache as a side effect.",
+    "Connection-status banner switches copy based on cvOpenAI.isConfigured(), explaining that unconfigured = Imagery AI Studio runs in 'preview mode'.",
+    "ModelPicker groups models into flagship/standard/legacy tiers and renders capability badges (generate/edit/variations/style/n×maxN), sizes, and quality-tier counts per card.",
+    "ModelDefaults is capability-aware: size/quality/style/n options adapt to cvOpenAI.getModelCapabilities(selectedModel); unsupported current size is shown as '(not supported)'.",
+    "Storage section shows MB used against an ~5MB browser quota meter and image count, with a confirm-gated 'Clear all studio state'.",
+    "formatRelative renders human 'just now / Nm / Nh / Nd ago' timestamps.",
+    "Privacy copy: 'Stored locally in your browser. Never sent anywhere except OpenAI.'",
+    "Registers window.Settings; aliases hooks as *_st."
+  ],
+  "standouts": [
+    "Capability-driven UI: the model list is pulled live ('new models appear automatically as they ship') and the defaults form reshapes to exactly what the selected model supports.",
+    "Optional proxy URL to route around networks that block direct browser→OpenAI calls.",
+    "Local-first, privacy-forward framing — credentials and all studio state live in the browser, with an explicit storage meter and one-click wipe.",
+    "Connection state gates downstream features (Imagery AI Studio preview mode, Vi image awareness)."
+  ],
+  "conventions": [
+    "Follows window-global registration and React-via-globals; uses dsa-* and cv-st-* class names with CSS-var styling.",
+    "Subscribe-driven re-render keeps the UI a projection of cvOpenAI state.",
+    "Notably routes image config directly through window.cvOpenAI rather than through CV_AI's resolveProvider('openai-image') — the project CLAUDE.md says image work should go through CV_AI; this settings surface manages the underlying cvOpenAI store directly."
+  ],
+  "concerns": [
+    "Direct coupling to window.cvOpenAI for all credential/model logic sits beside the project's directive to route model work through CV_AI; this is the config layer for that provider, but it bypasses the CV_AI abstraction.",
+    "saveCredentials trims and stores the raw API key in browser storage (necessary for client-side calls, but a plaintext-key-in-localStorage exposure).",
+    "Hardcoded ~5MB browser quota assumption for the meter; actual quota varies by browser.",
+    "Several capabilities depend on optional-chained methods (getCachedModels?., subscribeModels?., cvImageStore?.) that silently no-op if absent, so a missing store degrades quietly.",
+    "modelError surfaces fetch failures but the auto-fetch-on-mount path swallows nothing visibly until a manual refresh."
+  ],
+  "notes": "The OpenAI image-provider control panel: enter/test credentials, pick a live-fetched model by tier, set capability-aware defaults, toggle Vi image-gen/safe-mode, and manage local storage — all driven off window.cvOpenAI.",
+  "questions": [
+    "Why is image config managed via window.cvOpenAI directly rather than through CV_AI.resolveProvider('openai-image') as the project directive suggests?",
+    "Where do safeMode and enableForVi actually take effect in the generation path?",
+    "Is the ~5MB quota assumption accurate across the target browsers, and what happens on quota overflow?"
+  ],
+  "purpose_vs_actual": "Match — the header ('Configure the AI services your studio uses... Vi connects to OpenAI for image generation') matches the implemented credentials/model/defaults/storage configuration surface.",
+  "apparent_themes": [
+    "Capability-aware, self-updating provider configuration",
+    "Local-first, privacy-forward credential handling",
+    "Connection state as a gate for downstream AI features"
+  ],
+  "intention_signals": "Aims to make connecting and tuning the OpenAI image provider effortless and self-explaining — pulling models live so the UI never goes stale, adapting options to each model's real capabilities, and keeping credentials/state local with a visible storage budget.",
+  "novelty": "The live, tier-grouped model picker with per-model capability badges and a defaults form that reshapes to the selected model's actual supports — configuration that tracks the provider's evolving catalogue automatically.",
+  "contribution": "Contributes the image-provider settings canvas: credential entry/test/mask, live tiered model picker with capability badges, capability-aware image defaults, Vi/safe-mode toggles, and a local-storage meter with wipe, all bound to window.cvOpenAI.",
+  "summary_for_embedding": "A React Settings canvas that configures the OpenAI image provider via window.cvOpenAI: save/test masked credentials and proxy, a live tier-grouped model picker with capability badges, capability-aware defaults, Vi/safe-mode toggles, and a local-storage meter with clear.",
+  "intention_for_embedding": "To let the user connect and tune the OpenAI image-generation provider with a self-updating, capability-aware UI while keeping credentials and studio state local to the browser."
+}

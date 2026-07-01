@@ -1,0 +1,50 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/rg10_reask.py",
+ "model": "opus",
+ "what_it_does": "GC4 floor-triggered re-ask pass. For each class=='floor' entry in .build/rg10/reconciled.json (a dossier that failed the deterministic fact-check), it rebuilds the original element unit from the per-mockup artifact's cluster_members[0] and candidates.json ordering, re-fires the register_element role with the SAME grounding context PLUS the floor's named refcheck reasons as an explicit correction, then re-floors + re-juries (run_jury confirm_registration) + recomputes confirm_status, reclassifying the entry to confirmed / jury / floor. Updates reconciled.json in place (prior dossier kept under prior_dossier, reasked:true stamped). Then retires the prior status card and surfaces a final reconciled card.",
+ "observations": [
+  "Imports heavily from registry_generation_run (_load_suite, _grounding_payload, _unit_of, EXEMPLAR_KEYS) and runtime.cognition, reusing the proven generation seams.",
+  "Builds a variant Role (reg_v) by copying register_element's spec and overriding input_addresses to ('utterance','ground','exemplars','inventory') — the bare-name ground chaining form.",
+  "Loads confirm_registration via importlib.util from roles/confirm_registration.py to call its confirm_status function.",
+  "Groups floor entries by source mockup so each group shares one grounding context, and processes them in batched run_items calls.",
+  "Correction text instructs: maps_to_feature must be copied verbatim from the allowed list or be literal 'proposed'; capabilities must use only allowed words.",
+  "Fail-loud handling: a re-ask whose output isn't a dict stays class='floor' and stamps reask_failed; unrebuildable cluster reps are recorded in 'skipped' with a reason, never silently dropped.",
+  "Re-classification: confirmed if cs['confirmed']; else 'floor' if any refcheck reason; else 'jury'.",
+  "Docstring 'THE FLOOR: proposes only; the operator's resolved field is never touched.'",
+  "Recounts all four classes and persists in place; docstring references a 'no-versioning law' (maximal capture, history visible)."
+ ],
+ "standouts": [
+  "The deterministic floor's rejection reason is fed back verbatim as correction — the rejection IS the repair signal.",
+  "Bounded single re-fire then re-gate: a re-asked dossier passes only by passing the SAME floor + jury, so the gate isn't weakened by the retry.",
+  "In-place update keeping prior_dossier and a reasked flag (no-versioning / maximal-capture discipline)."
+ ],
+ "conventions": [
+  "Family pattern: os.chdir to repo root, multiple sys.path inserts, read/write .build/rg10/reconciled.json, 'PROPOSES only / THE FLOOR' framing.",
+  "Reuse-don't-reimplement: leans on registry_generation_run helpers and runtime cognition rather than duplicating the chain.",
+  "Idempotency via stamps (reasked, reask_failed) so reruns are safe."
+ ],
+ "concerns": [
+  "Mixes RoleRegistry-loaded confirm_registration (rr.get) for jury with an importlib-loaded copy of the same module for confirm_status — two load paths for one role file invite drift.",
+  "Heavy dynamic import / spec construction makes the data flow hard to trace statically.",
+  "Relies on artifact filename convention rg10-batch-<mockup-without-.html>.json; a mismatch silently routes the entry to 'skipped'."
+ ],
+ "notes": "GC4 re-ask: feeds the deterministic floor's named rejection reasons back into one bounded re-generation, re-gates, and reclassifies floor entries in place — repairing fixable fabrications while leaving stubborn ones loudly flagged.",
+ "questions": [
+  "Why is confirm_registration loaded twice (registry + importlib) rather than once — is confirm_status not exposed via the Role object?",
+  "What guarantees cluster_members[0] still maps to the same candidate ordering on a later run (candidates.json stability)?"
+ ],
+ "purpose_vs_actual": "Match — docstring describes a floor-triggered, bounded, re-gated re-ask that updates reconciled.json in place and resurfaces a card, which is what the code implements.",
+ "apparent_themes": [
+  "Rejection-as-feedback (the floor's reason becomes the correction prompt)",
+  "Bounded retry behind an unchanged gate",
+  "In-place no-versioning capture with full history (prior_dossier)",
+  "Refine-before-gating / give Tim the smallest refined set",
+  "Fail-loud, never silently drop"
+ ],
+ "intention_signals": "Automatically heal model fabrications that the deterministic floor caught, by re-prompting with the exact failure reason, without lowering the bar — so the human gate receives fewer, cleaner entries.",
+ "novelty": "Closing the loop from a deterministic fact-check failure back into a single corrective re-generation that must re-pass the identical floor+jury, with the failure reason as the repair instruction.",
+ "contribution": "Contributes the self-repair stage of the RG10 pipeline: a floor-feedback re-ask that converts fixable fabrications into confirmed entries and re-surfaces true counts, all as a proposal.",
+ "summary_for_embedding": "A floor-triggered re-ask pass that rebuilds and re-fires register_element on fact-check-failed dossiers using the failure reason as correction, re-gates them through the same floor+jury, and updates reconciled.json in place.",
+ "intention_for_embedding": "To automatically repair fixable registry fabrications by feeding the deterministic rejection reason back into one bounded re-generation behind an unchanged gate, shrinking what the human must review."
+}

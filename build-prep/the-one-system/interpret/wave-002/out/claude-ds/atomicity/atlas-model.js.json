@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/atlas-model.js",
+  "model": "opus",
+  "what_it_does": "Defines window.ATLAS, an IIFE that derives a single hierarchical navigation tree for the AtomiCity interface by projecting four+ live sources of truth: the _ds_manifest.json (tokens/cards/components/templates/themes/fonts) and the runtime registries CV_REGISTRY (Types), CV_AI (providers/behaviours/skills/capabilities/context), CV_HOST (runtimes/serializers/staged changes), and CV_SCAN (autonomous scanner sources/extractors). It loads the manifest by fetch, builds a tree of {id,label,kind,icon,count,badge,children,leaf,data} nodes, indexes them for find/pathTo/search, exposes a compact census() for machine consumption, and re-triggers build() when CV_REGISTRY or CV_HOST notify.",
+  "observations": [
+    "Header comment frames the tree as a projection that 'cannot drift from the system' and as the backbone that lets the UI 'know everything in the system without being told' — read by both the browser AND Vi.",
+    "Loads ../_ds_manifest.json with cache:'no-store' and throws a descriptive error if not ok, asserting AtomiCity must run inside the design-system project.",
+    "Token nodes group by kind via TOKEN_KIND_META (color/spacing/shadow/radius/font/other) in a fixed order, then sub-group by definedIn file when more than one file exists (comment notes '477 tokens').",
+    "Card nodes use a deliberate PREF reading order and a two-level 'UI Kit — X' convention nesting kits under a synthetic 'UI Kits' section.",
+    "registryNodes() conditionally builds sections only for registries present on window (guarded with if (window.CV_*)), each carrying a 'doc' string describing the registry.",
+    "Capabilities sub-group by family; AI leaves carry provenance as a badge.",
+    "node() factory normalizes defaults (count:undefined, badge:null, leaf:false, children:null, data:null).",
+    "search() builds a haystack from label/kind/data fields, sorts leaves first then by label length, caps at 40.",
+    "_wire() deliberately does NOT subscribe to CV_AI (explained in comment: its notify() fires on every navigation, causing a rebuild↔navigate loop); new AI entries arrive via a CV_HOST change instead.",
+    "census() returns namespace, token counts by kind, component/template/theme/font names, AI ids by layer, type count, and host modeLabel."
+  ],
+  "standouts": [
+    "The whole navigation map is derived, not hand-written — a stated anti-drift design where adding a token/capability/card/Type makes it appear on next build().",
+    "Dual-consumer intent: the same model serves the human browser UI and Vi (the AI), with census() as the machine-readable digest.",
+    "The explicit anti-loop comment on why CV_AI is not subscribed shows a known reactive hazard handled deliberately."
+  ],
+  "conventions": [
+    "Follows the project's 'interface is a projection of the registries' non-negotiable from CLAUDE.md.",
+    "IIFE + 'use strict' + single window.ATLAS export; pub/sub via on()/emit() listeners Set.",
+    "Open icon/label vocabulary attached per kind; data carries the raw record for the detail pane."
+  ],
+  "concerns": [],
+  "notes": "The single derived navigation tree for AtomiCity — projects manifest + four live registries into one indexed node tree, serving both the UI and Vi; never hand-edit navigation, it regenerates from the sources.",
+  "questions": [
+    "What renders these nodes (the detail pane keyed off node.kind) — defined elsewhere?",
+    "What are the exact shapes/contracts of CV_REGISTRY.all(), CV_AI.query(), CV_HOST.describe(), CV_SCAN.describe()/stats() that this relies on?"
+  ],
+  "purpose_vs_actual": "Match — the header claims a single drift-proof projection of the system into a tree, and the code derives every section from the named sources with no hand-written navigation.",
+  "apparent_themes": [
+    "Registry-as-truth / projection over duplication",
+    "Anti-drift by derivation",
+    "Self-describing system that reads itself",
+    "Single model shared by human UI and AI"
+  ],
+  "intention_signals": "Trying to make the entire product's navigation an automatic, always-true reflection of its own sources of truth, so the map and the system can never diverge and both a person and Vi can enumerate everything the system contains.",
+  "novelty": "A navigation tree that is a live projection of multiple heterogeneous registries plus a manifest, with a built-in machine census() and a reactive-loop guard, rather than a static sidebar config.",
+  "contribution": "Contributes the projection-tree backbone that turns disparate registries (tokens, Types, AI, host bridge, scanner) into one indexed, searchable, self-updating navigation/census model consumable by both UI and AI.",
+  "summary_for_embedding": "An IIFE (window.ATLAS) that derives AtomiCity's entire hierarchical navigation tree and a machine-readable census by projecting the _ds_manifest plus the live CV_REGISTRY, CV_AI, CV_HOST, and CV_SCAN registries into indexed, searchable nodes.",
+  "intention_for_embedding": "To give the design system a single, drift-proof, self-updating map of everything it contains, readable by both the human interface and the AI."
+}

@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/AREA-3-detection-rigor.md",
+  "model": "opus",
+  "what_it_does": "A research-findings markdown companion that measures whether the system can extract a trustworthy real connection graph; it quantifies the accuracy gap of the current substring-based reachability heuristic, argues a trustworthy graph is feasible on this codebase, and specifies a three-leg hybrid (AST static, registry-as-declared-truth, event-log runtime) joined across the Python/TS HTTP boundary.",
+  "observations": [
+    "Frames itself as the make-or-break area where a false finding is corrosive to an autonomous loop and to Tim's trust.",
+    "Uses an evidence convention adding External-prior-art to the standard Verified/Observed/Inferred/[my idea] tags.",
+    "Reports measured numbers this run: regex route extraction == AST extraction (115=115); of 82 'wired' routes, >=3 are wired only by a mention (~3.7% false-wire rate).",
+    "Names the dangerous direction as false-WIRE (a dead route reading as whole), distinct from false-orphan.",
+    "Counts code-shape evidence: 103 + 20 distinct SUITE.<method> call-edges (bridge + MCP), zero getattr route-dispatch, 18 statically-mounted FE regions, 2106 events with 58% carrying an address, 80 ui:// entries in addresses.json.",
+    "Gives concrete false-wire examples: /api/mockup-feedback (comments only), /api/scope (a test asserting existence), /api/voice/turn (test prose), and a self-caught false positive on /api/stream (EventSource consumer it initially missed).",
+    "Presents a tool-comparison table (pyan, code2flow, vulture, pyflakes, import-linter/grimp, knip, dependency-cruiser/madge, CPG/Joern, fitness functions) with what each does/fails/adaptable.",
+    "Includes an ADDENDUM from a second independent pass adding an AST-walk-bleed finding (/api/run binding to 59 methods via naive ast.walk), a per-edge-type rigor matrix, the missed mcp_face caller surface, and a broken ui->code link."
+  ],
+  "standouts": [
+    "The carry-forward number 3 of 82 (false-wire) reframing the gap as consumer-side, not extraction-side.",
+    "The directional composition rule: static proposes candidate-dead; registry and event-log may only demote; nothing declares an edge dead from absence.",
+    "The structure-aware-AST finding (naive ast.walk fabricates 59-method edges) showing the upgrade is structural fidelity, not the slogan 'AST'."
+  ],
+  "conventions": [
+    "Strict evidence labeling with measured-this-run numbers privileged over theory.",
+    "Skeptical/adversarial stance explicitly requested and held ('I was asked to be rigorous, not to confirm').",
+    "Grounds external tool claims to categories the codebase already implements rather than fabricated feature claims."
+  ],
+  "concerns": [
+    "The measured rates (3 of 82, 115=115) are single-run snapshots tied to the current tree state.",
+    "Some prior-art specifics (grimp/import-linter) are explicitly not retrieved and mapped by category, a stated limitation the reader must respect."
+  ],
+  "notes": "The rigor argument: route extraction is already accurate but the consumer substring test silently mis-states ~3.7% of wired routes, and a trustworthy graph is feasible here only as a three-leg directional hybrid with a bespoke cross-language join.",
+  "questions": [
+    "What is the ANCHOR.md framing this file partly inverts (it says the anchor frames the gap as string->AST)?",
+    "What are the sibling areas (Area 2, Area 6) it references as handing the hard part here?",
+    "Did the proposed three-leg hybrid get built, and was the resident vLLM's behavior on the join ever probed?"
+  ],
+  "purpose_vs_actual": "Matches: the stated deliverable (measured accuracy gap, the closing hybrid, achievable-now vs aspirational) is answered directly in section 9 and grounded with run numbers.",
+  "apparent_themes": [
+    "Trustworthiness as the real deliverable for an autonomous loop",
+    "Measured evidence over framing/theory",
+    "Positive-only corroboration (runtime presence proves, absence proves nothing)",
+    "Declared dynamism is analyzable; hidden metaprogramming is not"
+  ],
+  "intention_signals": "Trying to replace a confident framing with measured truth: prove the cheap heuristic is wrong on the consumer side, prove a trustworthy graph is buildable on this specific well-shaped codebase, and bound exactly one class (half-migration) as candidate-only.",
+  "novelty": "Quantifying the false-wire gap empirically (3 of 82) and the structure-aware-AST-bleed counterexample (59 fabricated method edges) that distinguishes naive AST from trustworthy extraction.",
+  "contribution": "Contributes the measured consumer-side gap, the three-leg directional hybrid design, the bespoke Python/TS route-literal join, the per-edge rigor matrix, and the bounding of half-migration as candidate-only.",
+  "summary_for_embedding": "A coherence research companion measuring the substring reachability heuristic's ~3.7% false-wire rate and specifying a three-leg (AST/registry/event-log) trustworthy connection graph for this codebase.",
+  "intention_for_embedding": "To determine, with measured evidence, whether a trustworthy self-extracted connection graph is feasible and what hybrid achieves it without overclaiming."
+}

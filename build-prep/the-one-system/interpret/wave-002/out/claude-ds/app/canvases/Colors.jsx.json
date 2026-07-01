@@ -1,0 +1,53 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Colors.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React canvas component `Colors` (window.Colors) that browses the brand palette and generates/refines colors with Vi. It declares BASE_PALETTE (a hardcoded list of named tokens grouped Brand/Surfaces/Ink/Status), merges in caller-provided extras and live colorEdits overrides, and renders grouped swatches with per-swatch lock toggles, color-picker editing, refine-by-message, and copy-to-clipboard. A generation panel calls window.CV_AI.complete with a warm-ivory brand prompt (honoring locked tokens) to propose a new color group the user can adopt. A live-preview section shows buttons/card/section-panel rendered with the edited tokens, with snapshot/restore/compare.",
+  "observations": [
+    "BASE_PALETTE is an explicit array of {name, hex, role, group} entries spanning Brand, Surfaces, Ink, Status (lines 4-34).",
+    "Props expose extras/addExtras, colorEdits/setColorEdit, snapshot/setSnapshot, lockedTokens/toggleLock, removeExtra.",
+    "`generate()` composes a prompt that pins the brand (ivory #FBF7EC, ink #1F1A12, gold #E0C010, bronze #988058, warm-shifted status, no cool greys/pure black/purple-blue) and appends a LOCKED-tokens clause built from lockedTokens.",
+    "Generated colors are filtered to valid hex via /^#[0-9A-F]{3,8}$/i and capped at 8.",
+    "Per-swatch lock button toggles whether Vi may change a token; locked list is summarized in the header.",
+    "Clicking a swatch color opens an inline <input type=color> bound to setColorEdit.",
+    "`refineSwatch` calls CV_AI.complete to revise one color, validates the returned hex, and applies via setColorEdit.",
+    "Snapshot feature stores a copy of colorEdits with a timestamp and renders a second PreviewBlock for side-by-side compare.",
+    "Helper functions makeTokenMap and makePreviewValues rebuild derived values from a flat edits object with hardcoded hex defaults.",
+    "PreviewBlock renders KitPreviews (external) plus inline button/card/section-panel demos using the preview values."
+  ],
+  "standouts": [
+    "Per-token lock that is fed into the generation prompt so Vi preserves locked values when proposing a new group.",
+    "Snapshot/restore/compare of token edits, rendering current vs snapshot side by side.",
+    "Live multi-component preview that recolors from the edited tokens, demonstrating cascade of a single value change."
+  ],
+  "conventions": [
+    "Follows a generate -> proposal -> adopt-all flow with a discard option.",
+    "Parses model JSON defensively (raw then {...} regex).",
+    "Validates returned hex before applying.",
+    "Aliases React hooks with a `_co` suffix for the shared bundle.",
+    "Uses CSS vars for chrome but keeps literal hex defaults for the palette token values it owns."
+  ],
+  "concerns": [
+    "refineSwatch's extras path (lines ~136-148) computes an `updated` array that is never used and ends up calling the same setColorEdit as the base path; inline comments openly deliberate the workaround, indicating an unresolved code path for editing extras.",
+    "The snapshot Restore handler (lines ~310-318) builds a `newEdits` object it then discards, and applies edits with setColorEdit(k, undefined) followed by re-setting snapshot keys — convoluted state reconciliation.",
+    "Failure paths toast generic messages and swallow the error (catch with only window.dsaToast)."
+  ],
+  "notes": "The palette browser/editor: shows the grouped brand tokens, lets Vi generate or refine colors within the warm-ivory aesthetic, and previews/snapshots how token edits cascade across components.",
+  "questions": [
+    "Where do colorEdits/extras get persisted or exported (the file mentions 'Export to disk on the Overview' but doesn't do it here)?",
+    "How are extras meant to be edited given refineSwatch routes both base and extra through setColorEdit?",
+    "What does the external KitPreviews component render?"
+  ],
+  "purpose_vs_actual": "Matches. The header calls it a 'palette browser with real AI color generation' and the component browses BASE_PALETTE + extras and generates/refines via CV_AI.",
+  "apparent_themes": [
+    "Single-value-change cascades through every consumer",
+    "Brand-constrained AI generation",
+    "Lockable tokens to constrain the model",
+    "Compare/snapshot of design state"
+  ],
+  "intention_signals": "Trying to let a user explore and evolve the color system safely: generate new palettes that respect the warm aesthetic and locked tokens, edit any token and watch it cascade live, and compare against a saved snapshot before committing.",
+  "novelty": "Lock-aware palette generation combined with a live snapshot/compare of token edits across a mini component preview.",
+  "contribution": "Contributes the Colors canvas: a grouped brand palette, per-token lock, color-picker + message-based refinement, lock-aware Vi palette generation, and snapshot/compare live preview of token cascades.",
+  "summary_for_embedding": "A React canvas (window.Colors) browsing a grouped brand palette with per-token lock, color-picker and AI refinement, lock-aware palette generation via CV_AI, and snapshot/compare live preview.",
+  "intention_for_embedding": "To let a user generate, lock, edit, and compare brand color tokens within a warm-ivory aesthetic and see edits cascade live across components."
+}

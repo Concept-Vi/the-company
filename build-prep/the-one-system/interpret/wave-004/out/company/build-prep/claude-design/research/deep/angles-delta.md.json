@@ -1,0 +1,54 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/deep/angles-delta.md",
+  "model": "opus",
+  "what_it_does": "A branch-merge research report (read 2026-06-08) that corrects a prior inventory and documents what two now-merged branches (concurrent-cognition at 233f34e, interactive-surface-build at e1063f7) added to and changed on unified main. It enumerates the new files, the contract-level seam changes, the X1-X17 + L-series staged delivery, the new SSE/route surfaces, the three corpus layers, the still-unmerged operable-interface-build worktree, and a punch-list of what the design pack must add or document, headlined by the pending mode-dial unification.",
+  "observations": [
+    "Opens with an explicit correction to inv-E-angles.md: both branches previously 'not merged' are now MERGED; unified main is ground truth",
+    "Status table of all four branches (concurrent-cognition, interactive-surface-build, night-build, overnight-20260605) with prior vs actual status",
+    "Angle 1 details concurrent-cognition: new runtime files (cognition.py, roles.py, rules.py, activation.py, authoring.py), contracts/cognition_info.py, 8 role files, CognitionView.tsx FE region, a cognition.* SSE event branch, 2 new CONFIRM-class governance verbs, 13 new test files",
+    "Documents 5 shared-seam CHANGES from cognition: the mode dial built twice (MODE_SPECS vs THOUGHT_SHAPES on same 8 modes), thread-scoped chat feed fix, voice clean_fn per-part granularity, self-mod audit ledger restructure, latent FE capabilities now consumed by CognitionView",
+    "Angle 2 details interactive-surface-build X1-X17: the address→scope→build chain, blast_radius, codeedges.py, semantic vector index, R2 ranking knobs; plus L1-L10 wires; 15 new test files",
+    "Documents 5 seam CHANGES from interactive-surface-build: surface_build_intent signature extended, blast_radius 4-kind return shape, composition_config in capabilities, approve_reach as net-new operator-only route, code-edges.json as a new substrate (three corpus layers)",
+    "Angle 3: operable-interface-build worktree is 3 commits ahead of main carrying studio + mockups, and REMOVES CognitionView.tsx (214 lines) — flagged as the primary merge risk",
+    "A 'Structure Implications' punch-list of surfaces/seams to ADD to the pack (10 items) and contracts that CHANGED (3 items)",
+    "Names the mode-dial unification as the single most structurally consequential pending work, with a concrete risk for Claude Design",
+    "Closes with a cross-reference map of what exists where vs what is missing/needs-addition",
+    "NOTE: states CognitionView.tsx is a new FE region added by the cognition merge and depends on cognition.* SSE — this contradicts the sibling fe-structure.md read (same date) which says CognitionView.tsx does not exist on disk"
+  ],
+  "standouts": [
+    "The mode-dial unification (MODE_SPECS + THOUGHT_SHAPES as two halves of one dial on the same 8 modes) named as 'the integration (the real prize)' and the biggest reshape to watch",
+    "The three corpus layers distinction: code-symbols.json (UI→code), code-edges.json (code→code structural), vectors/ (code→code semantic)",
+    "Consent-time resolution property (X3/X5): R2 gather happens AT MINT so the surfaced record is exactly what the build later composes from",
+    "blast_radius 4-kind return contract: co_reference / structural_dependents / structural_dependencies / semantic_neighbours"
+  ],
+  "conventions": [
+    "Honest-correction discipline: explicitly overrides its own prior inventory rather than silently revising",
+    "Cites commit SHAs and merge-commit messages as ground truth (stat+log first, then bounded diffs)",
+    "Distinguishes ADDITIONS from CHANGES-to-existing-contracts — a seam-aware framing",
+    "Reference-don't-duplicate posture: repeatedly tells the pack to reference already-written docs (BACKEND-SEAM-PACK, AUTHORING-FE-HANDOFF) not re-characterize"
+  ],
+  "concerns": [
+    "Internal cross-file tension visible from this file alone: it asserts CognitionView.tsx exists as a merged FE region, but is part of a corpus whose fe-structure.md (same read date) asserts it does NOT exist on disk — the file does not reconcile this",
+    "Status labels rest on read-time diffs (2026-06-08); the worktree merge-risk and 'not yet on main' claims are time-sensitive and may have shifted"
+  ],
+  "notes": "If briefing someone: this is the delta report proving two big branches are now merged into one main, cataloguing every new file/route/SSE/seam-change they brought, and handing the design pack a precise add-list — with the mode-dial unification flagged as the next big surface change to design around.",
+  "questions": [
+    "Does CognitionView.tsx actually exist? This file says it was added by the merge; the sibling fe-structure.md says it is absent — which is correct as of the read?",
+    "Has the operable-interface-build worktree (3 commits ahead, removing CognitionView.tsx) since been merged or abandoned?",
+    "Has the mode-dial unification (MODE_SPECS + THOUGHT_SHAPES) been performed since this read?"
+  ],
+  "purpose_vs_actual": "Matches — it sets out to report the branch-merge delta and reshape implications for the pack, and delivers a thorough file-level + seam-level + punch-list account.",
+  "apparent_themes": [
+    "merge/integration delta tracking against commit ground truth",
+    "seam-change awareness (additions vs contract changes)",
+    "consent-time resolution as a trust property",
+    "registry-driven / reflects-never-owns FE",
+    "honest correction of prior claims"
+  ],
+  "intention_signals": "Trying to give the design pack an accurate, evidence-grounded picture of what the merged main actually contains and which contracts shifted, so downstream design work targets the real surface — and to flag the mode-dial unification as a near-term restructuring that design must not build against prematurely.",
+  "novelty": "The explicit naming of the mode-dial as built twice and its unification as a deferred 'prize', plus the three-corpus-layers taxonomy and the consent-time-mint trust property, are distinctive structural insights surfaced by this read.",
+  "contribution": "Contributes the merged-main delta ledger and the pack's add/change punch-list — the catalogue of new routes (approve-reach, stale-at, ref-versions, journey, self-changes-at), the cognition.* SSE lifecycle, the blast_radius 4-kind shape, the three corpus layers, and the named pending mode-dial unification — which a fused system would keep as the record of what the unified backend exposes and what is still converging.",
+  "summary_for_embedding": "A branch-merge delta report documenting how the now-merged concurrent-cognition and interactive-surface-build branches reshaped unified main — new runtime/FE files, cognition.* SSE, X1-X17 address→scope→build chain, blast_radius 4-kind shape, three corpus layers, new operator routes — plus a punch-list of additions for the design pack and the pending mode-dial unification.",
+  "intention_for_embedding": "To give the Claude Design pack an evidence-grounded account of what merged main actually contains and which seams changed, so design targets the real backend surface and accounts for the near-term mode-dial unification."
+}

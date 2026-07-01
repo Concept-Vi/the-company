@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "assets/icons/CvIcon.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a single React component CvIcon that renders any icon from window.CV_ICONS, optionally wrapped in a brand entity-badge container shape (plain glyph, gold circle ring, or polygon node shape hex/octagon/diamond). It resolves the icon body, picks a tone colour from CV_TONES, auto-scales stroke weight by size, draws a missing-icon placeholder if the name is unknown, and publishes window.CvIcon + window.CV_TONES.",
+  "observations": [
+    "CV_TONES maps named tones (bronze/gold/ink/muted/cream) to CSS token vars with hex hints in comments.",
+    "CV_SHAPE_PTS is read from window.CV_SHAPES.points() when available, with a byte-identical literal fallback for hex/octagon/diamond marked 'keep in sync'.",
+    "cvBrandStroke(size) scales stroke between 1.55 and 2 based on size; strokeWidth prop pins it.",
+    "Props: name, size, tone, strokeWidth, circle, shape, filled, desaturated, className, style, title, plus rest spread.",
+    "Missing icon renders a dashed error-bordered span with '?' using status-error token.",
+    "Three render branches: polygon node shape (SVG polygon behind centred glyph), circle entity-badge (CSS border ring), and plain icon (single SVG).",
+    "Glyph bodies are injected via dangerouslySetInnerHTML from the resolved CV_ICONS entry.",
+    "desaturated prop lowers opacity (floor 0.15) for state-strength gradients; filled inverts to a filled badge with ink/paper glyph."
+  ],
+  "standouts": [
+    "Resolves geometry from the canonical CV_SHAPES.points() but keeps an in-sync fallback so it works before that module loads.",
+    "Container shape is selected by the same shape vocabulary as the shape system (circle=User Portal, hex=Property Wizard, octagon=Virtual Hub, diamond=Vi)."
+  ],
+  "conventions": [
+    "Tone names resolve through CSS tokens (var(--...)) not raw hex in the live code.",
+    "Names resolve through CV_ICONS aliases so semantic and brand names both work.",
+    "window global publish pattern; component documented with a usage block in the header.",
+    "Loud-ish fallback for missing icons (visible placeholder) rather than silent empty render."
+  ],
+  "concerns": [
+    "CV_SHAPE_PTS fallback literal duplicates geometry that must be hand-kept-in-sync with CV_SHAPES — an acknowledged drift risk in the comment.",
+    "dangerouslySetInnerHTML on icon bodies trusts the CV_ICONS source content (acceptable if that source is trusted, but worth noting).",
+    "window.CV_ICONS is referenced directly (resolve = window.CV_ICONS && ...) so component silently shows the missing-placeholder if the icon registry hasn't loaded rather than failing loud."
+  ],
+  "notes": "The React renderer for ConceptV icons — plain glyph or wrapped in a brand entity-badge shape, resolving colour/geometry from the design tokens and shape system.",
+  "questions": [
+    "What is the load-order guarantee that window.CV_ICONS and window.CV_SHAPES exist before CvIcon first renders?",
+    "Is there an enforcement check that the CV_SHAPE_PTS fallback stays byte-identical to CV_SHAPES.points()?"
+  ],
+  "purpose_vs_actual": "Matches — the header describes a single component rendering icons with optional brand-shape treatments, and the code implements exactly the documented usages.",
+  "apparent_themes": [
+    "Single source of truth with safe fallback",
+    "Brand-consistent entity badges",
+    "Token-driven colour and auto-scaled stroke",
+    "Projection of the shared shape/icon vocabulary into React"
+  ],
+  "intention_signals": "Trying to give React consumers one component that renders any brand icon in any brand container shape, with colour and geometry pulled from the canonical token/shape sources so usage stays on-brand and drift-free.",
+  "novelty": "Reuses the shape system's polygon points at runtime (with an in-sync fallback) so the same geometry drives both the SVG shape module and the React badge.",
+  "contribution": "Contributes the React rendering surface for the icon library, including tone resolution, brand stroke scaling, the entity-badge container variants, and the missing-icon placeholder.",
+  "summary_for_embedding": "A React component (window.CvIcon) that renders any ConceptV icon from window.CV_ICONS, optionally wrapped in a brand entity-badge container (gold circle ring or hex/octagon/diamond polygon node), resolving tone tokens, auto-scaled stroke, and geometry from the shape system.",
+  "intention_for_embedding": "To give React consumers one drift-free way to render brand icons and entity-badge node shapes using the canonical token and shape sources."
+}

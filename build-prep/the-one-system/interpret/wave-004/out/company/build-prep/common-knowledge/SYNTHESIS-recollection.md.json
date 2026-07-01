@@ -1,0 +1,53 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/SYNTHESIS-recollection.md",
+  "model": "opus",
+  "what_it_does": "A stream-synthesis document for the 'recollection' area (the Company's memory/recall/index substrate), written for Tim's Law union-assembly. It states what the area IS, its principles, its built shape, its outputs, its seams to adjacent areas, and an offer to the union: that recall-over-histories can recover any other stream's history/principles/shape on demand from a backfilled cross-session index.",
+  "observations": [
+    "Frames recollection as a clone-refit of the episodic-memory plugin, Company-integrated, living in THE COMPANY layer",
+    "Asserts recovery-quality GATES the multi-session fabric's high-bar self-approval (recovery quality = the autonomy floor, ref APPROVAL-STANDARD.md)",
+    "Two pillars: identity continuity (agents already understand Tim) and cross-project omniscience (knows everything built at every scale)",
+    "Headline claim: recollection is BOTH a stream AND the organ the Law's cross-session scan runs on ('I am the Law's scanning organ')",
+    "Principle: conversation is source of truth; code is a lossy unreviewed AI projection whose duplicates/gaps are a feature to surface",
+    "Multi-space addressing grammar: exchange:// board:// clone:// vec://<src>#space=<lens>#emb=<model> code:// project://",
+    "States the four root axes: scale/hierarchy, time, frame/perspective, state/phase",
+    "Shape figures: ~/recollection codebase (46 src .ts / 47 tests); store at ~/.recollection (sqlite-vec @ :8007/pplx) with ~1,250 sessions / ~8,220 exchanges backfilled",
+    "Lists Company-side integrations claimed live+verified: common_knowledge corpus comprehension, bge->pplx switch (RESOLVED), neighbour-field /api/cognition/neighbours, corpus_rerank, cross-session maps",
+    "Notes the README still reads 'Episodic Memory' (upstream shape shared; Company-integration is the delta)"
+  ],
+  "standouts": [
+    "The self-positioning as the Law's scanning organ: recall-over-histories is HOW the union scans what no single model holds, making 'union requires union' executable",
+    "Recovery-quality-gates-autonomy: explicitly ties memory recall fidelity to the fabric's self-approval safety floor",
+    "Verification-state required on every unit (verified-by-use / built-unverified / stub / suspect / design-only) to prevent laundering confident-built into done"
+  ],
+  "conventions": [
+    "Follows the 'scan-before-build / union requires union' framing shared across stream-synthesis docs",
+    "Follows the structured WHAT IT IS / PRINCIPLES / SHAPE / OUTPUTS / SEAMS layout common to the union-assembly synthesis set",
+    "Uses the multi-layer #space=/#emb= addressing grammar",
+    "Marks principles as Tim's-value-not-code (principles live in history/principles/shape, not the implementation)"
+  ],
+  "concerns": [
+    "Several integration items are asserted 'live + verified' with no inline evidence in this file (verification lives elsewhere)",
+    "Session/exchange counts differ across docs (~1,250 sessions / ~8,220 exchanges here vs 18,857 extractions in DRAGNET-RESULTS referenced by sibling files) — figures are point-in-time and not reconciled here",
+    "Self-described as 'I am the Law's scanning organ' — a strong area-positioning claim presented within a single stream's own synthesis"
+  ],
+  "notes": "Recollection's self-synthesis: the memory/recall/index substrate framing itself as the autonomy-gating safety layer AND the cross-session scanning organ that makes the union assembly executable.",
+  "questions": [
+    "Are the claimed-live integrations (neighbour-field, corpus_rerank, common_knowledge comprehension) verified by use, or asserted?",
+    "How do the session/exchange counts here reconcile with the larger extraction counts in DRAGNET-RESULTS?",
+    "Is the common_knowledge projection space actually populated, or still EMPTY pending the pilot publish?"
+  ],
+  "purpose_vs_actual": "Match: it sets out to be a union-assembly synthesis of the recollection area's identity, principles, shape, outputs and seams, and it delivers exactly that plus an offer to recall other streams.",
+  "apparent_themes": [
+    "Conversation-as-source-of-truth; code-as-lossy-projection",
+    "Memory recovery-quality as the gate on autonomy/self-approval",
+    "Multi-space, multi-lens addressable identity (graph, not blob)",
+    "Union requires union / scan before build",
+    "Honest verification-state on every unit"
+  ],
+  "intention_signals": "It is trying to establish recollection not as a feature but as the foundational safety substrate of the multi-session fabric, and to offer its backfilled cross-session index as the operational mechanism for assembling the union (recall any stream's history on demand).",
+  "novelty": "The equation of a memory/recall organ with the cross-session SCANNING substrate of Tim's Law — memory and 'the thing that scans before building' are claimed to be the same organ.",
+  "contribution": "Contributes the recollection area's identity, its principle set (conversation-as-truth, recovery-gates-autonomy, multi-space addressing, verification-state), its built-shape inventory, and its offer to serve cross-stream history recall for the union assembly.",
+  "summary_for_embedding": "A union-assembly stream synthesis of recollection, the Company's memory/recall/index substrate (episodic-memory refit, ~1,250 sessions backfilled in sqlite-vec @ :8007/pplx), framing it as the autonomy-gating safety layer and the cross-session scanning organ that makes 'union requires union' executable.",
+  "intention_for_embedding": "To define recollection as the memory substrate that gates fabric autonomy and to offer its cross-session recall as the mechanism for assembling Tim's union across what no single model can hold."
+}

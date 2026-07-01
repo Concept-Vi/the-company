@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/gc9_gap_intake.py",
+  "model": "opus",
+  "what_it_does": "A fully deterministic (no model) intake script that turns the 18 'stubborn-floor' entries in .build/rg10/reconciled.json into proposed feature-inventory rows. For each floor entry it derives a row {id (the feature name the model insisted on), area (from the id prefix via a prefix→area map derived from the real design/register.json inventory), label (at-altitude prose from the dossier), code ''}, applies deterministic floor checks (id format, no collision with a real id, area resolvable, label non-empty) flagging rather than guessing, merges within-batch entries insisting the same id, writes a proposed_feature back in-place into reconciled.json, and proposes only — register.json is never touched.",
+  "observations": [
+    "chdir hardcoded to /home/tim/company; reads design/register.json and .build/rg10/reconciled.json",
+    "prefix→area map is derived from the real inventory: a prefix mapping to multiple areas (ratio < 1.0) is set to None and flags rather than guesses",
+    "label chosen as howto.what prose, falling back to represents only when it is real prose and not the id echo (comment notes the first run mislabeled rows with their own id, caught by look-at-output)",
+    "floor checks accumulate reasons: id shape regex ^[A-Z]+-[a-z][a-z_-]*$, collision with existing inventory id, unknown/ambiguous prefix, missing label",
+    "flagged entries get status FLAGGED with reasons; clean ones get status proposed",
+    "within-batch merge: multiple elements insisting one feature id collapse to one proposed feature carrying all ui_addresses, label = longest (most specific) prose",
+    "returns counts, flagged list, by_area tally, and the merged rows; writes reconciled.json in-place",
+    "origin tagged 'mockup-gap (RG10 stubborn-floor)'"
+  ],
+  "standouts": [
+    "the no-fiction floor taken to its strongest form: deterministic end-to-end, every field derived from existing data, unknown prefixes flag rather than invent an area",
+    "the gap signal is read from the feature id the model INSISTED on through correction (insistence-under-correction as the sensor)",
+    "registry-derived prefix→area map with ambiguity-flagging — never hand-written",
+    "the label-vs-id-echo guard explicitly traces to a prior bug caught by look-at-output"
+  ],
+  "conventions": [
+    "PROPOSES ONLY discipline — register.json untouched, Tim's stop-3 verdict authorizes growth",
+    "update-in-place on the walk's stop-3 artifact (reconciled.json) as the truth the surface reads",
+    "node-id naming (GC9) and explicit framing as the registry-filling pattern's second instance",
+    "main() returns structured dict, __main__ prints JSON — consistent script harness"
+  ],
+  "concerns": [
+    "hardcoded absolute path reduces portability",
+    "the merge branch mutates rows in place with pop()/setdefault juggling of ui_address vs ui_addresses, which is intricate and could be fragile if a row shape varies"
+  ],
+  "notes": "A deterministic gap-intake that proposes feature-inventory rows from RG10's stubborn-floor entries, deriving every field from real data and flagging anything it cannot ground.",
+  "questions": [
+    "What produces the 'stubborn-floor' entries and the dossier shape (maps_to_feature, howto.what, represents) in reconciled.json?",
+    "How does the stop-3 surface present these proposed_feature entries for Tim's verdict?"
+  ],
+  "purpose_vs_actual": "Match — docstring says deterministic propose-only intake deriving every field from existing data, flagging the ungroundable; the code does exactly that and never mutates register.json.",
+  "apparent_themes": [
+    "no-fiction / no-model determinism",
+    "registry-is-truth (area map derived, not authored)",
+    "flag-don't-guess",
+    "propose-then-gate (operator authorizes inventory growth)",
+    "insistence-under-correction as a gap sensor"
+  ],
+  "intention_signals": "Trying to convert the residue of an RG10 reconcile (features the model kept insisting on but the inventory lacks) into clean, fully-grounded proposed inventory rows that Tim can approve, without any fabricated fields.",
+  "novelty": "Deriving the prefix→area mapping from the live inventory with explicit ambiguity-flagging, and treating model-insistence-through-correction as the deterministic gap signal feeding propose-only inventory growth.",
+  "contribution": "Contributes the deterministic gap-intake stage of the registry-filling pattern: maps stubborn-floor entries to grounded proposed feature rows, with id/area/label floor checks, ambiguity flagging, and same-id within-batch merge.",
+  "summary_for_embedding": "A deterministic no-model intake that converts RG10 stubborn-floor entries into propose-only feature-inventory rows, deriving area from a registry-derived prefix map and flagging anything ungroundable.",
+  "intention_for_embedding": "To turn the gap signal of features the model insisted on into fully-grounded proposed inventory rows for the operator to approve, without fabricating any field."
+}

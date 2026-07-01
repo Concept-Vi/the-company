@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/InfoPanel.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React InfoPanel component (and a small FeatIcon SVG helper) for the Virtual Hub buyer-facing overlay: a right-side aside showing a property title, four feature badges (2 BED, LIVING, 2 BATH, 1 CAR) rendered as inline SVG icons, a description paragraph, and an 'Enquire about this apartment' CTA. Exposed globally via window.InfoPanel.",
+  "observations": [
+    "FeatIcon helper maps an array of SVG path 'd' strings into <path> elements inside a 24x24 viewBox.",
+    "Title falls back to a hardcoded default 'Apartment A — Level 12' when hub?.title is absent.",
+    "Four feature badges with hardcoded labels and inline SVG path data for floor/sofa/bath/car glyphs.",
+    "Description section uses Lorem ipsum placeholder text and a literal 'Description text' heading.",
+    "Close button has aria-label='Close'; uses ✕ glyph.",
+    "Component attaches to window.InfoPanel rather than using ES module export."
+  ],
+  "standouts": [
+    "Inline SVG path data embedded directly as string arrays for each feature glyph.",
+    "Placeholder Lorem ipsum content indicating a mockup/demo stage rather than wired data."
+  ],
+  "conventions": [
+    "Follows the kit's vh-* CSS class naming (vh-info-panel, vh-info-title, etc.).",
+    "Follows the global-window registration pattern (window.InfoPanel) seen across the kit.",
+    "Uses className strings rather than the claude-ds token/registry system; classes carry the styling."
+  ],
+  "concerns": [
+    "Hardcoded feature labels and Lorem ipsum body — not yet data-driven from hub.",
+    "Only hub.title is consumed; features/description are static regardless of hub prop."
+  ],
+  "notes": "A static-content right-side property info card for the Virtual Hub overlay; demo-grade, mostly hardcoded except the title fallback.",
+  "questions": [
+    "Are the feature badges (beds/baths/car) meant to be driven by hub data, or are they intentionally static for this mockup?",
+    "Where do the vh-info-* CSS classes get defined (which stylesheet)?"
+  ],
+  "purpose_vs_actual": "Matches the README's description of InfoPanel as the right-side info card (title, features, description, CTA); content is placeholder but structure is as stated.",
+  "apparent_themes": [
+    "Photo-first immersive viewer overlay",
+    "Minimal dark-surface buyer-facing UI",
+    "Self-contained presentational React component"
+  ],
+  "intention_signals": "Aims to present a clean, dismissible property summary card overlaid on an immersive render, with iconography for key apartment attributes and a clear enquire action.",
+  "novelty": "Inline-array SVG path glyphs for real-estate features (bed/bath/car) as a tiny reusable FeatIcon abstraction.",
+  "contribution": "Contributes a buyer-facing property info-panel pattern: titled aside with icon feature badges, descriptive body, and a single enquire CTA, plus a compact array-driven SVG icon helper.",
+  "summary_for_embedding": "React InfoPanel component for the Virtual Hub overlay rendering a property title, icon feature badges, description, and enquire CTA as a right-side aside.",
+  "intention_for_embedding": "To give buyers a clean overlaid summary card of an apartment with key attributes and a path to enquire."
+}

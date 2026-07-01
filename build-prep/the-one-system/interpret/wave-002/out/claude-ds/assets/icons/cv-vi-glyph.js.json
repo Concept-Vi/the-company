@@ -1,0 +1,36 @@
+{
+  "project": "claude-ds",
+  "path": "assets/icons/cv-vi-glyph.js",
+  "model": "opus",
+  "what_it_does": "Sets window.CV_VI_GLYPH to a single data object holding the ConceptV 'Vi' wordmark as auto-traced SVG path data: a viewBox string, width/height (120x114), and a multi-subpath 'path' string (5 subpaths: V blades, chevron, i-stem, i-dot). Consumed by the shape renderer (cv-shapes.js) to draw the Vi mark in a single fill colour.",
+  "observations": [
+    "Pure data file — a two-line comment header plus one assignment of a JSON object literal to a window global.",
+    "Comment states it was AUTO-TRACED from assets/brand-marks/vi.png and is 'the ONE home for the Vi glyph'.",
+    "path uses fill-rule even-odd implicitly (drawn with fill-rule='evenodd' by the consumer per cv-shapes.js).",
+    "viewBox '0 0 120 114' equals the w/h fields; the bbox is the glyph itself."
+  ],
+  "standouts": [
+    "Declares itself the single canonical home for the Vi glyph, drawn in one fill colour by the entity-shape renderer."
+  ],
+  "conventions": [
+    "window global publish pattern (no module.exports here, unlike cv-shapes.js).",
+    "Single-source discipline — one home for the glyph, referenced by cv-shapes.js viWordmark().",
+    "Provenance noted inline (traced from a named source PNG)."
+  ],
+  "concerns": [],
+  "notes": "A one-line data module: the traced Vi wordmark path used by the shape renderer's wordmark layer.",
+  "questions": [
+    "Is the traced path expected to be regenerated if assets/brand-marks/vi.png changes, and by what tool?"
+  ],
+  "purpose_vs_actual": "Matches — it is exactly the single data home for the Vi glyph that its comment claims to be.",
+  "apparent_themes": [
+    "Single source of truth",
+    "Data over code",
+    "Provenance tracking"
+  ],
+  "intention_signals": "Trying to keep the brand wordmark as one reusable vector asset so any consumer draws an identical Vi from one canonical path rather than embedding copies.",
+  "novelty": "An auto-traced raster-to-vector brand mark stored as plain JS data with viewBox metadata for renderer-agnostic reuse.",
+  "contribution": "Contributes the canonical Vi wordmark vector path data with its bounding-box metadata for single-colour rendering.",
+  "summary_for_embedding": "A JavaScript data module setting window.CV_VI_GLYPH to the ConceptV 'Vi' wordmark as auto-traced SVG path data with viewBox and width/height, for single-fill rendering by the shape renderer.",
+  "intention_for_embedding": "To hold the Vi brand glyph as one canonical vector asset so every consumer renders an identical wordmark."
+}

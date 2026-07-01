@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-IA-mobile.json",
+  "model": "opus",
+  "what_it_does": "A machine-generated grounding/confirmation report for the IA-mobile.html mockup — a mobile 'Board' interface (warm gold theme) with a four-section bottom nav (Board, Talk, Queue, Tune) for managing ideas/tasks. Records 89 candidate elements in 54 clusters as dossiers with jury verdicts, split into confirmed (~31) and flagged (~22).",
+  "observations": [
+    "Same ground/confirmed/flagged dossier schema; counts n_candidates=89, n_dossiers=89, n_clusters=54.",
+    "Subject screen: four-tab mobile nav plus a live board where the user runs tasks, approves items, and adjusts settings.",
+    "Voice-forward controls: ui://chrome/ptt (hold-to-speak), ui://board/listen (VOICE-listen), ui://board/record-turn (VOICE-record), ui://board/utterance (VOICE-utter) — voice wired to runtime/suite.py:voice.",
+    "Decision/triage controls: board/approve & board/resolve (ENG-resolve), board/decide (RHM-decide), board/need-you lane (INB-lanes), chrome/decline ('not now'), board/abstain.",
+    "Self-evolution surfaced: board/manifest (self-generating manifesto with propose->see->approve->reversible lifecycle), board/ledger (self-change ledger), board/revert (SM-revert).",
+    "ENG-memo / memo-gate appears again as a no-code tuning panel for hash inputs (chrome/memo-gate, board/memo-gate, board/question).",
+    "Addresses span ui://board/*, ui://chrome/*, ui://toolbar/*, ui://queue/*; how_to_change cites Board.tsx, Chrome.tsx, Tabbar.tsx, Toolbar.tsx, Queue.tsx, suite.py:voice/board_intent/rhm-decide/sm_revert.",
+    "RUN-status live presence light (board/status, 4-member, built) flagged 0/3 despite built grounding."
+  ],
+  "standouts": [
+    "Dual voice input model on mobile: push-to-talk (hold-to-speak) plus active-listen and record-turn, all routed to the voice wire.",
+    "Self-generating manifesto (board/manifest) describing the board's own growth lifecycle: propose, see, approve, reversible.",
+    "Mobile pre-triage 'need you' lane that tints items requiring operator attention.",
+    "Memo-gate exposed as a no-code parameter-tuning panel."
+  ],
+  "conventions": [
+    "ui:// addressing; 'proposed'/'built' grounding sentinels.",
+    "Mobile regions traced to Board.tsx / Chrome.tsx / Tabbar.tsx and suite.py wires.",
+    "Shared batch dossier/jury structure."
+  ],
+  "concerns": [
+    "Address reuse/overlap: ui://board/process appears as both a confirmed 5-member cluster and a flagged 9-member cluster; ui://board/utterance maps to both VOICE-utter and a build-utterance text — concept spread across clusters.",
+    "Several 'built'-grounding controls (chrome/run, board/status, board/build-review) are flagged 0/3 by the jury.",
+    "Mockup-only sentinels dominate flagged entries, consistent with an early mobile draft."
+  ],
+  "notes": "Auto-generated audit of the mobile Board app; confirms the run/voice/approve/decline core and the four-tab nav, while flagging much of the status/settings/self-evolution surface for scrutiny.",
+  "questions": [
+    "Why does ui://board/process split into both a confirmed and a separate flagged cluster?",
+    "How do the three voice controls (ptt, listen/record, utter) divide responsibility in the live voice wire?",
+    "Is board/manifest's self-growth lifecycle a designed feature or aspirational mockup text?"
+  ],
+  "purpose_vs_actual": "Matches: declared a mobile Board grounding report and delivers clustered dossiers + verdicts for that four-tab interface.",
+  "apparent_themes": [
+    "Mobile-first operator board with voice-forward input",
+    "Pre-triage and decision support (need-you lane, decide-for-me, abstain)",
+    "Self-evolution with reversibility (manifest lifecycle, ledger, SM-revert)",
+    "Value-altitude decision-compiling (memo-gate / coa)",
+    "Adversarial grounding of mobile controls"
+  ],
+  "intention_signals": "Trying to give the operator a warm, voice-capable mobile board to run, triage, decide on, and approve work — including reviewing and reverting the system's own self-changes — and to verify those controls are honestly grounded.",
+  "novelty": "The mobile dual-mode voice (PTT + active-listen + record-turn) combined with a self-generating, reversible board manifesto on a phone surface.",
+  "contribution": "Contributes the mobile Board surface's element ledger: the four-tab nav (Board/Talk/Queue/Tune), the VOICE control family, the need-you triage lane, RHM-decide/ENG-resolve actions, and the mobile self-evolution controls (manifest/ledger/SM-revert) tied to suite.py voice and board wires.",
+  "summary_for_embedding": "A grounding/jury-confirmation report for the IA mobile Board interface, clustering 89 UI elements of a four-tab voice-forward operator board into confirmed and flagged dossiers with feature mappings and code locations.",
+  "intention_for_embedding": "To verify the mobile Board app honestly supports running, triaging, deciding, voice input, and reversible self-change, grounded in real board and voice code."
+}

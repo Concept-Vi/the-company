@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-E1-fleet-desktop.json",
+  "model": "opus",
+  "what_it_does": "A machine-generated grounding/confirmation report for the E1-fleet-desktop.html mockup, a process-control dashboard for picking which AI model (Chat vs Embed lists) runs the current 'ask' workflow step. Records 33 candidate elements in 23 clusters as dossiers with jury verdicts, split into confirmed (3) and flagged (20).",
+  "observations": [
+    "Same ground/confirmed/flagged dossier schema; counts n_candidates=33, n_dossiers=33, n_clusters=23.",
+    "Subject screen: an 'ask' node step with model selection across two tabs (Chat / Embed) plus status indicators top and bottom.",
+    "Three confirmed dossiers all concern the model field: ui://inspector/model-fleet (FLEET-refresh, proposed), .../transport-filter (proposed), .../endpoint-status (MOD-embed).",
+    "Honesty surfaces around model config: a transport-filter note explaining why an option is hidden, and an embed-endpoint 'unconfigured' status that prevents silent fallback to chat.",
+    "model-field dossier (.../models_at, MOD-registry, built) describes the field generated from the node-type config_schema (NodeConfigForm.tsx) with the model list pulled live from suite.py:available_models, preserving saved-but-missing values rather than dropping them.",
+    "Multiple flagged refcheck feature-fabrications: 'RHM-process' and 'NODE-model' called out as not in inventory nor proposed.",
+    "Addresses split across ui://settings/*, ui://inspector/model-field/*, ui://canvas/node/*; how_to_change cites Settings.tsx, Inspector.tsx, NodeShape.tsx, NodeConfigForm.tsx, suite.py:set_rhm_config / available_models.",
+    "Two near-duplicate Canvas entries exist (ui://settings/canvas openable vs ui://settings/Canvas tab, differing by case)."
+  ],
+  "standouts": [
+    "Anti-silent-fallback design: embed models cannot be listed without a configured endpoint, surfaced as an explicit error rather than degrading to chat.",
+    "Live registry model selector that preserves a saved value even if it has dropped out of the live list.",
+    "Refcheck catching fabricated feature ids (RHM-process, NODE-model) on a model-selection screen."
+  ],
+  "conventions": [
+    "ui:// addressing; 'proposed' sentinel; built/proposed grounding.",
+    "Config fields traced to node-type config_schema and the live model registry.",
+    "Shared batch dossier/jury structure."
+  ],
+  "concerns": [
+    "Case-variant duplicate addresses ui://settings/canvas and ui://settings/Canvas represent overlapping Canvas controls.",
+    "Many 'built'-grounding dossiers (settings/run, settings/toolbar, model-field/models_at) are nonetheless flagged 0/3 or 1/3 by the jury.",
+    "RHM-process and NODE-model are surfaced with confident text but fail the deterministic feature floor."
+  ],
+  "notes": "Auto-generated audit of the fleet/model-selection dashboard; the solidly-described pieces are the model field, its live registry source, and honest config/endpoint status; most controls are flagged for scrutiny.",
+  "questions": [
+    "Are ui://settings/canvas and ui://settings/Canvas the same control or two intended entries?",
+    "What is the canonical inventory id for model selection given RHM-process and NODE-model were rejected?",
+    "How do Chat and Embed model lists map to distinct registry endpoints in the live system?"
+  ],
+  "purpose_vs_actual": "Matches: declared a fleet/model-selection grounding report and delivers clustered dossiers + verdicts for that dashboard.",
+  "apparent_themes": [
+    "Per-step model selection from a live fleet/registry",
+    "Honest configuration state (no silent fallbacks, hidden-option transparency)",
+    "Node-type config_schema as the source of UI fields",
+    "Adversarial grounding of UI-to-code claims"
+  ],
+  "intention_signals": "Trying to let an operator choose the model for a workflow step from the live model fleet while being honest about endpoint configuration and hidden options, and to verify those controls are actually code-backed.",
+  "novelty": "The explicit no-silent-fallback embed-endpoint failure notice and the saved-value-preserving live registry selector on a per-node model field.",
+  "contribution": "Contributes the model-fleet selection surface's element ledger: the inspector model-field family (models_at/MOD-registry, transport-filter, endpoint-status, default-brain, embed-error) tied to NodeConfigForm.tsx and suite.py:available_models.",
+  "summary_for_embedding": "A grounding/jury-confirmation report for the E1 fleet/model-selection desktop dashboard, clustering 33 UI elements and confirming the live model field while flagging fabricated feature mappings and weakly-grounded controls.",
+  "intention_for_embedding": "To verify the per-step model-selection dashboard honestly draws from the live model registry and surfaces configuration state without silent fallbacks."
+}

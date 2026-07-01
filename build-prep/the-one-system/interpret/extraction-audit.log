@@ -1,0 +1,60 @@
+auditing 1065 code files (resume on) | concurrency=32 | engine=http://127.0.0.1:8770/api/cognition/run_items
+  20/1065  ok=19 flagged=19 err=1  61s
+  40/1065  ok=39 flagged=39 err=1  113s
+  60/1065  ok=59 flagged=58 err=1  156s
+  80/1065  ok=79 flagged=77 err=1  198s
+  100/1065  ok=99 flagged=97 err=1  220s
+  120/1065  ok=112 flagged=110 err=8  242s
+  140/1065  ok=129 flagged=126 err=11  283s
+  160/1065  ok=148 flagged=143 err=12  302s
+  180/1065  ok=167 flagged=160 err=13  320s
+  200/1065  ok=182 flagged=174 err=18  341s
+  220/1065  ok=200 flagged=192 err=20  391s
+  240/1065  ok=219 flagged=210 err=21  428s
+  260/1065  ok=236 flagged=227 err=24  441s
+  280/1065  ok=254 flagged=245 err=26  454s
+  300/1065  ok=273 flagged=264 err=27  487s
+  320/1065  ok=292 flagged=282 err=28  517s
+  340/1065  ok=308 flagged=295 err=32  540s
+  360/1065  ok=325 flagged=312 err=35  581s
+  380/1065  ok=345 flagged=331 err=35  608s
+  400/1065  ok=364 flagged=349 err=36  644s
+  420/1065  ok=380 flagged=365 err=40  683s
+  440/1065  ok=399 flagged=384 err=41  707s
+  460/1065  ok=418 flagged=402 err=42  725s
+  480/1065  ok=435 flagged=419 err=45  750s
+  500/1065  ok=455 flagged=438 err=45  779s
+  520/1065  ok=473 flagged=456 err=47  821s
+  540/1065  ok=489 flagged=472 err=51  862s
+  560/1065  ok=508 flagged=490 err=52  893s
+  580/1065  ok=526 flagged=507 err=54  934s
+  600/1065  ok=543 flagged=523 err=57  973s
+  620/1065  ok=562 flagged=542 err=58  1000s
+  640/1065  ok=578 flagged=558 err=62  1056s
+  660/1065  ok=592 flagged=572 err=68  1110s
+  680/1065  ok=608 flagged=588 err=72  1173s
+  700/1065  ok=621 flagged=601 err=79  1227s
+  720/1065  ok=637 flagged=617 err=83  1288s
+  740/1065  ok=656 flagged=636 err=84  1346s
+  760/1065  ok=672 flagged=652 err=88  1401s
+  780/1065  ok=683 flagged=662 err=97  1452s
+  800/1065  ok=698 flagged=677 err=102  1489s
+  820/1065  ok=715 flagged=694 err=105  1562s
+  840/1065  ok=730 flagged=709 err=110  1651s
+  860/1065  ok=746 flagged=725 err=114  1688s
+  880/1065  ok=758 flagged=737 err=122  1724s
+  900/1065  ok=774 flagged=753 err=126  1771s
+  920/1065  ok=792 flagged=771 err=128  1821s
+  940/1065  ok=810 flagged=789 err=130  1865s
+  960/1065  ok=827 flagged=806 err=133  1890s
+  980/1065  ok=844 flagged=823 err=136  1923s
+  1000/1065  ok=860 flagged=839 err=140  1956s
+  1020/1065  ok=877 flagged=856 err=143  1997s
+  1040/1065  ok=896 flagged=875 err=144  2040s
+  1060/1065  ok=907 flagged=886 err=153  2168s
+final persist: CREATE TABLE
+CREATE TABLE
+COPY 7
+INSERT 0 7
+
+DONE: 907/1065 ok | 886 flagged | 158 err | 2181s

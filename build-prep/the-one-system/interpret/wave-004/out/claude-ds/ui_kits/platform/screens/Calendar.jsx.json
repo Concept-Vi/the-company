@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/screens/Calendar.jsx",
+  "model": "opus",
+  "what_it_does": "A React (Babel-in-browser style, no imports) screen component rendering a static Calendar view — a toolbar (Filter/Sort/Search/Clear/Task Type), a 'Top Tasks & Reminders' row of 8 task cards, a month navigator (June 2026), and a 7-day-by-3-week month grid with color-coded task chips. All content is placeholder/lorem data.",
+  "observations": [
+    "Defines four function components: TopTask, CalChip, Day, and the main CalendarScreen",
+    "No import statements; relies on global JSX/React and exposes itself via window.CalendarScreen at the end",
+    "Uses cv- classes from platform.css (cv-screen-title, cv-toolbar, cv-btn--outline, cv-search, cv-cal-*) — purely a markup composition over the kit CSS",
+    "All data is hardcoded placeholder: 'Task Name', 'Due Date: 00/00/00', 'Lorem ipsum...', static day numbers 27..16",
+    "Color categories passed as string props (purple/green/blue/orange/yellow/gray/red) matching the chip/task color classes in platform.css",
+    "Inline SVG search-glyph uses var(--fg-muted) directly in stroke attributes",
+    "A couple of inline style objects (minWidth, font/color for the Manage link)",
+    "Emoji used as icons in markup (📊 Task Type, ‹ › ▾ chevrons)",
+    "Calendar grid is hand-laid as literal Day components, not computed from a date library"
+  ],
+  "standouts": [
+    "Entirely static mockup data — a visual scaffold, not a functioning calendar",
+    "Self-registration via window.CalendarScreen rather than ES module export"
+  ],
+  "conventions": [
+    "Follows the kit pattern of composing cv- classes rather than restating styles",
+    "Follows the browser-Babel / window-global mounting convention seen in claude-ds kits",
+    "Mixes a few inline styles into otherwise class-driven markup"
+  ],
+  "concerns": [
+    "Hand-laid calendar grid with literal day numbers will not reflect a real month/date",
+    "Repeated placeholder 'Task Name' / lorem text — clearly a non-functional mockup if mistaken for production"
+  ],
+  "notes": "A static placeholder Calendar screen for the platform kit — pure markup over platform.css classes, no real dates or data, registered on window.",
+  "questions": [
+    "Is this meant to become data-driven, or to stay a fixed visual mockup?",
+    "Where does window.CalendarScreen get mounted (which host page consumes it)?"
+  ],
+  "purpose_vs_actual": "Matches as a mockup — the filename and class usage say 'Calendar screen' and that is what it renders, though only as static layout with placeholder content.",
+  "apparent_themes": ["screen-as-composition-of-kit-classes", "static visual mockup", "color-categorised tasks", "window-global component registration"],
+  "intention_signals": "Aims to show what the platform's Calendar screen looks like — toolbar, top-tasks strip, and a month grid with categorised task chips — as a recognisable visual for review.",
+  "novelty": "n/a",
+  "contribution": "Contributes the Calendar screen's layout and structure for the platform kit: the toolbar arrangement, the Top-Tasks strip, and the month-grid with color-coded task chips composed from kit classes.",
+  "summary_for_embedding": "Static React Calendar screen for the platform UI kit — toolbar, top-tasks strip, and a month grid of color-coded task chips composed from platform.css cv- classes, registered on window.",
+  "intention_for_embedding": "To present the platform Calendar screen's visual layout for recognition and review."
+}

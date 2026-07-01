@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Glyphic System" name="System Atlas — the directory map" subtitle="Where everything lives: the real directory tree, every folder labelled with the system it holds, fully expandable. Click any folder or file to see what it is and its complete live contents — all tokens, all axis values, all types, all components." viewport="1340x940" -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>System Atlas — directory map</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../axes/motion/motion.css">
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<script src="../app/registry/conditions.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../core/archetype-catalog.js"></script>
+<script src="../app/registry/types-seed.js"></script>
+<script src="../app/registry/glyphic-type.js"></script>
+<script src="../app/registry/components-type.js"></script>
+<script src="../app/registry/kinds-type.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:940px;background:var(--zone-ground,#FCFAF2);color:var(--fg-primary);font-family:var(--font-body);-webkit-font-smoothing:antialiased}
+  .app{display:grid;grid-template-rows:auto minmax(0,1fr);height:940px}
+  header.bar{padding:14px 22px;border-bottom:1px solid var(--border-faint);background:var(--paper);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .bar .kk{font:600 9px/1 var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--accent-bronze)}
+  .bar h1{margin:0;font:800 19px/1 var(--font-display);letter-spacing:-0.01em}
+  .bar .sub{font:400 12.5px/1.4 var(--font-body);color:var(--fg-secondary)}
+  .bar .grow{flex:1}
+  .bar input{font:400 13px/1 var(--font-body);padding:8px 12px;border:1px solid var(--border-strong);border-radius:9px;background:var(--bg-surface);outline:none;width:210px}
+  .bar input:focus{border-color:var(--accent-gold);box-shadow:0 0 0 3px var(--accent-gold-50)}
+  .bar a{font:600 10px/1 var(--font-mono);text-decoration:none;color:var(--accent-gold-deep);border:1px solid color-mix(in srgb,var(--accent-gold) 30%,transparent);border-radius:999px;padding:6px 10px}
+  .body{display:grid;grid-template-columns:440px minmax(0,1fr);min-height:0}
+  .tree{overflow-y:auto;border-right:1px solid var(--border-faint);background:var(--paper);padding:14px 12px 60px}
+  .detail{overflow-y:auto;padding:24px 28px 70px}
+
+  .trow{display:flex;align-items:flex-start;gap:8px;padding:4px 8px;border-radius:8px;cursor:pointer}
+  .trow:hover{background:var(--accent-gold-50)}
+  .trow.sel{background:color-mix(in srgb,var(--accent-gold) 18%,transparent)}
+  .trow .tw{width:12px;flex:none;color:var(--fg-muted);font:400 11px/1.5 var(--font-mono);text-align:center}
+  .trow .dot{width:9px;height:9px;border-radius:2px;flex:none;margin-top:5px}
+  .trow .mid{min-width:0;flex:1}
+  .trow .nm{font:500 13px/1.4 var(--font-mono)}
+  .trow.folder .nm{font-weight:700}
+  .trow .ann{font:400 11px/1.35 var(--font-body);color:var(--accent-bronze)}
+  .trow .cnt{font:500 10px/1.5 var(--font-mono);color:var(--fg-soft);flex:none;margin-top:2px}
+
+  .det .ph{font:600 9px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fg-muted)}
+  .det h2{margin:6px 0 2px;font:800 22px/1.05 var(--font-display);letter-spacing:-0.015em;word-break:break-word}
+  .det .pp{font:400 11px/1.4 var(--font-mono);color:var(--accent-bronze);word-break:break-all;margin-bottom:12px}
+  .det .rb{display:inline-flex;align-items:center;gap:6px;font:600 10px/1 var(--font-mono);padding:5px 9px;border-radius:999px;margin-bottom:12px}
+  .det .desc{font:400 13.5px/1.6 var(--font-body);color:var(--fg-secondary);max-width:68ch;text-wrap:pretty}
+  .det .desc b{color:var(--fg-primary)}
+  .det section{margin-top:20px}
+  .det section h4{margin:0 0 10px;font:600 9px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted)}
+  .kids{display:flex;flex-direction:column;gap:4px}
+  .kid{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:9px;background:var(--bg-muted);font:500 12.5px/1.2 var(--font-mono);cursor:pointer}
+  .kid:hover{background:var(--accent-gold-50)}
+  .kid .dot{width:9px;height:9px;border-radius:2px;flex:none}
+  .kid .ka{margin-left:auto;font:400 10.5px/1.3 var(--font-body);color:var(--fg-muted)}
+  .toks{display:flex;flex-wrap:wrap;gap:7px}
+  .tok{display:flex;align-items:center;gap:7px;font:500 10.5px/1 var(--font-mono);padding:5px 8px;border-radius:7px;border:1px solid var(--border-faint);background:var(--paper)}
+  .tok .sw{width:15px;height:15px;border-radius:4px;border:1px solid var(--border-faint);flex:none}
+  .vrow{display:flex;flex-wrap:wrap;gap:10px}
+  .vchip{display:flex;flex-direction:column;align-items:center;gap:5px;width:74px}
+  .vchip .b{width:60px;height:46px;border-radius:9px;border:1px solid var(--border-faint);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--paper)}
+  .vchip .l{font:500 10px/1.15 var(--font-mono);text-align:center;color:var(--fg-secondary);word-break:break-word}
+  .tlist{display:flex;flex-direction:column;gap:6px}
+  .tcard{border:1px solid var(--border-faint);border-radius:10px;padding:10px 13px;background:var(--paper)}
+  .tcard .tn{font:700 13px/1.1 var(--font-display)}
+  .tcard .tk{font:600 8.5px/1 var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--accent-bronze);margin-left:7px}
+  .tcard .td{font:400 11px/1.4 var(--font-body);color:var(--fg-secondary);margin-top:4px}
+  .empty{color:var(--fg-muted);font:400 13.5px/1.65 var(--font-body)}
+  .empty b{color:var(--fg-secondary)}
+  .stat{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
+  .stat .s{font:400 10px/1.3 var(--font-mono);color:var(--fg-muted)}
+  .stat .s b{display:block;font:700 18px/1 var(--font-display);color:var(--accent-gold-deep)}
+  .live{margin-top:6px;border:1px solid var(--border-faint);border-radius:12px;padding:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:radial-gradient(circle at 1px 1px,color-mix(in srgb,var(--accent-bronze) 9%,transparent) 1px,transparent 0) 0 0/18px 18px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div><div class="kk">ConceptV · System</div><h1>System Atlas</h1></div>
+    <span class="sub">The directory, mapped — every folder labelled with the system it holds. Click to open its real contents.</span>
+    <div class="grow"></div>
+    <input id="q" placeholder="Search files / folders…">
+    <a href="system-map.html">Guided tour →</a>
+  </header>
+  <div class="body">
+    <div class="tree" id="tree"></div>
+    <div class="detail" id="det"><div class="empty">This is the actual project directory. Each <b>folder</b> is labelled with the system it holds — click one to see what's in it, or click a <b>file</b> to see what it is and its real, live contents (all tokens, all axis values, all types…). Everything reads the live build.</div></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var AX=window.CV_AXES,GL=window.CV_GLYPHIC,R=window.CV_REGISTRY,ICONS=window.CV_ICONS,MEAN=window.CV_MEANING;
+  var ROLE_COLORS={'axis-core':'#4A78B8','axis':'#5E7CA6','axis-css':'#7E96B8','value-source':'#988058','glyphic-core':'#E0C010','glyphic-css':'#D6BF57','meaning':'#7CA85B','registry':'#9F772C','ai':'#C24A3C','engine':'#7A6A48','component':'#1F1A12','token':'#D0C098','spec':'#B8860B','doc':'#A89678','card':'#E8C84A','template':'#C09D5D','ui-kit':'#8C8A7E','atomicity':'#5C8A4C','app':'#6B5F47','specimen':'#B98664','other':'#C9B999','folder':'#6B5F47'};
+  // what each folder/path IS — plain-language annotation shown right in the tree
+  var FOLDER_ANN={
+    'axes':'The axis systems — one folder per dial',
+    'axes/color':'Colour axis','axes/motion':'Motion axis (+ its CSS)','axes/size':'Size axis','axes/space':'Space axis','axes/form':'Form/shape axis','axes/texture':'Texture axis','axes/depth':'Depth axis','axes/fill':'Fill axis','axes/symbol':'Symbol axis',
+    'tokens':'Design tokens — the raw values',
+    'assets':'Raw assets','assets/icons':'The symbol library + glyphic + shape engine',
+    'components':'UI components (each also a type)',
+    'app':'The application shell','app/registry':'The Type Registry — catalogue + rules','app/ai':'The AI layer — providers, the foundry',
+    'core':'The engine — layout/diagram/slide solvers',
+    'system':'These living explainer pages',
+    'analysis':'Build notes & plans','templates':'Copyable starting folders','preview':'Design-system preview cards','ui_kits':'Product UI-kit surfaces','atomicity':'The AtomiCity explorer app','specimens':'Token/zoning specimens','_qa':'Test harnesses'
+  };
+  var ROLE_DESC={'axis-core':'The shared engine every axis is built on.','axis':'One dial you can vary; its values are tokens.','axis-css':'CSS that realises an axis (e.g. motion keyframes).','value-source':'A library of raw values an axis wraps.','glyphic-core':'Builds a glyphic from its parts, each from an axis.','glyphic-css':'Base styling for the glyphic.','meaning':'The loadable layer: what a value means, per context.','registry':'Catalogue + rules — types, conditions, slots/sockets.','ai':'AI layer — providers, behaviours, the glyphic foundry.','engine':'Generative solvers — layout / diagram / slide.','component':'A UI component (also registered as a type).','token':'Design values — colours, spacing, sizes — used everywhere.','spec':'A living explainer page in the design-system tab.','doc':'Project documentation / build memory.','card':'A design-system preview/specimen surface.','template':'A starting folder a project can copy.','ui-kit':'A product UI-kit surface.','atomicity':'The AtomiCity exploration app.','app':'The application shell + services.','specimen':'A token/zoning specimen page.','other':'A supporting file.','folder':'A directory.'};
+
+  var M,NODES={},CONTAIN={},sel=null,expanded={'':true},query='';
+  fetch('system-map.json').then(function(r){return r.json();}).then(function(d){
+    M=d; M.nodes.forEach(function(n){NODES[n.id]=n;CONTAIN[n.id]=[];});
+    M.edges.forEach(function(e){if(e.kind==='contains'&&NODES[e.from]&&NODES[e.to])CONTAIN[e.from].push(e.to);});
+    // auto-expand the architecture folders so the systems are visible immediately
+    ['axes','tokens','assets','assets/icons','components','app','app/registry','app/ai','core','system'].forEach(function(p){expanded[p]=true;});
+    renderTree(); emptyStat();
+  }).catch(function(e){document.getElementById('det').innerHTML='<div class="empty">Could not load system-map.json: '+e.message+'</div>';});
+
+  function emptyStat(){
+    var files=M.nodes.filter(function(n){return n.type==='file';}).length, folders=M.nodes.filter(function(n){return n.type==='folder';}).length;
+    document.getElementById('det').innerHTML='<div class="empty">This is the actual project directory. Each <b>folder</b> is labelled with the system it holds — click one to see its contents, or click a <b>file</b> to see what it is and its real live contents.</div><div class="stat"><div class="s"><b>'+files+'</b>files</div><div class="s"><b>'+folders+'</b>folders</div><div class="s"><b>'+(AX?AX.all().length:0)+'</b>axes</div><div class="s"><b>'+(R?R.all().length:0)+'</b>types</div></div>';
+  }
+
+  function ff(a,b){if((a.type==='folder')!==(b.type==='folder'))return a.type==='folder'?-1:1;return a.name.localeCompare(b.name);}
+  function matchTree(n){if(n.path.toLowerCase().indexOf(query)>=0)return true;return (CONTAIN[n.id]||[]).some(function(id){return matchTree(NODES[id]);});}
+  function renderTree(){
+    var roots=M.nodes.filter(function(n){return !n.parent;}).sort(ff);
+    function walk(n,depth){
+      if(query&&!matchTree(n))return '';
+      var kids=(CONTAIN[n.id]||[]).map(function(id){return NODES[id];}).sort(ff);
+      var isF=n.type==='folder', open=expanded[n.id]||(query&&kids.length);
+      var ann=isF?(FOLDER_ANN[n.path]||''):'';
+      var row='<div class="trow '+(isF?'folder':'')+(sel===n.id?' sel':'')+'" data-id="'+n.id+'" style="padding-left:'+(depth*15+8)+'px">'
+        +'<span class="tw">'+(isF&&kids.length?(open?'▾':'▸'):'')+'</span>'
+        +'<span class="dot" style="background:'+(ROLE_COLORS[n.role]||'#ccc')+'"></span>'
+        +'<span class="mid"><span class="nm">'+n.name+'</span>'+(ann?'<br><span class="ann">'+ann+'</span>':'')+'</span>'
+        +(isF&&kids.length?'<span class="cnt">'+kids.length+'</span>':'')+'</div>';
+      return row+((isF&&open)?kids.map(function(k){return walk(k,depth+1);}).join(''):'');
+    }
+    document.getElementById('tree').innerHTML=roots.map(function(r){return walk(r,0);}).join('');
+    document.querySelectorAll('.trow').forEach(function(el){el.addEventListener('click',function(){
+      var n=NODES[el.dataset.id]; if(n.type==='folder')expanded[n.id]=!expanded[n.id]; select(n.id); renderTree();
+    });});
+  }
+  document.getElementById('q').addEventListener('input',function(e){query=e.target.value.toLowerCase();renderTree();});
+
+  function select(id){sel=id;renderDetail();}
+  function hexA(hex,a){if(!hex)return 'transparent';var h=hex.replace('#','');return 'rgba('+parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16)+','+a+')';}
+
+  function renderDetail(){
+    var n=NODES[sel]; if(!n)return;
+    var h='<div class="ph">'+(n.type==='folder'?'folder':'file')+' · '+n.role+'</div><h2>'+n.name+'</h2><div class="pp">'+n.path+'</div>';
+    h+='<div class="rb" style="background:'+hexA(ROLE_COLORS[n.role],.14)+';color:'+(ROLE_COLORS[n.role]||'#333')+'"><span style="width:8px;height:8px;border-radius:2px;background:'+(ROLE_COLORS[n.role]||'#ccc')+'"></span>'+n.role+'</div>';
+    h+='<div class="desc">'+(FOLDER_ANN[n.path]?'<b>'+FOLDER_ANN[n.path]+'.</b> ':'')+(ROLE_DESC[n.role]||'')+'</div>';
+    var d=document.getElementById('det'); d.innerHTML=h; d.scrollTop=0;
+    // folder → list children
+    if(n.type==='folder'){
+      var kids=(CONTAIN[n.id]||[]).map(function(id){return NODES[id];}).sort(ff);
+      var sec=document.createElement('section'); sec.innerHTML='<h4>Inside this folder ('+kids.length+')</h4>';
+      var box=document.createElement('div'); box.className='kids';
+      kids.forEach(function(k){var el=document.createElement('div');el.className='kid';el.innerHTML='<span class="dot" style="background:'+(ROLE_COLORS[k.role]||'#ccc')+'"></span>'+k.name+'<span class="ka">'+(k.type==='folder'?(FOLDER_ANN[k.path]||'folder'):k.role)+'</span>';el.onclick=function(){if(k.type==='folder')expanded[k.id]=true;select(k.id);renderTree();};box.appendChild(el);});
+      sec.appendChild(box); d.appendChild(sec);
+      return;
+    }
+    // file → live contents by role
+    addLiveContent(d,n);
+  }
+
+  function sectionEl(title){var s=document.createElement('section');s.innerHTML='<h4>'+title+'</h4>';return s;}
+  function addLiveContent(d,n){
+    var role=n.role, name=n.name;
+    // AXIS file → its values
+    if(role==='axis'){var aid=name.replace('-axis.js','');if(AX&&AX.has(aid)){var ax=AX.resolve(aid);var s=sectionEl('Every value on this dial ('+ax.ids().length+')');var box=document.createElement('div');box.className='vrow';ax.values().forEach(function(v){box.insertAdjacentHTML('beforeend','<div class="vchip"><div class="b">'+axPrev(aid,v)+'</div><span class="l">'+v.id+'</span></div>');});s.appendChild(box);d.appendChild(s);}return;}
+    if(role==='axis-core'){d.appendChild(htmlSec('All axes it powers ('+(AX?AX.all().length:0)+')','<div class="kids">'+(AX?AX.all().map(function(a){return '<div class="kid">'+a.label+'<span class="ka">'+a.ids().length+' values</span></div>';}).join(''):'')+'</div>'));return;}
+    // SYMBOL library / value source
+    if(role==='value-source'&&/cv-icons/.test(name)){var ids=Object.keys(ICONS.data).filter(function(k){return k.indexOf('__')!==0;});var s2=sectionEl('Every symbol in the library ('+ids.length+')');var b2=document.createElement('div');b2.className='vrow';ids.forEach(function(id){b2.insertAdjacentHTML('beforeend','<div class="vchip"><div class="b"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--accent-bronze)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+(ICONS.get(id)||'')+'</svg></div><span class="l">'+id+'</span></div>');});s2.appendChild(b2);d.appendChild(s2);return;}
+    if(role==='value-source'&&/cv-shapes/.test(name)){d.appendChild(htmlSec('The shapes it provides','<div class="vrow">'+['triangle','square','pentagon','hex','heptagon','octagon','diamond','circle'].map(function(sh){return '<div class="vchip"><div class="b">'+(window.CV_SHAPES?window.CV_SHAPES.markSVG(sh,{size:44,icon:false,flat:true}):'')+'</div><span class="l">'+sh+'</span></div>';}).join('')+'</div>'));return;}
+    // GLYPHIC core → live glyphics
+    if(role==='glyphic-core'){d.appendChild(htmlSec('Live glyphics it builds','<div class="live">'+[{form:'circle',symbol:'person',fill:'paper',color:{ring:'gold',symbol:'bronze'}},{form:'hex',symbol:'gear',texture:'hatch'},{form:'octagon',symbol:'globe',fill:'wash'},{form:'diamond',symbol:'atom',color:{ring:'sage',symbol:'sage'},motion:'glow'}].map(function(g){return '<span style="display:inline-flex">'+(GL?GL.render(g,{size:70}):'')+'</span>';}).join('')+'</div>'));return;}
+    if(role==='meaning'&&MEAN){d.appendChild(htmlSec('Meaning facets it governs','<div class="kids">'+MEAN.facets.map(function(f){return '<div class="kid">'+f+'<span class="ka">axis</span></div>';}).join('')+'</div>'));return;}
+    // REGISTRY files → the types they register
+    if(role==='registry'&&R){
+      var filt=null,lbl='';
+      if(/glyphic-type/.test(name)){filt=function(t){return t.id==='glyphic'||t.id.indexOf('glyphic-')===0;};lbl='The glyphic + its parts';}
+      else if(/components-type/.test(name)){filt=function(t){return t.id.indexOf('component.')===0;};lbl='UI components it registers';}
+      else if(/kinds-type/.test(name)){filt=function(t){return t.id.indexOf('panel.')===0||t.id.indexOf('kind.')===0;};lbl='Other kinds it registers';}
+      else if(/types-seed/.test(name)){filt=function(t){return t.provenance==='built-in'&&t.id.indexOf('component.')!==0&&t.id!=='glyphic'&&t.id.indexOf('glyphic-')!==0&&t.id.indexOf('panel.')!==0&&t.id.indexOf('kind.')!==0;};lbl='Built-in types it seeds';}
+      if(filt){var types=R.all().filter(filt);d.appendChild(htmlSec(lbl+' ('+types.length+')','<div class="tlist">'+types.map(function(t){return '<div class="tcard"><span class="tn">'+t.name+'</span>'+(t.kind?'<span class="tk">'+t.kind+'</span>':'')+'<div class="td">'+(t.description||'').slice(0,140)+'</div></div>';}).join('')+'</div>'));return;}
+      // conditions / core
+      d.appendChild(htmlSec('The whole registry ('+R.all().length+' types)',regByLayer()));return;
+    }
+    if(role==='component'){
+      var tid='component.'+name.replace('.jsx','').replace('.d.ts','').toLowerCase();
+      var t=R&&(R.get(tid)||R.get(name.replace('.jsx','').replace('.d.ts','').toLowerCase()==='glyphic'?'glyphic':tid));
+      if(t){var vs=t.valueSlots?Object.keys(t.valueSlots):[];var sk=t.sockets?Object.keys(t.sockets):[];
+        d.appendChild(htmlSec('What it is','<div class="desc">'+(t.description||'')+'</div>'));
+        if(vs.length)d.appendChild(htmlSec('Varies by','<div class="toks">'+vs.map(function(k){var s=t.valueSlots[k];return '<span class="tok">'+k+(s.axis?' → '+s.axis:'')+'</span>';}).join('')+'</div>'));
+        if(sk.length)d.appendChild(htmlSec('Holds (slots)','<div class="toks">'+sk.map(function(k){return '<span class="tok">'+k+'</span>';}).join('')+'</div>'));
+      }
+      return;
+    }
+    // TOKEN css → parse + list every token in the file
+    if(role==='token'&&/\.css$/.test(name)){
+      var slot=sectionEl('Reading tokens…');d.appendChild(slot);
+      fetch('../'+n.path).then(function(r){return r.text();}).then(function(css){
+        var seen={},out=[];var re=/(--[a-z0-9-]+)\s*:\s*([^;]+);/gi,m;
+        while((m=re.exec(css))){var k=m[1];if(seen[k])continue;seen[k]=1;out.push({k:k,v:m[2].trim()});}
+        slot.innerHTML='<h4>Every token defined here ('+out.length+')</h4><div class="toks">'+out.map(function(t){var isC=/^#|rgb|oklch|hsl|var\(--(accent|paper|ink|fg|bg|zone|status|pig)/.test(t.v);return '<span class="tok">'+(isC?'<span class="sw" style="background:'+t.v+'"></span>':'')+t.k+'</span>';}).join('')+'</div>';
+      }).catch(function(){slot.innerHTML='<h4>Tokens</h4><div class="desc">Could not read the file.</div>';});
+      return;
+    }
+    if(role==='ai'){d.appendChild(htmlSec('What this does','<div class="desc">Part of the AI layer. The glyphic foundry lives here — describe a symbol, get candidates, save into the library.</div><a class="kid" style="margin-top:10px;display:inline-flex;text-decoration:none;color:inherit" onclick="location.href=\'glyphic-foundry.html\'">Open the foundry →</a>'));return;}
+  }
+  function htmlSec(title,html){var s=document.createElement('section');s.innerHTML='<h4>'+title+'</h4>'+html;return s;}
+  function regByLayer(){var by={};R.all().forEach(function(t){(by[t.layer]=by[t.layer]||[]).push(t);});return Object.keys(by).map(function(l){return '<div style="margin-bottom:10px"><div style="font:600 10px/1 var(--font-mono);text-transform:uppercase;color:var(--accent-gold-deep);margin-bottom:5px">'+l+' · '+by[l].length+'</div><div class="toks">'+by[l].map(function(t){return '<span class="tok">'+t.name+'</span>';}).join('')+'</div></div>';}).join('');}
+  function axPrev(aid,v){
+    if(aid==='color')return '<div style="width:100%;height:100%;background:'+(AX.css('color',v.id)||'#ccc')+'"></div>';
+    if(aid==='size'){var p=Math.min(v.meta&&v.meta.px||16,40);return '<div style="width:'+p+'px;height:'+p+'px;border:2px solid var(--accent-gold);border-radius:4px"></div>';}
+    if(aid==='space'){var p2=Math.min(v.meta&&v.meta.px||0,48);return '<div style="width:'+Math.max(2,p2)+'px;height:12px;background:var(--accent-gold);border-radius:2px"></div>';}
+    if(aid==='depth'){var sh=v.id==='flat'?'none':v.meta?'0 '+(v.meta.dy||0)+'px '+(v.meta.blur||0)+'px rgba(42,33,26,'+(v.meta.opacity||.2)+')':'var(--shadow-card)';return '<div style="width:32px;height:32px;border-radius:6px;background:var(--paper);border:1px solid var(--border-faint);box-shadow:'+sh+'"></div>';}
+    if(aid==='motion'){return '<span class="'+(AX.css('motion',v.id)||'')+'" style="width:20px;height:20px;border-radius:50%;background:var(--accent-gold);display:inline-block"></span>';}
+    if(aid==='texture')return window.CV_SHAPES?window.CV_SHAPES.markSVG('square',{size:44,icon:false,pattern:v.id==='none'?null:v.id,flat:true}):'';
+    if(aid==='form')return v.meta&&v.meta.shape&&window.CV_SHAPES?window.CV_SHAPES.markSVG(v.meta.shape,{size:44,icon:false,flat:true}):(v.id==='none'?'<span style="font:9px monospace;color:var(--fg-muted)">none</span>':'');
+    if(aid==='fill'){var bg=v.id==='none'?'repeating-linear-gradient(45deg,#0000,#0000 5px,#0002 5px,#0002 6px)':v.id==='wash'?'linear-gradient(135deg,var(--accent-gold-50),var(--accent-gold-soft))':v.id==='tint'?'color-mix(in srgb,var(--accent-gold) 22%,var(--paper))':'linear-gradient(135deg,var(--bg-surface),var(--paper-2))';return '<div style="width:100%;height:100%;background:'+bg+'"></div>';}
+    if(aid==='symbol'){var b=ICONS.get(v.id)||'';return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--accent-bronze)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+b+'</svg>';}
+    return '';
+  }
+})();
+</script>
+</body>
+</html>

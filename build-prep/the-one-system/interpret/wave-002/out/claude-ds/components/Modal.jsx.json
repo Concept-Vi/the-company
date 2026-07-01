@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "components/Modal.jsx",
+  "model": "opus",
+  "what_it_does": "React implementation of the Modal dialog using React.createElement (aliased h). Renders nothing when open is false; when open, renders a .cv-modal-overlay containing a .cv-modal panel (role=dialog, aria-modal=true) with an optional head (title h2 + close button), the children body, and an optional footer. Adds a keydown listener that calls onClose on Escape, and closes on backdrop click (target === currentTarget).",
+  "observations": [
+    "useEffect registers a document keydown listener only while open && onClose, cleaning it up on unmount/dependency change.",
+    "Returns null when !open (matches the .d.ts JSX.Element | null return).",
+    "Backdrop click handler only fires onClose when e.target === e.currentTarget (click on overlay, not the panel).",
+    "Head renders only if title or onClose exists; when no title but a close button exists, a flex:1 spacer span pushes the close button right.",
+    "Sets role='dialog' and aria-modal='true' on the panel; close button has aria-label 'Close' and renders a '×' glyph.",
+    "Uses inline style { flex: 1 } on the spacer span — a small inline-style literal.",
+    "Token-class wrapper over .cv-modal-overlay/.cv-modal/.cv-modal__head/__title/__close/__foot; no JSX, global React."
+  ],
+  "standouts": [
+    "Backdrop-only close via target===currentTarget guard (clicks inside the panel don't dismiss).",
+    "Escape handling scoped to open && onClose with proper listener cleanup."
+  ],
+  "conventions": [
+    "Class-driven styling referencing design-system modal classes (look lives in CSS) — matches single-source directive.",
+    "Controlled-component pattern (open/onClose) consistent with the .d.ts.",
+    "createElement instead of JSX; consumes a global React.",
+    "Accessibility: role=dialog, aria-modal, aria-label on close.",
+    "One inline-style literal ({flex:1}) on the spacer breaks the otherwise class-only styling."
+  ],
+  "concerns": [
+    "No focus trap or focus restoration / portal — focus management is not handled here.",
+    "Inline style { flex: 1 } is a styling literal in a component meant to be class-driven."
+  ],
+  "notes": "The Modal dialog runtime: a controlled overlay+panel class wrapper with Escape and backdrop-click close, ARIA dialog roles, and optional head/footer; renders null when closed.",
+  "questions": [
+    "Is the absence of a focus trap / portal intentional, or handled elsewhere?",
+    "Where are the .cv-modal* classes defined (referenced, not in this file)?"
+  ],
+  "purpose_vs_actual": "Match — header comment describes a controlled token-class modal that closes on backdrop/Escape/button and renders nothing when closed; the code implements exactly that and matches its .d.ts.",
+  "apparent_themes": [
+    "Controlled overlay with multiple close affordances",
+    "Class-as-styling single source",
+    "Accessibility-by-contract (dialog role, aria-modal, aria-label)"
+  ],
+  "intention_signals": "Aims to provide a minimal controlled modal whose appearance lives entirely in design-system classes, with conventional close behaviour and basic ARIA, without reimplementing styling.",
+  "novelty": "n/a",
+  "contribution": "Contributes the modal runtime — overlay/panel structure, Escape + backdrop-click close logic with listener cleanup, optional head/footer assembly, and the dialog ARIA wiring.",
+  "summary_for_embedding": "React Modal component built with React.createElement that renders a controlled .cv-modal-overlay/.cv-modal dialog with title, children, and footer, closing on Escape, backdrop click, or a close button, and rendering null when closed.",
+  "intention_for_embedding": "To provide a controlled, class-styled modal dialog with conventional close affordances and basic ARIA in the design system."
+}

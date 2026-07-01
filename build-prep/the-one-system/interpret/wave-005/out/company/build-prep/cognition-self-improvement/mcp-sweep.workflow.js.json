@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/mcp-sweep.workflow.js",
+  "model": "opus",
+  "what_it_does": "Defines a Workflow script that executes the MCP consolidation sweep in parallel. It dispatches five file-disjoint lane agents (create, marks, runs, node, rule), each building one consolidated mcp_face/tools/<resource>.py module that wraps existing Suite methods into a single resource+op tool, researching the codebase through the MCP (corpus op=query) to dogfood, verifying its module in isolation, and reporting the flat tool names to remove. It builds only — no server.py edits and no commit (a serial removal+commit pass follows).",
+  "observations": [
+    "LAWS constant restates the MCP-DESIGN-PRINCIPLE binding rules: resource+op (not flat-per-op), registry-is-truth enums, detail=concise|detailed, teaching fail-loud errors, design-for-coldest-consumer, the FLOOR as security boundary, reuse-don't-parallel (wrap existing Suite methods), file-disjoint lanes, verify-in-isolation, no commit, NO Gemini.",
+    "Verification rule: construct a throwaway FastMCP + Suite, call the module's register(mcp, suite), confirm registration and fire a sample op of each kind; bring company gpu up first if a model is needed.",
+    "Each lane writes a report JSON to build-prep/cognition-self-improvement/seam-lanes/mcpsweep-<lane>.report.json with lane/module/tool/ops/flat_tools_to_remove/how_verified/notes/new_suite_methods.",
+    "SCHEMA requires lane/module/flat_tools_to_remove/how_verified/status; status enum is built-verified|built-untested|blocked.",
+    "LANE CREATE is the largest (8->1) and additionally lifts an inline server.py create_projection into Suite.create_projection (the only lane allowed to touch runtime/suite.py), with a precise verified lift recipe (add a 'projection' row to _CORPUS_REGISTRIES, add a create_projection wrapper using _write_registry_file).",
+    "LANE CREATE addresses eval finding M4: create_role via MCP does not auto-reflect roles/AGENTS.md drift-home, so create's response must return a 'reflect_in' field naming the drift-home (self-teaching response, not silent gap).",
+    "LANE MARKS keeps the mark write separate (CQRS) and consolidates reads marks(by=target|type|findings).",
+    "LANE RUNS consolidates run/result reads but explicitly cautions against god-tooling distinct nouns (state/events) and asks the agent to be honest about what genuinely folds.",
+    "LANE NODE has explicit FLOOR care: confirm node(op=apply/propose) introduces no new escalation path for external agents.",
+    "Final log reports built count, module list, and total removals reported; returns { built }."
+  ],
+  "standouts": [
+    "File-disjoint parallelism enabled by file-discovered per-resource tool modules (each lane owns mcp_face/tools/<r>.py).",
+    "The precise, pre-verified create_projection lift recipe embedded directly in the lane prompt.",
+    "Dogfooding requirement: lanes research the codebase THROUGH the MCP (corpus op=query) rather than reading files directly."
+  ],
+  "conventions": [
+    "export const meta {name, description, phases} workflow header; phase()/parallel()/agent()/log() primitives.",
+    "Per-lane report JSON written to a seam-lanes directory; strict additionalProperties:false schema.",
+    "References the sibling MCP-DESIGN-PRINCIPLE.md as the binding law to read first."
+  ],
+  "concerns": [
+    "LANE CREATE writes both its module and runtime/suite.py while other lanes are file-disjoint; the comment scopes suite.py to the create lane only, so disjointness holds but it is the one cross-file lane to watch."
+  ],
+  "notes": "The parallel build half of the MCP consolidation: five lanes each producing one resource+op tool module by wrapping Suite methods, reporting flat tools to remove for a later serial server.py pass.",
+  "questions": [
+    "Where is the serial removal+commit pass (the follow-on that edits server.py and deletes the reported flat tools)?",
+    "Are the create_<kind> Suite methods truly all present except node, as the registry-is-truth derivation assumes?"
+  ],
+  "purpose_vs_actual": "Match — the header describes a parallel, file-disjoint, build-only consolidation sweep reporting removals, and the lanes implement exactly that.",
+  "apparent_themes": [
+    "Consolidation via resource+op modules",
+    "File-disjoint parallel agent lanes",
+    "Reuse-don't-parallel (wrap Suite, no second path)",
+    "Registry-is-truth and the FLOOR security boundary",
+    "Self-teaching responses (the M4 reflect_in fix)"
+  ],
+  "intention_signals": "Trying to mechanically execute the MCP-DESIGN-PRINCIPLE consolidation safely and in parallel, isolating shared-file risk to a later serial pass, while dogfooding the MCP and honoring the don't-god-tool and FLOOR constraints.",
+  "novelty": "Embedding an exact, author-verified code-lift recipe and a specific eval-finding fix (M4 reflect_in) directly into the dispatched agent prompts.",
+  "contribution": "Contributes the executable parallel sweep that turns the design principle's audit into per-resource consolidated tool modules, including the create_projection suite lift and the M4 self-teaching response requirement.",
+  "summary_for_embedding": "A company Workflow script that runs five parallel file-disjoint lanes (create/marks/runs/node/rule) each building one consolidated resource+op mcp_face/tools module wrapping Suite methods, verifying in isolation and reporting flat tools to remove, without editing server.py or committing.",
+  "intention_for_embedding": "To execute the MCP consolidation sweep in parallel by building per-resource tool modules and reporting removals for a later serial cleanup."
+}

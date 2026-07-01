@@ -1,0 +1,38 @@
+{
+  "project": "company",
+  "path": "attachment_types/board_items.py",
+  "model": "opus",
+  "what_it_does": "Declares a module-level ATTACHMENT_TYPE dict registering 'board_items' — noticeboard items (requests/issues/tips/guides/ideas) attachable to a channel. Specifies id, label, target_kind, multi flag, and description.",
+  "observations": [
+    "ATTACHMENT_TYPE keys: id ('board_items'), label ('Board items'), target_kind ('address'), multi (True), desc.",
+    "Inline comment on target_kind explains the target is board://<id>, opaque, resolved by stripping the scheme then calling cc_board.get_item.",
+    "multi: True indicates a channel can have many board-item attachments.",
+    "desc: 'a noticeboard item (board://<id>) bound to a channel — the channel's requests/issues/etc.'",
+    "Single-line module docstring summarizing the same intent."
+  ],
+  "standouts": [
+    "Defines an address-scheme contract: board://<id> resolved via cc_board.get_item.",
+    "target_kind 'address' (opaque reference) rather than an inline/embedded target."
+  ],
+  "conventions": [
+    "Seed-as-data dict pattern, same family as the ai_tics seed files but with attachment-type schema (target_kind/multi).",
+    "Uses an inline comment to encode the resolution protocol for the address scheme."
+  ],
+  "concerns": [],
+  "notes": "A registry seed declaring the 'board_items' channel-attachment type bound to board://<id> addresses resolved through cc_board.",
+  "questions": [
+    "What is the full set of valid attachment target_kind values besides 'address'?",
+    "Where is the board:// scheme parser / cc_board.get_item defined?"
+  ],
+  "purpose_vs_actual": "Match — declares the board_items attachment type exactly as the docstring states.",
+  "apparent_themes": [
+    "channel attachments as a typed registry",
+    "opaque address references (board://<id>) over embedded content",
+    "noticeboard items bound to channels"
+  ],
+  "intention_signals": "Registers a way to attach many noticeboard items to a channel via opaque board addresses, keeping the channel decoupled from item storage.",
+  "novelty": "An address-scheme attachment contract (board://<id> with strip-scheme resolution) declared as plain registry data.",
+  "contribution": "Contributes the 'board_items' attachment-type definition and its board:// address resolution contract to a fused attachment-type registry.",
+  "summary_for_embedding": "A Python seed file declaring the 'board_items' channel-attachment type targeting opaque board://<id> addresses resolved via cc_board.get_item.",
+  "intention_for_embedding": "To register noticeboard items as a multi-valued, address-referenced attachment type bindable to a channel."
+}

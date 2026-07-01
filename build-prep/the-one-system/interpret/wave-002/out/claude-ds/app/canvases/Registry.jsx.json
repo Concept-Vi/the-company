@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Registry.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the Registry canvas, re-framed as a 'Workshop Studio Floor' — instead of a typed-database browser it presents the type registry (window.CV_REGISTRY) organized by what the user can make (decks, brochures, widgets, wizards, shared materials). Each workstation has shelves that query the registry by layer/family and render TypeThumb tiles; users can search, inspect a type, add new types via a QuickAdder, and open an advanced Type Builder.",
+  "observations": [
+    "WORKSTATIONS is a hardcoded spine of five groups, each with a headline/sub/addPrompt and shelves whose query objects ({layer, family}) drive R.query.",
+    "Reads/queries window.CV_REGISTRY and subscribes to it (R.subscribe) bumping a tick to re-render on registry changes — UI is a projection of the registry.",
+    "userAdditions counts types whose provenance is 'user' or 'vi' per workstation, shown as a '+N custom' badge.",
+    "Composes sub-components: RegistryFloor, Workstation, Shelf, ShelfTile, FloatingAddButton (defined here) plus TypeInspector, ViStudioRail, QuickAdder, TypeThumb (referenced as window.* or assumed in scope).",
+    "Shelf supports an onlyExtending filter (e.g. 'doc.wizard') applied after query, and threads the search string into the query.",
+    "ShelfTile is thumbnail-first with name/provenance revealed on hover; tile class encodes provenance (cv-prov-<provenance>).",
+    "QuickAdder onSaved opens the new type in the inspector; onAdvanced routes to the builder.",
+    "Registers window.Registry; aliases hooks as *_reg (useRef_reg imported but unused at top level)."
+  ],
+  "standouts": [
+    "The deliberate reframing (comment block: 'instead of a typed database browser, the Registry is a walk through your Workshop's capabilities... organised by WHAT YOU CAN MAKE, not by abstract layer').",
+    "The interface is constructed as a pure projection of CV_REGISTRY via query + subscribe, matching the project's 'interface is a projection of the registries' non-negotiable.",
+    "Provenance-aware presentation (built-in vs user vs vi) surfaced both as per-tile tags and per-workstation custom counts.",
+    "Vi is always present via ViStudioRail, contextualized to the inspected type."
+  ],
+  "conventions": [
+    "Follows window-global registration and React-via-globals; reads CV_REGISTRY through register/query/subscribe as the project mandates.",
+    "Uses rs-* class names (a distinct namespace from dsa-*) for this workshop-floor layout.",
+    "Extend-by-registration philosophy mirrored in the UI: 'Add' shelves and a QuickAdder register new types rather than hand-laying components."
+  ],
+  "concerns": [
+    "Two components (Registry and Shelf) each independently call R.subscribe in an effect with [] deps; the returned unsubscribe is returned from the effect (ok) but the double-subscription pattern means many subscribers — minor, but worth noting.",
+    "useRef_reg and the shelf-level effect's subscribe duplicate the parent's subscription; potential redundant re-renders.",
+    "Several referenced components (TypeInspector, ViStudioRail, QuickAdder) are not defined in this file, so the file alone cannot confirm their contracts.",
+    "WORKSTATIONS queries hardcode layer/family taxonomy here; if the registry's families change this spine must be hand-updated."
+  ],
+  "notes": "The registry browser reimagined as a capability-oriented 'workshop floor': workstations→shelves→thumbnail tiles projected live from CV_REGISTRY, with inspect/add/advanced-build and an ever-present Vi rail.",
+  "questions": [
+    "Where are TypeInspector, ViStudioRail, and QuickAdder defined and what are their full prop contracts?",
+    "What does onOpenBuilder open (the 'Advanced' Type Builder) and where does it live?",
+    "Is the WORKSTATIONS family taxonomy authoritative, or derived from the registry elsewhere?"
+  ],
+  "purpose_vs_actual": "Match — the file's own header comment states the intent (capability-oriented workshop floor, edit-on-thumb, Vi always present) and the implementation delivers that structure.",
+  "apparent_themes": [
+    "Interface as a live projection of the registry",
+    "Organize by what-you-can-make, not abstract layer",
+    "Provenance transparency (built-in vs user vs vi) and extend-by-registration"
+  ],
+  "intention_signals": "Aims to make the type registry approachable by framing it around the user's real questions ('what goes inside your decks?') and keeping the UI a synchronized projection of CV_REGISTRY, with Vi and a quick-add path always at hand.",
+  "novelty": "Reframes a registry/database browser as a 'workshop floor' of capability questions, with thumbnail-first tiles and provenance-driven styling, rather than a typed-layer table.",
+  "contribution": "Contributes the capability-oriented Registry canvas: a workstation→shelf→tile projection of CV_REGISTRY (queried by layer/family, filtered by search/extends), provenance badges/counts, and the inspect/add/advanced-build + Vi-rail composition.",
+  "summary_for_embedding": "A React Registry 'Workshop Floor' canvas that projects window.CV_REGISTRY as workstations and shelves of thumbnail type-tiles (queried by layer/family), with search, provenance counts, inspect, quick-add, and an always-present Vi rail.",
+  "intention_for_embedding": "To make the type registry navigable by what the user can make rather than abstract layers, as a live projection of CV_REGISTRY with inspect/add/Vi assistance built in."
+}

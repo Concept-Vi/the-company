@@ -1,0 +1,51 @@
+{
+ "project": "company",
+ "path": "build-prep/cognition-self-improvement/rg10_redescribe.py",
+ "model": "opus",
+ "what_it_does": "Re-describe pass over panel-flagged dossiers. For each class=='panel' entry in reconciled.json not yet redescribed, it rebuilds the real element unit (from the batch artifact's cluster_members[0] and candidates.json), collects the panel seats' named dissents, and re-fires register_element with those dissents as an explicit correction plus the full grounding package. The corrected dossier is then re-checked: refcheck (refloor), check_prose (deterministic prose floor), and two seats (confirm_registration + element_fit_lens). It passes only if refcheck passes AND prose passes AND at least 2 of the 3 seats are grounded; on pass the entry becomes class='confirmed', else stays 'panel' with new named seat dissents. Updates reconciled.json in place (prior_dossier kept, redescribed stamped), with periodic checkpointing every 10 and a time budget.",
+ "observations": [
+  "Targets CONTENT defects specifically: docstring says the 77 remaining flags carry both content lenses' dissents (mis-described elements, e.g. 'claims it pauses the tour; the text says it opens the workshop').",
+  "Builds reg_v as a spec-copied register_element variant with input_addresses ('utterance','ground','exemplars','inventory'), same as the reask pass.",
+  "element_of caches loaded artifacts in arts dict and resolves the unit via _unit_of(sel[rep]).",
+  "Correction text feeds the ungrounded seats' reasons and instructs: describe only what the element shows, do not invent interactions, plain prose.",
+  "Pass criterion is explicit: rc.passed and pc.passed and grounded_seats >= 2 (quorum 2).",
+  "Seats list includes a deterministic 'prose_floor (deterministic)' pseudo-seat alongside the two model seats.",
+  "Idempotent via the 'redescribed' flag; prior_dossier preserved with a get-default guard.",
+  "Per-entry try/except records 'error: <Type>: <msg>' into redescribed and appends to failed — fail-loud per entry.",
+  "Time budget default 1800s, overridable via argv; checkpoints reconciled.json every 10 processed.",
+  "Recounts all classes at end and persists."
+ ],
+ "standouts": [
+  "Re-description is gated on a triple floor (refcheck + deterministic prose + 2/3 seats) — passing one is not enough.",
+  "Named seat dissents are fed back as the exact correction, mirroring the reask pass's rejection-as-feedback pattern but for content/description quality.",
+  "A deterministic prose floor sits as a seat next to model seats, blending hard rules with judged grounding."
+ ],
+ "conventions": [
+  "Family pattern: os.chdir, sys.path inserts, in-place reconciled.json updates, refine-before-gating framing, 'PROPOSES only'.",
+  "Reuse of registry_generation_run helpers and runtime cognition; spec-copy Role variant identical in shape to rg10_reask.",
+  "Idempotency stamp + prior_dossier capture (no-versioning discipline)."
+ ],
+ "concerns": [
+  "Line 97 sets prior_dossier with e.get('prior_dossier', e['dossier']) — if an entry was already redescribed once, the ORIGINAL prior_dossier is kept and the immediately-prior dossier is overwritten without being captured; only first-prior is retained across repeats.",
+  "Broad `except Exception` swallows all error types into a string field, which can mask non-transient bugs as per-entry failures.",
+  "The class name 'panel' is the target here, but rg10_rejury also produces class='panel'; ordering between the two passes is implied but not enforced within this file."
+ ],
+ "notes": "Re-describe pass for content-misdescription flags: feeds panel seats' dissents back into register_element and re-confirms a corrected dossier against a triple floor (refcheck + prose + 2/3 seats), confirming it or leaving it flagged with fresh named dissents.",
+ "questions": [
+  "What populates class='panel' entries with a 'panel' object carrying seats before this pass runs (is rg10_rejury a prerequisite)?",
+  "Does element_fit_lens require the raw element unit, and what happens to the seat if unit rebuild partially succeeds?"
+ ],
+ "purpose_vs_actual": "Match — docstring describes feeding both content lenses' dissents back to register_element and re-gating through refcheck + prose + seats, which the code implements.",
+ "apparent_themes": [
+  "Rejection/dissent-as-feedback for content quality",
+  "Triple floor (deterministic + judged) before confirmation",
+  "Refine-before-gating: exhaust buildable refinements before the human gate",
+  "In-place no-versioning capture with prior_dossier",
+  "Fail-loud per entry, time-bounded composable batches"
+ ],
+ "intention_signals": "Automatically repair mis-described elements by re-prompting with the exact content dissents and re-confirming against hard + judged floors, so genuinely-grounded descriptions confirm and stubborn ones stay flagged with explicit reasons.",
+ "novelty": "A content-focused re-description loop that combines deterministic prose checking with model grounding seats as co-equal seats under one quorum.",
+ "contribution": "Contributes the content-defect repair stage of the RG10 pipeline, distinct from the fact-check reask: it fixes mis-descriptions (not fabricated feature ids) and re-gates against a combined prose+refcheck+seat floor.",
+ "summary_for_embedding": "A re-describe pass that feeds panel seats' content dissents back into register_element and re-confirms the corrected dossier against refcheck, a deterministic prose floor, and 2-of-3 grounding seats, updating reconciled.json in place.",
+ "intention_for_embedding": "To automatically repair mis-described UI elements by re-prompting with the exact content dissents and re-gating through hard and judged floors before the human review."
+}

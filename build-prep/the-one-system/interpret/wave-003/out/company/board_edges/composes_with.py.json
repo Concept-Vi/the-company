@@ -1,0 +1,40 @@
+{
+  "project": "company",
+  "path": "board_edges/composes_with.py",
+  "model": "opus",
+  "what_it_does": "Defines a single RELATION_TYPE dict for the 'composes_with' board edge: a directed, conceptual edge declaring that one addressed perspective/claim composes or builds together with another into one mechanism.",
+  "observations": [
+    "Module-level RELATION_TYPE constant only.",
+    "directed=True, label='composes-with'; no inverse key is defined.",
+    "desc frames it as a CONCEPTUAL edge between addressed perspectives/claims (the harvest's RELATIONS).",
+    "States it is first-class on the board specifically so the linking layer parses it rather than collapsing it to 'references'.",
+    "Notes it is surfaced by-use during the wind-down harvest (recollection)."
+  ],
+  "standouts": [
+    "Explicit design note that it must NOT be collapsed into the generic 'references' edge.",
+    "Tied to a 'wind-down harvest / recollection' process."
+  ],
+  "conventions": [
+    "Follows the board_edges RELATION_TYPE pattern (id/directed/label/desc).",
+    "Omits the inverse key, unlike some sibling edges (commented_on/part_of/promoted_from/references)."
+  ],
+  "concerns": [
+    "No inverse defined while the desc implies a symmetric-ish 'combine into one mechanism' relation; whether reverse traversal is intended is unclear from this file alone."
+  ],
+  "notes": "A conceptual 'these two ideas combine into one mechanism' edge, kept distinct from generic references for the harvest layer.",
+  "questions": [
+    "Is the absence of an inverse intentional (truly directed) or an omission?",
+    "What is the 'wind-down harvest (recollection)' that surfaces this edge?"
+  ],
+  "purpose_vs_actual": "Match: desc states a conceptual composition edge and the dict declares that edge.",
+  "apparent_themes": [
+    "Conceptual relations between claims/perspectives",
+    "Preserving relation granularity instead of collapsing to a generic link",
+    "Composition / building-together as a first-class idea"
+  ],
+  "intention_signals": "Trying to capture how distinct perspectives or claims combine into a single mechanism, keeping that semantic separate so a linking/harvest layer can reason about it.",
+  "novelty": "A relation specifically for 'these ideas compose into one mechanism', distinguished from cross-reference at the schema level.",
+  "contribution": "Contributes the conceptual composition edge between addressed claims/perspectives, with the explicit non-collapse-to-references semantic for the harvest layer.",
+  "summary_for_embedding": "A board relation-type definition for 'composes_with', a directed conceptual edge declaring that two addressed perspectives/claims combine into one mechanism.",
+  "intention_for_embedding": "To preserve, as a first-class board edge, that distinct claims compose into one mechanism rather than being flattened to a generic reference during the harvest."
+}

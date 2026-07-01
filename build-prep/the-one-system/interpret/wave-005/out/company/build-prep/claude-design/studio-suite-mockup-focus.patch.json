@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/studio-suite-mockup-focus.patch",
+  "model": "opus",
+  "what_it_does": "A git diff patch to runtime/suite.py that teaches the Suite turn-builder to recognize a new `mockup://<file>` value inside focus.selected, read the corresponding static HTML mockup from design/mockups/, and inject its (byte-capped) raw content into the live-state grounding block so the right-hand-man can explain the mockup the operator is reviewing.",
+  "observations": [
+    "Adds a `mockups` filter alongside the existing `indicated` (ui://) filter, extracting values starting with 'mockup://'.",
+    "Excludes mockup values from `selected` so they aren't treated as node ids.",
+    "Validates the filename against regex [A-Za-z0-9._-]+\\.html (bare basename, no path).",
+    "Uses os.path.realpath + os.path.commonpath containment check against design/mockups to prevent path traversal.",
+    "Caps injected HTML at 14000 chars and appends an explicit truncation notice when exceeded.",
+    "Injects a long natural-language preamble instructing the model that this is a static design artifact (not the live app) and to explain it at plain-language altitude for an operator who doesn't read code.",
+    "Emits distinct refusal/error strings for bad names and missing files, surfaced into the context honestly.",
+    "Repo root computed via dirname(dirname(abspath(__file__)))."
+  ],
+  "standouts": [
+    "mockup:// rides the SAME focus.selected list as ui:// — described as widening the focus vocabulary (Seam 4), explicitly 'never a new mechanism'.",
+    "Grounding discipline: the mockup content must be in the LIVE-STATE block because the grounding rule refuses to answer about anything not in that block.",
+    "Fail-loud truncation — the model is told it was truncated, never fed a partial as if whole."
+  ],
+  "conventions": [
+    "Mirrors the bridge's _safe_mockup_path containment approach for path safety.",
+    "Follows the honest-surfacing convention (refusals/markers never silently dropped).",
+    "Inline comments cite advisor guidance and numbered rules (rule 4), matching repo's provenance-commenting style.",
+    "Local import of re inside the branch (import re as _re) rather than at module top."
+  ],
+  "concerns": [
+    "Local `import re as _re` inside a loop is unusual; minor file-local smell.",
+    "CAP of 14000 chars is a magic constant defined inline; one large mockup could still dominate the window even when truncated.",
+    "No charset/HTML stripping — raw HTML (including markup noise) is fed to the model by deliberate choice, deferred until a test fails."
+  ],
+  "notes": "A patch making the turn-builder treat `mockup://file.html` focus selections as ground truth by safely reading the static mockup HTML into the grounded live-state block.",
+  "questions": [
+    "What is the bridge's _safe_mockup_path that this mirrors, and does it use the same regex/cap?",
+    "Where does the mockup:// value originate in the frontend (the Review workspace) before reaching focus.selected?"
+  ],
+  "purpose_vs_actual": "n/a (patch file; inline comments describe intent that matches the diff)",
+  "apparent_themes": [
+    "Grounding / refusing to answer about unseen content",
+    "Vocabulary widening over new mechanisms",
+    "Path-safety containment",
+    "Fail-loud over silent partial",
+    "Explaining for a non-code-reading operator at the right altitude"
+  ],
+  "intention_signals": "Trying to let the right-hand-man speak truthfully about a design mockup the operator is viewing by injecting the mockup's real content into the grounded context, reusing the existing focus.selected mechanism rather than inventing a new channel.",
+  "novelty": "The mockup:// addressing scheme that smuggles static design-artifact content into the live grounding block via the same selection list as live ui:// addresses.",
+  "contribution": "Contributes the server-side mockup-review grounding: safe filename validation, path containment, capped raw-HTML injection, and the explain-at-altitude preamble for review turns.",
+  "summary_for_embedding": "A patch to runtime/suite.py adding mockup:// focus handling that safely reads design/mockups HTML into the grounded live-state block for the right-hand-man to explain.",
+  "intention_for_embedding": "To ground the right-hand-man's answers in the actual content of a static design mockup the operator is reviewing, reusing focus.selected without a new mechanism."
+}

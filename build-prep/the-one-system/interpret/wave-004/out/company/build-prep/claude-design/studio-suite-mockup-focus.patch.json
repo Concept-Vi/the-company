@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/studio-suite-mockup-focus.patch",
+  "model": "opus",
+  "what_it_does": "A git diff patch to runtime/suite.py that extends the focus-handling logic of the Suite class to recognize a new `mockup://<file>` address in the same focus.selected list as ui:// addresses. When present, it path-safely loads the referenced static HTML mockup from design/mockups/, caps its size at 14000 bytes (with a fail-loud truncation marker), and injects its raw content into the turn's live-state context block so the right-hand-man can read the design mockup for the operator and explain it.",
+  "observations": [
+    "Adds parsing of mockup:// entries from raw_selected, filtered out of the node-id `selected` list",
+    "Validates the filename with a regex requiring a bare <name>.html basename (no paths)",
+    "Resolves the repo root via os.path.dirname twice on __file__ and constructs design/mockups/<name>",
+    "Uses os.path.realpath + os.path.commonpath containment check to prevent path traversal outside design/mockups/",
+    "Three honest failure messages injected into ctx: refused (bad name), cannot see (no file), or the content block",
+    "Reads file with errors='replace' and caps at CAP=14000 chars, appending an explicit truncation notice",
+    "Injects a long natural-language instruction telling the model this is a static HTML design artifact (not the live app) and to explain it at plain-language altitude for a non-code-reading operator",
+    "mockup:// check happens BEFORE the node-id filter so it isn't swallowed as a non-existent node"
+  ],
+  "standouts": [
+    "Comments cite 'seams-rhm Seam 4' and frame this as WIDENING the existing focus vocabulary, 'never a new mechanism'",
+    "Comment notes it mirrors the bridge's _safe_mockup_path for path safety",
+    "Comment cites an advisor decision to inject RAW HTML rather than pre-build an extraction pipeline unless a test shows truncation/junk",
+    "Explicitly invokes the grounding rule: a filename alone would correctly draw 'I can't see that'"
+  ],
+  "conventions": [
+    "Honest/fail-loud surfacing — never silently drop or feed partial content as whole (cites 'rule 4')",
+    "Path-safety via realpath + commonpath containment, mirroring an existing helper",
+    "ui://-style address vocabulary extended rather than replaced",
+    "Dense rationale-bearing inline comments with provenance, consistent with repo discipline"
+  ],
+  "concerns": [
+    "import re aliased as _re is done inside the loop block (functional but unusual placement)"
+  ],
+  "notes": "A patch teaching the Suite turn-builder to load a static mockup HTML into live-state when the operator selects a mockup:// focus, so the right-hand-man can read the design for a non-code operator.",
+  "questions": [
+    "What is the bridge's _safe_mockup_path that this mirrors, and where is it defined?",
+    "Where does the mockup:// value originate in the frontend focus payload?",
+    "Is 14000 chars sufficient for typical mockups, or will truncation be common?"
+  ],
+  "purpose_vs_actual": "n/a (patch; the diff implements exactly the mockup-grounding behavior its comments describe)",
+  "apparent_themes": [
+    "Grounding: the model may only speak about content present in the live-state block",
+    "Operator does not read code — the right-hand-man reads artifacts for them",
+    "Vocabulary widening over new mechanisms",
+    "Path safety and fail-loud honesty",
+    "Decision provenance encoded in comments (advisor, seam references)"
+  ],
+  "intention_signals": "Trying to let the operator point at a developer-authored design mockup and have the assistant explain it in plain language, by reusing the focus.selected channel and the grounding-block contract rather than building a new review pipeline.",
+  "novelty": "The mockup:// focus address that rides the existing ui:// selected list and injects raw static HTML into the grounded live-state so a non-code operator can be walked through a design they cannot read themselves.",
+  "contribution": "Contributes the server-side mockup:// resolution: parsing, path-safe loading from design/mockups/, size-capping, honest failure messaging, and the grounded explain-this-mockup context injection.",
+  "summary_for_embedding": "Patch to runtime/suite.py adding mockup:// focus handling that path-safely loads a static design mockup's HTML into the grounded live-state block.",
+  "intention_for_embedding": "To let the right-hand-man read a developer-authored design mockup for a non-code operator and explain what they are looking at."
+}

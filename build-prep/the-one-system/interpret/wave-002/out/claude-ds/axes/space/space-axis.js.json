@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "axes/space/space-axis.js",
+  "model": "opus",
+  "what_it_does": "Defines the 'space' axis — a typed view over the strict 8px spacing scale (--s-* tokens in colors_and_type.css) — and registers it on window.CV_AXES. It enumerates 14 spacing steps (s0 through s24, 0px→96px), grouped into inner/between/layout, each pointing at its spacing token with an informational meta.px.",
+  "observations": [
+    "IIFE guarded on window.CV_AXES; errors and returns if axis-core hasn't loaded.",
+    "steps array maps [id, token, px]: s0/0, s1/4, s2/8, s3/12, s4/16, s5/20, s6/24, s7/32, s9/40, s12/48, s14/56, s16/64, s20/80, s24/96.",
+    "Step ids skip numbers (s7 then s9, s9 then s12…) — the numeric suffix loosely tracks the px/4 ratio but isn't strictly sequential.",
+    "Values built by mapping: id, label ('16px' style), token (s-0…), zero:true when px===0, group by index (0-3 inner, 4-7 between, else layout), meta.px.",
+    "Header states meta.px is informational only — the token remains the source.",
+    "default is 's4' (16px).",
+    "Group threshold via index position."
+  ],
+  "standouts": [
+    "Explicit note that meta.px is informational only and the token is authoritative — a clear single-source stance.",
+    "The 8px-rhythm framing makes the spacing scale a generative axis like size/motion.",
+    "Three usage groups (inner / between siblings / layout) give consumers semantic buckets over a raw ramp."
+  ],
+  "conventions": [
+    "Same CV_AXES.make/register pattern as the other axes.",
+    "Single-home discipline: values reference --s-* tokens; meta.px explicitly non-authoritative.",
+    "Guard-and-return idiom at top.",
+    "Index-derived grouping, consistent with size-axis.js."
+  ],
+  "concerns": [
+    "The px numbers are inlined alongside token names; meta.px is labelled informational, but if --s-* token values change these numbers drift silently — mitigated by the explicit 'token is the source' note but still a second copy of the value.",
+    "Step id numbering is irregular (s7→s9→s12…) which could confuse consumers expecting contiguous ids."
+  ],
+  "notes": "The 'space' axis = the typed 8px spacing ramp (--s-* tokens, 0→96px) grouped inner/between/layout; meta.px is informational, the token is the source; default s4 (16px).",
+  "questions": [
+    "Why are step ids non-contiguous (s7 then s9, s9 then s12)? Do the suffix numbers correspond to a multiplier the consumer relies on, or are they just labels?"
+  ],
+  "purpose_vs_actual": "Match — the header describes a typed view over the 8px --s-* scale with informational meta.px, and the code builds exactly that ramp.",
+  "apparent_themes": [
+    "Axis as a typed/ordered view over existing spacing tokens.",
+    "Single source of truth (the --s-* tokens), meta.px explicitly secondary.",
+    "8px rhythm / systematic spacing scale.",
+    "Semantic grouping of a raw ramp by usage."
+  ],
+  "intention_signals": "To offer 'the spacing steps the system provides' as one queryable axis over the 8px token scale, so all gaps/padding/margins dial from one home rather than each consumer picking arbitrary spacing.",
+  "novelty": "n/a",
+  "contribution": "Contributes the 'space' dimension of the axis model — the typed, grouped 8px spacing ramp over --s-* tokens with informational px metadata.",
+  "summary_for_embedding": "A JS IIFE registering the 'space' axis on window.CV_AXES as a typed view over the 8px --s-* spacing tokens (s0→s24, 0-96px) grouped inner/between/layout, with informational meta.px.",
+  "intention_for_embedding": "To give the system's 8px spacing scale one home as a generative axis so gaps, padding, and margins all dial from the same token ramp."
+}

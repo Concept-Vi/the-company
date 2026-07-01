@@ -1,0 +1,54 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Patterns.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a 'Motion & space' React canvas that lets the user view and edit four token scales — spacing, radii, shadows, motion (easings + durations) — each in its own tabbed sub-panel with live editing, per-token lock, copy-var, revert, a snapshot/compare feature, and a live preview card that uses all four scales. It also has a 'Generate with Vi' panel and per-shadow 'Refine' that call window.CV_AI.complete to propose JSON token edits the user can adopt.",
+  "observations": [
+    "Hardcoded BASE_* arrays define the default scales: 13 spacing steps (8px base + 4px half), 7 radii (4→pill 999), 6 warm-tinted shadows, 5 motion tokens.",
+    "edits/setEdit/snapshot/setSnapshot/locked/toggleLock are props — the component edits a session token-overrides object owned by the parent.",
+    "generate() builds a long brand-context prompt (ivory paper #FBF7EC, ink #1F1A12, gold #E0C010, warm shadows, 8px spacing) and asks for compact JSON {intent, entries[]}, with a regex fallback to extract JSON from non-strict replies.",
+    "Locked tokens are passed to the prompt as 'keep exactly' and skipped during adopt; adoptOne/adoptAll respect the lock.",
+    "Shadow panel embeds a RefinePop that calls CV_AI to revise a single box-shadow value, again parsing {value} JSON with regex fallback.",
+    "Motion panel renders the cubic-bezier curve as an SVG path with an animateMotion play dot, plus a CSS-keyframe slide demo (dsa-pat-slide) replayed via a playKey counter.",
+    "PatternPreviewBlock applies token values as inline CSS custom properties on a local style object so the snapshot preview is isolated from :root edits.",
+    "Numeric inputs clamp values (spacing max 400, radii max 120, duration max 3000) and re-emit as px/ms strings.",
+    "Registers window.Patterns; aliases hooks as useState_pt/useMemo_pt (useMemo imported but unused).",
+    "An animateMotion dur reads editsObj['dur-base'] || '600ms' (uses the edited base duration to time the curve replay)."
+  ],
+  "standouts": [
+    "Three distinct CV_AI touchpoints with shared JSON-with-regex-fallback parsing: bulk generate, per-shadow RefinePop refine — all constrained to the warm paper aesthetic in-prompt.",
+    "Lock mechanism is honored both in the UI and inside the generation prompt ('LOCKED tokens to keep exactly'), so AI proposals respect user-pinned values.",
+    "Snapshot/compare: takes a frozen copy of edits and renders it side-by-side with live edits via isolated inline custom properties.",
+    "Live SVG bezier curve + animated play dot makes easing tokens directly legible and replayable."
+  ],
+  "conventions": [
+    "Follows window-global registration (window.Patterns) and React-via-globals; tokenized look via CSS vars and dsa-* classes.",
+    "Routes all model calls through window.CV_AI.complete per the AI-registry directive; never calls a provider directly.",
+    "The edit-as-override pattern (edits object keyed by token name, setEdit(name, undefined) to revert) is consistent across all four panels.",
+    "Default values live in the BASE_* arrays in this file rather than being read from the token registry — a potential second home for token defaults."
+  ],
+  "concerns": [
+    "BASE_SPACING/RADII/SHADOWS/MOTION duplicate token default values inline; if the real token registry diverges these defaults silently drift from the system's actual tokens.",
+    "JSON-parse fallbacks swallow parse errors silently (empty catch blocks), surfacing only a generic toast.",
+    "useMemo_pt is imported but never used.",
+    "proposal.entries keyed by array index; minor but fragile.",
+    "The shadow textarea and easing/value inputs accept free-form strings with no validation before setEdit, so an invalid CSS value could be adopted."
+  ],
+  "notes": "A four-scale (spacing/radii/shadow/motion) token-tuning canvas with per-token lock, snapshot compare, a unified live preview, and three CV_AI-driven proposal flows constrained to the brand aesthetic.",
+  "questions": [
+    "Are the BASE_* defaults meant to mirror the real token registry, and if so how are they kept in sync?",
+    "Where do edits/snapshot/locked actually persist, and how does 'Export to disk' turn them into a CSS patch?",
+    "Is RefinePop defined elsewhere and shared, given it is used here without definition?"
+  ],
+  "purpose_vs_actual": "Match — the header ('Spacing · radii · shadows · motion — tokens that quietly hold every component together') matches the implemented four-scale token editor with live preview and AI proposals.",
+  "apparent_themes": [
+    "Tokens as the editable single source for look-and-feel",
+    "AI proposals constrained by an explicit brand aesthetic and user locks",
+    "Direct manipulation with live, isolated preview and compare"
+  ],
+  "intention_signals": "Aims to let the user retune the system's quiet structural tokens by direct manipulation or AI proposal, while protecting locked values and the paper-first aesthetic, and seeing the effect immediately in one representative card.",
+  "novelty": "Combines token editing, per-token locking that AI must respect, a frozen snapshot/compare via isolated inline custom properties, and a live SVG bezier-curve replay in one canvas.",
+  "contribution": "Contributes the motion-and-space token-tuning canvas: four scale editors, lock/snapshot/revert UX, an all-four-scales live preview, and three brand-constrained CV_AI proposal flows (bulk generate, per-shadow refine) with robust JSON-fallback parsing.",
+  "summary_for_embedding": "A React 'Motion & space' canvas editing spacing/radii/shadow/motion tokens with per-token lock, snapshot compare, live preview, and CV_AI-driven JSON token proposals constrained to a warm paper aesthetic.",
+  "intention_for_embedding": "To let the user retune the design system's structural tokens by hand or via AI proposals that respect locked values and the brand aesthetic, seeing the effect live in one card."
+}

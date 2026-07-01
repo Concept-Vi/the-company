@@ -1,0 +1,55 @@
+{
+  "project": "claude-ds",
+  "path": "core/RenderType.jsx",
+  "model": "opus",
+  "what_it_does": "Implements the bridge between the type registry and the rule engine: a JSX-free React component that resolves a CV_REGISTRY Type (or a typeId via a registry/CoreTypes) and its data into the shared solver IR via typeToNode, then renders it through window.__cvContainmentTree (and DiagramSolver) under the axis dials. blockToNode maps the whole WS_BLOCKS block taxonomy into core atom roles/clusters/zones/diagrams; widgetToNode maps a widget doc into a Zone tile; CoreTypes exposes the core archetype catalogue as registry-shaped seeds.",
+  "observations": [
+    "h = React.createElement; JSX-free, read via window.<NS>; registers window.__cvRenderType and window.__cvTypeToNode.",
+    "REGISTER meta-dial maps presenter↔reader to combined lod+density+motion, but any explicit prop overrides it (separable).",
+    "blockToNode has a large switch over block keys (headline, body, quote/pullquote/bigQuote, callout, button, divider, image, imageGrid/showcase, bullets, checklist, icons/chipRow, palette, pillars, logoStrip, stats/statPills/metricRow, featureCards, labeledCard, statTable, bio/photoBio, contactCard, hexBadge, comparison, hero, process/funnel/timeline/tagCluster/orgDiagram) mapping each to atom/cluster/zone/diagram IR.",
+    "Each mapped atom carries edit/editValue/editLabel paths for inline editing, threaded through to the engine.",
+    "Diagram blocks (process/funnel/timeline/tagCluster/orgDiagram) emit kind:'diagram' with a graph spec handed to the graph solver.",
+    "embedWidget/embedWizard intentionally throw — cross-doc embeds belong to the widget engine (WidgetRender), not the slide solver.",
+    "typeToNode dispatches by type.layer/family: surface+deck-slide → window.__cvArchetypes.build (throws if not loaded); doc → recurse over slides/sections/pages into a node sequence; content.graph → diagram node; system/surface+widget → widgetToNode; else blockToNode.",
+    "LOUD failures throughout: missing __cvContainmentTree, missing archetype builders, unresolved type, and the embed blocks all throw rather than degrade.",
+    "widgetToNode builds a Zone tile from a widget doc (eyebrow/title/kpis/rows/media/chart/cta) with a __bodyOnly mode for hosts supplying their own chrome; charts/deltas noted as placeholders until a dataviz atom (W7).",
+    "CoreTypes reads window.CV_ARCHETYPE_CATALOG (single-source catalogue), throwing if absent; seedInto registers many into a CV_REGISTRY instance silently; get/resolve give a standalone lookup so RenderType works without the app registry.",
+    "RenderType resolves axis {lod,surface,density}, builds IR, and renders either a single node or a gap-stacked column of nodes (for a doc sequence)."
+  ],
+  "standouts": [
+    "blockToNode is a faithful re-expression of the entire block taxonomy in the core atom vocabulary with no new atoms invented — the explicit 'atom/block weld' (UNIFICATION W3).",
+    "Loud-fail discipline is pervasive: six distinct throw sites for missing engine, missing archetypes, unresolved types, and mis-routed embeds — no silent degradation.",
+    "Inline-edit paths (edit/editValue/editLabel) are computed for every mapped field, including string-vs-object item handling, so direct manipulation survives the type→IR translation.",
+    "CoreTypes makes the core catalogue the single source the app seeds from, structurally preventing a parallel archetype list (W2)."
+  ],
+  "conventions": [
+    "Strict adherence to single-source: reuses existing archetype builders and atom roles, invents no new atom, seeds the app from one catalogue.",
+    "Loud-fail-never-silent throughout, matching the project's non-negotiable.",
+    "JSX-free h=React.createElement, self-registers on window, paired with its .d.ts.",
+    "The 'interface is a projection of the registry' principle — typeToNode dispatches purely off layer/family/runtime, no parallel structure."
+  ],
+  "concerns": [
+    "blockToNode is a long single-function switch; adding a block means a new code branch here rather than a registry entry, concentrating the taxonomy in one growing function.",
+    "REGISTER's 'motion' key is part of the meta-dial here but motion is not in CVAxis (cv-nodes.d.ts) — the dial set is wider than the typed axis.",
+    "Several mappings assume item shape (string vs object) and index-based edit paths; malformed data could produce mislabeled edit paths silently (the one place degradation is quiet rather than loud)."
+  ],
+  "notes": "The bridge: resolves any registry Type into the shared solver IR (block taxonomy → core atoms, widgets → zones, docs → sequences) and renders it through the one engine, failing loud when the engine/catalogue is missing.",
+  "questions": [
+    "Should the block taxonomy in blockToNode eventually move to registry data rather than a code switch, per the system's extend-as-data ideal?",
+    "Is 'motion' meant to be added to CVAxis, given REGISTER and RenderType both thread it but the type omits it?",
+    "Where does onEdit originate at the top call site — RenderType passes it down but the .d.ts RenderTypeProps does not declare it?"
+  ],
+  "purpose_vs_actual": "Matches strongly: declared as THE BRIDGE welding the type system to the engine (UNIFICATION W1) and the code does exactly that — resolve Type+data → solver IR → render through the one engine, with CoreTypes single-sourcing the catalogue (W2) and blockToNode the atom/block weld (W3).",
+  "apparent_themes": [
+    "unification: one bridge welding registry to engine",
+    "single source of truth / no parallel catalogue",
+    "loud fail never silent",
+    "interface as a projection of the registry",
+    "inline-editable, direct-manipulation content"
+  ],
+  "intention_signals": "Trying to make every registry Type — blocks, widgets, deck slides, whole docs — render through the single rule engine by translating each into the shared core vocabulary, so the type system and the solvers stop being two isolated halves and the app seeds its catalogue from one place.",
+  "novelty": "The complete, no-new-atom re-expression of an entire block taxonomy into a small core atom vocabulary, plus a dispatch that routes by layer/family (surface→archetype, doc→sequence, graph→diagram, widget→zone, else block) with loud failure at every seam.",
+  "contribution": "Contributes the actual translation + dispatch layer that turns any registry Type and its data into the shared solver IR and renders it under the axis dials, plus the CoreTypes seed catalogue — the seam a fused system would keep to bind types to rendering.",
+  "summary_for_embedding": "JSX-free React bridge that resolves a CV_REGISTRY Type and its data into the shared solver IR (block taxonomy→atoms, widgets→zones, docs→sequences) and renders it through the core engine under axis dials, with loud-fail seams and a single-source archetype seed catalogue.",
+  "intention_for_embedding": "To weld the type registry to the rule engine by mapping every Type into the one core vocabulary and rendering it through the single engine, single-sourcing the archetype catalogue."
+}

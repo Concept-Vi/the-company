@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "app/components/Resizable.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React `Resizable` component that lays out children as horizontal columns separated by draggable gutters; non-flex column widths persist to localStorage keyed by a storageKey, and dragging a gutter resizes the adjacent column within min/max bounds. Exposes the component on window.Resizable.",
+  "observations": [
+    "Destructures React hooks into suffixed local aliases (useState_rz, useEffect_rz, useRef_rz) from a global React, not via ES imports.",
+    "cols config takes {id, size, min, max}; size can be a number or the string 'flex'; exactly one column is meant to be 'flex'.",
+    "localStorage key is namespaced 'cvstudio:resizable:' + storageKey; load and save are wrapped in try/catch that silently fall back.",
+    "Drag math: a gutter normally resizes the column on its LEFT, but if that column is the flex one, it resizes the RIGHT column with inverted dx instead.",
+    "Default fallbacks scattered in drag logic: starting size 240, min 120, max 560.",
+    "Gutter div carries role='separator' and aria-orientation='vertical' and toggles a 'dragging' class.",
+    "Uses React.Children.toArray and pushes column+gutter elements into a flat array per child."
+  ],
+  "standouts": [
+    "The flex-column special-case in drag handling (invert dx, shift target index) so the elastic column is never the one being sized.",
+    "Layout state survives reloads via namespaced localStorage with graceful try/catch degradation."
+  ],
+  "conventions": [
+    "Follows the no-ESM, window-global, hooks-from-global-React pattern of this DS app.",
+    "Namespaces persisted keys under 'cvstudio:' consistent with usePersisted.js.",
+    "Attaches component to window at file end (window.Resizable = Resizable)."
+  ],
+  "concerns": [
+    "Magic numbers (240, 120, 560) hardcoded as fallbacks rather than derived from col config or tokens.",
+    "Mouse-only drag handlers (mousemove/mouseup); no touch/pointer support.",
+    "parsed[i] || c.size on load treats a stored 0 as falsy and reverts to default size."
+  ],
+  "notes": "A self-contained, localStorage-persisting multi-column resizer with a clever flex-column drag inversion; mouse-only and globals-based per this app's style.",
+  "questions": [
+    "Is the 'flex' column guaranteed to be exactly one by callers, given the drag logic assumes adjacency to it?",
+    "Is touch input intentionally out of scope?"
+  ],
+  "purpose_vs_actual": "Matches: the header comment describes a horizontal split with draggable gutters and persisted non-flex sizes, which is exactly what the code does.",
+  "apparent_themes": [
+    "Persisted user layout / spatial state",
+    "Direct-manipulation UI",
+    "Global-registry component style"
+  ],
+  "intention_signals": "Aims to give the studio a reusable, brand-consistent split-pane layout (left rail / main / right rail) whose proportions the user can tune and that remembers them.",
+  "novelty": "The deliberate rule that the gutter never resizes the flex column (redirecting to the neighbor with inverted delta) is an uncommon, intentional handling choice.",
+  "contribution": "Contributes a localStorage-persisting, flex-aware multi-column resizer primitive with accessible gutter semantics that a fused system would keep for tunable split-pane layouts.",
+  "summary_for_embedding": "React Resizable component rendering children as draggable, localStorage-persisted horizontal columns with min/max bounds and a flex-column drag-inversion rule, exposed on window.",
+  "intention_for_embedding": "To provide a reusable, layout-remembering split-pane primitive for the studio's left/main/right rail surfaces."
+}

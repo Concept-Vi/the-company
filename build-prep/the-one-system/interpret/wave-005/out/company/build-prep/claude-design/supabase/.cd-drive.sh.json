@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/.cd-drive.sh",
+  "model": "opus",
+  "what_it_does": "A bash 'drive handle' script that mints a design_client JWT for a throwaway test user and exercises the connector Edge Function's security gates A–H against a local Supabase stack — RLS reads/writes, fail-closed tool allow-listing, an inlet ingest, audit-row inspection, and an audit-before-dispatch fail-closed test.",
+  "observations": [
+    "Targets Edge Function at 127.0.0.1:8773/mcp and Supabase API at 127.0.0.1:15421.",
+    "Embeds the supabase-demo ANON and SERVICE_ROLE JWTs inline as variables.",
+    "Mints a token via password grant for design-test@company.local / TestPass123! and exits with FAIL if no token returned.",
+    "Defines a call() helper that POSTs JSON-RPC tools/call requests with the minted bearer token.",
+    "Gate A: lists channels expecting only the granted shared 'design' channel via RLS.",
+    "Gate B: posts to granted 'design' expecting success.",
+    "Gate E/F: posts to non-granted 'internal-only-fake' expecting a 403 RLS dispatch error.",
+    "Gate G: calls cc_clone (not in client allow-list) expecting a REFUSED isError.",
+    "Inlet test: calls claude_design ingest_bundle expecting success.",
+    "Reads connector_audit rows using the service_role key.",
+    "Gate H: revokes INSERT on connector_audit via docker exec psql, sends a post (expecting audit-pending-failed and NO persisted post), compares channel_posts counts before/after, then re-grants INSERT."
+  ],
+  "standouts": [
+    "Gate H proves audit-before-dispatch: if the audit insert can't happen, the write must not persist (verified by before/after row counts).",
+    "Gate G proves fail-closed tool allow-listing rather than relying solely on RLS.",
+    "Directly manipulates the live DB grants via docker exec to simulate audit failure, then restores them."
+  ],
+  "conventions": [
+    "Follows the lettered-gate (A–H) verification convention referenced elsewhere in this design work.",
+    "Uses python3 inline one-liners to parse JSON from curl, a recurring pattern in these scripts.",
+    "Self-documents creds as LOCAL THROWAWAY, not boundary, not prod, gitignored."
+  ],
+  "concerns": [
+    "Embeds service_role and anon JWTs plus a test password in plaintext (local/demo keys, but still in-repo).",
+    "Mutates database grants on a shared local DB mid-run; an aborted run before the re-grant would leave INSERT revoked.",
+    "set -u only (no -e/pipefail); a failing curl mid-script won't necessarily halt subsequent gates."
+  ],
+  "notes": "A self-contained security smoke-test that drives the connector Edge Function through eight RLS/allow-list/audit gates against a local Supabase, including a destructive-then-restored grant toggle.",
+  "questions": [
+    "What is the full set of gates and what do C and D cover (only A,B,E/F,G,H are explicitly labeled here)?",
+    "What is the connector's audit-before-dispatch implementation that gate H is validating?"
+  ],
+  "purpose_vs_actual": "Stated purpose (drive handle to mint a design_client JWT and exercise gates A–H) matches what the script does.",
+  "apparent_themes": [
+    "Fail-closed security (allow-list + audit-before-dispatch)",
+    "RLS-enforced channel access",
+    "Verify-by-use / live-local verification",
+    "Honest audit trail"
+  ],
+  "intention_signals": "Trying to prove, against a live local stack, that the connector enforces channel RLS, refuses non-allow-listed tools, and will not persist a write when its audit record can't be written.",
+  "novelty": "The audit-before-dispatch destructive test (revoke INSERT, confirm no persistence, re-grant) as an executable proof.",
+  "contribution": "Contributes an executable security-gate verification harness for the connector Edge Function covering RLS, allow-list refusal, inlet ingest, and audit-before-dispatch.",
+  "summary_for_embedding": "A bash script that mints a test design_client JWT and runs connector Edge Function security gates A–H (RLS, allow-list, ingest, audit-before-dispatch) against a local Supabase.",
+  "intention_for_embedding": "To verify the connector's fail-closed security gates live against a local Supabase stack before trusting them."
+}

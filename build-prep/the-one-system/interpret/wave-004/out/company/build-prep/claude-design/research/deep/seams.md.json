@@ -1,0 +1,40 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/deep/seams.md",
+  "model": "opus",
+  "what_it_does": "A deep read-only mine of the ~/company backend (commit state 2026-06-08) characterizing the integration seams a design surface needs: the address grammar, the focus→locus→context-at-address channel, the address-keyed read/write methods (chat, address_help, annotate, attach_chat, presentation_pref, up_translate, resolve_scope, address_view), the /api/act click-emission seam, and the SSE event spine. It corrects the task's premise by proving with file:line citations that 4 of 5 'net-new' seams are already BUILT, and isolates the two genuine gaps.",
+  "observations": [
+    "Headline correction table: I2 /api/act, I4 address→tier gate, R1 backend-held locus, L1 /api/intent-at all proven BUILT with suite.py/bridge.py line numbers; only R2 standalone GET /api/context?address= and an R2-knob setter are DESIGNED-NOT-BUILT",
+    "Documents the address grammar from contracts/address.py: run:// cas:// blob:// vec:// ui:// code:// schemes, and the ui:// three-form grammar (region/element/corpus-region-only) gated by parse_ui_address",
+    "Traces the focus→locus→context channel step by step through suite.py line numbers: focus sets self._current_locus (R1, last-wins, session-persistent), R2 reads the held locus via current_locus()",
+    "Gives the verified R2 scoring formula: recency=exp(-lambda*age), proximity=address_tree_distance, semantic=cosine, plus pin_bonus, capped to R2_BUDGET; weights are composition_config knobs exposed read-only",
+    "Includes a full built-seam contract table (method, route, inputs, outputs, event emitted, surface need) and a net-new status table",
+    "Documents provenance grading on ingest_comment: operator comment → user/operator/gold (trains the twin); non-operator → assistant/twin/working (never trains)",
+    "Ends with 5 key findings for Claude Design centered on the focus→locus channel as the load-bearing connection"
+  ],
+  "standouts": [
+    "The headline correction that 4 of 5 'net-new' seams are already built, with file:line proof, reversing the task's framing",
+    "The two isolated real gaps: standalone GET /api/context?address= route and an R2-knob setter route (composition_config is read-only)",
+    "The verified R2 score formula with named composition_config knobs"
+  ],
+  "conventions": [
+    "Carries an explicit status legend (BUILT+REACHABLE / BUILT-NO-FE / DESIGNED-NOT-BUILT) and tags every seam",
+    "Every claim is backed by a file:line citation, following the repo's evidence-requirements discipline",
+    "Frames findings around the fail-loud and registry-is-truth laws (empty scope = DENY-ALL, S0 grammar gate raises on malformed)"
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the authoritative seam contract for the backend integration surface — read it to learn what address-keyed routes already exist and that only the context-at-address GET route and the R2 knob setter remain to build.",
+  "questions": [],
+  "purpose_vs_actual": "Match — states it goes deeper than the capability-map on seams and delivers a per-seam contract with built/gap status, fulfilling that stated purpose.",
+  "apparent_themes": [
+    "address-keyed everything (ui:// as the routing key for reads, writes, events, governance)",
+    "verify-before-claiming (file:line proof overturns the task's net-new premise)",
+    "fail-loud and DENY-ALL fail-safety",
+    "the locus as backend-held session state, not FE-ephemeral"
+  ],
+  "intention_signals": "Trying to give a design session an accurate, evidence-grounded map of the backend seams so it composes on existing routes rather than re-specifying or rebuilding them — and to correct a wrong assumption before it wastes a build.",
+  "novelty": "The systematic file:line refutation of the 'net-new' premise and the precise isolation of exactly two remaining gaps amid a sea of already-built capability.",
+  "contribution": "Contributes the definitive backend-seam contract layer: the route table, the verified R2 scoring formula, the focus→locus→context trace, and the exact built-vs-gap status of each address-keyed seam — the integration ground-truth a fused system would keep for wiring any surface to the backend.",
+  "summary_for_embedding": "A file:line-cited deep mine of ~/company's backend integration seams (address grammar, focus→locus→context channel, address-keyed read/write routes, /api/act, SSE spine) proving 4 of 5 'net-new' seams already built and isolating two real gaps.",
+  "intention_for_embedding": "To give Claude Design an accurate, evidence-grounded backend seam contract so it composes on existing routes instead of rebuilding them, correcting the net-new premise."
+}

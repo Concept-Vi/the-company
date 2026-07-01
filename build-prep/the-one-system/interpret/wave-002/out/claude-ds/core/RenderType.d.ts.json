@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "core/RenderType.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration for the bridge module: defines CVType (the CV_REGISTRY type schema with id/name/layer/family/runtime/defaults/slots), RenderTypeProps (a resolved type or a typeId+registry to resolve, plus data, extending CVAxis), and declares the RenderType component, the typeToNode mapper (Type+data → solver IR), and the CoreTypes object exposing core archetypes as registry-shaped Type seeds.",
+  "observations": [
+    "Imports CVNode and CVAxis from ./cv-nodes — types against the shared node system.",
+    "CVType.layer is the 7-rung union: token|atom|block|system|surface|doc|template.",
+    "RenderTypeProps accepts either a resolved type object OR a typeId plus an optional registry (defaulting to window.CV_REGISTRY, then CoreTypes) — two resolution paths.",
+    "Doc comment names RenderType 'THE BRIDGE' that welds the type system to the engine (UNIFICATION.md W1).",
+    "typeToNode declared to return { node?: CVNode; nodes?: CVNode[] } (single node or a doc sequence).",
+    "CoreTypes declared with archetypeSeeds/seeds/seedInto/get/resolve — the core's catalogue exposed registry-shaped so the app single-sources from the bundle (W2).",
+    "CVType uses an index signature [k:string]:any for open extension."
+  ],
+  "standouts": [
+    "Encodes the unification architecture in types: the bridge takes a registry Type and emits the shared solver IR, and CoreTypes lets the app's registry seed from the bundle rather than declaring parallel stubs.",
+    "Two-mode prop contract (resolved type vs typeId+registry) typed explicitly, including the default-registry fallback chain in the comment."
+  ],
+  "conventions": [
+    "Paired .d.ts + .jsx for the core component, consistent with the project.",
+    "References the shared CVNode/CVAxis types (single source) rather than redefining them.",
+    "Heavily JSDoc-annotated, tying each export to a UNIFICATION work-item (W1/W2)."
+  ],
+  "concerns": [],
+  "notes": "The typed contract for the bridge between CV_REGISTRY and the solvers — declares RenderType, the typeToNode IR mapper, and the CoreTypes seed catalogue.",
+  "questions": [
+    "CVType.runtime is {kind:string; key?:string} here — is 'key' the same value keyOf() relies on in the .jsx for dispatch?",
+    "Does the index signature [k:string]:any imply Types carry arbitrary extra fields the bridge reads, beyond the declared ones?"
+  ],
+  "purpose_vs_actual": "Matches: declared as the bridge that resolves a registry Type into solver IR and renders it under the axis dials, which is exactly the surface it types.",
+  "apparent_themes": [
+    "unification: welding the type system to the rule engine",
+    "single-source catalogue (seed from the bundle)",
+    "one bridge, two resolution paths",
+    "typed self-description of the architecture"
+  ],
+  "intention_signals": "Trying to give a stable typed handle on the seam between the registry and the engine, so consumers can render any registry Type through the one engine and the app can seed its catalogue from the same core module without duplication.",
+  "novelty": "n/a",
+  "contribution": "Contributes the typed definition of the bridge surface — CVType, RenderTypeProps, typeToNode, and the CoreTypes seed API — that joins the registry world to the solver world.",
+  "summary_for_embedding": "TypeScript declaration of RenderType the bridge, plus the CVType schema, the typeToNode IR mapper, and the CoreTypes seed catalogue exposing core archetypes registry-shaped.",
+  "intention_for_embedding": "To type the bridge that resolves a CV_REGISTRY Type and its data into the shared solver IR and renders it through the one engine."
+}

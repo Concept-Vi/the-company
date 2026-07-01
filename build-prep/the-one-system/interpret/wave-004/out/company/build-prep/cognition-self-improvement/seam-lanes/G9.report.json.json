@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/G9.report.json",
+  "model": "opus",
+  "what_it_does": "Records the outcome and by-use verification of the G9 build lane, which added a deterministic 'verdict-tally' reduce-rule to mcp_face/server.py and saved a 'verify-jury' cascade to the live store. Reports files written, new reduce rules, saved cascades, status, a blocked end-to-end note, and design notes.",
+  "observations": [
+    "files_written: mcp_face/server.py and .data/store/cascades.json; new_reduce_rules: ['verdict-tally']; saved_cascades: ['verify-jury'].",
+    "verdict-tally collects each output's 'verdict' field (pass|fail|uncertain) and returns {tally, n, verdicts}: 'fail' if any fail, 'green' iff non-empty and all pass, else 'flag'.",
+    "Key deviation from literal spec: a non-empty guard closes the all([])==True trap so a zero-juror set routes to 'flag' instead of green.",
+    "Verified by unit tests over mock verdict-sets, a real-store round-trip, and a full live chain via run_items + run_reduce on the resident chat-4b.",
+    "Reports floor suites green: mcp_engine_acceptance 35/35, cognition_governance_acceptance 42/42, reduce_acceptance 28/28, cascade_acceptance 25/25, drift 5/5.",
+    "needs_tim states run_cascade('verify-jury') END-TO-END is BLOCKED by a cross-lane gap: the cascade path uses a separate _CASCADE_REDUCE_RULES in runtime/suite.py:842 that parallels mcp_face/server.py:_REDUCE_RULES, and verdict-tally was only added to the latter (editing suite.py forbidden in this lane).",
+    "Captures the literal fail-loud message from run_cascade and proposes single-sourcing the two parallel dicts as a SYSTEM-GAPS entry.",
+    "Documents that with the rule injected in-memory as a fixture, run_cascade ran end-to-end, confirming the dict is the only blocker (not G3).",
+    "Self-classifies status as built-verified and states it explicitly did not green-paint the canonical run_cascade path."
+  ],
+  "standouts": [
+    "The non-empty guard against vacuous green (all([])==True) as a deliberate spec deviation for a verification jury.",
+    "The verified-not-inferred BLOCKED end-to-end, attributed to a parallel rule registry between server.py and suite.py.",
+    "Refusal to green-paint: the deliverable's by-use checks never call run_cascade, stated openly."
+  ],
+  "conventions": [
+    "Follows the seam-lane report schema with extra fields (new_role_ids, new_reduce_rules, saved_cascades).",
+    "Mirrors the existing count/concat/first reduce-rule lambda shape and the single-source _REDUCE_RULES pattern so derived listings/errors stay consistent.",
+    "Honors file-disjoint scope (only server.py + cascades.json) and not-committed instruction."
+  ],
+  "concerns": [],
+  "notes": "A build-lane status record: G9 added the verdict-tally reduce-rule and saved the verify-jury cascade, but reports the canonical cascade run still fails loud until a parallel rule dict in suite.py is updated.",
+  "questions": [
+    "Is the parallel _CASCADE_REDUCE_RULES / _REDUCE_RULES drift hazard scheduled to be single-sourced, and by which lane?"
+  ],
+  "purpose_vs_actual": "Matches — a build report recording what the lane built, plus an honest blocked-path caveat.",
+  "apparent_themes": [
+    "Determinism as the floor (a pure reduce-rule, no model)",
+    "Guard against false-pass (vacuous green)",
+    "Fail-loud over silent green; no green-paint"
+  ],
+  "intention_signals": "Aims to complete the verification jury's tally step deterministically and surface (rather than hide) the cross-lane registry gap that blocks the saved cascade from running end-to-end.",
+  "novelty": "The explicit vacuous-green guard and the verified attribution of an end-to-end block to a built-twice parallel rule registry.",
+  "contribution": "Contributes the verdict-tally rule definition, its vacuous-green guard rationale, and the documented parallel-dict drift between server.py and suite.py, which a fused system would keep as both the rule's provenance and a flagged single-source target.",
+  "summary_for_embedding": "A seam-lane JSON report documenting the G9 addition of a deterministic verdict-tally reduce-rule and a saved verify-jury cascade, with a verified end-to-end block on a parallel cascade rule registry.",
+  "intention_for_embedding": "To complete the verification jury's deterministic tally step while flagging the cross-lane rule-registry gap that prevents the saved cascade from running."
+}

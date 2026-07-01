@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/studio-fe-wiring.patch",
+  "model": "opus",
+  "what_it_does": "A git diff patch that wires a new top-level 'review' workspace into the canvas frontend. It edits canvas/app/src/App.tsx to add a view-switch (canvas vs review) state and a chip UI toggling between the tldraw canvas shell and a new <Review> region, and edits canvas/app/vite.config.ts to add dev-server proxy routes for /mockups and /design-system.css to the same backend target as /api.",
+  "observations": [
+    "Imports a new Review region component into App.tsx",
+    "Adds useState<'canvas' | 'review'>('canvas') to Hud() as a single source of truth for the active workspace",
+    "Adds a .view-switch chip with two buttons (◧ canvas, ▦ review) carrying data-ui-ref='ui://view-switch'",
+    "Renders <Review/> wrapped in a PanelErrorBoundary named 'review' when view==='review'",
+    "Hides the .app-shell via inline style display:none when in review mode so canvas chrome doesn't bleed over",
+    "Both views mount inside the same AppContext.Provider so the right-hand-man machinery is shared",
+    "vite proxy gains /mockups and /design-system.css routes pointing at VITE_API_TARGET (default http://localhost:8770) for same-origin iframe staging of mockups via the bridge"
+  ],
+  "standouts": [
+    "Inline comments attribute the design decision to Tim on 2026-06-08 ('a separate workspace, separate from the canvas')",
+    "Deliberately router-free: 'Minimal by design — no router, just a mode + a switch chip'",
+    "The tldraw board keeps running underneath both views (App() owns <Tldraw>)"
+  ],
+  "conventions": [
+    "Uses data-ui-ref='ui://...' addressing scheme on the switch control",
+    "Wraps regions in named PanelErrorBoundary (defense-in-depth pattern referenced in surrounding comments)",
+    "Heavy inline comments documenting rationale and attribution, consistent with the codebase's self-description discipline"
+  ],
+  "concerns": [],
+  "notes": "A patch that adds a canvas/review view-switch to the frontend shell plus vite proxies for serving the mockup review corpus same-origin.",
+  "questions": [
+    "Does the Review region component already exist at ./regions/Review, or is it introduced by a separate patch?",
+    "What backend serves /mockups and /design-system.css on port 8770 (referred to as 'the bridge')?"
+  ],
+  "purpose_vs_actual": "n/a (patch file; the diff content matches its evident intent of wiring a review workspace)",
+  "apparent_themes": [
+    "Shared machinery across views (same AppContext for both canvas and review)",
+    "Minimalism / avoid extra infrastructure (no router)",
+    "Same-origin static serving for iframe-staged design mockups",
+    "Decision provenance encoded in code comments"
+  ],
+  "intention_signals": "Trying to introduce a second top-level workspace (Review) for examining design mockups with the right-hand-man, without restructuring the app, by reusing existing context/error-boundary patterns and a simple mode toggle.",
+  "novelty": "The 'separate workspace, same machinery' approach — a mode switch that swaps the rendered workspace while keeping the underlying tldraw board and AppContext alive — and routing mockups through the same dev proxy for same-origin iframe staging.",
+  "contribution": "Contributes the canvas↔review view-switch mechanism and the vite proxy entries that let the Review workspace serve mockups/design-system.css same-origin through the bridge.",
+  "summary_for_embedding": "Git patch wiring a router-free canvas/review view-switch into the frontend App shell and adding vite dev proxies for /mockups and /design-system.css.",
+  "intention_for_embedding": "To add a separate Review workspace for design-mockup review that reuses the same AppContext and right-hand-man machinery as the canvas."
+}

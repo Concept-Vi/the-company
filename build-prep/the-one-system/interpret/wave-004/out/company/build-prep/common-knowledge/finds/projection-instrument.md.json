@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/finds/projection-instrument.md",
+  "model": "opus",
+  "what_it_does": "A per-member append-only 'finds' log owned by the session 'projection' (the Instrument, /home/tim/company). It records that the company's real, live operable interface already exists as 'the Instrument' (surface/app, the radial projection wheel) bound to the live substrate via the bridge's one resolver; documents the common_knowledge substrate-to-face binding as verified-by-use through the live project() MCP door; and records the resolved D2 decision that the loadable brain is a function of the scale axis (FOCUS at overlord altitude, PANEL at drill).",
+  "observations": [
+    "Same shared finds header/discipline; projection notes it is a cron build-loop that send+polls (not push-subscribed), so this file is its primary contribution channel.",
+    "Documents 'THE INSTRUMENT' in surface/app (the radial projection wheel) bound to the substrate via runtime/bridge.py build_projection and the MCP doors mcp__company__project / __layers — a face bound to the live store as a navigable field, not a built screen.",
+    "Lists the four axes as drivable controls: SCALE=rung, TIME=?at= scrubber, FRAME=?emb= layer + ?center= vantage, plus sub-type axes, directional-edge wheels (by_node_type, by_cascade), and the keystone (nucleation -> born candidate-operators).",
+    "Verification-state for the Instrument is verified-by-use: live on desktop 1440x900, mobile portrait 390x844, landscape 844x390 with a discrete classify(w,h) layout switch, design-critic-passed, MCP doors verified end-to-end.",
+    "Documents the common_knowledge seam (projections/common_knowledge.py, commit 6648660) and the publish path runtime/cognition.embed_corpus_to_spaces (pplx, dim-2560).",
+    "Records a closed render-proof: project(space=common_knowledge, center=code://.../sync.test.ts, emb=pplx) returns r=0.0 at the centred unit, r=0.06 for a near unit, r=1.0 for an unrelated unit (radius = cosine meaning-distance), with fail-loud on wrong/omitted emb.",
+    "Records D2 resolved (lead-accepted a529de3): the loadable brain is a function of the scale axis — FOCUS (the RHM brain) at overlord altitude, PANEL (run_turn, real Claude Code, full tools) at drill; spawn dropped.",
+    "Frames the Instrument as both the counterexample to and the template for the EMERGING_SHAPE ('the interface IS the binding act') — the binding has been done once and should be extended, not re-found.",
+    "Distinguishes verified-by-use (the Instrument, the render proof) from built-unverified (the brain wire) from design-only (the click-to-talk assembly, gated on fork's territory_for)."
+  ],
+  "standouts": [
+    "The headline claim: the real live interface already exists (surface/app, the Instrument) and is the binding act done once — extend it rather than rebuild.",
+    "The closed comprehend->publish->project()->resolve() render proof with concrete cosine radii (0.0 / 0.06 / 1.0) and verified fail-loud on wrong addressing.",
+    "D2: the same scale axis that selects the projection's resolution selects the brain AND the altitude — the four axes as the interface's control grammar."
+  ],
+  "conventions": [
+    "Follows the shared finds format and append-only discipline; cites file paths and commit hashes; honest verification-state labeling.",
+    "Reuse-don't-parallel framing (recollection's Option A publish-into-a-space chosen over a parallel chroma read; projection holds the FE wire until the seam locks).",
+    "Address-as-meeting-point convention (contracts.address as the binding contract; space-parametric rendering)."
+  ],
+  "concerns": [
+    "The brain wire is built-unverified and the click-to-talk assembly is design-only/gated, so the 'binding act' is fully proven only for the read/render path, not the talk path, at the time of writing.",
+    "Live-state claims (served on :8443, on Tim's phone) are time-sensitive."
+  ],
+  "notes": "projection's finds log — the company's real live interface is the Instrument (surface/app) already bound to the substrate via one resolver, with a closed common_knowledge render proof and the scale-axis-selects-brain (D2) decision.",
+  "questions": [
+    "Has the click->talk assembly (the brain wire + FE seam) been completed and verified-by-use since this was written?",
+    "Is ui://instrument/surface given a registered identity so the default surface aim resolves to real meaning rather than a scheme-noun?"
+  ],
+  "purpose_vs_actual": "Matches: header declares a per-member append-only finds log feeding the lead; the body delivers projection's Instrument-side finds and the D2 decision in that form.",
+  "apparent_themes": [
+    "The interface IS the binding act (a face bound to the live substrate, done once as the Instrument).",
+    "One resolver, many sources; address as the meeting point; space-parametric projection.",
+    "The four axes as the control grammar (scale picks projection AND brain AND altitude).",
+    "Verified-by-use through the live MCP door; fail-loud over silent fallback.",
+    "Reuse-don't-parallel; extend the seed rather than re-find it."
+  ],
+  "intention_signals": "projection is establishing that the binding act the wave is hunting has already been achieved once in the Instrument, and that the comprehend->publish->project->resolve spine is a closed demonstrated circuit, so the rest of the interface should be the same binding extended (the four axes as control grammar, the brain selected by scale) rather than rebuilt.",
+  "novelty": "The concrete, cosine-radius render proof of the common_knowledge binding through a live MCP door, and the framing of the running radial Instrument as both counterexample and template for the binding-act shape.",
+  "contribution": "Contributes the projection/Instrument ground truth: the one built-and-bound operable surface (the radial wheel, tri-form-factor, verified-by-use), the closed common_knowledge render proof, and the scale-axis-selects-brain control grammar (D2) — the reference binding a fused system would keep as the template to extend.",
+  "summary_for_embedding": "projection's append-only finds log documenting the Instrument (surface/app radial projection wheel) as the company's live face bound to the substrate via one resolver, a closed common_knowledge render proof, and the scale-axis-selects-brain (D2) control grammar.",
+  "intention_for_embedding": "To establish that the interface's binding act is already done once in the Instrument and the comprehend-publish-project-resolve spine is closed, so the rest of the interface extends that binding rather than rebuilding it."
+}

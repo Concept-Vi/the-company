@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/G1.report.json",
+  "model": "opus",
+  "what_it_does": "A lane completion report (the seam-lanes report artifact) for lane G1. It records that the lane added two new MCP tools to mcp_face/server.py — run_draft (single fire) and run_draft_items (the MAP over N units) — that fire an inline draft role spec without registering or committing it, closing SYSTEM-GAPS G1. The report documents what was built, the reuse path, the floor invariant held, a detailed how_verified narrative, status:built-verified, an empty needs_tim, and notes on file-disjointness and follow-ups.",
+  "observations": [
+    "Documents the G1 problem: run_role/run_items take a registered role id, so a one-off classify forced create_role (a committed throwaway role + index race) or dropped below the MCP.",
+    "Both tools consume a draft FIELD-SPEC dict (same shape create_role/dry_run_role consume) and route through the existing _resolve_role(dict) → authoring.load_role_from_source → tempdir RoleRegistry → shutil.rmtree in a finally (never writes roles/).",
+    "Reports refactoring shared wrapper tails into two helpers (_fire_role_and_persist, _run_items_and_shape) so run_role/run_draft and run_items/run_draft_items stay byte-identical (described as behaviour-preserving, not copy-paste).",
+    "FLOOR HELD: the draft role is tempdir-only and rmtree'd, never committed; tools emit run:// computation only; verified by assertion plus the floor scan (cognition_governance_acceptance 42/42).",
+    "Verification was in-process (the new tool not in this harness's deferred mcp__company__* set) by importing mcp_face.server and calling the @mcp.tool() function directly.",
+    "A look-at-output anecdote: a terse 1-line prompt + 64 tok first returned empty 'kind' strings; investigated and isolated to small-model prompt/token sensitivity, NOT a draft-path bug (explicit prompt + 128 tok returned 3 distinct correct classifications).",
+    "Adversarial checks: a bad id and an unfireable spec (no prompt_template) both fail loud (AuthoringError / ValueError) and leak no file.",
+    "Regression suites cited as passing: mcp_engine_acceptance 35/35, mcp_use.py real stdio client, cognition_governance_acceptance 42/42.",
+    "git diff touched only mcp_face/server.py (+86/-3); other dirty paths attributed to concurrent sessions and explicitly not touched.",
+    "Follow-ups flagged but not built: serving on the operator FE/bridge is a separate lane; G3/G4 remain open; a permanent draft-tool acceptance test suite deferred to keep the lane file-disjoint."
+  ],
+  "standouts": [
+    "The look-at-output discipline is documented in situ: an empty-output observation was investigated and diagnosed as model prompt/token sensitivity rather than accepted or papered over.",
+    "The lane deliberately did NOT add a test file because a second file would break its ONLY-mcp_face/server.py file-disjoint constraint — the constraint shaped what was left undone."
+  ],
+  "conventions": [
+    "Conforms to the seam-lane report schema (lane, files_written, new_mcp_tools, new_role_ids, how_verified, status, needs_tim, notes) with extra descriptive keys (title, what_built, reuse, floor).",
+    "REUSE-DON'T-PARALLEL: routes through the existing engine functions read-only rather than building a new path.",
+    "Verify-by-use with concrete asserted observations and named test counts.",
+    "Explicit file-disjoint accounting and a do-not-commit note (next loop beat commits)."
+  ],
+  "concerns": [],
+  "notes": "This is G1's done-report: two ephemeral-draft MCP run tools built on the existing engine, floor held (roles/ stayed clean), verified in-process plus regression suites, not committed.",
+  "questions": [
+    "Why was the new tool absent from this harness's deferred mcp__company__* set, requiring in-process verification instead of a live MCP call?",
+    "When will the deferred draft-tool acceptance test suite and the operator-FE/bridge serving lane be scheduled?",
+    "What is the contract for the draft field-spec dict's optional keys (input_addresses, requires, op) when fired ephemerally?"
+  ],
+  "purpose_vs_actual": "Matches: the report's lane/title declare G1 the MCP draft/one-off run path, and the body documents exactly that being built and verified.",
+  "apparent_themes": [
+    "Ephemeral computation without registry pollution",
+    "The deterministic floor (run:// only, no committed role, fail-loud)",
+    "Reuse over parallel paths (shared helpers, existing engine)",
+    "Verification by use with adversarial and regression coverage",
+    "File-disjoint lane discipline and deferred follow-ups"
+  ],
+  "intention_signals": "It seems to be trying to prove, with traced evidence, that the one-off draft-run path was added by reusing the engine, never leaks a role file, holds the floor, and passes regression — while honestly flagging what was intentionally left for later beats.",
+  "novelty": "Reports an in-process verification of an MCP tool (because it wasn't in the deferred set) and a documented diagnosis distinguishing a small-model output artifact from a code bug.",
+  "contribution": "Contributes the verified completion record for the run_draft / run_draft_items ephemeral-run path: the exact reuse seam (_resolve_role → tempdir → rmtree, shared helpers), the floor assertions (roles/ byte-identical), and the regression evidence a fused system would keep as proof of how G1 was closed.",
+  "summary_for_embedding": "A built-verified lane report for G1 documenting two new MCP tools (run_draft, run_draft_items) that fire an inline un-committed draft role spec via the existing engine, with floor assertions that roles/ stays clean and named regression suites passing.",
+  "intention_for_embedding": "To record, with traced evidence, that the SYSTEM-GAPS G1 one-off draft-run path was built by reusing the engine, holds the no-commit floor, and passes regression, without committing."
+}

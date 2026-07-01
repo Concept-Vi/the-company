@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "preview/_card.css",
+  "model": "opus",
+  "what_it_does": "A small shared stylesheet providing the common frame for design-system preview cards. It imports the colour/type tokens, resets html/body margins, sets body font/colour/background from tokens with antialiasing, and defines a handful of layout/utility classes: .card (padded full-size container), .card-row (flex wrap row), .card-grid (grid), .label (uppercase muted caption), and .mono (mono secondary text).",
+  "observations": [
+    "@import of ../colors_and_type.css pulls in the token definitions this file consumes.",
+    "Body uses var(--font-body), var(--fg-primary), var(--bg-canvas) plus -webkit-font-smoothing: antialiased.",
+    ".card uses border-box, width:100%, min-height:100%, 24px 28px padding.",
+    ".card-row is a flex row (center-aligned, gap 16px, wrap); .card-grid is a grid with gap 16px (no template).",
+    ".label is 11px 600 uppercase with 0.08em letter-spacing in var(--fg-muted).",
+    ".mono is var(--font-mono) 12px var(--fg-secondary).",
+    "Contains a few hardcoded px values (24/28/16/11/12px, 0.08em) rather than spacing tokens."
+  ],
+  "standouts": [
+    "Tiny shared frame — only fonts/colours come from tokens; spacing/sizes are literal px."
+  ],
+  "conventions": [
+    "Follows the token-reference convention for colour and font (var(--font-body)/--fg-*/--bg-canvas).",
+    "Deviates from the 'no raw px in consumers' rule by hardcoding spacing/size literals (padding, gaps, font-sizes).",
+    "Uses --fg-*/--bg-canvas role names rather than the --ink/--zone-* names seen in slide-archetypes.html, suggesting two token namings in play."
+  ],
+  "concerns": [
+    "Hardcoded px (24/28/16/11/12, 0.08em) are off-token literals that the system's check.py/design-lint would flag.",
+    "Token names here (--fg-primary/--fg-secondary/--fg-muted/--bg-canvas) differ from --ink/--zone-ground used elsewhere in the corpus — a possible naming inconsistency between preview and core."
+  ],
+  "notes": "The shared preview-card frame stylesheet: imports the colour/type tokens and defines .card/.card-row/.card-grid/.label/.mono, with colours tokenised but spacing/sizes hardcoded.",
+  "questions": [
+    "Are --fg-primary/--fg-secondary/--fg-muted/--bg-canvas the preview-only token set, or aliases of the core --ink/--zone-* tokens?",
+    "Should the px spacing/font-size literals here be replaced with --d-*/--fs-* tokens to satisfy the anti-drift rule?"
+  ],
+  "purpose_vs_actual": "Match — the header says it is the shared frame for design-system cards and the file provides exactly that minimal frame and utilities.",
+  "apparent_themes": [
+    "Token-referenced styling (colour/type)",
+    "Shared frame / reuse over per-card CSS",
+    "Layout utility primitives"
+  ],
+  "intention_signals": "Give every preview card one consistent, token-driven frame and a small set of reusable layout/text utilities so cards don't each re-style their shell.",
+  "novelty": "n/a",
+  "contribution": "Contributes the shared preview-card shell and its small utility class vocabulary (.card/.card-row/.card-grid/.label/.mono) that a fused system would keep for card framing.",
+  "summary_for_embedding": "A small shared CSS file framing design-system preview cards: imports colour/type tokens, resets body, and defines .card/.card-row/.card-grid/.label/.mono utilities.",
+  "intention_for_embedding": "To give all preview cards one consistent token-driven shell and reusable layout/text utilities."
+}

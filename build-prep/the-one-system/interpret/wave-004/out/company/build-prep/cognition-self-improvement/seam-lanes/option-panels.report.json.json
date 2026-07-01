@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/option-panels.report.json",
+  "model": "opus",
+  "what_it_does": "Seam-lane report (JSON record) for the option-panel composition: two new roles roles/develop_option.py (MAP, op=generate, mode_scope={panel}) and roles/score_options.py (REDUCE role) that develop per-lens approaches and then score/recommend across them. Records verification by use on the resident chat-4b and floor/regression results.",
+  "observations": [
+    "files_written: develop_option.py, score_options.py; new_role_ids both; no new reduce rules.",
+    "Verified by use: both roles discovered and can_fire; develop_option mode_scope={panel}, input_addresses=('utterance',); score_options no mode_scope, input_addresses=('notes',); neither declares forbidden verbs.",
+    "MAP: run_items(develop_option, [mvp-first, risk-first]) -> 2 approaches with fields lens/approach/buys/costs/touches/risk.",
+    "REDUCE: run_reduce(mode='role', role=score_options) -> ScoreOptionsOut with scored [{lens,score 0..1,why}], a recommendation, and grafts (grafted risk-first's fail-loud net onto the mvp-first lead).",
+    "Floor: cognition_governance_acceptance 42/42; regression suites run_items 32/32, reduce 28/28, cast_beyond_listening 9/9 all pass; roles_acceptance reds only on expected drift at line 174.",
+    "develop_option mirrors verify_lens.py; score_options mirrors reduce_synth.py but with a richer nested ScoredOption sub-model and score:float 0..1.",
+    "LENS set per COMPOSITIONS ⑧: mvp-first, risk-first, reuse-first, framework-first, radical-recompose.",
+    "needs_tim: none for this lane; follow-ons are reflecting the roles in roles/AGENTS.md and (pending gap G3 multi-variable prompt substitution) turning the panel into a one-call saved cascade."
+  ],
+  "standouts": [
+    "The reduce produced 'grafts' — synthesizing across options by transplanting one lens's strength onto another's lead, not just scoring.",
+    "Advisory-only floor: panelists develop, the reduce recommends, Tim decides the fork — no consequential effect.",
+    "Ran broad regression (four suites) to prove the build is purely additive."
+  ],
+  "conventions": [
+    "Mirror-existing-role discipline (verify_lens, reduce_synth).",
+    "MAP-then-REDUCE composition via run_items + run_reduce(mode='role').",
+    "Cast-beyond-listening (mode_scope={panel}); pure ROLE dict + Pydantic, governance floor by construction.",
+    "Expected-red-on-drift acknowledged; file-disjoint (only the two new role files)."
+  ],
+  "concerns": [],
+  "notes": "Builds an advisory option-panel (per-lens develop then cross-lens score-and-recommend with grafts) as two new roles, verified end-to-end on the resident 4B with full regression.",
+  "questions": [
+    "When does SYSTEM-GAPS G3 (cascade multi-variable prompt substitution) land so the panel becomes a one-call saved cascade?",
+    "Is the lens set fixed at five, or extensible per panel invocation?"
+  ],
+  "purpose_vs_actual": "Matches — it is the option-panel lane report and documents the two-role MAP/REDUCE build and its verification.",
+  "apparent_themes": [
+    "Multi-lens option development and cross-option scoring/synthesis",
+    "Advisory cognition (recommend, never decide)",
+    "MAP/REDUCE composition over a closed lens set",
+    "Additive build proven by regression"
+  ],
+  "intention_signals": "Documents building a decision-support organ that develops several framed approaches in parallel and reduces them to a scored recommendation with cross-option grafts for Tim to fork on.",
+  "novelty": "The 'graft' behavior in the reduce (combining strengths across lenses) and the richer nested ScoredOption schema with a 0..1 float score.",
+  "contribution": "Contributes the develop_option and score_options roles, the five-lens panel set, and the nested-scored-recommendation-with-grafts reduce shape — a distinct decision-support composition.",
+  "summary_for_embedding": "Seam-lane report building two roles (develop_option MAP, score_options REDUCE) for an advisory option-panel that develops per-lens approaches then scores and grafts them into a recommendation, verified by use on the resident 4B.",
+  "intention_for_embedding": "To build an advisory multi-lens option-panel organ that produces a scored, cross-grafted recommendation for Tim to decide on."
+}

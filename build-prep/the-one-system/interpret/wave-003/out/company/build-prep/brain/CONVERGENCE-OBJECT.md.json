@@ -1,0 +1,55 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/CONVERGENCE-OBJECT.md",
+  "model": "opus",
+  "what_it_does": "A doctrine-layer doc that regenerates and amplifies a dense transmission Tim sent 2026-06-12: it lays out a theory of two coordinate spaces (structural vs semantic), a Convergence Law of placement, a Classification Law for tiny-model routing, a Barrier Protocol for Tim<->agent communication, ten generative derivations, a worked example, and open threads.",
+  "observations": [
+    "Header distinguishes [TIM] sections (his object regenerated faithfully) from [GEN] sections (agent generations run from the object), with a fit-test discipline.",
+    "Section I: every unit has positions in structural space (discrete/exact: size/age/filetype/address/type) and semantic space (continuous/learned); the Convergence Law says information lives where the two converge, resistance=0 at convergence.",
+    "States maximum-divergence points sit at odd multiples of pi/4 at sqrt(2)/2 - framed as deep holes of the lattice / quantizer bin boundaries / classifier decision boundaries.",
+    "Frame-relativity: scale and state/phase select the frame; the registry holds coordinate systems, not just categories. Laws are 'resistance-removal - paid once, dividending forever.'",
+    "Section II Classification Law: any type for tiny-model classification must declare ONE axis, TWO extremes, evenly spaced classifications between; working range ~3-5 for a 0.8B model; deeper discriminations composed as progressive chains.",
+    "Sibling laws: edges must be directional along an axis with a meaningful inverse; registry-is-truth.",
+    "Section III Barrier Protocol: Tim and agent as two coordinate systems on a narrow serial CLI; two friction sources (decoding bias toward a developer prior; no persistent identity/memory). Names anchor-interleave decompression, transfer-timing 'the wave', three universes (mind/transcript/filesystem), triangulation, and a session ontology where sessions are unaware peers all deriving from Tim.",
+    "Section IV: ten derivations (classification IS addressing; corpus temperature/resistance; consolidation=annealing; new types born at deep holes; principles as scale-invariants; compute routes by resistance; corrections as training signal; self-anchored artefacts corrected to LINK not embed; transcript as ledger of crossings; the wave can be engineered), with an evidence-honesty rating per item.",
+    "Section V: a worked example processing the transmission through the pipeline it designs (passes 0-5).",
+    "Section VI: open threads including Tim's pending fit-test on derivation 4 and registry encoding of the laws.",
+    "Cites primary source ~/company/foundation/exchanges/20-the-convergence-object.md and names consumer EPISODIC-UPGRADE-PLAN.md and sibling SEED/lattice docs."
+  ],
+  "standouts": [
+    "The Convergence Law: information = where structural (discrete) and semantic (continuous) coordinates coincide; deviation = resistance = computational tax paid forever.",
+    "'Laws are not constraints; laws are resistance-removal - paid once, dividending forever' as the thermodynamic ground under the path-of-least-resistance law.",
+    "The Classification Law (one axis / two extremes / 3-5 even steps / progressive chains) tied formally to a tiny model's channel capacity.",
+    "The Barrier Protocol's value inversion: regenerating Tim's meaning-objects with fidelity overrides tasks, priority, and token thrift.",
+    "Ten derivations presented as 'one generator, not ten features', each with an explicit solid/strong/mostly-mine evidence rating."
+  ],
+  "conventions": [
+    "Strict [TIM]/[GEN] provenance tagging and a no-versioning, update-in-place doctrine discipline.",
+    "Links to primary-source exchange and downstream consumers rather than re-embedding (itself an instance of derivation 8).",
+    "Heavy use of Tim's coined vocabulary (convergence, resistance, deep holes, the wave, triangulation)."
+  ],
+  "concerns": [
+    "Large [GEN] surface area: several derivations (notably 4) are flagged as the author's own generation awaiting Tim's fit-test, so doctrine and hypothesis coexist and must not be conflated.",
+    "Physics/math analogies (Noether, Landauer, superconductivity, minimax quantization) are asserted as grounding; rigor of each mapping is not proven within the doc."
+  ],
+  "notes": "If briefing someone: this is the canonical doctrine doc for Tim's two-spaces convergence theory - the law that placing units where discrete and continuous coordinates coincide removes friction - and the ten derivations the Company architecture is meant to follow from it.",
+  "questions": [
+    "What is Tim's fit-test verdict on derivation 4 (new types born at deep holes) and the other [GEN] design choices?",
+    "Have the two laws been encoded into the live law/registry surface yet (Section VI open thread)?",
+    "What are the remaining untransmitted parts of the object Tim refers to?"
+  ],
+  "purpose_vs_actual": "Match: it states it is the doctrine-layer regeneration plus amplification of Tim's transmission, and it delivers the laws, protocol, derivations, worked example, and open threads with provenance discipline intact.",
+  "apparent_themes": [
+    "Two coordinate spaces (structural discrete vs semantic continuous) and convergence as the optimum",
+    "Resistance/friction as thermodynamic cost of coordinate disagreement",
+    "Laws as one-time resistance removal that dividends forever",
+    "Tiny-model classification via axis/extremes/even-spacing/progressive chains",
+    "The Tim<->agent barrier: amplification, anchoring, wave-timing, triangulation",
+    "Memory/identity as a provenance-linked connected component"
+  ],
+  "intention_signals": "Trying to crystallize Tim's foundational theory of placement into a stable doctrine and to derive the Company's architecture (addressing, classification, consolidation, compute routing, memory, communication) as consequences of one convergence/resistance generator.",
+  "novelty": "The unification of structural and semantic coordinate systems under a single resistance-minimization law, with classification, retrieval, consolidation, and compute economics all derived as faces of it.",
+  "contribution": "Contributes the canonical convergence/resistance doctrine and its ten derivations - the theoretical generator that grounds the Company's placement, classification, consolidation, routing, and Tim-barrier-communication principles.",
+  "summary_for_embedding": "A doctrine doc regenerating Tim's 2026-06-12 transmission into a theory of structural-vs-semantic coordinate spaces, a Convergence Law (information at the discrete/continuous coincidence, resistance=0), a tiny-model Classification Law, a Tim-agent Barrier Protocol, and ten derivations for the Company architecture.",
+  "intention_for_embedding": "To fix Tim's foundational placement theory as stable doctrine and derive the Company's architecture as consequences of minimizing coordinate-disagreement resistance."
+}

@@ -1,0 +1,41 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0008_drop_broad_read_policies.sql",
+  "model": "opus",
+  "what_it_does": "A security-fix migration (labeled C-1, an adversarial-review CRITICAL fix) that drops the broad placeholder using(true) SELECT policies shipped in 0003/0004 on channels, channel_posts, dna_tokens, design_seeds, and design_submissions, revokes anon SELECT on the shared tables, and adds a DO-block sanity check that raises an exception if any of the named broad using(true) policies still remain.",
+  "observations": [
+    "Explains the root issue: Postgres ORs all matching permissive policies, so a broad using(true) policy OR-widens past the scoped 0005/0006 policies, leaking every channel/post/submission to design_clients and anyone with the anon key.",
+    "Drops named policies idempotently (drop policy if exists) on five tables.",
+    "Revokes SELECT on channels, channel_posts, dna_tokens, design_seeds, design_submissions from anon.",
+    "Final DO $$ block queries pg_policies for the named policies with qual = 'true' and raises 'C-1: broad using(true) SELECT policy still present' if any remain.",
+    "Notes 0003/0004 source were also fixed; this migration is belt-and-suspenders for already-applied environments including a fresh db reset."
+  ],
+  "standouts": [
+    "The OR-widening insight — permissive RLS policies are OR-combined, so a leftover using(true) silently defeats all scoped policies.",
+    "The self-verifying DO block that fails the migration loudly if the broad policies survive."
+  ],
+  "conventions": [
+    "Idempotent drops + revokes.",
+    "Inline root-cause commentary tying the change to an adversarial review finding (C-1).",
+    "Fail-loud assertion at the end (raise exception on residual bad state)."
+  ],
+  "concerns": [
+    "The sanity check only inspects a hardcoded list of policy names; a differently-named broad using(true) policy on these tables would not be caught."
+  ],
+  "notes": "This removes the accidental using(true) read-everything backdoor so the scoped 0005/0006 policies become authoritative, with a built-in assertion that the leak is gone.",
+  "questions": [
+    "Are there any other tables in this schema that might still carry a broad using(true) SELECT policy outside this named list?"
+  ],
+  "purpose_vs_actual": "Match — header states it drops broad read policies and revokes anon read; the statements do exactly that plus self-verify.",
+  "apparent_themes": [
+    "Adversarial review driving security fixes",
+    "Least privilege (scoped policies authoritative, anon gets nothing)",
+    "Fail-loud verification baked into the migration",
+    "Belt-and-suspenders idempotency"
+  ],
+  "intention_signals": "Trying to close a critical RLS read-leak by removing placeholder broad policies and proving, within the migration, that no leak remains.",
+  "novelty": "An in-migration pg_policies assertion that raises if the very policies it dropped are still present — verification co-located with the fix.",
+  "contribution": "Contributes the C-1 leak remediation: removal of broad using(true) read policies, anon SELECT revocation, and the self-verifying residual-policy check.",
+  "summary_for_embedding": "A Supabase migration that drops broad using(true) SELECT policies and revokes anon read on the design shared tables, with a DO-block assertion that no broad policy remains.",
+  "intention_for_embedding": "To fix a critical RLS read-leak where permissive broad policies OR-widened past the scoped policies, and to verify the fix held."
+}

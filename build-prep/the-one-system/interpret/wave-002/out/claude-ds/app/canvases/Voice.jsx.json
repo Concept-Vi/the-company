@@ -1,0 +1,59 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Voice.jsx",
+  "model": "opus",
+  "what_it_does": "Implements the Voice & tone canvas: a working surface that codifies the ConceptV brand voice and acts on it with AI. It holds 7 voice rules (with bad/good examples), 7 vocabulary anchors, and 5 tone contexts as inline data, then provides four AI features via window.CV_AI.complete — a paste-and-rewrite tool that flags which rules the original broke, a tone-variant generator (3 variants for a chosen context), a per-rule 'audit the system for violations' generator, and a saved-rewrites library. Exposes Voice on window.",
+  "observations": [
+    "VOICE_RULES: 7 rules (r1-r7) each with id/title/desc/bad/good — e.g. sentence case, second person, imperative actions, no exclamation marks, no emoji, inline consequence previews, sparing gold accent.",
+    "VOCAB: 7 brand terms (Virtual Hub, Hub, Linked Hubs, Landing Page, Capture, Vi, Property Wizard) with meanings.",
+    "TONE_CONTEXTS: 5 contexts (success/error/onboarding/empty/cta) each with a label and example string.",
+    "rewrite() builds a prompt from the rules, calls CV_AI.complete, and robustly parses JSON (direct parse, then regex-extract a {...} block) expecting {rewritten, violations[]}.",
+    "generateTone() asks for 3 variants of a context message as {variants:[...]}, slices to 5.",
+    "auditRule() asks the model to imagine likely violating UI strings for one rule and return {findings:[{location,violation,fix}]} — i.e. a synthetic/imagined audit, not a real codebase scan.",
+    "saveCurrentRewrite() builds a {id,original,rewritten,violations,savedAt} entry and calls addSavedRewrite prop.",
+    "RefinePop chip lets the user iteratively revise an on-brand rewrite with a free-text instruction.",
+    "Renders rules with dangerouslySetInnerHTML for the bad/good examples (which contain inline HTML spans with hardcoded gold #E0C010).",
+    "A duplicate rules block exists hidden under style={{display:'none'}} above the live audit-enabled rules section.",
+    "Heavy inline styling throughout referencing design tokens (var(--accent-gold), var(--status-error-bg), etc.), plus copy-to-clipboard helper.",
+    "Header subtitle counts rules/vocab dynamically from the arrays."
+  ],
+  "standouts": [
+    "The brand voice is encoded as machine-readable rules that are then fed back into prompts — the rules drive both the rewrite, the refine, and the audit.",
+    "auditRule explicitly asks the model to IMAGINE plausible violating strings 'that would likely appear somewhere in the codebase' — a generated/heuristic audit rather than an actual scan of real source.",
+    "Robust JSON-recovery pattern (direct parse → regex {...} extraction → fallback) repeated across all three AI calls.",
+    "A hidden duplicated rules block (display:none) sits alongside the live one — likely a superseded version left in place."
+  ],
+  "conventions": [
+    "Routes all model calls through window.CV_AI.complete (per project rule: never window.claude.complete directly) — single AI entry point.",
+    "Inline-styles-with-tokens pattern (values reference var(--...) but layout is hand-set per element), consistent with sibling canvases.",
+    "window-global component pattern and window.Voice export; aliased React hook (useState_v).",
+    "Loud-fail-to-toast on AI failures (window.dsaToast).",
+    "Breaks the project's no-second-home rule for the voice itself: voice rules are inlined here AND the CLAUDE.md says the voice should live in CV_AI behaviour 'voice.conceptv', never inlined."
+  ],
+  "concerns": [
+    "VOICE_RULES/VOCAB/TONE_CONTEXTS are inlined here, but the design-system charter says the voice must be sourced from the CV_AI behaviour registry (voice.conceptv) and never inlined — a drift/second-home risk.",
+    "auditRule presents model-imagined violations as 'Likely violations in your system' — fiction risk: these are invented, not found in real code, yet framed as system findings.",
+    "Two ironic in-file voice violations: hardcoded hex #E0C010 in the rule example HTML (the system forbids raw hex in consumers), and dangerouslySetInnerHTML on rule examples.",
+    "A fully duplicated hidden rules block (display:none) is dead/duplicated markup that should be removed.",
+    "Variants and findings keyed by array index; rewrite fallback sets raw reply text when JSON parse fails (may show non-JSON noise)."
+  ],
+  "notes": "The Voice & tone canvas: 7 codified brand-voice rules + vocabulary feeding four CV_AI features (rewrite-with-violation-flags, tone-variant generation, per-rule imagined-violation audit, saved rewrites) — note the audit is model-imagined, and the voice is inlined here rather than sourced from the AI registry.",
+  "questions": [
+    "Should these voice rules/vocab live in the CV_AI behaviour registry (voice.conceptv) per the charter, rather than inlined in this canvas?",
+    "Is the 'Audit system' meant to eventually scan real source, or is the imagined-violations approach the intended design?",
+    "Why does the hidden display:none duplicate of the rules block remain — is it superseded?",
+    "Where are addSavedRewrite/removeSavedRewrite/savedRewrites persisted (the library's storage)?"
+  ],
+  "purpose_vs_actual": "Mostly matches the header comment (voice rules + vocab + AI rewriter + tone variants), but the 'Audit system for violations' feature does not audit the real system — it asks the model to imagine likely violations, so that sub-feature's framing overstates what it does.",
+  "apparent_themes": [
+    "Brand voice made operational/executable (rules as both reference and prompt fuel).",
+    "AI as the actor on codified rules (rewrite, refine, generate, audit).",
+    "Single AI entry point (CV_AI.complete) and robust JSON recovery.",
+    "Reusable on-brand copy library."
+  ],
+  "intention_signals": "Aims to turn the brand's language standards into a live workspace: codify the voice once, then let Vi enforce it (rewrite arbitrary copy to compliance and explain the violations), produce context-appropriate variants, surface where the system probably breaks each rule, and bank good results for reuse.",
+  "novelty": "The per-rule 'audit the system' move that generates plausible violating UI strings with fixes, and the closed loop of rules→prompt→rewrite→refine→save built atop a single CV_AI call.",
+  "contribution": "Contributes the codified ConceptV voice ruleset (7 rules with examples), the vocabulary anchors, the tone contexts, and the four voice-acting UI features (rewrite-with-violations, tone-variant generation, per-rule imagined audit, saved-rewrites library) over CV_AI.",
+  "summary_for_embedding": "A React canvas codifying the ConceptV brand voice (7 rules, vocabulary, tone contexts) with CV_AI-powered copy rewriting, violation flagging, tone-variant generation, a per-rule imagined-violation audit, and a saved-rewrites library.",
+  "intention_for_embedding": "To make the brand voice operational by encoding its rules and letting Vi rewrite copy to compliance, generate context tone variants, surface likely violations, and bank reusable on-brand text."
+}

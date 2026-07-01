@@ -1,0 +1,56 @@
+{
+  "project": "claude-ds",
+  "path": "app/services/openai.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that defines window.cvOpenAI, the single OpenAI image service for the whole app. It holds the user's API key/proxy/model settings in localStorage, maintains a STATIC capability registry of known image models (gpt-image-2/1, dall-e-3/2 with sizes, qualities, formats, backgrounds, moderations, supports flags), and provides: listImageModels (fetch /v1/models, filter to image-capable by registry or prefix, attach caps, cache 24h), getModelCapabilities (registered caps or inferred-from-id defaults), validateSize (arbitrary-size rules for gpt-image-2), a brand-suffix prompt builder, and image operations generateImage / editImage / variateImage / responsesImage (multi-turn Responses API) with SSE streaming for partial images, plus testConnection, classifyIntent, and helpers. Every image call funnels through this one service.",
+  "observations": [
+    "Namespaces: 'cvstudio:cvOpenAI:settings' and ':models'; model cache TTL 24h",
+    "DEFAULT_SETTINGS includes apiKey, proxyUrl, imageModel 'gpt-image-2', default size/quality/style, enableForVi, safeMode",
+    "MODEL_REGISTRY enumerates exact per-model capabilities (gpt-image-2 supports custom size/mask/multiRef/stream/partialImages 3; dall-e-2 is the only model with variation:true)",
+    "IMAGE_MODEL_PATTERNS lets unknown ids (gpt-image-*, dall-e-*, imagen-*, omni-image-*, image-*) still register; inferCapabilities clones the closest family template",
+    "endpoint() routes through settings.proxyUrl if set, else api.openai.com — an explicit CORS/proxy escape hatch surfaced in error messages",
+    "validateSize enforces gpt-image-2 rules: multiples of 16, aspect 1:3..3:1, max edge 3840, 655,360..8,294,400 px, flags >2560x1440 as experimental",
+    "BRAND_SUFFIX appends the ConceptV warm-paper-with-gold-ink palette (with exact hexes) to prompts unless brandEnrich:false or the prompt already says 'conceptv'",
+    "generateImage/editImage build the request body strictly from the model's caps (only sends quality/format/background/moderation/n if the model supports them), clamps n and compression, and streams via SSE when supported and onPartial given",
+    "streamSSE parses data: blocks, emitting onPartial for partial_image events and collecting completed b64 images",
+    "responsesImage uses the /v1/responses API with an image_generation tool for multi-turn editing, threading previous_response_id and returning revisedPrompt",
+    "variateImage forces dall-e-2 when the chosen model lacks variation support",
+    "classifyIntent regex-classifies a chat message into text / image-generate / image-edit",
+    "Throws typed errors (code 'cv-openai/no-key','network','bad-input','unsupported','http-<status>') rather than silently failing; testConnection refreshes the model cache without burning credits",
+    "Seeds the model cache from the static registry on load so callers can render a list before any fetch"
+  ],
+  "standouts": [
+    "Capabilities-driven request building: the body is assembled only from what getModelCapabilities says the model supports, so one code path serves four very different models and any future one",
+    "Forward-compatible model discovery: unknown ids still surface and get inferred caps from their family, so a newly released model appears in the dropdown without a code change",
+    "BRAND_SUFFIX enforces the ConceptV look on every generated image (exact palette hexes) unless explicitly suppressed — brand applied at the service boundary"
+  ],
+  "conventions": [
+    "Same observable localStorage settings pattern as the other services (NS, load/save, listeners)",
+    "Loud typed errors with codes (aligns with the project loud-fail rule)",
+    "Single source of truth for all image calls and model swapping (one home)",
+    "validateSize/getModelCapabilities centralize per-model rules instead of scattering them"
+  ],
+  "concerns": [
+    "Project rule says image work should route through CV_AI.resolveProvider('openai-image') and not call cvOpenAI.generateImage directly — this is the low-level service that the AI registry is meant to wrap, so direct callers would violate that boundary (not visible from this file)",
+    "BRAND_SUFFIX is a second place the brand palette lives (also encoded in ai-presets seed bodies and the design tokens) — the exact hexes are inline literals here",
+    "saveCachedModels swallows localStorage write errors silently (catch {}), and several settings writes do the same"
+  ],
+  "notes": "The single low-level OpenAI image service: capability-registry-driven generate/edit/variation/responses calls with streaming, model discovery, size validation, brand-suffix prompts, and proxy support — all funneling through window.cvOpenAI.",
+  "questions": [
+    "Is cvOpenAI meant to be called only via CV_AI.resolveProvider('openai-image'), and is that wrapper enforced elsewhere?",
+    "Should the BRAND_SUFFIX palette be sourced from the single token/voice home rather than inlined here as literal hexes?"
+  ],
+  "purpose_vs_actual": "Matches — header declares the single source of truth for API key, model prefs, and every image call with a static-registry + discovery + inference model approach, and the file implements exactly that plus generate/edit/variation/responses and streaming.",
+  "apparent_themes": [
+    "Capabilities registry drives behaviour (data, not branching)",
+    "Forward-compatible model discovery and inference",
+    "One home for all image calls and model swapping",
+    "Loud typed errors",
+    "Brand enforcement at the service boundary"
+  ],
+  "intention_signals": "Trying to make the app robust to a fast-changing image-model landscape by funneling every image operation through one capability-aware service, so new models drop in via the registry/inference, requests only send supported params, and brand styling and errors are handled in one place.",
+  "novelty": "The static-registry + pattern-match + family-inference model-discovery scheme (unknown models still work with inferred caps), combined with capability-gated request building across generate/edit/variation/responses-API and SSE partial-image streaming.",
+  "contribution": "Contributes the complete OpenAI image-generation service: the per-model capability registry + inference, model-list discovery/cache, arbitrary-size validation, brand-suffix prompt builder, and the generate/edit/variation/Responses-API calls with SSE streaming, typed errors, and proxy support.",
+  "summary_for_embedding": "A single browser OpenAI image service (cvOpenAI) driven by a static-plus-inferred model-capability registry, providing capability-gated generate/edit/variation/Responses-API calls with SSE streaming, model discovery, size validation, and brand-suffix prompts.",
+  "intention_for_embedding": "To funnel every image-model call through one capability-aware service so new models drop in via registry/inference, requests send only supported params, and brand styling, errors, and model-swapping have a single home."
+}

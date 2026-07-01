@@ -1,0 +1,56 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/DISCOVERY_LOG.md",
+  "model": "opus",
+  "what_it_does": "A running finding-phase register where fabric members log what they FIND (located/verbatim, not interpreted-to-conclusion) as they excavate their own project territory and session history, recording for each find what/where/verbatim/verification-state/why-it-matters/who-found-it, with cross-find convergences flagged for Tim rather than silently merged.",
+  "observations": [
+    "Opens with a dated (2026-06-16) Tim directive that building on assumptions is an instant failure and finding is where the value is; build is HELD while finding EXPANDS.",
+    "States a standing rule that NOTHING FOUND IS FINAL — every find is partial inspiration/an attempt, Tim is the only judge of 'right', and the fabric's job is to read the SHAPE through the parts and design the intended whole, never adopt a part.",
+    "Includes a META-PROOF: the lead found a Session-Fabric 'graph of minds' Face nobody knew about; wildcard then found 4 more in its own unread strata — confirming every project/history holds unsurfaced interface designs.",
+    "Logs 17 finds (F1-F17) plus shape-reads, attributed to specific members (wildcard, composition, fork, DNA, recollection/Index Chief) with channel codes (ch-piffgfxv, ch-ovxwz8k8, ch-2mnxl9j0).",
+    "F1 OmniFile = addressable markdown as a coordinate system (Tim verbatim, March); F5/F6 a whole front-half interface design corpus + 14 named surface-mode primitives; F7 a RUNNING spatial shell found in DNA's repo (/home/tim/repos/counterpart/design) that DNA hadn't surfaced.",
+    "F11/F14 the graph-of-minds Face is 'built-wire, unrendered-face' — fork's segment has addressed nodes (clone://, mind://, session://), edges, 8 session-lenses, and an R15 gate/abort/rewind control, with 4 lenses VERIFIED-BY-USE on a 17.9MB transcript.",
+    "F15 P0 complete — all 10 substrate-mcp vaults re-embedded on the resident :8007/pplx (~116K chunks, 0 errors), making the mine semantically queryable; F16/F17 are finds enabled by that now-live semantic search.",
+    "Uses the converged verification-state vocabulary throughout (verified-by-use, built-unverified, design-only, candidacy) and marks verbatim Tim quotes explicitly.",
+    "Recurring analytical move: each find ends with a 'WHAT SHAPE DOES THIS POINT AT?' zoom-out reading the part as a partial sketch of one intended whole.",
+    "Contains a duplicate find number: two distinct finds are both labeled F13 (wildcard's MCP-tools find and composition's OmniFile-in-its-territory find).",
+    "Convergence sections flag that the interface was designed multiple times independently and convergently (OmniFile/UNIFIED_SHELL/front-half corpus/Session-Fabric Face) all landing on 'one addressed substrate, many contextual projections, steer-by-reaction, space-not-screen'."
+  ],
+  "standouts": [
+    "The recurring 'read the shape, never adopt the part' discipline turning a find log into a convergence-detection instrument.",
+    "The 'built-wire, unrendered-face' pattern named by fork and then found independently in wildcard's and composition's territories — the same conclusion from separate territories.",
+    "F7's cross-stream flag: composition found a running spatial shell inside DNA's own cwd that DNA never surfaced.",
+    "F15 reframed as 'the lens that makes the finds visible, not a find' — infrastructure that makes finding mechanical not luck.",
+    "Multiple independent four-axis structures (composition/fork/wildcard/FRD/DNA = 5 sources) and a two-end triangulation on polarity (presentation end F12 vs math end F17)."
+  ],
+  "conventions": [
+    "Follows a strict find-record schema (what/where/verbatim/verification-state/why-it-matters/who-found-it) and the standing rule that finds are partial, never final.",
+    "Adheres to the common-knowledge laws it is part of: observed-vs-verified, verification-state typing, convergences flagged not merged, verbatim quotes preserved.",
+    "Uses ★/★★/★★★ emphasis tiers and member channel codes; embeds wikilinks ([[feedback-confident-not-correct]]).",
+    "Breaks its own numbering convention by reusing F13 for two different finds."
+  ],
+  "concerns": [
+    "Duplicate F13 numbering is a real inconsistency that could cause cross-reference confusion.",
+    "Extremely dense, member-coded, and shorthand-heavy; opaque without the surrounding fabric and FRD context.",
+    "Many finds are reported by members at design-only or candidacy state — value claims (running shells, line counts) are largely member-asserted within the log."
+  ],
+  "notes": "This is the live find register for the finding-phase — read it to see what designs/substrates each member has surfaced, their verification-state, and the emerging convergence that the interface was designed many times as one addressed-field-projected-per-context shape.",
+  "questions": [
+    "Should the duplicate F13 be renumbered, and which find owns the number?",
+    "Did the per-member session-history excavation (the GPU-sequenced pass after F15) run, and what did it add?",
+    "How were the flagged convergences ultimately judged by Tim — was a single intended-whole design produced?"
+  ],
+  "purpose_vs_actual": "Match — it declares itself the finding-phase register of located-not-concluded finds with convergences flagged for Tim, and the body is exactly that: numbered finds plus convergence/shape-read sections.",
+  "apparent_themes": [
+    "Find-before-build / assumptions are instant failure",
+    "Read the shape through partial parts, never adopt a part",
+    "Built-wire / unrendered-face as a pervasive pattern",
+    "Independent convergent design of one addressed-projected interface",
+    "Verification-state typing of every find"
+  ],
+  "intention_signals": "It is trying to surface every unsurfaced interface-relevant design and substrate across projects and histories, hold each as a partial sketch, and detect convergence so the fabric can design the intended whole for Tim to judge — replacing assumption-driven building with evidence-driven shape-reading.",
+  "novelty": "The disciplined zoom-out-per-find practice and the cross-territory rediscovery of the same 'built-wire/unrendered-face' shape, plus the multi-source four-axis and two-end polarity triangulations, make this a distinctive convergence-detection log.",
+  "contribution": "Contributes the actual corpus of located finds and their convergences: the OmniFile coordinate-system, the front-half design corpus and 14 surface-primitives, the graph-of-minds built substrate, the running spatial shell, the semantic-index infrastructure, and the recurring shape (one addressed field projected per context) — the evidence base a fused system would keep as the record of what was already designed/built and how it converges.",
+  "summary_for_embedding": "A finding-phase register of 17 located finds across Company projects and histories, each with verification-state and a shape-read, surfacing repeatedly-designed interface substrates (OmniFile, front-half corpus, graph-of-minds, spatial shell, semantic index) that converge on one addressed-field-projected-per-context interface.",
+  "intention_for_embedding": "To replace assumption-driven building by logging every unsurfaced design/substrate as a partial sketch and flagging cross-find convergences so the fabric can design the intended whole for Tim to judge."
+}

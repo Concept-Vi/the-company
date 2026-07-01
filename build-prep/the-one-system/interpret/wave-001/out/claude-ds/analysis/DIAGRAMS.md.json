@@ -1,0 +1,55 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/DIAGRAMS.md",
+  "model": "opus",
+  "what_it_does": "Defines the type system for a diagram generator: a hierarchical DiagramType->subtype->content-schema->layout-rule model with a shared node/edge/axis/center vocabulary, an enumeration of the 10 diagram types (with subtypes) observed across the deck corpus, icons as a first-class content type, and a spec->diagram generator contract.",
+  "observations": [
+    "States diagrams are not drawings but instances of a diagram type with a valid content schema, rendered deterministically under DNA rules",
+    "Defines a shared content vocabulary: Node {id,label,shape,icon,tint,state}, Edge {from,to,kind,routing,label}, Axis, Center",
+    "Node shapes encode specific entities: octagon=Vi-Hub, hexagon=Property-Wizard, plus circle/rounded-rect/person-glyph/logo-card",
+    "tint is explicitly a position on the gold->bronze->tan ramp (often mapped to sequence/position)",
+    "Enumerates 10 diagram types each with a stated 'State' meaning (e.g. network=chaos, hub-and-spoke=order) and capital-raise page citations for subtypes",
+    "Type 3 (state-morph pair) is marked as inherently animatable — same node-set shown as two frames with a transform",
+    "Icons are first-class: node.icon, icon-flow rows, fan-out leaves, obeying an icon language (single thin weight, 24-grid, two-tone gold)",
+    "Provides a generator contract pseudocode: spec -> validate -> layout rule -> render -> optional state-morph"
+  ],
+  "standouts": [
+    "The same-spec/different-knob design: same spec + different state = the morph; + different surface = reflow; + different tint = variant theming — one spec, many renders",
+    "State-morph pair as the hero 'chaos->order' rhyme that is inherently animatable (edges retract tangle->radial)",
+    "Shape-as-entity-semantics (octagon=Hub, hexagon=Wizard) baked into the node schema rather than chosen per-diagram",
+    "Diagram 'State' carries narrative meaning (network='chaos', hub-and-spoke='order') — semantics attached to topology"
+  ],
+  "conventions": [
+    "Registry/schema-driven: every diagram validated against its type's content schema before layout",
+    "Single-source token use: tint from the ramp, icons from the icon language (tokens/diagram.css, tokens/icons.css), never ad-hoc",
+    "Generative north-star: generate NEW diagrams that still obey the DNA",
+    "axis=f(content,position): layout is a deterministic rule per type, not hand-drawn",
+    "Open vocabulary growth: subtypes added with page-citation evidence from the corpus"
+  ],
+  "concerns": [
+    "Token files (tokens/diagram.css, tokens/icons.css) and feeds (REQUIREMENTS D4, SYNTHESIS-PLAN) are referenced but cannot be confirmed present from this file",
+    "The generator contract is pseudocode/spec — no indication here whether the validator and layout rules are implemented",
+    "Entity-specific shapes (Vi-Hub, Property-Wizard) hardcode product semantics into a supposedly content-agnostic type system"
+  ],
+  "notes": "The diagram generator's type system: 10 typed diagram families with a shared node/edge/axis/center schema and a same-spec-many-knobs generator contract, where icons are first-class content and topology carries narrative state.",
+  "questions": [
+    "Is the validator + per-type layout rules actually implemented (DiagramSolver), or is this a spec the generator is built toward?",
+    "How does the content-agnostic schema reconcile with entity-specific shape semantics (octagon=Vi-Hub, hexagon=Property-Wizard)?",
+    "Where is the icon set drawn from, and is the icon-flow layout a registered layout rule?",
+    "Do the five new subtypes cited from capital-raise (orbital verb-ring, stacked node, 1-D spectrum, manifold, progressive-fidelity stepper) exist in code or only in this doc?"
+  ],
+  "purpose_vs_actual": "Matches — titled as the diagram-generator type system and it delivers the type hierarchy, shared vocabulary, observed types, icon handling, and generator contract.",
+  "apparent_themes": [
+    "registry-is-truth",
+    "axis=f(content,position)",
+    "schema-validated-generation",
+    "single-source-token-use",
+    "topology-as-semantics",
+    "same-spec-many-renders"
+  ],
+  "intention_signals": "Inferred: the author wants diagrams to be GENERATED, not drawn — a deterministic engine that takes a typed spec, validates it against a schema, and lays it out under shared DNA, so new diagrams obey the design language automatically. The same-spec-different-knob framing (state/surface/tint) signals intent to make morphs, reflows, and theme variants fall out of one spec, and the state-morph pair signals an intent to make the chaos->order narrative animatable from the same data.",
+  "novelty": "Attaching narrative 'State' meaning to diagram topology, the inherently-animatable state-morph pair as a first-class type, entity-encoding node shapes, and the same-spec-different-knob morph/reflow/theme model are distinctive vs an ordinary diagram component library.",
+  "contribution": "Contributes a complete hierarchical diagram type system (10 types + subtypes), a shared node/edge/axis/center content schema, icons-as-first-class-content, the state-morph animatable transform, and the same-spec-many-knobs generator contract that ties diagrams into the single-sourced token/DNA system.",
+  "summary_for_embedding": "A hierarchical diagram-generator type system defining a shared node/edge/axis/center schema, 10 observed diagram types with subtypes, icons as first-class content, and a spec->validate->layout->render generator contract under shared design DNA.",
+  "intention_for_embedding": "To make diagrams generated and schema-validated rather than drawn, so a typed spec yields DNA-obeying diagrams whose morphs, reflows, and theme variants fall out of changing one knob."
+}

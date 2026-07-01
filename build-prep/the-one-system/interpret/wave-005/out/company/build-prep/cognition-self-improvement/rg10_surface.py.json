@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10_surface.py",
+  "model": "opus",
+  "what_it_does": "A one-shot script (stage 'RG8') that aggregates a completed RG10 mockup-element-registry run into ONE review item placed at the operator's APPROVE gate. It reads .build/rg10/state.json plus each per-mockup rg10-batch-*.json artifact, refuses to run unless every mockup is either done or failed-loud, refuses a second card if an unresolved full-run batch already sits in the inbox, then builds a scannable item (totals, per-mockup counts, compact confirmed rows of address/feature/grounding) and surfaces it via Suite.surface_review. It writes nothing to addresses.json or mockups itself.",
+  "observations": [
+    "Hardcodes os.chdir('/home/tim/company') and sys.path.insert at module import time",
+    "Reads STATE='.build/rg10/state.json' and design/_system/candidates.json; per-mockup artifacts at build-prep/cognition-self-improvement/rg10-batch-<stem>.json",
+    "Two fail-loud guards: (1) not_done mockups -> RuntimeError; (2) existing unresolved full-run registry_proposal_batch in inbox -> RuntimeError",
+    "Aggregates total_ok (confirmed) and total_flag (flagged) across mockups; builds confirmed_rows mapping mockup -> [{address, maps_to_feature, grounding}]",
+    "Carries state['failed'] forward as 'failed_loud' on the payload so failed mockups ride along, never dropped",
+    "Surfaces with origin='responsive'; prints the result as JSON when run as __main__"
+  ],
+  "standouts": [
+    "Explicit 'THE FLOOR' contract in the docstring: this surfaces only; approving authorizes RG9's write-back; nothing here mutates the registry",
+    "Duplicate-guard treats inbox.list() as the real listing API and refuses rather than creating a second card",
+    "failed-loud mockups are deliberately attached as needs-attention rather than silently excluded"
+  ],
+  "conventions": [
+    "Module-level cwd change + sys.path insert (a repeated pattern across these RG scripts)",
+    "Lazy imports of runtime.suite/registry and store.fs_store inside main()",
+    "Fail-loud RuntimeError with explanatory messages rather than silent skips",
+    "Builds a dict payload then calls Suite.surface_review; __main__ prints json.dumps(..., default=str)"
+  ],
+  "concerns": [
+    "Opens many files with open(...) without context managers (file handles left to GC)",
+    "os.chdir at import time makes the module import-order-sensitive and unsafe to import as a library"
+  ],
+  "notes": "The aggregator that turns a finished mockup-registry run into a single operator APPROVE card; pure surfacing, refuses if incomplete or already-carded.",
+  "questions": [
+    "What schema does state.json's 'done' map carry (the v['candidates']/['clusters']/['confirmed']/['flagged'] keys are assumed)?",
+    "What does Suite.surface_review return and what does origin='responsive' select?"
+  ],
+  "purpose_vs_actual": "Match — the docstring claims it surfaces the full run as one aggregate card without writing, and the code only reads state/artifacts and calls surface_review.",
+  "apparent_themes": [
+    "Human-in-the-loop approval gate (operator authorizes write-back)",
+    "Fail-loud over silent-drop",
+    "Render-for-the-operator: build for scanning, totals before detail",
+    "Reuse existing inbox/review surface rather than a new mechanism"
+  ],
+  "intention_signals": "Compress a large automated registry-generation run into a single at-altitude decision the operator can scan and approve, keeping the operator as the sole authority for any registry mutation while never hiding failures.",
+  "novelty": "The 'one aggregate card with full dossiers carried by linked artifacts' pattern — the card is a scannable index, the artifacts hold the prose dossiers.",
+  "contribution": "Contributes the aggregation+surfacing step that converts a per-mockup batch run into a single operator-gated approval item, plus its completeness and duplicate guards.",
+  "summary_for_embedding": "Python script (RG8) that aggregates a finished RG10 mockup-element-registry run into one scannable operator-APPROVE review item via Suite.surface_review, guarded against incompleteness and duplicates, writing nothing to the registry.",
+  "intention_for_embedding": "To present an entire automated registry-generation run as a single at-altitude decision the operator can scan and approve, gating the downstream write-back."
+}

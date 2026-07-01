@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "axes/color/color-axis.js",
+  "model": "opus",
+  "what_it_does": "Defines the colour axis as a typed/grouped view over the colour tokens, built via `CV_AXES.make` and registered into the axes registry. Declares 5 groups (brand, semantic/status, ink, communication, neutral) and ~18 values, each mapping a value id to a role token (e.g. gold→accent-gold), with default 'bronze'. Adds 3 legacy alias values (amber→status-warning, clay→status-error, blue→status-info).",
+  "observations": [
+    "Guards that `window.CV_AXES` exists, else logs an error and returns.",
+    "Each value's payload is a `token` (no hex literals) — the hex stays in colors_and_type.css per the single-home rule stated in the header.",
+    "Groups: brand (gold/gold-deep/gold-soft/bronze/bronze-2/tan), semantic (success/warning/error/info/pending), ink (ink/ink-2/muted/soft), communication (sage/sage-soft), neutral (paper/surface).",
+    "Default value is 'bronze'.",
+    "Three aliases registered after construction so legacy short names (amber/clay/blue) resolve to existing status tokens.",
+    "Header notes value MEANING is contextual and lives in CV_MEANING, not here.",
+    "Registers the built axis into CV_AXES at the end."
+  ],
+  "standouts": [
+    "Pure data: the colour axis is entirely value-to-token mappings with no literals, embodying 'the axis IS the tokens, typed'.",
+    "Legacy aliases (amber/clay/blue) point at the same status tokens, keeping old card names working without a second colour home.",
+    "Explicitly defers colour meaning to CV_MEANING — keeping the axis about identity/grouping, not semantics."
+  ],
+  "conventions": [
+    "Single-source: every value references a token (var) rather than a hex — no literal duplicated.",
+    "Loads after axis-core.js and registers via the shared CV_AXES API.",
+    "IIFE/window globals pattern; guard-and-return if the core is missing (note: this is a console.error+return, softer than the core's throw)."
+  ],
+  "concerns": [
+    "Missing-core handling is a `console.error` + silent return rather than a throw, which is softer than the project's loud-fail rule (a downstream consumer would then fail later when resolving 'color').",
+    "Aliases create multiple ids mapping to one token (amber and warning both → status-warning); harmless but two names for one role could confuse a candidates list."
+  ],
+  "notes": "The colour axis registration: 5 groups, ~18 token-backed values plus 3 legacy aliases, default bronze, registered into CV_AXES — meaning lives elsewhere (CV_MEANING).",
+  "questions": [
+    "Are the referenced tokens (accent-gold, status-success, fg-primary, etc.) all defined in colors_and_type.css?",
+    "Why is the missing-core case a console.error+return here when the core uses throw — intentional softness?",
+    "Do consumers subscribe by group (e.g. brand-only ring colours) as the header implies, and where?"
+  ],
+  "purpose_vs_actual": "Matches: the header describes a typed/grouped view over colour tokens with value→token resolution and meaning deferred to CV_MEANING — the code is exactly that data registration.",
+  "apparent_themes": [
+    "Axis IS the tokens (typed, not a layer over them)",
+    "Single home for the literal (hex in CSS, ids in the axis)",
+    "Identity/grouping separated from meaning (CV_MEANING)",
+    "Backward compatibility via aliases without a second home"
+  ],
+  "intention_signals": "Trying to give colour a typed, groupable structure consumers can subscribe to subsets of, while keeping the actual colour literals single-sourced in the stylesheet and meaning in a separate registry.",
+  "novelty": "The clean separation of colour identity (this axis) from colour meaning (CV_MEANING), and aliasing legacy names onto canonical role tokens.",
+  "contribution": "Contributes the concrete colour-axis instance: the group structure and the value→token map (including legacy aliases) that lets any colour slot declaratively pick a role token.",
+  "summary_for_embedding": "A JavaScript registration of the ConceptV colour axis: 5 groups and ~18 token-backed colour values (brand/semantic/ink/communication/neutral) plus amber/clay/blue aliases, default bronze, built via CV_AXES.make and registered into the axes registry.",
+  "intention_for_embedding": "To structure colour as a typed, subscribable axis whose values reference single-sourced role tokens, leaving colour meaning to CV_MEANING."
+}

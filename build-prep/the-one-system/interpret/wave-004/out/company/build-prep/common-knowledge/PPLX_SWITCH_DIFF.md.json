@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/PPLX_SWITCH_DIFF.md",
+  "model": "opus",
+  "what_it_does": "An apply-ready proposed diff (authored by session ch-83e2cque for ch-al7jdfdr to review+apply) that switches the Company's default corpus-embed layer from bge-m3 (1024-dim @ :8001) to pplx-embed-context-v1-4b (2560-dim @ :8007), making pplx the coupled default while leaving bge reachable as an explicit dormant alternate. It specifies four concrete edits across fabric/config.py, store/vector_index.py, runtime/cognition.py, and runtime/suite.py, plus a no-change list, a residual decision, a restart+smoke-test gate, and a walker follow-up.",
+  "observations": [
+    "Introduces a single knob DEFAULT_EMB_LAYER plus a resolve_emb_layer() helper resolved at three chokepoints (query_index, build_index, find_relations)",
+    "Uses a string sentinel '__default__' as the param default meaning 'caller didn't pin a layer'; None/''/'bge'/'bare' all resolve to the bare/legacy bge layer",
+    "Claims PROVEN end-to-end without touching any committed file: pplx query gives dim 2560, 5 hits ranked of 644; cross-dim query (2560 vs 1024 bge) raises ValueError 'vector dim mismatch'",
+    "Frames the dim/layer mismatch as a deliberate FAIL-LOUD RAISE already built into retrieve._cosine (no silent-empty)",
+    "Flags one residual the lead must decide: the unspaced default consult index (_retrieve_for_consult_semantic) resolves to an EMPTY pplx layer post-switch, degrading consult to keyword; offers options (a) tiny 78-entry re-embed (recommended), (b) accept keyword-only, (c) point consult at a populated space",
+    "Defines a two-step smoke-test gate (corpus query -> ranked hits; ingest one .md -> captured:1) after one mcp_face restart",
+    "Records the bge backup at vectors.bge-backup-20260615 and the layer key grammar vec://<source>#space=<proj>#emb=<model>",
+    "Names a walker follow-up: add .ts/.tsx/.js to WALK_EXTS in flows/repo_ingest.py, with a deeper language-aware extractor reference"
+  ],
+  "standouts": [
+    "The single-knob revert design: ONE env var (COMPANY_EMB_LAYER) reverts the whole core read/write path",
+    "Fail-loud cross-dim mismatch is demonstrated empirically (2560 vs 1024 ValueError) rather than asserted",
+    "Honest accounting of the unspaced-consult residual: explains WHY it degrades to keyword (no vector to cross-dim, so the fail-loud doesn't fire) rather than hiding it"
+  ],
+  "conventions": [
+    "Follows the no-versioning / apply-in-place ethos with explicit OLD/NEW line-anchored diff blocks",
+    "Follows fail-loud-everywhere (dim mismatch RAISES, never silent cosine)",
+    "Follows the multi-layer #emb=<tag> addressing grammar",
+    "Honors the lead-decides discipline: the residual and walker fix are explicitly handed up, not assumed"
+  ],
+  "concerns": [
+    "Line numbers are hardcoded into the diff (e.g. config.py lines 23-27, suite.py:10856) which will drift if the target files change before apply",
+    "The proof is described in prose with no attached reproducible script or transcript inside this file",
+    "_embed_consult_query docstring is noted as stale (cosmetic) but left for a later pass"
+  ],
+  "notes": "A reviewer-ready embed-layer switch spec: pplx becomes the coupled default via one knob + resolve_emb_layer at three chokepoints, with a proven fail-loud dim guard and one open lead-decision about the empty unspaced consult index.",
+  "questions": [
+    "Was this diff actually applied, and which residual option (a/b/c) did the lead choose?",
+    "Did the smoke-test gate pass after the mcp_face restart?",
+    "Has the WALK_EXTS walker follow-up been made separately?"
+  ],
+  "purpose_vs_actual": "Match: the stated purpose (make pplx the default coupled corpus-embed layer with one knob and a fail-loud dim contract) is exactly what the four edits and the no-change analysis implement.",
+  "apparent_themes": [
+    "Fail-loud over silent-degradation",
+    "Single-knob reversibility / config-driven not literal",
+    "Coupled query-dim == stored-dim invariant",
+    "Lead-decides for residuals and consequential choices",
+    "Multi-layer addressable embeddings"
+  ],
+  "intention_signals": "It is trying to make a risky storage-layer migration safe and reversible: prove it end-to-end without committing, keep the old layer explicitly reachable, surface (not hide) the one place it degrades, and gate the live apply behind a restart + smoke test that a separate reviewer runs.",
+  "novelty": "The '__default__' string sentinel distinct from None (None means the legacy bge layer, sentinel means 'use the knob') is an unusual but deliberate three-valued resolution scheme for the emb param.",
+  "contribution": "Contributes a concrete, line-anchored, proven migration pattern for switching the corpus embedding layer: the resolve_emb_layer chokepoint design, the sentinel-vs-None semantics, the fail-loud dim coupling, and the explicit handling of the empty-unspaced-consult edge case.",
+  "summary_for_embedding": "An apply-ready proposed diff switching the Company corpus-embed default from bge-1024 to pplx-2560 via a single DEFAULT_EMB_LAYER knob and a resolve_emb_layer helper at query_index/build_index/find_relations, with a proven fail-loud dim-mismatch guard and one open lead-decision about the empty unspaced consult index.",
+  "intention_for_embedding": "To safely and reversibly make the pplx 2560-dim embedder the coupled default corpus layer while keeping bge explicitly reachable and surfacing the single place consult degrades."
+}

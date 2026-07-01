@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "CLAUDE.md",
+  "model": "opus",
+  "what_it_does": "The operating manual injected into every conversation for the ConceptV Design System. States the core anti-drift principle ('everything defined once, referenced everywhere'), enumerates the four single-source-of-truth registries (design tokens, types, the generative engine, AI), gives the propagation rules for adding/changing each, lists non-negotiables, the after-every-change checklist, and hard-won traps.",
+  "observations": [
+    "Section 0 'The one idea': find the one home, edit there, reference everywhere; copy-paste = drift, the failure mode the system exists to prevent",
+    "Lists companion docs: analysis/HANDOFF.md, AXES.md, INTEGRATION.md, UNIFICATION.md, FINDINGS-LOG.md, DESIGN-LANGUAGE.md, README.md v2",
+    "Four registries table with home/consumed-via/extend-by columns: tokens (styles.css→colors_and_type.css+tokens/*.css, L0→L1→L2), types (window.CV_REGISTRY / app/registry/types-core.js), engine (core/ ContainmentTree, DiagramSolver, RenderType/Slide on cv-nodes.d.ts), AI (window.CV_AI)",
+    "AI layer detail: providers, behaviours (voice is voice.conceptv), skills, capabilities ('43 today across 14 families'), contexts; capability id == dispatch target",
+    "Non-negotiables: no second home; loud fail never silent (throw, don't degrade); interface is a projection of the registries; audit (grep) before touching; vigilance against mere technical success",
+    "After-change checklist: run check_design_system, append to FINDINGS-LOG.md, keep DESIGN-LANGUAGE.md+README.md v2 in lockstep, ready_for_verification({path:'app/index.html'})",
+    "Traps: _ds_bundle.js/_ds_manifest.json/_adherence.oxlintrc.json are compiled output (never hand-edit); script load order ai-registry→ai-seed→ai-capabilities-canvas; DOM-guard self-mounting .jsx; normalize() must carry function members through"
+  ],
+  "standouts": [
+    "The four registries deliberately mirror each other (same register/resolve/lineage/query/subscribe API) so learning one teaches the others",
+    "Capability id == the target/move name, 'so the catalogue IS the dispatch'",
+    "The interface is described as a projection of the registries, synchronised by construction rather than a parallel structure",
+    "'Vigilance against mere technical success' — compiles/renders/passes ≠ computed from the rules"
+  ],
+  "conventions": [
+    "Establishes the conventions the rest of the corpus follows (single home, var(--token), data-* knobs for axes, register/resolve)",
+    "Self-maintenance discipline: keep DESIGN-LANGUAGE.md/README.md/this file in lockstep",
+    "Fail-loud is a stated law, not just a habit"
+  ],
+  "concerns": [
+    "Concrete counts/lists (43 capabilities across 14 families) are point-in-time and can drift from the actual registry if not maintained"
+  ],
+  "notes": "The constitution of the ConceptV Design System — read this to understand the four-registry single-source-of-truth architecture and the anti-drift discipline everything else obeys.",
+  "questions": [
+    "Are the four registries actually unified under one API in code, or is the mirrored-API claim aspirational?",
+    "Is the '43 capabilities / 14 families' count kept current by tooling or by hand?"
+  ],
+  "purpose_vs_actual": "Match (as a document) — it states it is the operating manual for a unified generative system and it delivers exactly that: the homes, the propagation rules, the laws, the checklist. Whether the code fully realises the claims is not verifiable from this file alone.",
+  "apparent_themes": [
+    "Single source of truth / anti-drift",
+    "Registry-as-truth, interface-as-projection",
+    "Composition over duplication",
+    "Fail-loud over silent degradation",
+    "Self-describing, self-maintaining substrate"
+  ],
+  "intention_signals": "To prevent design/code drift by force of doctrine — making every agent internalise that there is exactly one home for any value, type, prompt, axis, or capability, and that the UI is computed from those registries rather than hand-laid.",
+  "novelty": "Framing four heterogeneous systems (tokens, types, generative engine, AI) under one mirrored register/resolve API and one anti-drift law; treating 'mere technical success' as a named failure mode.",
+  "contribution": "Contributes the architectural doctrine and the four-registry map of the design system — the single-source-of-truth principle, the per-registry propagation rules, the fail-loud law, and the self-maintenance discipline that a fused system would keep as its governing charter.",
+  "summary_for_embedding": "The operating-manual CLAUDE.md for the ConceptV Design System defining four single-source-of-truth registries (tokens, types, generative engine, AI), their propagation rules, anti-drift non-negotiables, a post-change checklist, and known traps.",
+  "intention_for_embedding": "To enforce one-home/reference-everywhere anti-drift discipline across a unified generative design system so the interface is a projection of registries and nothing is ever copied or hand-set."
+}

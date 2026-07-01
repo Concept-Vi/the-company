@@ -1,0 +1,54 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/COMPOSITIONS.md",
+  "model": "opus",
+  "what_it_does": "Specifies twelve named 'compositions' that turn the cognition engine on itself and on Claude Code's own work — each a chain of engine calls (MAP/REDUCE/CONFIRM/embed/capture) designed to become a runnable stored graph via save_cascade/run_cascade. Each composition is documented at chain grain: what it does, how it works, the models, the exact MCP tool-calls, and codebase file:line addresses, all framed around offloading broad/shallow work to a free local swarm while reserving deep judgment for the Opus/Claude-Code seat.",
+  "observations": [
+    "Twelve numbered compositions: repo exocortex, drift radar, transcript miner, pre-flight scout brief, background self-audit, verification jury, spec-compiler, self-extending toolmaking, durable cross-session memory, option-panels, grunt-offload reflex, engine-improves-engine",
+    "Opens with the asymmetry framing: Opus is the scarce deep-judgment resource; the swarm is free/concurrent/local/broad/persistent — every composition is one trade across that line (an 'exocortex')",
+    "Two invariant safety laws stated: the floor is invariant (surface/mark/draft/propose, never auto-mutate or self-approve) and no-fiction/grounding-is-everything (real artifact + real law as per-unit context, CONFIRM jury cross-checks)",
+    "Grounds the floor claim in tests/cognition_governance_acceptance.py with '42/42 checks passing' and lists COG_SOURCES scanned by an AST scan",
+    "Includes a dependency-spine ASCII diagram showing the twelve as one circuit, not twelve features",
+    "A shared-primitives table maps each primitive (MAP/REDUCE/single-role/chunk/embed/capture/retrieve/mark/resolve/authoring/cascade/etc.) to its MCP tool signature and engine fn at file:line",
+    "Distinguishes GPU-dependent compositions (need bge-m3 embedder live @ :8001) from non-embed ones that run on the resident 4B swarm @ :8000",
+    "Each composition gives explicit run_items/run_reduce/run_role/capture/find_relations/save_cascade tool-call blocks with template-var substitution (${task}/${seed}/${question})",
+    "Two honest needs-build flags surfaced inline (multi-variable per-step prompt substitution; no retrieve/similarity cascade op primitive yet)",
+    "Ends with a BUILD ORDER (verification-jury first, then repo exocortex, then the serve-Tim layer) and a STATUS/GROUNDING section dated 2026-06-09 claiming v1 grounded against live MCP schemas and real file:line refs"
+  ],
+  "standouts": [
+    "The scarce-resource asymmetry is the organizing idea: every composition is one trade pushing broad work down and reserving deep judgment up",
+    "Composition 12 (engine-improves-engine) closes the loop — the engine reads its own open items and drafts the next build's lane-cut, with build-dispatch staying human-gated",
+    "The 'first-use friction is the 12 input' section: using the compositions generates the list of how to improve them, implemented in parallel from both the strategic seat and the swarm",
+    "Every tool-call block and file:line is claimed verified against the live MCP tool schemas this session, not asserted from memory",
+    "The verification-jury reduce is deterministic (mode=rule, no model) so it is replay-identical despite nondeterministic juror finish-order"
+  ],
+  "conventions": [
+    "Each composition follows a fixed template: What it does / How it works (the chain) / The models / The exact tool calls / Codebase addresses",
+    "Heavy file:line citation discipline and registry-is-truth framing throughout",
+    "Honest-status convention: needs-build items flagged inline, never green-painted; floor restated per-composition",
+    "Numbered circled glyphs and dense symbolic shorthand consistent with sibling build-prep docs"
+  ],
+  "concerns": [
+    "The '42/42 checks passing' and 'v1 grounded' claims are point-in-time (2026-06-09) and could drift from the live code without the doc updating",
+    "Two compositions explicitly depend on engine primitives that do not yet exist (retrieve/similarity ops), so some chains as written run only partially today"
+  ],
+  "notes": "A twelve-composition catalogue turning the cognition engine on itself — each a stored-graph-ready chain that offloads broad work to a free swarm and keeps deep judgment and build-dispatch human-gated.",
+  "questions": [
+    "Have the two flagged needs-build rungs (multi-var substitution, retrieve/similarity ops) been built since 2026-06-09?",
+    "Which of the three existing memory systems does composition 9 ultimately complement vs extend (the doc leaves it as a Tim-decision)?",
+    "Is the 42/42 governance count still current against the listed COG_SOURCES?"
+  ],
+  "purpose_vs_actual": "Matches — it states it specifies twelve stored-graph compositions at chain grain with tool-calls and addresses, and the body delivers exactly that for all twelve plus build order and grounding status.",
+  "apparent_themes": [
+    "Compositional reuse — every composition built from the same shared primitives",
+    "Resource-asymmetry / exocortex (free swarm vs scarce deep judgment)",
+    "Invariant floor (surface/draft/propose, never auto-mutate or self-approve)",
+    "No-fiction / grounding-is-everything",
+    "Self-improving loop (the engine reading and improving itself)"
+  ],
+  "intention_signals": "It is trying to operationalize a free local cognition swarm as a token/latency/memory multiplier on a strategic mind, defining concrete reusable chains that keep humans in the approval loop while letting the engine progressively read, audit, and extend itself.",
+  "novelty": "Treating self-improvement as twelve composable stored graphs over one engine, with the closing composition (engine-improves-engine) drafting its own next build lane-cut and a stated mechanism for first-use friction to feed that loop.",
+  "contribution": "Contributes the concrete catalogue of twelve engine-on-itself chains — their exact tool-call sequences, model assignments, codebase addresses, dependency spine, and safety framing — that a fused system would keep as the operational design for self-improving cognition.",
+  "summary_for_embedding": "A specification of twelve cognition-engine self-improvement compositions, each a save_cascade-ready chain of MAP/REDUCE/CONFIRM/embed engine calls with exact MCP tool-calls and codebase addresses, framed by a swarm-vs-deep-judgment asymmetry and an invariant safety floor.",
+  "intention_for_embedding": "To operationalize a free local cognition swarm as an exocortex that offloads broad work and reserves deep judgment, via reusable stored-graph chains that keep mutation and dispatch human-gated."
+}

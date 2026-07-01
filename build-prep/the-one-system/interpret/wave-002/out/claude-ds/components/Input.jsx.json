@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "components/Input.jsx",
+  "model": "opus",
+  "what_it_does": "React implementation of the Input form-field component using React.createElement (aliased h). Renders one of .cv-input/.cv-textarea/.cv-select based on the as prop, sets aria-invalid when error is present, and — if any of label/hint/error are provided — wraps the control in a .cv-field div with a .cv-label and a .cv-hint span (the hint switches to error text and .cv-hint--error styling when error is set).",
+  "observations": [
+    "No JSX; uses const h = React.createElement and a /* global React */ comment (consumes a global React).",
+    "Control class chosen by as: textarea→cv-textarea, select→cv-select, else cv-input; appends caller className.",
+    "Bare-control shortcut: if label, hint, and error are all null, returns the control element alone.",
+    "aria-invalid set to 'true' only when error is truthy, else undefined.",
+    "When wrapped, the .cv-hint span shows error text if present, otherwise hint; error adds the cv-hint--error class.",
+    "Header comment notes the gold focus ring and underlying classes come from tokens/controls.css and 'the source's composer'.",
+    "Defensive props || {} destructuring guard."
+  ],
+  "standouts": [
+    "Single error/hint span that prefers error over hint, keeping one message slot.",
+    "Token-class-only styling (no inline styles) — purely a class wrapper over CSS-defined controls."
+  ],
+  "conventions": [
+    "Class-driven styling referencing design-system tokens/classes (no raw values) — matches the single-source directive.",
+    "createElement instead of JSX, suggesting a no-build / bundle-friendly module.",
+    "Polymorphic 'as' element selection matching the .d.ts contract.",
+    "React keys on conditional children (key: 'l', 'h')."
+  ],
+  "concerns": [],
+  "notes": "The Input field primitive: a class-wrapper over .cv-input/.cv-textarea/.cv-select that optionally builds the full .cv-field label/hint/error stack and sets aria-invalid.",
+  "questions": [
+    "Where are .cv-input/.cv-textarea/.cv-select/.cv-field/.cv-hint defined (tokens/controls.css, referenced not shown here)?",
+    "Is the reliance on a global React (not imported) consistent with how this module is bundled?"
+  ],
+  "purpose_vs_actual": "Match — header comment describes a token-class wrapper with an optional .cv-field stack; the code implements exactly that and matches its .d.ts.",
+  "apparent_themes": [
+    "Class-as-styling single source (CSS tokens carry the look)",
+    "Polymorphic form control",
+    "Accessibility-by-contract (aria-invalid)"
+  ],
+  "intention_signals": "Aims to keep the form field as a minimal class-wrapping React layer with no styling literals of its own, deferring all appearance to the design-system control classes.",
+  "novelty": "n/a",
+  "contribution": "Contributes the runtime that maps Input props to the correct control class and conditionally assembles the .cv-field label/hint/error stack with error-priority messaging and aria-invalid.",
+  "summary_for_embedding": "React Input component built with React.createElement that renders .cv-input/.cv-textarea/.cv-select by the as prop, sets aria-invalid on error, and optionally wraps the control in a .cv-field stack with label and an error-or-hint span.",
+  "intention_for_embedding": "To provide a styling-free, class-driven form-field wrapper that defers all appearance to design-system control classes."
+}

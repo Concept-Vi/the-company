@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "preview/image-slot.js",
+  "model": "opus",
+  "what_it_does": "Defines a self-contained <image-slot> Web Component (custom element with shadow DOM): a user-fillable image placeholder that accepts an image by drag-drop or file-browse, downscales it to WebP via a canvas, persists it (plus crop/scale/pan framing) to a .image-slots.state.json sidecar through window.omelette.writeFile, and offers a double-click 'reframe' mode (pan, corner-resize, wheel-zoom) for fit=cover slots. Outside the omelette runtime it renders read-only from the sidecar/src.",
+  "observations": [
+    "Opens with '@ds-adherence-ignore -- omelette starter scaffold (raw elements/hex/px by design)' — explicitly exempting itself from the design-system's no-raw-hex/px adherence rule.",
+    "Large /* BEGIN USAGE *//* END USAGE */ JSDoc block documenting attributes: id (persistence key, REQUIRED to survive reload), shape (rect|rounded|circle|pill), radius, mask (clip-path), fit (cover|contain|fill), position, placeholder, src.",
+    "Shared module-level sidecar store: a single fetch(STATE_FILE) load with merge-on-hydration, tombstones to distinguish 'never set' from 'just deleted', and serialized writes (saving/saveDirty) to prevent reorder/clobber.",
+    "Image downscale via createImageBitmap → canvas → toDataURL('image/webp', 0.85), capped at 2× rendered width and MAX_DIM=1200.",
+    "ACCEPT allowlist = png/jpeg/webp/avif; SVG excluded (script risk) and GIF excluded (canvas re-encode keeps only first frame) — documented reasons.",
+    "Reframe geometry done in frame-% coordinates with a cover-baseline so crops survive responsive resize and transform:scale() ancestors (PPTX export / deck_stage).",
+    "Generation counter (this._gen) guards async encodes so a stale drop/clear can't clobber a newer one.",
+    "ResizeObserver re-renders on host size change; re-seeds _view from stored value so shrink→grow round-trips without ratcheting.",
+    "Security: only accepts data:image/ URLs from the sidecar (which agent write_file can also touch) but passes the author-controlled src attribute through unchanged.",
+    "Editability gates entirely on presence of window.omelette.writeFile — controls and reframe disabled on share links.",
+    "Stores either a bare data-URL string (legacy) or {u,s,x,y} object; getSlot normalizes both shapes."
+  ],
+  "standouts": [
+    "Comments repeatedly cite the same read-via-fetch / write-via-window.omelette persistence pattern as design_canvas.jsx, naming a shared host-bridge contract.",
+    "The trust boundary: src is author-controlled and trusted; the sidecar is treated as potentially agent-written and restricted to data:image/ URLs.",
+    "Frame-% coordinate math explicitly designed to survive transform:scale() ancestors so crops export correctly to PPTX.",
+    "Race-correctness is heavily engineered: hydration merge, tombstones, save serialization, and async generation guards each have a documented rationale."
+  ],
+  "conventions": [
+    "Deliberately breaks the design-system token discipline (raw hex like #c96442, px literals, system-ui font) and opts out via @ds-adherence-ignore, calling itself a 'starter scaffold'.",
+    "Follows the established omelette sidecar persistence + host-bridge writeFile-allowlist convention (writes only *.state.json basenames at project root).",
+    "Standard custom-element lifecycle (observedAttributes, connected/disconnected/attributeChanged callbacks) with listeners bound once to survive remount."
+  ],
+  "concerns": [
+    "The accent colour #c96442 is hardcoded in many places in the stylesheet string; if it is meant to match a design token it can drift (the file acknowledges this by opting out of adherence).",
+    "Persistence depends on a global window.omelette bridge and on the HTML living at project root (host allowlists only root *.state.json) — fragile coupling documented but real."
+  ],
+  "notes": "A standalone, heavily race-hardened drag-drop image placeholder Web Component that persists filled images + crops to a JSON sidecar via the omelette host bridge; deliberately exempt from design-token rules as a scaffold.",
+  "questions": [
+    "Is the hardcoded accent #c96442 intended to track a design token, or is the adherence-ignore a permanent decision for this scaffold?",
+    "What exactly is the window.omelette host bridge, and where is its writeFile allowlist enforced?"
+  ],
+  "purpose_vs_actual": "Matches — the USAGE block describes a user-fillable, persistable image slot with shape/fit/reframe controls, and the implementation delivers exactly that including the documented persistence and read-only-outside-runtime behaviour.",
+  "apparent_themes": [
+    "Authoring surfaces that persist user content via a host bridge (read-via-fetch / write-via-omelette)",
+    "Portability of rendered output (share links, zip, PPTX) through coordinate math and read-only fallback",
+    "Defensive correctness against races and untrusted-content trust boundaries",
+    "Pragmatic exemption from design-token rules for a scaffold component"
+  ],
+  "intention_signals": "Aims to let an author drop an image-fill region into any deck/mockup/page that any user can fill by drag-drop, with the fill (and its crop) surviving reload, share, and export — a reusable building block for the authoring/mockup runtime rather than a styled design-system component.",
+  "novelty": "A drop-to-fill image placeholder with an in-place cover 'reframe' (pan/resize/zoom) whose crop is stored in frame-% so it survives responsive resize and scale-to-fit export, persisted through a sidecar+host-bridge with explicit race and trust handling.",
+  "contribution": "Contributes the reusable <image-slot> custom element and its omelette-sidecar persistence pattern (including the data:image/ trust restriction and export-safe frame-% crop geometry) that a fused authoring system would keep as its image-fill primitive.",
+  "summary_for_embedding": "A self-contained <image-slot> Web Component providing a drag-drop/browse image placeholder with WebP downscaling, cover-mode reframe (pan/resize/zoom), and persistence of image+crop to a JSON sidecar via the omelette host bridge.",
+  "intention_for_embedding": "To provide a reusable, persistable, export-safe user-fillable image slot for decks, mockups, and pages in the omelette authoring runtime."
+}

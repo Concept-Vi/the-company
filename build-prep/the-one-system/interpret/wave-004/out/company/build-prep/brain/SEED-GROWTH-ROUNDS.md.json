@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/SEED-GROWTH-ROUNDS.md",
+  "model": "opus",
+  "what_it_does": "A conversation-capture document (2026-06-11/12) preserving two 'amplification rounds' grown from Tim Geldard's geometric seed. Round 2 records Tim's correction (everything is variables, the centre moves) plus a set of proposed bindings of the geometric figure to Company concepts; Round 3 records the translation of those bindings into a DB/UI/resolver design. It explicitly marks nothing as ratified.",
+  "observations": [
+    "Frames itself as a cross-compaction preservation of conversation results, attributing all derived work to Tim Geldard.",
+    "Round 2 records Tim's correction that the axes/divisions are all variables and 'the centre is the object of attention and it MOVES'.",
+    "Proposes bindings: embeddings=the circle (continuous), directory/addresses=the square (discrete), type registries=angular sectors + grammar of legal moves, timestamps=the involuntary axis, nodes=populated coincidence points, edges=performed moves.",
+    "Defines 'forbidden, operationally = where only recognition can operate' and 'forbidden-zone density = gap-pressure' as the signal to grow a new axis.",
+    "States 'LEARNING = the growth of new axes under forbidden-zone pressure' and distinguishes recognition (small move) from learning (large move).",
+    "Round 3 collapses four existing gatherers into ONE parameterized resolve(centre, spaces, n, k, audience, exhale) call; states 'STORE POSITIONS, COMPUTE PERSPECTIVES'.",
+    "Proposes two new registries (origins, axes) and an 'origin' lineage field; describes three audiences (Tim / RHM-Viv / sidecar-builder) as one resolve with different bindings.",
+    "Ends with an explicit status line: Tim has not yet ratified rounds 2-3 part-by-part."
+  ],
+  "standouts": [
+    "The collapse claim: 'ONE operation — re-centre, read the rings — three faces' unifying gatherer, greeting assembler, builder context block, and boot bundle into one resolve call.",
+    "'STORE POSITIONS, COMPUTE PERSPECTIVES' as the DB law (radius/angle never stored, computed at read time).",
+    "'what Tim sees and what the AIs know are two output formats of ONE read' — shared-reality-as-structural claim."
+  ],
+  "conventions": [
+    "Carefully labels which statements are Tim's verdicts vs the agent's extensions ('await his per-part reaction; none ratified yet').",
+    "Uses the repo's resolve/centre/rings vocabulary and references GC14, R2 strata, the per-address gatherer as existing pieces.",
+    "Follows an expand-before-harden discipline: extensive design, explicit non-ratification."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the captured second and third growth rounds of Tim's geometric seed — the variable-everything correction, the figure-to-Company bindings, and the one-resolve-call DB/UI design, all explicitly unratified.",
+  "questions": [
+    "Which of the round-2/round-3 bindings did Tim later ratify, and which were corrected? (this file predates those verdicts)",
+    "Was the single resolve(centre, spaces, n, k, audience, exhale) call actually built, or is it still a stated build-delta?"
+  ],
+  "purpose_vs_actual": "Match — it states it preserves the growth rounds across compaction and does exactly that, separating Tim's words from agent extensions.",
+  "apparent_themes": [
+    "Invariant law over free/variable bindings",
+    "Attention as a coordinate transform; the moving, nesting centre",
+    "Store positions, compute perspectives (relative-by-read)",
+    "One unified resolve operation with three exhale faces",
+    "Learning as axis-growth under forbidden-zone pressure",
+    "Expand-before-harden / nothing ratified"
+  ],
+  "intention_signals": "An effort to take a compact geometric intuition and grow it, in dialogue, into a concrete data/resolution architecture for the Company — binding embeddings, addresses, registries, and time onto the figure — while scrupulously preserving the conversation and not over-committing before Tim ratifies.",
+  "novelty": "The unification of attention and resolution ('the resolver IS the system's eye'), the forbidden-zone-density = gap-pressure = grow-an-axis mechanism, and the single parameterized resolve collapsing four separate context-assembly paths.",
+  "contribution": "Contributes the round-2/round-3 design layer of the seed: the explicit figure-to-Company bindings, the store-positions/compute-perspectives DB law, the origins+axes registries, and the one-resolve-call unification of gatherer/greeting/builder-context/boot-bundle — a design vocabulary a fused system could keep.",
+  "summary_for_embedding": "A conversation-capture of two amplification rounds of Tim Geldard's geometric seed, binding embeddings/addresses/registries/time onto the figure and collapsing the Company's context-assembly paths into one parameterized resolve(centre, spaces, n, k, audience, exhale) call under a store-positions/compute-perspectives law, explicitly unratified.",
+  "intention_for_embedding": "To preserve across compaction the grown design that translates Tim's geometric instrument into a concrete DB/UI/resolver architecture for the Company."
+}

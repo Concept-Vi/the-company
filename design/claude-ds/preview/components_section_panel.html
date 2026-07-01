@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Soft-gold section panel" subtitle="The brand's signature grouped-settings container" viewport="700x320" --><html><head><meta charset="utf-8"><title>Section panel</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 22px 26px; min-height: 280px; }
+  .lead { font: 400 12px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 16px; }
+  .panel {
+    background: var(--accent-gold-50);
+    border-radius: var(--r-lg);
+    padding: 20px 24px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px 32px;
+  }
+  .group-title {
+    font: 600 14px/1 var(--font-body);
+    color: var(--fg-primary);
+    margin: 0 0 14px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .info { width: 14px; height: 14px; border-radius: 50%; background: var(--accent-gold); display: inline-flex; align-items: center; justify-content: center; color: white; font: 700 9px/1 var(--font-body); }
+  .check { display: flex; align-items: center; gap: 10px; padding: 6px 0; font: 500 13px/1 var(--font-body); color: var(--fg-primary); }
+  .box { width: 16px; height: 16px; border-radius: 4px; flex: none; background: var(--accent-gold); position: relative; }
+  .box::after { content: ''; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border-right: 2px solid var(--fg-primary); border-bottom: 2px solid var(--fg-primary); transform: rotate(45deg); }
+  .box.off { background: var(--accent-gold-soft); }
+  .box.off::after { display: none; }
+  .link { color: var(--accent-gold); text-decoration: underline; cursor: pointer; }
+</style></head>
+<body><div class="card">
+  <p class="lead">The product UI's grouped-settings container: a <b>soft-gold-tinted panel</b> (no border, no shadow — colour wash + 12 px radius). This is the flat product-chrome pattern. On deck/generative surfaces, grouping is instead the <b>depth-keyed zone wash</b> — the near-white ladder (<code>--zone-*</code>) where the tint marks containment depth.</p>
+  <div class="panel">
+    <div>
+      <h4 class="group-title">Menu Options <span class="info">i</span></h4>
+      <div class="check"><span class="box"></span>Information Panel</div>
+      <div class="check"><span class="box"></span>Share Panel</div>
+      <div class="check"><span class="box"></span><span class="link">Floorplan</span></div>
+      <div class="check"><span class="box off"></span>Renders &amp; Videos</div>
+      <div class="check"><span class="box"></span>Gyroscope</div>
+    </div>
+    <div>
+      <h4 class="group-title">Navigation Options <span class="info">i</span></h4>
+      <div class="check"><span class="box off"></span>Show turning arrows</div>
+      <div class="check"><span class="box off"></span>Show Hide Navigation option</div>
+      <div class="check"><span class="box off"></span>Show Quick Navigation menu</div>
+      <div class="check"><span class="box off"></span>Show filter options</div>
+      <div class="check"><span class="box"></span>Apply to all Hubs in this Project</div>
+    </div>
+  </div>
+</div></body></html>

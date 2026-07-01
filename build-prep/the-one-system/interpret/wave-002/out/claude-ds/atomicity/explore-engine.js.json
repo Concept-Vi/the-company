@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/explore-engine.js",
+  "model": "opus",
+  "what_it_does": "Defines window.CV_EXPLORE, an IIFE engine for divergent-then-convergent style exploration. It lists restyleable product elements and an on-system token palette, builds a prompt asking Vi to produce N visibly different style 'directions' (recipes) for an element steered by intent/likes/dislikes, calls CV_AI.complete, robustly salvages the variant JSON (fenced or brace-balanced), and renders each recipe via styleFor(). It can promote a chosen recipe into a registered atom Type (staged through CV_HOST.commit and registered live in CV_REGISTRY), persists a gallery of promoted atoms in localStorage with listeners, computes a local taste profile from liked recipes (no model), and registers three CV_AI capabilities (explore.variations / explore.promote / explore.run).",
+  "observations": [
+    "Header frames it as 'divergent style exploration that converges into real components', with Generation = f(element, intent, taste), and recipes as data while markup lives in Explore.jsx.",
+    "Throws immediately if CV_AI is not loaded first ('[CV_EXPLORE] CV_AI must load first') — loud-fail on dependency order.",
+    "ELEMENTS are real product fragments (button/card/price/badge/stat) with sample content; TOKENS offers the on-system palette to the model while explicitly allowing divergence to raw values.",
+    "styleFor() converts a recipe to inline style props, defaulting every field to a system token (var(--bg-surface), var(--ink), var(--r-md), var(--elev-1), etc.).",
+    "PROMPT instructs distinct directions (minimal/bold/soft/architectural/dark/editorial/playful), feeds liked/disliked as JSON, and demands a terse {\"variants\":[…]} JSON shape.",
+    "salvageVariants is a defensive parser: strips code fences, tries JSON.parse, else brace-balances objects out of a partial '\"variants\"[...]' array with string/escape tracking.",
+    "variations() tries the messages-form complete then falls back to string-prompt complete, assigns time-based ids.",
+    "promote() slugifies a name into id 'atom.<element>.<slug>', stages via CV_HOST.commit (kind 'type') and registers in CV_REGISTRY, then remembers it; failures route to dsaToast or are swallowed (CV_REGISTRY register catch {}).",
+    "Gallery persists up to 60 promoted atoms in localStorage key 'atomicity:explored' with add/forget/subscribe listeners.",
+    "tasteProfile() derives human tags (solid fills/outlined, warm, dark, very rounded/rounded/sharp, floating/lifted/flat) and a strength from liked recipes using regex + ordinal maps — explicitly 'No model needed'.",
+    "Three CV_AI capabilities registered with {silent:true}: explore.variations (provider claude, voice.conceptv), explore.promote (provider host-fs), explore.run (end-to-end, optionally auto-promotes the first variant)."
+  ],
+  "standouts": [
+    "Promotion closes the divergent→convergent loop: an explored style becomes a real registered Type (staged to source via CV_HOST and live in CV_REGISTRY), not a throwaway preview.",
+    "The local taste-profile derives steering language instantly without a model call, making the like/dislike feedback feel immediate.",
+    "salvageVariants is a hardened brace-balancing JSON recovery for imperfect LLM output."
+  ],
+  "conventions": [
+    "Capabilities registered into CV_AI (the catalogue IS the dispatch) per the project's AI-registry rule; voice sourced as behaviour 'voice.conceptv' not inlined.",
+    "Recipes default to system tokens (styleFor), keeping variants on-system unless deliberately diverged.",
+    "IIFE + 'use strict' + single window.CV_EXPLORE export with a ready console.info."
+  ],
+  "concerns": [
+    "CV_REGISTRY.register failure is swallowed (catch {}), and exploreFor's 'promoteBest' auto-promotes variant[0] as 'the strongest' though variants are unordered by quality — a possibly arbitrary 'best'.",
+    "promote()/tasteProfile lean on recipe field names being consistent with what the model returns; malformed recipes would default silently."
+  ],
+  "notes": "The Explore engine — generate several distinct on-system style directions for a real element, steer by taste, and promote the keeper into a registered atom Type (staged to source + live); the visual rendering lives in Explore.jsx, capabilities are registered in CV_AI.",
+  "questions": [
+    "How is 'the best/strongest' variant determined for auto-promote — is variant[0] meaningfully ranked, or just first?",
+    "What does CV_HOST.commit({kind:'type', payload}) ultimately serialize to (types-seed.js per the header) and how does that round-trip to disk?"
+  ],
+  "purpose_vs_actual": "Match — the header describes pick→diverge→steer→iterate→promote-to-Type with recipes-as-data, and the code implements variation generation, taste steering, and promotion into CV_HOST+CV_REGISTRY exactly.",
+  "apparent_themes": [
+    "Divergent generation converging into single-sourced Types",
+    "Generation = f(element, intent, taste)",
+    "On-system by default, divergence by choice",
+    "Local, instant feedback over extra model calls"
+  ],
+  "intention_signals": "Trying to turn open-ended visual exploration into something that lands in the architecture: many cheap distinct directions, human taste as the steering signal, then a one-click promotion that makes the chosen look a real registered component rather than a discarded mockup.",
+  "novelty": "An explore-to-promote pipeline where AI-generated style recipes are steered by a locally-computed taste profile and the keeper becomes a staged+live registered atom Type, plus a hardened JSON-salvage parser for partial LLM output.",
+  "contribution": "Contributes the style-exploration capability: element/token catalogues, the variation-generation prompt + salvage parser, the taste-profile steering, the promote-to-Type bridge (CV_HOST + CV_REGISTRY), the persisted gallery, and three registered CV_AI capabilities.",
+  "summary_for_embedding": "window.CV_EXPLORE — an engine that generates several distinct on-system style directions for a real product element via CV_AI, steers them with a locally-computed taste profile from likes/dislikes, and promotes a chosen recipe into a registered atom Type staged through CV_HOST and live in CV_REGISTRY, with a persisted gallery and three registered CV_AI capabilities.",
+  "intention_for_embedding": "To let divergent visual exploration of an element converge, via human taste, into a real single-sourced component in the architecture rather than a throwaway mockup."
+}

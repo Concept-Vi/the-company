@@ -1,0 +1,40 @@
+{
+  "project": "company",
+  "path": "board_edges/refutes.py",
+  "model": "opus",
+  "what_it_does": "Defines a single RELATION_TYPE dict for the 'refutes' board edge: a directed conceptual edge declaring that one addressed claim refutes/contradicts/falsifies another (the adversarial/correction edge).",
+  "observations": [
+    "Module-level RELATION_TYPE constant only.",
+    "directed=True, label='refutes'; no inverse key defined.",
+    "desc example: a default-to-wrong catch.",
+    "desc frames it as a CONCEPTUAL edge between addressed perspectives/claims (the harvest's RELATIONS), first-class so the linking layer doesn't collapse it to 'references'.",
+    "Surfaced by-use during the wind-down harvest (recollection)."
+  ],
+  "standouts": [
+    "Names an adversarial/correction semantic ('a claim that falsifies another').",
+    "Shares the composes_with framing: a harvest RELATION kept distinct from generic references."
+  ],
+  "conventions": [
+    "Follows the board_edges RELATION_TYPE pattern (id/directed/label/desc).",
+    "Omits inverse, matching composes_with and unlike commented_on/part_of/promoted_from/references."
+  ],
+  "concerns": [
+    "No inverse defined for an adversarial relation; whether 'is-refuted-by' traversal is intended is unclear from this file alone."
+  ],
+  "notes": "The adversarial/correction conceptual edge: one claim falsifies another, kept distinct from references for the harvest layer.",
+  "questions": [
+    "Is the missing inverse deliberate?",
+    "How does a 'default-to-wrong catch' get recorded as this edge in practice?"
+  ],
+  "purpose_vs_actual": "Match: desc describes a claim-refutes-claim conceptual edge and the dict declares it.",
+  "apparent_themes": [
+    "Adversarial / corrective relations between claims",
+    "Preserving relation granularity over generic references",
+    "Conceptual edges surfaced during harvest"
+  ],
+  "intention_signals": "Trying to capture contradiction/falsification between claims as a distinct, queryable edge so corrections and adversarial catches are first-class in the harvest.",
+  "novelty": "An explicit falsification/contradiction edge between claims, distinct from generic cross-reference.",
+  "contribution": "Contributes the adversarial 'refutes/contradicts' conceptual edge between addressed claims, kept separate from references for the harvest layer.",
+  "summary_for_embedding": "A board relation-type definition for 'refutes', a directed conceptual edge declaring that one addressed claim contradicts or falsifies another.",
+  "intention_for_embedding": "To represent contradiction/falsification between claims as a first-class adversarial edge rather than a generic reference during the harvest."
+}

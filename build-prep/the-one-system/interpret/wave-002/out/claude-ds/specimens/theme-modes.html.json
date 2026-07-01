@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "specimens/theme-modes.html",
+  "model": "opus",
+  "what_it_does": "A design-system specimen page that shows the four theme modes side by side — Light (default, no attribute), Dim (data-theme=\"dim\"), Dark (data-theme=\"dark\"), and Contrast (data-theme=\"contrast\") — by rendering the same small UI fragment (zone swatch row, a candidate card with chips and Back/Approve buttons) in each themed pane. Demonstrates that one ground knob (data-theme) flips the whole zone system while gold discipline is preserved. Links ../styles.css and builds each pane from a JS PANES array.",
+  "observations": [
+    "@dsCard group=\"Colors\" header; subtitle: 'One ground knob flips the whole zone system — gold discipline preserved'.",
+    "Four .pane elements each set their own data-theme attribute (empty for light, then dim/dark/contrast).",
+    "Each pane renders the same content: a row of zone swatches (content/source/success/warning/reject + the vi/gold zone) and a card with a 'ready' chip, a 'Vi pick' gold chip, and secondary/primary buttons.",
+    "Primary button uses --accent-gold with a hardcoded #1f1a12 text colour; the page body background is a hardcoded #cfc7b6.",
+    "Zone swatches and card chrome resolve from --zone-<k>-surface/-edge and --vi-surface/--vi-edge tokens so they recompute per theme via the inherited data-theme.",
+    "Card copy explicitly states: 'The same zone tokens, recomputed against this theme's ground. Gold stays the only saturated voice.'",
+    "Uses --elev-4/--elev-1 for pane and card elevation and the rotated-gold-gem motif in each pane heading.",
+    "Responsive: grid collapses to one column under 720px."
+  ],
+  "standouts": [
+    "Demonstrates the theme system as a single inherited knob (data-theme on a container) flipping every token-derived surface — the same markup recomputed four ways.",
+    "Reinforces the gold-discipline rule across all four grounds (gold stays the only saturated voice in light/dim/dark/contrast)."
+  ],
+  "conventions": [
+    "Follows the specimen pattern: @dsCard header + self-contained HTML linking the shared stylesheet, panes built by inline JS.",
+    "Themes are applied via the data-theme attribute knob (matches the axis-dial convention described in the README/CLAUDE docs).",
+    "Most colour resolves via --zone-*/--vi-* tokens, but the body background (#cfc7b6) and primary-button text (#1f1a12) are hardcoded literals in the local style.",
+    "Uses the rotated-gold-gem heading motif consistent with sibling specimens."
+  ],
+  "concerns": [
+    "Two hardcoded hex literals in the local <style> (#cfc7b6 body bg, #1f1a12 primary-button text) sit outside the token system; the ink literal in particular duplicates what an --on-gold/ink token presumably already defines."
+  ],
+  "notes": "The specimen proving the theme axis: one data-theme knob recomputes the same zone-token UI across Light/Dim/Dark/Contrast while gold stays reserved — read it to see how theming is a single inherited dial.",
+  "questions": [
+    "Should the primary-button text (#1f1a12) use the --on-gold token mentioned in the README instead of a hardcoded ink value, and is #cfc7b6 page background intentional rather than a token?"
+  ],
+  "purpose_vs_actual": "Matches: the subtitle promises one ground knob flipping the zone system with gold discipline preserved, and the four themed panes demonstrate exactly that.",
+  "apparent_themes": [
+    "Theme as a single orthogonal axis (data-theme knob)",
+    "Recompute-not-redraw (same content, different ground)",
+    "Gold discipline preserved across themes",
+    "Tokens-as-truth (zones resolve per theme)"
+  ],
+  "intention_signals": "Trying to prove that theming is one inherited knob over a token system — the same UI fragment recomputes correctly across four grounds without per-theme markup — and that the gold rule holds in every mode.",
+  "novelty": "Showing all four themes as live, simultaneously-rendered panes of identical markup makes the 'one knob flips everything' claim directly verifiable side by side.",
+  "contribution": "Contributes a side-by-side demonstration of the theme axis (light/dim/dark/contrast) operating as a single data-theme knob over the zone tokens, with the gold-discipline invariant shown holding across all four grounds.",
+  "summary_for_embedding": "A ConceptV design-system specimen HTML page rendering the same zone-token UI fragment across four themes (light/dim/dark/contrast) via the data-theme knob, showing themes recompute from tokens while gold stays the only saturated voice.",
+  "intention_for_embedding": "To prove theming is a single inherited axis-knob that recomputes the whole zone system across four grounds while preserving the gold-reserved-for-decisions rule."
+}

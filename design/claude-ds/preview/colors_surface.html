@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Surface palette" subtitle="Canvas · surface · muted · sunken · dark" viewport="700x230" --><html><head><meta charset="utf-8"><title>Surface palette</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 22px 24px; min-height: 220px; }
+  .lead { font: 400 12px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 14px; }
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .sw { display: flex; flex-direction: column; gap: 6px; }
+  .chip { height: 80px; border-radius: var(--r-md); border: 1px solid var(--border-faint); position: relative; }
+  .name { font: 600 11px/1 var(--font-body); color: var(--fg-primary); }
+  .hex { font: 400 11px/1 var(--font-mono); color: var(--fg-muted); }
+  .desc { font: 400 11px/1.3 var(--font-body); color: var(--fg-muted); }
+  .ink-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--fg-primary); position: absolute; bottom: 8px; right: 8px; }
+</style></head>
+<body><div class="card">
+  <p class="lead">Surfaces — five layers, all warm. No cool greys, no pure white as page background.</p>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:#FBF7EC"></div><span class="name">canvas ★</span><span class="hex">#FBF7EC</span><span class="desc">page bg</span></div>
+    <div class="sw"><div class="chip" style="background:#FFFFFF"></div><span class="name">surface</span><span class="hex">#FFFFFF</span><span class="desc">cards on canvas</span></div>
+    <div class="sw"><div class="chip" style="background:#F1ECDC"></div><span class="name">muted</span><span class="hex">#F1ECDC</span><span class="desc">section panels</span></div>
+    <div class="sw"><div class="chip" style="background:#E8E2CC"></div><span class="name">sunken</span><span class="hex">#E8E2CC</span><span class="desc">dropzones, placeholders</span></div>
+    <div class="sw"><div class="chip" style="background:#1F1A12"><span class="ink-dot" style="background:#FBF7EC"></span></div><span class="name">dark</span><span class="hex">#1F1A12</span><span class="desc">menu overlays</span></div>
+  </div>
+</div></body></html>

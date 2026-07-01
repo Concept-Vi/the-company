@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/.cd-history.sh",
+  "model": "opus",
+  "what_it_does": "A bash script (Gate D handle) that mints the throwaway design_client JWT and reads the 'design' channel history through the connector Edge Function, printing each post's from_session, sender_kind, and text to prove the CD client and the fork's company session see the same rows in their shared channel.",
+  "observations": [
+    "Mints a token via password grant for design-test@company.local using the inline supabase-demo ANON key.",
+    "Exits FAIL if no token is returned.",
+    "Calls the channels tool with op:history on channel 'design' via JSON-RPC against the Edge Function at 127.0.0.1:8773/mcp.",
+    "Parses the JSON-RPC result text, and if it's a JSON array prints from_session | sender_kind | first 60 chars of text per row.",
+    "Header comments state the expectation: BOTH sides' posts (CD claude-design and the fork's company session) should appear.",
+    "Designed to run AFTER the fork posts to 'design' (from_session != claude-design)."
+  ],
+  "standouts": [
+    "Goal is to prove two-way participation: same row visible to both principals via RLS in the shared channel.",
+    "Single-purpose companion to gate D in the broader gate suite."
+  ],
+  "conventions": [
+    "Same inline-curl + python3 JSON parsing idiom as the companion .cd-drive.sh.",
+    "Same throwaway-cred / gitignored self-documentation header convention.",
+    "Lettered-gate naming (GATE D)."
+  ],
+  "concerns": [
+    "Embeds the demo ANON JWT and test password in plaintext (local/demo, but in-repo).",
+    "set -u only; a malformed history response falls back to printing raw text but won't fail the script."
+  ],
+  "notes": "A focused verification handle proving the design_client can read the shared 'design' channel history and sees the fork's company-side posts (same data, two-way).",
+  "questions": [
+    "What is sender_kind's vocabulary, and how does it distinguish CD vs company-session posts?",
+    "Does the broader gate suite have separate scripts for the other gates, or is this the only standalone gate-D handle?"
+  ],
+  "purpose_vs_actual": "Stated purpose (Gate D — CD reads design channel history to prove shared-row two-way participation) matches what the script does.",
+  "apparent_themes": [
+    "RLS-scoped shared-channel visibility",
+    "Two-way participation across principals",
+    "Verify-by-use proof"
+  ],
+  "intention_signals": "Trying to demonstrate that a granted shared channel is genuinely shared — the same persisted rows are visible to both the CD client and the fork's company session via RLS.",
+  "novelty": "n/a",
+  "contribution": "Contributes the gate-D verification: an executable read-side proof of shared-channel two-way participation through the connector.",
+  "summary_for_embedding": "A bash script that mints a design_client JWT and reads the shared 'design' channel history via the Edge Function to prove both CD and company-session posts appear.",
+  "intention_for_embedding": "To prove two-way shared-channel participation by showing the design_client sees the fork's posts in the same channel under RLS."
+}

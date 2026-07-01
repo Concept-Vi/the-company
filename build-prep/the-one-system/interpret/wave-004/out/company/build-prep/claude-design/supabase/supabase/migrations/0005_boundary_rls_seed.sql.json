@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0005_boundary_rls_seed.sql",
+  "model": "opus",
+  "what_it_does": "Wires the RLS for the dedicated least-privilege 'company boundary' principal and seeds the shared design channel. Defines is_company_boundary() (a stable SQL function reading app_metadata.role='company_boundary' from auth.jwt()). Creates INSERT+SELECT policies keyed on that function for channel_posts and the three collab tables (dna_tokens, design_seeds, design_submissions), plus SELECT+UPDATE policies on channels (no create). Seeds the 'design' channel (shared=true), adds 'design' to the claude-design client's channels array, and grants INSERT/UPDATE/DELETE on channel_posts and INSERT/UPDATE on the collab/channels tables to authenticated so the boundary RLS policies can actually let writes through.",
+  "observations": [
+    "Policies key off a STABLE custom JWT claim (app_metadata.role) rather than a hardcoded uid, explicitly for local-vs-prod portability.",
+    "is_company_boundary() is declared LANGUAGE sql STABLE with coalesce-to-empty-string default.",
+    "All policies use drop-if-exists then create for idempotent replay.",
+    "The boundary principal gets INSERT+SELECT on the shared slice, SELECT+UPDATE on channels, but explicitly may NOT create channels.",
+    "Comment clarifies grants confer privileges while RLS only filters — without the grants the boundary INSERTs 403 despite the policy.",
+    "Seeds the 'design' channel with shared=true and members '[]', on conflict do nothing.",
+    "Updates clients.channels via array(select distinct unnest(...)) to dedupe-append 'design'.",
+    "service_role still bypasses RLS for the Edge Function's audited writes; this narrows only the boundary principal."
+  ],
+  "standouts": [
+    "The dedicated least-privilege boundary principal instead of using the service-role master key for company-side writes.",
+    "Claim-based (not uid-based) policy design for portability across local/prod — one migration works in both.",
+    "The explicit grant-vs-RLS distinction documented in the privileges block (a common 403 footgun called out)."
+  ],
+  "conventions": [
+    "Idempotent drop-policy-if-exists/create-policy throughout.",
+    "Completes the RLS story that 0003/0004 scaffolded (they enabled RLS; this writes the scoped policies).",
+    "Helper function + policy pattern matching standard Supabase RLS idioms (auth.jwt() claim read)."
+  ],
+  "concerns": [
+    "Grants INSERT/UPDATE/DELETE on channel_posts to ALL authenticated, relying entirely on RLS policies to restrict to the boundary principal — any other authenticated role with a write policy could write; correctness depends on no broad write policy existing elsewhere.",
+    "Header references a separate 0006 (design_client policies) that this batch does not include — the full RLS picture is split across files not all seen here.",
+    "DELETE granted on channel_posts but no boundary DELETE policy is created in this file, so the grant is currently unusable by the boundary principal (latent)."
+  ],
+  "notes": "Completes the security model: defines the claim-based boundary principal, scopes it via RLS to the shared slice (insert+select, channels select+update only), grants the underlying privileges, and seeds the shared 'design' channel + grants it to the claude-design client.",
+  "questions": [
+    "Where is the 0006 design_client policy file that the comments repeatedly reference?",
+    "Why grant DELETE on channel_posts when no boundary DELETE policy is created here?",
+    "How is the company_boundary app_metadata.role provisioned on the boundary Supabase user?"
+  ],
+  "purpose_vs_actual": "Matches: stated as the boundary principal RLS + seed channel; the file defines the helper, the scoped policies, the grants, and the seed exactly as described.",
+  "apparent_themes": [
+    "least-privilege dedicated principal over master-key writes",
+    "portable claim-based RLS (uid-independent)",
+    "fail-closed scoping narrowed to the shared slice",
+    "grants enable, RLS filters (the two-layer access model)"
+  ],
+  "intention_signals": "Give the company-side outbound writer exactly the access it needs (write the shared slice, read it back, bump channels) and no more, using a portable JWT claim so the same migration secures both local and prod, then open the shared design channel for use.",
+  "novelty": "The dedicated company_boundary principal scoped purely by a portable custom claim, and the explicit grant-vs-policy reasoning that makes the boundary writes actually succeed.",
+  "contribution": "Brings the boundary-principal authorization layer and the seed shared channel — the scoped RLS policies, helper function, privilege grants, and the 'design' channel that activate the shared substrate for least-privilege company-side use.",
+  "summary_for_embedding": "SQL migration defining the is_company_boundary() claim helper, scoped INSERT/SELECT/UPDATE RLS policies for the boundary principal across channel_posts/collab/channels, privilege grants, and a seeded shared 'design' channel.",
+  "intention_for_embedding": "To scope a dedicated least-privilege company boundary principal via a portable JWT claim to exactly the shared-slice writes/reads and open the shared design channel for the Claude Design collaboration."
+}

@@ -1,0 +1,38 @@
+{
+  "project": "company",
+  "path": "bindings/raw.py",
+  "model": "opus",
+  "what_it_does": "Defines a single BINDING dict named 'raw' for a radial view whose sectors are the distinct 'kind' values present in the store, with radius from time and slices ordered by count, plus a meta block of operator-facing name/is/fills/why text.",
+  "observations": [
+    "BINDING fields: id='raw', label, angle_from='kind', radius_from='time', order_by='count'.",
+    "Described as 'THE DATA-DRIVEN DEFAULT' with no hardcoded sectors — sectors are the distinct kinds in the store.",
+    "meta provides four operator-facing strings (name, is, fills, why) explaining the view in plain language.",
+    "fills explains the radial encoding: each dot is one event, its slice is the kind, distance from centre is recency (centre = now).",
+    "Comments mark the copy as TENTATIVE draft for Tim/DNA ratification, journey-gated by OPERATOR-SURFACE-LOOP.md OQ1-4."
+  ],
+  "standouts": [
+    "The data-driven default framing: sectors emerge from whatever kinds exist, no hardcode.",
+    "The explicit operator-law note that the operator never sees machine names."
+  ],
+  "conventions": [
+    "Uses the same name/is/fills/why legibility field-set cited as composition's shape (ch-2mnxl9j0).",
+    "Marks human-meaning copy as TENTATIVE pending ratification.",
+    "Keeps the binding empty of meaning itself; the instrument reads and renders the meta."
+  ],
+  "concerns": [],
+  "notes": "The default live-activity radial view binding: kinds as sectors, recency as radius, with plain-language operator copy.",
+  "questions": [
+    "What is the full set of possible 'kind' values, and where are they enumerated?"
+  ],
+  "purpose_vs_actual": "Matches: declared as the data-driven default kinds view and that is exactly the binding it provides.",
+  "apparent_themes": [
+    "Data-driven defaults (no hardcoded structure)",
+    "Operator-legibility / plain-language framing",
+    "Self-describing views that carry their own human meaning"
+  ],
+  "intention_signals": "Trying to give the operator an at-a-glance live map of system activity where structure (the sectors) comes entirely from the data rather than from configuration.",
+  "novelty": "n/a",
+  "contribution": "Contributes the default kind-by-time radial activity binding and its operator-facing copy describing the dot/slice/radius encoding.",
+  "summary_for_embedding": "A Python binding defining the default live-activity radial view where sectors are the distinct event kinds in the store and radius encodes recency.",
+  "intention_for_embedding": "To give the operator a glanceable, data-driven map of what kinds of things are happening and how recently."
+}

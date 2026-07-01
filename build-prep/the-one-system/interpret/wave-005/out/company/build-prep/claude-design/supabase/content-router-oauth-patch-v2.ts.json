@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/content-router-oauth-patch-v2.ts",
+  "model": "opus",
+  "what_it_does": "A TypeScript (Deno/Supabase Edge Function) patch snippet providing an updated serveConsent() function meant to replace BLOCK 2 of the content-router. It downloads the existing content_login.html from Storage, substitutes a content_id placeholder with 'consent', and injects a consent-specific client script that reuses the login page's phone-OTP flow to authenticate a user and then approve an OAuth authorization for Vi (Claude Design).",
+  "observations": [
+    "Reads SUPABASE_ANON_KEY from Deno env and downloads content_login.html from the 'pages' storage bucket.",
+    "Returns a 500 text response if the login page can't be downloaded.",
+    "Replaces CONTENT_ID_PLACEHOLDER with 'consent' globally.",
+    "Injects an inline <script> that creates a supabase client and reads authorization_id from the query string.",
+    "normalizePhone() handles +, Australian 04xxxxxxxx → +61, 614xxxxxxxx, and generic 10–15 digit numbers.",
+    "On load (go()): if a session exists it renders an 'Allow Vi' card and calls approveAuthorization(authId), then redirects to the returned redirect_url.",
+    "If no session, it wires the existing phone-form/otp-form IDs to signInWithOtp({phone}) and verifyOtp({phone,token,type:'sms'}), then reloads to re-enter with a session.",
+    "Auto-submits the OTP form when the input reaches 6 digits.",
+    "Injects the script before </body> if present, else appends it; serves text/html with Cache-Control: no-store.",
+    "Consent card text declares Vi wants access to 'your Company design channel + your design submissions'."
+  ],
+  "standouts": [
+    "Deliberately reuses the user-familiar 'Vi Content Access' login page so the operator sees the same page; only post-login behavior is consent-specific.",
+    "Reuses the SAME form IDs and phone-OTP flow as content_login.html rather than building new tabs (the v1→v2 change).",
+    "Two-pass session flow: verify → reload → session present → Allow Vi → approve."
+  ],
+  "conventions": [
+    "Follows the BLOCK-replacement patch convention (comments say replace BLOCK 2, BLOCK 1 stays).",
+    "Reuses existing storage-hosted HTML + placeholder substitution pattern.",
+    "Phone normalization mirrors the existing content_login phone flow."
+  ],
+  "concerns": [
+    "serveConsent is declared as a non-async `function` yet uses `await` (storage.download, data.text) — this would not compile/run as written; likely needs `async`.",
+    "supabase, supabaseUrl, and supabase.storage are referenced but not defined in this snippet (assumed from the surrounding content-router scope).",
+    "The injected inline script references a global `supabase.createClient` in the browser, distinct from the server-side `supabase` client used to download — relies on the login page already loading the supabase JS lib.",
+    "Building HTML/script via string injection and JSON.stringify for the keys is workable but fragile if the login page markup changes its IDs."
+  ],
+  "notes": "An OAuth consent page handler that repurposes the familiar content login page + phone-OTP flow to authenticate then approve Vi's authorization; note the missing async on serveConsent.",
+  "questions": [
+    "Is serveConsent intended to be async (given the awaits), and is that corrected at the actual call site?",
+    "Where are supabase, supabaseUrl defined in the host content-router, and does the downloaded login page already include the supabase browser client?",
+    "What scopes/permissions does approveAuthorization actually grant beyond the card's stated 'design channel + submissions'?"
+  ],
+  "purpose_vs_actual": "Stated purpose (reuse content_login.html for the consent page with the same phone-OTP flow but consent-specific post-login) matches the code; however the missing `async` keyword means the code as written would not execute its awaits.",
+  "apparent_themes": [
+    "Familiarity/reuse of an existing trusted page",
+    "OAuth consent over phone-OTP identity",
+    "Minimal divergence (same IDs, same flow)",
+    "Vocabulary/asset reuse over new mechanism"
+  ],
+  "intention_signals": "Trying to make the OAuth consent step feel identical to the login the operator already knows, only changing what happens after sign-in (approve Vi's authorization), so consent is low-friction and recognizable.",
+  "novelty": "Injecting a consent-specific behavior layer into a reused, storage-hosted login page by binding to its existing form IDs rather than authoring a new consent UI.",
+  "contribution": "Contributes the v2 serveConsent implementation: storage-downloaded login-page reuse, placeholder substitution, and an injected phone-OTP + approveAuthorization consent flow for the OAuth content-router.",
+  "summary_for_embedding": "A Deno Edge Function serveConsent() snippet that reuses content_login.html and injects a phone-OTP + approveAuthorization script to serve the Vi OAuth consent page.",
+  "intention_for_embedding": "To present the OAuth consent screen using the familiar login page and phone-OTP flow, approving Vi's authorization after sign-in."
+}

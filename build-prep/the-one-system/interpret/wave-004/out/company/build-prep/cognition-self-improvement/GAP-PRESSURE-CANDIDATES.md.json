@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/GAP-PRESSURE-CANDIDATES.md",
+  "model": "opus",
+  "what_it_does": "A design-capture document stating the 'gap pressure' law — that every operation running constrained against a declared registry is also a sensor for that registry, leaking at missing/wrong entries if residue is recorded not swallowed — and cataloging its preconditions, evidence, intentional uses, and seven build candidates (C1–C7) plus open questions and an update protocol. Nothing in it is built; it is captured as candidates for a future builder session.",
+  "observations": [
+    "frontmatter: type design-capture, status 'candidates — NOT built', captured 2026-06-10, with typed relates-to wikilinks",
+    "opens with Tim's verbatim directive to capture everything as candidates with learnings for another session to pick up",
+    "naming is explicitly OPEN: gap pressure / misfit residue / the drop ledger / constrained operation is a sensor",
+    "states the law and four preconditions (closed declared vocabulary, grounded operation, fail-loud never coerce, residue recorded as data), each with the failure it prevents; removing any one kills the sensor",
+    "notes known limits: only detects what the worker model can name; weak pressure needs accumulation; variant-cluster convergence is the quality marker",
+    "three independent evidence instances: atlas_linker fan (135 drops, 115 being 6 variants of 'MCP Servers' → 9th domain), RG10 stubborn-floor entries via gc9_gap_intake.py, and SYSTEM-GAPS.md hand-ledger",
+    "extensive intentional-uses catalog (taxonomy bootstrapping, drift monitoring, starvation/inverse read, shadow-pass field sensing, cross-model triangulation, canary categories, MCP-face misuse, retrieval-side pressure, operator corrections as drops)",
+    "C1–C7 candidates with seams, verify-by-use checks, all marked unbuilt; recommended build order",
+    "adjacent candidate: evidence-in-error for parse failures in fabric/client.py, plus a stale-server-process incident note",
+    "open questions on threshold semantics, dedupe, vocabulary-mode placement, and G24 schema-decoding interaction"
+  ],
+  "standouts": [
+    "the reframing 'gaps are detected as pressure, not absence — you cannot query for what's missing, but a constrained system under load leaks at exactly the missing places'",
+    "the claim that gap pressure is not a feature but a PROPERTY that existing Company laws compose into, unplanned",
+    "fail-loud framed as the thing that preserves evidence: 'silent coercion eats the evidence'",
+    "each candidate is independently provable by use before the next stands on it, with a concrete instance-1 replay as the verification"
+  ],
+  "conventions": [
+    "follows the vault frontmatter + typed-relations + status discipline",
+    "candidates-not-built / propose-then-build epistemic discipline with explicit verify-by-use per stage",
+    "node-id naming tying into GC2 (REGISTRY-FILLING-PATTERN), G24, RG10",
+    "living-capture update protocol (flip the red marker, link the commit, update the AGENTS.md pointer)"
+  ],
+  "concerns": [],
+  "notes": "The capture of a discovered system PROPERTY (constrained ops are free gap sensors) with a 7-stage candidate build plan and three real evidence instances — a builder's pickup brief.",
+  "questions": [
+    "Which candidate name will Tim choose among the four offered?",
+    "Will the vocabulary mode live on per-role output_fields or as a shared referenced registry list (the doc leans toward the latter)?"
+  ],
+  "purpose_vs_actual": "Match — it states it is a candidates capture awaiting a builder and delivers law + evidence + uses + ordered candidates + open questions, building nothing.",
+  "apparent_themes": [
+    "constrained operation as a sensor (gap pressure)",
+    "registry-is-truth and fail-loud composing into emergent self-improvement",
+    "detect-by-pressure not by absence",
+    "propose-then-gate and verify-by-use",
+    "accumulation as the path to legibility"
+  ],
+  "intention_signals": "Trying to crystallize a discovered property of the Company's own laws into a named, evidenced, buildable plan so a future session can make gap-detection an automatic engine-native byproduct of normal constrained work, feeding the registry-growing pipeline.",
+  "novelty": "The whole framing that gap detection is a free emergent byproduct of four pre-existing laws, sensed as leakage/pressure rather than queried as absence, with a rich catalog of derived sensing modes (starvation, shadow-pass, canary, cross-model triangulation).",
+  "contribution": "Contributes the gap-pressure law with its four preconditions and failure-each-prevents, three evidence instances, the intentional-uses catalog, and the C1–C7 candidate build plan with seams and verify-by-use checks plus the open builder questions.",
+  "summary_for_embedding": "A design-capture stating the gap-pressure law (constrained registry-bound operations are free gap sensors via recorded drops) with preconditions, three evidence instances, a uses catalog, and seven unbuilt build candidates.",
+  "intention_for_embedding": "To capture and make buildable the discovery that recording the residue of constrained operations turns every normal operation into an automatic detector of missing registry entries."
+}

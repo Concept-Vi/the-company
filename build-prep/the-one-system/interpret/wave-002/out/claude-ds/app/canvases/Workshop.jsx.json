@@ -1,0 +1,67 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Workshop.jsx",
+  "model": "opus",
+  "what_it_does": "Implements the Workshop canvas — the visual editor for composing real deliverables (slide decks and one-page brochures live; widget and wizard route to their own builders; website/social/email/video are coming-soon). It manages a list view and an edit view over 'docs' (pages → sections/blocks), with full editing operations (add/remove/move/duplicate/lock pages and sections, drag-and-drop reorder, layout picking, theme/motif selection), an undo/redo history, keyboard shortcuts, a candidate gallery driven by streaming Vi generation, per-field Vi regeneration, per-section refine and variation generation, AI slide-fill, a save-as-template flow with Vi-extracted variables, and a workspace-variables rail with {{key}} reference counting and a Vi audit. Most blocks render through the one shared engine (window.__cvRenderType). Exposes Workshop and WS_viDraft on window.",
+  "observations": [
+    "DOC_TYPES lists 8 doc types with active flags: deck/brochure/widget/wizard active; website/social/email/video coming-soon.",
+    "useExtraDocTypes pulls user/vi-authored layer='doc' Types from CV_REGISTRY into a 'From your Type Registry' group on the picker — registry-driven doc types.",
+    "Large stateful component (~30 useState hooks aliased as useState_w) covering view/doc/draft/gallery/template/theme/library state.",
+    "Bridges to window.WS_AI.bridge.setActive so a chat rail / cross-doc surfaces can act on the active doc; clears on unmount.",
+    "Undo/redo via JSON snapshots (last 30) with an ignoreNextChange ref to avoid re-snapshotting on undo/redo.",
+    "Keyboard handler: Cmd+Z/Cmd+Shift+Z/Cmd+Y undo/redo, Cmd+D duplicate slide (deck), arrows for page nav, Escape to deselect.",
+    "runGallery drives window.WS_AI.generateCandidatesStream with per-candidate streaming callbacks; pickCandidate applies a diff via WS_AI.applyDiff/invertDiff.",
+    "Per-field regen wires window.__cvFieldFocus and WS_FIELD.setRegenHandler with angle-based titles (shorter/formal/specific/different).",
+    "refineSection/generateVariations/fillSlideWithVi build prompts that all inject window.CV_AI.get('voice.conceptv').text — voice sourced from the AI registry, not inlined.",
+    "viDraft generates a deck/brochure via CV_AI.execute('deck.generate', ...), with a parseJsonLoose recovery helper and normalization against WS_BLOCKS defaults and WS_KINDS.",
+    "saveAsTemplate calls WS_AI.extractTemplate to find variables, with a fallback to a plain copy; confirmSaveTemplate writes a workshop-doc template via saveTemplate.",
+    "VariablesRail: workspace vars with live reference counts (WS_VARS.countReferences), a Vi 'find' audit proposing candidate variables, color-aware inputs, and {{key}} usage.",
+    "Blocks render through window.__cvRenderType except embedWidget/embedWizard (WS_ENGINE_EDIT_SKIP) which keep their own renderer; wsSetPath is a dotted-path immutable setter for engine onEdit writeback.",
+    "SlideFrame fits a 1280-wide slide to the container via ResizeObserver scaling and renders slide chrome (hatch edge, page number, brand mark) with inline SVG.",
+    "ViSuggestionsRail shows instant heuristic suggestions then enriches asynchronously via WS_AI.viSuggest, with dismiss + refresh."
+  ],
+  "standouts": [
+    "One shared rendering engine (__cvRenderType) renders AND edits nearly every block kind via a runtime descriptor, with only cross-doc embeds excepted — strong single-engine discipline.",
+    "Voice is consistently pulled from CV_AI.get('voice.conceptv').text in every generation prompt rather than inlined — adheres to the project's no-second-home rule for voice.",
+    "Workspace variables form a live single-source system: define {{key}} once, reference anywhere, with live cross-doc reference counts and a Vi audit to extract repeated literals into variables.",
+    "Candidate generation is streamed (per-candidate callbacks update the gallery incrementally) and diffs are invertible (invertDiff reserved for a Vi-undo stack).",
+    "Registry-authored doc Types appear in the picker alongside built-ins, mapping to a built-in family as a rendering fallback."
+  ],
+  "conventions": [
+    "Registry/AI-as-truth: doc types extend from CV_REGISTRY, generation routes through CV_AI.execute/complete, voice from the CV_AI behaviour — consistent with the project charter.",
+    "Single-engine rendering via __cvRenderType with a small explicit skip-set, rather than per-block bespoke renderers.",
+    "window-global component/helper pattern; exports Workshop and WS_viDraft on window; aliased React hooks.",
+    "parseJsonLoose recovery pattern for all model JSON responses.",
+    "Heavy inline styling that references design tokens via var(); loud-fail-to-toast on AI failures.",
+    "Immutable update helpers throughout (map/filter/splice on copies, wsSetPath)."
+  ],
+  "concerns": [
+    "Very large multi-responsibility file (~1900 lines) holding the main component plus ~15 sub-components and several module helpers — high cognitive load and many cross-component prop chains.",
+    "Pervasive inline style objects duplicate styling that could be CSS classes (tokenised values, but layout/typography hand-set per element).",
+    "Many optional globals chained with ?. (WS_AI, WS_VARS, WS_BLOCKS, WidgetBuilder, TypeThumb, etc.); some paths assume presence (e.g. window.WS_BLOCKS[kind] in addSection without a guard).",
+    "Native confirm() used for destructive actions (remove page/section/doc, remove variable).",
+    "viDraft references module-scope `doc` (doc?.type) but `doc` is a component-local — at module scope `doc` is undefined, so the surface arg falls back; a subtle scoping oddity.",
+    "Variations/audit/preview items frequently keyed by array index; some onError callbacks 'swallow per-candidate errors' silently."
+  ],
+  "notes": "The Workshop is the deliverable composer: pages of blocks rendered/edited through the one engine, with deep Vi assistance (draft, refine, variations, slide-fill, candidate gallery, template extraction) and a live {{var}} workspace system; widget/wizard docs delegate to their own builders.",
+  "questions": [
+    "What is the full WS_AI surface (bridge, generateCandidatesStream, applyDiff/invertDiff, extractTemplate, viSuggest, materializeTemplate, computeSuggestions)?",
+    "How does WS_VARS.countReferences scan docs, and how are {{key}} references resolved at render time?",
+    "Why does module-scope viDraft reference `doc` (a component local) — is that intentional or a latent bug?",
+    "Where are WS_BLOCKS / WS_LAYOUTS / WS_THEMES / WS_MOTIFS / WS_KINDS defined and how do they relate to the Type Registry?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment (visual canvas for composing real deliverables; deck+brochure live, others coming) accurately describes the file, and the coming-soon flags are honestly reflected in the picker.",
+  "apparent_themes": [
+    "One shared generative engine renders and edits everything.",
+    "Registry/AI-as-truth and UI-as-projection.",
+    "Voice single-sourced from the AI registry.",
+    "Define-once / use-everywhere workspace variables.",
+    "Deep but optional Vi assistance layered over direct manual editing.",
+    "Streaming, invertible, gallery-based candidate generation."
+  ],
+  "intention_signals": "Aims to be the place where real, on-brand deliverables are composed visually — every block flowing through the one engine, every value definable once as a variable, and Vi available at every grain (whole-doc transform, slide fill, section refine/variations, per-field alternates, template extraction) while keeping manual control and undo safety.",
+  "novelty": "The combination of single-engine render-and-edit, a live cross-doc {{var}} reference-counting system with a Vi extraction audit, streaming invertible candidate galleries, and registry-authored doc types appearing beside built-ins — all in one composition surface.",
+  "contribution": "Contributes the full Workshop deliverable-composition surface: the page/section/block editing model and operations, undo/redo + keyboard layer, the streaming candidate gallery and per-field/per-section/whole-doc Vi flows, the save-as-template-with-extracted-variables modal, the workspace-variables rail, and the single-engine block rendering via __cvRenderType.",
+  "summary_for_embedding": "A large React canvas implementing the Workshop deliverable editor (decks/brochures) with page/block editing, undo/redo, a streaming Vi candidate gallery, per-section/per-field/whole-doc AI, template extraction, and a live {{var}} workspace, rendering blocks through one shared engine.",
+  "intention_for_embedding": "To let users visually compose real on-brand deliverables where every block renders through one engine, every value is a reusable variable, and Vi assists at every grain while preserving manual control and undo."
+}

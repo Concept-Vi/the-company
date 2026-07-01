@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-D6-wire-states-desktop.json",
+  "model": "opus",
+  "what_it_does": "A RG-10 confirmation-batch result for the mockup D6-wire-states-desktop.html (the 'Wire Failure & Lifecycle States' build-review dashboard). It records 74 candidate UI elements clustered into 31 groups, each carrying a dossier (ui:// address, capabilities, grounding, a howto with what/what_you_can_do/how_to_change, maps_to_feature, represents) plus a jury confirmation block, split into 'confirmed' and 'flagged' arrays.",
+  "observations": [
+    "Top-level metadata: mockup name, a 'ground' summary (screen_present, what_this_is, what_you_can_do), and counts n_candidates=74, n_dossiers=74, n_clusters=31.",
+    "Every dossier address is under the ui://inbox/build-review/* namespace (failed-refused, verdict, hold, cap-deferred, scope-overrun, claim-vanished, lifecycle-states, etc.).",
+    "Confirmation uses a 3-draw jury: votes_grounded vs votes_ungrounded, with verdict/unanimous/quorum flags; confirmed items reached quorum, flagged ones did not (or hit a refcheck failure).",
+    "Two-layer gate is named in reasons: refcheck (Layer 1, deterministic floor) catches 'feature fabrication' (maps_to_feature not an inventory id nor 'proposed'); accuracy jury (Layer 2, SOFT) flags lack of grounding quorum.",
+    "Largest confirmed cluster is failed-refused (cluster_size 22); largest flagged cluster is WIRE-layers (size 9).",
+    "Several flagged items failed refcheck for fabricated feature ids: WIRE-layers, WIRE-resolve, WIRE-trail.",
+    "grounding field takes values 'built' and 'proposed'; howto strings repeatedly cite runtime/suite.py:review_verdicts as the code home.",
+    "One address contains a stray glyph: ui://inbox/build-review/\\u2304open-trail."
+  ],
+  "standouts": [
+    "The SOFT-vs-HARD distinction in flag reasons: jury non-quorum is explicitly labeled 'variance not error' and routed to operator scrutiny rather than treated as a defect.",
+    "refcheck as a deterministic floor that rejects maps_to_feature values absent from the inventory — a fabrication guard distinct from the probabilistic jury.",
+    "Items marked grounding:'built' can still be FLAGGED (e.g. toolbar, lifecycle-states scored 0/3 grounded) — built-status and jury-grounding are independent."
+  ],
+  "conventions": [
+    "Follows the shared RG-10 batch schema (mockup/ground/counts/confirmed/flagged) identical across the sibling batch files.",
+    "Addresses use the ui:// scheme namespaced by surface region.",
+    "howto consistently carries the what / what_you_can_do / how_to_change triad in plain operator language.",
+    "maps_to_feature is either an inventory id (WIRE-review, WIRE-states, RUN-run) or the literal 'proposed'."
+  ],
+  "concerns": [
+    "Stray unicode glyph \\u2304 in the address ui://inbox/build-review/\\u2304open-trail looks like a transcription artifact.",
+    "Multiple confirmed dossiers share the same address (ui://inbox/build-review/verdict appears twice as separate clusters), so address is not unique within the file."
+  ],
+  "notes": "This is the confirmation ledger for one build-review-states mockup: which UI dossiers passed the jury+refcheck and which got flagged, with the reasons.",
+  "questions": [
+    "What inventory does refcheck validate maps_to_feature against, and where is the WIRE-* feature id list defined?",
+    "Is the \\u2304 glyph intentional or a corruption of the address?"
+  ],
+  "purpose_vs_actual": "Matches: the file's mockup/ground header states it is the Wire Failure & Lifecycle States review surface, and every dossier is a build-review element under that surface.",
+  "apparent_themes": [
+    "Operator-reviewable grounding of generated UI dossiers",
+    "Two-layer verification (deterministic floor + soft jury)",
+    "Build/wire lifecycle states surfaced for human verdict",
+    "Honest uncertainty — flag rather than assert"
+  ],
+  "intention_signals": "Trying to turn a generated mockup into a vetted, addressable element registry by clustering near-duplicate candidates and subjecting each cluster to a jury+refcheck so a human only scrutinizes the genuinely uncertain ones.",
+  "novelty": "The explicit 'SOFT — variance not error' framing of jury disagreement, paired with a hard deterministic refcheck floor, as two separately-reported gate layers.",
+  "contribution": "Contributes the D6 build-review-states slice of the element-dossier corpus: the lifecycle/failure-state addresses (scope-overrun, launch-crash, claim-vanished, hold, cap-deferred, re-issue) together with their jury verdicts and refcheck flags for this specific mockup.",
+  "summary_for_embedding": "RG-10 confirmation batch for the D6 'Wire Failure & Lifecycle States' build-review mockup: 74 candidate UI dossiers clustered into 31, each with ui:// address, capabilities, grounding, howto, maps_to_feature, and a 3-draw jury+refcheck verdict, split confirmed vs flagged.",
+  "intention_for_embedding": "To vet generated UI-element dossiers for one build-review-states mockup through deterministic refcheck and a soft accuracy jury, surfacing only flagged clusters for operator scrutiny."
+}

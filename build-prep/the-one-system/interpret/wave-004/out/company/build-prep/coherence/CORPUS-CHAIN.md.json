@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/CORPUS-CHAIN.md",
+  "model": "opus",
+  "what_it_does": "The grounded synthesis of the corpus-chain research wave (anchor + six CC-* companions), third in the series after the coherence and semantic-layer rounds. It corrects the anchor's hopeful claims with evidence: run_swarm is only the MAP half (no cross-unit reduce exists), the reduce and compiler are the real net-new builds, the primitive collapses only the LLM-read faculties (leaving four orthogonal pieces standing), and ties all three research rounds into one corrected picture. It ends with an honest built-vs-net-new build list, a joined-rounds diagram, the decisions for Tim, and a cross-read paragraph.",
+  "observations": [
+    "Self-describes as the grounded synthesis (not a spec), with the anchor's claims corrected by evidence including live probes",
+    "Correction 1: 'It IS run_swarm' → run_swarm is the MAP half only; the cross-unit smart REDUCE (join+decide-next+hierarchical staging) does not exist in code and is the highest-leverage build (grep-confirmed by CC-6+CC-4 independently)",
+    "Correction 2: the primitive collapses only the LLM-read faculties into configs of one engine; four orthogonal pieces remain standing (structural three-leg graph, disposition store, loop+safety, calibration harness)",
+    "Correction 3: the cost-shape is a per-config property not a primitive invariant — the research-wave face inverts both halves (strong workers + large reduce-inputs); this very wave overflowed the local synth context with six ~10K-token companions",
+    "Notes runtime/compile.py is a name-collision (graph→execution, not intent→config), so the NL→config compiler is net-new",
+    "Key compiler asymmetry: the compiler has no model tier above it (the strong model IS the planner), so SEM-3's stronger-model-confirm is structurally unavailable; trust comes from a hedge (Chain.validate() + dry-run-one-unit + governance.py inspect-approve)",
+    "Tiered compiler verdict T1 auto-safe / T2 must-approve / T3 do-not-auto-compile, with the sharp catch that a non-unit-local map_prompt is invisible in the plan, making dry-run-one-unit mandatory",
+    "Names THE one load-bearing seam, identified independently by four companions: run_role hardcodes ctx['utterance'] → needs generalizing to role.input_addresses (a fan-out axis inversion, best as a run_items refactor)",
+    "Cites concrete code: suite.py:1474 (reduce-tree declared-but-dead), suite.py:5854 (UPTRANSLATE_KINDS has 'finding'), CONCURRENCY_CAP=3 for subprocesses, suite.py ≈180K tokens",
+    "Honest novelty: not the mechanics (LOTUS/DocETL/RAPTOR/DSPy/FrugalGPT are prior art) but the composition — one resident local small-model swarm serving many faces, output held as a dispositioned substrate feeding a no-humans push loop, local-first",
+    "Provides an ordered net-new build list (reduce → seam → compiler → resolve node-types → digest-as-artifact → chunk-and-compose → synth-tier registry → calibration)"
+  ],
+  "standouts": [
+    "The corrected thesis that run_swarm is the MAP half only and the cross-unit REDUCE is net-new and the highest-leverage build",
+    "The compiler asymmetry — no stronger model above the planner, so trust must be a structural hedge (validate + mandatory dry-run-one-unit + approve), tiered T1/T2/T3",
+    "The one seam named by four companions (run_role ctx['utterance'] → input_addresses, a fan-out axis inversion) through which everything routes"
+  ],
+  "conventions": [
+    "Follows the research-wave synthesis convention (grounded artefact correcting the anchor, citing companions which cite file:line)",
+    "Uses the repo's evidence discipline (grep-confirmed, live-probe, file:line), the positive-only/own-reflect/no-green-paint laws, and the 'more types not more tools' / declared-type framing",
+    "Mirrors prior-round structure (numbered sections, a joined diagram, decisions-for-Tim, one-paragraph cross-read)"
+  ],
+  "concerns": [],
+  "notes": "The corpus-chain grounded — map half is built (run_swarm), reduce+compiler are the real net-new builds, everything routes through one run_role seam, and it collapses only the LLM-read faculties of all three rounds into one engine.",
+  "questions": [
+    "Where do the six CC-* companions and SEMANTIC-LAYER.md live relative to this file?",
+    "Has the run_role→input_addresses seam (the run_items axis-inversion) actually been built since this was written?",
+    "Is the compiler T1/T2/T3 tiering empirically validated, or still designed?"
+  ],
+  "purpose_vs_actual": "Match — it is the grounded synthesis it claims to be, correcting the anchor with cited evidence and joining the three rounds.",
+  "apparent_themes": [
+    "honest correction of one's own anchor via evidence (expansion-ratio research)",
+    "build-on-what-exists / name the net-new precisely (map built, reduce+compiler net-new)",
+    "trust by hedge where no stronger judge exists (validate + dry-run + approve)",
+    "novelty-is-composition not mechanics (local-first swarm + dispositioned substrate + push loop)",
+    "one seam, one validator — universal composition through a single door",
+    "calibration-as-first-real-artefact recurring across rounds"
+  ],
+  "intention_signals": "Trying to convert the corpus-chain anchor into a trustworthy, evidence-grounded build picture — telling Tim and the cognition session exactly what is already built, what is the real net-new work, the single seam everything depends on, and how the compiler can be trusted without a stronger model above it.",
+  "novelty": "The compiler asymmetry insight (no model tier above the planner → trust is a structural hedge, not a better judge) and the finding that the dominant compiler defect (non-unit-local map_prompt) is invisible in the plan, making dry-run-one-unit mandatory rather than optional.",
+  "contribution": "Contributes the grounded corpus-chain build picture: the map-built/reduce-and-compiler-net-new correction, the single run_role→input_addresses seam, the staging-threshold and followup-routing mechanics, the compiler hedge/tiering trust model, the declared-type + one-validator composition, and the joined-three-rounds diagram — the corpus-LLM-engine understanding a fused system would keep.",
+  "summary_for_embedding": "A grounded research synthesis of the corpus-chain primitive that corrects its anchor with code evidence: run_swarm is only the parallel MAP half, the cross-unit smart REDUCE and the NL→config compiler are the net-new highest-leverage builds, everything routes through one run_role→input_addresses seam, and the primitive collapses only the LLM-read faculties of all three research rounds into one configurable engine.",
+  "intention_for_embedding": "To give Tim and the cognition session an evidence-grounded, honestly-corrected picture of what the corpus-chain primitive actually requires to build and how it unifies the three research rounds, so the build can be sequenced and trusted."
+}

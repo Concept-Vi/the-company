@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/seam-lanes/mcpsweep-rule.report.json",
+  "model": "opus",
+  "what_it_does": "Seam-lane report (JSON record) for the `rule` tool consolidation in mcp_face/tools/rule.py, folding flat tools attach_rule/dry_run_rule/validate_rule into one tool with op=validate|dry_run|attach|detach. Records that the consolidation was already done in a prior commit and that this beat made no edits, plus verification and floor reasoning.",
+  "observations": [
+    "Ops [validate, dry_run, attach, detach]; flat_tools_to_remove lists the three originals.",
+    "how_verified describes isolated harnesses (/tmp/verify_rule_lane.py and /tmp/verify_rule_attach.py) building a throwaway FastMCP plus real Suite, confirming only ['rule'] registers, no model/GPU needed.",
+    "States rule ops are pure grammar/AST work; validate/dry_run are pure reads, attach/detach surface a role_build proposal that never self-applies.",
+    "Notes this is an ADOPTION lane, not net-new: consolidation landed in git commit 016cf08 ('MCP-SWEEP 4 of 5 lanes') and the three flat tools were already removed; server.py:654 is a consolidation-marker comment.",
+    "Adds a `detach` op beyond the spec — the symmetric remove of attach.",
+    "Cites Suite methods at runtime/suite.py:9261/9291/9307/9324 and reproduces flat-tool value conversions exactly (destination or None / destination or 'inject').",
+    "Notes runtime/rules.py FORBIDDEN_DESTINATION_VERBS=('resolve','approve','dispatch') rejects forbidden verbs at build_rule construction."
+  ],
+  "standouts": [
+    "Idempotency posture: reports nothing left to remove, flat_tools_to_remove kept only for completeness.",
+    "Floor held 'by construction' — forbidden destination verbs rejected at grammar-construction time.",
+    "Made zero edits this beat after confirming the existing module already met and exceeded the lane spec."
+  ],
+  "conventions": [
+    "Same seam-lane report schema as sibling lanes.",
+    "Verify-in-isolation, cite-exact-addresses, file-disjoint discipline.",
+    "Cross-checks wrapper signatures against both live Suite methods and original flat-tool git bodies."
+  ],
+  "concerns": [],
+  "notes": "An adoption/idempotency lane report confirming the `rule` tool was already consolidated in an earlier commit and adding a symmetric detach op, with the route-floor enforced at grammar construction.",
+  "questions": [
+    "If the consolidation already shipped in 016cf08, what triggered this lane to be re-run as a no-edit beat?",
+    "Were the /tmp verification scripts intended to be discarded, given they live outside the repo?"
+  ],
+  "purpose_vs_actual": "Matches — it presents as the rule-lane report and accurately documents an already-complete consolidation plus a verification re-run.",
+  "apparent_themes": [
+    "Tool consolidation and idempotent re-verification",
+    "Route-floor enforcement at grammar/construction time",
+    "Propose-not-apply (attach/detach surface a proposal)",
+    "File-disjoint parallel build hygiene"
+  ],
+  "intention_signals": "Documents catching that a lane's work was already shipped, re-proving it still holds, and extending it with the symmetric detach rather than redoing it.",
+  "novelty": "The detach op as a symmetric complement to attach, and the no-edit-but-still-verified beat treating prior commit work as the deliverable.",
+  "contribution": "Contributes the `rule` tool's op surface (validate/dry_run/attach/detach), the construction-time forbidden-verb enforcement detail, and the symmetric detach op — distinct from the other folded tools' surfaces.",
+  "summary_for_embedding": "Seam-lane report confirming the `rule` MCP tool was already consolidated (commit 016cf08) into op=validate|dry_run|attach, re-verified in isolation, and extended with a symmetric detach op.",
+  "intention_for_embedding": "To adopt and re-verify an already-shipped rule-tool consolidation and add the symmetric detach op while keeping the route floor enforced at grammar construction."
+}

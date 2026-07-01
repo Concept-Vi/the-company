@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0007_custom_access_token_hook.sql",
+  "model": "opus",
+  "what_it_does": "Adds three columns to the clients table (oauth_client_id, mcp_url, bind_aud) and defines a Supabase Custom Access Token Hook function that, only for tokens minted via the registered 'Vi' OAuth client, stamps design_client claims (role, app_metadata.role/client_id/scope) and optionally a resource-bound aud; all other tokens pass through untouched.",
+  "observations": [
+    "Header marks the file STAGED — no prod action — and describes its place in a flip runbook.",
+    "Adds clients.oauth_client_id, clients.mcp_url, clients.bind_aud (default false) with descriptive column comments.",
+    "Hook reads the Vi client_id, mcp_url and bind_aud from the clients row id='claude-design' status='active' (registry-is-truth, nothing hardcoded except claim VALUES).",
+    "Early return for non-oauth authentication_method and for tokens whose client_id does not match the registered Vi client (safe no-op).",
+    "Comment notes nested jsonb_set('{app_metadata,role}') does not create the parent on this PG version, so a single-level app_metadata merge is used to preserve existing metadata.",
+    "Item-B aud binding (claims.aud = mcp_url) is gated behind bind_aud=true and explicitly coordinated with the EF AUDIENCE env — comments warn never to set one without the other.",
+    "Grants EXECUTE on the hook to anon, authenticated, service_role, postgres."
+  ],
+  "standouts": [
+    "The 'strictly additive, no blast radius' design: only Vi-client OAuth tokens are mutated; password/anon/other OAuth tokens are returned verbatim.",
+    "The bind_aud coupling rule — flip the column and the EF AUDIENCE env together or auth breaks — captured in column comments as an invariant."
+  ],
+  "conventions": [
+    "Idempotent: add column if not exists, create or replace function.",
+    "SECURITY DEFINER + set search_path = public on the hook so it can read clients.",
+    "Verbose header + column/function comments documenting the runbook ordering and safety posture."
+  ],
+  "concerns": [],
+  "notes": "This is the staged auth hook that turns a real Vi OAuth token into design_client claims so 0006 RLS treats it like the local service principal; it is inert until clients.oauth_client_id is populated.",
+  "questions": [
+    "Has this hook actually been selected as the active Custom Access Token Hook in the dashboard (the file notes the function existing is not enough)?",
+    "Is this hook still on the claims path, given a later migration (0010) describes going native and dropping the hook?"
+  ],
+  "purpose_vs_actual": "Match: header says it stamps connector claims and resource-bound aud only for the Vi OAuth client's tokens, and the function does exactly that with the bind_aud gate.",
+  "apparent_themes": [
+    "Registry-is-truth (claims sourced from the clients row)",
+    "Zero-blast-radius additive auth on a shared project",
+    "Cross-resource token-replay defense (resource-bound aud)",
+    "Staged flip with runbook ordering"
+  ],
+  "intention_signals": "Trying to bridge a real OAuth 2.1 connector flow into the same design_client claim shape the local/RLS layer expects, while guaranteeing no other auth flow on the shared project is affected.",
+  "novelty": "The single-level app_metadata merge workaround for jsonb_set not creating parents, and the explicit bind_aud↔EF-AUDIENCE coupling invariant.",
+  "contribution": "Contributes the OAuth-token claim-stamping mechanism and the clients columns (oauth_client_id, mcp_url, bind_aud) that connect a verified OAuth client to the design_client RLS identity and to resource-bound audience binding.",
+  "summary_for_embedding": "Supabase Custom Access Token Hook migration that stamps design_client claims and an optional resource-bound aud onto tokens from a registered Vi OAuth client, leaving all other tokens untouched.",
+  "intention_for_embedding": "To let a real Claude Design OAuth login acquire the design_client claims the RLS layer gates on, additively and with optional cross-resource replay protection, as a staged flip step."
+}

@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-D6-wire-states-desktop.json",
+  "model": "opus",
+  "what_it_does": "A machine-generated grounding/confirmation report for the D6-wire-states-desktop.html mockup. It records 74 candidate UI elements clustered into 31 groups, each a 'dossier' (ui:// address, capabilities, grounding, how-to/what/what-you-can-do text, maps_to_feature, represents) with a jury confirmation result, split into 'confirmed' and 'flagged' buckets.",
+  "observations": [
+    "Top-level: mockup name, a 'ground' block (screen_present + plain-language what_this_is/what_you_can_do), counts (n_candidates=74, n_dossiers=74, n_clusters=31), and two arrays: confirmed and flagged.",
+    "Subject screen is the 'Wire Failure & Lifecycle States' dashboard surfacing six build-failure / non-closing outcomes returned to the operator (scope overrun, launch crash, design unverifiability, etc.).",
+    "Every dossier carries a ui:// address under inbox/build-review/* and a 'howto' triple (how_to_change, what, what_you_can_do).",
+    "Confirmation uses a 3-draw jury with votes_grounded/votes_ungrounded, unanimous, quorum flags; many confirmed entries are 2-1 splits that still reach quorum.",
+    "Flagged entries carry reasons strings from two layers: 'refcheck (Layer 1, deterministic floor)' for feature fabrication, and 'accuracy jury (Layer 2, SOFT)' for no-quorum grounding.",
+    "maps_to_feature values include real-looking inventory ids (WIRE-review, WIRE-states, WIRE-intent, RUN-run) and the literal 'proposed' for mockup-only elements.",
+    "Several flagged reasons explicitly call out fabricated feature ids: 'WIRE-layers', 'WIRE-resolve', 'WIRE-trail' are 'not an inventory id nor proposed'.",
+    "how_to_change repeatedly cites concrete code locations, especially runtime/suite.py:review_verdicts and the 'decision->implementation wire (guarded close + surface_review)'."
+  ],
+  "standouts": [
+    "The two-layer confirmation model: a deterministic refcheck floor against a feature inventory, plus a soft 3-draw accuracy jury for grounding.",
+    "Feature-fabrication detection that names invented ids (WIRE-layers/resolve/trail) as the failure reason.",
+    "The 22-member confirmed cluster mapping to ui://inbox/build-review/failed-refused — by far the largest grouping in the file."
+  ],
+  "conventions": [
+    "Follows the ground/confirmed/flagged dossier schema shared across the rg10-batch-*.json family.",
+    "ui:// addressing for every element; 'proposed' as the sentinel for unbuilt features.",
+    "how_to_change consistently points changes back to a named code region or wire."
+  ],
+  "concerns": [
+    "Duplicate address ui://inbox/build-review/verdict appears twice as separate confirmed clusters (members 7,46 and 17,65), suggesting one address mapped to two distinct dossiers.",
+    "One flagged cluster (send-back) has a unanimous grounded jury (3/0) yet is FLAGGED solely on a refcheck feature-fabrication floor — confirmation and grounding can disagree.",
+    "Many 'built'-grounding dossiers are nonetheless flagged for 0/3 jury grounding, a tension between declared and adjudicated grounding."
+  ],
+  "notes": "This is an auto-generated audit of one mockup's clickable elements: which UI addresses are confirmed grounded in code vs flagged for operator scrutiny, with reasons.",
+  "questions": [
+    "What is the authoritative feature inventory that refcheck validates maps_to_feature against?",
+    "Why does the same address (build-review/verdict) yield two separate dossiers/clusters?",
+    "How is the 3-draw jury sampled, and what makes a soft no-quorum flag distinct from a hard refcheck failure in downstream handling?"
+  ],
+  "purpose_vs_actual": "Matches: stated as a wire-failure/lifecycle-states grounding report, and the content is exactly that — clustered dossiers with jury verdicts for that mockup.",
+  "apparent_themes": [
+    "Operator-facing grounding/honesty (built vs proposed, never assert unverified)",
+    "Decision->implementation wire with guarded close and surface_review",
+    "Failure-state visibility (builds return loudly for review, never silently)",
+    "Adversarial/jury verification of UI-to-code claims"
+  ],
+  "intention_signals": "Trying to certify that each interactive element on the failure/lifecycle dashboard is honestly described and actually backed by code (or honestly marked proposed), flagging fabricated feature mappings and weakly-grounded claims for human review.",
+  "novelty": "The dual-layer (deterministic refcheck + soft probabilistic jury) confirmation with explicit feature-fabrication reasons, applied to UI element grounding.",
+  "contribution": "Contributes the wire-failure/lifecycle-states surface's element-level grounding ledger: the inbox/build-review address vocabulary, the six failure outcomes framing, and the verdict/hold/defer/re-issue/send-back action set tied to runtime/suite.py:review_verdicts.",
+  "summary_for_embedding": "A grounding/jury-confirmation report clustering 74 UI elements of the D6 wire-failure & lifecycle-states build-review dashboard into confirmed and flagged dossiers with feature mappings and code locations.",
+  "intention_for_embedding": "To verify and audit that every clickable element on the build-failure/lifecycle-states mockup is honestly described and grounded in real code or marked proposed."
+}

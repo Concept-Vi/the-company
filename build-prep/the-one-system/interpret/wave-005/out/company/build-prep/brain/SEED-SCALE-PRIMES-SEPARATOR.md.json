@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/SEED-SCALE-PRIMES-SEPARATOR.md",
+  "model": "opus",
+  "what_it_does": "A long (17-section) capture of a 2026-06-13 conversation arc continuing Tim Geldard's geometric seed, covering the equation's variables, the grid/square half, time (past and future), embeddings as the circle, the two-gravity pollution separator, the constants/pinned frame, scale-as-rules, the prime/divisor lattice, viewpoint-not-resolution correction, and a corpus-cleaning machine. Appendix A reproduces Tim's four raw messages verbatim as the primary source.",
+  "observations": [
+    "Frames the equation 2pi/n = (1/n)^k as a FORM WITH EMPTY SLOTS; every slot (n, 2pi, k, x, centre, angle, radius, grid) is a variable filled by resolution; the built instance (angle=kind, radius=time, 7 sectors) is one binding.",
+    "n is corrected to mean the number of PRIMES of the thing at that scale (not arbitrary, not cardinality of types); k is the dimension/fractal exponent; x is the step flagged as unused in the build.",
+    "Section 6 - the two-gravity separator: an axis between Tim's-intent-pole and the AI-deformation-pole; named concept axis/discriminative direction/steering vector; embed the corpus twice under framing instructions ('as Tim's intent' vs 'as generic-AI') and the gap between a unit's two positions IS its pollution signal.",
+    "Section 7 enumerates Tim's constants: one origin (no second human), nothing ever read by Tim, no specifications (so nothing has a single purpose), no external measure of importance but Tim's perception; plus the three-point plane (Tim, collective-AI, owned-systems) and the address-coincidence law (transcript-address = folder-path = timestamp).",
+    "Section 8: scale changes RULES not content; rules-as-data = schema = type = registry; a registry is a unit one scale up -> register-of-registries, infinite both ways = scale-invariance/fractal.",
+    "Section 9 - the primes: every scale-step is a ratio factoring into primes (fundamental theorem of arithmetic); prime = irreducible unit/type, exponent = number of cycles = mass/influence; the register-of-registries IS the divisor lattice (one prime per axis, exponent = position).",
+    "Section 11 records Tim's correction (polygon/circle = VIEWPOINT not resolution): corners = primes, FIXED; circle-vs-polygon is where you stand (centre = continuous, corner = discrete); knowledge fills the harmonic wave between fixed prime-corners; a type crystallizes at the ~20/80 nucleation threshold.",
+    "Section 17 dissolves a prior 'model-call ratification gate': all four supposed Tim-decisions are shown to be the agent trying to freeze variables Tim left free; the gate (Criteria Group 12) is declared DISSOLVED, the two-gravity separator un-gated.",
+    "Section 16 keeps an explicit mine-vs-his ledger separating Tim's confirmations, Tim's corrections, the lead's flagged extrapolations, and a buildable near-term dependency order.",
+    "Appendix A reproduces four full verbatim Tim messages (A1-A4) with dictation artifacts preserved as ground truth."
+  ],
+  "standouts": [
+    "The two-gravity separator with double-embedding under framing instructions as a concrete, buildable corpus-pollution detector whose only human input is Tim describing AI tells.",
+    "The address-coincidence law: transcript-address, folder-path, and timestamp are the same address on three axes because born of one act through one interface on one computer.",
+    "The self-correcting meta-pattern (section 17): the agent's recurring error named as the 'hardcode/first-binding reflex' disguised as 'a decision only Tim can make', and a gate formally dissolved rather than left pending.",
+    "Deliberate preservation of Tim's raw verbatim messages as the ground-truth anchor, with the decompressions explicitly labeled as interpretation."
+  ],
+  "conventions": [
+    "Strong primary-source discipline: verbatim Tim messages preserved in full per his explicit instruction ('not summaries, not key terms, the full things'); interpretation layered above and labeled.",
+    "Maintains a mine-vs-his ownership ledger and flags every agent extrapolation for Tim's fit-test (expand-before-harden).",
+    "Explicit unratified status footer; nothing claimed as built.",
+    "Cross-references companion brain files by name (geometric-substrate, GROWTH-ROUNDS, UNIVERSAL-PROJECTION, TRIANGULATION, CONVERGENCE-OBJECT)."
+  ],
+  "concerns": [],
+  "notes": "This is the densest single capture of Tim's seed theory - the variables, the primes/divisor-lattice formalism, the two-gravity corpus separator, the constants, and the dissolved ratification gate - with his four raw source messages preserved verbatim at the foot.",
+  "questions": [
+    "Have the buildable near-term items in section 16 (pub-sub, binding-as-row, grid/strain, freed time, separator, multi-scale embedding) been started since this capture?",
+    "Is the prime/divisor-lattice formalism (section 9) accepted by Tim as the object his intuition meant, given section 17 calls it 'one description' not a new object?"
+  ],
+  "purpose_vs_actual": "Match - it states it is a maximal (non-reduced) capture of a dense design arc plus verbatim sources, and that is exactly what it contains.",
+  "apparent_themes": [
+    "Form-with-empty-slots resolved by binding, never hardcoded",
+    "Scale-invariance / fractal register-of-registries",
+    "Primes as irreducible types, exponents as influence/mass",
+    "Pollution separation via dual-framed embedding (two gravities)",
+    "Constants as the pinned frame that makes free rendering possible",
+    "Viewpoint (where you stand) determines discrete-vs-continuous",
+    "Primary source fidelity and mine-vs-his ownership tracking"
+  ],
+  "intention_signals": "It is trying to fully externalize and preserve a non-linguistic mental object across the session barrier without reducing it, while pinning down where Tim's intuition meets a formal mathematics (primes/divisor lattice), naming a buildable corpus-cleaning instrument, and disarming the agent's own tendency to freeze the variables Tim deliberately leaves open.",
+  "novelty": "The prime/divisor-lattice as a register-of-registries (one prime per axis, exponent as influence/mass), the dual-framed-embedding pollution separator, the three-axis address-coincidence law, and the explicit naming/dissolution of the agent's hardcoding reflex disguised as a Tim-gate.",
+  "contribution": "Contributes the deepest articulation of the seed's variables and the prime/divisor-lattice formalism, the two-gravity corpus-separator mechanism, Tim's enumerated constants and address-coincidence law, the scale-as-rules register-of-registries, and the verbatim primary-source anchors plus the mine-vs-his ledger.",
+  "summary_for_embedding": "A maximal capture of Tim Geldard's 2026-06-13 seed arc - the equation's variables, scale-as-rules register-of-registries, the prime/divisor lattice, the dual-framed-embedding two-gravity corpus separator, the pinned constants and address-coincidence law - with his four raw messages preserved verbatim.",
+  "intention_for_embedding": "To externalize and preserve a dense non-linguistic theory without reduction, formalize where intuition meets mathematics, name a buildable corpus-cleaning instrument, and stop the agent from hardcoding variables Tim left free."
+}

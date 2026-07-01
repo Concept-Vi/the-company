@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/motion.css",
+  "model": "opus",
+  "what_it_does": "Defines the motion language under the rule 'nothing teleports': duration and easing tokens, travel-distance and stagger tokens, ENTER/EXIT keyframes (cvEnter*/cvExit* in four directions plus scale) with matching .enter-*/.exit-* classes, a .stagger child-delay rule, a .moves transition for FLIP/View-Transitions repositioning, ::view-transition styling, and a prefers-reduced-motion override.",
+  "observations": [
+    "Durations: instant 90ms, quick 160ms, move 280ms, enter 360ms, exit 240ms, page 480ms",
+    "Easings: --ease-entrance (decelerate), --ease-exit (accelerate), --ease-emphasized, --ease-spring (overshoot)",
+    "Travel distances --move-xs..lg plus --move-off 120% (fully off frame); stagger step 55ms, max 10",
+    "Enter keyframes fade+translate in from a direction (Up/Down/Left/Right) plus cvEnterScale; exit keyframes mirror outward",
+    "Enter classes use --ease-entrance, exit classes use --ease-exit, both with animation-fill 'both'",
+    ".stagger > * delays by min(--i, --stagger-max) * --stagger-step",
+    ".moves transitions transform+opacity over --dur-move with --ease-emphasized for FLIP/VT repositioning",
+    "::view-transition-group(*) duration set to --dur-page; root old/new use --ease-emphasized",
+    "prefers-reduced-motion collapses all animation/transition durations to 1ms (content still appears)",
+    "Header notes durations extend dur-fast/base/slow from colors_and_type.css"
+  ],
+  "standouts": [
+    "Three-primitive model (ENTER/EXIT/MOVE) framed as 'nothing teleports' — a stated motion philosophy",
+    "First-class support for the View Transitions API alongside a FLIP fallback, both routed through the same tokens",
+    "Reduced-motion handled by collapsing durations to 1ms rather than removing animations, so 'both' fill still applies end state"
+  ],
+  "conventions": [
+    "Token-then-rule pattern; all 'feel' values are tokens tunable in one place",
+    "@kind other annotations on duration/easing/stagger non-length tokens",
+    "Accessibility gate (prefers-reduced-motion) included as a first-class concern",
+    "Direction suffix convention documented (where it comes FROM / goes TO)"
+  ],
+  "concerns": [],
+  "notes": "The single home for the design system's motion feel — durations, easings, enter/exit/move primitives, stagger, View-Transitions/FLIP support, and reduced-motion; add .enter-* on mount, .exit-* before unmount.",
+  "questions": [
+    "Where are --dur-fast/base/slow (extended per the header) defined in colors_and_type.css?",
+    "The FLIP fallback and the JS that adds/removes .enter-*/.exit-* and wraps startViewTransition are referenced as a 'helper component' — where does that live?"
+  ],
+  "purpose_vs_actual": "Matches — header declares the 'nothing teleports' three-primitive motion language; the file delivers enter/exit/move primitives, tokens, stagger, VT support, and reduced-motion gating.",
+  "apparent_themes": [
+    "nothing teleports (choreographed exit+entrance)",
+    "single-source tunable feel",
+    "accessibility (reduced motion) by default",
+    "View Transitions / FLIP for layout moves"
+  ],
+  "intention_signals": "Trying to make every state/page change a choreographed travel rather than a flash, with the entire feel tunable from tokens and degraded gracefully for reduced-motion users.",
+  "novelty": "The explicit ENTER/EXIT/MOVE triad as a named philosophy, and treating View Transitions and FLIP as two mechanisms of one MOVE primitive driven by shared tokens.",
+  "contribution": "Contributes the motion token set and the enter/exit/move animation primitives plus stagger, View-Transitions styling, and the reduced-motion gate — the system's choreography layer.",
+  "summary_for_embedding": "ConceptV design-system CSS defining motion tokens (durations, easings, travel, stagger) and ENTER/EXIT/MOVE animation primitives with stagger, View-Transitions support, and a prefers-reduced-motion gate.",
+  "intention_for_embedding": "To make every state and page change a choreographed exit+entrance ('nothing teleports'), tunable from single-source tokens and respectful of reduced-motion."
+}

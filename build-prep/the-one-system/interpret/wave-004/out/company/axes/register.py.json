@@ -1,0 +1,32 @@
+{
+  "project": "company",
+  "path": "axes/register.py",
+  "model": "opus",
+  "what_it_does": "Declares the 'register' axis as a module-level AXIS dict — the mood/finish/theme axis. Defines id and namespace 'register', a single discrete field 'theme' (e.g. the dark-observatory), value_source 'live', and a description tying register to the DNA language/theme that the renderer resolves through (archetype.language to DNA grammar/tokens/voice), noting that re-resolving the register re-skins every surface via a served cascade onto color.primary.",
+  "observations": [
+    "Pure declarative data — only the AXIS dict, no logic",
+    "Single discrete field: {'theme': 'discrete'}",
+    "value_source is 'live'",
+    "desc names 'the dark observatory' as a theme example and describes a served-cascade re-skin onto color.primary",
+    "References archetype.language to DNA grammar/tokens/voice resolution chain"
+  ],
+  "standouts": [
+    "Re-resolving the register 're-skins every surface' — a single axis value propagates a full visual re-theme through a served cascade"
+  ],
+  "conventions": [
+    "Follows an AXIS-dict declaration pattern (id, namespace, fields, value_source, desc) shared with sibling axes files like resolution.py"
+  ],
+  "concerns": [],
+  "notes": "The theme/mood axis declaration — one discrete 'theme' field whose live value drives a cascade that re-skins every surface.",
+  "questions": [
+    "What other theme values exist besides the dark-observatory ('others')?",
+    "Where is the served-cascade onto color.primary actually resolved?"
+  ],
+  "purpose_vs_actual": "Matches — file header and desc both describe the register/theme axis and the dict declares exactly a discrete theme field.",
+  "apparent_themes": ["axis-as-data declaration", "theme/DNA-driven re-skinning", "live-resolved cascade"],
+  "intention_signals": "To define register as a first-class live axis so that selecting a theme value re-resolves the visual DNA (grammar/tokens/voice) across every rendered surface from one place.",
+  "novelty": "Treating visual mood/finish as a resolvable axis whose change cascades a full re-skin is a distinctive design-system framing.",
+  "contribution": "Contributes the 'register' axis definition: a discrete live theme field that drives DNA-language re-skinning across surfaces.",
+  "summary_for_embedding": "An axes declaration file defining the discrete live 'register' (theme/mood) axis that drives DNA-language re-skinning of every surface.",
+  "intention_for_embedding": "To declare register as a live axis whose theme value re-resolves the visual DNA across all rendered surfaces."
+}

@@ -1,0 +1,53 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/organ-map-grounded.md",
+  "model": "opus",
+  "what_it_does": "Grounds the FRAME doc's lean organ-map ('~80% built') against the real ~/company code: a 13-row table where each Surface organ is mapped to a verified file:line:symbol with a status (✅ exists / 🟡 partial / 🔴 net-new), flags three FRAME rows that overclaimed, computes a built-percentage from the cites (~65%), and assembles a precise net-new build backlog of what the Surface needs that the engine lacks.",
+  "observations": [
+    "Frames itself as the LANE-GROUND deliverable for composition ① (the repo-exocortex), converting an unverified lean reading into citeable evidence; read-only, cross-references FRAME-the-two-halves.md without editing it.",
+    "Documents a clean degradation: the space='repo' corpus was empty at run-time (list_corpus(project='company') → 0), so grounding was done by direct deterministic grep+read rather than corpus query — itself recorded as finding row 10 (the ① ingest has never run on the repo).",
+    "Includes a RE-VERIFIED note (2026-06-09 ~20:40) by a later beat confirming cites still resolve, corpus still empty, and that embed-bge is now resident (company gpu: 4.9GB co-resident with chat-4b) so net-new #8 is unblocked.",
+    "States the cross-cutting truth: the engine has the PRIMITIVES and PATTERNS; many specific Surface organs are net-new.",
+    "The 13-row table cites concrete symbols: run_items/run_reduce/SlotBudget (cognition.py), append_mark/marks_for (fs_store.py), mark/capture_corpus (suite.py), the wire (surface_build_intent/dispatch_decision/drive_dispatchable), and the FE regions (RhmChat.tsx etc.).",
+    "Three overclaim corrections: row 3 (no-confidence is convention not enforced — mark() accepts a confidence field via **fields), row 8 (no first-class Decision-Ledger/Assumption-Shelf/Missing-Info-Map objects, only adjacent inbox/governance/coa substrate), row 6 (lens pattern ✅ but §20.4 extractor roles 🔴).",
+    "Built-% computed transparently: ✅=1.0, 🟡=0.5, 🔴=0.0 over 13 rows → 8.5/13 = ~65%, versus the FRAME's lean ~80%.",
+    "Net-new backlog: the schema-rendered generative surface (the hard 🔴), §20.4 extractor roles, ⑨ durable cross-session memory, progressive-type-resolution wiring, schema→UI render, first-class ledger/shelf/map objects, optional no-confidence enforcement, plus the ACTION of running the ① repo ingest.",
+    "A VERIFY-BY-USE section lists the exact grep/Read checks that confirmed each load-bearing claim (mark() confidence param, missing session_memo, no generative-surface render, empty corpus, the spine symbols).",
+    "Explicitly resists 'green-paint': refuses to downgrade row 13 to 🟡 just because FE regions exist, since those are the extension base, not the generative surface."
+  ],
+  "standouts": [
+    "Built-% is derived from per-row cites with a stated weighting rather than guessed, converting a lean estimate into a defensible 65%.",
+    "The empty-corpus finding becomes a first-class deliverable: row 10's code exists but the ① ingest is a net-new ACTION never run.",
+    "Disciplined overclaim-flagging with grep evidence (e.g. mark() accepting confidence makes no-confidence a convention, not a law).",
+    "Anti-green-paint stance: distinguishes 'extension base' from 'partial build' so existing FE regions don't earn false credit."
+  ],
+  "conventions": [
+    "Strict evidence discipline: every status resolves to a real file:line:symbol, with a degrade-clean note when corpus query was unavailable.",
+    "Uses the company's circled-composition vocabulary (①②③⑨⑩⑫), the ✅/🟡/🔴 legend, and §-section references to the Surface doc.",
+    "Read-only grounding deliverable that cross-references but never edits the source FRAME doc; provenance noted per beat (authored vs re-verified)."
+  ],
+  "concerns": [
+    "Status snapshot tied to a specific run-time (2026-06-09); the corpus-empty and embedder-resident facts will drift as the ingest runs and services change.",
+    "The 65% figure depends on the chosen 1.0/0.5/0.0 weighting and the 13-row partition, which are reasonable but somewhat arbitrary."
+  ],
+  "notes": "A grounded, citeable audit that re-scores the FRAME organ-map from ~80% to ~65% built, flags three overclaims, and hands Tim a precise net-new backlog (headed by the schema-rendered generative surface) plus the un-run repo ingest action.",
+  "questions": [
+    "Has the ① repo-exocortex ingest been run since this doc (is the repo space now populated)?",
+    "Did Tim decide whether no-confidence should become an enforced schema invariant or stay a convention?",
+    "Which existing memory substrate (episodic plugin vs file-memory) does ⑨ durable memory extend rather than parallel?"
+  ],
+  "purpose_vs_actual": "Match — it declares itself the grounded verification of the FRAME organ-map and delivers cited statuses, overclaim flags, a computed built-%, and a net-new backlog exactly as stated.",
+  "apparent_themes": [
+    "Evidence-grounded verification over lean estimates",
+    "Primitives/patterns exist vs specific organs are net-new",
+    "Anti-green-paint honesty",
+    "reuse-don't-parallel (digest/memory reuse targets named)",
+    "The product face (generative surface) as the headline gap",
+    "Clean degradation when a preferred data source is unavailable"
+  ],
+  "intention_signals": "Trying to give Tim a trustworthy, citeable map of what is actually built versus claimed, so the build backlog is real and steerable rather than inflated by a lean reading or partial-build credit.",
+  "novelty": "Computing a built-percentage from per-row file:symbol cites with an explicit weighting, and elevating an empty-corpus observation into a named net-new action distinct from net-new code.",
+  "contribution": "Contributes the grounded organ-map itself: the 13-row verified status table with real symbol cites, the three documented overclaim corrections, the derived ~65% built figure, and the precise eight-item net-new backlog the Surface still needs.",
+  "summary_for_embedding": "A grounded audit of the FRAME organ-map verifying each Surface organ against real ~/company code with file:symbol cites, correcting three overclaims, computing ~65% built, and listing the precise net-new backlog.",
+  "intention_for_embedding": "To replace a lean ~80%-built estimate with an evidence-grounded map of what is actually built versus net-new, giving Tim a citeable backlog to steer the Surface build."
+}

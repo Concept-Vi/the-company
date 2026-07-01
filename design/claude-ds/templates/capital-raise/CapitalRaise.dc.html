@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Capital Raise" description="Investor capital-raise deck computed from the generative core — the running-sentence title chain (DESIGN-LANGUAGE §16) and the capital-raise grammar (orbital ring, stacked pipeline, spectrum, manifold, fidelity, logo wall, team, dashboard, reason cards, product bookends) as content-as-data, recomputed live by the LOD / density / theme dials." -->
+<helmet>
+<script src="./ds-base.js?v=3"></script>
+<style>@keyframes deckSlideIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }</style>
+</helmet>
+<div data-theme="{{ theme }}" data-ground="{{ ground }}" style="background: var(--zone-ground); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; min-height: 100vh; padding: 40px clamp(16px, 4vw, 64px) 80px;">
+
+  <div style="max-width: 1280px; margin: 0 auto;">
+
+    <header style="display: flex; align-items: baseline; gap: 14px; margin: 0 0 8px; flex-wrap: wrap;">
+      <span style="font: var(--weight-semibold,600) var(--fs-caption)/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-bronze); display: inline-flex; align-items: center; gap: 8px;">
+        <span style="width: 7px; height: 7px; background: var(--accent-gold); transform: rotate(45deg); border-radius: 1px;"></span>
+        ConceptV
+      </span>
+      <span style="font: var(--weight-medium,500) var(--fs-meta)/1 var(--font-body); color: var(--ink-3);">Capital raise · computed from the generative core</span>
+      <span style="margin-left: auto; font: var(--weight-medium,500) var(--fs-caption)/1 var(--font-mono); color: var(--ink-3);">lod = {{ lod }} · density = {{ density }}</span>
+    </header>
+
+    <p style="font: var(--weight-regular,400) var(--fs-meta)/1.5 var(--font-body); color: var(--ink-3); margin: 0 0 24px; max-width: 80ch;">Read the slide titles top to bottom: they form <b style="color: var(--ink-2);">one running sentence</b> — the argument is legible from the title rail alone (DESIGN-LANGUAGE §16).</p>
+
+    <sc-for list="{{ slides }}" as="slide" hint-placeholder-count="5">
+      <div data-deck-slide="" data-screen-label="{{ slide.no }}" class="cv-slide-frame" style="border: 1px solid var(--zone-base-edge); box-shadow: var(--elev-2); margin-bottom: 28px;">
+        <div class="cv-slide-stage">
+          <x-import component-from-global-scope="ConceptVDesignSystem_c8f43c.Slide" archetype="{{ slide.archetype }}" content="{{ slide.content }}" register="{{ register }}" lod="{{ lod }}" density="{{ density }}" surface="slide" style="display:block;width:100%;" hint-size="1280px,720px">Loading slide…</x-import>
+        </div>
+        <span style="position: absolute; right: 16px; bottom: 12px; z-index: 3; font: var(--weight-medium,500) var(--fs-caption)/1 var(--font-mono); color: var(--ink-3); letter-spacing: 0.04em;">{{ slide.no }}</span>
+      </div>
+    </sc-for>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;register&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;custom&quot;,&quot;presenter&quot;,&quot;reader&quot;],&quot;default&quot;:&quot;custom&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;lod&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;summary&quot;,&quot;pitch&quot;,&quot;full&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;compact&quot;,&quot;comfortable&quot;,&quot;spacious&quot;],&quot;default&quot;:&quot;comfortable&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dim&quot;,&quot;dark&quot;,&quot;contrast&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;ground&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;clean&quot;,&quot;warm&quot;],&quot;default&quot;:&quot;clean&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  // The capital-raise narrative as DATA. Each slide picks an archetype and
+  // supplies content; the generative core computes the layout (block + graph
+  // solvers) under the axis dials. The slide TITLES chain into one running
+  // sentence (DESIGN-LANGUAGE §16) — editing the deck = editing this data.
+  get DECK() {
+    return [
+      // — cover: the live product surface + frosted title lockup —
+      { archetype: "product-cover", content: {
+        kicker: "ConceptV",
+        title: "Streamlining property design and development",
+        subtitle: "We turn architectural design files into interactive Virtual Tours — connecting every stakeholder of unbuilt property in one place.",
+        image: "warm coastal-luxury interior render (panotour viewer chrome)" } },
+
+      // — problem: bullets + the disconnection mesh —
+      { archetype: "split", content: {
+        title: "Poor design coordination creates billions in preventable work",
+        visual: "disconnection network — stakeholders, no shared source",
+        heading: "The core problem: communication",
+        bullets: [
+          { title: "Tedious, expensive, wasteful", text: "dozens to thousands of stakeholders touch a single build.", bullet: "dot", priority: 1 },
+          { title: "Technical stakeholders are siloed", text: "diverse, incompatible software; they email 2D plans.", bullet: "leads", priority: 2, detail: "support" },
+          { title: "Non-technical stakeholders can't read the plans", text: "leading to oversights and ill-informed decisions.", bullet: "leads", priority: 2, detail: "support" } ],
+        note: "We connect all stakeholders in a single, integrated visual platform." } },
+
+      // — consequences: the hero metrics —
+      { archetype: "metric-band", content: {
+        title: "We're bringing the third epoch of property development technology",
+        metrics: [
+          { value: "52%", label: "of global rework from poor data & miscommunication", priority: 1 },
+          { value: "30%", label: "of construction waste from miscommunication", priority: 1 },
+          { value: "$430B+", label: "global cost of rework from poor communication", priority: 2 } ],
+        note: "Digitise → Visualise → Connect. We're building the connect epoch." } },
+
+      // — single system: the orbital verb-ring around the Property Wizard —
+      { archetype: "orbital", content: {
+        title: "With a single system for a variety of use cases",
+        lede: "Stakeholders and their files flow through the Property Wizard, which assembles and delivers Virtual Tours.",
+        center: { label: "Property Wizard", shape: "hex" },
+        verbs: [{ label: "Configure" }, { label: "Output" }, { label: "Update" }, { label: "Upload" }] } },
+
+      // — go-to-market: the stacked / recyclable pipeline —
+      { archetype: "stacked", content: {
+        title: "Our go-to-market is organic and recyclable",
+        lede: "A replicable, standardised acquisition process that self-generates from referrals and the network effect.",
+        nodes: [
+          { label: "Networks", top: ["Research"], bottom: ["Referrals"] },
+          { label: "Developers", top: ["Architects"], bottom: ["Designers"] },
+          { label: "User Portal", shape: "circle" },
+          { label: "Virtual Tours", shape: "octagon" },
+          { label: "Sales", top: ["Onsellers"], bottom: ["Subscribers"] },
+          { label: "Organic Awareness", shape: "circle", join: "plus" } ] } },
+
+      // — focus: the two-panel compare —
+      { archetype: "compare", content: {
+        title: "But our growth stage is strategically focused",
+        left: { title: "Architects", bullets: [
+          "Branded Virtual Tours sold to their clients, updated at key stages",
+          "Returning to customers we couldn't serve before",
+          { text: "$130.6M SAM · $20k–$40k average project", bullet: "done" } ] },
+        right: { title: "Developers", bullets: [
+          "Full rendering packages for the cost of renders alone",
+          "Strong market response to immersive technologies",
+          { text: "$975M SAM · $40k–$80k average project", bullet: "done" } ] },
+        note: "High-revenue, low-volume entry in QLD, NSW and VIC luxury residential." } },
+
+      // — competitive landscape: the 1-D spectrum axis —
+      { archetype: "spectrum", content: {
+        title: "In a siloed competitive landscape",
+        lede: "Existing tools each own one slice; our Virtual Tours augment design AND replace sales technologies across the whole spectrum.",
+        ends: ["Technical · strictly professional", "Non-technical · public facing"],
+        segments: [{ label: "Design process", at: 0.27 }, { label: "Marketing & sales", at: 0.72 }],
+        cards: [
+          { label: "Architect software", at: 0.08 },
+          { label: "Visualisation software", at: 0.34 },
+          { label: "Rendering services", at: 0.62 },
+          { label: "360° tour providers", at: 0.9 } ],
+        hatch: [0, 0.2] } },
+
+      // — traction: the logo wall bracketed by stat strips —
+      { archetype: "logo-wall", content: {
+        title: "That we've market tested and sold",
+        top: [{ value: "60+", label: "Projects delivered" }, { value: "41,500+", label: "Unique users" }],
+        logos: ["Penfold", "Brookmoore", "Ellivo", "Baahouse", "Habitat", "Feltham", "Arco", "Vida", "Kitome", "Heran", "Focus", "G.J. Gardner", "Reds Group", "Modscape", "LeaDesign", "Gatehouse"],
+        bottom: [
+          { value: "100%", label: "Reported improved communication" },
+          { value: "89%", label: "Found integration easy" },
+          { value: "100%", label: "Would recommend us" } ] } },
+
+      // — pipeline: the converging manifold → one total —
+      { archetype: "manifold", content: {
+        title: "Which has generated a diverse pipeline",
+        lede: "30+ companies in the pipeline; we've had to turn the majority away to focus on key potentials.",
+        branches: [
+          { title: "Architect clients", value: "$120–210k", label: "sum AR potential" },
+          { title: "Developer clients", value: "$440–720k", label: "sum AR potential" },
+          { title: "Home builder clients", value: "$215–365k", label: "sum ARR potential" } ],
+        total: { value: "$1,035,000", label: "ARR in 6-month pipeline" } } },
+
+      // — product: the progressive-fidelity stepper —
+      { archetype: "fidelity", content: {
+        title: "Delivered through tools that streamline project updates",
+        lede: "Each project stage escalates fidelity — from placeholders to a full marketing package.",
+        steps: [
+          { label: "Stage 1", text: "Placeholders, basic visual quality", inter: "1–2 weeks", image: "grey massing render" },
+          { label: "Stage 2", text: "Some elements defined, improved quality", inter: "Revision", image: "part-textured render" },
+          { label: "Stage 3", text: "Final output, high detail and quality", inter: "Revision", image: "full interior render" },
+          { label: "Marketing package", text: "Renders, brochures and other collateral", image: "hero kitchen render" } ] } },
+
+      // — team —
+      { archetype: "team", content: {
+        title: "Run by a team that's already built it",
+        core: [
+          { name: "Tim Geldard", role: "CEO & Founder", initials: "TG", credential: "Bachelor of Property Economics, major in Residential Construction" },
+          { name: "Michael Baggott", role: "CTO & Founder", initials: "MB", credential: "Bachelor of Technology & Computing; Diploma of Interactive Games" },
+          { name: "Jackie Nishimura", role: "CPO", initials: "JN", credential: "Bachelor of Industrial Design, major in Product Development" } ],
+        advisory: ["Private Equity", "Operations", "Sales & Growth", "Risk", "Construction", "Financial Strategy"],
+        upcoming: [
+          { name: "Christian Hodges", role: "Automation", initials: "CH" },
+          { name: "Shane Begovic", role: "Integration", initials: "SB" } ] } },
+
+      // — why now: the ramp-bordered reason cards over two summary zones —
+      { archetype: "reasons", content: {
+        title: "But why raise capital now?",
+        lede: "We weren't planning to — recent market movements and new partnerships created a time-sensitive opportunity to fast-track growth.",
+        cards: [
+          { title: "Current climate", text: "Markets are pressured to reduce waste and gain a competitive edge." },
+          { title: "Market partnerships", text: "Industry bodies are inviting us to educate their members." },
+          { title: "AI development", text: "Systems years in design are now possible, with tech giants behind us." },
+          { title: "Existing demand", text: "We have clients we've had to turn away on onboarding capacity." } ],
+        zones: [
+          { title: "People and markets", bullets: [
+            "A director of the AIA joins as Growth Director; partnered with a luxury sales agency",
+            "Invited to deliver seminars hosted by the AIA, PCA and TUD" ] },
+          { title: "Investment spend", bullets: [
+            "Automate delegation and consolidation for capacity",
+            "Develop V3.0 of the Property Wizard with tech partners" ] } ] } },
+
+      // — the ask: the dashboard of panels —
+      { archetype: "dashboard", content: {
+        title: "Because we know how to spend it",
+        panels: [
+          { title: "Deal size", metrics: [{ value: "$1M", label: "Capital round (SAFE note)" }, { value: "$5.5M", label: "Pre-money valuation" }] },
+          { title: "Future outlook with capital", chart: { kind: "spark", points: [1, 1.2, 2, 2.6, 3, 4.2, 6, 8.4, 11], label: "Sales revenue → Q4" } },
+          { title: "Use of funds", chart: { kind: "gauge", value: 61, label: "Sales & marketing (26% tech, 8% legal)" } },
+          { title: "Key milestones", bullets: [
+            { title: "6 mo", text: "10 luxury customers" },
+            { title: "24 mo", text: "NZ, USA & UK markets" } ] } ] } },
+
+      // — section divider —
+      { archetype: "photo-divider", content: { title: "Appendix", image: "full-bleed architectural render at golden hour" } },
+
+      // — closing: the live product surface + frosted contact card —
+      { archetype: "product-closing", content: {
+        kicker: "ConceptV",
+        subtitle: "Let's build your first Virtual Tour",
+        lines: [
+          { label: "Phone", value: "0421 849 615" },
+          { label: "Email", value: "t.geldard@conceptv.com.au" },
+          { label: "Website", value: "conceptv.com.au" },
+          { label: "Head office", value: "Level 1, 235 Boundary Street, West End QLD 4101" } ],
+        image: "luxury interior, panotour viewer chrome" } },
+    ];
+  }
+
+  componentDidMount() {
+    // fit-to-frame is universal (core/slide-fit.js). It + the <x-import> slides
+    // load async, so drive it DEFENSIVELY here: only ever use refit() (present
+    // in every build — never assume kick exists) and re-fit on our own short
+    // loop until the stages stop changing. Cannot throw; works on cold loads
+    // regardless of which fitter build won the install.
+    let last = "", stable = 0, n = 0;
+    const sig = () => Array.from(document.querySelectorAll(".cv-slide-stage"))
+      .map((s) => ((s.parentElement && s.parentElement.clientWidth) | 0) + ":" + (s.scrollHeight | 0)).join("|");
+    const tick = () => {
+      const F = window.CV_SLIDE_FIT;
+      if (F && F.kick) F.kick(); else if (F && F.refit) F.refit();
+      const s = sig();
+      if (s && s === last && s.indexOf(":0") === -1) stable++; else { stable = 0; last = s; }
+      n++;
+      if (stable < 8 && n < 120) setTimeout(tick, 200);
+    };
+    tick();
+    // per-slide entrance (base stays visible for print / no-JS / reduced-motion)
+    if (typeof IntersectionObserver !== "undefined") {
+      const reduce = !window.matchMedia || !window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
+      this._io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting && !e.target.dataset.revealed) {
+            e.target.dataset.revealed = "1";
+            if (!reduce) e.target.style.animation = "deckSlideIn .5s cubic-bezier(.16,1,.3,1) both";
+            this._io.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.1 });
+      const attach = () => document.querySelectorAll("[data-deck-slide]").forEach((el) => this._io.observe(el));
+      requestAnimationFrame(attach); setTimeout(attach, 400);
+    }
+  }
+  componentWillUnmount() { if (this._io) this._io.disconnect(); }
+
+  renderVals() {
+    const slides = this.DECK.map((s, i) => ({
+      archetype: s.archetype,
+      content: s.content,
+      no: String(i + 1).padStart(2, "0"),
+    }));
+    const custom = (this.props.register || "custom") === "custom";
+    return {
+      slides,
+      register: custom ? undefined : this.props.register,
+      lod: custom ? (this.props.lod || "full") : "",
+      density: custom ? (this.props.density || "comfortable") : "",
+      theme: this.props.theme || "light",
+      ground: this.props.ground || "clean",
+    };
+  }
+}
+</script>
+</body>
+</html>

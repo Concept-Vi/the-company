@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/workshop/WidgetBuilder.jsx",
+  "model": "opus",
+  "what_it_does": "A self-contained Workshop editor for ConceptV widgets. Defines widget kinds (dashboard tile / virtual-hub / embeddable) and systems (kpi / media / hybrid) with mock feeds and sparkline datasets; an AI drafter (viDraftWidget) that prompts the model to produce widget JSON from a brief; a presentational WidgetRender that renders the widget body through the shared core engine; the WidgetBuilder editor (kind/system pickers, data panel, live stage, variations, candidate gallery, export); a WidgetStage with simulated live-data rotation and skeleton-resolve; context frames showing the widget inside dashboard/hub/embed mockups; and a JSX/PNG/PDF export menu.",
+  "observations": [
+    "WidgetRender renders the body via window.__cvContainmentTree / __cvDiagramSolver / __cvTypeToNode and throws loudly if the core engine isn't loaded ('unification requires window.__cvContainmentTree')",
+    "viDraftWidget injects window.CV_AI.get('voice.conceptv').text into the prompt and calls window.CV_AI.complete, then parses JSON with a brace-regex fallback, throwing if unparsable",
+    "Authorship is made legible via a 'by by-vi'/'by by-human' mark derived from doc.author or doc.mocked, citing DESIGN-LANGUAGE §11",
+    "WidgetStage simulates a live feed: rotates trend sparkdata and deterministically nudges KPI numeric values on a 2200ms tick, plus a 620ms skeleton-resolve on mock toggle (cites states.css §10)",
+    "Candidate gallery flow uses window.WS_AI.generateCandidates / applyDiff and a window.WSCandidateGallery component",
+    "Pickers read window.WIDGET_KINDS/WIDGET_SYSTEMS if present (falling back to the module constants), and show a provenance badge for non-built-in entries",
+    "Export menu builds standalone JSX via widgetToJSX, a foreignObject-SVG PNG export with cross-origin caveat, and window.print PDF",
+    "Promote-to-Type via window.CV_TYPES_SAVE.fromWidget + window.CV_TYPES_PROMPT.open; save-as-template via onSaveTemplate",
+    "co-brand path uses two hardcoded hex colors (#2A78C6 partner blue, #DEEAF7 soft) instead of tokens"
+  ],
+  "standouts": [
+    "The widget body is rendered THROUGH the one shared engine (T2N → ContainmentTree) rather than bespoke widget markup, with a loud throw if the engine is absent — an explicit unification seam",
+    "Simulated 'live' data: deterministic KPI drift + trend rotation + skeleton-resolve to make a mock feel alive",
+    "Provenance/authorship vocabulary (.by-vi / .by-human) reused from the engine's zoning rather than parallel chrome"
+  ],
+  "conventions": [
+    "Follows the project's window-global registry pattern (CV_AI.complete, voice.conceptv sourced not inlined, core engine resolved off window) and exports components onto window",
+    "Uses CSS var() tokens extensively for the card chrome",
+    "Breaks the no-raw-px/hex rule: the export-JSX template and many inline styles hardcode px values, and the co-brand colors are raw hex (#2A78C6 / #DEEAF7)"
+  ],
+  "concerns": [
+    "Co-brand colors are hardcoded hex (#2A78C6, #DEEAF7) — a second home for color values, against the project's single-source token rule",
+    "The exported standalone JSX hardcodes pixel literals and reimplements the KPI/CTA layout (a parallel rendering path divergent from the engine-rendered preview)",
+    "PNG export via foreignObject is acknowledged as possibly non-working cross-browser (htmlToInline is a minimal clone)"
+  ],
+  "notes": "The full Workshop widget editor — kind/system model + mock feeds + a Vi drafter + an engine-rendered preview with simulated live data + variations + export; note it renders through the shared core engine and throws if that engine is missing.",
+  "questions": [
+    "What is the exact shape returned by WS_AI.generateCandidates and the diff format applyDiff consumes?",
+    "Does T2N with family:'widget'/kind:'widget-system' have a registered renderer for all three systems?",
+    "Why does the export path reimplement layout instead of serializing the engine output?"
+  ],
+  "purpose_vs_actual": "Matches — header says a self-contained editor for KPI/media/hybrid widgets across dashboard/hub/embed contexts, and the code delivers exactly that plus AI drafting and export.",
+  "apparent_themes": [
+    "Unification — one engine renders every surface (widgets included), no parallel parts",
+    "AI-as-collaborator (Vi drafts, refines, generates candidate alternatives) with the shared voice",
+    "Authorship/provenance legibility",
+    "Mock-that-feels-live (simulated feeds, skeleton-resolve, states discipline)",
+    "Context-in-situ previewing (widget shown inside its real host frame)"
+  ],
+  "intention_signals": "Aims to let a designer build a ConceptV widget once and see it rendered by the same engine that drives every other surface, inside its real deployment context, with Vi able to draft/refine/offer alternatives, and then export it as code or image — all single-sourced from the registries and token system.",
+  "novelty": "Rendering a 'widget' through the generic Type→Node→ContainmentTree engine (treating a widget as just another system family) and the deterministic 'fake live feed' that nudges KPI numbers and rotates sparklines to simulate real data.",
+  "contribution": "Contributes a complete widget-authoring canvas: a widget kind/system taxonomy with size specs, a Vi widget-drafting prompt+parser, an engine-rendered in-context preview with simulated live data and skeleton-resolve, a system/kind variations panel, and a multi-format (JSX/PNG/PDF) export.",
+  "summary_for_embedding": "A ConceptV Workshop widget builder defining dashboard/hub/embed kinds and kpi/media/hybrid systems, with an AI drafter, an engine-rendered in-context preview with simulated live data, variations, candidate gallery, and JSX/PNG/PDF export.",
+  "intention_for_embedding": "To author widgets once and render them through the one shared engine inside their real host context, with Vi drafting/refining/offering alternatives and code/image export, all single-sourced from the token and AI registries."
+}

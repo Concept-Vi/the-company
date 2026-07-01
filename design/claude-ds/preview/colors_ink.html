@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Ink scale" subtitle="Four tiers of warm near-black" viewport="700x200" --><html><head><meta charset="utf-8"><title>Ink scale</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 22px 24px; min-height: 200px; background: var(--bg-canvas); }
+  .lead { font: 400 12px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 14px; }
+  .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .sw { display: flex; flex-direction: column; gap: 6px; }
+  .chip { height: 60px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; font: 600 18px/1 var(--font-display); }
+  .name { font: 600 11px/1 var(--font-body); color: var(--fg-primary); }
+  .hex { font: 400 11px/1 var(--font-mono); color: var(--fg-muted); }
+  .desc { font: 400 11px/1.3 var(--font-body); color: var(--fg-muted); }
+</style></head>
+<body><div class="card">
+  <p class="lead">Ink — near-black with warm undertone, never pure black. Four tiers.</p>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:#FFF;color:#1F1A12">Aa</div><span class="name">primary</span><span class="hex">#1F1A12</span><span class="desc">all body & headlines</span></div>
+    <div class="sw"><div class="chip" style="background:#FFF;color:#6B5F47">Aa</div><span class="name">secondary</span><span class="hex">#6B5F47</span><span class="desc">helper text, descriptions</span></div>
+    <div class="sw"><div class="chip" style="background:#FFF;color:#A89678">Aa</div><span class="name">muted</span><span class="hex">#A89678</span><span class="desc">placeholders, captions</span></div>
+    <div class="sw"><div class="chip" style="background:#1F1A12;color:#FBF7EC">Aa</div><span class="name">inverse</span><span class="hex">#FBF7EC</span><span class="desc">on dark surfaces</span></div>
+  </div>
+</div></body></html>

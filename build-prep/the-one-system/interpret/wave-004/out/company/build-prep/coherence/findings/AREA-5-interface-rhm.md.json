@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/AREA-5-interface-rhm.md",
+  "model": "opus",
+  "what_it_does": "A research-findings markdown companion specifying what a full coherence interface would be (a company coherence CLI plus an in-app CoherenceView sibling of CognitionView, with the RHM explaining each finding via up_translate, and acting through the existing consent/build wire); it shows the interface is mostly existing machinery pointed at a new lens and names three (then four) concrete seams where it is not yet wired, each with a grounded fix.",
+  "observations": [
+    "Declares the area in the header: a glanceable, addressed, RHM-explained, consent-actionable coherence surface, with FORM marked needs-tim throughout.",
+    "Uses [OBS file:line], [INF], [IDEA] marking, and refuses to self-certify look-and-feel per AGENTS rule 9.",
+    "Identifies four existing organs as precedents: address_help/up_translate/chat (RHM), CognitionView.tsx (glanceable live surface), AddressHelp.tsx (indicate->explain-at-altitude), surface_build_intent->resolve_surfaced (consent/build wire), plus _ORPHAN_ROUTES (disposition embryo) and ops/cli/app.py (CLI pattern).",
+    "Key finding: up_translate already has a kind=='finding' branch (suite.py:5828-5855) whose docstring says it is the shape a later FE-surface lane will feed.",
+    "SEAM 1: up_translate('finding') is not reachable over HTTP because the GET passes ref as a string but the finding branch requires a dict; the bridge comment says this was left for the G2/FE lane.",
+    "SEAM 2: no /api/coherence_info projection and no coherence.* SSE branch exist (grep returned nothing); specifies the exact contract modeled on cognition_info.",
+    "SEAM 4: the finding-branch blast_radius enrichment is ui:// only, but the flagship finding type is code://; proposes dispatching code:// findings through code-edges.json reach_report.",
+    "SEAM 3: 'by-design/defer' is a different write than 'approve a fix'; proposes finish->build-intent (inbox), defer/by-design->store disposition write + annotation at the finding address.",
+    "Offers 2-3 candidate altitude-0/1 shapes (weave/mesh, vessel/fill, constellation; seam-map, burn-down terrain, radial dial) and includes a composition diagram and next-step options A-D."
+  ],
+  "standouts": [
+    "The discovery that the RHM-explains-a-finding organ is already half-written (up_translate kind=='finding' branch).",
+    "The four named seams, each with file:line evidence and a grounded fix modeled on an existing pattern.",
+    "The explicit reflects-never-owns clarification: a disposition is an operator action through an existing write path, not a violation."
+  ],
+  "conventions": [
+    "Holds the repo's reflects-never-owns, registry-is-truth, token-only design-lint, and FORM=needs-tim disciplines.",
+    "Every proposed UI piece is justified against an existing region/component to avoid a parallel system.",
+    "Ends with the multi-option direction format (A depth / B dealer's choice / C artifact / D)."
+  ],
+  "concerns": [
+    "SEAM 2 is a hard dependency (the projection and SSE branch must exist first), so the surface cannot be built before another area lands them.",
+    "Much of the surface (CoherenceView) is [IDEA]/companion-design, not built; the end-to-end click->explain->act flow is [INF] not executed."
+  ],
+  "notes": "The coherence interface is a sibling of CognitionView reusing address_help/up_translate/the consent wire over a findings projection, blocked on four named-and-fixed seams (HTTP reachability of the finding branch, a missing projection+SSE, ui://-only blast enrichment, and the defer/by-design write path).",
+  "questions": [
+    "What is ANCHOR.md and which of its sections (5, 6, 9) define the interface wishes this file answers?",
+    "What are Areas C/D that must deliver the detectors+store and the coherence_info projection before this surface can exist?",
+    "Were the four seams closed, and which altitude-0/1 shape did the operator pick?"
+  ],
+  "purpose_vs_actual": "Matches: the header's claim (a full coherence interface composed from existing organs, with named seams) is exactly delivered, with each composition grounded and each seam fixed.",
+  "apparent_themes": [
+    "One more lens, not a new system",
+    "Reflects-never-owns of the model; operator writes only dispositions",
+    "Explain at Tim's altitude (lead-plain, mechanism-behind-a-drill)",
+    "Sibling of CognitionView, not a forced merge"
+  ],
+  "intention_signals": "Trying to prove the coherence interface is almost entirely existing machinery repointed, and to make the remaining gaps concrete and closeable (with file:line) rather than hand-waved, while keeping FORM as the operator's call.",
+  "novelty": "Surfacing that up_translate's finding branch is pre-built but HTTP-unreachable, and the SEAM 4 insight that the headline code:// finding type would get no blast enrichment from the ui://-only path.",
+  "contribution": "Contributes the interface composition map, the four named seams with grounded fixes, the coherence_info/SSE contract spec, the defer/by-design-as-disposition-plus-annotation split, and the candidate altitude shapes for the surface.",
+  "summary_for_embedding": "A coherence research companion specifying a company-coherence CLI and a CoherenceView surface reusing up_translate/address_help/the consent wire, with four file:line seams and grounded fixes.",
+  "intention_for_embedding": "To design a coherence interface that composes from existing organs and to pin down exactly where it is not yet wired so the gaps can be closed."
+}

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Type System" name="Type System — the universal component registry" subtitle="A live projection of window.CV_REGISTRY: every universal component (Glyphic · the 11 UI components · panels · graph · slide · blocks · surfaces · docs) with its parts, value-slots (axis subscriptions) and sockets (typed attachment points). One grammar, total coverage." viewport="1180x3200" -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Type System</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../axes/motion/motion.css">
+<!-- the axis + glyphic stack (glyphic-type subscribes to axes) -->
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<!-- the registry chain -->
+<script src="../app/registry/conditions.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../core/archetype-catalog.js"></script>
+<script src="../app/registry/types-seed.js"></script>
+<script src="../app/registry/glyphic-type.js"></script>
+<script src="../app/registry/components-type.js"></script>
+<script src="../app/registry/kinds-type.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--zone-ground, #FCFAF2); color: var(--fg-primary); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .doc { max-width: 1080px; margin: 0 auto; padding: 56px 56px 120px; }
+  .mast { padding-bottom: 26px; border-bottom: 2px solid var(--accent-gold); margin-bottom: 12px; }
+  .kicker { font: 600 11px/1 var(--font-mono); letter-spacing: .22em; text-transform: uppercase; color: var(--accent-bronze); }
+  h1 { margin: 12px 0 10px; font: 800 38px/1.04 var(--font-display); letter-spacing: -0.02em; }
+  .stand { font: 400 15px/1.55 var(--font-body); color: var(--fg-secondary); max-width: 82ch; text-wrap: pretty; }
+  .stand code { font: 500 13px/1 var(--font-mono); color: var(--accent-bronze); }
+
+  .layer { margin-top: 40px; }
+  .layer > h2 { margin: 0 0 4px; font: 700 13px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-gold-deep); }
+  .layer > .ld { margin: 0 0 16px; font: 400 12.5px/1.5 var(--font-body); color: var(--fg-muted); }
+
+  .types { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .type { border: 1px solid var(--border-faint); border-radius: 14px; background: var(--paper); box-shadow: var(--shadow-card); overflow: hidden; }
+  .type > header { display: flex; align-items: center; gap: 9px; padding: 12px 15px; background: color-mix(in srgb, var(--accent-gold) 5%, var(--paper)); border-bottom: 1px solid var(--border-faint); }
+  .type .nm { font: 700 14px/1 var(--font-display); letter-spacing: -0.01em; }
+  .type .kd { font: 600 9px/1 var(--font-mono); letter-spacing: .07em; text-transform: uppercase; color: var(--accent-bronze); background: var(--accent-gold-50); border: 1px solid color-mix(in srgb, var(--accent-gold) 32%, transparent); border-radius: 999px; padding: 4px 8px; }
+  .type .prov { margin-left: auto; font: 500 9px/1 var(--font-mono); color: var(--fg-soft); }
+  .type .body { padding: 12px 15px; display: flex; flex-direction: column; gap: 10px; }
+  .type .desc { font: 400 11.5px/1.45 var(--font-body); color: var(--fg-secondary); margin: 0; }
+  .rowlab { font: 600 8.5px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { font: 500 10px/1.3 var(--font-mono); padding: 3px 7px; border-radius: 6px; background: color-mix(in srgb, var(--accent-bronze) 8%, transparent); color: var(--fg-secondary); }
+  .chip.cls { background: color-mix(in srgb, var(--accent-communication) 12%, transparent); color: color-mix(in srgb, var(--accent-communication) 80%, var(--ink)); }
+  .chip.sock { background: color-mix(in srgb, var(--accent-gold) 13%, transparent); color: var(--accent-gold-deep); }
+  .chip.ax { background: color-mix(in srgb, var(--status-info) 12%, transparent); color: color-mix(in srgb, var(--status-info) 85%, var(--ink)); }
+  .chip .acc { opacity: .6; }
+  .chip.evt { background: color-mix(in srgb, var(--status-warning) 16%, transparent); color: color-mix(in srgb, var(--status-warning) 88%, var(--ink)); }
+  .note { margin-top: 30px; font: 400 12px/1.5 var(--font-body); color: var(--fg-muted); border-top: 1px solid var(--border-faint); padding-top: 16px; }
+  .note code { font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+<div class="doc">
+  <header class="mast" data-screen-label="Type System masthead">
+    <div class="kicker">ConceptV · Living Projection</div>
+    <h1>The Type System</h1>
+    <p class="stand">Everything on an interface is a <b>universal component</b> — a typed thing that declares its <b>parts</b>, its <b>value-slots</b> (parameters that take an axis value), and its <b>sockets</b> (typed attachment points where other components, or events, plug in). This page is a <b>live projection</b> of <code>window.CV_REGISTRY</code>: the Glyphic, all 11 UI components, the panel / graph / slide kinds, and the block/surface/doc library — one grammar, total coverage. Acceptance is declarative, so <code>candidatesForSocket()</code> shows what fits a socket with no bespoke code. Model: <code>system/glyphic-system.html</code>.</p>
+  </header>
+  <div id="layers"></div>
+  <p class="note" id="foot"></p>
+</div>
+
+<script>
+(function () {
+  var R = window.CV_REGISTRY;
+  var root = document.getElementById('layers');
+  if (!R) { root.innerHTML = '<p style="color:#b00">CV_REGISTRY failed to load.</p>'; return; }
+
+  var LAYER_ORDER = ['atom', 'token', 'block', 'system', 'surface', 'doc'];
+  var LAYER_DESC = {
+    atom: 'Single visual units — the Glyphic + the control/status/media components.',
+    token: 'Design primitives — value-units of an axis (colour, type, shape).',
+    block: 'Composable content units + container components.',
+    system: 'Composition rules over blocks — widgets, the graph generator.',
+    surface: 'Framed containers with context — panels, modals, slide archetypes, wizard steps.',
+    doc: 'Top-level documents — decks, brochures, widgets, wizards, the slide system.',
+  };
+
+  function chip(text, cls) { return '<span class="chip ' + (cls || '') + '">' + text + '</span>'; }
+
+  function acceptsLabel(acc) {
+    if (!acc) return '';
+    if (Array.isArray(acc)) return acc.join('·');
+    var p = [];
+    if (acc.classification) p = p.concat(acc.classification);
+    if (acc.layers) p = p.concat(acc.layers);
+    if (acc.families) p = p.concat(acc.families);
+    if (acc.tags) p = p.concat(acc.tags);
+    if (acc.forbid) p.push('¬' + acc.forbid.join('·'));
+    return p.join('·');
+  }
+
+  function renderType(t) {
+    var h = '<div class="type" data-screen-label="Type: ' + t.id + '"><header>' +
+      '<span class="nm">' + t.name + '</span>' +
+      (t.kind ? '<span class="kd">' + t.kind + '</span>' : '') +
+      '<span class="prov">' + (t.provenance || '') + '</span></header><div class="body">';
+    if (t.description) h += '<p class="desc">' + t.description + '</p>';
+
+    // classification
+    if (t.classification && t.classification.length) {
+      h += '<div><div class="rowlab">classified as</div><div class="chips">' +
+        t.classification.map(function (c) { return chip(c, 'cls'); }).join('') + '</div></div>';
+    }
+    // value-slots (axis subscriptions / enums)
+    var vs = t.valueSlots && Object.keys(t.valueSlots);
+    if (vs && vs.length) {
+      h += '<div><div class="rowlab">value-slots</div><div class="chips">' + vs.map(function (k) {
+        var s = t.valueSlots[k];
+        if (s.axis) return chip(k + ' <span class="acc">→ ' + s.axis + (s.groups ? ':' + s.groups.join('/') : '') + '</span>', 'ax');
+        if (s.values) return chip(k + ' <span class="acc">' + s.values.slice(0, 4).join('|') + (s.values.length > 4 ? '…' : '') + '</span>');
+        return chip(k + (s.kind ? ' <span class="acc">' + s.kind + '</span>' : ''));
+      }).join('') + '</div></div>';
+    }
+    // parts
+    var ps = t.parts && Object.keys(t.parts);
+    if (ps && ps.length) {
+      h += '<div><div class="rowlab">parts</div><div class="chips">' + ps.map(function (k) { return chip(k); }).join('') + '</div></div>';
+    }
+    // sockets
+    var sk = t.sockets && Object.keys(t.sockets);
+    if (sk && sk.length) {
+      h += '<div><div class="rowlab">sockets</div><div class="chips">' + sk.map(function (k) {
+        var s = t.sockets[k];
+        var ev = s.kind === 'event';
+        return chip(k + ' <span class="acc">' + (ev ? '⚡' + (s.event || 'event') + ' ' : '') + (acceptsLabel(s.accepts) ? '◂ ' + acceptsLabel(s.accepts) : '') + (s.multiple ? ' ×n' : '') + '</span>', ev ? 'evt' : 'sock');
+      }).join('') + '</div></div>';
+    }
+    // conditions
+    if (t.conditions && t.conditions.length) {
+      h += '<div><div class="rowlab">conditions</div><div class="chips">' + t.conditions.map(function (c) { return chip(typeof c === 'string' ? c : JSON.stringify(c)); }).join('') + '</div></div>';
+    }
+    h += '</div></div>';
+    return h;
+  }
+
+  var all = R.all();
+  // headline kinds first within each layer (those with a kind / sockets)
+  LAYER_ORDER.forEach(function (layer) {
+    var types = all.filter(function (t) { return t.layer === layer; });
+    if (!types.length) return;
+    // sort: universal-component kinds (have sockets/parts) first
+    types.sort(function (a, b) {
+      var av = (a.parts && Object.keys(a.parts).length ? 2 : 0) + (a.sockets && Object.keys(a.sockets).length ? 1 : 0);
+      var bv = (b.parts && Object.keys(b.parts).length ? 2 : 0) + (b.sockets && Object.keys(b.sockets).length ? 1 : 0);
+      return bv - av;
+    });
+    var sec = document.createElement('section');
+    sec.className = 'layer';
+    sec.setAttribute('data-screen-label', 'Layer: ' + layer);
+    sec.innerHTML = '<h2>' + layer + ' · ' + types.length + '</h2><p class="ld">' + (LAYER_DESC[layer] || '') + '</p>' +
+      '<div class="types">' + types.map(renderType).join('') + '</div>';
+    root.appendChild(sec);
+  });
+
+  // demonstrate declarative acceptance: what can fill the composition-menu's items socket?
+  var demo = '';
+  try {
+    var menu = R.get('panel.composition-menu');
+    if (menu && menu.sockets && menu.sockets.items) {
+      var cands = R.candidatesForSocket(menu.sockets.items);
+      demo = ' <b>Declarative acceptance demo:</b> the composition-menu\'s <code>items</code> socket accepts <code>' +
+        (Array.isArray(menu.sockets.items.accepts) ? menu.sockets.items.accepts.join('·') : '') +
+        '</code> — <code>candidatesForSocket()</code> resolves <b>' + cands.length + '</b> matching Types live, no bespoke code.';
+    }
+  } catch (e) {}
+  document.getElementById('foot').innerHTML = 'Projected live from <code>window.CV_REGISTRY</code> — ' + all.length + ' Types across ' + LAYER_ORDER.length + ' layers.' + demo;
+})();
+</script>
+</body>
+</html>

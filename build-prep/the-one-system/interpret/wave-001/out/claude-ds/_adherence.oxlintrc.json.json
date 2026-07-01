@@ -1,0 +1,54 @@
+{
+  "project": "claude-ds",
+  "path": "_adherence.oxlintrc.json",
+  "model": "opus",
+  "what_it_does": "An oxlint configuration that enforces design-system adherence: it forbids importing design-system component internals (only the package index.js entry is allowed), bans raw hex colors / raw px values / non-system fonts in literals, and uses AST selectors to restrict each design-system component (Avatar, Badge, Button, Card, ContainmentTree, DiagramSolver, Glyphic, Input, Modal, CVType, SegmentedOption, Slide, StepItem, Switch, TabItem) to its declared props and enumerated prop value sets.",
+  "observations": [
+    "Header note in the consuming CLAUDE.md says this file is compiled output and must never be hand-edited.",
+    "no-restricted-imports lists a large explicit group of internal paths (app/**, axes/**, core/**, components/**, ui_kits/**, etc.) all funnelling to the message 'Import design-system components from index.js, not component internals.'",
+    "no-restricted-syntax uses regex Literal selectors to flag raw hex (#RRGGBB[AA]), raw px values, and font-family declarations not using Sora/DM Sans/JetBrains Mono.",
+    "Per-component JSXOpeningElement selectors whitelist allowed prop names (always including key/ref/className/style/children) and reject anything else with a component-specific message.",
+    "Per-prop selectors pin enumerated value sets, e.g. Button variant ∈ {primary,ink,outline,ghost,soft,comm,default}, Glyphic form ∈ 9 shapes, Card variant ∈ {soft,surface,outline,gold}.",
+    "All rules are set to 'warn' (not 'error').",
+    "An overrides block turns off no-restricted-imports for **/index.js (the allowed re-export barrel).",
+    "Carries a non-standard 'x-omelette' payload: a components map (each with an empty 'replaces' array), a flat list of ~470 design tokens, a tokenKinds map classifying each token (color/spacing/shadow/font/radius/other), and a fontFamilies list."
+  ],
+  "standouts": [
+    "The x-omelette block embeds the entire token catalogue (~470 tokens) plus a token→kind classification inside a lint config — the lint config doubles as a machine-readable token manifest.",
+    "Component prop contracts (allowed props + enumerated values) are encoded as oxlint AST selectors, turning the design-system API surface into lint-enforceable rules.",
+    "Every component's 'replaces' array is empty."
+  ],
+  "conventions": [
+    "Token-driven: raw hex/px/fonts are disallowed in favour of var() tokens.",
+    "Single-entry import discipline: consume from index.js, never component internals.",
+    "Closed enumerations: component prop values are restricted to named sets (fail-on-unknown-prop / fail-on-unknown-value).",
+    "Generated-not-edited: treated as compiled output per the project charter.",
+    "Carries an extension namespace (x-omelette) to ride extra registry data inside a standard config schema."
+  ],
+  "concerns": [
+    "react/forbid-elements is configured with an empty forbid list — currently a no-op rule.",
+    "Every component entry's 'replaces' array is empty — the field looks declared-but-unpopulated.",
+    "tokenKinds has classifications that look mismatched for several entries (e.g. --frame-desktop-h / --page-w / --gutter mapped to kind 'color', --_pct and --zone-pigment mapped to 'color') which may be classifier artefacts rather than true kinds.",
+    "All rules are 'warn', so violations do not fail a build by themselves."
+  ],
+  "notes": "A generated oxlint config that hard-codes the design system's import discipline, no-raw-literal rules, and per-component prop/value contracts — and smuggles the full token catalogue in an x-omelette extension block.",
+  "questions": [
+    "What tool produces this file and the x-omelette block (the empty 'replaces' arrays suggest a planned component-replacement/migration feature)?",
+    "Why are rules set to 'warn' rather than 'error' if adherence is meant to be enforced?",
+    "Are the tokenKinds entries that read 'color' for px/spacing-looking tokens intentional or a generation bug?"
+  ],
+  "purpose_vs_actual": "Matches: the filename '_adherence' and contents both serve enforcing adherence to the design system's tokens, imports, and component contracts.",
+  "apparent_themes": [
+    "token-driven",
+    "registry-is-truth",
+    "single-source-of-truth",
+    "closed-vocabulary-enforcement",
+    "generated-not-hand-edited",
+    "fail-loud (via lint warnings)"
+  ],
+  "intention_signals": "Inferred: this is meant to be the machine-enforced guardrail of the 'everything defined once, referenced everywhere' principle — it tries to make drift (raw values, internal imports, off-contract props) detectable by a linter, and embeds the token registry so the same config that lints also describes the legal vocabulary.",
+  "novelty": "Encoding a whole design-system component API (allowed props + enumerated values) as oxlint AST selectors, and embedding the complete token catalogue with kind-classification inside the lint config via a custom x-omelette key, is unusual — the lint config IS a design-system manifest.",
+  "contribution": "Brings a machine-readable contract layer: the exact legal prop names and value enumerations per component, the import-discipline boundary, the no-raw-literal rules, and a flat token catalogue with kind classification — a deterministic adherence/vocabulary spec a fused system could query or enforce against.",
+  "summary_for_embedding": "Generated oxlint config enforcing design-system adherence — banning raw hex/px/non-system fonts and component-internal imports, restricting each component to declared props and enumerated values, with the full ~470-token catalogue and token-kind map embedded in an x-omelette extension.",
+  "intention_for_embedding": "Make design-system drift lint-detectable by encoding the import boundary, no-raw-literal rules, and per-component prop/value contracts as enforceable rules, while carrying the canonical token vocabulary inside the same config."
+}

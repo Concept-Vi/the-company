@@ -1,0 +1,35 @@
+{
+  "project": "claude-ds",
+  "path": "preview/components_section_panel.html",
+  "model": "opus",
+  "what_it_does": "A self-contained design-system preview card rendering the brand's signature grouped-settings container: a soft-gold-tinted panel (no border/shadow) holding two columns of titled checkbox groups (Menu Options, Navigation Options).",
+  "observations": [
+    "Carries the @dsCard metadata comment (group Brand, name 'Soft-gold section panel', viewport 700x320).",
+    ".panel uses --accent-gold-50 background, --r-lg radius, no border or shadow — a colour-wash grouping.",
+    "Group titles carry a small circular 'i' info badge (--accent-gold fill, white glyph).",
+    "Reuses the same CSS-only gold checkbox pattern (.box + ::after checkmark; .off variant) seen in the inputs card.",
+    "Lead text explicitly contrasts this flat product-chrome pattern with the deck/generative surfaces' 'depth-keyed zone wash' (--zone-* near-white ladder), referencing a separate grouping mechanism.",
+    "Checkbox content mirrors real product settings (Information Panel, Floorplan, Renders & Videos, turning arrows, Apply to all Hubs)."
+  ],
+  "standouts": [
+    "Lead text documents a two-system grouping distinction: flat colour-wash for product chrome vs depth-keyed zone wash for generative surfaces.",
+    "Named as 'the brand's signature grouped-settings container'."
+  ],
+  "conventions": [
+    "Follows token references for colours, radii.",
+    "Reuses the shared gold-checkbox pattern (consistent with the inputs card's approach).",
+    "Real product setting labels keep the preview grounded rather than lorem."
+  ],
+  "concerns": [],
+  "notes": "The signature soft-gold settings panel — a borderless colour-wash grouping container with two checkbox columns; lead text distinguishes it from the zone-wash depth grouping.",
+  "questions": [
+    "Where is the contrasting 'depth-keyed zone wash' (--zone-*) pattern actually defined, since this file only references it?"
+  ],
+  "purpose_vs_actual": "Matches — declares the soft-gold section panel preview and renders it, with prose situating it among grouping patterns.",
+  "apparent_themes": ["colour-wash grouping (no border/shadow)", "two-mode grouping doctrine (flat chrome vs depth zone)", "token-referenced styling", "grounded real-product settings"],
+  "intention_signals": "To establish the borderless tinted-panel as the canonical product-chrome grouping device and explicitly distinguish it from the generative-surface depth grouping.",
+  "novelty": "The articulated distinction between flat colour-wash grouping and depth-keyed --zone-* containment grouping.",
+  "contribution": "Contributes the soft-gold grouped-settings panel pattern plus the documented doctrine separating product-chrome grouping from generative-surface zone-wash grouping.",
+  "summary_for_embedding": "A token-driven HTML preview card rendering the brand's soft-gold-tinted, borderless grouped-settings panel with two columns of CSS gold checkboxes and info badges.",
+  "intention_for_embedding": "To present and document the design system's signature colour-wash grouping container and its place among grouping patterns."
+}

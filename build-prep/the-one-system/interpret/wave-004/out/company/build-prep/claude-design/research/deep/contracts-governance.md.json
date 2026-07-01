@@ -1,0 +1,54 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/deep/contracts-governance.md",
+  "model": "opus",
+  "what_it_does": "A deep-read research distillation of the contracts/ layer and runtime governance/wire (read 2026-06-08). It documents the import-nothing contracts spine, the six-scheme address grammar, the NodeType/node-record contracts, the declare-by-registration discovery pattern, the parallel UI-component registry (ui_info) and its UnionAddressRecord, the live UI_REGISTRY in suite.py, the object_info/cognition_info serializations, schema-additive discipline, the generic tool surface, the governance POLICY (AUTO/SURFACE/CONFIRM/LOCKED) and guard() seam, the I4 address→tier gate, the RHM verb set, and the full Decision→Implementation wire end-to-end. Each major item carries a BUILD/PARTIAL/DESIGNED status label.",
+  "observations": [
+    "Frontmatter declares scope, date, exact source files+line ranges read, and a status legend (BUILD/PARTIAL/DESIGNED)",
+    "Six address schemes documented from address.py: run:// cas:// blob:// vec:// ui:// code://, with ui:// and code:// label-only (resolved by ui_info / Suite.resolve_scope, not the store)",
+    "NodeType is the single definition of what a node IS (3 kinds: process/content/presentation) with a full field table; registry discovers .py files declaring KIND/PORTS_IN/PORTS_OUT/CONFIG/OUTPUT_SCHEMA/VERSION",
+    "Declare-by-registration documented for four kinds: node-types, UI components, cognition roles, tool verbs — all extend by dropping a file or a registry entry with zero new server/FE code",
+    "UI_REGISTRY in suite.py is a class-level tuple list; _load_corpus_element_addresses() projects 24+ element addresses from addresses.json; the 6th union-extras element carries the governance tier",
+    "Governance POLICY postures: AUTO / SURFACE / CONFIRM with LOCKED = {source_data, external, frozen_contract}; unknown class → CONFIRM (safe default); guard() enforces, CONFIRM raises GovernanceError when not confirmed",
+    "decision_build is deliberately AUTO meaning auto-DISPATCH on operator approve, NOT auto-CLOSE — every build is surfaced for review; CLOSE routes through guard('code_build') CONFIRM",
+    "I4 address→tier gate: _tier_for_address reads UI_REGISTRY rows; a non-AUTO tier surfaces the click for approval and never routes through autonomous_dispatch (which would execute do() directly)",
+    "Full wire documented: surface_build_intent → surface_intent_at (composes ingest_comment + resolve_scope + surface_build_intent) → request_change verb → resolve_surfaced (operator-only) → dispatch_decision (CHECK/CLAIM/GATE/LAUNCH/VERIFY/CLOSE), with EMPTY/STALE SCOPE = DENY-ALL as the headline safety property",
+    "L2 resolve→dispatch trigger is INERT BY DEFAULT (plan mode); acceptEdits via COMPANY_WIRE_PERMISSION is the deliberate opt-in; default claude -p permission mode is 'plan' (read-only)",
+    "dispatch_decision enforces three-part bind verification, exactly-once via durable event-log + cross-process fcntl lock, W4 scope-diff against git ground truth, and a git checkpoint commit per build"
+  ],
+  "standouts": [
+    "EMPTY/STALE SCOPE = DENY-ALL: an unmapped or stale address yields empty scope which can never close 'implemented' — never fabricated broad scope",
+    "The AI-path-of-least-resistance law stated explicitly: governance posture rides in the same declaration so the CORRECT action is the AI's easiest path",
+    "Consent-time trust property: surface_build_intent persists address/symbols/context/blast_radius at mint so approve_reach validates against the EXACT radius the operator saw",
+    "decision_build AUTO = auto-dispatch-on-approve but NOT review-free — AI-operated builds are still surfaced for review and CLOSE is CONFIRM-gated",
+    "I4 explicitly must NOT route a non-AUTO click through autonomous_dispatch because do() would execute the graph directly (the inverse U1 regression)"
+  ],
+  "conventions": [
+    "Honest evidence labels (BUILD/PARTIAL/DESIGNED) on every claim, with cited file:line",
+    "Documents the repo's uniform register-by-declaration + schema-additive + one-source-enforcement patterns",
+    "Distinguishes infrastructure-built from data-incomplete (e.g. I4 gate built but per-address tier authoring PARTIAL)"
+  ],
+  "concerns": [
+    "PARTIAL areas noted as structurally important but data-incomplete: per-address tier assignments in addresses.json, L1 FE wiring, blast-radius display, howto rendering — these are gaps the file itself flags, not file-local smells",
+    "All status labels are read-time (2026-06-08) snapshots and may drift from current code"
+  ],
+  "notes": "If briefing someone: this is the authoritative deep-read of the contracts spine + governance + the self-build wire — the address grammar, declare-by-registration, the AUTO/SURFACE/CONFIRM/LOCKED policy, the I4 address-tier gate, and the full surface→approve→dispatch→verify→close circuit with DENY-ALL-on-empty-scope as the core safety property.",
+  "questions": [
+    "Have the PARTIAL items (per-address tier authoring, L1 FE wiring, blast-radius/howto rendering) since been completed?",
+    "Is the mode dial split (referenced elsewhere) reflected here? This file documents governance/contracts but not the MODE_SPECS/THOUGHT_SHAPES split"
+  ],
+  "purpose_vs_actual": "Matches — it sets out to deep-read contracts + registry + governance + the act/wire seams and delivers a precise, line-cited account with honest build-status labels.",
+  "apparent_themes": [
+    "register-by-declaration / extend-by-registration",
+    "schema-additive, one-source-enforced contracts",
+    "graduated governance posture (AUTO/SURFACE/CONFIRM/LOCKED) with safe defaults",
+    "consent-time resolution and DENY-ALL-on-empty-scope safety",
+    "AI-path-of-least-resistance (correct = easiest)",
+    "operator-only governance floor; self-build inert by default"
+  ],
+  "intention_signals": "Trying to give a builder the exact, evidence-grounded contract + governance backbone so any new surface composes against the real seams — how addresses/types/roles/tools register, how every action is governed by posture, and how the decision→build wire enforces consent, exactly-once, scope, and review.",
+  "novelty": "The unified articulation of register-by-declaration across four kinds plus the governance posture riding in the same declaration (correct-is-easiest), and the consent-time-mint trust property tying surface_build_intent to approve_reach, are distinctive structural insights.",
+  "contribution": "Contributes the line-cited reference for the contracts spine and the full governance + self-build wire — the address grammar, the four register-by-declaration kinds, the AUTO/SURFACE/CONFIRM/LOCKED policy, the I4 address-tier gate, and the dispatch_decision sequence with DENY-ALL safety — which a fused system would keep as the canonical description of how the backend governs and builds.",
+  "summary_for_embedding": "A deep-read distillation of the company contracts spine and governance: the six-scheme address grammar, NodeType/ui_info register-by-declaration, object_info/cognition_info serializers, the AUTO/SURFACE/CONFIRM/LOCKED governance policy and guard() seam, the I4 address→tier gate, and the full surface→approve→dispatch→verify→close self-build wire with empty-scope-equals-deny-all safety.",
+  "intention_for_embedding": "To give a builder the precise, evidence-grounded contract and governance backbone so new surfaces compose against the real seams and the self-build wire's consent, scope, and review guarantees are understood."
+}

@@ -1,0 +1,121 @@
+<!-- @dsCard group="Components" name="Slide Archetypes — content as data" subtitle="25 corpus archetypes (incl. the capital-raise set) as pure content→tree builders; one spec recomputed across LOD" viewport="1280x2600" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Slide Archetypes</title>
+<link rel="stylesheet" href="../styles.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: var(--zone-ground, #fff); color: var(--ink);
+         font-family: var(--font-body); -webkit-font-smoothing: antialiased; padding: 36px 38px 60px; }
+  h1 { font: var(--weight-bold,700) var(--fs-h2)/1 var(--font-display); letter-spacing: -.02em; margin: 0 0 4px; }
+  .sub { color: var(--ink-3); font-size: var(--fs-meta); margin: 0 0 28px; max-width: 76ch; }
+  h2 { font: 700 12px/1 var(--font-body); letter-spacing:.12em; text-transform:uppercase;
+       color: var(--accent-bronze); margin: 40px 0 6px; display:flex; align-items:center; gap:10px; }
+  h2::before { content:""; width:8px; height:8px; background: var(--accent-gold); transform:rotate(45deg); }
+  .note { color: var(--ink-3); font-size: var(--fs-caption); margin: 0 0 18px; max-width: 74ch; }
+  .lod-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
+  .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; align-items: start; }
+  .cap { font: 700 10px/1 var(--font-mono); color: var(--accent-bronze); letter-spacing:.08em; margin-bottom: 8px; display:block; }
+  .frame { position: relative; border: 1px solid var(--zone-base-edge); border-radius: 10px; overflow: hidden; box-shadow: var(--elev-2); background: var(--zone-ground); }
+  .artboard { width: 1100px; transform-origin: top left; }
+  code { font-family: var(--font-mono); font-size: .92em; color: var(--accent-bronze); }
+</style>
+</head>
+<body>
+  <h1>Slide Archetypes</h1>
+  <p class="sub">A slide archetype is a <b>pure function <code>content → CVNode tree</code></b> — the fixed Section/Zone/Cluster subtree with content as data (the duplicate "Our Entry Markets" slides proved slides ARE templates). <code>&lt;Slide archetype content lod surface density/&gt;</code> builds the tree and runs it through the block solver; nothing here is hand-laid-out. The same content at a different LOD is <i>recomputed</i> — <code>design = f(content, axisPosition)</code>.</p>
+
+  <h2>One spec · three LOD levels</h2>
+  <p class="note">The identical <code>split</code> content computed at summary / pitch / full. LOD prunes by narrative priority and drops "support" detail — it grows sections and atom depth, never clutter.</p>
+  <div class="lod-row" id="lod-row"></div>
+
+  <h2>The archetype library</h2>
+  <p class="note">Each frame is a different archetype name fed real ConceptV content. The block solver renders blocks; diagram archetypes hand their graph to the graph solver (hub shapes = the entity system, chevron stepper tinted along the ramp).</p>
+  <div class="gallery" id="gallery"></div>
+
+  <h2>Capital-raise archetypes (slice 28)</h2>
+  <p class="note">The grammar mined from the 30pp capital-raise deck, each a first-class builder: product bookends + photo divider (full-bleed + frosted overlay), logo wall, team/org, dashboard of panels, ramp-bordered reason cards, and five new <b>diagram sub-types</b> — orbital verb-ring, stacked pipeline, 1-D spectrum axis, converging manifold, progressive-fidelity stepper. Same <code>content → tree</code> path; the sage-green <code>--comm-*</code> voice and the gold→bronze ramp resolve from tokens.</p>
+  <div class="gallery" id="gallery2"></div>
+
+<script>
+  const NS = window.ConceptVDesignSystem_c8f43c;
+  const { Slide } = NS;
+  const e = React.createElement;
+  const DESIGN_W = 1100;
+
+  function frameInto(parent, cap, render) {
+    const col = document.createElement("div");
+    const c = document.createElement("span"); c.className = "cap"; c.textContent = cap;
+    const frame = document.createElement("div"); frame.className = "frame";
+    const art = document.createElement("div"); art.className = "artboard";
+    frame.appendChild(art); col.appendChild(c); col.appendChild(frame); parent.appendChild(col);
+    render(art);
+    const fit = () => { const s = frame.clientWidth / DESIGN_W; art.style.transform = "scale(" + s + ")"; frame.style.height = (art.offsetHeight * s) + "px"; };
+    requestAnimationFrame(fit); new ResizeObserver(fit).observe(frame); setTimeout(fit, 350);
+  }
+
+  // ---- one split spec, three LOD ---------------------------------
+  const splitContent = {
+    title: "Translation, not re-drawing",
+    visual: "chaos → order diagram",
+    heading: "The shift",
+    bullets: [
+      { title: "One source of truth", text: "tokens flow to every surface.", bullet: "leads", priority: 1 },
+      { title: "Computed, not hand-set", text: "the same spec renders every ratio.", priority: 2, detail: "support" },
+      { title: "Nothing drifts", text: "every value resolves to a token.", bullet: "done", priority: 3, detail: "support" },
+    ],
+    note: "The layout itself makes the pitch.",
+  };
+  const lodRow = document.getElementById("lod-row");
+  [["summary","SUMMARY"],["pitch","PITCH"],["full","FULL READ"]].forEach(([lod, cap]) => {
+    frameInto(lodRow, cap + ' · lod="' + lod + '"', (art) =>
+      ReactDOM.createRoot(art).render(e(Slide, { archetype: "split", content: splitContent, lod, surface: "slide", density: "compact" })));
+  });
+
+  // ---- the archetype gallery -------------------------------------
+  const cases = [
+    ["cover", "cover", { title: "Virtual Hubs for stakeholder-rich projects", kicker: "ConceptV", subtitle: "Turn architectural design files into interactive panotour experiences.", image: "warm coastal-luxury interior render" }],
+    ["metric-band", "metric-band", { title: "Our innovation is science-based", metrics: [
+      { value: "70+", label: "Virtual Hubs delivered" }, { value: "$1.5M+", label: "spent on IP" }, { value: "41,500+", label: "unique users" } ] }],
+    ["compare", "compare", { title: "Current practice vs Virtual Hubs",
+      left: { title: "Current practice", bullets: ["Files emailed around", "Versions drift", "Sign-off takes weeks"] },
+      right: { title: "Virtual Hubs", bullets: [{ text: "Single live source", bullet: "done" }, { text: "Everyone sees the same thing", bullet: "done" }] },
+      note: "Same inputs, a calmer process." }],
+    ["triptych", "triptych", { title: "Three things the data tells us", cards: [
+      { title: "Top drivers", value: "70%", metricLabel: "want accuracy" },
+      { title: "Top barriers", value: "67%", metricLabel: "cost of software" },
+      { title: "Why fail", value: "36%", metricLabel: "poor fit" } ] }],
+    ["stepper", "stepper", { title: "Strategic rollout across disciplines", steps: ["Design", "Marketing", "Sales", "Construction"], active: 1, lede: "The accent slides along the gold→bronze ramp as stages activate." }],
+    ["diagram · hub", "diagram", { title: "The AI framework powering our systems", lede: "Vi sits at the centre of the three platform entities.",
+      graph: { type: "hub", center: "Vi", nodes: [
+        { id: "Vi", shape: "diamond", tone: "active" }, { id: "Portal", label: "User Portal", shape: "circle" },
+        { id: "Wizard", label: "Property Wizard", shape: "hex" }, { id: "Hubs", label: "Virtual Hubs", shape: "octagon" } ],
+        edges: ["Portal", "Wizard", "Hubs"].map(t => ({ from: "Vi", to: t, kind: "flow" })) } }],
+  ];
+  const gallery = document.getElementById("gallery");
+  cases.forEach(([cap, archetype, content]) => {
+    frameInto(gallery, cap, (art) =>
+      ReactDOM.createRoot(art).render(e(Slide, { archetype, content, lod: "full", surface: "slide", density: "compact" })));
+  });
+
+  // ---- capital-raise archetypes (slice 28): pull each Type's registered
+  // default content from the single-source catalogue so the card and the
+  // registry can never drift. Falls back to {} (the builder tolerates it).
+  const META = window.CV_ARCHETYPE_META || {};
+  const CAT = window.CV_ARCHETYPE_CATALOG || [];
+  const defaultsOf = (key) => { const s = CAT.find(t => t.id === "surface.deck-slide." + key); return (s && s.defaults) || {}; };
+  const newKeys = ["product-cover", "photo-divider", "logo-wall", "team", "dashboard", "reasons", "orbital", "stacked", "spectrum", "manifold", "fidelity", "product-closing"];
+  const gallery2 = document.getElementById("gallery2");
+  newKeys.forEach((key) => {
+    const cap = key + "  ·  " + ((META[key] && META[key].name) || key);
+    frameInto(gallery2, cap, (art) =>
+      ReactDOM.createRoot(art).render(e(Slide, { archetype: key, content: defaultsOf(key), lod: "full", surface: "slide", density: "compact" })));
+  });
+</script>
+</body>
+</html>

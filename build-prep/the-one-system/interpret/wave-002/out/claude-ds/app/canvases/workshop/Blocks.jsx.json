@@ -1,0 +1,52 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/workshop/Blocks.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the Workshop block library: window.WS_BLOCKS, a map (keyed by block kind) where each entry has a label, icon, defaults, and a render(data, set) JSX function. Provides an inline-editable contentEditable text component (Edit) that activates a global per-field Vi regen toolbar and live-substitutes {{key}} workspace variables, plus two reactive cross-doc embed components (EmbedWidget, EmbedWizard) that subscribe to WS_DOCS. Also defines isLight (luminance check), and two canonical mapping tables (WS_BLOCK_CORE / WS_BLOCK_ATOM) that tie each block kind to a core atom-role or 'diagram'/'widget-engine' treatment.",
+  "observations": [
+    "~30 block kinds are defined, from primitives (hero, headline, body, quote, button, callout, image, divider) to composites (process, funnel, tagCluster, orgDiagram, timeline, statTable, comparison, hexBadge, bio, photoBio, etc.)",
+    "Every block's defaults are filled with real ConceptV pitch content (e.g. '$430B+/year in rework', 'Grant Plummer', 't.geldard@conceptv.com.au', 'Tower East', NVIDIA/AWS/Google/Oracle partner programs)",
+    "Edit is a contentEditable wrapper that on focus/mouseUp/keyUp calls window.WS_FIELD.activate with the element rect, value, blockKind, sectionId, fieldName, and an onApply callback; debounces commit on blur and delays deactivate 150ms so toolbar clicks land",
+    "Edit live-substitutes workspace vars via window.substituteVars + window.useWSVars(), rendering through dangerouslySetInnerHTML",
+    "Icon blocks pull SVG path data from window.CV_ICONS.data[name] and inline it; '?' or '·' fallback when the icon is missing",
+    "EmbedWidget/EmbedWizard filter window.useWSDocs() by type, render a picker when no docId, and render the live source doc (window.WidgetRender) with a '● live' indicator when bound",
+    "WS_BLOCK_CORE maps each kind to a core treatment (atom role like 'headline'/'text'/'metric', composites to 'diagram', embeds to 'widget-engine', divider to null) and back-fills b._atomRole on each WS_BLOCKS entry",
+    "guessFieldName parses the element className (ws-blk-<name>) to infer the field name when none is passed"
+  ],
+  "standouts": [
+    "The single block registry (WS_BLOCKS) is the home every other Workshop file resolves against (AIEngine, Layouts, Library, Export all read it)",
+    "Inline contentEditable editing is fused with per-field Vi regeneration and workspace-variable substitution in one Edit component",
+    "WS_BLOCK_CORE explicitly reconciles every legacy composer block onto the core atom/diagram/widget vocabulary (cited as UNIFICATION.md W3), making the block list a projection that maps onto the canonical render engine"
+  ],
+  "conventions": [
+    "Follows the single-source rule: blocks are data entries in one map; icons resolve from CV_ICONS; vars from the global VARS store; no parallel block list",
+    "Uses dangerouslySetInnerHTML for both var-substituted text and inlined icon SVG — a deliberate but notable pattern",
+    "Reactive embeds subscribe to the global doc store so source edits propagate without refresh (the live-reference principle)",
+    "Defaults double as the brand-content seed corpus rather than generic lorem"
+  ],
+  "concerns": [
+    "Edit renders user/var text via dangerouslySetInnerHTML — any HTML in a value would be injected unescaped (XSS surface if values are ever untrusted)",
+    "WS_BLOCK_CORE lists keys (bigQuote, showcase) that are not present in WS_BLOCKS, and the back-fill loop silently skips kinds not in the map — the two lists can drift",
+    "isLight assumes well-formed #hex and returns false otherwise; malformed colors silently read as dark",
+    "Many render functions mutate via spread of data.items with [...data.items] assuming the array exists; defaults guarantee it but injected data without items would throw on the setter path"
+  ],
+  "notes": "This is the Workshop block catalogue — one map of ~30 self-rendering, inline-editable block kinds (seeded with real ConceptV content) plus the contentEditable+Vi-regen+var-substitution editing primitive and a core-vocabulary reconciliation table.",
+  "questions": [
+    "Are bigQuote and showcase (referenced in WS_BLOCK_CORE) defined elsewhere, or is the core map ahead of the block map?",
+    "Is the dangerouslySetInnerHTML in Edit considered safe because all values originate from the user editing their own doc?",
+    "What consumes b._atomRole — is the W3 RenderType migration reading it yet?"
+  ],
+  "purpose_vs_actual": "Matches: the header says 'block renderers; every block knows how to render itself given its data; inline-editable text uses contentEditable' and the file is exactly that plus the embeds and core-mapping table.",
+  "apparent_themes": [
+    "One registry of self-rendering blocks (data + render, no literals elsewhere)",
+    "Editing as a first-class block concern (contentEditable fused with Vi regen and variables)",
+    "Reconciliation of a legacy block vocabulary onto a canonical core render vocabulary",
+    "Live cross-doc references that update without refresh",
+    "Brand content as seed defaults"
+  ],
+  "intention_signals": "Trying to give Workshop one authoritative, extensible catalogue of editable visual blocks whose defaults already speak ConceptV, while quietly mapping that catalogue onto the unified core render engine so the composer and the engine converge.",
+  "novelty": "Blocks that carry their own contentEditable+AI-regen+variable-substitution editing behaviour, plus an explicit per-block reconciliation onto core atom/diagram roles, is a distinctive fusion of catalogue, editor, and unification map in one file.",
+  "contribution": "Contributes the Workshop block vocabulary itself — ~30 block kinds with brand-seeded defaults and render functions, the Edit inline-editing primitive with Vi-regen and var substitution, the reactive cross-doc embed components, and the WS_BLOCK_CORE reconciliation table that ties blocks to the core render engine.",
+  "summary_for_embedding": "Workshop block library (window.WS_BLOCKS): ~30 self-rendering, inline-editable block kinds seeded with real ConceptV pitch content, a contentEditable Edit primitive with per-field Vi regeneration and {{var}} substitution, reactive cross-doc widget/wizard embeds, and a table mapping each block onto core atom/diagram/widget render roles.",
+  "intention_for_embedding": "To provide one extensible registry of editable visual blocks for Workshop and reconcile it onto the unified core render vocabulary."
+}

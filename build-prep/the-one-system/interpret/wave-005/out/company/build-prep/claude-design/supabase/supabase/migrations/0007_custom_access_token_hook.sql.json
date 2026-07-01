@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0007_custom_access_token_hook.sql",
+  "model": "opus",
+  "what_it_does": "Adds three columns to public.clients (oauth_client_id, mcp_url, bind_aud) and defines a Supabase Custom Access Token Hook (public.custom_access_token_hook) that stamps design_client claims (role, app_metadata.role/client_id/scope) — and optionally a resource-bound aud — onto JWTs minted via the 'Vi' OAuth client, identified by matching the token's claims.client_id to the claude-design client's oauth_client_id. All other tokens pass through untouched.",
+  "observations": [
+    "Header marks the file STAGED — no prod action, part of a flip runbook.",
+    "Adds clients.oauth_client_id, clients.mcp_url, clients.bind_aud (default false), each with a column comment explaining its role in the auth flow.",
+    "Hook returns untouched claims unless authentication_method ilike 'oauth%' AND the token's client_id equals the active claude-design row's oauth_client_id.",
+    "registry-is-truth: vi_client/mcp_url/bind_aud are read from the clients row, never hardcoded.",
+    "Stamps claims.role and merges app_metadata (role/client_id/scope) with a single-level merge because nested jsonb_set on a missing parent fails on this PG.",
+    "item-B (resource-bound aud) is gated behind bind_aud=true; comments insist bind_aud and the EF AUDIENCE env must be flipped together or auth breaks.",
+    "Function is SECURITY DEFINER with search_path=public; execute granted to anon, authenticated, service_role, postgres.",
+    "Ordering note: the Vi OAuth client must be created (step 4) and its id stored on the row before the hook does anything (safe no-op until then)."
+  ],
+  "standouts": [
+    "The single-level app_metadata MERGE workaround for jsonb_set not creating a missing parent on this Postgres version.",
+    "The bind_aud gate coupling: stamping a resource-bound aud must be coordinated with the EF AUDIENCE env, never one without the other.",
+    "Strictly-additive design — non-Vi tokens (password, other OAuth, anon) returned untouched, claimed zero blast radius."
+  ],
+  "conventions": [
+    "Idempotent ALTER ... add column if not exists; create or replace function.",
+    "Column + function comments document the auth contract in-place.",
+    "registry-is-truth — runtime values read from the clients table, not literals."
+  ],
+  "concerns": [
+    "The hook is the single point that mints all connector claims (role/client_id/scope/aud); a bug here is the whole auth boundary.",
+    "Effectiveness depends on a dashboard step (selecting the hook as active) the SQL cannot enforce, noted in the header."
+  ],
+  "notes": "This is the staged claims-stamping hook that makes a real OAuth Claude-Design JWT carry the design_client claims that 0006 RLS gates on — inert until the Vi client id is registered and the hook is selected in the dashboard.",
+  "questions": [
+    "Was this hook approach later superseded (the header calls it staged and 0010 mentions going native)?",
+    "What is the EF AUDIENCE env and where is it coordinated with bind_aud?"
+  ],
+  "purpose_vs_actual": "Match — header describes a staged claims-stamping hook + the aud-binding columns and the function/columns implement exactly that.",
+  "apparent_themes": [
+    "One place to stamp all connector identity claims",
+    "Strictly additive / zero blast radius on existing auth",
+    "Resource-bound audience as cross-resource replay defense",
+    "Registry-is-truth"
+  ],
+  "intention_signals": "Trying to bridge a real Supabase OAuth login to the design_client RLS claims (and optionally a resource-bound aud) without touching any other auth path, staged so it is a safe no-op until the runbook flips it on.",
+  "novelty": "A Custom Access Token Hook keyed on the OAuth client_id that conditionally stamps RLS-relevant claims plus a gated resource-bound aud, with the jsonb_set-parent workaround.",
+  "contribution": "Contributes the clients OAuth-binding columns and the conditional claims-stamping hook that feeds 0006's RLS, including the gated resource-bound aud mechanism.",
+  "summary_for_embedding": "A staged Supabase Custom Access Token Hook that stamps design_client claims and an optional resource-bound aud onto JWTs from the matched Vi OAuth client, plus clients table OAuth-binding columns.",
+  "intention_for_embedding": "To make a real OAuth-issued JWT carry the design_client claims (and optionally a resource-bound audience) that RLS gates on, additively and safely staged."
+}

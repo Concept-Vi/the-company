@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/g23_mine.py",
+  "model": "opus",
+  "what_it_does": "A persistent incremental driver that mines Claude Code transcripts (~465 .jsonl files) into the 'history' corpus projection. Per transcript it deterministically extracts exchanges (transcript_extract.extract_exchanges), runs the resident mine_exchange role over each new exchange-unit (run_items), and captures the results into corpus space='history' (embedded on write). It is idempotent at exchange granularity by reading the skip-list from the corpus itself (exchange://<sid>/<i> source addresses), skips active (mtime<1h), thin (<3 exchanges), out-of-band, and twice-failed sessions, processes richest-first, and records loud per-file failures in .build/g23/state.json.",
+  "observations": [
+    "chdir/sys.path hardcoded to /home/tim/company plus the cognition-self-improvement dir; transcript dir hardcoded to /home/tim/.claude/projects/-home-tim",
+    "ACTIVE_S=3600 ripening guard, MIN_EXCHANGES=3, MAX_NEW_PER_FILE=60 model-work bound",
+    "skip-list derived from corpus source_address parsing (exchange://<sid>/<i>) — 'substrate-is-truth', no parallel mined-list file",
+    "state.json carries only round counter, failed map (with attempts/error), skipped_thin list",
+    "ordering is richest-first (size desc) within a 30KB–20MB band, with size band parameterised so the >20MB tail (6 long foundational sessions) can be mined by raising max_mb",
+    "extracts deep (cap 500, parse cheap) but bounds model work to MAX_NEW_PER_FILE new units per batch so deep files deepen across batches",
+    "records carry the ORIGINAL exchange index as durable key and ts_source from the exchange's original timestamp (addresses a 173/1420 timestamp-coverage gap)",
+    "fail-loud: ALL-units-failed increments attempts and is never marked mined; success pops the file from failed",
+    "extensive inline lesson commentary referencing batch-1, batch-6, rg10_run.py shape"
+  ],
+  "standouts": [
+    "exchange-granularity idempotency lets a per-file-capped session DEEPEN on later batches instead of being stranded behind a session-level skip (the batch-6 lesson)",
+    "the skip-list is the corpus itself, not a parallel state file — substrate-is-truth design",
+    "the active-session ripening guard prevents minting partial minings from still-growing transcripts"
+  ],
+  "conventions": [
+    "declares 'THE FLOOR: extraction + run:// computation + corpus writes only — no resolve/approve/dispatch, no claude -p'",
+    "mirrors rg10_run.py's persistent-incremental-driver shape (stated)",
+    "main() returns structured dict, __main__ prints JSON; CLI args for budget and max_mb",
+    "writes state to disk after every consequential step (skip/fail/success)"
+  ],
+  "concerns": [
+    "hardcoded absolute paths reduce portability",
+    "extract_exchanges is called with cap 500 every batch even for already-fully-mined files (re-parse cost), though parse is noted as cheap",
+    "twice-failed sessions are skipped permanently within a run with no surfaced retry/inspection path beyond the recorded error"
+  ],
+  "notes": "The scaled, crash-safe transcript-mining engine that incrementally fills the history corpus exchange-by-exchange, deriving its own resume point from the substrate.",
+  "questions": [
+    "What output schema does the mine_exchange role produce (the 'out' dict that becomes the corpus record output)?",
+    "Where is the backfill that re-stamps the older records lacking ts_source?"
+  ],
+  "purpose_vs_actual": "Match — the docstring describes a persistent incremental transcript miner with substrate-derived skip-list and fail-loud state, and the code implements exactly that.",
+  "apparent_themes": [
+    "substrate-is-truth (resume state derived from the corpus, not a side file)",
+    "incremental/idempotent crash-safe batch processing",
+    "fail-loud over silent swallowing",
+    "bounded model work with deep extraction",
+    "durable memory on the corpus rather than episodic memory"
+  ],
+  "intention_signals": "Trying to mine the entire transcript history into a queryable durable 'history' memory at exchange granularity, safely and incrementally, so deep sessions are fully covered over successive bounded batches without re-mining or stranding.",
+  "novelty": "Using corpus source-addresses as the only resume state, with per-exchange idempotency that lets capped deep sessions deepen across batches, and a ripening guard against still-growing transcripts.",
+  "contribution": "Contributes the persistent incremental mining driver: deterministic extraction + resident-model mining + history-corpus capture, with substrate-derived skip-list, richest-first banded ordering, ripening guard, and fail-loud state.",
+  "summary_for_embedding": "A persistent incremental Python driver that mines transcript exchanges into the history corpus via a resident model, idempotent at exchange granularity using corpus source-addresses as its own resume state.",
+  "intention_for_embedding": "To incrementally and safely mine the full Claude Code transcript history into a durable queryable history memory at exchange granularity."
+}

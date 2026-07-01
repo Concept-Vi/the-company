@@ -1,0 +1,38 @@
+{
+  "project": "claude-ds",
+  "path": "preview/components_sidebar.html",
+  "model": "opus",
+  "what_it_does": "A self-contained design-system preview card rendering the product sidebar navigation in its three row states (default/hover/active), with section glyphs drawn from the CV icon library and a side legend explaining each state.",
+  "observations": [
+    "Carries the @dsCard metadata comment (group Brand, name 'Sidebar nav states', viewport 700x320).",
+    "Loads ../assets/icons/cv-icons.js and builds nav rows in script from a JS ITEMS array.",
+    "Each item declares label, icon name, a hardcoded section hue, and state (default/hover/active).",
+    "State styles: default transparent; hover white --bg-surface + --shadow-xs; active white fill + 1.5px dashed --border-dashed (the signature selection treatment).",
+    "Icons rendered as inline SVG (viewBox 0 0 24 24, stroke-width 1.7) with body pulled from window.CV_ICONS.data[name]; stroke colour set per-item.",
+    "Section hues hardcoded inline: teal #2BA39A, charcoal #3A3026, blue #3B7DD8, gold #C8AB0E, pink #D8568A.",
+    "Legend describes Icons/Default/Hover/Active in prose; comment notes hues were sampled from the product dashboard reference."
+  ],
+  "standouts": [
+    "Dashed-gold active outline is named 'the brand's signature selection treatment'.",
+    "Per-section icon tinting (each glyph carries its own hue) is an explicit design rule, not decoration."
+  ],
+  "conventions": [
+    "Follows token references for surface/shadow/border/radius and the shared CV icon library.",
+    "Breaks token discipline with the five hardcoded section hue hexes inline in the script.",
+    "Reuses the dashed-gold active treatment consistent with the buttons/cards dashed language."
+  ],
+  "concerns": [
+    "Section colour hues are hardcoded hex literals in JS rather than token references."
+  ],
+  "notes": "Sidebar nav preview showing default/hover/active row states with per-section tinted CV-library icons; the active state is the signature white-fill + dashed-gold outline.",
+  "questions": [
+    "Should the per-section hues (teal/charcoal/blue/gold/pink) be promoted to named tokens rather than inline hexes?"
+  ],
+  "purpose_vs_actual": "Matches — declares sidebar nav states preview and renders the three states with coloured CV icons and a legend.",
+  "apparent_themes": ["state-driven nav styling", "per-section icon tinting", "dashed-gold selection signature", "icon-library reuse (not emoji)", "self-describing preview card"],
+  "intention_signals": "To codify how sidebar rows look across interaction states and to assert the CV icon library with section-specific hues as the canonical nav iconography.",
+  "novelty": "The combination of per-section hue tinting on shared line icons plus the dashed-gold active outline as the selection signature.",
+  "contribution": "Contributes the sidebar nav state vocabulary (default/hover/active row styling) and the per-section tinted-icon convention drawn from the CV icon library.",
+  "summary_for_embedding": "A token-driven HTML preview card rendering sidebar nav rows in default/hover/active states with per-section tinted CV-library line icons and a state legend.",
+  "intention_for_embedding": "To present the design system's sidebar navigation states and per-section icon-tinting convention for visual review in the gallery."
+}

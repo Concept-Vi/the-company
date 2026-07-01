@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "core/slide-fit.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that installs window.CV_SLIDE_FIT, the universal fitter for PAGED surfaces (slide/print). It scales a fixed-design-width '.cv-slide-stage' inside a ratio-locked '.cv-slide-frame' so the stage's full natural height fits the frame without clipping, letterboxing (centering) short content. It re-fits on resize, on ResizeObserver/MutationObserver changes, and on a heartbeat interval that runs until the layout signature stabilises.",
+  "observations": [
+    "Versioned install (VERSION=3): newer build replaces older; only skips if a same-or-newer build already won, to fix a cache/load race.",
+    "fitOne reads --cv-stage-w (default 1280) as design width, computes frame height from explicit clientHeight or aspect-ratio (fallback 16/9).",
+    "Scale s = min(fw/designW, fh/h) so width and height both fit; used height centered vertically when shorter than frame.",
+    "fitAll iterates all .cv-slide-frame; schedule() debounces via requestAnimationFrame.",
+    "ResizeObserver observes frames+stages; MutationObserver on document.body subtree re-observes and re-schedules for async-mounted <x-import> slides.",
+    "signature() builds a per-frame width:stageScrollHeight string; heartbeat re-fits every 250ms until signature stable for 8 ticks (~2s) or 120 ticks (~30s) cap.",
+    "Heartbeat ignores signatures containing ':0|' (a not-yet-mounted stage) so it won't declare stability prematurely.",
+    "Public API: refit, fitOne, kick (restart settle loop), __v. resize listener calls both schedule and kick.",
+    "Comment notes WEB surface does NOT use this (it reflows); styles live in core/containers.css; loaded by ds-base.js."
+  ],
+  "standouts": [
+    "The heartbeat-until-stable-signature strategy explicitly solves async/out-of-tree slide mounts where events alone are unreliable.",
+    "Version-aware install that lets a fresh copy override a stale one rather than bailing at the guard."
+  ],
+  "conventions": [
+    "Follows the system rule 'fixed-size content implements its own JS scaling' and the anti-drift 'one mechanism, no template re-implements it'.",
+    "Reads design width from a CSS var (--cv-stage-w) rather than hardcoding, keeping the token single-sourced.",
+    "Guards every browser API (typeof window/ResizeObserver/MutationObserver) for non-DOM environments.",
+    "Defensive try/catch around ro.observe."
+  ],
+  "concerns": [
+    "The 30s heartbeat cap and 250ms interval are timing heuristics; very slow or perpetually-resizing content could fit imperfectly or stop early.",
+    "Hardcoded fallbacks (1280, 16/9, 8 stable ticks, 120 cap) are magic numbers local to this file (though 1280 mirrors the CSS default)."
+  ],
+  "notes": "The single universal letterbox-fitter for paged slide/print surfaces; scales a fixed-width stage to fit its frame without clipping, kept reliable by a stable-signature heartbeat for async mounts.",
+  "questions": [
+    "What mounts the <x-import> slides asynchronously and where is core/containers.css defining the frame/stage CSS?",
+    "Does any consumer call CV_SLIDE_FIT.kick() explicitly after a programmatic content change, or is the heartbeat relied on?"
+  ],
+  "purpose_vs_actual": "Match — the header docstring describes the paged-surface fitter and the code implements exactly that letterbox-scaling mechanism.",
+  "apparent_themes": [
+    "One universal mechanism, anti-drift",
+    "Surface axis of design = f(content, axis)",
+    "Robustness to async/out-of-tree DOM",
+    "Loud version-aware self-replacement over silent bail"
+  ],
+  "intention_signals": "Provide a single, never-clipping, letterboxing scaler for fixed-ratio paged surfaces so 'missing lines' never happen and no deck template re-implements scaling, robust to whenever slides actually mount.",
+  "novelty": "The stable-layout-signature heartbeat (ignoring unmounted ':0|' stages) as a way to guarantee fit fires after an unknown-timing async mount without spinning forever.",
+  "contribution": "Contributes the canonical paged-surface scaling/letterbox behaviour and its async-mount settle strategy that a fused system would keep as the one slide/print fitter.",
+  "summary_for_embedding": "A JavaScript IIFE installing window.CV_SLIDE_FIT, the universal fitter that scales a fixed-design-width slide stage to letterbox-fit its ratio-locked frame without clipping, re-fitting via observers and a stable-signature heartbeat.",
+  "intention_for_embedding": "To be the single anti-drift scaling mechanism for paged slide/print surfaces so fixed-ratio content is never clipped and every deck template inherits one fitter."
+}

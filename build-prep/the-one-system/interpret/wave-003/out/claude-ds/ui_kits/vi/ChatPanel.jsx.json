@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/vi/ChatPanel.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the 'Vi' conversation surface for the AI-workspace kit as a set of React components: EntityIcon (emoji per entity kind), ReadCard (Vi reading/has-read an entity, with spinner via ViMark), MissingPrompt (a fill-in prompt for missing data that flips to a confirmed ✓ state on submit), ApproveCard (a text + Approve button), Message (user vs Vi message bubble with avatar), and ChatPanel (scrollable message list + composer input with Enter-to-send and disabled 'Vi is working…' state). Exports ChatPanel, Message, ReadCard, MissingPrompt, ApproveCard on window.",
+  "observations": [
+    "Aliased hook destructure: const { useEffect: useEffect_c, useRef: useRef_c } = React (collision-avoidance across kit files).",
+    "EntityIcon maps entity kinds (brandkit, master, gallery, analytics, files, pricing, contact) to emoji, defaulting to 📄.",
+    "ReadCard toggles between 'Reading <entity>' (with an animated ViMark, showGlyph=false) and a done '✓ Read <entity>' state.",
+    "MissingPrompt is a controlled input (value/onChange/onSubmit) that submits on Enter and, once submitted, renders a green success ✓ row instead of the input.",
+    "Message distinguishes from==='user' (user avatar) from Vi; Vi avatar's ViMark is animated only when from==='vi-live'.",
+    "ChatPanel auto-scrolls to bottom on children change via a useEffect that sets scrollTop = scrollHeight.",
+    "Composer input sends on Enter (not Shift+Enter), preventing default; disabled state changes placeholder to 'Vi is working…' and disables the Send button.",
+    "Hint text: 'Shift + Enter for new line · Vi reads your connected entities'.",
+    "Depends on a globally-available ViMark component (not imported here) and CSS vars / vi-* classes.",
+    "Inline styles use design tokens (var(--accent-gold), var(--status-success), var(--r-sm))."
+  ],
+  "standouts": [
+    "The MissingPrompt 'Missing · <label>' → fill → confirmed ✓ flow encodes a gap-resolution interaction (Vi asks for what it couldn't find).",
+    "ReadCard makes Vi's act of reading connected entities a first-class, animated UI affordance.",
+    "Message supports a distinct 'vi-live' source that animates the Vi mark (live vs static replies)."
+  ],
+  "conventions": [
+    "Module-as-window-globals export of multiple components, matching the kit's babel-script load model.",
+    "Token-driven inline styling plus vi-* design-system classes.",
+    "Controlled-input pattern with onChange/onSubmit passed from a parent (state lives outside these presentational pieces).",
+    "Relies on ViMark being loaded earlier (index.html loads ViMark.jsx before ChatPanel.jsx)."
+  ],
+  "concerns": [
+    "ViMark is referenced as a global with no guard; renders fail loudly if ViMark.jsx hasn't loaded first (load-order coupling).",
+    "Several literal inline style values (font sizes, padding) bypass spacing/type tokens."
+  ],
+  "notes": "The Vi chat surface kit: message bubbles, entity read-cards, missing-data prompts, approve cards, and an auto-scrolling composer — presentational components driven by parent state, exported on window.",
+  "questions": [
+    "Where does the entity 'kind' taxonomy (brandkit/master/gallery/...) come from — is it the real connected-entity model?",
+    "What distinguishes 'vi' from 'vi-live' message sources in the driving app logic?"
+  ],
+  "purpose_vs_actual": "Matches: header says 'Vi conversation surface' and the file implements the chat panel plus its specialized message/card types.",
+  "apparent_themes": [
+    "Conversational AI workspace UI",
+    "Agent reads-then-acts made visible (read cards, missing prompts, approvals)",
+    "Connected-entity model surfaced in chat",
+    "Token-driven design language",
+    "Live vs static agent message states"
+  ],
+  "intention_signals": "Aims to render Vi as a working agent in conversation — showing what it is reading from connected entities, asking the user to fill gaps it can't resolve, and requesting approval — turning the agent's process into legible chat affordances.",
+  "novelty": "The specialized in-chat card vocabulary (ReadCard, MissingPrompt with confirm state, ApproveCard) that externalizes an agent's read→gap→approve workflow inside a chat stream.",
+  "contribution": "Contributes the Vi conversational surface and its agent-process card vocabulary (reading-entity cards, missing-data prompts, approval cards, live/static message states, auto-scroll composer) as reusable presentational pieces.",
+  "summary_for_embedding": "A React 'Vi' chat surface kit defining message bubbles, entity read-cards, missing-data prompts, approve cards, and an auto-scrolling composer, exported on window.",
+  "intention_for_embedding": "To make the Vi AI agent's read-gap-approve workflow legible inside a conversation surface for the AI-workspace kit."
+}

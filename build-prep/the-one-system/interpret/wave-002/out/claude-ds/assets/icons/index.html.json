@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "assets/icons/index.html",
+  "model": "opus",
+  "what_it_does": "A standalone interactive icon-library explorer page. It loads the design tokens CSS, the full axis/icon/shape/meaning scripts, derives categories from the CV_ICONS symbol taxonomy, and renders a searchable, filterable grid of every icon. Users can search, filter by category, change ring/icon colour, pick a render style (plain / circle / triangle / square / diamond / pentagon / hex / septagon / octagon / filled), toggle ghost (dashed) and solid, scale size, and click any icon to copy its name.",
+  "observations": [
+    "Carries a @dsCard annotation comment (group Brand, name 'Icon Library — explorer', subtitle, viewport 1280x800) — a design-gallery metadata tag.",
+    "Links ../../colors_and_type.css and ../../axes/motion/motion.css; all colours/typography use CSS token vars.",
+    "Loads a long ordered script chain: axis-core, cv-icons, cv-vi-glyph, cv-shapes, then color/space/size/motion/texture/depth/fill/form/symbol axis scripts, cv-meaning, cv-glyphics.",
+    "CATEGORIES is DERIVED from CV_ICONS.taxonomy + .facets (brand-flagged symbols first, then one group per domain, then an 'Other' catch-all) — explicitly no hand-maintained list.",
+    "renderIcon() builds plain / polygon-node / circle / filled variants inline, mirroring CvIcon's logic but in template strings; geometry is single-sourced from CV_SHAPES.geom with literal fallbacks.",
+    "Ring colour and icon colour are independent toggles (the Mark's two colour facets); COLOR_TOKENS resolves from the token graph including a sage fallback hex.",
+    "Click-to-copy uses navigator.clipboard with a toast; tiles get a morphPop animation on filtered re-render.",
+    "Count of icons is read live from Object.keys(CV_ICONS.data).length."
+  ],
+  "standouts": [
+    "Categories and counts are computed from the icon taxonomy/facets at runtime, so adding a symbol with facets makes it appear in the right group automatically — nothing hand-listed.",
+    "Independent ring vs icon colour facets and a full polygon-shape style selector make it a live exploration of the shape+icon+colour axes together."
+  ],
+  "conventions": [
+    "Token-pure styling (var(--...)) throughout the embedded CSS.",
+    "Single-source discipline: categories from taxonomy, geometry from CV_SHAPES, no duplicated hand lists.",
+    "@dsCard gallery-annotation convention for design-system specimen pages.",
+    "Strict script load order (registry/axes before consumers)."
+  ],
+  "concerns": [
+    "renderIcon() reimplements CvIcon's render branches in raw template strings rather than reusing the React component — a parallel rendering path that could drift from CvIcon.jsx.",
+    "SHAPE_PTS keeps literal fallbacks duplicating CV_SHAPES geometry (drift risk if CV_SHAPES changes and fallbacks aren't updated).",
+    "Hardcoded sage hex (#5A8A4A) appears as a token fallback inline."
+  ],
+  "notes": "The interactive icon-library specimen page: search/filter/colour/shape/size explorer with click-to-copy, categories derived from the icon taxonomy.",
+  "questions": [
+    "Why does the explorer reimplement icon rendering in template strings instead of mounting CvIcon, and is the duplication intentional?",
+    "Do cv-meaning.js and cv-glyphics.js (loaded here) feed the taxonomy this page relies on?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard subtitle calls it a searchable browser where clicking copies the name, and the page implements exactly that plus colour/shape/size controls.",
+  "apparent_themes": [
+    "Derive-from-the-registry (taxonomy/facets as source)",
+    "Live multi-axis exploration (colour, shape, size, ghost)",
+    "Token-driven specimen page",
+    "Self-describing design gallery (@dsCard)"
+  ],
+  "intention_signals": "Trying to give a human a fast way to find, preview-in-context, and grab any brand icon — exercising the colour/shape/size axes live so the explorer doubles as a demonstration of the unified icon+shape+token system.",
+  "novelty": "A taxonomy-derived, zero-hand-list icon browser that previews each glyph across the full polygon-shape and dual-colour-facet space and copies names on click.",
+  "contribution": "Contributes the interactive icon-explorer specimen UI — taxonomy-derived categories, multi-axis (colour/shape/size/ghost) live preview, and click-to-copy.",
+  "summary_for_embedding": "A standalone HTML icon-library explorer that loads the ConceptV token/axis/icon/shape scripts and renders a searchable, taxonomy-categorised, colour/shape/size-filterable grid of every icon with click-to-copy.",
+  "intention_for_embedding": "To let a human browse, preview across shapes and colours, and copy any brand icon name while demonstrating the unified icon/shape/token system."
+}

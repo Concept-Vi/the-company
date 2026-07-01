@@ -1,0 +1,55 @@
+{
+  "project": "claude-ds",
+  "path": "core/DiagramSolver.jsx",
+  "model": "opus",
+  "what_it_does": "Implements the graph solver: a JSX-free React component (uses React.createElement aliased as h) that takes a {type, nodes, edges} graph spec and renders a laid-out diagram. A layout() function computes node positions per type (hub/morph/network/pipeline/timeline/quadrant/tree/stack) inside a 320-unit square viewbox; separate early-return HTML views handle stepper plus capital-raise subtypes (orbital, stacked, spectrum, manifold, fidelity); the SVG path draws edges with arrow markers and shaped/toned nodes.",
+  "observations": [
+    "h = React.createElement; VB=320 square viewbox, R=130 radial radius — layout normalised to the viewbox.",
+    "edLabel() makes any label inline-editable via contentEditable, committing on blur, with Enter-to-blur and a window.__cvFieldFocus hook for an external edit surface.",
+    "layout() switch covers hub, morph (before=ring, after=hub), network, pipeline, timeline, quadrant (explicit x/y in 0..1), tree, stack; default falls back to a ring.",
+    "EDGE_CLASS maps edge kinds (flow/dependency/reference/rejected/communication/bidirectional) to CSS classes; arrows via SVG <marker> defs (cv-arrow, cv-arrow-back, cv-arrow-comm).",
+    "SHAPE provides border-radius/clip-path for circle/square/hex/octagon/diamond; shapedNode() instead draws hex/octagon/diamond as real SVG <polygon> outlines because clip-path strips the visible border on a light ground.",
+    "RAMP indexes the brand ramp (--ramp-1..4); TONE_FILL maps warm/neutral/review/active to color-mix token expressions.",
+    "Five capital-raise subtype views are bespoke flex/grid HTML (orbitalView, stackedView, spectrumView, manifoldView, fidelityView), each documented to a specific capital-raise page number (p5/p4/p9/p13/p12/p28/p22).",
+    "Chevron stepper builds interlocking clip-path polygons and tints by position along the ramp; graph.active fills steps up to and including the index.",
+    "Token-purity is asserted in comments — strokes/fills/shapes come from tokens/diagram.css and zones, no literals; node positions tween via --dur-move motion tokens.",
+    "icon rendering reads window.CV_ICONS.data[nd.icon] and inlines the SVG via dangerouslySetInnerHTML.",
+    "Registers itself globally as window.__cvDiagramSolver and as default export."
+  ],
+  "standouts": [
+    "Two distinct rendering strategies live in one file: a generic SVG positional layout for relational graphs, and several bespoke early-return HTML 'subtype views' tied to specific pitch-deck pages.",
+    "The hex/octagon/diamond outline workaround (SVG polygon with non-scaling-stroke instead of clip-path) is a deliberate, commented fix to keep the border visible on a light ground.",
+    "Every visual value resolves to a token or color-mix expression — strong token-purity discipline visible throughout.",
+    "Inline editability (edLabel) is woven into every text-bearing element, including graph node labels and subtype-view fields."
+  ],
+  "conventions": [
+    "Follows the project's JSX-free, h=React.createElement, window.<NS> bundle pattern.",
+    "Honours single-source token discipline (no raw hex/px in rendered output; all via var()/color-mix/RAMP).",
+    "Extends the solver by adding new diagram types/subtypes as branches/views rather than parallel components — though the new subtypes are added as code branches rather than registry data.",
+    "Self-registers on window for cross-bundle consumption."
+  ],
+  "concerns": [
+    "The five capital-raise subtype views are bespoke hand-laid-out HTML branches keyed to specific deck page numbers, which sits in tension with the system's 'computed, not hand-set / extend as data not a new code branch' ideal.",
+    "EDGE_CLASS and the marker logic include kinds (communication, bidirectional) not present in the cv-nodes.d.ts CVGraphEdge union — the implementation's edge vocabulary is wider than the typed contract.",
+    "layout() reads nodes[0].id for hub/morph/tree centers without an empty-array guard, so a zero-node graph of those types would throw."
+  ],
+  "notes": "The graph solver: one generic SVG positional engine for relational layouts plus a set of bespoke deck-page subtype views, all token-pure and inline-editable.",
+  "questions": [
+    "Why are orbital/stacked/spectrum/manifold/fidelity coded as bespoke views rather than expressed as data/registry entries like the other types?",
+    "Are the extra edge kinds (communication, bidirectional) meant to be added to the CVGraphEdge type, or are they implementation-only?",
+    "edLabel reads props.onEdit but DiagramSolver destructures onEdit off props directly — is onEdit always threaded from the same source the type declaration omits?"
+  ],
+  "purpose_vs_actual": "Matches: it is THE graph solver computing positions from relationships and rendering in the diagram vocabulary, as both its header and the .d.ts claim; it additionally implements stepper and capital-raise subtypes beyond the .d.ts's documented list.",
+  "apparent_themes": [
+    "position computed from relationships, not nesting",
+    "token-purity / no literals",
+    "two layout strategies on one substrate",
+    "inline-editable, direct-manipulation surface",
+    "the capital-raise pitch grammar made into reusable diagram types"
+  ],
+  "intention_signals": "Trying to turn relational specs into branded, token-pure, editable diagrams covering both general graph shapes and the specific visual grammar of ConceptV's capital-raise deck, so a {type,nodes,edges} spec produces a finished, on-system diagram with no hand layout per slide.",
+  "novelty": "The blend of a normalised SVG positional solver with bespoke HTML 'subtype views' that encode a real pitch deck's diagram grammar (orbital verb-ring, collapsed-set pipeline, gradient spectrum axis, converging manifold, escalating-fidelity stepper) as reusable, editable types.",
+  "contribution": "Contributes the actual relational layout engine plus a library of branded diagram archetypes (network/hub/morph/pipeline/timeline/quadrant/tree/stack/stepper + orbital/stacked/spectrum/manifold/fidelity) rendered token-pure and inline-editable — the graph half of the generative core.",
+  "summary_for_embedding": "JSX-free React graph solver that lays out {type,nodes,edges} specs into token-pure SVG/HTML diagrams across many diagram types and capital-raise subtypes with inline-editable labels.",
+  "intention_for_embedding": "To render relational content specs as finished, on-brand, editable diagrams by computing positions from relationships rather than hand-laying out each one."
+}

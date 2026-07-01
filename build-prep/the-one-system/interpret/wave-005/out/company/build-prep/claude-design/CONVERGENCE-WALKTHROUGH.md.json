@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/CONVERGENCE-WALKTHROUGH.md",
+  "model": "opus",
+  "what_it_does": "A close-out narrative (2026-06-08) by the interface/lead session reporting the convergence of parallel work streams (interface/studio, Claude Design prep, cognition merge) into one stable main. It states the all-green gate result, lists the three commits that converged onto main, describes the readiness of the Claude Design prep folder and the in-app Review (studio) surface, and separates what is proven from the handful of items left for Tim to decide.",
+  "observations": [
+    "States main is stable with 117 suites, 113 green, 4 documented live-dep skips, 0 RED",
+    "Lists three converged commits by SHA with role tags: 81f48be (prep, 21 files), 8734c40 (studio Review surface + backend seam), 6d27099 (stabilize 2 studio reds, fixed not silenced)",
+    "Describes the build-prep/claude-design prep folder contents and names BACKEND-SEAM-PACK.md as the canonical backend contract doc, plus AUTHORING-FE-HANDOFF/AUTHORING-UI-BRIEF, APPLICATION-STRUCTURE-PACK, README, research/",
+    "Describes the in-app Review surface at canvas/app/src/regions/Review.tsx with three regions [Rail | Stage | RhmPanel(+Composer)], wired to real backend (/api/corpus gallery, RhmPanel as the real RHM organ, comments -> /api/annotate)",
+    "Emphasizes the studio surface is deliberately UNSTYLED with neutral --studio-* token-slots — the structure to point Claude Design at",
+    "Verified by use at both widths 1440 and 390 on a temp store, never the live one",
+    "Lists five 'your eyes / decisions' items for Tim: a reversible ui_registry scoping call, deferred studio-extract worktree removal (with the exact git command), the studio's unstyled FORM, two harmless live-store leaves, and five net-new studio binds",
+    "Notes a disjoint research-prep session and leftover worktrees as separate tidy-ups"
+  ],
+  "standouts": [
+    "The proven-vs-yours-to-decide split, surfacing reversible decisions and harmless leftovers explicitly rather than hiding them",
+    "The framing that the studio is intentionally unstyled token-slots — structure done, look is Tim's in Claude Design"
+  ],
+  "conventions": [
+    "Follows the no-green-paint / all-green-gate verification discipline (counts the suites, distinguishes documented skips from reds)",
+    "Reports decisions with reversibility noted and exact revert/cleanup commands (epistemic humility + actionability)",
+    "Uses the offer-options-to-Tim pattern (a numbered decision list rather than binary confirmations)"
+  ],
+  "concerns": [],
+  "notes": "The merge close-out: what landed on one stable main (three SHAs, 0-red gate), why the studio surface is intentionally unstyled, and the five reversible items left for Tim.",
+  "questions": [
+    "Were the five net-new studio binds (R2 /api/context, per-address tier data, persistent server-side locus, comment->build-intent promotion, in-frame element deixis) subsequently built?",
+    "Did Tim act on the deferred studio-extract worktree removal and the two live-store leaves?"
+  ],
+  "purpose_vs_actual": "Matches. It states it is the close-out of the converge-into-one-stable-main mandate, and the body delivers the convergence result, the proven items, and the decisions left to Tim.",
+  "apparent_themes": [
+    "unions-not-bridges / convergence into one stable main",
+    "no-green-paint verification (real counts, reds fixed not silenced)",
+    "structure-vs-style separation (unstyled token-slots are the design target)",
+    "reflects-never-owns (the Review surface wired to the real backend, bespoke jsonl retired)"
+  ],
+  "intention_signals": "Trying to hand Tim a verified, single stable main with the Claude Design prep and the unstyled studio surface ready, while transparently flagging the reversible calls and small remaining binds so nothing is presented as more finished than it is.",
+  "novelty": "The in-app Review surface as a real wired page of the app replacing the old standalone detached HTML, delivered deliberately unstyled as the design target for Claude Design.",
+  "contribution": "Contributes the convergence record (three SHAs onto one 0-red main), the readiness statement for the claude-design prep and the unstyled in-app Review/studio surface, and the explicit list of reversible decisions and remaining binds — a fused system would keep this as the provenance of how these streams merged and what was left open.",
+  "summary_for_embedding": "A 2026-06-08 close-out reporting the convergence of the interface/studio, Claude Design prep, and cognition streams into one stable 0-red main (117 suites, three SHAs), the readiness of the claude-design prep folder and the deliberately-unstyled in-app Review surface, and five reversible items left for Tim.",
+  "intention_for_embedding": "Written to hand Tim a verified single stable main with the design prep and structural studio surface ready for Claude Design, while transparently surfacing the reversible decisions and the last remaining binds."
+}

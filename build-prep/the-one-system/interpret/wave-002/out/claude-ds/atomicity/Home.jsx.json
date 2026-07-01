@@ -1,0 +1,44 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/Home.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React component (AcHome) that renders the AtomiCity app's home/landing screen: a hero with a one-line description, a set of 'door' buttons that navigate to the main sections (foundations, explore, ingest, ask Vi), and a 'your brand right now' snapshot showing the live palette, type, and a mini product card.",
+  "observations": [
+    "DOORS array defines the three primary navigation entries (Your brand, Explore looks, Bring in inspiration) plus a fourth Vi-assistant door rendered separately.",
+    "PALETTE array lists six brand token names rendered as live color swatches via inline `var(--token)` backgrounds.",
+    "Navigation and assistant calls go through window.ATOMICITY.openNode(id) and window.ATOMICITY.askVi(text), both null-guarded with &&.",
+    "Uses staggered entrance animation via CSS classes (stagger, enter-up) and a `--i` index custom property per door.",
+    "Snapshot section repeats the same fictional real-estate surface (14 Eclipse Boulevard, $1.84m) used elsewhere, tying brand to a concrete product.",
+    "References ViShape and CvIcon components and hardcodes typeface names (Sora display, DM Sans body) as display text."
+  ],
+  "standouts": [
+    "Frames the whole app as 'doors' — orientation-first, jargon-free entry points rather than a registry or menu.",
+    "The brand snapshot is interactive: clicking the palette or links navigates into foundations to edit it.",
+    "An 'Ask Vi' door invites natural-language intent ('just say what you're trying to do') as a first-class navigation path."
+  ],
+  "conventions": [
+    "Follows the window-global pattern (ATOMICITY, CvIcon, ViShape, React off window) consistent with the project's no-import style.",
+    "Uses `var(--token)` for all brand colors rather than literals — consistent with the single-source-of-truth token rule.",
+    "Plain-language, no-jargon UI copy consistent with the human-facing design ethos."
+  ],
+  "concerns": [
+    "Typeface names ('Sora', 'DM Sans') are written as literal display strings rather than read from a token, so they could drift from the actual --font-display/--font-body values.",
+    "Depends on window.ATOMICITY existing for any action; if absent, doors silently do nothing (guarded but no feedback)."
+  ],
+  "notes": "The app's orientation screen — one-line 'what is this', four doors into the main flows, and a live brand snapshot that doubles as a shortcut into the foundations editor.",
+  "questions": [
+    "Where is window.ATOMICITY (openNode/askVi) defined, and what is the node-id routing scheme (e.g. 'sec/foundations')?",
+    "Are the displayed typeface names meant to stay in sync with the actual font tokens, and if so how?"
+  ],
+  "purpose_vs_actual": "Matches — the header comment promises a jargon-free orientation home with a one-line identity, a live brand display, and doors to the few things you do, and the component delivers exactly that.",
+  "apparent_themes": [
+    "Orientation-first onboarding (say what it is, show doors)",
+    "Brand-as-living-system tied to a concrete product surface",
+    "Natural-language assistant access as a navigation primitive"
+  ],
+  "intention_signals": "Trying to give the app the orientation it was missing — immediately telling a newcomer what AtomiCity is, showing their brand alive, and routing them to the handful of real actions without exposing any system internals.",
+  "novelty": "Treating navigation as 'doors' and making the brand snapshot itself a clickable shortcut into live editing; offering an assistant door as a peer to concrete sections.",
+  "contribution": "Contributes the landing/orientation surface for AtomiCity — the hero identity statement, the curated door-based navigation into foundations/explore/ingest/Vi, and a live brand snapshot that links into the editor.",
+  "summary_for_embedding": "A React home-screen component for the AtomiCity design-system app with a hero identity line, door-style navigation into foundations/explore/ingest/ask-Vi, and a live brand snapshot of palette, type, and a sample product card.",
+  "intention_for_embedding": "To orient a newcomer to AtomiCity by stating what it is, showing their brand alive, and routing them to the few real actions through jargon-free doors."
+}

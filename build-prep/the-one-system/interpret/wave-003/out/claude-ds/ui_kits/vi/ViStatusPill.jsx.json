@@ -1,0 +1,36 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/vi/ViStatusPill.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the ViStatusPill React component: a small inline pill that shows Vi's current activity. It renders a mini ViMark (18px, no glyph) followed by children text; when `live` is true it adds a 'live' class (a pulsing pill animation in vi.css) and animates the mini mark. Exposed on window.",
+  "observations": [
+    "Props: children (the status text) and live (default false).",
+    "Composes ViMark at size 18 with showGlyph={false} and animated={live} as the pill's leading icon.",
+    "Toggles the 'live' CSS class on the pill based on the `live` prop (drives the vi-pulse-pill animation defined in vi.css).",
+    "Assigns window.ViStatusPill; depends on a global ViMark and global React (no imports/exports).",
+    "Very small (10 lines) — a thin composition over ViMark plus styled text."
+  ],
+  "standouts": [
+    "Reuses ViMark (animated, glyph-less) as the pill icon — the same brand mark expresses 'Vi is doing something' inline at small size."
+  ],
+  "conventions": [
+    "Browser-global component pattern (window.ViStatusPill, global React/ViMark), consistent with the rest of the Vi kit.",
+    "Single-source reuse: leans on ViMark and vi.css classes rather than re-implementing icon or animation."
+  ],
+  "concerns": [],
+  "notes": "A tiny inline status pill ('Vi is reading…') that reuses an animated mini ViMark; pass children for the text and `live` for the pulsing/active state.",
+  "questions": [
+    "What values are typically passed as children, and is `live` meant only for in-progress states? (App.jsx uses `live` for the reading step.)"
+  ],
+  "purpose_vs_actual": "Matches: the comment ('inline pill showing Vi's current activity') matches the small icon+text pill with a live/animated state it renders.",
+  "apparent_themes": [
+    "Composition over duplication (built from ViMark + vi.css)",
+    "Inline, embeddable status indication",
+    "Motion-as-state (live pulse signals active work)"
+  ],
+  "intention_signals": "Tries to provide a drop-in indicator of what Vi is doing right now that works inside any surface, reusing the brand mark so the indicator is recognisably 'Vi'.",
+  "novelty": "n/a",
+  "contribution": "Contributes the small, embeddable Vi activity indicator that composes the animated ViMark with status text and a live-pulse state.",
+  "summary_for_embedding": "React ViStatusPill component: a small inline activity pill composing an 18px animated glyph-less ViMark with status text and a `live` pulsing state, exposed on window.",
+  "intention_for_embedding": "To show Vi's current activity inline in any surface using a recognisable, optionally-pulsing mini brand mark plus text."
+}

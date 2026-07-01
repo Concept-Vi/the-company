@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/workshop/WizardBuilder.jsx",
+  "model": "opus",
+  "what_it_does": "A Workshop multi-step flow builder. Defines wizard kinds (property/onboarding/generic) each with a canonical shape and seeded steps, step kinds (capture/form/choice/review/celebrate), and layouts (sidebar/progress/cards). Provides a Vi drafter (viDraftWizard) that turns a brief into wizard JSON, the WizardBuilder editor (step strip with reorder/add/remove, layout picker, per-step editor with branching rules, candidate gallery), a WizardRender that draws the flow in any of the three layouts, an interactive prototype mode with persisted per-step state and choice-driven branching, a per-step Vi refine, shape glyphs, and JSX/PDF export.",
+  "observations": [
+    "Each wizard kind carries a canonical shape (property→hexagon, onboarding→circle, generic→diamond); the Vi prompt also states the broader shape vocabulary (Virtual Hub→octagon, Vi→diamond, User Portal→circle)",
+    "viDraftWizard and ViStepRefine both inject voice.conceptv (or restate the voice rules inline in ViStepRefine) and use CV_AI.complete with a brace-regex JSON fallback, throwing if unparsable",
+    "Prototype mode preserves field state across steps (protoState keyed by step id) and supports choice branching via step.gotoOnChoice ({option→ 'next'|'end'|index})",
+    "WizardRender renders three distinct layout shells (sidebar rail, top progress bar, card stack) sharing one StepBody",
+    "ShapeGlyph draws hexagon/diamond/circle inline SVG using token-var stroke/fill",
+    "Branching dropdown reads other steps via window.WS_AI.bridge.getActive().steps",
+    "Export builds a standalone self-contained JSX wizard (own useState navigation) via wizardToJSX, plus copy/print",
+    "Promote-to-Type via window.CV_TYPES_SAVE.fromWizard"
+  ],
+  "standouts": [
+    "Choice-step branching (gotoOnChoice) makes the prototype a real navigable flow, not just linear next/back",
+    "Canonical shape-per-kind vocabulary tying flows to a consistent geometric identity",
+    "The exported standalone JSX is a working interactive wizard, not just a static snapshot"
+  ],
+  "conventions": [
+    "Follows the window-global registry/export pattern and sources the voice from CV_AI rather than inlining — except ViStepRefine which restates the voice rules inline in its prompt",
+    "Uses CSS var() tokens for the in-app rendering",
+    "Breaks the no-raw-px rule heavily in the exported JSX template (many hardcoded px) and in some inline styles"
+  ],
+  "concerns": [
+    "ViStepRefine inlines the brand-voice rules ('sentence case, second person, no exclamation marks, no emoji') instead of pulling voice.conceptv — a second home for the voice, the exact drift the project forbids",
+    "Dead/no-op disabled logic on the Continue button: `disabled={!proto && idx < total - 1 ? false : false}` always evaluates to false",
+    "The exported wizard JSX reimplements the layout with hardcoded px literals — a parallel rendering path divergent from the in-app renderer",
+    "Math.random()-based step ids could collide in rare cases (short 5-char suffix)"
+  ],
+  "notes": "The Workshop wizard editor — three flow archetypes with canonical shapes, three layouts, an interactive prototype with branching, and a standalone-JSX export; note one helper (ViStepRefine) inlines the voice rules instead of sourcing them.",
+  "questions": [
+    "Why does ViStepRefine restate voice rules inline when viDraftWizard sources voice.conceptv?",
+    "Is the gotoOnChoice keyed by option label or option index — the editor writes by label but onAdvance reads protoState._pick which holds the label?",
+    "What does WS_AI.bridge.getActive() return and how does it relate to the current doc?"
+  ],
+  "purpose_vs_actual": "Matches — header says a multi-step flow builder (property/onboarding/generic) with visual-mock and functional-prototype modes, and the code delivers all of that plus branching and export.",
+  "apparent_themes": [
+    "Archetype-driven generation (kinds seed canonical steps + shape)",
+    "AI-as-collaborator (Vi drafts whole flows, refines steps, proposes alternatives)",
+    "Mock vs functional-prototype duality with real state",
+    "Single-source design via tokens and shared shape vocabulary"
+  ],
+  "intention_signals": "Aims to let a designer assemble or have Vi draft a multi-step flow from named archetypes, preview it in multiple layouts, exercise it as a real branching prototype with persisted state, and export it as a working standalone component — keeping shape identity and brand voice consistent.",
+  "novelty": "Choice-driven branching in a mock/prototype flow builder plus the canonical shape-per-wizard-kind identity, and an export that emits a fully interactive (not static) wizard component.",
+  "contribution": "Contributes a flow/wizard authoring canvas: a wizard-kind+step-kind+layout taxonomy with seeded archetypes and canonical shapes, a Vi flow drafter and per-step refiner, a three-layout renderer with an interactive branching prototype and persisted state, and a standalone interactive-JSX export.",
+  "summary_for_embedding": "A ConceptV Workshop wizard builder with property/onboarding/generic archetypes, capture/form/choice/review/celebrate step kinds, three layouts, choice branching, an interactive prototype with persisted state, Vi drafting/refinement, and standalone-JSX export.",
+  "intention_for_embedding": "To author or have Vi draft multi-step flows from canonical archetypes, preview them across layouts, run them as real branching prototypes, and export a working interactive component, keeping shape and voice consistent."
+}

@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0011_ledger.sql",
+  "model": "opus",
+  "what_it_does": "Creates the 'ledger' Postgres schema for the-one-system: a run-scoped structural code/design ledger with four tables (run, entry, symbol, edge), idempotent additive ALTERs, a set of indexes (including trigram and per-run), and accumulation views (latest_run, entry_latest, symbol_latest, edge_latest, coverage) that surface only the most recent complete run per (project, purpose).",
+  "observations": [
+    "Enables extensions vector, pg_trgm and ltree; creates schema ledger if not exists.",
+    "ledger.run is the run header scoped by project/channel/purpose/layer with provenance (model, prompt_version, tool_git_sha, tool_version, schema_version), status, stats jsonb and timestamps.",
+    "ledger.entry is the per-file/node row with rich interpretive columns (what_it_does, observations, standouts, conventions, concerns, notes, questions, purpose_vs_actual, apparent_themes, intention_signals, novelty) plus structural fields (imports, declares, address_schemes_used, stores_touched, env_vars, markers, signals), unique(run_id, path).",
+    "ledger.symbol holds per-symbol code detail (signature, params, returns, decorators, bases, line range, is_exported/is_async, does, description), unique(run_id, code_id).",
+    "ledger.edge holds typed relations (from_ref, kind, to_raw, to_resolved, line) with provenance.",
+    "Idempotent additive ALTER TABLE ... add column if not exists for extractor/tool provenance columns on already-existing schemas.",
+    "Header states it supersedes the loose build-prep/the-one-system/ledger_schema.sql (retired to a pointer), is reversible via DROP SCHEMA ledger CASCADE, and reuses the code:// coordinate; runs ACCUMULATE for drift comparison.",
+    "Views use distinct on (project, purpose) over status='complete' to define the 'latest run' projection; coverage groups file entries by coverage_state."
+  ],
+  "standouts": [
+    "The non-flat, run-scoped accumulation design: every extraction is a RUN, runs accumulate and are comparable over time (drift), with latest-* views giving a usable current view over the accumulation.",
+    "The entry table's interpretive columns mirror exactly the interpretation JSON schema this very wave produces (what_it_does, observations, standouts, conventions, concerns, intention_signals, etc.)."
+  ],
+  "conventions": [
+    "Fully idempotent: create extension/schema/table if not exists, add column if not exists, create index if not exists, create or replace view.",
+    "Per-row provenance and per-extractor version columns on run/entry/symbol.",
+    "jsonb for open/extensible structured fields (signals, markers, extra, suggested_fields, proposed_edge_kinds)."
+  ],
+  "concerns": [],
+  "notes": "This is the canonical durable home for the-one-system's interpretation/extraction ledger — the run/entry/symbol/edge schema plus latest-run views that the interpretation pipeline writes into and queries.",
+  "questions": [
+    "What enumerates the allowed values for node_type, coverage_state, kind and edge.kind (no CHECK constraints or lookup tables are defined here)?",
+    "The ltree extension is enabled but no ltree column appears in these tables — where is it used?"
+  ],
+  "purpose_vs_actual": "Match: header describes a non-flat run-scoped structural ledger with provenance and accumulation, and the four tables plus latest-* views implement precisely that.",
+  "apparent_themes": [
+    "Run-scoped accumulation enabling drift comparison over time",
+    "Provenance on every row (model, prompt, tool sha, extractor version)",
+    "Open/extensible jsonb-typed structured fields",
+    "Idempotent, reversible, canonical schema home"
+  ],
+  "intention_signals": "Trying to give the code/design interpretation pipeline a durable, queryable, version-aware home where extractions are runs that accumulate, so the same corpus can be re-mapped and compared rather than overwritten.",
+  "novelty": "Treating every extraction as a first-class scoped RUN with accumulation + drift semantics, and an entry table whose interpretive columns directly match the per-file interpretation contract.",
+  "contribution": "Contributes the entire ledger schema (run/entry/symbol/edge tables, provenance columns, trigram/per-run indexes, and latest-run accumulation views) that persists and serves the-one-system's interpretation output.",
+  "summary_for_embedding": "Supabase migration creating the run-scoped 'ledger' schema (run, entry, symbol, edge tables plus latest-run and coverage views) to persist accumulating, provenance-tagged code/design interpretation extractions.",
+  "intention_for_embedding": "To establish a durable, queryable, version-aware ledger where code interpretation extractions are scoped runs that accumulate for drift comparison rather than being overwritten."
+}

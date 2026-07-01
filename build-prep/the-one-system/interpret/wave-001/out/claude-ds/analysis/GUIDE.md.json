@@ -1,0 +1,56 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/GUIDE.md",
+  "model": "opus",
+  "what_it_does": "The procedure for any session to run a consistent folder analysis on an ingested deck: states four golden rules, a 7-step workflow (ingest -> view -> sample real pixels -> fill the 9-level template -> diff against the system -> log gaps/progress -> synthesise only when confirmed across >=2 folders), a recommended folder order, and open cross-folder questions.",
+  "observations": [
+    "Establishes that analysis changes nothing in the design system; synthesis happens only after a rule is confirmed across >=2 folders",
+    "Golden rule 2: content-agnostic — translate every domain noun to a generic role ('property'->'subject', '$430B'->'hero metric')",
+    "Golden rule 3: ratios, not pixels — every position/size as % of frame so a native ratio recomputes to any surface",
+    "Golden rule 4: 'subtlety is the signal' — sample real pixels, never eyeball, because 1-3% zone deltas are the whole point",
+    "Step 3 gives concrete sampling recipes: 11x11 averaging window with spread<10 trustworthy, hue-clustering chromatic pixels binned by 12 degrees to extract the gold/bronze ramp, row/column scans for margins as %",
+    "Step 5 diff uses the same confirm/new/generalise/contradict tag vocabulary; says contradictions are the most valuable (they reveal a 'rule' was actually dialect)",
+    "Step 7 graduation order: recalibrate tokens -> pattern primitives -> components -> templates (the 13 archetypes); deprecate rather than rename",
+    "Lists a recommended folder order and a watch-for set of open cross-folder questions"
+  ],
+  "standouts": [
+    "The >=2-folder confirmation bar before any finding graduates into the system — the core anti-overfitting discipline the sibling analyses obey",
+    "'Subtlety is the signal' with measured tolerances (spread<10 = trustworthy flat) — a rigorous anti-eyeball sampling protocol",
+    "'Contradictions are the most valuable — they reveal where a rule was actually dialect' — failure/conflict prioritised as the highest-signal output",
+    "Hue-clustering as a robust method to extract a colour ramp from thin elements without guessing coordinates"
+  ],
+  "conventions": [
+    "Content-agnostic grammar capture (record the grammar, not the subject)",
+    "Ratio-relative measurement (% of frame, type-step ratios) for surface-independence",
+    "Evidence-grounded sampling with stated tolerances (never eyeball)",
+    "Confirm/new/generalise/contradict diff tagging against tokens AND prior folders",
+    "Graduation discipline: confirmed-across-2-folders gate, deprecate-not-rename to protect consumers",
+    "Template-driven consistency (copy _TEMPLATE.md, complete all 9 levels)"
+  ],
+  "concerns": [
+    "References many sibling files (_TEMPLATE.md, pitch-deck.md, SYSTEM-GAPS.md, PROGRESS.md) whose presence cannot be confirmed from this file",
+    "Typeface identification is left to letterform judgement / user confirmation — an acknowledged gap in the otherwise measured protocol",
+    "Sampling snippets are said to live in 'pitch-deck's session' (copy and adjust) rather than as reusable code in the repo"
+  ],
+  "notes": "The methodology doc that makes every folder analysis consistent and overfitting-resistant: content-agnostic, ratio-relative, pixel-sampled, diffed with confirm/new/generalise/contradict, and graduated into the system only after >=2-folder confirmation.",
+  "questions": [
+    "Where is _TEMPLATE.md and what are the exact 9 levels it prescribes?",
+    "Are the sampling/measuring snippets captured anywhere reusable, or only in a prior session's history?",
+    "How is the >=2-folder graduation bar reconciled with single-folder findings that other analyses still routed to graduation?",
+    "What is the current state of PROGRESS.md / the recommended folder order — which folders are done?"
+  ],
+  "purpose_vs_actual": "Matches — titled as how to run a folder analysis for any session, and it delivers golden rules, a step-by-step workflow, sampling recipes, the diff/graduation discipline, folder order, and open questions.",
+  "apparent_themes": [
+    "content-agnostic-grammar",
+    "ratio-not-pixels",
+    "evidence-graduation-discipline",
+    "contradiction-as-highest-signal",
+    "measure-dont-eyeball",
+    "anti-overfitting"
+  ],
+  "intention_signals": "Inferred: the author wants every analysis session to produce comparable, universal design grammar rather than per-deck observations, so the design system is built only from rules proven across multiple folders. The emphasis on ratios, content-agnosticism, and measured sampling signals an intent to produce surface-independent, subject-independent design language that a generator can apply universally.",
+  "novelty": "Codifying analysis as a reproducible measured protocol with explicit sampling tolerances, a >=2-folder graduation gate, and contradiction-prioritisation is unusual versus informal design auditing.",
+  "contribution": "Contributes the analysis methodology itself: the content-agnostic ratio-relative pixel-sampling protocol, the confirm/new/generalise/contradict diff, and the >=2-folder graduation discipline (recalibrate->primitives->components->templates) that governs how findings enter the design system.",
+  "summary_for_embedding": "A reproducible methodology for analysing ingested deck folders into universal design grammar via content-agnostic ratio-relative pixel sampling, a confirm/new/generalise/contradict diff, and a >=2-folder confirmation gate before any finding graduates into the design system.",
+  "intention_for_embedding": "To make every folder analysis consistent and overfitting-resistant so the design system is built only from surface-independent, subject-independent rules proven across multiple folders."
+}

@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/workshop/Polish.jsx",
+  "model": "opus",
+  "what_it_does": "Provides the Workshop UX-polish layer: three components exported on window. WSShortcutsOverlay is a keyboard-shortcuts cheat-sheet (grouped Navigate/Edit/Vi-gallery/Vi-everywhere) toggled by pressing '?'. WSOnboarding is a one-time first-run guided tour (six steps) gated by a localStorage key that explains the Vi capabilities, with dot navigation and skip/next. WSErrorBoundary is a React class error boundary that catches render errors in a subtree, logs them, and renders a recovery panel (reload or try-again) so the rest of Studio keeps working.",
+  "observations": [
+    "SHORTCUTS is a static data structure of four groups; the overlay renders kbd rows from it",
+    "The '?' key (or shift+'/') toggles the overlay, ignored while focus is in an input/textarea/contentEditable; Escape closes it",
+    "ONBOARD_KEY = 'cvstudio:onboarded:engine-v2' gates the tour; ONBOARD_STEPS describes the new Vi surfaces (field pill, +Vi divider, Transform menu, chat-rail edits, templates)",
+    "WSOnboarding reads/writes localStorage in try/catch so storage failures don't break the tour; dots are clickable and keyboard-navigable",
+    "WSErrorBoundary uses getDerivedStateFromError + componentDidCatch, shows err.message in a <pre>, and offers location.reload() or this.reset()",
+    "All three are exposed as window.WSShortcutsOverlay / WSOnboarding / WSErrorBoundary",
+    "ViShape and dsa-btn classes are used (shared design-system components/styles)"
+  ],
+  "standouts": [
+    "An error boundary that frames the crash as 'Vi caught the crash so the rest of Studio keeps working' and reassures auto-save — recovery UX tied to the product narrative",
+    "The shortcuts and onboarding content double as living documentation of the Vi capability surface (field alternates, +Vi dividers, transforms, chat-rail edits, templates)"
+  ],
+  "conventions": [
+    "Content-as-data: shortcuts and onboarding steps are static arrays the components render, easy to extend",
+    "Uses the shared ViShape and dsa-btn primitives rather than bespoke styling",
+    "localStorage access wrapped in try/catch (defensive, non-fatal)",
+    "Keyboard handlers guard against firing while typing in editable fields"
+  ],
+  "concerns": [
+    "The onboarding/shortcuts text hardcodes capability descriptions (e.g. 'Transform button opens 7 whole-doc moves', '43 capabilities') that can drift from the actual CV_AI registry, since they are prose not a projection of it",
+    "The ONBOARD_KEY is versioned ('engine-v2'); changing the tour requires bumping the key or returning users won't see updates — a manual coupling",
+    "WSErrorBoundary catches render errors but not async/event-handler errors (standard React limitation, worth noting for an editor with heavy async Vi calls)"
+  ],
+  "notes": "This is the Workshop polish/safety layer: a '?' shortcuts overlay, a one-time Vi-capabilities onboarding tour, and an error boundary with a friendly recovery panel — all static-content-driven and window-exposed.",
+  "questions": [
+    "Could the shortcuts/onboarding capability descriptions be generated from the CV_AI registry to avoid prose drift (e.g. the '7 transforms' / '43 capabilities' counts)?",
+    "Is bumping ONBOARD_KEY the intended mechanism for re-showing the tour after capability changes?"
+  ],
+  "purpose_vs_actual": "Matches: the header lists keyboard-shortcuts overlay, first-run onboarding tour, and a graceful error boundary; the file implements exactly those three.",
+  "apparent_themes": [
+    "UX polish and resilience as a distinct layer",
+    "Discoverability of the Vi capability surface (shortcuts + tour)",
+    "Graceful failure framed in the product's voice",
+    "Content-as-data components"
+  ],
+  "intention_signals": "Trying to make Workshop feel finished and safe — teach users the breadth of Vi's woven-in capabilities, give power users a shortcut reference, and ensure a single subtree crash never takes down the whole editor.",
+  "novelty": "Modest but coherent: the error-boundary copy and onboarding both narrate Vi's omnipresence in Workshop, reinforcing the product's 'Vi is woven through everything' story at the polish layer rather than treating these as generic chrome.",
+  "contribution": "Contributes the Workshop UX-polish components: the keyboard-shortcuts overlay, the first-run Vi-capabilities onboarding tour, and the React error boundary with recovery panel — the discoverability and resilience layer of the editor.",
+  "summary_for_embedding": "Workshop UX-polish layer: a '?'-triggered keyboard-shortcuts overlay, a one-time localStorage-gated six-step Vi-capabilities onboarding tour, and a React error boundary that catches subtree render crashes and shows a friendly recovery panel — all static-content-driven and window-exposed.",
+  "intention_for_embedding": "To make Workshop feel finished and resilient by teaching users the Vi capability surface and ensuring a single crash never takes down the whole editor."
+}

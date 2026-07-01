@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/consolidation-drafts/consent-tests.md",
+  "model": "opus",
+  "what_it_does": "An analysis/consolidation-draft markdown produced by a consolidation-drafter lane. It examines two acceptance-test suites it names as overlap members (tests/propose_affordance_acceptance.py and tests/interactive_consent_acceptance.py), determines whether they should be merged, and concludes 'keep-separate-by-design'. It inventories what each suite uniquely holds, catalogues the genuinely-duplicated scaffolding, lists coverage gaps, and gives a proposed (never-executed) disposition table. The draft explicitly states no source file was edited — the deliverable is analysis only.",
+  "observations": [
+    "Opens with a VERDICT (keep-separate-by-design) and a law-honoured note that no test code was touched.",
+    "Frames the two suites as covering one mechanism (the non-executing suggest affordance / consent gate) from two angles: B1 = substrate, B2 = widening.",
+    "Gives a five-reason argument against merging (criteria traceability, determinism boundary, failure isolation, institutional memory in headers, load-bearing contract re-proofs).",
+    "An overlap matrix table maps each invariant across both suites and characterizes the nature of the overlap.",
+    "Sections B and C inventory what ONLY each suite holds (act-vs-offer distinctness, reuse-equality proof, the unification record vs. the interactive marker derivation, CONFIRM-class second approval, per-option fail-loud).",
+    "Section D identifies the one genuine duplication — ~45 lines of copy-paste scaffolding — and proposes extraction (tests/_consent_harness.py), not merging.",
+    "Section E surfaces coverage gaps neither suite holds (single-consequential→interactive True; multi-non-consequential→False; extend verb never approved).",
+    "Section F splits verification status honestly into Observed (by reading, with runtime/suite.py anchors) vs NOT-verified (neither suite executed in this lane).",
+    "Ends with what-the-owning-session-should-decide (5 items) and a proposed disposition table; nothing retires, nothing folds."
+  ],
+  "standouts": [
+    "The reframe that duplicated checks are 'load-bearing contract re-proofs' / 'regression armour for a multi-consumer contract' rather than copy-paste drift — duplication-as-by-design.",
+    "The determinism-boundary argument: merging would infect a fully-deterministic substrate suite with an environment-dependent live-model step, degrading it from always-runnable to sometimes-runnable.",
+    "The honest verification split (Observed vs NOT-verified, with explicit file-line anchors) and the disclaimer that neither suite was executed in this lane."
+  ],
+  "conventions": [
+    "Consolidation-draft convention: verdict → rationale → unique-content inventory → genuine-duplication → disposition table; proposed-not-executed throughout.",
+    "Analysis-only law for TESTS overlap (no test-code changes; the deliverable is a doc).",
+    "Evidence-classification discipline (Observed vs NOT-verified) with file:line anchors.",
+    "Expansion-over-reduction framing (preserve every unique fact in place; extract shared scaffolding rather than merge)."
+  ],
+  "concerns": [
+    "Self-flagged: neither suite was executed in this lane, so no claim is made that either currently passes — green status is left to the owning session.",
+    "The runtime/suite.py anchors are given as approximate line ranges (~4364, ~5757-5801), so they may drift as the source file changes."
+  ],
+  "notes": "If briefing someone: this is a no-execute analysis arguing two consent acceptance suites are intentionally layered (substrate vs widening) and should stay separate, with only the shared scaffolding worth extracting — plus three coverage gaps and a dead-code flag for the owning session.",
+  "questions": [
+    "Will the owning session accept keep-separate and act on the extraction / dead-code / coverage-gap recommendations, or park them?",
+    "Is _parse_rhm_proposal (flagged as dead code still present) to be deleted in a hygiene pass or kept as a documented fossil?",
+    "Do the three coverage-gap cells (single-consequential, multi-non-consequential, approved extend verb) reflect real untested behaviour, confirmed by execution?"
+  ],
+  "purpose_vs_actual": "Matches. The header states it is a consolidation-draft analyzing the two named suites with analysis-only (no test-code changes); the body delivers exactly that — a keep-separate verdict, unique-content inventory, and a proposed never-executed disposition.",
+  "apparent_themes": [
+    "Duplication-as-by-design (layered acceptance: substrate + widening)",
+    "Preserve-don't-merge; extract shared scaffolding instead",
+    "Honest verification status (Observed vs not-executed)",
+    "Consent floor — offer dispatches nothing until explicit approve",
+    "Criteria traceability — one suite per criterion as the marking unit"
+  ],
+  "intention_signals": "Trying to resolve an apparent test-overlap correctly — proving the two suites are intentionally layered angles on one consent mechanism and must stay separable, while routing the one true duplication (scaffolding) and surfacing free coverage gaps, all without touching source.",
+  "novelty": "The articulation of layered acceptance (a deliberate non-regression smoke of one suite living inside another as 'armour') and the multi-consumer contract-re-proof justification for repeated assertions is a distinctive framing of test overlap.",
+  "contribution": "Contributes a file-local overlap analysis of the two consent acceptance suites: the substrate-vs-widening layering rationale, the per-suite unique-content inventory, the shared-scaffolding extraction proposal, and three coverage gaps. A fused system would keep this as the recorded judgment on why these acceptance angles are kept distinct.",
+  "summary_for_embedding": "A no-execute consolidation-draft analyzing two consent acceptance suites (propose_affordance and interactive_consent), concluding keep-separate-by-design as layered substrate-vs-widening angles, with a shared-scaffolding extraction proposal and coverage gaps.",
+  "intention_for_embedding": "To correctly adjudicate an apparent test-suite overlap by proving the suites are intentionally layered and routing only the genuine scaffolding duplication, without editing any source."
+}

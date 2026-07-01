@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "preview/colors_bronze.html",
+  "model": "opus",
+  "what_it_does": "A static preview card (@dsCard group=\"Colors\") presenting the bronze→tan color scale: a 6-chip swatch grid (bronze-deep, bronze★, bronze-warm, bronze-soft, tan, bronze-2) each with name/hex/source-count/usage, plus a footer with a bronze title demo and a note that the ramp continues into the gold→bronze ramp.",
+  "observations": [
+    "Static HTML, only _card.css linked; chips render via var(--accent-bronze-*) / var(--accent-tan) tokens.",
+    "Lead documents provenance: colors sampled from source brand vectors (_ingest/src-all/*.svg), citing #99885e (≈bronze, ×42), #7b7055 (deep line/shadow), #c7a961 (deck bronze).",
+    "Each swatch lists a token name, a hex (e.g. #7B7055, #988058, #C09D5D), a 'src ×N' usage count from the source SVGs, and a usage description.",
+    "Marks bronze (#988058) with a ★ as the primary stroke / section heads color.",
+    "Footer: a .title-demo box (background --accent-bronze, cream text) noting screen titles set bronze at 36px display, and four ramp dots (--ramp-1..4) noting continuation into the gold→bronze ramp.",
+    "Distinguishes roles: bronze = structural/quiet voice; ink stays content; gold stays active."
+  ],
+  "standouts": [
+    "Color values are traced to source brand SVGs with occurrence counts (e.g. ×42), grounding the palette in real vectors rather than invention.",
+    "Explicit role separation — bronze is the 'structural/quiet voice', distinct from active gold and content ink."
+  ],
+  "conventions": [
+    "Follows @dsCard preview convention (group Colors).",
+    "Chips reference tokens via var(--…) rather than the displayed hex literals (hex is shown as documentation text only).",
+    "Documents provenance/source, matching the corpus 'sampled from source vectors' grounding discipline."
+  ],
+  "concerns": [
+    "Displayed hex strings (e.g. #7B7055) are plain text labels; the lead also cites slightly different source hexes (#99885e vs token #988058), which is intentional sampling but could read as a mismatch if not noted."
+  ],
+  "notes": "The bronze/tan color scale card — six tokenized swatches with source-traced provenance, defining bronze as the structural/quiet voice in the palette.",
+  "questions": [
+    "Why do some swatches (bronze-soft, tan, bronze-2) lack a 'src ×N' provenance count while others cite source SVG occurrences?"
+  ],
+  "purpose_vs_actual": "Matches — subtitle (structural bronze→tan scale, sampled from source brand vectors) is exactly what the card presents, including the source citations.",
+  "apparent_themes": [
+    "Provenance-grounded palette (sampled from real vectors)",
+    "Role-based color (structural/quiet vs active vs content)",
+    "Token-as-truth (chips read tokens, hex is documentation)",
+    "Ramp continuity (bronze into gold→bronze ramp)"
+  ],
+  "intention_signals": "Defines and justifies the bronze/tan scale as the structural/quiet register of the palette, traced to source brand vectors, so the color choices are evidenced and role-assigned rather than arbitrary.",
+  "novelty": "Showing per-color source occurrence counts (src ×N) sampled from the original brand SVGs as palette justification.",
+  "contribution": "Contributes the bronze→tan scale, its role (structural/quiet voice) and its source-traced provenance that a fused system would keep as the definition of its bronze color family.",
+  "summary_for_embedding": "A ConceptV design-system color card defining the bronze→tan scale (bronze-deep, bronze, bronze-warm, bronze-soft, tan, bronze-2) with token swatches, source-SVG-traced hex provenance, and role as the structural/quiet voice.",
+  "intention_for_embedding": "To define and justify the bronze/tan color family as the palette's structural register, grounded in the source brand vectors."
+}

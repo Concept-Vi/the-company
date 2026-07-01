@@ -1,0 +1,54 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/PRINCIPLE-tags-counts-temporal.md",
+  "model": "opus",
+  "what_it_does": "States a standing design law for the cognition self-improvement program and the Live Intent Resolution Surface: no confidence scores anywhere (enforced out, not just discouraged), evidence is represented as tags + counts + structured observations, and the temporal axis is a first-class dimension (counts are trajectories, retrieval is recency/decay-weighted, the event store is the temporal spine). It maps what exists vs net-new and surfaces design choices for Tim.",
+  "observations": [
+    "Attributes the law to Tim 2026-06-09 ('No confidence, tags and counts. Temporal axis play a real role in this.').",
+    "Section 1 mandates enforcing-out confidence: mark()/output schemas should NOT carry a confidence field; degree-of-evidence is a COUNT + temporal shape, not a float; flags existing confidence:float fields (register_element/judge_mining) for migration to count+trajectory.",
+    "Section 2 defines the representation: tags (discrete labels), counts (occurrences reveal patterns), structured observations, with rejections counting as much as acceptances (cites Surface §9).",
+    "Section 3 elevates the temporal axis to first-class alongside the semantic (embedding spaces) and structural (graph) axes.",
+    "3a: a count is a trajectory {count, first_seen, last_seen, occurrence_series} with shapes rising/fading/bursty/steady carrying the meaning.",
+    "3b: recency-weighting in retrieval and an evolving user/project model (decay of unreinforced, reversals read as real reversals).",
+    "3c: the event store / run-index / corpus ts is the temporal spine; decisions become replayable traces with before/after, not static ledger rows.",
+    "3d: downstream organs become temporal by nature — ② drift-radar (divergence over time), ③ failure-patterns (rising vs fixed), the time-series user/project model.",
+    "Section 4 gives a lean exists/partial/net-new map: ✅ raw timestamps captured, 🟡 counts as aggregates not trajectories + no recency/decay, 🔴 trajectory representation, recency-weighted retrieval, temporal queries, time-series model, the no-confidence schema invariant.",
+    "Section 5 surfaces design choices for Tim: decay function (linear/exponential/half-life), trajectory granularity (per-occurrence vs windowed vs {first,last,count,slope}), and whether to add a temporal SPACE vs a weighting (lean: weighting first).",
+    "Section 6 declares it a program law that every new role/schema/composition obeys, with the no-confidence invariant and trajectory-count as the first concrete builds."
+  ],
+  "standouts": [
+    "no-confidence is to be ENFORCED as a schema invariant, not left as a convention — a direct correction of the 'convention not law' status flagged elsewhere.",
+    "The temporal axis is named a first-class peer of the semantic and structural axes, not bolted-on metadata.",
+    "A count is reframed as a trajectory whose shape (rising/fading/bursty/steady) is the signal, replacing flat numbers.",
+    "Design choices are explicitly handed to Tim as 'his axis to shape' with lean defaults, consistent with surfacing outcomes for reaction."
+  ],
+  "conventions": [
+    "Standing-law markdown with a dated Tim quote, numbered sections, the ✅/🟡/🔴 exists-map legend, and circled-composition references (②/③).",
+    "Lean-now / richen-later framing with explicit lean defaults for each open choice.",
+    "Cross-references the Surface doc by section (§8/§9/§14.1/§18/§33)."
+  ],
+  "concerns": [
+    "The exists/net-new map is self-described as 'lean' and to be grounded with ① when the corpus is online, so it is provisional.",
+    "Migrating existing confidence:float fields (register_element/judge_mining) is named but the migration path/scope is not specified here."
+  ],
+  "notes": "The program law that bans confidence scores, makes tags+counts the evidence representation, and promotes time to a first-class axis (trajectories, recency-decay, replayable decisions) — with the first builds being the no-confidence schema invariant and the trajectory-count.",
+  "questions": [
+    "Which decay function and trajectory granularity did Tim choose from the surfaced options?",
+    "What is the concrete migration plan for existing confidence:float fields?",
+    "Is the temporal axis implemented as a weighting on existing spaces or as a separate time-sliced space?"
+  ],
+  "purpose_vs_actual": "Match — it declares a standing design law and delivers the law (no-confidence, tags+counts, first-class temporal) plus its exists/net-new grounding and open design choices.",
+  "apparent_themes": [
+    "No fake certainty / no confidence scores",
+    "Evidence as tags + counts + observations",
+    "Temporal as a first-class axis (semantic × structural × temporal)",
+    "Trajectories over scalars; recency and decay",
+    "Replayable decisions over static ledgers",
+    "Lean-now, richen-later; surface choices to Tim"
+  ],
+  "intention_signals": "Trying to encode Tim's objection to fake precision into an enforced representation, and to make the system's self-model alive over time by reasoning over how evidence moves rather than a static count.",
+  "novelty": "Promoting time to a co-equal first-class axis and redefining a count as a trajectory whose shape is the meaning, with recency-weighted, decaying, replayable evidence.",
+  "contribution": "Contributes the no-confidence + tags+counts + first-class-temporal law: the enforced-out confidence stance, the trajectory representation {count,first_seen,last_seen,series,slope}, recency/decay-weighted retrieval, the temporalised downstream organs, and the surfaced decay/granularity/space design choices.",
+  "summary_for_embedding": "A standing design law banning confidence scores in favour of tags+counts as evidence and making the temporal axis first-class via trajectories, recency-decay-weighted retrieval, and replayable decision traces.",
+  "intention_for_embedding": "To enforce Tim's no-fake-certainty principle and make the system's evidence and self-model alive over time by representing counts as trajectories and weighting retrieval by recency."
+}

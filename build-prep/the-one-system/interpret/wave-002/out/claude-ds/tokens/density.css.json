@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "tokens/density.css",
+  "model": "opus",
+  "what_it_does": "Defines a single density knob (--density) and a set of density-aware spacing tokens (--d-1..--d-12) computed as calc(base * var(--density)). Provides density-scaled control/row heights (with a touch-size floor), and three data-density presets (compact 0.8, comfortable 1, spacious 1.25) that also retune fluid spacing and the gutter.",
+  "observations": [
+    "--density default is 1 (comfortable); the --d-* scale derives 4/8/12/16/20/24/32/48px each multiplied by --density",
+    "--control-h uses max(var(--touch-min), calc(40px*--density)) so density never shrinks controls below the touch floor",
+    "--control-h-sm uses max(36px, calc(32px*--density)); --row-h is calc(44px*--density)",
+    "data-density attribute presets set --density to 0.8 / 1 / 1.25",
+    "compact and spacious presets additionally override --space-fluid-md (clamp) and --gutter (var(--s-4) vs var(--s-12))",
+    "Inline @kind annotations (other / spacing) tag each declaration, presumably for tooling/the token registry",
+    "Header notes the fixed 8px --s-* scale stays for hard structural measures while --d-* are for new components"
+  ],
+  "standouts": [
+    "A single multiplier knob re-tunes the whole layout's breathing room per surface, explicitly framed as the spacing analogue of --zone-intensity for colour",
+    "The touch-min floor on control height prevents density compaction from violating tappable minimums"
+  ],
+  "conventions": [
+    "Follows the knob-pattern (a data-* attribute driving a CSS var) used across the system",
+    "Two parallel spacing scales by intent: fixed --s-* for structure, scalable --d-* for components",
+    "Uses @kind inline comment annotations consistent with a token-tagging convention"
+  ],
+  "concerns": [],
+  "notes": "One --density multiplier scales all component spacing (--d-*) and control sizing per surface via data-density, with a touch-size floor protecting controls; structural --s-* stays fixed.",
+  "questions": [
+    "Where are --touch-min, --s-4, --s-12, and --space-fluid-md defined that this file references?",
+    "What consumes the @kind annotations (a token registry / emitter)?"
+  ],
+  "purpose_vs_actual": "Matches: the header describes one density knob scaling breathing room with presets and a touch floor, and the file implements exactly that.",
+  "apparent_themes": [
+    "single knob driving many derived values",
+    "per-surface adaptivity (data-dense desktop vs roomy mobile)",
+    "accessibility floor (touch minimum preserved under compaction)",
+    "separation of structural vs component spacing"
+  ],
+  "intention_signals": "Aims to let one attribute re-tune an entire UI's spacing for context (dense data views vs comfortable mobile) by multiplying a coherent spacing scale, while keeping hard structural measures and tappable minimums protected.",
+  "novelty": "Casting spacing as a continuous density multiplier analogous to a colour-intensity knob, with derived spacing tokens new components reach for instead of fixed pixels.",
+  "contribution": "Contributes the density axis: the --density knob, the density-aware --d-* spacing scale, density-scaled control/row sizing with a touch floor, and the compact/comfortable/spacious presets including fluid-spacing and gutter overrides.",
+  "summary_for_embedding": "A CSS file defining a --density multiplier and density-aware spacing tokens (--d-*), density-scaled control/row heights with a touch floor, and compact/comfortable/spacious data-density presets that also retune fluid spacing and gutter.",
+  "intention_for_embedding": "To let a single per-surface attribute scale a UI's breathing room continuously, treating spacing density as a knob like colour intensity, while protecting structural measures and touch-size minimums."
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Spacing scale" subtitle="8-px base grid · 11 steps" viewport="700x280" --><html><head><meta charset="utf-8"><title>Spacing scale</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 22px 24px; min-height: 220px; }
+  .lead { font: 400 12px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 14px; }
+  .scale { display: flex; flex-direction: column; gap: 6px; }
+  .step { display: grid; grid-template-columns: 60px 1fr 60px; align-items: center; gap: 12px; }
+  .bar { height: 14px; background: var(--accent-gold); border-radius: 2px; }
+  .name { font: 500 12px/1 var(--font-body); color: var(--fg-primary); }
+  .px { font: 400 11px/1 var(--font-mono); color: var(--fg-muted); text-align: right; }
+</style></head>
+<body><div class="card">
+  <p class="lead">8-px base grid. Component padding usually <b>16–24</b>; gutter between sections <b>32–48</b>.</p>
+  <div class="scale">
+    <div class="step"><span class="name">--s-1</span><div class="bar" style="width:4px"></div><span class="px">4</span></div>
+    <div class="step"><span class="name">--s-2</span><div class="bar" style="width:8px"></div><span class="px">8</span></div>
+    <div class="step"><span class="name">--s-3</span><div class="bar" style="width:12px"></div><span class="px">12</span></div>
+    <div class="step"><span class="name">--s-4</span><div class="bar" style="width:16px"></div><span class="px">16</span></div>
+    <div class="step"><span class="name">--s-5</span><div class="bar" style="width:20px"></div><span class="px">20</span></div>
+    <div class="step"><span class="name">--s-6</span><div class="bar" style="width:24px"></div><span class="px">24</span></div>
+    <div class="step"><span class="name">--s-8</span><div class="bar" style="width:32px"></div><span class="px">32</span></div>
+    <div class="step"><span class="name">--s-10</span><div class="bar" style="width:40px"></div><span class="px">40</span></div>
+    <div class="step"><span class="name">--s-12</span><div class="bar" style="width:48px"></div><span class="px">48</span></div>
+    <div class="step"><span class="name">--s-16</span><div class="bar" style="width:64px"></div><span class="px">64</span></div>
+    <div class="step"><span class="name">--s-24</span><div class="bar" style="width:96px"></div><span class="px">96</span></div>
+  </div>
+</div></body></html>

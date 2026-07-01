@@ -1,0 +1,91 @@
+/* ============================================================
+   ConceptV · LAYOUT PRIMITIVES + LAYERING
+   ------------------------------------------------------------
+   The structural backbone that makes "responsive & computed"
+   automatic. A handful of composable primitives (after Every-Layout)
+   that are responsive by construction — components compose these
+   instead of bespoke flex/grid each time. Plus the z-index scale so
+   overlays never fight.
+
+   All are class-based and direct-editable. Tune behaviour with the
+   per-instance custom props noted on each.
+   ============================================================ */
+:root {
+  /* ---- Z-index layering scale — the only legal stacking order */
+  --z-base:     0;   /* @kind other */
+  --z-raised:   10;  /* @kind other */
+  --z-sticky:   100; /* @kind other */
+  --z-nav:      200; /* @kind other */
+  --z-overlay:  300; /* @kind other */  /* scrim behind modals */
+  --z-modal:    400; /* @kind other */
+  --z-popover:  500; /* @kind other */  /* menus, selects, tooltips */
+  --z-toast:    600; /* @kind other */
+  --z-command:  700; /* @kind other */  /* command palette — top */
+  --z-max:      9999;/* @kind other */
+}
+
+/* STACK — vertical rhythm; even gap between children.
+   Per-instance: --gap (default --d-4). */
+.stack { display: flex; flex-direction: column; gap: var(--gap, var(--d-4)); min-height: 0; }
+.stack > * { margin-block: 0; }
+
+/* CLUSTER — horizontal group that wraps gracefully (chips, actions).
+   Per-instance: --gap, --align (default center), --justify. */
+.cluster {
+  display: flex; flex-wrap: wrap;
+  gap: var(--gap, var(--d-2));
+  align-items: var(--align, center);
+  justify-content: var(--justify, flex-start);
+  min-width: 0;
+}
+
+/* SIDEBAR — content + side panel that collapses to a stack when the
+   main column would get too narrow. No media query needed.
+   Per-instance: --side (rail width), --content-min (wrap threshold),
+   --side-edge ("left"|"right" by source order). */
+.sidebar { display: flex; flex-wrap: wrap; gap: var(--gap, var(--space-fluid-md)); }
+.sidebar > .side    { flex: 1 1 var(--side, 280px); }
+.sidebar > .content { flex: 999 1 var(--content-min, 60%); min-width: min(var(--content-min, 60%), 100%); }
+
+/* CENTER — horizontally center a measure-capped column.
+   Per-instance: --max (default --measure). */
+.center {
+  box-sizing: content-box;
+  max-width: var(--max, var(--measure));
+  margin-inline: auto;
+  padding-inline: var(--gutter, var(--d-4));
+}
+
+/* COVER — vertically centered region with optional top/bottom slots.
+   Use .cover > .cover-main for the centered piece. Per-instance: --min. */
+.cover { display: flex; flex-direction: column; min-height: var(--min, 100%); gap: var(--gap, var(--d-4)); }
+.cover > .cover-main { margin-block: auto; }
+
+/* REEL — single-row horizontal scroller (carousels, thumbnail rails).
+   Children keep their width; the row scrolls. */
+.reel {
+  display: flex; gap: var(--gap, var(--d-3));
+  overflow-x: auto; overscroll-behavior-inline: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+.reel > * { flex: none; scroll-snap-align: start; }
+
+/* FRAME — lock a media box to an aspect ratio, crop the contents.
+   Per-instance: --ratio (default 16/9). */
+.frame-ratio { aspect-ratio: var(--ratio, 16 / 9); overflow: hidden; }
+.frame-ratio > img, .frame-ratio > video { width: 100%; height: 100%; object-fit: cover; }
+
+/* GRID — responsive auto-fit; see also .auto-grid in sizing.css.
+   Per-instance: --col-min, --gap. */
+.grid-fit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--col-min, 240px), 100%), 1fr));
+  gap: var(--gap, var(--space-fluid-md));
+}
+
+/* SWITCHER — N items in a row until the container is too narrow,
+   then all snap to a column together (not one-by-one).
+   Per-instance: --threshold, --gap. */
+.switcher { display: flex; flex-wrap: wrap; gap: var(--gap, var(--d-4)); }
+.switcher > * { flex-grow: 1; flex-basis: calc((var(--threshold, 460px) - 100%) * 999); }

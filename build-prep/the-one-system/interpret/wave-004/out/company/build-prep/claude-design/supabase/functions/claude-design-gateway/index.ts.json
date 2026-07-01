@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/functions/claude-design-gateway/index.ts",
+  "model": "opus",
+  "what_it_does": "A Supabase edge function that acts as a thin OAuth-facing forwarder for the Company MCP backend. It serves the OAuth protected-resource discovery doc (resource = this gateway, authorization server = the project's /auth/v1), a /healthz check, and an /mcp endpoint. On /mcp POST with no Bearer token it returns 401 with a WWW-Authenticate pointing at its own discovery; with a token it forwards the request verbatim (body + Authorization header) to the box backend (remote.py over Tailscale Funnel) and passes the response back, re-pointing WWW-Authenticate on a 401.",
+  "observations": [
+    "Header comment (Tim 2026-06-22) declares a UNIFY decision: ONE brain in the box's remote.py; this function holds NO tool list and makes NO access decision",
+    "States the clients.allowed_tools column and the gateway's own dispatch() have been DELETED",
+    "BACKEND_URL defaults to https://workstation001.tail777bc2.ts.net, overridable via COMPANY_BACKEND_URL; described as a public Funnel URL, not a secret",
+    "Reads SUPABASE_URL from env; publicOrigin() returns it",
+    "Discovery returns { resource, authorization_servers:[origin/auth/v1], bearer_methods_supported:['header'] }",
+    "/mcp GET returns 405; non-POST returns 404",
+    "Forwards user JWT verbatim; box re-validates (operator sub → all 66 tools; other valid user → posture-safe subset)",
+    "Returns 502 if the box is unreachable, with the error message included",
+    "Deno.serve binds to PORT (default 8000) and HOST (default 127.0.0.1)"
+  ],
+  "standouts": [
+    "Deliberately stateless/logic-free: explicitly a door, not a second brain — all auth and tool decisions deferred to the box",
+    "Exists only to keep a stable cloud OAuth resource URL while the real backend lives behind a Tailscale Funnel"
+  ],
+  "conventions": [
+    "Follows the OAuth protected-resource discovery + WWW-Authenticate bootstrap pattern",
+    "Forwarder/reverse-proxy pattern with verbatim header+body pass-through",
+    "Small helper json() for JSON responses; suffix-matching on url.pathname for routing"
+  ],
+  "concerns": [
+    "Uses pathname.endsWith() for route matching, which could match unintended longer paths",
+    "References '66 tools' and posture subset only in comments — actual numbers/logic not in this file"
+  ],
+  "notes": "A thin OAuth door: serves discovery + 401 bootstrap and forwards token-bearing /mcp requests verbatim to the box backend, which does all real auth and dispatch.",
+  "questions": [
+    "What does the box's remote.py do with the forwarded JWT and how does it derive the posture-safe tool subset?",
+    "Why is HOST defaulted to 127.0.0.1 for a Supabase-deployed edge function?"
+  ],
+  "purpose_vs_actual": "Matches — the header says forwarder-only with no tool logic or auth decision, and the code only does discovery, 401 bootstrap, and verbatim forwarding.",
+  "apparent_themes": [
+    "single source of truth / one brain",
+    "OAuth resource indirection (stable cloud URL fronting a home backend)",
+    "deny-by-default identity-gated access deferred to the backend"
+  ],
+  "intention_signals": "Seeks to eliminate duplicated tool menus and auth decisions by collapsing the gateway into a pure forwarder, keeping only the cloud-anchored OAuth resource the connecting app was bound to.",
+  "novelty": "Pairs a Supabase edge function as the OAuth resource with a Tailscale-Funnel home backend as the actual MCP brain, forwarding JWTs across the boundary.",
+  "contribution": "Contributes the stable cloud OAuth resource endpoint, discovery doc, 401/WWW-Authenticate bootstrap, and verbatim JWT-forwarding bridge to the box backend.",
+  "summary_for_embedding": "A Supabase edge function forwarder that serves OAuth protected-resource discovery and forwards token-bearing /mcp requests verbatim to a Tailscale-Funnel box backend which performs all auth and tool dispatch.",
+  "intention_for_embedding": "To keep a stable cloud OAuth resource URL for the MCP connector while unifying all tool logic and access decisions into the single backend brain on the box."
+}

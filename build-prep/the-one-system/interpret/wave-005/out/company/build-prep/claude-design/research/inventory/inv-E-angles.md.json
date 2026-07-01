@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/inventory/inv-E-angles.md",
+  "model": "opus",
+  "what_it_does": "A fast-coverage census note (Inventory E) that maps four 'angles' of where Company design and build work lives — in-repo build-prep/, the two Obsidian vault build-prep corpora, the git branch deltas, and the interface worktree — then synthesizes them into an angle-map, a surfaces hierarchy, a triads pattern, top deep-reads, surprises, and next steps for Tim.",
+  "observations": [
+    "Angle 1 covers in-repo build-prep/concurrent-cognition/ and reports it FULLY BUILT (13 completion criteria verified by use).",
+    "Angle 2 covers two vault paths: a counterpart vault (252 markdown files, including context-00..context-16 narrative and three design triads) and a canonical vault (~50 architecture docs).",
+    "Angle 3 walks branch deltas with file/line churn for concurrent-cognition (stable cleanup), interactive-surface-build (217 files, ~3.5k ins / ~31.5k del, ACTIVE not merged), night-build (consolidation base), and two stale branches.",
+    "Angle 4 covers the /home/tim/company-interface worktree on operable-interface-build: gold-primary redesign, mockup studio review portal, voice auto-listen/barge-in/speakable layer.",
+    "Names a recurring 'triad' pattern: each loop-prep produces Completion Criteria + Implementation Guide + Research Synthesis; three triads are in flight (Concurrent Cognition built, Interactive Addressed Surface designed, Operable Composition in-build).",
+    "Records the X1-X17 staged-delivery commit series on interactive-surface-build as a delivery SEQUENCE, not ordinary feature branching.",
+    "Flags that form/aesthetic is held on Tim's A/B/C decision and lives in the worktree, NOT in the interactive-surface-build branch.",
+    "Uses absolute /mnt/c/... vault paths and references the 'Sequences as Universal Substrate' doc as THE foundational pattern.",
+    "Surprises section warns branch naming is confusing: operable-interface-build (stale worktree branch) vs interactive-surface-build (active in-repo branch)."
+  ],
+  "standouts": [
+    "The surfaces hierarchy diagram (Altitude/Feedback -> Operable Composition -> Interactive Addressed -> Collective Cognition RHM spine) tying each layer to its branch/worktree location.",
+    "The observation that the three triads compose fractally rather than running sequentially.",
+    "The explicit warning that merging interactive-surface-build does NOT capture the visual redesign, which only exists in a separate worktree.",
+    "Concrete branch churn figures used as evidence of consolidation vs active build (e.g. night-build ~67k deletions)."
+  ],
+  "conventions": [
+    "Priority-tagged (YES/no) tables per angle, consistent with the other inventory notes.",
+    "Cross-references contract/design codes (D3, C6, C7, D9, D13, F1, V-B/V-C/V-D) and X-numbered commits.",
+    "Coverage-not-deep framing with explicit top-priority deep-read list."
+  ],
+  "concerns": [
+    "Depends on /mnt/c vault paths and specific commit hashes that are point-in-time (2026-06-08) and may have moved or merged since.",
+    "Some size/status claims are estimated (e.g. 'Should be ~2-5 KB') rather than measured, mixed in with measured churn figures."
+  ],
+  "notes": "A 2026-06-08 four-angle census of WHERE Company design/build work lives (repo, two vaults, branches, worktree) plus the triads pattern and the warning that visual form lives only in the worktree.",
+  "questions": [
+    "Have the active branch (interactive-surface-build) and the worktree redesign since been merged, given the note flags both as pending?",
+    "Which of the A/B/C form aesthetic options did Tim choose, since the note says it is held outside the code?",
+    "Are the /mnt/c vault corpora still at those paths, or have they moved (the orienteering ledger would track this)?"
+  ],
+  "purpose_vs_actual": "Matches — it declares a fast coverage census across four angles mapping where things live, and delivers exactly that with explicit non-deep caveats and next-step guidance.",
+  "apparent_themes": [
+    "Loop-prep triads (Completion/Implementation/Research) as the unit of design",
+    "Sequences as the universal commanding substrate",
+    "Fractal composition of surfaces rather than sequential phases",
+    "Design corpus split across repo and Obsidian vaults",
+    "Staged, proof-per-commit delivery (X-series)"
+  ],
+  "intention_signals": "Aims to orient Tim (and future agents) to the scattered geography of the design corpus and in-flight builds — which branch/worktree/vault holds what, what is done vs in-build vs designed — so a reader knows where to look before acting.",
+  "novelty": "The four-angle framing (repo + two vaults + branches + worktree) and the surfaces-hierarchy-to-location mapping, plus surfacing the branch-naming confusion and the form-lives-in-worktree gotcha.",
+  "contribution": "Contributes a geographic map of the entire design/build corpus across repo, vaults, branches, and worktree, the triads pattern, the X1-X17 delivery-sequence framing, and the explicit caveats (form held outside code, confusing branch names) that prevent a reader from acting on the wrong location.",
+  "summary_for_embedding": "A four-angle census note mapping where Company design and build work lives — in-repo build-prep, two Obsidian vaults, git branch deltas, and the interface worktree — with a triads pattern, surfaces hierarchy, and deep-read priorities.",
+  "intention_for_embedding": "To orient readers to the scattered geography of the Company design corpus and in-flight builds so they know which repo/vault/branch/worktree holds what before acting."
+}

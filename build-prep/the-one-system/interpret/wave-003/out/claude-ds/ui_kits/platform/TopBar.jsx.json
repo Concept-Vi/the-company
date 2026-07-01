@@ -1,0 +1,41 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/TopBar.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a small React component TopBar({notifications=7}) that renders a top-right toolbar containing a bell icon (with a count badge shown when notifications > 0) and an avatar icon, both as inline SVGs. Attaches it to window.TopBar.",
+  "observations": [
+    "Single prop `notifications` defaulting to 7; the badge renders conditionally only when the count is positive.",
+    "Bell and avatar are inline SVG paths (no external icon dependency).",
+    "Uses cv-* classes (cv-topbar, cv-bell, cv-bell-badge, cv-avatar) for styling — no inline style block here.",
+    "Accessibility: bell span has role='button' and aria-label='Notifications'; avatar has none.",
+    "Module-as-global export at end."
+  ],
+  "standouts": [
+    "Purely class-driven styling (no inline tokens), unusual among sibling kit files that lean on inline var() styles."
+  ],
+  "conventions": [
+    "Module-as-window-global export, consistent with the kit's babel-script load model.",
+    "Uses cv-* design-system classes rather than inline styles, leaning on the stylesheet for the look.",
+    "Inline SVG icons rather than an icon font/library."
+  ],
+  "concerns": [
+    "Avatar lacks role/aria-label that the bell has — minor accessibility inconsistency.",
+    "Default notifications=7 is a hardcoded mock value (expected for a design kit)."
+  ],
+  "notes": "A tiny presentational top-right bar (bell-with-badge + avatar) styled entirely via cv-* classes, exported on window.TopBar.",
+  "questions": [
+    "Is the notifications count wired to any real source, or always the mock default in this kit?",
+    "Should the avatar be interactive (it has no role/handler here)?"
+  ],
+  "purpose_vs_actual": "Matches: the comment 'bell + avatar pinned top-right of content column' is exactly what it renders.",
+  "apparent_themes": [
+    "Presentational chrome component",
+    "Class-driven design-system styling",
+    "Self-contained inline SVG iconography"
+  ],
+  "intention_signals": "Provides the reusable top-bar chrome (notifications + identity) that sits atop each content screen in the platform kit.",
+  "novelty": "n/a",
+  "contribution": "Contributes the top-bar chrome pattern — a notification bell with conditional count badge plus an avatar — as a small reusable, class-styled header element.",
+  "summary_for_embedding": "A React presentational TopBar component rendering a notification bell with a conditional count badge and an avatar as inline SVGs, exported on window.TopBar.",
+  "intention_for_embedding": "To provide the reusable top-right chrome (notifications and identity) for the platform kit's content screens."
+}

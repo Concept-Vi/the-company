@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/scout-studio-extract.md",
+  "model": "opus",
+  "what_it_does": "A scout report (read-only, 2026-06-08) analyzing the studio-extract git worktree/branch: what it is, how its lineage compares to the lead operable-interface-build scaffold and to main, a critical finding that it is a divergent parallel fork not a superset, what it uniquely adds, and a recommendation to DISCARD it in favor of operable-interface-build.",
+  "observations": [
+    "Frontmatter: status scout-read-only, date 2026-06-08, worktree /home/tim/company-studio-extract, branch studio-extract.",
+    "Describes studio-extract as an abandoned parallel studio build (Review.tsx, StudioKit.tsx, Composer/Rail/Stage/RhmPanel, bridge mockup serving), 6 commits ahead of operable-interface-build's scaffold, diverged from main before the concurrent-cognition merge.",
+    "Reports code is byte-for-byte identical through the first 80 lines of each surface file vs operable-interface-build.",
+    "Lineage table: studio-extract 6 ahead of operable-interface-build; operable-interface-build has 3 commits with identical messages but different SHAs; vs main both diverged (studio-extract 6 ahead, main 1 ahead via mode-dial unify); main..studio-extract code diff is docs+mockups+minimal wiring with zero unique code; collision risk none.",
+    "Critical finding: studio-extract is NOT a superset — its commits (cb471aa..314221d) would need cherry-pick/re-apply and do not linearly rebase onto current main.",
+    "Unique additions: a 60+ file build-prep documentation bundle and noise revert commits on /api/mockup-feedback/status (7cf145c dropped, 314221d reverted).",
+    "Recommendation DISCARD with five reasons: zero unique code, stale branch, docs belong in vault, merge risk, operable-interface-build is the operative lineage Tim signalled for merge."
+  ],
+  "standouts": [
+    "The finding that operable-interface-build and studio-extract share commits with identical messages but different SHAs (re-downloaded), making them non-linearly-mergeable.",
+    "The clear DISCARD recommendation grounded in 'zero unique code' verified by byte-for-byte comparison.",
+    "Flagging the revert back-and-forth on the mockup-feedback status route as noise needing a single decision on main."
+  ],
+  "conventions": [
+    "Uses the scout-read-only frontmatter status and a comparison table, consistent with the research-wave inventory style.",
+    "Applies the single-source / docs-belong-in-vault discipline by recommending build-prep docs live in the canonical vault, not as committed code.",
+    "Gives a decisive recommendation rather than a neutral listing — a scout/verdict artifact."
+  ],
+  "concerns": [
+    "All claims are point-in-time git state (2026-06-08, specific SHAs and ahead/behind counts) that will not hold as branches evolve.",
+    "The 'byte-for-byte through first 80 lines' check is a sample, not a full-file diff, though the report treats the code as identical."
+  ],
+  "notes": "A scout verdict: studio-extract is a stale parallel fork with zero unique code (studio surface already in operable-interface-build) plus 60+ docs that belong in the vault — recommends discarding it.",
+  "questions": [
+    "Was studio-extract actually discarded/deleted after this recommendation?",
+    "Were the 60+ build-prep docs moved into the canonical vault as recommended?",
+    "Was the /api/mockup-feedback/status route decision settled once on main?"
+  ],
+  "purpose_vs_actual": "Matches — it is a scout report and it scouts the branch, compares lineage, and issues a grounded recommendation.",
+  "apparent_themes": [
+    "One operative lineage / avoid divergent forks",
+    "Verify-by-comparison before keeping or merging",
+    "Docs belong in the canonical vault, not committed code",
+    "Reduce merge friction / noise from revert churn"
+  ],
+  "intention_signals": "Intends to resolve branch sprawl by proving studio-extract carries no unique capability and steering all studio work onto operable-interface-build, with its docs relocated to the vault.",
+  "novelty": "The identical-message-different-SHA observation and the framing of a worktree as discardable because its only deltas are vault-bound docs plus revert noise.",
+  "contribution": "Contributes the lineage analysis and discard verdict for the studio-extract branch — the evidence (zero unique code, divergent base, doc bundle, revert noise) that consolidates studio work onto operable-interface-build and routes its docs to the vault.",
+  "summary_for_embedding": "A read-only scout report comparing the studio-extract git branch to operable-interface-build and main, finding it a divergent fork with zero unique code plus 60+ docs, and recommending it be discarded.",
+  "intention_for_embedding": "To resolve branch sprawl by proving studio-extract has no unique capability and consolidating studio work onto the operative operable-interface-build lineage."
+}

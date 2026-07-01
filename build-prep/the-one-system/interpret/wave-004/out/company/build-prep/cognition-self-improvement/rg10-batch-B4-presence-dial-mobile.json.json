@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-B4-presence-dial-mobile.json",
+  "model": "opus",
+  "what_it_does": "Records the grounding-batch result for the B4-presence-dial-mobile.html mockup: a 'ground' description of the mobile presence sheet, counts (22 candidates/22 dossiers/11 clusters), and confirmed (8) vs flagged (3) dossiers, each with a ui:// address, capabilities, grounding state, a plain-language howto, a feature mapping, and an accuracy-jury verdict.",
+  "observations": [
+    "Screen is a mobile presence sheet: a bottom floating sheet opened by tapping a 'focus' pill, offering eight posture modes plus a bottom tabbar.",
+    "Dossiers cover presence modes (resp/text-only, minimal, narrate, observation, decide-for-me, no-self-approve) and tabbar entries (canvas, inbox, run).",
+    "8 dossiers are confirmed, 3 flagged.",
+    "The largest confirmed cluster is ui://toolbar/presence with 10 members, unanimously grounded.",
+    "howto.how_to_change points variously at Toolbar.tsx, runtime/suite.py:set_mode, presence.tsx, and App.tsx for the tabbar.",
+    "Grounding values include built, proposed, and defer (ui://tabbar/canvas is 'defer').",
+    "Feature mappings include RHM-modes, RHM-decide, CAN-compose, INB-lanes, RUN-run.",
+    "Flagged elements: ui://toolbar/presence/directives, ui://tabbar/inbox, ui://tabbar/run — the two tabbar items flagged here are confirmed-grounded as 'built' in their grounding field but fail the jury."
+  ],
+  "standouts": [
+    "Same physical mockup family as the desktop B4 file but a different element set and outcome — here the central presence control is confirmed, not flagged.",
+    "A 'minimal presence surface' element encodes a principle: surface only what genuinely needs you, else a one-line ack.",
+    "tabbar/run and tabbar/inbox are flagged 0-of-3 / 1-of-3 despite grounding:'built'."
+  ],
+  "conventions": [
+    "Same confirmed/flagged + accuracy-jury structure as the other rg10 batch files.",
+    "ui:// addressing split across toolbar/presence, presence sheet, and tabbar namespaces.",
+    "Plain-language howto triad on every dossier."
+  ],
+  "concerns": [
+    "An element declared grounding:'built' can still be jury-flagged ungrounded, so the 'built' tag and the jury verdict can disagree within one dossier.",
+    "maps_to_feature 'RHM-modes' again spans several distinct represents values (text-mode, minimal, narrate, observation, no-self-approve)."
+  ],
+  "notes": "The mobile counterpart of the presence-dial grounding batch — bottom-sheet posture modes plus tabbar nav, 8 confirmed and 3 flagged.",
+  "questions": [
+    "Why do tabbar/inbox and tabbar/run flag here while equivalent tabbar entries pass in sibling batches?",
+    "What distinguishes grounding:'defer' from 'proposed' for the canvas tab?",
+    "Is the disagreement between grounding:'built' and a 0/3 jury vote expected, or a signal of a mismatch to resolve?"
+  ],
+  "purpose_vs_actual": "Matches: declared as a grounding result for the mobile presence-dial mockup and that is what it contains.",
+  "apparent_themes": [
+    "Mobile-first posture control via a bottom sheet",
+    "Minimal-interruption presence principle",
+    "Quorum-voted UI grounding"
+  ],
+  "intention_signals": "It appears to be verifying that the mobile presence-sheet and tabbar elements described in the mockup are grounded in built code, surfacing the few uncertain ones (directives display, two tab entries) for human scrutiny.",
+  "novelty": "Captures a 'minimal presence' interaction principle (one-line ack unless genuinely needed) as an addressable, grounded UI element.",
+  "contribution": "Contributes the mobile presence-sheet element inventory — bottom-sheet posture modes (minimal, narrate, observation, decide-for-me, no-self-approve) plus tabbar nav — with addresses, capabilities, howtos, and jury verdicts.",
+  "summary_for_embedding": "Grounding-batch JSON for the mobile presence-dial mockup, listing 22 clustered UI-element dossiers across a posture bottom-sheet and tabbar, split into 8 confirmed and 3 flagged with jury grounding verdicts.",
+  "intention_for_embedding": "To check whether the mobile presence-sheet and tabbar controls in the mockup are grounded in built code, flagging uncertain mappings for operator review."
+}

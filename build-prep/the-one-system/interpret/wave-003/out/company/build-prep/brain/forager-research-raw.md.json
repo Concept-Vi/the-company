@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/forager-research-raw.md",
+  "model": "opus",
+  "what_it_does": "Raw lane-by-lane findings from a forager research workflow (wf_c199b8c6) mapping, with file:line evidence, what exists in /home/tim/company for building a faceted/whittle-search canvas over the corpus. Four lanes: facets (what the corpus index can partition on), retrieval (the semantic-search seams and the one missing HTTP route), canvas (the tldraw shape pattern for forager circles), and handoff (generalizing the builder panel from one address to a selection set).",
+  "observations": [
+    "Facets lane: the corpus is 2067 deduped records (history=1420 mined exchanges, repo=644 code digests); the index event carries only project/projection/record_kind/source_address/capture-ts/lineage for free — any other facet needs per-record content fetches.",
+    "Five facets assessed: project (queryable but degenerate, 2079/2080 = 'company'), time (needs cheap deterministic backfill of ts_source from transcripts), topic and principle (declared embeddable spaces with ZERO data, awaiting capture runs), language/vocabulary (does not exist — named in ai_tics.py design but never declared as a projection).",
+    "Retrieval lane: three Suite methods (query_corpus, find_corpus, find_relations) with exact signatures and file:line; the embedder path is BGE-M3 @ :8001 OpenAI-shape, dim-guarded, degrade-to-honest-empty.",
+    "Identifies THE one gap: semantic query_corpus has no HTTP route (MCP-only); a single new GET /api/cognition/query delegating to it, added to the BRIDGE_ROUTES drift-table, is the one new seam.",
+    "Notes ensure_resident('embed-bge') exists but is NOT wired into the query path, and a /api/corpus name-collision with the mockup gallery.",
+    "Canvas lane: tldraw 3.15.6 confirmed; exactly one custom shape (NodeShapeUtil); a forager circle is a sibling ForagerShape.tsx + one array edit + a persistenceKey v3->v4 bump; every existing shape consumer is type-fenced to s.type==='node' (audited line-by-line) so coexistence holds by construction.",
+    "Handoff lane: run_turn already takes context_block as an opaque string prefixed each turn, so generalizing the builder panel from one address to a selection set is almost entirely a bridge-side block-builder change; hard ceiling ~128KiB argv, sensible range single-digit KB.",
+    "Carries an explicit cost-shape warning: every find_corpus call re-scans the whole event log; whittle UIs should debounce/fetch-once rather than embed/refilter per keystroke."
+  ],
+  "standouts": [
+    "The diagnosis that topics/principles/worldview/vocabulary are declared-but-empty spaces (machinery ready, no capture run) — separating registry readiness from data population.",
+    "The single-seam retrieval finding: query_corpus is MCP-only; one new HTTP GET mirroring the find_relations route pattern unblocks whittle-search.",
+    "The line-by-line no-breakage audit proving every tldraw shape consumer is already type-fenced, so a second shape type drops in with zero edits to existing loaders.",
+    "The handoff finding that selection-set context needs ZERO session-layer change because context_block is an opaque per-turn-prefixed string."
+  ],
+  "conventions": [
+    "Each lane: a dense SUMMARY paragraph then WHERE/DETAIL/IMPLICATION findings with file:line evidence — a consistent grounded-research format.",
+    "Explicit Observed vs Inferred labeling, especially on runtime behavior not executed in a read-only pass.",
+    "Working-doc register under build-prep/, raw research output rather than a polished spec."
+  ],
+  "concerns": [
+    "Findings are heavily file:line-coupled to the live codebase and will silently rot as those files change (line numbers especially).",
+    "Canvas runtime behavior of the proposed new shape is explicitly Inferred, never executed — a correctly-flagged but unverified path."
+  ],
+  "notes": "This is the grounded build-readiness map for a faceted/whittle-search forager canvas — read the four lane summaries first; each ends with the concrete minimal change.",
+  "questions": [
+    "Have the topics/principles/worldview/vocabulary capture runs been executed since this pass, or are those spaces still empty?",
+    "Are the cited file:line locations still accurate against the current tree?"
+  ],
+  "purpose_vs_actual": "Matches — titled raw forager research lane findings, and it delivers exactly that: four evidence-grounded lanes each ending in the minimal buildable change.",
+  "apparent_themes": [
+    "Coordinate/space-as-facet for a navigable corpus surface",
+    "Registry-declared vs data-populated spaces",
+    "Minimal-seam, no-breakage extension by type-fencing",
+    "Honest degradation and fail-loud over silent wrong answers",
+    "Grounded research with file:line evidence"
+  ],
+  "intention_signals": "Trying to establish, with hard evidence, exactly what already exists versus what must be built to turn the corpus into an interactive faceted/whittle-search canvas — so a build session can act on a precise, minimal change list rather than re-discovering the seams.",
+  "novelty": "The facet-readiness taxonomy (free / needs-derivation / declared-but-empty / nonexistent) and the one-seam retrieval diagnosis; the by-construction coexistence proof for a second tldraw shape.",
+  "contribution": "Contributes the evidence-grounded map of the corpus retrieval/facet seams and the tldraw forager-canvas and builder-panel extension paths, each reduced to its minimal concrete change with file:line provenance.",
+  "summary_for_embedding": "Raw forager research lanes mapping the Company corpus's facetable index fields, the MCP-only semantic-query seam needing one HTTP route, the tldraw forager-circle shape pattern, and the builder-panel single-to-set context generalization, all with file:line evidence.",
+  "intention_for_embedding": "To map with hard evidence what exists versus what must be built for an interactive faceted/whittle-search forager canvas over the Company corpus."
+}

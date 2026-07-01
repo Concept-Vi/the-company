@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/company-landscape/AREA-ops.md",
+  "model": "opus",
+  "what_it_does": "An exhaustive read-only landscape of the Company's operations layer: the `company` CLI (one console over all services), the services.json registry, the model-capability catalog, ops runbooks/docs, the non-CLI ops Python scripts (transcript exporter/reindex, dragnet, rerank, commit-queue, self-seed, hooks), the systemd units/timers, platforms/, docs/, skills/, and contexts/. Lists every file in scope with what-it-is / what-it-does / cross-refs / gaps.",
+  "observations": [
+    "The `company` CLI (ops/company shim -> ops/cli/app.py) is the single control surface: status/gpu/health/suites/coherence/models/telemetry/session/board/clone/combos/config/swap/ensure/up/down/restart/logs; TARGET resolves None->autostart, all, group, @combo, or a service key.",
+    "Resource-manager gate (_act + cli/gpu.py): gpu.check_fit measures free VRAM vs sum of budgets; over-budget --evict runs plan_eviction (models->brain->voice, largest first), --force proceeds with warning, else REFUSE exit(2); gpu.py is the ONE VRAM authority shared with voice/lifecycle.py.",
+    "services.json is the self-describing source of truth: 6 groups (core/brain/voice/models/reach/jobs), 16376 MB ceiling, ~30 services with port/unit/VRAM/notes; named combos (@wake, @xsession, @xsession-brain, @small-pair, @instrument).",
+    "model_capabilities.json is the model-TYPE catalog keyed by model-id with provenance vocabulary (declared/probed/measured/served); cli/capabilities.py loads it (fail-loud) and JOINs to gpu.py for VRAM; ensure_resident is the gated load-on-demand actuator (G14 swap-approval ASK, never auto-evicts).",
+    "Non-CLI ops scripts: agent_sessions_exporter (transcript->markdown, every 20min, filter+redaction law), claude_sessions_reindex (cheap delta reindex via embed-pplx), commit_queue.py (single-drainer fcntl-locked FIFO fixing concurrent-commit race), seed_self.py (in-session self-id pre-seed for compaction survival), rerank.py (CPU cross-encoder), serve_pplx_embed/serve_rerank (custom transformers servers).",
+    "systemd: company-owned units (bridge/canvas/session-supervisor/embed-pplx/tts-kokoro + exporter/reindex timers), third-party vLLM units via serve_model.sh, and GENERATED routine units (self_status 09:00, completion_poke every 30min); company.target is DISABLED (boot off by design).",
+    "platforms/ is Level-2 DATA discipline: pure-data row files (claude_code.py instance #1, gh_cli.py instance #2 generalization-proof), engine never knows platform identity, fail-loud PlatformEntry.model_validate, _wiring.py registers the head_builder thunk.",
+    "docs/ holds concepts-and-principles (9 principles), vault-conventions, claude-code-interconnection, and methodology recipes copied from ~/.claude/skills/; skills/ and contexts/ are file-discovered registries (summarize/corpus_pipeline/etc.; company_overview)."
+  ],
+  "standouts": [
+    "cli/gpu.py is the single shared VRAM authority for both the CLI and voice/lifecycle.py — one resource manager, deterministic eviction priority (models->brain->voice, largest-first), measured-not-estimated fit.",
+    "commit_queue.py: a single-drainer fcntl-locked FIFO that fixes a live-observed concurrent-commit race (projection's commit swept DNA's board append) — fail-loud to deadletter, cursor always advances, never silent-drop.",
+    "ensure_resident is a gated actuator that NEVER auto-loads or auto-evicts: it returns a structured G14 swap-approval ASK with would_evict/would_load — operator-disposes posture baked into ops."
+  ],
+  "conventions": [
+    "Embodies the ops constitution laws: one console, one registry of truth, systemd is the muscle, fail loud/no hiding, honest over complete.",
+    "Registry-driven everywhere: serve_model.sh reads serveconfig.py which reads services.json; model capabilities are DATA with provenance, not literals.",
+    "Honest-coverage discipline: explicitly marks 'not fully read' files and flags stale docs (WINDOWS-BOOT.md, STARTUP.md hard-refuse claim)."
+  ],
+  "concerns": [
+    "Records concrete stale/incomplete state: WINDOWS-BOOT.md claims auto-start (false, company.target disabled), STARTUP.md says 'does not hard-refuse' (stale, code exits(2)), README 'Skeleton only'; 5 voice trial engine units in services.json but not in ops/systemd/; tts-kokoro model-id unconfirmed; litellm/rerank-jina are manual no-unit.",
+    "Port collisions noted (8004 shared by embed-jina-v5/embed-qwen3; 8000 by chat-4b/chat-nemotron) — only one of each can run.",
+    "main branch reported 1339 commits ahead of origin (large uncommitted set running from working tree); no `company routine` CLI verb despite session/board type-views existing."
+  ],
+  "notes": "If briefing someone: this is how the Company is run — the `company` CLI over a self-describing services.json, one shared VRAM resource manager with eviction gating, the model-capability catalog, the transcript/reindex/commit-queue ops scripts, the systemd units (company.target disabled by design), and the pure-data platforms registry.",
+  "questions": [
+    "Which callers actually use commit_queue.py vs still do direct git commit — is the concurrent-commit fix fully adopted?",
+    "Is company.target meant to stay disabled long-term, or is a one-command fleet relaunch planned?",
+    "Are the 5 voice trial engine systemd units going to be canonicalized into ops/systemd/, or are they intentionally out-of-repo?"
+  ],
+  "purpose_vs_actual": "Matches. Stated as an exhaustive read-only landscape with volume as the goal; delivers a file-by-file capture of the ops/platforms/docs/skills/contexts layer plus an operated-and-run summary map, exactly as scoped.",
+  "apparent_themes": [
+    "One console / one registry of truth",
+    "Single shared VRAM resource manager with gated eviction",
+    "systemd as the muscle; nothing auto-starts by design",
+    "Fail-loud, no silent drops (commit-queue, ensure_resident, fail-loud catalog load)",
+    "Pure-data platform registry (engine blind to platform identity)",
+    "Honest-over-complete coverage with stale-doc flagging"
+  ],
+  "intention_signals": "Trying to give an agent a complete operational mental model — how to see, start, stop, budget, swap, and diagnose the whole running stack from one CLI over one registry — and to surface every stale doc, port collision, and unbuilt unit so the agent operates from live truth rather than the prose.",
+  "novelty": "The single shared VRAM authority spanning CLI and voice lifecycle, plus the gated ensure_resident ASK and the single-drainer commit queue, are distinctive operations primitives for a GPU-constrained self-modifying system.",
+  "contribution": "Contributes the consolidated operations map: the `company` CLI command surface and resource-manager gate, the services.json/model_capabilities.json registries, the transcript/reindex/commit-queue/self-seed ops scripts, the systemd unit inventory (disabled-target boot model), and the pure-data platforms registry — the run-the-system counterpart to the runtime/interface/memory captures.",
+  "summary_for_embedding": "Exhaustive landscape capture of the Company's ops layer: the `company` CLI over a self-describing services.json, the single shared VRAM resource manager with gated eviction, the model-capability catalog, transcript/reindex/commit-queue/self-seed scripts, systemd units with a disabled company.target, and the pure-data platforms/docs/skills/contexts registries.",
+  "intention_for_embedding": "To give an agent a complete operational model — see/start/stop/budget/swap/diagnose the whole stack from one CLI over one registry — and to surface every stale doc, port collision, and unbuilt unit so it operates from live truth."
+}

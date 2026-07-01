@@ -1,0 +1,40 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/vi/index.html",
+  "model": "opus",
+  "what_it_does": "The host HTML page for the 'Vi' AI-workspace UI kit. Loads the shared color/type stylesheet plus the kit's vi.css, mounts a #app root, pulls React 18, ReactDOM, and Babel-standalone from unpkg CDN, and loads six text/babel screen scripts (ViMark, ViStatusPill, ChatPanel, TaskTree, OutputPreview, ViKitApp) in dependency order to render the workspace in-browser.",
+  "observations": [
+    "Carries a @dsCard HTML comment (group='UI Kit — Vi', name, subtitle='Vi workspace — chat + task tree + live brochure preview', viewport='1480x800') — a metadata annotation the design-system gallery reads.",
+    "Links two stylesheets: ../../colors_and_type.css (shared tokens) and vi.css (kit-local).",
+    "Loads React, ReactDOM, and Babel from unpkg CDN with SRI integrity hashes and crossorigin — pinned versions (react 18.3.1, babel 7.29.0).",
+    "Six type='text/babel' script tags loaded in a deliberate order, ending with ViKitApp.jsx (the composer/mount).",
+    "Uses in-browser Babel transpilation (text/babel) rather than a build step.",
+    "Single #app mount div."
+  ],
+  "standouts": [
+    "The @dsCard comment binds this file into the design-system gallery with a descriptive subtitle and target viewport.",
+    "subtitle reveals the kit's intent: 'chat + task tree + live brochure preview' — the three-pane Vi workspace concept."
+  ],
+  "conventions": [
+    "Follows the kit pattern of CDN React + in-browser Babel + ordered global-script loading (matching the window.X registration seen in the screen .jsx files).",
+    "Uses SRI integrity hashes and crossorigin on all CDN scripts (good supply-chain hygiene).",
+    "Links the shared colors_and_type.css so the kit inherits the central token base."
+  ],
+  "concerns": [
+    "Depends on external CDN (unpkg) and the development builds of React/ReactDOM — won't render offline and ships dev bundles.",
+    "In-browser Babel transpilation is fine for mockups but not a production load path.",
+    "Script order is load-order-fragile (ViKitApp must come last); no module system enforces it."
+  ],
+  "notes": "The Vi AI-workspace kit's index page — CDN React + Babel, shared tokens + vi.css, and ordered babel scripts assembling a chat / task-tree / brochure-preview workspace, gallery-tagged via @dsCard.",
+  "questions": [
+    "What does ViKitApp.jsx compose the six scripts into (the workspace layout)?",
+    "Is the CDN/dev-build setup intentional for mockups only, or expected to back a real workspace?"
+  ],
+  "purpose_vs_actual": "Matches: the @dsCard subtitle describes a chat+task-tree+brochure-preview workspace and the file loads exactly those parts to render it.",
+  "apparent_themes": ["browser-rendered mockup host", "design-system gallery card", "CDN React + in-browser Babel", "shared-token inheritance", "Vi AI workspace (chat/task/preview)"],
+  "intention_signals": "Stands up a self-contained, build-free page that renders the Vi AI-workspace design so it can be viewed and judged, while declaring itself to the design-system gallery via @dsCard.",
+  "novelty": "It frames an AI-workspace concept (chat pane + task tree + live brochure preview) as a single gallery-tagged kit page.",
+  "contribution": "Brings the Vi AI-workspace kit's host page — the assembly point that loads the chat/task-tree/preview screen scripts and registers the kit as a gallery card.",
+  "summary_for_embedding": "The host HTML for the ConceptV 'Vi' AI-workspace UI kit, loading shared tokens, vi.css, CDN React/Babel, and six babel screen scripts (chat, task tree, preview) with a @dsCard gallery annotation.",
+  "intention_for_embedding": "To render and gallery-register the Vi AI-workspace design (chat + task tree + live brochure preview) as a build-free browser mockup."
+}

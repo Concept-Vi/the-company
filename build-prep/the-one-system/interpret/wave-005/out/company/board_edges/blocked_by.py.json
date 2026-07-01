@@ -1,0 +1,36 @@
+{
+  "project": "company",
+  "path": "board_edges/blocked_by.py",
+  "model": "opus",
+  "what_it_does": "Defines a single RELATION_TYPE dict declaring a directed board edge 'blocked_by' meaning X is blocked by Y — a dependency/gating relation between addressed perspectives or claims on the board.",
+  "observations": [
+    "id='blocked_by', directed=True, label='blocked-by'.",
+    "desc frames it as a CONCEPTUAL edge between addressed perspectives/claims (the harvest's RELATIONS), first-class on the board.",
+    "Explicitly says the linking layer parses it rather than collapsing it to 'references'.",
+    "Notes it is surfaced by-use during the wind-down harvest (recollection)."
+  ],
+  "standouts": [
+    "Insistence that this dependency edge stay first-class and not be collapsed into a generic 'references' relation."
+  ],
+  "conventions": [
+    "Registry-style: one file declaring one RELATION_TYPE dict with id/directed/label/desc.",
+    "desc carries the conceptual rationale and lifecycle (surfaced during wind-down harvest)."
+  ],
+  "concerns": [],
+  "notes": "A directed board relation type for dependency/gating edges between claims, kept distinct from generic references.",
+  "questions": [
+    "What is the 'wind-down harvest (recollection)' process that surfaces these edges?",
+    "What is the full set of sibling board_edges relation types this sits among?"
+  ],
+  "purpose_vs_actual": "Match — declares a blocked-by relation type and the desc explains exactly that.",
+  "apparent_themes": [
+    "first-class typed relations (no collapse to generic references)",
+    "board as a graph of claims/perspectives",
+    "by-use surfacing during session wind-down"
+  ],
+  "intention_signals": "Trying to preserve the semantic distinction of dependency/gating between claims so the board's linking layer can reason about blockers explicitly.",
+  "novelty": "n/a",
+  "contribution": "Contributes the directed dependency/gating relation type 'blocked_by' to the board edge vocabulary, with its conceptual definition and harvest-surfaced lifecycle.",
+  "summary_for_embedding": "A directed board relation type 'blocked_by' declaring X-is-blocked-by-Y dependency edges between addressed claims/perspectives.",
+  "intention_for_embedding": "To keep dependency/gating between claims a first-class typed edge on the board rather than a generic reference."
+}

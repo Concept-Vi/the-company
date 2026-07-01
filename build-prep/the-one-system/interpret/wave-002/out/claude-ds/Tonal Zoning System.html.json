@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "Tonal Zoning System.html",
+  "model": "opus",
+  "what_it_does": "A standalone specimen/deliverable page (a @dsCard 'Colors' card) that documents and demonstrates the ConceptV surface-zone language: a masthead manifesto, a JS-generated zone registry (10 tonal zones), a component-roles gallery (buttons/chips/Vi pills/badges), and an applied 're-skinned' Overview dashboard mock with a spatial path-line layer. Includes a live Tweaks panel (React/Babel) that drives intensity/palette/spatial knobs via CSS vars.",
+  "observations": [
+    "Links colors_and_type.css + tonal-zoning.css; declares the page via an HTML comment @dsCard (group/name/subtitle/viewport) for the gallery harness",
+    "Masthead states the doctrine: differentiation via subtle undertones not colour blocks; ~2% undertone per nesting level = containment depth read without borders; gold reserved for Vi/active decisions/selected states; 'felt more than seen'",
+    "Plain JS builds the zone registry from a TZ_ZONES array (base, content, panel, review, source, package, success, warning, reject, vi) each with role/name/pigment token/percent/desc, swapping vi to --vi-* and --accent-gold tokens",
+    "Component roles section demos cvx-btn (primary gold / secondary / reject), cvx-chip (ready/source/pending), cvx-vi (gem) — 'only one thing is gold-filled and clickable: the primary decision'",
+    "Applied Overview mock: 3-column dashboard (nav / main / Vi rail) with zoned blocks, an SVG spatial connective layer, ghosted off-frame neighbours, and a JS buildFlow() that draws dashed path-lines through the zone-label markers",
+    "A fit() routine scales the fixed 1240px Overview design to its frame via transform:scale and a ResizeObserver",
+    "Tweaks panel (script type=text/babel, uses TweaksPanel/useTweaks from tweaks-panel.jsx) writes --zone-intensity, --gold-intensity, --spatial-opacity and palette body classes; defaults wrapped in EDITMODE-BEGIN/END markers"
+  ],
+  "standouts": [
+    "Articulates the core zoning principle: zoning = containment depth made visible via stacked low-% warm undertones, no cool greys, gold strictly reserved",
+    "Live edit-mode knobs (tint/gold intensity, warm/cooler/warmer palette, spatial layer) that re-tune the whole language by moving single CSS vars — demonstrates the 'one knob re-tunes everything' claim in situ",
+    "The spatial layer (dashed path-lines + diamond nodes + ghosted neighbour frames) makes 'how work moves through the system' visible, gated by --spatial-opacity",
+    "EDITMODE-BEGIN/END comment fences around TWEAK_DEFAULTS suggest a tooling round-trip that rewrites defaults"
+  ],
+  "conventions": [
+    "Consumes canonical tokens only ('nothing here invents colour'); zone surfaces/strong/edge/ink referenced as var(--zone-<key>-*)",
+    "@dsCard comment registration for the gallery; data-driven specimen build (TZ_ZONES / legendZones arrays) rather than hand-marked-up cards",
+    "Follows the gold-for-Vi-only rule and the felt-not-seen low-opacity intent throughout"
+  ],
+  "concerns": [
+    "Pins React/ReactDOM/Babel from unpkg.com CDNs with SRI — a network/external dependency and runtime Babel transform (standalone, dev builds) in what is otherwise a token specimen",
+    "ReactDOM.createRoot mounts a Tweaks app at top level — a self-mounting pattern the project's own CLAUDE.md warns can poison a shared bundle if not DOM-guarded (here it's a standalone page, so lower risk, but the pattern is present)",
+    "DESIGN_W constant is 1240 in JS while .ov width is also 1240 but the @dsCard viewport is 1360x900 — multiple width sources to keep aligned",
+    "Numerous inline styles on the Overview mock (--zone-* overrides per tile) — legitimate for a specimen but dense"
+  ],
+  "notes": "The flagship specimen for the tonal-zoning language: a manifesto + JS-built zone registry + component-role gallery + a live-tweakable re-skinned Overview dashboard showing depth-as-undertone, gold-for-Vi-only, and a spatial flow layer.",
+  "questions": [
+    "What consumes the EDITMODE-BEGIN/END fenced TWEAK_DEFAULTS — is there an external editor that writes back into this file?",
+    "Is the unpkg CDN + runtime Babel acceptable for a deliverable, or is this expected to be bundled before shipping?",
+    "Does the JS-listed pigment/percent metadata (TZ_ZONES) stay in sync with the actual token definitions in colors_and_type.css, or could it drift?"
+  ],
+  "purpose_vs_actual": "Match — it presents itself as the 'Surface-Zone Language' registry + component roles + applied Overview re-skin, and it delivers all three plus a live tuning panel.",
+  "apparent_themes": [
+    "Containment depth made visible through subtle warm undertones",
+    "Reserved-meaning colour (gold = Vi / decision / selection only)",
+    "Felt-not-seen restraint",
+    "Spatial connective storytelling (how work flows through zones)",
+    "Live single-knob re-tuning of the whole language"
+  ],
+  "intention_signals": "Trying to teach and prove the tonal-zoning system to the eye — show that structure can be read from undertone alone, that gold means one thing, and that the entire language re-tunes from single tokens — by rendering the rules as a registry plus a real applied dashboard with interactive knobs.",
+  "novelty": "The interactive edit-mode panel that re-tunes the live language via CSS vars, plus the spatial path-line + ghosted-neighbour layer that visualises work-flow through zones, all in a self-contained specimen.",
+  "contribution": "Contributes the canonical visual demonstration of the surface-zone language — the zone registry, the component-role vocabulary (buttons/chips/Vi pills), and a fully zoned applied Overview with a spatial flow layer and live tuning knobs that exercise the tokens end-to-end.",
+  "summary_for_embedding": "A standalone ConceptV design-system specimen page demonstrating the surface-zone (tonal zoning) language: a zone registry, a component-role gallery, and a re-skinned Overview dashboard with a spatial flow layer and a live React tweaks panel driving CSS-var knobs.",
+  "intention_for_embedding": "To show and prove the tonal-zoning system to the eye — depth-as-undertone, gold-reserved-for-Vi, and one-knob re-tuning — by rendering the rules as a registry plus a real applied dashboard with interactive controls."
+}

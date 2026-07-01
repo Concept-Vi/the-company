@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/CONFIG-INTO-COMPANY.md",
+  "model": "opus",
+  "what_it_does": "Captures Tim's requirement (2026-06-18) that the remote-MCP gateway's configuration and client-onboarding be folded INTO the Company as company-native registries and actions, with ONE control surface. It records the verbatim-in-meaning requirement, a four-point design direction, the laws it rests on, the open questions for an oracle clone to answer, and ownership.",
+  "observations": [
+    "Frames the remote-MCP gateway as transport only; its config + onboarding become Company-native",
+    "Direction #1: mcp_face/remote_exposure.json (a private file today) should become a file-discovered Company registry the gateway resolves from at startup, not a private copy",
+    "Direction #2: client registration, channel-joining and capability discovery become company-native discoverable actions (OAuth via Supabase), reusing the #69 self-registration path the builder itself used",
+    "Direction #3: the company CLI / company action surface is the single control point; the gateway is one consumer of it",
+    "Direction #4: per-client scoping is DATA (a client -> posture/scope binding row), so onboarding a new client is a registry edit plus the OAuth client, not new code",
+    "Names the laws: registry-is-truth, resolution-first, ONE control surface, unions-not-bridges, no-hardcoding",
+    "Lists four OPEN items for oracle clone-c9f6db2d to supply concrete company internals (where the registry pattern lives, CLI entry points, register/join mechanics, the approvals surface)",
+    "Owner: builder ch-eyzitp9p (handle builder-remote-mcp); oracle supplies internals; lead holds the security gate"
+  ],
+  "standouts": [
+    "Quotes Tim's requirement directly: configs must be written INTO the company, an EASY PLACE to change allowed tools/approvals, and clients must know how to REGISTER and JOIN CHANNELS — and it is NOT Claude-Design-specific, it is for ANY client",
+    "The explicit anti-pattern Tim names: 'I don't want different places to start different things' -> the one-control-surface law",
+    "Treats allowed-tools/scopes/postures/approvals as registry rows, so changing them is a data edit not a code/hidden-file change"
+  ],
+  "conventions": [
+    "Provisional-design framing with an explicit deferral to an oracle clone for the concrete internals (epistemic humility / never-invent)",
+    "Applies the Company's own laws explicitly rather than generic best practices",
+    "Uses [[wikilink]] relations to related projects and references issue/session #69"
+  ],
+  "concerns": [
+    "Entirely directional/provisional: the four OPEN items mean the concrete mechanism (which registry, which CLI entry points) is unresolved within this file alone"
+  ],
+  "notes": "This is the requirements-and-direction note for making remote-MCP config + any-client onboarding company-native registries/actions under one control surface — the how is deferred to an oracle clone.",
+  "questions": [
+    "Where exactly does a config like remote_exposure become a Company registry (which registry pattern / table)?",
+    "What are the company CLI / action entry points for set/inspect allowed-tools, register a client, join a channel, and view capabilities?",
+    "Did oracle clone-c9f6db2d ever supply the concrete pointers the OPEN section requests?"
+  ],
+  "purpose_vs_actual": "Match — it states it is a provisional design capturing Tim's requirement, and the body delivers the requirement, design direction, governing laws, open questions and ownership without overclaiming a built solution.",
+  "apparent_themes": [
+    "Registry-is-truth (config as data, one place to edit)",
+    "One control surface (no parallel control points)",
+    "Unions-not-bridges (config lives in the centre, the gateway reads it)",
+    "Reusable, generic client onboarding (any client, not Claude-Design-specific)"
+  ],
+  "intention_signals": "Trying to ensure the public remote-MCP surface does not spawn a parallel configuration/onboarding world: all config and client lifecycle (register, join channels, discover tools, approvals) should resolve through the Company's existing registries and action surface, so adding a client is a data edit and there is exactly one place things are started and configured.",
+  "novelty": "Generalizes the connector requirement beyond Claude Design to ANY future client, and reframes gateway configuration as a resolved-from-registry concern rather than gateway-owned state.",
+  "contribution": "Contributes the captured requirement and law-grounded design direction for company-native remote-MCP configuration and universal client onboarding (registry-resolved config, discoverable register/join/capability actions, per-client scope as data, one control surface), plus the explicit open questions and ownership for the build.",
+  "summary_for_embedding": "A provisional design note recording Tim's requirement to fold remote-MCP gateway configuration and any-client onboarding (register, join channels, discover tools, approvals) into the Company as registry-resolved config and company-native actions under one control surface.",
+  "intention_for_embedding": "To direct that the public remote-MCP surface's configuration and client lifecycle live as Company registries and actions rather than a parallel config store, so config edits and client onboarding are data changes through the one company control surface."
+}

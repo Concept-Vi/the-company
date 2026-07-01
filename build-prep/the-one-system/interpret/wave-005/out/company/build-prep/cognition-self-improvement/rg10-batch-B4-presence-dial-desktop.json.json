@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-B4-presence-dial-desktop.json",
+  "model": "opus",
+  "what_it_does": "A grounding-confirmation result record for the B4-presence-dial-desktop.html mockup. It holds the operator-readable 'ground' summary of the screen plus 35 candidate UI-element dossiers reduced to 6 clusters, each split into 'confirmed' (3) and 'flagged' (3) by an accuracy-jury verdict. Each dossier carries a ui:// address, capabilities, grounding state (built/proposed), a howto (what/what_you_can_do/how_to_change), maps_to_feature, and represents.",
+  "observations": [
+    "Screen is the Presence Dial: an 8-mode selector (Listening, Text-Only, Background, Focus, Walkthrough, Watch-and-React, Decide-for-Me, Off) controlling the RHM's posture, loudness, and autonomy.",
+    "n_candidates=35, n_dossiers=35, n_clusters=6 — heavy clustering: the main 'presence/dial' cluster absorbs 30 of 35 members.",
+    "Confirmed dossiers: presence/resp (text-only switch), presence/watch-and-react, presence/self-approve (a guard that blocks selecting self-approve).",
+    "Flagged dossiers: presence/dial (the 30-member cluster, only 1/3 jury draws grounded), presence/deep-work, presence/decide-for-me (0/3 grounded, unanimous-ungrounded).",
+    "Most howtos point to runtime/suite.py:set_mode as the change site; the dial itself points to Toolbar.tsx.",
+    "Jury verdicts are explicitly framed as SOFT 'variance not error' at Layer 2, distinct from a Layer-1 deterministic refcheck floor.",
+    "self-approve dossier encodes a prohibition: it visually blocks the operator from granting the system self-authority."
+  ],
+  "standouts": [
+    "The presence/self-approve guard — a UI element whose whole purpose is to PREVENT the system granting itself authority.",
+    "One 30-member cluster (presence/dial) collapses most of the screen into a single representative, yet is flagged for low grounding quorum."
+  ],
+  "conventions": [
+    "Follows the dossier schema: address + capabilities + grounding + howto{what,what_you_can_do,how_to_change} + maps_to_feature + represents.",
+    "Capabilities drawn from a fixed verb vocabulary: pointable, openable, presentable.",
+    "Features tagged with stable ids (RHM-modes, RHM-decide) or the literal 'proposed'.",
+    "Jury record carries votes_grounded/votes_ungrounded/n/unanimous/quorum plus a human-readable reason string."
+  ],
+  "concerns": [
+    "Eight modes are named in the ground summary but only a few have their own confirmed dossier; the rest are swallowed by the 30-member dial cluster, so per-mode grounding is not individually asserted.",
+    "presence/decide-for-me is unanimously ungrounded (0/3) yet still marked grounding:'built' in its own dossier — the dossier's self-claim and the jury disagree."
+  ],
+  "notes": "This is the desktop Presence-Dial mockup's grounding ledger: 35 element-dossiers clustered to 6, with the main dial cluster and the autonomy-related modes flagged for operator scrutiny.",
+  "questions": [
+    "Why does the dial cluster (30 members) get flagged while individual modes inside it vary — what distinguishes the cluster representative from its members?",
+    "Is 'set_mode' in runtime/suite.py the real single change-site for all modes, or a placeholder repeated across dossiers?"
+  ],
+  "purpose_vs_actual": "Matches. Stated as a confirmation batch for the presence-dial-desktop mockup; the content is exactly that ledger of clustered, juried element dossiers.",
+  "apparent_themes": [
+    "Operator-altitude posture control (modes change loudness/autonomy, not internals)",
+    "Self-approval prohibition / agent-cannot-grant-itself-authority",
+    "Grounding verification as a juried, quorum-based, soft-vs-hard layered check",
+    "Address-as-handle UI (every element has a ui:// address and capabilities)"
+  ],
+  "intention_signals": "Trying to verify, element by element, that each clickable on the presence-dial mockup is actually grounded in real code (and to flag where the claim and the code disagree) before the surface is trusted.",
+  "novelty": "The combination of a clustered UI-element catalogue with a multi-draw jury that distinguishes a deterministic refcheck floor from soft accuracy variance, plus an explicit anti-self-approval guard element.",
+  "contribution": "Contributes the desktop presence-dial's grounded element inventory and the specific guard/decide/text-mode/watch-and-react dossiers with their suite.py:set_mode change-sites and jury verdicts — the verified address-to-feature map for the desktop posture control.",
+  "summary_for_embedding": "A grounding-confirmation ledger for the desktop Presence-Dial mockup: 35 UI-element dossiers (ui:// addresses, capabilities, feature maps) clustered to 6 and split into confirmed vs jury-flagged.",
+  "intention_for_embedding": "To verify and flag, per element, whether the desktop presence-dial mockup's controls are grounded in real RHM-mode code before the surface is trusted."
+}

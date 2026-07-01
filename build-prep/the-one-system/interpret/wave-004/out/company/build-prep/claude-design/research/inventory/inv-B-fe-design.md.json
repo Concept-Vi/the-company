@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/inventory/inv-B-fe-design.md",
+  "model": "opus",
+  "what_it_does": "A fast read-only census (2026-06-08, 106 files) of the front-end region (canvas/), the design substrate (design/), and the declarative panels (panels/): a compressed directory tree, a file-by-file inventory table with PRIORITY and notes, key findings per subsystem, a top-10 priority list, and the documented extend-points (token/address/component/panel extension + the design-lint gate).",
+  "observations": [
+    "Maps the F0-restructured FE: App.tsx (carved from a 1659-line Hud), useAppController.ts (single state container, ~37 useState), api.ts, registryStore.ts, NodeShape.tsx (one generic data-driven node shape), AppContext.ts, and 19 region components",
+    "Documents kit.tsx (WAVE-2) as the shared vocabulary (SectionHead/LaneHead/Badge/Surface) for recognition-by-shape+tint, token-only",
+    "Maps the design substrate: tokens.json (WARM GOLD theme, source of truth) → emit.py → design-system.css (GENERATED, never edit); addresses.json (the ui:// registry); register.json (production contract); the free structural tools check.py/refcheck.py/symbols.py/codeedges.py",
+    "Documents the blueprint (B1) build-to-schema philosophy and surfaces/J*/**.json journey-routed surface specs (J1–J9 + _unrouted)",
+    "Marks every generated _system/*.json file as do-not-edit (element-map, check-report, code-symbols, code-edges)",
+    "Documents the CSS-grid shell over tldraw (canvas cell pointer-events:none, chrome cells re-enable) and the F5 api error-normalization (jr/json-or-error)",
+    "Top-10 priority list led by App.tsx, useAppController.ts, design/CLAUDE.md, conventions.md, tokens.json, addresses.json",
+    "Documents the design-lint gate command: check.py --target canvas/app/src --fail-on (blocks build per AGENTS rule 9)"
+  ],
+  "standouts": [
+    "The carved-from-monolith FE structure (App.tsx + useAppController + 19 regions) as the F0 deliverable shape",
+    "The extend-by-registration pattern across tokens/addresses/components/surfaces, with the generated-vs-source distinction (tokens.json source → design-system.css generated)",
+    "The free structural-tools chain (check/refcheck/symbols/codeedges) that indexes code refs and lints off-token literals"
+  ],
+  "conventions": [
+    "Consistent PRIORITY column (YES/MAYBE/NO) with NO reserved for generated/built-output files",
+    "Explicit GENERATED markers so no agent edits derived files",
+    "Documents the extend-by-registration operations (add entry → run generator → reflows) rather than describing files in isolation"
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the FE-and-design-substrate census — read it to learn the carved FE module layout, the token/address registries and their generators, the blueprint surface specs, and the design-lint gate; note it is a coverage pass, not deep synthesis.",
+  "questions": [],
+  "purpose_vs_actual": "Match — declares itself a fast read-only coverage pass (location + apparent purpose, no deep synthesis) and delivers that with priority flags, findings, and extend-points.",
+  "apparent_themes": [
+    "extend-by-registration (tokens/addresses/components/surfaces all registered, not hardcoded)",
+    "source-vs-generated discipline (edit the source, never the emitted file)",
+    "registry-as-truth carried into the design substrate",
+    "one design language / recognition-by-shape (kit.tsx) and one generic node shape",
+    "the FORM gate (design-lint) as a build-blocking enforcement"
+  ],
+  "intention_signals": "Trying to give the deep-read planning layer a complete, priority-flagged inventory of the FE and design substrate — the keystone's FE half — so comprehension reads and any surface design compose on the registered token/address/blueprint shapes rather than introducing parallel ones.",
+  "novelty": "n/a",
+  "contribution": "Contributes the FE-and-design-substrate file census: the carved FE module map, the token/address/register/blueprint registry inventory with source-vs-generated tags, the structural-tools chain, and the extend-point operations — the design-side structural index a fused system would keep to navigate and extend the surface.",
+  "summary_for_embedding": "A fast read-only census of ~/company's FE (canvas/), design substrate (design/), and panels: the carved FE module map, the token/address/register/blueprint registries with source-vs-generated tags, the structural tools, and the design-lint gate, with a top-10 deep-read list.",
+  "intention_for_embedding": "To give the deep-read planning layer a priority-flagged inventory of the FE and design substrate so reads and surface design compose on the registered token/address/blueprint shapes."
+}

@@ -1,0 +1,9 @@
+auditing 52 code files (resume on) | concurrency=5 | engine=http://127.0.0.1:8770/api/cognition/run_items
+  20/52  ok=20 flagged=20 err=0  504s
+  40/52  ok=40 flagged=40 err=0  1017s
+final persist: CREATE TABLE
+CREATE TABLE
+COPY 22
+INSERT 0 22
+
+DONE: 52/52 ok | 52 flagged | 0 err | 1332s

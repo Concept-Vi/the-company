@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/CaptureComment.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React function component CaptureComment that renders a comment-capture popup anchored near a clicked point on a photo. It shows a tap marker at (x,y), a header with author metadata and close button, a placeholder image area, a comments list, attachment thumbnails, a message input with a formatting toolbar, a cyclable status pill, and a 'More Captures' pager. It manages one piece of state (status) cycling through pending/approved/resolved/rejected, clamps the popup position inside the viewport, and exposes itself on window.CaptureComment.",
+  "observations": [
+    "Imports React.useState aliased as useState_cc (avoids global name collision across the babel-loaded kit files)",
+    "STATUSES object maps four statuses to hardcoded hex colors and labels: pending #E5C547, approved #5A8A4A, resolved #4A78B8, rejected #C24A3C",
+    "Position is clamped with Math.min/Math.max against window.innerWidth/innerHeight using magic offsets (160, 20, 16, 336, 540)",
+    "Renders a sibling fragment: vh-tap-marker positioned at raw (x,y) plus the vh-capture popup at clamped (left,top)",
+    "Author/date metadata is hardcoded ('Created by Sam Lin on 19/05/26'); comment rows are empty placeholder bars not real data",
+    "Inline SVGs for image and PDF attachment icons; the PDF icon embeds a <text>PDF</text> label",
+    "Message toolbar is a row of non-functional buttons (B, I, S, </>, etc.) with no handlers",
+    "Status pill onClick cycles to the next status via Object.keys index modulo length",
+    "Registers on window.CaptureComment for the global-script kit pattern"
+  ],
+  "standouts": [
+    "Status-cycling pill is the only interactive logic; everything else is static presentation",
+    "Viewport-clamped popup positioning around a click point"
+  ],
+  "conventions": [
+    "Follows the kit's window.<Component> registration pattern and the vh- BEM-ish class prefix",
+    "Mixes design-token vars (var(--accent-gold-50), var(--fg-muted)) with raw hex literals in the STATUS map and avatar backgrounds — partial token adherence",
+    "Uses JSX with React from a UMD global rather than a module import"
+  ],
+  "concerns": [
+    "Status colors are raw hex literals rather than design tokens, inconsistent with the var()-based theming used elsewhere in the file",
+    "Magic-number positioning offsets (336, 540) assume a fixed popup size and could clip on small viewports",
+    "Hardcoded author/date and placeholder comment bars — purely a mockup, no data binding"
+  ],
+  "notes": "A mockup comment-pin popup for a property-viewer; cycles a status pill but everything else (comments, attachments, toolbar) is static chrome.",
+  "questions": [
+    "Where does the captured comment data (author, date, comments, status) come from in a real wiring — is there a backing store?",
+    "Are the toolbar formatting buttons intended to become functional or are they decorative?"
+  ],
+  "purpose_vs_actual": "Header comment says 'the comment-capture popup from the source mockup' — matches: it is a presentational popup with only the status cycle interactive.",
+  "apparent_themes": [
+    "Spatial annotation (drop a comment pin on an image)",
+    "Review/approval workflow surfaced as a status lifecycle",
+    "Overlay UI over a full-bleed photo"
+  ],
+  "intention_signals": "Aims to reproduce a Figma-like comment thread / review marker dropped onto a property photo, with a status that moves through a review lifecycle (pending→approved→resolved→rejected).",
+  "novelty": "The drop-a-comment-on-a-photo with a cyclable approval status pill, combined into one anchored popup.",
+  "contribution": "Contributes a spatial-annotation popup pattern: click-anchored, viewport-clamped, with a four-state review-status lifecycle and a threaded-comment/attachment/formatting-toolbar layout a fused system could reuse for image markup.",
+  "summary_for_embedding": "A React mockup popup component that drops a viewport-clamped comment-capture card with author metadata, comment list, attachments, message toolbar, and a cyclable pending/approved/resolved/rejected status pill at a clicked point on a property photo.",
+  "intention_for_embedding": "Built to reproduce a Figma-style spatial comment/review marker on a property image, carrying a review-status lifecycle for buyer/reviewer annotation."
+}

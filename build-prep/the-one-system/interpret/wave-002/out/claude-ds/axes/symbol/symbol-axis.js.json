@@ -1,0 +1,47 @@
+{
+  "project": "claude-ds",
+  "path": "axes/symbol/symbol-axis.js",
+  "model": "opus",
+  "what_it_does": "Defines the 'symbol' axis — a typed, live view over the inner-glyph library (CV_ICONS) — and registers it on window.CV_AXES. It builds groups from the icon taxonomy domains and a value per icon (resolving to the icon's 24px SVG body live from the library), exposing a rebuild() method so the AI foundry can refresh the axis after adding symbols.",
+  "observations": [
+    "IIFE guarded twice: requires window.CV_AXES and window.CV_ICONS, erroring and returning if either is missing.",
+    "domainOf(id) reads CV_ICONS.facets[id].domain, defaulting to 'feature' when absent.",
+    "Axis created with make({id,label,description,meta:{intrinsicMeaning:true},default:'person'}) — note no values passed up front; they are added dynamically by rebuild().",
+    "rebuild() iterates CV_ICONS.data keys: registers each domain as a group once (capitalised label) and registers each icon as a value with group, label from facets.name, meta:{intrinsic:true}, and a resolve() that pulls the SVG live via I.get(id) (falling back to I.data[id]).",
+    "rebuild is attached to the axis as symbol.rebuild and documented as called by the foundry after CV_ICONS.add — so AI-foundry-added symbols appear without code change.",
+    "Header marks this axis as SPECIAL: a symbol's meaning is INTRINSIC, so it is NOT governed by the loadable meaning profiles (CV_MEANING), unlike colour/texture/motion.",
+    "resolve() returns the icon's SVG body resolved live from the library, not a cached copy."
+  ],
+  "standouts": [
+    "Live, rebuildable axis: values are read from CV_ICONS dynamically and refreshed via symbol.rebuild() after the AI foundry adds icons — the axis stays in sync with the library.",
+    "Declared the one axis whose meaning is INTRINSIC and therefore exempt from contextual meaning profiles (CV_MEANING).",
+    "Groups and values are registered imperatively (registerGroup/register) rather than passed to make() — a different construction path from the other static axes."
+  ],
+  "conventions": [
+    "Uses the CV_AXES axis pattern but extends it with imperative registerGroup/register and a rebuild() refresh hook.",
+    "Single-home discipline: reads the icon library live rather than copying glyph data; meaning intrinsic, not duplicated into a profile.",
+    "Double guard-and-return for both dependencies at top.",
+    "Load-order discipline stated (after axis-core.js and cv-icons.js)."
+  ],
+  "concerns": [
+    "rebuild() registers domains into a module-local `domains` map to dedupe groups, but re-registering the same icon value on repeated rebuild() calls is not guarded here — whether CV_AXES.register is idempotent for already-registered values is not visible in this file.",
+    "domainOf falls back to 'feature' silently for icons missing a facet domain, which could mis-bucket an icon without surfacing the missing metadata."
+  ],
+  "notes": "The 'symbol' axis = a live, rebuildable view over the CV_ICONS glyph library, grouped by taxonomy domain, each value resolving its 24px SVG live; uniquely INTRINSIC-meaning so it is exempt from contextual meaning profiles, and refreshed via symbol.rebuild() after the foundry adds icons.",
+  "questions": [
+    "Is CV_AXES.register (for a value) idempotent, so calling rebuild() repeatedly after foundry additions won't duplicate existing icon values?",
+    "When an icon lacks a facet domain it falls into 'feature' — is that intended, or should missing taxonomy be surfaced as a defect?"
+  ],
+  "purpose_vs_actual": "Match — the header describes a live typed view over CV_ICONS, grouped by taxonomy domain, intrinsic-meaning and exempt from CV_MEANING, that stays in sync including foundry-added symbols; the code implements exactly that with rebuild().",
+  "apparent_themes": [
+    "Axis as a live, self-syncing view over an external registry (CV_ICONS).",
+    "Intrinsic vs contextual meaning — symbol is the intrinsic exception to the meaning-profile model.",
+    "Extensibility via AI foundry: add an icon, call rebuild(), it appears with no code edit.",
+    "Single source of truth (glyphs resolved live, never copied)."
+  ],
+  "intention_signals": "To expose the icon library as one queryable axis that mirrors the library live and updates itself when the AI foundry adds symbols, while encoding the principle that symbols carry intrinsic meaning and therefore sit outside the contextual meaning-profile system.",
+  "novelty": "A rebuildable axis whose value set is populated live from another registry and refreshed by an external foundry, plus the explicit intrinsicMeaning flag marking it as the sole axis exempt from CV_MEANING.",
+  "contribution": "Contributes the 'symbol' dimension of the axis model — a live, foundry-refreshable, domain-grouped view over the glyph library, and the intrinsic-meaning exception to the contextual meaning-profile system.",
+  "summary_for_embedding": "A JS IIFE registering the 'symbol' axis on window.CV_AXES as a live, rebuildable view over the CV_ICONS glyph library, grouped by taxonomy domain, each value resolving its 24px SVG live, flagged as intrinsic-meaning (exempt from CV_MEANING).",
+  "intention_for_embedding": "To expose the icon library as one self-syncing axis that updates when the AI foundry adds symbols, encoding that symbols carry intrinsic meaning outside the contextual meaning profiles."
+}

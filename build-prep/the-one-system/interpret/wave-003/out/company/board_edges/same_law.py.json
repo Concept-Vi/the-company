@@ -1,0 +1,40 @@
+{
+  "project": "company",
+  "path": "board_edges/same_law.py",
+  "model": "opus",
+  "what_it_does": "Declares a single RELATION_TYPE dict for a 'same_law' board edge: a directed conceptual edge asserting that two addressed perspectives/claims express the same underlying law/principle seen in different places, surfaced during the wind-down harvest.",
+  "observations": [
+    "Module-level constant RELATION_TYPE only; no functions or classes.",
+    "Fields: id, directed (True), label ('same-law'), desc; no inverse field.",
+    "desc frames it as the 'pattern-unification edge' between addressed perspectives/claims (the harvest's RELATIONS).",
+    "desc states the edge is first-class on the board so the linking layer parses it rather than collapsing it to 'references'.",
+    "desc says it is surfaced by-use during the wind-down harvest (recollection)."
+  ],
+  "standouts": [
+    "No inverse declared, despite directed=True (differs from reply_to in this batch).",
+    "Explicitly resists collapse into a generic 'references' edge."
+  ],
+  "conventions": [
+    "Follows the board_edges one-RELATION_TYPE-per-file pattern.",
+    "directed=True without a stated inverse is a deviation from the directional-edge-with-inverse law seen in reply_to."
+  ],
+  "concerns": [
+    "Marked directed=True but declares no inverse; a same-law relation reads as symmetric, so directionality and the missing inverse are unexplained from this file alone."
+  ],
+  "notes": "A conceptual pattern-unification edge that says two claims are the same law; kept first-class so it isn't flattened to 'references'.",
+  "questions": [
+    "Why is this edge directed=True with no inverse when 'same law' appears symmetric?",
+    "What is the 'wind-down harvest / recollection' process that surfaces these edges?"
+  ],
+  "purpose_vs_actual": "Match: the file declares exactly the same-law conceptual edge its purpose states.",
+  "apparent_themes": [
+    "Pattern unification across addresses",
+    "Preserving conceptual relations rather than flattening them",
+    "Recollection/harvest-driven linking"
+  ],
+  "intention_signals": "Aims to give the board a dedicated edge for 'these two things are the same principle' so the recollection harvest can record pattern-unification as a distinct, parseable relation.",
+  "novelty": "A first-class 'same underlying law/principle' edge whose existence is justified by refusing to collapse it into generic references.",
+  "contribution": "Contributes the same-law pattern-unification edge definition that lets harvested perspectives/claims be linked as instances of one principle.",
+  "summary_for_embedding": "A board_edges relation-type declaration defining the directed same_law edge that links two addressed perspectives or claims as the same underlying law/principle, kept first-class for the linking layer.",
+  "intention_for_embedding": "To record pattern-unification across the corpus as a distinct board edge surfaced during the recollection harvest, instead of collapsing it into a generic reference."
+}

@@ -1,0 +1,56 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/capital-raise.md",
+  "model": "opus",
+  "what_it_does": "A leveled (Level 1-9) structural analysis of a single 30-page capital-raise pitch deck folder, cataloguing its surface format, grid, zoning, type, colour roles, iconography, atoms, layout archetypes, and narrative architecture, then diffing all findings against the design system (confirm/new/generalise/contradict) to feed token/diagram/atom registries.",
+  "observations": [
+    "Translates all content to generic content-agnostic roles per a GUIDE so the analysis is about grammar not the actual pitch content",
+    "Uses a fixed 9-level analysis ladder (surface, grid, zoning, type, colour, icons, atoms, archetypes, narrative)",
+    "Atom catalogue is a table with explicit 'In system?' status markers (checkmark / plus-new / pencil-generalise)",
+    "Diff section uses a 4-symbol tag vocabulary: confirm / new / generalise / contradict",
+    "Records the 'running-sentence titles' rule where slide titles chain into one grammatical sentence via leading connectives (But/To/With/That/Which/By/And/Because)",
+    "Cites specific page numbers (p1, p5, p10, p20, p30) and exact hex values (#ffffff, #fdfcf7, #9fbc73, #cdbf5a)",
+    "Tracks an 'Open items / to verify next' section with one item marked RESOLVED (slice 28) inline",
+    "Asserts 'No contradictions' — the model survived a 30pp dense pitch with only additions"
+  ],
+  "standouts": [
+    "Running-sentence titles framed as 'the single strongest narrative rule the corpus has surfaced' — slide titles read as one continuing argument from the title rail alone",
+    "Graduation discipline: the sage-green communication accent is promoted to an L0 primitive only on three INDEPENDENT semantic uses within one folder, with a p5 legend that LITERALLY defines green='Communication' called the strongest (definitional) evidence kind",
+    "Explicitly distinguishes photographic green (foliage in renders) from a UI voice, refusing to graduate the latter from the former",
+    "Theme.light gains a clean↔warm sub-axis (#ffffff ⟷ #fdfcf7) framed as 'a knob, not a redraw'"
+  ],
+  "conventions": [
+    "Evidence-grounded: every claim cites page numbers and exact hex/measurement values",
+    "Re-confirmation discipline: notes when a property holds for the Nth folder (margins 'ratio-invariant, re-confirmed a 4th time')",
+    "Token-driven framing: findings route to specific files (tokens/theme.css, tokens/imagery.css, DIAGRAMS.md, DiagramSolver)",
+    "Registry-as-truth: atoms checked against a system registry, new ones marked for registry growth",
+    "Axis thinking: surface ⟂ density ⟂ LOD treated as orthogonal axes",
+    "Single-source / no-redraw framing: variations expressed as sub-positions on a knob, never as contradictions"
+  ],
+  "concerns": [
+    "Several findings are single-folder-deep (running-sentence titles called 'single-folder-deep but unambiguous'); the doc flags this itself but still routes some to graduation",
+    "The 'No contradictions' conclusion is self-reported with no adversarial check shown",
+    "Open items reference a 'slice 28' and other docs (DIAGRAMS.md, tokens/*.css) whose state cannot be confirmed from this file"
+  ],
+  "notes": "A deep leveled grammar-analysis of one capital-raise deck that both re-confirms the design model and surfaces new rules (running-sentence titles, frosted bookends, sage-green semantic, five diagram sub-types), with a disciplined diff feeding the token/atom/diagram registries.",
+  "questions": [
+    "What is the GUIDE that defines the content-agnostic role translation, and where does it live?",
+    "What is 'slice 28' and the FINDINGS-LOG referenced as resolving the sage-green open item?",
+    "Are the five new diagram sub-types actually added to DIAGRAMS.md/DiagramSolver, or just proposed here?",
+    "How are single-folder-deep findings (running-sentence titles) reconciled against the multi-folder graduation bar applied to sage-green?"
+  ],
+  "purpose_vs_actual": "Matches — the header states it is a folder analysis that re-confirms the model and surfaces new grammar, and the body delivers exactly that across nine levels plus a system diff.",
+  "apparent_themes": [
+    "registry-is-truth",
+    "axis=f(content,position)",
+    "single-source-no-redraw",
+    "evidence-graduation-discipline",
+    "design-as-grammar",
+    "narrative-as-structure"
+  ],
+  "intention_signals": "Inferred: the author is reverse-engineering an existing pitch corpus into a formal, queryable design grammar — extracting reusable atoms/diagrams/colour-roles and feeding them into a single-sourced token/registry system, with a strong bias toward only graduating a finding to a system primitive when the evidence is definitional or multi-instance. The running-sentence-titles discovery suggests an intent to capture narrative structure as a buildable deck property/capability, not just visual style.",
+  "novelty": "The 'running-sentence titles' rule (titles chaining into one argument via leading connectives) and the explicit definitional-vs-multi-instance graduation bar for promoting a colour to a system primitive are unusual; so is treating photographic-vs-UI colour as a distinction that blocks graduation.",
+  "contribution": "Contributes a leveled grammar-extraction method, the running-sentence-title narrative rule, a content-agnostic atom/archetype catalogue with system-status tags, the clean↔warm theme sub-axis, the sage-green communication semantic with its definitional-evidence graduation rationale, and five new diagram sub-types — all routed to specific registries.",
+  "summary_for_embedding": "A nine-level structural analysis of a 30-page capital-raise pitch deck cataloguing its format, grid, colour roles, atoms, archetypes, and narrative, diffed against a design system to feed token/diagram/atom registries.",
+  "intention_for_embedding": "To reverse-engineer a pitch deck into a formal single-sourced design grammar, surfacing new rules (running-sentence titles, semantic colours, diagram sub-types) and graduating them to system primitives only on strong evidence."
+}

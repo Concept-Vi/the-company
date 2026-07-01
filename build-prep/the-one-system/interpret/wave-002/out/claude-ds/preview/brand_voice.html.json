@@ -1,0 +1,37 @@
+{
+  "project": "claude-ds",
+  "path": "preview/brand_voice.html",
+  "model": "opus",
+  "what_it_does": "A static preview card (@dsCard group=\"Brand\") documenting voice & tone: it states the voice (precise, second-person, sentence-case) and shows a 2x2 grid of Use/Avoid example copy pairs styled with success/error tag colors.",
+  "observations": [
+    "Pure static HTML, no scripts — only _card.css linked.",
+    "Two 'Use' examples (sentence-case, direct 'you', inline URL preview) and two 'Avoid' examples (exclamation+emoji, all-caps).",
+    "Tags colored via --status-success (do) and --status-error (dont).",
+    "Lead text states the rules: inline previews of consequences, direct 'you', no marketing voice, no exclamation marks, no emoji in copy.",
+    "URL preview example uses --accent-gold for the accent span."
+  ],
+  "standouts": [
+    "The 'Avoid' examples deliberately contain an emoji and all-caps to demonstrate the anti-patterns the voice forbids.",
+    "Inline URL preview (conceptv.io/panotours/...) is used as a positive example of showing consequences inline."
+  ],
+  "conventions": [
+    "Follows @dsCard preview convention.",
+    "Uses status tokens (--status-success / --status-error) for do/avoid semantics.",
+    "Tokens via var(--…) throughout."
+  ],
+  "concerns": [],
+  "notes": "The brand voice card — a do/avoid copy guide codifying ConceptV's precise, second-person, sentence-case tone.",
+  "questions": [],
+  "purpose_vs_actual": "Matches — subtitle (precise, second-person, sentence-case examples) is exactly what the card presents.",
+  "apparent_themes": [
+    "Voice as a single-sourced brand rule",
+    "Show consequences inline / second-person directness",
+    "Anti-marketing, restrained tone",
+    "Do/avoid contrast as teaching device"
+  ],
+  "intention_signals": "Codifies the product's writing voice as part of the design system so all copy stays precise, second-person, and free of marketing/emoji noise — voice treated as a design token in prose form.",
+  "novelty": "Including written voice & tone as a first-class brand card alongside visual tokens, with concrete app-specific use/avoid examples.",
+  "contribution": "Contributes the canonical voice & tone specification (precise, second-person, sentence-case, inline consequences) with do/avoid examples that a fused system would keep as its copy-writing rule.",
+  "summary_for_embedding": "A ConceptV brand preview card specifying voice & tone — precise, second-person, sentence-case — with a 2x2 grid of Use/Avoid copy examples styled by success/error status tokens.",
+  "intention_for_embedding": "To codify the product's writing voice as a single-sourced brand rule guiding all UI copy."
+}

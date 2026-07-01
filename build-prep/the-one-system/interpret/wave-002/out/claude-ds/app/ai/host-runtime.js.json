@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "app/ai/host-runtime.js",
+  "model": "opus",
+  "what_it_does": "Defines window.CV_HOST, a browser-side registry of pluggable 'runtimes' (ways to reach the world: a no-disk 'review' sandbox floor, the browser File System Access API 'fsapi', and an injected 'native'/MCP host) plus a uniform read/list/write op surface that resolves the best available runtime per capability. Also holds a serializer registry that turns registry mutations into exact source text, a localStorage-persisted proposed-change store (propose/apply/reject), a commit() call that stages-then-optionally-writes a change, handoff modes (review/stash/download), and a describe() self-documentation projection consumed by the UI.",
+  "observations": [
+    "Three runtimes registered with ranks 0/1/2 and explicit caps {read,write,list,exec,tools}; best(cap) picks the highest-rank available runtime that has the cap.",
+    "'review' runtime is always available() and has no caps — the explicit degraded floor so the system is never dead.",
+    "fsapi runtime uses window.showDirectoryPicker, persists the granted FileSystemDirectoryHandle in IndexedDB ('cv-host' db, 'kv' store), and attempts to restore it on load, surfacing window.__cvFsapiPending for a 'reconnect' gesture.",
+    "native runtime reads window.CV_HOST_NATIVE; reqNative throws a specific message naming the missing op and how to implement it.",
+    "writerOrThrow() composes an error that lists every write-capable runtime and its activation description.",
+    "resolveProviderRuntime bridges to CV_AI: handles 'host-fs' (repo.* capabilities) and 'native-model'/'mcp-model' kinds, else returns null to let CV_AI raise its own unknown-kind error.",
+    "commit() always proposes (stages) first; only writes immediately when canWrite() AND autoApply() are both true; otherwise stashes or downloads per handoffMode.",
+    "applySerialized supports three strategies: 'new-file', 'css-token' (insert in a selector), and default 'append-block' (insert before an anchor sentinel or at EOF).",
+    "fnReplacer serializes function values as 'ƒ'+source string when cloning payloads.",
+    "console.info logs the resolved mode label when the IIFE finishes."
+  ],
+  "standouts": [
+    "capability-available = f(environment, runtime): a single resolution rule replaces bespoke per-surface file I/O.",
+    "Loud-never-silent discipline — every impossible op throws a message naming what is missing and how to activate it; the only graceful path is the explicitly-labelled 'review' staging.",
+    "describe() is the single source for the environment's status; the comment forbids any hand-written status string elsewhere."
+  ],
+  "conventions": [
+    "IIFE attaching a single global namespace object (window.CV_HOST), 'use strict', no module system.",
+    "Mirrors the stated four-registry shape (register/resolve/subscribe/describe) called out in the project CLAUDE.md.",
+    "Persistence keys namespaced 'cv:host:*'; localStorage reads wrapped in try/catch returning safe defaults.",
+    "subscribe/notify listener pattern for reactivity."
+  ],
+  "concerns": [
+    "localStorage writes in saveChanges/setHandoffMode swallow errors silently (empty catch) while reads default quietly — a quota failure would lose a staged change without a loud signal, which sits in tension with the file's own loud-never-silent law.",
+    "safeClone falls back to returning the original value on JSON failure, so a non-cloneable payload could be stored by reference."
+  ],
+  "notes": "The environment/host capability registry — resolves the best runtime to actually read/write disk from the browser, stages every change review-first, and self-describes the whole environment via describe().",
+  "questions": [
+    "What is the exact contract window.CV_HOST_NATIVE must implement (read/list/write/exec/tool/complete) — is it specified elsewhere?",
+    "Who registers serializers and where are the change 'kinds' defined (host-serializer.js is referenced but not in this file)?"
+  ],
+  "purpose_vs_actual": "Matches: the header describes an environment/host registry with pluggable runtimes, uniform routing, loud failure, and a self-documenting describe(), and the code implements exactly that.",
+  "apparent_themes": [
+    "Registry-as-truth applied to the runtime environment",
+    "Explicit graceful degradation (labelled sandbox mode, never silent fallback)",
+    "Self-describing system (UI as projection of describe())",
+    "Review-first / human-in-the-loop change handoff"
+  ],
+  "intention_signals": "Trying to make 'what can Vi do to the world it runs in' a single resolvable capability question, so adding a new way to reach disk (Tauri, MCP, cloud) is a runtime registration rather than edits to every caller, and so the running app honestly shows its own degraded vs. full state.",
+  "novelty": "Treating filesystem/exec/tool access as a ranked capability registry with a guaranteed always-available no-op floor, plus an IndexedDB-persisted File System Access handle with reconnect, and serialize-then-stage commit semantics in a pure browser context.",
+  "contribution": "Contributes a browser-resident host-capability abstraction: ranked pluggable runtimes, a uniform read/list/write surface, review-first change staging with serializers, IndexedDB-persisted FS Access handles, and a single describe() environment projection — the bridge between an in-browser app and real disk/exec/tool access.",
+  "summary_for_embedding": "A browser CV_HOST registry of ranked pluggable runtimes (review sandbox, File System Access API, native/MCP host) exposing a uniform read/list/write op surface, a serializer-backed review-first change store, handoff modes, and a self-describing describe() projection.",
+  "intention_for_embedding": "To make environment capabilities (file read/write, exec, tool calls) a single resolvable question so new ways to reach the world are registered not hand-wired, with loud failure and an honest, self-documented degraded mode."
+}

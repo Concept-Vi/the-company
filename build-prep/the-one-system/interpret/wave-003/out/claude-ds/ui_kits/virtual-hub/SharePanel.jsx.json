@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/SharePanel.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the Virtual Hub SharePanel: a right-side aside (reusing the vh-info-panel shell) showing a shareable hub URL and a list of share actions (Email, Copy link, Embed, Download PDF brochure), each with an inline SVG icon, plus a note that recipients see the hub at its current published stage. Includes a ShIcon helper. Registered as window.SharePanel.",
+  "observations": [
+    "Reuses className 'vh-info-panel' (shares the InfoPanel shell rather than a dedicated share class).",
+    "ShIcon helper renders array path 'd' strings in an 18x18 viewBox.",
+    "Displays a constructed URL https://conceptv.io/panotours/<accent>acme</accent>/{hub?.id || 'tower-east'} with hardcoded 'acme' tenant and a hub-id fallback.",
+    "Four share rows (Email, Copy link, Embed, Download PDF brochure) — none have onClick handlers wired.",
+    "Closing note paragraph uses inline style with token vars (var(--font-body), var(--fg-muted)).",
+    "Attaches to window.SharePanel."
+  ],
+  "standouts": [
+    "The note 'Recipients of this link will see the Hub at its current published stage' encodes a publish-stage sharing semantic.",
+    "Mixes inline-style token vars on the note while the rest relies on vh-* classes."
+  ],
+  "conventions": [
+    "Follows vh-* class naming and global-window registration.",
+    "Inline style on the note uses var(--token) tokens, partially aligning with the design-token convention; other styling is class-based.",
+    "Reuses the InfoPanel shell class — single shell, multiple panel contents."
+  ],
+  "concerns": [
+    "Hardcoded tenant 'acme' in the share URL and an unwired share action list (no handlers).",
+    "One-off inline style block instead of a class for the note — a small drift from the class-based pattern in this kit."
+  ],
+  "notes": "The right-side Share panel of the Virtual Hub — shows the hub link plus Email/Copy/Embed/PDF actions; URL tenant is hardcoded and actions are presentational stubs.",
+  "questions": [
+    "Should the 'acme' tenant segment come from hub/tenant data rather than being hardcoded?",
+    "Are the share rows intended to be wired to handlers later, or is this a static mockup of the share affordances?"
+  ],
+  "purpose_vs_actual": "Matches the README's SharePanel row (share by link / email / social); 'social' is represented as Email/Copy/Embed/PDF rather than named social networks.",
+  "apparent_themes": [
+    "Buyer-facing sharing of published hubs",
+    "Publish-stage-aware link sharing",
+    "Minimal dark overlay panel reusing a common shell"
+  ],
+  "intention_signals": "Aims to let a viewer share the immersive hub via link, email, embed, or brochure, with clarity that the shared view reflects the current published stage.",
+  "novelty": "The publish-stage note and the panotour share-URL structure (tenant/hub) as a sharing affordance.",
+  "contribution": "Contributes the share-panel pattern: a shareable hub URL display plus an icon list of share modes (email/copy/embed/PDF) and a publish-stage disclosure, reusing the info-panel shell.",
+  "summary_for_embedding": "React SharePanel component for the Virtual Hub showing a shareable hub URL and Email/Copy/Embed/PDF share actions with inline icons in a right-side aside.",
+  "intention_for_embedding": "To let viewers share a published immersive hub by link, email, embed, or brochure with publish-stage clarity."
+}

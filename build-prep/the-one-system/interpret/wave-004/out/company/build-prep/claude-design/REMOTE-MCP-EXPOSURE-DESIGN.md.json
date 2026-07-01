@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/REMOTE-MCP-EXPOSURE-DESIGN.md",
+  "model": "opus",
+  "what_it_does": "Design document (draft for channel review) for making the company MCP server REMOTE so Anthropic's Claude Design no-code tool can connect as a custom connector. Restates the mission, inventories the current system (mcp_face, bridge, session supervisor, capability posture, tool annotations, MCP config, channel fabric), proposes a target architecture (remote gateway as transport+auth+scoping over the same Suite), defines a remote-posture tool classification with a fail-closed allow-list, an OAuth 2.1 + Supabase Auth model with scopes, a Streamable HTTP transport, a local Supabase plan with mandatory audit, a production deployment plan, an 8-step build sequence, and a decisions table of rulings received.",
+  "observations": [
+    "Two non-negotiable guards: FAIL-CLOSED deny-by-default (no explicit safe/design posture = not exposed) and MANDATORY AUDIT (audit-write failure makes the call fail loud)",
+    "Posture table with 5 levels: safe (expose), design (expose), consent (deferred), hazard (never), locked (operator-only, never)",
+    "Proposed initial whitelist maps specific tool modules to postures (introspection/object_info/corpus/chat/sessions read as safe; cc_channel.send as design; a NEW claude_design module with ingest_bundle/submit_seed/walk_decision as design)",
+    "Explicit NOT-exposed list: node create/delete/propose/apply, connect, set_config, cc_clone, cc_gate, session_post wake/consult, resolve_surfaced/approve_proposal/dispatch, checkpoint/revert/self_change_log writes, run_graph",
+    "Auth: OAuth 2.1 with PKCE, Supabase Auth directly as the authorization server; JWT bearer per request with audience binding; DCR or static client id",
+    "Transport: MCP Streamable HTTP (2025-06-18 spec), single /mcp endpoint, Mcp-Session-Id header, Origin validation, dedicated mcp_face/remote.py on :8772 (8770 bridge stays internal)",
+    "Local Supabase plan includes a connector_audit Postgres schema logging who/what/when/address for every remote call",
+    "Production deployment ruled APPROVED as a public Supabase Edge Function behind Tim's custom domain, gated behind a local fail-closed/audit/scopes verification step",
+    "Build sequence step 1 marked done (design approved by lead); references an oracle reply from clone-c9f6db2d and rulings from a channel thread",
+    "Two '4.1' section numbers (posture table and proposed whitelist both labelled 4.1) — a numbering collision"
+  ],
+  "standouts": [
+    "Fail-closed deny-by-default posture filter: a newly added tool can never auto-leak because absent posture = deny",
+    "Mandatory-audit-or-fail-loud: no un-audited remote call can ever succeed",
+    "Reuse-one-engine principle: remote gateway is transport+auth+scoping only over the same runtime.suite.Suite — explicitly NOT a forked second engine ('one brain, now three faces')",
+    "Operator/destructive/clone-spawning verbs are structurally excluded from the remote face by allow-list, never reachable via remote scope"
+  ],
+  "conventions": [
+    "Extends the existing readonly/destructive/idempotent tool-annotation dimension with a new remote-posture dimension rather than inventing a parallel scheme",
+    "Follows the repo's fail-loud / deny-by-default / operator-only-governance-floor patterns",
+    "Reuses one Suite as the single brain across faces (one-source) instead of forking"
+  ],
+  "concerns": [
+    "Two sections are both numbered 4.1 (posture table and proposed whitelist) — a heading numbering collision that could confuse cross-references",
+    "Document self-describes as a draft pending Tim+lead approval of the exposure boundary, yet build sequence step 1 is already ticked as approved — the approval state is internally ambiguous"
+  ],
+  "notes": "If briefing someone: this is the security-boundary design for exposing the company MCP to Claude Design remotely — the heart is the fail-closed allow-list posture filter + mandatory audit + OAuth-via-Supabase, reusing one Suite as a third face that can never reach operator/destructive verbs.",
+  "questions": [
+    "Which of the two '4.1' sections is the intended numbering, and does any other doc cross-reference §4.1 ambiguously?",
+    "Is the design actually approved (step 1 ticked) or still pending the draft-review caveat at the top?",
+    "What is the project ref + custom domain (stated as provided by lead on request) — unresolved from this file alone"
+  ],
+  "purpose_vs_actual": "Matches — it states the mission of a secure remote MCP exposure for Claude Design and delivers a complete design covering architecture, posture, auth, transport, audit, deployment, and build sequence.",
+  "apparent_themes": [
+    "least-privilege / deny-by-default security boundary",
+    "one engine, many faces (no forking)",
+    "mandatory audit / fail-loud accountability",
+    "operator-only governance floor preserved across faces",
+    "prove-local-before-prod"
+  ],
+  "intention_signals": "Trying to let an external no-code design tool participate in the company fabric and feed the Face Pipeline without ever granting it operator, destructive, or clone-spawning power — by adding a transport/auth/scoping layer over the existing Suite, gated by an allow-list posture filter and unbypassable audit.",
+  "novelty": "The remote-posture classification layered on top of existing tool annotations, plus the 'three faces, one brain' framing (stdio mcp_face + REST bridge + remote gateway all over one Suite), and routing OAuth through Supabase Auth directly as the authorization server.",
+  "contribution": "Contributes the security-boundary and exposure design for a remote MCP face — the posture allow-list, the not-exposed verb set, the OAuth-via-Supabase auth model, the audit-or-fail-loud rule, and the transport/hosting plan — which a fused system would keep as the specification of how external tools safely connect to the one Suite.",
+  "summary_for_embedding": "A design doc for exposing the company MCP server remotely to Claude Design as an OAuth 2.1 custom connector via a Streamable-HTTP gateway over the same runtime Suite, gated by a fail-closed remote-posture allow-list and mandatory audit, with a Supabase auth/audit plan and public Edge Function deployment.",
+  "intention_for_embedding": "To safely connect Anthropic's Claude Design tool into the company fabric and Face Pipeline with read/design scopes only, never granting operator, destructive, or clone-spawning verbs."
+}

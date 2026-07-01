@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/HubApp.jsx",
+  "model": "opus",
+  "what_it_does": "The root React component for the Virtual Hub viewer kit. It defines the HUBS list (entry/apt-a/apt-b/rooftop with labels and titles), manages all UI state (active hub, menu open, which panel is showing, and any in-progress capture), and composes the child components (HubBug, MenuButton, QuickMenu, InfoPanel, SharePanel, FloorplanOverlay, CaptureComment). It handles stage clicks to drop a capture comment only when the click lands on the photo background, and renders an onboarding hint when nothing is open. It mounts itself to #app via ReactDOM.createRoot.",
+  "observations": [
+    "Imports React.useState aliased as useState_vh",
+    "HUBS array of four locations, each {id, label, title}; default active is 'apt-a'",
+    "Four state atoms: active, menuOpen, panel ('info'|'share'|'floorplan'|null), capture ({x,y}|null)",
+    "handleStageClick gates capture creation by checking e.target classList contains 'vh-stage' or 'vh-vignette' (so overlay clicks don't drop comments) and computes click coords relative to the stage via getBoundingClientRect",
+    "Panels are mutually exclusive with the menu: info/share only render when !menuOpen",
+    "FloorplanOverlay receives activeHub mapped: apt-a becomes 'living', otherwise the raw active id; onPick switches the panel to 'info'",
+    "Switching hubs clears any in-progress capture (setCapture(null))",
+    "Onboarding hint is an inline-styled pill shown only when !menuOpen && !panel && !capture, with pointerEvents none",
+    "Child components (HubBug, MenuButton, QuickMenu, InfoPanel, SharePanel, FloorplanOverlay, CaptureComment) are referenced as globals, not imported — relies on window registration + script load order",
+    "Mounts with a DOM guard: only createRoot if #app exists"
+  ],
+  "standouts": [
+    "Click-target gating so comments drop only on the photo, never on UI chrome — clean separation of canvas vs overlay interaction",
+    "Single root holding all viewer state and orchestrating mutually-exclusive overlays",
+    "DOM-guarded self-mount (avoids poisoning a shared bundle, per the project's known trap)"
+  ],
+  "conventions": [
+    "Follows the global-component + script-load-order kit pattern (children are window globals)",
+    "DOM-guarded createRoot matches the project CLAUDE.md trap guidance for self-mounting jsx",
+    "Uses var() tokens in the inline onboarding-hint style but also raw rgba literals"
+  ],
+  "concerns": [
+    "Hardcoded HUBS data and the apt-a→'living' floorplan mapping are mockup-specific magic with no data source",
+    "Onboarding hint carries inline raw rgba literals rather than tokens/classes",
+    "Relies entirely on implicit script load order for its child globals — fragile if order changes (acknowledged kit pattern)"
+  ],
+  "notes": "The orchestrator of the whole Virtual Hub viewer: owns hub/menu/panel/capture state and gates photo-clicks into capture comments.",
+  "questions": [
+    "Where do real hub data and panorama images come from in production (HUBS is hardcoded)?",
+    "Why does apt-a specifically map to the 'living' floorplan position — is that a per-apartment mapping that would need real data?"
+  ],
+  "purpose_vs_actual": "Header 'Virtual Hub viewer root' matches: it is the state-owning root that composes the viewer.",
+  "apparent_themes": [
+    "Single-root state orchestration of mutually-exclusive overlays",
+    "Canvas-vs-chrome interaction separation",
+    "Composition of registered global components",
+    "Immersive single-screen viewer"
+  ],
+  "intention_signals": "Aims to wire the Virtual Hub kit into one interactive whole — switch between property hubs, toggle a menu and panels, navigate by floorplan, and annotate the photo with capture comments.",
+  "novelty": "The dual interaction model where the same stage both navigates (via chrome) and accepts spatial annotations (via background clicks), arbitrated by click-target class.",
+  "contribution": "Contributes the orchestration pattern for an immersive media viewer: one root owning hub/menu/panel/capture state, mutually-exclusive overlay arbitration, and photo-vs-chrome click gating that a fused system could reuse for any annotatable media-viewer surface.",
+  "summary_for_embedding": "The root React component of a Virtual Hub property viewer that owns active-hub/menu/panel/capture state, composes brand-bug/menu/panels/floorplan/capture children, and gates photo-background clicks into spatial capture comments.",
+  "intention_for_embedding": "Built to wire the Virtual Hub kit into one interactive immersive viewer where a buyer switches hubs, opens panels, navigates by floorplan, and drops capture comments on the photo."
+}

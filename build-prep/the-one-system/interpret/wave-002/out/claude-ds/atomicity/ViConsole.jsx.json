@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/ViConsole.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a React component `ViConsole`, an always-present agent launcher/panel ('Vi') with three modes (Chat, Teach, Memory). It renders a floating FAB and a slide-out aside; routes user input through `window.VI_BRAIN.interpret`/`learn`, auto-runs navigational actions, performs a before/after visual-diff restyle on a picked element via CV_SHOT/CV_OVERRIDE, shows proposals, learned-preference memory, and a screenshot-FIFO control.",
+  "observations": [
+    "Initializes from globals: `window.VI_BRAIN.memory()`, `window.CV_SHOT` history/limit; subscribes to CV_SHOT changes.",
+    "`send()` branches on mode: 'teach' calls `VI_BRAIN.learn(text, ctx)` and reports a learned entry + staged proposal; otherwise calls `VI_BRAIN.interpret(text, {...ctx, picked}, history)` with last 6 messages as history.",
+    "Action loop: 'restyle' is deferred to the visual-diff path; 'open' calls onOpenNode; search/expand/highlight/connect/ingest/explore call onAct; 'pageshot' triggers a whole-page snapshot.",
+    "Restyle flow takes before snapshot + snapshotStyles, applies override, waits a frame+80ms, takes after snapshot+styles, diffs styles, and calls `CV_AI.execute('vision.diff', ...)` so Vi can react to the change.",
+    "Memory mode lists learned preferences with a forget button calling `VI_BRAIN.forget(id)`.",
+    "Composer shows the picked element (shot or color swatch), context-specific quick-action buttons, mode toggles, and a screenshot-limit stepper (1..40).",
+    "Local helpers: `actIcon`, `actLabel`, `lastSeg`, `fmt` (markdown-lite to HTML), `esc` (HTML escape); exposes `window.ViConsole`.",
+    "Uses `dangerouslySetInnerHTML` for message text and clickable `data-node` spans for navigation."
+  ],
+  "standouts": [
+    "The restyle path is a full perceive-act-perceive loop: screenshot before, apply, screenshot after, diff styles, then feed before/after to a vision capability for Vi's own follow-up reaction.",
+    "Teach mode folds a stated preference into both a live AI-registry behaviour and a staged repo proposal (learn-and-persist).",
+    "Suffixed hook aliases (`useState_vc`, etc.) destructured from a global React to coexist in a shared bundle."
+  ],
+  "conventions": [
+    "Reads all capability/state from window globals (VI_BRAIN, CV_SHOT, CV_OVERRIDE, CV_AI, AcKit) rather than imports — matches the project's registry-via-globals pattern.",
+    "Routes model touches through CV_AI.execute (vision.diff) rather than calling a provider directly, per the AI-registry rule.",
+    "Attaches the component to window at the end (no ES module export)."
+  ],
+  "concerns": [
+    "`window.CV_SHOT.snapshotPage()` and `window.CV_OVERRIDE`/`CV_SHOT` are used without existence guards in several places (only `subscribe` is guarded with `&&`); a missing global would throw at runtime.",
+    "Catch blocks around interpret/learn swallow errors into a generic user message, which can hide failures (the project's loud-fail rule is for capability resolution, but the diagnostic detail is lost here)."
+  ],
+  "notes": "The Vi agent console UI: a chat/teach/memory panel that interprets intent, runs interface actions, and does a screenshot before/after restyle-and-review loop via window globals.",
+  "questions": [
+    "What is the full shape of `VI_BRAIN.interpret`'s return (say/actions/proposals/followup/options) and where is it defined?",
+    "What does `CV_AI.execute('vision.diff', ...)` return and what model backs it?",
+    "Is `window.CV_SHOT` guaranteed present, given the page-shot path assumes it exists?"
+  ],
+  "purpose_vs_actual": "Matches: the header comment describes an omnipresent agent that sees the system, acts, stages changes, solicits feedback, and learns — the code implements chat/teach/memory, action dispatch, proposals, feedback nudges, and learn-to-registry-plus-proposal.",
+  "apparent_themes": [
+    "Agent-as-interface (natural language drives real interface verbs)",
+    "Perceive-act-perceive visual loop",
+    "Single-source registries accessed via globals",
+    "Learning preferences into live behaviour + persisted change"
+  ],
+  "intention_signals": "Trying to make a conversational agent a first-class operator of the design surface — one that can navigate, restyle with visible before/after evidence, propose repo changes, and improve by absorbing the user's stated preferences.",
+  "novelty": "The integrated restyle-then-screenshot-then-vision-react loop and the teach-mode that simultaneously registers a live behaviour and stages a permanence proposal.",
+  "contribution": "Contributes a concrete agent-console UI pattern that binds NL intent to interface actions, a before/after visual-diff restyle flow, and a teach/memory mechanism that turns preferences into both live AI behaviour and staged changes.",
+  "summary_for_embedding": "A React Vi agent console component with Chat/Teach/Memory modes that interprets user intent via VI_BRAIN, runs interface actions, performs before/after screenshot visual-diff restyles via CV_SHOT/CV_OVERRIDE/CV_AI, shows proposals, and learns preferences into the AI registry.",
+  "intention_for_embedding": "To give the design surface an omnipresent conversational agent that navigates, acts, restyles with visible evidence, proposes repo changes, and learns the user's preferences."
+}

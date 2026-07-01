@@ -170,11 +170,20 @@ def extract_python(rel: str, src: str) -> dict:
             for t in node.targets:
                 if isinstance(t, ast.Name):
                     nm = t.id
-                    if isinstance(node.value, ast.Dict) and nm.isupper() or (nm.isupper() and isinstance(node.value, ast.Dict)):
+                    def _const_sym(kind, sig):                    # F3/R2: module constants ARE symbols (nodes)
+                        symbols.append({"code_id": code_id(nm), "stem_id": f"code://{_stem(rel)}/{nm}",
+                                        "name": nm, "qual": nm, "symbol_kind": kind, "signature": sig[:160],
+                                        "params": [], "returns": None, "decorators": [], "bases": [],
+                                        "line_start": node.lineno, "line_end": getattr(node, "end_lineno", node.lineno),
+                                        "is_async": False, "is_exported": not nm.startswith("_")})
+                    if nm.isupper() and isinstance(node.value, ast.Dict):
                         keys = [k.value for k in node.value.keys if isinstance(k, ast.Constant)]
                         registry_rows.append({"name": nm, "keys": keys[:60], "line": node.lineno})
-                    if nm.isupper() or re.match(r"^_[A-Z]", nm):
                         constants.append({"name": nm, "value": _unparse(node.value)[:200], "line": node.lineno})
+                        _const_sym("registry-dict", f"{nm} = {{…{len(keys)} keys}}")
+                    elif nm.isupper() or re.match(r"^_[A-Z]", nm):
+                        constants.append({"name": nm, "value": _unparse(node.value)[:200], "line": node.lineno})
+                        _const_sym("constant", f"{nm} = {_unparse(node.value)[:120]}")
 
     # symbols (all defs, incl nested + methods) + per-symbol edges
     def walk_defs(node, parent_qual="", parent_is_class=False):
@@ -296,10 +305,25 @@ def _scan_markers(src: str) -> list:
     return out[:50]
 
 
+_INTERNAL_TOPS = None
+
+
+def _internal_tops() -> set:
+    # REUSABLE: internal top-level packages = the scanned repo's own top dirs (derived from ROOT), not a
+    # company-specific literal. Cached; recomputed per process (ROOT is set once from --root in main()).
+    global _INTERNAL_TOPS
+    if _INTERNAL_TOPS is None:
+        try:
+            _INTERNAL_TOPS = {d for d in os.listdir(ROOT)
+                              if os.path.isdir(os.path.join(ROOT, d)) and not d.startswith(".")}
+        except Exception:
+            _INTERNAL_TOPS = set()
+    return _INTERNAL_TOPS
+
+
 def _is_internal(mod: str) -> bool:
     top = mod.split(".")[0].lstrip(".")
-    return top in {"runtime", "contracts", "store", "nodes", "fabric", "mcp_face", "ops", "voice", "introspection",
-                   "design", "roles", "flows", "routines"} or mod.startswith(".")
+    return top in _internal_tops() or mod.startswith(".")
 
 
 def _stem(rel: str) -> str:
@@ -348,16 +372,24 @@ _TS_LIB = None
 
 
 def _resolve_ts_lib() -> str:
-    """Find a node_modules that has `typescript` — reusable across repos: env override, the SCAN ROOT's
-    own node_modules, then this tool's known ones. Absent -> JS/TS recorded shallow with reason (loud)."""
+    """Find the SCANNED repo's OWN `typescript` (node_modules dir), wherever it lives — root or a sub-app
+    (open-webui: root; this repo: canvas/app/node_modules). Reusable, no cross-repo dependency. Env override
+    wins. Absent -> JS/TS recorded shallow with reason (loud). Bounded-depth glob so it's cheap."""
     global _TS_LIB
     if _TS_LIB is not None:
         return _TS_LIB
-    cands = [os.environ.get("COMPANY_TS_LIB", ""),
-             os.path.join(ROOT, "node_modules"), os.path.join(ROOT, "app", "node_modules"),
-             os.path.join(REPO, "canvas", "app", "node_modules"), os.path.join(REPO, "surface", "app", "node_modules")]
-    _TS_LIB = next((c for c in cands if c and os.path.isdir(os.path.join(c, "typescript"))), "")
-    return _TS_LIB
+    import glob
+    env = os.environ.get("COMPANY_TS_LIB", "")
+    if env and os.path.isdir(os.path.join(env, "typescript")):
+        _TS_LIB = env
+        return env
+    for pat in ("node_modules/typescript", "*/node_modules/typescript", "*/*/node_modules/typescript"):
+        hits = glob.glob(os.path.join(ROOT, pat))
+        if hits:
+            _TS_LIB = os.path.dirname(sorted(hits)[0])            # the node_modules dir (ts_extract.js requires it)
+            return _TS_LIB
+    _TS_LIB = ""
+    return ""
 
 
 def extract_ts(rel: str, src: str, raw: bytes = b"") -> dict:
@@ -782,7 +814,7 @@ def _psql(sql: str) -> str:
 
 def _git_sha() -> str:
     try:
-        return subprocess.check_output(["git", "-C", REPO, "rev-parse", "HEAD"], text=True).strip()
+        return subprocess.check_output(["git", "-C", ROOT, "rev-parse", "HEAD"], text=True).strip()
     except Exception:
         return "unknown"
 
@@ -829,17 +861,25 @@ def current_hashes() -> dict:
     return h
 
 
+import builtins as _builtins, sys as _sys
+_PY_BUILTINS = set(dir(_builtins))
+_STDLIB = set(getattr(_sys, "stdlib_module_names", ()))
+_JS_GLOBALS = {"console", "window", "document", "Math", "JSON", "Object", "Array", "Promise", "String",
+               "Number", "Boolean", "Date", "RegExp", "Map", "Set", "WeakMap", "Symbol", "Error", "parseInt",
+               "parseFloat", "isNaN", "setTimeout", "setInterval", "clearTimeout", "fetch", "require", "process",
+               "module", "exports", "global", "globalThis", "localStorage", "navigator", "location", "alert"}
+_JS_RES_EXT = ("", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".d.ts")
+
+
 def resolve_edges(ex: dict) -> dict:
-    """Resolution pass — fill each edge's `to_resolved` (the real node id) from the in-memory facts, making
-    the graph traversable. Precedence mirrors codeedges: same-file > unambiguous-global for calls/extends;
-    module→file for imports; child node-id for contains. Unresolvable (external import, ambiguous name,
-    dynamic dispatch) → null, honestly. No DB round-trip (computed before load)."""
-    file_paths = set(e["path"] for e in ex["entries"] if e["node_type"] == "file")
-    all_nodes = set(f"code://{PROJECT}/{e['path']}" for e in ex["entries"])
-    mod_map = {}
-    for p in file_paths:
-        if p.endswith(".py"):
-            mod_map[p[:-3].replace("/", ".")] = p
+    """Resolution pass — fill each edge's `to_resolved` (the real node id) from in-memory facts, and CLASSIFY
+    every far-end that can't resolve (builtin | stdlib | external) so 'unresolved' is honest, not conflated
+    with 'broken wiring'. Handles: contains (child id); imports (python module-map + JS/TS relative/path
+    module-resolution); calls/extends/references (same-file > import-scoped > unambiguous-global). Far-end
+    class lands in edge.extra.far. No DB round-trip. Reusable — all facts come from the scanned tree."""
+    file_set = set(e["path"] for e in ex["entries"] if e["node_type"] == "file")
+    all_nodes = set(f"code://{PROJECT}/{p}" for p in file_set)
+    mod_map = {p[:-3].replace("/", "."): p for p in file_set if p.endswith(".py")}
     global_name, per_file = {}, {}
     for s in ex["symbols"]:
         global_name.setdefault(s["name"], set()).add(s["code_id"])
@@ -849,25 +889,68 @@ def resolve_edges(ex: dict) -> dict:
         pre = f"code://{PROJECT}/"
         return ref[len(pre):].split("::")[0] if ref.startswith(pre) else None
 
-    resolved_n = 0
+    def resolve_js_import(from_file, target):                    # relative/path → a real file in the tree
+        cand = os.path.normpath(os.path.join(os.path.dirname(from_file), target))
+        for e in _JS_RES_EXT:
+            if cand + e in file_set:
+                return cand + e
+        for idx in ("index.ts", "index.tsx", "index.js", "index.jsx"):
+            p = os.path.normpath(os.path.join(cand, idx))
+            if p in file_set:
+                return p
+        return None
+
+    def classify(raw):
+        head, leaf = raw.split(".")[0], raw.split(".")[-1]
+        if head in _PY_BUILTINS or leaf in _PY_BUILTINS or head in _JS_GLOBALS:
+            return "builtin"
+        if head in _STDLIB:
+            return "stdlib"
+        return "external"                                        # a library / dynamic / method-on-value
+
+    # PASS A — imports (also builds per-file imported-file set, for import-scoped call resolution)
+    per_file_imp, resolved_n = {}, 0
     for g in ex["edges"]:
-        k, raw, res = g["kind"], g["to_raw"], None
-        if k == "contains":
-            res = raw if raw in all_nodes else None
-        elif k == "imports":
-            res = f"code://{PROJECT}/{mod_map[raw]}" if raw in mod_map else None
-        elif k in ("calls", "extends"):
-            fp = file_of(g["from"])
-            nm = raw.split(".")[-1]
-            if fp and fp in per_file and nm in per_file[fp]:
-                res = per_file[fp][nm]                           # same-file
-            else:
-                ids = global_name.get(nm)
-                if ids and len(ids) == 1:
-                    res = next(iter(ids))                        # unambiguous global
+        if g["kind"] != "imports":
+            continue
+        raw, ff, res = g["to_raw"], file_of(g["from"]), None
+        if raw in mod_map:
+            res = f"code://{PROJECT}/{mod_map[raw]}"
+        elif ff and (raw.startswith(".") or "/" in raw):
+            rf = resolve_js_import(ff, raw)
+            res = f"code://{PROJECT}/{rf}" if rf else None
         g["to_resolved"] = res
         if res:
             resolved_n += 1
+            per_file_imp.setdefault(ff, set()).add(res.split("::")[0])
+        else:
+            g.setdefault("extra", {})["far"] = "stdlib" if raw.split(".")[0] in _STDLIB else "external"
+
+    # PASS B — contains / calls / extends / references (import-scoped, then classify the misses)
+    for g in ex["edges"]:
+        k, raw = g["kind"], g["to_raw"]
+        if k == "imports":
+            continue
+        res = None
+        if k == "contains":
+            res = raw if raw in all_nodes else None
+        elif k in ("calls", "extends", "references"):
+            ff, nm = file_of(g["from"]), raw.split(".")[-1]
+            if ff and ff in per_file and nm in per_file[ff]:
+                res = per_file[ff][nm]                           # same-file
+            else:
+                ids = global_name.get(nm) or set()
+                if len(ids) == 1:
+                    res = next(iter(ids))                        # unambiguous global
+                elif len(ids) > 1 and ff in per_file_imp:        # import-scoped: unique candidate in an imported file
+                    cands = [i for i in ids if i.split("::")[0] in per_file_imp[ff]]
+                    if len(cands) == 1:
+                        res = cands[0]
+        g["to_resolved"] = res
+        if res:
+            resolved_n += 1
+        elif k in ("calls", "extends", "references"):
+            g.setdefault("extra", {})["far"] = classify(raw)     # honest: builtin | stdlib | external
     ex["stats"]["edges_resolved"] = resolved_n
     return ex
 
@@ -1006,9 +1089,9 @@ def load_run(scope_label: str, ex: dict, *, project: str, channel: str, purpose:
                       s.get("extractor", ""), s.get("extractor_version", ""), session, "deterministic-v1"])
     _write_csv(spath, srows)
 
-    gcols = ["run_id", "from_ref", "kind", "to_raw", "to_resolved", "line", "produced_by_session", "pass"]
+    gcols = ["run_id", "from_ref", "kind", "to_raw", "to_resolved", "line", "produced_by_session", "pass", "extra"]
     grows = [[run_id, g["from"], g["kind"], g["to_raw"], g.get("to_resolved") or "", g.get("line") or "",
-              session, "deterministic-v1"] for g in ex["edges"]]
+              session, "deterministic-v1", json.dumps(g.get("extra") or {})] for g in ex["edges"]]
     _write_csv(gpath, grows)
 
     scope = _j({"roots": [scope_label], "denominator": "real-tree"})
@@ -1172,7 +1255,7 @@ def main():
         return 0 if health_check(a.project, a.purpose) else 1
 
     if a.show:
-        abs_path = os.path.join(REPO, a.show)
+        abs_path = os.path.join(ROOT, a.show)
         rec = extract_file({"rel_path": a.show, "abs_path": abs_path})
         out = dict(rec)
         if out.get("symbols"):

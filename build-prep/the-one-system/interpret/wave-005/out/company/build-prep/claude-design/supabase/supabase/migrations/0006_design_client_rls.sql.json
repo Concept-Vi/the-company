@@ -1,0 +1,42 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/supabase/supabase/migrations/0006_design_client_rls.sql",
+  "model": "opus",
+  "what_it_does": "Defines the per-client RLS layer (gate 2 of a two-gates model) for the claude-design connector in Supabase/Postgres. Creates SQL helper functions (client_id(), is_design_client(), channel_granted()) that read the caller's JWT app_metadata, then declares row-level-security policies on channel_posts, channels, design_submissions, dna_tokens, and design_seeds so a design_client can only insert its own posts/submissions into channels granted to its registry row and read only its granted shared channels plus read-mostly collab context.",
+  "observations": [
+    "client_id() reads app_metadata.client_id from auth.jwt(); is_design_client() checks app_metadata.role == 'design_client'.",
+    "channel_granted(chan) is SECURITY DEFINER with a fixed search_path so reading public.clients/public.channels inside a channels policy does not recurse into RLS (would cause infinite recursion / stack-depth).",
+    "Explicit ALTER ... security definer and ALTER ... set search_path after CREATE OR REPLACE because replace does not change an existing function's security attribute.",
+    "Policies are drop-if-exists then create (idempotent re-apply).",
+    "Insert policy ties from_session = client_id() so a client cannot forge another client's posts; submission insert ties submitted_by = client_id().",
+    "Closing comment states no new grants are needed because 0001-0005 already granted SELECT/INSERT/UPDATE to authenticated; RLS only gates which rows."
+  ],
+  "standouts": [
+    "The recursion-avoidance rationale: a channels policy querying channels must use SECURITY DEFINER to bypass RLS or it recurses infinitely.",
+    "The explicit ALTER to FORCE security definer on upgraded environments where CREATE OR REPLACE would silently keep INVOKER."
+  ],
+  "conventions": [
+    "Idempotent migration style (drop policy if exists, create or replace function).",
+    "Heavy inline commentary explaining the security model and the why, not just the what.",
+    "Helper functions marked stable; security-definer functions pin search_path = public."
+  ],
+  "concerns": [
+    "client_id()/is_design_client() trust app_metadata claims in the JWT — the security depends entirely on those claims being server-set (this file does not set them; relies on a separate hook)."
+  ],
+  "notes": "This is the row-level scoping that ties every design_client read/write to its own registry client_id; the JWT claims it trusts are stamped elsewhere.",
+  "questions": [
+    "What process guarantees app_metadata.client_id/role are server-set and not user-forgeable (this file assumes it)?",
+    "How do 0005's boundary policies interact with these design_client policies on the same tables?"
+  ],
+  "purpose_vs_actual": "Match — the header states it is gate 2 (per-client RLS scoping) and the policies/functions implement exactly that.",
+  "apparent_themes": [
+    "Defense in depth (two gates: edge-function posture + RLS at the row)",
+    "Registry-is-truth (a client's grants live in its clients row)",
+    "Least privilege scoping at the row level"
+  ],
+  "intention_signals": "Trying to make Supabase RLS the authoritative per-client boundary so a forwarded design_client JWT can only touch its own rows, independent of (and beneath) the Edge Function's checks.",
+  "novelty": "The SECURITY DEFINER trick to break RLS-policy self-recursion when a policy must query the very table it guards, plus the explicit re-ALTER to defeat CREATE OR REPLACE not changing the security attribute.",
+  "contribution": "Contributes the per-client row-level scoping rules and the JWT-claim helper functions for the design connector, including the non-recursive granted-channel lookup pattern.",
+  "summary_for_embedding": "A Supabase RLS migration scoping the claude-design connector's reads/writes to its own registry client_id via JWT-claim helper functions and per-table policies.",
+  "intention_for_embedding": "To enforce per-client row-level security as the second gate so a design_client can only access rows belonging to its granted channels and own submissions."
+}

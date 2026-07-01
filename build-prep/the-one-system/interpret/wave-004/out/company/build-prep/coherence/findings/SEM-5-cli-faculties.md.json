@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/SEM-5-cli-faculties.md",
+  "model": "opus",
+  "what_it_does": "A companion findings doc on the whole-corpus on-demand semantic faculties and the CLI verbs they become. It reduces the parent anchor's five faculties to two interactive verbs (onboard, ask), one verb-plus-injectable-critic (review), and two bulk scan-phase enrichment passes, grounding each in the existing CLI dispatch and self-description machinery, and gives company onboard the deepest treatment as the institutional-memory faculty.",
+  "observations": [
+    "Grounds the CLI shape in ops/cli/app.py: a flat if cmd == ... dispatch chain, stdlib-only, where adding a verb is one branch plus one help line; company suites (app.py:133-149) is the template for shelling a heavy job under a temp store.",
+    "Reclassifies the anchor's auto-explain and candidate-disposition faculties as bulk --enrich scan phases, not top-level verbs.",
+    "Maps company onboard onto the existing structural self-description seam: refresh_self_description (suite.py:823-839) regenerates factual registry/suite blocks and doc_drift (suite.py:855-869) only checks a name is present, so neither checks whether the prose is true.",
+    "Decides onboard should emit a transient orientation, not own/write prose, by the substrate's own/reflect law (detection is re-derivable so reflected, never owned).",
+    "Identifies the half-built up_translate('finding') organ (suite.py:5828) that the auto-explain enrichment pass feeds, and the injectable _critic_recheck (suite.py:7308) that the semantic review slots into.",
+    "Surfaces the tension that a blocking critic collides with positive-only, resolving it as hard-block only where a deterministic check seconds the flag, candidate-surface the fuzzy laws.",
+    "Corrects throughput to 2,250 tok/s aggregate at concurrency 32 and emphasizes sublinear prefill (30K input in ~1.07s) as the real unlock; estimates whole-corpus onboard at ~30s-2min."
+  ],
+  "standouts": [
+    "onboard as institutional-memory-as-faculty: the memory is the ability to regenerate the true map on demand, not a file that rots.",
+    "The review faculty as two invocations of one thing — a top-level verb and an injected wire critic — mirroring the one-agent-two-invocations loop frame.",
+    "The per-rule tiering of which AGENTS.md laws a 4B can actually check vs which grep already catches vs which need deep dataflow."
+  ],
+  "conventions": [
+    "Uses Observed/Inferred/External-prior-art/Your-idea marking, explicitly noting every proposed verb is Your-idea while the machinery is Observed.",
+    "Grounds each faculty in the exact existing seam (app.py branch, refresh_self_description/doc_drift, _critic_recheck, up_translate).",
+    "Closes with a 'but actually' correction list and a summary table per faculty."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: five faculties collapse to two interactive verbs plus a verb-and-injectable-critic plus two enrich passes, each riding an existing seam; onboard emits-not-owns and cures the named session-drift incidents at session start.",
+  "questions": [
+    "What driver/cadence governs the --enrich passes, and how often is onboard expected to run per session?",
+    "How is the narrowing step for company ask (grep/registry/reachability) wired before the swarm fan-out?"
+  ],
+  "purpose_vs_actual": "Matches its stated area: it specifies the on-demand faculties as concrete CLI verbs/phases, their reads/emits, value vs cost, and onboard's relation to the existing self-description machinery.",
+  "apparent_themes": [
+    "Build-on-not-beside (every faculty rides an existing seam)",
+    "Emit-not-own for re-derivable detection",
+    "Positive-only constrains where a critic may block",
+    "Prefill-cheap-not-free, with VRAM/slot reserve respected"
+  ],
+  "intention_signals": "It is trying to make the semantic faculties concrete and economical — naming the exact CLI branch and existing machinery each rides — and to make onboard the institutional-memory answer to the no-humans-hold-the-thread problem.",
+  "novelty": "The onboard-as-regeneration-faculty framing and the two-invocations-of-one review faculty (verb plus injected critic) are distinctive shapings.",
+  "contribution": "Contributes the concrete CLI verb/phase mapping for the faculties, the onboard/self-description seam analysis, the emit-not-own decision, the critic-vs-positive-only resolution, and measured cost numbers.",
+  "summary_for_embedding": "A faculties findings doc mapping the anchor's five semantic capabilities to CLI verbs and scan phases, grounding each in existing machinery and developing company onboard as an emit-not-own institutional-memory faculty.",
+  "intention_for_embedding": "To define the whole-corpus on-demand semantic faculties as concrete CLI verbs and their value, cost, and relation to the existing self-description machinery."
+}

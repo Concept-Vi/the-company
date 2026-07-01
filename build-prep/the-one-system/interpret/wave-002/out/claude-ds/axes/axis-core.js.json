@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "axes/axis-core.js",
+  "model": "opus",
+  "what_it_does": "Defines the universal AXIS foundation: a `makeAxis(spec)` factory producing one typed, hierarchical axis (groups → values, each value resolving to a token var / literal CSS / computed payload), and a `CV_AXES` registry of axes. Each axis exposes register/resolve/list/query/subscribe verbs, group helpers, a `resolveCSS(id)` that turns a value into `var(--token)` (or css/computed), and subscription `candidates`/`validate`. Attaches `window.CV_AXIS` (the factory) and `window.CV_AXES` (the registry).",
+  "observations": [
+    "`makeAxis` maintains ordered value ids (`order`), `byId`, and groups; `addValue` tolerates implicit groups declared on a value and adds them.",
+    "A value carries `token`, `css`, or `resolve` (fn); `resolveCSS` prefers `resolve(v,ctx)`, then `var(--token)`, then literal css, else null.",
+    "Verbs: register, registerGroup, has, resolve (fails loud listing available ids), tryResolve, values, ids, groups, group, valuesIn, default, setDefault, zero, query.",
+    "`candidates(sub)` filters values by `sub.groups`/`sub.values`; subscription shape is `{axis, groups?, values?, default, conditions?}`.",
+    "Change notification via `subscribe`/`_emit`; register and setDefault are re-wrapped to emit `register`/`default` events.",
+    "`CV_AXES` accepts either a built axis (has id+resolveCSS) or a spec; provides resolve/tryResolve/has/list/all, a universal `css(axisId,valueId,ctx)` entry point, `candidates(sub)`, and `validate(sub,valueId)` returning a loud-list of errors (never coerces).",
+    "`fail()` throws `CV_AXIS: <msg>` — loud-fail throughout.",
+    "Header states tokens ARE the value-units of an axis (the axis does not wrap over tokens); the value's `token` is its canonical identity."
+  ],
+  "standouts": [
+    "Establishes 'tokens are the value-units of an axis' — the axis adds type/grouping/meaning around tokens without becoming a second value home.",
+    "Mirrors the other registries' verb set (register/resolve/list/query/subscribe) so the axis system feels identical to CV_REGISTRY/CV_AI/CV_MEANING.",
+    "Subscriptions: a component slot declares {axis, groups, values} and `candidates` yields exactly what an editor/foundry shows — no bespoke per-slot code.",
+    "Two-level registry: axes are themselves enumerable/typed via CV_AXES."
+  ],
+  "conventions": [
+    "Loud-fail (throw) on unknown axis/value/missing id rather than silent default — matches the project non-negotiable.",
+    "Single-source discipline: values point at their token home; resolveCSS returns var(--token), never a copied literal.",
+    "IIFE with 'use strict' attaching to window; no module export — globals pattern.",
+    "Same register/resolve/subscribe API as sibling registries (deliberate mirroring)."
+  ],
+  "concerns": [
+    "`_subs`, `_emit`, `subscribe` are defined on the axis object literal so `_subs` is per-instance (correct), but `_emit` swallows subscriber errors silently in a `try{}catch(e){}` — a subscriber failure is hidden.",
+    "`resolveCSS` returning null for a value with no payload is intentional but callers must handle null (no error)."
+  ],
+  "notes": "The universal axis engine: a factory + registry giving every visual dimension (colour, depth, fill, …) the same typed group→value shape, with values resolving to token vars and subscriptions driving editor candidate lists.",
+  "questions": [
+    "What is CV_MEANING (referenced as a sibling registry) and where is it defined?",
+    "How are `conditions?` in a subscription consumed — candidates/validate don't appear to use them here?",
+    "Which file loads the concrete axes (color/depth/fill) that register against this foundation?"
+  ],
+  "purpose_vs_actual": "Matches: the header describes a universal axis foundation mirroring the other registries with token-as-value-unit and subscription-driven candidates — the code implements exactly the factory, registry, resolveCSS, candidates, validate, and subscribe.",
+  "apparent_themes": [
+    "Tokens as the value-units of typed axes (no second value home)",
+    "Registry isomorphism across the system (same verbs everywhere)",
+    "Subscription-driven UI (candidates = what the editor shows)",
+    "Loud-fail resolution"
+  ],
+  "intention_signals": "Trying to generalize the token system into a typed, queryable dimensional model — every visual property becomes an axis with the same shape, so editors and the generative engine consume any dimension uniformly without bespoke code.",
+  "novelty": "The explicit framing that an axis IS its tokens (typed/grouped) rather than wrapping them, plus the subscription/candidates mechanism that makes any slot's allowed values declarative.",
+  "contribution": "Contributes the axis abstraction itself — the factory, the axes registry, resolveCSS (value→token var), and the subscription candidates/validate API that lets slots declaratively consume any visual dimension.",
+  "summary_for_embedding": "A JavaScript universal AXIS foundation defining `makeAxis` (typed group→value axis resolving values to token vars/css/computed) and a `CV_AXES` registry, with register/resolve/query/subscribe verbs and subscription-driven candidates/validate, exposed as window.CV_AXIS/CV_AXES.",
+  "intention_for_embedding": "To generalize design tokens into typed, queryable axes sharing one registry shape so every visual dimension is consumed uniformly by editors and the generative engine."
+}

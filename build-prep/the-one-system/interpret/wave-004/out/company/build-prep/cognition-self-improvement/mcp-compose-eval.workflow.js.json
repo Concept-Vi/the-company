@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/mcp-compose-eval.workflow.js",
+  "model": "opus",
+  "what_it_does": "Defines an executable workflow (meta + phases) that spawns seven fresh, MCP-only agents to evaluate whether the company MCP is intuitive for composition; each agent drives a real make/check/use/run/discover flow and reports every friction point it hits, returning structured JSON. The collected friction is the deliverable.",
+  "observations": [
+    "Exports a `meta` object (name, description, single 'Eval' phase) describing the workflow's intent and that it does no code build and no commit.",
+    "A `FRESH` prompt prelude forbids reading the repo/AGENTS.md/docs/source and restricts agents to mcp__company__* tools discovered via ToolSearch, so the test measures cold MCP usability.",
+    "A `SCHEMA` JSON-schema requires task/outcome/friction; outcome is an enum {smooth, completed-with-friction, blocked}; friction is an array of {tool, confusion, fix}; optional top_gap field.",
+    "Runs all seven agent tasks via `parallel([...])`, each tagged with a label and the shared schema and phase.",
+    "Tasks A-G cover: full compose loop (make→check→use→reduce→save cascade→run), ask-the-corpus retrieval, discovery of composables, running an existing cascade, the feed→ask→tally knowledge loop, running pre-built production-line chains cold, and the governed-growth loop (operator memory, propose-not-create, gated cascade 'registration-gauntlet').",
+    "Safety FLOOR: agents may create declarative things (roles, cascades) but never resolve/approve/dispatch/claude-p, and must prefix throwaways with 'eval_'.",
+    "Honesty rule repeated: a smooth run is a real result; don't manufacture or hide friction.",
+    "Final log reports `${ok.length}/7` with per-task outcome string; returns `{ evals: ok }`."
+  ],
+  "standouts": [
+    "The friction agents hit IS the deliverable — failure-to-use is treated as the signal, not an error.",
+    "Agents are explicitly forbidden from reading docs/source, deliberately reproducing a cold-handed-the-server experience.",
+    "Task G tests the governance boundary: invented feature ids are expected to be CAUGHT by the gated cascade."
+  ],
+  "conventions": [
+    "Uses an implicit workflow DSL: `phase()`, `parallel()`, `agent()`, `log()` are ambient globals, not imported.",
+    "Each agent gets a per-call options object {label, phase, schema}.",
+    "Header comment attributes the design directive to Tim 2026-06-09 and gives the exact Run command."
+  ],
+  "concerns": [
+    "`phase('Eval')` is called once but each agent call also passes phase:'Eval' — redundancy could mask intent if the DSL treats them differently (not determinable from this file).",
+    "Cascade names like 'registration-gauntlet' are referenced as pre-existing but their existence is assumed, not asserted here."
+  ],
+  "notes": "A self-evaluation harness: seven cold MCP-only agents stress the company MCP's compositional ergonomics and emit a structured, prioritised friction/gap list.",
+  "questions": [
+    "Where are the ambient `phase`/`parallel`/`agent`/`log` primitives defined and how does the Workflow runner inject them?",
+    "Does the gated cascade 'registration-gauntlet' actually exist, and what feature-id source does cognition_info/capabilities expose?",
+    "How is the per-agent friction aggregated downstream into the 'prioritised MCP gap list that drives the sweep'?"
+  ],
+  "purpose_vs_actual": "Match — the header states it produces a prioritised MCP gap list via fresh agents hitting friction, and the code dispatches exactly those friction-reporting agents under that constraint.",
+  "apparent_themes": [
+    "Intuitiveness/ergonomics as a measurable bar",
+    "Eval-driven design (friction = signal)",
+    "Cold-start usability testing",
+    "Composition vocabulary: make/check/use/run/discover",
+    "Governed growth and approval boundaries"
+  ],
+  "intention_signals": "Trying to keep the MCP composable by real agents without docs — institutionalize a recurring, honest usability eval whose output feeds an improvement sweep.",
+  "novelty": "Treating friction logs from doc-blind agents as the primary deliverable, with an enforced no-read constraint and an 'eval_' throwaway-naming discipline.",
+  "contribution": "Contributes a reusable MCP-usability evaluation harness: the seven cold compositional-flow tasks, the friction JSON schema, the no-docs/floor/honesty rules, and the gap-list framing that drives downstream MCP improvement.",
+  "summary_for_embedding": "A company workflow that spawns seven fresh MCP-only agents to run real composition flows and report every friction point as a structured prioritised gap list.",
+  "intention_for_embedding": "To enforce and measure an intuitiveness bar for the company MCP by having doc-blind agents drive make/check/use/run/discover flows and surface what is unintuitive."
+}

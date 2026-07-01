@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "analysis/SYSTEM-MAP-EDITOR-ADAPTER.md",
+  "model": "opus",
+  "what_it_does": "The contract document for the System Map's visual editor and its disk-write adapter: the browser editor lets you reorganise the codebase visually (create/rename/duplicate/move/archive/delete files and folders) non-destructively, emitting a typed operation queue, which a separate adapter (run where filesystem access exists) replays to make the changes real; this doc specifies the operation schema and the adapter algorithm.",
+  "observations": [
+    "Defines the operation queue JSON schema with a generatedFrom staleness timestamp and an ordered ops array (createFolder, createFile, rename, duplicate, move, archive, delete).",
+    "All paths are project-relative and identical to a node's id/path in system-map.json.",
+    "Provides an op-to-filesystem-action table (mkdir -p, write empty file, mv, cp -r, rm -rf, archive into _archive/).",
+    "Specifies correctness requirements: staleness guard comparing generatedFrom to current generatedAt, idempotent create ops, refuse-to-overwrite mv/cp, treat delete as destructive (suggest a trash dir).",
+    "Warns never to move/delete compiler artifacts (_ds_bundle.js, _ds_manifest.json, _adherence.oxlintrc.json) and to re-run check_design_system after moving components.",
+    "Requires re-sourcing after apply: regenerate system-map.json via build-system-map.js, then Clear the local edit queue.",
+    "Explains in-memory single-sourcing: edits persist to localStorage['cv-sysmap-edits-v1'], Rescan re-reads disk, Clear discards, the 6-second auto-poll is suppressed while edits pend; all mutation goes through one relocate()/morphEdit() path.",
+    "Gives Claude Code a recipe to build a minimal Node adapter, stressing the op vocabulary must stay in sync between this doc and the editor's emit calls (one home)."
+  ],
+  "standouts": [
+    "Browser-preview-cannot-write constraint resolved by an operation-queue + external-adapter replay pattern rather than direct writes.",
+    "Staleness/conflict guard via generatedFrom timestamp so concurrent disk edits surface a conflict instead of being clobbered.",
+    "The op queue is the single record of intent and the adapter is the only thing that touches disk."
+  ],
+  "conventions": [
+    "Follows the system's one-home / single-source discipline (op vocabulary changed in doc and editor together).",
+    "Apply-in-array-order with explicit ordering rationale (later ops reference earlier-created paths).",
+    "Generated/compiler artifacts treated as untouchable, consistent with the project charter.",
+    "Numbered 'Piece N' framing tying it into a larger System Map series."
+  ],
+  "concerns": [
+    "delete maps to rm -rf with only a soft suggestion to use a trash dir — destructive default with no enforced undo."
+  ],
+  "notes": "The read-write seam between a non-writing browser visual file-tree editor and the real filesystem, defined as a typed, ordered, staleness-guarded operation queue replayed by an external adapter.",
+  "questions": [
+    "Where is build-system-map.js and the editor emit code, and do they currently implement every op listed here?",
+    "Is there a reference Node adapter implementation, or is this purely the contract awaiting one?"
+  ],
+  "purpose_vs_actual": "Matches — declares itself 'the contract' and delivers a complete schema + algorithm + safety contract for the editor/adapter seam.",
+  "apparent_themes": [
+    "Non-destructive edit / external apply seam",
+    "Operation queue as single record of intent",
+    "Single-source / one-home discipline extended to op vocabulary",
+    "Staleness/conflict safety on shared disk state",
+    "Generated artifacts are untouchable"
+  ],
+  "intention_signals": "Trying to let a browser-only visual editor safely reorganise a real codebase by decoupling intent (the typed op queue) from application (an external filesystem adapter), with staleness and overwrite guards so concurrent edits never silently clobber.",
+  "novelty": "The visual-codebase-reorganiser-without-write-access pattern: a FLIP-animated in-memory tree that emits a replayable op queue for an out-of-band adapter to enact.",
+  "contribution": "Contributes the typed file-operation queue schema, the ordered adapter algorithm, and the staleness/overwrite/compiler-artifact safety contract that a fused system would keep as the editor-to-disk seam.",
+  "summary_for_embedding": "Contract for a visual System Map editor that emits a typed, ordered, staleness-guarded file-operation queue replayed by an external disk-write adapter to reorganise a codebase non-destructively.",
+  "intention_for_embedding": "To let a non-writing browser editor safely reorganise a real codebase by decoupling edit intent into a replayable operation queue applied out-of-band by a filesystem adapter."
+}

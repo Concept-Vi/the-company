@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "_ds_bundle.js",
+  "model": "opus",
+  "what_it_does": "A compiled/generated JavaScript bundle (~256KB, ~6970 lines) of the ConceptV design system: a leading /* @ds-bundle */ JSON header declares the namespace (ConceptVDesignSystem_c8f43c), the exported components (Avatar, Badge, Button, Card, Glyphic, Input, Modal, Segmented, Stepper, Switch, Tabs, plus the core ContainmentTree, DiagramSolver, RenderType/CoreTypes, Slide/Archetypes) with their source paths, and a sourceHashes map of every app/ai/canvas/core source file that fed the build. The body is the bundled implementation of those components and the engine.",
+  "observations": [
+    "Marked compiled output; the consuming CLAUDE.md explicitly says '_ds_bundle.js / _ds_manifest.json / _adherence.oxlintrc.json are compiled output — never hand-edit' and that the bundle is stale mid-turn.",
+    "Header is a machine manifest: format:3, a hashed namespace, a components[] list (name + sourcePath), and sourceHashes for content-addressed staleness detection.",
+    "Component sourcePaths show several exports share one source file (RenderType + CoreTypes from core/RenderType.jsx; Slide + Archetypes from core/Slide.jsx).",
+    "sourceHashes enumerates the app surface: ai-registry/seed/capabilities, host-runtime/serializer, and many canvases (AIStudio, Architecture, Bridge, Build, Colors, Components, Icons, Imagery, Inbox, Overview, Patterns, Registry, RegistryInspector, Settings, Templates, …).",
+    "File size read out at exactly 262144 bytes (256KB) — likely a generated/packed artifact.",
+    "Not read line-by-line: treated as a generated blob per the project's never-hand-edit rule."
+  ],
+  "standouts": [
+    "The bundle carries a content-hash manifest of every source file that built it — drift/staleness is detectable by hashing sources against the header.",
+    "It is the single packed runtime home for both the leaf components and the core generative engine (the two solvers + the RenderType/Slide bridge)."
+  ],
+  "conventions": [
+    "Generated-not-hand-edited (compiled artifact).",
+    "Content-addressed staleness via sourceHashes — registry-style provenance baked into the output.",
+    "Single-bundle distribution: consumers import the components/engine from this one packed namespace."
+  ],
+  "concerns": [
+    "Compiled blob — not human-reviewable in source form; its truth lives in the source files it was built from.",
+    "Bundle is known-stale mid-turn (per charter), so reading it can misrepresent current source state.",
+    "No file-local concerns can be asserted beyond that it is generated output."
+  ],
+  "notes": "Generated 256KB design-system bundle packing the leaf components plus the core engine; never hand-edit — it's built from the source files listed in its @ds-bundle sourceHashes header.",
+  "questions": [
+    "What build step emits this (the @ds-bundle format:3 + sourceHashes structure) and how is staleness checked against the header at runtime?",
+    "Why are some exports (CoreTypes, Archetypes) co-bundled from another component's source file — are they re-exports or distinct entities?"
+  ],
+  "purpose_vs_actual": "Matches: it is the compiled distribution bundle of the design system's components and engine, exactly as its header declares.",
+  "apparent_themes": [
+    "generated-not-hand-edited",
+    "content-addressed-provenance (sourceHashes)",
+    "single-source-of-truth (one packed runtime home)",
+    "registry-is-truth (manifest header)"
+  ],
+  "intention_signals": "Inferred: the bundle is meant to be the single deployable runtime of the unified design system, with a self-describing manifest header so consumers and tooling can know exactly which sources and components it contains and detect when it has drifted from its inputs — the compiled embodiment of the 'defined once, referenced everywhere' principle.",
+  "novelty": "Embedding a full sourceHashes provenance manifest and a typed components/sourcePaths list as a JSON header comment inside the compiled bundle is more deliberate than an ordinary minified output.",
+  "contribution": "Brings the packed runtime artifact and, distinctively, its self-describing @ds-bundle manifest — the authoritative list of which components/engine exports exist and the content hashes of the sources that produced them, a provenance/staleness signal a fused system could keep.",
+  "summary_for_embedding": "Compiled ~256KB ConceptV design-system JS bundle packing the leaf components (Avatar, Badge, Button, Card, Glyphic, Input, Modal, Segmented, Stepper, Switch, Tabs) and the core engine (ContainmentTree, DiagramSolver, RenderType, Slide), fronted by an @ds-bundle JSON header with namespace, exported-components list, and per-source content hashes.",
+  "intention_for_embedding": "Provide the single deployable runtime of the unified design system with a self-describing provenance manifest so tooling can know its contents and detect drift from its source files."
+}

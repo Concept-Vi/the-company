@@ -1,0 +1,39 @@
+{
+  "project": "claude-ds",
+  "path": "components/Card.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript type declarations for the `Card` component: declares a `CardProps` interface extending `React.HTMLAttributes<HTMLDivElement>`, the `Card` function signature, and default export. Documents variants and modifiers via JSDoc.",
+  "observations": [
+    "`variant` union: 'soft' | 'surface' | 'outline' | 'gold', described as soft (cream deck panel), surface (white content card), outline (stroke only), gold (gold-tinted).",
+    "Boolean modifiers: `raised`, `interactive`.",
+    "`pad` is 'sm' | 'lg'.",
+    "Slot-like props: `title`, `sub`, `footer` typed as `React.ReactNode`.",
+    "`as?: any` for polymorphic root element.",
+    "Extends `React.HTMLAttributes<HTMLDivElement>`."
+  ],
+  "standouts": [
+    "Carries optional structured slots (title/sub/footer) in addition to children, making it a container with built-in header/footer regions."
+  ],
+  "conventions": [
+    "Standard `.d.ts` companion to a `.jsx` implementation.",
+    "JSDoc variant descriptions tie classes to product surface semantics (cream deck panel, white content card)."
+  ],
+  "concerns": [
+    "`as?: any` loosens polymorphic-element type safety (no element/component constraint)."
+  ],
+  "notes": "The type contract for Card: variant (soft/surface/outline/gold) + raised/interactive/pad + title/sub/footer slots, extending React div attributes.",
+  "questions": [
+    "Does the .jsx render all four variants and the title/sub/footer slots as documented?"
+  ],
+  "purpose_vs_actual": "Match — it is a type-declaration companion accurately describing Card's props.",
+  "apparent_themes": [
+    "Typed component contracts",
+    "Structured container with header/footer slots",
+    "Variants as named product surfaces"
+  ],
+  "intention_signals": "Aims to give consumers a documented, IDE-discoverable type surface for the container primitive including its header/footer slot regions.",
+  "novelty": "Slot props (title/sub/footer) typed at the container level rather than left entirely to children composition.",
+  "contribution": "Contributes the typed prop vocabulary for the surface/container primitive — the variant taxonomy (soft/surface/outline/gold) plus raised/interactive/pad and the title/sub/footer slot contract.",
+  "summary_for_embedding": "A TypeScript .d.ts declaration for a Card component defining a variant union (soft/surface/outline/gold), raised/interactive/pad modifiers, and title/sub/footer slots, extending React div attributes.",
+  "intention_for_embedding": "To provide a typed, documented contract for the Card container primitive including its variants and header/footer slots."
+}

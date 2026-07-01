@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "bindings/by_cascade.py",
+  "model": "opus",
+  "what_it_does": "Defines one binding/lens 'by_cascade' (label 'Flow — the steps, in the order they run') with angle_from 'cascade-flow', radius_from 'time', order_by 'edge', whole_set True, and a 'meta' block of operator-language naming. Also defines CASCADE_FLOW_META, a {id: {name, is}} dict giving human meaning for each step (role / op-verb) that saved cascades reference.",
+  "observations": [
+    "sectors are the operator roles + op-verbs that saved cascades reference; directional precedence edges (step i -> i+1) render as directed chords",
+    "explicitly allows cycles across cascades to render as cycles ('nonsequential is valid — no forced acyclicity')",
+    "radius_from='time' is called a placeholder axis — this view is about edges, not radius",
+    "registry-is-truth: save_cascade -> steps appear as sectors + edges with no code edit",
+    "CASCADE_FLOW_META covers 13 entries (focus, eval_classify, decompose_seed, expand_criterion, ground_criterion, triad_synth, develop_option, score_options, verify_lens, confirm_registration, repo_digest, reduce_synth, op:retrieve, op:reduce)",
+    "comments note the meaning dict is kept here (not in projections/_meta.py) to avoid a runtime-module import collision; cites the projections/_meta.py lesson",
+    "each meta entry is grounded in the role's own ROLE['description'], translated to operator language, avoiding chain jargon",
+    "meta and CASCADE_FLOW_META both flagged 'TENTATIVE draft — Tim/DNA ratify'"
+  ],
+  "standouts": [
+    "directional precedence edges type (have direction) while symmetric ones never do — typed chords from cascade ordering",
+    "cycles render as cycles — no forced acyclicity",
+    "the meaning dict deliberately lives beside the binding to dodge an import-name collision with runtime/projections.py"
+  ],
+  "conventions": [
+    "follows the BINDING row schema from bindings/AGENTS.md (id, label, angle_from, radius_from, order_by)",
+    "adds a 'meta' operator-language block and a sibling {id:{name,is}} sector-meaning dict (same legibility-type as kinds/raw.py, nodes/_meta.py, bindings/grouped.py, bindings/by_lens.py)",
+    "whole_set True -> no '—' remainder",
+    "operator-law: translate role descriptions, never expose machine/chain names"
+  ],
+  "concerns": [],
+  "notes": "The 'Flow' lens: sectors are the cascade steps (roles + op-verbs), connected by directed precedence chords from saved cascades; ships with a grounded, operator-translated meaning dict and is marked tentative pending ratification.",
+  "questions": [
+    "What resolves the 'cascade-flow' angle_from domain at runtime and reads CASCADE_FLOW_META?",
+    "Where/when does radius_from move off the 'time' placeholder?",
+    "What is the OQ1–4 field-set journey-gating referenced for ratification?"
+  ],
+  "purpose_vs_actual": "Match — declares a flow/precedence lens and supplies the step-meaning mapping it describes.",
+  "apparent_themes": [
+    "registry-is-truth (saved cascades drive sectors and edges, no code edit)",
+    "directionality types edges; cycles are legitimate",
+    "operator legibility (translate machine names to human meaning)",
+    "tentative/ratifiable drafts (Tim/DNA gate)"
+  ],
+  "intention_signals": "Trying to surface the system's saved flows as a radial instrument where steps are sectors and their run-order becomes directed chords — automatically, from the registry — while keeping the human-facing names grounded and operator-legible.",
+  "novelty": "Encoding cascade step precedence as typed directional chords that permit cycles, plus the co-located-to-avoid-import-collision meaning dict.",
+  "contribution": "Contributes the 'by_cascade' flow lens definition and the operator-translated meaning for each cascade step (roles + op:retrieve/op:reduce), keyed for the cascade-flow sector domain.",
+  "summary_for_embedding": "A binding 'by_cascade' (Flow lens, angle_from cascade-flow, order_by edge) rendering saved-cascade steps as sectors with directed precedence chords, plus CASCADE_FLOW_META mapping each step/op-verb to operator-language name and meaning.",
+  "intention_for_embedding": "To show the Company's saved flows as a registry-driven instrument of steps connected in run order, with grounded operator-legible step names."
+}

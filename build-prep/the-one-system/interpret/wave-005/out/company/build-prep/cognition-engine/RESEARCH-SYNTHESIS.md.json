@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-engine/RESEARCH-SYNTHESIS.md",
+  "model": "opus",
+  "what_it_does": "The evidence base under the Cognition Engine build: a connect-to / don't-duplicate map of what already EXISTS in the system (registries, surfaces, systems-to-connect, primitives) that the build must wire into rather than rebuild, written first from current knowledge and then enriched/corrected across multiple research rounds (parallel research wave, the run-1 prototype + MCP-tool inspection, and a 5-adversary review).",
+  "observations": [
+    "Confidence tagging convention throughout: checkmark-known (verified by use/code), tilde-recall (believed, verify), question-open (research must answer)",
+    "Round 1 enumerates the registries as 'the composition material' (RoleRegistry, Skill/ContextRegistry, run-index, MODEL_CAPABILITIES, MODE_REGISTRY, NodeRegistry, closed grammars, SCHEMES, field_types) with file:line references",
+    "Round 2 enumerates the surfaces (MCP, /api, FE, CLI) and the contract that one composition surface is rendered on all of them (reflects-never-owns)",
+    "Round 3 lists systems-to-connect (resource-manager, store+vector-index, address resolver, fabric, governance/floor, design system) and Round 4 lists existing primitives (the engine quartet run_swarm/run_role/run_items/run_reduce/run_jury, put_vector/query_index, op=embed, ensure_resident, resolve_address)",
+    "An explicit DON'T-DUPLICATE / DON'T-HARDCODE LEDGER restating the bar Tim set",
+    "Multiple enrichment rounds that self-correct earlier claims (e.g. field_types reframed from 'unprojected hardcoded' to 'projected but wrongly-closed grammar')",
+    "Names a /api/corpus name-collision with the mockup/design gallery, forcing D1 to use /api/cognition/corpus",
+    "Documents a concrete generation pathology: greedy temp0 + grammar-constrained long arrays causing degenerate repetition loops (~20%), cured by repetition_penalty ladder not frequency_penalty",
+    "ROUND 3 records store rules from store/AGENTS.md (address-stability, CAS-immutability, no DB on /mnt/c, fcntl locks, Resolver Protocol) as abide-by constraints"
+  ],
+  "standouts": [
+    "The field_types reframe: research overturns the doc's own Round-0 claim, distinguishing 'closed grammar correct' from 'closed set too narrow' — a self-correcting evidence base",
+    "The run-1 prototype mapping that identifies the coherence finding store AS the marks layer and the ActionRegistry AS the saved-cascade validator (already existing)",
+    "The 5-adversary convergence that re-classifies the cascade RUNNER and cloud routing as net-new and flags the lane-cut as broken (unowned fabric/vector_index files, fs_store wrongly banned)",
+    "Explicit no-regression catch: the live-animated CRAFT-SURFACE (C7.3) was dropped and is restored"
+  ],
+  "conventions": [
+    "Same dense symbolic shorthand and file:line citation style as the companion Implementation Guide",
+    "Registry-is-truth / wire-don't-rebuild framing throughout",
+    "REVIEW HISTORY sections at the end of each round documenting what changed and what's next",
+    "Honest confidence marking rather than asserting certainty"
+  ],
+  "concerns": [
+    "Layered self-correction across rounds means a reader must reconcile Round-0 claims against later corrections (e.g. field_types, corpus-as-mostly-wiring vs adversary's net-new resize)",
+    "Very high abbreviation density makes it hard to consume without the rest of the build-prep context"
+  ],
+  "notes": "The living evidence map of what already exists for the cognition build — registries, surfaces, primitives — that successively corrects itself through research and adversarial review.",
+  "questions": [
+    "Which version of the corpus-effort claim is current: 'almost entirely wiring' (Round 1) or the adversary's 'substantial net-new' resize?",
+    "Has the op.run seq cross-process-uniqueness issue (flagged as mattering if a corpus index keys on seq) been resolved?",
+    "What does the reference-session file (Tim's path, repeatedly cited as 'next') ultimately add or correct?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is the connect-to/don't-duplicate evidence base under the criteria and guide, and the body is exactly that map plus its enrichment rounds.",
+  "apparent_themes": [
+    "Registry-is-truth and no-hardcoding",
+    "Wire-don't-rebuild / no-duplication",
+    "One surface rendered on many faces (reflects-never-owns)",
+    "Living, confidence-marked, self-correcting research",
+    "Abide-by store and governance constraints"
+  ],
+  "intention_signals": "It is trying to ground every planned change in concrete existing code so the build wires into the system rather than duplicating it, and to keep that grounding honest by letting parallel research, a real prototype, and adversaries correct the initial scaffold.",
+  "novelty": "Treating a research-synthesis document as a versioned, self-correcting artifact with explicit confidence tags and adversary rounds — and surfacing findings like a prototype's store being structurally identical to the planned marks layer.",
+  "contribution": "Contributes the concrete inventory of existing system pieces (registries with field lists, surfaces, primitives, store rules) and the verified corrections that distinguish reuse from net-new — the grounding layer a fused system would keep to avoid duplication.",
+  "summary_for_embedding": "A confidence-tagged, multi-round research synthesis mapping the existing registries, surfaces, systems, and primitives the Cognition Engine build must connect to, corrected by parallel research, a prototype, and adversarial review.",
+  "intention_for_embedding": "To ground the cognition build in what already exists so it wires in rather than duplicates, and to keep that grounding honest through iterative research and adversarial correction."
+}

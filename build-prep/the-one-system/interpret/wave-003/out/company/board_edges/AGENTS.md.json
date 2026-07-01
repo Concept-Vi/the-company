@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "board_edges/AGENTS.md",
+  "model": "opus",
+  "what_it_does": "The prescriptive module constitution for board_edges/ — defines the file-discovered EDGE-KIND registry for NOTICEBOARD items: the row schema, the live set of edge kinds, where new edges go, the discovery seam, and prohibitions.",
+  "observations": [
+    "Frontmatter: type=constitution, register=prescriptive, status=living, governs=[board-edge-vocabulary].",
+    "States the registry REUSES runtime/relation_types.py:RelationTypeRegistry verbatim — one mechanism, a separate vocabulary dir.",
+    "Records a dated decision (2026-06-15, lead+fork+advisor) explaining why board_edges is a SEPARATE dir from relation_types/: structural/provenance edges vs corpus-semantic edges.",
+    "Row schema: required id (==filename) and directed(bool); optional inverse/near/far/label/desc; malformed entries RAISE at discovery.",
+    "Lists four live edge-kinds: authored_by, attached_to, sourced_from, promoted_from (with directions and targets).",
+    "Extend mechanism: drop an <id>.py file; cc_board.reset_registries() re-discovers it; cited as proven by tests/cc_board_acceptance.py via a 'blocks' edge.",
+    "Seam: discovered by runtime/cc_board.py:_edges_reg(), consumed by file_item validating each link kind fail-loud.",
+    "Never section: no inlined enum, no second registry mechanism, no silent unregistered edge-kinds.",
+    "Has an auto-reflected 'Agent-authored entries' section appended live by the create face."
+  ],
+  "standouts": [
+    "Explicit 'one MECHANISM, not one dir' principle separating reuse of a class from sharing a namespace.",
+    "A deferred-unification clause: unify into relation_types/ only when the Heart's cross-registry traversal engine lands, tracked as a board idea item not dropped.",
+    "Live edge set framed as 'the drift home' kept green by acceptance tests."
+  ],
+  "conventions": [
+    "Follows the vault constitution schema (frontmatter with typed relations, Is/Why/Guarantees/Seam/Never sections).",
+    "Row id must equal filename; RELATION_TYPE = {...} per-file declaration.",
+    "Cites the discovering/consuming code paths and the acceptance test that proves the row-add-no-code claim."
+  ],
+  "concerns": [],
+  "notes": "Constitution for the noticeboard's typed edge vocabulary — same registry class as relation_types but a deliberately separate dir for structural/provenance edges.",
+  "questions": [
+    "The live-set lists promoted_from but the extend example/tests mention a 'blocks' edge — is the documented live set fully in sync with the actual files?",
+    "What exactly distinguishes near/far semantics here given these are structural rather than corpus edges?"
+  ],
+  "purpose_vs_actual": "Match — it is a constitution and it governs the board-edge vocabulary exactly as the frontmatter claims.",
+  "apparent_themes": [
+    "One mechanism, many vocabularies",
+    "File-discovered registries (row-add, no code)",
+    "Fail-loud validation",
+    "Deliberate deferred unification with provenance tracking",
+    "Separation of structural/provenance edges from corpus-semantic edges"
+  ],
+  "intention_signals": "Tries to justify and govern a separate edge namespace for the board while insisting it stays on the single shared relation-registry mechanism, so the system gains a vocabulary without forking machinery.",
+  "novelty": "The careful articulated distinction between sharing a mechanism (the RelationTypeRegistry class) versus sharing a directory/vocabulary, with a dated multi-party decision rationale.",
+  "contribution": "Contributes the governing rules and the live edge-kind vocabulary (authored_by/attached_to/sourced_from/promoted_from) for noticeboard item links, plus the rationale for keeping that vocabulary separate.",
+  "summary_for_embedding": "A prescriptive constitution defining the board_edges/ edge-kind registry for noticeboard items — its row schema, four live edge kinds, discovery seam via RelationTypeRegistry, and separation from relation_types/.",
+  "intention_for_embedding": "To govern a separate typed edge vocabulary for board-item provenance/structural links while reusing the single shared relation-type registry mechanism."
+}

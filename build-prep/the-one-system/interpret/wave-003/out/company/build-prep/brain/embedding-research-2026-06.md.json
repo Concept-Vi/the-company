@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/brain/embedding-research-2026-06.md",
+  "model": "opus",
+  "what_it_does": "A multi-lane web-research dossier on embedding and reranker models for the Company's embedding layer as of mid-2026. Three appended lanes cover (1) nomic-embed-code quantization, (2) small sub-2B code embedders, (3) an open frontier scan; plus a corrections section listing the real verified-on-disk repo IDs. Each finding is labeled Observed / Verified / Inferred with source URLs and dated.",
+  "observations": [
+    "Lane 1 documents nomic-embed-code: Qwen2.5-Coder-7B base, last-token pooling, mandatory query prefix 'Represent this query for searching relevant code:', a full GGUF quant ladder (f32 28.3GB down to Q2_K 2.84GB) with Nomic's own per-quant quality notes, and AWQ/FP8 variants.",
+    "Provides a VRAM table mapping precision to realistic serve footprint on a 16GB RTX 4080, concluding Q6_K (~6.5-7GB) is the evidence-backed sweet spot for coexistence with the chat model.",
+    "Names two 'silent-garbage traps': wrong pooling mode and missing query prefix degrade retrieval more than any >=4-bit quant.",
+    "Lane 2 warns that three code benchmark scoreboards (CoIR, MTEB-Code, jina's 25-bench suite) are NOT cross-comparable, then tables ~13 sub-2B code-capable models with params/ctx/dim/license/score/serving.",
+    "Flags license landmines repeatedly: jina code models, SFR, and jina-reranker-v3 are CC-BY-NC (non-commercial); Qodo is RAIL; Qwen3/Granite/CodeSage are permissive.",
+    "Lane 3 frontier scan tracks six headline shifts (multimodal default, small distilled text embedders, contextual embeddings, late-interaction infra, benchmark trust collapse/RTEB+LIMIT, no BGE-M3 successor).",
+    "Highlights Qwen3-VL-Embedding-2B/8B + matched VL-Reranker (Apache-2.0, screenshot-native) as the single most consequential release for the 16GB box, superseding jina-v4.",
+    "Notes pplx-embed (MIT) with quantization-aware-training native INT8/binary compression and a context-aware variant.",
+    "The final section corrects download-pass mistakes with verified-on-disk repo IDs and sizes, plus a captured lesson about hf download exit codes being masked by a tail pipe."
+  ],
+  "standouts": [
+    "The disciplined Observed/Verified/Inferred labeling on nearly every claim, with source URLs and dates carried so later passes can re-check.",
+    "The cross-comparability warning on the three benchmark scoreboards — a guard against vendor-cherry-picked numbers.",
+    "The starred Qwen3-VL-Embedding-2B finding identified as the strategic pick and as superseding the prior jina-v4 plan.",
+    "The captured operational lesson: `hf download <id> 2>&1 | tail` returns tail's exit code, hiding a 404 as false success."
+  ],
+  "conventions": [
+    "Every lane opens with date, scope, and an explicit evidence-labeling key (Observed/Verified/Inferred); nothing is claimed Verified-on-our-hardware.",
+    "Sources listed inline and in a trailing source block per lane.",
+    "Append-only lane structure ('appended by its research agent'), working-doc register under build-prep/."
+  ],
+  "concerns": [
+    "All quality scores are vendor/leaderboard numbers, none verified on the Company's own corpus — the doc itself repeatedly flags this and recommends self-retrieval probes before committing any index.",
+    "Some figures (jina-v5 license, Granite R2 dims, VRAM coexistence) are explicitly left as open questions / Inferred and could be relied on prematurely.",
+    "Point-in-time model landscape that will age quickly."
+  ],
+  "notes": "This is the sourced, evidence-labeled procurement-research behind the embedding fleet decisions — read the corrections section at the bottom for the actual on-disk repo IDs.",
+  "questions": [
+    "Have the recommended self-retrieval probes on the Company's own corpus been run to convert any of these Observed scores into Verified?",
+    "Which of the listed not-on-disk models (pplx variants, jina-reranker-v3, Granite, Qwen3-VL-8B) were ultimately downloaded and registered?"
+  ],
+  "purpose_vs_actual": "Matches — it is a research dossier for the embedding layer and delivers lane-by-lane sourced findings plus a verified on-disk correction section, exactly as framed.",
+  "apparent_themes": [
+    "Evidence discipline and provenance over marketing claims",
+    "License as a first-class selection axis",
+    "Quantization for VRAM coexistence on a constrained card",
+    "Configuration correctness (pooling/prefix) as a failure class",
+    "Permissive Qwen spine as the strategic family choice"
+  ],
+  "intention_signals": "Trying to ground the embedding-fleet decisions in verifiable external research rather than the agent's prior knowledge — to map the real 2026 model/reranker landscape, sizes, licenses, and serving traps so the Company can pick swappable embedders for a 16GB box with eyes open.",
+  "novelty": "The starred Qwen3-VL-Embedding finding, the late-interaction-as-infrastructure scan, the native-compression pplx note, and the on-disk-ID corrections with the exit-code lesson.",
+  "contribution": "Contributes the sourced, dated, evidence-labeled model/reranker landscape — quant ladders, VRAM math, license map, benchmark caveats, and the verified on-disk repo IDs — that backs the fleet/spaces registry choices.",
+  "summary_for_embedding": "A dated, source-cited multi-lane research dossier on embedding and reranker models (nomic-embed-code quants, sub-2B code embedders, the 2026 frontier) with VRAM math, license flags, and verified on-disk repo IDs for the Company's 16GB box.",
+  "intention_for_embedding": "To ground the Company's swappable embedding-fleet decisions in verifiable external evidence about model sizes, licenses, quantization, and serving discipline."
+}

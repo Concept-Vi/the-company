@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "axes/size/size-axis.js",
+  "model": "opus",
+  "what_it_does": "Defines the 'size' axis — the element/mark size ramp — and registers it on window.CV_AXES. It enumerates six steps (xs, sm, md, lg, xl, hero) whose value-units are the --size-* tokens from tokens/sizing.css, grouped into inline/standard/feature, each carrying a meta.px number for computational consumers (e.g. SVG width).",
+  "observations": [
+    "IIFE guarded on window.CV_AXES; errors and returns if axis-core hasn't loaded.",
+    "sizes array maps each step to [id, token, px]: xs/16, sm/24, md/40, lg/56, xl/72, hero/96.",
+    "Values are built by mapping sizes: id, label ('xs · 16px' style), token (size-xs…), group (by index: 0-1 inline, 2-3 standard, 4-5 feature), meta.px.",
+    "Header states the axis IS the tokens, typed and ordered — not a replacement; resolveCSS → var(--size-*).",
+    "meta.px is explicitly the resolved number for SVG/JS consumers that need a number, not a CSS var.",
+    "Header notes the inline --icon-* scale (tokens/icons.css) is a separate icon-within-chrome sub-scale.",
+    "default is 'md'.",
+    "Group thresholds derived from index position (i<=1, i<=3, else)."
+  ],
+  "standouts": [
+    "Dual-form values: a token (for CSS var resolution) AND meta.px (a raw number) so both CSS and JS/SVG consumers can use the same axis.",
+    "Explicit framing that the axis is the tokens themselves, typed/ordered — not a parallel definition.",
+    "Distinguishes this size ramp from the separate --icon-* sub-scale."
+  ],
+  "conventions": [
+    "Same CV_AXES.make/register pattern as the other axes.",
+    "Single-home discipline: value-units are the --size-* tokens; the axis references, not redefines.",
+    "Guard-and-return idiom at top.",
+    "Index-derived grouping keeps the value list compact."
+  ],
+  "concerns": [
+    "The px numbers (16/24/40/56/72/96) are inlined here alongside the token names; if tokens/sizing.css ever changes a --size-* value, meta.px would silently drift unless kept in sync — a duplication of the numeric value across two homes."
+  ],
+  "notes": "The 'size' axis = the typed, ordered --size-* token ramp (xs→hero) grouped inline/standard/feature, with each value also exposing meta.px so SVG/JS consumers get a raw number alongside the CSS var.",
+  "questions": [
+    "meta.px duplicates the numeric value that also lives in tokens/sizing.css as --size-* — is there a sync mechanism, or is the px here authoritative for JS consumers and the token authoritative for CSS?"
+  ],
+  "purpose_vs_actual": "Match — the header describes a token-backed size ramp with meta.px for computational consumers and a separate icon sub-scale note, and the code builds exactly that.",
+  "apparent_themes": [
+    "Axis as a typed/ordered view over existing tokens.",
+    "Single source of truth (the --size-* tokens), with a pragmatic raw-number escape hatch for JS/SVG.",
+    "Grouping a continuous ramp into usage buckets (inline/standard/feature)."
+  ],
+  "intention_signals": "To make element/mark sizing a generative axis whose units ARE the design tokens, while exposing a resolved px number so non-CSS consumers (SVG glyphics, JS) can use the same single ramp instead of inventing their own sizes.",
+  "novelty": "Carrying both a CSS-token reference and a resolved numeric meta.px on each axis value to serve CSS and computational consumers from one ramp.",
+  "contribution": "Contributes the 'size' dimension of the axis model — an ordered token-backed size ramp grouped by usage, with dual CSS-var/px access for consumers.",
+  "summary_for_embedding": "A JS IIFE registering the 'size' axis on window.CV_AXES as a typed/ordered ramp over --size-* tokens (xs→hero) grouped inline/standard/feature, each value carrying meta.px for SVG/JS consumers.",
+  "intention_for_embedding": "To make element/mark sizing a generative axis backed by the --size-* tokens, with a resolved px number so non-CSS consumers use the same single ramp."
+}

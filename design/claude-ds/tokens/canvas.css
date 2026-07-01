@@ -1,0 +1,82 @@
+/* ============================================================
+   ConceptV · SPATIAL CANVAS  (scaffold)
+   ------------------------------------------------------------
+   The home for the workflow vision: source → candidate → approval →
+   package laid out in space, with branch traces, ghosted off-frame
+   continuation, memory zones for rejected/near-miss work, and the
+   selected branch brought forward. This file is the STRUCTURAL
+   scaffold — coordinates, pan/zoom transform, node placement, edge
+   layer. The interactive engine (pan/zoom drag, auto-routing,
+   spec→diagram generation) is a later component that builds on this
+   and on tokens/diagram.css.
+
+   Coordinate model: a .spatial-canvas is the viewport; .spatial-world
+   is the pannable/zoomable plane (transformed by --cv-x/--cv-y/
+   --cv-scale). Nodes are absolutely placed at --x/--y. Edges draw in
+   one <svg class="spatial-edges"> spanning the world.
+   ============================================================ */
+:root {
+  --cv-x: 0px;   /* @kind other */  /* world pan offset */
+  --cv-y: 0px;   /* @kind other */
+  --cv-scale: 1; /* @kind other */
+  --cv-grid: 28px;
+  --cv-grid-color: color-mix(in oklch, var(--ink) 6%, transparent);
+  --cv-ghost-opacity: 0.4; /* @kind other */  /* off-frame continuation */
+}
+
+.spatial-canvas {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(var(--cv-grid-color) 1px, transparent 1px) 0 0 / var(--cv-grid) var(--cv-grid),
+    linear-gradient(90deg, var(--cv-grid-color) 1px, transparent 1px) 0 0 / var(--cv-grid) var(--cv-grid),
+    var(--zone-base-surface);
+  background-position: var(--cv-x) var(--cv-y);
+  touch-action: none;            /* the engine handles pan/zoom */
+  isolation: isolate;
+}
+
+.spatial-world {
+  position: absolute; top: 0; left: 0;
+  transform: translate(var(--cv-x), var(--cv-y)) scale(var(--cv-scale));
+  transform-origin: 0 0;
+  will-change: transform;
+  transition: transform var(--dur-move) var(--ease-emphasized);  /* programmatic moves glide */
+}
+.spatial-world.dragging { transition: none; }   /* live drag is 1:1 */
+
+/* edge layer spans the whole world, behind nodes */
+.spatial-edges { position: absolute; inset: 0; overflow: visible; pointer-events: none; z-index: 0; }
+.spatial-world > .spatial-node { z-index: 1; }
+
+/* a placed node — set --x/--y (world px). Reuses diagram node styling. */
+.spatial-node {
+  position: absolute;
+  left: var(--x, 0px); top: var(--y, 0px);
+  display: inline-flex; align-items: center; gap: var(--s-3);
+  min-width: var(--dgm-node-min-w);
+  padding: var(--dgm-node-pad);
+  border-radius: var(--dgm-node-radius);
+  background: var(--dgm-node-fill);
+  border: var(--dgm-stroke-hair) solid var(--dgm-node-edge);
+  box-shadow: var(--elev-2);
+  font-size: var(--fs-meta);
+}
+.spatial-node[data-active] { box-shadow: var(--glow-active); border-color: var(--vi-edge); }
+.spatial-node[data-state="rejected"] { opacity: 0.7; border-style: dashed; border-color: var(--zone-reject-edge); }
+
+/* branch states: the chosen path forward, others softened back */
+.spatial-world.has-branch .spatial-node:not([data-branch="active"]) { opacity: var(--cv-ghost-opacity); }
+
+/* off-frame continuation — a node bleeding past the viewport edge to
+   signal "there's more this way." Place at the canvas edge. */
+.spatial-ghost { opacity: var(--cv-ghost-opacity); -webkit-mask-image: linear-gradient(90deg, #000 40%, transparent); mask-image: linear-gradient(90deg, #000 40%, transparent); }
+
+/* memory shelf — a docked zone for rejected / near-miss nodes */
+.spatial-memory {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 132px;
+  background: var(--zone-reject-surface);
+  border-left: 1px solid var(--zone-reject-edge);
+  padding: var(--d-3); display: flex; flex-direction: column; gap: var(--d-2);
+  z-index: var(--z-raised);
+}

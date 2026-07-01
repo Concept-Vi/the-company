@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/REMAINING-WORK-BOARD.md",
+  "model": "opus",
+  "what_it_does": "A canonical, update-in-place management board that organizes the remaining post-loop work into a two-track arrangement: Track 1 (THE CONVERSATION — the memory/brain system, design-only, no building until talked through with Tim) and Track 2 (THE BUILD BOARD — workflows/beats run autonomously while the conversation happens). It enumerates Track 2's work items B1-B7, states the per-beat management protocol, and lists honest constraints.",
+  "observations": [
+    "Written 2026-06-10 at Tim's direction; frames the two-track split (design conversation vs autonomous build) so the board is clear by implementation-time",
+    "Track 1 bundles the memory & brain system (GC15-deep) with the mechanisms it rides (GC14 self-injection, GC3 address-accumulation, GC13 acceptance->build lifecycle) as ONE design conversation, plus the [M] UI lane tie-in and 3 pending one-word memory rows",
+    "Track 2 lists B1 (G3 data-chains build — checks/ registry + check step kind, panel/jury step kinds, per-unit ctx, shared resolve-once, re-express registry_generation as a cascade), B2 (GC10 propose_flow gated path), B3 (rolling flow programs: transcript_mine, repo_ingest, drift_radar, pattern_cluster+memory_proposals)",
+    "B4 (consolidation marks — PROPOSE-NOT-APPLY for cross-lane docs), B5 (harness->system memory migration, batched <=5/run, gated), B6 (small bounded items including ingest path normalization, trailing-comma unit, inbox litter, standing Tim-reminders), B7 (Eval #4 after G3+GC10)",
+    "Management protocol: each loop beat does RUNNING-CHECK -> ingest finished workers -> pick B1->B7 in order (B3 fills idle) -> dispatch ONE file-disjoint workflow or build serially -> verify by USE -> commit -> record",
+    "Honest constraints: cognition.py/suite.py work is SERIAL (no parallel workers on hot engine files), consolidations are propose-not-apply, board completeness depends mostly on B1",
+    "Notes Track 1 turns PREEMPT build talk; beats hold to prep-only when Tim is in conversation"
+  ],
+  "standouts": [
+    "The deliberate two-track arrangement separating talked-through design work from autonomously-runnable build work, so autonomous beats never preempt the design conversation",
+    "The explicit serial constraint on hot engine files (cognition.py/suite.py) — no parallel fan-out there, the lead's direct work across beats",
+    "Cross-lane docs governed by a propose-not-apply rule (produce a consolidated draft + diff for the owning session, never rewrite shared docs in place)"
+  ],
+  "conventions": [
+    "Update-in-place canonical board convention",
+    "File-disjoint parallel lanes / workers-never-commit discipline",
+    "Verify-by-use before commit",
+    "Propose-not-apply for shared/cross-lane docs",
+    "Gated, batched, conservative memory migration"
+  ],
+  "concerns": [
+    "Being a living update-in-place board, its accuracy depends on continuous updating; as a snapshot it may not reflect current completion state"
+  ],
+  "notes": "This is the lead's management substrate for the two-track post-loop arrangement — Track 1 (design conversation, no building) and Track 2 (the B1-B7 build board run autonomously via beats under a stated protocol), with honest constraints on serial engine work.",
+  "questions": [
+    "What is the current completion state of B1 (the G3 data-chains build) since the board notes overall completeness depends mostly on it?",
+    "Has the Track 1 design conversation occurred, unblocking the memory/brain implementation?",
+    "Are the [M] FE lane and MESSAGES.md coordination still the active cross-session arrangement?"
+  ],
+  "purpose_vs_actual": "Matches — it states it is the management substrate for the two-track arrangement and the body provides exactly that (the two tracks, the itemized build board, the protocol, the constraints).",
+  "apparent_themes": [
+    "Two-track separation of design-conversation from autonomous build",
+    "Operator-gated, propose-not-apply discipline",
+    "File-disjoint parallel lanes vs serial hot-file work",
+    "Verify-by-use loop beats",
+    "Honest constraint disclosure"
+  ],
+  "intention_signals": "Trying to keep autonomous build work moving on clearly-buildable items while protecting the memory/brain system for a deliberate design conversation with Tim, so the board is clear (or close) by the time the design is implementation-ready.",
+  "novelty": "The explicit arrangement where a design conversation track PREEMPTS the autonomous build track, with beats holding to prep-only when Tim is engaged — a coordination discipline between human-design-time and agent-build-time.",
+  "contribution": "Contributes the structured remaining-work inventory and the per-beat management protocol that coordinates autonomous building against a protected design conversation, including the serial-hot-file and propose-not-apply constraints.",
+  "summary_for_embedding": "A canonical update-in-place management board splitting remaining work into Track 1 (the memory/brain design conversation, no building) and Track 2 (the B1-B7 autonomous build board run via loop beats), with a per-beat protocol and honest serial/propose-not-apply constraints.",
+  "intention_for_embedding": "Written to coordinate autonomous build progress on clearly-buildable items while reserving the memory/brain system for a deliberate design conversation with Tim, keeping the board clear by implementation-time."
+}

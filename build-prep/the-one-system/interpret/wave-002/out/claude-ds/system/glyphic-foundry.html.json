@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "system/glyphic-foundry.html",
+  "model": "opus",
+  "what_it_does": "A conversational symbol-generation surface (the 'mark foundry'). A left rail thread + composer lets the user describe a symbol; on Generate it routes through CV_AI.execute('glyphic.generate') when a live model is bound, otherwise falls back to a deterministic demo generator that composes candidates from existing CV_ICONS. Candidates render live as glyphics; clicking selects, and Save routes to CV_AI.execute('glyphic.save') (or ICONS.add) and rebuilds the symbol axis.",
+  "observations": [
+    "Declared as @dsCard (group 'Glyphic System', 1180x860) whose subtitle says it routes through CV_AI.execute(glyphic.generate/save) with a demo fallback.",
+    "Loads the axis stack, icon/shape assets, CV_GLYPHIC, and the CV_AI stack (ai-registry.js, ai-seed.js, ai-glyphic.js) — with a comment 'so generation routes through CV_AI.execute, never raw window.claude'.",
+    "Detects live mode via !!(window.claude && typeof window.claude.complete === 'function') and shows a 'Live · CV_AI' vs 'Demo mode' badge accordingly.",
+    "previewGlyphic() temp-registers a candidate's svg into CV_ICONS (persist:false-style, ids prefixed '__foundry_') so it can render through GL.render, with an inline SVG fallback if GL is absent.",
+    "demoCandidates() composes plausible candidates from the existing icon pool keyed off brief length/words, assigning domain/kind/tags facets — so the foundry is always demonstrable without a model.",
+    "generate() is async: live path calls AI.execute('glyphic.generate', {surface, params:{brief,count,thread}}) and maps p.record; demo path delays 350ms then composes; catch falls back to demo on error.",
+    "saveCandidate() prefers AI.execute('glyphic.save') when live else ICONS.add(...provenance:'vi'); then rebuilds the symbol axis (CV_AXES.resolve('symbol').rebuild) and toasts.",
+    "Keyboard: Cmd/Ctrl+Enter in the brief triggers generate; click delegation handles save vs select.",
+    "Saved-this-session strip renders saved glyphics inline via GL.render."
+  ],
+  "standouts": [
+    "Hard discipline that all model calls go through CV_AI.execute, never raw window.claude — stated in a comment and enforced in code.",
+    "Graceful degradation: a real demo generator means the surface is functional and demonstrable even with no provider bound.",
+    "Saving a candidate live-updates two other systems (the icon library and the symbol axis) so a new mark is instantly first-class everywhere."
+  ],
+  "conventions": [
+    "Routes AI through the registry (CV_AI) per the design system's AI single-source rule.",
+    "Loud-ish failure to a labelled fallback rather than silent break (catch shows a Vi message and demo candidates).",
+    "Tokens-only styling in the inline <style>; vanilla IIFE app logic like the sibling cards."
+  ],
+  "concerns": [
+    "Temp icons are injected into the shared CV_ICONS.data with '__foundry_' prefixes; if not cleaned they could accumulate in the live library during a long session (other code filters '__' ids, mitigating but not removing them).",
+    "Live-mode detection keys off window.claude.complete rather than asking CV_AI whether a provider is bound, so the badge could disagree with the registry's actual provider state."
+  ],
+  "notes": "If briefing someone: this is the chat-style icon generator card — describe a symbol, get candidate glyphics (via CV_AI or a demo fallback), Save one and it drops into CV_ICONS and the symbol axis instantly.",
+  "questions": [
+    "Are the '__foundry_' temp icons ever purged from CV_ICONS.data after the session?",
+    "What exactly does glyphic.generate return and is the p.record shape guaranteed by CV_GLYPHIC.schema?"
+  ],
+  "purpose_vs_actual": "Match — the subtitle describes a conversational foundry routing through CV_AI with a demo fallback, and the script implements that generate/select/save loop.",
+  "apparent_themes": [
+    "AI as a registered capability (route through CV_AI, never raw model)",
+    "Generative composition of marks from a single icon/shape source",
+    "Graceful degradation / always-demonstrable",
+    "New artifacts become first-class instantly (live axis + library update)"
+  ],
+  "intention_signals": "Trying to realise the brief's 'AI built into the icon system' — a multi-step propose/feedback/iterate/save conversation that adds generated marks into the collective library through the registry, without bespoke per-call model code.",
+  "novelty": "Temp-registering candidate SVGs into the live icon registry so previews render through the real glyphic compositor, plus a deterministic demo generator that makes the AI surface usable with no model.",
+  "contribution": "Contributes the working conversational mark-foundry UI that turns descriptions into saved, system-integrated glyphics via CV_AI, with a self-contained demo mode.",
+  "summary_for_embedding": "Conversational glyphic-foundry HTML card: describe a symbol, generate candidate glyphics via CV_AI.execute (with a demo fallback), select and Save into CV_ICONS and the symbol axis.",
+  "intention_for_embedding": "To let the user generate and add new symbols to the collective icon system through a multi-step AI conversation routed entirely through the AI registry."
+}

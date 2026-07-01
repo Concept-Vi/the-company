@@ -1,0 +1,48 @@
+{
+  "project": "claude-ds",
+  "path": "README.md",
+  "model": "opus",
+  "what_it_does": "The top-level brand and architecture document for the ConceptV Design System. Introduces the company (Australian innovation firm building on a proprietary 'Universal Mechanics' model), names the four product surfaces and their canonical shapes, then describes a 'v2 generative layer' that reframes the whole system as one type system + one rule engine + two layout solvers driven by orthogonal axis-dials over an invariant DNA core. Catalogues sources, the root folder manifest, content/voice fundamentals, visual foundations (colour, type, spacing, shapes, motion), iconography (three icon families), and the three UI kits.",
+  "observations": [
+    "Defines an entity 'shape system': User Portal=circle, Property Wizard=hexagon, Virtual Hubs=octagon, Vi=line-fill diamond, generic=rounded rect.",
+    "States v2 supersedes the original narrow read and 'when they conflict, v2 wins' — explicit conflict-resolution rule embedded in the doc.",
+    "Core formula repeated: design = f(content, axisPosition); axis-dials are surface, LOD, density, theme, tint/gold intensity.",
+    "Describes a containment ladder Band -> Section -> Zone -> Cluster -> Atom with a ~2% undertone wash per nesting level (zoning = containment depth, not semantic colour).",
+    "Two solvers on a shared node type (core/cv-nodes.d.ts): block solver (ContainmentTree) and graph solver (DiagramSolver) with 10+ diagram types, compiled into _ds_bundle.js read via window.ConceptVDesignSystem_c8f43c.",
+    "Colours sampled pixel-accurate from logo PNG: gold #E0C010 (234,036 pixels), bronze #988058, ink #1F1A12, canvas #FBF7EC, sunken #E8E2CC.",
+    "Notes the conceptv.com.au website was offline during build, so calibration relied on mockups and provided assets alone.",
+    "Flags font substitution (Sora/DM Sans/JetBrains Mono) as unconfirmed against the real product font.",
+    "Describes a 'Glyphic' as the universal component/mark with facets (ring, symbol, fill, colour, texture, motion, size, depth) registered both as component and as a Type in CV_REGISTRY (94 Types total).",
+    "Describes Universal AXES (axes/axis-core.js -> window.CV_AXES) where tokens are the value-units of each axis (Colour, Space, Size, Motion, Texture, Depth, Fill, Form, Symbol + Meaning)."
+  ],
+  "standouts": [
+    "The whole-system thesis 'one type system + one rule engine + two layout solvers ... design = f(content, axisPosition)'.",
+    "Explicit 'v2 wins on conflict' precedence rule baked into a README.",
+    "Pixel-accurate colour provenance with exact pixel counts cited from the logo PNG.",
+    "The entity shape system (circle/hexagon/octagon/diamond) as a named brand-distinctive device."
+  ],
+  "conventions": [
+    "Sentence-case copy throughout; direct second person; imperative action labels; no exclamation marks/emoji in body copy (emoji allowed as sidebar nav icons).",
+    "Single-source / extend-by-registration framing: one catalogue, no parallel lists, references not copies.",
+    "Uses a table-heavy reference format with source-stored-at columns and a fenced folder manifest.",
+    "Cites file paths and live-object globals (window.ConceptVDesignSystem_c8f43c, CV_AXES, CV_REGISTRY) as canonical anchors."
+  ],
+  "concerns": [],
+  "notes": "The brand+architecture constitution for ConceptV's design system — read it to understand both the visual DNA and the v2 generative 'design = f(content, axis)' model in one place.",
+  "questions": [
+    "What is the actual real product UI font (flagged as unknown/substituted)?",
+    "Is the v2 generative engine fully implemented or partly aspirational, given the 'weld'/unification language describing two halves still being joined?"
+  ],
+  "purpose_vs_actual": "Matches: it states it is the brand foundation + v2 generative model overview, and the content delivers exactly that across voice, visual, icon, and architecture sections.",
+  "apparent_themes": [
+    "Single-source-of-truth / anti-drift composition",
+    "Generative design (compute the layout, don't hand-lay it)",
+    "Brand DNA grounded in sampled real assets",
+    "Orthogonal axis dimensions composing freely over an invariant core"
+  ],
+  "intention_signals": "Trying to be the one orientation document a fresh agent reads to design on-brand AND to understand that the system is generative rather than a static component pile — encoding both the look and the rule engine behind it.",
+  "novelty": "The entity shape system tied to platform parts, and the framing of tokens as the value-units of named visual axes (Colour axis IS the colour tokens), are unusual ways to organise a design system.",
+  "contribution": "Contributes the full ConceptV brand vocabulary (colours/type/voice/shapes/icons) plus the v2 generative-system thesis and its registry/axis architecture description — the connective narrative that names every part and how they reference each other.",
+  "summary_for_embedding": "ConceptV Design System README defining the brand DNA (sampled colours, type, voice, entity shape system, icon families) and the v2 generative model of one type system, one rule engine, two layout solvers driven by axis-dials over an invariant core.",
+  "intention_for_embedding": "To orient any agent on how to design on-brand for ConceptV and to explain the generative single-sourced architecture (design = f(content, axisPosition)) behind the visuals."
+}

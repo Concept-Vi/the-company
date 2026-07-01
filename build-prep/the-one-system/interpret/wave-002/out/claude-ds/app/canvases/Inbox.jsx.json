@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/Inbox.jsx",
+  "model": "opus",
+  "what_it_does": "Defines an Inbox React canvas (and an InboxItem sub-component) where a user drops/uploads files; each file is read, given an id, and sent to an AI model (via window.CV_AI.complete) to be classified into one of eight brand design-system categories. The suggested category appears in gold; the user can apply, re-tag, reject, or bulk-operate, and applied items fire onApplied(cat).",
+  "observations": [
+    "Eight fixed CATEGORIES (icons, colors, logos, imagery, voice, components, templates, type) each with id/label/cat/desc.",
+    "Images are sent to the model as base64 image content for visual classification; non-images are classified from filename/type/size text only.",
+    "Classification result is normalized aggressively (trim, lowercase, first word, strip non-letters) and falls back to 'imagery' if invalid or on error.",
+    "Item lifecycle fields: suggestedCat, appliedCat, thinking, plus dataUrl/receivedAt; nothing enters the system until appliedCat is set.",
+    "Bulk-select toolbar with selectAll/clearSelection and bulkApply/bulkRetag/bulkReject, plus section-level applyAllSuggestions/retagAll/clearTagged.",
+    "Uses window.dsaToast for user feedback and confirm() for destructive discard.",
+    "autoTag reads the item out of a setItems callback (setItems(prev => { item = prev.find(...); return prev; })) to get current state without a re-render.",
+    "Registers itself globally as window.Inbox; aliases React hooks as useState_in/useRef_in.",
+    "Heavy use of CSS custom properties (var(--accent-gold), --r-md, --font-body, etc.) and dsa-* class names."
+  ],
+  "standouts": [
+    "Vision-based AI classification: actually sends the dropped image bytes to the model and asks for one category id, distinct from filename-only heuristics.",
+    "The 'nothing enters your system until you accept it' approval gate — suggestion is advisory, application is the user's act.",
+    "applyTag mutates suggestedCat to match the applied cat as well, keeping the two fields consistent post-apply."
+  ],
+  "conventions": [
+    "Follows the project's window-global component registration pattern (window.Inbox = Inbox) and React-via-globals (no imports).",
+    "Routes all model calls through window.CV_AI.complete rather than a raw provider, per the AI-registry directive.",
+    "Tokenized styling via CSS vars and dsa-* classes; some inline styles use raw px values for layout."
+  ],
+  "concerns": [
+    "applyTag reads `items` from the closure (const item = items.find(...)) right after calling setItems, so the toast/onApplied may use stale item data.",
+    "autoTag's stale-read via setItems(prev => { item = prev.find ... }) is a side-effect inside a state updater, an unusual pattern that can misbehave under React strict/double-invoke.",
+    "Silent fallback to 'imagery' on any classification error swallows the failure cause from the user.",
+    "id generation uses Date.now()+random slice, low but nonzero collision risk on rapid multi-file drops."
+  ],
+  "notes": "A drag-and-drop intake canvas that uses real (vision-capable) AI to propose a category for each file, gated behind explicit user approval before anything is filed.",
+  "questions": [
+    "What downstream consumer handles onApplied(cat) — where does an applied item actually go?",
+    "Is window.CV_AI.complete guaranteed to accept the {messages:[{content:[image,text]}]} shape used for images?",
+    "Are the eight CATEGORIES meant to mirror the four-registry model or a separate brand-asset taxonomy?"
+  ],
+  "purpose_vs_actual": "Match — the header copy ('Vi auto-tags by content and proposes where it belongs; nothing enters your system until you accept it') accurately describes the implemented suggest-then-approve flow.",
+  "apparent_themes": [
+    "AI-as-advisor with human approval gate",
+    "Content-aware (visual) classification over filename guessing",
+    "Single source for model access (CV_AI) and tokenized look"
+  ],
+  "intention_signals": "Aims to make ingesting arbitrary brand assets effortless by having Vi read each item's actual content and propose where it belongs, while keeping the user in final control of what is admitted.",
+  "novelty": "Sends the dropped image's pixels to the model for category inference, not just metadata — a genuine visual-classification intake rather than rule-based sorting.",
+  "contribution": "Contributes a complete drag-drop intake canvas with vision-based AI categorization, a suggest/apply/reject approval gate, and bulk-tagging UX over a fixed brand-asset taxonomy.",
+  "summary_for_embedding": "A React Inbox canvas that drag-drops files, sends each (images as base64) to CV_AI for one-of-eight brand-category classification, and gates filing behind explicit user apply/reject with bulk operations.",
+  "intention_for_embedding": "To let a user drop any brand asset and have Vi read its content and propose where it belongs, with the user approving before anything enters the design system."
+}

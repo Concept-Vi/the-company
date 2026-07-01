@@ -1,0 +1,50 @@
+{
+  "project": "claude-ds",
+  "path": "app/registry/types-ui.jsx",
+  "model": "opus",
+  "what_it_does": "Defines a small set of shared visual primitives every Type Registry consumer surface uses: TypeLayerBadge (coloured pip + layer label), TypeProvBadge (provenance: built-in/user/vi/imported), TypeChip (one-line clickable reference), TypeCard (full grid card with thumbnail, badges, stats, optional Use button), TypeLineageStrip (root→…→self breadcrumb), SlotAcceptsHint + TypeSlotList + FilledSlotChip (render a Type's slots and what they accept/contain), TypeFilterBar (search + segmented layer filter), and TypeTree/TypeTreeNode (nested parent→children tree grouped by layer). All read from window.CV_REGISTRY and are exported onto window.",
+  "observations": [
+    "LAYER_RANK constant {token:0..template:6} is defined but not referenced within this file",
+    "TypeCard composes TypeThumb (with a plain placeholder div fallback if window.TypeThumb absent), TypeLayerBadge, TypeProvBadge, and shows stat counts: slots (◇), children (↳), variables (𝓋), plus up to 3 tags",
+    "TypeCard derives childCount from R.children(type.id) and varCount from type.variables",
+    "TypeLineageStrip reverses R.lineage(id) to render root→self with › separators",
+    "TypeTree groups query results by layer, then within each layer separates roots (no extends within the filtered set) from extending children, rendering children nested via recursive TypeTreeNode",
+    "SlotAcceptsHint formats accepts.layers/families/tags into a single hint string, defaulting to 'any Type'",
+    "FilledSlotChip resolves a typeId to a Type and shows a missing-marker chip when unresolved",
+    "TypeFilterBar reads LAYERS and LAYER_INFO swatches/labels from window.CV_REGISTRY",
+    "Badges/labels/icons all sourced from CV_REGISTRY.LAYER_INFO and type.icon with 'check-square' fallback",
+    "React hooks aliased with _tu suffix (useState_tu, useMemo_tu)"
+  ],
+  "standouts": [
+    "TypeTree's root-vs-child grouping is computed against the *filtered* set (roots = no extends inside the current result set), so filtering reshapes the tree",
+    "The header frames these as 'so the system feels coherent' — a deliberate shared-primitive set",
+    "useMemo deps include R?.all().length / filter to recompute on registry growth"
+  ],
+  "conventions": [
+    "Reads all data from window.CV_REGISTRY (interface as projection of the registry, per project rule)",
+    "Icon fallback 'check-square', class names prefixed cv-type-*",
+    "Exports the component set via Object.assign(window, {...})",
+    "No raw colors — pips/swatches come from LAYER_INFO"
+  ],
+  "concerns": [
+    "LAYER_RANK is declared but unused in this file (possible dead code or intended for a consumer)",
+    "Several components silently return null/empty when CV_REGISTRY or a type is absent rather than failing loud (project rule favours loud fail, though UI null-render is a common exception)"
+  ],
+  "notes": "The shared UI toolkit for showing Types — badges, chips, cards, lineage, slot lists, filter bar, and a recursive layer-grouped tree — all driven off CV_REGISTRY.",
+  "questions": [
+    "Is LAYER_RANK intended for sorting here and left unwired, or consumed elsewhere?",
+    "What is the source/shape of CV_REGISTRY.LAYER_INFO (swatch, label, desc) these components depend on?"
+  ],
+  "purpose_vs_actual": "Matches — the header promises shared visual primitives every consumer surface uses, and the file is exactly that coherent component set.",
+  "apparent_themes": [
+    "Interface as a projection of the registry",
+    "Coherence through shared primitives",
+    "Composition (cards compose thumbs+badges; trees compose nodes)",
+    "Provenance and lineage made visible"
+  ],
+  "intention_signals": "Trying to give every place that shows a Type (Registry, builder browser, sidebar, embedding UI) the same small vocabulary of components so the registry reads coherently everywhere and stays in sync with CV_REGISTRY by construction.",
+  "novelty": "The filter-aware root/child tree reshaping and the slot-accepts hint rendering (showing what each slot will accept by layer/family/tag) are the distinctive pieces.",
+  "contribution": "Contributes the reusable Type-display component library: layer/provenance badges, chip, full card, lineage strip, slot list with accept hints, search+layer filter bar, and the recursive layer-grouped type tree — the consumer-facing UI primitives for the Type registry.",
+  "summary_for_embedding": "A set of shared React/browser-global UI primitives (badges, chip, card, lineage strip, slot list, filter bar, recursive tree) for displaying registry Types, all driven from window.CV_REGISTRY.",
+  "intention_for_embedding": "To give every surface that shows a Type one coherent set of components so the registry UI is a projection of CV_REGISTRY and never drifts into parallel structures."
+}

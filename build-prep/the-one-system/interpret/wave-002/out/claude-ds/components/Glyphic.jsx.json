@@ -1,0 +1,43 @@
+{
+  "project": "claude-ds",
+  "path": "components/Glyphic.jsx",
+  "model": "opus",
+  "what_it_does": "React implementation of the Glyphic component. Assembles a facet-spec object from props, then calls window.CV_GLYPHIC.compose(spec, {size}) to get back SVG + a motion class, which it injects into a span. If window.CV_GLYPHIC is not loaded it renders a labelled dashed-border placeholder instead of nothing.",
+  "observations": [
+    "Default prop values: form=circle, symbol=person, fill=paper, ringColor=gold, symbolColor=bronze, texture=none, motion=none, depth=normal, size=56.",
+    "Builds spec with color nested as { ring: ringColor, symbol: symbolColor }; value is only added to spec if truthy.",
+    "Reads the renderer via typeof window !== 'undefined' ? window.CV_GLYPHIC : null (SSR-safe guard).",
+    "Fallback span uses inline styles with CSS-var fallbacks (var(--accent-bronze, #988058)), a title attribute explaining the missing assets, and class cv-glyphic--unresolved; shows the raw symbol string as text.",
+    "Success path injects GL.compose's svg via dangerouslySetInnerHTML and applies the returned motionClass.",
+    "Spreads ...rest onto the rendered span in both branches; merges caller style."
+  ],
+  "standouts": [
+    "Component does NOT redraw — it only assembles a spec and delegates to the single CV_GLYPHIC.compose source.",
+    "Graceful labelled-placeholder fallback ('never a blank') with an explanatory title rather than silent failure."
+  ],
+  "conventions": [
+    "Single-source / socket pattern: rendering delegated to one renderer, matching the project's 'one home, reference everywhere' directive.",
+    "Uses CSS-var design tokens (var(--accent-bronze, ...)) rather than raw hex where possible; the hex appears only as a var fallback.",
+    "Mild tension with the project's 'loud fail, never silent' rule — the fallback degrades to a placeholder rather than throwing, though it is visibly labelled (comment calls it 'loud-ish')."
+  ],
+  "concerns": [
+    "Uses dangerouslySetInnerHTML with compose's svg output — relies on CV_GLYPHIC producing safe SVG.",
+    "Hardcoded #988058 hex appears as the var fallback default in the placeholder branch."
+  ],
+  "notes": "The Glyphic React socket: builds a facet-spec from props and delegates drawing to window.CV_GLYPHIC.compose, with a labelled dashed placeholder when the renderer is absent.",
+  "questions": [
+    "What shape does GL.compose return beyond { svg, motionClass }, and how does it interpret value/depth/texture?",
+    "Is the placeholder-instead-of-throw an accepted exception to the project's loud-fail rule?"
+  ],
+  "purpose_vs_actual": "Match — docstring says it is a socket that assembles a spec and delegates, with a non-blank fallback; the code does exactly that.",
+  "apparent_themes": [
+    "Delegation to a single renderer (socket, not reimplementation)",
+    "Graceful-but-visible degradation",
+    "Token-referenced styling with var fallbacks"
+  ],
+  "intention_signals": "Aims to make Glyphic a thin React wiring layer over the one composition source, never a parallel drawing implementation, while preventing invisible failure when assets are missing.",
+  "novelty": "The facet-spec assembly (form/symbol/fill/texture/motion/depth/size + nested color + optional value) handed wholesale to an external compose function that returns SVG and a motion class.",
+  "contribution": "Contributes the runtime wiring that turns Glyphic props into a compose spec and renders the returned SVG, plus the labelled missing-renderer fallback behaviour.",
+  "summary_for_embedding": "React Glyphic component that builds a facet-spec from props and delegates to window.CV_GLYPHIC.compose for SVG and a motion class, rendering a labelled placeholder when the renderer is not loaded.",
+  "intention_for_embedding": "To wire the Glyphic mark's props to the single CV_GLYPHIC renderer without reimplementing drawing, and to fail visibly rather than blank."
+}

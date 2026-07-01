@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Type scale" subtitle="9-step ramp from Display → Eyebrow" viewport="700x380" --><html><head><meta charset="utf-8"><title>Type scale</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .card { padding: 26px 30px; min-height: 360px; display: flex; flex-direction: column; gap: 10px; }
+  .row { display: grid; grid-template-columns: 70px 1fr 80px; gap: 16px; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--border-faint); }
+  .row:last-child { border-bottom: none; }
+  .name { font: 600 11px/1 var(--font-body); color: var(--fg-muted); letter-spacing: .08em; text-transform: uppercase; }
+  .px { font: 400 11px/1 var(--font-mono); color: var(--fg-muted); text-align: right; }
+  .x { font-family: var(--font-display); color: var(--fg-primary); letter-spacing: -0.01em; }
+  .x.body { font-family: var(--font-body); letter-spacing: 0; }
+  .x.eb { font-family: var(--font-body); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-bronze); }
+</style></head>
+<body><div class="card">
+  <div class="row"><span class="name">Display</span><span class="x" style="font-size:48px;font-weight:700;line-height:1">Display</span><span class="px">48 / 700</span></div>
+  <div class="row"><span class="name">H1</span><span class="x" style="font-size:36px;font-weight:700;line-height:1.1">Headline 1</span><span class="px">36 / 700</span></div>
+  <div class="row"><span class="name">H2</span><span class="x" style="font-size:28px;font-weight:600;line-height:1.15">Headline 2</span><span class="px">28 / 600</span></div>
+  <div class="row"><span class="name">H3</span><span class="x" style="font-size:22px;font-weight:600;line-height:1.25">Headline 3</span><span class="px">22 / 600</span></div>
+  <div class="row"><span class="name">H4</span><span class="x body" style="font-size:17px;font-weight:700">Section</span><span class="px">17 / 700</span></div>
+  <div class="row"><span class="name">Body</span><span class="x body" style="font-size:15px;font-weight:400">The mathematics of operation.</span><span class="px">15 / 400</span></div>
+  <div class="row"><span class="name">Body sm</span><span class="x body" style="font-size:13px;font-weight:400;color:var(--fg-secondary)">Helper text under inputs.</span><span class="px">13 / 400</span></div>
+  <div class="row"><span class="name">Caption</span><span class="x body" style="font-size:11px;font-weight:500;color:var(--fg-muted)">12 captions / labels</span><span class="px">11 / 500</span></div>
+  <div class="row"><span class="name">Eyebrow</span><span class="x eb" style="font-size:11px">Eyebrow · uppercase</span><span class="px">11 / 600</span></div>
+</div></body></html>

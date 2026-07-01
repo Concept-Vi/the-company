@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "app/ai/ai-seed.js",
+  "model": "opus",
+  "what_it_does": "An IIFE that seeds the CV_AI registry's built-in data that does NOT depend on the composer's prompt helpers: three providers (claude, openai-image, vision), three behaviours (voice.conceptv, angle, diversity), eight skills (transform skills + a theme skill), four context resolvers (generic/pages/widget/wizard), and two image capabilities (image.generate, image.edit). Capabilities needing composer helpers are seeded elsewhere (AIEngine.jsx). Sets window.CV_AI._seeded at the end.",
+  "observations": [
+    "Throws on load if CV_AI is missing ('load app/ai/ai-registry.js first') — loud load-order enforcement.",
+    "Providers: claude (text/stream, json, maxPromptChars 200000), openai-image (via window.cvOpenAI), and vision (multimodal, caps.exportOnly:true — unavailable in browser sandbox, callers fall back to local pixel analysis).",
+    "voice.conceptv behaviour carries the house voice as a fixed text fragment (sentence case, second person, no exclamation/emoji, concrete numbers, canonical product names: User Portal, Property Wizard, Virtual Hub, Capture, Vi).",
+    "angle behaviour is a single parametric entry: text is a function of params.angle mapping shorter/formal/specific/different to instructions, defaulting to a distinct-angle instruction.",
+    "diversity behaviour seeds parallel single-shot generations to differ (uses params.seed and slotIndex).",
+    "SKILLS array defines seven transform skills (shorten/lengthen/urgent/friendly/pro/audit/concrete) all targeting capability 'doc.transform'; plus skill.theme targeting 'theme.generate'.",
+    "Four context resolvers keyed by surface: context.generic (floor), context.pages (deck/brochure — page neighbourhood + hasCta/hasStats), context.widget (kind/system + kpi/media/chart shape), context.wizard (kind + step sequence).",
+    "pageNeighbourhood helper renders the page before/current/after with a ▶ marker, self-contained so context resolution works before AIEngine loads.",
+    "image.generate/image.edit capabilities run via the resolved openai-image provider, surfaces ['*'], behaviours [].",
+    "A 'CV_HOST:ai-entries' marker comment marks where Vi-authored entries (via ds.propose) are inserted above the _seeded flag."
+  ],
+  "standouts": [
+    "The ConceptV voice is single-sourced here as one behaviour fragment — every capability composes it rather than inlining voice strings.",
+    "The 'angle' behaviour collapses the field toolbar's shorter/formal/specific/different into ONE parametric entry rather than four — parameterisation over duplication.",
+    "Context resolvers project 'what screen Vi is on' into a compact prompt context, with a generic floor so no surface is ever context-less.",
+    "vision provider is declared but marked exportOnly/unavailable-in-sandbox, with a documented fallback — honest about runtime availability."
+  ],
+  "conventions": [
+    "Pure-data seed: every entry parametric and inheritable; adding a provider/behaviour/skill/context is a registration not code (stated in header).",
+    "Splits seeding by dependency: helper-free entries here, helper-dependent capabilities in AIEngine.jsx — mirrors how CV_REGISTRY built-ins carrying render() are seeded where the function lives.",
+    "All registrations use { silent: true } and a _seeded marker flag is set at the end.",
+    "Single-sourcing of the voice and parameterisation of the angle behaviour follow the project's no-second-home rule."
+  ],
+  "concerns": [],
+  "notes": "The helper-free built-in seed of CV_AI — the three providers, the single-sourced ConceptV voice + parametric angle/diversity behaviours, the transform/theme skills, and the four surface context resolvers; capabilities needing prompt helpers live in AIEngine.jsx.",
+  "questions": [
+    "The transform skills all target capability 'doc.transform' and skill.theme targets 'theme.generate' — these capabilities are seeded in AIEngine.jsx; what guarantees that module loads so the skills are not dangling?",
+    "The vision provider is exportOnly/unavailable in the browser — which callers depend on it and how is the 'local pixel analysis' fallback wired given the registry's otherwise loud-fail stance?"
+  ],
+  "purpose_vs_actual": "Match — the header says it seeds the helper-free built-in providers/behaviours/skills/contexts (+ image capabilities) and defers helper-dependent capabilities to AIEngine.jsx, which is exactly what it does.",
+  "apparent_themes": [
+    "Single source of truth (voice single-sourced, angle parameterised not duplicated)",
+    "Configuration as data (every AI primitive is a registration)",
+    "Context projection (surface → compact prompt context, with a floor)",
+    "Honest runtime availability (vision exportOnly + documented fallback)",
+    "Loud load-order enforcement"
+  ],
+  "intention_signals": "Trying to populate the AI registry with the foundational, dependency-free building blocks (endpoints, the house voice, reusable steers, the screen-to-context projectors, the user-invokable transforms) so every Vi move composes from one catalogue rather than inlined functions and strings.",
+  "novelty": "Collapsing four field-toolbar steers into one parametric 'angle' behaviour, and seeding surface-keyed context resolvers with a guaranteed generic floor — plus declaring a provider (vision) as available-only-on-export with a named fallback.",
+  "contribution": "Contributes the built-in AI primitives: the provider set, the single-sourced ConceptV voice and parametric angle/diversity behaviours, the transform/theme skill catalogue, the four surface context resolvers (with the pageNeighbourhood helper), and the two image capabilities.",
+  "summary_for_embedding": "IIFE seeding CV_AI built-ins — providers (claude/openai-image/vision), behaviours (single-sourced ConceptV voice + parametric angle/diversity), transform/theme skills, four surface context resolvers, and two image capabilities.",
+  "intention_for_embedding": "To seed the AI registry with the foundational dependency-free primitives (endpoints, the house voice, reusable steers, screen-context projectors, user transforms) so every Vi move composes from one single-sourced catalogue."
+}

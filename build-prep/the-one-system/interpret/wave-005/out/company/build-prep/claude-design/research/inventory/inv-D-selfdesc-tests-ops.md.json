@@ -1,0 +1,51 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/research/inventory/inv-D-selfdesc-tests-ops.md",
+  "model": "opus",
+  "what_it_does": "A fast-coverage inventory note (Region D, 2026-06-08, read-only) mapping the Company codebase's self-description layer (AGENTS.md/MAP.md/STATE.md), tests/ (130 acceptance suites), docs/, and ops/ — with directory trees, priority-tagged tables, a full categorized listing of all 130 test suites, summary counts, a top-10 deep-read list, key insights, and gaps.",
+  "observations": [
+    "Lists 16 modules WITH AGENTS.md and 2 directories WITHOUT (build-prep/, design/), declaring both as non-code.",
+    "A self-description table maps each AGENTS.md to its module, the contracts it governs (C1-C8, S1/S5/S6/S7, D3, C2.1-C2.5), and a one-line characterization.",
+    "Enumerates all 130 acceptance test suites by hand, grouped into ~13 categories (Engine E1-E6, Wire S8, Address Grammar C3, Conversation, RHM, Activation, Governance/Self-Mod, Fabric, Voice, Data, Presentation, Misc).",
+    "Records concrete ops detail: gpu.py VRAM fit-gate measured on a 16GB card (4B brain solo 256K context; co-resides with light voices at 64K; Orpheus ~8.5GB blocks).",
+    "Names two anchoring design decisions: D3 (one substrate, per-type view-modes) and PoLR-3 (path-of-least-resistance self-maintenance).",
+    "States MAP.md is self-maintained by Suite.refresh_self_description() and STATE.md drift is checked by tests/drift_acceptance.py.",
+    "Includes a run command for the suite: for t in tests/*.py; do ./.venv/bin/python \"$t\"; done.",
+    "Notes ext4-only storage constraint (no /mnt/c due to WSL fsync corruption) for the store module.",
+    "trajectory_acceptance.py appears twice in the listing (lines 208 and 251)."
+  ],
+  "standouts": [
+    "The complete hand-enumerated catalog of all 130 acceptance suites with a one-line purpose each — a full proof-record index.",
+    "The D3 framing that the ops console is the FIRST instantiation of 'one substrate, per-type view-modes', with cognitive/RHM/data/jobs as pending view-modes of the same mechanism.",
+    "The wire_adversarial scope-overrun rule: a build touching paths outside declared scope is NOT closed.",
+    "The claim 'tests ARE the record' — done = green suite + use-evidence, never code-read-only, enforced by drift-check."
+  ],
+  "conventions": [
+    "Uses priority-tagged (YES/NO/Maybe) tables as the inventory backbone.",
+    "Cross-references the codebase's numbered contract/spec codes rather than redefining them.",
+    "Follows the repo's self-description discipline (every code module has an AGENTS.md, single MAP/STATE at root)."
+  ],
+  "concerns": [
+    "trajectory_acceptance.py is listed twice, so the hand-counted '130' may not exactly match the actual file count.",
+    "Several VRAM/context figures are stated as measured but the note is explicitly coverage-level and read-only, so they are reported, not verified here."
+  ],
+  "notes": "A 2026-06-08 read-only map of the self-description / tests / docs / ops regions, with a complete 130-suite catalog and the D3 + PoLR-3 design anchors — a navigation and proof-record index.",
+  "questions": [
+    "Is the duplicate trajectory_acceptance.py entry a listing error, and does the actual suite count equal 130?",
+    "What do the contract codes (C1-C8, S1-S8, D3) resolve to in build-prep/contracts/?",
+    "Are the pending ops view-modes (cognitive/RHM/data/jobs) still pending as of now, or have they since been instantiated?"
+  ],
+  "purpose_vs_actual": "Matches — it declares itself a fast coverage read-only scan of Region D and delivers exactly that, with explicit gaps/pending caveats.",
+  "apparent_themes": [
+    "The system describes itself (auto-maintained registries, drift-fails-loud)",
+    "Tests as the proof record / done = green + use-evidence",
+    "One substrate, per-type view-modes (D3)",
+    "Path-of-least-resistance self-maintenance (PoLR-3)",
+    "Audited self-modification with surface-before-modify gating"
+  ],
+  "intention_signals": "Aims to give a refresh agent a single map of the meta layer — where the constitution, proofs, docs, and operational control live, what governs what, and which files anchor the whole — so navigation does not require re-discovery.",
+  "novelty": "The full one-line annotation of 130 acceptance suites in a single note, plus the explicit linkage of each AGENTS.md to its governing contract codes.",
+  "contribution": "Contributes a complete catalog of the 130 acceptance suites, the module-to-contract governance map, and the operational-detail (VRAM fit-gate, capability registry, systemd substrate) plus the D3/PoLR-3 design anchors that explain why the layer is shaped as it is.",
+  "summary_for_embedding": "A read-only coverage inventory mapping the Company codebase's self-description files, all 130 acceptance test suites by category, docs, and ops/CLI, with priority tables and the D3 and PoLR-3 design anchors.",
+  "intention_for_embedding": "To give a refresh agent a navigable map of the meta layer — constitution, proof record, docs, and operational control — and the design decisions that shape it."
+}

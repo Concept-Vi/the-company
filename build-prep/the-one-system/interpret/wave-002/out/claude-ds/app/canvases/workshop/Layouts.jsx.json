@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/workshop/Layouts.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the Workshop slide/page layout, motif, and theme system. window.WS_LAYOUTS is a map of ~40 named layout templates (each with name/kind/desc/icon/forTypes and a build() returning a sections array of {kind, data}); window.WS_KINDS lists slide kinds; window.WS_MOTIFS defines eight slide-background recipes (with a bleed hint); window.WS_THEMES defines four themes (editorial/architectural/quiet/bold) that map each slide kind to a motif. Helpers: WS_resolveMotif (theme+override resolution), WS_layoutsForType, WS_buildPage (instantiate a layout into a page with stamped IDs and merged block defaults), WS_LAYOUT_ARCHETYPE (reconciles each layout onto one core archetype), WS_coreArchetypes (derives canonical archetypes that have no legacy layout from CV_ARCHETYPE_CATALOG), and WSMotifLayer (a React component rendering watermark/section/blueprint background SVGs).",
+  "observations": [
+    "~40 layouts span generic deck slides (title/section/content/quote/stats/closing) and ConceptV-specific pitch slides (threeFeatures, funnel, systemMap, scienceBacked, achievements, bioFacts, investmentTerms, rolloutTimeline, partnerships, aiFramework, contactClosing) plus brochure layouts (property, factsheet, oneSheet, event)",
+    "Layout descriptions cite inspiration pages ('Inspo p09', 'frame_19', 'Matches deck pages 02-04'), tying templates to an existing real pitch deck",
+    "build() functions emit block specs with full real ConceptV content (the same corpus as Blocks.jsx defaults — Grant Plummer, $500M target valuation, NVIDIA/AWS partners, contact details)",
+    "WS_MOTIFS: ivory/paper/blueprint/edgeband/watermark/ink/goldBleed/section, each with bleed light/dark/gold",
+    "WS_THEMES map each slide kind to a motif; WS_resolveMotif honours a page-level motif override before the theme map, defaulting to 'ivory'",
+    "WS_buildPage merges WS_BLOCKS[kind].defaults with the layout's data and stamps deterministic-ish IDs (Date.now + idx)",
+    "WS_LAYOUT_ARCHETYPE reconciles each layout to a core archetype id (surface.deck-slide.<key>) and back-fills L.archetype; cites UNIFICATION.md W2/W3",
+    "WS_coreArchetypes derives canonical archetypes (incl. the +12 capital-raise grammar) from window.CV_ARCHETYPE_CATALOG that have no legacy WS_LAYOUT, so coverage is computed not duplicated",
+    "WSMotifLayer renders an elaborate blueprint SVG (floor plan, elevation, north arrow, dimension lines, isometric cube, site plan, gold grid) for the blueprint motif"
+  ],
+  "standouts": [
+    "WS_coreArchetypes deliberately does NOT duplicate the +12 new archetypes into WS_LAYOUTS — it derives the additive set from the single catalogue, making coverage drift-proof",
+    "Every layout is reconciled onto exactly one core archetype (WS_LAYOUT_ARCHETYPE), proving the composer's ~40 layouts map onto the 15 canonical archetypes for the W3 renderer migration",
+    "The blueprint motif is a hand-built architectural drawing SVG (plan/section/site) — domain-specific brand atmosphere, not a generic grid"
+  ],
+  "conventions": [
+    "Single-source-by-reference: layouts compose WS_BLOCKS by kind and merge their defaults; motifs/themes are one map each; archetype reconciliation is additive metadata, never a parallel list",
+    "Extend-by-registration: add a layout/motif/theme = add a map entry; the picker and motif renderer pick it up",
+    "Comments explicitly track the unification welds (W2/W3) and explain why the capital-raise archetypes are derived not copied — self-describing per the project charter"
+  ],
+  "concerns": [
+    "Layout content (real ConceptV figures and people) is duplicated between Layouts.jsx build() and Blocks.jsx defaults; the same brand data lives in two homes and could drift",
+    "WS_LAYOUT_ARCHETYPE omits 'blank' (intentional) but any new layout without an archetype entry silently gets no L.archetype, weakening the 'every layout maps' invariant",
+    "WS_buildPage IDs use Date.now()+idx which can collide if many pages build in the same millisecond"
+  ],
+  "notes": "This is Workshop's template/theme system: ~40 brand-seeded layout recipes, eight motif backgrounds, four themes, and the reconciliation tables/helpers that map every layout onto the unified core-archetype catalogue.",
+  "questions": [
+    "Should the real ConceptV figures in layout build() be sourced from the same place as Blocks.jsx defaults rather than re-stated?",
+    "Is WS_coreArchetypes already consumed by the layout picker, or is that wiring still pending weld W3?",
+    "Are the 'Inspo pXX' references to a specific source deck that the corpus should track?"
+  ],
+  "purpose_vs_actual": "Matches: the header says it provides slide layout templates plus the theme/motif system (layout = arrangement of blocks, motif = background recipe, theme = motif-per-kind), and the file delivers exactly that plus the core-archetype reconciliation.",
+  "apparent_themes": [
+    "Templates as composed block recipes (no hand-laid-out layouts)",
+    "Coherent visual rhythm via theme→motif→slide-kind mapping",
+    "Drift-proof coverage by deriving additive archetypes from one catalogue",
+    "Reconciling a legacy composer vocabulary onto canonical archetypes (unification)",
+    "Brand-specific atmosphere (the architectural blueprint motif)"
+  ],
+  "intention_signals": "Trying to give Workshop a rich, brand-true library of ready slides and a theme system that keeps a deck visually coherent, while proving (and preparing) that this legacy layout set collapses onto the unified core-archetype render engine.",
+  "novelty": "Pairing a concrete ~40-layout pitch-deck library with an explicit, computed reconciliation onto a canonical archetype catalogue (deriving uncovered archetypes rather than copying them) is a distinctive unification-in-progress artifact.",
+  "contribution": "Contributes the Workshop layout/motif/theme system: the ~40 brand-seeded layout templates, the eight motifs and four themes with motif resolution, the page-builder helper, the blueprint/watermark/section motif renderer, and the layout→archetype reconciliation that bridges the composer to the core archetype catalogue.",
+  "summary_for_embedding": "Workshop layout/motif/theme system: ~40 brand-seeded slide and brochure layout templates (build() → block sections), eight motif background recipes, four themes mapping motifs to slide kinds, a page builder, an SVG motif renderer, and tables reconciling every layout onto the unified core-archetype catalogue.",
+  "intention_for_embedding": "To give Workshop a coherent, brand-true library of ready slides and themes and to prove/prepare that the legacy layout set maps onto the unified core-archetype render engine."
+}

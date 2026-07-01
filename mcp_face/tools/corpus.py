@@ -19,7 +19,8 @@ def register(mcp, suite):
     def corpus(op: Literal["query", "list", "find", "read", "neighbours", "determine"], project: str = "", kind: str = "", projection: str = "",
                source_address: str = "", address: str = "", text: str = "", space: str = "",
                k: int = 8, rerank: bool = False, top_n: int = 0, emb: str = "pplx", min_score: float = 0.0,
-               detail: str = "concise", limit: int = 50, asset: str = "full", min_strong: int = 0) -> dict:
+               detail: str = "concise", limit: int = 50, asset: str = "full", min_strong: int = 0,
+               mode: str = "semantic") -> dict:
         """Read the corpus — the engine's durable, embedded, addressed records (the repo-exocortex's
         'ask the codebase', + every capture pass's output). Pick `op`:
 
@@ -30,6 +31,13 @@ def register(mcp, suite):
                         detail="detailed" → each hit carries its record's CONTENT inline (the answer in
                         ONE call); the default stays ids+scores. Every hit id is directly
                         op='read'-able (the round-trip).
+                        `mode` (default 'semantic') selects the retrieval: 'semantic' = cosine top-k (the
+                        default, meaning-only); 'hybrid' = LATE-FUSION (RRF) of a vector leg (meaning) AND a
+                        lexical leg (substrings) over the SAME `space` (runtime/corpus_fusion.py). Hybrid
+                        finds an item ranked decently in BOTH legs over one ranked #1 in only one (consensus
+                        wins) and degrades HONESTLY to lexical-only when the embedder is down (legs_used says
+                        so). The fused list is ids+scores, so `rerank` composes on top of it exactly as on
+                        the cosine list. The default stays 'semantic' (every prior caller unchanged).
                         `rerank` (default OFF, opt-in) → a jina-v3 cross-encoder PRECISION pass over the
                         cosine top-k (ops/rerank.py @ :8008, CPU/0-VRAM): re-orders by deeper
                         (query, digest) relevance, annotating rerank_score + orig_rank (+ the original
@@ -89,8 +97,24 @@ def register(mcp, suite):
         if op == "query":
             if not text:
                 return {"error": "corpus(op='query') needs `text` (the question). Optional: `space` "
-                        "(an embeddable space, e.g. 'repo' — cognition_info().spaces), `k`."}
-            out = {"op": op, **suite.query_corpus(text, space=(space or None), k=k)}
+                        "(an embeddable space, e.g. 'repo' — cognition_info().spaces), `k`, `mode` "
+                        "('semantic' default | 'hybrid' = RRF of vector+lexical over the space)."}
+            if mode not in ("semantic", "hybrid"):
+                return {"error": f"corpus(op='query'): unknown mode {mode!r}. Valid: 'semantic' (cosine "
+                        "top-k, default) | 'hybrid' (late-fusion RRF of a vector leg + a lexical leg over "
+                        "the SAME space — runtime/corpus_fusion.py)."}
+            if mode == "hybrid":
+                # HYBRID late-fusion (runtime/corpus_fusion.py): RRF over query_corpus (vector/meaning) +
+                # a lexical leg over the same space's digests. Degrades HONESTLY to lexical-only if the
+                # embedder is down (legs_used + degraded say so — never a silent fallback). The fused
+                # `ranked` is ids+rrf_score, the SAME shape the rerank stage + detailed-enrich consume.
+                from runtime import corpus_fusion as _cf
+                try:
+                    out = {"op": op, **_cf.query_hybrid(suite, text, space=(space or None), k=k)}
+                except ValueError as e:
+                    return {"op": op, "stage": "hybrid-failed", "error": str(e)}
+            else:
+                out = {"op": op, **suite.query_corpus(text, space=(space or None), k=k)}
             # OPT-IN RERANK precision stage (runtime/corpus_rerank.py): cosine top-k → jina-v3
             # cross-encoder reorder (:8008, CPU/0-VRAM). Default OFF (additive, reusable). FAIL-LOUD: a
             # hit with no resolvable CAS digest text RAISES inside rerank_hits → surfaced here as a

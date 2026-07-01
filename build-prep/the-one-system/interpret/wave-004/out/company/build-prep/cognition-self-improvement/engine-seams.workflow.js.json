@@ -1,0 +1,50 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/engine-seams.workflow.js",
+  "model": "opus",
+  "what_it_does": "A Workflow script (run via Workflow({scriptPath})) that dispatches two file-disjoint agent lanes in parallel to build (no commit) two engine seams: G24 schema-guided decoding in fabric/transport.py (wire role output_schema through to vLLM guided_json so malformed role-JSON becomes impossible) and G14 swap-approval response in ops/cli/capabilities.py (a load needing eviction returns a structured approve-able ASK instead of hard-blocking or silently evicting). It defines a shared LAWS preamble, a report SCHEMA, runs one 'Build' phase, and logs how many of the two lanes finished.",
+  "observations": [
+    "Header comment declares BUILD-ONLY, no commit (the loop's next beat verifies + commits) and file-disjointness from the lead's serial mcp_face/ + suite.py work.",
+    "meta.phases has a single 'Build' phase; the two lanes run via parallel([...]) of two agent() calls.",
+    "LAWS preamble enforces the read-order (AGENTS.md -> MAP.md -> STATE.md -> module AGENTS.md + SYSTEM-GAPS.md), LAW-0 UNIFICATION (finish, don't fork), reuse-don't-parallel, fail-loud, registry-is-truth, additive/schema-compatible, FLOOR STAYS, GPU-aware, NO Gemini, NO green-paint.",
+    "Each lane must write build-prep/cognition-self-improvement/seam-lanes/<lane>.report.json with a fixed JSON schema (lane, files_written, how_verified, status in built-verified|built-untested|blocked, needs_tim, notes).",
+    "G24 lane carries concrete evidence: 3 files deterministically fail the 4B digest with unparseable JSON (runtime/bridge.py, roles/check.py, nodes/portal.py) and notes a prior L-transport json_schema lane to find and finish rather than fork.",
+    "G14 lane encodes Tim's 2026-06-09 design: ensure_resident returns {swap_needed, would_load, would_evict, free_gb, needed_gb, approve} when eviction is unauthorized, never hard-block or silent evict.",
+    "Both lanes specify VERIFY BY USE with GPU-aware caution (chat-4b+embed-bge ~13GB resident; check 'company gpu'; never stomp/evict heavy models) and demand honest reporting if vLLM rejects guided_json.",
+    "Lanes are forbidden from editing runtime/* and mcp_face/* (the lead's serial territory); needed cross-territory changes are reported as NEEDED-SEAM for the lead to apply."
+  ],
+  "standouts": [
+    "Schema-guided decoding framed as making malformed role-JSON structurally impossible at the transport layer, with a concrete 3-file regression set to reproduce and verify.",
+    "G14's swap-approval design: turning a resource conflict into an approve-able structured ASK rather than an exception or a silent eviction — decision returned to the agent/operator.",
+    "Strict territory partitioning with NEEDED-SEAM reporting so parallel agents never touch the lead's serial files."
+  ],
+  "conventions": [
+    "Follows the build-loop worker contract: read-order law, lane report JSON, verify-by-use, no-commit, no-green-paint.",
+    "Embeds LAW-0 UNIFICATION (find half-built work and finish it, don't fork) as the first binding law.",
+    "Uses an explicit JSON Schema (additionalProperties:false, enum'd status) for the lane report — schema-as-contract.",
+    "GPU-resource discipline (co-resident models, never stomp) baked into both verification instructions."
+  ],
+  "concerns": [
+    "Lane success is computed as built.filter(Boolean) and status strings are logged but not asserted — a 'blocked' lane still counts as built unless the caller inspects status.",
+    "G24's success hinges on the half-built L-transport json_schema support actually existing; if it doesn't, the lane scope expands silently into fabric/client.py."
+  ],
+  "notes": "A two-lane parallel build workflow that wires schema-guided decoding into fabric transport and adds a structured swap-approval response to the GPU capability actuator — build + verify-by-use only, the loop commits later.",
+  "questions": [
+    "Did the L-transport lane's json_schema support exist to be finished, or did G24 end up forking new transport code?",
+    "What is the run_role(ensure=) NEEDED-SEAM in runtime/cognition.py and did the lead apply it?",
+    "Does the Workflow harness surface lane status to the next loop beat, or only the count logged here?"
+  ],
+  "purpose_vs_actual": "Match — the meta description and header promise two file-disjoint, build-only, verify-by-use seam lanes with no commit, and the script dispatches exactly those two agent lanes under that discipline.",
+  "apparent_themes": [
+    "Make invalid states structurally impossible (guided decoding)",
+    "Turn conflicts into approve-able asks, not hard-blocks or silent actions",
+    "File-disjoint parallelism with strict territory boundaries",
+    "Finish-don't-fork (LAW-0 unification)",
+    "Verify by USE with resource-aware safety"
+  ],
+  "intention_signals": "Trying to close two known engine gaps (G24, G14) in parallel without disturbing the lead's serial work — eliminate malformed role-JSON at the transport seam and replace silent/forced GPU eviction with an operator-decidable swap-approval response.",
+  "novelty": "The swap-approval ASK pattern for GPU memory pressure (return an approve-able structured offer rather than evict or fail) and using vLLM guided_json to make role-JSON unfalsifiable at decode time.",
+  "contribution": "Contributes a concrete parallel build orchestration for two engine seams: the guided-decoding transport fix (with a reproducible 3-file regression set) and the GPU swap-approval response design, plus the lane-report schema and territory/law contract that scopes them.",
+  "summary_for_embedding": "A parallel Workflow script dispatching two file-disjoint build-only agent lanes: G24 schema-guided decoding in fabric/transport.py and G14 a structured GPU swap-approval response in ops/cli/capabilities.py, each verified by use and reported via a fixed schema.",
+  "intention_for_embedding": "To close two engine gaps in parallel — make malformed role-JSON impossible via guided decoding and replace silent/forced model eviction with an approve-able swap request — without touching the lead's serial territory or committing."
+}

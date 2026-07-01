@@ -1,0 +1,33 @@
+{
+  "project": "company",
+  "path": ".claude/settings.json",
+  "model": "opus",
+  "what_it_does": "Claude Code per-project settings: sets worktree.bgIsolation to 'none' and registers a single SessionStart hook that runs the bash script ops/hooks/cc_registry_freshness_check.sh at the start of each Claude Code session.",
+  "observations": [
+    "Only two top-level keys: 'worktree' and 'hooks'.",
+    "worktree.bgIsolation is 'none' — background isolation disabled for worktrees.",
+    "The one hook fires on SessionStart and shells out to /home/tim/company/ops/hooks/cc_registry_freshness_check.sh via an absolute path."
+  ],
+  "standouts": [
+    "A SessionStart hook wired to a repo-local registry-freshness check — the repo bootstraps an orientation/staleness check on every session."
+  ],
+  "conventions": [
+    "Uses an absolute path to the hook script rather than a relative or $CLAUDE_PROJECT_DIR reference.",
+    "Minimal config — only the keys actually in use are present."
+  ],
+  "concerns": [
+    "Hardcoded absolute path /home/tim/company/... makes this non-portable to any other checkout location."
+  ],
+  "notes": "Project Claude Code config; its only active behavior is a SessionStart hook that runs a registry-freshness bash check.",
+  "questions": [
+    "What does cc_registry_freshness_check.sh check and how does it surface staleness?",
+    "Why is bgIsolation explicitly set to 'none' rather than left default?"
+  ],
+  "purpose_vs_actual": "n/a (config file, no stated purpose); content is internally consistent.",
+  "apparent_themes": ["session-start orientation", "self-description freshness enforcement", "automation hooks"],
+  "intention_signals": "Ensure every Claude Code session begins by verifying the live registry/self-description is fresh, embedding the repo's 'self-description is part of the change' discipline into the tooling itself.",
+  "novelty": "Wiring a registry-freshness check into the SessionStart hook ties agent tooling to the repo's self-description discipline.",
+  "contribution": "Contributes the concrete mechanism that auto-runs a registry-freshness check at session start, plus the worktree bgIsolation setting.",
+  "summary_for_embedding": "Claude Code project settings.json that disables worktree background isolation and runs a registry-freshness bash hook on SessionStart.",
+  "intention_for_embedding": "To make every Claude Code session start by checking the live registry/self-description for staleness."
+}

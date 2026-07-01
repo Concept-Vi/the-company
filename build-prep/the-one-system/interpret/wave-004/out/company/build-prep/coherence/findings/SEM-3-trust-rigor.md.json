@@ -1,0 +1,45 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/SEM-3-trust-rigor.md",
+  "model": "opus",
+  "what_it_does": "A companion findings doc on trust rigor: whether a 4B semantic judgment can be trusted enough to act on as a candidate, and how to keep semantic findings from becoming cry-wolf noise. It runs the resident 4B on the canonical /status incident to produce real numbers, dissects each proposed trust mechanism for exactly what it buys, and proposes a three-tier trust ladder plus a calibration harness.",
+  "observations": [
+    "Reports an empirical probe (marked Verified, this session) against the resident Qwen3.5-4B: canonical half-migration bit-stable at temp-0 and 5/5 unanimous-correct at temp-1; a cosmetic-rename true-negative false-positived 1-in-4 at temp>0; an additive case emitted malformed JSON 2-in-6.",
+    "Maps each mechanism to what it provably buys: schema-constraint kills malformed output not wrong output; same-model jury reduces variance not systematic error; determinism (C0.2) is a routing-rule property not a judgment property; stronger-model confirm is the only systematic-error corrector.",
+    "Argues self-reported confidence is Verified-useless as a gate (the 4B said 'high' on both correct and wrong answers).",
+    "Quotes verify_jury.py:12-18 that N draws on one model are correlated samples (variance not independent error).",
+    "Tiers checks S1 (surface-consistency, clears on 4B alone), S2 (single-locus intent-drift, only with stronger-model confirm), S3 (deep reasoning/dataflow/lifecycle, never clears at 4B).",
+    "Frames cry-wolf as a precision-at-Tim's-eyes problem living in the economics of the confirm tier, not in 4B throughput.",
+    "Corrects the throughput figure to 2,241 tok/s at concurrency 32, plateauing there."
+  ],
+  "standouts": [
+    "The empirical probe converting the central trust question from reasoning to measured per-case results.",
+    "The joint trust-bar condition: 4B precision high enough that the confirm tier is affordable AND confirm precision high enough that what survives to Tim is real.",
+    "The calibration-harness proposal built from the system's own named incidents to make the S1/S2/S3 tiering a measured number per class."
+  ],
+  "conventions": [
+    "Uses the repo's evidence marking with an explicit 'Verified = executed this session' for the probe.",
+    "Adopts the skeptical-by-instruction stance, refusing to let any mechanism be oversold.",
+    "Closes with a 'yes, but actually' correction list against the parent anchor, per the round's format."
+  ],
+  "concerns": [
+    "Self-flags that n is small for the probe (single labelled rename point), so the false-positive rate is a single event not a measured rate — a limit the doc states but the tiering partly leans on."
+  ],
+  "notes": "If briefing someone: the load-bearing fact is a same-model jury measures variance not error, so a stronger-model confirm is the keystone, and the trust bar is the confirm tier's precision-and-economics, not the 4B's throughput.",
+  "questions": [
+    "What thresholds per class would Tim set for the calibration harness to gate a check into the panel?",
+    "How is the tiered confirm cascade (cheap 2nd small model then Claude Code) actually wired, given it is proposed as my-idea?"
+  ],
+  "purpose_vs_actual": "Matches its stated area: it interrogates the trust bar skeptically, grounds it in a real probe, and delivers a tiered ladder plus the harness that would make the tiering rigorous.",
+  "apparent_themes": [
+    "Necessary-but-not-sufficient ladder (each leg buys exactly one thing)",
+    "Stability is not correctness; determinism is not trust",
+    "Cry-wolf as a precision/economics problem",
+    "Measure-don't-assert (the calibration harness)"
+  ],
+  "intention_signals": "It is trying to establish a defensible, measured trust discipline so the semantic layer is a tool and not a noise generator, naming plainly which classes never clear at the 4B.",
+  "novelty": "The in-session empirical probe on the canonical incident and the determinism-is-a-category-error argument are distinctive grounded contributions.",
+  "contribution": "Contributes the empirical per-case 4B reliability numbers, the dissection of what each trust leg buys, the S1/S2/S3 trust tiering, and the named-incident calibration-harness design.",
+  "summary_for_embedding": "A trust-rigor findings doc with an empirical 4B probe on the /status incident, dissecting each trust mechanism and proposing a three-tier ladder gated by a stronger-model confirm plus a calibration harness.",
+  "intention_for_embedding": "To determine whether a 4B semantic finding can be trusted as a candidate and how to prevent semantic findings from training the operator to ignore them."
+}

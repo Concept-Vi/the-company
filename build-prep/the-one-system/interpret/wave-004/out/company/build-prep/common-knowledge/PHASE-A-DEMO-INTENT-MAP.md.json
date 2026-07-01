@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/common-knowledge/PHASE-A-DEMO-INTENT-MAP.md",
+  "model": "opus",
+  "what_it_does": "A recall-generated mapping authored by 'recollection' that, for each demo (app-canvas, app-flow, app-sheet, scr-home, app-states, etc.), lists the authoring session id(s) and an intent snippet recovered by semantic recall over session histories (via :8007/pplx), each annotated with a cosine score. It is intended to feed DNA's interactive-app-face exploration and the lead's kimi-clone deep-reads by pointing each demo back to the conversation that authored it.",
+  "observations": [
+    "Header explains the method: recall over session histories (:8007/pplx); per demo the authoring session(s) + an intent snippet; targets the lead's kimi-clone deep-reads; score=cosine.",
+    "Organized as one section per demo name, each listing up to three session UUIDs with a parenthetical cosine score and a truncated snippet of the recalled session text.",
+    "Recurring high-scoring session 7c2c1b74-... carries Tim's storage/portability intent: 'For storage, yes I think filesystem and yes I think making it portable and agnostic, addresses are very useful... It can move to supabase later if we want.'",
+    "Session 104a58a7-... recurs as build-worker / design-critic prompts for the 'Operable Interface' / 'Interactive Addressed Surface' loop (the autonomous self-modifying UI build).",
+    "Snippets are truncated mid-sentence (raw recall excerpts), mixing Tim's verbatim direction, agent build-worker prompts, design-critic prompts, task-notification stubs, and session-limit messages.",
+    "Cosine scores are modest (mostly ~0.40-0.54), reflecting loose semantic association between demo names and session content rather than exact provenance.",
+    "Covers many demo variants (app-canvas, app-flow / -fused / -full, app-sheet, app-scr-ledger / -focus / -compare, scr-home, scr-piece, scr-compose, scr-canvas, scr-dashboard, app-comp-cards / -controls, app-states / -2).",
+    "Some entries are clearly noise (session-limit notices, task-notification headers) surfaced by the recall rather than true authoring intent."
+  ],
+  "standouts": [
+    "Tim's verbatim storage/portability principle recovered as the top intent for the canvas demos: filesystem-first, portable and address-agnostic, Supabase-later.",
+    "The method itself: tying frozen demos back to their authoring conversations by semantic recall + cosine score, as input for clone deep-reads."
+  ],
+  "conventions": [
+    "Recall-grounded provenance with explicit cosine scores (the repo's measure-don't-infer discipline applied to demo->session attribution).",
+    "Honest about the tool used (:8007/pplx) and that snippets are recall excerpts.",
+    "Feeds a downstream consumer (DNA's explore + the lead's kimi-clone deep-reads) rather than concluding."
+  ],
+  "concerns": [
+    "Low/moderate cosine scores and noisy snippets (session-limit lines, task-notification stubs) mean several demo->session attributions are weak and would need confirmation before being treated as true provenance.",
+    "Snippets are truncated, so the recalled intent is only partially legible from this file alone.",
+    "Same session id recurs across many demos, so the map points at broad authoring sessions rather than per-demo authorship."
+  ],
+  "notes": "recollection's demo->authoring-session recall map — semantic (cosine-scored) provenance pointers from each demo to the conversations that likely authored it, as input for clone deep-reads; treat low scores as leads, not facts.",
+  "questions": [
+    "Which of these demo->session attributions were confirmed by the downstream kimi-clone deep-reads versus discarded as low-confidence?",
+    "What do the truncated snippets say in full — do they actually express each demo's design intent or just co-occur semantically?"
+  ],
+  "purpose_vs_actual": "Matches: it states it is a recall-based demo-to-session-intent map for DNA's explore and the lead's deep-reads, and delivers exactly that (cosine-scored session pointers per demo).",
+  "apparent_themes": [
+    "Recall-by-meaning provenance: tracing artifacts back to authoring conversations.",
+    "Filesystem-first, portable, address-agnostic storage (Tim's recovered principle).",
+    "Demos as outputs of an autonomous self-modifying UI build loop.",
+    "Honest, scored, tool-grounded attribution feeding downstream deep-reads."
+  ],
+  "intention_signals": "recollection is trying to give each frozen demo a thread back to the conversation that authored it, so a downstream clone deep-read can recover the real design intent behind the demo rather than guessing — turning the demo set into a recall-navigable provenance map.",
+  "novelty": "Using semantic session-recall with cosine scores as a provenance-mapping technique from artifacts (demos) to their authoring conversations, as explicit input for clone deep-reads.",
+  "contribution": "Contributes the recall-grounded provenance index linking each interface demo to its likely authoring session(s) with cosine confidence, plus recovered Tim-verbatim intent snippets (notably the filesystem-first/portable/address-agnostic storage principle) — the demo-to-intent threading a fused system would keep to recover why each demo exists.",
+  "summary_for_embedding": "recollection's recall-generated map linking each interface demo to its likely authoring session(s) via cosine-scored semantic recall, with recovered Tim-verbatim intent snippets, as input for the lead's kimi-clone deep-reads.",
+  "intention_for_embedding": "To thread each frozen demo back to its authoring conversation so a downstream clone deep-read can recover the real design intent rather than guess."
+}

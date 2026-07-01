@@ -1,0 +1,49 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-D7-selfmod-desktop.json",
+  "model": "opus",
+  "what_it_does": "A machine-generated grounding/confirmation report for the D7-selfmod-desktop.html mockup, a 'Self-Modification Audit' panel that lets an operator review and undo system self-changes. Records 38 candidate elements in 17 clusters as dossiers with jury verdicts, split into confirmed (2) and flagged (15).",
+  "observations": [
+    "Same ground/confirmed/flagged schema as the rg10-batch family; counts n_candidates=38, n_dossiers=38, n_clusters=17.",
+    "Subject screen: shows only the single most recent self-change with a 'Revert' button; older changes are explicitly described as a hidden future feature.",
+    "Only two confirmed dossiers: ui://toolbar/run (RUN-run, built) and ui://workshop/self-changes/sm-revert (SM-revert, built).",
+    "The sm-revert dossier describes an instant no-confirm git revert that re-discovers the node registry and emits a revert event, itself git-reversible (runtime/suite.py:revert_self_change).",
+    "Fifteen flagged clusters, most with 0/3 unanimous-ungrounded juries; addresses span ui://toolbar/*, ui://inbox/*, ui://workshop/*, ui://activity/*.",
+    "Workshop cluster ui://workshop/audit is the largest (16 members) and is flagged 0/3.",
+    "Includes draft self-extension verbs: ui://workshop/extend (SM-extension), ui://workshop/self-changes/nodes (NODE-types), ui://workshop/sentiment-node (SM-node).",
+    "ui://inbox/walk has grounding 'defer' (distinct from built/proposed) for the WALK-present review organ."
+  ],
+  "standouts": [
+    "The git-reversible self-revert as the one operator-only built control — the system can undo its own last change, and the undo is itself reversible.",
+    "Honest scoping in the ground block: only the latest change is shown, history is openly deferred.",
+    "Self-extension authoring (add node types / extensions) surfaced as build-gated, git-reversible verbs."
+  ],
+  "conventions": [
+    "ui:// addressing and 'proposed'/'built'/'defer' grounding sentinels.",
+    "how_to_change points to runtime/suite.py functions (revert_self_change, ui_info) and canvas/app/src/regions/Toolbar.tsx.",
+    "Shared dossier/jury structure consistent with sibling batch files."
+  ],
+  "concerns": [
+    "Very low confirmation rate (2 of 17 clusters) — most self-mod elements are weakly grounded, fitting a draft panel.",
+    "ui://toolbar/workshop maps_to_feature SM-revert but represents SM-revert while its what-text describes the workshop strip, a mild address/feature mismatch.",
+    "Several distinct addresses (inbox/audit, inbox/self-apply, workshop/audit) all map to SM-revert / the same audit panel, indicating overlapping representations of one concept."
+  ],
+  "notes": "Auto-generated audit of the self-modification panel mockup; the only solidly-grounded interactive thing is the git-reversible 'revert last self-change' control, everything else is draft.",
+  "questions": [
+    "What distinguishes grounding 'defer' from 'proposed' in the confirmation pipeline?",
+    "Why do multiple addresses collapse onto SM-revert — is the audit panel one feature surfaced at several addresses?",
+    "Is the 16-member workshop/audit cluster intended as the canonical panel, given it is flagged 0/3?"
+  ],
+  "purpose_vs_actual": "Matches: declared a self-modification audit grounding report and delivers exactly clustered dossiers + verdicts for that panel.",
+  "apparent_themes": [
+    "Safe self-modification (operator review + instant undo)",
+    "Git-reversibility as the safety substrate for self-change",
+    "Honest disclosure of what is built vs deferred vs proposed",
+    "Self-extension (the system proposing new node types/extensions to itself)"
+  ],
+  "intention_signals": "Trying to make the system's self-edits auditable and trivially undoable by a human, and to verify the panel's controls are honestly grounded — most are still draft, with revert being the load-bearing built capability.",
+  "novelty": "A self-modification audit surface whose core action is a no-confirm, registry-rediscovering, itself-git-reversible undo of the system's last change to itself.",
+  "contribution": "Contributes the self-modification audit surface's vocabulary and grounding: the SM-revert built control (revert_self_change), the SM-extension/SM-node self-authoring verbs, and the 'show only latest, defer history' framing.",
+  "summary_for_embedding": "A grounding/jury-confirmation report for the D7 Self-Modification Audit desktop panel, clustering 38 UI elements and confirming the git-reversible revert-last-self-change control while flagging the draft remainder.",
+  "intention_for_embedding": "To verify that the self-modification audit panel honestly surfaces and safely undoes the system's self-changes, grounded in real revert code."
+}

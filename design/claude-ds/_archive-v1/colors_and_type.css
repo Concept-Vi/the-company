@@ -1,0 +1,407 @@
+/* ============================================================
+   ConceptV Design System — Colors & Type
+   Source-of-truth tokens. Import this once at the top of every
+   surface (deck, ui kit, mock) so the whole system stays in sync.
+   ============================================================ */
+
+/* ---------- Webfonts ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ===== Surfaces — paper-first system, calibrated to the pitch deck ===== */
+
+  /* The page is a near-white off-cream — the deck's "paper" surface. Panels
+     sit on it in a slightly more saturated cream wash. White is reserved for
+     content cards (images, dashboards) that need to stand out from the paper. */
+  --paper:        #FCFAF2;   /* page background — the paper */
+  --paper-2:      #F8F3E1;   /* soft-cream panels, like the deck's content panels */
+  --paper-3:      #F2EAD0;   /* deeper cream, used for headers/legends inside panels */
+  --paper-warm:   #FBF4C8;   /* gold-tinted wash for emphasis (rare) */
+
+  /* Legacy aliases — DO NOT REMOVE. They are widely used across canvases. */
+  --bg-canvas:    #FCFAF2;   /* was #FBF7EC — lighter, deck-grade */
+  --bg-surface:   #FFFFFF;   /* pure white cards (images, dashboards) */
+  --bg-muted:     #F1ECDC;   /* light section panels */
+  --bg-sunken:    #E8E2CC;   /* dropzones */
+  --bg-dark:      #1F1A12;
+  --bg-dark-2:    #2A2620;
+
+  /* Foreground / ink — warm, NEVER pure black. The deck uses a slightly
+     softer ink than #000 for body text and #5A4F38 for descriptive copy. */
+  --ink:          #1F1A12;   /* primary, near-black with warmth */
+  --ink-2:        #3A3026;   /* secondary, used for body copy in the deck */
+  --ink-3:        #6B5F47;   /* tertiary, helper / description copy */
+  --ink-4:        #9C8C6E;   /* placeholder / muted */
+  --ink-5:        #C9B999;   /* subtle */
+  --ink-inverse:  #FCFAF2;
+
+  --fg-primary:   #1F1A12;
+  --fg-secondary: #6B5F47;
+  --fg-muted:     #A89678;
+  --fg-soft:      #C9B999;
+  --fg-inverse:   #FCFAF2;
+
+  /* Primary brand accent — the ConceptV gold (sampled from the real logo) */
+  --accent-gold:       #E0C010;
+  --accent-gold-hover: #C8AB0E;
+  --accent-gold-press: #A5900A;
+  --accent-gold-soft:  #F4E89A;
+  --accent-gold-dashed:#D8C040;
+  --accent-gold-50:    #FBF4C8;
+  --accent-gold-faint: #FDFAEB;
+
+  /* Secondary brand — bronze for illustration figures and section accents */
+  --accent-bronze:     #988058;
+  --accent-bronze-soft:#C9B58A;
+  --accent-bronze-2:   #7A6A48;
+  --accent-tan:        #D0C098;
+
+  /* Semantic status — warm-shifted */
+  --status-success:    #5A8A4A;
+  --status-success-bg: #E6EFDB;
+  --status-warning:    #E5A547;
+  --status-warning-bg: #FBEBC8;
+  --status-error:      #C24A3C;
+  --status-error-bg:   #F5D7D2;
+  --status-info:       #4A78B8;
+  --status-info-bg:    #DCE7F3;
+  --status-pending:    #E5C547;
+  --status-pending-bg: #FBF1C0;
+
+  /* Borders — the deck uses these very sparingly. Most "separators" are
+     subtle background-tone shifts, not strokes. */
+  --border-default:    #E8DFC5;
+  --border-strong:     #D4C99A;
+  --border-faint:      #F0E9D2;
+  --border-soft:       #EDE5CD;
+  --border-dashed:     #D9B84A;
+  --border-dark:       #3A332A;
+
+  /* ===== Shadows — deck-quiet ===== */
+  /* The deck never shows hard shadows; cards float on the page with just a
+     touch of warm depth. We re-tuned these to be quieter than before. */
+  --shadow-xs:    0 1px 1px rgba(31, 26, 18, 0.03);
+  --shadow-sm:    0 1px 2px rgba(31, 26, 18, 0.04);
+  --shadow-card:  0 1px 2px rgba(31, 26, 18, 0.03),
+                  0 6px 18px rgba(31, 26, 18, 0.04);
+  --shadow-pop:   0 6px 22px rgba(31, 26, 18, 0.08),
+                  0 2px 6px rgba(31, 26, 18, 0.04);
+  --shadow-modal: 0 24px 64px rgba(31, 26, 18, 0.22);
+  --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.6),
+                  inset 0 -1px 0 rgba(31,26,18,0.03);
+
+  /* ===== Radii ===== */
+  --r-xs:   4px;
+  --r-sm:   6px;
+  --r-md:   8px;
+  --r-lg:   12px;
+  --r-xl:   16px;
+  --r-2xl:  20px;
+  --r-pill: 999px;
+
+  /* ===== Spacing scale (strict 8px rhythm) =====
+     This is the ONLY scale used across the system. Inputs/buttons/cards/
+     gaps/margins all snap to a value below. Deviating is a smell. */
+  --s-0:  0px;
+  --s-1:  4px;     /* tight inner padding (chips, badges) */
+  --s-2:  8px;     /* between siblings (icon ↔ label, button rows) */
+  --s-3:  12px;
+  --s-4:  16px;    /* default card inner padding, between fields */
+  --s-5:  20px;
+  --s-6:  24px;    /* between sections of a panel */
+  --s-7:  32px;    /* between major panels */
+  --s-8:  32px;
+  --s-9:  40px;
+  --s-10: 40px;
+  --s-12: 48px;    /* between top-level sections in a canvas */
+  --s-14: 56px;
+  --s-16: 64px;    /* hero / title bottom gap */
+  --s-20: 80px;
+  --s-24: 96px;    /* canvas outer gutter */
+
+  /* ===== Type =====
+     Deck observations: the slide titles use a bold sans, with a slightly
+     warmer dark color than #000 and tight tracking. Body text is a medium
+     weight. Numbers are big and bold and gold. We retain Sora + DM Sans
+     pairing for now (with a flag) — these are well calibrated to the look. */
+  --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  --font-body:    'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  --tracking-tight:   -0.02em;
+  --tracking-snug:    -0.01em;
+  --tracking-normal:   0em;
+  --tracking-wide:     0.04em;
+  --tracking-caps:     0.08em;
+
+  /* Motion */
+  --ease-out: cubic-bezier(.2, .8, .2, 1); /* @kind other */
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1); /* @kind other */
+  --dur-fast: 120ms; /* @kind other */
+  --dur-base: 200ms; /* @kind other */
+  --dur-slow: 360ms; /* @kind other */
+
+  /* ===== Layout primitives =====
+     Used by both the deck templates and the application chrome to keep
+     measurements consistent. */
+  --layout-gutter:  32px;
+  --layout-rail:    240px;
+  --layout-rail-min:  180px;
+  --layout-rail-max:  340px;
+  --layout-chat:    320px;
+  --layout-chat-min: 280px;
+  --layout-chat-max: 440px;
+}
+
+/* ============================================================
+   SEMANTIC TYPE PRESETS — apply with class names
+   ============================================================ */
+
+.cv-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(44px, 5.6vw, 72px);
+  line-height: 1.02;
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-primary);
+}
+.cv-h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1.08;
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-primary);
+}
+.cv-h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 1.15;
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-primary);
+}
+.cv-h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1.25;
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-primary);
+}
+.cv-h4 {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.3;
+  color: var(--fg-primary);
+}
+
+.cv-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--fg-primary);
+}
+.cv-body-sm {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg-secondary);
+}
+.cv-caption {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--fg-muted);
+  letter-spacing: var(--tracking-wide);
+}
+.cv-eyebrow {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--accent-bronze);
+}
+.cv-mono {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg-secondary);
+}
+
+/* The ConceptV title treatment — gold serif-weight sans, used for screen titles */
+.cv-screen-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: var(--tracking-snug);
+  color: var(--accent-bronze);
+}
+
+/* Inline gold accent for words inside body copy — like the URL highlight pattern */
+.cv-accent {
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+/* ============================================================
+   GLOBAL DEFAULTS — opt-in via class on <body> or wrapper
+   ============================================================ */
+.cv-scope {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--fg-primary);
+  background: var(--bg-canvas);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.cv-scope h1 { font: 700 44px/1.08 var(--font-display); letter-spacing: var(--tracking-tight); margin: 0; }
+.cv-scope h2 { font: 600 32px/1.15 var(--font-display); letter-spacing: var(--tracking-snug); margin: 0; }
+.cv-scope h3 { font: 600 24px/1.25 var(--font-display); margin: 0; }
+.cv-scope h4 { font: 700 18px/1.3 var(--font-body); margin: 0; }
+.cv-scope p  { margin: 0; text-wrap: pretty; }
+.cv-scope code, .cv-scope pre { font-family: var(--font-mono); font-size: 0.92em; }
+
+/* ============================================================
+   SURFACE-ZONE REGISTRY  ·  low-opacity tonal zoning
+   ------------------------------------------------------------
+   The interface is differentiated through subtle undertones,
+   NOT through obvious colour blocks. Each functional zone gets
+   a near-white tinted surface with a clear semantic role. Gold
+   is reserved for Vi, active decisions, selected states, key
+   emphasis and primary actions — never the default background.
+
+   The system is compositional. Every wash is mixed from a named
+   PIGMENT toward white, at a percentage scaled by a single
+   --zone-intensity multiplier. Re-tune the whole language by
+   moving one knob; re-colour it by overriding the pigments
+   (see the .zone-palette-* variants below).
+
+   Per zone we expose four derived roles:
+     --zone-<x>-surface  large panel wash         (felt, not seen)
+     --zone-<x>-strong   selected / stateful wash  (a touch more present)
+     --zone-<x>-edge     soft boundary stroke
+     --zone-<x>-ink      legible accent for icons / labels / numbers
+   ============================================================ */
+:root {
+  /* Global knobs — overridden live by the Tweaks panel ------- */
+  /* 0.45 quiet … 1.0 default … 1.7 present */
+  --zone-intensity:   1; /* @kind other */
+  /* strength of Vi / decision gold */
+  --gold-intensity:   1; /* @kind other */
+  /* path lines, branch traces, ghosting */
+  --spatial-opacity:  1; /* @kind other */
+
+  /* PIGMENTS — the raw undertones. Override these (not the
+     derived roles) to recolour the whole system. */
+  --pig-base:     #B49A5C;   /* warm parchment — the workspace ground   */
+  --pig-content:  #D8B86A;   /* warm ivory — primary readable surface   */
+  --pig-panel:    #8C8A7E;   /* warm grey-stone — supporting structure  */
+  --pig-review:   #E4C24C;   /* soft cream — creative review state      */
+  --pig-source:   #5E7CA6;   /* cool blue-grey — factual / provenance   */
+  --pig-package:  #C79A52;   /* manila / sand — formal handoff          */
+  --pig-success:  #5C8A4C;   /* sage — passed / ready                   */
+  --pig-warning:  #E0A23C;   /* amber — incomplete (NOT brand gold)     */
+  --pig-reject:   #C4505A;   /* rose-coral — anti-pattern memory        */
+
+  /* ----- Base environment ----------------------------------- */
+  --zone-base-surface: color-mix(in oklch, var(--pig-base)    calc(3.5% * var(--zone-intensity)), #FFFEFB);
+  --zone-base-strong:  color-mix(in oklch, var(--pig-base)    calc(7%   * var(--zone-intensity)), #FFFEFB);
+  --zone-base-edge:    color-mix(in oklch, var(--pig-base)    calc(16%  * var(--zone-intensity)), #FFFFFF);
+  --zone-base-ink:     color-mix(in oklch, var(--pig-base)    62%, var(--ink));
+
+  /* ----- Primary content (ivory) ---------------------------- */
+  --zone-content-surface: color-mix(in oklch, var(--pig-content) calc(3%  * var(--zone-intensity)), #FFFFFF);
+  --zone-content-strong:  color-mix(in oklch, var(--pig-content) calc(7%  * var(--zone-intensity)), #FFFFFF);
+  --zone-content-edge:    color-mix(in oklch, var(--pig-content) calc(15% * var(--zone-intensity)), #FFFFFF);
+  --zone-content-ink:     color-mix(in oklch, var(--pig-content) 60%, var(--ink));
+
+  /* ----- Secondary panel (stone) ---------------------------- */
+  --zone-panel-surface: color-mix(in oklch, var(--pig-panel) calc(5%  * var(--zone-intensity)), #FFFFFF);
+  --zone-panel-strong:  color-mix(in oklch, var(--pig-panel) calc(10% * var(--zone-intensity)), #FFFFFF);
+  --zone-panel-edge:    color-mix(in oklch, var(--pig-panel) calc(18% * var(--zone-intensity)), #FFFFFF);
+  --zone-panel-ink:     color-mix(in oklch, var(--pig-panel) 64%, var(--ink));
+
+  /* ----- Review / candidate (soft cream) -------------------- */
+  --zone-review-surface: color-mix(in oklch, var(--pig-review) calc(6%  * var(--zone-intensity)), #FFFFFF);
+  --zone-review-strong:  color-mix(in oklch, var(--pig-review) calc(12% * var(--zone-intensity)), #FFFFFF);
+  --zone-review-edge:    color-mix(in oklch, var(--pig-review) calc(22% * var(--zone-intensity)), #FFFFFF);
+  --zone-review-ink:     color-mix(in oklch, var(--pig-review) 58%, var(--ink));
+
+  /* ----- Source / reference (cool grey-white) --------------- */
+  --zone-source-surface: color-mix(in oklch, var(--pig-source) calc(5%  * var(--zone-intensity)), #FFFFFF);
+  --zone-source-strong:  color-mix(in oklch, var(--pig-source) calc(10% * var(--zone-intensity)), #FFFFFF);
+  --zone-source-edge:    color-mix(in oklch, var(--pig-source) calc(20% * var(--zone-intensity)), #FFFFFF);
+  --zone-source-ink:     color-mix(in oklch, var(--pig-source) 72%, var(--ink));
+
+  /* ----- Package / handoff (manila) ------------------------- */
+  --zone-package-surface: color-mix(in oklch, var(--pig-package) calc(6.5% * var(--zone-intensity)), #FFFFFF);
+  --zone-package-strong:  color-mix(in oklch, var(--pig-package) calc(12%  * var(--zone-intensity)), #FFFFFF);
+  --zone-package-edge:    color-mix(in oklch, var(--pig-package) calc(22%  * var(--zone-intensity)), #FFFFFF);
+  --zone-package-ink:     color-mix(in oklch, var(--pig-package) 64%, var(--ink));
+
+  /* ----- Success / ready (sage) ----------------------------- */
+  --zone-success-surface: color-mix(in oklch, var(--pig-success) calc(6%  * var(--zone-intensity)), #FFFFFF);
+  --zone-success-strong:  color-mix(in oklch, var(--pig-success) calc(12% * var(--zone-intensity)), #FFFFFF);
+  --zone-success-edge:    color-mix(in oklch, var(--pig-success) calc(22% * var(--zone-intensity)), #FFFFFF);
+  --zone-success-ink:     color-mix(in oklch, var(--pig-success) 78%, var(--ink));
+
+  /* ----- Warning / incomplete (amber) ----------------------- */
+  --zone-warning-surface: color-mix(in oklch, var(--pig-warning) calc(7%  * var(--zone-intensity)), #FFFFFF);
+  --zone-warning-strong:  color-mix(in oklch, var(--pig-warning) calc(14% * var(--zone-intensity)), #FFFFFF);
+  --zone-warning-edge:    color-mix(in oklch, var(--pig-warning) calc(26% * var(--zone-intensity)), #FFFFFF);
+  --zone-warning-ink:     color-mix(in oklch, var(--pig-warning) 80%, var(--ink));
+
+  /* ----- Rejected / anti-pattern (rose-coral) --------------- */
+  --zone-reject-surface: color-mix(in oklch, var(--pig-reject) calc(6%  * var(--zone-intensity)), #FFFFFF);
+  --zone-reject-strong:  color-mix(in oklch, var(--pig-reject) calc(12% * var(--zone-intensity)), #FFFFFF);
+  --zone-reject-edge:    color-mix(in oklch, var(--pig-reject) calc(24% * var(--zone-intensity)), #FFFFFF);
+  --zone-reject-ink:     color-mix(in oklch, var(--pig-reject) 74%, var(--ink));
+
+  /* ----- Vi / active decision (gold) ------------------------ *
+     The only saturated voice. Used for recommendations, the
+     selected candidate, current branch and primary actions. */
+  --vi-surface:  color-mix(in oklch, var(--accent-gold) calc(9%  * var(--gold-intensity)), #FFFFFF);
+  --vi-strong:   color-mix(in oklch, var(--accent-gold) calc(18% * var(--gold-intensity)), #FFFFFF);
+  --vi-edge:     color-mix(in oklch, var(--accent-gold) calc(46% * var(--gold-intensity)), #FFFFFF);
+  --vi-line:     var(--accent-gold);
+
+  /* ----- Spatial layer (path lines / branch traces) --------- */
+  --spatial-line:  color-mix(in oklch, var(--accent-bronze) 42%, transparent);
+  --spatial-faint: color-mix(in oklch, var(--accent-bronze) 16%, transparent);
+  --spatial-node:  var(--accent-gold);
+}
+
+/* ---- Palette variants — recolour by overriding pigments ---- */
+.zone-palette-cooler {
+  --pig-base:    #8FA0A6;  --pig-content: #AEB4AE;  --pig-panel: #8A9398;
+  --pig-review:  #C9B86A;  --pig-source:  #5A86B0;  --pig-package: #A89A6E;
+  --pig-success: #4E8C72;  --pig-warning: #D4A24E;  --pig-reject:  #B85A6C;
+}
+.zone-palette-warmer {
+  --pig-base:    #C0964A;  --pig-content: #DCB255;  --pig-panel: #A08A66;
+  --pig-review:  #E6B23C;  --pig-source:  #7E8A6E;  --pig-package: #CF9442;
+  --pig-success: #6E8A3E;  --pig-warning: #E08C32;  --pig-reject:  #C8504A;
+}
+
+/* ---- Zone helper classes — apply role with one class ------- *
+   Sets the surface, a hairline edge and the zone's ink so that
+   icons / .zone-ink children pick up the accent automatically. */
+.zone-base    { background: var(--zone-base-surface); }
+.zone-content { background: var(--zone-content-surface); border-color: var(--zone-content-edge); }
+.zone-panel   { background: var(--zone-panel-surface);   border-color: var(--zone-panel-edge); }
+.zone-review  { background: var(--zone-review-surface);  border-color: var(--zone-review-edge); }
+.zone-source  { background: var(--zone-source-surface);  border-color: var(--zone-source-edge); }
+.zone-package { background: var(--zone-package-surface); border-color: var(--zone-package-edge); }
+.zone-success { background: var(--zone-success-surface); border-color: var(--zone-success-edge); }
+.zone-warning { background: var(--zone-warning-surface); border-color: var(--zone-warning-edge); }
+.zone-reject  { background: var(--zone-reject-surface);  border-color: var(--zone-reject-edge); }
+.zone-vi      { background: var(--vi-surface);           border-color: var(--vi-edge); }

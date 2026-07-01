@@ -1,0 +1,56 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/SYSTEM-GAPS.md",
+  "model": "opus",
+  "what_it_does": "A long, append-only running backlog/journal (410 lines) of MCP/engine gaps surfaced BY USE during the cognition-engine self-improvement loop. Each entry is a buildable seam with a status marker (open/partial/closed), an ID family (G/GC/M/N/P/Q/B series), evidence, root-cause, and a fix or closure pointer with commit shas. It is the 'engine-improves-engine' input file: a future workflow reads it, scouts each gap against the code, and drafts buildable lanes.",
+  "observations": [
+    "Header states the convention: first-use friction is the input not a failure; status legend open/partial/closed; entries are dated and chronologically appended",
+    "Tracks many ID families: G1-G25 (engine/MCP primitives), GC1-GC15 (grounded-chain laws and operator-memory), M/N/P/Q series (cold-agent eval friction backlogs across four eval rounds), B1-B7 (the build board)",
+    "Documents the FRAME: the loop serves the Live Intent Resolution Surface (intent→spec upstream) with cognition engine + compositions + workflows + cron + wire as spec→artifact downstream — two halves of one circuit",
+    "Records the ① repo-exocortex going fully online (584 files digested+embedded, corpus ~1854 records, codebase queryable), ② drift-radar full-repo sweeps, ③ failure-pattern clustering over full mined history (1267 extracts)",
+    "Captures a recurring ARC lesson: a 4B model judgment that keeps misfiring on a constraint should become a deterministic floor check (refcheck → prose_check → checks-registry); the model raises, the floor decides",
+    "Records four cold-agent re-evals showing the friction class shifting over time: missing-capabilities → tool-seams → description-drift+regression → schema-polish+server-staleness",
+    "Encodes Tim's standing laws as they emerge: no-confidence (tags/counts not floats), temporal-axis-first-class, recency-supersedes, refine-before-gating, grounded-chain-must-be-MCP-easiest, no-unconditional-deferrals",
+    "Tracks the RG10 registry-generation program end to end: 82→483 addresses, 58→76 features, a 222-pile refined autonomously to 27 residue, executed via a conversational class-grouped walk with Tim",
+    "Logs the operator-memory layer (GC15): a file-discovered operator_memory registry requiring verbatim evidence, 7 confirmed + 18 proposed rows migrated from harness notes",
+    "Ends with Track-1 dials (anticipation/stability as adjustable character traits) and a 'declare a dial' default for future behavior questions",
+    "Includes honest negative findings (e.g. EVERY recurring failure-pattern maps to an existing memory → no new memory minted; a first drift sweep reported clean zeros over an empty set, caught by zero-is-suspicious)"
+  ],
+  "standouts": [
+    "The repeated 'floor over prompt' vindication: the deterministic refcheck floor caught invented feature-ids the 4B coined DESPITE a verbatim-copy instruction — strongest by-use evidence that no-fiction must not rest on the model",
+    "The 222-pile-to-27 refinement cascade as the first full exercise of the refine-before-gating rule (panel → calibrated panel → deterministic prose floor → re-describe)",
+    "The stubborn-floor class reframed as an INVENTORY-GAP DETECTOR: a model that repeats the same invented id after correction is pointing at a real concept the feature inventory doesn't name",
+    "The whole confirm machinery becoming DECLARED DATA via the checks/jury/panel cascade step kinds (the registration-gauntlet)",
+    "Self-honesty markers throughout: harness return-shape bit-twice, LAW-0 naming mistakes (panels/ vs verdict_panels/), and the gate-not-the-subset lesson after a NameError regression"
+  ],
+  "conventions": [
+    "Append-only journal discipline: closures recorded in later sections; a reconciliation pass flips stale-open lines in place with closure pointers",
+    "Evidence-by-use and verify-by-use as the bar for every closure; commit shas cited",
+    "Registry-is-truth, reuse-don't-parallel, fail-loud-not-silent, no-green-paint, and propose→operator-approve gates applied consistently",
+    "Status markers and ID families give the file a queryable structure despite being prose"
+  ],
+  "concerns": [
+    "The append-only journal grew stale-open lines while closures lived in later sections — an acknowledged self-similar staleness the doc's own radar exists to catch (reconciled once, but recurs by design)",
+    "A persistent G24/G24-EDGE class: some 4B digests deterministically emit malformed JSON even through schema-guided decoding (left loud, unresolved at this file's end)"
+  ],
+  "notes": "The master engine-improves-engine backlog/journal — read this to know every gap surfaced by use, its closure or open status, and the standing laws the loop discovered along the way.",
+  "questions": [
+    "Of the four-item true-open set (G8 lesson, G24-edge, GC8 dynamic walk re-composition, GC14 conditional-memory injection), which are now built versus still Track-1 conversation pieces?",
+    "Were the 18 proposed operator-memory rows block-confirmed by Tim?",
+    "Did the G24 guided-decoding transport fix land to eliminate the malformed-JSON digest class?"
+  ],
+  "purpose_vs_actual": "Matches: it declares itself the running backlog for next workflows and functions exactly as that — a status-tracked, evidence-bearing ledger of gaps and closures.",
+  "apparent_themes": [
+    "engine-improves-engine self-modification driven by first-use friction",
+    "floor-over-prompt: deterministic checks beat model instruction for no-fiction",
+    "verify-by-use as the only acceptable evidence of done",
+    "refine-before-gating: minimize the operator's decision set",
+    "registry-is-truth and propose→approve lifecycle for everything including the toolset itself",
+    "cold-agent evals as the intuitiveness floor measured over rounds"
+  ],
+  "intention_signals": "Trying to make a 100%-AI-built cognition engine continuously improve its own MCP surface, composition primitives, and grounding floors by capturing every friction as a buildable seam, closing it with by-use evidence, and crystallizing the recurring lessons into standing laws — all while keeping the operator's gate minimal and the no-fiction floor deterministic.",
+  "novelty": "The longitudinal record of an engine refactoring its own agent-facing surface across four cold-agent evals, the floor-over-prompt evidence pattern, the stubborn-floor-as-inventory-gap-detector insight, and the confirm-machinery-as-declared-data (checks/jury/panel step kinds).",
+  "contribution": "Contributes the canonical chronological ledger of the cognition engine's self-improvement: every gap, its evidence, root cause, and closure, plus the emergent standing laws (no-confidence, refine-before-gating, floor-over-prompt, grounded-chain-must-be-MCP-easiest) — the institutional memory a fused system would keep as its build-history and law-derivation provenance.",
+  "summary_for_embedding": "An append-only running backlog/journal of MCP and cognition-engine gaps surfaced by use, each with status, evidence, root cause, and closure, tracking the engine's self-improvement across four cold-agent evals and the emergence of its standing laws.",
+  "intention_for_embedding": "To serve as the engine-improves-engine input file capturing every first-use friction as a buildable, evidence-tracked seam and crystallizing recurring lessons into standing laws."
+}

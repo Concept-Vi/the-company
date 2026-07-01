@@ -1,0 +1,48 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/AREA-2-detector-layer.md",
+  "model": "opus",
+  "what_it_does": "A research-findings markdown companion (to ANCHOR.md) arguing that the existing self-description and detector layer (doc_drift, refresh_self_description, reachability, suite_health, the *_acceptance corpus) already contains, in fragments, the unified 'finding-model' a coherence system would need; it maps each desired finding-field onto an existing code primitive and proposes a build order to compose them.",
+  "observations": [
+    "Declares its scope in the header: the self-description + detector layer and the path from point-detectors-that-forget to contributors that write into one persisted, typed, addressed, dispositioned finding-model.",
+    "Uses an explicit evidence-marking convention: Verified (executed this session), Observed (read in code file:line), Inferred (pattern-match), [my idea] (design proposal).",
+    "Reports live-run numbers: doc_drift() returns all-empty; reachability() returns routes=112, wired=80, orphan=32, new=0, stale=0 with a backlog breakdown.",
+    "Cites specific suite.py line ranges for capabilities() (683-767), refresh_self_description (823-839), doc_drift (855-869), suite_health (6969-7006), reachability (7056-7089).",
+    "Builds a table mapping a finding object's fields (kind/at/state/owner/disposition/since/evidence) to existing primitives (NODE_STATES, append_annotation, append_event, the Inbox status lane, _ORPHAN_ROUTES tags).",
+    "Tiers candidate 'latent detectors' by difficulty: Tier 1 (literal/registry set-difference, trustworthy now), Tier 2 (needs a real call/import graph), Tier 3 (no clean machine signal).",
+    "Proposes detectors be declared like node-types (a detectors/ dir, KIND/READS/DISPOSITIONS/address/detect) discovered the same way registry.discover walks nodes/.",
+    "Names a design tension (mutable disposition over an append-only log) and resolves it via the Inbox's separate-status-lane pattern (governance.py)."
+  ],
+  "standouts": [
+    "The thesis that unification is reachability()'s own internal documented/new/stale reconcile, generalized across every detector as known/new/resolved.",
+    "The finding-field-to-primitive mapping table presented as a 'build-on-not-beside' proof.",
+    "The honest difficulty-tiering that explicitly refuses to claim Tier-2 detection is cheap, gating it on an accurate connection graph."
+  ],
+  "conventions": [
+    "Follows the repo's evidence-classification discipline (Verified/Observed/Inferred labels) throughout.",
+    "Heavy file:line citation grounding most claims.",
+    "Frames every proposal as composing existing primitives rather than adding new tools ('more types, not more tools')."
+  ],
+  "concerns": [
+    "Live numbers (e.g. reachability routes=112) are timestamped to a single run and will silently age.",
+    "Much of the design ([my idea] sections) is proposal not implemented, so the file mixes confirmed code reading with unbuilt architecture."
+  ],
+  "notes": "A grounded argument that the coherence finding-model is already latent in three forgetful detector return-shapes plus the Inbox/registry patterns, with a concrete compose-don't-build order.",
+  "questions": [
+    "What is ANCHOR.md and what does it define (the file repeatedly defers to it for sections)?",
+    "What are the sibling Areas (referenced as 'Area C', anchor sections) covering the connection-graph work this file hands off?",
+    "Has any of the proposed [my idea] build order (persisted finding-store, universal reconcile engine) been implemented?"
+  ],
+  "purpose_vs_actual": "Matches: the stated area (self-description + detector layer, and the path to one finding-model) is exactly what the body delivers, with grounding and an honest difficulty split.",
+  "apparent_themes": [
+    "Build-on-not-beside (reuse existing primitives, no parallel store)",
+    "More types, not more tools (declared detectors like node-types)",
+    "Mutable disposition over immutable trace via a separate status lane",
+    "Honest tiering of feasibility / refusing to overclaim"
+  ],
+  "intention_signals": "Trying to prove that turning forgetful detectors into a unified persisted finding-model is a naming-and-composing job over code that already exists, while routing the genuinely hard detection rigor to another area rather than pretending it is solved.",
+  "novelty": "The framing of reachability's documented/new/stale split as the embryonic universal detector contract, and the (kind, address) upsert as the dedup key that makes burn-down convergence definable.",
+  "contribution": "Contributes the field-by-field mapping from an abstract finding object to concrete existing primitives, the difficulty-tiering of latent detectors, and the declared-detector discovery proposal grounded in the node-type registry.",
+  "summary_for_embedding": "A coherence research companion mapping an abstract finding-model onto existing detector/registry/inbox primitives in suite.py and proposing declared detectors with a tiered feasibility split.",
+  "intention_for_embedding": "To show that a unified persisted finding-model is composable from existing code (reachability's reconcile, the Inbox status lane, the node-type registry) rather than built anew."
+}

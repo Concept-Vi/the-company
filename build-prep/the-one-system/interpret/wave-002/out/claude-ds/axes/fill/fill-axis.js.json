@@ -1,0 +1,46 @@
+{
+  "project": "claude-ds",
+  "path": "axes/fill/fill-axis.js",
+  "model": "opus",
+  "what_it_does": "Defines the fill axis (the ring's inner-space treatment) via `CV_AXES.make` and registers it. Values are token recipes (referenced by a `ramp` name in meta, resolved against the colour axis / token graph) rather than raw colours: none (zero/transparent), paper, wash, tint (fromColor). Grouped into none/surface/colour, default 'paper'. The actual gradient ramps live in CV_GLYPHIC (FILL_RAMPS); this axis is the vocabulary/meaning surface.",
+  "observations": [
+    "Guards for `window.CV_AXES`, else console.error + return.",
+    "Groups: none, surface, colour.",
+    "Values: none (zero:true, no payload — transparent α0), paper (meta.ramp 'paper'), wash (meta.ramp 'wash'), tint (meta.ramp 'tint', meta.fromColor true).",
+    "No value carries a `token` or `css` — payload is entirely a `ramp` reference in meta, so resolveCSS would return null; the actual ramps live in CV_GLYPHIC FILL_RAMPS.",
+    "`tint` has `fromColor: true` meta indicating it derives from the chosen colour axis value.",
+    "Default 'paper'; zero is 'none'."
+  ],
+  "standouts": [
+    "Values are recipes (ramp names) not literals — the axis is purely the vocabulary, with the gradient ramps single-sourced in CV_GLYPHIC.",
+    "`fromColor: true` on tint signals cross-axis composition (fill derived from the colour axis value).",
+    "A deliberately payload-less axis: resolveCSS returns null for all values because meaning here is the ramp reference, not a CSS string."
+  ],
+  "conventions": [
+    "Single-home discipline: the axis lists which fills exist; the ramp definitions live once in CV_GLYPHIC.",
+    "`zero: true` marks the transparent baseline value.",
+    "Same guard-and-return + IIFE/window pattern as sibling axes."
+  ],
+  "concerns": [
+    "Like the other axes, missing-core handling is console.error + silent return rather than throw (softer than the core's loud-fail).",
+    "Because no value has token/css, this axis's resolveCSS is effectively unused — consumers must read `meta.ramp` and resolve via CV_GLYPHIC, an implicit contract not enforced here."
+  ],
+  "notes": "The fill axis: a small vocabulary (none/paper/wash/tint) of ring inner-space treatments as ramp recipes (tint derives fromColor), with the actual gradient ramps living in CV_GLYPHIC; default paper.",
+  "questions": [
+    "What does CV_GLYPHIC's FILL_RAMPS contain for 'paper'/'wash'/'tint' and how is `fromColor` combined with the colour axis value?",
+    "Is it intended that resolveCSS returns null for every fill value (consumers read meta.ramp instead)?",
+    "Why console.error+return on missing core when the core throws — a consistent softer pattern across axes?"
+  ],
+  "purpose_vs_actual": "Matches: the header describes a typed vocabulary of ring fill treatments as token recipes with ramps living in CV_GLYPHIC — the code registers exactly that small recipe-based axis.",
+  "apparent_themes": [
+    "Axis as vocabulary/meaning surface (not the literal home)",
+    "Recipes over raw values (ramp references)",
+    "Cross-axis composition (tint fromColor)",
+    "Single home for ramps (CV_GLYPHIC)"
+  ],
+  "intention_signals": "Trying to name the small set of fill treatments a ring can have as a typed, subscribable dimension, while keeping the actual gradient construction single-sourced in the Glyphic renderer and allowing fill to compose with the colour axis.",
+  "novelty": "A payload-less axis whose values are ramp recipes resolved elsewhere, plus the `fromColor` cross-axis composition flag.",
+  "contribution": "Contributes the fill-axis vocabulary (none/paper/wash/tint) and the ramp-recipe + fromColor convention that lets ring inner-space treatments be chosen declaratively and composed with colour.",
+  "summary_for_embedding": "A JavaScript registration of the ConceptV fill axis: four ring inner-space treatments (none/paper/wash/tint) as token-recipe ramp references in meta (tint derived fromColor), default paper, with actual gradient ramps living in CV_GLYPHIC, registered into CV_AXES.",
+  "intention_for_embedding": "To name ring fill treatments as a typed vocabulary of ramp recipes that compose with the colour axis while the gradient definitions stay single-sourced in the Glyphic renderer."
+}

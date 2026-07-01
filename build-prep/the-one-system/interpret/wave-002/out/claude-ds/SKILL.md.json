@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "SKILL.md",
+  "model": "opus",
+  "what_it_does": "The agent-skill entrypoint for the ConceptV Design System. Carries YAML frontmatter (name: conceptv-design, user-invocable) and a description telling agents to use it to generate well-branded ConceptV interfaces/assets. The body is a prioritised read-list of the most important files to load, a condensed statement that the system is generative (v2), the product surfaces and their shapes, concrete on-brand design rules (type/colour/texture/motion/signature-moves/avoid), how to use the skill for visual-artifact vs production-code requests, icon-library usage, and flagged open questions (substituted fonts, offline website).",
+  "observations": [
+    "Frontmatter declares it a user-invocable skill named conceptv-design for production or throwaway prototypes.",
+    "Gives a numbered load-order of 10 file groups (README, colors_and_type.css, logos, icons, illustrations, ui_kits, preview, DESIGN-LANGUAGE.md, analysis docs, core/templates).",
+    "Restates the v2 thesis: one type system + one rule engine + two layout solvers via axis-dials, design = f(content, axisPosition), 'v2 wins' on conflict.",
+    "Instructs 'Don't hand-lay-out a layout' — use window.ConceptVDesignSystem_c8f43c's Slide/RenderType with an archetype and content.",
+    "Lists the colour ramp tokens --ramp-1..4 (#dad364 -> #d6bf57 -> #c09d5d -> #b98664) and distinguishes the true logo gold #E0C010 from the softer applied deck gold.",
+    "States colour-role logic: ink=content, gold=active/decision/selected (never default background), bronze=structural/quiet voice.",
+    "Enumerates six signature moves and an explicit 'Avoid' list (pure-white backgrounds, cool greys, ALL-CAPS, emoji in body, Lucide/Feather in diagrams).",
+    "Gives three concrete icon-usage code snippets (React CvIcon, static SVG img, vanilla CV_ICONS).",
+    "Tells the agent, if invoked without guidance, to ask audience/surface/fidelity/variation-count then act as expert designer."
+  ],
+  "standouts": [
+    "Operational read-order that ranks which files to load first for an agent (a load contract, not just a list).",
+    "The crisp colour-role logic line (ink=content, gold=decision, bronze=quiet voice) as a single rule.",
+    "The 'Avoid' list including the specific instruction not to replace the bronze icon library with Lucide/Feather in diagrams."
+  ],
+  "conventions": [
+    "Standard Claude-skill format: YAML frontmatter (name/description/user-invocable) + markdown body.",
+    "Defers to README/DESIGN-LANGUAGE/analysis as canonical and positions itself as the condensed entry pointer.",
+    "Uses fenced jsx/html code blocks for usage examples.",
+    "Mirrors README's voice rules and v2 precedence ('v2 wins')."
+  ],
+  "concerns": [],
+  "notes": "The skill an agent invokes to design on-brand for ConceptV — read it as a condensed, action-oriented index that points into the README/analysis and gives the do/avoid rules and icon snippets.",
+  "questions": [
+    "Are the exact ramp hex values here kept in sync with colors_and_type.css, or could they drift as a second copy?"
+  ],
+  "purpose_vs_actual": "Matches: frontmatter promises a skill to generate well-branded ConceptV interfaces and the body delivers the load-order, rules, and usage guidance an agent needs to do that.",
+  "apparent_themes": [
+    "Skill-as-condensed-entrypoint pointing to canonical sources",
+    "Generative design over hand-layout",
+    "On-brand discipline via explicit do/avoid rules",
+    "Ask-then-act collaboration when under-specified"
+  ],
+  "intention_signals": "Trying to give an agent the minimum it must load and the rules it must follow to produce on-brand ConceptV artifacts, while routing it to the deeper canonical docs for everything else.",
+  "novelty": "n/a",
+  "contribution": "Contributes the actionable, condensed designer brief: the file load-order, the colour-role logic, the signature-moves/avoid lists, and ready-to-paste icon usage — the operational distillation of the brand for an agent doing a build.",
+  "summary_for_embedding": "ConceptV Design System skill entrypoint (frontmatter + body) giving agents a prioritised file load-order, condensed v2 generative model, on-brand colour/type/motion rules, do/avoid lists, and icon-library usage for generating branded interfaces.",
+  "intention_for_embedding": "To let an agent invoke a skill that quickly equips it to design well-branded ConceptV interfaces and prototypes by loading the right files and applying the brand rules."
+}

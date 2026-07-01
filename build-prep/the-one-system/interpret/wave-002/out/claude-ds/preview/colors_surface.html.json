@@ -1,0 +1,37 @@
+{
+  "project": "claude-ds",
+  "path": "preview/colors_surface.html",
+  "model": "opus",
+  "what_it_does": "A standalone @dsCard preview (group 'Brand') showing the five surface layers — canvas, surface, muted, sunken, dark — as swatch chips with name, hex, and a short usage description.",
+  "observations": [
+    "Comment header `@dsCard group=\"Brand\" name=\"Surface palette\" subtitle=\"Canvas · surface · muted · sunken · dark\" viewport=\"700x230\"`.",
+    "Five layers: canvas #FBF7EC (page bg, starred ★), surface #FFFFFF (cards on canvas), muted #F1ECDC (section panels), sunken #E8E2CC (dropzones/placeholders), dark #1F1A12 (menu overlays).",
+    "The dark chip carries an ink-dot (overridden to a light #FBF7EC fill) demonstrating inverse content on dark.",
+    "Lead text: 'Surfaces — five layers, all warm. No cool greys, no pure white as page background.'",
+    "Chips use --border-faint outlines and --r-md radius tokens."
+  ],
+  "standouts": [
+    "Rule 'No cool greys, no pure white as page background' — white exists only as a card surface, not the page.",
+    "Canvas (#FBF7EC) is starred as the default/base surface; matches the ink 'inverse' value."
+  ],
+  "conventions": [
+    "Follows the @dsCard gallery convention.",
+    "Hardcodes the literal surface hexes inline (expected for a colour-definition card)."
+  ],
+  "concerns": [],
+  "notes": "A swatch card defining the five warm surface layers and where each belongs (page/card/panel/dropzone/overlay).",
+  "questions": [
+    "Do these map one-to-one onto the --bg-canvas/--bg-muted/--bg-dark tokens used in sibling cards?"
+  ],
+  "purpose_vs_actual": "Matches — metadata lists canvas/surface/muted/sunken/dark and the body shows exactly those five with usage.",
+  "apparent_themes": [
+    "All-warm surface stack, no cool greys",
+    "Depth via layered surfaces (canvas → surface → muted → sunken → dark)",
+    "White reserved for cards, never the page background"
+  ],
+  "intention_signals": "Aims to define the surface elevation system as a warm, ivory-based stack and enforce the no-pure-white-page rule.",
+  "novelty": "The explicit warm-only surface doctrine and the named five-layer elevation stack with role per layer.",
+  "contribution": "Contributes the canonical surface/background layer scale (five warm layers with roles and hexes) that a fused system would keep as its elevation/background reference.",
+  "summary_for_embedding": "A Brand-group design-system preview card showing the five warm surface layers (canvas, surface, muted, sunken, dark) with hex values and per-layer usage roles.",
+  "intention_for_embedding": "To define the brand's warm surface/elevation stack and enforce the no-cool-grey, no-pure-white-page rule."
+}

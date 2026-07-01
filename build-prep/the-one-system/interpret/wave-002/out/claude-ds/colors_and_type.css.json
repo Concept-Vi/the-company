@@ -1,0 +1,53 @@
+{
+  "project": "claude-ds",
+  "path": "colors_and_type.css",
+  "model": "opus",
+  "what_it_does": "The source-of-truth design token stylesheet for the ConceptV Design System. Imports webfonts and defines, on :root, the colour palette (paper surfaces, warm ink ramp, gold/bronze/tan brand ramps, sage communication accent, semantic statuses, borders), shadows, radii, an 8px spacing scale, type families and tracking, motion easings/durations, and layout primitives. Then defines semantic type-preset classes (.cv-display, .cv-h1..h4, body/caption/eyebrow/mono, screen-title, accent), .cv-scope global defaults, and a compositional surface-zone registry that derives per-zone roles (surface/strong/edge/ink) by color-mix toward a theme ground, plus palette variants and zone helper classes.",
+  "observations": [
+    "@import of Google Fonts (Sora, DM Sans, JetBrains Mono) — an external network dependency at the top",
+    "Paper-first palette: --paper / --paper-2/3/warm; white reserved for content cards; ink is warm, never pure black; explicit 'Legacy aliases — DO NOT REMOVE' block (--bg-canvas etc.)",
+    "Heavy provenance comments: colours sampled from real brand vectors (_ingest/src-all/*.svg) and decks with occurrence counts (#99885e ×42, #7b7055 ×8, #c7a961 ×7); gold sampled from the real logo",
+    "--on-gold documented as the one home for text that sits on gold, fixed because gold never flips between themes",
+    "Many tokens annotated with /* @kind color */ or /* @kind other */ markers (likely consumed by the check tool)",
+    "Strict 8px spacing scale with duplicate values flagged (--s-7 and --s-8 both 32px; --s-9/--s-10 both 40px)",
+    "Surface-zone registry: pigments (--pig-*) mixed toward --zone-ground via color-mix(in oklch, ...) scaled by --zone-intensity/--gold-intensity knobs; four derived roles per zone",
+    "Derived zone roles declared on a selector LIST (:root, [data-theme], [data-ground], .zone-palette-cooler/warmer) with an inline rationale that custom-property substitution is fixed at the declaring element, so descendants overriding the ground must redeclare",
+    "Two palette variants (.zone-palette-cooler/.zone-palette-warmer) recolour by overriding only pigments; zone helper classes apply surface+edge in one class",
+    "--vi-* gold voice and --comm-* sage voice mirror the same surface/strong/edge/ink/line shape"
+  ],
+  "standouts": [
+    "Compositional zoning: every wash is mixed from a named pigment toward a theme ground at a percentage scaled by one --zone-intensity knob — retune the whole language by moving one multiplier, recolour by overriding pigments",
+    "Provenance-as-comment: colours carry their source vector/deck and occurrence count, making the palette auditable to ground truth",
+    "Theme-invariance is reasoned about explicitly (gold and its on-gold text never flip; ground-mixed roles stay single-sourced)"
+  ],
+  "conventions": [
+    "Embodies the project's L0 primitives → L1 roles layering (pigments are primitives, --zone-*-surface are derived roles)",
+    "Single-home discipline: --on-gold, the spacing scale ('the ONLY scale'), and the voice tokens are each declared once and meant to be referenced",
+    "color-mix(in oklch) for perceptually-even washes is used consistently",
+    "Departs slightly from a clean scale by keeping duplicate spacing stops (32px, 40px) for naming convenience"
+  ],
+  "concerns": [
+    "The webfont @import is an external https dependency — would break under a strict CSP / offline rendering and couples the look to a remote host",
+    "Duplicate spacing values (--s-7==--s-8, --s-9==--s-10) invite ambiguity about which to use despite the 'deviating is a smell' note",
+    "Large 'DO NOT REMOVE' legacy-alias block signals accumulated coupling to older canvases"
+  ],
+  "notes": "The colour-and-type source of truth: a warm paper-first palette with documented provenance, an 8px scale, semantic type presets, and a compositional color-mix-based surface-zone system driven by a single intensity knob.",
+  "questions": [
+    "Why keep duplicate spacing stops rather than collapse them — is some consumer relying on the distinct names?",
+    "Where is --zone-ground flipped for dark/dim/contrast (tokens/theme.css is referenced but not present here)?",
+    "Is the Google Fonts @import acceptable in the production render context, or is there a self-hosted fallback elsewhere?"
+  ],
+  "purpose_vs_actual": "Match — the header declares it the source-of-truth tokens to import once per surface, and the file delivers a comprehensive single-home token set plus the derived zoning system.",
+  "apparent_themes": [
+    "Single source of truth for design values",
+    "Compositional / parametric colour (mix toward a ground, one intensity knob)",
+    "Provenance and groundedness (sampled from real assets)",
+    "Theme-invariance reasoning",
+    "Warm, paper-first, restrained visual language"
+  ],
+  "intention_signals": "To make the entire visual language re-tunable and recolourable from a handful of knobs and named pigments while staying grounded in the real brand — so the look propagates to every surface from one file and never drifts from the deck/logo sources.",
+  "novelty": "The surface-zone registry: semantic functional zones rendered as low-opacity undertones derived by oklch color-mix from named pigments toward a theme ground, scaled by a single global intensity multiplier, with an explicit account of why the roles must be redeclared per ground-overriding scope.",
+  "contribution": "Contributes the concrete ConceptV palette (with provenance), the type presets, the 8px scale, motion/radii/shadow/layout primitives, and especially the compositional pigment→ground color-mix zoning system with its intensity knobs and palette variants — the single home of the look that a fused system would keep.",
+  "summary_for_embedding": "The ConceptV source-of-truth CSS token file: warm paper-first palette with sampled provenance, type presets, an 8px scale, and a compositional surface-zone registry deriving per-zone roles via oklch color-mix toward a theme ground scaled by one intensity knob.",
+  "intention_for_embedding": "To single-source and parametrise the entire visual language so colour and type propagate from one file, stay grounded in real brand assets, and can be retuned or recoloured by moving one knob or overriding pigments."
+}

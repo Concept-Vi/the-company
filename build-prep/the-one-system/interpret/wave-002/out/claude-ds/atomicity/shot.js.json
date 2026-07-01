@@ -1,0 +1,51 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/shot.js",
+  "model": "opus",
+  "what_it_does": "Defines window.CV_SHOT, an IIFE that gives AtomiCity/Vi visual capture and a rolling image memory. It lazily loads the snapdom library from a CDN, captures a dataURL PNG of a selected element (snapshot) or the whole #atomicity-root/body (snapshotPage), keeps a FIFO-capped history of captured images (default limit 8, adjustable 1-40 by user or AI), and produces before→after pairs around an action (aroundChange) for visual diffing. On load it also registers two capabilities into CV_AI: shot.setLimit (AI tunes its own visual memory) and vision.diff (compare before/after with a vision provider, throws in sandbox).",
+  "observations": [
+    "Capture uses snapdom.toCanvas (scale capped at 2 / devicePixelRatio, transparent background) and returns a PNG dataURL",
+    "ensureLib lazily injects a script tag and fails soft (resolves null on error) so callers fall back to the computed-style text diff",
+    "remember() pushes {id,url,meta,at} and shifts oldest when over limit (FIFO)",
+    "aroundChange captures before, runs the action (catching errors into result), waits one rAF + 60ms for paint to settle, captures after, remembers the after-shot",
+    "Both CV_AI registrations are wrapped in try/catch and use {silent:true}",
+    "vision.diff throws explicitly when no vision runtime exists, with a message telling the user to export with a vision model",
+    "setLimit clamps to 1-40 and trims history immediately"
+  ],
+  "standouts": [
+    "Before→after visual pairing so a change can be judged by sight, with a deliberate paint-settle delay before the after-shot",
+    "The AI can adjust its own visual memory size via a registered capability (shot.setLimit)",
+    "snapdom is chosen specifically because it understands modern CSS color (oklch/color-mix) unlike html2canvas"
+  ],
+  "conventions": [
+    "Registers its capabilities INTO CV_AI rather than maintaining a parallel UI list (interface = projection of registry)",
+    "Fail-soft on the optional capture lib (returns null) but loud-throw inside vision.diff when the runtime is genuinely absent",
+    "IIFE + window global + subscribe pattern shared across atomicity layer",
+    "voice.conceptv sourced as a behaviour reference on vision.diff rather than inlined"
+  ],
+  "concerns": [
+    "Header docstring says capture uses html2canvas via pinned CDN, but the code actually loads and uses snapdom — the comment is stale relative to the implementation",
+    "Loads a third-party library from an external unpkg CDN at runtime (network dependency / supply-chain surface)",
+    "emit() swallows listener errors with an empty catch",
+    "snapshotPage targets a hardcoded #atomicity-root selector with a body fallback"
+  ],
+  "notes": "The vision/memory layer: snapshot any element or the page to a PNG dataURL, keep a small FIFO image history, and capture before/after pairs so Vi can literally see whether a change worked — falling back to text diff when capture or a vision runtime is unavailable.",
+  "questions": [
+    "Was the html2canvas reference in the header intended to be updated to snapdom, or is one of the two the intended library?",
+    "Which callers consume aroundChange and the history (the chat UI, the inspector)?",
+    "What is the 'vision' provider's runtime and when is it present outside the sandbox?"
+  ],
+  "purpose_vs_actual": "Mostly match — the implemented behaviour (capture, FIFO memory, before/after pairs, CV_AI capability registration) matches the stated purpose; the only divergence is the header naming html2canvas while the code uses snapdom.",
+  "apparent_themes": [
+    "Letting the AI see (vision as first-class)",
+    "Visual before/after verification of changes",
+    "Bounded rolling memory",
+    "Fail-soft optional capability, loud-fail genuine absence",
+    "Capabilities registered into the AI registry, not a parallel surface"
+  ],
+  "intention_signals": "Tries to make visual verification real — give Vi eyes so it can snapshot a change, compare before/after, and decide whether the intent was achieved — while degrading gracefully to text diffs when capture or a vision model is unavailable.",
+  "novelty": "The combination of element-scoped snapshotting, a self-tunable FIFO image memory, and an AI-registered before/after vision-diff capability (with snapdom's modern-color support) is the distinctive element.",
+  "contribution": "Contributes the visual capture and image-memory substrate: element/page snapshots to PNG dataURLs, a FIFO rolling history the chat and vision provider consume, and before→after pairing plus a registered vision-diff capability that lets Vi judge a change by sight (with text-diff fallback).",
+  "summary_for_embedding": "A JS IIFE (window.CV_SHOT) that snapshots elements/pages to PNG dataURLs via snapdom, keeps a FIFO-capped image history, and produces before→after pairs, registering CV_AI capabilities for self-tuning memory and vision-based change diffing.",
+  "intention_for_embedding": "To give Vi visual perception and memory so it can snapshot and visually verify before/after of a UI change, degrading to a text diff when capture or vision is unavailable."
+}

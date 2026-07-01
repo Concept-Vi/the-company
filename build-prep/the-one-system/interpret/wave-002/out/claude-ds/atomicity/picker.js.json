@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "atomicity/picker.js",
+  "model": "opus",
+  "what_it_does": "Defines window.CV_PICK, an IIFE document-wide element picker. When started, it spotlights the element under the cursor with a fixed overlay box and a role·tag label (hover), and on click captures a structured descriptor of that element (role, tag, id, classes, text, size, layout, box, child roles, computed styles) plus a live node reference, then invokes the supplied callback. Esc cancels. The app's own chrome (Vi panel/fab, command bar, top bar, toast) is excluded from picking.",
+  "observations": [
+    "Overlay box uses a huge box-shadow (0 0 0 9999px rgba) to dim everything outside the spotlighted element",
+    "z-index uses max int values (2147483646/47) so overlays sit above all app chrome",
+    "roleOf() heuristically classifies an element by tag + className regex into button/heading/card/image/badge/value/link/field/icon/navigation/element",
+    "excluded() uses el.closest against a selector list of app chrome to avoid picking the picker's own UI",
+    "describe() trims and caps every captured field (text 120 chars, classes 6, children 8, shadow 60, etc.) to keep the descriptor compact for Vi",
+    "clsOf() handles SVG className (baseVal) vs string className",
+    "uses elementFromPoint on mousemove to track the hovered element, capturing in capture phase (true)",
+    "layout/box/styles selectively omit default values (e.g. flexDirection only if not 'row', margin only if not '0px')"
+  ],
+  "standouts": [
+    "Captures a compact, Vi-readable structured descriptor (role + layout + computed styles + child roles) rather than raw DOM, purpose-built for the AI to reason about and restyle",
+    "Works on ANY real element on screen, not only app-rendered ones"
+  ],
+  "conventions": [
+    "IIFE + window global registry pattern shared across the atomicity layer",
+    "Token-aware overlay styling via var(--accent-gold), var(--font-mono) fallbacks",
+    "Capture-phase listeners with preventDefault/stopPropagation to intercept the click before the app handles it",
+    "Self-excludes its own chrome — a clean boundary between tool and target"
+  ],
+  "concerns": [
+    "roleOf() classification is regex/heuristic over class names and can misclassify against unconventional markup",
+    "Descriptor field caps are hardcoded magic numbers scattered through describe()",
+    "Overlay nodes are appended once and never removed (only hidden), persisting in the DOM"
+  ],
+  "notes": "The element picker: arm it and any element you hover gets spotlighted+labelled, and a click hands Vi a compact structured descriptor (role, layout, computed styles, children) plus a live reference for in-place restyling.",
+  "questions": [
+    "Who consumes the descriptor callback — is it the mode-engine's inspect mode and/or ATOMICITY.pickElement?",
+    "How does the roleOf heuristic stay in sync with the design system's actual component/atom roles?"
+  ],
+  "purpose_vs_actual": "Match — docstring describes a document-wide inspect-and-capture picker handing structured context to Vi; the code implements hover spotlight, click capture, descriptor build, and chrome exclusion exactly as stated.",
+  "apparent_themes": [
+    "Universality (pick any element)",
+    "Structured capture for AI consumption",
+    "Tool/target boundary (self-exclusion)",
+    "Compactness (capped, default-omitting descriptors)",
+    "Live reference + descriptor pairing"
+  ],
+  "intention_signals": "Tries to turn any on-screen element into addressable, AI-readable context — a bridge from raw DOM to a descriptor Vi can talk about and build/restyle from, while never picking the tool's own UI.",
+  "novelty": "The role-inference heuristic combined with a deliberately compact, default-eliding computed-style descriptor designed for an LLM to consume is the distinctive element.",
+  "contribution": "Contributes the element-capture front end of the inspect flow: a universal hover-spotlight picker that converts any DOM element into a compact structured descriptor (role/layout/styles/children) plus a live node reference for Vi to reason about and for the override layer to restyle.",
+  "summary_for_embedding": "A JS IIFE (window.CV_PICK) document-wide element picker that hover-spotlights elements and on click captures a compact structured descriptor (role, layout, computed styles, child roles) plus a live node reference for Vi, excluding the app's own chrome.",
+  "intention_for_embedding": "To convert any on-screen element into AI-readable structured context plus a live reference so Vi can discuss and restyle it in place."
+}

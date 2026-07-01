@@ -1,0 +1,46 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/CONVERGENCE-WALKTHROUGH.md",
+  "model": "opus",
+  "what_it_does": "A close-out narrative (2026-06-08) from the interface/lead session reporting that the parallel work streams (interface/studio, Claude Design prep, cognition merge) were converged into one stable main. It records the three merge commits, the state of the Claude Design prep docs, the new in-app Review (studio) surface, what is proven by use vs what is left for Tim to decide, and next moves.",
+  "observations": [
+    "Reports main is stable: all-green gate holds — 117 suites, 113 green, 4 documented live-dep skips, 0 RED",
+    "Lists three verified merge commits: 81f48be (prep, docs-only 21 files), 8734c40 (studio Review surface scaffold, by-use 6/6), 6d27099 (fixed 2 studio-introduced suite reds correctly)",
+    "Inventories the build-prep/claude-design/ prep docs: BACKEND-SEAM-PACK (canonical backend contract), AUTHORING-FE-HANDOFF/AUTHORING-UI-BRIEF, APPLICATION-STRUCTURE-PACK (the keystone), README, research/",
+    "Describes the new in-app Review surface at canvas/app/src/regions/Review.tsx with three regions [Rail | Stage | RhmPanel(+Composer)], wired to real backend endpoints (/api/corpus, /api/annotate)",
+    "States the Review surface is deliberately UNSTYLED with neutral --studio-* token-slots — the structure to point Claude Design at",
+    "Verified by use at both widths 1440 and 390 on a temp store, never the live one",
+    "Lists Tim's-eyes items: a reversible ui_registry scoping call, deferred studio-extract worktree removal, the studio FORM, two harmless live-store leaves, five net-new studio binds",
+    "Notes other concurrent sessions (research-prep, leftover worktrees) as disjoint/harmless"
+  ],
+  "standouts": [
+    "The all-green gate figures (117 suites / 113 green / 4 skips / 0 RED) as the convergence proof",
+    "The retirement of the old detached standalone HTML mockup in favor of a real in-app Review surface wired to the real backend — the stated sin of the old standalone was reinventing",
+    "The five net-new studio binds left as the 'last 5%': R2 /api/context route, per-address tier data (I4), persistent server-side locus (R1), auto comment->build-intent promotion (L1), in-frame element deixis"
+  ],
+  "conventions": [
+    "Separates proven-by-use (green checks) from yours-to-decide (yellow) — the verification-before-completion discipline",
+    "Offers Tim explicit decision items rather than binary confirmation, with reversibility noted on the scoping call",
+    "Path-scoped, clean commits asserted; temp-store-not-live-store discipline for verification"
+  ],
+  "concerns": [
+    "Acknowledges two annotation/chat rows were written to the LIVE store by a scaffold agent before catching itself (append-only, non-code) — flagged harmless but a live-store leak nonetheless"
+  ],
+  "notes": "The convergence close-out: main is one stable green base, the Claude Design prep docs are one-source, and the unstyled in-app Review surface is the structure to design into — with five small binds and a few cleanup decisions left for Tim.",
+  "questions": [
+    "Were the two harmless live-store leaves ever scrubbed, and was the studio-extract worktree removed?",
+    "Have the five net-new studio binds (R2 context route, I4 tier data, R1 locus, L1 promotion, element deixis) since been built?"
+  ],
+  "purpose_vs_actual": "Match — it presents itself as the convergence close-out of the merge-into-one-main mandate and the body delivers exactly that: the mandate-done claim, the commits, the prep/studio state, proof vs open items.",
+  "apparent_themes": [
+    "Convergence to one stable main (unions-not-bridges)",
+    "Verification by use, all-green-no-green-paint",
+    "Structure-first, style-later (the deliberately unstyled surface as a design target)",
+    "Reversible decisions surfaced for the operator"
+  ],
+  "intention_signals": "Trying to demonstrate that disparate parallel streams were genuinely unified into a single verified main with no green-paint, and to hand Tim a clean state plus a precise set of reversible decisions and remaining small binds — positioning the unstyled Review surface as the concrete thing to point Claude Design at next.",
+  "novelty": "The framing of an intentionally unstyled, real-backend-wired in-app surface as the deliverable — structure as the design target — and the explicit retirement of a reinventing standalone mockup in favor of it.",
+  "contribution": "Contributes the dated convergence record: the exact merge commits and green-gate figures, the inventory and roles of the Claude Design prep docs, the existence and shape of the in-app Review/studio surface (regions, backend wiring, unstyled token-slots), and the precise list of operator decisions and net-new binds remaining.",
+  "summary_for_embedding": "A 2026-06-08 close-out narrative reporting the convergence of interface/studio, Claude Design prep and cognition streams into one all-green stable main, recording the three merge commits, the unstyled in-app Review surface wired to the real backend, and the items left for Tim to decide.",
+  "intention_for_embedding": "To prove the merge-into-one-stable-main mandate was completed and verified, hand off a clean state, and point Claude Design at the deliberately unstyled in-app Review surface as the structure to design into next."
+}

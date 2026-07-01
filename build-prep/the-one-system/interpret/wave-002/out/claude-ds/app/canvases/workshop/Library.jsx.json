@@ -1,0 +1,49 @@
+{
+  "project": "claude-ds",
+  "path": "app/canvases/workshop/Library.jsx",
+  "model": "opus",
+  "what_it_does": "Implements the Workshop left-side asset library panel and its drag-payload resolver. The Library React component renders five searchable tabs (Blocks / Layouts / Icons / Components / Imagery), each populated from a registry (WS_BLOCKS, WS_layoutsForType, CV_ICONS.data, COMPONENT_GROUPS, a small local imagery catalogue). Every tile is both click-to-insert and drag-to-drop, encoding a JSON drag payload on dataTransfer under the custom type 'application/x-cv-library'. window.WS_resolveLibraryPayload converts a drag/click payload into either a section object (block/icon/component/image) or a 'apply layout' signal. titleCase is a small helper.",
+  "observations": [
+    "Five tabs; each builds its item list inside a useMemo keyed by tab/query/docType, filtering by a lowercase search query",
+    "Blocks tab reads window.WS_BLOCKS (excluding divider); Layouts reads window.WS_layoutsForType(docType); Icons reads window.CV_ICONS.data keys; Components reads window.COMPONENT_GROUPS; Imagery reads a local 10-entry LIB_IMAGERY array",
+    "startDrag sets the payload JSON on dataTransfer, sets effectAllowed='copy', and clones the tile as a custom drag image (appended off-screen, removed next tick)",
+    "clickInsert routes layout payloads to onApplyLayout and everything else to onInsertBlock",
+    "WS_resolveLibraryPayload maps payload.kind: block→section from WS_BLOCKS defaults, layout→{kind:'layout'}, icon→a one-item icons block, component→a callout block seeded with the component name, image→an image block",
+    "Imagery is explicitly a placeholder catalogue with a comment noting real renders would come from the project's media library",
+    "Tiles carry per-tab rendering (icon-tile, img-tile with tone class, generic tile with grip handle)",
+    "Exposes window.Library and window.WS_resolveLibraryPayload"
+  ],
+  "standouts": [
+    "One panel projects four different registries (blocks, layouts, icons, components) into a uniform searchable, draggable, click-insertable surface",
+    "A single custom drag-payload format ('application/x-cv-library') unifies block/layout/icon/component/image drops, resolved by one function",
+    "The drop resolver gracefully degrades unknown source types into the nearest real block (icon→icons block, component→callout)"
+  ],
+  "conventions": [
+    "Interface-as-projection: the library reads the live registries rather than holding its own lists (per the project non-negotiable), so registering a block/layout/component surfaces it automatically",
+    "Click and drag share one payload + one resolver — no duplicate insertion logic",
+    "Imagery is the one local catalogue, explicitly flagged as placeholder rather than fiction"
+  ],
+  "concerns": [
+    "The component→callout and image→image fallbacks substitute a generic block for the dragged thing; a user dragging a named component gets a callout placeholder, which may surprise (documented but lossy)",
+    "LIB_IMAGERY is a hardcoded local list rather than a registry read — a small second home for asset names until the media library is wired",
+    "WS_resolveLibraryPayload reads window.WS_BLOCKS.icons.defaults indirectly but constructs the icons block by hand rather than via ensureSection, so it won't pick up future default fields"
+  ],
+  "notes": "This is Workshop's asset shelf: a five-tab searchable panel that projects the block/layout/icon/component registries (plus a placeholder imagery list) into uniform click-or-drag tiles, with one drag-payload format and one resolver.",
+  "questions": [
+    "When the real media library lands, will LIB_IMAGERY be replaced by a registry read?",
+    "Is the component→callout fallback the intended final behaviour, or a stub until real component instantiation exists?",
+    "Should WS_resolveLibraryPayload route through ensureSection (from AIEngine) so new block defaults flow through?"
+  ],
+  "purpose_vs_actual": "Matches: the header says it is the left-side asset library replacing the icon rail, with searchable tabs and click-to-insert + drag-to-drop tiles and a documented payload format; the file is exactly that plus the resolver.",
+  "apparent_themes": [
+    "Interface as a projection of registries (no parallel lists, except the flagged imagery stub)",
+    "One uniform insertion mechanism (click and drag share payload + resolver)",
+    "Graceful degradation of unmapped asset kinds into real blocks",
+    "Searchable, discoverable composition surface"
+  ],
+  "intention_signals": "Trying to give the user one discoverable shelf of everything insertable into a doc, driven by the same registries the engine uses, so the panel never diverges from what actually exists and both click and drag funnel through one resolver.",
+  "novelty": "A single custom-MIME drag-payload format spanning blocks/layouts/icons/components/images with one resolver that downgrades unknown kinds into the nearest real block is a tidy unification of an asset-insertion surface.",
+  "contribution": "Contributes the asset-library UI and its payload contract: the five-tab searchable panel projecting the registries, the click/drag insertion mechanism with a custom drag MIME type, and the WS_resolveLibraryPayload function that turns any library payload into a section or layout-apply signal.",
+  "summary_for_embedding": "Workshop left-side asset library panel: five searchable tabs (Blocks/Layouts/Icons/Components/Imagery) projected from the live registries, click-to-insert and drag-to-drop tiles using a custom 'application/x-cv-library' payload, and a resolver converting payloads into section objects or layout-apply signals.",
+  "intention_for_embedding": "To give the user one discoverable, registry-driven shelf of everything insertable into a Workshop doc, with click and drag funneling through a single payload format and resolver."
+}

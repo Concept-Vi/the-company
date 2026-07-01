@@ -1,0 +1,47 @@
+{
+  "project": "company",
+  "path": "build-prep/claude-design/PROD-FLIP-RUNBOOK.md",
+  "model": "opus",
+  "what_it_does": "A staged production runbook (lead, 2026-06-18) for making the Claude Design connector public, split into steps that run automatically (lead + builder via Supabase MCP) and three steps only Tim can do in his dashboard. It lists the migration/principal/edge-function deploy, Tim's OAuth + custom-domain steps, the live re-verify gate, the handoff card, open items, and the rationale for staging rather than firing.",
+  "observations": [
+    "Hard precondition: Tim's explicit, present 'do the flip' at a keyboard — not a vague 'go' — because opening the public door is irreversible and outward-facing and needs his 3 dashboard steps",
+    "States the local A-I gate is fully green by use (references LIVE-LOCAL-VERIFY.md); this runbook is the deploy of the proven thing",
+    "LEAD steps: apply migrations 0001-0006 to prod (connector_audit, clients, channels, collab_data, boundary_rls_seed, design_client_rls) one per file; mint the prod boundary principal with app_metadata.role=company_boundary and hand fork the cred out-of-channel",
+    "BUILDER step: deploy the edge function with verify_jwt=false (the EF is the auth gate via jose jwtVerify vs JWKS; Supabase function-JWT would double-gate)",
+    "TIM's 3 dashboard steps: enable the OAuth server; create the OAuth client (Name Vi, redirect https://claude.ai/api/mcp/auth_callback, confidential -> Client ID+Secret) with the CD user carrying app_metadata role=design_client/client_id=claude-design + scope company:design:write; route custom domain vspokes.com",
+    "Final MCP URL: https://vspokes.com/functions/v1/claude-design-gateway/mcp",
+    "LEAD live re-verify: full A-I on the prod public endpoint with a real OAuth token before the door is 'open'",
+    "Handoff card gives Tim the four connector-dialog inputs (Name, server URL, OAuth Client ID, Secret)",
+    "OPEN: the design_client OAuth-claims mechanism (likely a custom-access-token hook that also does the AUDIENCE resource-binding fast-follow)"
+  ],
+  "standouts": [
+    "The automatic-vs-Tim's-dashboard split is the organizing spine: secrets and the irreversible OAuth/domain steps stay with Tim; code + migrations run via MCP",
+    "verify_jwt=false rationale: the Edge Function itself IS the auth gate (JWKS verification), so Supabase's own function-JWT would double-gate",
+    "Staged-not-fired: nothing touched prod while Tim was away on a bike ride; on his explicit confirm, steps 1-3 + 7-8 run in minutes and he does 4-6"
+  ],
+  "conventions": [
+    "One-confirm-to-execute / human-in-the-loop for irreversible outward-facing actions (operator-only floor extended to deployment)",
+    "Secrets handled out-of-channel; canonical env var names referenced (supabase_principal.py)",
+    "Reuse of the same A-I gate live as was run locally (no new work, just deploy + re-verify)"
+  ],
+  "concerns": [
+    "The design_client OAuth-claims mechanism is OPEN at staging time — exactly how the real CD OAuth JWT gets role/client_id/scope is still being confirmed by builder, which is on the critical path for the 0006 RLS to gate prod like local"
+  ],
+  "notes": "The staged go-public runbook for the Claude Design connector: who runs what (lead/builder automatic vs Tim's 3 dashboard steps), the exact migrations/EF deploy/OAuth/domain, and the live A-I re-verify gate — fired only on Tim's explicit present confirm.",
+  "questions": [
+    "Was the design_client OAuth-claims mechanism (custom-access-token hook) resolved before the flip?",
+    "Has the flip actually been executed on vspokes.com, and did the live A-I re-verify pass?"
+  ],
+  "purpose_vs_actual": "Match — it states it is a staged, one-confirm-to-execute prod flip runbook and the body delivers the role-split step sequence, Tim's dashboard steps, the live re-verify gate, the handoff card and the staging rationale.",
+  "apparent_themes": [
+    "Human-in-the-loop for irreversible public actions (explicit present confirm)",
+    "The Edge Function as the single auth gate (verify_jwt=false by design)",
+    "Deploy-the-proven-thing (reuse the local-green gate live)",
+    "Clean separation of secrets/dashboard (Tim) from code/migrations (agents)"
+  ],
+  "intention_signals": "Trying to make opening a public, irreversible production door safe and crisp: stage every automatable step so that on Tim's explicit present 'do the flip' it executes in minutes, keep the secret-bearing and irreversible OAuth/domain steps in Tim's hands, and re-run the full proven security gate live before declaring the door open.",
+  "novelty": "The explicit automatic-vs-operator-dashboard split of a deployment, with a one-confirm trigger and a live re-run of the same local acceptance gate as the open condition.",
+  "contribution": "Contributes the concrete prod-flip procedure for the Claude Design connector: the migration list (0001-0006), the prod boundary-principal minting, the verify_jwt=false EF deploy and its rationale, Tim's three OAuth/domain dashboard steps with required app_metadata claims, the live A-I re-verify gate, the connector-dialog handoff card, and the open OAuth-claims item.",
+  "summary_for_embedding": "A staged, one-confirm-to-execute production runbook for making the Claude Design Supabase connector public: prod migrations 0001-0006, the boundary principal, a verify_jwt=false edge-function deploy, Tim's three OAuth/custom-domain dashboard steps, and a live A-I re-verify gate before the door opens.",
+  "intention_for_embedding": "To safely deploy the already-locally-proven Claude Design connector to a public production endpoint by staging all automatable steps for a single explicit operator confirm while keeping secrets and irreversible OAuth/domain steps in Tim's dashboard and re-running the full security gate live."
+}

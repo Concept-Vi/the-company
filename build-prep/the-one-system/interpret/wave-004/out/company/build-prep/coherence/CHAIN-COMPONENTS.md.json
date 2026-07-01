@@ -1,0 +1,54 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/CHAIN-COMPONENTS.md",
+  "model": "opus",
+  "what_it_does": "A component-level build spec for the coherence '4B-swarm chains' — the HOW behind CHAIN-DESIGNS.md's what. It defines one shared seven-component anatomy every chain follows (unit+allocation, MAP call, concurrency, digest, reduce, finding emission, calibration), then works four flagship chains end-to-end (one per reduce-pattern: A1 connection graph, C1 half-migration, D1 built-twice, F1 onboard), gives the rest as anatomy-deltas, and draws the build seam between what cognition owns (the engine) and what coherence owns (roles, reduces, findings, calibration).",
+  "observations": [
+    "States all numbers are SEM-1's measured reality, not rosy claims, and that the engine (run_items/run_reduce + embed op) is cognition's while this spec is what coherence builds on it",
+    "§1.1 unit = one file + its self-description (or one function/class for symbol-level); allocation = repo partitioned into units, one unit → one MAP call; ~234 first-party files / 48K LOC ≈ 234 calls; an over-context sub-tier chunks giant files (4B window ~65K, suite.py ~180K) with an intra-file mini-reduce",
+    "§1.2 MAP via run_items(role, units) — cognition's axis-inversion (1 role × N units); the role IS the map declaration (op generate, 4b, thinking off, structured json_schema, never tools)",
+    "Asserts STRUCTURED OUTPUT never tools (tools = agency = not-agent-by-default law) and THINKING OFF for extraction (constrained decoding helps, cites 'Let Me Speak Freely' SEM-3 and a 2-in-6 malformed-under-thinking risk)",
+    "§1.3 concurrency: ~14 concurrent on real files (max_num_seqs:16, effective 8-14), 234/14 ≈ 17 waves, whole repo ≈ 30-90s; contention is sweep-vs-cognition-waves, fixed by a second polite SlotBudget that yields to live turns; VRAM a non-issue (fires at resident model)",
+    "§1.4 digest = {unit → structured-fact}, content-hash keyed for incremental re-derivation (re-map only changed units), cas://-addressable, re-derived-not-owned (cache, never truth)",
+    "§1.5 three reduce kinds: EXACT (code over facts, deterministic, gateable), EMBEDDING (cluster/NN, candidate-only), STRONGER MODEL (runs only on flagged candidates, never the 4B judging itself, never a same-model jury — variance≠error)",
+    "§1.6 finding emission via append_finding({kind,address,state,evidence,source,owner}); structural→source structural, embedding/stronger-model→semantic candidate; the chain is a new SOURCE into the existing model",
+    "§1.7 calibration: each chain has captured-incident fixtures in build-prep/coherence/eval-set, calibrate() measures precision/recall, an N-config sweep ranks model-configs, save_calibration pins the winner as the Action default",
+    "§2 details four flagships with concrete schemas: A1 CONNECTION_SCHEMA (defines/calls/serves_routes/consumes_routes/emits_events/listens_events/imports/addresses), C1 SHAPE_SCHEMA, D1 CONCEPT_SCHEMA, F1 SUMMARY_SCHEMA",
+    "§3 gives eight more chains as anatomy-deltas (A2 address-graph, B1 doc-drift, B2 self-description-truth, C2 producer-consumer schema, D2 semantic-duplication, E1 coverage, G1 claim-symbol-exists multi-pass, G2 the compiler that builds chains)",
+    "§4 build seam: cognition builds run_items/embed/run_reduce/model-launch; coherence builds each MAP role, each REDUCE function, finding-emission, digest cache + hash invalidation, calibration, Action declarations, and company coherence surfacing"
+  ],
+  "standouts": [
+    "The A1 universal connection graph: a pure cross-language string-join (serves_routes ∩ consumes_routes) that spans the Python↔TS boundary no off-the-shelf tool crosses, subsuming AST reachability + capability-no-consumer into every-kind/every-language",
+    "C1's two-stage half-migration detector: EXACT flags pairs where the new storage mechanism's lifecycle_states are a strict subset of the old (the dropped /status states bug), then a stronger model adjudicates defect-vs-intentional-retirement",
+    "The reduce-kind discipline: never the 4B judging itself, never a same-model jury — only model diversity gates systematic error (variance≠error)",
+    "G2 the compiler is recursive — a chain that builds chains from an NL→Chain-config grounded in a real scan",
+    "Calibration with captured-incident fixtures (the /status bug, the mode-dial-built-twice) as ground-truth TP fixtures before a chain is allowed to gate"
+  ],
+  "conventions": [
+    "Follows the one-shared-anatomy / per-chain-delta documentation pattern (the seven components reused for every chain)",
+    "Cites measured evidence (SEM-1/SEM-3) rather than asserting performance",
+    "Embeds concrete JSON schemas with inline field comments for each flagship's MAP role",
+    "Invokes project laws: structured-output-not-tools, not-agent-by-default, registry-is-truth, own/reflect (re-derived not owned)",
+    "Distinguishes EXACT (gateable) from candidate (embedding/stronger-model) reduces as a trust convention"
+  ],
+  "concerns": [],
+  "notes": "This is the build mechanics for the coherence detection chains — read it to know how each detector is one parameterized swarm (map role + reduce + finding emit + calibration) over the resident 4B, and exactly which pieces cognition vs coherence build.",
+  "questions": [
+    "Have the four flagship chains and their roles (connection_extract, shape_extract, concept_extract, file_summary) been built and calibrated, since this is a spec?",
+    "What thresholds did calibration set for which chains are allowed to gate vs remain candidate-only?"
+  ],
+  "purpose_vs_actual": "Match — it states its purpose as the component-level HOW spec complementing CHAIN-DESIGNS.md's what, and delivers the shared anatomy, four worked flagships, the deltas for the rest, and the build seam.",
+  "apparent_themes": [
+    "one parameterized swarm anatomy reused for every detector (more types not more tools)",
+    "structured extraction over the cheap 4B, judgment escalated only to a stronger model on candidates",
+    "exact/deterministic reduces gate; semantic/embedding reduces only propose",
+    "incremental content-hash re-derivation; the digest as cache not truth",
+    "calibration against captured real incidents before a chain may gate",
+    "a clean build seam between the cognition engine and the coherence detectors"
+  ],
+  "intention_signals": "It tries to specify a single, measured, reusable mechanism for building every coherence detector as a map-reduce swarm over the resident 4B — cheap exhaustive structured extraction, judgment kept off the 4B and escalated only to a stronger model on flagged candidates, with calibration against real incidents so chains earn the right to gate.",
+  "novelty": "Reframing architectural-integrity detectors (orphan routes, half-migrations, built-twice concepts, coverage) as one parameterized run_items+reduce swarm with calibrated reduce-kinds, and the cross-language route string-join that spans a boundary off-the-shelf tools can't.",
+  "contribution": "Contributes the concrete build mechanics for the coherence chains: the seven-component shared anatomy, the three calibrated reduce-kinds with their trust semantics, four end-to-end flagship schemas+reduces, the anatomy-delta catalogue for the rest, and the cognition-vs-coherence build seam.",
+  "summary_for_embedding": "A component-level build spec defining one shared seven-part anatomy (unit/allocation, run_items MAP with structured output and thinking-off, ~14-wide concurrency, content-hash digest, three calibrated reduce-kinds, finding emission, calibration) for coherence detection chains, worked end-to-end for four flagships (connection graph, half-migration, built-twice, onboard) plus deltas for the rest.",
+  "intention_for_embedding": "To specify how every coherence detector is built as one parameterized map-reduce swarm over the resident 4B, with judgment escalated only to a stronger model on candidates and calibrated against real incidents before it may gate."
+}

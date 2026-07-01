@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Icon Library — explorer" subtitle="Searchable browser — click any icon to copy its name" viewport="1280x800" -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ConceptV — Icon Library</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px 40px 80px; background: var(--bg-canvas); color: var(--fg-primary); font-family: var(--font-body); }
+  .hero { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; margin-bottom: 28px; padding-bottom: 22px; border-bottom: 1px solid var(--border-faint); }
+  h1 { font: 700 42px/1.05 var(--font-display); letter-spacing: -0.025em; color: var(--accent-bronze); margin: 0 0 6px; }
+  .sub { font: 400 14px/1.55 var(--font-body); color: var(--fg-secondary); margin: 0; max-width: 640px; }
+  .count { font: 700 56px/1 var(--font-display); color: var(--accent-gold); letter-spacing: -0.04em; }
+  .count small { display: block; font: 600 10px/1 var(--font-body); color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 6px; }
+
+  .controls { display: flex; gap: 14px; align-items: center; margin-bottom: 22px; flex-wrap: wrap; }
+  .search {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg-surface);
+    border: 1.5px solid var(--accent-gold);
+    border-radius: var(--r-md);
+    min-width: 320px;
+  }
+  .search input { flex: 1; border: none; outline: none; font: 400 14px/1 var(--font-body); background: transparent; color: var(--fg-primary); }
+  .toggle-group { display: flex; gap: 4px; padding: 4px; background: var(--bg-muted); border-radius: var(--r-md); }
+  .toggle { background: transparent; border: none; cursor: pointer; padding: 7px 14px; border-radius: var(--r-sm); font: 600 12px/1 var(--font-body); color: var(--fg-secondary); }
+  .toggle.active { background: var(--bg-surface); color: var(--fg-primary); box-shadow: var(--shadow-xs); }
+
+  .size-slider { display: flex; align-items: center; gap: 10px; }
+  .size-slider input { accent-color: var(--accent-gold); }
+  .size-label { font: 500 12px/1 var(--font-body); color: var(--fg-secondary); }
+  .colorset { display: flex; align-items: center; gap: 8px; }
+  .grp-label { font: 600 11px/1 var(--font-body); color: var(--fg-muted); text-transform: uppercase; letter-spacing: .06em; }
+
+  .cat-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 28px; }
+  .cat-bar button {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font: 500 12px/1 var(--font-body);
+    color: var(--fg-secondary);
+    cursor: pointer;
+  }
+  .cat-bar button:hover { background: var(--bg-muted); color: var(--fg-primary); }
+  .cat-bar button.active { background: var(--accent-gold); color: var(--fg-primary); border-color: var(--accent-gold); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 16px; }
+  .tile {
+    background: var(--bg-surface);
+    border-radius: var(--r-md);
+    padding: 22px 12px 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    transition: all 160ms var(--ease-out);
+    cursor: pointer;
+    border: 1px solid var(--border-faint);
+  }
+  .tile:hover {
+    border-color: var(--accent-gold);
+    box-shadow: var(--shadow-card);
+    transform: translateY(-1px);
+  }
+  .tile.copied { background: var(--accent-gold-50); border-color: var(--accent-gold); }
+  .tile-glyph { min-height: 48px; display: flex; align-items: center; justify-content: center; }
+  .tile-name { font: 500 11px/1.2 var(--font-mono); color: var(--fg-secondary); text-align: center; word-break: break-all; }
+
+  @keyframes morphPop {
+    0%   { transform: scale(0.4) rotate(-28deg); opacity: 0; }
+    55%  { transform: scale(1.12) rotate(7deg);  opacity: 1; }
+    100% { transform: scale(1) rotate(0);        opacity: 1; }
+  }
+  .tile-glyph > * { transition: opacity 180ms var(--ease-out); }
+  .tile-glyph.morph > * { animation: morphPop 460ms var(--ease-out) both; animation-delay: var(--d, 0ms); }
+
+  .copy-toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--bg-dark); color: var(--fg-inverse);
+    padding: 10px 18px; border-radius: var(--r-md);
+    font: 500 13px/1 var(--font-body);
+    box-shadow: var(--shadow-pop);
+    opacity: 0; transition: opacity 200ms var(--ease-out);
+    pointer-events: none;
+    z-index: 100;
+  }
+  .copy-toast.show { opacity: 1; }
+
+  .section-title { font: 700 12px/1 var(--font-body); color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 12px; }
+
+  .empty { padding: 60px 20px; text-align: center; color: var(--fg-muted); font: 400 14px/1.55 var(--font-body); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div>
+    <h1>Icon Library</h1>
+    <p class="sub">The complete ConceptV icon set — single-stroke on a 24&nbsp;×&nbsp;24 grid, rounded caps, weight auto-scaling toward the brand&rsquo;s bolder ~1.9&nbsp;px at display size. The <b>brand feature</b> glyphs are vectorised from the gold/bronze source sheets; the rest is the shared system&nbsp;/&nbsp;UI set. Try the <b>node-shape</b> treatments (circle&nbsp;=&nbsp;User&nbsp;Portal, hexagon&nbsp;=&nbsp;Property&nbsp;Wizard, octagon&nbsp;=&nbsp;Virtual&nbsp;Hub, diamond&nbsp;=&nbsp;Vi). Tap any icon to copy its name; semantic and brand names both resolve (e.g. <code>square-meters</code>&nbsp;=&nbsp;<code>m2</code>).</p>
+  </div>
+  <div class="count" id="count">—<small>icons</small></div>
+</div>
+
+<div class="controls">
+  <div class="search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M16 16 L21 21"/></svg>
+    <input id="q" placeholder="Search icons…" autocomplete="off">
+  </div>
+  <div class="colorset">
+    <span class="grp-label">Ring</span>
+    <div class="toggle-group" id="ringToggle">
+      <button class="toggle active" data-c="gold">Gold</button>
+      <button class="toggle" data-c="bronze">Bronze</button>
+      <button class="toggle" data-c="ink">Ink</button>
+      <button class="toggle" data-c="sage">Sage</button>
+    </div>
+  </div>
+  <div class="colorset">
+    <span class="grp-label">Icon</span>
+    <div class="toggle-group" id="iconColorToggle">
+      <button class="toggle" data-c="gold">Gold</button>
+      <button class="toggle active" data-c="bronze">Bronze</button>
+      <button class="toggle" data-c="ink">Ink</button>
+      <button class="toggle" data-c="sage">Sage</button>
+    </div>
+  </div>
+  <div class="toggle-group" id="styleToggle">
+    <button class="toggle active" data-style="plain">Plain</button>
+    <button class="toggle" data-style="circle">Circle</button>
+    <button class="toggle" data-style="triangle">Triangle</button>
+    <button class="toggle" data-style="square">Square</button>
+    <button class="toggle" data-style="diamond">Diamond</button>
+    <button class="toggle" data-style="pentagon">Pentagon</button>
+    <button class="toggle" data-style="hex">Hexagon</button>
+    <button class="toggle" data-style="septagon">Septagon</button>
+    <button class="toggle" data-style="octagon">Octagon</button>
+    <button class="toggle" data-style="filled">Filled</button>
+  </div>
+  <div class="toggle-group" id="ghostToggle">
+    <button class="toggle active" data-ghost="false">Solid</button>
+    <button class="toggle" data-ghost="true">Ghost</button>
+  </div>
+  <div class="size-slider">
+    <span class="size-label">Size</span>
+    <input id="size" type="range" min="20" max="72" value="48" step="2">
+    <span class="size-label"><span id="sizeVal">48</span>px</span>
+  </div>
+</div>
+
+<div class="cat-bar" id="catBar"></div>
+
+<div id="content"></div>
+
+<div class="copy-toast" id="toast">Copied!</div>
+
+<link rel="stylesheet" href="../../axes/motion/motion.css">
+<script src="../../axes/axis-core.js"></script>
+<script src="cv-icons.js"></script>
+<script src="cv-vi-glyph.js"></script>
+<script src="cv-shapes.js"></script>
+<script src="../../axes/color/color-axis.js"></script>
+<script src="../../axes/space/space-axis.js"></script>
+<script src="../../axes/size/size-axis.js"></script>
+<script src="../../axes/motion/motion-axis.js"></script>
+<script src="../../axes/texture/texture-axis.js"></script>
+<script src="../../axes/depth/depth-axis.js"></script>
+<script src="../../axes/fill/fill-axis.js"></script>
+<script src="../../axes/form/form-axis.js"></script>
+<script src="../../axes/symbol/symbol-axis.js"></script>
+<script src="cv-meaning.js"></script>
+<script src="cv-glyphics.js"></script>
+<link rel="stylesheet" href="cv-glyphic.css">
+<script>
+// Categories are DERIVED from the symbol taxonomy (CV_ICONS.taxonomy +
+// .facets) — the single source. No hand-maintained list here: add a symbol
+// with facets in cv-icons.js and it appears in the right group automatically.
+const CATEGORIES = (function () {
+  const ICONS = window.CV_ICONS, tax = ICONS.taxonomy, F = ICONS.facets;
+  const cats = {};
+  // brand / feature-flagged symbols lead, as a named customer-facing group
+  const brand = Object.keys(F).filter(n => F[n].brand);
+  if (brand.length) cats['Brand · Feature glyphs'] = brand;
+  // one group per domain, in taxonomy order, excluding brand dupes
+  Object.keys(tax.domains).forEach(dom => {
+    const names = ICONS.byDomain(dom).filter(n => !F[n].brand);
+    if (names.length) cats[tax.domains[dom].label] = names;
+  });
+  // any symbol not yet given facets still shows up (nothing disappears)
+  const tagged = new Set(Object.keys(F));
+  const other = Object.keys(ICONS.data).filter(n => !tagged.has(n));
+  if (other.length) cats['Other'] = other;
+  return cats;
+})();
+
+// Build category bar
+const catBar = document.getElementById('catBar');
+const allBtn = makeCatBtn('All', null);
+allBtn.classList.add('active');
+catBar.appendChild(allBtn);
+Object.keys(CATEGORIES).forEach(cat => catBar.appendChild(makeCatBtn(cat, cat)));
+
+function makeCatBtn(label, key) {
+  const b = document.createElement('button');
+  b.textContent = label;
+  b.dataset.cat = key || '';
+  b.onclick = () => {
+    [...catBar.children].forEach(c => c.classList.remove('active'));
+    b.classList.add('active');
+    state.cat = key;
+    render(true);
+  };
+  return b;
+}
+
+// State
+const state = { query: '', ringColor: 'gold', iconColor: 'bronze', style: 'plain', size: 48, cat: null, ghost: false };
+
+document.getElementById('q').oninput = e => { state.query = e.target.value.toLowerCase(); render(); };
+document.getElementById('size').oninput = e => {
+  state.size = Number(e.target.value);
+  document.getElementById('sizeVal').textContent = state.size;
+  render();
+};
+document.querySelectorAll('#ringToggle .toggle').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#ringToggle .toggle').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.ringColor = b.dataset.c;
+    render(true);
+  };
+});
+document.querySelectorAll('#iconColorToggle .toggle').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#iconColorToggle .toggle').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.iconColor = b.dataset.c;
+    render(true);
+  };
+});
+document.querySelectorAll('#styleToggle .toggle').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#styleToggle .toggle').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.style = b.dataset.style;
+    render(true);
+  };
+});
+document.querySelectorAll('#ghostToggle .toggle').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#ghostToggle .toggle').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.ghost = b.dataset.ghost === 'true';
+    render(true);
+  };
+});
+
+function copy(name) {
+  navigator.clipboard.writeText(name).then(() => {
+    const t = document.getElementById('toast');
+    t.textContent = `Copied "${name}"`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1400);
+  });
+}
+
+// Colour tokens — ring and icon each pick one independently (the Mark's two
+// colour facets). All resolve from the design-token graph.
+const COLOR_TOKENS = {
+  bronze: 'var(--accent-bronze)',
+  gold:   'var(--accent-gold)',
+  ink:    'var(--fg-primary)',
+  sage:   'var(--accent-communication, #5A8A4A)',
+};
+
+// Geometry is single-sourced from CV_SHAPES (the shape system) — not redrawn
+// here. Fallback literals only if CV_SHAPES failed to load.
+const G = window.CV_SHAPES && window.CV_SHAPES.geom;
+const SHAPE_PTS = {
+  triangle: G ? G.triangle.points : '50,6 92,82 8,82',
+  square:   G ? G.square.points   : '8,8 92,8 92,92 8,92',
+  diamond:  G ? G.diamond.points  : '50,3 97,50 50,97 3,50',
+  pentagon: G ? G.pentagon.points : '50,4 96,37 78,91 22,91 4,37',
+  hex:      G ? G.hex.points      : '25,8 75,8 98,50 75,92 25,92 2,50',
+  septagon: G ? G.heptagon.points : '50,4 88,22 97,63 71,95 29,95 3,63 13,22',
+  octagon:  G ? G.octagon.points  : '30,4 70,4 96,30 96,70 70,96 30,96 4,70 4,30',
+};
+
+function brandStroke(size) { return Math.max(1.55, Math.min(2, 1.5 + (size - 16) * 0.025)); }
+
+function renderIcon(name) {
+  const body = (window.CV_ICONS.get ? window.CV_ICONS.get(name) : window.CV_ICONS.data[name]) || '';
+  const ring = COLOR_TOKENS[state.ringColor] || COLOR_TOKENS.gold;   // outer-ring colour facet
+  const ink  = COLOR_TOKENS[state.iconColor] || COLOR_TOKENS.bronze; // inner-icon colour facet
+  const sz = state.size;
+  const sw = brandStroke(sz);
+  const ghost = state.ghost;
+  const glyphOp = ghost ? 0.5 : 1;
+  const glyphDash = ghost ? 'stroke-dasharray="2.4 2"' : '';
+  if (state.style === 'plain') {
+    return `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" style="color:${ink};opacity:${glyphOp}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" ${glyphDash}>${body}</svg>`;
+  }
+  if (SHAPE_PTS[state.style]) {
+    // polygon node shape — ring stroke = ring colour, glyph = icon colour
+    const inner = Math.round(sz * 0.5);
+    const shapeDash = ghost ? 'stroke-dasharray="6 4.5"' : '';
+    const shapeOp = ghost ? 0.5 : 1;
+    return `<span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:${sz}px;height:${sz}px;">
+      <svg viewBox="0 0 100 100" width="${sz}" height="${sz}" style="position:absolute;inset:0;opacity:${shapeOp}" fill="none" stroke="${ring}" stroke-width="7" stroke-linejoin="round" ${shapeDash}><polygon points="${SHAPE_PTS[state.style]}"/></svg>
+      <svg viewBox="0 0 24 24" width="${inner}" height="${inner}" style="position:relative;color:${ink};opacity:${glyphOp}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${body}</svg>
+    </span>`;
+  }
+  // circle wrapper / filled — ring = ring colour (border or fill), glyph = icon colour
+  const inner = Math.round(sz * 0.58);
+  const ringStroke = Math.max(1.25, sz * 0.06);
+  const isFilled = state.style === 'filled';
+  const ringFill = isFilled ? (ghost ? `color-mix(in srgb, ${ring} 32%, transparent)` : ring) : 'transparent';
+  const glyphStroke = isFilled ? 'var(--paper, #fff)' : ink;
+  const borderStyle = ghost ? 'dashed' : 'solid';
+  const ringOp = ghost ? 0.6 : 1;
+  return `<span style="
+    display:inline-flex;align-items:center;justify-content:center;
+    width:${sz}px;height:${sz}px;border-radius:50%;
+    border:${ringStroke}px ${borderStyle} ${ring};background:${ringFill};opacity:${ringOp};
+    color:${glyphStroke};">
+      <svg viewBox="0 0 24 24" width="${inner}" height="${inner}" style="opacity:${glyphOp}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${body}</svg>
+    </span>`;
+}
+
+function render(animate) {
+  const allNames = Object.keys(window.CV_ICONS.data);
+  document.getElementById('count').firstChild.textContent = allNames.length;
+
+  const out = [];
+  let total = 0;
+  for (const [cat, names] of Object.entries(CATEGORIES)) {
+    if (state.cat && state.cat !== cat) continue;
+    const filtered = names.filter(n =>
+      !state.query || n.toLowerCase().includes(state.query) || cat.toLowerCase().includes(state.query)
+    );
+    if (filtered.length === 0) continue;
+    out.push(`<h2 class="section-title">${cat} · ${filtered.length}</h2>`);
+    out.push('<div class="grid" style="margin-bottom: 36px">');
+    for (const n of filtered) {
+      const d = animate ? Math.min(total * 9, 320) : 0;
+      total++;
+      out.push(`
+        <div class="tile" data-name="${n}">
+          <div class="tile-glyph${animate ? ' morph' : ''}" style="--d:${d}ms">${renderIcon(n)}</div>
+          <div class="tile-name">${n}</div>
+        </div>`);
+    }
+    out.push('</div>');
+  }
+  if (total === 0) {
+    out.push('<div class="empty">No icons match "<b>'+state.query+'</b>". Try a different search or category.</div>');
+  }
+  const c = document.getElementById('content');
+  c.innerHTML = out.join('');
+  c.querySelectorAll('.tile').forEach(t => {
+    t.onclick = () => {
+      copy(t.dataset.name);
+      t.classList.add('copied');
+      setTimeout(() => t.classList.remove('copied'), 800);
+    };
+  });
+}
+
+render();
+</script>
+</body>
+</html>

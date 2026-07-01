@@ -1,0 +1,52 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-C5-replay-desktop.json",
+  "model": "opus",
+  "what_it_does": "Records the grounding-batch result for the C5-replay-desktop.html mockup (a forensic-audit / decision-replay dashboard): a 'ground' summary, counts (51/51/33), and 12 confirmed vs 21 flagged UI-element dossiers, each with a ui:// address, capabilities, grounding state, plain-language howto, feature mapping, and accuracy-jury (plus occasional refcheck) verdict.",
+  "observations": [
+    "Screen is a forensic audit dashboard tracing one decision's full chronological history from idea to resolution, with raw log and causal chain.",
+    "Dossiers cover replay controls, activity-feed markers (build-closed, criterion, root-bind/SEQ-412 anchor, verdict, lineage), replay-timeline nodes (intent, dispatch, verify, surfaced-for-review, comment), CoA cards and audit panels.",
+    "A trajectory dossier states the append-only log shape (seq, ts, kind, summary) that trains the twin, spanning both bridge and MCP faces.",
+    "An audit-window dossier mentions a truncation limit of the last 999 events.",
+    "A lineage dossier encodes a provable resolve chain (ENG-resolve): verify each hop from idea through resolve to system action.",
+    "One refcheck feature-fabrication failure: ui://inbox/layers maps_to_feature 'INB-layers' (not an inventory id nor 'proposed').",
+    "A large 11-member flagged cluster (ui://activity/audit) is unanimously voted ungrounded.",
+    "Addresses ui://activity/audit and ui://inbox/audit each appear in multiple distinct dossiers.",
+    "Grounding values include built, proposed, and defer (ui://inbox/walk, ui://inbox/coa are 'defer').",
+    "howto.how_to_change names ForensicAudit.tsx, runtime/suite.py:replay, suite.py:now, suite.py:coa, suite.py:resolve, activity.tsx."
+  ],
+  "standouts": [
+    "Defines the append-only event-log record shape (seq/ts/kind/summary) as the substrate that trains the twin.",
+    "Provable resolve lineage (ENG-resolve) — verify the causal chain hop by hop — captured as an audit element.",
+    "Largest, most-flagged batch by element count (51); 21 flagged including an 11-member unanimously-ungrounded audit cluster."
+  ],
+  "conventions": [
+    "Same confirmed/flagged + two-layer grading as sibling rg10 files.",
+    "ui:// addressing across inbox, inbox/coa, activity, activity/replay namespaces.",
+    "Plain-language howto triad; read-only audit elements note 'it reflects, it doesn't drive'.",
+    "Some maps_to_feature values are 'proposed' (permitted); one fabricated id caught."
+  ],
+  "concerns": [
+    "Address reuse: ui://activity/audit and ui://inbox/audit each map to several different dossiers in one file.",
+    "Feature fabrication for ui://inbox/layers ('INB-layers').",
+    "High flag rate (21 of 33 clusters) — much of the replay dashboard is not confidently grounded.",
+    "maps_to_feature 'EVT-log' spans many distinct represents values (criterion, audit, audit-window, root-bind, derived, replay)."
+  ],
+  "notes": "The forensic decision-replay dashboard inventory — 12 confirmed, 21 flagged — defining the append-only log shape that trains the twin and a provable resolve lineage, with one fabricated feature id caught.",
+  "questions": [
+    "Should the repeated ui://activity/audit and ui://inbox/audit addresses be deduped or are they genuinely distinct views?",
+    "Is the 999-event audit-window truncation a final design or a placeholder?",
+    "Why is the bulk of the audit/replay surface ungrounded — is most of it still proposed at this point?"
+  ],
+  "purpose_vs_actual": "Matches: declared as a grounding result for the replay/forensic-audit desktop mockup and that is its content.",
+  "apparent_themes": [
+    "Forensic, append-only auditability of decisions",
+    "Provable causal lineage from idea to authorized action",
+    "The event log as training substrate for the twin"
+  ],
+  "intention_signals": "It appears to be verifying which forensic-replay controls are grounded in built code while capturing the audit model — append-only log shape, provable resolve lineage, read-only reflection — as addressable elements, flagging the many uncertain mappings.",
+  "novelty": "Ties the decision-replay UI directly to the append-only event-log record that trains the twin, and models a hop-by-hop provable resolve lineage as an auditable element.",
+  "contribution": "Contributes the forensic decision-replay element inventory — trajectory/log shape, audit window, root-bind anchor, resolve lineage, replay-timeline nodes — with addresses, howtos, and two-layer grounding verdicts including a fabricated-feature catch.",
+  "summary_for_embedding": "Grounding-batch JSON for the forensic decision-replay desktop mockup, listing 51 clustered UI dossiers (replay controls, append-only log trajectory, resolve lineage, audit window) with 12 confirmed and 21 flagged via refcheck-plus-jury grading.",
+  "intention_for_embedding": "To check whether forensic-replay/audit controls are grounded in built code and capture the append-only log and provable resolve-lineage model, flagging uncertain or fabricated mappings for review."
+}

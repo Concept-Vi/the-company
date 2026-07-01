@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Staged-process flow pattern" subtitle="Vertical stage ladder · gap-pills on gold connectors · ⊕ join · real escalating-fidelity renders" viewport="900x680" --><html><head><meta charset="utf-8"><title>Process flow pattern</title>
+<link rel="stylesheet" href="_card.css">
+<script src="image-slot.js"></script>
+<style>
+  .card { padding: 24px 28px 22px; display: flex; flex-direction: column; gap: 16px; }
+  .lead { font: 400 12px/1.55 var(--font-body); color: var(--fg-secondary); margin: 0; max-width: 100%; }
+  .lead b { color: var(--fg-primary); }
+  .lead i { color: var(--accent-bronze); font-style: italic; }
+
+  .diagram { display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: stretch; flex: 1; }
+
+  /* ---- Left: vertical stage ladder (vessels resolve from the box/connector system) ---- */
+  .ladder { display: flex; flex-direction: column; align-items: center; }
+  .stage {
+    width: 100%;
+    background: var(--paper);
+    border: 2.5px solid var(--accent-gold);
+    border-radius: 20px;
+    padding: 13px 18px;
+    text-align: center;
+  }
+  .stage-title { font: 700 18px/1.12 var(--font-display); color: var(--accent-gold-deep); letter-spacing: -0.01em; }
+  .stage.head { border-radius: 16px; padding: 12px 18px; }
+  .stage.head .stage-title { color: var(--fg-primary); }
+  .stage-desc { font: 400 11px/1.34 var(--font-body); color: var(--fg-secondary); margin-top: 4px; }
+
+  /* connector: solid gold line · endpoint dot · ▼ arrowhead · pill on the line */
+  .conn { display: flex; flex-direction: column; align-items: center; width: 100%; }
+  .conn .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent-gold); }
+  .conn .seg { width: 0; border-left: 2.5px solid var(--accent-gold); height: 11px; }
+  .conn .pill {
+    background: var(--paper);
+    border: 2px solid var(--accent-gold);
+    border-radius: 13px;
+    padding: 7px 18px;
+    font: 700 12px/1 var(--font-body); color: var(--fg-primary);
+  }
+  .conn .pill.muted { font-weight: 600; color: var(--accent-bronze-2); }
+  .conn .arrow {
+    width: 0; height: 0;
+    border-left: 6px solid transparent; border-right: 6px solid transparent;
+    border-top: 8px solid var(--accent-gold);
+  }
+  .conn .join {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2.5px solid var(--accent-gold); color: var(--accent-gold);
+    display: flex; align-items: center; justify-content: center;
+    font: 700 18px/1 var(--font-body); background: var(--paper);
+  }
+
+  /* ---- Right: REAL escalating-fidelity renders, joined by dashed leaders ---- */
+  .gallery { display: flex; flex-direction: column; justify-content: space-between; padding: 44px 0 4px; gap: 12px; }
+  .shot { display: flex; align-items: center; gap: 0; }
+  .leader { flex: 0 0 26px; height: 0; border-top: 2px dashed var(--accent-gold-dashed); position: relative; }
+  .leader::after { content: ''; position: absolute; right: -1px; top: -4px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-gold); }
+  .frame {
+    flex: 1; border-radius: var(--r-lg); overflow: hidden; position: relative;
+    border: 1px solid var(--border-faint); background: var(--bg-sunken);
+    box-shadow: var(--shadow-card);
+  }
+  .frame img, .frame image-slot { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .frame.f1 { height: 64px; }
+  .frame.f2 { height: 76px; }
+  .frame.f3 { height: 88px; }
+  .frame.f4 { height: 104px; }
+  .frame .cap {
+    position: absolute; left: 8px; bottom: 6px;
+    font: 600 9px/1 var(--font-mono); letter-spacing: 0.05em;
+    color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.45);
+    background: rgba(31,26,18,.32); padding: 3px 7px; border-radius: var(--r-xs);
+  }
+
+  .meta { display: flex; gap: 16px; flex-wrap: wrap; font: 400 10.5px/1 var(--font-body); color: var(--fg-secondary); padding-top: 4px; border-top: 1px solid var(--border-faint); }
+  .meta b { color: var(--fg-primary); font-weight: 600; }
+  .meta code { font: 500 10px/1 var(--font-mono); color: var(--accent-bronze); }
+  .meta .rel { margin-left: auto; color: var(--fg-muted); }
+  .meta .rel b { color: var(--accent-bronze); }
+</style></head>
+<body><div class="card">
+  <p class="lead">The <b>staged-process pattern</b> reads as a <b>vertical ladder</b>: flat white cards with a logo-gold border and centered <b>gold-brown</b> titles, joined by <b>solid gold connectors</b> (endpoint dot · line · ▼). The between-stage gap is a <b>pill on the connector</b> — <i>1 – 2 Weeks</i> / <i>Revision</i> — and a <b>⊕ join</b> appends the deliverable. Each stage taps out to the deliverable image at that stage, where <b>render fidelity escalates</b> from grey massing to a hero render. <i>(Vessels reuse the container + connector system; titles use <code>--accent-gold-deep</code>.)</i></p>
+
+  <div class="diagram">
+    <div class="ladder">
+      <div class="stage head"><div class="stage-title">Mobilisation</div></div>
+      <div class="conn"><div class="dot"></div><div class="seg"></div><div class="pill muted">1 – 2 Weeks</div><div class="seg"></div><div class="arrow"></div></div>
+      <div class="stage"><div class="stage-title">Stage 1</div><div class="stage-desc">Placeholders, basic visual quality</div></div>
+      <div class="conn"><div class="dot"></div><div class="seg"></div><div class="pill">Revision</div><div class="seg"></div><div class="arrow"></div></div>
+      <div class="stage"><div class="stage-title">Stage 2</div><div class="stage-desc">Some elements defined, improved visual quality</div></div>
+      <div class="conn"><div class="dot"></div><div class="seg"></div><div class="pill">Revision</div><div class="seg"></div><div class="arrow"></div></div>
+      <div class="stage"><div class="stage-title">Stage 3</div><div class="stage-desc">Final output, high level of detail &amp; quality</div></div>
+      <div class="conn"><div class="seg"></div><div class="join">+</div><div class="seg"></div></div>
+      <div class="stage"><div class="stage-title">Marketing Package</div><div class="stage-desc">Renders, brochures &amp; other collateral</div></div>
+    </div>
+
+    <div class="gallery">
+      <div class="shot"><div class="leader"></div><div class="frame f1"><image-slot id="sf-massing" shape="rounded" radius="12" src="../assets/illustrations/staged/stage1-massing.png" placeholder="Drop render"></image-slot><span class="cap">GREY MASSING</span></div></div>
+      <div class="shot"><div class="leader"></div><div class="frame f2"><image-slot id="sf-defined" shape="rounded" radius="12" src="../assets/illustrations/staged/stage2-defined.png" placeholder="Drop render"></image-slot><span class="cap">DEFINED</span></div></div>
+      <div class="shot"><div class="leader"></div><div class="frame f3"><image-slot id="sf-detailed" shape="rounded" radius="12" src="../assets/illustrations/staged/stage3-bedroom.png" placeholder="Drop render"></image-slot><span class="cap">DETAILED</span></div></div>
+      <div class="shot"><div class="leader"></div><div class="frame f4"><image-slot id="sf-hero" shape="rounded" radius="12" src="../assets/illustrations/staged/marketing-kitchen.png" placeholder="Drop render"></image-slot><span class="cap">HERO RENDER</span></div></div>
+    </div>
+  </div>
+
+  <div class="meta">
+    <span>Card <b>2.5px gold · r-20 · flat</b></span>
+    <span>Connector <b>solid gold · dot · ▼</b></span>
+    <span>Gap <b>pill</b> (action / <span style="color:var(--accent-bronze-2)">duration</span>)</span>
+    <span>Join <b>⊕</b></span>
+    <span class="rel">Related: <b>Card / box variants</b> · <b>Entity shape system</b></span>
+  </div>
+</div></body></html>

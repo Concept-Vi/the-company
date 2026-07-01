@@ -1,0 +1,37 @@
+{
+  "project": "company",
+  "path": "ai_tics/framework_imposition.py",
+  "model": "opus",
+  "what_it_does": "Declares a module-level AI_TIC dict for 'framework-imposition': imposing a standard framework/terminology/structure onto content that has its own native shape. Carries id, label, markers, and description.",
+  "observations": [
+    "Docstring states Tim actively rejects standard frameworks because they constrain thinking and miss relational patterns.",
+    "AI_TIC keys: id ('framework_imposition'), label ('framework-imposition'), markers (5 phrases), desc.",
+    "markers: \"best practice\", \"industry standard\", \"framework\", \"design pattern\", \"according to the standard\".",
+    "Docstring contains an explicit invariant: 'id MUST equal the file stem.'",
+    "References runtime/ai_tics.py and ai_tics/AGENTS.md."
+  ],
+  "standouts": [
+    "Explicit 'id MUST equal the file stem' rule stated inline in the docstring.",
+    "Markers target generic-authority language (best practice, industry standard)."
+  ],
+  "conventions": [
+    "Same seed-as-data dict shape as sibling ai_tics files.",
+    "Docstring carries motivation plus cross-reference."
+  ],
+  "concerns": [],
+  "notes": "A seed file defining the 'framework-imposition' tic — flagging generic-framework language that overrides Tim's native meaning.",
+  "questions": [
+    "Is the bare marker 'framework' prone to false positives against legitimate uses?"
+  ],
+  "purpose_vs_actual": "Match — declares the framework-imposition seed tic as the docstring describes.",
+  "apparent_themes": [
+    "rejection of standard frameworks",
+    "preserving native/relational shape of content",
+    "Tim's framework over generic AI conventions"
+  ],
+  "intention_signals": "Encodes Tim's rejection of imposed standard frameworks as detectable markers so corpus text echoing generic frameworks can be flagged.",
+  "novelty": "Casting 'best practice'/'industry standard' vocabulary itself as an anti-pattern to detect.",
+  "contribution": "Contributes the 'framework-imposition' tic definition and its generic-authority markers, plus the stated id-equals-stem invariant.",
+  "summary_for_embedding": "A Python seed file defining the 'framework-imposition' AI-tic dict with markers for generic-framework/standard language.",
+  "intention_for_embedding": "To detect and subtract generic-framework/standard-terminology imposition that overrides the content's native shape."
+}

@@ -1,0 +1,31 @@
+
+=== company === added=15806 changed=0 deleted=0 unchanged=0 (ledger 0 / tree 15806)
+   [A] .adv.log
+   [A] .claude/scheduled_tasks.lock
+   [A] .claude/settings.json
+   [A] .gitignore
+   [A] .loop.log
+   [A] .recollection/conversation-archive/-home-tim/000e2a0a-7e3c-417c-9044-710f80c2ce07.jsonl
+   … +15800 more added
+
+=== counterpart-design === added=1576 changed=0 deleted=0 unchanged=0 (ledger 0 / tree 1576)
+   [A] .gitignore
+   [A] CLAUDE.md
+   [A] FORMATION_JOURNAL.md
+   [A] ONBOARDING.md
+   [A] PROJECT.md
+   [A] app/gallery.html
+   … +1570 more added
+
+=== claude-ds === added=296 changed=0 deleted=0 unchanged=0 (ledger 0 / tree 296)
+   [A] CLAUDE.md
+   [A] DESIGN-LANGUAGE.md
+   [A] README.md
+   [A] SKILL.md
+   [A] Tonal Zoning System.html
+   [A] _adherence.oxlintrc.json
+   … +290 more added
+
+wrote build-prep/the-one-system/interpret/changes.json
+
+TOTAL needing re-run (added+changed): 17678

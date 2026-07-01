@@ -1,0 +1,43 @@
+{
+  "project": "company",
+  "path": "build-prep/coherence/findings/SEM-1-swarm-engine.md",
+  "model": "opus",
+  "what_it_does": "A companion research/findings doc whose allocated area is whether the cognition swarm engine is real and reusable for whole-repo semantic reading. It reads the live cognition-swarm code, the resource manager, the service registry and a vLLM benchmark sheet, measures the actual repo size, and corrects the parent anchor's headline capacity/throughput numbers on three axes while affirming the engine exists and is mostly reusable.",
+  "observations": [
+    "Marks every claim with an explicit evidence class: Observed (file:line/measured), Inferred, External, My-idea.",
+    "Catalogs concrete cognition.py functions as already-built: run_swarm (523-621), run_role (93-119), run_jury (637-715), resolve_run_ref (474-496), SlotBudget.from_registry (403-450), RoleRegistry.discover.",
+    "Corrects throughput from the anchor's ~3000 tok/s to a measured 2,241 tok/s aggregate at concurrency 32 (BENCHMARK_FACTSHEET.md:24).",
+    "Computes that live config caps max_num_seqs at 16, giving a swarm budget knee of 14 for small inputs and 8-13 for real source files (KV-bound).",
+    "Measures the real repo: ~395 first-party source files, ~1.37M tokens; core ~101 Python files; file-size distribution skewed into the 2-8K-token KV-binding band.",
+    "Flags runtime/suite.py at ~180K tokens as exceeding the 65,536 context window, requiring chunk-and-compose.",
+    "States VRAM is a non-issue (the 4B is already resident, loads nothing); the real contention is shared request-slot/KV between a sweep and the cognition stream's own waves."
+  ],
+  "standouts": [
+    "Derives a per_role_ctx crossover at ~4.7K tokens/file where KV binding replaces the seq-cap, making effective concurrency file-size-dependent.",
+    "Identifies the one net-new code seam: run_role hardcodes content as 'Utterance: {utterance}' so a file-reading role needs a declared ctx-to-messages mapping.",
+    "Proposes giving a background sweep its own SlotBudget with a larger reserve_r so it is polite-by-construction and never queues a live wave behind it."
+  ],
+  "conventions": [
+    "Follows the repo's evidence-classification discipline (Observed/Inferred/Verified-style marking) throughout.",
+    "Uses a TL;DR correction table up front, then sectioned argument, then a builder-facing bottom line.",
+    "Cites file:line and measured numbers rather than asserting from inference, per the project's no-speculation norm."
+  ],
+  "concerns": [],
+  "notes": "If briefing someone: this is the grounded reality-check on whether the swarm engine can be pointed at the repo — ~80% reusable, but size the sweep at ~8-14 concurrent, ~1-2 minutes for the core, with suite.py needing chunking.",
+  "questions": [
+    "How is the chunk-and-compose tier for over-window files and cross-file checks actually built, given the file says it is net-new?",
+    "What is the real prefill aggregate rate at the live concurrency of ~14 (the throughput interpolation is labelled Inferred)?"
+  ],
+  "purpose_vs_actual": "Matches its stated area: it asks whether the capability is real and the engine reusable, and delivers a grounded yes-with-three-corrections answer.",
+  "apparent_themes": [
+    "Build-on-not-beside (reuse the existing wave engine rather than build a new one)",
+    "Honest cost accounting over optimistic headline numbers",
+    "Evidence-grounded correction as a stronger result than confirmation",
+    "Resource-budget discipline (slots, KV, reserve) as a first-class concern"
+  ],
+  "intention_signals": "It is trying to give a builder accurate sizing so a semantic-reading sweep is provisioned correctly — affirming feasibility while puncturing three optimistic assumptions about throughput, concurrency, and per-file context cost.",
+  "novelty": "The per-file KV-crossover computation and the framing of contention as sweep-vs-cognition-waves (not sweep-vs-chat) are distinctive grounded derivations.",
+  "contribution": "Contributes the measured capacity/throughput/concurrency reality for the swarm engine and the precise verbatim-vs-net-new reuse seam, including the suite.py context-window wall and the polite-budget coexistence mechanism.",
+  "summary_for_embedding": "A grounded findings doc measuring the cognition swarm engine's real throughput, concurrency, context-window limits, and reuse seam for whole-repo semantic reading, correcting the anchor's headline numbers on three axes.",
+  "intention_for_embedding": "To verify whether the existing swarm engine is real and reusable for repo-reading and to give a builder honest sizing for a semantic sweep."
+}

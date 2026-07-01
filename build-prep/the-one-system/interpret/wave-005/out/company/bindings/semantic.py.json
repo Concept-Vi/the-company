@@ -1,0 +1,40 @@
+{
+  "project": "company",
+  "path": "bindings/semantic.py",
+  "model": "opus",
+  "what_it_does": "Defines a single radial-view BINDING dict named 'semantic' where radius is meaning-distance (1 - cosine, normalized) from a chosen centre item, read off persisted per-space vectors, with angle from kind and a chosen embeddable space (default 'topics').",
+  "observations": [
+    "radius_from='semantic', angle_from='kind', space='topics', order_by='count'.",
+    "Comments explain r = 1 - cosine normalized for legibility, read off persisted per-space vectors.",
+    "The centre is an item with a vector in `space`; the bridge resolves vectors via store.get_vector and passes them to a pure project() function.",
+    "Notes this is 'Group 6' (the CIRCLE / semantic radius); the ANGLE (order-from-edges) is 'Group 10'.",
+    "`space` selects which lens space the cosine reads (topics/principles/worldview/repo); a space with no vectors yields an empty meaning-ring (registry-is-truth).",
+    "meta {name,is,fills,why} marked TENTATIVE pending Tim/DNA ratification, never machine names."
+  ],
+  "standouts": [
+    "Semantic radius defined as normalized cosine distance to an operator-chosen centre item.",
+    "Empty-meaning-ring fallback when a space has no vectors (registry-is-truth)."
+  ],
+  "conventions": [
+    "Same meta field-set (name/is/fills/why) as the other bindings.",
+    "Pure project() + bridge separation: vectors resolved outside, projection stays pure.",
+    "Operator-law: plain language, never machine names; copy marked TENTATIVE."
+  ],
+  "concerns": [],
+  "notes": "A radial view that arranges items by meaning-distance (cosine) to a chosen centre, reading per-space vectors.",
+  "questions": [
+    "How does the operator choose the centre item, and how is its in-space vector required/guaranteed?",
+    "Is the default space='topics' overridable per invocation?"
+  ],
+  "purpose_vs_actual": "Match — states it arranges items by meaning-closeness to a chosen centre and provides exactly that binding.",
+  "apparent_themes": [
+    "semantic / vector-space organization",
+    "pure-core + bridge separation",
+    "registry-is-truth (empty ring when no vectors)"
+  ],
+  "intention_signals": "Trying to let an operator pick one thing and see everything else arranged by how related in meaning it is, using persisted embeddings.",
+  "novelty": "The radius-as-meaning-distance binding tied to a per-space embedding choice is distinct among the bindings here.",
+  "contribution": "Contributes the semantic-radius binding that maps cosine meaning-distance to radial position around a chosen centre, with a selectable embedding space.",
+  "summary_for_embedding": "A radial-view binding 'semantic' whose radius is normalized cosine meaning-distance from a chosen centre item, reading per-space embeddings (default topics).",
+  "intention_for_embedding": "To let an operator center on one item and see everything arranged by how close in meaning it is."
+}

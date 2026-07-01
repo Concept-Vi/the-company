@@ -1,0 +1,39 @@
+{
+  "project": "company",
+  "path": "build-prep/cognition-self-improvement/rg10-batch-A11-portals-desktop.json",
+  "model": "opus",
+  "what_it_does": "A generated RG10 per-mockup result artifact for the A11-portals-desktop.html screen. Same shape as the other rg10-batch files: a screen-level ground block (screen_present + plain-language what_this_is / what_you_can_do), run counts (n_candidates=30, n_dossiers=30, n_clusters=19), and confirmed (11) and flagged (8) lists. Each entry holds a dossier (address, capabilities, grounding, howto{what,what_you_can_do,how_to_change}, maps_to_feature, represents), cluster_size/cluster_members, the jury confirm verdict (grounded/ungrounded votes, quorum, unanimous, reasons), and the source mockup name.",
+  "observations": [
+    "mockup field: A11-portals-desktop.html",
+    "Counts: 30 candidates → 30 dossiers → 19 clusters → 11 confirmed + 8 flagged",
+    "Identical entry schema to the A1 and A12 batch artifacts (dossier / cluster_size / cluster_members / confirm / mockup)",
+    "confirm.jury records votes_grounded vs votes_ungrounded with quorum and unanimous flags; flagged entries carry named reasons",
+    "Dossiers use ui:// addresses, concept codes in represents, feature codes in maps_to_feature, and how_to_change prose"
+  ],
+  "standouts": [
+    "Lower confirmed:flagged ratio (11:8) than A1 — this portals screen had more elements the jury did not reach grounded quorum on"
+  ],
+  "conventions": [
+    "Shared generated-artifact schema consumed by rg10_surface.py / rg10_walk.py / rg10_writeback_run.py",
+    "ui:// addressing and concept/feature code conventions"
+  ],
+  "concerns": [
+    "Generated data — no file-local concerns"
+  ],
+  "notes": "A generated registry-candidate result for the A11 portals screen: 19 unique elements (11 confirmed, 8 flagged), each a grounded dossier with a jury verdict — one per-mockup unit the aggregate/walk/writeback scripts consume.",
+  "questions": [
+    "What model and prompts produced these dossiers and jury votes?",
+    "What distinguishes a 'portal' element on this screen relative to the canvas/workshop screens (only inferable from the dossiers, not stated at top level)?"
+  ],
+  "purpose_vs_actual": "n/a — generated data artifact.",
+  "apparent_themes": [
+    "Self-describing UI elements at the operator's altitude",
+    "Jury-based grounding confirmation with explicit flagging",
+    "Per-screen grounding context attached to element dossiers"
+  ],
+  "intention_signals": "An autonomous attempt to turn the portals screen's elements into grounded plain-language registry dossiers, separating confirmed from flagged so the operator only adjudicates the uncertain ones.",
+  "novelty": "n/a — structurally the same generated unit as its sibling batch files, distinct only in its screen and counts.",
+  "contribution": "Contributes the A11-portals screen's grounded element dossiers and jury verdicts (11 confirmed, 8 flagged ui:// entries) as one consumable per-mockup registry-run record.",
+  "summary_for_embedding": "Generated RG10 per-mockup artifact for the A11 portals desktop screen: 30 candidates clustered to 19, yielding 11 confirmed and 8 flagged ui:// element dossiers with jury verdicts and how-to-change pointers.",
+  "intention_for_embedding": "To capture the portals screen's clickable elements as grounded self-describing registry dossiers with jury confirmation, for operator review and write-back."
+}

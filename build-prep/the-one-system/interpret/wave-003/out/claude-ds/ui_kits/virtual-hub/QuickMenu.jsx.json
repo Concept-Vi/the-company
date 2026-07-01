@@ -1,0 +1,40 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/virtual-hub/QuickMenu.jsx",
+  "model": "opus",
+  "what_it_does": "Defines the Virtual Hub Quick Menu: a dark pop-up column of buttons (Info, Floorplan, Share, a disabled 'Gyro Not Found', and CLOSE). Includes a QmIcon SVG helper and a QM_ICONS map of inline-path glyphs. Highlights the active item, calls onSelect(key) for the three actions and onClose for CLOSE. Registered as window.QuickMenu.",
+  "observations": [
+    "QmIcon helper renders array path 'd' strings in a 16x16 viewBox, with a fill prop toggling fill between currentColor and none.",
+    "QM_ICONS map holds five prebuilt icons: info, floorplan, share, gyro, close.",
+    "Each action button toggles an 'active' class via active===key comparison.",
+    "Gyro button is rendered 'muted' with literal text 'Gyro Not Found' and no handler — a disabled/unavailable state shown inline.",
+    "A divider div separates the action group from the CLOSE button.",
+    "Attaches to window.QuickMenu."
+  ],
+  "standouts": [
+    "The 'Gyro Not Found' muted button surfaces a hardware-unavailable state directly in the menu rather than hiding it."
+  ],
+  "conventions": [
+    "Follows vh-* class naming (vh-quickmenu) and global-window registration.",
+    "Centralises icon path data in a small map (QM_ICONS) — single definition reused.",
+    "Controlled component: active selection and handlers come from parent."
+  ],
+  "concerns": [
+    "Gyro entry is hardcoded to the 'Not Found' state with no detection logic in this file."
+  ],
+  "notes": "The dark action column of the Virtual Hub overlay (Info/Floorplan/Share + a muted Gyro state + CLOSE), controlled by active/onSelect/onClose.",
+  "questions": [
+    "Is the gyro availability meant to be detected dynamically elsewhere, or is the muted 'Not Found' state a fixed mockup placeholder?"
+  ],
+  "purpose_vs_actual": "Matches the README's QuickMenu row (the dark Info/Floorplan/Share/Gyro/CLOSE column).",
+  "apparent_themes": [
+    "Minimal dark-overlay navigation",
+    "Inline SVG iconography as data",
+    "Surfacing unavailable capability states explicitly"
+  ],
+  "intention_signals": "Provides the panel-switching menu for the immersive viewer, swapping the right-side panel and exposing device-feature availability (gyro) inline.",
+  "novelty": "Inline 'Gyro Not Found' muted state — depicting a device-orientation feature that is present in UI but unavailable.",
+  "contribution": "Contributes the Quick Menu pattern: a controlled action column with active-highlighting, a centralised inline-icon map, and an explicit muted unavailable-feature state.",
+  "summary_for_embedding": "React QuickMenu component rendering a dark Info/Floorplan/Share/Gyro/CLOSE button column with active highlighting and inline SVG icons for the Virtual Hub.",
+  "intention_for_embedding": "To let the viewer switch between Info, Floorplan, and Share panels and surface device-feature availability."
+}

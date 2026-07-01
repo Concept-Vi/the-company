@@ -1,0 +1,45 @@
+{
+  "project": "claude-ds",
+  "path": "core/ContainmentTree.d.ts",
+  "model": "opus",
+  "what_it_does": "TypeScript declaration for ContainmentTree — the block SOLVER. Declares ContainmentTreeProps (node: CVNode, plus three axis dials lod/surface/density and an injectable DiagramSolver) and the ContainmentTree function, whose return type augments JSX.Element with registerAtom(role, fn) and atomRoles() methods.",
+  "observations": [
+    "Imports CVNode type from ./cv-nodes (the shared node type)",
+    "Three named axes typed as string unions: lod ('summary'|'pitch'|'full'), surface ('desktop'|'tablet'|'mobile-portrait'|'mobile-landscape'|'slide'|'print'|'web'), density ('compact'|'comfortable'|'spacious')",
+    "JSDoc per prop documents intent: lod = content zoom (prunes/grows tree, independent of surface); surface = screen/ratio (reflow + locked band aspect); density = breathing room (scales spacing at every level)",
+    "DiagramSolver typed as `any` — injected to render kind:'diagram' nodes (pass window.<NS>.DiagramSolver)",
+    "Component docstring: 'THE BLOCK SOLVER' — renders a CVNode tree as the containment ladder; zone wash computed from depth; LOD prunes before layout; same node at different lod/surface/density computes a different concrete design",
+    "Return type augments JSX.Element with registerAtom (add atom role without editing the solver — 'atoms = data') and atomRoles() (list registered roles)"
+  ],
+  "standouts": [
+    "The function's return type is declared as JSX.Element WITH extra methods (registerAtom/atomRoles) — typing the component as also being an extension point / registry handle",
+    "'atoms = data' — atom roles are registered, not coded into the solver",
+    "Explicit statement that the same node at different axis values 'computes a different concrete design' — the generative-design thesis encoded in the type docs"
+  ],
+  "conventions": [
+    "Standard .d.ts named + default export pattern",
+    "Axis dials typed as string-literal unions (the DS dial convention)",
+    "Dependency injection of the sibling solver (DiagramSolver) rather than hard import"
+  ],
+  "concerns": [
+    "DiagramSolver typed as `any` loses type safety at the solver-to-solver seam"
+  ],
+  "notes": "Type contract for THE block solver: takes a CVNode tree + three axis dials, renders the containment ladder, and exposes registerAtom/atomRoles so atom roles are registrable data not code.",
+  "questions": [
+    "Why is DiagramSolver `any` rather than a typed interface — is the graph solver's type intentionally decoupled?",
+    "How does a JSX.Element return value also carry callable methods (registerAtom/atomRoles) at runtime?"
+  ],
+  "purpose_vs_actual": "n/a — declaration file; the JSDoc 'block solver / generative' purpose matches the declared props and extension API.",
+  "apparent_themes": [
+    "design = f(content, axis)",
+    "extend-by-registration (atoms as data)",
+    "axis dials (lod/surface/density)",
+    "solver injection / decoupling",
+    "content-tree-driven layout"
+  ],
+  "intention_signals": "Trying to type a generative layout engine where one content tree plus orthogonal dials yields different concrete designs, and where new leaf types are added by registration rather than by editing the solver.",
+  "novelty": "Typing a React component's return as JSX.Element augmented with a registration API (registerAtom/atomRoles), making the component itself an extension point.",
+  "contribution": "Contributes the typed public contract for the block solver — the lod/surface/density axis vocabulary, the CVNode input, the injectable DiagramSolver seam, and the registerAtom extension API a fused system would keep.",
+  "summary_for_embedding": "TypeScript declaration for the ContainmentTree block solver: CVNode input, lod/surface/density axis dials, injectable DiagramSolver, and a registerAtom/atomRoles extension API.",
+  "intention_for_embedding": "To type a generative layout engine that renders a content tree into the containment ladder differently per axis dial, extensible via registered atom roles."
+}

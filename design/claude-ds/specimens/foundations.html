@@ -1,0 +1,120 @@
+<!-- @dsCard group="Spacing" name="Foundations · Surfaces, Motion & Depth" subtitle="Multi-surface frames, fluid type, the 'nothing teleports' motion language" viewport="1180x1320" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Foundations</title>
+<link rel="stylesheet" href="../styles.css"/>
+<style>
+  body { margin:0; background: var(--zone-base-surface); color: var(--ink);
+         font-family: var(--font-body); -webkit-font-smoothing:antialiased; padding: 34px 36px 48px; }
+  h1 { font: 700 var(--fs-h2)/var(--lh-tight) var(--font-display); letter-spacing:-.02em; margin:0 0 4px; }
+  .sub { color: var(--ink-3); font-size: var(--fs-meta); margin: 0 0 30px; max-width: 70ch; }
+  h2 { font: 700 12px/1 var(--font-body); letter-spacing:.12em; text-transform:uppercase;
+       color: var(--accent-bronze); margin: 34px 0 14px; display:flex; align-items:center; gap:10px; }
+  h2::before { content:""; width:8px; height:8px; background: var(--accent-gold); transform:rotate(45deg); }
+
+  /* surfaces */
+  .frames { display:flex; gap: 22px; align-items:flex-end; flex-wrap:wrap; }
+  .frame-wrap { display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
+  .frame-cap { font:600 10px/1 var(--font-mono); color: var(--ink-3); letter-spacing:.04em; }
+  .frame { border:1px solid var(--zone-base-edge); border-radius: 8px; background:#fff;
+           box-shadow: var(--elev-2); overflow:hidden; position:relative; }
+  .frame .bar { height:6px; background: var(--vi-strong); }
+  .frame .body { padding:10px; display:flex; flex-direction:column; gap:6px; }
+  .frame .ln { height:6px; border-radius:3px; background: var(--zone-panel-strong); }
+  .frame .ln.g { background: var(--vi-edge); width:60%; }
+  .desktop { width: 240px; height: 150px; }
+  .mob-p { width: 78px; height: 168px; }
+  .mob-l { width: 168px; height: 78px; }
+  .tablet { width: 120px; height: 160px; }
+
+  /* fluid type */
+  .type-row { display:flex; flex-direction:column; gap:6px; }
+  .type-row .r { display:flex; align-items:baseline; gap:14px; border-bottom:1px dashed var(--hairline); padding-bottom:8px; }
+  .type-row .tk { font:600 10px/1 var(--font-mono); color: var(--accent-bronze); width:92px; flex:none; }
+  .sp { font-family: var(--font-display); color: var(--ink); font-weight:700; line-height:1; }
+
+  /* motion */
+  .motion { display:flex; gap:14px; flex-wrap:wrap; }
+  .mo { border:1px solid var(--hairline); border-radius:10px; padding:16px; background:#fff;
+        box-shadow: var(--elev-1); width: 150px; overflow:hidden; }
+  .mo .dot { width:34px; height:34px; border-radius:8px; background: var(--accent-gold); box-shadow: var(--elev-2); }
+  .mo .nm { font:700 12px/1.2 var(--font-display); color: var(--ink); margin-top:12px; }
+  .mo .ez { font:500 9.5px/1.3 var(--font-mono); color: var(--ink-4); margin-top:3px; }
+
+  /* depth */
+  .elev { display:flex; gap:16px; flex-wrap:wrap; }
+  .el { width:96px; height:64px; border-radius:10px; background:#fff; display:grid; place-items:end center;
+        font:600 9px/1 var(--font-mono); color: var(--ink-4); padding-bottom:7px; border:1px solid var(--hairline); }
+
+  /* pill wrap demo */
+  .demo-card { max-width: 340px; border:1px solid var(--zone-panel-edge); background: var(--zone-panel-surface);
+               border-radius:12px; padding:14px; box-shadow: var(--elev-1); }
+  .pill.demo-pill { background:#fff; border:1px solid var(--vi-edge); color: var(--ink-2); }
+</style>
+</head>
+<body>
+  <h1>Foundations</h1>
+  <p class="sub">The functional spine the visual DNA pours into: canonical surfaces, fluid sizing, the "nothing teleports" motion language, and the elevation ramp. Hover the motion tiles to preview.</p>
+
+  <h2>Canonical surfaces</h2>
+  <div class="frames">
+    <div class="frame-wrap"><span class="frame-cap">desktop · 1440×900</span>
+      <div class="frame desktop"><div class="bar"></div><div class="body"><div class="ln" style="width:50%"></div><div class="ln g"></div><div class="ln" style="width:80%"></div></div></div></div>
+    <div class="frame-wrap"><span class="frame-cap">tablet · 834×1112</span>
+      <div class="frame tablet"><div class="bar"></div><div class="body"><div class="ln" style="width:60%"></div><div class="ln g"></div><div class="ln" style="width:90%"></div></div></div></div>
+    <div class="frame-wrap"><span class="frame-cap">mobile portrait · 390×844</span>
+      <div class="frame mob-p"><div class="bar"></div><div class="body"><div class="ln g"></div><div class="ln" style="width:85%"></div></div></div></div>
+    <div class="frame-wrap"><span class="frame-cap">mobile landscape · 844×390</span>
+      <div class="frame mob-l"><div class="bar"></div><div class="body"><div class="ln" style="width:40%"></div><div class="ln g"></div></div></div></div>
+  </div>
+
+  <h2>Fluid type scale</h2>
+  <div class="type-row">
+    <div class="r"><span class="tk">--fs-display</span><span class="sp" style="font-size:var(--fs-display)">Ag</span></div>
+    <div class="r"><span class="tk">--fs-h1</span><span class="sp" style="font-size:var(--fs-h1)">Decision space</span></div>
+    <div class="r"><span class="tk">--fs-h3</span><span class="sp" style="font-size:var(--fs-h3)">Section heading</span></div>
+    <div class="r"><span class="tk">--fs-body</span><span style="font-size:var(--fs-body);color:var(--ink-2)">Body copy resizes between a legible mobile floor and a desktop cap — never fixed.</span></div>
+  </div>
+
+  <h2>Motion — nothing teleports</h2>
+  <div class="motion" id="motion"></div>
+
+  <h2>Elevation ramp</h2>
+  <div class="elev">
+    <div class="el e0">e0</div><div class="el e1">e1</div><div class="el e2">e2</div>
+    <div class="el e3">e3</div><div class="el e4">e4</div><div class="el e5">e5</div>
+    <div class="el glow-active" style="color:var(--accent-bronze)">active</div>
+  </div>
+
+  <h2>Overflow-safe pill group</h2>
+  <div class="demo-card">
+    <div class="pill-group">
+      <span class="pill demo-pill"><span class="pill-label">ready</span></span>
+      <span class="pill demo-pill"><span class="pill-label">live sequence frame</span></span>
+      <span class="pill demo-pill"><span class="pill-label">this label is intentionally far too long to fit</span></span>
+      <span class="pill demo-pill"><span class="pill-label">README pending</span></span>
+      <span class="pill demo-pill"><span class="pill-label">v3</span></span>
+    </div>
+  </div>
+
+<script>
+  const MO = [
+    { nm:'Enter', ez:'--ease-entrance · 360ms', cls:'enter-up' },
+    { nm:'Exit', ez:'--ease-exit · 240ms', cls:'enter-down' },
+    { nm:'Move', ez:'--ease-emphasized · 280ms', cls:'enter-left' },
+    { nm:'Spring', ez:'--ease-spring · overshoot', cls:'enter-scale' },
+  ];
+  const wrap = document.getElementById('motion');
+  MO.forEach(m => {
+    const c = document.createElement('div'); c.className = 'mo';
+    c.innerHTML = `<div class="dot"></div><div class="nm">${m.nm}</div><div class="ez">${m.ez}</div>`;
+    const replay = () => { const d = c.querySelector('.dot'); d.classList.remove(m.cls); void d.offsetWidth; d.classList.add(m.cls); };
+    c.addEventListener('mouseenter', replay);
+    wrap.appendChild(c); setTimeout(replay, 200 + MO.indexOf(m)*150);
+  });
+</script>
+</body>
+</html>

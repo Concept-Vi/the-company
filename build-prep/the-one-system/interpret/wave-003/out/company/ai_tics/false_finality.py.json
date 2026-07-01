@@ -1,0 +1,38 @@
+{
+  "project": "company",
+  "path": "ai_tics/false_finality.py",
+  "model": "opus",
+  "what_it_does": "Declares a single module-level dict named AI_TIC describing the 'false-finality' AI-tic: declaring something done/fixed/complete without proof. The dict carries id, label, a list of phrase markers, and a description.",
+  "observations": [
+    "Module docstring frames false-finality as a generic-AI 'tell' tied to Tim's eroded credibility from false 'it's fixed' claims.",
+    "AI_TIC has keys: id ('false_finality'), label ('false-finality'), markers (6 closure phrases), desc.",
+    "markers are literal trigger strings: \"it's fixed\", \"all done\", \"fully working\", \"complete and ready\", \"production-ready\", \"now works perfectly\".",
+    "Docstring points to runtime/ai_tics.py and ai_tics/AGENTS.md as the consuming/registering code.",
+    "desc explicitly names the remedy 'verify-before-claiming'."
+  ],
+  "standouts": [
+    "The id 'false_finality' equals the file stem, signaling a stem-as-id registration convention.",
+    "Marker phrases are the exact closure language to subtract from a corpus."
+  ],
+  "conventions": [
+    "Follows a seed-as-data pattern: pure declarative dict, no logic.",
+    "Docstring states the WHY (Tim frustration) plus a cross-reference to runtime + AGENTS.md."
+  ],
+  "concerns": [],
+  "notes": "A one-dict seed file defining the 'false-finality' AI-tic and its trigger phrases for a tic-detection subsystem.",
+  "questions": [
+    "How does runtime/ai_tics.py consume markers — substring match, regex, or embedding?",
+    "What does 'subtract' mean operationally for a detected tic in this corpus?"
+  ],
+  "purpose_vs_actual": "Match — docstring says it is a seed AI-tic definition and the file is exactly that.",
+  "apparent_themes": [
+    "verify-before-claiming",
+    "evidence over closure language",
+    "subtracting generic-AI tells from a corpus"
+  ],
+  "intention_signals": "Encodes a named Tim frustration (false 'it's fixed') as detectable data so an automated layer can flag unproven completion claims.",
+  "novelty": "Treating closure/finality language as a catalogued, machine-detectable anti-pattern with named markers.",
+  "contribution": "Contributes the specific 'false-finality' tic definition and its six closure-phrase markers to a fused tic catalogue.",
+  "summary_for_embedding": "A Python seed file defining the 'false-finality' AI-tic dict with id, label, closure-phrase markers, and description for tic detection.",
+  "intention_for_embedding": "To register, as detectable data, the generic-AI habit of claiming something is done/fixed without proof so it can be flagged and subtracted."
+}

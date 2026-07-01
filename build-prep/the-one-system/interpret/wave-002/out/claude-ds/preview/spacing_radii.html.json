@@ -1,0 +1,41 @@
+{
+  "project": "claude-ds",
+  "path": "preview/spacing_radii.html",
+  "model": "opus",
+  "what_it_does": "A preview card (HTML) showing the design system's six border-radius tiers: five gold chips at radii 4/6/8/12/16 px (named xs/sm/md★/lg/xl) plus a full pill (999px), each labelled with name and pixel value, with a lead sentence assigning each tier to UI roles (chips/checkboxes 4-6, buttons/inputs 8, cards 12, popups 16, pill only for status dots and the Chats button).",
+  "observations": [
+    "@dsCard annotation: group='Brand', name='Radii', subtitle 'Six tiers · 4 → pill', viewport='700x220'.",
+    "Lead sentence maps radii to component roles and notes 'only status dots & the Chats button go full pill'.",
+    "Five .chip swatches use inline style border-radius literals (4/6/8/12/16 px) and one .pill at 999px.",
+    "md is marked with a star (★), indicating the default/most-common tier.",
+    "Chips styled with tokens var(--accent-gold-soft) fill + var(--accent-gold) border; pill filled with var(--accent-gold).",
+    "Type/colour via tokens (--font-body, --fg-primary, --fg-muted, --font-mono); radius values themselves are inline literals."
+  ],
+  "standouts": [
+    "Each radius tier carries an explicit usage assignment (which components use which radius), not just a visual swatch.",
+    "Names a specific product element — 'the Chats button' — as one of only two pill-radius uses, tying a token tier to a concrete UI feature."
+  ],
+  "conventions": [
+    "Follows the @dsCard + _card.css + token convention for colour/type.",
+    "Radius values are hardcoded inline literals here rather than referenced as --r-* tokens, though other cards (e.g. elevation) use var(--r-md)/var(--r-lg) — a possible inconsistency for a token-definition card."
+  ],
+  "concerns": [
+    "Radius px values appear as inline literals rather than named --r-* tokens; if --r-* tokens are the canonical home, this preview duplicates the values and could drift."
+  ],
+  "notes": "The radii card: six border-radius tiers (4/6/8/12/16/pill) shown as gold swatches, each mapped to the components that use it.",
+  "questions": [
+    "Are these radii backed by --r-* tokens (referenced elsewhere as var(--r-md) etc.), and if so why are the swatch radii inline literals here?",
+    "Is 'the Chats button' a fixed product element whose pill radius is intentionally a one-off exception?"
+  ],
+  "purpose_vs_actual": "Matches — the @dsCard claims 'Six tiers · 4 → pill' and the file shows exactly six radius tiers from 4px to full pill.",
+  "apparent_themes": [
+    "Tokenised radius scale with role-based usage assignments",
+    "Self-documenting design tokens",
+    "Brand surface tying tokens to concrete components"
+  ],
+  "intention_signals": "Aims to define and document a small, role-assigned set of corner radii so every component uses a consistent rounding from one scale, with the pill reserved for a couple of named exceptions.",
+  "novelty": "Pairs each radius tier with an explicit component-role mapping (including a named product element for the pill), making the scale prescriptive rather than just descriptive.",
+  "contribution": "Contributes the six-tier radius scale (xs/sm/md/lg/xl/pill) and its component-role assignments that a fused system would keep as its rounding language.",
+  "summary_for_embedding": "An HTML preview card showing the ConceptV six-tier border-radius scale (4/6/8/12/16 px plus full pill) as gold swatches, each mapped to the UI components that use it.",
+  "intention_for_embedding": "To define and document a consistent, role-assigned corner-radius scale across the product's components."
+}

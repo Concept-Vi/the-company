@@ -1,0 +1,42 @@
+{
+  "project": "claude-ds",
+  "path": "ui_kits/platform/README.md",
+  "model": "opus",
+  "what_it_does": "Documents the ConceptV Platform UI kit: it describes the kit as the creator-side dashboard used by architects, developers, and agencies to package architectural visualisation projects (Revit → Enscape pipeline) into branded Virtual Hubs. It lays out the three fixed layout zones (280px left rail, top-right notification/avatar cluster, floating Chats pill), the content-column structure (bronze 36px title → toolbar row → surface), a component table mapping each .jsx file to what it is, and a demo note describing index.html mounting the platform with Gallery as default.",
+  "observations": [
+    "Names the domain: architectural visualisation, Revit → Enscape pipeline, branded Virtual Hubs",
+    "Specifies exact layout measures: left rail 280px, screen title bronze 36px",
+    "Toolbar row enumerated: Select / Filter / Sort / Search / Clear Filters / Create New / Upload",
+    "Component table lists 14 files including four screen components, mapping file → description",
+    "References files (TopBar.jsx, ScreenHeader.jsx, ActionToolbar.jsx, Button.jsx, etc.) beyond the ones in this batch",
+    "States index.html defaults to Gallery and navigation covers Gallery, Calendar, Brand Kit, Virtual Hub Settings"
+  ],
+  "standouts": [
+    "Names the concrete user audience and the Revit→Enscape→Virtual Hub product domain, grounding the kit in a real workflow",
+    "Pins specific design measures (280px rail, 36px bronze title) as documented spec"
+  ],
+  "conventions": [
+    "Follows a standard README structure: overview → layout → components table → demo",
+    "Describes the same zones (sidebar, topbar, chats) the PlatformApp/PlatformSidebar code implements"
+  ],
+  "concerns": [
+    "Component table lists more components (Button, Checkbox, SectionPanel, MediaTile, Dropzone, TaskChip, etc.) than the routing code references — cannot confirm from this file alone they all exist",
+    "Hardcoded measures (280px, 36px) documented in prose rather than tied to tokens"
+  ],
+  "notes": "The platform kit's orientation doc: explains it as the creator dashboard for packaging arch-viz projects into branded hubs, with a three-zone layout and a 14-file component map.",
+  "questions": [
+    "Do all 14 listed component files exist, or is the table partly aspirational?",
+    "Are the documented px measures (280, 36) sourced from design tokens or fixed in CSS?"
+  ],
+  "purpose_vs_actual": "Matches — it is a README and accurately documents the kit's purpose, layout, and components.",
+  "apparent_themes": [
+    "Domain grounding (architectural visualisation / Virtual Hubs)",
+    "Fixed three-zone dashboard layout",
+    "Component-catalogue documentation"
+  ],
+  "intention_signals": "Aims to orient a reader to the platform kit as a real product surface — who uses it, the workflow it serves, its layout grammar, and the inventory of parts that compose it.",
+  "novelty": "The explicit product framing: a creator-side dashboard for the Revit→Enscape→branded-Virtual-Hub pipeline, an arch-viz packaging tool.",
+  "contribution": "Contributes the product-domain definition and audience for the platform kit, the canonical three-zone layout spec with measures, and a file→role component inventory.",
+  "summary_for_embedding": "README for the ConceptV Platform UI kit describing it as a creator-side arch-viz dashboard with a three-zone layout and a 14-file component inventory.",
+  "intention_for_embedding": "To orient readers to the platform kit's purpose (packaging arch-viz projects into branded Virtual Hubs), its layout grammar, and its component set."
+}
