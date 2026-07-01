@@ -30,6 +30,17 @@ Vectors currently persist in FsStore `vectors/` (space-keyed JSON files). Target
 - recall (single-session sidecar) · recollection (cross-session, ~/recollection) · corpus/extractions (FsStore spaces) · scale pyramid (`runtime/scale.py`) · the projection engine · the 3-way code:// address fragmentation · the FsStore→Supabase migration.
 - Axis inventory (Tim's list): semantic (embeddings) · graph (edges) · type-registry · file/folder · time · **jsonl-provenance** (the session-turn that generated each node — recall/recollection are this axis) · recall/recollection memory. These compose over one node.
 
+## THE BIGGER FRAME (found via the recollection survey + build-prep/episodic-memory-adaptation/MERGE-INTENTION.md)
+My embedding work is ONE part of an already-designed **memory unification**, not a standalone system. The vision (Tim's, documented): **the conversation transcripts (.jsonl) are THE ROOT** — the sole primary-source spine — and *everything generated* (all code, all files = the ledger) re-anchors to its transcript genesis. The connector already exists and is VERIFIED on live data:
+- **The provenance join runs now:** `tool_calls.tool_input → file_path` (99.99% of Write/Edit rows) completes `artefact → tool_call → exchange://<sid>/<i> → session → timestamp → parallel-activity`. Live: 75,397 exchanges / 6.72M tool-calls / 7,351 sessions / 96 projects.
+- **The grammar is ALREADY ONE:** `contracts/address.py` holds `code:// cap:// exchange:// board:// clone:// session:// vec:// file:// project://` in one SCHEMES registry, one `resolve_address` seam. Not a merge — recollection is already a citizen.
+- **Three memory systems to fuse into one store:** ① episodic-memory capture (75k exchanges, sqlite-vec, MiniLM, sidecar) · ② Company corpus (addressed/governed understanding, `exchange://`, but starved: 2,111 records) · ③ consolidation (Chroma). MERGE-INTENTION says: *"almost the entire merge is wiring + volume + activation of pieces that already exist — with exactly ONE genuinely large net-new build (the storage backend)."* That backend = Supabase (Tim's intent).
+
+**So my code/symbol/doc embeddings are the "generated-artefact / what-exists" side; recall+recollection+corpus+the provenance spine are the "genesis / why-and-when" side. Unification = connect the two over the shared grammar, on one Supabase store.** The crossings/provenance builders are BUILT + TESTED but NEVER RUN (`links=0`) — the highest-value connect is nearly free: run them + join to the ledger's code nodes.
+
+## The code:// format reconciliation (precise now)
+Not a grammar merge — the grammar is one. It's a FORMAT divergence WITHIN `code://`: the contract declares `code://<file-stem>/<symbol>` (the S3 surface / `resolve_scope` form), but the ledger + my spaces use `code://<project>/<path>::<symbol>`. And the provenance spine addresses artefacts as `file://<abs-path>`. To make a code node, its embedding, its graph edges, AND its generating exchange all address the SAME thing, these need one canonical join (likely: ledger's `code://<project>/<path>` canonical + a `file://`↔`code://` path map for provenance). System-wide (touches S3) → decide with Glyphic + Tim.
+
 ## Open / next
 - [ ] recollection deep survey (agent) — its store, addressing, Supabase touch, jsonl-provenance link.
 - [ ] canonical code:// decision (with Glyphic + Tim) → migrate corpus/repo + resolve_scope.
