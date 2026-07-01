@@ -191,13 +191,19 @@ def main():
         over = [c for c in corpus if len(c["text"]) > ceil]
         fit = [c for c in corpus if len(c["text"]) <= ceil]
         tot = {"embedded": 0, "skipped": 0, "degraded": False}
-        for i in range(0, len(fit), 16):
-            r = vi.build_index(store, fit[i:i + 16], model=cfg["model"], base_url=cfg["base_url"],
+        # SMALL batch: pplx is a bidirectional 4B at num_ctx=32768 — 16 long docs in one forward spikes
+        # activation and OOMs/hangs the server (observed 2026-07-02). 4 keeps the peak bounded. This is a
+        # batch-size bound, NOT truncation — every doc still embeds whole.
+        DOCS_BATCH = int(os.environ.get("DOCS_BATCH", "4"))
+        for i in range(0, len(fit), DOCS_BATCH):
+            r = vi.build_index(store, fit[i:i + DOCS_BATCH], model=cfg["model"], base_url=cfg["base_url"],
                                dim=cfg["dim"], space="docs", emb=cfg["emb"])
             tot["embedded"] += r.get("embedded", 0); tot["skipped"] += r.get("skipped", 0)
             tot["degraded"] = tot["degraded"] or r.get("degraded", False)
             if r.get("degraded"):
-                print(f"  DEGRADED at batch {i//16}; stopping", flush=True); break
+                print(f"  DEGRADED at batch {i//DOCS_BATCH} (pplx raised — likely OOM on a long doc); stopping", flush=True); break
+            if (i // DOCS_BATCH) % 20 == 0:
+                print(f"  ...{tot['embedded']} embedded ({i}/{len(fit)})", flush=True)
         print(f"BUILD: {tot} | flagged for chunking (>{ceil} chars): {len(over)}", flush=True)
         for c in sorted(over, key=lambda x: -len(x["text"]))[:8]:
             print(f"    {len(c['text'])} chars  {c['address']}")
