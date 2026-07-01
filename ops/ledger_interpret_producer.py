@@ -107,12 +107,19 @@ def _items_from_wave(wave: str) -> list:
     return items
 
 
+# the STRUCTURE exts worth interpreting — code + real docs. NOT the .json/.jsonl/.txt DATA noise (the
+# ingest-boundary problem: 5650 .json data files would otherwise burn the whole model budget describing
+# noise before reaching the code). An env override widens it if ever needed.
+_INTERP_EXTS = os.environ.get("INTERP_EXTS", ".py,.ts,.tsx,.js,.jsx,.md,.sh,.sql,.html,.css").split(",")
+
+
 def _items_from_project(project: str, limit: int) -> list:
     import subprocess
     env = {**os.environ, "PGPASSWORD": PGCONF["pw"]}
+    ext_in = ",".join(f"$q${e.strip()}$q$" for e in _INTERP_EXTS)
     sql = (f"select e.path from ledger.entry e join ledger.latest_run r using(run_id) "
            f"where r.project=$q${project}$q$ and e.node_type='file' and e.coverage_state='deterministic' "
-           f"and e.what_it_does is null order by e.path limit {int(limit)}")
+           f"and e.ext in ({ext_in}) and e.what_it_does is null order by e.path limit {int(limit)}")
     out = subprocess.run(["psql", "-h", PGCONF["host"], "-p", PGCONF["port"], "-U", PGCONF["user"],
                           "-d", PGCONF["db"], "-tAc", sql], capture_output=True, text=True, env=env).stdout
     root = PROJECT_ROOTS.get(project, REPO)
