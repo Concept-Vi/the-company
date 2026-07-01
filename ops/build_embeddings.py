@@ -223,7 +223,7 @@ def main():
         DOCS_BATCH = int(os.environ.get("DOCS_BATCH", "4"))
         for i in range(0, len(fit), DOCS_BATCH):
             r = vi.build_index(store, fit[i:i + DOCS_BATCH], model=cfg["model"], base_url=cfg["base_url"],
-                               dim=cfg["dim"], space="docs", emb=cfg["emb"])
+                               dim=cfg["dim"], space=a.space, emb=cfg["emb"])
             tot["embedded"] += r.get("embedded", 0); tot["skipped"] += r.get("skipped", 0)
             tot["degraded"] = tot["degraded"] or r.get("degraded", False)
             if r.get("degraded"):
