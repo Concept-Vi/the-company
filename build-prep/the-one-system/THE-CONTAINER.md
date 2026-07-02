@@ -1,76 +1,88 @@
 # ④ THE CONTAINER — project_space fusion + the self-recording case study
 
-*(Tim, 2026-07-02, via the fusion session — the charge: "full research, design, plan and orchestration execution, to full polish production with the latent principles and design architecture of the chaotic bolted-together prototypes." Read NORTH-STAR.md first; this is the next movement of the same campaign. ① made the ledger the vector substrate, ② made it the address surface, ③ is the window — ④ gives the universe its CONTAINER: who owns what, which project scopes what, members human+agent, the Keeper, and the discourse layer. It fills the socket the engine already reserved: `project://` is registered-but-deferred in `contracts/address.py`.)*
+*(Tim, 2026-07-02, via the fusion session. **v2** — revised after a three-critic gauntlet: adversarial refuter (facts verified against cvi_mine/ledger/engine, 14 defects), law-validator (verdict table vs AGENTS.md/NORTH-STAR/substrate laws, 8 amendments), completeness critic (13 gaps, 3 build-blocking). All folded below. Read NORTH-STAR.md first; ④ is the next movement: ① vector substrate, ② address surface, ③ the window, ④ the CONTAINER — who owns what, which project scopes what, members human+agent, the Keeper, the discourse layer.)*
 
-## Plain-language: what it is
+## Plain-language: what it is (revised core)
 
-The cloud "Concept-Vi" Supabase (fully snapshotted to disk 2026-06-30, now restored locally as the **`cvi_mine`** reference DB on :15432) contains a proven **project_space** system: Space → Project → Scope → Resource, each level addressed (URI + ltree), with polymorphic **members (users AND agents)**, a per-project **Keeper** with 4-level config inheritance, space-scoped design tokens, a **generative type registry** (register a type → tools/board-face/UI/capabilities auto-generate), and the **Intent→Proposal→Approval→Execution** circuit carrying `(user_id, actor_id, space_id, correlation_id)`.
+The cloud "Concept-Vi" Supabase (snapshotted 2026-06-30; restored complete locally as **`cvi_mine`** — 466/466 tables, counts reconciled) contains a proven **project_space** system. ④ brings it home by one rule the reviews sharpened:
 
-④ transplants that **organ** (not the 466-table flood) into the one system, defines `project://` AND `code://` in the one resolver (the three-way weld: container → ledger body → cognition join in one motion), and proves it end-to-end with a **case study that records itself**: the fusion runs as the first project born in the unified container.
+> **Transplant only the SPINE that has no local counterpart. Everything that overlaps an existing engine mechanism arrives as DATA into that mechanism — never as a second mechanism.**
 
-## The evidence base (what was mined — 5 deep investigations, 2026-07-02)
+- **SPINE (transplants — nothing like it exists locally):** spaces → projects → scopes → resources (+ project_content), space_members + project_members, keeper config, space-scoped token values, the generative type fan-out. New schema `container` beside `ledger`.
+- **OVERLAPS (fuse as data into the engine's existing organ):**
+  - cloud notice_board_posts (319) → **cc_board items** (`board://`, the engine's board — rule 3/one-source; cc_board's addressed-items+typed-edges shape is the stronger form);
+  - cloud universal_types (16) + cascade_registry (10 handlers) → **registered types in the ONE registry** (the engine's registry philosophy is the home; the cloud's *generative fan-out* is absorbed as the registry's generate step — law 7 kept true by construction);
+  - cloud intents/proposals/approvals/delegations → **the engine's decision://+marks+wire circuit** (approval = mark, per law 4; the container contributes the **space_id axis + the context tuple** to the existing circuit, not a second circuit). Migrated circuit rows arrive as decision records + marks (history preserved, provenance-stamped).
 
-- **The cloud container was genuinely LIVED IN**: 12 real projects = the prototypes organizing themselves (ci-processing, workshop-v2, vi-coder-config, dev-tracers, block-composition, project-system, universal-types, vi-chat, el-external-wizardry, bobs-cars…); 86 scopes; **483 resources whose types are DISCOURSE units** (document 209, note 67, pattern 61, comment, proposal, workflow, question/answer) — the container is the **about** layer; the ledger is the **is** layer. They stack; no collision.
-- **319 board posts whose types match registered universal_types** — the generative registry demonstrably worked (16 types registered; all 10 cascade handlers enabled).
-- **The circuit really ran**: 107 intents / 31 proposals / 18 approvals / 14 delegations — but **73 intents are zombie "running"** (dead sessions, nothing watching). Fail-loud discipline is not optional here.
-- **The designed seams sat EMPTY**: `project_resources.uri_refs` = 0/483, `embedding` = 0/483 — the pointer columns were built before the ledger existed. ④ completes the sentence.
-- **Three graphs drifted into three JOBS** — don't merge tables, name the jobs: containment → ltree paths (fold `type_instance_edges` `belongs_to`=319/606 into it); knowledge → `ledger.edge` (579k, the winner); lineage/paths → `graph_edges` (54 rows are session lineage: branched_from/restarted_from/continues — a `path://` prototype all along).
-- Full detail: the session memory corpus (`~/.claude/projects/-home-tim-repos-counterpart-design/memory/fusion-*.md`) + the cloud snapshot (`/home/tim/repos/Supabase/supabase/_cloud-snapshot/`, verified restorable) + `cvi_mine`.
+## Evidence base (numbers corrected per refuter)
 
-## What moves / what doesn't
+- Container lived-in: 12 project rows, 86 scopes, **483 resources — predominantly discourse units** (document 209, note 67, pattern 61, comment 43, proposal 18, workflow 14, Q&A 16; plus a small non-discourse tail: scripts/folders/pointers ~6%). The container is the **about** layer; the ledger (`is` layer) stacks beneath — same distinction as the substrate's two halves, made same-law by the reverse index (below).
+- Boards: 319 posts; **316/319** post types match registered universal_types (research=2, diagnostic=1 unregistered — the registry worked, with a small honest tail).
+- Circuit: 107 intents (**73 zombie 'running'**) / 31 proposals / 18 approvals / 14 delegations. **33 intents + 22 proposals live in personal spaces** — curation must not orphan them (disposition below).
+- Empty designed seams: uri_refs **0**/483, embedding **0**/483 — built before the ledger existed; ④ completes the sentence.
+- Graphs, jobs not winners (each keeps its contextual job): containment → ltree (fold type_instance_edges' belongs_to=319/606 in); knowledge → **ledger.edge (720,461 as of 2026-07-02** — recount at build; the ledger is live and growing); lineage → **the 16 lineage rows** of graph_edges (branched_from 7, restarted_from 7, continues 2) are the `path://` ancestor; the other 38 rows (syncs_with 9, depends_on/depended_by 8, references, implements…) migrate as ordinary typed edges.
+- Ledger side: `project` is bare text on **entry, run, coverage_findings** (not edge/embedding/symbol); 4 labels — company **161,835**, counterpart-design 1,743, platforms 1,028, claude-ds 331. ltree installed, 0 ltree columns.
+- Engine side: `project://` and `code://` both registered-but-unresolvable in `resolve_address` (fail-loud raise). **`project://` has a PRIOR CLAIMANT** — registered for recollection's containment-graph lane (contracts/address.py:106–112). Reconciliation below.
+- Sources: cvi_mine (the immutable reference; also the rollback source-of-record), the snapshot dir, the session memory corpus (`~/.claude/projects/-home-tim-repos-counterpart-design/memory/fusion-architecture-map.md`, `fusion-upgrade-laws.md`, `prototypes-are-the-spec.md`, `supabase-cloud-pull.md`), and the three review reports (this session's transcript).
 
-- **Moves (the organ, rebuilt clean under this repo's laws, schema-additive):** the spine (spaces, projects, project_scopes, project_resources, project_content), membership (space_members, project_members — polymorphic user|agent), keeper_agent_config (4-level inheritance), notice_board_posts + types, token_values (system|user|space|thread cascade), the intent circuit (intents/proposals/approvals/delegations + context tuple), universal_types + cascade_registry (the generative registry), graph_edges (as the path/lineage layer). The proven RPC shape (`create_project` as ONE atomic circuit: space+owner-member+project+token-seed) re-expressed as shared functions.
-- **Does NOT move (stays queryable in `cvi_mine`):** the ci_* lineage (1/1/7/1/2 rows — its design already absorbed; archive), the 4 fake federation arms of all_type_registries, visual_dev/vi_coder text-keyed project systems (later movements, condition-addressed), miro_* (parked), bobs-cars (demo tenant), `repo_knowledge_index` (**retired with honour — the ledger IS what it wanted to be**), the ~15 unnamed auto-personal spaces + duplicate default-project rows (curated out at transplant; migrated data is CURATED, never bulk-copied).
-- **Data migration of the 12 projects + 483 resources + 319 posts**: YES — they are the records of the prototypes' own development (case-study-shaped already). The-fusion becomes project 13, the first born in the unified home.
+## Identity (build-blocker resolved by decision)
 
-## The three-way weld (the core build)
+- cvi_mine has 15 auth.users; the local stack has 4 test accounts; zero overlap. The container FKs outward ONLY to auth.users.
+- **Resolution:** mint ONE canonical local Tim identity (the operator); build an explicit uuid rewrite map applied at migration (`created_by`/`owner_user_id`/`granted_by`/tuple `user_id` → Tim's local uuid where the cloud row was Tim's; the other 14 cloud users → curated-out-with-reason rows, their owned objects re-homed to the archive space below). Agent identities (keepers) are **project_members agent rows** (member_type='agent', agent_key) — NOTE (refuter #8): `space_members` is NOT polymorphic (FKs auth.users); only project_members carries agents. The case study binds Keepers at the **project** level accordingly; extending space membership to agents is a separate, additive, later proposal.
 
-1. **`project://` gets its resolver** — resolves to the container record (space/project/scope/resource by ltree or key), per `contracts/address.py`'s reserved scheme.
-2. **`code://` gets its resolver** — the ledger's own scheme, currently unresolvable by the runtime (the universe cannot read its own body). Resolves to `ledger.entry`/`ledger.symbol` records.
-3. **`ledger.*.project` (bare text) binds to the container** — promoted to a real scoping key referencing the project row (schema-additive: add the FK column alongside, backfill, never break).
-4. **`project_resources.uri_refs` finally points** — a repo-project's resources point at ledger addresses (pointed-at, never copied).
+## Physical home + operational vehicle (build-blockers resolved)
 
-## The case study (the proof, self-recording from act one)
+- **Schema `container`** in the local Postgres beside `ledger` (public is occupied by the Face Pipeline/channel fabric — collision avoided by construction).
+- **Vehicle, per engine conventions:** `0012_container.sql` (tracked, idempotent schema) + `ops/migrate_container_from_cvi.py` (curated transplant; idempotent upserts keyed on source uuid; resumable; emits a source↔target reconciliation report with denominators) + `tests/container_acceptance.py` (the gate). Every weld step lists its reversal; cvi_mine is the immutable rollback source; every curation writes an excluded-with-reason row (law 8).
+- **Cross-table CHECK constraints become real FKs/triggers at rebuild** (found live: component_theme_specs' CHECKs query token_vocabulary — an integrity illusion that also broke pg_restore ordering).
 
-One Space (Tim's; Tim as owner-member, Keepers as agent-members) with two projects:
-- **`counterpart-design`** — the subject repo (already in the ledger: 1,743 entries). Resources = pointers to ledger addresses; the surface and the Keeper resolve the same addresses; project_type uses the seeded-token types.
-- **`the-fusion`** — the case study. Scopes: `decisions/` (immutable records, state composed from decision_take/update/retract marks) · `ore/` (mined capabilities as findings with gold_likelihood/built_twice/overlap marks) · `sequence/` (typed precedes/depends_on edges linking decisions→runs→findings — the AI's paths, replayable, the template for every future fusion) · `concepts/` (vocabulary as it's discovered). Its notice board receives the campaign's posts. The Keeper's context = territory over `project://the-fusion`.
-- Every consequential build step flows through the propose→confirm circuit it is building. Backlog items land condition-addressed (explicit return-when), never parked silently.
+## The weld (revised)
 
-## The 10 emergent laws (the latent architecture, land as PROPOSALS — Tim's yes fires each)
+1. **`project://` — one scheme, both claimants served.** The container resolver provides BOTH faces: the container record (space/project/scope/resource, by key or ltree) AND the containment edges recollection's lane wanted — the same data, two projections. The registration comment in `contracts/address.py` is updated (registry-is-truth) as part of ④, coordinated on the board before the edit.
+2. **`code://` — ② owns the seam; ④ consumes it.** ② is already cutting code-address resolution to the ledger. ④ does NOT edit that dispatcher independently; if ②'s general branch isn't landed when ④ needs it, ④ proposes the branch THROUGH the coordination file/board and ② reviews. (Refuter #13 resolved: ownership assigned.)
+3. **Ledger binding, total backfill:** add nullable `project_id` FK columns (schema-additive) on `ledger.entry/run/coverage_findings`; **mint container project rows for ALL 4 ledger labels** (company, platforms, claude-ds minimally dressed; counterpart-design fully) so the backfill is 100%, not 1.1%.
+4. **Pointers with their reverses (equal-and-opposite, declared per kind):** `project_resources.uri_refs` → ledger addresses, reverse `referenced_by` **composed at read** via the resolver (stored inverses only if profiling demands — the composed reverse IS legal under law 1). Sequence edges ship both names: precedes↔follows, depends_on↔depended_on_by, branched_from↔branched_to.
+5. **Breadcrumbs (①'s decided format):** `project://` miss → "expected container.spaces/projects (:15432 container schema); previously cloud gctunhsuwpaxeatwlmuv spaces table (cvi_mine mirror); fix: ops/migrate_container_from_cvi.py --slice spine". `code://` miss → "expected ledger.entry/symbol for <project>/<path>; project not ingested — run ops/ledger_build.py --root <path> --project <label>".
 
-1. State is composed, never stored (rows immutable; meaning resolved at read).
-2. Address + context = coordinate (every read is "resolve this address AT this coordinate" — extends the North Star's coordinate-space frame).
-3. Every address accumulates faces (fact/interpretation/disposition/geometry/page; one resolver serves all).
-4. Propose→confirm is the universal write law (proposal = addressed record, approval = mark, execution = run:// trail — structural provenance, the review layer this no-developer system never had).
-5. The universe self-scans as a resident process (drift → auto-proposed marks).
-6. `path://` first-class (ordered typed walks; replayable, embeddable, promotable — graph_edges' lineage rows are the ancestor).
-7. One generative type registry (register a kind → scheme resolution, MCP verbs, board/panel face, embedding policy, edge kinds, keeper behaviours — universal_types+cascades are the working ancestor; how forecasts/theorems/documents arrive with zero new systems).
-8. Honesty as the trust layer (denominators, excluded-with-reason, honest-empty on every view).
-9. Selection is an address-set (what the operator sees/filters/selects = an addressed context record the Keeper resolves against; saveable ways-of-looking).
-10. Vocabulary as data (names mined→proposed→confirmed→enforced; ends session naming drift; tmp_edgevocab is the ancestor).
+## The case study (bootstrap de-circularized)
 
-## PROACTIVE IMPROVEMENTS to fold in (standing directive: Tim can't ask for what he can't see)
+- **Phase 0 (before the container exists):** approvals ride the engine's EXISTING inbox/governance; the 10 laws land there as proposals; build decisions are recorded as the engine's decision:// records + marks from the first act.
+- **First slice (verifiable alone):** `0012_container.sql` + the `project://` resolver + ONE row (`the-fusion`) + a live resolve round-trip. No data migration yet.
+- **Back-write moment (right after first slice):** a one-shot ops back-write of the campaign's already-made decisions/findings (①②③④ DECIDED lists, the investigation findings) into `the-fusion`'s scopes, provenance-stamped to their source docs + this spec — the record is born complete, then new records flow live.
+- One Space (Tim's) → projects: `counterpart-design` (subject; resources point at its 1,743 ledger addresses) + `the-fusion` (scopes: decisions/ ore/ sequence/ concepts/) + minimal rows for company/platforms/claude-ds (backfill targets).
+- **The Keeper is a build item, not an assumption (refuter #14):** Keeper = a registered cognition ROLE per project; its context = territory composed over `project://<p>`; keeper_agent_config rows bind through the SAME context-resolution ladder as token_values (validator amendment 5: ONE resolution mechanism, two uses — keeper config and tokens are both instances of law 2).
 
-- **Zombie-proof the circuit**: intents get heartbeat/timeout → terminal states; migration marks the 73 zombies `abandoned` with evidence (honest history, never silent deletion).
-- **RLS done properly** on the transplanted organ (the cloud had SELECT-only asymmetries, a WITH CHECK(true) hole, and `hosted_content` RLS disabled "temporarily" — fix at transplant, not inherited).
-- **One function → two faces** for every container capability (create/query/dashboard/compose as shared functions projected to MCP + UI), per the North Star.
-- **ltree everywhere it belongs**: the local ledger installed ltree but uses text paths — adopt the container's ltree discipline for container paths; evaluate (don't assume) whether ledger paths should follow.
-- **Embedding discipline stays local**: the cloud's vector(384) single-dim is retired; the container's resources embed through the one multi-space store; absorb the cloud's *event-driven auto-embed trigger pattern* (queue/pg_net), not its geometry.
-- **The two vector homes finish unifying** (FsStore → ledger.embedding read-path = movement ①; ④ builds on ①'s seam, never adds a third home).
+## Migration dispositions (explicit; replaces "the 12")
 
-## Verification (by use, never by claim)
+| Organ | Cloud rows | Disposition |
+|---|---|---|
+| spaces | 55 | ~“Tim's space” + curated project spaces; 15 unnamed personal + duplicate default-projects → excluded-with-reason; ONE `cvi-archive` space minted to re-home orphans |
+| projects | 12 | **9 migrate** (ci-processing, workshop-v2, vi-coder-config, dev-tracers, block-composition, project-system, universal-types, vi-chat, el-external-wizardry); bobs-cars + miro-integration + default-project → archive dispositions in cvi_mine (excluded-with-reason). the-fusion is minted new — **the 10th live project, first born at home** |
+| resources / scopes / content | 483 / 86 / 41 | migrate with their surviving projects; provenance-stamped (source=cvi_mine + original uuid) |
+| board posts | 319 | → cc_board items, typed from the registry (register `research`+`diagnostic` or mark unregistered-with-reason); provenance-stamped |
+| intents/proposals/approvals/delegations | 107/31/18/14 | → decision records + marks in the engine circuit; the 33 intents + 22 proposals from personal spaces re-home to `cvi-archive` (nothing orphaned); 73 zombies marked `abandoned` with evidence; delegations re-keyed per identity map |
+| universal_types + cascade_registry | 16 + 10 | → the ONE registry as registered types + the generate step (validator amendment 3: explicit federation, no second registry) |
+| keeper configs / token values | 4 / 64 | rows migrate onto the one context-resolution ladder |
+| graph_edges | 54 | 16 lineage rows → path:// ancestry (inert history until sessions resolve; provenance kept); 38 relation rows → typed edges with declared reverses |
+| hosted_content | 62 | STAYS in cvi_mine for now — the surface story belongs to ③; condition-addressed: returns when ③'s direction lands |
+| repo_knowledge_index | — | retired with honour (the ledger IS it) |
 
-- The resolver resolves `project://the-fusion` and `code://company/...` end-to-end; the Keeper answers a real question from its territory; the surface renders the counterpart-design project (real browser); every migrated count reconciles source↔target with denominators.
-- **FORM is half of done** (rule 9): container surfaces built on the design system, design-critic + design-lint gates, native desktop AND mobile.
-- Adversarial verify-jury on each criterion; drift_radar + floor_walk sweep before any "done"; **Tim's sight-verify is the terminator** — the loop never declares itself done.
+## The 10 laws (as proposals; two amended)
+
+1. **State is composed, never hand-stored** — immutable rows are the source; composed state MAY be materialized as a DERIVED, re-runnable registry (never hand-edited): the registry is the fold. (Bridges registry-is-truth.)
+2. Address + context = coordinate. 3. Every address accumulates faces. 4. **Propose→confirm for CONSEQUENTIAL acts** (scope: anything irreversible, contract-touching, operator-facing, or cross-session — routine in-scope build commits under rule 10 are not proposals); proposal = addressed record, approval = mark, execution = run:// trail; the circuit's own intents carry heartbeat/timeout → terminal states (zombie-proof by schema). 5. Self-scanning resident process. 6. `path://` first-class (ancestor: the 16 lineage rows). 7. ONE generative type registry (kept true by the fuse-as-data rule). 8. Honesty as trust layer. 9. Selection is an address-set. 10. Vocabulary as data.
+
+## Verification (split per completeness #8)
+
+- **④-core (surface-independent):** resolver round-trips for `project://the-fusion` + `code://company/...`; the Keeper ROLE answers a real question from composed territory; migration reconciliation report all-green with denominators; acceptance suite green; zombie terminal-states demonstrated; every curated exclusion carries its reason.
+- **④-surface (gated on ③'s A/B/C):** the counterpart-design project rendered on the chosen surface, built on THAT surface's design system, desktop + mobile, design-critic + design-lint pass. FORM is half of done — ④-core alone is explicitly HALF.
 
 ## DECISIONS
 
-- **(Tim, decided)**: fusion home = local Docker stack; organ + mine (not the flood); one Space, two projects; the discourse-layer reading of resources; the anatomy verdicts above; the 10 laws proceed as proposals; full charge given for research→design→plan→orchestration→execution→polish.
-- **(OPEN — coordination)**: where ④ slots against ①→②→③ order (natural: ④ can start now — its schema work is additive and collision-free; its surface slice should land inside ③'s direction once Tim calls A/B/C; my lean matches the North Star's C→A: the-fusion project board + the counterpart-design project view ARE strong candidates for ③'s "narrow powerful slice").
-- **(OPEN — Tim)**: ③'s A/B/C call itself.
+- **(Tim, decided):** local home; organ+mine; one Space, two dressed projects; discourse-layer reading; laws as proposals; full charge.
+- **(Folded by review, surfacing for Tim's awareness):** spine-transplant + fuse-overlaps-as-data (the anti-parallel rule); identity minting + archive space; 9-not-12 project migration; ② owns code://.
+- **(OPEN — Tim):** ③'s A/B/C (④-surface waits on it; ④-core does not).
 
-## Coordination note (for the interface + cognition sessions)
+## Coordination
 
-④'s build surface: NEW schema (container tables) + NEW resolver branches (`project://`, `code://`) + additive columns on `ledger.*` — no collision with the wire/self-build stream or the ①② cutover seams; it CONSUMES ②'s canonical addresses and ①'s search function. I follow rule 10 (main, verify-first, no stranded branches) and will announce build starts on the board. — the fusion session
+④ edits: NEW `container` schema, NEW ops/tests files, the `project://` branch + address.py comment (announced on the board first), additive ledger columns. ④ does NOT edit the code:// seam (②'s). Rule 10 obeyed: main, verify-first, no stranded branches. — the fusion session
