@@ -23,7 +23,7 @@
 create or replace function ledger.query(spec jsonb) returns jsonb
 language plpgsql stable as $fn$
 declare
-    _known      text[] := array['project','filter','graph','semantic','lexical','limit'];
+    _known      text[] := array['project','filter','graph','semantic','lexical','scale','limit'];
     _k          text;
     _project    text  := coalesce(spec->>'project', 'company');
     _run        uuid;
@@ -35,6 +35,7 @@ declare
     _lex        jsonb := spec->'lexical';
     _gph        jsonb := spec->'graph';
     _flt        jsonb := spec->'filter';
+    _scl        jsonb := spec->'scale';
     _dim        int;
     _vcol       text;
     _sem_rows   jsonb;
@@ -100,6 +101,36 @@ begin
             return jsonb_build_object('results', '[]'::jsonb,
                 'meta', jsonb_build_object('run_id', _run, 'candidates_n', 0, 'plan', _plan,
                     'note', 'graph walk reached nothing from the anchor — check the anchor address + kinds/direction'));
+        end if;
+    end if;
+
+    -- ── SCALE drill: rank the rung's centroids by the query vector (tiny space, exact), take the top
+    -- clusters, restrict candidates to their MEMBERS (coarse-to-fine; the world-map's zoom semantics).
+    -- Requires semantic.vector (centroids are ranked by it); rung membership from ledger.cluster_member.
+    if _scl is not null then
+        if _sem is null or _sem->'vector' is null then
+            raise exception 'ledger.query: scale drill needs semantic.vector (centroids are ranked by the query vector)';
+        end if;
+        _dim := jsonb_array_length(_sem->'vector');
+        _vcol := case _dim when 3584 then 'vec_3584' when 2560 then 'vec_2560' when 1024 then 'vec_1024' end;
+        execute format(
+            'select array_agg(member_address) from (
+                select source_address from ledger.embedding
+                where space = $1 and %I is not null
+                order by %I <=> $2::halfvec(%s) limit $3) top
+             join ledger.cluster_member cm on cm.cluster_address = top.source_address',
+            _vcol, _vcol, _dim)
+        into _cands
+        using format('scale:%s:k%s', _scl->>'space', _scl->>'rung'),
+              (select array(select jsonb_array_elements_text(_sem->'vector'))::real[])::halfvec,
+              coalesce((_scl->>'top_clusters')::int, 5);
+        _cands_n := coalesce(array_length(_cands, 1), 0);
+        _plan := _plan || jsonb_build_object('scale', jsonb_build_object(
+            'rung', format('scale:%s:k%s', _scl->>'space', _scl->>'rung'),
+            'top_clusters', coalesce((_scl->>'top_clusters')::int, 5), 'member_candidates', _cands_n));
+        if _cands_n = 0 then
+            raise exception 'ledger.query: scale drill found no members — is rung scale:%:k% loaded in ledger.cluster_member? (0022)',
+                  _scl->>'space', _scl->>'rung';
         end if;
     end if;
 
