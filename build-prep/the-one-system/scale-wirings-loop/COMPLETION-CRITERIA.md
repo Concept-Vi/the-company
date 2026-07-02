@@ -13,7 +13,7 @@ is additive-only (no collision). No live-surface changes; the loop switch stays 
 - [x] P1.2 `scale:desc:*` — same over desc (1043, pplx).
 - [x] P1.3 `scale:code:*` — same over code (1042, nomic/3584 — the FIRST non-pplx pyramid; proves the
       dim-agnostic path).
-- [ ] P1.4 `scale:symbol:*` — same over symbol (6201, nomic/3584; the big one — kmeans path).
+- [x] P1.4 `scale:symbol:*` — same over symbol (6201, nomic/3584; the big one — kmeans path).
 - [x] P1.5 build_scale_pyramid EMITS cluster_member rows going forward (no new sidecars; the sidecar
       writer retired-commented per the no-fallback rule).
 - [x] P1.6 pyramid-rebuild registered as a JOB (handler), trigger PROPOSED (never self-armed).
@@ -31,10 +31,10 @@ is additive-only (no collision). No live-surface changes; the loop switch stays 
       pure SQL (no http from Postgres); text-in lives at the faces (bridge + tool). Recorded as the design.
 
 ## P3 · COORDINATION + CLOSE
-- [ ] P3.1 ④ pinged per landing (P1 batch + P2 batch); Glyphic informed of new scale spaces (their
+- [x] P3.1 ④ pinged per landing (P1 batch + P2 batch); Glyphic informed of new scale spaces (their
       glyph_meaning can pyramid the same way when they're ready).
-- [ ] P3.2 STATUS.md updated; board note filed; everything committed; working tree clean of my files.
-- [ ] P3.3 the morning message to Tim: what landed, what's verified, what waits on him.
+- [x] P3.2 STATUS.md updated; board note filed; everything committed; working tree clean of my files.
+- [x] P3.3 the morning message to Tim: what landed, what's verified, what waits on him.
 
 ## Priority: P1.1→P1.2 (small, prove the chain) → P1.5 (rows-forward) → P1.3→P1.4 → P1.6 → P2.1→P2.4 → P3.
 ## Loop mechanics: ScheduleWakeup self-paced; each wake = build next unchecked criterion, verify BY USE,

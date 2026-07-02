@@ -114,3 +114,11 @@
 - 0022 cluster_member (213,725 rows, all 7 sidecars, per-rung reconciled) + the scale stage in ledger.query — the ZOOM verified by use (history k16 drill 1464→335, on-topic). Migration map closed: 0014/15/16 + 0021 + 0022, all announced.
 - ④'s phase B also complete (L1–L7 committed, 325 checks, walkthrough delivered to Tim). "How Tim drives it" lines handed to ④ for the unified walkthrough.
 - EVERYTHING NOW GATED ON TIM: the L8 window go · arming COMPANY_ACTIVATION_LOOP (continuous heartbeat) · follow-ons not gated (code/symbol/docs/desc pyramids via build_scale_pyramid row-emit; paths[] axis on L4's shape).
+
+---
+## 2026-07-03 (overnight, Fable) — THE SCALE+WIRINGS LOOP COMPLETE (all P-criteria green)
+- **PYRAMIDS over every lens**: docs (84c/2037r) · desc (3129r) · code (3126r, first nomic-3584) · symbol (kmeans k128/32/8, 168c/18,603r — self-similarity 1.0000 THROUGH the drill: the zoom is exact) + topics/worldview k8 centroid holes found+HEALED. cluster_member total ≈ 244k rows.
+- **ROWS-FORWARD**: build_scale_pyramid emits cluster_member rows (reconciled, ns-isolated); sidecar write retired-commented; load_pyramid/rung_points reconstruct from rows (verified == legacy). Rebuild = job 'scale-pyramids' (daily schedule, born PROPOSED; incremental proven: refire → built=0 skipped=84).
+- **WIRINGS**: /api/query LIVE (GET probes + POST full-spec; teaching 400s; embedder-down 503) · fabric/embed_routing (code/symbol→nomic-3584 w/ num_ctx, else pplx-2560) shared by bridge + coordinate tool via ONE run_query · golden gate tests/ledger_query_acceptance.py 22 checks green.
+- **PERF DEBT flagged**: build_scale_pyramid does per-member psql get_vector calls (~20min for symbol) — fix = a store.get_vectors_bulk; also _member_hash reads default-space keys (returns None per member → hash constant-ish; harmless for fresh builds, weakens incrementality for symbol-scale spaces). Morning follow-on.
+- GATED ON TIM: window go · COMPANY_ACTIVATION_LOOP · arming scale-pyramids + heartbeat-durability's continuous fire.
