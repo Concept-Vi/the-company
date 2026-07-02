@@ -221,6 +221,7 @@ routing/verdict rule is a pure declared function — L2) · let a role emit `res
 `build-prep/concurrent-cognition/` (the G2 criteria + guide).
 
 ## Agent-authored entries (auto-reflected)
+- **`complete_text`** — agent-authored role (created via the declarative-direct face). PASSTHROUGH completion — the union path for plain text completion (A2 of the Glyphic AI fusion): the browser projection (CV_AI) fires this r
 - **`extraction_audit`** — agent-authored role (created via the declarative-direct face). 
 - **`coverage_audit`** — agent-authored role (created via the declarative-direct face). 
 - **`interpret_file`** — agent-authored role (created via the declarative-direct face). Discovery-system interpret phase: receives a file's programmatically-extracted structural observations and produces the interpretive observa
