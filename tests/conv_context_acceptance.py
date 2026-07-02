@@ -30,8 +30,10 @@ PROOF MODEL:
   • PRESERVE — X1/X2 address+symbols still persist alongside `context`; the existing chat-path is untouched
     (a separate assertion that `_resolve_context_at(locus)` still returns the same bounded string block).
 
-REAL corpus address (verified live, same fixtures conv_payload uses):
-  ui://chat/input → symbols=['code://RhmChat','code://suite/chat'] (post-App.tsx-carve)
+REAL address (verified live, same fixtures conv_payload uses). Source: the LEDGER's derived
+ui://→code powered-by join (runtime/scope.py, recomputed every build; code-symbols.json retired).
+Symbols are canonical code://company/<path>:
+  ui://chat/input → symbols ⊇ ['code://company/canvas/app/src/regions/RhmChat.tsx','code://company/runtime/suite.py']
 
 Run: /home/tim/company/.venv/bin/python tests/conv_context_acceptance.py
 """
@@ -63,7 +65,7 @@ store = FsStore(STORE_ROOT)
 reg = NodeRegistry(); reg.discover([NODES])
 suite = Suite(store, reg, nodes_dir=NODES)
 
-CHATIN = "ui://chat/input"                 # → symbols=['code://RhmChat','code://suite/chat'] (post-App.tsx-carve)
+CHATIN = "ui://chat/input"                 # symbols ⊇ ['code://company/canvas/app/src/regions/RhmChat.tsx','code://company/runtime/suite.py']
 
 # ── PRE-ATTACH a notebook at the address (the accumulated context the build should inherit) ─────────
 # A FAR, OLD item that the cap should DROP (parent address = proximity-farther; attached FIRST = oldest).
@@ -82,10 +84,12 @@ for i in range(60):
 PREEXISTING = "the run button has felt sluggish since last week — this is the accumulated note"
 suite.annotate(CHATIN, PREEXISTING, source="operator")
 
-# sanity: the corpus resolver gives the symbols+scope the X1/X2 assertions lean on
+# sanity: the ledger-backed resolver gives the symbols+scope the X1/X2 assertions lean on
 rs = suite.resolve_scope(CHATIN)
-check(f"{CHATIN} resolves symbols={rs['symbols']} (S3, real corpus — post-App.tsx-carve: the chat input lives in RhmChat + suite.chat, not the old monolith App)",
-      rs["symbols"] == ["code://RhmChat", "code://suite/chat"])
+check(f"{CHATIN} resolves symbols={rs['symbols']} (S3, ledger-derived join — canonical code://company ids "
+      f"for RhmChat.tsx + suite.py)",
+      "code://company/canvas/app/src/regions/RhmChat.tsx" in rs["symbols"]
+      and "code://company/runtime/suite.py" in rs["symbols"])
 
 # ── mint a build-intent at the address (the L1 mint path that should now gather + persist context) ──
 MINT_COMMENT = "this run button is too loud — tone it down"
@@ -136,8 +140,9 @@ check("X3 JSON-CLEAN: every persisted item is the public {kind,address,ts,text,p
 
 # ── PRESERVE — X1/X2 still persist alongside the new context key ───────────────────────────────────
 check("PRESERVE X1: the address still reaches disk alongside context", payload.get("address") == CHATIN)
-check("PRESERVE X2: the code:// symbol-neighbours still persist alongside context",
-      payload.get("symbols") == ["code://RhmChat", "code://suite/chat"])
+check("PRESERVE X2: the code:// symbol-neighbours still persist alongside context (== the resolved join)",
+      payload.get("symbols") == rs["symbols"]
+      and "code://company/canvas/app/src/regions/RhmChat.tsx" in (payload.get("symbols") or []))
 for f in ("intent", "spec", "scope", "consequence_class", "why"):
     check(f"PRESERVE: the existing payload field {f!r} survives on the reloaded record", f in payload)
 

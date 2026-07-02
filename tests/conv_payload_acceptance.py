@@ -22,9 +22,12 @@ PROOF MODEL:
     unaffected; an intent minted via the bare `surface_build_intent` (no address) has NO address/symbols
     keys (additive-optional: absent reads as None, exactly as before); empty-scope=DENY-ALL still holds.
 
-REAL corpus addresses (verified live, same fixtures L1 uses) — POST-App.tsx-carve:
-  ui://chat/input            → symbols=['code://RhmChat','code://suite/chat'], scope=['canvas/app/src/regions/RhmChat.tsx','runtime/suite.py']
-  ui://workshop/self-changes → symbols=['code://suite/revert_self_change'],    scope=['runtime/suite.py']
+REAL addresses (verified live, same fixtures L1 uses). Source: THE LEDGER's derived ui://→code
+powered-by join (runtime/scope.py, recomputed every build; the code-symbols.json sidecar with its
+lossy code://<stem>/<symbol> ids is retired). Symbols are canonical code://company/<path>[::<symbol>]:
+  ui://chat/input            → symbols ⊇ ['code://company/canvas/app/src/regions/RhmChat.tsx','code://company/runtime/suite.py'],
+                               scope ⊇ ['canvas/app/src/regions/RhmChat.tsx','runtime/suite.py']
+  ui://workshop/self-changes → symbols ⊇ ['code://company/runtime/suite.py'], scope ⊇ ['runtime/suite.py'] (+ live region files)
 
 Run: /home/tim/company/.venv/bin/python tests/conv_payload_acceptance.py
 """
@@ -56,20 +59,20 @@ store = FsStore(STORE_ROOT)
 reg = NodeRegistry(); reg.discover([NODES])
 suite = Suite(store, reg, nodes_dir=NODES)
 
-# POST-App.tsx-carve: the chat input's code home moved out of the App monolith into the carved chat
-# region (regions/RhmChat.tsx) + the suite chat handler (suite.chat). The regenerated corpus resolves
-# ui://chat/input → ['code://RhmChat','code://suite/chat'], NOT the pre-carve ['code://App']. (Mirrors
-# the 0f61b4f conv_context fix — same App.tsx-carve symbol drift.)
-CHATIN = "ui://chat/input"                 # → symbols=['code://RhmChat','code://suite/chat'], scope=['canvas/app/src/regions/RhmChat.tsx','runtime/suite.py']
-WORKSHOP = "ui://workshop/self-changes"    # → symbols=['code://suite/revert_self_change']
+# The join source is the LEDGER's derived ui://→code powered-by edges (runtime/scope.py, recomputed
+# every build). Symbols are canonical code://company/<path>[::<symbol>] — never the retired sidecar's
+# lossy code://<stem>/<symbol> form.
+CHATIN = "ui://chat/input"                 # symbols ⊇ ['code://company/canvas/app/src/regions/RhmChat.tsx','code://company/runtime/suite.py']
+WORKSHOP = "ui://workshop/self-changes"    # symbols ⊇ ['code://company/runtime/suite.py']
 ORPHAN = "ui://nonexistent/thing"          # → [] (DENY-ALL)
 
-# sanity: the corpus resolver gives the symbols+scope the assertions lean on (else the fixtures are wrong)
+# sanity: the ledger-backed resolver gives the symbols+scope the assertions lean on (else the fixtures are wrong)
 rs = suite.resolve_scope(CHATIN)
-check(f"{CHATIN} resolves symbols={rs['symbols']} (S3, real corpus — post-App.tsx-carve: chat lives in RhmChat + suite.chat)",
-      rs["symbols"] == ["code://RhmChat", "code://suite/chat"])
-check(f"{CHATIN} resolves scope={rs['scope']} (S3, real corpus — post-App.tsx-carve)",
-      rs["scope"] == ["canvas/app/src/regions/RhmChat.tsx", "runtime/suite.py"])
+check(f"{CHATIN} symbols carry the canonical code://company ids for RhmChat.tsx + suite.py (S3, ledger-derived)",
+      "code://company/canvas/app/src/regions/RhmChat.tsx" in rs["symbols"]
+      and "code://company/runtime/suite.py" in rs["symbols"])
+check(f"{CHATIN} scope carries regions/RhmChat.tsx + suite.py (S3, ledger-derived)",
+      "canvas/app/src/regions/RhmChat.tsx" in rs["scope"] and "runtime/suite.py" in rs["scope"])
 
 # ── mint a build-intent at the address (the L1 mint path that widens the payload) ────────────────
 out = suite.surface_intent_at(CHATIN, "this run button is too loud — tone it down", source="operator")
@@ -89,9 +92,10 @@ payload = reloaded["payload"]
 check("X1: the RELOADED payload carries the ui:// address (reaches disk, not just the return dict)",
       payload.get("address") == CHATIN)
 
-# X2 — the relationships (code:// symbol-neighbours) reach disk (post-App.tsx-carve: RhmChat + suite.chat)
-check("X2: the RELOADED payload carries the code:// symbol-neighbours",
-      payload.get("symbols") == ["code://RhmChat", "code://suite/chat"])
+# X2 — the relationships (code:// symbol-neighbours) reach disk (canonical code://company ids from the ledger join)
+check("X2: the RELOADED payload carries the code:// symbol-neighbours (canonical code://company ids)",
+      "code://company/canvas/app/src/regions/RhmChat.tsx" in (payload.get("symbols") or [])
+      and "code://company/runtime/suite.py" in (payload.get("symbols") or []))
 check("X2: the persisted symbols == resolve_scope's computed value (REUSED, not recomputed/fabricated)",
       payload.get("symbols") == suite.resolve_scope(CHATIN)["symbols"])
 
@@ -101,10 +105,13 @@ r2 = FsStore(STORE_ROOT)
 p2 = Suite(r2, reg, nodes_dir=NODES).inbox.get(out2["id"])["payload"]
 check(f"X1/X2 general: {WORKSHOP} persists its address",
       p2.get("address") == WORKSHOP)
-check(f"X1/X2 general: {WORKSHOP} persists symbols=['code://suite/revert_self_change']",
-      p2.get("symbols") == ["code://suite/revert_self_change"])
+check(f"X1/X2 general: {WORKSHOP} persists the canonical backend symbol (code://company/runtime/suite.py) "
+      f"== resolve_scope's computed value (reused, not recomputed)",
+      "code://company/runtime/suite.py" in (p2.get("symbols") or [])
+      and p2.get("symbols") == suite.resolve_scope(WORKSHOP)["symbols"])
 check("the address's symbols + scope travel together on the persisted record (the relationship reaches disk)",
-      p2.get("symbols") == ["code://suite/revert_self_change"] and (p2.get("scope") or []) == ["runtime/suite.py"])
+      "code://company/runtime/suite.py" in (p2.get("symbols") or [])
+      and "runtime/suite.py" in (p2.get("scope") or []))
 
 # ── PRESERVE — the 5 existing payload fields survive verbatim; .get readers unaffected ────────────
 for f in ("intent", "spec", "scope", "consequence_class", "why"):
@@ -112,7 +119,9 @@ for f in ("intent", "spec", "scope", "consequence_class", "why"):
           f in payload)
 check("PRESERVE: intent=='build' (the discriminator, untouched)", payload.get("intent") == "build")
 check("PRESERVE: scope still carries S3's resolved scope (X2 added symbols BESIDE it, didn't touch it)",
-      (payload.get("scope") or []) == ["canvas/app/src/regions/RhmChat.tsx", "runtime/suite.py"])
+      (payload.get("scope") or []) == rs["scope"]
+      and "canvas/app/src/regions/RhmChat.tsx" in (payload.get("scope") or [])
+      and "runtime/suite.py" in (payload.get("scope") or []))
 check("PRESERVE: the comment text still drives the spec",
       "tone it down" in (payload.get("spec") or "") or "too loud" in (payload.get("spec") or ""))
 check("PRESERVE: a .get of an OLD field (why) still works exactly as before",

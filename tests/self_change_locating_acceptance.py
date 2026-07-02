@@ -1,7 +1,7 @@
 """tests/self_change_locating_acceptance.py — L5 · self-change-locating (§21.7#5).
 
 "What changed HERE?" — filter the self-change audit log by the ADDRESS the operator is at, and
-revert from there. The address→code join is S3's resolver (`resolve_scope`, corpus-side); L5 adds an
+revert from there. The address→code join is S3's resolver (`resolve_scope`, ledger-backed); L5 adds an
 address FILTER on top of the EXISTING `self_change_log` — it does NOT modify the log/revert methods.
 
 THE JOIN (additive query, no new revert path):
@@ -10,22 +10,22 @@ THE JOIN (additive query, no new revert path):
 
 This suite proves:
   1. A self-change whose `changed_files` touch a scope S3 maps to `ui://workshop/self-changes`
-     (→ runtime/suite.py) IS returned by the address-filtered query for that address.
+     (scope carries runtime/suite.py + its live region files) IS returned by the address-filtered
+     query for that address.
   2. ISOLATION — a change touching a DIFFERENT scope (nodes/portal.py, which
-     `ui://canvas/portal-window` maps to) is NOT returned for `ui://workshop/self-changes`, and
-     vice-versa. Same two synthetic records prove the join BOTH ways, against the REAL corpus resolver.
-     (POST-App.tsx-carve note: the old isolation partner `ui://chat/input` now resolves to
-     ['canvas/app/src/regions/RhmChat.tsx','runtime/suite.py'] — it OVERLAPS workshop's runtime/suite.py
-     scope, so it can no longer prove isolation. Switched to ui://canvas/portal-window → ['nodes/portal.py'],
-     a clean single-file ref that does NOT intersect runtime/suite.py. The carve made UI addresses commonly
-     map to suite.py (the handler) PLUS their region file; the pre-carve non-overlap assumption is gone.)
+     `ui://canvas/portal-window`'s scope carries) is NOT returned for `ui://workshop/self-changes`,
+     and vice-versa. Same two synthetic records prove the join BOTH ways, against the REAL resolver
+     (the ledger's derived join). The isolation partner `ui://chat/input` cannot serve — its scope
+     carries runtime/suite.py too, OVERLAPPING workshop. ui://canvas/portal-window's scope
+     (NodeShape.tsx + nodes/portal.py) does NOT intersect workshop's — the sanity checks below
+     assert the disjointness the isolation leans on.
   3. PRESERVE — `self_change_log` / `last_self_change` / `revert_self_change` are unchanged: the
      query is a NEW method that calls them, never an edit to them. (We assert the existing methods
      still answer, and that the new method does not shadow/replace them.)
   4. STALE TRICHOTOMY (rule 4 — fail-loud, not a silent empty):
        (a) scope resolves → filter (changes that touch it, possibly empty = legit "none here");
        (b) empty scope, NOT stale (orphan/CSS-selector/DENY-ALL address) → [] WITH the note;
-       (c) corpus unreadable → stale:True propagated WITH the note — NEVER a silent [] that lies
+       (c) ledger unreachable → stale:True propagated WITH the note — NEVER a silent [] that lies
            "nothing changed here". The query passes `stale`/`note` straight through from resolve_scope.
   5. REVERT-AT-ADDRESS composes the EXISTING `revert_self_change(sha)` — the file→ui→sha chain
      resolves, then the same operator-only revert runs (we capture the sha via a mock leaf; we do
@@ -34,10 +34,11 @@ This suite proves:
 
 DETERMINISM: `self_change_log` reads real git history (non-deterministic), so the isolation
 assertions feed SYNTHETIC records (monkeypatch `self_change_log`) while using the REAL
-`resolve_scope` against the present corpus — both join directions are then provable exactly.
+`resolve_scope` against the live ledger join — both join directions are then provable exactly.
 
-FRESHNESS COUPLING (seams-engine risk #4): the join depends on the regenerated
-design/_system/code-symbols.json — a STALE corpus returns a STALE change list. Surfaced via
+FRESHNESS COUPLING (seams-engine risk #4): the join reads THE LEDGER's derived ui://→code
+powered-by edges (runtime/scope.py, recomputed every build; the design/_system/code-symbols.json
+sidecar is retired) — an UNREACHABLE ledger returns a STALE change list. Surfaced via
 `stale`/`note`, never pretended-live (proven by check 4c).
 """
 import os
@@ -67,19 +68,22 @@ store = FsStore(os.path.join(tempfile.mkdtemp(prefix="l5-"), "store"))
 reg = NodeRegistry(); reg.discover([NODES])
 suite = Suite(store, reg, nodes_dir=NODES)
 
-# Two REAL corpus addresses with clean, non-overlapping scopes (verified live), POST-App.tsx-carve:
-#   ui://workshop/self-changes → ['runtime/suite.py']
-#   ui://canvas/portal-window  → ['nodes/portal.py']   (the carve-safe isolation partner — does NOT
-#       intersect runtime/suite.py, unlike the pre-carve ui://chat/input which now maps to RhmChat.tsx
-#       + suite.py and OVERLAPS workshop on suite.py).
+# Two REAL addresses with disjoint scopes (verified live). Source: the ledger's derived ui://→code
+# powered-by join (runtime/scope.py, recomputed every build) — each address resolves to its LIVE
+# component file(s) + the hand-seeded backend:
+#   ui://workshop/self-changes → scope ⊇ ['runtime/suite.py'] + live region files (Grow/SelfChanges)
+#   ui://canvas/portal-window  → scope ⊇ ['nodes/portal.py'] + NodeShape.tsx (the isolation partner —
+#       does NOT intersect workshop's scope, unlike ui://chat/input which carries suite.py too).
 WORKSHOP = "ui://workshop/self-changes"
 PORTAL = "ui://canvas/portal-window"
 
-# sanity: the corpus resolver gives the scopes the join leans on (else the fixtures are wrong, not L5)
-check(f"{WORKSHOP} resolves to runtime/suite.py (S3, real corpus)",
-      suite.resolve_scope(WORKSHOP)["scope"] == ["runtime/suite.py"])
-check(f"{PORTAL} resolves to nodes/portal.py only (S3, real corpus — clean non-overlapping isolation partner)",
-      suite.resolve_scope(PORTAL)["scope"] == ["nodes/portal.py"])
+# sanity: the ledger-backed resolver gives the scopes the join leans on (else the fixtures are wrong, not L5)
+_ws_scope = suite.resolve_scope(WORKSHOP)["scope"]
+check(f"{WORKSHOP} scope carries runtime/suite.py (S3, ledger-derived join)",
+      "runtime/suite.py" in _ws_scope)
+_pi_scope = suite.resolve_scope(PORTAL)["scope"]
+check(f"{PORTAL} scope carries nodes/portal.py and is DISJOINT from {WORKSHOP}'s scope (isolation partner)",
+      "nodes/portal.py" in _pi_scope and not (set(_pi_scope) & set(_ws_scope)))
 
 # Two SYNTHETIC self-change records — one per scope — so the join is provable BOTH directions.
 SUITE_CHANGE = {"sha": "aaaa1111", "subject": "[self-apply] add node-type 'foo'",
@@ -95,7 +99,7 @@ suite.self_change_log = lambda limit=50: [PORTAL_CHANGE, SUITE_CHANGE]   # newes
 ws = suite.self_changes_at(WORKSHOP)
 shas_ws = [c["sha"] for c in ws["changes"]]
 check(f"{WORKSHOP} → returns the suite.py change ({shas_ws})", "aaaa1111" in shas_ws)
-check(f"{WORKSHOP} carries its address + scope", ws["address"] == WORKSHOP and ws["scope"] == ["runtime/suite.py"])
+check(f"{WORKSHOP} carries its address + scope", ws["address"] == WORKSHOP and "runtime/suite.py" in ws["scope"])
 check("a returned change carries the touched files (the operator sees WHY it matched)",
       "runtime/suite.py" in (ws["changes"][0].get("matched_files") or ws["changes"][0]["changed_files"]))
 
@@ -130,20 +134,20 @@ if real:
 else:
     check("self_change_log returns [] on no ledger (documented degrade) — preserved", real == [])
 
-# ── 4c. STALE TRICHOTOMY — corpus unreadable → stale propagated, NOT a silent empty
-# Point the resolver at an empty corpus dir so code-symbols.json is unreadable → resolve_scope stale.
-empty_corpus = tempfile.mkdtemp(prefix="l5-empty-corpus-")
-os.makedirs(os.path.join(empty_corpus, "design", "_system"), exist_ok=True)
-_real_corpus_dir = suite._corpus_dir
-suite._corpus_dir = lambda: os.path.join(empty_corpus, "design", "_system")
+# ── 4c. STALE TRICHOTOMY — the LEDGER unreachable → stale propagated, NOT a silent empty
+# The join source is the ledger's derived ui://→code edges (runtime/scope.py) — point the resolver's
+# ledger connection at a dead port so the source is unreachable → resolve_scope returns stale=True.
+import runtime.scope as _scope_mod
+_real_pg_port = _scope_mod._PG["port"]
+_scope_mod._PG["port"] = "1"                               # nothing listens here → ledger unreachable
 suite.self_change_log = lambda limit=50: [SUITE_CHANGE]   # there IS a change touching suite.py
 stale = suite.self_changes_at(WORKSHOP)
-check("corpus unreadable → stale:True PROPAGATED (not a silent empty that lies 'nothing here')",
+check("ledger unreachable → stale:True PROPAGATED (not a silent empty that lies 'nothing here')",
       stale["stale"] is True)
-check("stale result carries the legible note (regenerate the corpus)", bool(stale["note"]))
+check("stale result carries the legible note (restore the ledger / re-run the build)", bool(stale["note"]))
 check("stale result does NOT fabricate a change list (changes empty under DENY-ALL stale scope)",
       stale["changes"] == [])
-suite._corpus_dir = _real_corpus_dir
+_scope_mod._PG["port"] = _real_pg_port
 suite.self_change_log = _real_self_change_log
 
 # ── 5. REVERT-AT-ADDRESS composes the EXISTING revert_self_change(sha) — no new path
@@ -182,5 +186,6 @@ check("revert stays on the EXISTING operator-only /api/revert gate (no new rever
 print(f"\nSELF-CHANGE LOCATING ACCEPTANCE — {PASS} checks passed. "
       f"'what changed HERE?' filters self_change_log by S3's address→code scope join; isolation holds "
       f"both ways; revert-at-address composes the EXISTING revert_self_change (operator-only gate "
-      f"untouched); stale trichotomy fails loud (corpus unreadable → stale, never a silent empty). "
-      f"FRESHNESS: the join depends on the regenerated code-symbols.json — surfaced via stale/note.")
+      f"untouched); stale trichotomy fails loud (ledger unreachable → stale, never a silent empty). "
+      f"FRESHNESS: the join is the ledger's derived ui://→code edges, recomputed every build — "
+      f"surfaced via stale/note.")
