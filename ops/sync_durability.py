@@ -75,7 +75,12 @@ def sync_interpretation() -> int:
 
 def sync_assertion() -> int:
     """Upsert authored-provenance edges (run-independent) from ledger.edge into ledger.assertion. Single-
-    direction (reverses are composed at read from the kind's declared inverse — ④'s shared law, never stored)."""
+    direction (reverses are composed at read from the kind's declared inverse — ④'s shared law, never stored).
+    ONE GRAMMAR both sides: every kind is validated against ④'s L4 registry (ledger.validate_edge_kind —
+    RAISES with the authoring breadcrumb on an unregistered kind; absorb-never-reject means the fix is to
+    author the edge_kinds/<id>.py row, never to drop the edge)."""
+    for k in AUTHORED_KINDS:
+        _psql(f"select ledger.validate_edge_kind('{k}')")      # fail-loud BEFORE writing any row
     kinds = ", ".join(f"'{k}'" for k in AUTHORED_KINDS)
     before = _psql("select count(*) from ledger.assertion")
     _psql(f"""
