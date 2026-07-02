@@ -230,6 +230,16 @@ def run_job(suite, *, job_id: str | None = None, job: dict | None = None, params
     fire_id = job["id"] + "-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()) + f"-{int(time.monotonic()*1000)%10000:04d}"
     run = job["run"]
 
+    # L10↔L5 BIND: every fire IS an intent — claimed with a lease, terminated on completion, composed by
+    # the clock (runtime/circuit). A fire that dies mid-run composes to LAPSED with no reaper (the same
+    # zombie-proofing the historical 73 got); a lapsed fire is re-claimable. The marks are the DURABLE
+    # execution record (container.mark) — the trigger walk's in_flight state file is just its fast path.
+    from runtime import circuit as _circ
+    _intent = f"intent://job/{job['id']}/{fire_id}"
+    _lease_s = int((job.get("allocations") or {}).get("time_budget_s", 600))
+    _circ.claim_intent(suite.store, _intent, by=f"job://{job['id']}", session=fire_id,
+                       lease_seconds=_lease_s)
+
     if "handler" in run:                               # deterministic-python body from the closed registry
         mod_path, fn_name, _doc = HANDLERS[run["handler"]]
         suite._emit("job.run", f"fire job {job['id']!r} → handler {run['handler']!r} (fire {fire_id})",
@@ -241,8 +251,11 @@ def run_job(suite, *, job_id: str | None = None, job: dict | None = None, params
             state, err = "succeeded", None
         except Exception as e:                         # fail-loud: the run record carries the breadcrumb
             result, state, err = None, "failed", f"{type(e).__name__}: {e}"
+        _circ.terminate(suite.store, _intent, outcome=state,
+                        result=f"run://job/{job['id']}/{fire_id}", error=err)
         rec = {"ok": state == "succeeded", "fire_id": fire_id, "job": job["id"], "state": state,
                "params": resolved, "handler": run["handler"], "result": result, "error": err,
+               "intent": _intent,
                "outputs": {"address": f"run://job/{job['id']}/{fire_id}"}}
         suite._emit("job.done", f"job {job['id']!r} {state} (fire {fire_id})",
                     job=job["id"], fire_id=fire_id, state=state, error=err)
@@ -258,6 +271,8 @@ def run_job(suite, *, job_id: str | None = None, job: dict | None = None, params
         decl = dict(run["cascade_inline"]); decl["name"] = cname
         saved = suite.save_cascade(decl)
         if not saved.get("ok"):
+            _circ.terminate(suite.store, _intent, outcome="cancelled",
+                            error="inline cascade decl refused at the door")
             return {"ok": False, "refused": True, "at": "run.cascade_inline", "error": saved.get("error"),
                     "why": "the inline cascade decl failed the cascade validation door (same door as save_cascade)"}
     suite._emit("job.run", f"fire job {job['id']!r} → cascade {cname!r} (fire {fire_id})",
@@ -268,8 +283,11 @@ def run_job(suite, *, job_id: str | None = None, job: dict | None = None, params
         state, err = "succeeded", None
     except Exception as e:                             # fail-loud: the run record carries the breadcrumb
         result, state, err = None, "failed", f"{type(e).__name__}: {e}"
+    _circ.terminate(suite.store, _intent, outcome=state,
+                    result=f"run://job/{job['id']}/{fire_id}", error=err)
     rec = {"ok": state == "succeeded", "fire_id": fire_id, "job": job["id"], "state": state,
            "params": resolved, "cascade": cname, "result": result, "error": err,
+           "intent": _intent,
            "outputs": {"address": f"run://job/{job['id']}/{fire_id}"}}
     suite._emit("job.done", f"job {job['id']!r} {state} (fire {fire_id})",
                 job=job["id"], fire_id=fire_id, state=state, error=err)
