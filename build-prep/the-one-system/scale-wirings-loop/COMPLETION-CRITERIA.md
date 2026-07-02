@@ -16,18 +16,18 @@ is additive-only (no collision). No live-surface changes; the loop switch stays 
 - [ ] P1.4 `scale:symbol:*` — same over symbol (6201, nomic/3584; the big one — kmeans path).
 - [x] P1.5 build_scale_pyramid EMITS cluster_member rows going forward (no new sidecars; the sidecar
       writer retired-commented per the no-fallback rule).
-- [ ] P1.6 pyramid-rebuild registered as a JOB (handler), trigger PROPOSED (never self-armed).
+- [x] P1.6 pyramid-rebuild registered as a JOB (handler), trigger PROPOSED (never self-armed).
 
 ## P2 · THE WIRINGS (the window's text-in feed + embedder routing)
-- [ ] P2.1 `/api/query` bridge route: text-in → server-side embed → ledger.query → results (the UI face
+- [x] P2.1 `/api/query` bridge route: text-in → server-side embed → ledger.query → results (the UI face
       of the one function; loud teaching errors pass through). VERIFIED with curl.
-- [ ] P2.2 embedder ROUTING by space in the shared face(s): code/symbol → nomic (ollama :11434,
+- [x] P2.2 embedder ROUTING by space in the shared face(s): code/symbol → nomic (ollama :11434,
       num_ctx set), everything else → pplx (:8007). One routing table, used by /api/query AND the
       coordinate tool (no second dialect). VERIFIED: a text query over space='code' returns real code hits.
-- [ ] P2.3 the `coordinate` MCP tool passes ALL v2 axes verbatim + uses the routing table.
-- [ ] P2.4 golden-spec acceptance test: tests/ledger_query_acceptance.py — one spec per axis + the full
+- [x] P2.3 the `coordinate` MCP tool passes ALL v2 axes verbatim + uses the routing table.
+- [x] P2.4 golden-spec acceptance test: tests/ledger_query_acceptance.py — one spec per axis + the full
       composition + the teaching refusals (bad key/count.by/direction/depth) + plan-echo assertions. GREEN.
-- [ ] P2.5 (stretch) `semantic.text` accepted INSIDE ledger.query spec? NO — decided against: the fn stays
+- [x] P2.5 (stretch) `semantic.text` accepted INSIDE ledger.query spec? NO — decided against: the fn stays
       pure SQL (no http from Postgres); text-in lives at the faces (bridge + tool). Recorded as the design.
 
 ## P3 · COORDINATION + CLOSE
