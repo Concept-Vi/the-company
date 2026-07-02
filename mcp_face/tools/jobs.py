@@ -12,12 +12,12 @@ from __future__ import annotations
 
 from typing import Literal
 
-OPS = ("define", "list", "describe", "fire", "vocabulary")
+OPS = ("define", "list", "describe", "fire", "vocabulary", "arm", "pause", "tick")
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def jobs(op: Literal["define", "list", "describe", "fire", "vocabulary"],
+    def jobs(op: Literal["define", "list", "describe", "fire", "vocabulary", "arm", "pause", "tick"],
              job: dict | None = None, id: str = "", params: dict | None = None,
              check: bool = False) -> dict:
         """Register + run PARAMETRIC JOBS (data rows: what-to-run · params · trigger · allocations · outputs).
@@ -29,7 +29,11 @@ def register(mcp, suite):
           op="list"       — every registered job (id · label · run kind · trigger · enabled).
           op="describe"   — one job, fully (`id`=the job id).
           op="fire"       — run a job NOW: a registered one (`id` + optional `params`), or an inline body
-                            (`job`=a full job dict — ephemeral, recorded, not registered). Manual only.
+                            (`job`=a full job dict — ephemeral, recorded, not registered).
+          op="arm"        — THE OPERATOR DOOR: arm a proposed standing trigger (call only on Tim's word;
+                            agents propose, the operator arms). op="pause" disarms.
+          op="tick"       — one manual trigger-walk pass (the same walk the activation tick runs;
+                            armed triggers only; every skip is legible).
         """
         from runtime import jobs as J
         if op == "vocabulary":
@@ -63,6 +67,16 @@ def register(mcp, suite):
                 return {"op": "describe", "found": False,
                         "note": f"no job {id!r} — jobs are {[j['id'] for j in J.list_jobs(suite)]}"}
             return {"op": "describe", "found": True, "job": row}
+        if op == "arm":
+            if not id:
+                raise ValueError("jobs(op='arm') requires `id`.")
+            return {"op": "arm", **J.arm_job(suite, id, by="operator")}
+        if op == "pause":
+            if not id:
+                raise ValueError("jobs(op='pause') requires `id`.")
+            return {"op": "pause", **J.pause_job(suite, id)}
+        if op == "tick":
+            return {"op": "tick", **J.trigger_tick(suite)}
         if op == "fire":
             if job is not None:
                 return {"op": "fire", **J.run_job(suite, job=job, params=params)}

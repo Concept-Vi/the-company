@@ -125,12 +125,29 @@ def build_job(decl: dict, *, cascades: set) -> dict:
         return _teach("trigger.kind", trig.get("kind") if isinstance(trig, dict) else trig,
                       f"a trigger kind — one of {TRIGGER_KINDS}",
                       closest=_closest(isinstance(trig, dict) and trig.get("kind") or "", TRIGGER_KINDS))
+    trig_state = "n/a"
     if trig.get("kind") != "manual":
-        return _teach("trigger.kind", trig.get("kind"),
-                      "manual (the skeleton fires manual only; schedule/change/condition triggers land "
-                      "with the TriggerDriver + the ActivationCaller tick — see plan-a-jobs/DESIGN.md)",
-                      why="registering a standing trigger arms autonomous work and routes through the "
-                          "operator (proposed→ask→armed); not yet built")
+        # STANDING TRIGGERS: accepted as data, but NEVER born armed — the floor (proposed→armed; arming is
+        # the operator's, and the autonomous loop is ALSO env-gated off: a double gate). Validate the config:
+        cfg = trig.get("config") or {}
+        if trig["kind"] == "schedule":
+            if not isinstance(cfg.get("every_s"), int) or cfg["every_s"] < 30:
+                return _teach("trigger.config.every_s", cfg.get("every_s"),
+                              "an int ≥ 30 (seconds between fires)", fix={"trigger": {"kind": "schedule", "config": {"every_s": 3600}}})
+        elif trig["kind"] == "change":
+            srcs = cfg.get("sources")
+            if not isinstance(srcs, list) or not srcs or not all(isinstance(s, str) and s.startswith("git:") for s in srcs):
+                return _teach("trigger.config.sources", srcs,
+                              'a non-empty list of "git:<abs-repo-path>" sources (v1: git-sig change detection; '
+                              '"ledger:<table>" is the reserved post-outbox kind)',
+                              fix={"trigger": {"kind": "change", "config": {"sources": ["git:/home/tim/company"],
+                                                                            "quiet_window_s": 120}}})
+        else:
+            return _teach("trigger.kind", trig["kind"],
+                          "manual | schedule | change (event/condition kinds land with the event-cursor "
+                          "+ rules-AST work — see plan-a-jobs/DESIGN.md)")
+        trig_state = "proposed"                        # ALWAYS born proposed — arming is arm_job's transition
+                                                       # only (trigger_state is not even an authorable field)
     job = {
         "name": jid,                                   # ActionRegistry keys on `name`; id IS the key
         "id": jid, "label": decl["label"], "description": decl["description"],
@@ -138,7 +155,8 @@ def build_job(decl: dict, *, cascades: set) -> dict:
         "params": params,
         "allocations": decl.get("allocations") or {},
         "outputs": decl.get("outputs") or {"address": f"run://job/{jid}"},
-        "trigger": {"kind": "manual"},
+        "trigger": {**trig} if trig.get("kind") != "manual" else {"kind": "manual"},
+        "trigger_state": trig_state,                   # n/a (manual) | proposed | armed — armed ONLY via arm_job
         "proposes_only": bool(decl.get("proposes_only", True)),
         "enabled": bool(decl.get("enabled", True)),
         "created_by": decl.get("created_by", ""),
@@ -256,3 +274,154 @@ def run_job(suite, *, job_id: str | None = None, job: dict | None = None, params
     suite._emit("job.done", f"job {job['id']!r} {state} (fire {fire_id})",
                 job=job["id"], fire_id=fire_id, state=state, error=err)
     return rec
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════
+# THE TRIGGER LAYER (L10 stage 2) — standing triggers as data on the job row, fired by ONE tick driver.
+# Floor: a non-manual trigger is born state='proposed'; ONLY arm_job (the operator door) arms it — and the
+# autonomous loop that would tick this continuously is ITSELF env-gated off (COMPANY_ACTIVATION_LOOP), so
+# nothing self-fires until Tim arms both. Change detection v1 = git-sig (HEAD + porcelain hash: sees every
+# writer); quiet-window debounce + watermark semantics per plan-a-jobs/DESIGN.md (the graphile job_key
+# arithmetic compressed into per-trigger state, safe because exactly ONE caller ticks).
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════
+
+def arm_job(suite, job_id: str, *, by: str = "operator") -> dict:
+    """ARM a proposed standing trigger — THE OPERATOR DOOR (call this only on Tim's word; agents propose,
+    the operator arms). Records who armed + when; the tick only ever fires state='armed' triggers."""
+    reg = _registry(suite)
+    job = reg.get(job_id)
+    if job is None:
+        raise ValueError(f"arm_job: no job {job_id!r} — jobs: {[j['id'] for j in reg.all()]}")
+    if (job.get("trigger") or {}).get("kind") in (None, "manual"):
+        raise ValueError(f"arm_job: job {job_id!r} has a manual trigger — nothing to arm (fire it directly).")
+    job["trigger_state"] = "armed"
+    job["armed_by"], job["armed_at"] = by, time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    reg.save(job)
+    suite._emit("job.armed", f"standing trigger ARMED on job {job_id!r} (by {by})", job=job_id, by=by)
+    return {"ok": True, "job": job_id, "trigger_state": "armed", "by": by}
+
+
+def pause_job(suite, job_id: str, *, by: str = "") -> dict:
+    """Disarm a standing trigger (row stays; state → proposed)."""
+    reg = _registry(suite)
+    job = reg.get(job_id)
+    if job is None:
+        raise ValueError(f"pause_job: no job {job_id!r}")
+    job["trigger_state"] = "proposed"
+    reg.save(job)
+    suite._emit("job.paused", f"standing trigger PAUSED on job {job_id!r}", job=job_id, by=by)
+    return {"ok": True, "job": job_id, "trigger_state": "proposed"}
+
+
+def _git_sig(repo: str) -> str:
+    """The change signature for a git: source — HEAD sha + a hash of the dirty state. One subprocess,
+    sees EVERY writer (agent sessions, manual edits, other tools) — the property job-completion events
+    can't have. An unreadable repo raises (fail loud, never a silent 'no change')."""
+    import hashlib
+    import subprocess as sp
+    head = sp.run(["git", "-C", repo, "rev-parse", "HEAD"], capture_output=True, text=True, timeout=30)
+    dirty = sp.run(["git", "-C", repo, "status", "--porcelain"], capture_output=True, text=True, timeout=60)
+    if head.returncode != 0 or dirty.returncode != 0:
+        raise RuntimeError(f"_git_sig: {repo} unreadable as a git repo — "
+                           f"{(head.stderr or dirty.stderr).strip()[:120]}")
+    return head.stdout.strip() + ":" + hashlib.blake2b(dirty.stdout.encode(), digest_size=8).hexdigest()
+
+
+def _trigger_state_path(suite) -> str:
+    return str(suite.store.root / "trigger_state.json")
+
+
+def _load_trigger_state(suite) -> dict:
+    p = _trigger_state_path(suite)
+    if not os.path.exists(p):
+        return {}
+    try:
+        return json.load(open(p, encoding="utf-8"))
+    except Exception as e:                             # corrupt state NEVER silently resets — raise with the path
+        raise RuntimeError(f"trigger_state.json corrupt at {p} ({type(e).__name__}: {e}) — "
+                           "inspect/repair it; a silent reset would re-fire or skip triggers invisibly.")
+
+
+def _save_trigger_state(suite, state: dict) -> None:
+    p = _trigger_state_path(suite)
+    tmp = p + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(state, f, indent=1)
+    os.replace(tmp, p)
+
+
+def trigger_tick(suite, *, now: float | None = None) -> dict:
+    """Walk every ARMED standing trigger once; fire what's due. THE one scheduler pass (hosted as the 4th
+    driver in ActivationCaller.activation_tick — no second scheduler). Per armed job:
+      schedule: due ⇔ now − last_fired_at ≥ every_s.
+      change:   sig ≠ state.sig → re-arm the quiet window (changed_at=now; job_key replace-mode semantics);
+                due ⇔ sig ≠ last_fired_sig ∧ quiet elapsed ∧ not in-flight. Fires run_job with a
+                `watermark` param when the job declares one (the run discovers its own work — events are
+                only wake-ups, so coalescing is free and a missed tick self-heals).
+      Single-flight: in_flight_fire_id guards a running fire; a stall past 1.5× time_budget_s surfaces
+      LOUD (job.stalled event) + releases (recorded, never a silent wedge).
+    Returns {walked, fired[], skipped[], errors[]} — every non-fire is legible, never silent."""
+    now = now if now is not None else time.time()
+    state = _load_trigger_state(suite)
+    out = {"walked": 0, "fired": [], "skipped": [], "errors": []}
+    for job in list_jobs(suite):
+        trig = job.get("trigger") or {}
+        if trig.get("kind") in (None, "manual"):
+            continue
+        out["walked"] += 1
+        jid = job["id"]
+        if job.get("trigger_state") != "armed":
+            out["skipped"].append(f"{jid}: proposed (not armed — the operator door)")
+            continue
+        st = state.setdefault(jid, {})
+        cfg = trig.get("config") or {}
+        budget_s = int((job.get("allocations") or {}).get("time_budget_s", 600))
+        # single-flight + loud stall
+        if st.get("in_flight_fire_id"):
+            if now - st.get("in_flight_since", now) > budget_s * 1.5:
+                suite._emit("job.stalled", f"job {jid!r} fire {st['in_flight_fire_id']} exceeded "
+                            f"{budget_s * 1.5:.0f}s — releasing single-flight (recorded, surfaced)",
+                            job=jid, fire_id=st["in_flight_fire_id"])
+                st["in_flight_fire_id"] = None
+            else:
+                out["skipped"].append(f"{jid}: in-flight ({st['in_flight_fire_id']})")
+                continue
+        try:
+            due, fire_params = False, {}
+            if trig["kind"] == "schedule":
+                due = now - st.get("last_fired_at", 0) >= cfg["every_s"]
+                if not due:
+                    out["skipped"].append(f"{jid}: schedule not due "
+                                          f"({int(cfg['every_s'] - (now - st.get('last_fired_at', 0)))}s left)")
+            elif trig["kind"] == "change":
+                sig = "|".join(_git_sig(s[len("git:"):]) for s in cfg["sources"])
+                if sig != st.get("sig"):
+                    st["sig"], st["changed_at"] = sig, now       # job_key replace-mode: re-arm the window
+                quiet = cfg.get("quiet_window_s", 120)
+                if sig == st.get("last_fired_sig"):
+                    out["skipped"].append(f"{jid}: no change since last fire")
+                elif now - st.get("changed_at", now) < quiet:
+                    out["skipped"].append(f"{jid}: in quiet window "
+                                          f"({int(quiet - (now - st.get('changed_at', now)))}s left)")
+                else:
+                    due = True
+                    if "watermark" in (job.get("params") or {}):
+                        fire_params["watermark"] = st.get("watermark")
+            if not due:
+                continue
+            fire_start = now
+            st["in_flight_fire_id"], st["in_flight_since"] = "pending", now
+            _save_trigger_state(suite, state)                    # persist BEFORE the fire (crash-legible)
+            rec = run_job(suite, job_id=jid, params=fire_params or None)
+            st["in_flight_fire_id"] = None
+            st["last_fired_at"] = fire_start
+            if trig["kind"] == "change":
+                st["last_fired_sig"] = st.get("sig")
+                st["watermark"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(fire_start))
+            out["fired"].append({"job": jid, "fire_id": rec.get("fire_id"), "state": rec.get("state")})
+        except Exception as e:                                   # a trigger error is recorded + surfaced, never fatal to the walk
+            st["in_flight_fire_id"] = None
+            out["errors"].append(f"{jid}: {type(e).__name__}: {e}")
+            suite._emit("job.trigger_error", f"trigger walk error on {jid!r}: {e}", job=jid)
+    _save_trigger_state(suite, state)
+    return out

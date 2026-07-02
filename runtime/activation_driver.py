@@ -215,6 +215,19 @@ class ActivationCaller:
         else:
             res.reasons.append(f"mode: {md.get('reason', 'no candidate')}")
 
+        # ── standing job triggers (clock) — the L10 trigger walk (runtime/jobs.trigger_tick): fires
+        # ARMED schedule/change triggers only (proposed ones skip legibly; arming = the operator door
+        # arm_job). No second scheduler — this tick IS the scheduler pass. A corrupt trigger-state file
+        # raises loud through here (rule 4); per-trigger errors are recorded inside the walk result.
+        from runtime import jobs as _jobs
+        tw = _jobs.trigger_tick(self.suite)
+        res.reasons.append(
+            f"triggers: walked {tw['walked']}, fired {len(tw['fired'])}"
+            + (f" {[f['job'] for f in tw['fired']]}" if tw["fired"] else "")
+            + (f", errors {tw['errors']}" if tw["errors"] else ""))
+        if tw["fired"]:
+            res.acted = True
+
         # ── sense (EVENT-ONLY) — fire ONLY on a real supplied event; never fabricate one ────────────
         if sense_event is not None:
             sn = _act.sense_tick(self.suite, sense_event, mode=mode)
