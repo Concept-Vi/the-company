@@ -136,3 +136,70 @@ dimensions the current build does NOT touch:
 - **④ THE CONTAINER** (cron/board, ch-mcjowz0m?): the one-system fusion (SPINE/CIRCUIT/REGISTRY/BOARD/KEEPER/
   TENANCY/GRAPH-PATH, container schema + ledger.entry). Reach via the board.
 - The convergence law: everything folds INTO the one system; coordinate schema-touching work on the board first.
+
+---
+
+## 9 · The FULL ANATOMY (what exists to integrate — hold the whole breadth, don't build narrow)
+The glyphic-language work is ONE slice. Product-level-integrated means building WITH all of this. Enumerated
+2026-07-02 so nothing is invisible to a fresh session.
+
+### 9a · `claude-ds` — the design system (the home), by subsystem
+- **The 4 registries (the spine — `claude-ds/CLAUDE.md` §1):** tokens (`tokens/*.css` [18: canvas, controls,
+  dataviz, density, depth, diagram, export, focus, icons, imagery, layout, motion, provenance, sizing, states,
+  surfaces, texture, theme] + `colors_and_type.css` + `styles.css` + `tonal-zoning.css`) · **Types** `CV_REGISTRY`
+  (`app/registry/`: `types-core.js`, `kinds-type.js` [kind.graph], `glyphic-type.js` [the slots/sockets/triggers/
+  state grammar], `conditions.js` [CV_COND], `relationships-seed.js`, `types-vi.js`, `types-adapter.js`,
+  `components-type.js`) · **the generative ENGINE** `core/` (`DiagramSolver.jsx` [the glyphgraph renderer],
+  `ContainmentTree.jsx` [block solver], `RenderType.jsx`/`Slide.jsx` [the bridge], `archetype-catalog.js`,
+  `cv-nodes.d.ts` [the CVGraph IR — the one-IR], `slide-fit.js`) · **AI** `CV_AI` (`app/ai/` — done in A).
+- **The AXES system** `axes/` (`axis-core.js` + color/depth/fill/form/motion/size/space/symbol/texture) — the
+  generative model the glyphic facets resolve THROUGH (`CV_AXES.css → var(--token)`, `validate`/`candidates`).
+- **The Glyphic engine** `assets/icons/` (`cv-icons.js`, `cv-shapes.js`, `cv-meaning.js`, `cv-glyphics.js`,
+  `cv-edges.js`, `cv-vi-glyph.js`, `glyphgraph.js` [the rulebook]).
+- **The component library** `components/` (11 real token-clean React components: Avatar/Badge/Button/Card/Input/
+  Modal/Segmented/Stepper/Switch/Tabs + **`Glyphic.jsx`** [the React socket around CV_GLYPHIC] + `component-library.html`)
+  — BUILD product surfaces FROM these, not bespoke.
+- **The Studio app** `app/canvases/` (~18: AIStudio, Architecture, Bridge, Build, Colors, Components, Icons,
+  Imagery, Inbox, Overview, Registry, Settings, Templates, TypeBuilder, Voice, Workshop, …) + `app/components/`
+  (ChatRail, CanvasHeader, CommandPalette, Sidebar, Toast, …) — the real surface the instrument integrates INTO.
+- **AtomiCity** `atomicity/` (`ViConsole.jsx` [the talk→surface-mutates + correction-loop SKELETON],
+  `mode-engine.js` [CV_MODE], `vi-brain.js`, `scan-engine.js` [the re-runnable f(sources×extractors) index],
+  `explore-engine.js`, `override.js`, `picker.js`) — disposable runtime, load-bearing PATTERNS.
+- **ui_kits** `ui_kits/{vi, platform, virtual-hub}` — 3 parallel UI versions (fusion material: `FloorplanOverlay`
+  =node-on-canvas, `CaptureComment`=address-bound annotation, vi's conversation·task-tree·output shape).
+- **The specimen corpus** `preview/` (~37 @dsCard specimens — the product-quality reference) + `specimens/` +
+  `system/*.html` (axis-system, glyphic-system, glyphic-foundry, language, system-map, system-atlas, type-system,
+  glyphgraph-generator [the writer]).
+- **The self-describing docs** `analysis/` — `LANGUAGE.md`, `AXES.md`, `INTEGRATION.md` (the anti-drift contract),
+  `UNIFICATION.md` (how halves were welded — the recorded "fifth-strand" lesson), `SYSTEM-MAP-EDITOR-ADAPTER.md`,
+  `SYSTEM-MAP-ENCODING-GRAMMAR.md` (data→channel binding), `mid-lod.md` (level-of-detail), `SYSTEM-GAPS.md`,
+  `HANDOFF.md`, `FINDINGS-LOG.md`, + the business decks (pitch-deck, capital-raise, deck1-2026 — the product context).
+- **Root:** `DESIGN-LANGUAGE.md`, `README.md`, `SKILL.md`, `Tonal Zoning System.html`, `face-index.js`,
+  `tweaks-panel.jsx`, `_demo/` (harnesses incl. `glyphic-board.html`).
+- **The parent machinery** `design/_system/*.py` (governs the whole `design/` corpus, READ-ONLY over ~/company):
+  `emit.py` (tokens.json→CSS), `parse.py` (addresses→element-map), `check.py` (hardcode/design-lint GATE),
+  `refcheck.py` (code-ref drift), `symbols.py`/`codeedges.py` (`code://` registry + dep-graph), `gallery.py`,
+  `navgraph.py`, `registry_writeback.py`, `mechanisms.json` — the resolution/no-staleness apparatus the live layer copies.
+
+### 9b · `counterpart/design` — the parallel design system (converges INTO claude-ds — a REAL fusion task)
+Richer than first noted. Key territory to fold in:
+- **`dna/`** — a whole parallel DNA as JSON registries: `address.json`, `grammar.json`, `subject.json`, `types.json`,
+  `roles.json`, `modes.json`, `shapes.json`, `molecules.json`, `organisms.json`, `layouts.json`, `motion.json`,
+  `voice.json`, `icons.json`, `connectors.json`, `sequence.json`, `reader.json`, `tokens.json`, `canon.json`,
+  `application.json` — a DECLARATIVE registry-set to reconcile against claude-ds's live registries.
+- **`engine/`** (build/lint/prove/substrate + rebuild.sh/render.sh/serve.sh) — a parallel generative engine.
+- **`pieces/`** (56 UI explorations: gen3/gen4 atoms/shapes/verbs/tiers/stack/matrix, app-canvas/flow/screens/
+  states, decision-card, board-view, channel-view, session-card, nav-rail) — the richest fusion-material pile.
+- **`factory/`, `content/stories/`, `docs/` (analysis/campaigns/command/derived/dev/loop/letters), `archive/history`,
+  `state/`, `probes/`, `review/`, `server/`, `supabase/`** + root `PROJECT.md`/`ONBOARDING.md`/`FORMATION_JOURNAL.md`.
+  NOTE: `dna/modes.json` + `dna/roles.json` + `dna/address.json` are the direct counterparts to CV_MODE / the
+  Company roles / the address scheme — prime fusion seams.
+
+### 9c · `build-prep/the-one-system/` — the shared one-system corpus (beyond glyphic/)
+`NORTH-STAR.md`, `THE-CONTAINER.md`, `WORLD-INTERFACE-CHARTER.md`, `SCOPE.md`, `FULL-BUILD-INTEGRATION.md`,
+`LEDGER-SPEC.md`/`LEDGER-EXPLORATION.md`/`LEDGER-ENRICHMENT-PLAN.md`, `SUPABASE-VECTOR-SCHEMA.md`,
+`EMBEDDING-MEMORY-SUBSTRATE.md`, `CODE-ADDRESS-RECONCILIATION.md`, `JOBS-AND-COORDINATES-PLAN.md`,
+`REGISTRY-NOTES.md`, `CONCURRENCY-RESEARCH.md`, `MODEL-NOTES.md`/`4B-FINDINGS.md`, `PROCESS-LEARNINGS.md`,
+`interface-map/INTERFACE-MAP.md`, `discovery/*.tsv` (the asset/markdown/schema manifests), `ledger_schema.sql`.
+And `~/company` itself: `MAP.md`, `STATE.md`, `HANDOFF.md`, `AGENTS.md`, `orienteering/INDEX.md` (the terrain ledger),
+`runtime/` (cognition, bridge, modes_registry, model_routing), `roles/` (37+ incl. my 5 glyph_*), `ops/`.
