@@ -190,11 +190,11 @@
       },
       "health": "/v1/models",
       "vram_mb": 5600,
-      "note": "config-driven via serve_model.sh. FP8 (RedHatAI) on Ada; --language-model-only (text RHM); model's OWN template (thinking-capable, per-request enable_thinking); --reasoning-parser qwen3 splits reasoning_content. The FP8 brain for the spike + C5. Tune: `company config chat-4b-fp8 <key> <value>`.",
+      "note": "config-driven via serve_model.sh. FP8 (RedHatAI) on Ada; --language-model-only (text RHM); model's OWN template (thinking-capable, per-request enable_thinking); --reasoning-parser qwen3 splits reasoning_content. The FP8 brain for the spike + C5. Tune: `company config chat-4b-fp8 <key> <value>`. | gpu_util 0.9->0.44 (2026-07-03, glyphic W0): 0.9 was the Jun-29 bulk-worker SOLO shape (coverage-audit, embedder+voice evicted); 0.44 is this service's own documented interaction-combo fit ('gpu_util 0.5->0.44 to fit the FULL interaction combo'). Restores brain+embedder+reranker+ear+voice co-residence. Revert to 0.9 only for a deliberate solo bulk run.",
       "config": {
         "model": "RedHatAI/Qwen3.5-4B-FP8-dynamic",
         "port": 8001,
-        "gpu_util": 0.9,
+        "gpu_util": 0.44,
         "max_model_len": 65536,
         "max_num_seqs": 32,
         "family": "qwen3.5",

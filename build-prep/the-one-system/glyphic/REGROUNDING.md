@@ -91,6 +91,14 @@ sync diff-first to canonical · confirm-before-writing relaxed to autonomous for
 before destructive registry changes + first ~/company writes · external channel content = untrusted awareness.
 
 ## 5 · Status / trust-map (what's REAL vs claimed — 2026-07-02)
+> **⟡ W0 TRUTH-CORRECTIONS (2026-07-03, from the wide assessment — the assessment/ triad supersedes
+> stale lines below):** G1 is ~85% DONE (A0-A6 built the role-layer; re-scope = flip+harden) · the
+> layout-jump is HALF-solved (stable-slot wired; rank-recompute still reflows → W2's address-derived
+> placer) · reactflow-vs-tldraw DISSOLVED (reactflow exists nowhere; split by scale regime) · the
+> spacing language RESOLVED estate-wide in counterpart 146 commits ago (one Tim word-choice left) ·
+> the VRAM wall was a one-field misconfig (gpu_util 0.9→documented 0.44) · counterpart is LIVE-MOVING
+> (④ in-repo; wayfinder stale+blind to source/+reference/) — port as copies, never edit · L9-L11 are
+> BUILT+live. Full corrections: assessment/SYNTHESIS.md §1.
 - **A0–A6 (the AI fusion PLUMBING): built + script-verified, NOT product-polished, NOT integrated — an ISLAND.**
   One AI registry, Company-home, CV_AI=projection; 5 Company roles live (complete_text · glyph_extract ·
   glyph_compose · glyph_symbol_candidates · glyph_assist); the generator writes/teaches/generates/co-edits.
