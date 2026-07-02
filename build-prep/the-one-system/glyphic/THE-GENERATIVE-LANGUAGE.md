@@ -185,7 +185,17 @@ world saying itself). The convergence is now a per-face task, not a vague merge 
    gradients) as orientation — "the almost imperceptible zones give direction too." A conversation-grown
    graph warms where attention is, steps the metal axis along the telling's order, and the reader orients
    without reading. Nobody has built this yet; the laws for it exist.
-6. `[my read]` **The block system** (newly started, remote claude design) is Layer 0 of the substrate
+6. `[my read, named with the container seat 2026-07-02]` **THE ONE CITIZEN GRAMMAR** — what sits under
+   my glyphs, ④'s types, and the ledger's edges: everything is a typed, addressed node whose TYPE declares
+   (a) its sockets/slots (glyphic-type `accepts` ↔ the registry faces), (b) its edges WITH DECLARED INVERSES
+   (edge_kinds ↔ CV_EDGES ↔ connectors — composed at read, never stored), (c) its STATES as a resolution axis
+   (law 11; the glyph colour-facet IS state), (d) its READER/ROUTING (④'s routing face "which agent handles
+   this kind" = cognition-is-role-resolved = the frame law applied to WORK — an AI is a coordinate), (e) its
+   VOICE (molecules carry a voice field; glyphs carry a read-out — every citizen can say itself), (f) its
+   CHECKER class (predicate/build/model — model-checked laws are the judge-role slot). Glyph, type, and
+   edge_kind are three projections of ONE row grammar; `path://` is its motion face (a transglyphed read-out
+   IS a path spoken — the "family's shared unfinished sentence" belongs to this grammar).
+7. `[my read]` **The block system** (newly started, remote claude design) is Layer 0 of the substrate
    architecture ("The Block — atomic composable unit") arriving as a build. Not yet seen from this seat —
    the next nose-follow, coordinated with the container lead (who sits in counterpart/design).
 
