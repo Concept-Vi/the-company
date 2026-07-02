@@ -96,8 +96,10 @@ def corpus_for_desc(project, root):
     """The DESCRIPTION corpus: each CODE file's what_it_does (from the ledger interpretive layer), addressed by
     the file's code:// address. Text = the description, embedded by pplx (text model) — the plain-language
     'find code that does X' lens, distinct from the raw-code nomic space."""
+    # L9: read the DURABLE unit_latest (entry ⊕ interpretation) — a run rebuild can no longer blank this
+    # corpus (entry_latest's what_it_does strands on supersession; unit_latest's survives by content key).
     rows = psql(f"select e.path||chr(1)||replace(coalesce(e.what_it_does,''),chr(1),' ') "
-                f"from ledger.entry_latest e where e.project=$q${project}$q$ and e.node_type='file' "
+                f"from ledger.unit_latest e where e.project=$q${project}$q$ and e.node_type='file' "
                 f"and e.ext in ($q$.py$q$,$q$.ts$q$,$q$.tsx$q$,$q$.js$q$,$q$.jsx$q$) "
                 f"and coalesce(e.what_it_does,'')<>'' and coalesce(e.coverage_state,'')<>'excluded' order by e.path").splitlines()
     corpus = []
