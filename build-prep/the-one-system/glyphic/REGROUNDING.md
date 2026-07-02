@@ -120,7 +120,7 @@ dimensions the current build does NOT touch:
 
 ## 7 · Addresses (the coordinates)
 - **Canonical DNA Studio:** projectId `c8f43c46-ed08-42df-9a4e-3a23e4697262` (DesignSync, diff-first).
-- **Board:** `item-ecb0b169` = the-one-system anchor; this manifest's own board item (registered alongside).
+- **Board:** `item-ecb0b169` = the-one-system anchor; **`board://item-3fcd342c`** = this manifest's own board item (part_of the-one-system).
 - **Ports (live services):** bridge `:8770` · embedder pplx `:8007` (2560-dim) · brain chat-4b `:8000` ·
   vite instrument-surface `:5174` (`/api`→:8770, `/design`→:8775 proxies) · static design server `:8775`.
 - **Key paths:** `design/claude-ds/` · `repos/counterpart/design/` · `build-prep/the-one-system/` (+ `/glyphic/`) ·
