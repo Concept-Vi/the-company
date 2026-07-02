@@ -318,35 +318,51 @@ finally:
         proc.kill()
     shutil.rmtree(work, ignore_errors=True)
 
-# ══ C2.2 — the OPERATOR_USER_ID shadow (shadow-then-flip; the flip is NEEDS-TIM, not done here) ═════════
-print("[C2.2] the operator shadow — principal-table read beside the env default (NO FLIP)")
+# ══ C2.2 — the operator gate, FLIPPED (2026-07-03): the PRINCIPAL TABLE is the live authority ═══════════
+print("[C2.2] the operator gate — principal-table authority (FLIPPED; env default retired inert)")
 src = open(os.path.join(ROOT, "mcp_face", "remote.py"), encoding="utf-8").read()
-check("the env default is STILL the live authority (subject == OPERATOR_USER_ID decides — no flip)",
-      "if subject == OPERATOR_USER_ID:" in src)
-check("the flip step is DOCUMENTED for Tim (needs-tim block present)",
-      "THE FLIP (needs-tim" in src and "_operator_tier_via_principals" in src)
+check("the live decision is the principal-table read (`_operator_tier_via_principals(subject) is True`)",
+      "if _operator_tier_via_principals(subject) is True:" in src)
+check("the env-default read is NO LONGER the live authority (no UNCOMMENTED `if subject == "
+      "OPERATOR_USER_ID:` decision — surviving mentions are revert-comments only)",
+      not any(ln.strip().startswith("if subject == OPERATOR_USER_ID:") for ln in src.splitlines()))
+check("the OPERATOR_USER_ID env default is retained inert + breadcrumbed for revert",
+      "now inert for the gate" in src and "FLIPPED 2026-07-03" in src)
 from mcp_face import remote as _remote
-check("shadow: the LIVE operator subject (ebe5f9c7/v.i@) is IDENTICAL under the principal table "
-      "(operator-tier via the acts-for delegation — no divergence)",
-      _remote._operator_tier_via_principals("ebe5f9c7-4d66-4717-835f-afc96088facb") is True)
-check("shadow: an ordinary human subject is IDENTICAL (client both ways)",
-      _remote._operator_tier_via_principals("26d4500d-9d93-4531-88b7-f0609e066d60") is False)
-check("shadow: an archived no-email subject is IDENTICAL (client both ways)",
-      _remote._operator_tier_via_principals("28848d4e-07eb-4d71-a2e5-12c140d35400") is False)
-check("shadow: t.geldard@ (554e223d) reads OPERATOR under the principal table — the DOCUMENTED "
-      "divergence that IS the flip's effect (live=CLIENT today; needs-tim)",
+check("live: t.geldard@ (554e223d/operator) resolves OPERATOR through the principal table",
       _remote._operator_tier_via_principals("554e223d-e431-41ce-8913-1a7d8d81d321") is True)
-# the divergence is RECORDED loud (the audit jsonl gains an OPERATOR_SHADOW_DIVERGENCE line)
+check("live: v.i@/vi (ebe5f9c7) STAYS OPERATOR — via the active Tim→vi acts-for delegation, not identity",
+      _remote._operator_tier_via_principals("ebe5f9c7-4d66-4717-835f-afc96088facb") is True)
+check("live: an ordinary human subject resolves CLIENT (least privilege)",
+      _remote._operator_tier_via_principals("26d4500d-9d93-4531-88b7-f0609e066d60") is False)
+check("live: an archived no-email subject resolves CLIENT",
+      _remote._operator_tier_via_principals("28848d4e-07eb-4d71-a2e5-12c140d35400") is False)
+# fail-closed: None (DB unreachable / model absent) must degrade to CLIENT, never operator
+import mcp_face.remote as _rmod
+_saved_cache = dict(_rmod._OP_SHADOW_CACHE)
+_rmod._OP_SHADOW_CACHE.clear()
+try:
+    from unittest import mock as _mock
+    with _mock.patch("runtime.scope._q", side_effect=Exception("DB down")):
+        _fc = _remote._operator_tier_via_principals("554e223d-e431-41ce-8913-1a7d8d81d321")
+    check("fail-closed: when the principal table cannot be read, the verdict is None → the gate gives CLIENT",
+          _fc is None)
+finally:
+    _rmod._OP_SHADOW_CACHE.clear()
+    _rmod._OP_SHADOW_CACHE.update(_saved_cache)
+# the residual divergence vs the OLD env default is still RECORDED loud (a witness, never the decider)
 import fabric.config as fcfg
 audit_path = os.path.join(fcfg.STORE_DIR, "remote_mcp_audit.jsonl")
 before_n = sum(1 for _ in open(audit_path)) if os.path.exists(audit_path) else 0
-_remote._operator_shadow_audit("554e223d-e431-41ce-8913-1a7d8d81d321", _remote.TIER_CLIENT)
+# t.geldard@ (now OPERATOR live) diverges from the OLD env default (which was CLIENT for it) → recorded
+_remote._operator_shadow_audit("554e223d-e431-41ce-8913-1a7d8d81d321", _remote.TIER_OPERATOR)
 after_lines = open(audit_path).readlines() if os.path.exists(audit_path) else []
-check("the divergence is RECORDED (OPERATOR_SHADOW_DIVERGENCE row appended, never silent)",
+check("the residual divergence vs the OLD env default is RECORDED (OPERATOR_SHADOW_DIVERGENCE, never silent)",
       len(after_lines) == before_n + 1
       and json.loads(after_lines[-1])["event"] == "OPERATOR_SHADOW_DIVERGENCE")
+# ebe5f9c7 (v.i@) matched the old env default (both operator) → no divergence → nothing recorded
 _remote._operator_shadow_audit("ebe5f9c7-4d66-4717-835f-afc96088facb", _remote.TIER_OPERATOR)
-check("an IDENTICAL decision records NOTHING (divergence-only, the grant-shadow convention)",
+check("a decision that AGREES with the old env default records NOTHING (divergence-only convention)",
       sum(1 for _ in open(audit_path)) == before_n + 1)
 
 # ══ the scope grammar registry (the C2.1 vocabulary leg) ════════════════════════════════════════════════
@@ -370,4 +386,4 @@ for bad in ("frobnicate:thing", "read:write", ""):
         check(f"ghost/ambiguous scope {bad!r} rejected fail-loud (registry-is-truth)", True)
 
 print(f"\nALL {PASS} CHECKS PASSED — L2-IDENTITY C2.1–C2.5 verified by use "
-      f"(C2.2 shadow proven; the FLIP stays needs-tim).")
+      f"(C2.2 FLIPPED 2026-07-03 — principal-table authority, fail-closed, verified by use).")

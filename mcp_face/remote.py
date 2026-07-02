@@ -166,27 +166,25 @@ def _grant_shadow_audit(tool_name: str, tier: str, subject: str, live_allowed: b
     except OSError:
         pass
 
-# ── OPERATOR-PRINCIPAL SHADOW (④ L2-IDENTITY C2.2 — shadow-then-flip; the FLIP IS NOT DONE) ──────
-# The live operator decision is `subject == OPERATOR_USER_ID` (env default ebe5f9c7… = v.i@'s uuid).
+# ── OPERATOR-PRINCIPAL GATE (④ L2-IDENTITY C2.2 — FLIPPED 2026-07-03, Tim: "do all of it") ──────
+# The live operator decision is now `_operator_tier_via_principals(subject) is True` — the PRINCIPAL
+# TABLE (0017_identity.sql), not the OPERATOR_USER_ID env default (which is retained inert, for revert).
 # Per Tim's identity correction (THE-CONTAINER v3): v.i@ is VI'S OWN email → the vi AGENT principal;
-# t.geldard@ (554e223d…) is Tim, the ONE operator. The principal table (0017_identity.sql) now holds
-# that model. This shadow reads THE INTENDED FLIPPED GATE beside the env default:
+# t.geldard@ (554e223d…) is Tim, the ONE operator. The principal table holds that model, and the gate
+# now reads it directly:
 #   operator ⇔ the subject's auth_user_id attaches to the OPERATOR principal (any login),
 #              OR to an AGENT principal holding an ACTIVE acts-for delegation FROM an operator
 #              (window-checked) — "acting for the operator" — which is exactly how ebe5f9c7 (v.i@)
-#              REMAINS operator-tier after the flip (via the standing Tim→vi delegation, not identity).
-# Divergence is RECORDED LOUD (never silent), NEVER decides. Expected divergence today (the honest
-# finding, not an error): 554e223d (t.geldard@) is CLIENT live but OPERATOR under the shadow — that
-# delta IS the flip's effect, surfaced for Tim.
+#              STAYS operator-tier (via the standing Tim→vi delegation, not identity).
+# Fail-closed: None (DB down / model not landed) → TIER_CLIENT — the gate degrades to least privilege.
+# What the flip changed, live: t.geldard@ (554e223d…) is now OPERATOR (was CLIENT under the old env
+# default); v.i@ (ebe5f9c7…) stays OPERATOR only while the Tim→vi acts-for delegation is active.
+# _operator_shadow_audit now records the residual divergence against the OLD env default — a witness,
+# never the decider.
 #
-# THE FLIP (needs-tim — DO NOT do this without Tim; it changes who is 'operator' on the live gate):
-#   1. In _validate_supabase_jwt, replace `subject == OPERATOR_USER_ID` with
-#      `_operator_tier_via_principals(subject) is True` (fail-closed: None → TIER_CLIENT).
-#   2. Comment out the OPERATOR_USER_ID env default with the breadcrumb
-#      "expected container.principal_auth (0017_identity.sql); previously env OPERATOR_USER_ID;
-#       fix: seed the operator principal (ops/migrate_identity_from_cvi.py)".
-#   3. Coordinate the moment with Tim: after the flip t.geldard@'s login becomes operator-tier and
-#      v.i@ stays operator-tier only while the Tim→vi acts-for delegation is active.
+# TO REVERT (restore the env-gate): in _validate_supabase_jwt replace
+#   `if _operator_tier_via_principals(subject) is True:` with `if subject == OPERATOR_USER_ID:`
+# and drop the "inert" note on the OPERATOR_USER_ID default below.
 _OP_SHADOW_TTL_S = 60.0
 _OP_SHADOW_CACHE: dict = {}          # subject -> (verdict True|False, ts) — keeps psql off the hot path
 
@@ -222,20 +220,22 @@ def _operator_tier_via_principals(subject: str) -> bool | None:
 
 
 def _operator_shadow_audit(subject: str, live_tier: str) -> None:
-    """Compare the principal-table operator verdict against the LIVE env-default decision; record any
-    divergence to the audit jsonl mirror (loud, never silent). Pure observation — the live tier is
-    returned unchanged by the caller. The known/expected divergence: t.geldard@'s subject (554e223d…)
-    is live-CLIENT but shadow-OPERATOR — that is the flip's documented effect (C2.2 needs-tim)."""
-    shadow = _operator_tier_via_principals(subject)
+    """POST-FLIP (2026-07-03) witness: record every live decision that DIVERGES from what the retired
+    env-default gate (`subject == OPERATOR_USER_ID`) would have said — proof the flip is doing something
+    + a revert-safety trail. Compares the LIVE tier the caller assigned (now principal-table–derived)
+    against the OLD env-default verdict. Loud, never silent; pure observation — never decides.
+    The expected residual divergence: t.geldard@ (554e223d…) is now OPERATOR live but was CLIENT under
+    the old env default — that delta IS the flip's effect, still surfaced."""
     live_is_operator = (live_tier == TIER_OPERATOR)
-    if shadow is None or shadow == live_is_operator:
+    old_env_operator = (subject == OPERATOR_USER_ID)
+    if live_is_operator == old_env_operator:
         return
     line = json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
                        "event": "OPERATOR_SHADOW_DIVERGENCE", "subject": subject,
-                       "live_tier": live_tier, "principal_shadow_operator": shadow,
-                       "note": "the principal-table gate disagrees with the env-default gate — this "
-                               "is the flip's effect surfaced (C2.2 shadow-then-flip; flip is "
-                               "needs-tim, see mcp_face/remote.py OPERATOR-PRINCIPAL SHADOW block)"},
+                       "live_tier": live_tier, "old_env_operator": old_env_operator,
+                       "note": "the FLIPPED principal-table gate disagrees with what the retired "
+                               "env-default gate would have decided — the flip's effect surfaced "
+                               "(C2.2 flipped 2026-07-03; see mcp_face/remote.py OPERATOR-PRINCIPAL GATE)"},
                       default=str) + "\n"
     try:
         with AUDIT_LOCK:
@@ -373,11 +373,9 @@ def _validate_supabase_jwt(tok: str) -> tuple[bool, str, str, str]:
     subject = str(claims.get("sub", ""))
     if not subject:
         return False, "", "", "token has no subject (sub)"
-    # IDENTITY IS THE GATE. A cryptographically-verified sub == OPERATOR_USER_ID → operator (all
-    # tools). Any other valid Supabase user → client (posture-safe subset). No scope claim needed.
-    # ④ L2-IDENTITY C2.2: the env-default read below STAYS THE LIVE AUTHORITY; the principal-table
-    # shadow runs BESIDE it (divergence logged, never decides — see the OPERATOR-PRINCIPAL SHADOW
-    # block above for the documented flip step, which is needs-tim).
+    # IDENTITY IS THE GATE. A cryptographically-verified subject that the PRINCIPAL TABLE resolves to
+    # operator-tier → operator (all tools). Any other valid Supabase user → client (posture-safe
+    # subset). No scope claim needed.
     # ④ L2-IDENTITY C2.2 — FLIPPED 2026-07-03 (Tim: "do all of it"): the principal table is now the
     # LIVE AUTHORITY. operator-tier = kind='operator' OR an active acts-for delegation FROM the operator
     # (so v.i@/vi REMAINS operator-tier via the standing Tim→vi delegation — identity, not a hardcoded
