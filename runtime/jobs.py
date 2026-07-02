@@ -25,8 +25,19 @@ import time
 # lift-ready so the eventual Supabase move (NORTH-STAR directive 4, deliberately later) is a copy, not a redesign.
 JOB_FIELDS = ("id", "label", "description", "run", "params", "allocations", "outputs",
               "trigger", "proposes_only", "enabled", "created_by", "created_at", "version")
-RUN_KINDS = ("cascade", "cascade_inline")   # skeleton executor kinds; flow/graph/agent step-kinds land later
+RUN_KINDS = ("cascade", "cascade_inline", "handler")   # flow/graph/agent step-kinds land later
 TRIGGER_KINDS = ("manual", "schedule", "change", "event", "condition")  # skeleton fires manual only
+
+# THE HANDLER REGISTRY — the ONE place deterministic-python run-bodies live ("rows for everything; code
+# only in the handler registry" — plan-a-jobs R2's law). A job row NAMES a handler; it can never carry
+# code. Each entry: name → (import path, callable, one-line what-it-does). Closed set, fail-loud on an
+# unregistered name at define-time. These are the maintenance primitives the heartbeat composes.
+HANDLERS = {
+    "durability_sync": ("ops.sync_durability", "sync_durability",
+                        "refresh ledger.interpretation + ledger.assertion from the newest enrichment (L9)"),
+    "file_meta_walk":  ("ops.build_file_meta", "load_file_meta",
+                        "git-walk a project's history into ledger.file_meta (the run-independent time axis)"),
+}
 
 
 def _registry(suite):
@@ -91,6 +102,14 @@ def build_job(decl: dict, *, cascades: set) -> dict:
                           closest=_closest(cname, cascades),
                           why="refs resolve at define-time so a job never fires into a dangling name",
                           fix={"run": {"cascade": (_closest(cname, cascades) or ['<save it first>'])[0]}})
+    elif rk == "handler":
+        hname = run["handler"]
+        if hname not in HANDLERS:
+            return _teach("run.handler", hname, "a registered handler name (jobs never carry code — "
+                          f"the closed registry is {sorted(HANDLERS)})",
+                          closest=_closest(hname, HANDLERS),
+                          why="rows for everything; code only in the handler registry",
+                          fix={"run": {"handler": (_closest(hname, HANDLERS) or sorted(HANDLERS))[0]}})
     else:  # cascade_inline — validated at fire time by the cascade door (it may reference roles live)
         if not isinstance(run["cascade_inline"], dict) or not run["cascade_inline"].get("steps"):
             return _teach("run.cascade_inline", run.get("cascade_inline"),
@@ -192,6 +211,25 @@ def run_job(suite, *, job_id: str | None = None, job: dict | None = None, params
     resolved = _resolve_params(job, params)
     fire_id = job["id"] + "-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()) + f"-{int(time.monotonic()*1000)%10000:04d}"
     run = job["run"]
+
+    if "handler" in run:                               # deterministic-python body from the closed registry
+        mod_path, fn_name, _doc = HANDLERS[run["handler"]]
+        suite._emit("job.run", f"fire job {job['id']!r} → handler {run['handler']!r} (fire {fire_id})",
+                    job=job["id"], fire_id=fire_id, params=resolved)
+        try:
+            import importlib
+            fn = getattr(importlib.import_module(mod_path), fn_name)
+            result = fn(**resolved) if resolved else fn()
+            state, err = "succeeded", None
+        except Exception as e:                         # fail-loud: the run record carries the breadcrumb
+            result, state, err = None, "failed", f"{type(e).__name__}: {e}"
+        rec = {"ok": state == "succeeded", "fire_id": fire_id, "job": job["id"], "state": state,
+               "params": resolved, "handler": run["handler"], "result": result, "error": err,
+               "outputs": {"address": f"run://job/{job['id']}/{fire_id}"}}
+        suite._emit("job.done", f"job {job['id']!r} {state} (fire {fire_id})",
+                    job=job["id"], fire_id=fire_id, state=state, error=err)
+        return rec
+
     # the step-0 input for the cascade = the resolved params (the cascade's own contract consumes them)
     inputs = resolved if resolved else None
     if "cascade" in run:
