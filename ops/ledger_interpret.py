@@ -27,10 +27,35 @@ PGCONF = {"host": os.environ.get("COMPANY_LEDGER_PGHOST", "127.0.0.1"),
           "user": os.environ.get("COMPANY_LEDGER_PGUSER", "postgres"),
           "db": os.environ.get("COMPANY_LEDGER_PGDB", "postgres"),
           "pw": os.environ.get("COMPANY_LEDGER_PGPASSWORD", "postgres")}
-# project → the filesystem root its paths are relative to (so an agent can open the original file)
-PROJECT_ROOTS = {"company": REPO,
-                 "counterpart-design": "/home/tim/repos/counterpart/design",
-                 "claude-ds": os.path.join(REPO, "design", "claude-ds")}
+# project → the filesystem root its paths are relative to (so an agent can open the original file).
+# ④ THE CONTAINER (L1-SPINE, 2026-07-02): the hardcoded dict DIED AS CODE, LIVES AS DATA —
+# container.projects.root_path (schema `container`, 0013_container.sql; landed by
+# ops/migrate_container_from_cvi.py --slice spine). The dict below had a LIVE DEFECT: `platforms`
+# (1,028 ledger entries) was absent, so its root silently defaulted to REPO. The registry read fixes
+# that mechanically (registry-is-truth; the SPINE study's C1.5).
+# -- PROJECT_ROOTS = {"company": REPO,                                          # pre-container path —
+# --                  "counterpart-design": "/home/tim/repos/counterpart/design", # commented out, not
+# --                  "claude-ds": os.path.join(REPO, "design", "claude-ds")}     # deleted (Tim's rule);
+# -- expected container.projects.root_path (schema container, Postgres 127.0.0.1:15432); previously this
+# -- dict; fix/restore: re-run ops/migrate_container_from_cvi.py --slice spine (or un-comment to fall back).
+_PROJECT_ROOTS_CACHE: dict | None = None
+
+
+def project_roots() -> dict:
+    """project → root_path, read from container.projects (the registry; PROJECT_ROOTS's successor).
+    Cached per process (the queue loop calls it per row). FAIL-LOUD if the container schema is absent —
+    never a silent empty dict (an empty root map would silently mis-root every batch)."""
+    global _PROJECT_ROOTS_CACHE
+    if _PROJECT_ROOTS_CACHE is None:
+        rows = _rows("select project_key, root_path from container.projects where root_path is not null")
+        if not rows:
+            raise RuntimeError(
+                "project_roots: no container.projects rows with root_path — expected schema `container` "
+                f"(Postgres {PGCONF['host']}:{PGCONF['port']}, 0013_container.sql); previously the "
+                "hardcoded PROJECT_ROOTS dict above (commented out); fix: .venv/bin/python "
+                "ops/migrate_container_from_cvi.py --slice spine")
+        _PROJECT_ROOTS_CACHE = {k: r for k, r in rows}
+    return _PROJECT_ROOTS_CACHE
 
 
 def _psql(sql: str) -> str:
@@ -79,7 +104,7 @@ def queue(wave_bytes: int, wave_files: int, max_batches: int) -> dict:
             flush(); cur_proj = proj
         if cur and (cur_b + sz > wave_bytes or len(cur) >= wave_files):
             flush()
-        cur.append({"project": proj, "path": path, "root": PROJECT_ROOTS.get(proj, REPO)}); cur_b += sz
+        cur.append({"project": proj, "path": path, "root": project_roots().get(proj, REPO)}); cur_b += sz
         if len(batches) >= max_batches:
             break
     flush()
