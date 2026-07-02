@@ -6,13 +6,13 @@
 **Standing rules for every criterion:** fail-loud with breadcrumbs on every miss · every migration count reconciles source↔target with denominators · every curation writes excluded-with-reason · every weld step lists its reversal · schema-additive only · commits to main, verify-first, per-criterion.
 
 ## L1 · SPINE — first slice
-- [ ] C1.1 `0012_container.sql` applied idempotently twice in a row on a scratch DB with identical result (schema container: spaces, projects, scopes, resources, members).
-- [ ] C1.2 `resolve_address("project://the-fusion")` returns the container record + its containment edges, live, through the ONE resolver. An unknown project fails loud with the decided breadcrumb text.
-- [ ] C1.3 `territory_for("project://the-fusion")` composes the project leg (identity + relations + status), absent legs noted-absent, prose renders without raw addresses.
-- [ ] C1.4 All 4 ledger labels have container.projects rows; `ledger.entry.project_id` backfill = 100% (161,835 + 1,743 + 1,028 + 331 rows verified by count query, denominator printed).
-- [ ] C1.5 PROJECT_ROOTS is read from container.projects.root_path; `platforms` (the live defect) now opens files. The old dict is commented out with the breadcrumb, not deleted.
-- [ ] C1.6 **The back-write moment**: the campaign's decided record (①–④ DECIDED lists, the 7 studies' findings, the 11 laws) lands in the-fusion's scopes as addressed resources, provenance-stamped to their source docs; queryable via project://the-fusion/decisions/…
-- [ ] C1.7 create_project runs as one atomic circuit (space-if-needed → project → membership → keeper binding → ledger label reservation); a failed step rolls the whole circuit back; the result is provenance-stamped.
+- [x] C1.1 `0012_container.sql` applied idempotently twice in a row on a scratch DB with identical result (schema container: spaces, projects, scopes, resources, members).
+- [x] C1.2 `resolve_address("project://the-fusion")` returns the container record + its containment edges, live, through the ONE resolver. An unknown project fails loud with the decided breadcrumb text.
+- [x] C1.3 `territory_for("project://the-fusion")` composes the project leg (identity + relations + status), absent legs noted-absent, prose renders without raw addresses.
+- [x] C1.4 All 4 ledger labels have container.projects rows; `ledger.entry.project_id` backfill = 100% (161,835 + 1,743 + 1,028 + 331 rows verified by count query, denominator printed).
+- [x] C1.5 PROJECT_ROOTS is read from container.projects.root_path; `platforms` (the live defect) now opens files. The old dict is commented out with the breadcrumb, not deleted.
+- [x] C1.6 **The back-write moment**: the campaign's decided record (①–④ DECIDED lists, the 7 studies' findings, the 11 laws) lands in the-fusion's scopes as addressed resources, provenance-stamped to their source docs; queryable via project://the-fusion/decisions/…
+- [x] C1.7 create_project runs as one atomic circuit (space-if-needed → project → membership → keeper binding → ledger label reservation); a failed step rolls the whole circuit back; the result is provenance-stamped.
 
 ## L2 · IDENTITY
 - [ ] C2.1 principal / principal_auth / membership / delegation tables live; the operator seed migration mints exactly ONE operator row (Tim; t.geldard@ primary login attached; v.i@ attached to the VI AGENT principal per Tim's correction) + the standing acts-for delegation Tim→vi.
