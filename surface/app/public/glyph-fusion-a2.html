@@ -1,0 +1,70 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Glyphic fusion — A2 flip probe</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- A2 ACCEPTANCE probe (Glyphic AI-fusion). Loads the REAL CV_AI stack from the design system
+     (:8775, classic cross-origin script tags — same one-source files, no copies), then on THIS
+     same-origin surface (:5174, /api→:8770 proxy):
+       1) flips the TEXT role binding to the 'company' provider (setRoleProvider — a registry op)
+       2) fires CV_AI.complete(...) → company-http → bridge run_role(complete_text) → the brain
+       3) fires CV_AI.embed(...)    → company-http → bridge embed → the pplx embedder
+     Loud-fail: every error renders red; nothing is swallowed. The flip is RUNTIME-ONLY (this page);
+     the shipped default binding stays claude until Tim flips it for real. -->
+<style>
+  body{font:15px/1.5 system-ui,sans-serif;max-width:820px;margin:36px auto;padding:0 18px;color:#1F1A12;background:#FCFAF2}
+  h1{font-size:20px;color:#988058;margin:0 0 4px} .sub{color:#6B5F47;margin:0 0 20px;font-size:13px}
+  .card{border:1px solid #E8DFC5;border-radius:12px;padding:14px 16px;margin-bottom:14px;background:#fff}
+  .card h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#A89678;margin:0 0 8px}
+  pre{background:#F6F1E4;border-radius:8px;padding:10px;overflow:auto;font:12px/1.5 ui-monospace,monospace;margin:8px 0 0;white-space:pre-wrap}
+  .ok{color:#4A7A3C;font-weight:600} .bad{color:#B5482E;font-weight:600;white-space:pre-wrap}
+</style></head><body>
+<h1>Glyphic fusion — A2 flip probe</h1>
+<p class="sub">The real CV_AI registry, text-role flipped to the <b>company</b> provider at runtime, completing + embedding through the bridge. All auto-fires on load.</p>
+<div class="card"><h2>0 · stack + flip</h2><div id="s0">…loading the CV_AI stack…</div></div>
+<div class="card"><h2>1 · CV_AI.complete() via company</h2><div id="s1">…</div></div>
+<div class="card"><h2>2 · CV_AI.embed() via company</h2><div id="s2">…</div></div>
+<div class="card"><h2>verdict</h2><div id="verdict">…running…</div></div>
+
+<!-- the ONE-SOURCE CV_AI stack, loaded from the design system (classic scripts: no CORS needed) -->
+<script src="http://127.0.0.1:8775/app/ai/ai-registry.js"></script>
+<script src="http://127.0.0.1:8775/app/ai/ai-seed.js"></script>
+<script src="http://127.0.0.1:8775/app/ai/host-runtime.js"></script>
+<script src="http://127.0.0.1:8775/app/services/company.js"></script>
+<script>
+(async function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const R = { flip: null, complete: null, embed: null };
+  function verdict() {
+    if (Object.values(R).some(v => v === null)) return;
+    $('verdict').innerHTML = Object.values(R).every(Boolean)
+      ? '<span class="ok">✓ A2 PROVEN — the projection (CV_AI) completes AND embeds through the Company, via the one registry, with the flip as a registry op.</span>'
+      : '<span class="bad">✗ A2 not proven — see the failing step.</span>';
+  }
+  try {
+    const AI = window.CV_AI;
+    if (!AI) throw new Error('CV_AI failed to load from :8775 — is the static server up?');
+    // flip TEXT → company (runtime-only; the shipped default stays claude)
+    const flip = AI.setRoleProvider('text', 'company');
+    $('s0').innerHTML = '<span class="ok">✓ stack loaded · text-role flipped → ' + esc(flip.provider) + '</span><pre>' + esc(JSON.stringify(AI.roleProviders)) + '</pre>';
+    R.flip = true; verdict();
+    // 1 · complete through the company runtime
+    try {
+      const t0 = performance.now();
+      const text = await AI.complete('In one short sentence, what does a design token do?');
+      const ms = Math.round(performance.now() - t0);
+      if (typeof text !== 'string' || !text.trim()) throw new Error('empty completion');
+      $('s1').innerHTML = '<span class="ok">✓ completion via company in ' + ms + 'ms</span><pre>' + esc(text) + '</pre>';
+      R.complete = true;
+    } catch (e) { $('s1').innerHTML = '<span class="bad">✗ ' + esc(e.message) + '</span>'; R.complete = false; }
+    verdict();
+    // 2 · embed through the company runtime
+    try {
+      const em = await AI.embed('a file is part of a project');
+      $('s2').innerHTML = '<span class="ok">✓ vector dim ' + em.dim + (em.model ? ' · ' + esc(em.model) : '') + '</span>';
+      R.embed = em.dim > 0;
+    } catch (e) { $('s2').innerHTML = '<span class="bad">✗ ' + esc(e.message) + '</span>'; R.embed = false; }
+    verdict();
+  } catch (e) { $('s0').innerHTML = '<span class="bad">✗ ' + esc(e.message) + '</span>'; R.flip = R.complete = R.embed = false; verdict(); }
+})();
+</script>
+</body></html>
