@@ -1,0 +1,29 @@
+{
+ "role": "A client-side URL-query detector that flags when the surface is running in non-persisting verification mode.",
+ "capabilities": [
+  "Detect ?verify query parameter via URLSearchParams",
+  "Default to real-write mode when query param absent",
+  "Safely return false when window.location is unavailable"
+ ],
+ "substance": "partial",
+ "substance_why": "Only the detection helper is implemented; the banner, per-click notice, and actual write-suppression logic are described in comments but live elsewhere.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No actual suppression of decision_take persistence",
+  "No persistent 'Verification mode' banner rendered here",
+  "No per-click Notice naming the suppressed take",
+  "No guard for generic annotation/reaction/favour writes",
+  "No mode toggle or explicit opt-in UI"
+ ],
+ "performance_risks": [],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The detection rule and safety default are correct and well-documented, but the redesign should centralize the guard in the write dispatcher and add a dedicated UI indicator.",
+ "decomposition_hints": [
+  "Keep the pure isVerifyMode() detection in a lib/util",
+  "Move banner/notice presentation into a VerifyModeIndicator component consumed by App",
+  "Move write-suppression policy into the decision_take dispatcher and annotation hooks"
+ ],
+ "_path": "surface/app/src/lib/verifyMode.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,51 @@
+{
+ "role": "It is the client-side tool registry store that fetches and enriches tool descriptors, manages the open/selected/loading state for the tool palette, and exposes a React hook for ToolsBar/ToolsPanel.",
+ "capabilities": [
+  "Fetch tool descriptors from /api/tools",
+  "Fallback to a seeded corpus descriptor when /api/tools is unavailable or empty",
+  "Map fork snake_case form_meta into the surface ToolDescriptor shape",
+  "Infer the op discriminator field from schema enum values",
+  "Resolve dynamic enum options from registry URLs with a 1.5s timeout and graceful degradation",
+  "Enrich enum dropdowns in the background without blocking the initial tool list render",
+  "Maintain open/selected/loading/error/scaffold state with a subscribe/notify store",
+  "Expose useTools React hook plus openTools/closeTools/selectTool actions",
+  "Guard against stale fetches using a monotonic load sequence token"
+ ],
+ "substance": "partial",
+ "substance_why": "The file implements real fetch, enrichment, and state management for the tool palette but explicitly defers the run/invoke action and result rendering to pending endpoints and DNA's archetype, and falls back to a single seeded tool when the registry endpoint is absent.",
+ "interactions_present": [
+  "Open the tool palette (openTools)",
+  "Close the tool palette (closeTools)",
+  "Select a tool from the list (selectTool)",
+  "Load the tool list on open/mount (loadTools)",
+  "Subscribe React components to store changes (useTools)"
+ ],
+ "interactions_missing": [
+  "Run/invoke a tool (no /api/tools/invoke wiring or submit handler)",
+  "Render tool results (DNA archetype not integrated)",
+  "Validate required op params before running",
+  "Explicit opField from server metadata (currently inferred)",
+  "Form rendering and submission UI (not in this store file)",
+  "Error recovery beyond falling back to the seed"
+ ],
+ "performance_risks": [
+  "Concurrent background enum-source fetches for every tool can spike network usage",
+  "No caching of resolved enum sources across store loads",
+  "Every state change notifies all subscribers, causing re-renders in every useTools consumer",
+  "loadTools can be triggered multiple times, spawning duplicate fetches despite sequence tokens",
+  "AbortController timeouts only mitigate slow enum fetches, not overall fetch volume"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the form_meta adapter, enum-source resolver, and store contract, but rebuild the global mutable state into a proper React context/reducer or hook and move fetch/enrichment into a dedicated service.",
+ "decomposition_hints": [
+  "Split tool descriptor fetching and caching into a dedicated api/tools service",
+  "Move form_meta mapping into a pure adapter module",
+  "Move enum-source resolution into a separate registry-options service",
+  "Move the seeded corpus fixture into a config/fixtures file",
+  "Keep useTools as a thin React binding over the store",
+  "Separate the open/selected UI state from tool data state"
+ ],
+ "_path": "surface/app/src/tools/toolsStore.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

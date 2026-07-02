@@ -1,0 +1,47 @@
+{
+ "role": "A React overlay surface that renders the live Company noticeboard as grouped sections by delegating layout and list rendering to a runtime DNA archetype system.",
+ "capabilities": [
+  "Open/close overlay via boardStore state",
+  "Listen for `board:open` window event to open",
+  "Close via Escape key, scrim click, or close button",
+  "Fetch live board rows through boardStore",
+  "Render grouped board sections through DNA `faceRecord.boardRecord`, `org.boardGroups`, and `renderArchetype`",
+  "Gracefully degrade when DNA runtime, archetype, or adapter is unavailable",
+  "Display loading, error-with-retry, and empty states"
+ ],
+ "substance": "substantial",
+ "substance_why": "It wires real open/close interactions, loads live data, delegates rendering to DNA with adapter error handling, and provides loading/error/empty UI states.",
+ "interactions_present": [
+  "`board:open` window event opens the overlay",
+  "Escape key closes the overlay",
+  "Scrim click closes the overlay",
+  "Close button click closes the overlay",
+  "Error state 'Try again' button re-fetches board data"
+ ],
+ "interactions_missing": [
+  "No item-level row selection or navigation",
+  "No search, filter, or grouping controls (groupBy is hardcoded)",
+  "No keyboard focus trap for the modal dialog",
+  "No focus restoration after closing",
+  "No retry for DNA render failures beyond a static message",
+  "No loading indicator inside the scrollable body while DNA renders rows"
+ ],
+ "performance_risks": [
+  "Re-runs DNA `boardRecord` and `renderArchetype` on every `rows` change, rebuilding the entire grouped DOM",
+  "No virtualization for long scrollable board lists",
+  "Fetches `/dna/layouts.json` on each open if the archetype is not already cached",
+  "Unconditional `replaceChildren` with DNA-generated HTML may cause layout thrash"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the overlay lifecycle, store binding, and state-machine pattern, but replace the DNA archetype rendering contract and CSS class structure with the new design system.",
+ "decomposition_hints": [
+  "Extract a generic overlay shell (scrim, header, close, keyboard handling) from the board-specific body",
+  "Extract a `BoardGroups` renderer/adapter that isolates DNA-specific rendering logic",
+  "Extract loading, error, and empty states into reusable message components",
+  "Move keyboard/focus management into a reusable overlay hook",
+  "Separate board data fetching hooks from the view component"
+ ],
+ "_path": "surface/app/src/board/BoardView.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

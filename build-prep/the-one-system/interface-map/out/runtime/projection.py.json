@@ -1,0 +1,50 @@
+{
+ "role": "The pure-read projection engine that maps stored events into polar coordinates and sector layouts from a variable binding, producing the data model that a surface will render.",
+ "capabilities": [
+  "Discovers and loads binding lenses from disk at runtime",
+  "Resolves angular sectors from a binding's angle_from source (kind, kind-group, registry, graph, nucleation types+zones)",
+  "Computes polar coordinates (theta, r) for each event using time, address-tree, semantic cosine, two-pole separator, or nucleation placement",
+  "Provides human-readable kind/sector names and meanings from declared registries with humanized fallback",
+  "Strips machine tokens from operator-facing summaries while preserving genuine human content for chat/annotation/trial.turn",
+  "Computes the two-gravity separation report (pole distinctness, spread, Spearman, balance)",
+  "Computes the 20/80 nucleation report (type membership, candidate birth, dissolution candidates)",
+  "Surfaces directed typed edges between sectors for chord rendering",
+  "Supports a temporal scrubber (?at=) and spatial re-centring by address",
+  "Computes dyadic grid cells and ring counts from address paths"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete, multi-mode projection engine with binding discovery, sector resolution, several radius strategies, separation/nucleation analytics, humanization, and full point output \u2014 not a stub.",
+ "interactions_present": [
+  "None: this is a pure data-transformation module with no UI or user-event wiring"
+ ],
+ "interactions_missing": [
+  "No user-facing binding/lens selector or configuration UI",
+  "No live scrubber control or time-slider interaction",
+  "No point selection, hover, drill-in, or tooltip rendering",
+  "No error-to-user feedback for malformed events or missing vectors",
+  "No loading state or progress indication for heavy analytics",
+  "No interactive re-centring or pole-picking UI",
+  "No inspector/legend interaction beyond emitted metadata"
+ ],
+ "performance_risks": [
+  "O(N*T) cosine scans for semantic/separator/nucleation modes over all events and type/pole vectors",
+  "Nucleation agglomerate is O(n\u00b3) even though bounded by `cap`",
+  "Binding discovery rescans and dynamically imports files on every no-arg call",
+  "Repeated SHA-256 hashing and regex processing per event in the hot loop",
+  "No caching of resolved sectors, humanized labels, or registry metadata",
+  "Vector dimension mismatch raises hard errors rather than degrading gracefully"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The core projection concepts (binding-driven sectors, variable radius, separation/nucleation analytics, operator-law humanization) are domain-specific and should be preserved, but the monolithic implementation needs modularization and clearer separation of concerns for the redesign.",
+ "decomposition_hints": [
+  "Split binding discovery/loading into its own module (runtime/bindings/registry.py)",
+  "Split sector resolution into a strategy per angle_from source (kind, kind-group, registry, graph, nucleation)",
+  "Split radius computation into pluggable radius modes (time, address, semantic, separator, nucleation)",
+  "Extract humanization/legibility helpers (kind/sector names, summary sanitization) into a dedicated runtime/humanize module",
+  "Move separation_report and nucleation_report analytics into runtime/analytics/ or runtime/reports/",
+  "Separate geometry/layout concerns (theta, rings, grid cells, edges) from data resolution"
+ ],
+ "_path": "runtime/projection.py",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

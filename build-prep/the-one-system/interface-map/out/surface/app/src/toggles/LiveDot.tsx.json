@@ -1,0 +1,33 @@
+{
+ "role": "A small presentational toggle control that shows a live/frozen state and lets the user flip it.",
+ "capabilities": [
+  "Render a pulsing live-state dot",
+  "Toggle live/frozen on click",
+  "Apply an address stamp to the control",
+  "Provide dynamic aria-label and title based on state"
+ ],
+ "substance": "substantial",
+ "substance_why": "It fully implements the live indicator + freeze toggle UI: styled button, click handler, accessible labels, and address stamp.",
+ "interactions_present": [
+  "Click/tap the button to toggle live/frozen"
+ ],
+ "interactions_missing": [
+  "No visible focus style",
+  "No screen-reader live-region announcement on state change",
+  "No actual stream pause/resume logic (only a boolean prop)",
+  "No disabled or loading state",
+  "No keyboard shortcut"
+ ],
+ "performance_risks": [
+  "Re-renders whenever parent re-renders with no memoization",
+  "Recomputes className string and stamp call on every render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "Keep the live/frozen concept and toggle behavior, but rebuild styling, focus, and accessibility during redesign.",
+ "decomposition_hints": [
+  "No split needed \u2014 the file is already a single-purpose control"
+ ],
+ "_path": "surface/app/src/toggles/LiveDot.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

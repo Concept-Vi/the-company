@@ -1,0 +1,45 @@
+{
+ "role": "A React modal overlay that renders the operator's 'What needs you' work-queue of pending stack items and dispatches item selection to the shared decision host.",
+ "capabilities": [
+  "Renders an overlay inbox panel driven by the decisions store",
+  "Lists pending stack items with loading, empty, error, and refresh-error states",
+  "Implements typed item dispatch with a fail-loud default for unknown stack kinds",
+  "Renders a decision-sequence preview row (name, meaning, recommendation, reversibility)",
+  "Opens a selected decision via a single CustomEvent('decision:open') path",
+  "Closes the inbox via Escape key, scrim click, or close button",
+  "Provides retry button to reload the decisions list"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete UI shell plus a real item renderer, error/empty/loading states, keyboard/scrim close, and retry wiring.",
+ "interactions_present": [
+  "Close inbox on Escape key",
+  "Close inbox on scrim click",
+  "Close inbox on \u2715 button click",
+  "Click a decision row to dispatch decision:open with address, id, and fromInbox flag",
+  "Click retry button to call loadDecisions"
+ ],
+ "interactions_missing": [
+  "No focus trap or restored focus on open/close",
+  "No visible open trigger (assumed opened externally via store)",
+  "No handling for non-decision item types beyond an honest placeholder row",
+  "No actual decision resolution UI inside this file (delegated to the host)",
+  "No loading skeleton or virtualization for long lists",
+  "No scroll containment or aria-live announcements for dynamic states"
+ ],
+ "performance_risks": [
+  "Entire list re-renders on every store update without memoization",
+  "pick callback and renderStackItem recreated each render, causing every row to re-render",
+  "No virtualization if pending list grows large"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "Keep the inbox concept, store integration, and single-event open path, but rebuild the presentation, split renderers, and add focus/performance affordances.",
+ "decomposition_hints": [
+  "Split overlay shell (scrim, header, close, aria) from list/body content",
+  "Extract item-type renderer registry so each stack kind has its own component file",
+  "Move DecisionRow to its own module",
+  "Separate data/loading orchestration from presentational markup"
+ ],
+ "_path": "surface/app/src/decisions/DecisionsInbox.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

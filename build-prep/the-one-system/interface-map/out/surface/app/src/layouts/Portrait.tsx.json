@@ -1,0 +1,53 @@
+{
+ "role": "Portrait.tsx is the mobile-portrait layout shell that composes the top chrome, central legend/wheel stage, scrubber, notice, decisions bar, and detail bottom sheet for the surface interface.",
+ "capabilities": [
+  "Renders the portrait-specific top chrome bar with lens, space, layer, resolution, quantization, centre, live, view, and settings chips",
+  "Displays dismissible notice banners",
+  "Shows the in-flow decisions bar below the header",
+  "Hosts the legend and central wheel-or-state stage as a vertically centred group",
+  "Renders the temporal scrubber at the bottom of the stage",
+  "Presents selected-point detail as a nonmodal bottom sheet via Disclosure",
+  "Renders a Tether indicator tied to the selected sequence"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file fully wires a real portrait layout, importing and binding more than a dozen controls and two wheel/detail components to SurfaceState actions.",
+ "interactions_present": [
+  "Dismiss notice via onDismiss",
+  "Pick lens binding via LensChip onPick",
+  "Set space via SpaceChip",
+  "Set embedding/layer via LayerChip",
+  "Set resolution/dimension via ResChip",
+  "Set quantization via QuantChip",
+  "Reset centre via CentreChip",
+  "Toggle live mode via LiveDot",
+  "Toggle view mode via ViewToggle",
+  "Set feel/settings via Settings",
+  "Scrub time via Scrubber setAt",
+  "Close detail sheet via Disclosure onDismiss",
+  "Focus centre via Disclosure onFocus",
+  "Set pole via Disclosure onSetPole"
+ ],
+ "interactions_missing": [
+  "No gallery UI or trigger is provided even though galleryOpen suppresses the sheet",
+  "No keyboard, screen-reader, or focus-management attributes are wired",
+  "No drag/gesture handling for the bottom sheet is visible in this file",
+  "No orientation or resize handling beyond the static portrait assumption",
+  "No loading, error, or empty-state handling beyond WheelOrState"
+ ],
+ "performance_risks": [
+  "Every SurfaceState change re-renders the entire layout and all chrome chips because no memoization is visible",
+  "WheelOrState, Legend, Disclosure, and Tether share the same render cycle, so frequent updates to selected/at/now may cascade",
+  "The stamp spread on the header creates a new props object each render, potentially defeating downstream memoization"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The portrait-specific spatial arrangement and control inventory are worth preserving, but the monolithic component should be rebuilt around smaller layout primitives during the redesign.",
+ "decomposition_hints": [
+  "Extract a dedicated PortraitTopBar component for the left/right chip groups",
+  "Extract a PortraitStage component unifying Legend and WheelOrState",
+  "Extract a BottomSheet host that conditionally renders Disclosure and manages its own open/close state",
+  "Separate pure layout chrome from SurfaceState wiring by passing a prepared chrome model object"
+ ],
+ "_path": "surface/app/src/layouts/Portrait.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

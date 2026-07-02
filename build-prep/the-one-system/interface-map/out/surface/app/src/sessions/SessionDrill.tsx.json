@@ -1,0 +1,59 @@
+{
+ "role": "A React overlay surface (app-root sibling modal) that lists live sessions, lets the operator filter and drill into one, and renders the selected session via a DNA archetype card plus recall-lens summaries.",
+ "capabilities": [
+  "Opens on the `sessions:open` window event",
+  "Closes via scrim click, close button, or Escape key",
+  "Lists live sessions from `sessionDrillStore`",
+  "Client-side filters the roster by title/name/cwd/state",
+  "Caps the displayed roster to 60 matches",
+  "Selects a session to drill into detail",
+  "Navigates back from detail to list",
+  "Mounts DNA's `session-card` archetype into a ref for the selected session",
+  "Fetches `/dna/layouts.json` to resolve the session-card archetype once",
+  "Renders recall-lens sections (`open_loops`, `catch_up`) capped at 8 items",
+  "Displays loading and error states with a retry action",
+  "Sets ARIA dialog/modal/label attributes"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete overlay workflow: event-driven open/close, async data loading, client-side filtering, selection navigation, DNA card mounting, and recall-lens rendering with loading/error/empty states.",
+ "interactions_present": [
+  "`sessions:open` window event opens the overlay and resets the filter",
+  "Escape key deselects the current session or closes the overlay",
+  "Scrim click closes the overlay",
+  "Close button closes the overlay",
+  "Back button returns from detail to list",
+  "Session row click selects that session",
+  "Filter input updates the roster query on every change",
+  "Retry button re-invokes `openSessions()` on error"
+ ],
+ "interactions_missing": [
+  "Lens items are displayed but not clickable or actionable",
+  "No actions on a selected session (resume, kill, open in editor, etc.)",
+  "No empty-state message when the roster is empty and not loading",
+  "No sorting controls for the session list",
+  "No pagination or \"show more\" beyond the hard 60-item cap",
+  "No focus trap or focus management for the modal",
+  "No keyboard navigation within the roster list",
+  "No handling/feedback when the selected session id is not found in the roster",
+  "Entry verb/chrome is explicitly deferred to DNA design lane"
+ ],
+ "performance_risks": [
+  "Filter recomputes `toLowerCase()` and scans the full `sessions` array on every render",
+  "`sessions.find()` is run multiple times per render and in the card-mount effect",
+  "DNA card is rebuilt from scratch on every selection change with no reuse/transition",
+  "If `/dna/layouts.json` fetch fails, it will be retried on every subsequent selection until an archetype is cached",
+  "Unbounded `sessions` array from the store could bloat memory and render time before the 60-item slice"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the session-drill concept, overlay lifecycle, and roster/filter interactions, but rebuild the imperative DNA DOM mounting into a declarative component model and split the list/detail/lens concerns.",
+ "decomposition_hints": [
+  "Split the overlay shell (scrim, dialog, ARIA, close/back controls) from the content panes",
+  "Split the roster list into its own component: filter input + virtualized/scrolled list + empty/no-match states",
+  "Split the detail view into a DNA-card mount wrapper and a recall-lens renderer",
+  "Extract the DNA archetype resolution and mounting into a reusable hook/component",
+  "Move the 60-item cap and filter logic into a derived selector or hook"
+ ],
+ "_path": "surface/app/src/sessions/SessionDrill.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

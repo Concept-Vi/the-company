@@ -1,0 +1,57 @@
+{
+ "role": "The zoom/scale axis of the semantic instrument: it builds nested, multi-resolution cluster pyramids over persisted embedding spaces and resolves queries at a chosen coarse or unit rung.",
+ "capabilities": [
+  "L2-normalize vectors and compute cosine similarity without numpy/scipy",
+  "Compute a cluster centroid as the normalized mean of its members' vectors",
+  "Build one dependency-free agglomerative dendrogram (Ward, complete, or average) with nested cuts at every K",
+  "Select the nearest available dendrogram cut for a requested K",
+  "Group a point-per-label partition into cluster label -> member index lists",
+  "Derive a dyadic default rung ladder from the space size",
+  "Compute incremental content-hash keys for centroids from member source/hash pairs",
+  "Build a small/medium scale pyramid via Ward agglomeration over persisted unit vectors",
+  "Build a large scale pyramid via a MiniBatchKMeans + Ward-over-centroids hybrid",
+  "Persist cluster centroids as queryable vectors in scale:<space>:k<K> spaces",
+  "Persist pyramid structure (membership, exemplars, cross-rung parent links) via store.save_scale_pyramid",
+  "Load a persisted pyramid structure",
+  "Fetch coarse rung points (centroids, sizes, exemplars, members) for rendering",
+  "Resolve a query vector at the unit rung or a coarse rung using the existing vector_index.query_index",
+  "Fail loudly on empty, thin, missing, or inconsistent spaces/rungs"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements full clustering algorithms, two scalability paths, persistence contracts, and query resolution, all backed by detailed design rationale and explicit fail-loud guards.",
+ "interactions_present": [
+  "build_scale_pyramid / build_scale_pyramid_kmeans invoked to construct a pyramid for a space",
+  "resolve_at_rung invoked to query a vector at a chosen unit or coarse rung",
+  "rung_points invoked to retrieve cluster centroids and metadata for a rung",
+  "load_pyramid invoked to read the persisted pyramid sidecar"
+ ],
+ "interactions_missing": [
+  "No wired zoom-stepping helper (next finer/coarser rung); callers must supply an explicit k",
+  "No automatic pyramid build or update trigger on corpus changes; only incremental member_hash skip",
+  "No API to delete, invalidate, or rebuild a single rung or space",
+  "No batch content-hash fetch for _member_hash; it does per-member store.get_vector round-trips",
+  "No progress or cancellation hook for long kmeans builds",
+  "No cross-rung query that automatically picks an optimal granularity",
+  "No direct UI zoom gesture; only programmatic k selection"
+ ],
+ "performance_risks": [
+  "Pure-Python agglomerate is O(n^3) time and O(n^2) memory with a full closest-pair scan per merge; the 4000-unit Ward threshold may already be too slow",
+  "The distance dictionary keyed by tuple pairs has high memory overhead for n in the thousands",
+  "_member_hash issues one store.get_vector per member, creating many store round-trips for large clusters",
+  "rung_points issues one store.get_vector per cluster, creating many store round-trips",
+  "The MiniBatchKMeans path materializes the full n x dim float32 matrix, so memory grows linearly with corpus size and embedding dimension",
+  "Pure-Python agglomeration over fine centroids remains O(K^3), so large top rungs can still bottleneck"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the clustering semantics, nesting contract, and scale-space addressing, but restructure the monolithic pure-Python engine and tight store coupling for the redesign.",
+ "decomposition_hints": [
+  "Extract the vector floor (_norm, _cos, centroid) into a shared vector-math module instead of replicating projection.py",
+  "Split the clustering engine (agglomerate, cut, clusters_of, default_rungs) from the persistence/build orchestrator",
+  "Isolate the scalable kmeans+ward backend behind a clustering strategy interface",
+  "Separate pyramid read/query paths (load_pyramid, rung_points, resolve_at_rung) from build/write paths",
+  "Extract scale-space addressing and the pyramid sidecar schema into a dedicated contract module"
+ ],
+ "_path": "runtime/scale.py",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,41 @@
+{
+ "role": "A dropdown chip control that lets the user override which embedded item-store (space) the active projection lens ranges over, populated dynamically from the backend layer registry.",
+ "capabilities": [
+  "Fetch and sort the list of embedded spaces from /api/layers",
+  "Conditionally render only for bindings that self-report a ranged-over space and are not by_nucleation",
+  "Display the currently effective space (explicit override or binding default)",
+  "Toggle an animated dropdown menu of available spaces",
+  "Select a space override and propagate it via setSpace callback",
+  "Close the menu via scrim click or selection",
+  "Apply UI address stamps for telemetry"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements complete data fetching, visibility logic, rendering, animation, selection handling, and telemetry stamping for the space picker.",
+ "interactions_present": [
+  "Click chip button to open/close the space menu",
+  "Click a menu item to select a space and close the menu",
+  "Click the scrim to close the menu"
+ ],
+ "interactions_missing": [
+  "No keyboard navigation, Escape-to-close, or focus trapping visible",
+  "No loading, error, or empty-state feedback for the layers fetch",
+  "No search/filter for potentially long space lists",
+  "No disabled or unavailable-space indication"
+ ],
+ "performance_risks": [
+  "fetchLayers is called on every mount with no caching, deduplication, or suspense integration",
+  "The full spaces list is rendered unconditionally, which may become costly if many spaces are registered",
+  "Framer-motion AnimatePresence runs on every open/close"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The registry-true dynamic space-selection concept is worth keeping, but the component should be rebuilt on top of a generic dropdown/menu primitive and a separate data hook.",
+ "decomposition_hints": [
+  "Extract a reusable useSpaces/useLayers data hook from the fetch/useEffect logic",
+  "Split the generic chip dropdown shell (button, menu, scrim, animation) into a shared primitive",
+  "Move binding-driven visibility rules (by_nucleation, binding.space) into a projection selector or hook",
+  "Separate stamp/telemetry concerns from the component markup"
+ ],
+ "_path": "surface/app/src/toggles/SpaceChip.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

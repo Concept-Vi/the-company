@@ -1,0 +1,52 @@
+{
+ "role": "A floating operator door that lets the user request a change to an indicated ui:// element by minting a build-intent, reviewing its X16 blast radius, and approving it for later dispatch.",
+ "capabilities": [
+  "Render only when a ui:// element is indicated and its click mode is 'annotate'",
+  "Show the pointed element's title via the registry",
+  "Accept a free-text change description in a textarea",
+  "Mint a build-intent via AppContext.mintBuildIntent on button click or Ctrl/Cmd+Enter",
+  "Resolve the full persisted minted item from the live inbox by id (with flat-return fallback)",
+  "Display the X16 blast radius using the existing BlastRadiusReach component",
+  "Approve the minted intent via api.resolve",
+  "Dismiss/clear the minted state from the door",
+  "Surface fail-loud errors from approval",
+  "Show honest static safe-default / plan-mode copy"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete gated UI flow with local state, API calls, conditional rendering, keyboard handling, error display, and integration with the registry, AppContext, and BlastRadiusReach.",
+ "interactions_present": [
+  "Indicate a ui:// element to open the door",
+  "Type a change description",
+  "Mint via button or Ctrl/Cmd+Enter",
+  "Review blast radius (and navigate targets via BlastRadiusReach onNavigate)",
+  "Approve the build-intent",
+  "Dismiss/clear the door"
+ ],
+ "interactions_missing": [
+  "No reject/disapprove action",
+  "No live armed-state indicator (intentional, but also no way to arm from the FE)",
+  "No option to widen or edit the blast radius before approving",
+  "No edit/update of the intent text after minting",
+  "No cancel/abort while a request is in flight",
+  "No retry flow after a mint or approve failure",
+  "No handling if the indicated element changes while a minted intent is open"
+ ],
+ "performance_risks": [
+  "Linear scan of inbox.live_escalations on every render to resolve the minted item",
+  "No memoization of the resolved minted item or derived title",
+  "mintBuildIntent internally polls the inbox before returning, adding latency without visible progress beyond 'minting\u2026'",
+  "BlastRadiusReach subtree may re-render whenever the door re-renders"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The POINT \u2192 ASK \u2192 SEE THE REACH \u2192 APPROVE concept and safe-by-default semantics are worth preserving, but the component should be rebuilt around the new design system and its state/data resolution split out.",
+ "decomposition_hints": [
+  "Extract a hook for resolving a minted intent from the inbox by id",
+  "Split the door into an 'Ask' form component and a 'Review/Approve' component",
+  "Move the safe-default / plan-mode messaging into a shared component or copy module",
+  "Keep BlastRadiusReach as a separate concern; do not inline reach rendering",
+  "Separate the approval state machine (idle, minting, reviewing, approved, error) from the presentation markup"
+ ],
+ "_path": "canvas/app/src/components/WireRequest.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

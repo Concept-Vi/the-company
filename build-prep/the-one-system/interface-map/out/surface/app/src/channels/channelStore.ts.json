@@ -1,0 +1,42 @@
+{
+ "role": "This file is the global, subscription-based data store for the channel graph view, fetching and caching /api/channels rows for React consumers.",
+ "capabilities": [
+  "Fetch /api/channels and normalize rows into ChannelRow shape",
+  "Hold channels, loading, error, and open/closed UI state",
+  "Provide a React useChannels hook via manual subscription set",
+  "Expose openChannels, closeChannels, and loadChannels actions",
+  "Guard against stale fetch races with a loadSeq counter"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements a complete fetch-normalize-cache-subscribe cycle with state management and React integration, despite an empty startup stub.",
+ "interactions_present": [
+  "openChannels action refreshes and reveals the channel view",
+  "closeChannels action hides the channel view",
+  "useChannels hook subscribes React components to store updates",
+  "loadChannels fetches and normalizes channel rows"
+ ],
+ "interactions_missing": [
+  "No auto-load on mount (ensureStarted is an empty stub)",
+  "No retry UI or action despite the fail-loud retry claim",
+  "No refresh, pagination, search, filter, or sort",
+  "No channel selection or drill-down interaction",
+  "Members object-to-array normalization is deferred to the call site"
+ ],
+ "performance_risks": [
+  "Every state update notifies all subscribers and returns a new state object, causing broad re-renders",
+  "No memoization or selector support in useChannels",
+  "No request deduplication or caching TTL; openChannels triggers a fresh fetch each time",
+  "Large channel arrays are re-mapped and stored in a single global object on every load"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the API normalization, row shape, and race-guard logic, but replace the hand-rolled mutable subscription store with a typed, modern state solution.",
+ "decomposition_hints": [
+  "Split API fetching and normalization into a dedicated channels API client/adapter",
+  "Split the custom subscription mechanism into a reusable store hook or replace with an off-the-shelf store",
+  "Separate channel data cache from open/close UI visibility state",
+  "Move members-object normalization into the adapter instead of the call site"
+ ],
+ "_path": "surface/app/src/channels/channelStore.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,46 @@
+{
+ "role": "MobileTray is the mobile selection-action component that renders a bottom tray of pointed items and exposes verbs (explain, ask, change, clear) against the current selection.",
+ "capabilities": [
+  "Render pointed-set items as removable chips",
+  "Fetch and display per-address explanations from /api/address-help",
+  "Dispatch a builder-context custom event and switch to the builder tab",
+  "Accept change input and mint a build intent via AppContext",
+  "Clear the entire pointed selection",
+  "Toggle explain/change verb panels"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements real UI, API calls, event dispatch, and state management for selection verbs rather than stubbing them.",
+ "interactions_present": [
+  "Tap chip to remove an item from the pointed set",
+  "Toggle explain panel and fetch descriptions",
+  "Ask button sends builder-context event and calls setMobileTab('builder')",
+  "Toggle change input, type intent, press Enter or tap button to mint",
+  "Clear button empties the pointed set"
+ ],
+ "interactions_missing": [
+  "Long-press gesture is not implemented here despite the design comment",
+  "No handling when explain is invoked on more than six items beyond silent truncation",
+  "No error/empty-state handling for ask or mint failures",
+  "No loading or success feedback for mint beyond busy text",
+  "No keyboard/accessibility handling for tray verbs",
+  "No abort/cleanup of in-flight explain fetches"
+ ],
+ "performance_risks": [
+  "Explain awaits up to six sequential fetches, blocking the UI and multiplying latency",
+  "No request cancellation or deduplication if the user toggles/clears during explain",
+  "No memoization of chips or explanation rows, causing re-renders on every state change",
+  "Global CustomEvent dispatch on every ask without a typed channel"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The selection-verb concepts and data flow are worth preserving, but the UI, concurrency, and event wiring should be rebuilt for the redesign.",
+ "decomposition_hints": [
+  "Split tray-chips list into a reusable PointedChips component",
+  "Split explain panel and fetch logic into an ExplainPanel with concurrent/abortable requests",
+  "Split change/mint form into a MintIntent component",
+  "Split ask dispatch into a typed hook or context action instead of a raw window event",
+  "Separate the tray shell (layout/visibility) from the verb implementations"
+ ],
+ "_path": "canvas/app/src/regions/MobileTray.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

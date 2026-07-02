@@ -1,0 +1,51 @@
+{
+ "role": "Top-center corpus-search HUD that creates and filters ForagerShape circles on the tldraw canvas.",
+ "capabilities": [
+  "Minimizable top-center search bar with header toggle",
+  "Fetch embeddable spaces from /api/cognition_info with history/repo fallback and surfaced info note",
+  "Explicit corpus query submission via button or Enter (no keystroke search)",
+  "Render query hits as ForagerShape circles using placeForagerHits",
+  "Loud status rendering for errors, empty results, and backend notes via EmptyState/info banner",
+  "Dynamic facet chips derived from live forager shapes' kind/session fields",
+  "Toggle chips to hide non-matching circles (opacity 0 + collapsed geometry + deselect)",
+  "Clear all forager-type shapes while leaving graph nodes untouched",
+  "Indicate address of the single selected forager shape through AppContext"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements the full search-to-shapes flow, live chip filtering, clear, selection indication, and loud empty/error states with real API calls and editor mutations.",
+ "interactions_present": [
+  "Click header to minimize/expand the bar",
+  "Type query and select search space",
+  "Press Enter or click search button to submit query",
+  "Click a kind/session chip to toggle filter focus",
+  "Click clear-circles button to remove all forager shapes",
+  "Select a single forager circle on the canvas to indicate its address"
+ ],
+ "interactions_missing": [
+  "No request cancellation/abort for in-flight corpus queries",
+  "No mobile breakpoint hide logic in this file despite the comment",
+  "No retry or refresh for the spaces list after registry failure",
+  "No loading state for the spaces dropdown",
+  "No way to adjust result count (fixed k=16)",
+  "No separate 'clear filters only' action without removing shapes"
+ ],
+ "performance_risks": [
+  "applyFilters calls editor.updateShapes over every forager shape on each chip toggle",
+  "No AbortController or request deduplication for search; rapid submissions can race",
+  "Stale search response could set state after unmount/no cleanup",
+  "Chip counts and shape list are recomputed each render without memoization",
+  "Fixed k=16 may under/over-fetch for large viewports"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The forager interaction model and state semantics are complete and should be preserved, but the imperative editor updates and UI shell should be refactored into the new component architecture.",
+ "decomposition_hints": [
+  "Extract space discovery and corpus query into data hooks/services",
+  "Extract chip filter state and applyFilters imperative logic into a reusable hook",
+  "Separate ForagerShape placement/hiding geometry operations from the React UI",
+  "Extract single-selection indication side effect into a selection hook",
+  "Make the .hud/.rhm card shell a shared layout primitive"
+ ],
+ "_path": "canvas/app/src/regions/ForagerBar.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

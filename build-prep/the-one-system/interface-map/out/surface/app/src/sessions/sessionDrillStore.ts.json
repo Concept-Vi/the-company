@@ -1,0 +1,46 @@
+{
+ "role": "A hand-rolled global subscription store and React hook that fetch and hold the session list and per-session recall lens data for the session-drill surface.",
+ "capabilities": [
+  "Fetch session list from /api/sessions with fail-loud error handling",
+  "Maintain global UI state: open/closed, selected session, loading, error",
+  "Fetch per-session lens from /api/session-recall concurrently for catch_up, open_loops, and directives",
+  "Apply a 4-second per-lens fetch timeout and degrade empty on failure",
+  "Expose useSessions hook that subscribes components to the global state and auto-starts list load"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements real fetch logic, typed domain shapes, concurrent lens loading, error states, and a complete subscription lifecycle, not just stubs.",
+ "interactions_present": [
+  "useSessions mount auto-loads the session list",
+  "openSessions opens the surface and reloads the list",
+  "closeSessions closes the surface",
+  "selectSession drills into a session and triggers lens fetch"
+ ],
+ "interactions_missing": [
+  "No explicit retry action after list load failure",
+  "No refresh/reload control for the list",
+  "No pagination, sorting, or filtering UI wired",
+  "Only three lens ops fetched; decisions/drift/timeline/find ops are not loaded",
+  "No search/find interaction for the lens",
+  "No per-lens loading or error visibility; failures silently become empty arrays",
+  "No cancellation/deduplication if the same session is selected repeatedly"
+ ],
+ "performance_risks": [
+  "Global mutable state with a Set-of-callbacks subscription pattern causes every subscriber to re-render on every state change",
+  "No request deduplication for loadLens, so rapid re-selections can spawn overlapping fetches",
+  "Three concurrent lens fetches per selection with a fixed 4-second timeout can create request bursts",
+  "No caching of sessions or lens data, so reopening or reselecting repeats network work",
+  "Large session/lens JSON is parsed and mapped on the main thread with no virtualization"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The grounded SessionRow/SessionLens types and the /api/sessions and /api/session-recall fetch contracts should be preserved, but the hand-rolled mutable subscription store should be rebuilt with a modern state solution.",
+ "decomposition_hints": [
+  "Split list state from lens state so the list does not re-render when a lens updates",
+  "Extract API adapters for /api/sessions and /api/session-recall into separate client modules",
+  "Separate the imperative store from the useSessions hook/presentation binding",
+  "Decompose lens loading per op (catch_up, open_loops, directives, decisions, drift, timeline, find) instead of one hard-coded batch",
+  "Move pure UI state (open/selected) out of the data-fetching store"
+ ],
+ "_path": "surface/app/src/sessions/sessionDrillStore.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

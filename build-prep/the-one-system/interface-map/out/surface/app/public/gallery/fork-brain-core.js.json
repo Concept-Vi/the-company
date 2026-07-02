@@ -1,0 +1,52 @@
+{
+ "role": "This file is the shared core engine that streams Claude turns over NDJSON and batches route-back territory writes for both per-unit gallery brains and the global V/RHM brain.",
+ "capabilities": [
+  "Stream a Claude turn via POST /api/claude/turn and parse NDJSON {init,text,tool,point,done,error} events",
+  "Maintain per-address session continuity in a client-side _sessions map",
+  "Strip common Markdown syntax from every emitted text delta and final reply",
+  "Read live on-screen pointables and dispatch ui:point when the model returns a point token",
+  "Batch direction items by element_id and POST /api/territory/write",
+  "Suppress writes in ?verify verification mode and broadcast gallery:write-suppressed",
+  "Emit gallery:rerender on successful writes and gallery:write-error on failures",
+  "Toggle a .brain-loading class and a 'Looking\u2026' wait state"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file contains a complete IIFE implementation of streaming fetch parsing, session storage, markdown stripping, pointable dispatch, batched territory writes, verification guards, and fail-loud error events.",
+ "interactions_present": [
+  "Send a prompt and stream the reply into a DOM element or custom onText hook",
+  "Display a 'Looking\u2026' wait state and .brain-loading class until the first token arrives",
+  "Dispatch ui:point when the model points at an on-screen token",
+  "Persist annotation/direction items via batched territory writes",
+  "Broadcast gallery:rerender after successful writes and gallery:write-error on failures",
+  "Suppress writes and broadcast gallery:write-suppressed when ?verify is present"
+ ],
+ "interactions_missing": [
+  "No AbortController or cancel/timeout for the long-running turn fetch",
+  "No HTTP status check on the /api/claude/turn response before entering the reader loop",
+  "No retry/backoff or recovery path for transient network or server errors",
+  "No cleanup/invalidation of stale _sessions entries",
+  "No onInit hook exposed to callers",
+  "No handling of malformed non-JSON lines beyond silent skip",
+  "No UI affordance for verification suppression beyond console warnings and custom events"
+ ],
+ "performance_risks": [
+  "Markdown stripping runs a battery of global regexes over the entire accumulated string on every text delta, giving O(n\u00b2) behavior for long replies",
+  "Repeated string concatenation of the NDJSON buffer and accumulated reply without size limits",
+  "Promise.all in writeDirections can fire many concurrent fetches for large direction bursts",
+  "No timeout or backpressure on the streaming reader",
+  "Regex patterns such as /\\*\\*([\\s\\S]+?)\\*\\*/g can be expensive on large inputs"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The concepts and contracts are well-scoped and worth keeping, but the implementation should be rebuilt as modular code with abortable streams, a separate markdown sanitizer, and proper HTTP error handling.",
+ "decomposition_hints": [
+  "Split the NDJSON stream reader and turn orchestration into its own module",
+  "Split the Markdown stripper into a reusable, testable utility module",
+  "Split the per-address session store into a small state module",
+  "Split the territory write batcher and verification guard into a persistence module",
+  "Split pointable catalog resolution and ui:point dispatch into a surface-binding module",
+  "Keep the public window.forkBrainCore API as a thin facade over the modules"
+ ],
+ "_path": "surface/app/public/gallery/fork-brain-core.js",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

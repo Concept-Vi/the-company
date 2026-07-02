@@ -1,0 +1,52 @@
+{
+ "role": "This file is the CSS presentation layer for the transcript-viz modal overlay, framing the DNA constellation graph and its search-driven corpus controls.",
+ "capabilities": [
+  "Style a fixed sibling-overlay modal with scrim and panel",
+  "Manage open/closed visibility and opacity transition",
+  "Lay out a header with title, subtitle, and close button",
+  "Provide a search row with text input and pill button",
+  "Style a scrollable body centered graph mount",
+  "Render empty/error/quiet message variants and a retry affordance",
+  "Override DNA .ar-responsive grid to a single-column phone-frame layout",
+  "Size the embedded constellation SVG at 600px width capped to 100%"
+ ],
+ "substance": "substantial",
+ "substance_why": "It fully implements the modal frame, search row, message states, and detailed responsive overrides for the embedded DNA constellation graph.",
+ "interactions_present": [
+  "Open/closed overlay state via .transcript-overlay--open",
+  "Close button cursor affordance",
+  "Search input focus-visible ring",
+  "Search button disabled styling",
+  "Retry button cursor affordance"
+ ],
+ "interactions_missing": [
+  "No open/close trigger or event wiring",
+  "No search form submission or query execution",
+  "No loading state handling",
+  "No error retry action wiring",
+  "No keyboard escape or focus trap",
+  "No scroll lock or reduced-motion support",
+  "No ARIA state attributes"
+ ],
+ "performance_risks": [
+  "Fixed overlay covering the viewport can cause large repaint areas",
+  "Opacity/visibility transitions on the overlay may promote layers",
+  "Color-mix scrim adds per-pixel blending cost",
+  "600px SVG width scales across viewports and may reflow",
+  "Deep selector overrides for .ar-responsive increase selector complexity",
+  "Flex centering with overflow:auto can cause layout thrashing on resize",
+  "Safe-area padding calculations depend on environment variables"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The token-based layout and modal/search patterns are sound, but the token names and DNA-specific responsive overrides must be reconciled with the new design system.",
+ "decomposition_hints": [
+  "Split overlay shell (scrim, panel, open state) into a generic modal primitive",
+  "Split search row into a reusable search-bar component",
+  "Split message/error/retry states into a reusable empty-state component",
+  "Extract DNA constellation overrides into a separate integration/adapter stylesheet",
+  "Isolate safe-area and motion tokens into global environment utilities"
+ ],
+ "_path": "surface/app/src/transcript/transcript.css",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

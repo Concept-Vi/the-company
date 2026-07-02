@@ -1,0 +1,47 @@
+{
+ "role": "Fleet.tsx is a canvas region panel that renders the live model registry as a grouped, refreshable surface for chat and embed model kinds.",
+ "capabilities": [
+  "Display live model registry grouped by chat/embed kind",
+  "Show per-kind model count via LaneHead chip",
+  "Show total live-model count in SectionHead Badge",
+  "Surface registry fetch errors as fail-loud kit Surface cards",
+  "Manual live refresh via button calling refreshFleet",
+  "Loading state indicator while fleet data is fetched",
+  "Kind monogram and honest live-registry dot with visible legend",
+  "Addressable surface via data-ui-ref='ui://models'",
+  "Consistent shared-kit styling via SectionHead, LaneHead, Badge, Surface, EmptyState"
+ ],
+ "substance": "substantial",
+ "substance_why": "It fully consumes fleet state, renders both kind groups, handles errors and loading, provides refresh and legend, and is built from the shared kit.",
+ "interactions_present": [
+  "Refresh button onClick triggers refreshFleet",
+  "Title tooltip on refresh button explains re-probe action",
+  "Title tooltip on live-registry dot explains honest liveness meaning"
+ ],
+ "interactions_missing": [
+  "No per-model actions (select, copy, details) \u2014 rows are intentionally non-clickable",
+  "No search, filter, or sort of model lists",
+  "No auto-refresh/polling of the registry",
+  "No per-kind retry or collapse controls",
+  "No keyboard navigation or focus management",
+  "No timestamp showing last refresh"
+ ],
+ "performance_risks": [
+  "FleetKind and model rows are unmemoized, causing full re-render on every fleet update",
+  "No virtualization for long model lists",
+  "Refresh button lacks debounce/throttle",
+  "Total count is recomputed every render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The data model, grouping logic, and kit integration are sound, but the visual form and layout classes will be rebuilt in the redesign.",
+ "decomposition_hints": [
+  "Extract FleetKind into its own component module",
+  "Extract each model row into a FleetModelItem component",
+  "Extract the legend into a separate FleetLegend component",
+  "Move KIND_TONE mapping and kind constants to shared config",
+  "Keep data fetching in AppContext/hook and keep this panel purely presentational"
+ ],
+ "_path": "canvas/app/src/regions/Fleet.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

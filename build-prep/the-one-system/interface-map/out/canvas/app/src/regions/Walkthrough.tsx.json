@@ -1,0 +1,51 @@
+{
+ "role": "This file is the visible walkthrough/review card region rendered during an active session, presenting either a guided tour or a step-by-step review UI and wiring operator verdicts back through AppContext.",
+ "capabilities": [
+  "Render active-session walkthrough card",
+  "Toggle voice-first vs text-only mode",
+  "Show session progress and close/end the walk",
+  "Guide mode: narrate the addressed UI element, re-spotlight it, step through the tour, and show completion",
+  "Review mode: display item framing and associated UI target",
+  "Capture a verdict reason via text input",
+  "Submit operator verdicts: approve, reject, comment, skip, decide",
+  "Advance to the next step",
+  "Disable respond/next controls while a request is in flight (wtBusy guard)",
+  "Show spoken/resolved status feedback"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements the full conditional UI for both guided tours and review walkthroughs, including wired controls, concurrency guards, and context-driven state.",
+ "interactions_present": [
+  "Voice/text mode toggle buttons",
+  "Close/end walk button",
+  "Show-again / resolve UI target button",
+  "Next step button",
+  "Verdict reason text input",
+  "Approve, reject, comment, skip, decide verdict buttons"
+ ],
+ "interactions_missing": [
+  "No previous/back step control",
+  "No retry or error-recovery UI for failed requests",
+  "No keyboard shortcuts for verdicts or navigation",
+  "No confirmation before closing the walkthrough",
+  "No cancellation UI for long in-flight requests",
+  "No loading/progress indication beyond disabled state and busy text"
+ ],
+ "performance_risks": [
+  "Reason input onChange updates context state and may re-render the whole app on every keystroke",
+  "Inline arrow functions are recreated each render, potentially causing unnecessary child re-renders",
+  "Long-running requests (~20s) block the card without cancellation, timeout, or progress UI",
+  "No memoization of the guide/review branches or derived values"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The domain concepts (guided tour, review verdicts, busy guards, voice toggle) are correct, but the implementation mixes both modes and is tightly coupled to AppContext, so it should be rebuilt as composable sub-components.",
+ "decomposition_hints": [
+  "Split GuideWalkthrough and ReviewWalkthrough into separate components",
+  "Extract a shared WalkthroughShell for head, progress, voice toggle, close, and footer",
+  "Extract a VerdictBar component that owns reason input and verdict buttons (review only)",
+  "Extract a SpotlightButton / resolveUiTarget trigger reused by both modes",
+  "Move busy-guard logic and status display into a shared action guard or footer component"
+ ],
+ "_path": "canvas/app/src/regions/Walkthrough.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

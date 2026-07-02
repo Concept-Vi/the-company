@@ -1,0 +1,33 @@
+{
+ "role": "A reusable React hook that measures a target DOM element's content-box dimensions and exposes them to consuming components.",
+ "capabilities": [
+  "Attach a ref to a DOM element to measure it",
+  "Initialize width/height from clientWidth/clientHeight on mount",
+  "Observe content-box size changes via ResizeObserver",
+  "Expose current width and height as reactive state",
+  "Clean up the ResizeObserver on unmount"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file contains a complete, typed hook implementation with ResizeObserver setup, initial measurement, state management, and cleanup, and it is explicitly shared by two views.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No ResizeObserver fallback for unsupported browsers",
+  "No debouncing or throttling of rapid resize callbacks",
+  "No measurement before the effect runs (initial size is 0x0)",
+  "No handling of ref changes or element swaps after mount"
+ ],
+ "performance_risks": [
+  "ResizeObserver callbacks can fire frequently and trigger a React state update on every resize",
+  "Reading clientWidth/clientHeight in the effect can force synchronous layout",
+  "Size-driven renders could alter layout and feed back into the ResizeObserver, risking an observer\u2192state\u2192layout loop"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The measurement concept is correct and needed by both wheel and separator views, but it should be hardened with throttling, fallback handling, and better initial-state behavior.",
+ "decomposition_hints": [
+  "Move from wheel/ to a shared hooks directory because it is already used outside the wheel view",
+  "Optionally split a lower-level useResizeObserver primitive from the size-state convenience hook"
+ ],
+ "_path": "surface/app/src/wheel/useSize.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

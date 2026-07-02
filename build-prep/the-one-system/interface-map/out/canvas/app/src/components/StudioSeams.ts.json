@@ -1,0 +1,30 @@
+{
+ "role": "Integration seam registry for the Studio, declaring wired backend contracts and typed pending seams with a fail-loud guard.",
+ "capabilities": [
+  "Catalog wired studio-backend seams (corpus, chatAtLocus, annotate, annotationsAt, addressHelp, upTranslate, act, intentAt, inFrameDeixis)",
+  "Catalog pending net-new seams (R2 context at address, I4 address tier, R1 persistent locus, L1 comment-to-intent)",
+  "Provide typed PendingSeam descriptors (id, what, why_pending, designed_test)",
+  "Expose a throwing callPendingSeam guard so unbound seams fail loudly",
+  "Document backend route/resolver mappings for each wired seam"
+ ],
+ "substance": "substantial",
+ "substance_why": "It defines concrete typed contracts for nine wired seams, four pending seams, and a throwing helper, with explicit backend route/resolver references.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No UI region actually calls /api/context for R2_CONTEXT_AT_ADDRESS",
+  "No UI control resolves governance tier from address (I4_ADDRESS_TIER)",
+  "No UI/server path sets a persistent cross-call current locus (R1_PERSISTENT_LOCUS)",
+  "No auto-promotion of an annotation/comment into a build intent (L1_COMMENT_TO_INTENT)",
+  "Pending seams are only declared and guarded, not wired to real controls"
+ ],
+ "performance_risks": [],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The wired/pending seam taxonomy and fail-loud policy are core architecture, but entries must be promoted/demoted and typed descriptors refined as the redesign lands real bindings.",
+ "decomposition_hints": [
+  "Split wired seam catalog from pending seam catalog and the throwing guard",
+  "Or split by domain: corpus/chat, annotation/context, act/intent, governance/deixis"
+ ],
+ "_path": "canvas/app/src/components/StudioSeams.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

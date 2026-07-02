@@ -1,0 +1,43 @@
+{
+ "role": "Central CSS design-token stylesheet that defines the 'Fresh Paper' visual language variables, global base styles, and attention-state utilities for the interface.",
+ "capabilities": [
+  "Defines warm paper ground, ink, and semantic pigment color tokens",
+  "Defines diffuse elevation shadow tokens",
+  "Defines modular type scale, line heights, and font-family tokens",
+  "Defines dyadic spacing scale and border-radius tokens",
+  "Exposes iOS safe-area inset variables",
+  "Provides typeface-pairing taste toggles via :root[data-type]",
+  "Provides pigment-saturation taste toggles via :root[data-pigment]",
+  "Applies global box-sizing, reset, and base html/body/#root styles",
+  "Provides a .display serif utility class",
+  "Provides .ui-indicated and .ui-spotlight attention markers with a single-shot ping animation",
+  "Respects prefers-reduced-motion by collapsing animation durations"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file contains a complete, commented token system covering color, type, spacing, elevation, radii, safe areas, theme toggles, base styles, and an animated attention marker.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No control wiring to toggle data-type or data-pigment attributes",
+  "No logic to apply or remove .ui-spotlight on user or V events",
+  "No focus, keyboard, or ARIA state wiring",
+  "No user-facing control for reduced motion beyond OS preference",
+  "No dark/light mode toggle"
+ ],
+ "performance_risks": [
+  "Box-shadow and color-mix animation on .ui-spotlight can cause repaint/compositing overhead during the 600ms ping",
+  "External webfont families (Inter, Source Serif 4, Crimson Pro, Lora, Outfit) may cause FOUT/FOIT if not preloaded",
+  "html/body/#root overflow:hidden forces internal scrolling and may complicate viewport/scroll performance",
+  "Global * animation-duration/transition-duration override with !important may interfere with intended motion design"
+ ],
+ "reuse_verdict": "keep",
+ "reuse_why": "This file is the canonical token contract for the visual language and should remain the source of truth, with cleanup rather than replacement during the redesign.",
+ "decomposition_hints": [
+  "Split pure tokens (colors, type, spacing, radii, elevation, safe-area) from global reset/base styles",
+  "Split taste-toggle theme overrides into a dedicated theme/tokens file",
+  "Split .ui-indicated/.ui-spotlight attention utilities into a component or motion module",
+  "Split font-loading/fallback strategy into a separate assets or typography concern"
+ ],
+ "_path": "surface/app/src/tokens/paper.css",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

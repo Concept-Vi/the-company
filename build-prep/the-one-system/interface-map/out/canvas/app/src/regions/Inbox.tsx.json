@@ -1,0 +1,49 @@
+{
+ "role": "This file is the operator's main inbox/triage surface region component, rendering escalated decisions, build intents, deferred offers, held builds, and resolved items as a multi-lane triage deck.",
+ "capabilities": [
+  "Render inbox headline with awaiting count badge and 'walk these' action",
+  "Display build-intent escalations in a dedicated decision\u2192build lane via BuildIntentCard",
+  "Display deferred_offer items as resumable parked-offer cards",
+  "Group remaining escalations by action into visual lanes and separate test-pollution items",
+  "Render the deferred queue of held builds from the activity log with deduplication",
+  "Render a collapsible resolved-for-you audit lane",
+  "Provide click-to-thing navigation for items carrying a ui_target",
+  "Start an operator walk over all live escalations",
+  "Use shared kit components and per-build error boundaries"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements a complete triage UI with multiple lanes, filtering/grouping logic, interaction wiring, error boundaries, and integration with the shared kit and context.",
+ "interactions_present": [
+  "Click 'walk these' button calls startWalk over live escalation ids",
+  "BuildIntentCard click opens COA, demonstrates node type, and navigates via resolveUiTarget",
+  "Click on a deferred offer Surface calls reviveOffer",
+  "Click on an action-lane Surface calls openCoa",
+  "Click 'go to thing' button calls resolveUiTarget with stopPropagation",
+  "Click on a deferred-queue Surface calls openCoa if surfaced",
+  "Click resolved lane header toggles showResolved; click resolved Surface calls openCoa"
+ ],
+ "interactions_missing": [
+  "Deferred-offers lane has no registered data-ui-ref (ui://inbox/deferred-offers pending registration)",
+  "No loading or skeleton state while inbox data is fetched",
+  "No error handling or retry for startWalk, reviveOffer, or resolveUiTarget failures",
+  "No keyboard navigation or shortcut interactions",
+  "No empty-state messaging for deferred queue or resolved lane"
+ ],
+ "performance_risks": [
+  "Deferred queue filters and dedupes the full events array on every render without memoization",
+  "Multiple filter passes over live_escalations and regex tests run on every render",
+  "Long escalation/deferred/resolved lists are rendered without virtualization",
+  "Inline callbacks created inside map loops may cause unnecessary child re-renders"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The triage concepts, preserved ui:// addresses, and BuildIntentCard composition should be retained, but the monolithic component and unmemoized data derivations need to be refactored.",
+ "decomposition_hints": [
+  "Extract lane data derivation (builds, deferred offers, action grouping, deferred queue) into a memoized hook or selector",
+  "Split each lane into its own subcomponent: BuildReviewLane, DeferredOffersLane, ActionLanes, DeferredQueueLane, ResolvedAuditLane",
+  "Move interaction handlers (startWalk, reviveOffer, resolveUiTarget wrappers) into a controller hook so the region component stays presentational",
+  "Encapsulate resolved audit toggle and rendering in a separate component"
+ ],
+ "_path": "canvas/app/src/regions/Inbox.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

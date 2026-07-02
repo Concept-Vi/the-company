@@ -1,0 +1,26 @@
+{
+ "role": "This file is the React context definition and typed consumption hook that injects the single AppController into region components without prop drilling.",
+ "capabilities": [
+  "Creates a React context typed as AppController | null",
+  "Exports a useApp hook that retrieves the controller or throws if used outside the provider"
+ ],
+ "substance": "partial",
+ "substance_why": "It only declares the context and hook; the Provider and controller logic are implemented in Hud/useAppController elsewhere.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "Provider setup and controller instantiation are not in this file",
+  "No loading/fallback state for missing context",
+  "No dev-only diagnostics for context scope"
+ ],
+ "performance_risks": [
+  "Any change to the AppController value will re-render all consumers of AppContext"
+ ],
+ "reuse_verdict": "keep",
+ "reuse_why": "It is a minimal, typed dependency-injection seam that can be preserved or retyped during the rebuild.",
+ "decomposition_hints": [
+  "If the monolithic AppController is split, this context should be split into multiple focused contexts per domain"
+ ],
+ "_path": "canvas/app/src/AppContext.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

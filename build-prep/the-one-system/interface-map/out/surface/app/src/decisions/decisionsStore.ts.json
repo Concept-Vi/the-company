@@ -1,0 +1,49 @@
+{
+ "role": "Module-level subscribe store that holds the operator's pending decision stack, coordinates its fetch/filter/enrichment lifecycle, and shares state between DecisionsBar and DecisionsInbox.",
+ "capabilities": [
+  "Fetch pending decisions from /api/decisions",
+  "Filter to Tim-facing pending items by registry-true owner",
+  "Map raw registry rows to typed StackItem ('decision-sequence')",
+  "Enrich each item from /api/territory with meaning and reversibility",
+  "Carry forward existing enrichment across reloads to avoid layout shift",
+  "Distinguish cold-load errors from refresh errors",
+  "Manage modal open/closed state",
+  "Self-start subscription store via useDecisions hook",
+  "Reload stack on gallery:rerender decision-write event"
+ ],
+ "substance": "substantial",
+ "substance_why": "Implements the full lifecycle with concrete API endpoints, filtering, enrichment, error/loading/open states, and subscription wiring.",
+ "interactions_present": [
+  "Open decisions list refreshes data on open",
+  "Close decisions list",
+  "Decision write elsewhere triggers stack reload via gallery:rerender"
+ ],
+ "interactions_missing": [
+  "Retry handler for cold-load errors despite the retry message",
+  "Explicit user refresh or pull-to-refresh",
+  "Optimistic update on decision take/write before gallery:rerender",
+  "Dismiss or reset of refreshError flag",
+  "Cancel in-flight fetches when the modal closes",
+  "Pagination or virtualization for long stacks",
+  "Keyboard shortcut or focus management for a11y"
+ ],
+ "performance_risks": [
+  "Every open and gallery:rerender triggers a full /api/decisions fetch plus per-item /api/territory enrichment with no request deduplication",
+  "No abort for stale enrichment fetches; loadSeq only guards state set, not fetch work",
+  "All subscribers re-render on every state patch, including per-item enrichment updates",
+  "No caching of territory records; repeated opens re-resolve the same addresses",
+  "Overlapping loadDecisions calls can run multiple /api/decisions fetches concurrently"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The registry-fetch/filter/enrich semantics and owner-based filtering are domain-correct and should be preserved, but the custom subscribe-store plumbing, error interactions, and fetch concurrency need redesign.",
+ "decomposition_hints": [
+  "Split subscription/store plumbing from data-fetching logic",
+  "Separate decisions registry client (/api/decisions fetch + filter + mapping) from territory enrichment client (/api/territory)",
+  "Separate modal open-state from data state",
+  "Extract StackItem type definitions and owner filter into a shared decisions model",
+  "Move retry/refresh/dismiss interactions into a dedicated UI-state/actions layer"
+ ],
+ "_path": "surface/app/src/decisions/decisionsStore.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

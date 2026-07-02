@@ -1,0 +1,37 @@
+{
+ "role": "A client-side adapter that fetches structured grounded explanations from the backend and injects them into DNA's renderGallery via a narrow resolve override for the explanation_source slot.",
+ "capabilities": [
+  "POST /api/decision/explain fetch with JSON body",
+  "Normalize and validate explanation payload fields",
+  "Clean degrade to empty string on failure/missing content",
+  "Gated resolve-override factory for DNA.renderGallery",
+  "Map decision:// address leaf to decision id"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements complete fetch, validation, gating, and DNA adapter logic with explicit fallback behavior and no TODOs or stubs.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No request timeout or AbortController cancellation",
+  "No retry or error surfacing beyond silent stub fallback",
+  "No loading state other than DNA's '\u2026' placeholder",
+  "No user-triggered refresh or explanation dismissal",
+  "No request deduplication or caching"
+ ],
+ "performance_risks": [
+  "Backend route is noted as slow (~18s) with no client timeout or abort",
+  "Repeated gallery renders could re-trigger identical fetches without deduplication",
+  "No caching of explanation payloads across mounts"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The domain-specific fetch/normalize logic and DNA adapter contract should be preserved but refactored into a cancellable, cache-aware service or hook.",
+ "decomposition_hints": [
+  "Separate gating/config (GROUNDED_EXPLAIN_ENABLED) from runtime logic",
+  "Extract API client for /api/decision/explain into a shared service",
+  "Extract payload normalization/validation into a pure helper",
+  "Keep the DNA resolve adapter as a thin wrapper",
+  "Add a query/cache layer (e.g., SWR/TanStack Query) for deduplication and cancellation"
+ ],
+ "_path": "surface/app/src/lib/groundedExplain.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,48 @@
+{
+ "role": "A region-level React view for the 'grow' workflow that lets an operator teach a new node, review/approve/reject the brain's surfaced proposal, inspect live node-types, and revert the last self-change.",
+ "capabilities": [
+  "Teach-new-node name/spec inputs and dispatch-build button",
+  "Build-error display via kit Surface",
+  "Surfaced proposal card with COA plain-language draft and drill-to-raw-code toggle",
+  "Operator approval of proposal (approve & apply)",
+  "Operator rejection of proposal with captured reason",
+  "Live node-types registry displayed as kind-toned chips",
+  "Last self-change audit footer with bounded git-revert affordance"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete, wired region with multiple interactive surfaces, input handling, API calls for reject, and data-ui-refs throughout.",
+ "interactions_present": [
+  "Typing node name and spec updates state",
+  "Clicking dispatch build triggers dispatch()",
+  "Toggling drill mode shows/hides raw code",
+  "Typing a rejection reason updates state",
+  "Clicking approve & apply triggers approveApply()",
+  "Clicking reject calls api.resolve, clears surface, sets message, and polls",
+  "Clicking revert last self-change triggers revertLast()"
+ ],
+ "interactions_missing": [
+  "No loading/pending feedback during dispatch, approval, reject, or revert",
+  "No input validation or disabled-state before dispatch",
+  "No confirmation step before revert",
+  "No error handling for approveApply or revertLast failures",
+  "Node-type chips are not actually navigable despite the navigable claim",
+  "No persistent history/trajectory view of past proposals"
+ ],
+ "performance_risks": [
+  "Anonymous onClick/onChange handlers recreated every render",
+  "Synchronous poll() after reject may trigger immediate re-render cascade",
+  "No memoization of surfaces or chip lists"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The region's responsibilities and data hooks are correct and should be preserved, but its markup should be rebuilt/refined using the shared kit and split into smaller presentational pieces.",
+ "decomposition_hints": [
+  "Extract teach-new-node form into its own component",
+  "Extract surfaced-for-approval Surface into its own component",
+  "Extract live node-types lane into its own component",
+  "Extract last-self-change audit footer into its own component",
+  "Separate pure presentation from useApp() data/container logic"
+ ],
+ "_path": "canvas/app/src/regions/Grow.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

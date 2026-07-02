@@ -1,0 +1,43 @@
+{
+ "role": "The decision-card rendering orchestrator that selects a visual device for a decision record and produces both the card's infographic HTML/SVG and the explanatory slide-content object consumed by DNA.renderExplained.",
+ "capabilities": [
+  "Shape selection for decision records (authored shape field > hint map > structural heuristic)",
+  "Render-hint registry keyed by decision id (device, nodes, matrix rows/cols, bar values, duo states, figure)",
+  "HTML/SVG infographic generation for hero-split hub networks",
+  "HTML/SVG infographic generation for binary duo-state diagrams",
+  "HTML/SVG infographic generation for check-matrix option comparisons",
+  "HTML/SVG infographic generation for ordinal bar charts with recommended highlight",
+  "HTML/SVG infographic generation for taxonomy emergence diagrams",
+  "Slide-content derivation (title, lead, figure, options, reading protocol points) for renderExplained"
+ ],
+ "substance": "substantial",
+ "substance_why": "It ships a populated HINT registry for eight decisions, a precedence-aware shape selector with a fallback heuristic, six device-specific HTML/SVG generators, and a full slide-content deriver.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No event wiring or user input handling (pure render helpers only)",
+  "Structural heuristic is a coarse stub for unhinted decisions",
+  "Ledger fallback device renders nothing, leaving cards without visuals",
+  "Taxonomy device uses hardcoded placeholder provisional/real labels instead of record data",
+  "Only a small, fixed subset of decisions have authored hints",
+  "No validation or graceful degradation when record fields or DNA.org renderers are missing",
+  "No harness or runtime feedback for the exposed _decisionHints authoring surface"
+ ],
+ "performance_risks": [
+  "Recomputes device and slide strings on every render with no memoization",
+  "Calls DNA.org() repeatedly inside device rendering instead of caching resolved renderers",
+  "Builds DOM strings via concatenation and Array.map/join for every card without size limits on options/rows/values",
+  "Scans record.options with find() for the recommended option inside both shape selection and slide derivation"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the decision-to-device mapping and slide-content schema, but rebuild the string-based HTML assembly, hardcoded hint data, and tight DNA.org coupling into real components.",
+ "decomposition_hints": [
+  "Split shape selection/heuristics into a standalone decision-shape module",
+  "Split each device renderer (hubNetwork, checkMatrix, bars, duo, taxonomy, ledger) into its own component/module",
+  "Separate the HINT data registry from rendering logic so it can live in content/config",
+  "Separate slide-content derivation from visual device generation",
+  "Move record-derived node/label extraction out of the monolithic hint map into per-device data adapters"
+ ],
+ "_path": "surface/app/public/gallery/decision-render.js",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

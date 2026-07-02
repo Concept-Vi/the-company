@@ -1,0 +1,52 @@
+{
+ "role": "This file is the tldraw custom-shape module that renders corpus-search hit circles ('forager' shapes) on the canvas and provides their creation, deduplication, placement, clearing, and selection-read utilities.",
+ "capabilities": [
+  "custom 'forager' circle tldraw shape with Circle2d geometry",
+  "stable shape id generation by hashing corpus address",
+  "label extraction from hit head JSON or address tail",
+  "score-tinted ring via CSS color-mix",
+  "semantic zoom detail expansion at zoom > 0.5",
+  "chip-hidden state via opacity 0 with collapsed geometry",
+  "deduplicated re-hit pulse via keyed remount on hits prop",
+  "viewport-centered loose-grid placement with slot-occupancy check",
+  "clear all forager shapes without touching graph nodes",
+  "selection hook reading selected forager shapes from the editor",
+  "resize/rotate handles disabled"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements a full ShapeUtil with geometry, component, indicator, label resolution, a deterministic placement/dedupe algorithm, a clear function, and a selection hook, all with detailed behavioral comments.",
+ "interactions_present": [
+  "native tldraw select/drag/delete on forager circles (coexistence with node shapes)",
+  "semantic zoom reveals kind/session/head when zoom > 0.5",
+  "re-hit deduplication triggers a pulse animation via keyed remount",
+  "programmatic placement of search-hit circles near viewport center",
+  "programmatic clear of all forager shapes",
+  "useForagerSelection hook exposes selected circles to other components",
+  "data-ui-ref attribute enables external indicate(address) highlighting"
+ ],
+ "interactions_missing": [
+  "no in-component click handler to call indicate(address) directly",
+  "no UI control wired to clear forager shapes",
+  "no interaction to open/navigate to the corpus record address",
+  "no drag-and-drop or conversion handoff from circles to graph nodes",
+  "no in-file filtering/chipping UI (only reacts to external opacity prop)",
+  "resize and rotate are intentionally disabled"
+ ],
+ "performance_risks": [
+  "placeForagerHits occupancy check is O(hits \u00d7 (existing+placed)) with up to 400 guard iterations per hit, risking slowdown with many hits or existing circles",
+  "foragerLabelFromHit parses JSON and scans object values for every hit and re-hit",
+  "every forager component subscribes to editor zoom individually via useValue",
+  "getGeometry recomputes a new Circle2d on every opacity record change"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The domain behavior\u2014dedupe-by-address, score-tinted ring, semantic zoom, viewport placement, coexistence rules, and selection readout\u2014is fully specified and should be preserved, but the tldraw ShapeUtil form and React component will be rebuilt in the redesign.",
+ "decomposition_hints": [
+  "split shape rendering (ForagerShapeUtil/component/indicator/geometry) from data loading (placeForagerHits, clearForagerShapes) and selection hook",
+  "extract label resolution (foragerLabel, foragerLabelFromHit) into a shared corpus-address presentation utility",
+  "extract the placement/grid algorithm into a separate canvas-layout service",
+  "separate animation/pulse behavior from the shape component"
+ ],
+ "_path": "canvas/app/src/ForagerShape.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

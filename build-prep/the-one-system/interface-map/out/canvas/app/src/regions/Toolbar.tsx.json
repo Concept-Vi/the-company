@@ -1,0 +1,67 @@
+{
+ "role": "A React toolbar region component that renders the top-level HUD for presence status, run controls, mode selection, graph editing actions, guided tours, settings, and notices.",
+ "capabilities": [
+  "mobile tools fold toggle",
+  "presence/status indicator with run/chat state",
+  "run-error surface with retry and dismiss",
+  "mode selection dropdown",
+  "active mode description display",
+  "run trigger button",
+  "wire selected nodes",
+  "create portal on selection",
+  "delete selected items",
+  "cycle layer views",
+  "fit graph to viewport with padding",
+  "toggle point/indicate mode",
+  "reload interface",
+  "launch guided tour",
+  "launch self-modify tour",
+  "open settings modal",
+  "display transient notice"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements a complete, wired toolbar with context-driven state, multiple action buttons, a mode selector, error surface, guided-tour entries, and a mobile fold.",
+ "interactions_present": [
+  "click tools-fold button to toggle mobile tool drawer",
+  "select mode from dropdown to change mode",
+  "click run button to trigger doRun",
+  "click retry button to retry doRun after error",
+  "click dismiss button to clear runError",
+  "click wire button to wireSelected",
+  "click portal button to portalSelected",
+  "click delete button to deleteSelected",
+  "click layers button to cycleLayers",
+  "click fit button to fitGraph",
+  "click point button to toggleIndicateMode",
+  "click reload button to reload",
+  "click guide button to startGuide",
+  "click teach button to startGuide('request-a-change')",
+  "click settings gear to openSettings"
+ ],
+ "interactions_missing": [
+  "no keyboard shortcuts for toolbar actions",
+  "no ARIA labels/roles for screen readers",
+  "no disabled-state logic for selection-dependent actions",
+  "no confirmation before delete",
+  "no loading/error feedback for non-run buttons",
+  "no search or command palette"
+ ],
+ "performance_risks": [
+  "subscribes to large useApp context object without memoization, causing re-render on any app state change",
+  "inline arrow handlers recreated every render for every button",
+  "MODES map and dynamic title/className strings rebuilt each render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The toolbar's concepts and controls are central to the interface, but its monolithic layout and mobile-fold logic should be rebuilt in the redesign.",
+ "decomposition_hints": [
+  "split mobile fold container from desktop toolbar layout",
+  "extract presence/run-error status region",
+  "extract mode selector + description into its own component",
+  "extract graph-action button group (wire/portal/delete/layers/fit)",
+  "extract help/settings group (guide/teach/settings)",
+  "extract notice display"
+ ],
+ "_path": "canvas/app/src/regions/Toolbar.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,54 @@
+{
+ "role": "Desktop-specific layout component that composes the top chrome, decisions bar, main stage with side strata, and bottom transport for the surface interface.",
+ "capabilities": [
+  "Renders the 1440\u00d7900 desktop layout shell",
+  "Positions top chrome with left parameter chips and right global toggles",
+  "Displays a dismissible notice",
+  "Shows the pending DecisionsBar entry below the header",
+  "Arranges the main stage as left legend, central wheel/state, and right detail panel or select hint",
+  "Renders the temporal Scrubber and selected-sequence Tether",
+  "Wires SurfaceState actions into chrome and detail-panel controls"
+ ],
+ "substance": "substantial",
+ "substance_why": "It concretely composes real controls such as LensChip, SpaceChip, LayerChip, ResChip, QuantChip, CentreChip, LiveDot, ViewToggle, Settings, Legend, WheelOrState, Disclosure, Scrubber, and Tether, binding their callbacks to SurfaceState actions.",
+ "interactions_present": [
+  "Dismiss notice via Notice onDismiss",
+  "Pick projection/lens binding via LensChip onPick",
+  "Set space via SpaceChip setSpace",
+  "Set embedding/layer via LayerChip setEmb",
+  "Set resolution/dimension via ResChip setDim",
+  "Set quantization via QuantChip setQuant",
+  "Reset centre via CentreChip onReset",
+  "Toggle live mode via LiveDot setLive",
+  "Toggle view via ViewToggle setView",
+  "Change feel/settings via Settings setFeel",
+  "Scrub time via Scrubber setAt",
+  "Dismiss selected point via Disclosure onDismiss",
+  "Focus centre via Disclosure onFocus",
+  "Set pole via Disclosure onSetPole"
+ ],
+ "interactions_missing": [
+  "DecisionsBar is mounted without props, so its actions are not wired at this seam",
+  "SelectHint has no click/tap action to create a selection",
+  "Tether is display-only with no user interaction",
+  "No keyboard shortcuts or strata resize/collapse controls",
+  "WheelOrState interactions are opaque at this file level"
+ ],
+ "performance_risks": [
+  "Whole layout re-renders on any SurfaceState change with no memoization",
+  "Entire SurfaceState object is passed to many children, potentially triggering expensive downstream re-renders",
+  "WheelOrState and Legend receive the full state and may re-render for unrelated changes"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The desktop chrome/stage/transport structure and its control set are domain concepts worth preserving, but the inline layout and styling should be rebuilt for the redesign.",
+ "decomposition_hints": [
+  "Extract a TopBar/Chrome component from the header composition",
+  "Extract a Stage component grouping left strata, center, and right strata",
+  "Extract a Transport/Footer component for DecisionsBar, Scrubber, and Tether",
+  "Move inline stamp annotations into layout primitives if retained",
+  "Separate the right-strata detail panel (Disclosure/SelectHint) into its own component"
+ ],
+ "_path": "surface/app/src/layouts/Desktop.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

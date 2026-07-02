@@ -1,0 +1,40 @@
+{
+ "role": "A thin, fail-loud HTTP client library that defines the surface's typed data contracts and fetches projection, context, territory, and embedder-layer metadata from the bridge.",
+ "capabilities": [
+  "Defines Projection, ProjPoint, Sector, Edge, BindingRef, ContextBundle, and Territory type contracts",
+  "Performs JSON GET requests to /api/projection, /api/context, /api/territory, /api/layers, and /api/layer-dims",
+  "Builds query strings for projection parameters",
+  "Encodes address parameters for context and territory endpoints",
+  "Throws typed ApiError on network, HTTP, and JSON parse failures"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements complete runtime type contracts for the renderer plus a working fetch helper and five concrete endpoint functions with explicit error handling.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No mutation/write endpoints (POST/PUT/DELETE)",
+  "No request cancellation or AbortController support",
+  "No request deduplication or caching layer",
+  "No retry/backoff for transient network failures",
+  "No loading or pending-state management",
+  "No pagination or limit controls for context items",
+  "No authentication or custom header injection",
+  "No request/response interceptors or logging"
+ ],
+ "performance_risks": [
+  "Every call performs an uncached network fetch with no deduplication, risking redundant requests for repeated addresses or unchanged projection params",
+  "No AbortController means in-flight requests may complete after the consumer no longer needs them",
+  "fetchProjection serializes all params into a query string on every call without memoization",
+  "Large JSON responses are parsed in full and error snippets slice up to 300 characters of text"
+ ],
+ "reuse_verdict": "keep",
+ "reuse_verdict_why": "The documented contracts and endpoint coverage are central to the redesign and should be preserved, with targeted adaptation for caching, cancellation, and request deduplication.",
+ "decomposition_hints": [
+  "Move type definitions (ProjPoint, Projection, ContextBundle, Territory, etc.) into a dedicated schema/types module",
+  "Move generic getJSON and ApiError into a transport/error module",
+  "Split endpoint functions by domain: projection.ts, source.ts (context/territory), layers.ts",
+  "Add a small request cache/memoization layer alongside the transport module"
+ ],
+ "_path": "surface/app/src/lib/api.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

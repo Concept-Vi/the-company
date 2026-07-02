@@ -1,0 +1,55 @@
+{
+ "role": "Generic archetype-and-data DOM renderer that produces decision cards and composed explanatory views for the gallery, standalone pieces, and live decision surface.",
+ "capabilities": [
+  "Render an archetype layout (zones and typed slots) into a DOM element from a data record",
+  "Resolve slot values via slot_map, slot.id, dotted paths, or live 'resolve:<name>' values",
+  "Render typed slots: heading, question hero, label/what-kind, lead/explanation, list, options, mark, shape, prose",
+  "Render option affordances as full-tile buttons (\u22642) or ledger rows (3+) with recommended/chosen states, ordinal metal ramp, decided gold moment, write-error banner, and 'Not now' ghost",
+  "Render full-card empty/failed state moments with retry buttons",
+  "Render composed 'explained' views that nest a mockup interface beside slide content, including binary two-panel and N-option comparison layouts",
+  "Stream async resolved values into slots with a streaming indicator",
+  "Apply live DNA design tokens and spacing grammar via CSS variable injection, with cached token/grammar fetch",
+  "Wire decision takes to window.galleryBinder.decide and dispatch skip/retry CustomEvents",
+  "Provide a self-contained VI mark SVG so composed views render without unit-view.js"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements a complete rendering pipeline with zone/slot resolution, multiple option layouts, composed comparison views, async streaming, live DNA variable injection, and take wiring across ~600 lines of real code.",
+ "interactions_present": [
+  "Option button clicks invoke window.galleryBinder.decide(address, label)",
+  "'Not now' skip button dispatches a CustomEvent 'decision:skip'",
+  "Empty/failed state retry buttons dispatch a CustomEvent 'decision:retry'",
+  "renderExplained panel CTAs invoke window.galleryBinder.decide when a decision address is present",
+  "Async 'resolve:<name>' values stream into their target slot textContent when promises resolve",
+  "el._showWriteError exposes a method to reveal the write-error banner"
+ ],
+ "interactions_missing": [
+  "The 'Change' button in the decided state is rendered but never wired to an action",
+  "No cancellation or cleanup for pending async resolves, risking updates to removed DOM",
+  "No keyboard/focus management or ARIA feedback beyond the error banner's aria-live",
+  "No disabled/loading state on option buttons during a take/save",
+  "No fallback UI when window.galleryBinder or org.* helper functions are absent",
+  "No retry/error UI for failed async resolves",
+  "No dynamic orientation change handling beyond the initial opts.orient class"
+ ],
+ "performance_risks": [
+  "First render triggers uncached fetch of /dna/tokens.json and /dna/grammar.json, blocking style resolution",
+  "Large inline SVG scene strings for binary/N-option comparisons are regenerated on every render with no caching",
+  "Async resolve promises are not cancelled, so stale resolutions may update detached DOM nodes",
+  "Whole-card innerHTML rebuilds on every data update instead of incremental updates",
+  "Repeated regex splitting and DOM queries inside render loops for every option/panel",
+  "Global _dnaResolvers promise caches fetch results indefinitely without invalidation"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The generic slot/zone renderer and composed-view concept are worth keeping, but the file mixes too many responsibilities and relies on inline onclick wiring and global galleryBinder coupling, so it should be refactored into smaller modules.",
+ "decomposition_hints": [
+  "Split the archetype card renderer (zones, slots, options, state moments, take wiring) from the composed explained-view renderer",
+  "Extract options rendering (tile, row, decided moment, ghost, error banner) into a dedicated options component",
+  "Extract SVG organism/scene helpers (planThumbnail, bars, fileStack, mesh, VI mark, binary panels) into a visual-assets module",
+  "Move async resolve/streaming logic into a cancellable resolver service",
+  "Move live DNA token/grammar injection into a theme/spacing module",
+  "Move decision-action binding (decide, skip, retry, write-error) into a separate interactions/actions module"
+ ],
+ "_path": "surface/app/public/gallery/archetype.js",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

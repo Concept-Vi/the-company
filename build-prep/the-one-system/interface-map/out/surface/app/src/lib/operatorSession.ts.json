@@ -1,0 +1,40 @@
+{
+ "role": "A client-side security interceptor that mints a per-session operator token and transparently attaches it to same-origin /api requests via the X-Operator-Session header.",
+ "capabilities": [
+  "Mint a per-session operator token from GET /api/operator-session",
+  "Store the minted token in module-level state",
+  "Expose the current token via getOperatorToken",
+  "Install a global window.fetch interceptor once",
+  "Attach X-Operator-Session header to same-origin /api requests when a token is held",
+  "Preserve original request init and headers during interception",
+  "Gracefully degrade when the mint endpoint is missing or errors"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements complete token minting, fetch interception, same-origin guarding, header injection, and explicit graceful-degradation error handling.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No retry or re-mint on mint failure",
+  "No token refresh, rotation, or expiry handling",
+  "No re-mint or recovery on a 401 response",
+  "No uninstall or cleanup of the fetch wrapper",
+  "No deduplication of concurrent mint requests",
+  "No user-visible session status or error feedback",
+  "No handling for non-fetch transports beyond the noted EventSource exclusion"
+ ],
+ "performance_risks": [
+  "Every same-origin /api fetch allocates a new Headers object and reconstructs the Request, adding per-request overhead",
+  "Repeated calls to installOperatorSession spawn additional mint fetches because only the wrapper installation is guarded, not the mint call",
+  "No throttling/deduplication could cause multiple concurrent mint requests if the installer is invoked more than once"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The operator-session token concept and transparent header-injection behavior are load-bearing security plumbing, but the global fetch monkey-patch and mutable module state should be rebuilt into a structured request client or middleware.",
+ "decomposition_hints": [
+  "Split token lifecycle (mint, store, refresh, clear) into a dedicated session-token service",
+  "Split fetch interception into a transport/middleware layer with proper install/uninstall hooks",
+  "Extract the same-origin /api URL guard into a reusable request-routing utility",
+  "Separate app-bootstrap wiring (install + initial mint) from the core token and interceptor logic"
+ ],
+ "_path": "surface/app/src/lib/operatorSession.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

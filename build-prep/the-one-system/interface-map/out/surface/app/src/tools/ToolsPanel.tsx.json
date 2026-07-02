@@ -1,0 +1,52 @@
+{
+ "role": "A focused modal tool palette that lets the operator pick a tool, configure it through a generated schema form, invoke it, and see a human-readable run status.",
+ "capabilities": [
+  "Render modal overlay dialog for tools",
+  "List available tools from the tools store",
+  "Select and deselect a tool with back navigation",
+  "Seed form values from JSON Schema defaults and enums",
+  "Render an op-conditional schema form via SchemaForm",
+  "Validate required fields before enabling Run",
+  "Invoke the selected tool via POST /api/tools/invoke",
+  "Display honest run-status states: running, done, gated, error",
+  "Handle Escape key for back/close navigation",
+  "Retry tool list loading on store error"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements the full list-to-run flow including store integration, schema-driven form seeding, validation, live HTTP invocation, and human status feedback, with only result rendering and the mutating-tool gate explicitly deferred.",
+ "interactions_present": [
+  "Click a tool row to open its detail form",
+  "Click back button to return to the tool list",
+  "Click scrim or close button to close the panel",
+  "Press Escape to go back or close",
+  "Click Try again to reload the tool list",
+  "Change form field values through SchemaForm",
+  "Click Run to invoke the tool",
+  "Disable Run while running or when required fields are missing",
+  "Show human status after run: count, empty, generic done, gated, or error"
+ ],
+ "interactions_missing": [
+  "Rich result content rendering (DNA tool-card archetype / renderArchetype seam not landed)",
+  "Operator-token approval flow for non-safe/mutating tools (only shows a gated message)",
+  "No raw/detailed output view for results",
+  "No search or filtering in the tool list"
+ ],
+ "performance_risks": [
+  "Stores the full result hits array in React state even though only the count is rendered, which can bloat memory for large responses",
+  "No abort controller for in-flight fetch requests when the panel closes or selection changes",
+  "Recomputes required-field validation and human name on every render without memoization",
+  "Repeated object spreading in onChange and value updates may cause unnecessary re-renders of SchemaForm"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The modal flow, store wiring, validation guard, and honest status-machine pattern should be kept, but the component should be rebuilt around a real result renderer and a separate gating/approval seam.",
+ "decomposition_hints": [
+  "Split the tool list into a ToolsList subcomponent",
+  "Split the detail/form/run area into a ToolRunner subcomponent",
+  "Extract the invoke logic into a useToolInvoke hook to isolate fetch, posture handling, and cancellation",
+  "Split the result region into a ToolResult component once the DNA archetype renderer is integrated",
+  "Split the gated approval step into a separate GatePrompt component"
+ ],
+ "_path": "surface/app/src/tools/ToolsPanel.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

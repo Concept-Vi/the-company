@@ -1,0 +1,39 @@
+{
+ "role": "A registry-driven pill switcher that lets a user pick one binding from a server-supplied list.",
+ "capabilities": [
+  "Render a pill for each binding in the bindings prop",
+  "Highlight the currently selected binding",
+  "Notify caller via onPick when a pill is clicked",
+  "Apply a compact layout variant via CSS class",
+  "Stamp stable UI addresses on the container and each pill"
+ ],
+ "substance": "partial",
+ "substance_why": "The core switching UI is implemented, but it lacks accessibility, keyboard control, empty-state handling, and any non-mouse interaction.",
+ "interactions_present": [
+  "Mouse click on a pill invokes onPick(id)",
+  "Native title tooltip on hover via the title attribute"
+ ],
+ "interactions_missing": [
+  "Keyboard navigation and selection between pills",
+  "ARIA roles/state (e.g., tablist, aria-pressed)",
+  "Focus management for the active pill",
+  "Empty bindings state",
+  "Disabled/loading pill states",
+  "Confirmation or prevention of accidental switches"
+ ],
+ "performance_risks": [
+  "No memoization of pill buttons, so the full list re-renders on every prop change",
+  "encodeURIComponent and stamp calls run for every binding on every render",
+  "No virtualization, so very large binding lists could bloat the DOM"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The registry-true, prop-driven design is worth keeping, but the component needs accessibility, keyboard handling, and styling modernization before reuse.",
+ "decomposition_hints": [
+  "Extract a reusable Pill component for individual items",
+  "Extract a keyboard-navigation hook for left/right/home/end handling",
+  "Separate the address-stamping wrapper from the rendered control"
+ ],
+ "_path": "surface/app/src/toggles/Lens.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

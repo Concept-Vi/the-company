@@ -1,0 +1,46 @@
+{
+ "role": "A combined wheel visualization and control panel for type nucleation, rendering projection sectors, points, candidate blooms, and parameter pickers in one React component.",
+ "capabilities": [
+  "Render registry type sectors as angular wedges",
+  "Draw membership boundary, pile horizon, and forbidden diagonal residue lines",
+  "Place and animate projection points as inside-fit, candidate-pile, or tail residue",
+  "Compute true-angle candidate blooms and born-type halos/sparks",
+  "Provide a client-side birth-threshold dial (20/80)",
+  "Display nucleation report counts (born, candidates, residue)",
+  "Provide pickers for items space, types space, and rung",
+  "Provide a transparent hit layer for point selection"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete interactive visualization with SVG geometry, point-placement algorithms, candidate bloom logic, a local dial, report UI, and engine parameter pickers.",
+ "interactions_present": [
+  "Clicking a point hit circle invokes onPick",
+  "Birth threshold range input updates the local dial",
+  "Picker selects call setNuc for space, types_space, and rung"
+ ],
+ "interactions_missing": [
+  "No keyboard navigation or shortcuts",
+  "No hover tooltips or detail views for points/blooms",
+  "No loading, empty, or error states for missing projection/report data",
+  "No accessible descriptions for dynamic points or candidate zones",
+  "No reset/default controls or direct manipulation of sectors/blooms"
+ ],
+ "performance_risks": [
+  "AnimatePresence with motion.circle per point and layoutId can jank with many points",
+  "Unmemoized clusterTheta, sectorIndex, zoneAngle, and jitter computations run every render",
+  "Two full passes over proj.points for rendering and hit layers",
+  "SVG viewBox tied to measured size causes full re-render on resize",
+  "Framer Motion transitions applied to every point simultaneously"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The domain-specific nucleation visualization and parameter controls are worth keeping, but they need decoupling and memoization to be maintainable.",
+ "decomposition_hints": [
+  "Split SVG wheel rendering (sectors, boundaries, points, blooms) from HTML report and controls",
+  "Extract point placement math (inside/pile/tail/cornerPlace) into a pure layout hook",
+  "Separate candidate bloom computation and birth-threshold state",
+  "Move generic Picker into its own reusable component/file",
+  "Isolate hit-layer interaction handling and selection logic"
+ ],
+ "_path": "surface/app/src/wheel/Nucleation.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

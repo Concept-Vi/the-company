@@ -1,0 +1,53 @@
+{
+ "role": "A monolithic shared CSS sheet that defines the product chrome, phone/screen shells, and data-driven archetype layouts (unit view, piece, decision card, generic archetype) for gallery surfaces.",
+ "capabilities": [
+  "Phone-sized device chrome (.phone variants, status bar, home-bar hatch)",
+  "Standalone 390\u00d7844 screen shell (.screen) scaling the same components",
+  "Product header, prose, stat band, ledger rows, plates/insets, primary/secondary actions",
+  "Glass rail, frosted cards, hotspot dots, filter pills, unit caption, joint connector",
+  "Unit-view immersive layout with radial background, frosted words, glass chips, and V-hub radial menu",
+  "Piece-in-focus archetype with preview, pins, takes, and slider dials",
+  "Decision-card layout with option buttons, recommendation/decided states, error banner, and Ask button",
+  "Generic archetype renderer (.ar-*) with responsive zones, streaming cursor, and ink-chevron options",
+  "CSS-driven motion: open/close transitions, fired confirmation flash, blinking streaming cursor, reduced-motion guard"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a broad, token-bound visual system with concrete classes for shells, chrome, and multiple archetypes, plus animations and responsive rules.",
+ "interactions_present": [
+  "Hover/focus-visible/active states on buttons and options",
+  "Class-driven open/close animations for the unit-view V-hub wheel (.uv-vee.open, .screen.uv.vee-open)",
+  "Confirmation flash animation triggered by .uv-fired.show",
+  "Streaming-cursor blink animation for pending explanation text",
+  "Reduced-motion media query disabling the streaming cursor blink"
+ ],
+ "interactions_missing": [
+  "No JavaScript event handlers or state machine for the V-hub, decision options, or piece dials",
+  "No ARIA roles, labels, or keyboard navigation for the radial menu or decision cards",
+  "No actual tap/click-to-select wiring beyond CSS cursor states",
+  "No loading, skeleton, or error retry interactions",
+  "No dark-mode, high-contrast, or touch-specific interaction variants",
+  "No focus-trap or scroll-lock behavior for overlays"
+ ],
+ "performance_risks": [
+  "Heavy use of backdrop-filter:blur across many stacked absolute elements",
+  "Multiple large radial gradients and repeating-linear-gradient patterns",
+  "Many layered box-shadows and text-shadows on small elements",
+  "Frequent color-mix() calls and CSS variable resolution in hot paths",
+  "Animations and transitions without will-change hints on complex composited layers",
+  "Deep absolute-position stacking contexts that may cause repaint/reflow churn on state changes"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The token-driven component vocabulary and archetype layouts are worth preserving, but the file is too monolithic and mixes chrome, screens, archetypes, and motion in one place.",
+ "decomposition_hints": [
+  "Split phone chrome (.phone, .sbar, .p-hd, .p-act, .p-rail, .p-hatch) into its own module",
+  "Split screen shell and responsive scaling (.screen, .screen.* overrides) into a screen module",
+  "Split unit-view immersive components (.uv-*) into a dedicated archetype module",
+  "Split piece-in-focus components (.screen.piece) into a dedicated archetype module",
+  "Split decision-card components (.dc-*, .brain-ask) into a dedicated archetype module",
+  "Split generic archetype components (.ar-*, .dc-q, .dc-explain) into a dedicated archetype module",
+  "Split keyframes and motion utilities (uvScrim, uvFired, rh-blink) into a motion/tokens module"
+ ],
+ "_path": "surface/app/public/gallery/phone.css",
+ "_mode": "symbols+head",
+ "_model": "kimi-k2.7-code:cloud"
+}

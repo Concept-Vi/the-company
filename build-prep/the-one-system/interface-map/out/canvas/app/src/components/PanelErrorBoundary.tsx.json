@@ -1,0 +1,32 @@
+{
+ "role": "A per-panel React error boundary that isolates malformed or throwing panel definitions so the surrounding canvas remains usable.",
+ "capabilities": [
+  "Catches render errors in child panels via getDerivedStateFromError",
+  "Displays a contained fallback card naming the failed panel",
+  "Prevents a full-canvas white-screen for operator control surface"
+ ],
+ "substance": "substantial",
+ "substance_why": "It fully implements the error-boundary lifecycle with state, fallback rendering, and an informative message, despite being small.",
+ "interactions_present": [
+  "None \u2014 it only renders a static failure message."
+ ],
+ "interactions_missing": [
+  "No error reset or retry mechanism in the UI",
+  "No action to revert/remove the failed panel (recovery is only described as bridge-side)",
+  "No error details, stack trace, or reporting",
+  "No dismiss/close button for the error card"
+ ],
+ "performance_risks": [
+  "None significant; the component is simple and only re-renders on error state change."
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The containment concept is valuable, but it should be modernized to a functional component with error reset, better fallback UI, and optional error logging.",
+ "decomposition_hints": [
+  "Split the fallback UI into its own presentational component",
+  "Separate error-handling logic from the displayed error card",
+  "Add a reset/error-info seam for integration with logging/telemetry"
+ ],
+ "_path": "canvas/app/src/components/PanelErrorBoundary.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

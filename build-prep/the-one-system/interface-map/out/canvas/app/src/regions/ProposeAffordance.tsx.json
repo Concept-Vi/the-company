@@ -1,0 +1,47 @@
+{
+ "role": "A React region component that renders the right-hand-man's proposal/consent surface, switching between a one-click safe-verb offer (B1) and a select-then-approve comparison for consequential interactive offers (B2).",
+ "capabilities": [
+  "Render proposal options from proposal.options or synthesize a single primary option",
+  "B1 one-click approval surface for safe verbs",
+  "B2 side-by-side interactive comparison with visual-only selection",
+  "Explicit separate approve-and-build commit for interactive offers",
+  "Steer/refine text input that sends feedback back to the RHM",
+  "Defer/queue proposal to inbox",
+  "Set aside proposal without queuing",
+  "Dismiss/reject proposal",
+  "Reset local selection and steer text when a new proposal arrives"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file fully implements both B1 and B2 consent surfaces, wires all primary and secondary actions, and contains extensive behavioral comments defining the consent model.",
+ "interactions_present": [
+  "Click an option to immediately approveProposal (B1)",
+  "Click a comparison card to select/deselect visually (B2)",
+  "Click explicit approve & build button to approve selected option (B2)",
+  "Type in steer input and submit via button or Enter key",
+  "Click queue to inbox to deferProposal",
+  "Click set aside to setAsideProposal",
+  "Click dismiss to dismissProposal",
+  "Disable controls while chatBusy"
+ ],
+ "interactions_missing": [
+  "No confirmation step before running approveProposal",
+  "No keyboard navigation/selection for comparison cards",
+  "No ARIA state for selected card or busy announcements",
+  "No error or success feedback surfaced in the UI",
+  "No loading state beyond disabled controls",
+  "Phone stacking behavior is only implied by CSS class, not verified/adapted here",
+  "No handling for stale selection if options mutate without a full proposal change"
+ ],
+ "performance_risks": [],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The two-mode consent logic and action wiring are conceptually sound and should be preserved, but the markup, styling classes, and accessibility need redesign.",
+ "decomposition_hints": [
+  "Split B1 (OfferAffordance) and B2 (InteractiveComparisonAffordance) into separate region components",
+  "Extract a reusable SteerInput subcomponent shared by both modes",
+  "Extract a reusable ProposalActionBar for defer/set-aside/dismiss",
+  "Extract an OptionCard component for both single-option and comparison rendering"
+ ],
+ "_path": "canvas/app/src/regions/ProposeAffordance.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

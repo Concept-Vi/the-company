@@ -1,0 +1,48 @@
+{
+ "role": "An App-level modal/side-panel surface that renders the 'Source' verb result \u2014 the full human-readable record, operator notes, and provenance for a selected point, kept as a durable sibling outside the V container.",
+ "capabilities": [
+  "Render full-record source panel from a SourceView object",
+  "Extract human-readable prose from Territory identity/corpus_content with fallback heuristics",
+  "Truncate oversized content to SOURCE_MAX with honest ellipsis",
+  "Count and display inbound board references (edges_in) as provenance",
+  "Read back operator-authored comment notes from directions",
+  "Show loading, error, empty, and success states",
+  "Close via Escape key, scrim click, and close button"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements complete data transformation helpers, all UI states, close interactions, and explicit operator-law rendering rules rather than stubs.",
+ "interactions_present": [
+  "Escape key closes the panel",
+  "Clicking the scrim closes the panel",
+  "Clicking the close button closes the panel",
+  "Displays the selected item's label, meaning, and fuller content",
+  "Displays the operator's own notes as a list",
+  "Displays the inbound reference count when greater than zero",
+  "Shows loading and error status messages"
+ ],
+ "interactions_missing": [
+  "No data fetching or SourceView construction is wired here \u2014 it is entirely prop-driven",
+  "No focus trap or focus restoration on open/close",
+  "No keyboard navigation beyond Escape",
+  "References count is not clickable to inspect the referencing things",
+  "No edit, add, or delete note actions",
+  "No copy, share, or deep-link action for the source record",
+  "aria-modal is set to false rather than true for a modal-like surface"
+ ],
+ "performance_risks": [
+  "contentFrom recursively walks objects on every render without memoization",
+  "Large strings are fully processed before truncation at SOURCE_MAX",
+  "Window keydown listener is re-registered whenever the onClose reference changes",
+  "Long notes lists are rendered without virtualization"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the human-text extraction logic, operator-law semantics, and note/reference concepts, but rebuild the panel shell, accessibility, and close behavior for the redesign.",
+ "decomposition_hints": [
+  "Move pure territory presentation helpers (readTerritoryContent, territoryRefCount, territoryNotes) into a shared territory presenter/util module",
+  "Extract a generic modal/side-panel shell (scrim, close button, Escape handling, focus trap) from SourcePanel",
+  "Keep SourcePanel as the thin composition layer that maps SourceView fields to the generic panel and presenter helpers"
+ ],
+ "_path": "surface/app/src/source/SourcePanel.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

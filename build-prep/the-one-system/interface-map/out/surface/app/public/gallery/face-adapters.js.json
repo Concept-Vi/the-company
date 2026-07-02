@@ -1,0 +1,39 @@
+{
+ "role": "A host-to-render data-shaping adapter layer that converts raw API records into the record shapes consumed by renderArchetype.",
+ "capabilities": [
+  "Adapt raw /api/sessions records into session-card render records",
+  "Adapt raw /api/channels records into channel-graph/hub-network render records",
+  "Adapt /api/board rows into grouped board render records",
+  "Adapt /api/transcript-search responses into constellation render records in raw and grounded modes",
+  "Normalize group dictionaries into declared arrays for the render slot shape",
+  "Normalize channel member lists whether provided as arrays or objects",
+  "Derive human-readable labels, relative timestamps, short paths, fact lists, and provenance metadata",
+  "Compute normalized scores, weights, warmth, brightness, and degraded-mode flags"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements four complete, domain-specific adapter functions with field mapping, grouping, two-mode transcript shaping, and helper normalization, all documented with binding contracts.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No user-driven controls are wired (e.g., groupBy selection, transcript mode toggle, sorting)",
+  "No validation, empty-state, or error-state handling for malformed or missing API payloads",
+  "No loading/async lifecycle integration beyond pure synchronous transformation",
+  "No selection, hover, or action handlers for the derived records"
+ ],
+ "performance_risks": [
+  "Full record derivation is recomputed on every call with no memoization or caching",
+  "channelGraph uses a spread into Math.max, materializing an intermediate array of all channel weights",
+  "grounded transcript mode maps nested claims without size limits, risking large derived structures",
+  "Per-item string regex and split operations in rel and shortCwd run on every record"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The adapter logic is host-agnostic and worth preserving, but the global IIFE registration, untyped fields, and mixed-domain file should be modernized into typed, modular exports.",
+ "decomposition_hints": [
+  "Split per domain into session-adapter, channel-graph-adapter, board-adapter, and transcript-adapter modules",
+  "Extract shared helpers rel and shortCwd into a date/path normalization utility module",
+  "Separate transcript raw-mode and grounded-mode builders into distinct internal functions or files",
+  "Move provenance/degradation metadata construction into a shared provenance helper if reused across adapters"
+ ],
+ "_path": "surface/app/public/gallery/face-adapters.js",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

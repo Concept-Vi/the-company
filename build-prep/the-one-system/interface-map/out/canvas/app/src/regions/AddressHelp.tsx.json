@@ -1,0 +1,47 @@
+{
+ "role": "A right-rail React region that renders the composed address-help bundle for the currently indicated ui:// element, surfacing what-it-is, how-to-use it, and how-to-change it with a presentation-preference feedback loop.",
+ "capabilities": [
+  "Render composed address help for an indicated ui:// locus",
+  "Consume backend bundle (address_help) and avoid duplicating backend composition logic",
+  "Degrade cleanly across five states: all legs present, thin howto, no-code scope, unregistered element, and malformed/fetch error",
+  "Lead with plain-language what + how-to-use and demote mechanism to a collapsible drill-down",
+  "Display a learned-preference marker and directive when a presentation_pref exists",
+  "Model-free structural adapt: hoist the how-to-change drill-down open when lead_with:change is learned",
+  "Provide an in-system feedback affordance via ShapeHow to set presentation preferences",
+  "Summarize blast-radius reach by relationship kind with expandable member lists",
+  "Surface loading, error, and empty states without blank renders",
+  "Self-register as a guidable element via data-ui-ref"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete multi-state renderer, local toggle state, preference adapt logic, blast-radius summarization, and a wired feedback child, all backed by detailed behavioral comments.",
+ "interactions_present": [
+  "Indicated ui:// locus change drives panel content via AppContext",
+  "Toggle the 'how to change it' mechanism drill-down open/closed via button",
+  "Expand/collapse each blast-radius relationship kind to show member symbols",
+  "Submit a presentation-preference shape via ShapeHow (onShape -> setPresentationPrefAt)"
+ ],
+ "interactions_missing": [
+  "No retry or dismiss action for malformed/unresolvable addresses",
+  "No click-through or copy action on file paths in the change scope",
+  "No in-panel action to register an unregistered element or author a missing howto",
+  "No keyboard shortcuts or focus management for the drill-down or reach lists",
+  "No reset/clear preference affordance is visible in this file"
+ ],
+ "performance_risks": [
+  "Blast-radius member arrays and change.scope are rendered fully when expanded, with no virtualization or truncation for very large corpora",
+  "Derived values (leg counts, hoist logic, represents parsing) are recomputed on every render without memoization",
+  "Each new indication triggers a backend fetch and full re-render of the panel and its nested reach trees"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The state machine, degradation rules, altitude concept, and preference loop are worth preserving, but the component should be split and its styling/structure rebuilt for the redesign.",
+ "decomposition_hints": [
+  "Extract BlastReach + ReachKind into a dedicated blast-radius summary component/file",
+  "Extract the mechanism drill-down into a MechanismDrillDown sub-component owning its open-state logic",
+  "Extract pure helpers (shortAddr, representsLabel) and the five-state decision tree into a small utility/hook",
+  "Keep ShapeHow as a separate feedback component but clarify its contract and busy/error states",
+  "Separate the AddressHelp shell (data fetch/lifecycle) from the presentation layers (lead, mechanism, feedback)"
+ ],
+ "_path": "canvas/app/src/regions/AddressHelp.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

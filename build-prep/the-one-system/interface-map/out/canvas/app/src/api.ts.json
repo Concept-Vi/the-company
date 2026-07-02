@@ -1,0 +1,55 @@
+{
+ "role": "Central HTTP API client and pure registry/formatting helper module for the canvas interface.",
+ "capabilities": [
+  "HTTP error normalization via `jr` (returns `{error}` for non-2xx)",
+  "Graph/canvas state API (graph, types, run, set, move, addNode, connect, del)",
+  "Model registry queries (models, chatModelsDetailed, fit, modelLoad, modelConfig)",
+  "Node config schema helpers (resolveOptions, configSchemaToFields, coerceConfigValue)",
+  "Build-intent lifecycle (propose, resolve, approveReach, apply, intentAt, buildIntent)",
+  "Address-keyed reads/writes (pin, annotations, presentationPref, setPresentationPref, upTranslate, addressHelp, addressHistory, selfChangesAt, staleAt, refVersions)",
+  "Inbox/decision/review surface (inbox, coa, deferOffer, reviveOffer, surfaceOutput, react, reviewStart/Current/Next/Status, walkthroughStart, resolveStep)",
+  "Chat and conversation API (chat, chatStream, chatHistory, act, newConversation, listConversations, loadConversation)",
+  "Mode and RHM config (setMode, rhmConfig, setRhmConfig, MODES constant)",
+  "Voice circuit (voice, stt, tts, personas, voiceServices, voiceSwitch, voiceStream, finishedThought, voiceLog, voiceEngineKnobs)",
+  "Corpus/forager/studio (corpusQuery, corpus, mockupGenerate)",
+  "Cognition engine facade (cogModelsForRole, cogInputs, cogFieldTypes, cogListRuns, cogFindRuns, cogRunRole, cogCreateRole, cogCreateSkill, cogCreateContext)",
+  "Build-intent display helpers (isBuildIntent, buildPhase, deriveOutcome)",
+  "Relative-time formatter (relTime)"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements 70+ typed fetch wrappers, a custom JSON-or-error normalizer, streaming chat parsing, and several pure UI-formatting helpers, all with extensive behavioral comments.",
+ "interactions_present": [
+  "No DOM/user-event wiring here \u2014 only HTTP call functions and streaming callbacks (`chatStream` `onPart`/`onDone`, `voiceStream` returns a raw `Response`)"
+ ],
+ "interactions_missing": [
+  "No `AbortController`/cancellation for long streams or pending requests",
+  "No request deduplication, retry, or client-side caching",
+  "No loading-state or optimistic-update handling",
+  "No input validation/sanitization before fetch",
+  "`upTranslate` has no FE consumer (comment notes identified_gaps)",
+  "`MODES` array is hardcoded despite the registry-is-truth claim for descriptions",
+  "No centralized surfacing of network failures (`jr` only normalizes HTTP non-2xx, not `fetch` rejections)",
+  "No typed response schemas (all `any`)"
+ ],
+ "performance_risks": [
+  "Every response is `any`, removing compile-time guards on large payload shapes",
+  "No cancellation can leave concurrent streams/readers running",
+  "`chatStream` buffers and parses every line in memory with no backpressure control",
+  "Registry endpoints (capabilities, models, etc.) are fetched fresh with no client cache",
+  "Synchronous `JSON.stringify` runs on the main thread for every request",
+  "`voiceStream` hands back a raw `Response`; callers may hold streams open"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "It encodes the canonical backend surface and several reusable pure helpers, but it is one flat `any`-typed module that mixes transport, streaming, domain-specific calls, and UI formatting.",
+ "decomposition_hints": [
+  "Split transport layer (`fetch`, `jr`, headers, `AbortController`) from domain API modules",
+  "Split graph/canvas calls from chat/voice/conversation calls",
+  "Split build/wire/approval calls from inbox/review/walkthrough calls",
+  "Split cognition-engine calls into their own module",
+  "Move pure helpers (config schema, `relTime`, build-intent formatters) into a shared formatting/utils module",
+  "Keep streaming methods (`chatStream`, `voiceStream`) in a dedicated streams module or with their domain"
+ ],
+ "_path": "canvas/app/src/api.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

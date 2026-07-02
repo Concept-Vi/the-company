@@ -1,0 +1,48 @@
+{
+ "role": "A React presentation component that surfaces a build-intent's frozen context bundle, lets operators toggle per-item pins, and guards navigation to ui:// loci only.",
+ "capabilities": [
+  "Render persisted payload.context[] as a sorted, newest-first list of strata items",
+  "Map each item's kind to a glyph/label (comment, chat, version, history, change, fallback)",
+  "Optimistically toggle and display per-item pinned state via api.pin",
+  "Fail-loud validation and error display for missing address/ts or failed pin writes",
+  "Enable navigation only for ui:// addresses through onNavigate; disable and label non-ui:// addresses",
+  "Show relative timestamps with relTime",
+  "Render item text and an explicit empty state",
+  "Display bundle count and pinned-count summary"
+ ],
+ "substance": "substantial",
+ "substance_why": "It fully implements the context-bundle view: sorting, rendering, pin interaction with optimistic overlay and error handling, plus a registry-aware navigation guard.",
+ "interactions_present": [
+  "Click pin button to call api.pin and update local pin overlay",
+  "Click a ui:// address button to invoke onNavigate",
+  "Hover tooltips via native title attributes"
+ ],
+ "interactions_missing": [
+  "No keyboard-accessible controls or focus management",
+  "No retry/clear action after a pin error",
+  "No confirmation before pin/unpin",
+  "No loading state while the parent fetches the bundle",
+  "No expand/collapse or truncation for long item text",
+  "No pagination or virtualization for large bundles",
+  "run:// addresses are only labeled, not navigable (reserved design call)",
+  "Visual/form treatment is flagged as needs-tim"
+ ],
+ "performance_risks": [
+  "Whole list re-renders on any pinOverlay/busyTs/err change",
+  "Sorting with localeCompare is O(n log n) and not virtualized",
+  "Inline IIFE inside the map creates fresh functions/elements per item each render",
+  "Large item.text blocks are rendered unconditionally without truncation"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The domain concepts\u2014frozen context bundle, optimistic pin affordance, and ui:// navigation guard\u2014are correct and should be kept, but the component should be rebuilt to separate state, API calls, and presentation.",
+ "decomposition_hints": [
+  "Extract a PinButton component/hook that owns api.pin, busy, and optimistic state",
+  "Extract a ContextItem component for kind glyph, address link guard, text, and pin slot",
+  "Extract sorting and empty-state logic into a container or utility",
+  "Extract the ui:// vs run:// address guard into a shared navigation utility",
+  "Separate presentational styling from the needs-tim markup layer"
+ ],
+ "_path": "canvas/app/src/components/ContextBundle.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

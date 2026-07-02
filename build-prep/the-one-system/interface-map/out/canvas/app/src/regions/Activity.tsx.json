@@ -1,0 +1,37 @@
+{
+ "role": "A HUD region component that renders the live run-state header and the chronological event feed for the current activity.",
+ "capabilities": [
+  "Display current graph name and live state counts as tone-coded badges",
+  "Render the event feed using the shared .ev row vocabulary",
+  "Defensively coerce structured or null event summaries into one-line strings",
+  "Format event timestamps as relative time via relTime",
+  "Key feed rows by event sequence number with index fallback"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements a complete region with live-state header, mapped event list, defensive summary coercion, and shared styling hooks.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No event row selection, expansion, or detail view",
+  "No filtering, searching, or sorting of the event feed",
+  "No virtualization, pagination, or truncation for long event lists",
+  "No user actions such as clearing, copying, or pinning events",
+  "No loading, error, or empty-state interactions beyond a static muted message"
+ ],
+ "performance_risks": [
+  "Unbounded events.map without virtualization or length cap can degrade with large feeds",
+  "No memoization of the event list, summaryText results, or relTime formatting",
+  "Fallback keying by array index when e.seq is missing can hurt reconciliation",
+  "JSON.stringify of large structured summaries on every render is expensive"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The region's responsibilities and defensive summary logic are worth keeping, but its layout and event-row presentation should be rebuilt in the new design language.",
+ "decomposition_hints": [
+  "Split the HEAD live-state summary into its own component (e.g., ActivityHead)",
+  "Split the FEED event list and individual event row into separate components",
+  "Extract summaryText into a shared event-formatting utility",
+  "Move empty-state rendering into a dedicated placeholder component"
+ ],
+ "_path": "canvas/app/src/regions/Activity.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,34 @@
+{
+ "role": "A fixed-position entry button that opens the tools palette by calling the store's openTools action.",
+ "capabilities": [
+  "Render a bottom-left 'Tools' pill button",
+  "Trigger the tools palette via openTools on click",
+  "Provide an accessible aria-label and a decorative glyph"
+ ],
+ "substance": "partial",
+ "substance_why": "It only renders the trigger button and delegates opening to the store; the palette itself, final placement, and copy are explicitly scaffold-grade or TODO.",
+ "interactions_present": [
+  "Clicking the 'Tools' button calls openTools"
+ ],
+ "interactions_missing": [
+  "No keyboard shortcut or alternative activation",
+  "No open/closed state feedback or toggle behavior",
+  "No actual tools palette rendered",
+  "No tool selection or active-tool indication",
+  "No finalized placement per DNA design system",
+  "No finalized copy (AI-draft awaiting Tim's steer)",
+  "No disabled/loading/error states"
+ ],
+ "performance_risks": [],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The component already isolates the correct trigger seam and accessibility basics, but its scaffold positioning and draft copy must be rebuilt against the new design system.",
+ "decomposition_hints": [
+  "Split the button presentation from the fixed-position layout shell so placement can be redesigned independently",
+  "Move finalized labels/copy into a content or config seam",
+  "Keep openTools as the stable boundary between the entry point and the palette surface",
+  "Consider merging this entry with the palette surface component once the redesign settles"
+ ],
+ "_path": "surface/app/src/tools/ToolsBar.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

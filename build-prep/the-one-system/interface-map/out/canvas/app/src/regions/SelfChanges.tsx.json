@@ -1,0 +1,42 @@
+{
+ "role": "A React region component that renders the self-modification audit log filtered to an indicated ui:// element's code scope and wires per-row revert through the existing AppContext revert gate.",
+ "capabilities": [
+  "Conditionally render only when a ui:// element is indicated",
+  "Display a three-way status: corpus-stale, no-code-scope, or true-empty",
+  "List filtered self-change rows with subject, matched-file count, and relative timestamp",
+  "Offer per-row operator-only revert for self-apply commits via revertSelfChangeAt(sha)",
+  "Reuse shared design-system event-row vocabulary plus SectionHead and Badge components"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements full conditional rendering, a three-way fail-loud status trichotomy, a mapped change list with tooltips, and a wired revert interaction using context-provided data and helpers.",
+ "interactions_present": [
+  "Reacts to the indicated ui:// address from AppContext to show or hide the region",
+  "Clicking a row's '\u21a9 revert' button calls revertSelfChangeAt(c.sha) through the existing /api/revert gate",
+  "Hovering the matched-files count shows a tooltip listing files touched at this scope"
+ ],
+ "interactions_missing": [
+  "No confirmation or undo flow before triggering revert",
+  "No feedback or progress state for an in-flight revert action",
+  "No error handling or retry affordance if selfChanges fetch or revert fails",
+  "No navigation to commit detail, diff view, or full audit log",
+  "No keyboard accessibility or focus management for row actions",
+  "No handling for indication changes mid-fetch or stale-to-loaded transitions"
+ ],
+ "performance_risks": [
+  "Unbounded change list rendered without virtualization, risking large DOM for busy scopes",
+  "New inline arrow function created per row on every render for the revert onClick",
+  "No memoization of rows or derived state, causing re-renders on any context update",
+  "Tooltip strings built by joining matched_files arrays inline per render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Preserve the fail-loud trichotomy, the ui:// indication gating, and the existing revert integration, but rebuild the monolithic component into smaller presentational pieces and add proper loading, error, and confirmation states.",
+ "decomposition_hints": [
+  "Split data/state access into a dedicated useSelfChanges hook so the view is pure",
+  "Extract SelfChangesStatus component for stale / no-scope / empty cues",
+  "Extract SelfChangesRow component with its own revert button state and confirmation",
+  "Share the revert affordance with the existing Grow/History revert button component"
+ ],
+ "_path": "canvas/app/src/regions/SelfChanges.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

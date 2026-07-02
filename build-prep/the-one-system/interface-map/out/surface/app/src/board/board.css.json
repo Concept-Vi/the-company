@@ -1,0 +1,42 @@
+{
+ "role": "Styles the board-view modal overlay shell (scrim, panel, header, scrollable body, message states, and DNA board-group framing overrides).",
+ "capabilities": [
+  "Board overlay modal chrome (open/closed states, scrim, panel)",
+  "Header layout with title, subtitle, and close button",
+  "Scrollable body with safe-area bottom padding",
+  "Empty/error/quiet message and retry button styling",
+  "Full-width framing for DNA .board-groups content",
+  "Override DNA .screen fixed phone-frame and .ar-responsive grid for grouped-list layout"
+ ],
+ "substance": "substantial",
+ "substance_why": "Implements a complete modal surface with detailed responsive/DNA integration overrides and extensive design rationale in comments.",
+ "interactions_present": [
+  "Overlay open/close transition via .board-overlay--open",
+  "Pointer-event toggling between open and closed overlay",
+  "Styled close button (cursor pointer, 44x44 touch target)",
+  "Styled retry button",
+  "Scrollable board body"
+ ],
+ "interactions_missing": [
+  "No wired close action for the close button or scrim click",
+  "No wired retry action for the retry button",
+  "No keyboard/escape/focus management",
+  "No loading or skeleton state",
+  "No aria/hidden announcements"
+ ],
+ "performance_risks": [
+  "Transition on visibility is discrete and may cause a perceptual jump alongside opacity",
+  "Fixed overlay/scrim creates a full-viewport stacking context"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the token-based layout intent and DNA override rules, but rebuild selectors and structure to match the redesigned component surface.",
+ "decomposition_hints": [
+  "Separate overlay chrome (overlay, scrim, panel, head, close) from content framing (.board-groups overrides)",
+  "Split DNA integration overrides into a dedicated host-overrides stylesheet",
+  "Extract message states and retry button into reusable empty/error components",
+  "Co-locate animation/transition tokens with other overlay surfaces"
+ ],
+ "_path": "surface/app/src/board/board.css",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

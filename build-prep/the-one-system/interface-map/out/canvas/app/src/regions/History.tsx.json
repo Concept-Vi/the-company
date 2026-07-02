@@ -1,0 +1,46 @@
+{
+ "role": "An addressed, read-only audit region that renders the full event trajectory of an indicated ui:// element, grouped by kind into navigable collapsible sections.",
+ "capabilities": [
+  "Render addressed history only for ui:// indicated elements",
+  "Group trajectory events by kind while preserving chronological order within groups",
+  "Sort kind groups by most-active-first",
+  "Toggle collapse/expand of each kind group with local state",
+  "Show event count and loading state in a kit SectionHead aside Badge",
+  "Display per-group recency and count in group headers",
+  "Render event rows using the shared .ev/.ev-k/.ev-s/.ev-t design-token vocabulary",
+  "Show an empty-state message when no events exist"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements the complete addressed-history UI surface: data grouping, sorting, collapsible sections, empty state, loading indicator, and shared event-row styling, with no TODOs or stubs visible.",
+ "interactions_present": [
+  "Click a kind-group header to toggle its collapse/expand state",
+  "Display updates reactively when the indicated ui:// address changes via AppContext"
+ ],
+ "interactions_missing": [
+  "No expand/collapse-all control",
+  "No click-through or detail view for individual events",
+  "No search or filter within history",
+  "No pagination or virtualization for long trajectories",
+  "No manual refresh/retry for the history fetch",
+  "No error state if the history read fails",
+  "No keyboard navigation or focus management",
+  "No link from the indicated address to its surface"
+ ],
+ "performance_risks": [
+  "Groups and sort order are recomputed on every render without memoization",
+  "Collapse toggle spreads the entire closed state object, re-rendering all groups",
+  "Long event lists are rendered fully with no virtualization",
+  "relTime is called inline for every row on every render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the region concept and shared .ev vocabulary, but refactor grouping/sorting into a memoized hook and split presentation pieces before adding missing interactions.",
+ "decomposition_hints": [
+  "Extract trajectory grouping/sorting into a dedicated hook or utility",
+  "Split GroupHead and EventRow into small presentational components",
+  "Separate empty, loading, and error states into subcomponents",
+  "Isolate history data access from AppContext into a region-specific history hook"
+ ],
+ "_path": "canvas/app/src/regions/History.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

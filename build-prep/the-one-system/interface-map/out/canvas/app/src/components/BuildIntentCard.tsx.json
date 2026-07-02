@@ -1,0 +1,43 @@
+{
+ "role": "A React presentation component that renders a build-intent review card in the inbox/surface UI, surfacing lifecycle phase, operator-facing outcome, blast-radius reach, context bundle, and the demonstrate-first affordance.",
+ "capabilities": [
+  "Render build-intent card with phase-derived CSS class and data-ui-ref",
+  "Display consequence class and declared scope metadata",
+  "Show the original intent/spec for awaiting or running builds",
+  "Render persisted blast-radius reach with navigation for awaiting builds",
+  "Render surfaced context bundle for awaiting builds",
+  "Present demonstrate-first outcome and a \"show me\" button for done builds",
+  "Render surfaced-back failure/scope-overrun reason",
+  "Provide a collapsible changed-files record, build summary, and permission mode"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file fully implements conditional phase-based rendering, integrates two child components, wires multiple user actions, and includes extensive inline design rationale.",
+ "interactions_present": [
+  "Head click calls onOpen(d.id) to compile/open the decision",
+  "BlastRadiusReach receives onNavigate for address navigation",
+  "ContextBundle receives onNavigate for context navigation/pinning",
+  "\"show me\" button calls onDemonstrate(outcome.demoType)",
+  "Record disclosure toggle switches showRecord state"
+ ],
+ "interactions_missing": [
+  "FORM = needs-tim stubs for BlastRadiusReach and ContextBundle placement/approval UI",
+  "No explicit approve/reject affordance beyond head-click compile",
+  "No internal error boundary or loading state",
+  "No fallback when onNavigate is undefined"
+ ],
+ "performance_risks": [
+  "Potentially large changed_files array is mapped on every render without memoization",
+  "deriveOutcome, buildPhase, and class-string concatenation run every render",
+  "New closures created for every onClick handler on each render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The card is a well-scoped pure-presentational container whose concepts and phase logic should be preserved, but its layout and child wiring should be rebuilt for the redesign.",
+ "decomposition_hints": [
+  "Split phase-specific bodies into separate subcomponents: AwaitingReachPanel, DoneOutcomePanel, SurfacedBackPanel",
+  "Extract the collapsible record section into its own RecordDisclosure component",
+  "Keep the card as a thin orchestrator that selects the phase panel and delegates navigation/demonstration callbacks"
+ ],
+ "_path": "canvas/app/src/components/BuildIntentCard.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

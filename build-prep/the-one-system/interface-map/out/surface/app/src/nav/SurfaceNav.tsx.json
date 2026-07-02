@@ -1,0 +1,43 @@
+{
+ "role": "SurfaceNav is the host component that renders a cross-cutting navigation rail for switching between top-level surface overlays and falls back to plain buttons when the DNA design system is unavailable.",
+ "capabilities": [
+  "Renders a vertical nav rail of surface tiles (map, decisions, fabric, board, sessions, transcript)",
+  "Injects and delegates to DNA.org.navRail when present",
+  "Provides degrade-clean fallback buttons if DNA navRail is missing or throws",
+  "Wires each tile click to open its corresponding surface via store call or window events",
+  "Applies stamped UI addresses to the nav container and each surface item"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements real navigation wiring, a static surface registry, DNA integration with fallback rendering, and explicit event delegation, not just a stub.",
+ "interactions_present": [
+  "Click/tap a nav tile to open its surface",
+  "Map tile dispatches an Escape keydown to dismiss overlays and return home",
+  "Decisions tile calls openDecisionsList()",
+  "Fabric, board, sessions, and transcript tiles dispatch custom window events (channels:open, board:open, sessions:open, transcript:open)",
+  "DNA navRail click delegation via [data-nav] attribute"
+ ],
+ "interactions_missing": [
+  "No explicit keyboard arrow navigation or focus management for the DNA rail",
+  "No active/selected state indicating which surface is currently open",
+  "No ARIA current/pressed attributes on the active tile",
+  "No re-attempt to render DNA navRail if it loads after mount",
+  "No cleanup of injected DNA innerHTML on unmount",
+  "No visible decisions count pill in the nav itself"
+ ],
+ "performance_risks": [
+  "Direct host.innerHTML mutation on mount bypasses React reconciliation",
+  "Synthetic Escape keyboard event may trigger unrelated global Escape handlers",
+  "Event listener is attached to the injected DOM host rather than delegated from a stable React-rendered parent"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the surface registry and open-surface contract, but replace imperative DOM injection and window-event dispatch with idiomatic React composition and a proper design-system adapter.",
+ "decomposition_hints": [
+  "Split the SURFACES registry and open-surface actions into a separate surface model/hook",
+  "Split the DNA navRail adapter into its own component that accepts items and an onNavigate callback",
+  "Split the fallback button list into a presentational React component",
+  "Separate the stamped address logic into a reusable utility if not already shared"
+ ],
+ "_path": "surface/app/src/nav/SurfaceNav.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

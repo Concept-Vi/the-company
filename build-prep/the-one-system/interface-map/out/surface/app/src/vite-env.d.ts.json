@@ -1,0 +1,24 @@
+{
+ "role": "A TypeScript ambient type reference file that pulls in Vite client types for the app surface package.",
+ "capabilities": [
+  "References Vite client ambient types for import.meta.env and Vite-specific APIs",
+  "Enables TypeScript type checking of Vite client features in the app"
+ ],
+ "substance": "placeholder",
+ "substance_why": "The file contains only a single triple-slash reference directive and no custom type declarations or app-specific augmentations.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "App-specific import.meta.env type definitions",
+  "Custom module declarations for app assets or workers",
+  "Type augmentation for environment variables used by the app"
+ ],
+ "performance_risks": [],
+ "reuse_verdict": "keep",
+ "reuse_why": "The Vite client type reference is a standard, necessary TypeScript support file and should be retained as-is.",
+ "decomposition_hints": [
+  "No split needed; expand in place if app-specific environment or module type declarations are required"
+ ],
+ "_path": "surface/app/src/vite-env.d.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

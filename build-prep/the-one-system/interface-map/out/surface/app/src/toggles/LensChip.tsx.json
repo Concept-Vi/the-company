@@ -1,0 +1,47 @@
+{
+ "role": "A compact toggle control that displays the active projection lens and lets the user switch between projection bindings from a dropdown menu.",
+ "capabilities": [
+  "Show active projection binding as a short label",
+  "Show live map-thing count with accessible title/aria-label",
+  "Toggle a dropdown menu of all projection bindings",
+  "Highlight the currently selected binding in the menu",
+  "Select a binding and notify parent via onPick",
+  "Close menu via scrim click or selection",
+  "Animate menu open/close with framer-motion",
+  "Attach telemetry stamps to chip and each menu item"
+ ],
+ "substance": "substantial",
+ "substance_why": "It renders the full chip surface, menu, selection handling, animations, and accessibility annotations end-to-end, with only positioning logic abstracted to useChipMenu.",
+ "interactions_present": [
+  "Click chip button toggles menu open/closed",
+  "Click menu item selects binding and closes menu",
+  "Click scrim closes menu"
+ ],
+ "interactions_missing": [
+  "No Escape key handler to close menu",
+  "No arrow-key navigation or focus trap inside menu",
+  "No aria-haspopup/aria-controls/role=menu/menuitem semantics",
+  "No handling for empty bindings list",
+  "No loading or error state for projection/count",
+  "No visible unit suffix decision for count (commented DNA aesthetic flag)",
+  "No explicit focus return to chip after close"
+ ],
+ "performance_risks": [
+  "AnimatePresence/motion re-renders and compositor work on every open/close",
+  "Menu re-renders and re-stamps all binding buttons on every parent render",
+  "No virtualization for large binding lists",
+  "encodeURIComponent + stamp string interpolation per binding per render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The lens-switching concept, short-label/count display, and binding selection logic are domain-correct, but the animation library, styling hooks, and accessibility need rebuilding.",
+ "decomposition_hints": [
+  "Split the chip face (label + count) from the menu overlay (scrim + animated list)",
+  "Extract shortLabel into a shared projection-formatting utility",
+  "Wrap the motion menu into a reusable dropdown primitive",
+  "Move accessibility/keyboard behavior into a headless menu hook or component",
+  "Separate telemetry stamping from markup to avoid per-item render cost"
+ ],
+ "_path": "surface/app/src/toggles/LensChip.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

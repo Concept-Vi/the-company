@@ -1,0 +1,47 @@
+{
+ "role": "ShapeHow is the visible, in-rail presentation-preference affordance that lets an operator at a locus reshape how the system shows that thing and records the choice via an onShape callback.",
+ "capabilities": [
+  "Render bare one-click preference chips (terser, more detail)",
+  "Render arg-taking chips that arm a text input (lead with\u2026, show as\u2026)",
+  "Track armed chip and typed arg in local React state",
+  "Submit bare preference with a human-readable text phrase",
+  "Submit arg-taking preference only when a non-empty arg is provided",
+  "Show busy state with a 'shaping\u2026' badge and disable controls",
+  "Highlight the currently active kind with a star marker",
+  "Show an EmptyState prompt when no preference is set and no chip is armed",
+  "Handle Enter to submit and Escape to cancel the arg input",
+  "Use shared kit components (Surface, Badge, EmptyState) and CSS var tokens"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete, wired UI for the presentation-pref learning loop including chip selection, arg input, busy/empty states, active highlighting, and callback dispatch.",
+ "interactions_present": [
+  "Click a bare chip to record terser/more preference",
+  "Click an arg-taking chip to show/hide its input",
+  "Type an arg and press Enter or click \u2713 to submit lead_with/shape",
+  "Press Escape to cancel arg input and close it",
+  "See busy feedback while a preference is being saved",
+  "See active preference highlighted with a star"
+ ],
+ "interactions_missing": [
+  "No error/failure feedback if onShape or the backend call fails",
+  "No way to clear or remove an existing preference",
+  "No data-ui-ref or guidable inspector address (intentionally excluded, flagged as gap)",
+  "No capability-registry integration; the four kinds are hardcoded from backend vocabulary",
+  "No ARIA state attributes (e.g., aria-pressed) on the toggle chips",
+  "No explicit keyboard navigation beyond native tab order",
+  "No loading skeleton or disabled reason announcement"
+ ],
+ "performance_risks": [],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The vocabulary and onShape contract are already aligned with the backend learning loop, so the component should be preserved in behavior and rebuilt with the new design-system form.",
+ "decomposition_hints": [
+  "Extract BareChip and ArgChip as reusable subcomponents",
+  "Extract the arg-input form into its own controlled component",
+  "Move the PRESENTATION_PREFS vocabulary into a capabilities/registry-driven module instead of hardcoding",
+  "Separate presentation state (active, busy, empty) from the preference-recording logic",
+  "Encapsulate local arming/submit state in a small useShapeHow hook"
+ ],
+ "_path": "canvas/app/src/components/ShapeHow.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

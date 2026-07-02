@@ -1,0 +1,52 @@
+{
+ "role": "This file is the complete visual stylesheet for the Right-Hand-Man (RHM) persistent overlay, covering the V handle, fan menu, scrim, greeting, brain panel, note composer, and post composer surfaces.",
+ "capabilities": [
+  "Style persistent draggable V handle with hover/active/greet states",
+  "Render open-fan verb arc with live and coming-soon variants",
+  "Render scrim veil behind the open fan",
+  "Render first-contact greeting card with tail pointer",
+  "Render brain panel with starter chips, guided tour stepper, reply area, and brain input",
+  "Render note composer panel with aim, meaning, unavailable message, input, status, and save",
+  "Render L4 post composer toggle/body/channel/message/send inside brain panel",
+  "Apply paper design tokens (no hardcoded colors)",
+  "Respect prefers-reduced-motion for animations"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file contains extensive, detailed CSS for every RHM surface\u2014handle, fan, scrim, greeting, brain panel, note composer, and post composer\u2014with states, animations, accessibility focus rings, and token usage.",
+ "interactions_present": [
+  "Hover/active/focus-visible states on handle, verbs, buttons, and inputs",
+  "Cursor grab/grabbing on the draggable handle",
+  "Touch-action: none declared on handle",
+  "Data-attribute-driven visibility: [data-open='true'], [data-greet='true']",
+  "Open/close affordances styled (close buttons, dismiss/tour buttons, send/save buttons)",
+  "Reduced-motion media query disables animations"
+ ],
+ "interactions_missing": [
+  "No actual drag behavior or transform updates (only touch-action: none and cursor)",
+  "No JavaScript wiring for toggling open/greet states",
+  "No fan verb selection or arc positioning logic",
+  "No brain starter/tour step progression logic",
+  "No note save/send or post send behavior",
+  "No scrim click-to-dismiss or escape handling",
+  "No aria/screen-reader semantics"
+ ],
+ "performance_risks": [
+  "Multiple fixed-position overlays with high z-index stacking may cause compositing overhead",
+  "Animations on opacity/transform are generally safe but fan items use fixed-width cards with box-shadows",
+  "Filter drop-shadow on greeting tail adds per-element GPU cost",
+  "Overflow:auto panels with max-height and pre-wrapped content can cause layout on large replies",
+  "Width expressions using min() with vw may trigger relayout on viewport resize"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The component structure, token-based styling, and interaction states are worth preserving, but the monolithic CSS should be rebuilt alongside the redesigned component architecture.",
+ "decomposition_hints": [
+  "Split handle + fan + scrim into one module",
+  "Split greeting card into its own module",
+  "Split brain panel into submodules: starters, tour, reply, brain input, post composer",
+  "Split note composer into its own module",
+  "Extract shared animation keyframes and token variables into a common RHM theme/animation file"
+ ],
+ "_path": "surface/app/src/rhm/rhm.css",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

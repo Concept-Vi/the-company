@@ -1,0 +1,41 @@
+{
+ "role": "A token-only stylesheet that frames the session-drill overlay (FACE-1), including its modal shell, roster list, search filter, and recall-lens detail layout.",
+ "capabilities": [
+  "Modal overlay shell with scrim, panel, open/closed state, and safe-area-aware centering",
+  "Header layout with title, subtitle, back, and close controls",
+  "Scrollable body with message/error/quiet and retry button styling",
+  "Search input styled as a pill with focus-visible ring",
+  "Session roster list rows with hover state and meta text",
+  "Session detail layout and recall-lens sections with bulleted lists"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file provides a complete, token-driven visual system for the sessions overlay surface with many distinct, fully styled components.",
+ "interactions_present": [
+  "CSS-only overlay open/close state (.sessions-overlay--open)",
+  "Button/link hover states via :hover",
+  "Search input focus-visible ring",
+  "Scrim/back/close/row/retry cursor pointers"
+ ],
+ "interactions_missing": [
+  "No JavaScript event handlers for open, close, back, retry, or row selection",
+  "No keyboard escape or focus-trap wiring",
+  "No loading, empty, or error retry behavior beyond static styles",
+  "No search debounce or filter logic",
+  "No aria/accessibility attribute hooks"
+ ],
+ "performance_risks": [
+  "Fixed-position overlay covers full viewport and uses visibility transitions",
+  "Box-shadow and color-mix scrim may repaint on every overlay transition",
+  "Body overflow scrolling inside a max-height flex panel without content-visibility"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The file already uses design tokens and mirrors established overlay patterns, so its structure and naming should be retained and refactored rather than discarded.",
+ "decomposition_hints": [
+  "Split overlay chrome (overlay, scrim, panel, head, close) into a shared modal-shell stylesheet",
+  "Split roster pieces (search, list, row, empty/error states) into a session-roster stylesheet",
+  "Split detail/recall-lens (card, lens, sections) into a session-detail stylesheet"
+ ],
+ "_path": "surface/app/src/sessions/sessions.css",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

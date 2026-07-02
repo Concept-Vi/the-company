@@ -1,0 +1,33 @@
+{
+ "role": "A small presentational control component that lets the user switch among three view modes of the application.",
+ "capabilities": [
+  "Render three view-mode toggle buttons (both, circle, square)",
+  "Show inline SVG glyphs representing each mode",
+  "Apply an active-state CSS class for the selected mode",
+  "Call a parent-supplied setView callback when a mode is clicked",
+  "Attach address stamps for UI instrumentation"
+ ],
+ "substance": "substantial",
+ "substance_why": "The component is fully implemented: it renders interactive buttons with labels, glyphs, click handlers, active-state styling, and instrumentation stamps, with no TODOs or stubs.",
+ "interactions_present": [
+  "Click a mode button to change the active view",
+  "Visual active-state feedback via CSS class",
+  "Accessible name and tooltip via aria-label/title"
+ ],
+ "interactions_missing": [
+  "No explicit keyboard arrow-key navigation between toggle buttons",
+  "No disabled, loading, or read-only state",
+  "No visible text label independent of icon/title"
+ ],
+ "performance_risks": [],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The mode-switching concept and configuration are worth keeping, but the component should be rebuilt to separate icons, styling, and instrumentation concerns.",
+ "decomposition_hints": [
+  "Extract the MODES configuration and SVG glyphs into a dedicated icons/config module",
+  "Separate the address-stamping concern into a wrapper or hook so the toggle itself is pure UI",
+  "Split the button rendering into a reusable ToggleButton or IconButton primitive"
+ ],
+ "_path": "surface/app/src/toggles/ViewToggle.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

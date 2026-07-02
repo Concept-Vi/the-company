@@ -1,0 +1,52 @@
+{
+ "role": "The Palette is the rail region that lets the operator browse the node-type registry and add nodes to the canvas.",
+ "capabilities": [
+  "Renders the palette rail with data-ui-ref=\"ui://rail/palette\"",
+  "Lists node types from the AppContext oinfo registry",
+  "Sorts node type names alphabetically",
+  "Groups node types by declared kind (process, content, fallback other)",
+  "Orders lanes: process first, content second, then any other kinds alphabetically",
+  "Renders each kind lane with a kit LaneHead showing a kind label and item count",
+  "Renders each node type as a kit Surface card with kind-tone spine, monogram, name, and add cue",
+  "Maps process/content kinds to design-system tones (sig/wire) and labels",
+  "Calls addNode(type) when a card is clicked",
+  "Shows an EmptyState when the registry has no types"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements complete presentational structure, grouping logic, tone mapping, click-to-add interaction, and empty state using the shared kit components.",
+ "interactions_present": [
+  "Click a node-type Surface card to invoke addNode(t)",
+  "Hover/focus styling provided by the kit Surface component",
+  "Browser tooltip via the title attribute on each card"
+ ],
+ "interactions_missing": [
+  "No drag-and-drop from palette onto canvas",
+  "No search or filter of node types",
+  "No keyboard navigation or shortcuts for palette items",
+  "No multi-select or bulk add",
+  "No loading state while oinfo is fetched",
+  "No error handling if addNode fails",
+  "No favorites, recents, or recently-used ordering",
+  "No preview or description of each node type",
+  "No disabled state for forward-provision kinds",
+  "No scroll virtualization for large registries"
+ ],
+ "performance_risks": [
+  "Regroups and re-sorts the full oinfo list on every render without memoization",
+  "Creates a new inline onClick closure for every card on every render",
+  "Renders every registry type as a DOM node with no virtualization",
+  "Builds className and title strings per item per render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The component already expresses the new design vocabulary and region responsibility, but it needs search, drag-and-drop, and render memoization to be production-ready.",
+ "decomposition_hints": [
+  "Extract grouping/sorting logic into a useNodeTypesByKind hook or utility",
+  "Split PaletteLane into its own component",
+  "Split PaletteItem/Surface card into its own component",
+  "Add a PaletteSearch or PaletteFilter subcomponent",
+  "Move kind tone/label constants into a shared design-system module if reused elsewhere"
+ ],
+ "_path": "canvas/app/src/regions/Palette.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

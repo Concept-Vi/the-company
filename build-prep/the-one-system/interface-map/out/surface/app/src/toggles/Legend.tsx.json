@@ -1,0 +1,41 @@
+{
+ "role": "A collapsible orientation panel that explains the active lens and view state to the operator.",
+ "capabilities": [
+  "Render a collapsible legend title and explanatory lines for the current projection and view mode",
+  "Persist collapse/expand preference in localStorage",
+  "Show registry-declared binding meta descriptions when in the default un-centred, live state",
+  "Compute dynamic, centre-aware and time-aware descriptions for square, nucleation, separator, and semantic lenses",
+  "Describe the centred semantic strain field by iterating points to count inward/outward populations",
+  "Append the grid-and-circle spine note for the 'both' view on wheel lenses",
+  "Stamp the component with a ui://instrument/legend address",
+  "Provide accessible toggle button labels and expanded state"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements full conditional description logic for multiple lens types, collapse persistence, and rendering with accessibility attributes.",
+ "interactions_present": [
+  "Clicking the toggle button collapses or expands the explanation and persists the choice",
+  "Legend content reacts to changes in projection, view mode, centre, and scrubbed time"
+ ],
+ "interactions_missing": [
+  "No keyboard shortcut or programmatic control for collapse",
+  "No reset to default expansion state",
+  "No per-line detailed help or tooltips",
+  "No cross-tab sync of the collapsed preference",
+  "No empty/loading placeholder when projection is absent"
+ ],
+ "performance_risks": [
+  "describe() and the centred semantic point-counting loop run on every render instead of being memoized",
+  "asOf() and array allocations for lines recreate values each render",
+  "Large proj.points arrays could make the strain-counting loop expensive"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The lens-specific human-readable description rules are domain-specific and worth keeping, but should be extracted into memoized pure functions/hooks and decoupled from the presentational component.",
+ "decomposition_hints": [
+  "Extract description computation into a pure function or hook (e.g., useLegendDescription) so it can be memoized and unit-tested",
+  "Extract the localStorage-backed collapse state into a reusable usePersistentToggle hook",
+  "Split lens-specific description strategies (square, nucleation, separator, semantic, both-view spine) into registry-driven or per-mode helpers"
+ ],
+ "_path": "surface/app/src/toggles/Legend.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

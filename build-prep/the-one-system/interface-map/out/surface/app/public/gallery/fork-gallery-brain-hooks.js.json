@@ -1,0 +1,47 @@
+{
+ "role": "Per-unit gallery/decision mount that wires a shared fork-brain core into rendered units and batches route-back direction writes.",
+ "capabilities": [
+  "Bind an inline 'Ask about this' brain affordance to a rendered gallery unit on gallery:rendered",
+  "Bind the same brain affordance to a decision card on decision:rendered",
+  "Build and toggle a brain panel with reply area, textarea input, and send button",
+  "Delegate brain turn Q&A to window.forkBrainCore.talk keyed by source/decision address",
+  "Collect gallery:direction events and flush them in a microtask batch via window.forkBrainCore.writeDirections",
+  "Expose window.forkBrainHooks.bindBrain for explicit projection binding"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements real event wiring, DOM construction, delegation to the core brain-turn engine, and includes a recent fix for decision-card binding plus microtask batching for route-back writes.",
+ "interactions_present": [
+  "Click .brain-ask button toggles the brain panel open/closed",
+  "Click .brain-send button reads .brain-input and calls core.talk",
+  "Typing into the .brain-input textarea",
+  "gallery:direction events are captured and batched for route-back writes"
+ ],
+ "interactions_missing": [
+  "No Enter-key submit handler in the textarea",
+  "No explicit loading, error, or retry UI for brain turn or route-back writes",
+  "No close affordance for the panel except re-clicking the ask button",
+  "No cleanup or unbinding when a unit/decision card is removed from the DOM",
+  "No guard against rapid repeated panel creation or duplicate send listeners",
+  "No accessibility roles/labels beyond title and aria-live reply",
+  "No fallback if forkBrainCore is missing except a thrown error"
+ ],
+ "performance_risks": [
+  "Binds and builds DOM for every rendered unit immediately, regardless of viewport",
+  "Microtask batch of gallery:direction events is unbounded within a tick, risking large payloads",
+  "Repeated panel open/close recreates DOM and reattaches listeners for the same unit",
+  "No throttling or debouncing on high-frequency gallery:direction or rendered events",
+  "Window-level event listeners and per-element bindings are never removed, risking leaks on long-lived pages"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The event contracts and per-unit brain-binding/routing-back responsibilities are well-defined and bug-hardened, but the DOM-construction and global-window wiring should be rebuilt in the new surface form.",
+ "decomposition_hints": [
+  "Separate brain panel UI construction from binding orchestration",
+  "Split gallery:rendered binding from decision:rendered binding",
+  "Extract direction batching/flush into a dedicated route-back queue module",
+  "Move the core() dependency check into shared bootstrap/dependency injection",
+  "Isolate the explicit bindBrain API from the self-wiring window event listeners"
+ ],
+ "_path": "surface/app/public/gallery/fork-gallery-brain-hooks.js",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

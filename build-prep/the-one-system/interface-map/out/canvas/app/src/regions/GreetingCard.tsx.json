@@ -1,0 +1,45 @@
+{
+ "role": "A React region component that renders the 'while you were away' morning greeting pill and its overlay card, fetching aggregated arrival context from /api/greeting.",
+ "capabilities": [
+  "Fetch /api/greeting with optional ?since from localStorage last-visit timestamp",
+  "Track last visit in localStorage and auto-open the card after AWAY_MS (4h) when there is content",
+  "Render a persistent '\u25cf while you were away' pill button",
+  "Render an overlay HUD card with current mode/dials, returned memories, built headlines, and waiting-on-you items",
+  "Toggle expansion of the built list beyond six items",
+  "Open the card on a custom window 'open-greeting' event"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete, wired feature: data fetching, visit tracking, auto-open logic, event handling, and a multi-section rendered card.",
+ "interactions_present": [
+  "Click pill to toggle card open/closed",
+  "Click \u2715 to close card",
+  "Click 'all/fewer' to expand/collapse built list",
+  "Custom window event 'open-greeting' opens card"
+ ],
+ "interactions_missing": [
+  "No loading or error UI for the greeting fetch",
+  "No retry or refresh after initial mount",
+  "No keyboard/escape-to-close or focus trap for the overlay",
+  "No click-outside-to-close behavior",
+  "No explicit accessibility roles/aria for the overlay or pill",
+  "No interaction on waiting-on-you items (they are read-only text)",
+  "No way to dismiss or act on returned memories"
+ ],
+ "performance_risks": [
+  "Synchronous localStorage read/write on the main thread during effect init",
+  "Unconditional fetch on every mount with no request caching or deduplication beyond module-level bootedThisLoad guard",
+  "No memoization of derived lists or event handlers, causing re-renders of the card body on trivial state changes",
+  "Module-level bootedThisLoad flag is a fragile StrictMode workaround and breaks component-level test isolation"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The greeting concept and data contract are valuable, but the presentation, state management, and lifecycle logic should be rebuilt into separated, testable pieces.",
+ "decomposition_hints": [
+  "Split visit-tracking and /api/greeting fetch into a custom hook or service (e.g., useGreeting)",
+  "Split the pill trigger into its own small chrome component",
+  "Split the overlay card into a generic HUD/Dialog shell plus section subcomponents: ReturnedMemories, BuiltList, WaitingList",
+  "Separate the auto-open decision policy from rendering so it can be tested independently"
+ ],
+ "_path": "canvas/app/src/regions/GreetingCard.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

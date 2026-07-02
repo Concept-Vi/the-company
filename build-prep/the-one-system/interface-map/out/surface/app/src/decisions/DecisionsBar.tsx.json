@@ -1,0 +1,36 @@
+{
+ "role": "A conditional in-surface call-to-action banner that surfaces the pending-decisions count and opens the decisions list modal.",
+ "capabilities": [
+  "Reads pending decisions count from decisionsStore",
+  "Conditionally renders a decision-count banner",
+  "Renders a clickable button that opens the decisions list",
+  "Provides accessible aria-label and count copy"
+ ],
+ "substance": "substantial",
+ "substance_why": "The component fully implements its scoped behavior: it consumes store state, decides whether to render, and wires a click handler to open the list with accessible copy.",
+ "interactions_present": [
+  "Clicking the inbox-entry button calls openDecisionsList"
+ ],
+ "interactions_missing": [
+  "No loading or error state while decisions are fetched",
+  "No empty-state rendering beyond returning null",
+  "No dismiss/hide or snooze action",
+  "No keyboard shortcut or focus management for the modal trigger",
+  "No direct rendering of the decisions list (modal lives in DecisionsInbox)"
+ ],
+ "performance_risks": [
+  "Subscribes to the full pending array via useDecisions, causing re-renders whenever the array reference changes",
+  "No memoization of the rendered bar or count label",
+  "Inline pluralization and string construction run on every render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The count-to-CTA logic and open action are domain-specific and worth preserving, but the markup, class names, and layout placement will be rebuilt in the redesign.",
+ "decomposition_hints": [
+  "Separate the responsive layout shell (inbox-bar positioning) from the entry button",
+  "Extract count/pluralization formatting into a reusable utility or hook",
+  "Isolate the store subscription if other surfaces need the same pending count"
+ ],
+ "_path": "surface/app/src/decisions/DecisionsBar.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,34 @@
+{
+ "role": "A small, animated inline status notice component that surfaces a dismissible message to the user.",
+ "capabilities": [
+  "Conditionally render a message banner",
+  "Animate enter and exit with a vertical fade slide",
+  "Provide a manual dismiss button",
+  "Expose an ARIA `status` role for accessibility"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete, self-contained notice UI with animation, dismissal, and accessibility attributes, despite its small size.",
+ "interactions_present": [
+  "Click the \u00d7 button to call onDismiss"
+ ],
+ "interactions_missing": [
+  "No auto-dismiss/timeout behavior",
+  "No Escape key dismissal",
+  "No focus management or focus trap",
+  "No support for actions or rich content inside the notice",
+  "No stacking/queueing of multiple notices"
+ ],
+ "performance_risks": [
+  "Framer-motion animations may cause compositor work and re-renders on every enter/exit",
+  "No memoization, so parent re-renders will recreate the motion element subtree"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The concept of a dismissible, accessible status notice is worth keeping, but its styling and animation library should be rebuilt to match the new design system.",
+ "decomposition_hints": [
+  "Separate the presentational notice markup from the motion wrapper if the redesign introduces multiple notice variants or a shared animation primitive",
+  "Extract dismissal logic into a hook if auto-dismiss, keyboard dismissal, or focus management are added"
+ ],
+ "_path": "surface/app/src/toggles/Notice.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

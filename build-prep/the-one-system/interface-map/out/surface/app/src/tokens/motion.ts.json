@@ -1,0 +1,37 @@
+{
+ "role": "A central motion-design token module that defines shared animation constants and resolves transitions for the interface.",
+ "capabilities": [
+  "Exports spring presets (gentle, snappy) and a material eased-out cubic",
+  "Exports duration tokens for enter/move/exit/colour",
+  "Exports MotionFeel type and a transition resolver that maps role + feel to a Transition",
+  "Honours prefers-reduced-motion by returning a near-zero duration transition",
+  "Provides shared fadeRise disclosure variants (hidden/shown)"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements concrete token values, a typed resolver function, reduced-motion handling, and a reusable variant set.",
+ "interactions_present": [
+  "Reduced-motion check via window.matchMedia at transition resolution time",
+  "Spring/eased feel selection passed into transition()"
+ ],
+ "interactions_missing": [
+  "No live reduced-motion listener or reactive update when the preference changes",
+  "No actual animated components or orchestration/sequencing logic",
+  "No per-role colour transition variant beyond duration",
+  "No validation or fallback for invalid role values",
+  "No integration with the mentioned S4.3 taste toggle (only accepts feel as an argument)"
+ ],
+ "performance_risks": [
+  "Each transition() call re-runs matchMedia; negligible but avoidable if preferences were cached or observed",
+  "No hazards visible because the code restricts animation to transform+opacity as per its own mandate"
+ ],
+ "reuse_verdict": "keep",
+ "reuse_why": "The file is a well-scoped, single-source-of-truth motion token layer whose constants and resolver should survive the redesign with minor API cleanup.",
+ "decomposition_hints": [
+  "Keep curves/durations as pure token exports",
+  "Keep transition resolver as the single semantic entry point",
+  "Consider extracting variant primitives (fadeRise) into a separate variants file if more disclosure patterns are added"
+ ],
+ "_path": "surface/app/src/tokens/motion.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,48 @@
+{
+ "role": "This file is the host overlay surface that presents the live channel fabric as a DNA-rendered hub-and-spoke graph, opened by a global window event and closed via standard overlay controls.",
+ "capabilities": [
+  "Renders a modal overlay for the channel fabric",
+  "Loads live channel data from channelStore",
+  "Opens on custom window event channels:open",
+  "Closes via Escape key, scrim click, and close button",
+  "Fetches and caches the channel-view DNA archetype",
+  "Normalizes channel members object to id array for the DNA adapter",
+  "Delegates graph layout and SVG rendering to DNA channelGraph/hubNetwork/renderArchetype",
+  "Shows loading, error-with-retry, and empty states",
+  "Degrades gracefully when DNA or archetype is unavailable"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements the full overlay lifecycle, live data integration, error/empty states, and degrade-clean rendering, with only the graph drawing itself delegated to DNA.",
+ "interactions_present": [
+  "channels:open window event opens the overlay",
+  "Escape key closes the overlay",
+  "Scrim click closes the overlay",
+  "Close button closes the overlay",
+  "Retry button re-fetches channels"
+ ],
+ "interactions_missing": [
+  "No in-component trigger/button to open the overlay",
+  "No focus trap or focus restoration on open/close",
+  "No scroll lock or body overflow management",
+  "No graph-node or channel selection interactions",
+  "No loading indicator while fetching the DNA archetype",
+  "No explicit handling for DNA adapter/runtime errors beyond a generic catch",
+  "No responsive resize/redraw behavior for the graph"
+ ],
+ "performance_risks": [
+  "Rebuilds and remounts the entire DNA SVG graph whenever the channels reference changes",
+  "No memoization of normalized channel records or graph device output",
+  "Fetches /dna/layouts.json repeatedly if the archetype cache is not populated",
+  "Potential memory leaks from DNA-attached SVG listeners not explicitly cleaned up"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The overlay host pattern, open/close lifecycle, and degrade-clean error states are worth keeping, but the DNA global integration and members-normalization hack should be replaced by a first-class graph renderer.",
+ "decomposition_hints": [
+  "Split the overlay shell (scrim, header, close controls, aria) from the graph renderer (data adapter + visual mount)",
+  "Split the channel-to-graph data adapter (members normalization, record shaping) into a separate module",
+  "Split the DNA archetype loader/cache into a reusable hook or service"
+ ],
+ "_path": "surface/app/src/channels/ChannelView.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

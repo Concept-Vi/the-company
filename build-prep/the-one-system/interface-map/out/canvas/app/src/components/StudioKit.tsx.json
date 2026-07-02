@@ -1,0 +1,65 @@
+{
+ "role": "This file is the keystone structural-primitive module that defines the five named React shells (Card, Rail, Stage, Composer, RhmPanel) composing the Studio review surface and wires them to the shared AppContext controllers.",
+ "capabilities": [
+  "Render grouped corpus gallery as selectable Cards",
+  "Indicate a reviewed mockup locus without executing it",
+  "Stage a mockup in a sandboxed same-origin iframe",
+  "Toggle staged mockup between desktop and phone frames",
+  "Capture element-level deixis from inside the staged iframe",
+  "Derive a meaningful sub-locus for un-registered clicked elements",
+  "Provide visual outline feedback for the selected element",
+  "Reset locus to the whole mockup via a whole-screen control",
+  "Compose and post addressed comments to the shared annotation store",
+  "Mint build-intents from addressed change requests",
+  "Run plan-mode generate on the open mockup and show proposed edits",
+  "Display the annotation thread at the current locus",
+  "Show address-help metadata for the current locus",
+  "Mount the real RhmChat organ grounded at the studio locus",
+  "Offer a one-click primed read question to the RHM"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements all five named primitives with real data binding, event handlers, iframe deixis bridge, composer actions, generate result display, and live RhmChat integration.",
+ "interactions_present": [
+  "Card click \u2192 onSelect \u2192 setReviewMockup (indicates locus)",
+  "Iframe load + polling \u2192 attachDeixis click delegate",
+  "Click inside iframe \u2192 setReviewMockup with element/ancestor/base address",
+  "Whole-screen button \u2192 reset locus to base mockup address",
+  "Desktop/phone buttons \u2192 local device toggle",
+  "Composer textarea onChange \u2192 local text state",
+  "Comment button \u2192 annotateLocus POST",
+  "Request change button \u2192 mintBuildIntent POST",
+  "Generate button \u2192 mockupGenerate for open mockup",
+  "RhmPanel read button \u2192 sendChat with primed question"
+ ],
+ "interactions_missing": [
+  "No loading/skeleton state for the corpus list or iframe load",
+  "No error or retry UI for iframe load failures",
+  "No feedback or error state for comment / intent submission",
+  "No ability to edit, delete, or resolve annotations",
+  "No search, filter, or sort in the Rail gallery",
+  "No zoom, reload, or fullscreen controls for the Stage",
+  "No explicit handling when address-help returns empty or fails",
+  "No keyboard shortcuts or accessible focus management",
+  "No dispatch/approve action for generated proposals in this surface",
+  "No history or back-navigation between previously indicated loci"
+ ],
+ "performance_risks": [
+  "Stage polls attachDeixis every 120 ms for up to ~2.4 s per mockup open, causing repeated cross-boundary contentDocument access and listener checks",
+  "Composer re-renders the full annotation thread on every keystroke because text state lives in the same component",
+  "Iframe click delegate uses capturing phase and reads innerText/outerHTML on every click; bounded slices help but still runs synchronously",
+  "Rail rebuilds the grouped corpus object on every render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the five primitive contracts and their wired interactions as the studio skeleton, but rebuild the implementation to remove polling, split responsibilities, and replace inline styling with token-driven layout.",
+ "decomposition_hints": [
+  "Split Card into its own component file",
+  "Split Rail (gallery grouping + empty states) into its own file",
+  "Extract Stage deixis bridge (message listener, click delegate, slug helper) into a custom hook or bridge module",
+  "Split Composer into comment composer, intent composer, generate result panel, and thread display",
+  "Split RhmPanel into address-help panel, primed-question launcher, and RhmChat wrapper",
+  "Move device-frame layout and whole-screen reset into Stage sub-components"
+ ],
+ "_path": "canvas/app/src/components/StudioKit.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

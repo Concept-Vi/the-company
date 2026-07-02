@@ -1,0 +1,42 @@
+{
+ "role": "This file is the global subscription-based data store for the board/noticeboard view, mirroring the channel/session store pattern by fetching /api/board and holding normalized raw rows plus view-open state.",
+ "capabilities": [
+  "Fetch /api/board and normalize response into BoardRow objects",
+  "Maintain loading, error, open, and rows state",
+  "Provide a useBoard hook that subscribes components to store updates",
+  "Guard against stale requests with a loadSeq race counter",
+  "Expose openBoard/closeBoard actions that refresh data on open"
+ ],
+ "substance": "partial",
+ "substance_why": "The store fetches and normalizes board rows and manages basic view state, but retry-on-error, real startup logic, grouping, filtering, selection, refresh, and request cancellation are absent or stubbed.",
+ "interactions_present": [
+  "Opening the board triggers a fresh /api/board load",
+  "Closing the board sets open=false",
+  "Components subscribe to state changes via useBoard"
+ ],
+ "interactions_missing": [
+  "Retry action after a load error",
+  "Auto-refresh or polling while the board is open",
+  "Grouping, filtering, sorting, or search interactions",
+  "Selection or navigation into a board item",
+  "Cancellation/supersession of in-flight fetch requests",
+  "Meaningful ensureStarted behavior"
+ ],
+ "performance_risks": [
+  "Every subscriber re-renders on any state change because there are no selectors or scoped subscriptions",
+  "forceUpdate via useState increments causes unconditional hook re-renders",
+  "No AbortController or request cancellation, so stale responses may still be processed briefly before the loadSeq check",
+  "loadBoard is called on every openBoard without deduplication or caching"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The fetch endpoint, normalization shape, and subscription pattern are worth preserving, but the store should be rebuilt with proper state isolation, selectors, cancellation, retry, and real lifecycle logic.",
+ "decomposition_hints": [
+  "Split data fetching and normalization from UI view-state (open/loading/error)",
+  "Extract the subscription mechanism into a reusable store primitive shared with channel/session stores",
+  "Move grouping, filtering, and sorting into dedicated selector/adapter modules",
+  "Separate retry, refresh, and polling concerns from the core load action"
+ ],
+ "_path": "surface/app/src/board/boardStore.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

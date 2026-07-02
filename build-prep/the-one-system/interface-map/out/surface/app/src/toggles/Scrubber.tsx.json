@@ -1,0 +1,39 @@
+{
+ "role": "A React toggle component that provides a time-range slider for selecting a historical snapshot or returning to the live present.",
+ "capabilities": [
+  "Renders a slider mapped between corpusStart and now",
+  "Computes fractional position from an ISO at timestamp",
+  "Sets at to an ISO timestamp on slider change",
+  "Snaps at to null (live present) when slider is near the far right",
+  "Displays a formatted date label or 'now \u00b7 live'",
+  "Provides a button to reset to the live present"
+ ],
+ "substance": "substantial",
+ "substance_why": "The component implements complete slider logic, date parsing, formatting, null/live snapping, and a reset button with wired handlers.",
+ "interactions_present": [
+  "Range slider onChange updates the selected time",
+  "Button click resets at to null (live present)"
+ ],
+ "interactions_missing": [
+  "No keyboard step or PageUp/PageDown handling beyond native range",
+  "No debouncing or throttling of slider input",
+  "No visible start/end tick labels or tooltips while dragging",
+  "No announcement of time change for screen readers",
+  "No handling for invalid or non-ISO date strings beyond silent null return"
+ ],
+ "performance_risks": [
+  "Date.parse(corpusStart) and Date.parse(now) run on every render without memoization",
+  "onChange creates a new closure and Date object on every slider event",
+  "fmt() constructs a new Date and locale string on every render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The time-scrubber concept and behavior are sound, but the date math, formatting, and slider handling should be extracted and memoized for the redesign.",
+ "decomposition_hints": [
+  "Extract date-range math and fraction conversion into a reusable hook or utility",
+  "Extract date formatting into a shared formatter",
+  "Separate the slider thumb/label UI from the time-state logic"
+ ],
+ "_path": "surface/app/src/toggles/Scrubber.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

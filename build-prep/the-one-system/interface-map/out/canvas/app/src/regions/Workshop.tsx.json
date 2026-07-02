@@ -1,0 +1,35 @@
+{
+ "role": "A full-screen modal region that displays a selected node's resolved output and metadata.",
+ "capabilities": [
+  "Conditionally render full-screen workshop modal from app context state",
+  "Display node type, node ID, and address in a kit SectionHead",
+  "Render the full resolved output inside a kit Surface",
+  "Close the modal via a click handler"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements a complete, conditional modal view with real data bindings to workshop.nodeType, nodeId, address, and output, plus a working close interaction.",
+ "interactions_present": [
+  "Click the \u2715 close button to dismiss the modal"
+ ],
+ "interactions_missing": [
+  "No Escape key handler to close modal",
+  "No click-outside-modal to dismiss",
+  "No focus trap or aria modal accessibility",
+  "No copy or export of the output text",
+  "No handling for oversized output (scrolling/virtualization)"
+ ],
+ "performance_risks": [
+  "Raw workshop.output is injected into DOM without size limits or virtualization",
+  "Component re-renders whenever app context updates, with no memoization"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The file already adopted the shared kit vocabulary and preserves the correct data contract, so it should be adapted rather than replaced.",
+ "decomposition_hints": [
+  "Extract a reusable modal chrome/shell (fixed overlay + close button) from the bespoke .workshop layout",
+  "Separate output rendering into its own component to handle sanitization, scrolling, and large content",
+  "Move modal open/close behavior and focus/keyboard handling into a shared modal hook or component"
+ ],
+ "_path": "canvas/app/src/regions/Workshop.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

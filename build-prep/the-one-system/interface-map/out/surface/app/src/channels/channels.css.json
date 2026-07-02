@@ -1,0 +1,45 @@
+{
+ "role": "This file is the CSS host frame for a sibling-overlay modal that presents the channel-view graph, delegating the actual graph rendering to DNA's fabric GRAPH component.",
+ "capabilities": [
+  "Modal overlay shell with scrim, centered panel, and open/close visibility transitions",
+  "Panel header with title, subtitle, and close button hit-target styling",
+  "Scrollable body with safe-area bottom padding and centered graph mount",
+  "Error, quiet, and default message text styling",
+  "Retry button styling for failed graph loads",
+  "Responsive SVG sizing with a definite 600px width capped to the viewport",
+  "Overrides for .screen.ar responsive grid to force a single-column, content-height layout inside the graph host",
+  "Override of the fixed 390px phone-frame width/height to let the graph fill available space"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete, token-driven visual frame for the channel-view overlay plus concrete responsive overrides discovered from real viewport bugs.",
+ "interactions_present": [
+  "Open/close overlay state classes (.channels-overlay--open)",
+  "Close button visual target (.channels-close)",
+  "Retry button visual target (.channels-retry)",
+  "Scrim backdrop for modal dismissal affordance"
+ ],
+ "interactions_missing": [
+  "No focus, hover, active, or disabled states for buttons",
+  "No keyboard/escape or focus-trap interaction styles",
+  "No explicit scrim-click close indicator beyond the backdrop",
+  "No loading/skeleton state styling",
+  "No graph interaction states (assumed DNA-owned)"
+ ],
+ "performance_risks": [
+  "Fixed-position overlay with a semi-transparent scrim can promote a large compositing layer",
+  "Opacity/visibility transitions may cause repaints on low-end devices",
+  "Fixed 600px SVG width combined with max-width:100% can trigger reflow on viewport resize",
+  "No CSS containment applied to the overlay or panel"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The responsive fixes and safe-area framing logic are worth preserving, but the rules should be rebuilt against the new design-system tokens and component boundaries.",
+ "decomposition_hints": [
+  "Extract generic modal chrome (overlay, scrim, panel, header, close) into a shared modal primitive",
+  "Move graph-host overrides (.channels-graph .screen.ar, .ar-responsive, svg sizing) to the graph/DNA component stylesheet",
+  "Move message and retry utilities to a shared feedback/empty-state component",
+  "Keep channel-specific title/subtitle spacing only in the channels module"
+ ],
+ "_path": "surface/app/src/channels/channels.css",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

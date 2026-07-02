@@ -1,0 +1,53 @@
+{
+ "role": "A self-wiring interaction binder that sits between the gallery rendering surface and the state-writing fork, turning rendered elements into annotatable targets and emitting annotation/decision events.",
+ "capabilities": [
+  "Listen for gallery:rendered and decision:rendered to start binding",
+  "Walk a rendered mount and bind anchorable elements by derived address",
+  "Attach an annotation strip with comment, favour, and reaction buttons",
+  "Open a comment-type picker and emit comment annotations",
+  "Emit reaction and favour annotations as gallery:verb annotate events",
+  "Emit legacy gallery:direction alias for backward compatibility",
+  "Validate and emit decision_take verbs via decide()",
+  "Expose window.galleryBinder API for explicit binding"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements concrete item factories, DOM binding, event routing, canonical-address validation, and self-wiring listeners, despite comments framing it as a contract/reference.",
+ "interactions_present": [
+  "Click comment button toggles the comment picker panel",
+  "Click reaction stamp button emits a reaction and appends a visual stamp",
+  "Click favour button prompts for a score and emits a favour",
+  "Click send in comment picker emits a comment",
+  "Window listens to gallery:rendered and decision:rendered to bind elements",
+  "decide() callable externally to emit a validated decision_take"
+ ],
+ "interactions_missing": [
+  "No keyboard/escape handling to close the comment picker",
+  "No cancel/close affordance in the comment picker beyond re-clicking comment",
+  "No input validation for the favour prompt",
+  "No debounce or throttle on rapid reaction/favour clicks",
+  "No cleanup or unbinding when rendered content is replaced",
+  "No accessibility labels/roles on the injected strip buttons",
+  "No consumer handling for gallery:verb responses or errors",
+  "No actual decision-option UI wiring inside the binder"
+ ],
+ "performance_risks": [
+  "querySelectorAll over a broad semantic selector on every render can scan a large DOM",
+  "Appends a separate annotation strip to every anchorable element, multiplying DOM nodes",
+  "Attaches per-element click listeners instead of using event delegation",
+  "Global window listeners are never removed, leaking on repeated module loads",
+  "innerHTML is used to build strips and picker panels repeatedly"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the address-keyed binding contract, event shapes, and canonical-address guard, but rebuild the inline DOM UI, prompts, and listener management for the redesigned gallery.",
+ "decomposition_hints": [
+  "Split address derivation/canonical validation into a dedicated address module",
+  "Split annotation item factories from event emission/routing",
+  "Extract the comment picker UI into a reusable component",
+  "Extract decision_take handling into its own binder/module",
+  "Separate event subscription lifecycle from binding logic",
+  "Move icon set and markup templates into a gallery-owned skin/component layer"
+ ],
+ "_path": "surface/app/public/gallery/wildcard-gallery-binder.js",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

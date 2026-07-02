@@ -1,0 +1,58 @@
+{
+ "role": "The right-hand-man (RHM) chat panel component that renders the conversational assistant region, including thread management, the chat log, proposed-action consent, locus indication, and voice/text input.",
+ "capabilities": [
+  "Collapse/expand chat panel via minimize toggle",
+  "Display current model name in header (hidden in studio mode)",
+  "Start a new conversation and reopen past conversations from a thread selector",
+  "Record/stop a conversation session and launch a debrief walkthrough",
+  "Render the chat log with user/vi role labels and gold/working grade badges",
+  "Show and clear the currently indicated UI element locus",
+  "Render the proposed-action approval card (ProposeAffordance)",
+  "Text input with Enter-to-send and busy state",
+  "Voice input button supporting push-to-talk and auto-listen modes"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete, wired chat region with context hooks, local minimize state, thread controls, memory-loop buttons, a rendered message log, indication chip, proposal gate, and a dual-mode voice/text input.",
+ "interactions_present": [
+  "Minimize/expand toggle on header",
+  "New conversation button",
+  "Thread dropdown to reopen a conversation",
+  "Record/stop conversation session button",
+  "Debrief button to review recorded sessions",
+  "Clear indicated locus button",
+  "Text input onChange and Enter key send",
+  "Mic button click for voice push-to-talk/auto-listen",
+  "Send button click",
+  "ProposeAffordance consent-gate rendering"
+ ],
+ "interactions_missing": [
+  "No disabled/empty-state guard on send when input is empty",
+  "No send failure, retry, or error feedback UI",
+  "No scroll-to-bottom or virtualization for long chat logs",
+  "No thread title editing or deletion",
+  "No ARIA/accessibility attributes on controls",
+  "No loading/error state for thread list or debrief start",
+  "Voice mode selection was retired to A3 Settings and is no longer present here"
+ ],
+ "performance_risks": [
+  "Entire chat log re-renders on every keystroke because chatMsg lives in shared context and the component consumes broad context",
+  "chat.map uses array index as key, which can hurt reconciliation on edits or reordering",
+  "No virtualization or windowing for long chat histories",
+  "ProposeAffordance and the full panel re-render together on every context change"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The chat organ, thread controls, memory loop, indication chip, and proposal gate are real and should be preserved, but the retired config gear, new studio prop, and broad context coupling mean the form should be rebuilt and split.",
+ "decomposition_hints": [
+  "Split header/minimize into RhmChatHeader",
+  "Split thread new/reopen controls into ConversationThreads",
+  "Split record/debrief memory loop into SessionRecorder or MemoryLoop",
+  "Split chat log rendering into ChatLog with its own scroll/virtualization",
+  "Split indicated-locus chip into IndicatedLocus",
+  "Split text/voice composer into ChatInput",
+  "Keep ProposeAffordance as a separate child component",
+  "Isolate studio-mode conditional rendering at the composition level rather than inline"
+ ],
+ "_path": "canvas/app/src/regions/RhmChat.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

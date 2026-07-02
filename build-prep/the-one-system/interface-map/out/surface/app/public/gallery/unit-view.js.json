@@ -1,0 +1,65 @@
+{
+ "role": "Shared pure presentation renderer and source adapters for the gallery surface, plus live V-wheel interaction binding and async address-resolution integration.",
+ "capabilities": [
+  "Render a normalised unit as an immersive phone-screen DOM (renderUnit)",
+  "Render a piece-in-focus archetype DOM (renderPiece)",
+  "Resolve and render decision:// addresses through the generic archetype renderer (renderDecisionGallery)",
+  "Inline the Vi logo SVG asset",
+  "Inline a ConceptV icon set and render themed SVG icons",
+  "Render the V corner hub with a 90\u00b0 arc of verb sockets (veeCorner)",
+  "Bind V wheel tap interactions (open/close, socket fire, tap-away close)",
+  "Define canonical circuit-verb socket set (drill, mark, ask, dials, source)",
+  "Deterministically transform a corpus digest into editorial voice text",
+  "Adapt corpus common_knowledge records into normalised units",
+  "Adapt authored story-tree nodes into normalised units",
+  "Normalise neighbour recall scores into weighted constellation nodes",
+  "Resolve run:// addresses via API and render the gallery",
+  "Bind projection:select drill-in events to gallery rendering",
+  "Handle gallery:write-error events for decision cards"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements multiple DOM renderers, source adapters, inline SVG assets, V-wheel geometry/interaction, and async API integration with degrade paths.",
+ "interactions_present": [
+  "V hub tap toggles the 90\u00b0 socket wheel open/closed",
+  "V socket tap dispatches a vee:socket CustomEvent and flashes a transient confirmation",
+  "Tap on the V overlay background closes the wheel",
+  "projection:select listener triggers async gallery rendering",
+  "gallery:write-error listener invokes _showWriteError on matching decision cards",
+  "renderGallery emits gallery:rendered after mounting",
+  "renderDecisionGallery emits decision:rendered after mounting",
+  "renderGallery fetches /api/cognition/corpus and optionally /api/cognition/neighbours",
+  "renderDecisionGallery fetches /api/territory and /dna/layouts.json"
+ ],
+ "interactions_missing": [
+  "No actual implementation of V verbs (drill, mark, ask, dials, source) \u2014 only events are emitted",
+  "No keyboard or focus/ARIA management for the V wheel",
+  "No click binding for data-anchorable targets or neighbour re-drill",
+  "No click handler for unit action buttons or piece pins/rows",
+  "No loading state during async address resolution",
+  "No explicit error UI beyond a degraded text card on fetch failure",
+  "No resize/orientation handling for V geometry or form factor",
+  "No decision-card option/take click binding wired here (relies on external galleryBinder.decide)",
+  "No href navigation for rendered action links"
+ ],
+ "performance_risks": [
+  "innerHTML string building for every renderUnit/renderPiece call reconstructs the whole screen DOM",
+  "Sequential network waterfall in renderGallery (corpus fetch, then optional neighbours fetch)",
+  "Rapid projection:select events can trigger repeated fetches and full DOM rebuilds without debounce",
+  "V corner geometry recomputed per call with Math.sin/cos instead of pure CSS",
+  "Large inline SVG/icon strings retained on the global DNA object for the lifetime of the page",
+  "No caching of rendered units or resolved records across re-renders"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The normalised-unit renderer and source-adapter pattern are worth keeping, but the file mixes presentation, interaction, async orchestration, and inline assets and should be split and modernized.",
+ "decomposition_hints": [
+  "Split pure renderers (renderUnit, renderPiece) from source adapters (unitFromCorpus, unitFromStory, voiceFromDigest, neighboursToNodes)",
+  "Split V wheel geometry, icons, logo, and interaction binding into a self-contained component module",
+  "Split async gallery orchestration (renderGallery, bindProjectionDrill) from DOM rendering",
+  "Split decision-card integration (renderDecisionGallery, write-error listener) from unit gallery integration",
+  "Move inline SVG assets and icon map into an asset loader or imported SVG/CSS files",
+  "Keep phone.css as the single presentation token source and remove bespoke inline styles"
+ ],
+ "_path": "surface/app/public/gallery/unit-view.js",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

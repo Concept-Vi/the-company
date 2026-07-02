@@ -1,0 +1,58 @@
+{
+ "role": "The central address-routing spine: parses ui:// addresses, maintains a locus pub/sub, and dispatches click/programmatic navigation to a single DOM spotlight sink.",
+ "capabilities": [
+  "Parse and validate ui:// addresses with optional @state segment",
+  "Type-guard isUiAddress",
+  "Stamp data-ui-ref props on addressable elements",
+  "Tiny locus pub/sub store with subscribe/get/set",
+  "Indicate an address by toggling .ui-indicated class",
+  "Resolve ui:// targets via single sink with spotlight glow, smooth scroll, and fail-loud notice",
+  "Transient vs persistent indication behavior",
+  "Clear notice helper",
+  "Fetch context bundle for an address",
+  "Install capture-phase click listener on data-ui-ref elements",
+  "Install pointer bridge for ui:point CustomEvent"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a full parser, pub/sub locus store, two event-driven sinks, DOM spotlight/scroll effects, notice errors, and an API bridge with explicit behavioral rules.",
+ "interactions_present": [
+  "Click capture on any [data-ui-ref] element resolves the ui:// address",
+  "CustomEvent ui:point resolves the address transiently",
+  "Malformed addresses publish a notice via the locus store",
+  "Locus subscription lets React/other consumers reflect current address/notice",
+  "contextAt fetches backend context for an address"
+ ],
+ "interactions_missing": [
+  "Keyboard navigation/focus management",
+  "Voice/gesture navigation wiring beyond comments",
+  "Browser history/URL routing integration",
+  "Accessibility live-region announcements",
+  "Listener uninstall/cleanup helpers",
+  "Debouncing/throttling for rapid ui:point events",
+  "Validation of @state segment semantics",
+  "Handling duplicate data-ui-ref collisions",
+  "SSR-safe guards for document/window access",
+  "Robust CSS escaping"
+ ],
+ "performance_risks": [
+  "document.querySelector attribute-selector scan on every click and ui:point across the whole DOM",
+  "setTimeout per spotlight event plus classList churn",
+  "smooth scrollIntoView can fire repeatedly on rapid events",
+  "No throttling on rapid ui:point dispatches",
+  "Minimal cssEscape may produce invalid selectors",
+  "Synchronous iteration over all subscribers on every locus change"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The ui:// address concept, single sink, and locus store are mandated architecture, but the DOM effects, event wiring, and CSS escaping need rebuilding.",
+ "decomposition_hints": [
+  "Split address grammar/parser into its own module",
+  "Split locus store/state management into its own module",
+  "Split DOM effects (indicate, spotlight, scroll) into a renderer module",
+  "Split input adapters (click capture, pointer bridge, future voice/gesture) into separate modules",
+  "Split context fetch/API bridge into its own module",
+  "Split notice/feedback handling into its own module"
+ ],
+ "_path": "surface/app/src/lib/address.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

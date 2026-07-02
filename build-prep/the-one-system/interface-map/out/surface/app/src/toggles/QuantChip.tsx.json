@@ -1,0 +1,42 @@
+{
+ "role": "A vector-lens representation picker rendered as a dropdown chip that switches between full-float and binary quantization.",
+ "capabilities": [
+  "Conditionally renders only for vector lenses (proj.binding.space)",
+  "Toggles a dropdown menu via useChipMenu",
+  "Lets the user pick 'Full' or 'Coarse (binary)' representation",
+  "Calls setQuant with 'binary' or null on selection",
+  "Closes menu via scrim click or option selection",
+  "Animates menu open/close with framer-motion",
+  "Applies semantic ui://controls/representation stamps"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete, wired dropdown control with real options, state callback, conditional visibility, animation, and telemetry stamps.",
+ "interactions_present": [
+  "Click chip button to open/close menu",
+  "Click menu option to select representation",
+  "Click scrim to close menu"
+ ],
+ "interactions_missing": [
+  "Keyboard navigation and Escape-to-close",
+  "Focus trap for the dropdown",
+  "aria-haspopup / aria-controls linking button to menu",
+  "Disabled/loading state while quantization applies",
+  "No live region or other selection feedback"
+ ],
+ "performance_risks": [
+  "Framer-motion AnimatePresence runs on every open/close",
+  "Inline stamp() and menu item handlers recreated each render",
+  "Parent re-render propagates through setQuant on every selection"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the representation concept, option set, and semantic stamps, but rebuild the presentation and hook integration for the redesign.",
+ "decomposition_hints": [
+  "Extract a generic LensChip shell from the repeated menu/scrim/button structure",
+  "Move OPTS label data and quant mapping into a config module",
+  "Isolate animation wrapper into a shared MenuPopover component",
+  "Separate stamp identifiers into a constants file"
+ ],
+ "_path": "surface/app/src/toggles/QuantChip.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

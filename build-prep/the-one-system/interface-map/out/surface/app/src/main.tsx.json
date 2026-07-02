@@ -1,0 +1,33 @@
+{
+ "role": "This file is the React application entry point that mounts the root component into the DOM.",
+ "capabilities": [
+  "Bootstraps the React application with createRoot",
+  "Mounts the <App /> component inside React.StrictMode",
+  "Eagerly imports global stylesheets (tokens/paper.css, surface.css, rhm/rhm.css)",
+  "Validates that the #root DOM element exists and fails loudly if missing"
+ ],
+ "substance": "substantial",
+ "substance_why": "It performs complete, real bootstrap work: DOM container validation, stylesheet loading, and React root rendering.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No error boundary around <App />",
+  "No loading or splash state during bootstrap",
+  "No lazy/code-split loading of the root component",
+  "No runtime environment or feature checks"
+ ],
+ "performance_risks": [
+  "Global CSS imports are eager and may block first render",
+  "<App /> is synchronously imported, preventing code-splitting of the root route",
+  "Initial render starts immediately with no deferred or progressive loading strategy"
+ ],
+ "reuse_verdict": "keep",
+ "reuse_why": "The file contains standard, minimal React bootstrap logic that remains valid and should be preserved in the redesign.",
+ "decomposition_hints": [
+  "Move global CSS imports into a dedicated theme/style provider or lazy-loaded layer",
+  "Wrap <App /> in a Suspense boundary and lazy-load it for code splitting",
+  "Extract root-element validation into a small setup/util module if reused elsewhere"
+ ],
+ "_path": "surface/app/src/main.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

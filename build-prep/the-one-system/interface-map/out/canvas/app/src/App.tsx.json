@@ -1,0 +1,67 @@
+{
+ "role": "App.tsx is the top-level tldraw-wrapped layout orchestrator that instantiates the shared editor, builds the app controller, and renders the CSS-grid shell plus view-switchable canvas/review/lattice workspaces with mobile chrome.",
+ "capabilities": [
+  "Mounts <Tldraw> with NodeShapeUtil and ForagerShapeUtil and a persistence key",
+  "Suppresses tldraw native chrome via StylePanel/ActionsMenu/QuickActions null components",
+  "Creates one editor-bound controller via useAppController and exposes it through AppContext",
+  "Renders the Edges screen-space overlay inside tldraw's container",
+  "Implements a view switcher for canvas / review / lattice workspaces",
+  "Implements a mobile-only top bar with status, tools sheet, and mode selector",
+  "Implements a mobile bottom tabbar that toggles bottom sheets and triggers doRun",
+  "Lays out desktop regions in a CSS-grid shell with pointer-events passthrough for the canvas cell",
+  "Conditionally renders Review and LatticeView workspaces over the canvas",
+  "Hosts per-panel error boundaries around every region and a shell-level catch-all boundary",
+  "Wires deep-link URL params (?review, ?mockup, ?guide) to set view/mockup/guide on mount",
+  "Mirrors active view to body[data-view] for CSS hiding of tldraw chrome in review mode",
+  "Auto-raises the RHM mobile sheet when an interactive proposal appears",
+  "Renders AnnotateBar for indicated annotate-mode ui:// loci and submits comments",
+  "Renders JourneyBar for recording and replaying ordered ui:// click-path journeys",
+  "Hosts full-viewport modals for Workshop and Settings outside the grid"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements the entire top-level layout shell, view switching, mobile chrome, error-boundary hierarchy, deep-link bootstrapping, and orchestration of ~20 regions plus annotate/journey affordances.",
+ "interactions_present": [
+  "View-switch buttons set canvas/review/lattice state",
+  "Mobile status button dispatches 'open-greeting' custom event",
+  "Mobile tools sheet toggles and contains view + Toolbar buttons",
+  "Mode <select> calls changeMode from controller",
+  "Mobile tabbar anchors call setMobileTab and the run anchor calls ctrl.doRun()",
+  "AnnotateBar input Enter/button submits text via ctrl.annotateLocus",
+  "JourneyBar record/stop button toggles recording via ctrl.toggleJourneyRecording",
+  "JourneyBar replay <select> calls ctrl.replayJourney",
+  "Review-view settings button calls ctrl.openSettings()",
+  "LatticeView onHandoff sets view to canvas and mobileTab to builder",
+  "URL query params drive setView, ctrl.setReviewMockup, and ctrl.startGuide"
+ ],
+ "interactions_missing": [
+  "No visible loading/empty state for the shell while controller initializes",
+  "No keyboard shortcut wiring in this file",
+  "No explicit close/back affordance for Settings/Workshop modals in this file",
+  "No undo/redo or canvas zoom/fit controls surfaced here",
+  "No notification/toast container",
+  "No accessibility attributes (aria labels, roles) on the custom chrome",
+  "No error retry/reset UI beyond the boundary fallback"
+ ],
+ "performance_risks": [
+  "Hud renders all canvas overlays (chat, builder, walkthrough, activity, cognition, etc.) unconditionally; mobile CSS hides them but React still mounts and reconciles them",
+  "A single AppContext value containing the entire controller can cause broad re-renders across every region",
+  "Edges overlay receives ctrl.edges and may redraw on every controller update",
+  "useAppController is a monolithic hook; any state change inside it can re-render the whole Hud tree",
+  "MobileTopBar and tabbar are rendered on desktop but hidden only by CSS, adding unnecessary reconciliation",
+  "Deep-link useEffect disables exhaustive-deps and runs only on mount, so URL changes after boot are not handled"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The F0 grid-shell, view-switch, error-boundary discipline, and mobile chrome are the right structural ideas, but Hud should be split and the monolithic controller/context should be narrowed to reduce re-render scope.",
+ "decomposition_hints": [
+  "Split Hud into CanvasWorkspace, ReviewWorkspace, and LatticeWorkspace files driven by the view switch",
+  "Extract MobileTopBar and the tabbar into a single MobileChrome module",
+  "Move AnnotateBar and JourneyBar into an IndicatedLocusOverlays module",
+  "Move Edges orchestration and the editor-binding setup into a CanvasOverlay host",
+  "Move URL deep-link and body data-view effects into a useBootSurface hook",
+  "Lazy-load Review and LatticeView to avoid rendering their subtrees in canvas view",
+  "Separate the right-rail composition (Inspector/AddressHelp/History/SelfChanges/Versions/Inbox/Grow/Fleet/RegistryProposals) into a PanelRail component"
+ ],
+ "_path": "canvas/app/src/App.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

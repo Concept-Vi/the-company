@@ -1,0 +1,34 @@
+{
+ "role": "A generated CSS custom-property token sheet that surfaces DNA's :root design-token vocabulary to the host surface so token-based styles (e.g., phone.css) can resolve values.",
+ "capabilities": [
+  "Exposes color tokens (surfaces, identity palette, status, warmpoles, blueprint/table)",
+  "Exposes spacing scale tokens (--dna-space-*)",
+  "Exposes radius scale tokens (--dna-radius-*)",
+  "Exposes typography scale tokens (--dna-type-*)",
+  "Exposes shadow tokens",
+  "Exposes responsive layout margin token",
+  "Exposes reference device dimension tokens",
+  "Serves as a generated extraction from piece.css (DNA source of truth)"
+ ],
+ "substance": "substantial",
+ "substance_why": "It declares a dense, complete :root vocabulary of colors, spacing, radius, type, shadows, layout margin, and device dimensions.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No interaction-specific tokens (hover/active/focus/animation) are defined",
+  "No dynamic theme switching (e.g., dark mode) is wired"
+ ],
+ "performance_risks": [
+  "Monolithic :root block with 100+ custom properties could increase CSS memory/style-matching overhead"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The token vocabulary and values are the real asset, but the generated flat CSS artifact should be rebuilt by a proper token pipeline.",
+ "decomposition_hints": [
+  "Split color tokens from spacing/radius/type/shadow/device tokens",
+  "Separate semantic/theme tokens from raw palette values",
+  "Separate generated artifact from source-of-truth token definitions",
+  "Group interaction/state tokens once added"
+ ],
+ "_path": "surface/app/public/gallery/dna-tokens.css",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

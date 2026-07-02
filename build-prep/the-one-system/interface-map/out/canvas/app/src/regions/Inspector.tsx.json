@@ -1,0 +1,53 @@
+{
+ "role": "The right-rail region that displays details and actions for the currently selected canvas node.",
+ "capabilities": [
+  "Show selected node identity (nodeType, kind, nodeId, address)",
+  "Render served status badge colored by registry token",
+  "Show derived freshness verdict (stale/fresh/unknown/checking)",
+  "Surface failed/stuck error reasons",
+  "Force re-run selected node bypassing memo cache",
+  "Edit node config through generic NodeConfigForm",
+  "Display node output in a Surface well",
+  "Open output in workshop",
+  "Surface output as an inbox decision",
+  "Build a new node from the output"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file fully implements the inspector region with real data bindings, status/freshness rendering, config editing, output display, and four wired action buttons.",
+ "interactions_present": [
+  "Click '\u21bb force' to rerun the selected node",
+  "Click '\u21bb rerun' from the output footer",
+  "Click 'open workshop \u2922' to load output into workshop",
+  "Click '\u2192 inbox' to surface output as a decision",
+  "Click '\u2295 build from output' to seed a new node",
+  "Edit config fields via NodeConfigForm onSet"
+ ],
+ "interactions_missing": [
+  "No in-file trigger for freshness derivation (only consumes existing state)",
+  "No copy-to-clipboard for node-id or address",
+  "No expand/collapse for sections",
+  "No confirmation before force rerun or build",
+  "No keyboard shortcuts or focus management",
+  "No loading/error state for config saves",
+  "No close/deselect control",
+  "No rich output rendering beyond a plain <pre>"
+ ],
+ "performance_risks": [
+  "Costly on-demand freshness derivation (recompile + input-hash + memo_sig compare) can be triggered repeatedly on selection changes",
+  "configTick key forces a full remount of NodeConfigForm after each write, losing focus and adding render cost",
+  "Large outputs are rendered verbatim inside <pre> without virtualization or truncation",
+  "statusStyle object is recreated every render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The component preserves the required inspector concepts, data-ui-refs, and registry-driven status logic, but its monolithic mix of identity, status, config, output, and actions needs restructuring.",
+ "decomposition_hints": [
+  "Split the identity/status/freshness header into its own component",
+  "Split the config section (NodeConfigForm wrapper + error boundary + configTick remount logic) into its own component",
+  "Split the output display and action footer into its own component",
+  "Extract empty state into a reusable component",
+  "Separate status/freshness presentation helpers from layout markup"
+ ],
+ "_path": "canvas/app/src/regions/Inspector.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

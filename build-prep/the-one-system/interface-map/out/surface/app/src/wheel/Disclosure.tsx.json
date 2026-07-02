@@ -1,0 +1,52 @@
+{
+ "role": "A React detail card that reveals human-readable placement, summary, and fetched context for a selected projection point, rendered as a panel, sheet, or rail.",
+ "capabilities": [
+  "Displays selected-point details in three host variants: panel, sheet, and rail",
+  "Animates entrance/exit with framer-motion AnimatePresence per variant",
+  "Computes and renders human-readable placement rows from the active projection binding (semantic, separator, nucleation, address, or age)",
+  "Shows the point's human kind name, kind meaning, and a truncated summary",
+  "Fetches and displays a context bundle for the selected point via contextAt",
+  "Caps displayed context items at six and indicates remaining count",
+  "Sanitizes context text for operators by stripping machine addresses, provenance tails, paths, and machine ids",
+  "Truncates long text on word boundaries with an ellipsis",
+  "Provides a dismiss button wired to onDismiss",
+  "Provides a focus/center action wired to onFocus",
+  "Provides pole A/B assignment actions wired to onSetPole when the separator lens is active",
+  "Handles context-fetch errors with an inline notice"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file is a complete, featureful component with multi-variant motion, five binding-specific placement branches, context fetching/error handling, operator-facing text sanitization, and wired action buttons.",
+ "interactions_present": [
+  "Click close button to dismiss the disclosure",
+  "Click 'centre here' to focus/re-centre on the selected point when onFocus is supplied",
+  "Click 'pole A' or 'pole B' to assign the selected point as a separator pole when onSetPole is supplied and binding is separator"
+ ],
+ "interactions_missing": [
+  "Sheet handle is decorative and not wired to drag-to-dismiss or drag-to-resize",
+  "No keyboard support such as Escape to dismiss or focus trap",
+  "No loading/skeleton state while context is being fetched",
+  "No retry or refresh action when context fetch fails",
+  "No click-outside or backdrop-dismiss behavior",
+  "No expand/collapse or full view for truncated context items",
+  "Context items are not clickable or navigable to their source"
+ ],
+ "performance_risks": [
+  "humanizeCtx runs multiple global regex passes on every render for every context item",
+  "placement() and excerpt()/humanizeCtx() are computed inline without memoization",
+  "contextAt is invoked on every address change with no debounce, caching, or request deduplication",
+  "AnimatePresence + motion may animate large DOM subtrees on every open/close"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The operator-facing concepts (placement narration, context sanitization, variant disclosure) are worth preserving, but the component should be rebuilt with separated data, layout, and motion concerns.",
+ "decomposition_hints": [
+  "Extract placement computation into a pure helper module or hook (e.g., usePlacement) separate from rendering",
+  "Extract context fetching into a dedicated hook (e.g., useContextBundle) with loading, error, and caching states",
+  "Move humanizeCtx and excerpt into a shared text-sanitization/utility module",
+  "Move motion variant definitions into a separate motion config or per-variant wrapper",
+  "Split the three variant layouts (Panel, Sheet, Rail) into subcomponents sharing a common detail body",
+  "Split footer actions (PoleSelector, FocusButton) into small, reusable action components"
+ ],
+ "_path": "surface/app/src/wheel/Disclosure.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,46 @@
+{
+ "role": "A module-scope external React-readable store that mirrors backend registries and controller-installed action handles for components rendered inside tldraw that cannot reach Hud-level React context.",
+ "capabilities": [
+  "Typed RegistryState slice definitions (OINFO, MODEL_OPTIONS, UI_INFO, NODE_STATES, COGNITION_INFO)",
+  "Hand-rolled external store with subscribe/getSnapshot/set",
+  "Partial patch updates to registry state",
+  "Imperative getters for non-React call sites",
+  "Module-scope CONNECT action handle for committing connections",
+  "Module-scope DRAG_CONN transient drag-to-connect gesture state",
+  "Module-scope FORCE_RUN action handle for per-node rerun",
+  "NodeStateRender/NodeStateDef type definitions"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements a complete, dependency-free external store with typed state, subscription/snapshot API, patch updates, imperative getters, and controller hook handles, replacing six mutable globals.",
+ "interactions_present": [
+  "Drag-to-connect gesture state sharing via DRAG_CONN",
+  "Connection commit callback slot via CONNECT",
+  "Force-rerun callback slot via FORCE_RUN"
+ ],
+ "interactions_missing": [
+  "No pointer event handlers are implemented here (only state/hook slots)",
+  "CONNECT and FORCE_RUN default to no-op stubs until externally installed",
+  "No validation, error handling, or loading state for registry fetches",
+  "No cancellation/reset logic for DRAG_CONN",
+  "No selector API, so subscribers cannot subscribe to a single slice"
+ ],
+ "performance_risks": [
+  "Every set() emits to all listeners even if the relevant slice is unchanged",
+  "No selectors/batching, so any registry update re-renders every subscriber",
+  "Shallow merge creates a new top-level state object on every patch, defeating snapshot identity/memoization",
+  "DRAG_CONN updates may cause store-wide re-renders if subscribed",
+  "Large backend objects (OINFO/UI_INFO) are held in module scope and returned by reference, risking accidental mutation"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The 'external registry mirror reachable from tldraw' concept and dependency-free store must survive, but the implementation needs typed slices, selectors, batching, and separation of gesture/action handles.",
+ "decomposition_hints": [
+  "Split backend registry slices (OINFO, MODEL_OPTIONS, UI_INFO, NODE_STATES, COGNITION_INFO) into per-domain modules or typed slices",
+  "Split transient gesture state (DRAG_CONN) into a dedicated drag/gesture store",
+  "Split controller-installed action handles (CONNECT, FORCE_RUN) into an actions/actions-context module",
+  "Split NodeStateRender/NodeStateDef types and registry schemas into a types/constants file",
+  "Split generic external-store plumbing (subscribe/emit/getSnapshot) into a reusable factory"
+ ],
+ "_path": "canvas/app/src/registryStore.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

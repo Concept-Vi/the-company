@@ -1,0 +1,47 @@
+{
+ "role": "This file is the operator-facing React surface and local controller for reviewing and batch-approving registry-generation proposals before they are written back to the registry.",
+ "capabilities": [
+  "Fetch a proposed registration batch via GET /api/registry/proposals",
+  "Render each proposal as a plain-language dossier with howto trio, capabilities, and no-fiction grounding tags",
+  "Group proposals by parent address or mockup file for screen-level review",
+  "Allow per-entry skip/keep toggle with transient local state",
+  "Submit one batch approve via POST /api/registry/approve with the skipped set excluded",
+  "Surface backend errors and approve notices fail-loud",
+  "Inject or self-host the useRegistryProposals controller hook"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file contains complete TypeScript domain types, a self-contained data hook with fetch/approve handlers, grouped rendering logic, and a full JSX review surface wired to real interactions.",
+ "interactions_present": [
+  "Refresh button re-fetches the proposal batch",
+  "Per-dossier skip/keep toggle updates transient local skip set",
+  "Batch approve button commits the kept proposals",
+  "Visual tags for feature mapping and grounding state"
+ ],
+ "interactions_missing": [
+  "No explicit reject/close action in the UI despite the consent model mentioning it",
+  "No search, filter, or sort for large batches",
+  "No pagination or virtualization for long proposal lists",
+  "No retry or dismiss for error/notice banners",
+  "No per-entry expand/detail or edit capability",
+  "No confirmation before the destructive approve write-back"
+ ],
+ "performance_risks": [
+  "Groups and item counts are recomputed on every render with no memoization",
+  "No virtualization; large proposal arrays will render many DOM nodes and cards",
+  "Inline style objects and callbacks are recreated each render, increasing re-render churn",
+  "approve() calls refresh() sequentially, causing an extra fetch+render cycle after commit",
+  "No request abort/timeout on the initial fetch or refresh"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The RG8 review-and-approve concept, no-fiction tags, and simple-consent batch gate are well-defined, but the hook, grouping, and card rendering should be decoupled and hardened during redesign.",
+ "decomposition_hints": [
+  "Move useRegistryProposals into a dedicated hooks file and separate it from the presentational component",
+  "Split DossierCard, FeatureTag, and GroundingTag into their own component files",
+  "Extract grouping logic into a memoized utility or selector",
+  "Extract the approve-bar footer into a standalone BatchActions component",
+  "Move domain types (RegistryDossier, ProposalBatch) to a shared types module"
+ ],
+ "_path": "canvas/app/src/components/RegistryProposals.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

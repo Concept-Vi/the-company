@@ -1,0 +1,33 @@
+{
+ "role": "This file is the shared React component kit (design-system primitives) that regions compose into a consistent product-wide visual language.",
+ "capabilities": [
+  "SectionHead: panel heading with optional uppercase kicker tag and right-aligned aside slot",
+  "LaneHead: grouped-lane header with tone tint, count badge, and optional collapsible toggle",
+  "Badge: tone-driven status pill",
+  "Surface: tone-accented card/list row with optional click/interactive affordance and data-ui-ref forwarding",
+  "EmptyState: honest empty-state placeholder"
+ ],
+ "substance": "substantial",
+ "substance_why": "All five documented primitives render real markup with token-driven classes and accept meaningful props.",
+ "interactions_present": [
+  "LaneHead toggle button with caret indicator",
+  "Surface click handler and interactive affordance styling"
+ ],
+ "interactions_missing": [
+  "No keyboard/focus handling on Surface or LaneHead",
+  "No ARIA expanded/collapsed or disabled states on LaneHead",
+  "No semantic action treatment for SectionHead aside",
+  "No aria-label or live-region semantics on Badge",
+  "EmptyState has no recovery action or illustration slot"
+ ],
+ "performance_risks": [],
+ "reuse_verdict": "keep",
+ "reuse_verdict_why": "It is the token-only shared primitive library central to the redesign and already aligned with the one-language direction.",
+ "decomposition_hints": [
+  "Split into per-primitive files (SectionHead, LaneHead, Badge, Surface, EmptyState) once the kit grows beyond these five",
+  "Extract tone tokens and class-name builders into a shared utilities file if more primitives are added"
+ ],
+ "_path": "canvas/app/src/components/kit.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

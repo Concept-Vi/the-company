@@ -1,0 +1,56 @@
+{
+ "role": "This file is the mobile-landscape layout shell that composes the wheel, control rail, detail panel, legend, notice, scrubber, and tether into a single viewport-specific surface.",
+ "capabilities": [
+  "Mobile landscape (wide-short) viewport layout",
+  "Composed left wheel/state region and right control rail",
+  "Top notice rendering with dismiss callback",
+  "Rail toolbar with lens, space, layer, resolution, and quantization chips",
+  "Live, view, and settings toggles in the rail header",
+  "Centre reset chip",
+  "Detail disclosure or empty select hint in the rail body",
+  "Legend, timeline scrubber, and selection tether wiring"
+ ],
+ "substance": "substantial",
+ "substance_why": "It fully wires the landscape surface, passing state and callbacks to every control, detail panel, and overlay rather than leaving stubs.",
+ "interactions_present": [
+  "Notice dismiss via s.dismissNotice",
+  "Wheel or state display via WheelOrState",
+  "Lens selection via s.setBinding",
+  "Space switching via s.setSpace",
+  "Layer/embedding switch via s.setEmb",
+  "Resolution change via s.setDim",
+  "Quantization change via s.setQuant",
+  "Live mode toggle via s.setLive",
+  "View mode toggle via s.setView",
+  "Settings/feel switch via s.setFeel",
+  "Centre reset via s.setCentre(null)",
+  "Detail dismiss/focus/set-pole via s.setSelected, s.focusCentre, s.setPole",
+  "Scrubber time change via s.setAt",
+  "Tether follows selected sequence"
+ ],
+ "interactions_missing": [
+  "DecisionsBar receives no props or callbacks from the layout",
+  "No keyboard or gesture handling in the layout itself",
+  "No loading, error, or skeleton state for the detail panel",
+  "No gallery UI is rendered even though galleryOpen gates the detail panel",
+  "No accessibility attributes or focus management",
+  "No animation/transition wiring between wheel and rail states"
+ ],
+ "performance_risks": [
+  "Inline arrow functions recreated every render for onDismiss, onReset, onFocus, and onSetPole can break child memoization",
+  "The entire SurfaceState object is passed wholesale to WheelOrState, Legend, and Notice, causing broad re-render propagation",
+  "No React.memo or structural splitting to isolate rail re-renders from wheel updates"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The landscape-specific component arrangement and control wiring should be preserved, but the monolithic JSX, inline closures, and hard-coded CSS layout need rebuilding for the new design system.",
+ "decomposition_hints": [
+  "Extract the right rail into its own Rail component",
+  "Split rail-head toolbar from rail-detail content",
+  "Make Notice, Scrubber, and Tether global overlay components independent of orientation",
+  "Separate the detail panel (Disclosure/SelectHint) into a reusable DetailPane",
+  "Isolate orientation-specific layout from state wiring via a thin layout container"
+ ],
+ "_path": "surface/app/src/layouts/Landscape.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

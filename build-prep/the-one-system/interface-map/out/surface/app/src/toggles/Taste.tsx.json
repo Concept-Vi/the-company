@@ -1,0 +1,41 @@
+{
+ "role": "A theme-and-motion preference control panel that exposes three pill-toggle rows for typography, color pigment, and motion feel, applying choices via :root data-attributes and a React prop callback.",
+ "capabilities": [
+  "Render three labeled pill-toggle rows (type, pigment, motion feel)",
+  "Apply selected type/pigment as data-type/data-pigment on document.documentElement",
+  "Delegate motion feel selection to parent via setFeel prop",
+  "Provide an internal reusable ToggleRow subcomponent",
+  "Stamp a ui://controls/taste address for instrumentation"
+ ],
+ "substance": "partial",
+ "substance_why": "The component is interactive and wired to real DOM side effects, yet the file header explicitly labels it a 'SLICE-ONLY SCAFFOLD (S4)' meant for flipping and watching rather than final spec implementation.",
+ "interactions_present": [
+  "Click a type pill to update local state and set data-type on :root",
+  "Click a pigment pill to update local state and set data-pigment on :root",
+  "Click a motion feel pill to call setFeel with 'spring' or 'eased'"
+ ],
+ "interactions_missing": [
+  "No keyboard/ARIA toggle semantics (aria-pressed, role=radiogroup, arrow-key navigation)",
+  "No persistence, URL sync, or restoration of type/pigment preferences",
+  "No system-preference detection or defaulting for motion or color scheme",
+  "No visual preview, reset-to-default, or disabled/loading states",
+  "No type-safe mapping from string ids to MotionFeel beyond an unsafe cast",
+  "No label text for the motion row beyond a glyph"
+ ],
+ "performance_risks": [
+  "Direct document.documentElement.setAttribute on every click may trigger broad CSS selector invalidation if many rules depend on data-type/data-pigment",
+  "Unmemoized ToggleRow and pill buttons re-render on every Taste state change even when unrelated rows change"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The 'taste' concept and the three preference axes are worth keeping, but the scaffold implementation should be rebuilt with proper state management, accessibility, and token-driven styling.",
+ "decomposition_hints": [
+  "Extract ToggleRow into a shared, accessible pill/radio-group primitive in a components folder",
+  "Move type/pigment constants and default values into a tokens/preferences module",
+  "Lift DOM attribute mutation into a theme provider or hook so Taste remains pure UI",
+  "Separate motion feel control into its own component if it is consumed independently elsewhere",
+  "Introduce a preference store/hook that handles persistence, defaults, and system-preference syncing"
+ ],
+ "_path": "surface/app/src/toggles/Taste.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

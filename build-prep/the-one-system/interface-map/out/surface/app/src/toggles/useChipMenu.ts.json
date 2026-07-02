@@ -1,0 +1,38 @@
+{
+ "role": "A shared React hook that manages chip-triggered popover open/close state and viewport-right-edge collision anchoring for optics chip menus.",
+ "capabilities": [
+  "Manages open/close menu state",
+  "Measures chip position on open",
+  "Flips menu anchor from left-aligned to right-aligned when menu would overflow viewport",
+  "Exposes wrapper ref and modifier class for styling"
+ ],
+ "substance": "substantial",
+ "substance_why": "It fully implements stateful toggle/close behavior plus a real collision-detection rule using getBoundingClientRect and window.innerWidth.",
+ "interactions_present": [
+  "Toggle open/close via callback",
+  "Close via callback"
+ ],
+ "interactions_missing": [
+  "Click-outside to close",
+  "Escape key handling",
+  "Focus management / focus trap",
+  "Reposition on resize or scroll",
+  "ARIA attributes for menu/button",
+  "Menu item selection / keyboard navigation"
+ ],
+ "performance_risks": [
+  "Synchronous getBoundingClientRect read on every open can force layout",
+  "setMenuClass called inside the setOpen updater triggers an additional render cycle",
+  "No debouncing or throttling for repeated toggles"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The collision-anchoring concept and measurement logic are worth keeping, but the hook needs accessibility, outside-click/Escape handling, and safer render scheduling.",
+ "decomposition_hints": [
+  "Extract viewport collision math into a pure positioning utility",
+  "Split generic open/close state management from collision-aware positioning",
+  "Move global event handling (outside click, Escape, resize) into a separate interaction hook"
+ ],
+ "_path": "surface/app/src/toggles/useChipMenu.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

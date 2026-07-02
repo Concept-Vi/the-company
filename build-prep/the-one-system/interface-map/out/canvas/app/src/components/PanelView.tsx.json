@@ -1,0 +1,40 @@
+{
+ "role": "A generic, declarative React panel renderer that turns a panel definition (title + fields) into editable controls, isolated so render-time errors are caught by its own boundary.",
+ "capabilities": [
+  "Render a titled panel from a declarative `p` object",
+  "Map a list of fields into labeled controls",
+  "Render `select` dropdowns with options",
+  "Render fallback `input` text fields with blur-to-commit",
+  "Show a 'no fields' placeholder when the field list is empty"
+ ],
+ "substance": "partial",
+ "substance_why": "It only supports `select` and a generic text `input`, with no validation, typed inputs, dynamic options, or field metadata beyond label/target/type/options.",
+ "interactions_present": [
+  "Select dropdown `onChange` immediately calls `onSet(f, value)`",
+  "Text input `onBlur` calls `onSet(f, e.target.value)`"
+ ],
+ "interactions_missing": [
+  "No validation or error feedback on user input",
+  "No support for number, checkbox, textarea, or custom field types",
+  "No handling of empty/invalid options in selects",
+  "No keyboard handling (e.g. Enter to commit)",
+  "No disabled/readonly states",
+  "No loading or async state for values"
+ ],
+ "performance_risks": [
+  "`value(f)` is invoked twice per field per render (for `value` prop and `defaultValue`)",
+  "Inline arrow functions for `onChange`/`onBlur` are recreated on every render, causing child select/input re-renders",
+  "No memoization of `p.fields` or `value`/`onSet` callbacks"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The declarative panel-rendering concept is worth keeping, but it needs typed schemas, controlled inputs, and per-field components to fit a redesigned interface.",
+ "decomposition_hints": [
+  "Extract a `Field` subcomponent to encapsulate select/input rendering and local change handling",
+  "Split field-type variants (SelectField, TextField) for future extension",
+  "Separate the panel schema/types into a dedicated model file",
+  "Move value formatting/commit logic out of the renderer into a hook or controller"
+ ],
+ "_path": "canvas/app/src/components/PanelView.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

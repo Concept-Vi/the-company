@@ -1,0 +1,51 @@
+{
+ "role": "A React form engine that converts a tool's JSON Schema parameters into a human-labeled, op-conditional configuration form.",
+ "capabilities": [
+  "Renders a form from any ToolDescriptor JSON Schema",
+  "Op-conditional discriminator selector that shows only params for the chosen op",
+  "Authored label/help lookup with schema title/description fallback",
+  "Enum rendering as pill group (\u22644 options) or dropdown (>4 options) with human labels",
+  "Boolean toggle switch control",
+  "Number/integer inputs with appropriate step",
+  "Multiline textarea for params matching text/question/query/prompt/body/message/content",
+  "Text input fallback for remaining string-like params",
+  "Required indicator using schema.required and op-conditional opRequired",
+  "Per-field onChange callback propagation"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements label resolution, op-conditional visibility, requiredness, and renders multiple concrete control types with accessibility attributes.",
+ "interactions_present": [
+  "Clicking op discriminator pills to switch operation",
+  "Clicking enum option pills to select a value",
+  "Selecting an enum value from a dropdown",
+  "Toggling a boolean switch on/off",
+  "Typing into number inputs",
+  "Typing into textarea inputs",
+  "Typing into text inputs"
+ ],
+ "interactions_missing": [
+  "No validation feedback or submit-time required-field enforcement",
+  "No support for nested object or array schema properties",
+  "No support for additionalProperties, oneOf, anyOf, or allOf schema constructs",
+  "No error/invalid state handling for controls",
+  "No reset, clear, or default-restore interactions",
+  "No keyboard or focus management beyond native controls"
+ ],
+ "performance_risks": [
+  "renderField is redefined inline on every render, creating fresh closures and elements",
+  "No useMemo/useCallback for visibleParams, label lookups, or control callbacks",
+  "Full form re-renders on every single field change because there is no field-level memoization"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The op-conditional visibility rules, authored-label fallback, and per-type control selection are domain logic worth keeping, but the inline rendering and limited schema support need restructuring.",
+ "decomposition_hints": [
+  "Extract label/help resolution into a pure utility",
+  "Extract op-conditional visibility logic into a pure utility",
+  "Split individual controls into separate components (EnumField, BooleanField, NumberField, TextField, TextAreaField)",
+  "Extract the op selector into its own component",
+  "Keep SchemaForm as an orchestrator that maps schema properties to control components"
+ ],
+ "_path": "surface/app/src/tools/schemaForm.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

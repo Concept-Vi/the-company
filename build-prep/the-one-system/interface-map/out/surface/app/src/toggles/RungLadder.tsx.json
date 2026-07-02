@@ -1,0 +1,39 @@
+{
+ "role": "A small presentational control widget that lets the user switch between item-level 'units' and coarser thematic scale 'rungs' in a multi-scale projection view.",
+ "capabilities": [
+  "Conditionally renders a rung ladder only when rungs exist",
+  "Renders a 'units' button that clears the active rung",
+  "Renders one button per rung, sorted descending",
+  "Highlights the currently active rung or units state via CSS class",
+  "Applies a stamped address attribute to the container"
+ ],
+ "substance": "partial",
+ "substance_why": "The visible control and click wiring are implemented, but accessibility semantics, keyboard handling, rung labels, and URL query synchronization are absent.",
+ "interactions_present": [
+  "Click 'units' button calls setRung(null)",
+  "Click a rung button calls setRung(r)"
+ ],
+ "interactions_missing": [
+  "Keyboard navigation/arrow-key traversal between rungs",
+  "Accessible names or aria-pressed/aria-current state for buttons",
+  "Rung value labels or tooltips explaining each scale",
+  "URL query ?rung= read/write synchronization",
+  "Disabled/loading/error states",
+  "Focus management and visible focus indicators"
+ ],
+ "performance_risks": [
+  "Re-sorts the rungs array on every render with [...rungs].sort",
+  "Re-creates button elements and stamp spread on every parent re-render",
+  "No memoization for stable callbacks or sorted list"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The core selection model and rung ordering are worth keeping, but the markup, accessibility, and state integration need to be rebuilt.",
+ "decomposition_hints": [
+  "Separate URL/query rung state synchronization from the presentational ladder",
+  "Extract a generic segmented-control/ladder primitive from the rung-specific UI",
+  "Separate rung metadata (labels, descriptions, accessibility text) from raw numeric values"
+ ],
+ "_path": "surface/app/src/toggles/RungLadder.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

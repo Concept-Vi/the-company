@@ -1,0 +1,69 @@
+{
+ "role": "Settings.tsx is the full-viewport consolidated settings modal surface that hosts the Brain, Modes, Voice, Roles, Composition, and Cognition configuration sections.",
+ "capabilities": [
+  "full-viewport modal settings shell with left section rail and close handling",
+  "Brain & persona: model picker with load-on-pick, temperature, max-tokens, context-window set-and-restart, endpoint, timeout, persona switching, and resource-fit bar",
+  "Modes: hierarchical mode registry display, live mode switching, and off/suggest/auto auto-detect toggle",
+  "Voice: voice on/off, listening style, STT ear selection, ear status + start service, TTS engine selection, voice argument, per-engine knob display, and voice path selection",
+  "Model roles: role registry display and per-role model binding",
+  "Composition: read-only R2 context-ranking knob display",
+  "Cognition: direct role creation, role execution, run-index display, and run refresh",
+  "global settings busy and error surfacing",
+  "ui-ref targets for settings close, brain, modes, voice, roles, composition, cognition, role cards, and run addresses"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements a six-section modal with wired interactions for model loading, persona switching, mode switching, voice engine/path selection, role model binding, and cognition role create/run/run-index, plus a resource-fit bar and error/loading states.",
+ "interactions_present": [
+  "close modal by scrim click or close button",
+  "switch settings section via left rail",
+  "select a chat model to load on pick",
+  "set temperature and max output tokens on blur",
+  "set context window and restart local service",
+  "set endpoint base URL and reply timeout on blur",
+  "switch persona by clicking a persona card",
+  "switch mode by clicking a mode card",
+  "toggle mode auto-detect via pill buttons",
+  "toggle voice enabled via select",
+  "set listening style via select",
+  "select STT ear via select",
+  "start a down ear service via button",
+  "select/clear TTS engine by clicking engine card",
+  "set voice argument override on blur",
+  "select voice path by clicking path card",
+  "bind a model to a role via select",
+  "create a cognition role via form + button",
+  "run a cognition role via form + button",
+  "refresh cognition runs via button"
+ ],
+ "interactions_missing": [
+  "Composition knobs are read-only with no live setter",
+  "per-engine TTS knobs are displayed but not adjustable",
+  "cognition lacks output-schema editor, richer input wiring (run://, context://, vec://), per-role model binding, role edit/delete, and rule attach/detach",
+  "no control to refresh the resource-fit report",
+  "context-window input is not prefilled from current config",
+  "no search/filter across personas, models, modes, engines, paths, roles, or runs",
+  "no keyboard shortcut (e.g. Esc) to close the modal",
+  "no inline form validation before backend call",
+  "no undo/reset-to-defaults action",
+  "no s2s working UI (only noted as unavailable)"
+ ],
+ "performance_risks": [
+  "the entire modal and all local form state live in one component, so any keystroke re-renders the whole settings surface",
+  "no memoization of derived lists (modes, engines, paths, roles, runs, personas) or repeated .find/.findIndex calls",
+  "no virtualization for potentially long persona/mode/engine/path/role/run lists",
+  "blur-triggered API writes for numeric/text fields fire immediately without debounce"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The consolidated settings surface and its section breakdown are the right architecture, but the file is an overgrown monolith with honest gaps (read-only composition, display-only engine knobs, limited cognition authoring) that the redesign should split and complete.",
+ "decomposition_hints": [
+  "split the settings shell (modal scrim, rail, masthead, error/busy) from section content",
+  "move each section (Brain, Modes, Voice, Roles, Composition, Cognition) into its own module",
+  "split CognitionSection into RoleAuthor, RoleRunner, and RunIndex sub-components",
+  "extract reusable form primitives (SetField, SetSelect, SetInput, SetPill) from duplicated markup",
+  "co-locate derived registry projections and memoization with their sections or in dedicated selectors",
+  "isolate the read-only Composition section until live setters are designed"
+ ],
+ "_path": "canvas/app/src/regions/Settings.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

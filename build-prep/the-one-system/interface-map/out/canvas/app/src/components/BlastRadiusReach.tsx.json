@@ -1,0 +1,57 @@
+{
+ "role": "Operator-facing React component that renders a build-intent's persisted blast radius as an interactive concentric-ring ripple and lets the operator tick and approve which related code addresses widen the editable scope.",
+ "capabilities": [
+  "Render persisted blast_radius rings (structural_dependents, structural_dependencies, co_reference, semantic_neighbours) as an SVG ripple",
+  "Display every blast-radius member as a tick-able chip in a per-ring legend",
+  "Toggle ticked state via legend chip or on-ring node to widen the build's editable scope",
+  "Call api.approveReach to persist the operator-approved reach expansion",
+  "Optimistically mark approved members as 'in reach' after a successful API call",
+  "Show an explicit empty state when the radius contains no related code",
+  "Disable the approve action until at least one member is ticked (default-narrow behavior)",
+  "Switch between three aesthetic variants A/B/C with shared behavior but different SVG geometry/layout",
+  "Apply a visual-only per-ring density cap and '+N' overflow chip (variant B)",
+  "Render inline ring labels for variant B",
+  "Guard navigation so only ui:// members trigger onNavigate; code:// members stay inert",
+  "Truncate long member addresses to a legible leaf label with full address in title tooltip",
+  "Display fail-loud approval errors"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements a complete UI surface: SVG ripple rendering, tick/approve state machine, API call, optimistic updates, empty state, error handling, and three aesthetic variants.",
+ "interactions_present": [
+  "Tick/un-tick a blast-radius member via a legend chip button or an on-ring SVG node",
+  "Approve reach by clicking the disabled-until-ticked approve button, which calls api.approveReach",
+  "Switch the A/B/C aesthetic variant via a segmented control button group",
+  "Navigate to a ui:// member address by clicking its chip label (onNavigate callback)",
+  "View native title tooltips on rings, nodes, chips, overflow marks, and controls"
+ ],
+ "interactions_missing": [
+  "Navigation for non-ui:// (code://) members is explicitly reserved and inert",
+  "No search, filter, select-all, or bulk-clear affordances in the legend",
+  "No confirmation step before committing the reach expansion",
+  "No retry or cancel affordance after an approval error",
+  "Variant selector choice is local-only and not persisted",
+  "On-ring SVG nodes are mouse-clickable but not keyboard-accessible",
+  "No loading or skeleton state while blast_radius data resolves",
+  "No explicit handling of malformed d.id or missing payload beyond optional access"
+ ],
+ "performance_risks": [
+  "Legend always renders every member as a DOM chip regardless of the SVG density cap, so large blast radii create many interactive nodes",
+  "SVG ring nodes and legend chips rebuild arrays and closures on every render without memoization",
+  "useMemo depends on the br object identity, so unstable identity causes recomputation each render",
+  "approvedAll Set is reconstructed every render and iterated inside nested loops",
+  "Leaf truncation and navigable checks run inline for every chip/node without memoization"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The tick/approve state machine, default-narrow policy, and API integration are concrete and worth keeping, but the visual surface, variant geometry, and legend rendering should be rebuilt and split for the redesign.",
+ "decomposition_hints": [
+  "Split the approval state machine and api.approveReach call into a dedicated container/hook (e.g., useReachApproval)",
+  "Extract the SVG ripple renderer into its own component driven by a geometry config object",
+  "Extract the legend chip list into a separate component with room for search/filter and bulk actions",
+  "Extract the A/B/C variant selector into a small presentational control",
+  "Separate code:// vs ui:// navigation resolution into a utility or hook once the reserved design call is resolved",
+  "Move VARIANTS geometry constants and RINGS metadata into dedicated config modules"
+ ],
+ "_path": "canvas/app/src/components/BlastRadiusReach.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

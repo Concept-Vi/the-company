@@ -1,0 +1,45 @@
+{
+ "role": "A React toggle component that exposes a gear button to open/close an on-demand 'taste' settings panel containing motion/typeface/pigment controls.",
+ "capabilities": [
+  "Toggle settings panel open/closed via a gear button",
+  "Viewport-anchored panel positioned by measuring the gear's bottom edge",
+  "Clickable scrim to dismiss the open panel",
+  "Animated panel enter/exit via Framer Motion",
+  "Render the Taste child component to adjust feel/typeface/pigment",
+  "Attach semantic ui:// stamp addresses to settings elements",
+  "Expose basic accessibility attributes (aria-label, aria-expanded) on the gear"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements real, wired behavior: measurement-based positioning, open/close state, scrim dismissal, animation, and integration with the Taste sub-component.",
+ "interactions_present": [
+  "Gear button click toggles panel open/closed",
+  "Scrim click closes the panel",
+  "Native button keyboard activation toggles the panel"
+ ],
+ "interactions_missing": [
+  "No Escape key handler to close the panel",
+  "No focus trap or focus management inside the panel",
+  "No focus return to the gear button on panel close",
+  "No close button or explicit dismiss control inside the panel",
+  "No resize/scroll handling to refresh the measured top position",
+  "No body scroll lock while the panel is open",
+  "No screen-reader live-region announcement for open/close state"
+ ],
+ "performance_risks": [
+  "useLayoutEffect reads getBoundingClientRect on every open, which can force synchronous layout",
+  "Panel top is computed only when open changes, so it can become stale if the header moves during scroll or resize",
+  "Anonymous inline callbacks recreated each render may cause unnecessary child re-renders",
+  "Framer Motion AnimatePresence with scale/opacity animations may increase compositor work on low-end devices"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The on-demand settings-shell pattern is worth keeping, but it needs proper focus management, dismissal semantics, and robust anchoring before reuse in the redesign.",
+ "decomposition_hints": [
+  "Extract a useAnchorPosition hook from the measurement logic",
+  "Split the gear trigger into a SettingsTrigger component",
+  "Split the scrim and animated panel into SettingsOverlay/SettingsPanel components",
+  "Keep Taste as the separate content component it already is"
+ ],
+ "_path": "surface/app/src/toggles/Settings.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

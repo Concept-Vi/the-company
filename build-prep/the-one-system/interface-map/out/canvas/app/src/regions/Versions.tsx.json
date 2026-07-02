@@ -1,0 +1,42 @@
+{
+ "role": "A read-only inspector region that renders the newest-first version history of a selected node's output address as a styled list of CAS/timestamp/preview rows.",
+ "capabilities": [
+  "Display version history for the currently selected versioned address",
+  "Show current vs prior version rows with kind badges",
+  "Render abbreviated CAS hash, relative timestamp, and content preview per version",
+  "Present an honest empty state when the address has no versions",
+  "Indicate loading state via the section header badge",
+  "Reuse shared design-system event-row and history layout tokens"
+ ],
+ "substance": "substantial",
+ "substance_why": "It fully implements a scoped, styled version-history viewer with address header, count badge, newest-first rows, current/prior classification, empty state, and loading indicator.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No click/select action on a version row",
+  "No restore/revert to a prior version",
+  "No diff or compare between versions",
+  "No pagination, virtualization, or filtering for long histories",
+  "No keyboard navigation or focus management",
+  "No copy-to-clipboard for the CAS hash",
+  "No expanded preview or download of version bytes",
+  "No error/empty-due-to-failure state beyond the loading badge"
+ ],
+ "performance_risks": [
+  "Renders the entire versions array without virtualization or windowing",
+  "No memoization of row rendering or class-name computation",
+  "Preview text is placed in DOM and title attribute without length guarding",
+  "Fallback key uses array index when CAS is missing, risking reconciliation issues"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The shared .ev/.hist design vocabulary and layout are coherent with sibling regions and should be preserved, but row rendering and interaction wiring need extraction and enhancement.",
+ "decomposition_hints": [
+  "Extract a VersionRow component from the inline map body",
+  "Split the SectionHead/header concern from the list body",
+  "Move empty-state and loading-state rendering into small sub-components",
+  "Isolate version data normalization/formatting (cas abbreviation, relTime) into helpers or hooks",
+  "Keep the design-token class vocabulary in a shared style contract rather than inline strings"
+ ],
+ "_path": "canvas/app/src/regions/Versions.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,62 @@
+{
+ "role": "Persistent draggable floating action handle that hosts the right-hand-man (V) overlay, its verb fan, brain chat panel, note composer, and channel post composer on every page.",
+ "capabilities": [
+  "Draggable bottom-right V handle with position persistence",
+  "Expandable radial verb fan with live/soon verb honesty",
+  "Aim tracking via projection:select and projection:aim events",
+  "Brain panel integration via window.forkVBrain.attach",
+  "Three-question starter prompts and guided tour walkthrough",
+  "Note composer that saves comments via brain.direct",
+  "Open V-post composer to post to named channels",
+  "First-contact self-introduction greeting",
+  "Dispatch of gallery:verb for navigate/open-source/drive/generate",
+  "Escape/outside-press dismissal of overlays",
+  "Territory label resolution for human-readable aim names"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a fully wired overlay with drag persistence, event-driven aim tracking, brain attachment, note saving, channel posting, a guided tour, and API fetches, not a stub.",
+ "interactions_present": [
+  "Pointer drag to reposition the V handle",
+  "Tap handle to toggle verb fan",
+  "Tap live/soon verb pills to act or show honest soon state",
+  "Tap Ask to open brain panel",
+  "Tap Note to open note composer and save with Enter or Save button",
+  "Tap three starter questions to ask the brain",
+  "Tap Show me around to start guided tour",
+  "Tap Next / Finish tour buttons",
+  "Tap Post to a channel toggle, select channel, type message, and send",
+  "Tap Got it / I\u2019ll explore to dismiss greeting",
+  "Escape or outside press closes fan/panel/note"
+ ],
+ "interactions_missing": [
+  "Drive and Make verbs are contract-only and not operable (shown as soon)",
+  "No retry or recovery UI for a failed note save beyond an error message",
+  "No loading state while resolving territory labels",
+  "No keyboard focus trap or arrow-key navigation inside the fan",
+  "No pointercancel handling during drag",
+  "No resize handling to keep handle within viewport",
+  "No confirmation before posting to a channel",
+  "No undo after a note is saved",
+  "No UI feedback when brain module fails to attach"
+ ],
+ "performance_risks": [
+  "setPos called on every pointermove with no throttling, causing frequent React re-renders",
+  "Repeated fetch of /api/territory/label whenever binding changes even if the resulting address is unchanged",
+  "Unconditional setOpen(false) fired on every pointermove during a drag",
+  "Synchronous localStorage write inside the pointer-up drag path",
+  "Brain panel DOM is always mounted even when closed so fork can attach"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The seam contracts (aim address, gallery:verb, forkVBrain attach, territory label/write) and operator-experience rules are worth keeping, but the monolithic component should be split for the redesign.",
+ "decomposition_hints": [
+  "Extract VHandle component for drag, tap, and fan rendering",
+  "Extract BrainPanel component for fork attachment, starters, tour, and post composer",
+  "Extract NoteComposer component for annotation UI and save flow",
+  "Extract useAim hook/context for projection event handling, address/label/meaning state",
+  "Extract Greeting component for first-contact intro and tour start",
+  "Separate the post composer from the brain panel so each can evolve independently"
+ ],
+ "_path": "surface/app/src/rhm/RightHand.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

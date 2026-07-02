@@ -1,0 +1,43 @@
+{
+ "role": "The studio design-review region that composes the Rail, Stage, and RhmPanel primitives and binds the review locus to the backend corpus.",
+ "capabilities": [
+  "Fetch/refetch corpus on mount",
+  "Auto-select first reviewable mockup and bind its address when corpus loads",
+  "Resolve missing address for an already-open mockup from the corpus row (deep-link fix)",
+  "Render the three-pane studio shell via StudioKit primitives",
+  "Supply title lookup for the Stage from corpus metadata"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements real mount/corpus effects, locus-binding logic, a title resolver, and wires the three studio regions together.",
+ "interactions_present": [
+  "Mount-time corpus refresh",
+  "Automatic selection/binding of first reviewable mockup on corpus load",
+  "Automatic address backfill for an open mockup from corpus metadata",
+  "Title resolution callback passed to Stage"
+ ],
+ "interactions_missing": [
+  "Explicit user click/select handling for Rail cards (delegated to StudioKit, not visible here)",
+  "Loading and error states for corpus fetch",
+  "Manual override or reset of auto-selected locus",
+  "Handling when no corpus item has an address",
+  "Cleanup/cancellation of refreshCorpus on unmount",
+  "Keyboard navigation or shortcuts",
+  "URL synchronization logic beyond the deep-link fix described in comments"
+ ],
+ "performance_risks": [
+  "ESLint-disabled exhaustive-deps in both useEffect hooks can cause stale closures or missed updates",
+  "titleFor callback recreated each render and passed to Stage, risking unnecessary child re-renders",
+  "refreshCorpus is fire-and-forget with no cancellation or loading tracking",
+  "Array.find in titleFor runs on every Stage render without memoization"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Preserve the corpus-driven locus-binding rules and deep-link address resolution, but rebuild the shell composition and fix effect dependencies/loading states.",
+ "decomposition_hints": [
+  "Extract locus initialization and address-binding effects into a dedicated useReviewLocus hook",
+  "Move titleFor corpus lookup to a shared corpus utilities module",
+  "Keep Review.tsx as a thin shell orchestrator composing StudioKit primitives"
+ ],
+ "_path": "canvas/app/src/regions/Review.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

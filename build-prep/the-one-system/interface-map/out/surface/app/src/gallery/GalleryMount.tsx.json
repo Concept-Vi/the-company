@@ -1,0 +1,55 @@
+{
+ "role": "A React host component that mounts an external vanilla \"DNA\" gallery renderer inside a stable DOM container and orchestrates modal drill-in, decision slides, deep-links, and post-write rerenders via window events.",
+ "capabilities": [
+  "Hosts DNA.renderGallery in a React-stable #gallery-mount container",
+  "Binds projection drill listener once with a module-level guard",
+  "Opens/closes a modal gallery face on gallery:rendered and projection:select",
+  "Renders decision cards via DNA with loading state and queue-return behavior",
+  "Handles ?decide= deep-link and decision:open inbox events",
+  "Refreshes the currently mounted face on gallery:rerender after writes",
+  "Carries decision subtype/render_kind across rerenders",
+  "Supplies a grounded resolve override to DNA when enabled",
+  "Toggles body class for modal chrome and handles Esc/scrim/close dismissal",
+  "Emits decision:ready signal after a decision card renders"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a full lifecycle host with multiple event seams, deep-link and inbox openers, rerender refresh, grounded resolve injection, loading states, and extensive inline design rationale.",
+ "interactions_present": [
+  "Click a projection point to drill into gallery face",
+  "Click scrim to dismiss modal",
+  "Click close button to dismiss modal",
+  "Escape key closes modal",
+  "?decide=<id> URL deep-link opens a decision card",
+  "decision:open event from inbox opens a decision card",
+  "gallery:rerender event refreshes the mounted face",
+  "decision:ready event emitted for driver consumers"
+ ],
+ "interactions_missing": [
+  "No focus trap or focus restoration for the modal",
+  "No explicit failure UI after the 20s polling window expires",
+  "No back-button/popstate handling for deep-linked decisions",
+  "No scroll lock beyond a body class",
+  "No decision-sequence walk driver (only 'slide' render_kind is handled)",
+  "No visible error state if DNA.renderGallery is permanently missing",
+  "No aria-live announcement for the loading state"
+ ],
+ "performance_risks": [
+  "Polls renderGallery every 250ms for up to 80 attempts (20s) on decision open",
+  "Repeated DOM querySelector for data-decision-address on each tick",
+  "renderGallery re-fetches the corpus on every gallery:rerender with no deduplication",
+  "Synchronous string manipulation and DOM class toggling on every select/render",
+  "Window event listeners added/removed on every onOpenChange/dismiss dependency change"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The DNA-host seam and event orchestration are domain-specific and worth keeping, but the modal chrome, decision opener, deep-link handling, and rerender logic should be decoupled.",
+ "decomposition_hints": [
+  "Split the stable DNA container binding from the modal overlay chrome",
+  "Extract decision opening/deep-link/inbox queue logic into a dedicated hook or service",
+  "Extract rerender refresh orchestration into its own module",
+  "Move grounded resolve supply into a provider/hook consumed by the opener",
+  "Separate the loading/error/pending UI into a small presentational component"
+ ],
+ "_path": "surface/app/src/gallery/GalleryMount.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

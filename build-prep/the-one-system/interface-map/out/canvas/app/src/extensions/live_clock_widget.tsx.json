@@ -1,0 +1,31 @@
+{
+ "role": "A self-contained React extension widget that renders a fixed-position live digital clock overlay.",
+ "capabilities": [
+  "Displays current time in HH:MM:SS format",
+  "Updates displayed time every second via setInterval",
+  "Positions itself as a fixed top-right overlay with themed styling"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file fully implements a working live clock with formatting, state updates, interval lifecycle, and rendered styled output.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No configuration via props (position, format, refresh rate, timezone)",
+  "No user controls to show/hide or customize the widget",
+  "No accessibility markup such as aria-label or live region"
+ ],
+ "performance_risks": [
+  "setInterval re-renders the component every second unconditionally",
+  "Hardcoded zIndex of 9999 can create stacking-context conflicts",
+  "Inline style object is recreated on every render"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The timekeeping logic is sound and reusable, but the hardcoded layout, inline styles, and lack of configurability must be rebuilt for the design system.",
+ "decomposition_hints": [
+  "Separate time formatting and interval hook from presentational markup",
+  "Extract styling into theme-aware component props or CSS module",
+  "Remove hardcoded fixed positioning into a configurable container/placement API"
+ ],
+ "_path": "canvas/app/src/extensions/live_clock_widget.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

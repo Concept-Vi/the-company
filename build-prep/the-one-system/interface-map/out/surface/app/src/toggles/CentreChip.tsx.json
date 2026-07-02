@@ -1,0 +1,42 @@
+{
+ "role": "A small, stateless React control that surfaces the current relative centre and offers a one-tap reset back to the root origin.",
+ "capabilities": [
+  "Display active centre label when centre is non-null",
+  "Hide itself entirely when centred on root (null)",
+  "Animate enter/exit with Framer Motion",
+  "Provide a reset action via native button click",
+  "Expose accessible name/title describing current state and reset action",
+  "Apply an address stamp for tracing/testing"
+ ],
+ "substance": "substantial",
+ "substance_why": "The component fully implements its stated purpose with real props, motion, accessibility text, and a reset callback, leaving no TODOs or stubs.",
+ "interactions_present": [
+  "Button click/tap invokes onReset callback",
+  "Keyboard activation via native <button>",
+  "Animated appear/disappear driven by centre state changes",
+  "Title/aria-label communicates state and action"
+ ],
+ "interactions_missing": [
+  "No disabled or loading state while reset is in flight",
+  "No visible focus/hover affordance defined in code",
+  "No reduced-motion alternative",
+  "No truncation or overflow handling for long centre labels",
+  "No keyboard shortcut or gesture for reset",
+  "No confirmation/undo for returning to root"
+ ],
+ "performance_risks": [
+  "Framer Motion AnimatePresence runs enter/exit animations on every centre toggle; rapid changes can queue motion work",
+  "Component is not memoized, so parent re-renders recreate motion props and re-render the chip",
+  "stamp() and transition objects are spread inline on every render, adding minor per-render object churn"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The behaviour and concept are focused and reusable, but the markup, motion tokens, and address stamping should be reconciled with the new design system.",
+ "decomposition_hints": [
+  "Extract a generic animated chip/pill wrapper if similar controls appear elsewhere",
+  "Separate the label formatting and reset affordance into presentational subcomponents",
+  "Move address stamping into a shared hook or design-system primitive instead of inline spread"
+ ],
+ "_path": "surface/app/src/toggles/CentreChip.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

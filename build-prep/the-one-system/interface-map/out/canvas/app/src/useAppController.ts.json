@@ -1,0 +1,67 @@
+{
+ "role": "A monolithic React context hook that centralizes all application state, editor bindings, API orchestration, and cross-cutting interaction handlers for the canvas-based IDE interface.",
+ "capabilities": [
+  "Canvas graph load/persist, node wiring, selection, and deletion",
+  "Run orchestration with error surfacing and elapsed-time tracking",
+  "SSE event-stream consumption, sequence deduplication, and per-kind dispatch",
+  "Chat messaging with streaming, threads, and conversation recording",
+  "Structured proposal/offer approval, steering, deferral, dismissal, and revive",
+  "UI locus indication, address resolution, spotlighting, and journey record/replay",
+  "Studio mockup review, corpus browsing, and address-keyed annotation threading",
+  "Address help, addressed history, self-change audit, freshness, and version lookup",
+  "Settings/persona/mode/model/voice configuration and live fleet registry mirroring",
+  "Push-to-talk and hands-free voice input with barge-in/cancel",
+  "TTS audio playback scheduling and stream cancellation",
+  "Inbox escalation and resolved-item management",
+  "Walkthrough/guide step driving and cog-role execution"
+ ],
+ "substance": "substantial",
+ "substance_why": "It declares dozens of state hooks and refs, implements concrete API integrations for graph, chat, voice, annotations, settings, and inbox, and wires handlers for canvas, studio, chat, and voice interactions.",
+ "interactions_present": [
+  "Canvas node select/add/wire/delete",
+  "Graph run trigger and retry after runError",
+  "UI element click-to-indicate with modal-exclusion guard",
+  "Chat send with streaming fallback path",
+  "Proposal approve/steer/defer/dismiss/revive",
+  "Voice push-to-talk record toggle",
+  "Hands-free auto-listen start/stop",
+  "Audio playback barge-in/cancel",
+  "Mockup open/review and corpus refresh",
+  "Annotation post/load at indicated locus",
+  "Settings open and per-slot config update",
+  "Persona/mode switch",
+  "Journey record/replay via resolveUiTarget",
+  "Inbox escalation resolve/revive",
+  "Thread open and conversation recording toggle"
+ ],
+ "interactions_missing": [
+  "Generate-result apply appears to be a display mirror only (no explicit apply wired in the visible code)",
+  "Several one-line helpers (`t`, `selected`, repeated `d`) look like stubs or narrow accessors",
+  "Form/build helpers (`fieldValue`, `setField`, `revertLast`, `approveApply`) appear partial and late in the file",
+  "No visible debouncing on rapid indicate/resolveUiTarget calls",
+  "Explicit cleanup/abort for in-flight SSE or non-voice API requests is not visible"
+ ],
+ "performance_risks": [
+  "Single context hook causes whole consumer-tree re-renders on any state change",
+  "No visible memoization of derived selectors or expensive computations",
+  "SSE event merging and chat result processing run on every message",
+  "Multiple independent polling/fetching functions without request deduplication",
+  "Audio context and MediaRecorder lifecycle managed manually across many refs",
+  "Large object state snapshots (events, chat, corpus, inbox) copied into React state"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The domain vocabulary, API contracts, and interaction rules are the authoritative source of truth, but the monolithic hook form must be decomposed to avoid render churn and coupling.",
+ "decomposition_hints": [
+  "Split canvas/graph concerns: editor bindings, nodes, edges, runs, stuck nodes, fitGraph",
+  "Split chat/proposal concerns: messages, streaming, proposals, threads, inbox offers",
+  "Split voice/audio concerns: recorders, playback, barge-in, TTS/STT, voice service",
+  "Split studio/review concerns: mockups, corpus, annotations, address help, generate",
+  "Split locus/history concerns: indicate, resolveUiTarget, journey, history, self-changes, freshness, versions",
+  "Split settings/config concerns: models, personas, modes, roles, voice config, autodetect",
+  "Split inbox/escalation concerns into a dedicated controller",
+  "Split SSE/event dispatch and mergeEvents into a dedicated stream controller"
+ ],
+ "_path": "canvas/app/src/useAppController.ts",
+ "_mode": "symbols+head",
+ "_model": "kimi-k2.7-code:cloud"
+}

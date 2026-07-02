@@ -1,0 +1,31 @@
+{
+ "role": "This file is the React application entry point that mounts the root component and loads global styles.",
+ "capabilities": [
+  "Bootstrap React root with ReactDOM.createRoot",
+  "Render the App component inside React.StrictMode",
+  "Load tldraw base styles",
+  "Load corpus design-system tokens and app-specific CSS"
+ ],
+ "substance": "substantial",
+ "substance_why": "It fully performs the single responsibility of an app entry point: importing global styles and mounting the root React tree.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No error boundary around the root render",
+  "No root-level providers (theme, state, routing, etc.)",
+  "No loading or splash state before App mounts",
+  "No runtime feature detection or graceful degradation"
+ ],
+ "performance_risks": [
+  "React.StrictMode causes double rendering of components during development",
+  "Global CSS imports (tldraw, design-system, app.css) are loaded synchronously and may block first paint"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The entry-point concept remains necessary, but the style-import strategy and root wrapper composition should be revisited during redesign.",
+ "decomposition_hints": [
+  "Separate style/theme bootstrap from React mount logic",
+  "Extract root providers and error boundary into a dedicated wrapper component"
+ ],
+ "_path": "canvas/app/src/main.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

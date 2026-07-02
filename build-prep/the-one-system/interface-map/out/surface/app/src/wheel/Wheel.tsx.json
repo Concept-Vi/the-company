@@ -1,0 +1,54 @@
+{
+ "role": "The Wheel is the core polar/spatial instrument view that renders a projection as an animated SVG: sectors, point cloud, structural-meaning strain, directed sector edges, scale rungs, and addressable hit targets.",
+ "capabilities": [
+  "Responsive SVG wheel geometry from container size",
+  "Dyadic square grid, axes, and forbidden corner circle overlay",
+  "Concentric rings and coincidence-spine diamonds on axial ring crossings",
+  "Sector wedges with per-sector hue, selection/dimming, and click addressing",
+  "Directed and bidirectional sector edge chords with arrowheads and selection emphasis",
+  "Radial strain lines showing structural-vs-semantic filing tension per point",
+  "Animated decorative point cloud with entrance/exit/tween and selected-point stroke",
+  "Theme name labels for coarse-scale cluster points when count is small",
+  "Invisible 15px hit layer over points to capture taps and invoke onPick",
+  "Center origin mark and optional center ring",
+  "Scale rung ladder via RungLadder when setRung is provided",
+  "Connection readout with in/out counts and pure source/sink findings",
+  "Address stamping for regions, sectors, edges, points, and readout"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete, multi-layer polar visualization with grid, rings, sectors, edges, strain, points, labels, rung controls, readout, and interaction wiring rather than stubs.",
+ "interactions_present": [
+  "Sector click toggles selection, dims other sectors, emphasizes connected edges, and dispatches a window projection:aim custom event",
+  "Invisible point hit layer calls onPick(p) when a point is clicked",
+  "RungLadder calls setRung to change scale rung",
+  "Selected point receives a visible stroke highlight"
+ ],
+ "interactions_missing": [
+  "No keyboard navigation or shortcuts for sectors/points",
+  "No hover tooltips or preview for points or edges",
+  "No zoom, pan, or touch gestures on the wheel",
+  "No point label or detail shown on selection beyond stroke",
+  "No listener for projection:aim inside this file; integration with the right-hand panel is not visible",
+  "No empty/error state for malformed or zero-point projections",
+  "No multi-select, lasso, or drag interactions"
+ ],
+ "performance_risks": [
+  "Point positions, addresses, and theme names are recomputed in multiple passes over proj.points per render",
+  "Framer-motion layoutId and enter/exit animations are applied to every point without virtualization",
+  "Edge readout filters all edges twice per render",
+  "Inline IIFEs and closures are recreated on every render inside JSX",
+  "SVG viewBox uses actual pixel dimensions, so a large container produces a large DOM coordinate space"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The polar-projection semantics, address stamping, and interaction contracts are domain-specific and should survive, but the monolithic SVG render and repeated computations need a structured rebuild.",
+ "decomposition_hints": [
+  "Extract subcomponents for Grid, Rings, Sectors, Edges, Strain, Points, Labels, HitLayer, and ConnectionReadout",
+  "Introduce memoized hooks for wheel geometry, sector selection state, edge role classification, and point positions",
+  "Separate the invisible interaction target layer from decorative rendering",
+  "Isolate the animation/feel wrapper so motion behavior can be tuned independently",
+  "Move repeated pure calculations such as point addresses and theme names into prepared projection data or memoized selectors"
+ ],
+ "_path": "surface/app/src/wheel/Wheel.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

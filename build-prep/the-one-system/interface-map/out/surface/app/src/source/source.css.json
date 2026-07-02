@@ -1,0 +1,49 @@
+{
+ "role": "This file is the stylesheet for the 'Source' verb result surface: a token-driven, fixed-position reading card (and its scrim) that displays the fuller record behind a tapped dot.",
+ "capabilities": [
+  "Semi-transparent scrim backdrop with fade-in animation",
+  "Fixed-position source card anchored above the V handle on wide viewports",
+  "Responsive bottom-sheet layout for narrow viewports",
+  "Close button styling with hover and focus-visible states",
+  "Verb tag, name, and meaning metadata typography",
+  "Body label and pre-wrapped prose content area",
+  "Stacked user note cards with distinct ground styling",
+  "Empty, status, and error message styling",
+  "Provenance footer with top divider",
+  "Token-based theming with zero hardcoded colors"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file supplies complete, production-ready styling for every documented surface element, including responsive breakpoints, entrance animations, and full token integration.",
+ "interactions_present": [
+  "Close button hover and focus-visible visual feedback",
+  "Card and scrim entrance animations"
+ ],
+ "interactions_missing": [
+  "No click/tap handler for the close button",
+  "No scrim click-to-dismiss behavior",
+  "No keyboard Escape handling",
+  "No focus trap or focus management",
+  "No scroll-lock on the underlying page",
+  "No exit/close animation",
+  "No prefers-reduced-motion guard",
+  "No touch swipe-to-dismiss gesture"
+ ],
+ "performance_risks": [
+  "Long .v-source-body pre-wrap text can cause expensive reflow on viewport resize",
+  "Entrance animations lack a prefers-reduced-motion media query",
+  "Fixed overlay with high z-index and semi-transparent scrim can promote large composited layers",
+  "No CSS containment on the card or notes list to limit layout/paint scope"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The token-driven architecture and clearly named component seams should be preserved, but the visual form, motion, and interaction wiring will be rebuilt in the redesign.",
+ "decomposition_hints": [
+  "Extract entrance/exit motion rules into a shared animation or motion layer",
+  "Split layout/positioning (scrim + card shell) from content typography (tag, name, meaning, body, notes)",
+  "Move empty/status/provenance utility styles to a shared status/empty-state stylesheet",
+  "Extract the note item component styles to a reusable note-card module",
+  "Keep the responsive breakpoint rules co-located with the card shell or move to a dedicated responsive layout layer"
+ ],
+ "_path": "surface/app/src/source/source.css",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

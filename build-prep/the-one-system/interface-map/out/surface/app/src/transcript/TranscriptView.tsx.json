@@ -1,0 +1,50 @@
+{
+ "role": "A React overlay component that hosts the transcript corpus search surface and renders the result constellation through DNA's generic archetype renderer.",
+ "capabilities": [
+  "Open/close overlay via window `transcript:open` event and Escape key",
+  "Search input with query state bound to transcriptStore",
+  "Submit semantic corpus search and retry on error",
+  "Fetch and cache the `transcript-viz` DNA archetype from `/dna/layouts.json`",
+  "Adapt API response via `DNA.faceRecord.transcriptRecord`",
+  "Render SVG constellation graph via `DNA.org.constellation` and `DNA.renderArchetype`",
+  "Display loading, error, empty-prompt, and no-match states",
+  "Close via scrim click, close button, or Escape"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements the full overlay lifecycle, search form, all message states, and the DNA graph mounting path, leaving only the actual drawing to external DNA helpers.",
+ "interactions_present": [
+  "Window `transcript:open` opens the overlay",
+  "Escape key closes the overlay when open",
+  "Scrim click closes the overlay",
+  "Close button closes the overlay",
+  "Typing updates the search query",
+  "Form submit triggers `searchTranscript`",
+  "Error message retry button re-runs the search"
+ ],
+ "interactions_missing": [
+  "No click/selection interaction on constellation stars or sessions",
+  "No pagination, infinite scroll, or result count handling for large result sets",
+  "No keyboard focus trap inside the modal dialog",
+  "No debounce on query input",
+  "No explicit failure UX for the `/dna/layouts.json` fetch beyond silent degradation",
+  "No session drill-down from the graph"
+ ],
+ "performance_risks": [
+  "Effect reruns whenever `raw` reference changes, regenerating the entire constellation and replacing DOM children",
+  "No memoization of the adapted record or SVG device",
+  "Query input updates store on every keystroke, causing re-renders without throttling",
+  "Async archetype fetch has no AbortController, and stale closures can write to a replaced host node",
+  "Large `raw` envelopes are passed whole to the adapter with no size guarding"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The overlay search flow and state transitions are worth keeping, but the imperative DNA-global coupling, archetype fetch, and DOM mounting should be rebuilt for the new design system.",
+ "decomposition_hints": [
+  "Split the overlay shell (header, search form, message states, close handling) from the graph renderer adapter",
+  "Extract DNA archetype loading and `transcriptRecord`/`constellation` invocation into a dedicated visualization service/hook",
+  "Move store actions and selectors (`useTranscript`, `searchTranscript`, etc.) into a separate store module if not already",
+  "Separate CSS into component-scoped or design-system tokens"
+ ],
+ "_path": "surface/app/src/transcript/TranscriptView.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

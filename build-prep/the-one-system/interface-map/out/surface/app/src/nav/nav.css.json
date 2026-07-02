@@ -1,0 +1,37 @@
+{
+ "role": "This file is the stylesheet that positions the surface navigation host in the shell and styles the plain fallback nav chips shown before DNA's navRail renders.",
+ "capabilities": [
+  "Fixed left-edge vertical rail placement centered vertically in the viewport",
+  "Responsive left inset adjustment at 1024px breakpoint",
+  "Progressive-enhancement visibility switch that hides the fallback once DNA's navRail has rendered",
+  "Fallback nav layout as a vertical flex column of pill-shaped chips",
+  "Fallback chip typography, color, background, border, sizing, and blur backdrop styling",
+  "Hover and focus-visible visual feedback on fallback chips"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements concrete layout, responsive behavior, a degrade-clean fallback mechanism, and complete fallback item styling with no TODOs or empty stubs.",
+ "interactions_present": [
+  "Hover feedback on fallback nav items",
+  "Focus-visible outline on fallback nav items"
+ ],
+ "interactions_missing": [
+  "No selected/current nav item state styling",
+  "No active/pressed state for taps/clicks",
+  "No keyboard activation or ARIA-current indicators",
+  "No reduced-motion or high-contrast considerations"
+ ],
+ "performance_risks": [
+  "backdrop-filter: blur(6px) on every fallback chip can be GPU/compositing-heavy",
+  "overflow:auto on a fixed-position rail may cause scroll/layout recalculation"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the spatial host role and degrade-clean fallback pattern, but revise the DNA coupling, token usage, and visual styling for the redesigned surface.",
+ "decomposition_hints": [
+  "Split host positioning rules (.surface-nav) from fallback chip styling (.surface-nav-fallback, .surface-nav-item)",
+  "Move the DNA render-state selector (.surface-nav-dna:not(:empty) + .surface-nav-fallback) next to component integration logic",
+  "Separate responsive breakpoint rules into a layout-specific partial"
+ ],
+ "_path": "surface/app/src/nav/nav.css",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

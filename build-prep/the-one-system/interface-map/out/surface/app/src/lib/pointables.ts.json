@@ -1,0 +1,39 @@
+{
+ "role": "This file is the surface-side registry and live DOM scanner that exposes spotlightable UI targets to the brain via a global window.surfacePointables() function.",
+ "capabilities": [
+  "Exposes a curated catalog of pointable controls/instruments as opaque tokens paired with ui:// addresses and human labels",
+  "Installs a singleton global function surfacePointables() for fork-brain-core to read at send-time",
+  "Filters the curated catalog to targets currently present in the DOM via [data-ui-ref] selectors",
+  "Auto-discovers additional pointable elements that declare data-ui-ref and data-point-label inline",
+  "Merges curated and auto-discovered lists with curated entries winning on duplicate addresses",
+  "Generates opaque per-call auto-N tokens so parseable addresses never reach the brain",
+  "Escapes double quotes and backslashes when building CSS attribute selectors"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements a real catalog, DOM presence filtering, auto-discovery with deduplication, opaque token generation, and a one-time global installer.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "Sector pointables are excluded because the spotlight visual is currently suppressed",
+  "Operator-facing labels are AI-supplied drafts awaiting final review/Tim's steer",
+  "No cleanup or uninstall of the global window.surfacePointables() function",
+  "No reactive updates beyond caller polling; no mutation observer or cache invalidation",
+  "No validation or normalization of data-ui-ref or data-point-label values"
+ ],
+ "performance_risks": [
+  "document.querySelectorAll('[data-ui-ref][data-point-label]') scans the whole DOM on every call",
+  "document.querySelector is run once per curated item on every call",
+  "Auto-discovered list is unbounded and could grow large if many elements declare pointability",
+  "No throttling, debouncing, or caching of the live scan result"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The address-free brain contract, curated catalog, and auto-discovery seam are worth preserving, but the global installer, hardcoded list, and per-call full-DOM scan should be rebuilt.",
+ "decomposition_hints": [
+  "Split the curated catalog data from the live DOM scanner",
+  "Split the global window bridge installer from the registry logic",
+  "Split auto-discovery heuristics from curated token/label management",
+  "Extract CSS selector escaping into a shared utility"
+ ],
+ "_path": "surface/app/src/lib/pointables.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

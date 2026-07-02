@@ -1,0 +1,46 @@
+{
+ "role": "A read-only React region that visualizes live backend cognition as three ascending-detail altitudes: Pulse, River, and Nodes.",
+ "capabilities": [
+  "Render an ambient Pulse glyph whose aperture dilates with turn cognition volume and failure state",
+  "Render a River SVG showing cast roles as converging tributaries sized by character contribution, with latent/failed states",
+  "Render a Nodes panel of role cards showing label, model, status, contribution, timing, trigger, and error",
+  "Map role lifecycle statuses to design-system tokens, falling back to registry node_states when registered",
+  "Consume live cognition data via AppContext (cognitionInfo projection + cognitionTurn fold)",
+  "Switch altitude level with local React state (0 Pulse, 1 River, 2 Nodes)"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements all three documented altitudes, status token resolution, SSE-driven data binding, and a self-contained SVG River plus role-card Nodes panel.",
+ "interactions_present": [
+  "Click the Pulse button to ascend to River (altitude 1)",
+  "Click 'river'/'nodes' header buttons to switch between altitudes 1 and 2",
+  "Click the close button to return to Pulse (altitude 0)",
+  "Title tooltips on Pulse and altitude controls"
+ ],
+ "interactions_missing": [
+  "No keyboard navigation or shortcuts between altitudes",
+  "No focus-visible or ARIA live region for active/failed thinking state",
+  "No reduced-motion support for the breathing ring animations",
+  "No click-through or expansion for individual role details/errors",
+  "No empty/error state handling when cognitionInfo or turn fields are missing",
+  "No resizable panel or copy/select interaction for role metadata"
+ ],
+ "performance_risks": [
+  "River SVG, cast arrays, and shape values are recomputed on every render without memoization",
+  "Each SSE update can re-render the entire component tree including all SVG paths and role cards",
+  "Cast length scales SVG DOM nodes linearly with no virtualization or capping",
+  "Inline style transitions on SVG radius/opacity may trigger paint during rapid updates",
+  "Heavy use of `any` typing prevents compile-time optimization and refactoring safety"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The altitude model, status-token mapping, and registry-driven role visualization concepts are keepable, but the monolithic component, untyped data, and unoptimized SVG need restructuring for the redesign.",
+ "decomposition_hints": [
+  "Extract Pulse into its own component/file",
+  "Extract River SVG rendering and marker defs into a dedicated component",
+  "Extract Nodes role cards into a reusable card component",
+  "Move statusToken and turn-shape calculations into a pure helper or custom hook",
+  "Split the altitude shell/state container from the three altitude views"
+ ],
+ "_path": "canvas/app/src/regions/CognitionView.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,38 @@
+{
+ "role": "A fixed SVG overlay that draws a dynamic ink curve between a selected wheel dot and its detail card so the visual relationship is explicit.",
+ "capabilities": [
+  "Locates the selected dot via [data-tether-point] and the detail card via [data-tether-card]",
+  "Computes client rects and anchors the tether to the nearest point on the card border",
+  "Offsets the tether start from the dot center by a fixed radius",
+  "Bows the curve away from the wheel hub, falling back to a perpendicular bow",
+  "Hides the tether when the dot and card are too close",
+  "Updates path and opacity each frame via requestAnimationFrame and refs"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete geometry-aware tether with start offset, directional bow, fallback logic, visibility threshold, and lifecycle cleanup.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No explicit resize/scroll listeners; relies entirely on the rAF loop",
+  "No handling for multiple selected points or multiple tether targets",
+  "Hardcoded dot radius (7) and bow limits (130, 0.22, 18)",
+  "No robust fallback if the wheel hub element is absent or the card is offscreen",
+  "No keyboard/accessibility interaction beyond aria-hidden"
+ ],
+ "performance_risks": [
+  "Continuous requestAnimationFrame loop while a point is selected",
+  "document.querySelector called twice per frame",
+  "getBoundingClientRect called twice per frame, potentially forcing layout",
+  "SVG attributes set every frame even when opacity is 0 if elements are missing",
+  "No throttling or pausing when the tether is offscreen or occluded"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The visual concept and geometry are worth keeping, but the DOM querying and per-frame layout reads should be replaced with refs, ResizeObserver, and a throttled or event-driven loop.",
+ "decomposition_hints": [
+  "Split pure geometry (anchor, bow, path) into a testable utility",
+  "Split the animation driver into a reusable rAF/observer hook",
+  "Separate the dot/card discovery layer from the SVG renderer"
+ ],
+ "_path": "surface/app/src/wheel/Tether.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

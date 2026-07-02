@@ -1,0 +1,45 @@
+{
+ "role": "A React SVG visualization component that renders the two-gravity separator form, mapping projected points into left/right basins, animating them, and exposing the balance bar, pole labels, and separation verdict.",
+ "capabilities": [
+  "Render two-basin separator SVG canvas sized via useSize",
+  "Project points by pole/lean into x/y coordinates around a center line",
+  "Animate points with framer-motion AnimatePresence and motion feel tokens",
+  "Provide large transparent hit targets for point selection",
+  "Display diverging balance bar and numeric lean counts",
+  "Show pole A/B labels and a reset-to-default-poles button",
+  "Render the engine separation verdict (separates / does not separate)",
+  "Stamp semantic ui://instrument/separator and per-point addresses"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete visual component: geometry, animation, hit layer, labels, reset control, and verdict rendering, all driven by projection data.",
+ "interactions_present": [
+  "Click/tap invisible SVG hit circles to select a point via onPick",
+  "Click reset button to restore default poles via onClearPoles"
+ ],
+ "interactions_missing": [
+  "Keyboard navigation/focus for points",
+  "Hover or tooltip detail on points",
+  "Accessible live announcement of the separation verdict",
+  "Zoom/pan or resize-independent coordinate system",
+  "Loading/empty state when projection or separation data is absent"
+ ],
+ "performance_risks": [
+  "Animating every projected point with AnimatePresence/motion without virtualization",
+  "Iterating the full point list twice (decorative layer + hit layer)",
+  "Using layoutId per point which can stress layout animations on large sets",
+  "SVG viewBox tied to measured pixel size causing full re-render on every resize",
+  "No memoization of place() geometry or derived balance-bar dimensions"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The two-gravity concept and data mapping are valuable to keep, but the component should be refactored for accessibility, performance, and clearer separation of concerns.",
+ "decomposition_hints": [
+  "Split SVG rendering from HTML overlay controls (labels, reset, verdict, counts)",
+  "Extract geometry/layout math into a dedicated hook or utility",
+  "Separate decorative animated point layer from pointer-hit layer",
+  "Make the balance bar its own component",
+  "Add a small presentational point/item component to avoid inline map closures"
+ ],
+ "_path": "surface/app/src/wheel/Separator.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

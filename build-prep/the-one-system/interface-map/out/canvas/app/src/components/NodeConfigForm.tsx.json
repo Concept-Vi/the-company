@@ -1,0 +1,46 @@
+{
+ "role": "A schema-driven React component that renders an editable configuration form for any node type using the registry's config_schema.",
+ "capabilities": [
+  "Schema-driven form generation for any node type",
+  "Renders <select> for enum/option fields and <input> for others",
+  "Coerces edited values via coerceConfigValue",
+  "Commits edits through onSet callback",
+  "Surfaces current select values missing from live options",
+  "Handles empty option lists",
+  "Commits input edits on blur and Enter key"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements complete end-to-end schema-to-form rendering with type coercion, option handling, and edit commits, with no visible TODOs or stubs.",
+ "interactions_present": [
+  "Select onChange commits value immediately",
+  "Input onBlur commits value",
+  "Enter key triggers input blur/commit",
+  "Current value preserved in select even when absent from live options"
+ ],
+ "interactions_missing": [
+  "No validation feedback or error display",
+  "No dirty/pending/committing state",
+  "No cancel or reset capability",
+  "No help text or field descriptions",
+  "No support for complex types (arrays/objects)",
+  "No disabled/loading state during async set",
+  "No keyboard navigation beyond Enter-to-blur"
+ ],
+ "performance_risks": [
+  "getOINFO() and configSchemaToFields() called on every render without memoization",
+  "Inline arrow functions created per mapped field each render",
+  "f.options.includes(String(cur)) scanned per select on every render",
+  "Input defaultValue pattern can cause cursor jump or stale value issues on rapid re-renders"
+ ],
+ "reuse_verdict": "keep",
+ "reuse_why": "The schema-driven, zero-per-node-type form concept is the intended architecture and should be preserved; only rendering, performance, and interaction details need rebuilding.",
+ "decomposition_hints": [
+  "Extract schema parsing and field derivation into a memoized hook",
+  "Split field renderers into separate SelectField and InputField components",
+  "Separate value coercion and validation into reusable utilities/hooks",
+  "Separate empty-state presentation from the form layout"
+ ],
+ "_path": "canvas/app/src/components/NodeConfigForm.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

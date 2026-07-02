@@ -1,0 +1,47 @@
+{
+ "role": "This file is the V/right-hand-man brain module that mounts a persistent, aim-aware brain UI inside the V overlay panel and routes user questions, channel posts, and directives through forkBrainCore or standalone API calls.",
+ "capabilities": [
+  "Mount an idempotent brain UI shell into a supplied panel element",
+  "Display a human-readable aim label that refreshes when the aim changes",
+  "Submit streaming Claude Code turns via forkBrainCore.talk at the current aim address",
+  "Submit blocking grounded Q&A via /api/brain/ask and render the answer",
+  "Post open messages to a named channel via /api/channel/post with humanized errors",
+  "Route directives/comments/reactions back at the current aim via core.writeDirections",
+  "Wire the send button and Enter key to the grounded-ask path",
+  "Remove the mounted UI on destroy"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete attach lifecycle, DOM construction, two distinct brain API paths, a channel-post path, directive routing, event wiring, and soft error handling with no TODOs or stubs visible.",
+ "interactions_present": [
+  "Clicking the .v-brain-send button submits a groundedAsk",
+  "Pressing Enter (without Shift) in .v-brain-input submits a groundedAsk",
+  "Typing into the textarea is the primary input interaction",
+  "The aim label updates when the host calls aimChanged()"
+ ],
+ "interactions_missing": [
+  "No UI affordance for picking a channel before postToChannel (host must supply the channel)",
+  "No UI for issuing direct actions (comment/reaction/favour)",
+  "No trigger wired for the streaming ask() path",
+  "No cancel/abort control for in-flight requests",
+  "No loading or disabled state on the send button",
+  "No clear/reset or close-panel interaction",
+  "No auto-resize or newline hint for the textarea"
+ ],
+ "performance_risks": [
+  "Repeated send clicks or Enter presses can queue overlapping groundedAsk fetches that race and overwrite the reply element",
+  "No AbortController is used for the blocking /api/brain/ask or the streaming core.talk call",
+  "destroy removes the DOM but does not detach event listeners or cancel pending promises",
+  "The aim address is re-read at send time without guarding against rapid aim changes mid-request"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the aim-context binding and the dual ask/post/direct semantics, but rebuild the DOM construction, decouple from the global window.forkBrainCore, and separate the API paths into testable strategies.",
+ "decomposition_hints": [
+  "Split the UI shell (markup, event wiring, reply rendering) from the API strategy objects (streamingAsk, groundedAsk, channelPost, directWrite)",
+  "Split the humanized channel-post error mapping into a reusable error translator",
+  "Split aim-address resolution and human labeling into an AimContext provider",
+  "Extract request lifecycle management (abort, loading state, cancellation) into a shared fetch wrapper"
+ ],
+ "_path": "surface/app/public/gallery/fork-v-brain.js",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

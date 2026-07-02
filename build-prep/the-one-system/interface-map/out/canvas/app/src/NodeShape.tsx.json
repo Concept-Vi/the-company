@@ -1,0 +1,57 @@
+{
+ "role": "This file is the tldraw custom node shape, graph-to-canvas synchronization layer, and screen-space edge overlay for the visual graph editor.",
+ "capabilities": [
+  "Defines a generic 'node' tldraw shape with fixed dimensions and disabled resize/rotate",
+  "Renders a node card with status dot, node type, kind, address, and semantic-zoom body",
+  "Reads port schemas and status definitions from the registry store at render time",
+  "Renders left input and right output port nubs at vertically computed positions",
+  "Implements pointer-based output-to-input connection drag using pointer capture and elementFromPoint",
+  "Commits new connections via the registry CONNECT action",
+  "Provides a force re-run control that calls FORCE_RUN for a node",
+  "Loads the backend graph into tldraw by creating, updating, or pruning shapes while preserving backend positions",
+  "Refreshes node status, output, layer, and error props without a full reload",
+  "Renders a reactive SVG edge overlay that anchors wires to exact source/target ports in screen space",
+  "Supports semantic zoom by collapsing/expanding the node body based on zoom level",
+  "Attaches data-ui-ref live addresses and portal-window addresses for resolver integration"
+ ],
+ "substance": "substantial",
+ "substance_why": "It fully implements node rendering, port-based connection gestures, backend graph load/refresh/prune, and a reactive SVG edge overlay with no TODOs or placeholder stubs.",
+ "interactions_present": [
+  "Drag from an output nub to an input nub to create a connection",
+  "Click the force re-run icon on a node's address bar",
+  "Hover port nubs to see input/output titles",
+  "Semantic zoom expands or collapses the node body automatically",
+  "Standard tldraw selection and drag of node shapes",
+  "Display of portal live/empty/ref state in the node body"
+ ],
+ "interactions_missing": [
+  "No disconnect or delete-edge interaction",
+  "No delete-node or create-node interaction in the canvas",
+  "No editing of node config, ref, or address from the card",
+  "No visual preview wire while dragging a connection",
+  "No keyboard or accessible alternatives for connection or force-run",
+  "No user-facing error feedback if CONNECT or FORCE_RUN fails",
+  "No context menu, pan-to-node, or node inspection trigger from the card"
+ ],
+ "performance_risks": [
+  "Edges overlay recomputes every line on each camera/zoom change via useValue, doing O(n) shape lookups and pageToScreen calls",
+  "Direct registry store reads in component render (getOINFO/getNODE_STATES) re-evaluate every render without memoization",
+  "loadGraph and refresh call editor.updateShape per node sequentially, potentially causing many tldraw transactions",
+  "document.elementFromPoint in onPointerUp performs a synchronous DOM hit-test that may collide with overlay elements",
+  "Edges list uses array index as React key, which can cause unnecessary re-mounts when edge order changes",
+  "No throttling or debouncing of refresh/loadGraph calls"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The node shape semantics, port anchoring, and backend-sync logic are worth preserving, but the monolithic file and unoptimized rendering should be refactored during redesign.",
+ "decomposition_hints": [
+  "Split graph synchronization (loadGraph/refresh) from the shape renderer",
+  "Extract the Edges overlay and its geometry computation into a dedicated component/hook",
+  "Extract port geometry helpers and the Nub component into a separate module",
+  "Extract status/error/body rendering into a NodeBody subcomponent",
+  "Separate connection gesture handling (drag/drop) from the node card rendering",
+  "Introduce adapter hooks for registry store reads to isolate tldraw components from direct store access"
+ ],
+ "_path": "canvas/app/src/NodeShape.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

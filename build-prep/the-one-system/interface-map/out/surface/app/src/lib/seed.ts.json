@@ -1,0 +1,38 @@
+{
+ "role": "Low-level geometry library that computes wheel, polar placement, square grid, chord, arrow, wedge, and sector-color math for the seed visualization.",
+ "capabilities": [
+  "Compute wheel center and inscribed-circle radius from viewport",
+  "Place polar projection points onto the wheel",
+  "Compute concentric ring radii in pixels",
+  "Map sector index to an HSL hue using CSS theme variables",
+  "Compute directed quadratic-bezier chord paths between sector mid-angles",
+  "Generate small arrowhead SVG paths",
+  "Compute deterministic square-grid cell centers with sub-cell jitter",
+  "Enumerate dyadic nesting division levels with opacity weights",
+  "Generate SVG wedge paths for sector wedges"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements concrete, well-documented geometric functions and mandated constants used to lay out the wheel, square grid, chords, arrowheads, and wedges.",
+ "interactions_present": [],
+ "interactions_missing": [
+  "No event handling, hover, click, or focus wiring",
+  "No resize observer or responsive recalculation integration",
+  "No animation, transition, or gesture helpers"
+ ],
+ "performance_risks": [
+  "sectorHue reads getComputedStyle on every call, which can force layout recalculation in hot render loops",
+  "No memoization of wheel geometry, ring radii, or repeated trigonometric computations",
+  "CSS variable fallback path still queries the DOM even when the value is unused"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The polar/square coordinate math and mandated constants are domain-specific and should be preserved, but SVG string generation and CSS-dependent color logic should be decoupled for the new renderer.",
+ "decomposition_hints": [
+  "Split pure coordinate geometry (wheelGeom, placePolar, gridCellCenter) from SVG path string generation (wedgePath, chordPath, arrowHead)",
+  "Split theming/color logic (sectorHue, cssVar) into a dedicated theme module",
+  "Isolate deterministic jitter/hash (hash01) so grid placement can choose jitter strategy independently",
+  "Add a caching/memoization layer for wheel geometry and expensive DOM reads"
+ ],
+ "_path": "surface/app/src/lib/seed.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

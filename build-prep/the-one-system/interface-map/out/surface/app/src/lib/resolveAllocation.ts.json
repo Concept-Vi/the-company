@@ -1,0 +1,41 @@
+{
+ "role": "Host-side resolver consumer that builds a modal allocation AST from the current device coordinate, posts it to /api/resolve, and writes the returned values to CSS custom properties on :root.",
+ "capabilities": [
+  "Build modal allocation invariant AST using fork resolver grammar (field, lit, mul, sub, clamp, select)",
+  "Derive live device coordinate and orientation from window.innerWidth/innerHeight",
+  "POST invariant + coordinate to /api/resolve and parse the resolved slot response",
+  "Apply resolved numeric slots as CSS custom properties with px units where required",
+  "Degrade-clean fallback that leaves CSS vars unset on any failure so body[data-ff] CSS fallbacks hold",
+  "Monotonic sequence guard to prevent stale async resolves from overwriting newer results",
+  "Primitive-value guard to avoid writing non-primitive resolved values into CSS"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements the full pipeline from coordinate capture and AST authoring through network resolution, concurrency guard, and CSS application, with documented degrade-clean behavior.",
+ "interactions_present": [
+  "none \u2014 only exported functions (coordinateFromWindow, resolveAndApplyModal) for a caller to invoke"
+ ],
+ "interactions_missing": [
+  "No resize/orientationchange event listeners are registered in this file",
+  "No debouncing or throttling of coordinate changes beyond the sequence guard",
+  "No loading or pending state surfaced to the user during resolve",
+  "No user-visible error or degraded-state feedback when /api/resolve fails",
+  "No cancellation of in-flight fetch requests superseded by newer coordinates"
+ ],
+ "performance_risks": [
+  "Unbounded /api/resolve POSTs if called on every resize/orientationchange without caller-side debounce",
+  "Stale in-flight fetches continue consuming network/resources even after newer coordinates arrive",
+  "Repeated window.innerWidth/innerHeight reads and CSS custom property writes may force layout recalc during resize storms",
+  "Network latency can cause resolved CSS values to lag behind the live viewport"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the resolver-client contract, degrade-clean guards, and sequence pattern, but generalize the modal-specific invariant and CSS var mapping for reuse across surfaces.",
+ "decomposition_hints": [
+  "Split generic resolver client (coordinate capture, /api/resolve call, sequence guard, value validation) from modal-specific invariant and slot mapping",
+  "Extract AST builder primitives into a shared resolver-DSL module",
+  "Move CSS custom-property name mapping and unit handling into a layout tokens/theme layer",
+  "Separate device coordinate detection into a viewport/orientation utility module"
+ ],
+ "_path": "surface/app/src/lib/resolveAllocation.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

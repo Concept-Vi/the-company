@@ -1,0 +1,60 @@
+{
+ "role": "Global stylesheet that maps corpus design tokens to app-specific aliases and implements the visual language\u2014living atmosphere, shared kit primitives, tldraw node cards, port nubs, HUD chrome, and panel feeds\u2014for the canvas interface.",
+ "capabilities": [
+  "Maps legacy app.css variables onto corpus design-system tokens",
+  "Defines a warm gold aurora atmosphere plus film-grain texture behind the canvas",
+  "Provides reduced-motion-aware ambient animations (aurora drift, entrance stagger, breathing presence)",
+  "Implements shared kit primitives: section headings, lane headers, badges, surfaces, empty states",
+  "Styles tldraw node cards with status-driven borders, output clamping, and transient flash",
+  "Styles input/output port nubs with hover affordances for wiring",
+  "Styles generic inspector config forms",
+  "Styles HUD toolbar, buttons, notices, run-error pill, presence dial, and mode selector",
+  "Styles activity feed, history/version groups, and address-help panels",
+  "Overrides tldraw background transparency and respects prefers-reduced-motion"
+ ],
+ "substance": "substantial",
+ "substance_why": "The visible head alone contains thousands of lines defining token aliases, atmospheric effects, animations, a shared UI kit, node cards, port nubs, HUD, activity/history/versions panels, and tldraw overrides, with extensive design-rule commentary.",
+ "interactions_present": [
+  "Hover/focus color transitions on buttons, actionable surfaces, port nubs, and mode selector",
+  "Focus outline on config inputs",
+  "Cursor changes (pointer for buttons/surfaces, crosshair for port nubs)",
+  "Collapsible lane headers and history group heads via button hover",
+  "Presence dial breathing animation and canvas-running energized aurora",
+  "Entrance stagger animations for chrome regions",
+  "Transient node-flash animation on newly added nodes",
+  "Node compute pulse while body.canvas-running",
+  "Reduced-motion media query disables aurora, entrance, and breathe animations"
+ ],
+ "interactions_missing": [
+  "No :focus-visible or keyboard-focus styles for buttons, lane headers, or port nubs",
+  "No explicit disabled, active, or loading states for toolbar buttons",
+  "No touch/active feedback beyond hover",
+  "No JS event wiring\u2014the CSS references backend classes/endpoints but does not implement them",
+  "No responsive layout breakpoints or mobile adaptations",
+  "No print stylesheet",
+  "No explicit ARIA expanded/collapsed indicators for collapsible headers"
+ ],
+ "performance_risks": [
+  "Full-viewport fixed pseudo-elements with large blur filters and radial gradients composited on every frame",
+  "Continuous opacity/transform/filter animations on body::before and multiple UI elements",
+  "Full-screen SVG noise overlay with fixed positioning and high z-index",
+  "Heavy box-shadow glows layered across many components",
+  "Unscoped global rules and !important tldraw overrides increase specificity wars and recalc",
+  "Multiple simultaneous breathing/pulsing animations may cause GPU contention"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The visual concepts, token mapping, and component vocabulary are valuable, but the monolithic global-CSS form must be split into scoped modules or a design-system library during redesign.",
+ "decomposition_hints": [
+  "Extract root token aliases into a dedicated tokens/variables file",
+  "Extract living atmosphere (aurora, grain, reduced motion) into a theme/atmosphere module",
+  "Extract tldraw canvas overrides into a canvas-specific stylesheet",
+  "Extract shared kit primitives into a kit/component primitives stylesheet or CSS-in-JS library",
+  "Extract node-card, port-nub, and inspector form styles into node/editor modules",
+  "Extract HUD, toolbar, presence, and mode styles into a chrome/hud module",
+  "Extract activity, history, versions, and address-help panel styles into feed/panel modules",
+  "Extract all keyframes into a shared motion/animation module"
+ ],
+ "_path": "canvas/app/src/app.css",
+ "_mode": "symbols+head",
+ "_model": "kimi-k2.7-code:cloud"
+}

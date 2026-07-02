@@ -1,0 +1,65 @@
+{
+ "role": "Root application shell and central state orchestrator for the projection surface: it fetches and parameterizes the meaning-space projection, chooses a responsive layout, wires cross-component window events, and mounts the gallery, tools, decisions, sessions, channels, board, transcript, source, and right-hand overlays.",
+ "capabilities": [
+  "Classify form factor (desktop/portrait/landscape) from window dimensions",
+  "Publish computed form factor to body[data-ff] and resolve/apply modal allocation CSS vars",
+  "Create and distribute the shared SurfaceState object to layouts and overlays",
+  "Fetch projection with lens binding, space, embedder, MRL dim, quantization, relative centre, separator poles, time scrub, and rung params",
+  "Persist selected lens binding in localStorage and reset stale bindings",
+  "Tail live event stream via EventSource with throttled re-fetch pulse",
+  "Probe earliest corpus timestamp via one-shot EventSource",
+  "Manage relative centre (focusCentre) and two-pole separator state",
+  "Select/deselect projection points and dispatch projection:select with deduplication",
+  "Handle gallery:verb events for navigate, open-source, decision_take, and accept-update",
+  "Load territory/source record into the Source panel via /api/territory",
+  "Show verification-mode banner and suppress real writes/accepts when ?verify=1",
+  "Wire notice lifecycle through address/locus subscription",
+  "Install operator session, address capture, pointer bridge, and pointables on mount",
+  "Mount top-level faces: GalleryMount, SurfaceNav, DecisionsInbox, SessionDrill, ChannelView, BoardView, TranscriptView, ToolsBar/ToolsPanel, RightHand, SourcePanel"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements concrete state, effects, API calls, event listeners, and renders the full layout plus nine top-level overlay components; only a few verbs and tool actions are explicitly stubbed.",
+ "interactions_present": [
+  "Window resize/orientationchange updates form factor and modal resolution",
+  "Lens binding selection with localStorage persistence",
+  "Point selection/deselection and re-centre on a selected point",
+  "Live/freeze toggle for the event stream",
+  "Time scrubber that pauses live updates",
+  "Space override, embedder layer, MRL dim, quantization, nucleation params, rung, view mode, and motion feel selection",
+  "Assign/clear separator poles",
+  "Dismiss notice",
+  "V verb actions: navigate, open-source, decision take, accept-update",
+  "Close Source panel"
+ ],
+ "interactions_missing": [
+  "drive and generate verbs only show a notice, performing no real action",
+  "Tool Run/result is not wired (pending fork invoke + DNA tool-card)",
+  "Generic annotate (comment/reaction/favour) is deliberately not routed here",
+  "No retry or clear-error interaction on projection fetch failure",
+  "No direct UI in this file for pole picking or many param controls (delegated to child components)",
+  "gallery:rerender is only emitted on successful accept-update, not generically handled"
+ ],
+ "performance_risks": [
+  "A new SurfaceState object is created every render, causing all consumers to re-render",
+  "Projection refetch fires on many state dependencies without debounce",
+  "A live EventSource and a separate one-shot EventSource are both opened on mount",
+  "The 2.5s throttled pulse can queue bursts of re-fetches",
+  "No cancellation for fetchTerritory or fetchProjection beyond an alive flag",
+  "resolveAndApplyModal runs synchronously on every resize/orientationchange",
+  "Large projection payloads (limit 400-600 points) plus full re-renders of all overlay siblings on state changes"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The orchestration semantics (projection parameterization, live stream, selection handoff, verb dispatch) are domain-critical and should be preserved, but the monolithic component that mixes data fetching, global event wiring, layout choice, and overlay mounting needs to be split into focused hooks/providers.",
+ "decomposition_hints": [
+  "Extract useFormFactor and modal resolution into dedicated hooks",
+  "Extract projection fetch and live-stream logic into a surface data hook or store",
+  "Extract selection dispatch and gallery:verb handling into an event-bridge module",
+  "Provide SurfaceState via React Context to avoid recreating the object each render",
+  "Separate layout chooser from the overlay host",
+  "Extract Source panel data loading into its own hook",
+  "Extract verification guards into a reusable helper/wrapper"
+ ],
+ "_path": "surface/app/src/App.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

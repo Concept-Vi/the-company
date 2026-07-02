@@ -1,0 +1,48 @@
+{
+ "role": "A registry-aware embedder-layer picker chip that lets the user choose which embedding layer (e.g. default, pplx) to view data through.",
+ "capabilities": [
+  "Fetches available layers from /api/layers on mount",
+  "Computes the union of layers across spaces and sorts them",
+  "Hides itself when only one layer exists",
+  "Displays the current layer with a toggle button",
+  "Opens an animated dropdown menu of layer options",
+  "Sets the selected embedding (null for default) via setEmb prop",
+  "Closes menu on scrim click or option selection",
+  "Applies semantic stamp data attributes for UI instrumentation",
+  "Gracefully ignores a missing layers endpoint"
+ ],
+ "substance": "substantial",
+ "substance_why": "The component implements the full lifecycle: data fetching, state management, menu interaction, selection mapping, and conditional visibility, with explicit handling for the default layer and missing endpoint.",
+ "interactions_present": [
+  "Click chip button to toggle menu open/closed",
+  "Click menu scrim to close",
+  "Click a layer option to select it and close the menu",
+  "aria-expanded reflects menu state"
+ ],
+ "interactions_missing": [
+  "No keyboard navigation inside the menu (arrow keys, Home/End)",
+  "No Escape key handler to close the menu",
+  "No focus trap or focus return to the trigger",
+  "No Enter/Space selection semantics on menu items beyond native button",
+  "No loading, error, or empty-state feedback for the layers fetch",
+  "No retry mechanism if fetch fails",
+  "No screen-reader announcement on layer change"
+ ],
+ "performance_risks": [
+  "fetchLayers is called on every component mount with no caching, SWR, or global store",
+  "Layer union and sort run on every fetch but are not memoized across renders",
+  "Menu items are re-rendered on every parent render without memoization",
+  "Framer-motion dropdown animates scale/opacity which can cause compositing work on many mounts"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "Keep the registry-true data model, default/null mapping, and hide-if-single-layer behavior, but rebuild the UI around shared menu primitives and a proper data-fetching hook.",
+ "decomposition_hints": [
+  "Extract a useLayers hook for fetching, unioning, and caching /api/layers",
+  "Extract a generic ChipMenu or Dropdown primitive from useChipMenu and the motion menu markup",
+  "Separate the layer-option item rendering into a presentational LayerOption component",
+  "Move stamp path generation into a small helper or shared instrumentation utility"
+ ],
+ "_path": "surface/app/src/toggles/LayerChip.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

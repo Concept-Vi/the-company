@@ -1,0 +1,40 @@
+{
+ "role": "A layout-level view router that maps the current SurfaceState to the appropriate wheel-region visualization component and renders an empty-detail placeholder hint.",
+ "capabilities": [
+  "Render explicit error and loading/no-project states for the wheel region",
+  "Route square view to the Grid component",
+  "Route circle view to Separator, Nucleation, or Wheel based on proj.binding.radius_from",
+  "Wire selection, poles, nucleation, and rung state into the active wheel component",
+  "Render a static SelectHint for the empty detail surface"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements real conditional routing across four visualization components and explicitly handles error, loading, and data states.",
+ "interactions_present": [
+  "Selection onPick passed through to Grid/Wheel/Separator/Nucleation",
+  "Clear poles via onClearPoles in Separator",
+  "Set nucleation focus via setNuc in Nucleation",
+  "Set rung via setRung in Wheel",
+  "View mode and binding drive which component is rendered"
+ ],
+ "interactions_missing": [
+  "No retry or dismiss action in the error state",
+  "No keyboard navigation or focus management",
+  "No loading timeout or failure escalation",
+  "SelectHint is purely decorative with no interactive affordance"
+ ],
+ "performance_risks": [
+  "Inline arrow functions for onPick, onClearPoles, setNuc, and setRung are recreated on every render and passed as props",
+  "No memoization of the routed component or state-derived props",
+  "Frequent state changes may cause remounts of the active wheel component"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The state-to-view routing rules and explicit honest-state handling are core domain logic, but the component should be restructured and memoized for the redesign.",
+ "decomposition_hints": [
+  "Split WheelOrState from SelectHint into separate files",
+  "Extract the view-resolution switch into a dedicated router/hook",
+  "Separate error/loading state presentation from visualization routing"
+ ],
+ "_path": "surface/app/src/layouts/shared.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

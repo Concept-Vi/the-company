@@ -1,0 +1,39 @@
+{
+ "role": "A React toggle chip that selects vector-lens resolution (full dimension or truncated powers-of-two) for a meaning-zoom control.",
+ "capabilities": [
+  "Fetch active layer full vector dimensions from API",
+  "Derive resolution ladder as powers of two strictly below the full dim",
+  "Render a dropdown resolution picker with current selection",
+  "Update the active dimension via callback prop",
+  "Conditionally hide on non-vector lenses or when no finer step exists",
+  "Animate menu open/close with motion"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements the complete control: data fetching, option derivation, menu interactions, conditional visibility, and animation.",
+ "interactions_present": [
+  "Click chip button to toggle the menu",
+  "Click scrim to close the menu",
+  "Click a resolution option to set the dimension and close the menu"
+ ],
+ "interactions_missing": [
+  "Keyboard navigation and Escape-to-close handling",
+  "Focus management / focus trap inside the dropdown",
+  "Loading or error feedback for the layer-dims fetch",
+  "Disabled / aria-selected states for individual options"
+ ],
+ "performance_risks": [
+  "Ladder and options arrays are recomputed on every render without memoization",
+  "Layer dimensions are fetched on every component mount even if shared across instances",
+  "Framer-motion dropdown animations may cause layout work"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The resolution-picker concept and ladder logic are domain-specific and worth keeping, but the presentation and menu shell should be rebuilt with the new design system.",
+ "decomposition_hints": [
+  "Extract ladder derivation and layer-dims fetching into a reusable hook or data layer",
+  "Split the menu shell (button, scrim, animated list) into a generic dropdown primitive",
+  "Separate resolution-specific option rendering and selection logic from the generic menu component"
+ ],
+ "_path": "surface/app/src/toggles/ResChip.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

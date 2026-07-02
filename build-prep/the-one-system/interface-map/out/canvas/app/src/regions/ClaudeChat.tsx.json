@@ -1,0 +1,53 @@
+{
+ "role": "This file is the builder side-panel chat surface that embeds a streaming Claude Code session tied to the shared indicated element and forager selection.",
+ "capabilities": [
+  "Streamed chat with /api/claude/turn (text, tool, error, done events)",
+  "Session persistence via backend session_id",
+  "Shared indicated locus display and clear",
+  "Forager multi-select context block composition with 6KB cap",
+  "One-shot arming/disanning of context block for next turn",
+  "Mobile tray builder-context event handling",
+  "Build-intent handoff via mintBuildIntent at indicated address",
+  "Panel minimize/expand",
+  "Auto-scroll chat log",
+  "Fail-loud HTTP/stream/done-event handling"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete chat panel with streaming transport, local state, context-block assembly, indication chips, and a build-intent handoff button.",
+ "interactions_present": [
+  "Type and send message (Enter or button)",
+  "Minimize/expand panel",
+  "Clear indicated element",
+  "Compose and arm forager selection as context block",
+  "Disarm armed context block",
+  "Click 'build this' to mint a build-intent",
+  "Receive context block from mobile tray builder-context window event"
+ ],
+ "interactions_missing": [
+  "No in-panel way to set/indicate an element (only clear)",
+  "No session reset or conversation history load on mount",
+  "No retry/resend for failed turns",
+  "No feedback if mintBuildIntent fails",
+  "No explicit error boundary in this file despite the comment",
+  "No export/copy of builder messages"
+ ],
+ "performance_risks": [
+  "One React setMsgs call per streamed event with no batching/throttling",
+  "Entire message list re-renders on every new line",
+  "Unbounded msgs array growth for long sessions",
+  "queueMicrotask scroll on every push",
+  "useForagerSelection may trigger re-renders on every editor selection change"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The builder-chat domain logic (session streaming, context block, build-intent handoff) should be preserved, but the UI shell and state orchestration need rebuilding for the redesigned form.",
+ "decomposition_hints": [
+  "Extract streaming session logic into a dedicated hook/service",
+  "Extract context-block composition from forager selection into a utility/hook",
+  "Split UI into panel chrome, message log, input bar, indication chips, and handoff button",
+  "Decouple mobile tray event listener from the chat component",
+  "Separate build-intent handoff into its own component/hook"
+ ],
+ "_path": "canvas/app/src/regions/ClaudeChat.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

@@ -1,0 +1,37 @@
+{
+ "role": "OpPanels is the operation-panel region component that renders context-driven declarative panels alongside dynamically discovered, lazy-loaded extension panels, each isolated by an error boundary.",
+ "capabilities": [
+  "Renders declarative panels from AppContext with PanelView",
+  "Passes current field value and setter into each panel",
+  "Discovers extension modules via import.meta.glob('../extensions/*.tsx')",
+  "Lazy-loads each extension with React.lazy inside Suspense",
+  "Wraps every panel and extension in PanelErrorBoundary for contained failures"
+ ],
+ "substance": "substantial",
+ "substance_why": "It implements real rendering, context integration, lazy extension discovery, and per-item error isolation, not just a stub.",
+ "interactions_present": [
+  "Panel field updates are wired by passing setField as onSet into PanelView"
+ ],
+ "interactions_missing": [
+  "No retry or user feedback when an extension fails to load",
+  "No controls for panel ordering, visibility, or collapsing",
+  "No search/filter for extensions",
+  "Extensions receive no shared value/onSet props",
+  "No explicit loading skeleton for panels themselves"
+ ],
+ "performance_risks": [
+  "import.meta.glob over ../extensions/*.tsx may generate many lazy chunks and increase build/runtime module graph size",
+  "No memoization of OpPanels or its children, so every context change re-renders all panels and Suspense boundaries",
+  "Each lazy extension fetches its chunk only at render time, causing potential waterfall requests"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The declarative panel + lazy extension + error-boundary concepts are worth keeping, but the loader, rendering, and memoization should be rebuilt for the new architecture.",
+ "decomposition_hints": [
+  "Split declarative PanelsRegion from lazy ExtensionsRegion",
+  "Extract extension discovery and registration into a dedicated hook/store",
+  "Extract the error-boundary-wrapped card layout into a reusable PanelSlot component"
+ ],
+ "_path": "canvas/app/src/regions/OpPanels.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

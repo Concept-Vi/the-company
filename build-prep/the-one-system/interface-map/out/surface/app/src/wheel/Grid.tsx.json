@@ -1,0 +1,45 @@
+{
+ "role": "This file is the visual rendering component of the wheel instrument, drawing a responsive SVG structure grid with selectable data points.",
+ "capabilities": [
+  "Responsive SVG sizing via useSize hook",
+  "Render forbidden circumscribed corner-circle boundary",
+  "Render dyadic nested grid lines by recursion depth",
+  "Render square outline and concentric inscribed circles",
+  "Render central axes and axis/circle coincidence points",
+  "Render animated data points colored by sector with selection highlight",
+  "Render transparent hit targets for point selection",
+  "Emit onPick callback when a point is clicked",
+  "Apply motion feel transitions to point enter/move/exit"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file fully implements geometry layout, decorative grid/circle/axis drawing, animated point rendering, selection feedback, and pointer hit handling with no TODOs or stubs visible.",
+ "interactions_present": [
+  "Click a point's invisible hit circle to invoke onPick",
+  "Visual selection feedback via larger radius and primary stroke"
+ ],
+ "interactions_missing": [
+  "Keyboard navigation or selection",
+  "Hover state / tooltip on points",
+  "Pan, zoom, or drag gestures",
+  "Focus management and ARIA live selection announcements",
+  "Empty / loading / error states"
+ ],
+ "performance_risks": [
+  "AnimatePresence + layoutId over all proj.points can cause layout thrashing with many points",
+  "Dyadic grid line count grows exponentially with proj.grid",
+  "place(), levels, and sectorIndex are recomputed on every render for every point and line",
+  "Duplicate iteration over proj.points for animated dots and hit targets doubles work",
+  "Framer-motion layout animations on every point may jank during resize or data updates"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_verdict_why": "The geometric concepts and visual language are domain-specific and worth keeping, but the rendering, animation, and hit-layer should be rebuilt with cleaner separation and performance safeguards.",
+ "decomposition_hints": [
+  "Extract pure geometry helpers (place, dyadicLevels, ringR, coincidence points) into a wheel/math module or hook",
+  "Split static structure rendering (grid, circles, axes, box) into a separate StructureLayer component",
+  "Split animated point layer and hit layer into PointLayer and HitLayer components",
+  "Make animation strategy pluggable or memoized to avoid re-mounting all points on every update"
+ ],
+ "_path": "surface/app/src/wheel/Grid.tsx",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}

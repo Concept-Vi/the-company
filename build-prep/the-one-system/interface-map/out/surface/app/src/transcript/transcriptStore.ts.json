@@ -1,0 +1,44 @@
+{
+ "role": "This file is a query-driven external React store that manages the transcript-search surface state and fetches /api/transcript-search results for the transcript-viz constellation view.",
+ "capabilities": [
+  "Holds controlled search query text",
+  "Fetches semantic/lexical transcript search results from /api/transcript-search?q=&k=24",
+  "Stores the full response envelope including mode_used, semantic availability, and results",
+  "Tracks loading, error, and open/closed surface state",
+  "Provides a subscription-based useTranscript hook for React components",
+  "Sequence-guards stale search responses"
+ ],
+ "substance": "substantial",
+ "substance_why": "The file implements a complete fetch-backed store with typed response shapes, state transitions, subscriber notifications, and open/close/search/query actions.",
+ "interactions_present": [
+  "Controlled query input state via setTranscriptQuery",
+  "Search invocation via searchTranscript",
+  "Surface open/close via openTranscript/closeTranscript",
+  "React subscription via useTranscript"
+ ],
+ "interactions_missing": [
+  "No debounce or throttling on search",
+  "No explicit retry UI or retry action despite the 'retry' mention in the error message",
+  "No cancellation of in-flight fetch requests",
+  "No user-facing mode selection or semantic availability feedback wiring",
+  "No pagination or load-more behavior",
+  "No keyboard shortcut or focus management for the search prompt"
+ ],
+ "performance_risks": [
+  "Every state update iterates all subscribers unconditionally",
+  "No debounce means rapid keystrokes or repeated calls can fire many network requests",
+  "Global mutable state and side-effect fetch inside the store make testing and concurrent usage harder",
+  "useTranscript forces a re-render for every subscriber on every state change regardless of selector"
+ ],
+ "reuse_verdict": "adapt",
+ "reuse_why": "The query-driven store concept and the full-envelope data contract are worth keeping, but the implementation should be rebuilt with a modern state library or hooks and separated from direct fetch logic.",
+ "decomposition_hints": [
+  "Split API client (/api/transcript-search) from UI state store",
+  "Separate query input state from search results/error/loading state",
+  "Extract open/close surface orchestration into its own surface-level store or hook",
+  "Move subscription/force-update mechanism into a generic store utility or replace with a state library"
+ ],
+ "_path": "surface/app/src/transcript/transcriptStore.ts",
+ "_mode": "whole",
+ "_model": "kimi-k2.7-code:cloud"
+}
