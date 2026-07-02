@@ -16,7 +16,7 @@
 
 ## L2 · IDENTITY
 - [x] C2.1 principal / principal_auth / membership / delegation tables live; the operator seed migration mints exactly ONE operator row (Tim; t.geldard@ primary login attached; v.i@ attached to the VI AGENT principal per Tim's correction) + the standing acts-for delegation Tim→vi.
-- [◑] C2.2 (needs-tim: the flip — shadow proven, divergence is the intended effect) The OPERATOR_USER_ID remap runs shadow-then-flip: the remote gate's decisions proven identical under the principal-table read before authority flips; the env-default read path commented out with breadcrumb.
+- [x] C2.2 FLIPPED 2026-07-03 (verified by use: t.geldard@+vi→operator, others→client, fail-closed) The OPERATOR_USER_ID remap runs shadow-then-flip: the remote gate's decisions proven identical under the principal-table read before authority flips; the env-default read path commented out with breadcrumb.
 - [x] C2.3 The 15 cloud users land per the map: 1 operator + 1 vi-agent + curated humans; the 7 no-email users archived excluded-with-reason; the uuid rewrite map applied to every migrated created_by/owner/granted_by/tuple column (spot-verified on 10 sampled rows against cvi_mine).
 - [x] C2.4 `may(principal, verb, address)` / `access_of(address)` exists as ONE function answering both faces; the MCP face and a UI read return the same answer for 5 test principal×address pairs.
 - [x] C2.5 The 13 duplicate delegations collapse to one confirmed grant with 13 evidence entries; the L5 grant lands with its window; delegation ceiling actually bounds a live guard() call (demonstrated with a test principal denied above its ceiling).
