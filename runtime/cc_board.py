@@ -303,6 +303,11 @@ def file_item(item_type: str, title: str, body: str, author_session: str, *,
     landing status is written into the file, NOT run through transition()); `extra` merges the long-tail
     content keys as OPEN frontmatter (nothing dropped); `created`/`updated` preserve the source timestamps;
     `history` replaces the default filed-history with synthesized provenance entries."""
+    for _an, _av in (("scope", scope), ("author", author)):   # ④ L6 adversary DENT-1: addresses, fail-loud
+        if _av is not None and _av != "global" and "://" not in _av:   # "global" = the board root sentinel
+            raise BoardError(
+                f"{_an}={_av!r} is not an address — {_an} is an ADDRESS (scheme://…, e.g. "
+                f"project://the-fusion, operator://tim). A bare string never lands. Fail loud, never guess.")
     reg = _items_reg()
     if item_type not in reg:
         raise BoardError(
@@ -672,9 +677,10 @@ def rebuild_authored_by_index(board_dir: str | None = None) -> dict:
     for rec in list_items(board_dir=board_dir):            # get_item derives `author` for pre-address items
         author = rec.get("author") or _author_of(rec.get("author_session"))
         idx.setdefault(author, []).append(rec["id"])
+    _n = sum(len(v) for v in idx.values())
     payload = {"_derived": "authored_by index (④ L6 BOARD) — DERIVED from each item's author address; "
                            "regenerate with cc_board.rebuild_authored_by_index(). Do not hand-edit.",
-               "count": sum(len(v) for v in idx.values()), "authors": len(idx), "index": idx}
+               "count": _n, "item_count": _n, "authors": len(idx), "index": idx}
     d = _dir(board_dir)
     os.makedirs(d, exist_ok=True)
     _atomic_write_fsync(Path(os.path.join(d, AUTHORED_BY_INDEX)), json.dumps(payload, indent=1))
@@ -697,6 +703,13 @@ def authored_by_index(board_dir: str | None = None, *, rebuild_if_missing: bool 
         except Exception as e:
             raise BoardError(f"authored_by index at {p} is corrupt ({type(e).__name__}: {e}) — a derived "
                              f"projection went bad; rebuild it. Fail loud.")
+    # ④ L6 adversary DENT-2: NEVER return a silently-stale index. The index is derived; if the live item
+    # count no longer matches the fingerprint, an item was filed/removed since the last build → self-heal
+    # by re-deriving (cheap name-scan, not a full parse). Derived data stays derived; staleness is loud.
+    live = sum(1 for f in os.listdir(_dir(board_dir))
+               if f.endswith(".md") and not f.startswith("_"))
+    if payload.get("item_count") != live:
+        return rebuild_authored_by_index(board_dir)
     return payload
 
 
