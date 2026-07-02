@@ -7,24 +7,26 @@
 > and the always-loaded running record is memory `project-glyphic-language.md`. Read those three + this.
 
 ## The one-line state
-**A0 DONE. A1 DONE. A2 DONE + PROVEN. A3 DONE + LIVE (2026-07-02). NEXT = A4 meaning-resolution + generate-on-miss
-→ A5 extract/compose roles → A6 collaborative AI.**
+**A COMPLETE (2026-07-02) — A0..A6 all built + PROVEN by use.** The AI FUSION is a UNION: ONE AI registry, the
+COMPANY is home, CV_AI is the browser projection; flip-to-Company = one registry op (setRoleProvider). The writer
+(glyphgraph generator, served same-origin via the vite /design proxy) now: writes by MEANING incl. COMPOUND
+sentences (glyph_extract → resolve-by-embedding → glyph_compose judge → one graph); TEACHES words that PERSIST;
+GENERATES icons 4-up with feedback (the glyph_symbol_candidates role); and CO-EDITS with the AI on the shared
+selection (glyph_assist → typed ops, atomically validated, one-IR). Next phase = A7+/the remaining LIVE-INSTRUMENT
+groups (Tim's call) + the honest residuals below.
 
-## What A3 did (advisor-gated; live in ledger.embedding)
-- **Corpus emitter** (claude-ds, commit + synced): `_system/emit_glyph_corpus.js` → GENERATES `glyph-corpus.json`
-  from the one engine source — 132 symbols (`glyph://symbol/<id>`: id+domain+kind+tags+gloss-when-authored) + 71
-  meaning-field values (`glyph://field/<facet>/<val>`: feeling+senses). Re-runnable; loud on empty. Glosses read the
-  active profile's symbolGloss (runtime data — captured on re-emit once authored+saved).
-- **The space** (~/company, edits landed on main — swept into the embedding session's commit 18a3a875 while
-  uncommitted, content correct, attribution commingled): SPACES row `glyph_meaning` (fabric/pplx/2560) +
-  `corpus_for_glyph()` (reads the generated JSON via root-join, `["entries"]` unwrap, loud on missing/empty) +
-  dispatch elif BEFORE the final else. **BUILT LIVE: 203/203 embedded** (vector cutover confirmed first-hand —
-  put_vector lands directly in Supabase ledger.embedding, no migrate step).
-- **Acceptance probes:** count 203/203 distinct · noun-leg "user avatar profile picture" → person-family fills the
-  top-6 · feeling-leg "tentative, could be, not yet decided" → `lineColor/pending` #1 (0.516). **HONEST: margins
-  are THIN** (fill/solid 0.511 right behind; antonyms cohabit — known embedding trait) → **A4 must retrieve top-k
-  and let composition/the judge decide, never trust #1 blindly** (which is the extract/judge design anyway).
-- Advisor's 3 catches applied (the entries-unwrap would have broken the build; root-join; elif placement).
+## Company roles authored (create-door, live, auto-reflected in roles/AGENTS.md)
+complete_text (passthrough completion) · glyph_extract (NL→nodes+relations) · glyph_compose (judge: choose-or-abstain)
+· glyph_symbol_candidates (foundry: 4 structured candidates) · glyph_assist (instruction+selection→typed graph ops).
+
+## Honest residuals (for the next plan phase — NOT silently dropped)
+- relation-teaching: an unresolved relation phrase (e.g. 'signs') leaves the pair unconnected + a loud toast; no
+  UI to TEACH a new edge-meaning yet (words teach; relations don't). 
+- reindex-after-save: glyphic.save commits + teaches, but making a new symbol MEANING-searchable needs
+  `node _system/emit_glyph_corpus.js && python3 ops/build_embeddings.py --space glyph_meaning` — surfaced as a toast,
+  no bridge route to trigger it in-page.
+- glyph_compose why-field empty on abstain (cosmetic); glyph_assist add_node resolves a glyph but doesn't place it.
+
 
 ## What A2 did (design-side d29d3c1+a475a15 in claude-ds · ~/company: roles/complete_text.py via the create-door + a6674ade)
 - `app/services/company.js` — the **company-http runtime kind**, registered through A1's `CV_HOST.registerKind` seam
