@@ -1096,6 +1096,47 @@ def resolve_edges(ex: dict) -> dict:
             g["to_resolved"] = g["to_raw"]                       # the ui node exists by construction (below)
             resolved_n += 1
             ui_bound_by.setdefault(g["to_raw"], set()).add(g["from"])
+
+    # HAND-SEED fold (legacy, read-if-present): the pre-ledger registry's 104 hand-curated `code` links
+    # (design/_system/addresses.json — e.g. "ui://inbox/build-review powers runtime/suite.py:review_verdicts")
+    # carry human knowledge the mechanical chain can't derive (WHICH backend symbol is the meaningful one).
+    # Folded as powered-by seeds tagged src='hand-seed'; malformed refs (bare filenames) repaired by
+    # unambiguous basename match against the tree; unrepairable ones counted, never guessed. This block
+    # auto-retires when addresses.json is deleted (the registry is scaffolding; the mechanism is the product).
+    _addr_json = os.path.join(ROOT, "design", "_system", "addresses.json")
+    if os.path.isfile(_addr_json):
+        try:
+            _areg = json.load(open(_addr_json, encoding="utf-8")).get("addresses", {})
+        except Exception:
+            _areg = {}
+        _by_base = {}
+        for p in file_set:
+            _by_base.setdefault(os.path.basename(p), []).append(p)
+        seeded = skipped_refs = 0
+        for _ua, _rec in _areg.items():
+            _code = (_rec or {}).get("code")
+            if not _code or not _ua.startswith("ui://"):
+                continue
+            for _ref in str(_code).split(" / "):
+                _ref = _ref.split(" (")[0].strip()               # drop the trailing annotation
+                _p = _ref.split(":")[0].strip().rstrip("/")
+                if not _p:
+                    continue
+                if _p not in file_set:                           # repair bare/malformed by unambiguous basename
+                    c = _by_base.get(os.path.basename(_p), [])
+                    if len(c) == 1:
+                        _p = c[0]
+                    else:
+                        skipped_refs += 1                        # ambiguous/dead — counted, not guessed
+                        continue
+                ui_bound_by.setdefault(_ua, set())               # ensure the ui node gets minted
+                ex["edges"].append({"from": _ua, "kind": "powered-by",
+                                    "to_raw": f"code://{PROJECT}/{_p}", "to_resolved": f"code://{PROJECT}/{_p}",
+                                    "line": None, "extra": {"src": "hand-seed"}})
+                resolved_n += 1
+                seeded += 1
+        ex["stats"]["ui_hand_seeded"] = seeded
+        ex["stats"]["ui_hand_skipped"] = skipped_refs            # visible, never silent
     if ui_bound_by:
         file_endpoint_targets = {}                               # binding file -> {resolved backend file addrs}
         for g in ex["edges"]:

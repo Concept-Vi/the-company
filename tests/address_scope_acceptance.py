@@ -60,52 +60,36 @@ for s in ("run", "cas", "blob", "vec", "ui"):
     check(f"existing scheme {s} still in SCHEMES", s in SCHEMES)
 check("scheme() recognizes a code:// address", scheme("code://suite/review_verdicts") == "code")
 
-# load the corpus registry the resolver sources from — every resolved id/path must come FROM it
-cs_path = os.path.join(ROOT, "design", "_system", "code-symbols.json")
-with open(cs_path, encoding="utf-8") as f:
-    corpus_symbols = json.load(f)["symbols"]
-
-# ── 2 + 3. resolve on a REAL clean address — sourced FROM the registry ────────
+# ── 2 + 3. resolve on REAL addresses — sourced from THE LEDGER's DERIVED join (② cutover 2026-07-02).
+# The join is recomputed every deterministic build (binds-ui → calls-endpoint → serves-endpoint →
+# powered-by) + the legacy hand-seed fold — so an element resolves to its LIVE component AND the
+# meaningful backend. Pins assert: the preserved hand-knowledge, the gained derived component, and the
+# canonical-form invariants. (The old sidecar-exact pins — incl. loading code-symbols.json as the truth
+# source — retired with the sidecar; the ledger IS the registry now.)
 r = suite.resolve_scope("ui://inbox/build-review")
-check(f"resolve ui://inbox/build-review → symbols {r['symbols']}",
-      r["symbols"] == ["code://suite/review_verdicts"])
-check(f"resolve → scope {r['scope']}", r["scope"] == ["runtime/suite.py"])
-check("not stale (corpus join read OK)", r["stale"] is False)
-check("the resolved code:// id is a real corpus code-symbol key (sourced FROM the registry)",
-      "code://suite/review_verdicts" in corpus_symbols)
+check(f"ui://inbox/build-review keeps the hand-seeded backend (scope {r['scope']})",
+      "runtime/suite.py" in r["scope"])
+check("…and gains the DERIVED live component (Inbox.tsx)",
+      "canvas/app/src/regions/Inbox.tsx" in r["scope"])
+check("all symbols are CANONICAL code://<project>/… ids, sorted",
+      all(s.startswith("code://company/") for s in r["symbols"]) and r["symbols"] == sorted(r["symbols"]))
+check("not stale (ledger join read OK)", r["stale"] is False)
 
-# resolve another clean single-symbol address
 r2 = suite.resolve_scope("ui://inbox/coa")
-check(f"resolve ui://inbox/coa → scope {r2['scope']}", r2["scope"] == ["runtime/suite.py"])
-check("ui://inbox/coa symbol is code://suite/coa", r2["symbols"] == ["code://suite/coa"])
+check(f"ui://inbox/coa keeps its backend (scope {r2['scope']})", "runtime/suite.py" in r2["scope"])
 
-# a file-only ref → the registry's file-stem id + RESOLVED file scope
-r3 = suite.resolve_scope("ui://canvas/portal-window")     # code = 'nodes/portal.py'
-check(f"file-only ref ui://canvas/portal-window → scope {r3['scope']}",
-      r3["scope"] == ["nodes/portal.py"])
-check("file-only id is code://portal (a registry key)", r3["symbols"] == ["code://portal"])
+r3 = suite.resolve_scope("ui://canvas/portal-window")     # hand code = nodes/portal.py; derived = NodeShape.tsx
+check(f"ui://canvas/portal-window keeps the hand-seeded backend (scope {r3['scope']})",
+      "nodes/portal.py" in r3["scope"])
+check("…and gains the derived component (NodeShape.tsx)",
+      "canvas/app/src/NodeShape.tsx" in r3["scope"])
 
-# THE BEYOND-CLEAN PROOF (advisor): a multi-ref address resolving to TWO registry keys across TWO files.
-# POST-App.tsx-carve, the run button's code home moved out of the App monolith into the carved Toolbar
-# region (regions/Toolbar.tsx) + the suite run handler (suite.run). The regenerated corpus resolves
-# ui://toolbar/run → ['code://Toolbar','code://suite/run'] (the old pre-carve ['code://App/doRun',
-# 'code://bridge/_probe'] are no longer registry keys at all). The RESOLVER still sources from the
-# registry, so it yields the registry's RESOLVED path canvas/app/src/regions/Toolbar.tsx (NOT the
-# shorthand 'Toolbar.tsx'). A hand-rolled string parser would diverge here; sourcing from the index agrees.
-# (Mirrors the 0f61b4f conv_context fix — same App.tsx-carve symbol drift.)
+# multi-file address: the Toolbar region component + the suite run handler, both RESOLVED repo-relative
 run_addr = suite.resolve_scope("ui://toolbar/run")
-check(f"multi-ref ui://toolbar/run → symbols {run_addr['symbols']} (post-App.tsx-carve: Toolbar region + suite.run)",
-      run_addr["symbols"] == ["code://Toolbar", "code://suite/run"])
-check(f"resolved scope uses the registry's RESOLVED path (scope {run_addr['scope']})",
-      run_addr["scope"] == ["canvas/app/src/regions/Toolbar.tsx", "runtime/suite.py"])
-check("the resolved path is NOT the corpus shorthand 'Toolbar.tsx'",
-      "Toolbar.tsx" not in run_addr["scope"] and "canvas/app/src/regions/Toolbar.tsx" in run_addr["scope"])
-for sid in run_addr["symbols"]:
-    assert sid in corpus_symbols, f"{sid} not a registry key"
-check("EVERY resolved id for ui://toolbar/run is a real registry key (by construction)", True)
-for f_ in run_addr["scope"]:
-    assert any(corpus_symbols[s]["file"] == f_ for s in run_addr["symbols"]), f"{f_} not a registry file"
-check("EVERY resolved path for ui://toolbar/run is a registry RESOLVED file", True)
+check(f"ui://toolbar/run resolves BOTH files (scope {run_addr['scope']})",
+      "canvas/app/src/regions/Toolbar.tsx" in run_addr["scope"] and "runtime/suite.py" in run_addr["scope"])
+check("resolved paths are FULL repo-relative, never shorthand stems",
+      all("/" in p for p in run_addr["scope"]))
 
 # ── 4. EMPTY scope = DENY-ALL (never raise, never fabricate, never allow-all) ──
 # DENY-ALL is proven by the ABSENT address (no entry in the corpus at all → empty, with a note).
@@ -119,10 +103,10 @@ check("absent address did NOT raise", absent["address"] == "ui://nonexistent/thi
 # a real indexed symbol now); the tabbar markup genuinely lives in App.tsx (the mobile nav) + app.css
 # (.tabbar). DENY-ALL stays proven by the ABSENT case above. (Mirrors the 0f61b4f carve-drift fix.)
 tabbar = suite.resolve_scope("ui://tabbar")
-check(f"ui://tabbar resolves to the App shell + .tabbar CSS (symbols {tabbar['symbols']}, post-App.tsx-carve)",
-      tabbar["symbols"] == ["code://App", "code://app"]
-      and tabbar["scope"] == ["canvas/app/src/App.tsx", "canvas/app/src/app.css"])
-check("ui://tabbar resolves WITHOUT crashing (a real multi-file CSS+TSX address)", tabbar["stale"] is False)
+check(f"ui://tabbar resolves to the App shell (scope {tabbar['scope']}; ledger-derived — the .tabbar CSS "
+      f"was a sidecar-era symbol, css files aren't symbol-indexed by the ledger join)",
+      "canvas/app/src/App.tsx" in tabbar["scope"])
+check("ui://tabbar resolves WITHOUT crashing", tabbar["stale"] is False)
 
 # ── 5. exhaustively prove resolve_scope NEVER raises across EVERY corpus address (L1/L5 robustness)
 corpus_path = os.path.join(ROOT, "design", "_system", "addresses.json")
