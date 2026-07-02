@@ -36,7 +36,7 @@
   **[1416]** (measure: children partition the parent's [0,1]; fusion = conservation), **[2804–2827]** (motion:
   change budget, diff/LCA, count ≈ distance ÷ budget). *Gives you: the derivations in the order they arrived,
   with Tim's own words beside each.*
-- `/home/tim/repos/counterpart/design/dna/SPACES.md` — **the four spaces** (SUBJECT soft polygon · TELLING =
+- `/home/tim/repos/counterpart/design/docs/SPACES.md` — **the four spaces** (SUBJECT soft polygon · TELLING =
   cut + route · STRUCTURE sharp/calculable · READER demand-side) + the two halves + the falsifiable-predictions
   ledger. *Gives you: the state-space decomposition — which variables are calculable and which are authored
   inputs, and the theorem that the boundary between them moves with the reader.*
@@ -58,7 +58,7 @@ These are the places where a number is already DERIVED, with proofs that re-deri
   base unit u = 8, signature ratio r = 1.5.** Space = u·k over a small vocabulary k ∈ {3,4,5,7,11} (linear);
   type/radius = base·rⁿ (geometric); zones = fractions of the axis (scale-free); density multiplies.
   Proof: 11/11 — the rules re-derive the source mockups' geometry.
-- `dna/resolve-sequence.mjs` (same repo) — the narrative resolver: roles + dial envelopes + elastic arcs
+- `engine/prove/resolve-sequence.mjs` (same repo) — the narrative resolver: roles + dial envelopes + elastic arcs
   re-derive the source deck's exact structure, 7/7. *Sequence as a solvable system.*
 - **The zone formula** (`/home/tim/company/design/claude-ds/core/containers.css:76-92`):
   `surface = mix(pigment, ground, depth · 2.1% · intensity)` — nesting depth as a computed visual quantity,
@@ -66,7 +66,7 @@ These are the places where a number is already DERIVED, with proofs that re-deri
 - **The address algebra** (`dna/address.json` + LINEAGE [2728]): children partition [0,1); units are SPANS
   (slide 2 of 3 = [1/3, 2/3)); a path collapses to one mixed-radix number and decodes back
   (zone 3/5 in slide 2/3 → 1/3 + (2/5)·(1/3) = 7/15). Addresses derived, never assigned.
-- **The motion equations** (`dna/motion.json` + MOTION.md): the transition = the address-DIFF between two
+- **The motion equations** (`dna/motion.json` + docs/MOTION.md): the transition = the address-DIFF between two
   views; the anchor = the LCA of the changers' addresses; **count ≈ understanding-distance ÷
   change-budget-per-page** (why deck counts cluster); point density follows RATE-OF-CHANGE of the view, not
   distance. Tours-direct evidence (a shipped product).
