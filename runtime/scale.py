@@ -312,8 +312,12 @@ def build_scale_pyramid(store, *, space: str, rungs: list | None = None, linkage
     pyramid = {"space": space, "linkage": linkage, "n_units": n, "dim": dim,
                # present COARSEST-FIRST (ascending K) — the order zoom walks out→in (theme → unit)
                "rungs": sorted(rung_records, key=lambda r: r["k"]), "unit_space": space}
-    store.save_scale_pyramid(space, pyramid, emb)
+    rows = emit_cluster_member_rows(store, pyramid, emb)     # the structure's SQL home (0022; reconciled)
+    # store.save_scale_pyramid(space, pyramid, emb)  # RETIRED 2026-07-03 (rows-forward): the JSON sidecar
+    #   write — structure now lives in ledger.cluster_member (the 7 legacy sidecars were loaded there once;
+    #   readers reconstruct from rows). Restore by uncommenting if the rows path must be rolled back.
     return {"space": space, "rungs": rungs, "n_units": n, "built": built, "skipped": skipped,
+            "member_rows": rows["rows"],
             "pyramid_rungs": [{"k": r["k"], "clusters": len(r["clusters"])} for r in rung_records]}
 
 
@@ -429,15 +433,95 @@ def build_scale_pyramid_kmeans(store, *, space: str, rungs: list | None = None, 
 
     pyramid = {"space": space, "linkage": "kmeans+ward", "n_units": n, "dim": dim,
                "rungs": sorted(rung_records, key=lambda r: r["k"]), "unit_space": space}
-    store.save_scale_pyramid(space, pyramid, emb)
+    rows = emit_cluster_member_rows(store, pyramid, emb)     # the structure's SQL home (0022; reconciled)
+    # store.save_scale_pyramid(space, pyramid, emb)  # RETIRED 2026-07-03 — see build_scale_pyramid's note.
     return {"space": space, "rungs": rungs, "n_units": n, "built": built, "skipped": skipped, "method": "kmeans+ward",
+            "member_rows": rows["rows"],
             "pyramid_rungs": [{"k": r["k"], "clusters": len(r["clusters"])} for r in rung_records]}
 
 
+def emit_cluster_member_rows(store, pyramid: dict, emb: str | None = None) -> dict:
+    """L-scale rows-forward (2026-07-03): persist the pyramid's MEMBERSHIP/NESTING as ledger.cluster_member
+    rows — the SQL home the coordinate query's scale-drill joins (migration 0022). Replaces the JSON sidecar
+    as the structure's home (vocabulary stays: vectors in ledger.embedding, structure in cluster_member).
+    Fresh-rebuild semantics: DELETE this (space, emb, ns)'s rows then insert the new set, count-reconciled
+    (RAISE on mismatch — never a silently-partial pyramid). Respects the store root's namespace (a test/tmp
+    store writes ns-prefixed space values — the same __root_ isolation law as vectors/marks)."""
+    from store.pg_marks import _psql, _dq                 # the shared psql runner (generic, param-quoted)
+    ns = getattr(store, "_pg_ns", "")
+    space = ns + pyramid["space"]
+    embv = emb or "pplx"
+    # invert children_finer -> parent_cluster (the coarser cluster each finer one folds into)
+    parent_of = {}
+    for rung in pyramid["rungs"]:
+        for c in rung["clusters"]:
+            for child in c.get("children_finer") or []:
+                parent_of[child] = c["source"]
+    lines = ["BEGIN;",
+             f"delete from ledger.cluster_member where space={_dq(space)} and emb={_dq(embv)};"]
+    want = 0
+    for rung in pyramid["rungs"]:
+        k = rung["k"]
+        for c in rung["clusters"]:
+            ca, ex, par = c["source"], c.get("exemplar"), parent_of.get(c["source"])
+            for m in c["members"]:
+                lines.append(
+                    f"insert into ledger.cluster_member (cluster_address,member_address,space,k,emb,is_exemplar,parent_cluster) "
+                    f"values ({_dq(ca)},{_dq(m)},{_dq(space)},{k},{_dq(embv)},{'true' if m == ex else 'false'},"
+                    f"{_dq(par) if par else 'null'});")
+                want += 1
+    lines.append("COMMIT;")
+    _psql("\n".join(lines))
+    got = int(_psql(f"select count(*) from ledger.cluster_member where space={_dq(space)} and emb={_dq(embv)}").strip())
+    if got != want:
+        raise RuntimeError(f"emit_cluster_member_rows: {pyramid['space']} landed {got} rows, expected {want} "
+                           f"— a partial pyramid is worse than none (investigate before trusting the drill).")
+    return {"space": pyramid["space"], "rows": got}
+
+
 def load_pyramid(store, space: str, emb: str | None = None) -> dict | None:
-    """The persisted pyramid structure for `space` (at the embedder LAYER `emb`; emb=None = default/BGE), or
-    None if never built (an HONEST None — never a fabricated pyramid). Thin reuse of store.load_scale_pyramid."""
-    return store.load_scale_pyramid(space, emb)
+    """The persisted pyramid structure for `space` (at the embedder LAYER `emb`), or None if never built
+    (an HONEST None — never a fabricated pyramid). RECONSTRUCTED from ledger.cluster_member rows (the
+    structure's SQL home since 2026-07-03; the 7 legacy sidecars were loaded there once) — same dict shape
+    the sidecar carried: {space, n_units, rungs:[{k, space, clusters:[{label, source, size, exemplar,
+    members, children_finer}]}]}. Respects the store root's namespace (test stores see only their rows)."""
+    from store.pg_marks import _psql, _dq
+    ns = getattr(store, "_pg_ns", "")
+    sp = ns + space
+    embv = emb or "pplx"
+    out = _psql("select k, cluster_address, member_address, is_exemplar, coalesce(parent_cluster,'') "
+                f"from ledger.cluster_member where space={_dq(sp)} and emb={_dq(embv)} "
+                "order by k desc, cluster_address")
+    rows = [l.split("|") for l in out.splitlines() if l.count("|") >= 4]
+    if not rows:
+        return None
+        # return store.load_scale_pyramid(space, emb)  # RETIRED 2026-07-03 (rows are the home; the sidecar
+        #   read — restore by uncommenting only if the rows path must be rolled back)
+    by_k: dict = {}
+    parents: dict = {}
+    for k, ca, m, ex, par in rows:
+        c = by_k.setdefault(int(k), {}).setdefault(ca, {"source": ca, "members": [], "exemplar": None})
+        c["members"].append(m)
+        if ex == "t":
+            c["exemplar"] = m
+        if par:
+            parents[ca] = par
+    children: dict = {}
+    for child, par in parents.items():
+        children.setdefault(par, []).append(child)
+    rungs = []
+    n_units = 0
+    for k in sorted(by_k):
+        clusters = []
+        for label, (ca, c) in enumerate(sorted(by_k[k].items())):
+            rec = {"label": label, "source": ca, "size": len(c["members"]),
+                   "exemplar": c["exemplar"], "members": c["members"]}
+            if ca in children:
+                rec["children_finer"] = sorted(children[ca])
+            clusters.append(rec)
+        rungs.append({"k": k, "space": f"scale:{space}:k{k}", "clusters": clusters})
+        n_units = max(n_units, sum(len(c["members"]) for c in by_k[k].values()))
+    return {"space": space, "n_units": n_units, "rungs": rungs, "unit_space": space}
 
 
 def rung_points(store, space: str, k: int, emb: str | None = None) -> list:

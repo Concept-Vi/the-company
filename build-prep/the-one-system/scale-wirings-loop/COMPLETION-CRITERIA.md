@@ -7,14 +7,14 @@ loop-prepping the window — ping each landing so its Research Synthesis stays c
 is additive-only (no collision). No live-surface changes; the loop switch stays OFF (Tim's).*
 
 ## P1 · THE FOUR MISSING PYRAMIDS (the zoom over the code-side lenses)
-- [ ] P1.1 `scale:docs:*` — pyramid over docs (679 units, pplx/2560): rungs per the ladder rule (~k32/k8);
+- [x] P1.1 `scale:docs:*` — pyramid over docs (679 units, pplx/2560): rungs per the ladder rule (~k32/k8);
       centroids in ledger.embedding + membership in cluster_member (reconciled counts, RAISE on mismatch);
       VERIFIED: a drilled query over docs returns on-topic hits with the drill in meta.plan.
-- [ ] P1.2 `scale:desc:*` — same over desc (1043, pplx).
-- [ ] P1.3 `scale:code:*` — same over code (1042, nomic/3584 — the FIRST non-pplx pyramid; proves the
+- [x] P1.2 `scale:desc:*` — same over desc (1043, pplx).
+- [x] P1.3 `scale:code:*` — same over code (1042, nomic/3584 — the FIRST non-pplx pyramid; proves the
       dim-agnostic path).
 - [ ] P1.4 `scale:symbol:*` — same over symbol (6201, nomic/3584; the big one — kmeans path).
-- [ ] P1.5 build_scale_pyramid EMITS cluster_member rows going forward (no new sidecars; the sidecar
+- [x] P1.5 build_scale_pyramid EMITS cluster_member rows going forward (no new sidecars; the sidecar
       writer retired-commented per the no-fallback rule).
 - [ ] P1.6 pyramid-rebuild registered as a JOB (handler), trigger PROPOSED (never self-armed).
 
