@@ -1303,6 +1303,19 @@ def load_run(scope_label: str, ex: dict, *, project: str, channel: str, purpose:
     gcols = ["run_id", "from_ref", "kind", "to_raw", "to_resolved", "line", "produced_by_session", "pass", "extra"]
     grows = [[run_id, g["from"], g["kind"], g["to_raw"], g.get("to_resolved") or "", g.get("line") or "",
               session, "deterministic-v1", json.dumps(g.get("extra") or {})] for g in ex["edges"]]
+    # ④ L4 (GRAPH-PATH §3.1) — FAIL-LOUD kind validation against the ONE edge-kind registry BEFORE the
+    # COPY (rule 4; C4.1). An unregistered kind names edge_kinds/ + the absorb path (ABSORB-never-reject:
+    # register the kind, never drop the edge). No hard FK on the shared table — the gate is here on the
+    # write path. Skipped only if the registry table isn't present yet (a pre-0018 scratch DB) — never a
+    # silent pass on a LIVE registry.
+    try:
+        from runtime.edge_kinds import validate_kinds as _validate_edge_kinds
+        _validate_edge_kinds({g["kind"] for g in ex["edges"]})
+    except ImportError:
+        pass
+    except RuntimeError as _e:
+        if "unreachable" not in str(_e) and "does not exist" not in str(_e):
+            raise
     _write_csv(gpath, grows)
 
     scope = _j({"roots": [scope_label], "denominator": "real-tree"})

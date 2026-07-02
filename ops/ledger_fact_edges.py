@@ -139,10 +139,16 @@ def main():
     csvp, sqlp = os.path.join(scratch, "fe.csv"), os.path.join(scratch, "fe.sql")
     now = _psql("select now()").strip()
     extra = json.dumps({"derivation": "frontmatter", "evidence": "channel-memory frontmatter"})
+    _kinds_emitted: set = set()
     with open(csvp, "w", newline="") as fh:
         w = csv.writer(fh)
         for kind, frm, to_raw, to_res in edges:
             w.writerow([str(uuid.uuid4()), rid, frm, kind, to_raw, to_res or "", extra, "fact-edge", now])
+            _kinds_emitted.add(kind)
+    # C4.1 gate (adversary fix): every kind in this batch must be registered — fail loud pre-write,
+    # same seam as ops/ledger_build.py load_run. ABSORB-never-reject: register the kind, never drop the edge.
+    from runtime.edge_kinds import validate_kinds as _validate_edge_kinds
+    _validate_edge_kinds(_kinds_emitted)
     open(sqlp, "w").write(
         f"delete from ledger.edge where pass='fact-edge' and run_id='{rid}';\n"
         "create temp table _fe(edge_id uuid, run_id uuid, from_ref text, kind text, to_raw text, "
