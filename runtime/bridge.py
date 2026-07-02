@@ -103,6 +103,9 @@ BRIDGE_ROUTES = (
     "/api/greeting",
     # S7 (overnight) — the FORAGER's search door: semantic corpus query (+ record heads) for the canvas.
     "/api/corpus-query",
+    # P2.1 (the-one-system wirings) — THE WINDOW'S TEXT-IN FEED: the UI face of ledger.query (L11). GET
+    # for text probes; POST carries a full multi-axis spec. One function, both faces.
+    "/api/query",
     # THE UNIVERSAL PROJECTION (Tim Geldard's equation, 2026-06-13) — the stores rendered for free:
     # θ=kind (the sector registry), r=time-from-NOW, depth=nesting, phases=the ts cycles. Pure read.
     "/api/projection",
@@ -1774,6 +1777,24 @@ class H(BaseHTTPRequestHandler):
                 # in build_projection (a sibling of the lens helpers); this face just serializes the result.
                 _st, _body = build_projection(q)
                 self._send(_st, json.dumps(_body))
+            elif path == "/api/query":                     # P2.1: THE WINDOW'S TEXT-IN FEED — the UI face of
+                # ledger.query (L11). Text embeds server-side under the RIGHT lens for the semantic space
+                # (fabric/embed_routing — the ONE routing table the coordinate MCP tool also uses), then the
+                # spec goes to the ONE Postgres function. Teaching RAISEs pass through as 400s verbatim.
+                # GET ?text=&space=&limit= for quick probes; the POST body form carries every axis.
+                q = self._qs(urlparse(self.path))
+                try:
+                    spec = {}
+                    if q.get("text"):
+                        spec["semantic"] = {"text": q["text"], "space": q.get("space") or "desc"}
+                    if q.get("limit"):
+                        spec["limit"] = int(q["limit"])
+                    from mcp_face.tools.coordinate import run_query as _coord_query
+                    self._send(200, json.dumps(_coord_query(spec)))
+                except ValueError as e:                    # the fn's teaching refusal — surfaced verbatim
+                    self._send(400, json.dumps({"error": str(e)}))
+                except RuntimeError as e:                  # embedder down — the routing's loud breadcrumb
+                    self._send(503, json.dumps({"error": str(e)}))
             elif path == "/api/corpus-query":              # S7: the forager's search door (semantic + heads)
                 q = self._qs(urlparse(self.path))
                 text, space = q.get("text"), q.get("space") or None
@@ -3149,6 +3170,15 @@ class H(BaseHTTPRequestHandler):
                 # live interactive conversation (the ProposeAffordance card with its options+steer+approve).
                 b = self._body()
                 self._send(200, json.dumps(SUITE.revive_offer(b["id"])))
+            elif self.path == "/api/query":                 # P2.1 POST: the FULL multi-axis spec body
+                try:
+                    spec = self._body()
+                    from mcp_face.tools.coordinate import run_query as _coord_query
+                    self._send(200, json.dumps(_coord_query(spec)))
+                except ValueError as e:
+                    self._send(400, json.dumps({"error": str(e)}))
+                except RuntimeError as e:
+                    self._send(503, json.dumps({"error": str(e)}))
             elif self.path == "/api/build-intent":          # T0-WIRE: the REAL production entry seam for the
                 # decision→implementation wire. The operator (this is the OPERATOR face, not the agent
                 # face) mints a build-intent — a declared-scope decision that, once they APPROVE it via

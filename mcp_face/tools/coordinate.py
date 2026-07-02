@@ -43,6 +43,28 @@ def _call_query(spec: dict) -> dict:
     return json.loads(r.stdout)
 
 
+def run_query(spec: dict) -> dict:
+    """THE shared entry both faces call (the MCP tool below + the bridge's /api/query route): embeds
+    semantic.text under the RIGHT lens for the space (fabric/embed_routing — code/symbol → nomic-3584,
+    else → pplx-2560), then runs the ONE Postgres function. Teaching refusals surface as ValueError;
+    embedder-down as RuntimeError (each face maps them to its own error shape)."""
+    if not isinstance(spec, dict) or not spec:
+        raise ValueError("run_query requires a non-empty spec dict (see coordinate op='vocabulary').")
+    spec = dict(spec)
+    sem = spec.get("semantic")
+    if isinstance(sem, dict) and sem.get("text") and not sem.get("vector"):
+        from fabric.embed_routing import embed_query, lens_for_space
+        space = sem.get("space") or "desc"
+        vec = embed_query(sem["text"], space=space)
+        sem = {**sem, "vector": vec}
+        sem.pop("text", None)
+        # the lens fixes the emb layer when the caller didn't pin one (read layer == write layer)
+        if not sem.get("emb"):
+            sem["emb"] = "nomic-code" if lens_for_space(space) == "nomic" else "pplx"
+        spec["semantic"] = sem
+    return _call_query(spec)
+
+
 def register(mcp, suite):
     @mcp.tool()
     def coordinate(op: str = "query", spec: dict | None = None) -> dict:
@@ -50,11 +72,12 @@ def register(mcp, suite):
         same function the UI reads; one definition, two faces).
 
           op="vocabulary" — the spec schema + a worked example (self-description).
-          op="query"      — `spec` = {project?, filter?{path_under,ext[],node_type[],changed_after},
-                            graph?{anchor,kinds[],direction,depth≤3}, semantic?{text|vector,space,emb,k},
-                            lexical?{text}, limit?}. `semantic.text` is embedded here via the fabric
-                            default (pplx-2560 — desc/docs/history/exchange spaces); pass a raw `vector`
-                            for the nomic-3584 code/symbol spaces. Returns results + meta.plan (all
+          op="query"      — `spec` = {project?, addresses?[…], filter?{path_under|[…], not_under,
+                            node_type[], ext[], changed_after}, graph?{anchor, kinds[], direction:
+                            out|in|both, depth≤3, expand}, paths?{kind|id|through}, scale?{space, rung,
+                            top_clusters}, semantic?{text|vector, space, emb, k}, lexical?{text},
+                            count?{by}, limit?}. semantic.text embeds under the RIGHT lens per space
+                            (code/symbol → nomic-3584; else pplx-2560). Returns results + meta.plan (all
                             legs' counts — nothing silently under-recalls).
         """
         if op == "vocabulary":
@@ -70,17 +93,4 @@ def register(mcp, suite):
                               "meta.plan echoes every leg's counts (under-recall is never silent)"]}
         if op != "query":
             raise ValueError(f"coordinate: unknown op {op!r} — one of {OPS}.")
-        if not isinstance(spec, dict) or not spec:
-            raise ValueError("coordinate(op='query') requires `spec` (see op='vocabulary').")
-        spec = dict(spec)
-        sem = spec.get("semantic")
-        if isinstance(sem, dict) and sem.get("text") and not sem.get("vector"):
-            # embed HERE (the fn is pure SQL): the fabric default path — pplx-2560, the text-space lens
-            from fabric import client, transport, config as fcfg
-            t = transport.openai_embeddings_transport(base_url=fcfg.DEFAULT_EMBED_URL)
-            vec = client.complete_embeddings(t, [sem["text"]], model=fcfg.DEFAULT_EMBED_MODEL,
-                                             dim=fcfg.DEFAULT_EMBED_DIM)[0]
-            sem = {**sem, "vector": vec}
-            sem.pop("text", None)
-            spec["semantic"] = sem
-        return {"op": "query", **_call_query(spec)}
+        return {"op": "query", **run_query(spec)}
