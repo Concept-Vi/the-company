@@ -498,6 +498,12 @@ def extract_ts(rel: str, src: str, raw: bytes = b"") -> dict:
     api_calls = data.get("endpoints", [])
     for e in api_calls:
         edges.append({"from": file_addr, "kind": "calls-endpoint", "to_raw": e["url"], "line": e.get("line", 0)})
+    # UI BINDINGS — the DERIVED ui://→code join (Tim 2026-07-02: a universal mechanism recomputed every
+    # extraction, never a curated registry). A FE file that carries a ui:// address is bound to it; the
+    # resolver then materializes powered-by from these + the endpoint seam. extra.src = attr|literal|template.
+    for u in data.get("ui_binds", []):
+        edges.append({"from": file_addr, "kind": "binds-ui", "to_raw": u["addr"], "line": u.get("line", 0),
+                      "extra": {"src": u.get("src", "")}})
     events = sorted(set(data.get("events", [])))
     seen, uedges = set(), []
     for g in edges:
@@ -992,6 +998,7 @@ def resolve_edges(ex: dict) -> dict:
         if g["kind"] == "emits-event":
             event_emits.setdefault(g["to_raw"], set()).add(g["from"])
 
+
     def resolve_endpoint(url):
         u = norm_url(url)
         if u in endpoint_serves:
@@ -1029,7 +1036,7 @@ def resolve_edges(ex: dict) -> dict:
     # PASS B — contains / calls / extends / references (import-scoped, then classify the misses)
     for g in ex["edges"]:
         k, raw = g["kind"], g["to_raw"]
-        if k == "imports":
+        if k in ("imports", "binds-ui", "powered-by"):           # already resolved in their own passes above
             continue
         res = None
         if k == "contains":
@@ -1076,6 +1083,41 @@ def resolve_edges(ex: dict) -> dict:
             resolved_n += 1
         elif k in ("calls", "extends", "references"):
             g.setdefault("extra", {})["far"] = classify(raw)     # honest: builtin | stdlib | external
+
+    # PASS C — THE ui://→code JOIN, MATERIALIZED (Tim 2026-07-02: a universal mechanism recomputed every
+    # build, never a curated registry — today's FE is its first input; the future real UI is born joined by
+    # this same pass). Runs AFTER pass B so calls-endpoint→serves-endpoint resolutions exist. For every
+    # ui:// address any FE file binds: mint a ui ENTRY (node_type='ui', address = the ui:// itself) +
+    # powered-by edges to (a) each binding file and (b) the backend files serving the endpoints those
+    # binding files call. Deterministic; anything underivable stays unjoined (empty scope = DENY-ALL holds).
+    ui_bound_by = {}                                             # ui addr -> {binding file addrs}
+    for g in ex["edges"]:
+        if g["kind"] == "binds-ui":
+            g["to_resolved"] = g["to_raw"]                       # the ui node exists by construction (below)
+            resolved_n += 1
+            ui_bound_by.setdefault(g["to_raw"], set()).add(g["from"])
+    if ui_bound_by:
+        file_endpoint_targets = {}                               # binding file -> {resolved backend file addrs}
+        for g in ex["edges"]:
+            if g["kind"] == "calls-endpoint" and g.get("to_resolved"):
+                file_endpoint_targets.setdefault(g["from"].split("::")[0], set()).add(g["to_resolved"].split("::")[0])
+        existing_ui = set(e["path"] for e in ex["entries"] if e.get("node_type") == "ui")
+        for ui_addr, binders in sorted(ui_bound_by.items()):
+            if ui_addr not in existing_ui:
+                ex["entries"].append({"node_type": "ui", "path": ui_addr, "parent": None,
+                                      "depth": 0, "ext": "", "language": "ui", "size_bytes": 0, "line_count": 0,
+                                      "source_hash": "", "coverage_state": "derived",
+                                      "imports": [], "declares": [], "address_schemes_used": [], "env_vars": [],
+                                      "markers": [], "signals": {"n_binders": len(binders)}, "extra_fields": {}})
+            powered = set()
+            for bf in binders:
+                bfile = bf.split("::")[0]
+                powered.add(bfile)                               # the component file itself powers the element
+                powered |= file_endpoint_targets.get(bfile, set())  # + the backend answering its calls
+            for tgt in sorted(powered):
+                ex["edges"].append({"from": ui_addr, "kind": "powered-by", "to_raw": tgt,
+                                    "to_resolved": tgt, "line": None})
+                resolved_n += 1
     ex["stats"]["edges_resolved"] = resolved_n
     return ex
 
@@ -1188,7 +1230,10 @@ def load_run(scope_label: str, ex: dict, *, project: str, channel: str, purpose:
     for e in ex["entries"]:
         erows.append([run_id, project, e["path"], e["node_type"], e.get("parent") or "", e.get("depth", 0),
                       e.get("ext", ""), e.get("language", ""), e.get("size_bytes") or "", e.get("line_count") or "",
-                      e.get("source_hash") or "", f"code://{project}/{e['path']}", e["coverage_state"],
+                      e.get("source_hash") or "",
+                      # a ui node's path IS its address (ui://…); files/folders get code://<project>/<path>
+                      e["path"] if e.get("node_type") == "ui" else f"code://{project}/{e['path']}",
+                      e["coverage_state"],
                       e.get("exclude_reason") or "", _j(e.get("imports", [])), _j(e.get("declares", [])),
                       _j(e.get("address_schemes_used", [])), _j(e.get("env_vars", [])), _j(e.get("markers", [])),
                       _j(e.get("signals", {})), _j(e.get("extra", {})), e.get("extractor", ""),

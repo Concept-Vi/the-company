@@ -14,9 +14,18 @@ const KIND = file.endsWith('.tsx') || file.endsWith('.jsx') ? ts.ScriptKind.TSX
           : file.endsWith('.ts') || file.endsWith('.mts') || file.endsWith('.cts') ? ts.ScriptKind.TS
           : ts.ScriptKind.JS;
 const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, KIND);
-const symbols = [], imports = [], calls = [], endpoints = [], events = [];
+const symbols = [], imports = [], calls = [], endpoints = [], events = [], uiBinds = [];
 const line = n => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
 const ENDPOINT_METHODS = new Set(['get', 'post', 'put', 'delete', 'patch']);
+
+// UI-BINDING capture — the ui://→code join's DERIVED half (universal mechanism, not curated data):
+// any FE file that carries a ui:// address is bound to it. Three deterministic sources:
+//   attr     — <div data-ui-ref="ui://…">        (the canvas convention)
+//   literal  — 'ui://…' string literal            (the surface/pointables stamp catalog)
+//   template — `ui://…/${x}` template family      (dynamic addresses; recorded as prefix + '*')
+function addUiBind(addr, src, node) {
+  if (addr && addr.startsWith('ui://') && addr.length > 5) uiBinds.push({ addr, src, line: line(node) });
+}
 
 function isFn(n) { return n && (ts.isArrowFunction(n) || ts.isFunctionExpression(n)); }
 function addSym(name, kind, node, exported = false, isAsync = false) {
@@ -40,6 +49,19 @@ function firstStringArg(callNode) {
 }
 
 function walk(node, inFunc) {
+  // ui:// bindings (see addUiBind) — attr wins over literal for the same address occurrence
+  if (ts.isJsxAttribute(node) && node.name && node.name.getText(sf) === 'data-ui-ref' && node.initializer) {
+    if (ts.isStringLiteral(node.initializer)) addUiBind(node.initializer.text, 'attr', node);
+    else if (ts.isJsxExpression(node.initializer) && node.initializer.expression) {
+      const e = node.initializer.expression;
+      if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) addUiBind(e.text, 'attr', node);
+      else if (ts.isTemplateExpression(e) && e.head.text.startsWith('ui://')) addUiBind(e.head.text + '*', 'template', node);
+    }
+  } else if ((ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) && node.text.startsWith('ui://')) {
+    addUiBind(node.text, 'literal', node);
+  } else if (ts.isTemplateExpression(node) && node.head.text.startsWith('ui://')) {
+    addUiBind(node.head.text + '*', 'template', node);
+  }
   if (ts.isFunctionDeclaration(node) && node.name) {
     addSym(node.name.text, 'function', node, isExported(node),
            !!(ts.getModifiers(node) || []).some?.(m => m.kind === ts.SyntaxKind.AsyncKeyword));
@@ -88,4 +110,4 @@ function walk(node, inFunc) {
 }
 try { ts.forEachChild(sf, c => walk(c, false)); }
 catch (e) { console.log(JSON.stringify({ error: String(e) })); process.exit(0); }
-console.log(JSON.stringify({ symbols, imports, calls, endpoints, events }));
+console.log(JSON.stringify({ symbols, imports, calls, endpoints, events, ui_binds: uiBinds }));

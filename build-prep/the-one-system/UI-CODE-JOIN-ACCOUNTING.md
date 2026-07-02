@@ -26,6 +26,10 @@
 ## THE INSIGHT (what the overnight work changed)
 The join no longer has to be hand-curated. The chain **ui-element → component file (data-ui-ref/stamp, deterministic) → its calls-endpoint edges (in the ledger, built overnight) → bridge route (serves-endpoint) → backend symbols (call graph)** is now COMPUTABLE from the ledger. The 104 hand links become *verification data* for a derived join, per deterministic-work-to-code.
 
+## TIM'S DECISION + REFRAME (2026-07-02): **A then B** — and the mechanism, not the data, is the product
+Tim: the mockups AND the UI attached to the registry are NOT in use — the current UI was AI-built to test the backend; the REAL interface hasn't been designed or built yet (that's ③). The ui→code mechanisms are meant to be **universal, automatic, generalised**. Same as the projection: everything is scaffolding for now-which-is-now.
+**Build implication:** the join is DERIVED INSIDE THE DETERMINISTIC LEDGER PASS (recomputed every extraction, like calls/imports) — never a one-time population, never a curated registry. Today's FE (canvas 91 refs, surface 36+templates) is the first input + proof; the 104 hand links are verification data; the ③ real UI will be born addressed+joined automatically by the same pass. The consumers' contract (5-key shape, empty=DENY-ALL) is preserved; the current 505-address registry is data-to-verify-against, not a universe to preserve.
+
 ## THE POPULATION DECISION (Tim's)
 - **A — Derive from the living system (recommended):** mechanically compute the join from live FE annotations + the ledger's endpoint/call graph; canonicalize + fold in the 104 hand links (repairing the 1 dead + 10 malformed); register surface/app's 36+4-regions into the address space; everything underivable stays honestly unjoined (deny-all preserved). No model needed for the bulk.
 - **B — A + a bounded model pass** for the judgment tail (which symbol is THE powering one when several are plausible; proposals for registered-but-not-live addresses), asked pointed/bounded/fed.
