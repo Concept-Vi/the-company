@@ -37,6 +37,8 @@ HANDLERS = {
                         "refresh ledger.interpretation + ledger.assertion from the newest enrichment (L9)"),
     "file_meta_walk":  ("ops.build_file_meta", "load_file_meta",
                         "git-walk a project's history into ledger.file_meta (the run-independent time axis)"),
+    "rebuild_scale_pyramids": ("runtime.scale", "rebuild_scale_pyramids",
+                        "rebuild the named spaces' scale pyramids (rows-forward, incremental by content-hash)"),
 }
 
 

@@ -564,3 +564,29 @@ def resolve_at_rung(store, query_vector: list, *, space: str, k: int | None = No
     rung_space = space if (k is None) else f"scale:{space}:k{k}"
     res = vx.query_index(store, query_vector, k=n, space=rung_space, with_note=True, emb=emb)
     return {"rung": ("unit" if k is None else f"k{k}"), "space": rung_space, **res}
+
+
+def rebuild_scale_pyramids(spaces: str = "docs,desc,code,symbol", emb_map: str = "") -> dict:
+    """The PYRAMID-REBUILD job body (jobs HANDLERS registry): rebuild the named spaces' pyramids through
+    the rows-forward path (incremental — unchanged centroids skip by content-hash). `spaces` = comma list;
+    `emb_map` optional overrides "space:emb,…" (default: code/symbol→nomic-code, else pplx). Returns per-
+    space results; a failed space is recorded + raised at the end (never silent)."""
+    import os
+    from store.fs_store import FsStore
+    from fabric import config as fcfg
+    st = FsStore(fcfg.STORE_DIR)
+    emb_default = {"code": "nomic-code", "symbol": "nomic-code"}
+    overrides = dict(p.split(":", 1) for p in emb_map.split(",") if ":" in p)
+    out, errors = {}, []
+    for sp in [s.strip() for s in spaces.split(",") if s.strip()]:
+        emb = overrides.get(sp) or emb_default.get(sp, "pplx")
+        try:
+            r = build_scale_pyramid(st, space=sp, emb=emb)
+            out[sp] = {"built": r["built"], "skipped": r["skipped"], "rows": r["member_rows"]}
+        except Exception as e:
+            errors.append(f"{sp}: {type(e).__name__}: {e}")
+            out[sp] = {"error": str(e)[:160]}
+    if errors:
+        raise RuntimeError(f"rebuild_scale_pyramids: {len(errors)} space(s) failed — {errors} "
+                           f"(the others' results: { {k: v for k, v in out.items() if 'error' not in v} })")
+    return out
