@@ -79,7 +79,11 @@ DISPATCH_LOCK = threading.Lock()
 TIER_NONE = ""
 TIER_OPERATOR = "operator"
 TIER_CLIENT = "client"
-OPERATOR_USER_ID = os.environ.get("OPERATOR_USER_ID", "ebe5f9c7-4d66-4717-835f-afc96088facb")  # Tim (…615)
+# ④ C2.2 FLIPPED 2026-07-03: this env default is NO LONGER the live operator authority — the principal
+# table is (see _validate_supabase_jwt / _operator_tier_via_principals). Retained for reference + the
+# shadow-audit's divergence baseline. Breadcrumb: expected container.principal_auth (0017_identity.sql);
+# previously env OPERATOR_USER_ID (ebe5f9c7… = v.i@); to restore the env-gate, revert the decision block.
+OPERATOR_USER_ID = os.environ.get("OPERATOR_USER_ID", "ebe5f9c7-4d66-4717-835f-afc96088facb")  # Tim (…615) — now inert for the gate
 
 
 def _tool_posture(tool_obj) -> str:
@@ -374,11 +378,16 @@ def _validate_supabase_jwt(tok: str) -> tuple[bool, str, str, str]:
     # ④ L2-IDENTITY C2.2: the env-default read below STAYS THE LIVE AUTHORITY; the principal-table
     # shadow runs BESIDE it (divergence logged, never decides — see the OPERATOR-PRINCIPAL SHADOW
     # block above for the documented flip step, which is needs-tim).
-    if subject == OPERATOR_USER_ID:
+    # ④ L2-IDENTITY C2.2 — FLIPPED 2026-07-03 (Tim: "do all of it"): the principal table is now the
+    # LIVE AUTHORITY. operator-tier = kind='operator' OR an active acts-for delegation FROM the operator
+    # (so v.i@/vi REMAINS operator-tier via the standing Tim→vi delegation — identity, not a hardcoded
+    # uuid). Fail-closed: None (DB down / model not landed) → TIER_CLIENT. The shadow-audit is retained
+    # as a divergence check against the OLD env default. REVERT: restore `if subject == OPERATOR_USER_ID`.
+    if _operator_tier_via_principals(subject) is True:
         _operator_shadow_audit(subject, TIER_OPERATOR)
-        return True, subject, TIER_OPERATOR, "supabase-jwt-operator"
+        return True, subject, TIER_OPERATOR, "principal-operator"
     _operator_shadow_audit(subject, TIER_CLIENT)
-    return True, subject, TIER_CLIENT, "supabase-jwt-client"
+    return True, subject, TIER_CLIENT, "principal-client"
 
 
 def _jwk_client():
