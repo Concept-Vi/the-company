@@ -1769,13 +1769,20 @@ class Suite:
         category (node-types, verbs, modes, panels) + the suite index. A failing check is the enforcement."""
         reg = self._doc_block("MAP.md", "REGISTRY")
         suites_block = self._doc_block("STATE.md", "SUITES")
+        # EXACT-TOKEN matching for the suites gate (④'s L6 adversary reproduced the false-pass: substring
+        # membership let 'board_acceptance' evade via 'cc_board_acceptance' being present — a suite whose
+        # name is a substring of another was invisible to the gate). Tokenize the block on non-name chars;
+        # membership is now whole-name. The capability categories keep substring (their names are long +
+        # non-overlapping prose mentions are legitimate there); the suite index is a NAME list — exact.
+        import re as _re
+        suite_tokens = set(_re.split(r"[^a-z0-9_]+", suites_block))
         cap = self.capabilities()
         return {
             "map_node_types": [t for t in cap["node_types"] if t.lower() not in reg],
             "map_rhm_verbs": [v for v in cap["rhm_verbs"] if v.lower() not in reg],
             "map_modes": [m for m in cap["modes"] if m.lower() not in reg],
             "map_panels": [p for p in cap["panels"] if p.lower() not in reg],
-            "state_missing_suites": [s for s in self._acceptance_suites() if s.lower() not in suites_block],
+            "state_missing_suites": [s for s in self._acceptance_suites() if s.lower() not in suite_tokens],
         }
 
     map_drift = doc_drift  # back-compat alias
