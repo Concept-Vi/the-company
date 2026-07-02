@@ -108,3 +108,9 @@
 - **L10↔L5 BIND: every job fire IS a claimed intent** (lease=time_budget_s, terminal on every exit) — verified: real fire → terminal/succeeded; simulated mid-run death → LAPSED (no reaper); lapsed → re-claimable → terminal. Jobs inherit the circuit's zombie-proofing.
 - **Shared-file ore fixed**: doc_drift suites gate → exact-token (④'s adversary find); the fixed gate caught the 3 new circuit suites unindexed → refresh_self_description run, drift zero.
 - **REMAINING (mine): scale-drill on 0022** (cluster_member + the query's scale axis). **GATED ON TIM:** the continuous loop (COMPANY_ACTIVATION_LOOP), L8 the window go. ④: L7-KEEPER building → phase-B sweep → walkthrough.
+
+---
+## 2026-07-03 — SCALE-DRILL LANDED; ledger-session PHASE B SPENT
+- 0022 cluster_member (213,725 rows, all 7 sidecars, per-rung reconciled) + the scale stage in ledger.query — the ZOOM verified by use (history k16 drill 1464→335, on-topic). Migration map closed: 0014/15/16 + 0021 + 0022, all announced.
+- ④'s phase B also complete (L1–L7 committed, 325 checks, walkthrough delivered to Tim). "How Tim drives it" lines handed to ④ for the unified walkthrough.
+- EVERYTHING NOW GATED ON TIM: the L8 window go · arming COMPANY_ACTIVATION_LOOP (continuous heartbeat) · follow-ons not gated (code/symbol/docs/desc pyramids via build_scale_pyramid row-emit; paths[] axis on L4's shape).
