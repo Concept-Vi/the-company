@@ -443,3 +443,84 @@ def trigger_tick(suite, *, now: float | None = None) -> dict:
             suite._emit("job.trigger_error", f"trigger walk error on {jid!r}: {e}", job=jid)
     _save_trigger_state(suite, state)
     return out
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════
+# HEARTBEAT VISIBILITY (Tim 2026-07-03: "the heartbeat must be visible in the tools and CLI").
+# ONE status function; the MCP `jobs(op='status')` face and the `company jobs` CLI verb both render it.
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════
+
+def jobs_status(suite) -> dict:
+    """The heartbeat's visible face: every registered job + its trigger posture + its LIVE trigger state
+    (change-sig/quiet-window/watermark) + its recent fires COMPOSED through the circuit (terminal/lapsed/
+    running — the clock-fold, so a dead fire shows LAPSED, never a lie). One function, both faces."""
+    from store import pg_marks
+    from runtime import circuit as circ
+    state = {}
+    try:
+        state = _load_trigger_state(suite)
+    except RuntimeError as e:                        # corrupt state is REPORTED, not hidden
+        state = {"_error": str(e)}
+    loop_armed = os.environ.get("COMPANY_ACTIVATION_LOOP", "") in ("1", "true", "on")
+    rows = []
+    for job in list_jobs(suite):
+        jid = job["id"]
+        trig = job.get("trigger") or {"kind": "manual"}
+        st = state.get(jid) or {}
+        # recent fires: intent://job/<jid>/* targets, composed through the clock-fold
+        fires = []
+        try:
+            out = pg_marks._psql(
+                "select distinct target from container.mark where ns='' and mark_type like 'intent_%' "
+                f"and target like {pg_marks._dq('intent://job/' + jid + '/%')} order by target desc limit 3")
+            for tgt in [l for l in out.splitlines() if l]:
+                comp = circ.compose_state(tgt, suite.store.marks_for(tgt))
+                fires.append({"intent": tgt.rsplit("/", 1)[-1], "state": comp["state"],
+                              "outcome": comp.get("outcome")})
+        except Exception as e:
+            fires = [{"error": f"{type(e).__name__}: {e}"[:120]}]
+        rows.append({
+            "id": jid, "label": job.get("label", ""),
+            "run": next(iter(job.get("run", {})), "?"),
+            "trigger": trig.get("kind", "manual"),
+            "trigger_state": job.get("trigger_state", "n/a"),
+            "armed_by": job.get("armed_by", ""),
+            "enabled": job.get("enabled", True),
+            "last_fired_at": (time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(st["last_fired_at"]))
+                              if st.get("last_fired_at") else None),
+            "watermark": st.get("watermark"),
+            "change_pending": bool(st.get("sig") and st.get("sig") != st.get("last_fired_sig")),
+            "in_flight": st.get("in_flight_fire_id"),
+            "recent_fires": fires,
+        })
+    return {"jobs": rows, "loop": {"armed": loop_armed,
+            "note": ("continuous — the tick self-fires" if loop_armed else
+                     "OFF (the operator switch COMPANY_ACTIVATION_LOOP) — fires only on a driven tick "
+                     "(/api/activation/tick or jobs op='tick')")},
+            "state_error": state.get("_error")}
+
+
+def jobs_status_render(suite) -> str:
+    """The CLI face: jobs_status rendered as legible text (stdlib print — `company jobs` shells here)."""
+    s = jobs_status(suite)
+    lines = [f"JOBS — the parametric job system ({len(s['jobs'])} registered)",
+             f"  loop: {'ARMED (continuous)' if s['loop']['armed'] else 'off — driven ticks only'}"]
+    if s.get("state_error"):
+        lines.append(f"  ⚠ trigger-state: {s['state_error']}")
+    for j in s["jobs"]:
+        trig = j["trigger"] if j["trigger"] == "manual" else f"{j['trigger']} [{j['trigger_state']}]"
+        lines.append(f"\n  {j['id']}  ·  {j['label']}")
+        lines.append(f"    run={j['run']}  trigger={trig}"
+                     + (f"  armed_by={j['armed_by']}" if j.get("armed_by") else ""))
+        if j.get("last_fired_at"):
+            lines.append(f"    last fire: {j['last_fired_at']}"
+                         + (f"  watermark: {j['watermark']}" if j.get("watermark") else "")
+                         + ("  ⚡ change pending" if j.get("change_pending") else "")
+                         + (f"  IN-FLIGHT: {j['in_flight']}" if j.get("in_flight") else ""))
+        for f in j.get("recent_fires", []):
+            if "error" in f:
+                lines.append(f"    fires: ⚠ {f['error']}")
+            else:
+                lines.append(f"    fire {f['intent']}: {f['state']}"
+                             + (f" ({f['outcome']})" if f.get("outcome") else ""))
+    return "\n".join(lines)

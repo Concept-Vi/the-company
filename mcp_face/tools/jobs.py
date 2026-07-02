@@ -12,12 +12,12 @@ from __future__ import annotations
 
 from typing import Literal
 
-OPS = ("define", "list", "describe", "fire", "vocabulary", "arm", "pause", "tick")
+OPS = ("define", "list", "describe", "fire", "vocabulary", "arm", "pause", "tick", "status")
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def jobs(op: Literal["define", "list", "describe", "fire", "vocabulary", "arm", "pause", "tick"],
+    def jobs(op: Literal["define", "list", "describe", "fire", "vocabulary", "arm", "pause", "tick", "status"],
              job: dict | None = None, id: str = "", params: dict | None = None,
              check: bool = False) -> dict:
         """Register + run PARAMETRIC JOBS (data rows: what-to-run · params · trigger · allocations · outputs).
@@ -34,6 +34,9 @@ def register(mcp, suite):
                             agents propose, the operator arms). op="pause" disarms.
           op="tick"       — one manual trigger-walk pass (the same walk the activation tick runs;
                             armed triggers only; every skip is legible).
+          op="status"     — THE HEARTBEAT'S VISIBLE FACE: every job + trigger posture + live change/
+                            quiet-window state + recent fires composed through the circuit clock-fold
+                            (a dead fire shows LAPSED — it cannot lie).
         """
         from runtime import jobs as J
         if op == "vocabulary":
@@ -77,6 +80,8 @@ def register(mcp, suite):
             return {"op": "pause", **J.pause_job(suite, id)}
         if op == "tick":
             return {"op": "tick", **J.trigger_tick(suite)}
+        if op == "status":
+            return {"op": "status", **J.jobs_status(suite)}
         if op == "fire":
             if job is not None:
                 return {"op": "fire", **J.run_job(suite, job=job, params=params)}

@@ -27,6 +27,9 @@ stdlib-only. See README.md (use) and UPDATING.md (extend). Constitution: ../AGEN
   company combos           list runnable combinations (`company up @<name>` to start one)
   company bench KIND [args]       chat|embed|suite|long-ctx
   company telemetry        learned model load times + measured VRAM (vs estimates)
+  company jobs             THE HEARTBEAT, visible: every registered job + trigger posture
+                           (proposed/armed) + live change/quiet-window state + recent fires
+                           composed through the circuit clock-fold (a dead fire shows LAPSED)
   company session [SUB]    the supervised Claude Code fleet (Session Fabric): list ·
                            new [--cwd D] [--resume ID] [--fork] [--name L] [--prompt "…"] ·
                            send <id> <msg…> · stop <id>. Talks to the session-supervisor
@@ -254,6 +257,22 @@ def main():
         from runtime import orienteering_drift as _od
         print("\n" + _od.format_scan(_od.scan(repo)))
         return
+    if cmd == "jobs":
+        # THE HEARTBEAT'S CLI FACE (one implementation — runtime/jobs.jobs_status_render; this verb is a
+        # thin invoker so the status logic lives ONCE and the CLI stays stdlib-only).
+        import subprocess, os as _os
+        _repo = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+        _code = ("import sys, os; sys.path.insert(0, '.'); "
+                 "from store.fs_store import FsStore; from runtime.registry import NodeRegistry; "
+                 "from runtime.suite import Suite; from fabric import config as fcfg; "
+                 "from runtime.jobs import jobs_status_render; "
+                 "s = Suite(FsStore(fcfg.STORE_DIR), NodeRegistry().discover([os.path.join('.', 'nodes')])); "
+                 "print(jobs_status_render(s))")
+        r = subprocess.run([_os.path.join(_repo, ".venv", "bin", "python"), "-c", _code],
+                           cwd=_repo, capture_output=True, text=True, timeout=120)
+        print(r.stdout.strip() or r.stderr.strip()[:800])
+        return 0 if r.returncode == 0 else 1
+
     if cmd == "models":
         print(models.inventory()); return
     if cmd == "telemetry":
