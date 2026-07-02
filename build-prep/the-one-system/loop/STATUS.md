@@ -3,7 +3,7 @@
 *The overnight loop is DONE. All authorized auto-work is green; only Tim-supervised items remain (below). Criteria: COMPLETION_CRITERIA.md. Tick log follows this summary.*
 
 ## ✅ FINAL — what the loop achieved
-**The unified Supabase embedding+memory store is LIVE: `ledger.embedding` (:15432) = 75,500 vectors across 26 spaces + 1,403 provenance edges.** Both halves of the merge-intention spine — *what exists* (code) and *why/when it exists* (conversation) — in ONE pgvector store, one address grammar.
+**The unified Supabase embedding+memory store is LIVE: `ledger.embedding` (:15432) = 76,039 vectors across 26 spaces + 1,403 provenance edges. ALL auto-work complete (desc 1043/1043 done — the stalls were resource contention during peak-load ticks, not a bug; ran clean once the machine was quiet).** Both halves of the merge-intention spine — *what exists* (code) and *why/when it exists* (conversation) — in ONE pgvector store, one address grammar.
 - **E — multi-model, multi-scale embeddings:** code 1042 + symbol 6201 (nomic-embed-code 3584) · docs 679 + desc 504/1041 (pplx 2560). Killed two hidden truncations (ollama 4096, pplx 8192→real 32768). Multi-scale = file ↕ symbol ↕ the 16 pyramid rungs.
 - **D — descriptions:** carry-forward 3384 + delta re-run → still-missing code/md **0**. Unlocked the `desc` space (plain-language code search).
 - **P/S4 — provenance spine:** activated recollection's dormant crossings (23,608 links); landed **1,403 `generated-by` edges** — code node → the `exchange://` that made it, queryable from the ledger.
