@@ -47,12 +47,12 @@ BRIDGE_ROUTES = (
     "/studio", "/design-system.css", "/mockups/",
     # --- GET routes ---
     "/api/stream", "/api/mockup-feedback", "/api/mockup-feedback/status", "/api/corpus", "/api/graph",
-    "/api/graphs", "/api/object_info", "/api/cognition_info", "/api/types", "/api/layers", "/api/layer-dims", "/api/models",
+    "/api/graphs", "/api/object_info", "/api/cognition_info", "/api/type_info", "/api/types", "/api/layers", "/api/layer-dims", "/api/models",
     "/api/chat-models", "/api/fit", "/api/surfaced", "/api/events", "/api/now", "/api/chat",
     "/api/conversations", "/api/conversation", "/api/rhm-config", "/api/inbox", "/api/last-change",
     "/api/self-change-log", "/api/panels", "/api/capabilities", "/api/capabilities/introspection",
     "/api/ui_info", "/api/scope", "/api/pages",
-    "/api/address-help", "/api/context", "/api/territory", "/api/up-translate", "/api/self-changes-at", "/api/annotations",
+    "/api/address-help", "/api/context", "/api/territory", "/api/may", "/api/access-of", "/api/keeper", "/api/up-translate", "/api/self-changes-at", "/api/annotations",
     "/api/presentation-pref", "/api/chats", "/api/address-history", "/api/stale-at", "/api/ref-versions",
     "/api/review/current", "/api/review/status", "/api/journey/replay", "/api/journeys", "/api/voice",
     "/api/personas", "/api/trial/sessions", "/api/trial/transcript", "/api/cognition/models_for_role",
@@ -1539,6 +1539,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.object_info()))
             elif path == "/api/cognition_info":            # L-fe-be: the COGNITION registry (sibling of object_info)
                 self._send(200, json.dumps(SUITE.cognition_info()))
+            elif path == "/api/type_info":                 # ④ L3: the generative TYPE registry + fan-out state
+                self._send(200, json.dumps(SUITE.type_info()))
             elif path == "/api/decisions":                 # the decisions INBOX (projection's operator see-all-pending entry,
                 # beyond the deep-link): [{id, address, name, state, recommended_label}] from the decision_registry,
                 # FAST mark-composed state (decision_registry.decision_inbox — GPU-free, no recall/embed). registry-is-truth.
@@ -1889,6 +1891,17 @@ class H(BaseHTTPRequestHandler):
                     for m in (_dirs or []) if isinstance(m, dict)
                 ]
                 self._send(200, json.dumps(terr))
+            elif path == "/api/keeper":                     # ④ L7-KEEPER: the keeper answers about its project
+                # keeper_answer(address, question, token) — the SAME Suite.keeper_answer the `keeper` MCP
+                # tool calls (ONE function, both faces; law 9). Composes territory over project://<key>
+                # (the LIVE ledger/status/members), resolves the config rungs through the ONE ladder, fires
+                # cast_for_mode('keeper'), returns {answer, envelope (coordinate+territory+trail), cast}.
+                # Missing `address`/`question` → KeyError → 400 (fail loud). `fire=0` returns the
+                # DETERMINISTIC envelope only (no model call) — the half the two faces compare byte-for-byte.
+                _fire = str(q.get("fire", "1")).lower() not in ("0", "false", "no")
+                _tok = {"user_id": q["user_id"]} if q.get("user_id") else None
+                self._send(200, json.dumps(
+                    SUITE.keeper_answer(q["address"], q["question"], _tok, fire=_fire)))
             elif path == "/api/context":                   # R2: the addressed-context inspector (the R2 read-face)
                 # The standalone read that EXPOSES the EXISTING R2 engine (Suite.context_at — composes
                 # `_r2_gather` + `_r2_score_and_cap`, the SAME scoring the chat runs at the live locus,
@@ -1900,6 +1913,16 @@ class H(BaseHTTPRequestHandler):
                 # loud); a well-formed-but-UNREGISTERED address returns an HONEST EMPTY bundle (items=[],
                 # DENY-ALL — never fabricated), not a crash.
                 self._send(200, json.dumps(SUITE.context_at(q["address"])))
+            elif path == "/api/may":                       # L2-IDENTITY: the effective-access GATE question
+                # may(principal, verb, address) — the SAME Suite.may() the MCP `may` tool calls (ONE
+                # function, both faces; law 9). Missing param → KeyError → 400 (fail loud). A non-container
+                # address / unknown principal returns allow=False WITH a legible reason (fail-closed, never
+                # a crash, never a silent allow).
+                self._send(200, json.dumps(SUITE.may(q["principal"], q["verb"], q["address"])))
+            elif path == "/api/access-of":                 # L2-IDENTITY: the roster (who-can-do-what) at an address
+                # access_of(address) — the roster projected via the SAME decision may() enforces, so the
+                # UI shows exactly what the gate enforces (law 9). Missing `address` → 400.
+                self._send(200, json.dumps(SUITE.access_of(q["address"])))
             elif path == "/api/up-translate":              # F1: the GENERALIZED up-translate move (reach face)
                 # The reusable "present-this-at-Tim's-altitude" resolver (Suite.up_translate — composes the
                 # EXISTING organs, NOT rebuilt): ANY artifact → its altitude envelope {lead, mechanism,

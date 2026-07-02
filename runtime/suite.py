@@ -4728,6 +4728,18 @@ class Suite:
         from runtime import access as _access
         return _access.access_of(address, verbs=verbs)
 
+    def keeper_answer(self, address: str, question: str, token: dict | None = None, *, fire: bool = True) -> dict:
+        """THE KEEPER answers about its project (④ L7-KEEPER, organ-studies/KEEPER.md §4.5). The tending
+        AI is a COMPOSITION — a member edge (L1) + the cast_for_mode('keeper') + config rungs resolved
+        through the ONE ladder + a persona record — anchored at project://<key>. Composes territory over
+        the address (the project's LIVE ledger/status/members), resolves the config rungs, fires the keeper
+        cast, and returns {answer, envelope, cast} with the envelope enriched by a trail. This Suite method
+        is the ONE function BOTH faces call (the /api/keeper bridge route + the `keeper` MCP tool) — the
+        MCP + HTTP faces cannot diverge (law 9). `fire=False` returns the DETERMINISTIC envelope only (no
+        model call — what the two faces compare)."""
+        from runtime import keeper as _keeper
+        return _keeper.keeper_answer(address, question, token, suite=self, store=self.store, fire=fire)
+
     # ════════════════════════════════════════════════════════════════════════════════════════════
     # THE SINGLE-SOURCE RHM VERB REGISTRY (replaces the old 3 parallel tables RHM_VERBS /
     # RHM_VERB_DESC / RHM_VERB_CLASS, which could drift). ONE VerbSpec per verb carries everything:

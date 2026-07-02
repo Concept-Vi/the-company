@@ -56,11 +56,11 @@
 - [ ] C6.7 The board is NOT the inbox: a board item does not appear in inbox_lanes; an explicit escalation does.
 
 ## L7 · KEEPER
-- [ ] C7.1 The ladder slot-kind lives in resolver.py: longest-prefix-on-address resolution proven with a 3-rung test (universal → project → scope), walk-up on absence, fail-loud legible absent below.
-- [ ] C7.2 The 4 cloud config rows land as rungs and resolve correctly at their depths; keeper capability flags GATE the governed verb whitelist (a keeper denied a verb its rung excludes — demonstrated).
-- [ ] C7.3 The keeper cast fires for mode='keeper'; per-project rung specialization changes one role's framing without touching any file (write rung → different resolved prompt — demonstrated).
-- [ ] C7.4 `keeper_answer("project://counterpart-design", question, token)` returns a real answer composed from live territory (the project's actual ledger data), the envelope returned enriched with a trail; the SAME function serves the MCP face and an HTTP face.
-- [ ] C7.5 The persona record resolves into the keeper's prompt; a project-level persona rung overrides it; removal restores the global one.
+- [x] C7.1 The ladder slot-kind lives in resolver.py: longest-prefix-on-address resolution proven with a 3-rung test (universal → project → scope), walk-up on absence, fail-loud legible absent below.
+- [x] C7.2 The 4 cloud config rows land as rungs and resolve correctly at their depths; keeper capability flags GATE the governed verb whitelist (a keeper denied a verb its rung excludes — demonstrated).
+- [x] C7.3 The keeper cast fires for mode='keeper'; per-project rung specialization changes one role's framing without touching any file (write rung → different resolved prompt — demonstrated).
+- [x] C7.4 `keeper_answer("project://counterpart-design", question, token)` returns a real answer composed from live territory (the project's actual ledger data), the envelope returned enriched with a trail; the SAME function serves the MCP face and an HTTP face.
+- [x] C7.5 The persona record resolves into the keeper's prompt; a project-level persona rung overrides it; removal restores the global one.
 
 ## L8 · ③-A THE WINDOW (gated on L1–L7 green + Tim's go)
 - [ ] C8.1 The full multi-axis window renders the substrate: containment clusters, typed edges, spine, ghosts, paths overlay, zoom (scale:* rungs), time, provenance-to-conversation — per the projection contract, on the chosen surface.

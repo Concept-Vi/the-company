@@ -40,6 +40,79 @@ class ResolverError(ValueError):
     """A malformed invariant slot (fail-loud at resolve) — never a silently-wrong allocation."""
 
 
+# ── THE LADDER slot-kind (④ THE CONTAINER · L7-KEEPER, organ-studies/KEEPER.md §4.2) ─────────────
+# The THIRD axis-kind (beside CONTINUOUS-derivation and DISCRETE-select): CONTAINMENT. A value that
+# inherits DOWN a containment ladder — universal → space → project → scope — resolving to the DEEPEST
+# rung whose address is a containment-prefix of the coordinate's address (walk UP on absence). This is
+# the cloud's `keeper_agent_config.override_level` (0=global,1=space,2=project,3=scope) re-expressed as
+# ONE pure resolver slot: **override_level WAS containment depth in disguise — the ADDRESS is the level**
+# (ci_resolve_keeper_config's `ORDER BY override_level DESC LIMIT 1` == longest-prefix-wins here). Keeper
+# config, per-project role framing, and token values (theme/archetype/autonomy/response_style) ALL
+# resolve through this ONE mechanism — NOT a second resolver (reuse-don't-parallel, the ONE-ladder law).
+#
+# Shape:  {"ladder": "<dot-path to the address on the coordinate>",   # e.g. "address"
+#          "rungs":  {"": v0,                        # universal   (cloud level 0) — matches EVERY address
+#                     "space://x": v1,               # space       (1)
+#                     "project://x/y": v2,            # project     (2)
+#                     "project://x/y#scope": v3},     # scope       (3)
+#          "default"?: v}                             # optional final fallback (below the shallowest rung)
+#
+# A rung key K MATCHES address A iff K == "" (universal) OR A == K OR A starts with K at a containment
+# BOUNDARY ('/' or '#' — so "project://x" matches "project://x#s" and "project://x/y", NEVER "project://xy").
+# Deepest (longest) matching rung wins. No match + no default → fail loud (a legible absent + breadcrumb),
+# NEVER a silent wrong rung (the resolver's PURE + FAIL-LOUD contract).
+def _rung_matches(rung: str, address: str) -> bool:
+    """Does containment-rung `rung` cover `address`? "" = universal (covers all); else exact OR a
+    containment-prefix ending at a boundary char ('/' or '#'). Prefix WITHOUT a boundary is NOT a match
+    (so 'project://x' never spuriously covers 'project://xy')."""
+    if rung == "":
+        return True
+    if address == rung:
+        return True
+    return address.startswith(rung) and address[len(rung):len(rung) + 1] in ("/", "#")
+
+
+def _resolve_ladder(slot: dict, coordinate: dict) -> Any:
+    """Resolve a CONTAINMENT ladder slot against the coordinate's address (longest-prefix-wins; walk up
+    on absence; fail-loud legible-absent below). PURE — the address comes from the coordinate, nothing else."""
+    addr_path = slot["ladder"]
+    if not isinstance(addr_path, str) or not addr_path:
+        raise ResolverError(
+            f"resolve(ladder): 'ladder' must be a non-empty dot-path to the coordinate's address "
+            f"(e.g. 'address'); got {addr_path!r}. Fail loud.")
+    rungs = slot.get("rungs")
+    if not isinstance(rungs, dict) or not rungs:
+        raise ResolverError(
+            f"resolve(ladder): a ladder-slot needs a non-empty 'rungs' dict {{address-prefix: value}}; "
+            f"got {slot!r}. Fail loud.")
+    # A MISSING/None address means "no containment context" → only the universal ("") rung can apply
+    # (never a deeper project/scope rung by accident). Normalise to "" so the match logic is uniform.
+    # (_get_path fail-louds on an absent field; here an absent address is a LEGITIMATE "universal-only"
+    # coordinate — the containment axis is simply unset — so absence walks to "", it does not raise.)
+    try:
+        address = rules._get_path(coordinate, addr_path)       # reuse the SAME dot-path reader select uses
+    except rules.RuleError:
+        address = ""
+    if address is None:
+        address = ""
+    if not isinstance(address, str):
+        raise ResolverError(
+            f"resolve(ladder): the address at {addr_path!r} must be a string (the containment axis); "
+            f"got {address!r} ({type(address).__name__}). Fail loud.")
+    best = None
+    for k in rungs:
+        if _rung_matches(k, address) and (best is None or len(k) > len(best)):
+            best = k
+    if best is not None:
+        return rungs[best]
+    if "default" in slot:
+        return slot["default"]
+    raise ResolverError(
+        f"resolve(ladder): address {address!r} matched NO rung {sorted(rungs)} and no 'default' — "
+        f"legible absent (a rung must exist AT or ABOVE this address, or declare a 'default'). "
+        f"Fail loud, never a silent wrong rung. Fix: write a rung at '' (universal) or a covering prefix.")
+
+
 def resolve_slot(slot: Any, coordinate: dict) -> Any:
     """Resolve ONE invariant slot against the coordinate. A slot is either:
       • a relationship-AST dict (has an "op") → CONTINUOUS: rules.evaluate(ast, coordinate).
@@ -49,6 +122,8 @@ def resolve_slot(slot: Any, coordinate: dict) -> Any:
     """
     if isinstance(slot, dict) and "op" in slot:
         return rules.evaluate(slot, coordinate)                # CONTINUOUS — derive via the relationship
+    if isinstance(slot, dict) and "ladder" in slot:            # CONTAINMENT — longest-prefix on the coordinate's address
+        return _resolve_ladder(slot, coordinate)
     if isinstance(slot, dict) and "select" in slot:            # DISCRETE — registry-select by coordinate value
         cases = slot.get("cases")
         if not isinstance(cases, dict) or not cases:
@@ -124,5 +199,28 @@ if __name__ == "__main__":
         raise SystemExit("FAIL: div-by-zero did not raise")
     except rules.RuleError:
         pass
+    # LADDER (L7-KEEPER): longest-prefix-on-address, walk-up, fail-loud-below. ONE 3-rung invariant,
+    # THREE coordinates → three different resolved rungs from one definition (the containment axis).
+    LADDER = {"tier": {"ladder": "address",
+                       "rungs": {"": "universal",
+                                 "project://counterpart-design": "project",
+                                 "project://counterpart-design#mockups": "scope"}}}
+    assert resolve(LADDER, {"address": "project://counterpart-design#mockups"})["tier"] == "scope"
+    assert resolve(LADDER, {"address": "project://counterpart-design"})["tier"] == "project"      # walk-up: no scope rung
+    assert resolve(LADDER, {"address": "project://counterpart-design#other"})["tier"] == "project"  # walk-up past absent scope
+    assert resolve(LADDER, {"address": "project://something-else"})["tier"] == "universal"        # walk all the way up
+    assert resolve(LADDER, {})["tier"] == "universal"                                              # no address → universal only
+    assert not _rung_matches("project://x", "project://xy")                                        # boundary guard (no spurious cover)
+    assert _rung_matches("project://x", "project://x#s") and _rung_matches("project://x", "project://x/y")
+    # fail-loud: an address below the shallowest rung, no "" universal + no default → RAISES a legible absent.
+    try:
+        resolve({"t": {"ladder": "address", "rungs": {"project://x/y": 2}}}, {"address": "project://z"})
+        raise SystemExit("FAIL: ladder below the shallowest rung (no universal/default) did not raise")
+    except ResolverError:
+        pass
+    # a 'default' catches the below-shallowest case (legible fallback, not a crash).
+    assert resolve({"t": {"ladder": "address", "rungs": {"project://x/y": 2}, "default": 0}},
+                   {"address": "project://z"})["t"] == 0
     print("resolver OPERATIONAL self-test: ALL PASS "
-          "(continuous-derivation · clamp-allocation · discrete registry-select · fits-by-coordinate · fail-loud)")
+          "(continuous-derivation · clamp-allocation · discrete registry-select · CONTAINMENT-ladder "
+          "longest-prefix+walk-up+fail-loud-below · fits-by-coordinate · fail-loud)")
