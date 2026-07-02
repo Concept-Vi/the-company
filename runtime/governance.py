@@ -57,6 +57,26 @@ POLICY = {
 # never graduate to AUTO, no matter the earned trust (D4/D7 forever-confirm)
 LOCKED = {"source_data", "external", "frozen_contract"}
 
+# ── L5 of the auth stack (④ L2-IDENTITY, organ-studies/TENANCY.md §3.3): the delegation CEILING.
+# A delegation grants an agent an autonomy CEILING (max_autonomy L0..L5 — A's semantics, finally
+# enforced). The effective posture of a guarded action is the STRICTER of the class posture and the
+# ceiling: if the ceiling is below what the class requires, the delegated principal may NOT auto-do it
+# — the action is bounded up to CONFIRM (operator inbox), and if not confirmed it FAILS LOUD.
+# The mapping is DATA (never inline literals), so a new level/class is a table edit, not code surgery.
+AUTONOMY_RANK = {"L0": 0, "L1": 1, "L2": 2, "L3": 3, "L4": 4, "L5": 5}
+
+# what autonomy an action-class REQUIRES to auto-execute. Explicit rows for the meaningful classes;
+# anything absent derives from the class posture (AUTO→L1 cheap · SURFACE→L3 · CONFIRM→L4).
+AUTONOMY_REQUIRED = {
+    "inspect": "L1", "compose": "L1", "run": "L1", "configure": "L2", "write_own_layer": "L2",
+    "decision_build": "L4",
+    "promote": "L3", "spend": "L3",
+    "destructive": "L5", "code_build": "L4", "register_type": "L4", "role_build": "L4",
+    "external": "L5", "source_data": "L5", "frozen_contract": "L5",
+    "ui_panel": "L3", "ui_extension": "L4", "review": "L3", "flow_build": "L4",
+    "loadout_swap": "L4", "role_delete": "L4",
+}
+
 
 class GovernanceError(RuntimeError):
     """Raised when a CONFIRM action is attempted without confirmation (fail loud)."""
@@ -66,21 +86,66 @@ def posture(action_class: str) -> str:
     return POLICY.get(action_class, CONFIRM)        # unknown class -> safest
 
 
-def guard(action_class: str, do, *, confirmed: bool = False, inbox=None, payload: dict | None = None):
-    """Run `do()` per policy. AUTO: run. SURFACE: run, record a surfaced note (default = proceed).
-    CONFIRM: run only if `confirmed`; else surface a gate and raise (fail loud)."""
+def required_autonomy(action_class: str) -> str:
+    """The autonomy level an action-class requires to auto-execute (DATA-driven; derives from the class
+    posture when not explicitly declared — AUTO→L1, SURFACE→L3, CONFIRM→L4). registry-is-truth."""
+    if action_class in AUTONOMY_REQUIRED:
+        return AUTONOMY_REQUIRED[action_class]
     p = posture(action_class)
+    return {AUTO: "L1", SURFACE: "L3", CONFIRM: "L4"}[p]
+
+
+def _rank(level: str) -> int:
+    r = AUTONOMY_RANK.get(level)
+    if r is None:
+        raise ValueError(f"governance: unknown autonomy level {level!r} — the ladder is "
+                         f"{list(AUTONOMY_RANK)} (L0..L5). Fail loud, never guess.")
+    return r
+
+
+def effective_posture(action_class: str, ceiling: str | None = None) -> str:
+    """The STRICTER of the class posture and the delegation ceiling. ceiling=None → the class posture
+    unchanged (the un-delegated caller — byte-identical to before). A ceiling BELOW the class's required
+    autonomy bumps AUTO/SURFACE up to CONFIRM (the delegated principal may not auto-do it)."""
+    p = posture(action_class)
+    if ceiling is None:
+        return p
+    if _rank(ceiling) < _rank(required_autonomy(action_class)) and p in (AUTO, SURFACE):
+        return CONFIRM
+    return p
+
+
+def guard(action_class: str, do, *, confirmed: bool = False, inbox=None, payload: dict | None = None,
+          ceiling: str | None = None):
+    """Run `do()` per policy. AUTO: run. SURFACE: run, record a surfaced note (default = proceed).
+    CONFIRM: run only if `confirmed`; else surface a gate and raise (fail loud).
+
+    `ceiling` (④ L2-IDENTITY, additive; default None → byte-identical to every existing caller): the
+    delegation autonomy ceiling of the acting principal. The effective posture becomes the STRICTER of
+    the class posture and the ceiling — an action ABOVE the principal's ceiling is bounded up to CONFIRM
+    and, unconfirmed, FAILS LOUD naming the ceiling breach. A's max_autonomy semantics finally wired
+    into enforcement (organ-studies/TENANCY.md §3.3, L5)."""
+    p = effective_posture(action_class, ceiling)
+    breach = ceiling is not None and _rank(ceiling) < _rank(required_autonomy(action_class))
+    if breach:
+        payload = {**(payload or {}), "ceiling": ceiling,
+                   "required_autonomy": required_autonomy(action_class), "ceiling_breach": True}
     if p == AUTO:
         return do()
     if p == SURFACE:
         if inbox is not None:
             inbox.surface(action_class, payload or {}, default="proceed", resolved="proceed")
         return do()
-    # CONFIRM
+    # CONFIRM (possibly forced by a ceiling breach)
     if confirmed:
         return do()
     if inbox is not None:
         inbox.surface(action_class, payload or {}, default="reject", resolved=None)
+    if breach:
+        raise GovernanceError(
+            f"action '{action_class}' requires autonomy {required_autonomy(action_class)} but the "
+            f"delegation ceiling is {ceiling} — bounded to CONFIRM and unconfirmed; surfaced for the "
+            f"operator (delegation ceiling enforced, TENANCY §3.3 L5)")
     raise GovernanceError(f"action '{action_class}' requires confirmation (CONFIRM); surfaced for the operator")
 
 

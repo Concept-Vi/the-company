@@ -162,6 +162,86 @@ def _grant_shadow_audit(tool_name: str, tier: str, subject: str, live_allowed: b
     except OSError:
         pass
 
+# ── OPERATOR-PRINCIPAL SHADOW (④ L2-IDENTITY C2.2 — shadow-then-flip; the FLIP IS NOT DONE) ──────
+# The live operator decision is `subject == OPERATOR_USER_ID` (env default ebe5f9c7… = v.i@'s uuid).
+# Per Tim's identity correction (THE-CONTAINER v3): v.i@ is VI'S OWN email → the vi AGENT principal;
+# t.geldard@ (554e223d…) is Tim, the ONE operator. The principal table (0017_identity.sql) now holds
+# that model. This shadow reads THE INTENDED FLIPPED GATE beside the env default:
+#   operator ⇔ the subject's auth_user_id attaches to the OPERATOR principal (any login),
+#              OR to an AGENT principal holding an ACTIVE acts-for delegation FROM an operator
+#              (window-checked) — "acting for the operator" — which is exactly how ebe5f9c7 (v.i@)
+#              REMAINS operator-tier after the flip (via the standing Tim→vi delegation, not identity).
+# Divergence is RECORDED LOUD (never silent), NEVER decides. Expected divergence today (the honest
+# finding, not an error): 554e223d (t.geldard@) is CLIENT live but OPERATOR under the shadow — that
+# delta IS the flip's effect, surfaced for Tim.
+#
+# THE FLIP (needs-tim — DO NOT do this without Tim; it changes who is 'operator' on the live gate):
+#   1. In _validate_supabase_jwt, replace `subject == OPERATOR_USER_ID` with
+#      `_operator_tier_via_principals(subject) is True` (fail-closed: None → TIER_CLIENT).
+#   2. Comment out the OPERATOR_USER_ID env default with the breadcrumb
+#      "expected container.principal_auth (0017_identity.sql); previously env OPERATOR_USER_ID;
+#       fix: seed the operator principal (ops/migrate_identity_from_cvi.py)".
+#   3. Coordinate the moment with Tim: after the flip t.geldard@'s login becomes operator-tier and
+#      v.i@ stays operator-tier only while the Tim→vi acts-for delegation is active.
+_OP_SHADOW_TTL_S = 60.0
+_OP_SHADOW_CACHE: dict = {}          # subject -> (verdict True|False, ts) — keeps psql off the hot path
+
+
+def _operator_tier_via_principals(subject: str) -> bool | None:
+    """The principal-table answer to 'is this subject the operator (or acting for them)?'.
+    True/False = a real verdict; None = the shadow cannot answer (DB down / model not landed) — then
+    there is nothing to compare, the shadow is silent. READ-ONLY, degrade-clean: this must NEVER
+    break or change the live gate."""
+    try:
+        import time as _t
+        hit = _OP_SHADOW_CACHE.get(subject)
+        if hit and (_t.monotonic() - hit[1]) < _OP_SHADOW_TTL_S:
+            return hit[0]
+        from runtime.scope import _q, _lit
+        ok, out = _q(
+            "select exists (select 1 from container.principal_auth a "
+            "join container.principal p using(principal_id) "
+            f"where a.auth_user_id = {_lit(subject)}::uuid and p.status='active' and ("
+            "  p.kind = 'operator' "
+            "  or exists (select 1 from container.delegation d "
+            "             join container.principal dl on dl.principal_id = d.delegator "
+            "             where d.grantee = p.principal_id and dl.kind = 'operator' "
+            "             and d.status = 'active' and d.container_address is null "
+            "             and d.valid_from <= now() and (d.valid_to is null or d.valid_to > now()))))")
+        if not ok:
+            return None
+        verdict = out.strip() == "t"
+        _OP_SHADOW_CACHE[subject] = (verdict, _t.monotonic())
+        return verdict
+    except Exception:
+        return None                              # shadow must NEVER break the live gate (read-only)
+
+
+def _operator_shadow_audit(subject: str, live_tier: str) -> None:
+    """Compare the principal-table operator verdict against the LIVE env-default decision; record any
+    divergence to the audit jsonl mirror (loud, never silent). Pure observation — the live tier is
+    returned unchanged by the caller. The known/expected divergence: t.geldard@'s subject (554e223d…)
+    is live-CLIENT but shadow-OPERATOR — that is the flip's documented effect (C2.2 needs-tim)."""
+    shadow = _operator_tier_via_principals(subject)
+    live_is_operator = (live_tier == TIER_OPERATOR)
+    if shadow is None or shadow == live_is_operator:
+        return
+    line = json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                       "event": "OPERATOR_SHADOW_DIVERGENCE", "subject": subject,
+                       "live_tier": live_tier, "principal_shadow_operator": shadow,
+                       "note": "the principal-table gate disagrees with the env-default gate — this "
+                               "is the flip's effect surfaced (C2.2 shadow-then-flip; flip is "
+                               "needs-tim, see mcp_face/remote.py OPERATOR-PRINCIPAL SHADOW block)"},
+                      default=str) + "\n"
+    try:
+        with AUDIT_LOCK:
+            with open(os.path.join(fcfg.STORE_DIR, "remote_mcp_audit.jsonl"), "a",
+                      encoding="utf-8") as f:
+                f.write(line)
+    except OSError:
+        pass
+
+
 # ★ PUBLIC-INSTANCE HARDENING (advisor security catch): when this instance is Funnel-exposed to the
 # public internet, REMOTE_PUBLIC=1 DISABLES the local dev-token bypass entirely — otherwise a static
 # COMPANY_REMOTE_DEV_TOKEN would be a JWT-bypass reachable from the internet (Funnel forwards to
@@ -291,8 +371,13 @@ def _validate_supabase_jwt(tok: str) -> tuple[bool, str, str, str]:
         return False, "", "", "token has no subject (sub)"
     # IDENTITY IS THE GATE. A cryptographically-verified sub == OPERATOR_USER_ID → operator (all
     # tools). Any other valid Supabase user → client (posture-safe subset). No scope claim needed.
+    # ④ L2-IDENTITY C2.2: the env-default read below STAYS THE LIVE AUTHORITY; the principal-table
+    # shadow runs BESIDE it (divergence logged, never decides — see the OPERATOR-PRINCIPAL SHADOW
+    # block above for the documented flip step, which is needs-tim).
     if subject == OPERATOR_USER_ID:
+        _operator_shadow_audit(subject, TIER_OPERATOR)
         return True, subject, TIER_OPERATOR, "supabase-jwt-operator"
+    _operator_shadow_audit(subject, TIER_CLIENT)
     return True, subject, TIER_CLIENT, "supabase-jwt-client"
 
 
