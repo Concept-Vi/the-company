@@ -57,6 +57,28 @@ non-`MARK_TYPE`/`_`-file is skipped.
 - **`decision_update`** — free · **surface**. L5 (2026-06-22, Tim greenlit). The RHM's PROPOSED refinement of a decision card — `value` = `{field, value}` (`field` ∈ the CONTENT whitelist meaning/options/legibility/dimensions/device; NEVER subtype/id/address/scope), `by`=`rhm`, `target` = the canonical decision address. INERT until accepted; `compose_definition` folds the ACCEPTED updates onto the row (the row never mutates). Model A: the AI proposes, the operator applies.
 - **`decision_update_accept`** — free · **surface**. L5's operator twin — APPLIES an RHM `decision_update`; `value` = the accepted update's `ts`. A LIGHT operator-confirm (the #1b token-enforcement held OFF + Tim's fully-open lean → not a security-gate; the actor+mark-type is the discriminator). `compose_definition` composes only updates with a matching accept (no matching `decision_update_reject`). Hole-1: an accepted options-touching update on a DECIDED card re-opens it.
 
+*The CIRCUIT mark-types (④ L5-CIRCUIT — the intent lifecycle AS marks, organ-studies/CIRCUIT.md §4: state
+is NEVER a stored column; `runtime/circuit.py:compose_state(target, marks, now)` folds these + THE CLOCK
+into pending|running|suspended|lapsed|terminal — an expired lease with no terminal IS lapsed, derived, no
+reaper process; additive beside the analysis + interaction types, registry-is-truth):*
+- **`intent_claim`** — free · **surface**. An executor CLAIMS an `intent://` target — carries `by`
+  (principal), `session` (the live handle: session:// or run://), `lease_until` (the liveness assertion's
+  expiry — the zombie-killer), optional `references_take` (the authorizing decision_take's proposal
+  address; the instant a claim references a take, that take is no longer retractable — C5.4). A pour may
+  synthesize a claim with a ZERO-LENGTH lease (lease_until == ts): liveness never proven → lands LAPSED.
+- **`intent_heartbeat`** — free · **surface**. The live executor EXTENDS its lease (`lease_until` = the
+  new expiry); the fold's effective lease = max over claim + subsequent heartbeats. Legal only while the
+  intent composes to RUNNING — a lapsed executor re-claims, never heartbeats back to life (fail-loud).
+- **`intent_suspend`** — free · **surface**. The walk PARKED at `at_step`, awaiting `awaiting` (the wizard
+  seam generalized). Newer-than-claim → suspended (no lapse while parked); a later claim resumes.
+- **`intent_terminal`** — label · **surface**. The walk ENDED — `outcome`/`value` = succeeded|failed|
+  cancelled (closed vocab, fail-loud), `result` = the payload. WINS over every other mark and over the
+  clock; a second terminal refuses (ends end once). ABORT = a cancelled terminal.
+- **`intent_created`** — free · **surface**. The intent's IMMUTABLE row, landed as its birth mark (the ④
+  pour: cvi_mine intents → `intent://global/<uuid>` addresses; the row payload — intent_type, actor,
+  required_autonomy, input_params, correlation_id, … — rides the open record; `source` = a source_types
+  row). The address's row-of-record; no intent_created ⇒ the address was never poured/minted this way.
+
 **The floor + render-not-judge:** a mark-type is DECLARED DATA — a vocabulary, not an action. Reading is
 a READ (`subtractive`/`as_records`, never `resolve`). A mark DESCRIBES a disposition; judgement of
 truth/quality is a later reduce pass, and the operator can overrule. A mark-pass appends a finding
