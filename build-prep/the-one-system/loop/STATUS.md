@@ -86,3 +86,11 @@
 
 ## GPU note
 - Embedding pass owns the card: chat-4b evicted; pplx :8007 @ 32768 (batch env=1); ollama nomic unloads between code passes. Don't co-load a big brain during pplx work (OOM). Never restart the live brain without coordination.
+
+---
+## SESSION CONTINUATION (2026-07-02, Fable) — ①+② EXECUTED LIVE; ③ mapping wave RUNNING
+- **② COMPLETE:** the ui→code join DERIVES inside every ledger build (binds-ui → calls-endpoint → serves-endpoint → powered-by; hand-seed folded: 178 links, 4 skipped visibly). `suite.resolve_scope` → the shared `runtime/scope.py` (sidecar commented out); **the MCP `scope` tool = the agent face that never existed**. 156 ui nodes, 359 powered-by edges. Test gate green: address_scope(25) + feedback_to_wire(25) + self_change_locating(25) + conv_payload(27) + conv_context(22) + conv_consent(35).
+- **① COMPLETE:** the vector namespace on Supabase (store/pg_vectors.py; FsStore delegates; file store retired → store/fs_store_file_vectors.retired.py). Search IN Postgres (HNSW; vec_any overflow = any new dim, no schema change; ValueError dim guard; per-root __root_* namespacing preserves test isolation). 7 readers verified; corpus test sweep green; 4 reds proven PRE-EXISTING on the file-store HEAD (conv_index×2 key-form drift, capture_lenses, staleness variant).
+- **LIVE:** bridge restarted — /api/scope answers from the ledger join; /api/corpus-query ranks from Supabase (51,600-space). Both faces of both cutovers serving.
+- **③ MAPPING WAVE RUNNING** (ops/map_interface.py, kimi-cloud, 128 interface files → interface-map/out/). Next: synthesis → the design wave (rendered mockups) → Tim's recognition checkpoint.
+- Glyphic pinged (main moved; their glyph vectors now land directly in ledger.embedding).
