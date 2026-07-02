@@ -1324,6 +1324,18 @@ def load_run(scope_label: str, ex: dict, *, project: str, channel: str, purpose:
     r = subprocess.run(_psql_base() + ["-f", scriptf], capture_output=True, text=True, env=_pgenv())
     if r.returncode != 0:
         raise RuntimeError(f"ledger load FAILED — transaction rolled back, nothing committed:\n{r.stderr.strip()}")
+    # L9 SUPERSESSION (2026-07-02): after each load, refresh the run-INDEPENDENT durable tables
+    # (ledger.interpretation / ledger.assertion) so a rebuild can never strand enrichment below the *_latest
+    # views (unit_latest/edge_unified read the durable tables — proven cured). Idempotent + freshness-guarded;
+    # best-effort so a durable-sync hiccup never fails a committed structural load. The heartbeat job (L10)
+    # runs this same sync on change; here it keeps every manual/CLI build self-maintaining.
+    try:
+        from ops.sync_durability import sync_durability
+        _dur = sync_durability()
+        if _dur.get("interpretation_added") or _dur.get("assertion_added"):
+            print(f"  durable sync: +{_dur}")
+    except Exception as _e:                                    # loud on stderr, never fails the load
+        print(f"  ⚠ durable sync skipped ({type(_e).__name__}: {_e}) — run ops/sync_durability.py manually")
     return run_id
 
 
