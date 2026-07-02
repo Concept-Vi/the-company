@@ -49,7 +49,16 @@ def _q(sql: str) -> tuple[bool, str]:
 
 
 def _lit(s: str) -> str:
-    return "$scope$" + str(s).replace("$scope$", "") + "$scope$"
+    # Dollar-quote with a tag guaranteed ABSENT from the value (mirrors ops/migrate_container_from_cvi._dq).
+    # The old form stripped any literal '$scope$' substring out of the value — silent data corruption; a
+    # collision-avoiding tag preserves the value verbatim instead.
+    s = str(s)
+    i = 0
+    while True:
+        tag = f"$s{i}$"
+        if tag not in s:
+            return f"{tag}{s}{tag}"
+        i += 1
 
 
 def resolve_scope(ui_addr: str, *, source=None) -> dict:

@@ -42,7 +42,10 @@ _MEMORY_LEG_TIMEOUT_S = float(os.environ.get("COMPANY_MEMORY_LEG_TIMEOUT_S", "3.
 # resolve_address → resolve_vi_vision (degrades clean if no transport; the LIBRARY leg adds the palette).
 # decision added 2026-06-18 (decision-surface): the identity leg resolves the AIMED decision (row + composed
 # state) via resolve_address → decision_registry + compose_state; territory_prose renders it humanly below.
-_RESOLVABLE = ("run", "cas", "skill", "context", "session", "cap", "board", "clone", "mind", "vi-vision", "decision")
+# project added 2026-07-02 (④ THE CONTAINER, L1-SPINE): the identity leg resolves the container record +
+# containment edges via resolve_address → schema `container`; the PROJECT leg below composes
+# scopes/resources/members/ledger into the territory (the noted absence at the old line ~138, filled).
+_RESOLVABLE = ("run", "cas", "skill", "context", "session", "cap", "board", "clone", "mind", "vi-vision", "decision", "project")
 
 
 def _scheme_of(address: str):
@@ -230,6 +233,40 @@ def territory_for(address, *, suite=None, store=None, max_relations: int = 20) -
             terr["notes"].append(f"library leg unresolved ({type(e).__name__}: {e})")
     terr["legs_present"]["library"] = bool(terr.get("library"))
 
+    # ── PROJECT leg (project:// → the container territory; ④ L1-SPINE, 2026-07-02) ──
+    # The guide's shape: identity = the container record (already resolved above through the ONE resolver),
+    # context = scopes/resources, relations = members + the ledger join (contains, filtered by project_id) —
+    # all composed here from the identity leg's resolved envelope (NO second DB read; reuse-don't-parallel).
+    # Guarded → degrade-to-noted-absent (a down container DB already left identity noted-absent above).
+    if sch == "project":
+        try:
+            ident = terr.get("identity")
+            if isinstance(ident, dict) and isinstance(ident.get("record"), dict):
+                rec = ident["record"]
+                # the HUMAN name for territory_label (operator-law: meaning-words, never the raw address)
+                if not ident.get("name"):
+                    ident["name"] = (rec.get("description") or "").strip() or \
+                        f"the {rec.get('project_key') or rec.get('resource_key') or rec.get('scope_key')} project"
+                if ident.get("kind") == "project":
+                    terr["project"] = {
+                        "status": rec.get("status"), "phase": rec.get("phase"),
+                        "project_type": rec.get("project_type"), "root_path": rec.get("root_path"),
+                        "scopes": [c.get("key") for c in (ident.get("contains") or [])
+                                   if c.get("kind") == "scope"],
+                        "members": ident.get("members") or [],
+                        "ledger": ident.get("ledger") or {},
+                    }
+                elif ident.get("contains") is not None or ident.get("contained_by") is not None:
+                    terr["project"] = {"kind": ident.get("kind"),
+                                       "contains": len(ident.get("contains") or []),
+                                       "contained_by": ident.get("contained_by") or []}
+            elif terr["identity"] is None:
+                terr["notes"].append("project leg absent (the container record did not resolve — see the "
+                                     "identity note above)")
+        except Exception as e:
+            terr["notes"].append(f"project leg unresolved ({type(e).__name__}: {e})")
+    terr["legs_present"]["project"] = bool(terr.get("project"))
+
     # ── MEMORY leg (decision:// → the RHM's explanation grounding; guarded → degrade-clean, 2026-06-18) ──
     # unify-to-ONE step-1 (the lead's independent early win): the orphaned recall_for_decision is now WIRED —
     # a decision's explanation RESOLVES through recall, not stored (resolution-first). recall_for_decision
@@ -405,6 +442,28 @@ def territory_prose(territory_or_address, *, suite=None, store=None, max_chars: 
                 bits.append(line)
             else:
                 bits.append(f"What's known about this: {len(ctx)} relevant piece(s) in your memory to draw on.")
+        # PROJECT (project:// resolved container territory) — status + what it holds, all HUMAN (scope keys
+        # are meaning-words; member principals are ADDRESSES so only their COUNT renders — operator-law).
+        proj = terr.get("project") if isinstance(terr.get("project"), dict) else {}
+        if proj and "scopes" in proj:
+            st = ", ".join(str(x) for x in (proj.get("status"), proj.get("phase")) if x)
+            if st:
+                bits.append(f"Standing: {st}.")
+            shelves = [s for s in (proj.get("scopes") or []) if s]
+            led = proj.get("ledger") or {}
+            holds = []
+            if shelves:
+                holds.append(f"{len(shelves)} authored shelv{'es' if len(shelves) != 1 else 'e'} "
+                             f"({', '.join(shelves[:6])}{'…' if len(shelves) > 6 else ''})")
+            if led.get("authored_resources"):
+                holds.append(f"{led['authored_resources']} authored piece(s)")
+            if led.get("entries"):
+                holds.append(f"{led['entries']} catalogued code/file entr{'ies' if led['entries'] != 1 else 'y'}")
+            if holds:
+                bits.append("This project holds: " + "; ".join(holds) + ".")
+            nmem = len(proj.get("members") or [])
+            if nmem:
+                bits.append(f"{nmem} member{'s' if nmem != 1 else ''} belong{'s' if nmem == 1 else ''} to it.")
         prior = mem.get("prior_decisions") or []
         if prior:
             ptexts = [str(p.get("text") or p.get("meaning") or p.get("decision") or "").strip()
@@ -432,7 +491,7 @@ _SCHEME_HUMAN_NOUN = {
     "skill": "a skill", "context": "a working context", "session": "a past conversation",
     "cap": "a capability", "board": "a noticeboard item", "clone": "a past self",
     "mind": "a way of thinking", "code": "a piece of the work", "corpus": "a piece of the work",
-    "decision": "a decision to make",
+    "decision": "a decision to make", "project": "a project",
 }
 
 
