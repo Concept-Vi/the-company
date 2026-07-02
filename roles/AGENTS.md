@@ -221,6 +221,7 @@ routing/verdict rule is a pure declared function — L2) · let a role emit `res
 `build-prep/concurrent-cognition/` (the G2 criteria + guide).
 
 ## Agent-authored entries (auto-reflected)
+- **`glyph_compose`** — agent-authored role (created via the declarative-direct face). A5 of the Glyphic AI fusion — the JUDGE half (extraction-vs-judgment): given a word and its top-k nearest glyph candidates from the glyph_me
 - **`glyph_symbol_candidates`** — agent-authored role (created via the declarative-direct face). A5 of the Glyphic AI fusion — the FOUNDRY role: proposes N candidate ConceptV line-symbols for a brief, as STRUCTURED records (the schema en
 - **`glyph_extract`** — agent-authored role (created via the declarative-direct face). A5 of the Glyphic AI fusion — the EXTRACT half of the NL→glyphgraph engine: pulls the things and their relationships out of a spoken/typed u
 - **`complete_text`** — agent-authored role (created via the declarative-direct face). PASSTHROUGH completion — the union path for plain text completion (A2 of the Glyphic AI fusion): the browser projection (CV_AI) fires this r
