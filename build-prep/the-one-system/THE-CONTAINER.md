@@ -49,11 +49,20 @@ Across seven organs and ~15 partial articulations, the same design kept trying t
 - **L8 · ④-surface** (gated on ③): the counterpart-design project + the-fusion board rendered on the chosen surface; FORM half (design system, design-critic, design-lint, desktop+mobile).
 Deps: L1→(L2 minimal inside) · L5 needs L1+L2 · L6 needs L1 · L7 needs L1+L2+L4 · L3, L4 parallel to L1. Ops vehicles per v2 (0012_container.sql · ops/migrate_container_from_cvi.py · tests/container_acceptance.py); every weld step lists its reversal; cvi_mine is the immutable source-of-record; every curation writes excluded-with-reason.
 
+## Law 11 (Tim, 2026-07-02, extending laws 2+5)
+
+**Types declare their states; state is a resolution axis.** Every type row declares its state vocabulary + transitions as part of its socket/slot system (the BOARD study's item_types pattern, generalized to EVERYTHING). Decided-through-the-operator's-authority is a distinguished state. Resolution behavior varies by state exactly as by any other coordinate axis. The decision-vs-board boundary is one instance of state-on-an-addressable-item; the rule will grow.
+
+## Standing methodology (Tim, 2026-07-02): dead stuff carries intention
+
+Never assume dead/hollow = intentionally abandoned. In an all-AI-prototyped estate, the dead stuff usually shows the clearest never-completed intention. Disposition comes ONLY from investigation → understanding → decision that harvests the glowy parts and builds them in. (The studies already lived this: A3's dead board DDL contributed the social skin; graph-schema's empty sequences table contributed the path shape.) Applies immediately to the 7 hollow universal_types — note their de-facto schemas are recoverable from the 319 board posts' content keys per type.
+
 ## DECISIONS
 
-- **(Tim, decided)**: local home · organ+mine · one Space, two dressed projects · discourse-layer reading · the rebuild-one-from-many method itself ("insight and meaning, not mechanical connection") · full charge.
-- **(Surfacing for Tim's confirm, from the studies)**: (a) the two cloud accounts (v.i@ and t.geldard@) are both Tim → one operator principal, two logins; (b) the 7 hollow universal_types surface for his call rather than importing; (c) the decision-vs-board boundary rule; (d) 9-not-12 projects migrate.
-- **(OPEN — Tim)**: ③'s A/B/C (gates only L8).
+- **(Tim, decided)**: local home · organ+mine · one Space, two dressed projects · discourse-layer reading · the rebuild-one-from-many method · full charge · law 11 · dead-stuff-carries-intention · the decision/board rule as a state instance · 9-not-12 projects.
+- **(Tim, decided — identity, corrected)**: v.i@conceptv.com.au is **Vi's own email** (Vi has an email address); t.geldard@ is Tim's MAIN. Lands as: operator principal (Tim, t.geldard@ primary login) + the vi agent principal (v.i@ attaches to VI) + a standing acts-for delegation Tim→vi ("I am both" = the creator relationship, expressed as delegation not identity-merge). TRANSITION NOTE: the engine's OPERATOR_USER_ID currently equals v.i@'s uuid (ebe5f9c7) — the identity seed must remap operator→t.geldard-primary without breaking the live remote gate (shadow-then-flip).
+- **(In investigation, per dead-stuff law)**: the 7 hollow universal_types — each gets a mini-study (mine usage, de-facto schemas, intention) before disposition.
+- **(OPEN — Tim)**: the ③ window direction (explained to Tim in conversation; gates only L8).
 
 ## Coordination
 
