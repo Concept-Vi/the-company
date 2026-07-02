@@ -53,6 +53,10 @@ Deps: L1→(L2 minimal inside) · L5 needs L1+L2 · L6 needs L1 · L7 needs L1+L
 
 **Types declare their states; state is a resolution axis.** Every type row declares its state vocabulary + transitions as part of its socket/slot system (the BOARD study's item_types pattern, generalized to EVERYTHING). Decided-through-the-operator's-authority is a distinguished state. Resolution behavior varies by state exactly as by any other coordinate axis. The decision-vs-board boundary is one instance of state-on-an-addressable-item; the rule will grow.
 
+## Standing methodology (Tim, 2026-07-02): hand-made powers the generator
+
+When a hand-authored/separated artifact outclasses what a generator produces, the hand-made one is the SPEC for the generator's next level: extract its principle, upgrade the generator so all future generated artifacts carry it, and re-home the original as a normal generated-shaped row — never a parallel special case. "Most of the time the principles and intentions generalise." Already applied in ④: the hand-authored @research/@diagnostic decorators (mode, affinity_bucket, agent routing — richer than every generated stub) → the type registry gains a **routing face**: a type declares which agent handles that kind of work (feeds L3; the ghost types register through it). Prior instances the studies absorbed the same way: hand-stored reverse edge rows → declared inverses in the kind registry; per-key SQL config ladders → the one ladder slot-kind.
+
 ## Standing methodology (Tim, 2026-07-02): dead stuff carries intention
 
 Never assume dead/hollow = intentionally abandoned. In an all-AI-prototyped estate, the dead stuff usually shows the clearest never-completed intention. Disposition comes ONLY from investigation → understanding → decision that harvests the glowy parts and builds them in. (The studies already lived this: A3's dead board DDL contributed the social skin; graph-schema's empty sequences table contributed the path shape.) Applies immediately to the 7 hollow universal_types — note their de-facto schemas are recoverable from the 319 board posts' content keys per type.
