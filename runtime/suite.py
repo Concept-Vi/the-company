@@ -266,7 +266,7 @@ class Suite:
     )
 
     def __init__(self, store: FsStore, registry: NodeRegistry, nodes_dir: str | None = None,
-                 role_registry: "RoleRegistry | None" = None):
+                 role_registry: "RoleRegistry | None" = None, artifact_store=None):
         self.store = store
         self.registry = registry
         self.inbox = Inbox(store)
@@ -344,6 +344,20 @@ class Suite:
         # _write_registry_file) so a created mind goes live on BOTH this Suite registry AND the run-path.
         self.minds_dir = os.path.join(_base, "minds")
         self.mind_registry = MindRegistry().discover([self.minds_dir])
+        # ④ L3 — the GENERATIVE TYPE registry (types/) + its fan-out (cascades/). Peer dirs beside the
+        # engine's registries; cascades reference INTO them, never fork (rule 3). types/ IS create()-
+        # authorable (pure DATA — added to _CORPUS_REGISTRIES below so create(kind='type') picks up
+        # Suite.create_type automatically); cascades/ is code-authored (a handler callable). The generated
+        # artifacts land in the DERIVED projection (container.generated_artifact, migration 0019) — injectable
+        # so acceptance proves the fan-out without a live DB. See runtime/type_registry.py + types/AGENTS.md.
+        from runtime.type_registry import TypeRegistry, CascadeRegistry, PgArtifactStore
+        self.types_dir = os.path.join(_base, "types")
+        self.type_cascades_dir = os.path.join(_base, "cascades")
+        self.type_registry = TypeRegistry().discover([self.types_dir])
+        # `type_cascade_registry` (NOT `cascade_registry` — that name is the SAVED-CASCADE ActionRegistry
+        # set below; distinct concept, distinct store). This is the type FAN-OUT registry (cascades/).
+        self.type_cascade_registry = CascadeRegistry().discover([self.type_cascades_dir])
+        self.artifact_store = artifact_store or PgArtifactStore()
         # The single-source create_*-authorable table: (kind, dir-attr, registry-attr, RegistryClass,
         # module-const-name). The create_* methods derive from this — never a per-registry literal. A bad
         # spec is REFUSED via the registry's OWN discover() gate (mirrors create_projection).
@@ -370,6 +384,11 @@ class Suite:
             # mind: R13 composable-mind. Pure-DATA row (no callable) → declarative-direct authorable here.
             # create_mind ALSO resets minds.py's module singleton (the run-path's source) — see the hook below.
             "mind":              ("minds_dir",               "mind_registry",              MindRegistry,             "MIND"),
+            # ④ L3 — the TYPE registry is create()-authorable (pure DATA: data_schema + faces + states, no
+            # callable). Adding this row makes create(kind='type') pick up Suite.create_type automatically
+            # (the enum derives from Suite.create_* — MAP.md path-of-least-resistance). create_type WRAPS the
+            # shared write-half with the trivial-schema teaching gate + the generate_all fan-out (below).
+            "type":              ("types_dir",               "type_registry",              TypeRegistry,             "TYPE"),
         }
         self.role_registry = role_registry or RoleRegistry().discover([self.roles_dir])
         self.ROLE_REGISTRY = {rid: self.role_registry[rid].spec for rid in self.role_registry}
@@ -1350,15 +1369,24 @@ class Suite:
 
         from runtime.checks import CheckRegistry as _CR
         from runtime.verdict_panels import PanelRegistry as _PR
-        return _cog.run_cascade(action, self.store, turn_id=turn_id, inputs=inputs,
-                                resolve_role=_resolve_role,
-                                reduce_rules=_cog.REDUCE_RULES,
-                                retrieve_fn=_retrieve,
-                                check_resolver=_CR().discover().get,
-                                panel_resolver=_PR().discover().get,
-                                emit=lambda k, p: self._emit(k, p.get("summary", k),
-                                                             **{kk: vv for kk, vv in p.items() if kk != "summary"}),
-                                max_tokens=max_tokens)
+        result = _cog.run_cascade(action, self.store, turn_id=turn_id, inputs=inputs,
+                                  resolve_role=_resolve_role,
+                                  reduce_rules=_cog.REDUCE_RULES,
+                                  retrieve_fn=_retrieve,
+                                  check_resolver=_CR().discover().get,
+                                  panel_resolver=_PR().discover().get,
+                                  emit=lambda k, p: self._emit(k, p.get("summary", k),
+                                                               **{kk: vv for kk, vv in p.items() if kk != "summary"}),
+                                  max_tokens=max_tokens)
+        # ④ L4 (GRAPH-PATH §3.3, C4.4) — AUTO-DERIVE the path from the run envelope (the walk becomes a
+        # first-class ledger.path record: path://company/<turn_id>, steps = legs, payloads = run:// addrs).
+        # Lenient (mirrors voice_log) — a path-derivation failure must NEVER break the cascade result.
+        try:
+            from runtime.paths import derive_path_from_cascade
+            result["path"] = derive_path_from_cascade(result, project="company")["address"]
+        except Exception as _pe:
+            self.voice_log("path.derive.error", turn_id=turn_id, error=str(_pe)[:200])
+        return result
 
     def voice_log(self, event: str, **data) -> None:
         """Client-side voice trace (Tim 2026-06-07: "store the process to a proper log so you can
@@ -4676,6 +4704,22 @@ class Suite:
         items = self._r2_score_and_cap(self._r2_gather(address), address, _dt.now(_tz.utc))
         return {"address": address, "items": list(items), "count": len(items),
                 "budget": self.R2_BUDGET}
+
+    # ── L2-IDENTITY: the effective-access resolver — ONE function, both faces (organ-studies/TENANCY.md §3.7)
+    def may(self, principal: str, verb: str, address: str) -> dict:
+        """may this PRINCIPAL do this VERB at this ADDRESS? {allow, reason, via, ceiling}. The gate's
+        question. This Suite method is the ONE function BOTH faces call (the /api/may bridge route + the
+        `may` MCP tool) — never a reimplementation, so the permission the UI shows and the gate enforces
+        can never diverge (law 9). Fail-closed: an unknown principal / non-container address → allow=False
+        with a legible reason. Reuses runtime.access (which rides runtime/scope.py's ONE DB convention)."""
+        from runtime import access as _access
+        return _access.may(principal, verb, address)
+
+    def access_of(self, address: str, verbs=None) -> dict:
+        """the ROSTER at this address — each member + the verbs it may, computed via the SAME decision
+        may() enforces (access_of shows what the gate enforces, law 9). Both faces call THIS."""
+        from runtime import access as _access
+        return _access.access_of(address, verbs=verbs)
 
     # ════════════════════════════════════════════════════════════════════════════════════════════
     # THE SINGLE-SOURCE RHM VERB REGISTRY (replaces the old 3 parallel tables RHM_VERBS /
@@ -10629,6 +10673,121 @@ class Suite:
         """#58 DIRECT — create an AI_TIC (the fingerprint marker vocabulary: framework_imposition/
         versioning/false_finality/…) LIVE, no approval. See runtime/ai_tics.py."""
         return self._write_registry_file("ai_tic", spec)
+
+    # ─────────────────────────────────────────────────────────────────────────────────────────────
+    # ④ L3 — THE GENERATIVE TYPE REGISTRY (organ-studies/REGISTRY.md §3). Thin delegators; the mechanism
+    # lives in runtime/type_registry.py (minimal suite.py footprint — the hot-file discipline). create_type
+    # is picked up by create(kind='type') automatically (the enum derives from Suite.create_*).
+    # ─────────────────────────────────────────────────────────────────────────────────────────────
+    def create_type(self, spec: dict) -> dict:
+        """#58-style DIRECT — author a NEW universal TYPE (data_schema + faces + law-11 states) and FAN IT
+        OUT. THE GATE (REGISTRY.md — the fix for A's 7 hollow rows): a TRIVIAL data_schema is REFUSED with a
+        TEACHING error naming the de-facto-schema evidence path (returned STRUCTURED so create() surfaces it
+        legibly, not a raw traceback). On acceptance: render→gate→write→commit→rediscover (the shared
+        _write_registry_file) → generate_all (the cascade fan-out). Returns {id, path, live, fanout}."""
+        from runtime import type_registry as _tr
+        if not isinstance(spec, dict) or not spec.get("id"):
+            return {"error": "create_type needs a spec dict with an `id` (becomes types/<id>.py)."}
+        rid = spec["id"]
+        # THE HOLLOW GATE — pre-check trivial schema → structured teaching refusal (the graded surface).
+        if _tr._is_trivial_schema(spec.get("data_schema")):
+            return {"refused": True, "id": rid,
+                    "reason": _tr.TRIVIAL_SCHEMA_TEACHING.format(id=rid, schema=spec.get("data_schema"))}
+        # face-key sanity: every face key should be a known cascade id (presence of a face = generates[]
+        # membership). An unknown face key generates nothing — surface it (never silently ignore), don't refuse.
+        unknown_faces = [k for k in (spec.get("faces") or {}) if k not in self.type_cascade_registry]
+        try:
+            written = self._write_registry_file("type", spec)     # gates (defense) + writes + commits + rediscovers
+        except (ValueError, TypeError) as e:                       # any other malformed → structured, not a traceback
+            return {"error": f"create_type({rid!r}) refused at the gate: {e}"}
+        fanout = self.generate_all(rid)
+        out = dict(written)
+        out["fanout"] = fanout
+        if unknown_faces:
+            out["warning"] = (f"faces {unknown_faces} match no cascade id — they generate nothing. Known "
+                              f"cascades: {sorted(self.type_cascade_registry)}. (Add a cascades/<name>.py for a new face.)")
+        return out
+
+    def generate_all(self, type_id: str) -> dict:
+        """Fan a type out through the cascades by priority, with per-cascade honesty {ok|error|skipped:reason}.
+        IDEMPOTENT: retract this type's artifacts first, then regenerate (delete-then-insert by address) so a
+        re-run never duplicates or leaves a stale artifact for a removed face. FAIL LOUD on an unknown type."""
+        from runtime import type_registry as _tr
+        if type_id not in self.type_registry:
+            raise ValueError(f"generate_all: unknown type {type_id!r} — registered: {sorted(self.type_registry)} "
+                             f"(registry-is-truth; create it with create(kind='type',…) first).")
+        self.artifact_store.retract_type(type_id)                  # idempotency: exact-match the current faces
+        return _tr.generate_all(self.type_registry[type_id], self.type_cascade_registry, self.artifact_store)
+
+    def delete_type(self, type_id: str) -> dict:
+        """DIRECT delete (symmetric to create_type — the declarative-direct lifecycle, C3.1's proof). Removes
+        the types/<id>.py, git-commits the removal (revertible), rediscovers (the type UN-registers), AND
+        ACTIVELY RETRACTS its generated artifacts (the fan-out retracts — a leftover would be a ghost). Three
+        distinct triggers stay distinct: deleting a TYPE actively retracts (here); a hand-removed ARTIFACT row
+        trips the completeness drift test; a ghost (artifact whose type is gone) fails loud in completeness."""
+        if type_id not in self.type_registry:
+            raise ValueError(f"delete_type: unknown type {type_id!r} — registered: {sorted(self.type_registry)}.")
+        path = os.path.join(self.types_dir, f"{type_id}.py")
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"delete_type: {path} does not exist (registry/file drift). Fail loud.")
+        os.remove(path)
+        sha = self._git_self_commit([path], f"remove type '{type_id}' (direct)")
+        self.type_registry = self.type_registry.rediscover([self.types_dir])   # un-registers
+        retracted = self.artifact_store.retract_type(type_id)                   # the fan-out retracts
+        self._emit("apply", f"deleted type '{type_id}' + retracted {retracted} artifact(s) · {(sha or '?')[:8]}",
+                   node_name=type_id, commit=sha)
+        self.refresh_map()
+        return {"removed": type_id, "commit": sha, "artifacts_retracted": retracted,
+                "live": type_id in self.type_registry}
+
+    def type_transition(self, type_id: str, from_state: str, to_state: str) -> dict:
+        """Law 11 — validate an INSTANCE state transition against the type's declared socket. An illegal
+        transition is REFUSED fail-loud (the one write door for a typed instance's lifecycle)."""
+        from runtime import type_registry as _tr
+        if type_id not in self.type_registry:
+            raise ValueError(f"type_transition: unknown type {type_id!r} — registered: {sorted(self.type_registry)}.")
+        return _tr.validate_transition(self.type_registry[type_id], from_state, to_state)
+
+    def type_state_view(self, type_id: str, state: str) -> dict:
+        """Law 11 — a resolver read that VARIES BY STATE (closure states require the verification block; open
+        states don't). One function, both faces (law 9)."""
+        from runtime import type_registry as _tr
+        if type_id not in self.type_registry:
+            raise ValueError(f"type_state_view: unknown type {type_id!r} — registered: {sorted(self.type_registry)}.")
+        return _tr.state_view(self.type_registry[type_id], state)
+
+    def type_info(self) -> dict:
+        """The honest replacement for A's all_type_registries (which FABRICATED the facts it unified). Serves
+        the DISCOVERED registries (types + cascades) + the live FAN-OUT/COMPLETENESS state + the hollow-type
+        DISPOSITIONS — from ONE function, to both faces (Suite method + /api/type_info). Sibling of
+        cognition_info. registry-is-truth; nothing fabricated."""
+        from runtime import type_registry as _tr
+        try:
+            comp = _tr.completeness(self.type_registry, self.type_cascade_registry, self.artifact_store)
+        except Exception as e:                                     # a down DB must not blank the whole view
+            comp = {"complete": None, "error": f"completeness unavailable: {type(e).__name__}: {e}",
+                    "drift": [], "ghosts": [], "per_type": {}}
+        # the hollow-type disposition record (surfaced, never buried — C3.4). Loaded by path (types/ is a
+        # registry dir, not an importable package).
+        dispositions = {}
+        try:
+            import importlib.util as _ilu
+            _p = os.path.join(self.types_dir, "_fusion_map.py")
+            if os.path.exists(_p):
+                _s = _ilu.spec_from_file_location("_type_fusion_map", _p)
+                _m = _ilu.module_from_spec(_s); _s.loader.exec_module(_m)
+                dispositions = {"hollow": getattr(_m, "HOLLOW_DISPOSITIONS", {}),
+                                "fusions": getattr(_m, "FUSIONS", {}),
+                                "observation_verdict": getattr(_m, "OBSERVATION_VERDICT", {})}
+        except Exception as e:
+            dispositions = {"error": f"disposition record unavailable: {type(e).__name__}: {e}"}
+        return {
+            "types": self.type_registry.as_records(),
+            "cascades": self.type_cascade_registry.as_records(),
+            "completeness": comp,
+            "dispositions": dispositions,
+            "counts": {"types": len(self.type_registry), "cascades": len(self.type_cascade_registry)},
+        }
 
     def create_mind(self, spec: dict) -> dict:
         """#59 DIRECT — create a MIND (R13 composable-mind: kind=role binds a roles/ role · kind=model binds
