@@ -1497,6 +1497,15 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
             f"resolve_address: no scope or resource at {addr!r} (project {_key!r} exists; the in-project "
             f"path {_path!r} matches no stored address) — {_crumb} (authored units land via the migration "
             f"/ the back-write / create-circuits). Fail loud, never fabricate.")
+    if sch == "path":
+        # ④ THE CONTAINER (L4 GRAPH+PATH, 2026-07-02) — path:// RESOLVED. An ordered typed walk
+        # (ledger.path/path_step, 0018_graph_path.sql): path://<project>/<id> → the path record + its
+        # ordered steps; path://<project>/<id>/<ordinal> → the addressable step (mirrors the run://·
+        # session:// step grammar). Paths are DERIVED (runtime.paths.derive_path_from_cascade / the fusion
+        # back-write), never hand-placed; reverses composed at read (law 4). LAZY import (mirrors board://·
+        # project://). Registry-is-truth: an unknown path / out-of-range ordinal RAISES (never a silent empty).
+        from runtime.paths import resolve_path_address as _rpa
+        return _rpa(addr)
     if sch is not None:
         # a REGISTERED scheme (blob/vec/ui/code/exchange) with no content-resolver wired into this
         # dispatcher yet (exchange:// is register-but-defer — recollection's capture/recall lane owns it).

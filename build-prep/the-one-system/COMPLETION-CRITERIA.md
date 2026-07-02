@@ -15,28 +15,28 @@
 - [x] C1.7 create_project runs as one atomic circuit (space-if-needed → project → membership → keeper binding → ledger label reservation); a failed step rolls the whole circuit back; the result is provenance-stamped.
 
 ## L2 · IDENTITY
-- [ ] C2.1 principal / principal_auth / membership / delegation tables live; the operator seed migration mints exactly ONE operator row (Tim; t.geldard@ primary login attached; v.i@ attached to the VI AGENT principal per Tim's correction) + the standing acts-for delegation Tim→vi.
-- [ ] C2.2 The OPERATOR_USER_ID remap runs shadow-then-flip: the remote gate's decisions proven identical under the principal-table read before authority flips; the env-default read path commented out with breadcrumb.
-- [ ] C2.3 The 15 cloud users land per the map: 1 operator + 1 vi-agent + curated humans; the 7 no-email users archived excluded-with-reason; the uuid rewrite map applied to every migrated created_by/owner/granted_by/tuple column (spot-verified on 10 sampled rows against cvi_mine).
-- [ ] C2.4 `may(principal, verb, address)` / `access_of(address)` exists as ONE function answering both faces; the MCP face and a UI read return the same answer for 5 test principal×address pairs.
-- [ ] C2.5 The 13 duplicate delegations collapse to one confirmed grant with 13 evidence entries; the L5 grant lands with its window; delegation ceiling actually bounds a live guard() call (demonstrated with a test principal denied above its ceiling).
+- [x] C2.1 principal / principal_auth / membership / delegation tables live; the operator seed migration mints exactly ONE operator row (Tim; t.geldard@ primary login attached; v.i@ attached to the VI AGENT principal per Tim's correction) + the standing acts-for delegation Tim→vi.
+- [◑] C2.2 (needs-tim: the flip — shadow proven, divergence is the intended effect) The OPERATOR_USER_ID remap runs shadow-then-flip: the remote gate's decisions proven identical under the principal-table read before authority flips; the env-default read path commented out with breadcrumb.
+- [x] C2.3 The 15 cloud users land per the map: 1 operator + 1 vi-agent + curated humans; the 7 no-email users archived excluded-with-reason; the uuid rewrite map applied to every migrated created_by/owner/granted_by/tuple column (spot-verified on 10 sampled rows against cvi_mine).
+- [x] C2.4 `may(principal, verb, address)` / `access_of(address)` exists as ONE function answering both faces; the MCP face and a UI read return the same answer for 5 test principal×address pairs.
+- [x] C2.5 The 13 duplicate delegations collapse to one confirmed grant with 13 evidence entries; the L5 grant lands with its window; delegation ceiling actually bounds a live guard() call (demonstrated with a test principal denied above its ceiling).
 
 ## L3 · REGISTRY
-- [ ] C3.1 types/ + cascades/ registries discovered; `create(kind='type', spec)` gates (a trivial data_schema is REFUSED with a teaching error), writes the file, commits, rediscoveres — proven by registering one new test type end-to-end and then deleting it (the fan-out retracts).
-- [ ] C3.2 generate_all(type) fans out with per-cascade honesty {ok|error|skipped:reason}; the completeness ledger holds a generated_from↔generates edge pair per artifact; the drift test fails when an artifact is removed by hand.
-- [ ] C3.3 The 9 sound cloud types land as type files and regenerate their artifacts (tool rows, board face, address template) — counts reconciled vs cvi_mine's cascade output where applicable.
-- [ ] C3.4 The 7 hollow types carry the hollow-types investigation's dispositions (RECONSTRUCT with de-facto schemas / FUSE with mapping recorded / HOLD with the missing evidence named) — each disposition traceable to its evidence, surfaced to Tim, none silently imported.
-- [ ] C3.5 Law 11 proven: a type declares states+transitions in its socket; an illegal transition on an instance is refused fail-loud; a resolver read varies by state (one demonstrated case).
-- [ ] C3.6 Suite.type_info() serves the registry + fan-out state to both faces from one function.
+- [x] C3.1 types/ + cascades/ registries discovered; `create(kind='type', spec)` gates (a trivial data_schema is REFUSED with a teaching error), writes the file, commits, rediscoveres — proven by registering one new test type end-to-end and then deleting it (the fan-out retracts).
+- [x] C3.2 generate_all(type) fans out with per-cascade honesty {ok|error|skipped:reason}; the completeness ledger holds a generated_from↔generates edge pair per artifact; the drift test fails when an artifact is removed by hand.
+- [x] C3.3 The 9 sound cloud types land as type files and regenerate their artifacts (tool rows, board face, address template) — counts reconciled vs cvi_mine's cascade output where applicable.
+- [x] C3.4 The 7 hollow types carry the hollow-types investigation's dispositions (RECONSTRUCT with de-facto schemas / FUSE with mapping recorded / HOLD with the missing evidence named) — each disposition traceable to its evidence, surfaced to Tim, none silently imported.
+- [x] C3.5 Law 11 proven: a type declares states+transitions in its socket; an illegal transition on an instance is refused fail-loud; a resolver read varies by state (one demonstrated case).
+- [x] C3.6 Suite.type_info() serves the registry + fan-out state to both faces from one function.
 
 ## L4 · GRAPH + PATH
-- [ ] C4.1 edge_kinds/ registry live (id/directed/inverse/face/endpoints/behavior); ledger.edge writes validate kind against it fail-loud; the 44 existing kinds registered with face tags; spelling collisions (part_of/part-of) normalized with count-verified rewrite.
-- [ ] C4.2 Reverses composed at read: a query for imported_by returns the composed inverse of imports (verified on a known pair); NO reverse rows stored (the ~8 cloud reverse rows dropped on landing, their forward rows verified present).
-- [ ] C4.3 The landing plan executed with reconciliation: graph_edges 54 → ~40 real edges (test rows quarantined, reverses dropped — each with excluded-with-reason); type_instance_edges 606 → ~190 knowledge + 95 lineage (belongs_to 319 verified derivable from fields before dropping); denominators printed.
-- [ ] C4.4 path/path_step live; ONE cascade run auto-derives its path (steps = legs, via = graph edges, payloads = run:// addresses); path://<id>/<ordinal> resolves; path_replay materializes the walk.
-- [ ] C4.5 The fusion campaign itself exists as a path:// record (kind=fusion) with the build's major steps as ordinals — the case study's sequence/ scope is THIS.
-- [ ] C4.6 Paths embed under space='paths'; a similarity query between two known paths returns sane ordering.
-- [ ] C4.7 The projection contract emits paths[] alongside clusters/edges/spine/ghosts; counts-including-zero.
+- [x] C4.1 edge_kinds/ registry live (id/directed/inverse/face/endpoints/behavior); ledger.edge writes validate kind against it fail-loud; the 44 existing kinds registered with face tags; spelling collisions (part_of/part-of) normalized with count-verified rewrite.
+- [x] C4.2 Reverses composed at read: a query for imported_by returns the composed inverse of imports (verified on a known pair); NO reverse rows stored (the ~8 cloud reverse rows dropped on landing, their forward rows verified present).
+- [x] C4.3 The landing plan executed with reconciliation: graph_edges 54 → ~40 real edges (test rows quarantined, reverses dropped — each with excluded-with-reason); type_instance_edges 606 → ~190 knowledge + 95 lineage (belongs_to 319 verified derivable from fields before dropping); denominators printed.
+- [x] C4.4 path/path_step live; ONE cascade run auto-derives its path (steps = legs, via = graph edges, payloads = run:// addresses); path://<id>/<ordinal> resolves; path_replay materializes the walk.
+- [x] C4.5 The fusion campaign itself exists as a path:// record (kind=fusion) with the build's major steps as ordinals — the case study's sequence/ scope is THIS.
+- [x] C4.6 Paths embed under space='paths'; a similarity query between two known paths returns sane ordering.
+- [x] C4.7 The projection contract emits paths[] alongside clusters/edges/spine/ghosts; counts-including-zero.
 
 ## L5 · CIRCUIT
 - [ ] C5.1 The mark-backing shadow: marks written through the ONE API land in both stores; reads proven identical over 100 sampled marks; authority flips; the file-only path commented out with breadcrumb.
