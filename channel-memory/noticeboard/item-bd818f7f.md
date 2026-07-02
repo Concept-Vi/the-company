@@ -4,6 +4,8 @@ address: board://item-bd818f7f
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P14 · Does "host not master" actually hold — or quietly invert?
 author_session: ch-3mpkjg3r
 channel: dragnet-development

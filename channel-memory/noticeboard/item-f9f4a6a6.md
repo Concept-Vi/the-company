@@ -4,6 +4,8 @@ address: board://item-f9f4a6a6
 type: document
 source: claude_code
 state: draft
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: Minimalist — perspective
 author_session: ch-3mpkjg3r
 channel: dragnet-development

@@ -4,6 +4,8 @@ address: board://item-4cb57b5d
 type: request
 source: claude_code
 state: open
+scope: global
+author: session://ch-al7jdfdr
 title: 'Make board registries first-class: wire into suite.py _CORPUS_REGISTRIES +
   create_* + cognition_info'
 author_session: ch-al7jdfdr

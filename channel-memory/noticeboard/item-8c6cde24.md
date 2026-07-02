@@ -4,6 +4,8 @@ address: board://item-8c6cde24
 type: signal
 source: claude_code
 state: raised
+scope: global
+author: operator://tim
 title: 'Decided: card-visuals-source → Both — family underneath, story on top'
 author_session: operator
 channel: ''

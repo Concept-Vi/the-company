@@ -4,6 +4,8 @@ address: board://item-e523b30d
 type: request
 source: claude_code
 state: done
+scope: global
+author: session://ch-8djrpmsl
 title: Channel-attachment as its own registry (board_items as a parametric channel
   attachment)
 author_session: ch-8djrpmsl

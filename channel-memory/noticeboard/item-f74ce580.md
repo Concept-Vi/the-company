@@ -4,6 +4,8 @@ address: board://item-f74ce580
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P7 · 6. What's missing for a voice-first operator (additions nobody else will
 author_session: ch-3mpkjg3r
 channel: dragnet-development

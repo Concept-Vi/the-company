@@ -4,6 +4,8 @@ address: board://item-544edc38
 type: request
 source: claude_code
 state: done
+scope: global
+author: session://ch-8djrpmsl
 title: 'Heart H1.2: reverse/query traversal on the board (edges-INTO a target + unified
   relations surface)'
 author_session: ch-8djrpmsl

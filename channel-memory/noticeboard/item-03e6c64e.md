@@ -4,6 +4,8 @@ address: board://item-03e6c64e
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: 'P10 · 8 · Display: opaque ids in the graph'
 author_session: ch-3mpkjg3r
 channel: dragnet-development

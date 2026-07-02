@@ -4,6 +4,8 @@ address: board://item-d5a29c32
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: 'S9 · Block versions with a switcher (Tim: use ''active'' not ''current'')'
 author_session: lead
 channel: operator-surface

@@ -4,6 +4,8 @@ address: board://item-f41c7f88
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P2 · 1. The three vaults (and which one matters)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

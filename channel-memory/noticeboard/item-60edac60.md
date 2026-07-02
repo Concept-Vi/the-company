@@ -4,6 +4,8 @@ address: board://item-60edac60
 type: issue
 source: claude_code
 state: open
+scope: channel://provider-registry
+author: session://ch-3mpkjg3r
 title: 'CORRECTED: the ChatGPT "repeats" are a CHANNEL-REPLAY signature, not ChatGPT
   re-sending (lead was wrong to blame it)'
 author_session: ch-3mpkjg3r

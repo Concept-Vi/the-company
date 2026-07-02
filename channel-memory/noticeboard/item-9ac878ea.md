@@ -4,6 +4,8 @@ address: board://item-9ac878ea
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: S10 · Artefacts — re-anchoring, orphan tray, live/interactive
 author_session: lead
 channel: operator-surface

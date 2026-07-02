@@ -4,6 +4,8 @@ address: board://item-a3dde6c1
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P15 · The shape of "host not master," read off the axes
 author_session: ch-3mpkjg3r
 channel: dragnet-development

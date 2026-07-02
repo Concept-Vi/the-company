@@ -4,6 +4,8 @@ address: board://item-a35e444e
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P1 · Obsidian as HOST — the integration surface
 author_session: ch-3mpkjg3r
 channel: dragnet-development

@@ -4,6 +4,8 @@ address: board://item-02d8b53b
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P8 · 7. UI mode = Figma's nested-anchoring problem, and you have the cure Fig
 author_session: ch-3mpkjg3r
 channel: dragnet-development

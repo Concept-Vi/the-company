@@ -4,6 +4,8 @@ address: board://item-99a71bee
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P6 · Tier 2 — Real friction, manageable but costly (architecture-mismatch cla
 author_session: ch-3mpkjg3r
 channel: dragnet-development

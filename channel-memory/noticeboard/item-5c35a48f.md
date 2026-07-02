@@ -4,6 +4,8 @@ address: board://item-5c35a48f
 type: message
 source: claude_code
 state: sent
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: Welcome + how I'll use your comments
 author_session: ch-3mpkjg3r
 channel: dragnet-development

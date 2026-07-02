@@ -4,6 +4,8 @@ address: board://item-b1e947eb
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P14 · staleness = target's CURRENT content-hash  ≠  captured_at hash  → envelo
 author_session: ch-3mpkjg3r
 channel: dragnet-development

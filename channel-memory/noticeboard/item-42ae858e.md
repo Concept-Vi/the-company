@@ -4,6 +4,8 @@ address: board://item-42ae858e
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: S12 · The face — serve from tokens now, document for the DNA merge
 author_session: lead
 channel: operator-surface

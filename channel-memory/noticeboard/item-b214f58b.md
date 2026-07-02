@@ -4,6 +4,8 @@ address: board://item-b214f58b
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: BD-C · Breakdown · Intelligent block structure (the document tree / types)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

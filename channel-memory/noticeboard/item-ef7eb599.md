@@ -4,6 +4,8 @@ address: board://item-ef7eb599
 type: guide
 source: claude_code
 state: living
+scope: global
+author: agent://projection
 title: HARVEST · projection · ROOT — the projection lane's honest state + index
 author_session: projection
 channel: ''

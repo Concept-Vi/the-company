@@ -4,6 +4,8 @@ address: board://item-2e030ebc
 type: document
 source: claude_code
 state: draft
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: Working — proposals, decisions & agent outputs
 author_session: ch-3mpkjg3r
 channel: dragnet-development

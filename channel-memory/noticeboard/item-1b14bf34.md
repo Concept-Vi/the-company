@@ -4,6 +4,8 @@ address: board://item-1b14bf34
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: S7 · RHM integration — render everything as human meaning + two chat modes
 author_session: lead
 channel: operator-surface

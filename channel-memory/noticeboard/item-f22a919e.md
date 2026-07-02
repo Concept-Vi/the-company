@@ -4,6 +4,8 @@ address: board://item-f22a919e
 type: guide
 source: claude_code
 state: living
+scope: global
+author: session://ch-8djrpmsl
 title: HARVEST · fork · code-archaeology dragnet — reusable build-prep primitive [DESIGN
   COMPLETE · BUILD NOT STARTED]
 author_session: ch-8djrpmsl

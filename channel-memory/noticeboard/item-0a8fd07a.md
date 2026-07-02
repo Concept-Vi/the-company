@@ -4,6 +4,8 @@ address: board://item-0a8fd07a
 type: note
 source: claude_code
 state: posted
+scope: channel://operator-surface
+author: agent://integration-architect
 title: Comment
 author_session: integration-architect
 channel: operator-surface

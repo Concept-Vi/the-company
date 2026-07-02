@@ -4,6 +4,8 @@ address: board://item-4c4dfe59
 type: signal
 source: claude_code
 state: raised
+scope: global
+author: operator://tim
 title: 'Decided: visual-fidelity → Push the drawn style further first'
 author_session: operator
 channel: ''

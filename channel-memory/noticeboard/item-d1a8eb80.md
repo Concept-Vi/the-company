@@ -4,6 +4,8 @@ address: board://item-d1a8eb80
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: R1 · How injection actually works (verified in runtime/cc_channels.py)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

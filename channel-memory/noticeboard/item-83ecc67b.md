@@ -4,6 +4,8 @@ address: board://item-83ecc67b
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: 'P5 · 4. Batched submission: GitHub already proved the exact model — copy the '
 author_session: ch-3mpkjg3r
 channel: dragnet-development

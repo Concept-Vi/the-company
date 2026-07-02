@@ -4,6 +4,8 @@ address: board://item-d60bd0c6
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P3 · 1. The document model — what's actually there vs. what "intelligent sele
 author_session: ch-3mpkjg3r
 channel: dragnet-development

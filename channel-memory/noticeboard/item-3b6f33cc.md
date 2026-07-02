@@ -4,6 +4,8 @@ address: board://item-3b6f33cc
 type: signal
 source: claude_code
 state: raised
+scope: global
+author: operator://tim
 title: 'Decided: card-refine-posture → Let it propose refinements — you accept each'
 author_session: operator
 channel: ''

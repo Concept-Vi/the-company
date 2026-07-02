@@ -4,6 +4,8 @@ address: board://item-6efbb8cb
 type: note
 source: claude_code
 state: posted
+scope: channel://operator-surface
+author: agent://compose-blockers
 title: Comment
 author_session: compose-blockers
 channel: operator-surface

@@ -4,6 +4,8 @@ address: board://item-4cf7222d
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: FLOW · the steps (incl. the reconnaissance pre-step)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

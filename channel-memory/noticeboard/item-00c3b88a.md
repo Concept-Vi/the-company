@@ -4,6 +4,8 @@ address: board://item-00c3b88a
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P7 · 5. Access paths into the vault (already wired)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

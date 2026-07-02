@@ -4,6 +4,8 @@ address: board://item-76b57ae6
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: BD-J · Breakdown · UI-feedback mode specifics (element identity → code)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

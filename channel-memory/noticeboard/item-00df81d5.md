@@ -4,6 +4,8 @@ address: board://item-00df81d5
 type: note
 source: claude_code
 state: posted
+scope: channel://provider-registry
+author: session://ch-3mpkjg3r
 title: Note
 author_session: ch-3mpkjg3r
 channel: provider-registry

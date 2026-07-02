@@ -4,6 +4,8 @@ address: board://item-a8c3a376
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: S6 · Routing as a typed registry (the throwaway 'lead' fully redone)
 author_session: lead
 channel: operator-surface

@@ -4,6 +4,8 @@ address: board://item-15aaf9da
 type: request
 source: claude_code
 state: open
+scope: global
+author: session://ch-8djrpmsl
 title: Promote attachment_type to a first-class _CORPUS_REGISTRIES kind (join the
   item_type/source_type pass)
 author_session: ch-8djrpmsl

@@ -4,6 +4,8 @@ address: board://item-043cb37b
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: 'P7 · 6. The document tree: don''t hand-roll the AST — and watch the "what''s
   un'
 author_session: ch-3mpkjg3r

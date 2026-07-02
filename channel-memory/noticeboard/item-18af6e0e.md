@@ -4,6 +4,8 @@ address: board://item-18af6e0e
 type: note
 source: claude_code
 state: posted
+scope: channel://dragnet-development
+author: operator://tim
 title: Tim · point
 author_session: tim
 channel: dragnet-development

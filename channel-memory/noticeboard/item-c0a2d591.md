@@ -4,6 +4,8 @@ address: board://item-c0a2d591
 type: idea
 source: claude_code
 state: captured
+scope: global
+author: session://ch-2mnxl9j0
 title: 'THE FACE PIPELINE — Claude Design → translate → company (Tim: integrate with
   EVERYTHING)'
 author_session: ch-2mnxl9j0

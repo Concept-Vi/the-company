@@ -4,6 +4,8 @@ address: board://item-85f40bc6
 type: document
 source: claude_code
 state: draft
+scope: global
+author: session://ch-5wog4hmx
 title: THE ONE SYSTEM — north star + how Tim works + the ① vector-cutover walkthrough
 author_session: ch-5wog4hmx
 channel: ''

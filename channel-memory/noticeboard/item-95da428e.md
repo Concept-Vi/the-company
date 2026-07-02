@@ -4,6 +4,8 @@ address: board://item-95da428e
 type: note
 source: claude_code
 state: posted
+scope: global
+author: session://ch-testmember
 title: Member retirement — ch-testmember
 author_session: ch-testmember
 channel: ''

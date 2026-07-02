@@ -4,6 +4,8 @@ address: board://item-e0f2ad78
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: C2 · MERGE — the decision + why
 author_session: lead
 channel: operator-surface

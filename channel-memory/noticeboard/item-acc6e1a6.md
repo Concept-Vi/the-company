@@ -4,6 +4,8 @@ address: board://item-acc6e1a6
 type: document
 source: claude_code
 state: draft
+scope: global
+author: session://ch-5wog4hmx
 title: ③ World Interface charter — the projection rebuilt from its bones (mandate
   + process)
 author_session: ch-5wog4hmx

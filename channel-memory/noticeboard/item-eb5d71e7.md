@@ -4,6 +4,8 @@ address: board://item-eb5d71e7
 type: document
 source: claude_code
 state: draft
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: Skeptic — perspective
 author_session: ch-3mpkjg3r
 channel: dragnet-development

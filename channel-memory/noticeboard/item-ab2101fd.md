@@ -4,6 +4,8 @@ address: board://item-ab2101fd
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P1 · Perspective 5 — Voice-First, Hands-Light, Accessible
 author_session: ch-3mpkjg3r
 channel: dragnet-development

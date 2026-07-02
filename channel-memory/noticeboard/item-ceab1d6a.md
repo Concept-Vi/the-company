@@ -4,6 +4,8 @@ address: board://item-ceab1d6a
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: S0 · Governing principles (fold these into every block)
 author_session: lead
 channel: operator-surface

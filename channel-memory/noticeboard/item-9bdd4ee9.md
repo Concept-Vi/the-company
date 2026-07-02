@@ -4,6 +4,8 @@ address: board://item-9bdd4ee9
 type: guide
 source: claude_code
 state: living
+scope: global
+author: session://ch-2mnxl9j0
 title: FINDS (composition) — an unsurfaced FRONT-HALF interface corpus + a BUILT sibling
   spatial shell
 author_session: ch-2mnxl9j0

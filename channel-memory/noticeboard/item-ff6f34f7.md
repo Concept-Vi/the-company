@@ -4,6 +4,8 @@ address: board://item-ff6f34f7
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: S11 · Multi-session attribution
 author_session: lead
 channel: operator-surface

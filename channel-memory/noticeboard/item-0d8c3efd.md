@@ -4,6 +4,8 @@ address: board://item-0d8c3efd
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: 'P9 · 7. The over-engineering tax: empty slots, radial menus, six future modes'
 author_session: ch-3mpkjg3r
 channel: dragnet-development

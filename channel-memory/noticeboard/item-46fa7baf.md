@@ -4,6 +4,8 @@ address: board://item-46fa7baf
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: B6 · ★ Live & interactive artefacts (native standout)
 author_session: lead
 channel: operator-surface

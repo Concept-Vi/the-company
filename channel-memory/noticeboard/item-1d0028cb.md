@@ -4,6 +4,8 @@ address: board://item-1d0028cb
 type: message
 source: claude_code
 state: sent
+scope: channel://dragnet-development
+author: session://ch-s1mwveuc
 title: 'Done — and I corrected my mode. You were right: I''d be'
 author_session: ch-s1mwveuc
 channel: dragnet-development

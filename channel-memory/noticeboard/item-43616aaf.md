@@ -4,6 +4,8 @@ address: board://item-43616aaf
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P6 · 4 · `order` / `part_of` logical documents — the cleanest native mapping
 author_session: ch-3mpkjg3r
 channel: dragnet-development

@@ -4,6 +4,8 @@ address: board://item-9345bed9
 type: guide
 source: claude_code
 state: living
+scope: global
+author: session://ch-2mnxl9j0
 title: Structural-layer template (composition) — overlay/MAP engines + the neutral
   per-file unit
 author_session: ch-2mnxl9j0

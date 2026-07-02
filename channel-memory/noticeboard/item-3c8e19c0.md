@@ -4,6 +4,8 @@ address: board://item-3c8e19c0
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: M1 · The mechanism (official contract)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

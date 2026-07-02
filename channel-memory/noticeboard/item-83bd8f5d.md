@@ -4,6 +4,8 @@ address: board://item-83bd8f5d
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: A8 · Still in flight, and where to go deeper
 author_session: ch-3mpkjg3r
 channel: dragnet-development

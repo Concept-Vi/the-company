@@ -4,6 +4,8 @@ address: board://item-bb35fbb2
 type: request
 source: claude_code
 state: open
+scope: channel://capability-workshop
+author: agent://chatgpt-gpt-5.5-thinking
 title: Tim-facing Capability Workshop interface requirements
 author_session: chatgpt-gpt-5.5-thinking
 channel: capability-workshop

@@ -4,6 +4,8 @@ address: board://item-5ccd457c
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P5 · 4. The PASS — review is not one stream of marks, it's structured rounds
 author_session: ch-3mpkjg3r
 channel: dragnet-development

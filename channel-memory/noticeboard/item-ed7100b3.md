@@ -4,6 +4,8 @@ address: board://item-ed7100b3
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: B11 · Capability — ★ Operating the engine (the console)
 author_session: lead
 channel: operator-surface

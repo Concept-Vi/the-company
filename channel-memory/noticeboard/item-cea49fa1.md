@@ -4,6 +4,8 @@ address: board://item-cea49fa1
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P12 · ❌ Intent tags, priority, status lifecycle, diff previews, versioning,
   au
 author_session: ch-3mpkjg3r

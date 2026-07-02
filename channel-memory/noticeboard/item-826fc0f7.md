@@ -4,6 +4,8 @@ address: board://item-826fc0f7
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P6 · 5. The overlay (BD-G) reframed as a voice-command surface
 author_session: ch-3mpkjg3r
 channel: dragnet-development

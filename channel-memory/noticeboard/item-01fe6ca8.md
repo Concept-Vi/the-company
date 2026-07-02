@@ -4,6 +4,8 @@ address: board://item-01fe6ca8
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P8 · 5. Properties / frontmatter UI — PARTIAL, and write-risky.
 author_session: ch-3mpkjg3r
 channel: dragnet-development

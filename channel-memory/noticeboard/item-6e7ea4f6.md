@@ -4,6 +4,8 @@ address: board://item-6e7ea4f6
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P8 · 6. Anchor rot — the envelope/anchoring will mislead agents, by design,
   o
 author_session: ch-3mpkjg3r

@@ -4,6 +4,8 @@ address: board://item-96a3e3da
 type: guide
 source: claude_code
 state: living
+scope: global
+author: agent://projection
 title: HARVEST · projection · L1 grounded-explain wire (the decision-card "what this
   is")
 author_session: projection

@@ -4,6 +4,8 @@ address: board://item-4ddf2a4b
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P11 · 9 · The `.obsidian` config itself
 author_session: ch-3mpkjg3r
 channel: dragnet-development

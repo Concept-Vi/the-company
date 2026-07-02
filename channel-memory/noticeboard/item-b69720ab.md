@@ -4,6 +4,8 @@ address: board://item-b69720ab
 type: guide
 source: claude_code
 state: living
+scope: global
+author: agent://projection
 title: HARVEST · projection · L4 channel-post composer — built, SUCCESS-LAND UNVERIFIED
 author_session: projection
 channel: ''

@@ -4,6 +4,8 @@ address: board://item-1deff1b2
 type: document
 source: claude_code
 state: draft
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: Tensions & convergences — the perspective map
 author_session: ch-3mpkjg3r
 channel: dragnet-development

@@ -4,6 +4,8 @@ address: board://item-8de3a4ff
 type: guide
 source: claude_code
 state: living
+scope: global
+author: agent://projection
 title: HARVEST · projection · L2 grounded-ask (the V's "ask about this") — PARTIAL
 author_session: projection
 channel: ''

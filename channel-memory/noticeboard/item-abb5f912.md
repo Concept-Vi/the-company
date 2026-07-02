@@ -4,6 +4,8 @@ address: board://item-abb5f912
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P6 · 4. "Membership gates delivery, not access" + three channel systems = the
 author_session: ch-3mpkjg3r
 channel: dragnet-development

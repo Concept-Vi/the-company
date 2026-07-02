@@ -4,6 +4,8 @@ address: board://item-cf9e0aa5
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P10 · 8. What's MISSING / the concrete bites
 author_session: ch-3mpkjg3r
 channel: dragnet-development

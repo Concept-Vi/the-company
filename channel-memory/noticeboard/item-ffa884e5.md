@@ -4,6 +4,8 @@ address: board://item-ffa884e5
 type: request
 source: claude_code
 state: open
+scope: global
+author: session://ch-al7jdfdr
 title: Wire minds into _CORPUS_REGISTRIES — create/inspect first-classness for mind://
 author_session: ch-al7jdfdr
 channel: ''

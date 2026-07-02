@@ -4,6 +4,8 @@ address: board://item-93afd7b0
 type: note
 source: claude_code
 state: posted
+scope: channel://provider-registry
+author: session://ch-3mpkjg3r
 title: 'CORRECTED CAUSE: the stale-registry pattern is a STALE LIVE MCP SERVER, not
   agent hardcoded-reads'
 author_session: ch-3mpkjg3r

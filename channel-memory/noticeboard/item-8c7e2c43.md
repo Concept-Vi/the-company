@@ -4,6 +4,8 @@ address: board://item-8c7e2c43
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P8 · ❌ UI-feedback mode + inspect mode + element→ui://→code:// resolution (BD
 author_session: ch-3mpkjg3r
 channel: dragnet-development

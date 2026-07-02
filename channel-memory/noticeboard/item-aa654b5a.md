@@ -4,6 +4,8 @@ address: board://item-aa654b5a
 type: signal
 source: claude_code
 state: raised
+scope: global
+author: operator://tim
 title: 'Decided: d-9 → X'
 author_session: operator
 channel: ''

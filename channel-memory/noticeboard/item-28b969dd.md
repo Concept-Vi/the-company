@@ -4,6 +4,8 @@ address: board://item-28b969dd
 type: note
 source: claude_code
 state: posted
+scope: channel://operator-surface
+author: agent://wiring-architect
 title: Comment
 author_session: wiring-architect
 channel: operator-surface

@@ -729,13 +729,21 @@
     },
     "cc_board": {
       "human_name": "Company noticeboard",
-      "human_description": "The shared noticeboard where anyone can post typed items about the Company itself — a request, an issue, a tip, a guide, an idea — and move them along their lifecycle as they get picked up and handled. File an item, browse what's posted, open one, move it forward, or see the kinds you can file.",
+      "human_description": "The shared noticeboard where anyone can post typed items about the Company itself — a request, an issue, a tip, a guide, an idea — and move them along their lifecycle as they get picked up and handled. Every item belongs to a board (its scope — a project, a group, or the global board) and carries who posted it. File an item, browse a board, open one, move it forward, comment and reply, pin things on your own view, or see the kinds you can file.",
       "op_labels": {
         "file": "Post an item",
-        "list": "Browse posts",
+        "list": "Browse a board",
         "get": "Open one",
         "transition": "Move it forward",
-        "types": "What you can post"
+        "types": "What you can post",
+        "edit": "Edit in place",
+        "comment": "Comment on anything",
+        "reply": "Reply to a comment",
+        "thread": "Read the thread",
+        "document": "Read a document",
+        "authored": "Who posted what",
+        "pin": "Pin on your board",
+        "pins": "What's pinned"
       },
       "op_params": {
         "file": [
@@ -744,13 +752,16 @@
           "body",
           "author_session",
           "channel",
+          "scope",
           "links"
         ],
         "list": [
           "type",
           "state",
           "source",
-          "author_session"
+          "author_session",
+          "scope",
+          "author"
         ],
         "get": [
           "item"
@@ -761,7 +772,48 @@
           "by",
           "note"
         ],
-        "types": []
+        "types": [],
+        "edit": [
+          "item",
+          "title",
+          "body",
+          "order",
+          "add_links",
+          "by",
+          "note"
+        ],
+        "comment": [
+          "target",
+          "body",
+          "author_session",
+          "title",
+          "channel"
+        ],
+        "reply": [
+          "target",
+          "body",
+          "author_session",
+          "title",
+          "channel"
+        ],
+        "thread": [
+          "target",
+          "item"
+        ],
+        "document": [
+          "item"
+        ],
+        "authored": [
+          "author"
+        ],
+        "pin": [
+          "view",
+          "item",
+          "by"
+        ],
+        "pins": [
+          "view"
+        ]
       },
       "param_labels": {
         "type": "Kind",
@@ -770,12 +822,18 @@
         "author_session": "Posted by",
         "source": "Source",
         "channel": "Group",
+        "scope": "Which board",
+        "author": "Who posted",
         "links": "Linked to",
         "item": "Which item",
         "state": "Status",
         "to_state": "Move to",
         "by": "Moved by",
-        "note": "Note"
+        "note": "Note",
+        "target": "On what",
+        "order": "Block order",
+        "add_links": "Add links",
+        "view": "Which view"
       }
     },
     "cc_channel": {

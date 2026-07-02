@@ -36,6 +36,7 @@ transition / missing item RAISES BoardError — never a silent no-op) · registr
 """
 from __future__ import annotations
 
+import json
 import os
 import uuid
 from datetime import datetime, timezone
@@ -54,11 +55,19 @@ ITEM_TYPES_DIR = os.path.join(REPO, "item_types")
 SOURCE_TYPES_DIR = os.path.join(REPO, "source_types")
 BOARD_EDGES_DIR = os.path.join(REPO, "board_edges")
 NOTICEBOARD_DIR = os.path.join(REPO, "channel-memory", "noticeboard")
+# The DERIVED authored_by index (④ L6 BOARD, C6.1): a regenerable reverse-lookup map author-address ->
+# [item ids], rebuilt from a full scan and read O(1) — so "which items did this author file?" costs one
+# dict access, never an O(n) reverse_traverse scan of every file. `_`-prefixed so list_items skips it.
+AUTHORED_BY_INDEX = "_authored_by_index.json"
 
 DEFAULT_SOURCE = "claude_code"
 
 # The frontmatter keys (the structured row); `body` is the markdown AFTER the frontmatter, not a key.
-FRONTMATTER_KEYS = ("id", "address", "type", "source", "state", "title", "author_session",
+# `scope` + `author` are ADDRESSES (④ L6 BOARD): scope = project://<key> | channel://<name> | global;
+# author = operator://tim | session://<id> | agent://<name>. Both derived-with-a-default from the legacy
+# channel/author_session fields (see _scope_of / _author_of) so the 690 pre-existing items carry them on
+# read even before the durable backfill sweep.
+FRONTMATTER_KEYS = ("id", "address", "type", "source", "state", "scope", "author", "title", "author_session",
                     "channel", "thread", "links", "order", "created", "updated", "history")
 # `order` (optional) — an ordered list of child addresses for a CONTAINER item (e.g. a document's blocks in
 # sequence). Membership is the part_of edge; SEQUENCE is this list. Written only when present (see _render).
@@ -148,6 +157,71 @@ def _new_id() -> str:
     return "item-" + uuid.uuid4().hex[:8]
 
 
+# ── scope + author AS ADDRESSES (④ L6 BOARD, C6.1) ─────────────────────────────────────────────────────
+# The BOARD study: "scope is an address · author is an address". author_type dissolves — you know it's an
+# agent because the address RESOLVES to one. These derive a canonical address from the legacy fields, so a
+# pre-address item (the 690) still yields a scope/author on read (get_item setdefault), and the migration
+# stamps the SAME derivation durably. Never fabricate — an unrecognised author stays as a session:// of its
+# raw handle (source provenance; L2's principal model formalises the operator/agent split).
+_OPERATOR_HANDLES = {"tim", "operator", "operator://tim"}
+
+
+def _scope_of(channel: str | None) -> str:
+    """channel -> scope address. '' / None -> the explicit global root; a named channel -> channel://<name>.
+    (A project:// scope is passed explicitly by a caller filing into a project; never guessed from a channel.)"""
+    ch = (channel or "").strip()
+    if not ch:
+        return "global"
+    if "://" in ch:                 # already an address (project://… / channel://…) — pass through
+        return ch
+    return f"channel://{ch}"
+
+
+def _author_of(author_session: str | None) -> str:
+    """author_session (a legacy untyped handle) -> author ADDRESS. tim/operator -> operator://tim; an
+    already-addressed value passes through; a session handle (ch-…) -> session://<id>; any other named role
+    -> agent://<slug>. This is the derivation the authored_by edge + index compose from."""
+    a = (author_session or "").strip()
+    if not a:
+        return "agent://unknown"
+    if "://" in a:                  # already an address
+        return a
+    if a.lower() in _OPERATOR_HANDLES:
+        return "operator://tim"
+    if a.startswith("ch-") or a.startswith("as-"):   # a Claude Code / agent-session handle
+        return f"session://{a}"
+    return f"agent://{a}"
+
+
+# ── the board-event emitter (④ L6 BOARD, C6.5) ─────────────────────────────────────────────────────────
+# item.filed / item.transitioned emit on the CHANNEL/event layer so a gated lane is WOKEN BY the board
+# (the study's "the board stays the thing agents are WOKEN BY"). cc_board is standalone (no suite import —
+# avoids a cycle); the emitter is INJECTED. The MCP tool wires it to suite.emit_run_record at the
+# register(mcp, suite) boundary (mirrors decision_decided_signal's floor-clean record emit). Lenient like
+# every telemetry emit: a failure is SURFACED on the return (emit_error), never breaks the file write.
+_BOARD_EMITTER = None
+
+
+def set_board_emitter(fn) -> None:
+    """Install the process's board-event emitter — a callable emit(event: str, fields: dict). Called by the
+    MCP face (suite.emit_run_record) and by tests (a capturing subscriber). None = no emit (pure file I/O)."""
+    global _BOARD_EMITTER
+    _BOARD_EMITTER = fn
+
+
+def _emit_board_event(event: str, fields: dict, *, emit=None) -> str | None:
+    """Emit a board event leniently. `emit` (per-call) overrides the module emitter. Returns an error string
+    on failure (surfaced on the record, never raised) or None on success/no-emitter."""
+    fn = emit if emit is not None else _BOARD_EMITTER
+    if fn is None:
+        return None
+    try:
+        fn(event, fields)
+        return None
+    except Exception as e:                       # VISIBILITY best-effort — never break the file write
+        return f"{type(e).__name__}: {e}"
+
+
 def _dir(board_dir: str | None) -> str:
     return board_dir or NOTICEBOARD_DIR
 
@@ -211,10 +285,24 @@ def _write(board_dir: str | None, record: dict) -> None:
 # ── the ops (cc_board file / list / get / transition ride on these) ────────────────────────────────────
 def file_item(item_type: str, title: str, body: str, author_session: str, *,
               source: str = DEFAULT_SOURCE, channel: str = "", thread: str = "",
-              links=None, board_dir: str | None = None) -> dict:
+              scope: str | None = None, author: str | None = None,
+              links=None, board_dir: str | None = None, item_id: str | None = None,
+              state: str | None = None, extra: dict | None = None,
+              created: str | None = None, updated: str | None = None,
+              history: list | None = None, emit=None) -> dict:
     """FILE a typed item onto the board. Validates type/source/edge-kinds against their registries
     (fail-loud), starts the item in its type's registry-declared initial state, stamps provenance +
-    history, and persists it id-keyed FLAT at <board>/<id>.md. Returns the item record."""
+    history, and persists it id-keyed FLAT at <board>/<id>.md. Returns the item record.
+
+    `scope` + `author` are ADDRESSES (④ L6 BOARD): scope defaults to the channel-derived scope (global for
+    ''), author defaults to the author_session-derived address. `item_id` forces a specific id (the pour
+    keeps the cloud uuids). Emits `item.filed` on the channel layer (C6.5) via the injected emitter.
+
+    Pour-only additive kwargs (④ L6 BOARD data landing, C6.3): `state` LANDS a non-initial state directly
+    (validated ∈ the type's declared states — fail-loud, honoring the legacy open/resolved/closed; the
+    landing status is written into the file, NOT run through transition()); `extra` merges the long-tail
+    content keys as OPEN frontmatter (nothing dropped); `created`/`updated` preserve the source timestamps;
+    `history` replaces the default filed-history with synthesized provenance entries."""
     reg = _items_reg()
     if item_type not in reg:
         raise BoardError(
@@ -227,28 +315,51 @@ def file_item(item_type: str, title: str, body: str, author_session: str, *,
     edges = _validate_links(links)
     d = _dir(board_dir)
     os.makedirs(d, exist_ok=True)
-    iid = _new_id()
-    while os.path.exists(_path(board_dir, iid)):       # collision-guard (uuid hex8)
+    if item_id:
+        iid = item_id
+        if os.path.exists(_path(board_dir, iid)):
+            raise BoardError(f"board item {iid!r} already exists — file with an explicit item_id refuses to "
+                             f"overwrite (idempotent pour checks existence first). Fail loud.")
+    else:
         iid = _new_id()
+        while os.path.exists(_path(board_dir, iid)):       # collision-guard (uuid hex8)
+            iid = _new_id()
     ts = _now()
-    state = reg[item_type].initial
+    if state is not None and state not in reg[item_type].states:
+        raise BoardError(
+            f"cannot land state {state!r} on item type {item_type!r} — declared states: "
+            f"{reg[item_type].states}. (a landing status must be in the type's vocabulary; add it to "
+            f"item_types/{item_type}.py to honour a legacy status. Fail loud, never a silent bad record.)")
+    landed = state or reg[item_type].initial
     record = {
         "id": iid,
         "address": f"board://{iid}",
         "type": item_type,
         "source": source,
-        "state": state,
+        "state": landed,
+        "scope": scope or _scope_of(channel),
+        "author": author or _author_of(author_session),
         "title": title,
         "author_session": author_session,
         "channel": channel,
         "thread": thread,
         "links": edges,
-        "created": ts,
-        "updated": ts,
-        "history": [{"from": None, "to": state, "by": author_session, "ts": ts, "note": "filed"}],
+        "created": created or ts,
+        "updated": updated or ts,
+        "history": history if history is not None else
+                   [{"from": None, "to": landed, "by": author_session, "ts": created or ts, "note": "filed"}],
         "body": body,
     }
+    for k, v in (extra or {}).items():                    # the open long-tail keys (never shadow a core key)
+        if k not in record and k != "body":
+            record[k] = v
     _write(board_dir, record)
+    err = _emit_board_event("item.filed", {"id": iid, "address": record["address"], "type": item_type,
+                                           "state": landed, "scope": record["scope"],
+                                           "author": record["author"], "title": title,
+                                           "channel": channel}, emit=emit)
+    if err:
+        record = dict(record); record["emit_error"] = err     # surfaced on the return, not persisted
     return record
 
 
@@ -266,14 +377,23 @@ def get_item(item_id: str, *, board_dir: str | None = None) -> dict:
     rec["body"] = body
     rec.setdefault("links", [])
     rec.setdefault("history", [])
+    # scope/author are ADDRESSES (④ L6 BOARD) — the 690 pre-address items get them derived on read from
+    # their legacy channel/author_session so a read never fails and list(scope=…) works pre-backfill.
+    rec.setdefault("scope", _scope_of(rec.get("channel")))
+    rec.setdefault("author", _author_of(rec.get("author_session")))
     return rec
 
 
 def list_items(*, type: str | None = None, state: str | None = None, source: str | None = None,
-               author_session: str | None = None, board_dir: str | None = None) -> list[dict]:
+               author_session: str | None = None, scope: str | None = None, author: str | None = None,
+               board_dir: str | None = None) -> list[dict]:
     """LIST items on the board (the pick-up read), optionally filtered. 'Browse by type' is a PROJECTION
     over the flat store (a filter), never a directory layout. (`type` shadows the builtin only in this
-    read-filter scope — the on-disk field this matches is the item's registry-ref `type`.)"""
+    read-filter scope — the on-disk field this matches is the item's registry-ref `type`.)
+
+    `scope` filters to one board (④ L6 BOARD): list(scope='project://the-fusion') is the projection that
+    makes 'one store, many boards' — a board is a scope-filtered VIEW over the one item store. `author`
+    filters by author address."""
     d = _dir(board_dir)
     if not os.path.isdir(d):
         return []
@@ -292,6 +412,10 @@ def list_items(*, type: str | None = None, state: str | None = None, source: str
         if source is not None and rec.get("source") != source:
             continue
         if author_session is not None and rec.get("author_session") != author_session:
+            continue
+        if scope is not None and rec.get("scope") != scope:
+            continue
+        if author is not None and rec.get("author") != author:
             continue
         out.append(rec)
     return out
@@ -422,9 +546,10 @@ def relations(addr: str, *, direction: str = "both", kind: str | None = None, hy
 
 
 def transition(item_id: str, to_state: str, *, by: str = "", note: str = "",
-               board_dir: str | None = None) -> dict:
+               board_dir: str | None = None, emit=None) -> dict:
     """MOVE an item along its type's registry-declared lifecycle. Fail-loud if the move is not a declared
-    legal transition (the lifecycle on the item-type row is the only truth). Appends to history + persists."""
+    legal transition (the lifecycle on the item-type row is the only truth). Appends to history + persists.
+    Emits `item.transitioned` on the channel layer (C6.5) via the injected emitter."""
     rec = get_item(item_id, board_dir=board_dir)          # raises if missing
     itype = rec.get("type")
     reg = _items_reg()
@@ -441,6 +566,11 @@ def transition(item_id: str, to_state: str, *, by: str = "", note: str = "",
     rec["updated"] = ts
     rec.setdefault("history", []).append({"from": cur, "to": to_state, "by": by, "ts": ts, "note": note})
     _write(board_dir, rec)
+    err = _emit_board_event("item.transitioned", {"id": item_id, "address": rec.get("address"),
+                                                  "type": itype, "from": cur, "to": to_state, "by": by,
+                                                  "scope": rec.get("scope")}, emit=emit)
+    if err:
+        rec = dict(rec); rec["emit_error"] = err          # surfaced on the return, not persisted
     return rec
 
 
@@ -526,3 +656,96 @@ def assemble_document(doc_id: str, *, board_dir: str | None = None) -> dict:
                        "body": brec.get("body"), "thread": thread(addr, board_dir=board_dir)})
     return {"document": doc, "blocks": blocks, "block_count": len(blocks),
             "missing": missing, "doc_thread": thread(doc["address"], board_dir=board_dir)}
+
+
+# ── the DERIVED authored_by index (④ L6 BOARD, C6.1) — the equal-and-opposite, composed + indexed ─────────
+# The BOARD study: "the authored_by edge becomes DERIVED from the author field (equal-and-opposite,
+# indexed) — fixing both the 8-of-690 inconsistency and the O(n) reverse." The index is a regenerable
+# projection (never hand-maintained): a full scan builds {author-address -> [item ids]}, and a reverse
+# lookup ("which items did operator://tim file?") is then ONE dict access — not a reverse_traverse scan of
+# every file. Rebuilt by the migration + on demand; the map is DERIVED, the files stay truth.
+def rebuild_authored_by_index(board_dir: str | None = None) -> dict:
+    """DERIVE the authored_by index from the item store (a full scan → {author: [ids]}), persist it to
+    <board>/_authored_by_index.json, and return it. Regenerable — deleting the file and re-running
+    reproduces it identically. This is the ONE place the reverse is composed; nothing hand-maintains it."""
+    idx: dict[str, list[str]] = {}
+    for rec in list_items(board_dir=board_dir):            # get_item derives `author` for pre-address items
+        author = rec.get("author") or _author_of(rec.get("author_session"))
+        idx.setdefault(author, []).append(rec["id"])
+    payload = {"_derived": "authored_by index (④ L6 BOARD) — DERIVED from each item's author address; "
+                           "regenerate with cc_board.rebuild_authored_by_index(). Do not hand-edit.",
+               "count": sum(len(v) for v in idx.values()), "authors": len(idx), "index": idx}
+    d = _dir(board_dir)
+    os.makedirs(d, exist_ok=True)
+    _atomic_write_fsync(Path(os.path.join(d, AUTHORED_BY_INDEX)), json.dumps(payload, indent=1))
+    return payload
+
+
+def authored_by_index(board_dir: str | None = None, *, rebuild_if_missing: bool = True) -> dict:
+    """LOAD the derived authored_by index (the map {author -> [ids]}). Rebuilds it if absent (derived data
+    is always regenerable — never a fail-loud dead-end for a missing projection). Fail-loud if the on-disk
+    index is corrupt (a malformed projection is a bug, not an empty answer)."""
+    p = os.path.join(_dir(board_dir), AUTHORED_BY_INDEX)
+    if not os.path.exists(p):
+        if rebuild_if_missing:
+            return rebuild_authored_by_index(board_dir)
+        raise BoardError(f"no authored_by index at {p} — it is DERIVED; run "
+                         f"cc_board.rebuild_authored_by_index() (or the L6 migration). Fail loud.")
+    with open(p, encoding="utf-8") as f:
+        try:
+            payload = json.load(f)
+        except Exception as e:
+            raise BoardError(f"authored_by index at {p} is corrupt ({type(e).__name__}: {e}) — a derived "
+                             f"projection went bad; rebuild it. Fail loud.")
+    return payload
+
+
+def items_by_author(author: str, board_dir: str | None = None, *, rebuild_if_missing: bool = True) -> list[str]:
+    """The REVERSE lookup, O(1): the item ids authored by `author` (an address), via the derived index —
+    NOT an O(n) reverse_traverse scan. `author` may be an address or a legacy handle (derived to an
+    address). Returns [] for an author with no items (the index answers, never a scan)."""
+    addr = author if "://" in (author or "") else _author_of(author)
+    return list(authored_by_index(board_dir, rebuild_if_missing=rebuild_if_missing).get("index", {}).get(addr, []))
+
+
+# ── PIN as a VIEW-RECORD (④ L6 BOARD, C6.6) — salience belongs to the view, never the item ────────────────
+# "One store, many boards": a board_view is itself an addressed item; a PIN is a typed `pinned` edge FROM
+# the view TO an item. Pinning on one view therefore does not pin on another — the pin lives on the view.
+def create_view(name: str, author_session: str, *, scope: str = "global", body: str = "",
+                board_dir: str | None = None, emit=None) -> dict:
+    """Create a BOARD-VIEW record (item_type board_view). A view is an addressed board item; pins hang off
+    it as `pinned` edges. Returns the view record (with its board://<id> address)."""
+    return file_item("board_view", name, body or f"Board view: {name}", author_session,
+                     scope=scope, links=None, board_dir=board_dir, emit=emit)
+
+
+def _board_target(item: str) -> str:
+    """Normalise a board id or board:// address to a board:// target string."""
+    return item if str(item).startswith("board://") else f"board://{item}"
+
+
+def pin(view_id: str, item: str, *, by: str = "", board_dir: str | None = None) -> dict:
+    """PIN an item ON a board-view: append a `pinned` edge FROM the view TO the item. Fail-loud if the view
+    is not a board_view. Idempotent (a duplicate pin is a no-op). Returns the updated view record."""
+    view = get_item(view_id, board_dir=board_dir)         # raises if missing
+    if view.get("type") != "board_view":
+        raise BoardError(f"pin target {view_id!r} is type {view.get('type')!r}, not 'board_view' — a pin is "
+                         f"a VIEW-record edge (salience belongs to the view). Fail loud.")
+    target = _board_target(item)
+    for ln in (view.get("links") or []):                  # idempotent — don't double-pin
+        if ln.get("kind") == "pinned" and ln.get("target") == target:
+            return view
+    return edit_item(view_id, add_links=[{"kind": "pinned", "target": target}], by=by,
+                     note=f"pinned {target}", board_dir=board_dir)
+
+
+def pinned_on_view(view_id: str, *, board_dir: str | None = None) -> list[str]:
+    """The item addresses a board-view has PINNED (its `pinned` edge targets). Empty for a view with no
+    pins. This is a per-VIEW read — the same item is pinned on one view and not another by construction."""
+    view = get_item(view_id, board_dir=board_dir)
+    return [ln.get("target") for ln in (view.get("links") or []) if ln.get("kind") == "pinned"]
+
+
+def is_pinned(item: str, view_id: str, *, board_dir: str | None = None) -> bool:
+    """Is `item` pinned ON `view_id`? (Salience is view-scoped — asks THIS view, never the item globally.)"""
+    return _board_target(item) in pinned_on_view(view_id, board_dir=board_dir)

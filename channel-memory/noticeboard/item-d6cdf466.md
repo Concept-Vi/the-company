@@ -4,6 +4,8 @@ address: board://item-d6cdf466
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P5 · 4. The "V" radial menu — right symbol, but watch the well-documented rad
 author_session: ch-3mpkjg3r
 channel: dragnet-development

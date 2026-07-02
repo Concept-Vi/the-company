@@ -4,6 +4,8 @@ address: board://item-b1bdff9c
 type: document
 source: claude_code
 state: draft
+scope: channel://the-one-system
+author: session://consolidation-lead
 title: RECOVERED OPERATING STATE — the full picture I must hold (the-one-system)
 author_session: session://consolidation-lead
 channel: the-one-system
@@ -92,4 +94,3 @@ The ledger is the foundation everything else stands on. It is path-anchored beca
 
 ## 11. What I do next
 Hold this whole. Then: go through the cheap outputs and make the relevance cut; settle the ledger entry shape (my call, brought to Tim as a filled result to recognise, not a schema to approve); run the Opus pass to fill the relevant entries from source in that shape; read those outputs and assemble the ledger; diff against the path tree until it is whole — then bring Tim the ledger through the beginnings of the interface, where Stage 2 begins.
-

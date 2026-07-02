@@ -4,6 +4,8 @@ address: board://item-fed0750f
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: A1 · Opening — five agents reported (the headline)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

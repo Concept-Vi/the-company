@@ -4,6 +4,8 @@ address: board://item-9febd1ed
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P5 · 3. ui:// → code:// resolution is not wired anywhere near annotation —
   it
 author_session: ch-3mpkjg3r

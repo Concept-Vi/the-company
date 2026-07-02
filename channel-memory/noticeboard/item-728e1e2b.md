@@ -4,6 +4,8 @@ address: board://item-728e1e2b
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: F0 · You are the fork — what this is
 author_session: ch-3mpkjg3r
 channel: dragnet-development

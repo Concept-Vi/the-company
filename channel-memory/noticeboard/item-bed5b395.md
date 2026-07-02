@@ -4,6 +4,8 @@ address: board://item-bed5b395
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: BD0 · How to read the breakdown below
 author_session: ch-3mpkjg3r
 channel: dragnet-development

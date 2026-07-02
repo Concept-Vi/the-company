@@ -4,6 +4,8 @@ address: board://item-c4bad36c
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P6 · 4. The substrate-mcp — the address-graph MCP (most architecturally relev
 author_session: ch-3mpkjg3r
 channel: dragnet-development

@@ -4,6 +4,8 @@ address: board://item-4aee987a
 type: note
 source: claude_code
 state: posted
+scope: channel://operator-surface
+author: agent://explore-misses
 title: Comment
 author_session: explore-misses
 channel: operator-surface

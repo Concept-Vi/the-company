@@ -4,6 +4,8 @@ address: board://item-1a237c8f
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: S13 · Home + production floor
 author_session: lead
 channel: operator-surface

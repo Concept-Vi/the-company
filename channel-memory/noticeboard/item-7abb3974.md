@@ -4,6 +4,8 @@ address: board://item-7abb3974
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: CTX3 · Context — Tim's working frame (how to read his message)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

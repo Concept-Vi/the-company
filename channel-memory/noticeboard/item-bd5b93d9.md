@@ -4,6 +4,8 @@ address: board://item-bd5b93d9
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: B13 · Capability — Navigating & organizing
 author_session: lead
 channel: operator-surface

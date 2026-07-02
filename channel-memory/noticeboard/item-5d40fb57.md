@@ -4,6 +4,8 @@ address: board://item-5d40fb57
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: 'P2 · 0. The one verdict that matters: there are TWO annotation runtimes, and '
 author_session: ch-3mpkjg3r
 channel: dragnet-development

@@ -4,6 +4,8 @@ address: board://item-fefdf7c2
 type: note
 source: claude_code
 state: posted
+scope: global
+author: session://ch-miiyd30l
 title: Comment
 author_session: ch-miiyd30l
 channel: ''

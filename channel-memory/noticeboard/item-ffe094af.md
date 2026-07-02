@@ -4,6 +4,8 @@ address: board://item-ffe094af
 type: signal
 source: claude_code
 state: raised
+scope: channel://fabric
+author: session://ch-8djrpmsl
 title: LANDING · fork lane harvested + wound down (honest-state, linked, attributed)
 author_session: ch-8djrpmsl
 channel: fabric

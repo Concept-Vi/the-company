@@ -4,6 +4,8 @@ address: board://item-a006f9d1
 type: note
 source: claude_code
 state: posted
+scope: global
+author: session://consolidation-lead
 title: Comment
 author_session: session://consolidation-lead
 channel: ''

@@ -4,6 +4,8 @@ address: board://item-c7984eee
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P8 · 2.2 Flat id-keyed files vs Obsidian's folder/title UX (HIGH for usabilit
 author_session: ch-3mpkjg3r
 channel: dragnet-development

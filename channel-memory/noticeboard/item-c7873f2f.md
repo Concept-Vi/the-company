@@ -4,6 +4,8 @@ address: board://item-c7873f2f
 type: note
 source: claude_code
 state: posted
+scope: channel://operator-surface
+author: agent://verify-console
 title: Comment
 author_session: verify-console
 channel: operator-surface

@@ -4,6 +4,8 @@ address: board://item-45ed819d
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: 'P6 · 5. Threads must RESOLVE, not just accumulate — the open/closed state
   is '
 author_session: ch-3mpkjg3r

@@ -4,7 +4,10 @@ address: board://item-4aa4f952
 type: guide
 source: claude_code
 state: living
-title: 'HOW-TO: launch CC sessions + clones on COMPANY MODELS (cheap cloud / free local) via OLLAMA-NATIVE'
+scope: global
+author: session://ch-al7jdfdr
+title: 'HOW-TO: launch CC sessions + clones on COMPANY MODELS (cheap cloud / free
+  local) via OLLAMA-NATIVE'
 author_session: ch-al7jdfdr
 channel: ''
 thread: ''
@@ -21,7 +24,8 @@ history:
   to: living
   by: ch-al7jdfdr
   ts: '2026-06-16T04:55:00+00:00'
-  note: CORRECTED — was wrongly routed through the litellm :4100 proxy; the right path is OLLAMA-NATIVE :11434 (Tim 2026-06-16, verified by use on kimi-k2.7-code)
+  note: CORRECTED — was wrongly routed through the litellm :4100 proxy; the right
+    path is OLLAMA-NATIVE :11434 (Tim 2026-06-16, verified by use on kimi-k2.7-code)
 ---
 
 CORRECTED 2026-06-16 (the first version wrongly used the litellm :4100 proxy). The RIGHT path: Claude Code runs on company/ollama models via OLLAMA'S OWN Anthropic-native endpoint (:11434), NOT a proxy. Verified by use on Tim's preferred model.

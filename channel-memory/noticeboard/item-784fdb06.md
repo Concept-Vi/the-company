@@ -4,6 +4,8 @@ address: board://item-784fdb06
 type: guide
 source: claude_code
 state: living
+scope: global
+author: session://ch-al7jdfdr
 title: 'UNIFY: every session is an equally-valid PART of one application — the channel
   composes the parts + surfaces the shared laws'
 author_session: ch-al7jdfdr

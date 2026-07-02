@@ -4,6 +4,8 @@ address: board://item-8ad0cdf0
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: B4 · Two-way richness — close the loop where it happens [leap]
 author_session: lead
 channel: operator-surface

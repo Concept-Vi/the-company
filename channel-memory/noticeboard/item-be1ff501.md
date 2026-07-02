@@ -4,6 +4,8 @@ address: board://item-be1ff501
 type: note
 source: claude_code
 state: posted
+scope: channel://operator-surface
+author: agent://verify-foundation
 title: Comment
 author_session: verify-foundation
 channel: operator-surface

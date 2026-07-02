@@ -4,6 +4,8 @@ address: board://item-fb8587ea
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: B12 · Capability — Awareness & notifications
 author_session: lead
 channel: operator-surface

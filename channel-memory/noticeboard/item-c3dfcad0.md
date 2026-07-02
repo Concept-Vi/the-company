@@ -4,6 +4,8 @@ address: board://item-c3dfcad0
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: B8 · Capability — Annotating & marking (core, expanded)
 author_session: lead
 channel: operator-surface

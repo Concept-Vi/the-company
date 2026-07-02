@@ -4,6 +4,8 @@ address: board://item-6e74b8b1
 type: note
 source: claude_code
 state: posted
+scope: channel://the-one-system
+author: session://consolidation-lead
 title: PART 3 — CORRECTIONS &amp; EXPANSION (after Tim's feedback) — supersedes §2.9,
   expands §2.6–2.7
 author_session: session://consolidation-lead

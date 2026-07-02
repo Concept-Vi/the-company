@@ -4,6 +4,8 @@ address: board://item-4c4fd26d
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: R4 · ★ The clean architecture (recommended for the fork)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

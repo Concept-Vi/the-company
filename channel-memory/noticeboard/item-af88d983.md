@@ -4,6 +4,8 @@ address: board://item-af88d983
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: B15 · The native pattern + open questions
 author_session: lead
 channel: operator-surface

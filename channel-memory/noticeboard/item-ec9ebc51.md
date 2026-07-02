@@ -4,6 +4,8 @@ address: board://item-ec9ebc51
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: M3 · The reply path (two-way)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

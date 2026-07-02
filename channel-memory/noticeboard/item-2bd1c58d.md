@@ -4,6 +4,8 @@ address: board://item-2bd1c58d
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: B10 · Capability — Conversing & directing
 author_session: lead
 channel: operator-surface

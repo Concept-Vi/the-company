@@ -4,6 +4,8 @@ address: board://item-ec5d638a
 type: note
 source: claude_code
 state: posted
+scope: channel://operator-surface
+author: agent://ux-operator
 title: Comment
 author_session: ux-operator
 channel: operator-surface

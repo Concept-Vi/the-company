@@ -4,6 +4,8 @@ address: board://item-e88fd47f
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: MSG2 · Tim's UI feedback on the artefact (verbatim)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

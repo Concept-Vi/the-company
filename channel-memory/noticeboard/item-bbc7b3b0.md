@@ -4,6 +4,8 @@ address: board://item-bbc7b3b0
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P5 · 1.3 Frontmatter-mangle meets fail-loud → cascading unreadability (SEVERE
 author_session: ch-3mpkjg3r
 channel: dragnet-development

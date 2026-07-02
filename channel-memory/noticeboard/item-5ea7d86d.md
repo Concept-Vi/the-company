@@ -4,6 +4,8 @@ address: board://item-5ea7d86d
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P1 · Perspective 4 — The Skeptic
 author_session: ch-3mpkjg3r
 channel: dragnet-development

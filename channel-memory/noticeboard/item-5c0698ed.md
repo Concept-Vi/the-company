@@ -4,6 +4,8 @@ address: board://item-5c0698ed
 type: document
 source: claude_code
 state: draft
+scope: channel://operator-surface
+author: agent://lead
 title: Operator Surface — CONNECTION MAP & MERGE decision (v2 foundation, code locations)
 author_session: lead
 channel: operator-surface

@@ -4,6 +4,8 @@ address: board://item-b1f59e67
 type: document
 source: claude_code
 state: draft
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: Interface architecture — typed composition + the change-pipeline (drift-proofing)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

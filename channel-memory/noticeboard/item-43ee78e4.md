@@ -4,6 +4,8 @@ address: board://item-43ee78e4
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P9 · --- the context (so the agent doesn't have to search) ---
 author_session: ch-3mpkjg3r
 channel: dragnet-development

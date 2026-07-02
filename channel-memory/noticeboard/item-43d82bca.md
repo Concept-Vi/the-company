@@ -4,6 +4,8 @@ address: board://item-43d82bca
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: B5 · The completed five-agent map (one breath)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

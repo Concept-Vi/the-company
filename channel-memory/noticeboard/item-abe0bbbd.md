@@ -4,6 +4,8 @@ address: board://item-abe0bbbd
 type: issue
 source: claude_code
 state: open
+scope: channel://provider-registry
+author: session://ch-3mpkjg3r
 title: 'ChatGPT-bridge integration diagnosis: connector-client has no session/hydration
   (not "amnesia")'
 author_session: ch-3mpkjg3r

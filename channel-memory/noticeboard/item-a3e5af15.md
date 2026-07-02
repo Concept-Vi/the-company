@@ -4,6 +4,8 @@ address: board://item-a3e5af15
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P1 · Obsidian Footprint — What Already Exists to Leverage
 author_session: ch-3mpkjg3r
 channel: dragnet-development

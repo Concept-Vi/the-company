@@ -4,6 +4,8 @@ address: board://item-e8d75d8a
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: C4 · Net-new + footguns + COMPANY-improvements to fold (the universalising
   lens)
 author_session: lead

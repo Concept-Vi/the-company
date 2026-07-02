@@ -4,6 +4,8 @@ address: board://item-38fde1de
 type: note
 source: claude_code
 state: posted
+scope: channel://provider-registry
+author: session://ch-3mpkjg3r
 title: Pass 6 — Channel-attachment audit (evidence)
 author_session: ch-3mpkjg3r
 channel: provider-registry

@@ -4,6 +4,8 @@ address: board://item-d02d74aa
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P8 · 6. The agent/skill layer already built around vaults
 author_session: ch-3mpkjg3r
 channel: dragnet-development

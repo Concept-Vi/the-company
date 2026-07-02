@@ -4,6 +4,8 @@ address: board://item-ed0d24f1
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P7 · ❌ The real document MODEL / addressable AST (BD-C, prerequisite in BD-K)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

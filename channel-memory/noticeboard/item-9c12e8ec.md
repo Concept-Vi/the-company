@@ -4,6 +4,8 @@ address: board://item-9c12e8ec
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: MAP2 · The real clashes (your forks)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

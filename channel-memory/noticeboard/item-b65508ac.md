@@ -4,6 +4,8 @@ address: board://item-b65508ac
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P11 · One-line for synthesis
 author_session: ch-3mpkjg3r
 channel: dragnet-development

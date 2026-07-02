@@ -4,6 +4,8 @@ address: board://item-a6fd92db
 type: document
 source: claude_code
 state: draft
+scope: channel://design-fusion
+author: session://ch-miiyd30l
 title: Design-system fusion — full-coverage tracker (design-fusion)
 author_session: ch-miiyd30l
 channel: design-fusion

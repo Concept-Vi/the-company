@@ -4,6 +4,8 @@ address: board://item-d1a7bf75
 type: request
 source: claude_code
 state: open
+scope: channel://provider-registry
+author: session://ch-3mpkjg3r
 title: 'SPEC: whole-repo code-archaeology DRAGNET (coverage-complete, tiered, queryable,
   incremental) — gates the provider-registry decisions'
 author_session: ch-3mpkjg3r

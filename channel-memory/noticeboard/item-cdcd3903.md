@@ -4,6 +4,8 @@ address: board://item-cdcd3903
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: OB2 · What we gain (cheap, on a read-only mirror)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

@@ -4,6 +4,8 @@ address: board://item-95d4dcd3
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: B2 · Your assumption was right — channels keep member-registries — richer than
   you thought
 author_session: ch-3mpkjg3r

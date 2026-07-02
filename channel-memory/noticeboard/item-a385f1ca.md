@@ -4,6 +4,8 @@ address: board://item-a385f1ca
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P11 · 3.1 Plugin lock-in & Obsidian-specific syntax leaking into canonical
   dat
 author_session: ch-3mpkjg3r

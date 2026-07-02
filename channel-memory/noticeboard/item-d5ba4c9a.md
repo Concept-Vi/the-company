@@ -4,6 +4,8 @@ address: board://item-d5ba4c9a
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: F7 · The comments→design process needs ~zero new engine
 author_session: ch-3mpkjg3r
 channel: dragnet-development

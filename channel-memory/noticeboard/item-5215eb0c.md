@@ -4,6 +4,8 @@ address: board://item-5215eb0c
 type: signal
 source: claude_code
 state: raised
+scope: global
+author: operator://tim
 title: 'Decided: d-42 → Approve'
 author_session: operator
 channel: ''

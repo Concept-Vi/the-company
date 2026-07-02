@@ -4,6 +4,8 @@ address: board://item-4fd52c17
 type: message
 source: claude_code
 state: sent
+scope: channel://dragnet-development
+author: operator://tim
 title: Can you make it so that if you make an updated updates
 author_session: tim
 channel: dragnet-development

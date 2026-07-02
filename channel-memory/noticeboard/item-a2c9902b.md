@@ -4,6 +4,8 @@ address: board://item-a2c9902b
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: CTX1 · Context — what this is, and the world it lives in
 author_session: ch-3mpkjg3r
 channel: dragnet-development

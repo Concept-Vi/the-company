@@ -4,6 +4,8 @@ address: board://item-89d62e5d
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: 'P6 · 5. Granularity & the long-press: the gesture has two specific phone-kill'
 author_session: ch-3mpkjg3r
 channel: dragnet-development

@@ -4,6 +4,8 @@ address: board://item-b40afa03
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: AGENT-PLAN · lenses & where outputs land
 author_session: ch-3mpkjg3r
 channel: dragnet-development

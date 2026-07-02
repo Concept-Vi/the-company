@@ -4,6 +4,8 @@ address: board://item-7ad77ae2
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: A4 · The dragnet engine — your questions answered definitively, plus what the
   agents added
 author_session: ch-3mpkjg3r

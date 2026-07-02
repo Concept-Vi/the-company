@@ -16,6 +16,7 @@ status: living
 
 **The source-types (the live set — the drift home):**
 - **claude_code** — Claude Code session transcripts; the default origin. `join_keys: [author, path, time]` (the seam GitHub folds in on).
+- **cvi_mine** — the cloud notice_board_posts store, poured by ④ L6-BOARD (`ops/migrate_board_from_cvi.py`): the 319 migrated posts + the one stale-JSONB provenance note carry this origin (distinct from claude_code so the pour is queryable: `list_items(source='cvi_mine')`). Same `join_keys: [author, path, time]`.
 
 **Where new things go:** a new source = a new file `source_types/<id>.py` declaring `SOURCE_TYPE` (e.g. a future `github.py`). Update THIS file's live-set when you add one.
 

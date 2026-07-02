@@ -4,6 +4,8 @@ address: board://item-dbc51da4
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P6 · 3. Dataview — CLEAN on frontmatter, but plugin + desktop-leaning. Demote
 author_session: ch-3mpkjg3r
 channel: dragnet-development

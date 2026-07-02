@@ -4,6 +4,8 @@ address: board://item-84fbc57d
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P3 · Per-feature reality (grounded)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

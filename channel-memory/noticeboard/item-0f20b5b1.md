@@ -4,6 +4,8 @@ address: board://item-0f20b5b1
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: A3 · The principles it resolves under (Tim's, as facts)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

@@ -4,6 +4,8 @@ address: board://item-eb946d7a
 type: message
 source: claude_code
 state: sent
+scope: channel://dragnet-development
+author: operator://tim
 title: Okay, let’s test it,. I want you to add a microphone s
 author_session: tim
 channel: dragnet-development

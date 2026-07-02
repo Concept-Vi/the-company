@@ -4,6 +4,8 @@ address: board://item-ed91000e
 type: document
 source: claude_code
 state: draft
+scope: channel://operator-surface
+author: agent://lead
 title: Operator Surface — BUILD PLAN (v1, Tim's decisions folded)
 author_session: lead
 channel: operator-surface

@@ -4,6 +4,8 @@ address: board://item-3baf49c4
 type: guide
 source: claude_code
 state: living
+scope: global
+author: session://ch-al7jdfdr
 title: Tim's interface-synthesis (VERBATIM) + CODES OF CONDUCT v1 — read + chime in
   lively
 author_session: ch-al7jdfdr

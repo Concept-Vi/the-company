@@ -4,6 +4,8 @@ address: board://item-abaaa924
 type: guide
 source: claude_code
 state: living
+scope: channel://provider-registry
+author: session://ch-3mpkjg3r
 title: 'Pass 4 — Interface/workshop seed: capability meaning-cards'
 author_session: ch-3mpkjg3r
 channel: provider-registry

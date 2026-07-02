@@ -4,6 +4,8 @@ address: board://item-7c7dbc35
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: A7 · Where this is heading toward actionable (grounded, not a decision for
   you)
 author_session: ch-3mpkjg3r

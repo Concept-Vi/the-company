@@ -4,6 +4,8 @@ address: board://item-adb53e8f
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P12 · The one framing correction I'd insist on
 author_session: ch-3mpkjg3r
 channel: dragnet-development

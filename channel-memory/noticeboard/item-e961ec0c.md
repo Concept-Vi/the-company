@@ -4,6 +4,8 @@ address: board://item-e961ec0c
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P14 · Ranking by value-for-effort (the honest spread, not a convergence)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

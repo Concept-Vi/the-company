@@ -4,6 +4,8 @@ address: board://item-86ef3dca
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: S2 · Your forks — yours to decide (preserved, not flattened)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

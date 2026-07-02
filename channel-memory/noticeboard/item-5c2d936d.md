@@ -4,6 +4,8 @@ address: board://item-5c2d936d
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P7 · 6. Specific feel-level things that will make-or-break it (his "I can't
   k
 author_session: ch-3mpkjg3r

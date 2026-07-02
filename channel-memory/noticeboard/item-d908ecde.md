@@ -4,6 +4,8 @@ address: board://item-d908ecde
 type: guide
 source: claude_code
 state: living
+scope: global
+author: agent://projection
 title: HARVEST · projection · dead-ends &amp; recurring friction (the un-tidy — by-use
   gap-signals)
 author_session: projection

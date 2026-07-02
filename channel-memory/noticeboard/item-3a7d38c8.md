@@ -4,6 +4,8 @@ address: board://item-3a7d38c8
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P4 · 3. The voice loop, end-to-end, grounded in this system
 author_session: ch-3mpkjg3r
 channel: dragnet-development

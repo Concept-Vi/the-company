@@ -4,6 +4,8 @@ address: board://item-5b9e1c6a
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P5 · 3. Plugins already installed (Obsidian Builder loadout)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

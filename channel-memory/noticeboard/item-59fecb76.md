@@ -4,6 +4,8 @@ address: board://item-59fecb76
 type: note
 source: claude_code
 state: posted
+scope: channel://provider-registry
+author: session://ch-3mpkjg3r
 title: Pass 3 — Relationship/Coupling dragnet (evidence)
 author_session: ch-3mpkjg3r
 channel: provider-registry

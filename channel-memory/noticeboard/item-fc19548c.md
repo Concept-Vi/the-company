@@ -4,6 +4,8 @@ address: board://item-fc19548c
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: BD-I · Breakdown · Mobile / iOS usability (a first-class constraint)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

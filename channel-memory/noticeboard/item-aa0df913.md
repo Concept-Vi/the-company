@@ -4,6 +4,8 @@ address: board://item-aa0df913
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P12 · 9. Community plugins (broad) — MOSTLY NONE; case-by-case.
 author_session: ch-3mpkjg3r
 channel: dragnet-development

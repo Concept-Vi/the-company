@@ -4,6 +4,8 @@ address: board://item-275dd98d
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P2 · 1. The mark has a VERB before it has content — and you're missing the
   ta
 author_session: ch-3mpkjg3r

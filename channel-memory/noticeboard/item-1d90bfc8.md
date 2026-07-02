@@ -4,6 +4,8 @@ address: board://item-1d90bfc8
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: B5 · ★ The comment-as-instruction loop (native standout)
 author_session: lead
 channel: operator-surface

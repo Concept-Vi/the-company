@@ -4,6 +4,8 @@ address: board://item-0af8d61e
 type: guide
 source: claude_code
 state: living
+scope: global
+author: session://ch-al7jdfdr
 title: THE INTERFACE BRIEF — Tim's overlord-surface, every member contributes a perspective
   (not one answer)
 author_session: ch-al7jdfdr

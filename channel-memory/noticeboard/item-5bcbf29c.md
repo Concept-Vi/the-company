@@ -4,6 +4,8 @@ address: board://item-5bcbf29c
 type: message
 source: claude_code
 state: sent
+scope: channel://dragnet-development
+author: operator://tim
 title: Here’s what’s gonna happen. I want you to ride a whole
 author_session: tim
 channel: dragnet-development

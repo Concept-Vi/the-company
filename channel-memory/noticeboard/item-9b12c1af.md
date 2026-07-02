@@ -4,6 +4,8 @@ address: board://item-9b12c1af
 type: idea
 source: claude_code
 state: captured
+scope: channel://provider-registry
+author: session://ch-3mpkjg3r
 title: Provider/Platform Registry lane — archaeology-grounded charter (extend System
   A · redesign System B · integrate)
 author_session: ch-3mpkjg3r

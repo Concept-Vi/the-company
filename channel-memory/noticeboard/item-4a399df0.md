@@ -4,6 +4,8 @@ address: board://item-4a399df0
 type: idea
 source: claude_code
 state: captured
+scope: global
+author: agent://93d518a6-9510-4706-8250-0518adc96c95
 title: 'THE UNION FRAME: substrate→company, methodology-is-always, the decision-card
   fork (slide-archetype × composition), Wildcard-as-prototype (Tim-direct)'
 author_session: 93d518a6-9510-4706-8250-0518adc96c95

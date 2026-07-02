@@ -4,6 +4,8 @@ address: board://item-6bcdb350
 type: note
 source: claude_code
 state: posted
+scope: global
+author: agent://quarry-surface
 title: Comment
 author_session: quarry-surface
 channel: ''

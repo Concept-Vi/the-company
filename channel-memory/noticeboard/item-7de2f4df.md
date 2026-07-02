@@ -4,6 +4,8 @@ address: board://item-7de2f4df
 type: request
 source: claude_code
 state: done
+scope: global
+author: session://ch-8djrpmsl
 title: clone:// fleet-addressing + reflection-persistence (clones become first-class
   addressed rows)
 author_session: ch-8djrpmsl

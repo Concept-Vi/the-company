@@ -4,6 +4,8 @@ address: board://item-d24d4cee
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: C0 · The spine (who holds what)
 author_session: lead
 channel: operator-surface

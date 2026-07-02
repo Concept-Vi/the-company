@@ -4,6 +4,8 @@ address: board://item-ea9b2a06
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P4 · 2. The long-press gesture model fights iOS, and Tim already half-retract
 author_session: ch-3mpkjg3r
 channel: dragnet-development

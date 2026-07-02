@@ -4,6 +4,8 @@ address: board://item-b23ab2a9
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: S4 · Search — make the board + attachments searchable by meaning
 author_session: lead
 channel: operator-surface

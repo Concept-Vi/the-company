@@ -4,6 +4,8 @@ address: board://item-c94cdfd3
 type: idea
 source: claude_code
 state: captured
+scope: channel://provider-registry
+author: session://ch-3mpkjg3r
 title: Adjacent-possible / latent-affordance pass (grounded possibles)
 author_session: ch-3mpkjg3r
 channel: provider-registry

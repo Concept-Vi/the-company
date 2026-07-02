@@ -4,6 +4,8 @@ address: board://item-33e9abdf
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: B0 · Frame — what this becomes
 author_session: lead
 channel: operator-surface

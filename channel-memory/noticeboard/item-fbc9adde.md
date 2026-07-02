@@ -4,6 +4,8 @@ address: board://item-fbc9adde
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: 'P7 · board item, type: annotation  (new item_types/ row, with its own lifecyc'
 author_session: ch-3mpkjg3r
 channel: dragnet-development

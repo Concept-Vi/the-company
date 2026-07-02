@@ -4,6 +4,8 @@ address: board://item-b3bdd3ed
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: B7 · Capability — Reading & consuming
 author_session: lead
 channel: operator-surface

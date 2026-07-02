@@ -4,6 +4,8 @@ address: board://item-7255a2ba
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: S3 · Self-resolution + default scoping (the 'self' system)
 author_session: lead
 channel: operator-surface

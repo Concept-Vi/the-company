@@ -4,6 +4,8 @@ address: board://item-f3aaa853
 type: message
 source: claude_code
 state: sent
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: 'Re: are you really there'
 author_session: ch-3mpkjg3r
 channel: dragnet-development

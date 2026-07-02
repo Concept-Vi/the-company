@@ -4,6 +4,8 @@ address: board://item-6de83e1f
 type: guide
 source: claude_code
 state: living
+scope: global
+author: session://ch-8djrpmsl
 title: HARVEST · fork · L5 propose engine — refine_decision + /api/decision/propose
   [MODEL-LEG VERIFIED · LIVE ROUTE ATTEMPTED-UNVERIFIED]
 author_session: ch-8djrpmsl

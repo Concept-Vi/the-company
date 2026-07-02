@@ -4,6 +4,8 @@ address: board://item-882c5df0
 type: document
 source: claude_code
 state: draft
+scope: channel://the-one-system
+author: session://consolidation-lead
 title: design/_system — anatomy, ledger-fusion findings, and the all-codebases plan
 author_session: session://consolidation-lead
 channel: the-one-system
@@ -50,4 +52,3 @@ Deterministic whole-tree all-language extractor → non-flat run-scoped Supabase
 2. Scan EVERY codebase as its own project into the ONE ledger: `~/company` (done), `~/repos/counterpart/design` (the peer's), `vi-visual-dev`, other splinters. The claude.ai DS (~600 files, claude-hosted) needs a local export or the peer ingests its registry map as nodes.
 3. Run the **Opus interpretive layer** over all entries — `what_it_does`/themes/intention/embeddings (where the sha-incremental + pgvector pay off — only changed files, semantic search across all repos).
 4. **Study the unified ledger**: cross-repo seams (counterpart tokens ↔ company `design/_system` tokens), duplications, the six-registry claude-DS mapped onto ledger nodes — grounded in total coverage, not agents comparing notes. Then co-write the convergence-into-the-company plan with the peer.
-

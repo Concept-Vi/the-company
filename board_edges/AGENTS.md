@@ -21,6 +21,7 @@ status: living
 - **`attached_to`** (label attached-to) — DIRECTED · item → channel/Space. The item is attached to a channel.
 - **`sourced_from`** (label sourced-from) — DIRECTED · item → source-type row. The item's origin source.
 - **`promoted_from`** (label promoted-from) — DIRECTED · inverse `promoted_to` · item → `board://<id>`. This item was promoted from another (e.g. a request promoted-from an idea).
+- **`pinned`** (label pinned) — DIRECTED · inverse `pinned_on` · board_view → `board://<item>` (④ L6-BOARD). The source VIEW pins the target item: salience belongs to the view, so a pin on one view is absent on another (`cc_board.pin/pinned_on_view/is_pinned`; the pin verb refuses a non-`board_view` source fail-loud).
 
 **Where new things go:** a new edge-kind = a new file `board_edges/<id>.py` declaring `RELATION_TYPE`. Update THIS file's live-set.
 

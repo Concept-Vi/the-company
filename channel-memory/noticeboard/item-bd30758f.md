@@ -4,6 +4,8 @@ address: board://item-bd30758f
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: A2 · Your graph idea — nodes, observations, typed edges — is the system's own
   unbuilt design
 author_session: ch-3mpkjg3r

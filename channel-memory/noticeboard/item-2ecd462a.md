@@ -4,6 +4,8 @@ address: board://item-2ecd462a
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P12 · 6 · Where it bites regardless of option — the cross-cutting traps
 author_session: ch-3mpkjg3r
 channel: dragnet-development

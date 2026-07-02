@@ -4,6 +4,8 @@ address: board://item-c04403bc
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: S6b · Spawn — permitted for TIM, firewalled for autonomous agents
 author_session: lead
 channel: operator-surface

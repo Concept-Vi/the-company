@@ -4,6 +4,8 @@ address: board://item-a72b23c2
 type: document
 source: claude_code
 state: draft
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: Pro annotator — perspective
 author_session: ch-3mpkjg3r
 channel: dragnet-development

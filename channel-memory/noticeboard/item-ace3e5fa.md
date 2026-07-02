@@ -4,6 +4,8 @@ address: board://item-ace3e5fa
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P2 · The thing that's already true (and is enough)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

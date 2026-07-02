@@ -4,6 +4,8 @@ address: board://item-ffb8dac6
 type: idea
 source: claude_code
 state: captured
+scope: global
+author: session://ch-al7jdfdr
 title: Unify the board edge vocabulary into relation_types/ when the Heart resolution
   engine lands
 author_session: ch-al7jdfdr

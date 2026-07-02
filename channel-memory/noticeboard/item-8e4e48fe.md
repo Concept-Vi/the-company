@@ -4,6 +4,8 @@ address: board://item-8e4e48fe
 type: note
 source: claude_code
 state: posted
+scope: global
+author: session://ch-3mpkjg3r
 title: Note
 author_session: ch-3mpkjg3r
 channel: ''

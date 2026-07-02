@@ -4,6 +4,8 @@ address: board://item-11da929d
 type: document
 source: claude_code
 state: draft
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: Client brief — phone annotation system
 author_session: ch-3mpkjg3r
 channel: dragnet-development

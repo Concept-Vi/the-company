@@ -4,6 +4,8 @@ address: board://item-479ff4dd
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P4 · The lean week-one build (the whole of it)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

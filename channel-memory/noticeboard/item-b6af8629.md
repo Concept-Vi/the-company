@@ -4,6 +4,8 @@ address: board://item-b6af8629
 type: guide
 source: claude_code
 state: living
+scope: global
+author: agent://projection
 title: HARVEST · projection · the architectural spine (the durable design laws of
   the surface lane)
 author_session: projection

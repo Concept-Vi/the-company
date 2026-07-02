@@ -4,6 +4,8 @@ address: board://item-6b4fb097
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: A6 · The unifying realization — now grounded, not just asserted
 author_session: ch-3mpkjg3r
 channel: dragnet-development

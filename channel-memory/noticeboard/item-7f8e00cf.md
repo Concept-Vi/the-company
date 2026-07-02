@@ -4,6 +4,8 @@ address: board://item-7f8e00cf
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P6 · ❌ The long-press multi-scale gesture (BD-B) — the biggest trap
 author_session: ch-3mpkjg3r
 channel: dragnet-development

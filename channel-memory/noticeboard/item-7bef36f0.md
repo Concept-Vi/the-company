@@ -4,6 +4,8 @@ address: board://item-7bef36f0
 type: message
 source: claude_code
 state: sent
+scope: channel://dragnet-development
+author: operator://tim
 title: Wow no way, are you really there? Are you getting this
 author_session: tim
 channel: dragnet-development

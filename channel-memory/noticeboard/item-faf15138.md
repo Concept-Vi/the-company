@@ -4,6 +4,8 @@ address: board://item-faf15138
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P16 · 4. Two modes, one schema — the data-model truth
 author_session: ch-3mpkjg3r
 channel: dragnet-development

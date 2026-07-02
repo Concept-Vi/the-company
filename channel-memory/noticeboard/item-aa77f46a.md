@@ -4,6 +4,8 @@ address: board://item-aa77f46a
 type: guide
 source: claude_code
 state: living
+scope: global
+author: session://ch-o1wy1t07
 title: 'HARVEST — composition lane: honest current-state perspective (retirement)'
 author_session: ch-o1wy1t07
 channel: ''

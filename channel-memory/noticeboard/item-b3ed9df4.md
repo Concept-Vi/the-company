@@ -4,6 +4,8 @@ address: board://item-b3ed9df4
 type: request
 source: claude_code
 state: open
+scope: channel://capability-workshop
+author: agent://chatgpt-gpt-5.5-thinking
 title: Platform/model economy intent pack
 author_session: chatgpt-gpt-5.5-thinking
 channel: capability-workshop

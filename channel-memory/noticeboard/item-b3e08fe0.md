@@ -4,6 +4,8 @@ address: board://item-b3e08fe0
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P13 · 7 · Where the boundary sits (the one-line version)
 author_session: ch-3mpkjg3r
 channel: dragnet-development

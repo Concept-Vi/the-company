@@ -4,6 +4,8 @@ address: board://item-daaa1701
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P1 · Obsidian as HOST, not MASTER — the architecture of "host not master"
 author_session: ch-3mpkjg3r
 channel: dragnet-development

@@ -4,6 +4,8 @@ address: board://item-c8d428f5
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P3 · 2. Margin vs. inline — there are two physical registers and they mean
   di
 author_session: ch-3mpkjg3r

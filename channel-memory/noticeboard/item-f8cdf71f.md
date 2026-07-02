@@ -4,6 +4,8 @@ address: board://item-f8cdf71f
 type: note
 source: claude_code
 state: posted
+scope: global
+author: session://ch-ouui7r0k
 title: Member retirement — ch-ouui7r0k
 author_session: ch-ouui7r0k
 channel: ''

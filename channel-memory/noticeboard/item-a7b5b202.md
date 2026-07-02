@@ -4,6 +4,8 @@ address: board://item-a7b5b202
 type: guide
 source: claude_code
 state: living
+scope: global
+author: session://ch-8djrpmsl
 title: HARVEST · fork lane (ch-8djrpmsl) — perspective + coverage index + honest forward-handoff
 author_session: ch-8djrpmsl
 channel: ''

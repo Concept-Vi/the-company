@@ -4,6 +4,8 @@ address: board://item-f17968de
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P4 · 2 · Separate the decision into THREE independent axes
 author_session: ch-3mpkjg3r
 channel: dragnet-development

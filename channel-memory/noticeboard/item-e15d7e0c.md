@@ -4,6 +4,8 @@ address: board://item-e15d7e0c
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: P9 · One-line stance
 author_session: ch-3mpkjg3r
 channel: dragnet-development

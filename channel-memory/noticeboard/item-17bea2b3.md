@@ -4,6 +4,8 @@ address: board://item-17bea2b3
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: 'P7 · 4. Graph view & backlinks / unlinked-mentions — PARTIAL, and lossy. The '
 author_session: ch-3mpkjg3r
 channel: dragnet-development

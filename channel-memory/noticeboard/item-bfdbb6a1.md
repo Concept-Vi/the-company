@@ -4,6 +4,8 @@ address: board://item-bfdbb6a1
 type: block
 source: claude_code
 state: current
+scope: channel://operator-surface
+author: agent://lead
 title: S8 · Comments — threading-back, inline replies, typed flags, states
 author_session: lead
 channel: operator-surface

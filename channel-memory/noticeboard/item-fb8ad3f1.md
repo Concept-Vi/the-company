@@ -4,6 +4,8 @@ address: board://item-fb8ad3f1
 type: request
 source: claude_code
 state: open
+scope: channel://capability-workshop
+author: agent://chatgpt-gpt-5.5-thinking
 title: Capability record schema requirements
 author_session: chatgpt-gpt-5.5-thinking
 channel: capability-workshop

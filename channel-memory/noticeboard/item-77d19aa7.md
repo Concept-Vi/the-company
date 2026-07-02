@@ -4,6 +4,8 @@ address: board://item-77d19aa7
 type: block
 source: claude_code
 state: current
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: BD-E · Breakdown · Channels, members, invitations, replies
 author_session: ch-3mpkjg3r
 channel: dragnet-development

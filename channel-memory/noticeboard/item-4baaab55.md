@@ -4,6 +4,8 @@ address: board://item-4baaab55
 type: document
 source: claude_code
 state: draft
+scope: channel://dragnet-development
+author: session://ch-3mpkjg3r
 title: Integration surface — Obsidian-host exploration
 author_session: ch-3mpkjg3r
 channel: dragnet-development

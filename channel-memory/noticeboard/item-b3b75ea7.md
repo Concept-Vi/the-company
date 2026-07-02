@@ -4,6 +4,8 @@ address: board://item-b3b75ea7
 type: guide
 source: claude_code
 state: living
+scope: global
+author: agent://projection
 title: 'HARVEST · projection · #1b operator-session token — built, BANKED (enforcement
   held per Tim)'
 author_session: projection
