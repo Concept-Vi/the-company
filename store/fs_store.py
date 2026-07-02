@@ -850,8 +850,15 @@ class FsStore:
             raise ValueError(f"append_mark: a mark must carry a non-empty string `mark_type` (got {mark_type!r}) "
                              "— it is the second retrieval key (from the mark-types registry); fail-loud.")
         out = {"ts": datetime.now(timezone.utc).isoformat(), **rec}
-        with (self.root / "marks.jsonl").open("a", encoding="utf-8") as f:
-            f.write(_j.dumps(out) + "\n")
+        # L5 CIRCUIT (2026-07-02, shadow-then-flip COMPLETE): the mark backing lives in container.mark
+        # (Supabase :15432, migration 0021) — beside the circuit rows whose state marks compose (④'s
+        # one-home decision). 114 historical marks backfilled + read-equal verified before the flip.
+        # DB write is the AUTHORITY: a failure RAISES (a mark that lands nowhere is a silent black hole).
+        from store import pg_marks as _pgm
+        _pgm.append_mark_db(out, ns=self._pg_ns)
+        # --- RETIRED file write (pre-2026-07-02) — kept legible per the no-fallback rule, not for use ---
+        # with (self.root / "marks.jsonl").open("a", encoding="utf-8") as f:
+        #     f.write(_j.dumps(out) + "\n")
         return out
 
     def marks_for(self, target: str) -> list[dict]:
@@ -860,18 +867,12 @@ class FsStore:
         for a Supabase backend). Reads disk every call (no cache), so a SECOND Suite over the same store root
         sees a prior Suite's marks (persistence-survives-reload). Mirrors findings_for exactly, on the marks
         leaf. An unmarked target → `[]` (the additive default; never an error)."""
-        import json as _j
-        path = self.root / "marks.jsonl"
-        if not path.exists():
-            return []
-        out = []
-        for l in path.read_text(encoding="utf-8").splitlines():
-            if not l.strip():
-                continue
-            rec = _j.loads(l)
-            if rec.get("target") == target:
-                out.append(rec)
-        return out
+        from store import pg_marks as _pgm
+        return _pgm.marks_where(target=target, ns=self._pg_ns)
+        # --- RETIRED file read (pre-2026-07-02; the L5 flip) ---
+        # import json as _j
+        # path = self.root / "marks.jsonl"
+        # ... (field-match scan of marks.jsonl — see git history / store/pg_marks.py for the DB form)
 
     def marks_by_type(self, mark_type: str) -> list[dict]:
         """Every mark of `mark_type`, oldest-first (the cross-target view of one mark kind — e.g. every
@@ -880,28 +881,17 @@ class FsStore:
         call (persistence-survives-reload). The SECOND retrieval projection over the SAME leaf — the marks
         generalization's second axis (by-type retrieval, which the finding store's address-only key can't do).
         An absent mark_type → `[]` (additive default; never an error)."""
-        import json as _j
-        path = self.root / "marks.jsonl"
-        if not path.exists():
-            return []
-        out = []
-        for l in path.read_text(encoding="utf-8").splitlines():
-            if not l.strip():
-                continue
-            rec = _j.loads(l)
-            if rec.get("mark_type") == mark_type:
-                out.append(rec)
-        return out
+        from store import pg_marks as _pgm
+        return _pgm.marks_where(mark_type=mark_type, ns=self._pg_ns)
+        # --- RETIRED file read (pre-2026-07-02; the L5 flip) ---
 
     def all_marks(self) -> list[dict]:
         """Every mark record, oldest-first (for a cross-mark rollup / the patterned-visibility render).
         Append-only over the marks leaf — the marks sibling of all_findings (and DISTINCT from it: marks
         NEVER appear in all_findings, so coherence_detect.burn_down's orphan count is unpolluted)."""
-        import json as _j
-        path = self.root / "marks.jsonl"
-        if not path.exists():
-            return []
-        return [_j.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        from store import pg_marks as _pgm
+        return _pgm.marks_where(ns=self._pg_ns)
+        # --- RETIRED file read (pre-2026-07-02; the L5 flip) ---
 
     # --- pin-state overlay (X7 · Convergence): operator's "keep this in view" override ---
     def append_pin(self, address: str, target_ts: str, pinned: bool) -> dict:
