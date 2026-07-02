@@ -47,7 +47,12 @@ Across seven organs and ~15 partial articulations, the same design kept trying t
 - **L6 · BOARD**: scope/author-as-address + 8 item_type rows + the 319 pour + the derived DB projection + the events graft.
 - **L7 · KEEPER**: the ladder slot-kind in resolver.py + the keeper cast + config rungs + keeper_answer (both faces).
 - **L8 · ④-surface** (gated on ③): the counterpart-design project + the-fusion board rendered on the chosen surface; FORM half (design system, design-critic, design-lint, desktop+mobile).
-Deps: L1→(L2 minimal inside) · L5 needs L1+L2 · L6 needs L1 · L7 needs L1+L2+L4 · L3, L4 parallel to L1. Ops vehicles per v2 (0012_container.sql · ops/migrate_container_from_cvi.py · tests/container_acceptance.py); every weld step lists its reversal; cvi_mine is the immutable source-of-record; every curation writes excluded-with-reason.
+Deps: L1→(L2 minimal inside) · L5 needs L1+L2 · L6 needs L1 · L7 needs L1+L2+L4 · L3, L4 parallel to L1.
+
+**Lanes owned by the ledger/substrate session (ch-5wog4hmx; reconciled via board://item-d47933e2 — ④'s cron tracks, never dispatches):**
+- **L9 · SUPERSESSION** — ledger.interpretation (address, source_hash) + file_meta + assertion + unit_latest/edge_unified views. Alignment: law 3 (faces at an address survive derived rebuilds), law 8 (assertion = an edge with provenance=authored, validated against L4's edge_kinds registry — one grammar, two provenances), edge_unified = THE unified edge read (syncs with L4's projection contract). Migrations 0014–0016 reserved for that session; numbering rule = next-free-at-write-time, board-announced.
+- **L10 · JOBS** (dep: L5) — jobs ON the circuit: a job = a standing intent template (registry row); executions = intent:// records, lifecycle = marks only (claim{lease}→heartbeat→terminal), state = the clock-fold (lapse, no reaper); run_cascade = the claim-holder writing through the ONE mark API; ActivationCaller tick = heartbeat-writer + lapse-surfacer. Skeleton may build pre-L5.
+- **L11 · QUERY** (deps: L4, L9) — ledger.query(spec jsonb), one fn both faces; L8's biggest consumer (part of the near-guarantee for Tim's window go). Ops vehicles per v2 (0012_container.sql · ops/migrate_container_from_cvi.py · tests/container_acceptance.py); every weld step lists its reversal; cvi_mine is the immutable source-of-record; every curation writes excluded-with-reason.
 
 ## Law 11 (Tim, 2026-07-02, extending laws 2+5)
 
