@@ -35,6 +35,18 @@
   }, { silent: true });
 
   AI.register({
+    id: 'company', name: 'Company', layer: 'provider', family: 'text',
+    description: 'The Company fleet over the bridge (:8770), SAME-ORIGIN (/api/cognition via the vite proxy or a bridge-served page). Text = the passthrough role (runtime.completeRole) fired via run_role — the union path (a completion IS a role); embed = the live pplx embedder (2560-dim). Fails loud off-origin (the static :8775 Studio cannot reach the bridge) — never a silent fallback. A2 of the AI fusion.',
+    runtime: { kind: 'company-http', api: '/api/cognition', completeRole: 'complete_text' },
+    modality: ['text', 'embed'],
+    // maxPromptChars: an honest conservative floor — the resident local brain is ~32k TOKENS (READ-6;
+    // never assume claude's 200k chars). The live cap should resolve from the served model's
+    // max_model_len once that wire exists; a low floor beats a silent overflow.
+    caps: { stream: false, json: true, embed: true, maxPromptChars: 100000 },
+    icon: 'gear', provenance: 'built-in', tags: ['text', 'embed', 'company', 'local'],
+  }, { silent: true });
+
+  AI.register({
     id: 'vision', name: 'Vision', layer: 'provider', family: 'image',
     description: 'Multimodal image understanding — reads screenshots/moodboards for layout, type feel, voice and palette. Resolves to a real vision runtime when AtomiCity is exported with one connected; in the browser sandbox it is unavailable and callers fall back to local pixel analysis.',
     runtime: { kind: 'vision' }, modality: ['image', 'text'],

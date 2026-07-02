@@ -120,8 +120,10 @@
   var elBrief = document.getElementById('brief');
   var elSaved = document.getElementById('savedStrip');
 
-  // is a live model reachable? (CV_AI claude provider → window.claude.complete)
-  var live = !!(window.claude && typeof window.claude.complete === 'function');
+  // is a live model reachable? Resolve through the REGISTRY (the text role's bound
+  // provider — A1: no direct window.claude probe; the badge follows the binding).
+  var live = false;
+  try { window.CV_AI.resolveProvider(window.CV_AI.providerForRole('text')); live = true; } catch (e) { live = false; }
   elMode.className = 'mode ' + (live ? 'live' : 'demo');
   elMode.textContent = live ? 'Live · CV_AI' : 'Demo mode';
 

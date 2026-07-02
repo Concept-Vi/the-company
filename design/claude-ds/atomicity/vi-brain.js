@@ -288,14 +288,14 @@ To change anything: find its one home, edit there, reference elsewhere. To add: 
     AI.register({
       id: 'atomicity.interpret', name: 'Interpret intent', layer: 'capability', family: 'atomicity',
       description: 'Vi’s main turn in AtomiCity — interpret what the user means and return prose + interface actions + staged proposals.',
-      surfaces: ['atomicity'], behaviours: ['voice.conceptv'], provider: 'claude', icon: 'atom',
+      surfaces: ['atomicity'], behaviours: ['voice.conceptv'], role: 'text', icon: 'atom',
       provenance: 'built-in', params: {},
       run: (a) => interpret(a.params.message, a.params.ctx, a.params.history),
     }, { silent: true });
     AI.register({
       id: 'atomicity.learn', name: 'Learn a preference', layer: 'capability', family: 'atomicity',
       description: 'Distil conversational feedback into a durable behaviour, register it live, and propose it to the repo so Vi improves permanently.',
-      surfaces: ['atomicity'], provider: 'claude', icon: 'sparkles',
+      surfaces: ['atomicity'], role: 'text', icon: 'sparkles',
       provenance: 'built-in', params: {},
       run: (a) => learn(a.params.feedback, a.params.ctx),
     }, { silent: true });

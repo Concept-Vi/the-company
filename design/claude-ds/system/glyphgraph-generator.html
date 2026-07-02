@@ -371,7 +371,8 @@
       try{ await AI.execute('glyphic.author-gloss',{params:{symbol:word,word:gloss}}); toast('Taught: '+word+' → “'+gloss+'”. It parses + reads now.'); }
       catch(e){ toast('Author failed: '+e.message); }
     };
-    var live=!!(window.claude && typeof window.claude.complete==='function');
+    var live=false;  // resolve through the REGISTRY (A1: the text role's binding, no direct window.claude probe)
+    try { AI.resolveProvider(AI.providerForRole('text')); live=true; } catch(e){ live=false; }
     document.getElementById('ai-mode').className='badge '+(live?'live':'demo');
     document.getElementById('ai-mode').textContent=live?'model: live':'model: demo';
     document.getElementById('ai-icon').onclick=async function(){

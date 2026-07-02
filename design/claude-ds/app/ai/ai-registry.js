@@ -244,7 +244,7 @@
   // so flipping every model touch to a different provider (e.g. the Company) is a
   // single edit here, not ~40 pinned call-sites. ADDITIVE: a cap with an explicit
   // `provider` still resolves exactly as before; only caps that opt into `role` use this.
-  const ROLE_PROVIDERS = { text: 'claude', image: 'openai-image' };  // embed/etc. bind here as A wires the Company
+  const ROLE_PROVIDERS = { text: 'claude', image: 'openai-image', embed: 'company' };  // embed = the Company (its only home; loud off-origin)
   function providerForRole(role) {
     const id = ROLE_PROVIDERS[role];
     if (!id) throw new Error('[CV_AI] no provider bound to role "' + role + '" (roles: ' + Object.keys(ROLE_PROVIDERS).join(', ') + ')');
@@ -252,6 +252,18 @@
   }
   // the provider id a capability resolves to: its explicit provider, else its role. Loud via providerForRole.
   function providerIdFor(cap) { return cap.provider || (cap.role ? providerForRole(cap.role) : null); }
+  // Re-bind a role → provider AT RUNTIME (A2: the "flip-to-Company = one edit" made a registry op,
+  // not a file edit). Validates the provider ENTRY exists (loud); runtime availability stays checked
+  // loud at FIRE time (a binding may legitimately point at a provider this surface can't reach —
+  // e.g. 'company' from the static :8775 Studio — and that must fail loud there, not here).
+  function setRoleProvider(role, providerId) {
+    if (!role || typeof role !== 'string') throw new Error('[CV_AI] setRoleProvider: role id required');
+    const entry = get(providerId);
+    if (!entry || entry.layer !== 'provider') throw new Error('[CV_AI] setRoleProvider: "' + providerId + '" is not a registered provider');
+    ROLE_PROVIDERS[role] = providerId;
+    notify();
+    return { role, provider: providerId };
+  }
 
   // ---------------------------------------------------------------------------
   // Context resolution — "resolve context from what screen Vi is on." Runs the
@@ -329,7 +341,8 @@
     const preamble = composeBehaviours(cap.behaviours, mergedParams);
     const body = cap.build(doc, target, resolvedCtx, mergedParams);
     if (!body) return [];
-    const reply = await (provider || resolveProvider('claude')).complete(preamble ? preamble + '\n\n' + body : body);
+    if (!provider) throw new Error('[CV_AI] capability "' + capabilityId + '" reached its build/parse path with no resolved provider — declare a `provider` or a `role` (A1: loud-fail restored, no silent claude fallback).');
+    const reply = await provider.complete(preamble ? preamble + '\n\n' + body : body);
     return (typeof cap.parse === 'function' ? cap.parse(reply, doc, target, mergedParams) : reply) || [];
   }
 
@@ -354,11 +367,20 @@
     register, registerMany, update, remove,
     get, all, query, resolve, lineage, children,
     resolveProvider, resolveContext, composeBehaviours, execute,
-    providerForRole, providerIdFor, get roleProviders() { return { ...ROLE_PROVIDERS }; },  // A1 role-indirection (read-only view)
-    // convenience: route a one-off text completion through the resolved claude
-    // provider — the single endpoint every surface should call instead of
-    // window.claude.complete directly. Loud if the runtime is absent.
-    complete(promptOrOpts) { return resolveProvider('claude').complete(promptOrOpts); },
+    providerForRole, providerIdFor, setRoleProvider, get roleProviders() { return { ...ROLE_PROVIDERS }; },  // A1/A2 role-indirection (+ runtime flip)
+    // convenience: route a one-off text completion through the TEXT ROLE's bound
+    // provider (A1: providerForRole('text') → claude now, → Company when the binding
+    // flips) — the single endpoint every surface should call instead of
+    // window.claude.complete directly. No hardcoded pin. Loud if role/runtime is absent.
+    complete(promptOrOpts) { return resolveProvider(providerForRole('text')).complete(promptOrOpts); },
+    // convenience: embed text through the EMBED ROLE's bound provider (A2: → the Company's
+    // pplx embedder over the bridge, same-origin). Returns { vector, dim, model }. Loud when
+    // the surface can't reach the bridge (e.g. the static Studio) or the runtime lacks embed.
+    embed(text) {
+      const p = resolveProvider(providerForRole('embed'));
+      if (typeof p.embed !== 'function') throw new Error('[CV_AI] provider "' + p.providerId + '" runtime has no embed()');
+      return p.embed(text);
+    },
     get active() { return ACTIVE; }, setActiveSurface,
     subscribe,
     _builtin: BUILTIN, _user: USER,

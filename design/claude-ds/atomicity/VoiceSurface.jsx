@@ -16,7 +16,7 @@ const { useState: useState_vo, useReducer: useReducer_vo } = React;
   AI.register({
     id: 'voice.write', name: 'Write in the voice', layer: 'capability', family: 'voice',
     description: 'Write several options of microcopy for a product moment, in the ConceptV house voice.',
-    surfaces: ['voice', 'atomicity'], provider: 'claude', behaviours: ['voice.conceptv'], icon: 'chat', provenance: 'built-in',
+    surfaces: ['voice', 'atomicity'], role: 'text', behaviours: ['voice.conceptv'], icon: 'chat', provenance: 'built-in',
     async run(a) {
       const m = a.params.moment, brief = a.params.brief || '';
       const prompt = `Write 4 options of ${m.kind} for this product moment: "${m.label}".${brief ? ' Extra direction: ' + brief : ''} ${m.hint} Keep each within ${m.max} characters. Reply as JSON only: {"options":["…","…","…","…"]}`;

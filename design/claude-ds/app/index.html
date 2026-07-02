@@ -198,6 +198,10 @@ window.__coreReady = (async () => {
      host providers/capabilities register into the one AI catalogue. -->
 <script src="ai/host-runtime.js"></script>
 <script src="ai/host-serializer.js"></script>
+<!-- The COMPANY runtime kind (A2 of the AI fusion) — registers 'company-http' into the
+     CV_HOST.registerKind seam, so the 'company' provider record resolves to the bridge
+     same-origin (/api/cognition). Loads AFTER CV_HOST (the seam must exist). -->
+<script src="services/company.js"></script>
 
 <!-- Shared components -->
 <script src="components/usePersisted.js"></script>

@@ -81,7 +81,7 @@
   for (const [id, name, family, surfaces, icon] of TEXT) {
     AI.register({
       id, name, layer: 'capability', family, surfaces,
-      behaviours: ['voice.conceptv'], provider: 'claude', params: {}, icon,
+      behaviours: ['voice.conceptv'], role: 'text', params: {}, icon,   /* A1: role-indirection (was provider:'claude') — the TEXT-factory caps resolve text→claude, →Company when the binding flips */
       provenance: 'built-in', run: runText,
       description: name + ' — a Vi generative move on the ' + family + ' surface (catalogued; prompt single-sourced in its canvas).',
     }, { silent: true });
@@ -102,7 +102,7 @@
   // voice is composed by the registry (not re-inlined).
   AI.register({
     id: 'deck.titlechain', name: 'Chain deck titles', layer: 'capability', family: 'deck',
-    surfaces: ['deck', 'brochure'], behaviours: ['voice.conceptv'], provider: 'claude',
+    surfaces: ['deck', 'brochure'], behaviours: ['voice.conceptv'], role: 'text',  /* A1: role-indirection (was provider:'claude') */
     params: {}, icon: 'link', provenance: 'built-in',
     description: 'Write a deck’s slide titles as one running sentence — each a clause continuing the previous via a leading connective (But/To/With/That/Which/By/And) — so the argument reads from the title rail alone (DESIGN-LANGUAGE §16).',
     run: (a) => {

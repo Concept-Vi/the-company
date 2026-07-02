@@ -1242,7 +1242,7 @@ function WSTransformMenu({ open, onClose, doc, onPickTransform }) {
   for (const c of CAPS) {
     window.CV_AI.register({
       id: c.id, name: c.name, layer: 'capability', family: c.family,
-      surfaces: c.surfaces, behaviours: c.behaviours || V, provider: 'claude',
+      surfaces: c.surfaces, behaviours: c.behaviours || V, role: 'text',  /* A1: role-indirection (was provider:'claude') — the workshop CAPS-factory caps */
       params: { count: 3 }, icon: c.icon, provenance: 'built-in', run: c.run,
       description: c.name + ' — a Vi generative move on the ' + c.family + ' surface.',
     }, { silent: true });

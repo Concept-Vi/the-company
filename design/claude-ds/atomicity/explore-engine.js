@@ -126,7 +126,7 @@ Each recipe (keep terse): {"name":"<2-3 word direction>","bg","fg","border","bor
 
   AI.register({ id: 'explore.variations', name: 'Explore style options', layer: 'capability', family: 'explore',
     description: 'Generate several distinct style directions for an element, steered by likes/dislikes.',
-    surfaces: ['explore'], provider: 'claude', behaviours: ['voice.conceptv'], icon: 'shuffle', provenance: 'built-in',
+    surfaces: ['explore'], role: 'text', behaviours: ['voice.conceptv'], icon: 'shuffle', provenance: 'built-in',
     run: a => variations(a.params || {}) }, { silent: true });
   AI.register({ id: 'explore.promote', name: 'Promote to component', layer: 'capability', family: 'explore',
     description: 'Turn a chosen style direction into a registered Type in the architecture, staged via CV_HOST.',
@@ -134,7 +134,7 @@ Each recipe (keep terse): {"name":"<2-3 word direction>","bg","fg","border","bor
     run: a => promote(a.params || {}) }, { silent: true });
   AI.register({ id: 'explore.run', name: 'Explore an element for me', layer: 'capability', family: 'explore',
     description: 'Generate style directions for an element and (optionally) promote the strongest into the system — Vi-driven, end to end.',
-    surfaces: ['explore', 'atomicity'], provider: 'claude', behaviours: ['voice.conceptv'], icon: 'shuffle', provenance: 'built-in',
+    surfaces: ['explore', 'atomicity'], role: 'text', behaviours: ['voice.conceptv'], icon: 'shuffle', provenance: 'built-in',
     run: a => exploreFor(a.params || {}) }, { silent: true });
 
   // taste profile — distil the liked set into human words, locally + instantly,
