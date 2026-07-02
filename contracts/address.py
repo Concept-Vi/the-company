@@ -103,13 +103,30 @@ ONE Company address space (Tim's "one addressed state"); its RESOLVER is recolle
 recall/capture + recall↔board wires own it) — register-but-defer, mirroring `ui://`. Purely additive;
 no record-shape or schema_ver change.
 
-Note on `file://` + `project://` (recollection's node-id grammar siblings — co-decided with the lead,
-2026-06-15): the crossings-graph node addresses recollection mints + populates — `file://<abs-path>` (a
-file node) + `project://<name>` (a project node), alongside `exchange://` + `session://`. Registered here
-as *labels* so the whole node grammar is ONE Company address space (the Heart's one addressed state);
-their RESOLVERS are recollection's lane (file://→whatTouchedFile, project://→containment edges), wired
-when its store absorbs — register-but-defer, mirroring `ui://`/`exchange://`. Purely additive; no
-record-shape or schema_ver change.
+Note on `file://` (recollection's node-id grammar sibling — co-decided with the lead, 2026-06-15): the
+crossings-graph file-node address recollection mints + populates — `file://<abs-path>`. Registered here
+as a *label* so the whole node grammar is ONE Company address space (the Heart's one addressed state);
+its RESOLVER is recollection's lane (file://→whatTouchedFile), wired when its store absorbs —
+register-but-defer, mirroring `ui://`/`exchange://`. Purely additive; no record-shape or schema_ver change.
+
+Note on `project://` (④ THE CONTAINER, L1-SPINE — RESOLVED 2026-07-02; was register-but-defer since
+2026-06-15): `project://<project-key>` is the PROJECT node — the unit-of-world, a top-level address
+(NORTH-STAR verbatim), the ONE join across all lanes: the ledger's bare text label, recollection's
+containment scale node, the container row, the design-repo root. The scheme now RESOLVES through
+`runtime/cognition.py:resolve_address`, which reads schema `container` (Postgres, 0013_container.sql):
+  project://<project-key>                       → the project record + its CONTAINMENT EDGES (scopes as
+                                                  authored `contains`, members, ledger label join) — BOTH
+                                                  prior claimants served (the container record AND the
+                                                  containment lane recollection registered the scheme for)
+  project://<project-key>/<scope-path>          → an authored sub-container (container.scopes)
+  project://<project-key>/<scope-path>/<key>    → an authored content unit (container.resources)
+Identity is the TEXT address (law 1 — every tree/index derived); addresses are stored NOT NULL UNIQUE
+on scopes/resources and DB-GENERATED on projects (derive-never-place). The grammar is
+`parse_project_address` below (declared ONCE, beside parse_session_address — the grammar home); the
+resolver + territory_for's project leg + the migration (ops/migrate_container_from_cvi.py) all ride it.
+Unknown project/scope/resource FAILS LOUD with the decided breadcrumb — never fabricated. recollection
+keeps minting project:// nodes; its keys are now FK-checkable against container.projects. Purely
+additive; no record-shape or schema_ver change.
 
 Note on `vi-vision://` (the FACTORY's asset library, built INTO the company — islands-join-mainland,
 Tim 2026-06-17): `vi-vision://<frame>/<type>/<id>` addresses the factory's visual-component registry
@@ -328,6 +345,34 @@ def decision_address(parsed: dict) -> str:
     normalization). Mirrors vi_vision's frame normalization. Pass parse_decision_address(addr)."""
     frame = parsed.get("frame") or "global"
     return f"decision://{frame}/{parsed['id']}"
+
+
+# ── project:// sub-address grammar — declared ONCE (④ THE CONTAINER / L1-SPINE, the rebuilt spine) ─────
+# project://<project-key>                     → the project node        (container.projects)
+# project://<project-key>/<scope-path>        → an authored container   (container.scopes)
+# project://<project-key>/<scope-path>/<key>  → an authored unit        (container.resources)
+# <project-key> carries no '/'; everything after the first '/' is the IN-PROJECT PATH (scope path,
+# optionally ending in a resource key). Which segment is scope vs resource is NOT decidable from syntax
+# alone (scopes may nest) — the RESOLVER decides against the stored UNIQUE addresses (exact-match by
+# level: resource → scope → fail loud). Declared here beside parse_session/clone/decision (one grammar
+# home); the resolver (runtime/cognition.py) + territory_for + the migration all ride this shape.
+def parse_project_address(addr: str) -> dict:
+    """project://<project-key>[/<path…>] → {"project_key", "path": <str|None>, "segments": [..]}.
+    `path` = the '/'-joined in-project remainder (None for the bare project node). FAIL-LOUD
+    (ValueError) on a malformed project address (empty key, empty segment, trailing '/') — never a
+    silent-pass / guessed-nearest. The canonical project-address parse."""
+    if not isinstance(addr, str) or not addr.startswith("project://"):
+        raise ValueError(f"parse_project_address: not a project:// address ({addr!r}). Fail loud.")
+    rest = addr[len("project://"):]
+    if not rest:
+        raise ValueError(f"parse_project_address: empty project key ({addr!r}). Fail loud.")
+    segs = rest.split("/")
+    if any(not s for s in segs):
+        raise ValueError(
+            f"parse_project_address: malformed project address {addr!r} — empty segment (want "
+            f"'project://<project-key>[/<scope-path>[/<resource-key>]]', no trailing '/'). Fail loud, "
+            f"never a silent-pass.")
+    return {"project_key": segs[0], "path": "/".join(segs[1:]) or None, "segments": segs[1:]}
 
 
 # cap://<platform>[@version]/<kind>/<name> → a CAPABILITY of a registered SOURCE/PLATFORM (Mirror-Registry).

@@ -1404,6 +1404,99 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
                 f"asset is the only source. Fail loud, never a silent empty (a ranked-but-unreadable chunk "
                 f"is a real staleness error — rebake the asset).")
         return rec
+    if sch == "project":
+        # ④ THE CONTAINER (L1-SPINE, 2026-07-02) — project:// RESOLVED (was register-but-defer since
+        # 2026-06-15; both prior claimants now served with one dataset: the CONTAINER RECORD plus the
+        # CONTAINMENT EDGES recollection registered the scheme for). project://<key> → the project row
+        # (container.projects, schema `container` beside `ledger` — 0013_container.sql) + its authored
+        # `contains` edges (scopes), members, and the ledger label join; project://<key>/<scope-path>
+        # → the authored sub-container; project://<key>/<scope-path>/<resource-key> → the authored unit
+        # (content included). Identity is the TEXT address (law 1); resolution is EXACT-MATCH against
+        # the stored UNIQUE addresses per level (resource → scope → project), so scope-vs-resource
+        # ambiguity in the raw syntax never guesses. The grammar is contracts.address.
+        # parse_project_address (declared once). REUSE: the DB read rides runtime/scope.py's _q/_lit
+        # (the ONE env-overridable ledger-Postgres convention — no parallel connection code). Registry-
+        # is-truth: an unknown project/path RAISES with the decided breadcrumb — never fabricate; a DOWN
+        # DB RAISES legibly (never a silent empty). LAZY import (keeps this dispatcher's module-load
+        # graph clean, mirrors board://·cap://).
+        from contracts.address import parse_project_address as _ppj
+        from runtime.scope import _q as _cq, _lit as _cl
+        parsed = _ppj(addr)                                   # malformed project:// RAISES here (fail loud)
+        _key, _path = parsed["project_key"], parsed["path"]
+        _crumb = ("expected a row in schema `container` (Postgres via runtime/scope.py _PG, "
+                  "0013_container.sql); previously the cloud projects table (cvi_mine) / PROJECT_ROOTS "
+                  "in ops/ledger_interpret.py; fix: .venv/bin/python ops/migrate_container_from_cvi.py "
+                  "--slice spine")
+        def _crow(sql: str):
+            ok, out = _cq(f"select row_to_json(t) from ({sql}) t")
+            if not ok:
+                raise ValueError(f"resolve_address: container DB unreachable resolving {addr!r} "
+                                 f"({out[:200]}) — {_crumb}. Fail loud, never a silent empty.")
+            lines = [ln for ln in out.splitlines() if ln.strip()]
+            return json.loads(lines[0]) if lines else None
+        def _crows(sql: str):
+            ok, out = _cq(f"select coalesce(json_agg(t), '[]'::json) from ({sql}) t")
+            if not ok:
+                raise ValueError(f"resolve_address: container DB unreachable resolving {addr!r} "
+                                 f"({out[:200]}) — {_crumb}. Fail loud, never a silent empty.")
+            return json.loads(out.strip() or "[]")
+        proj = _crow("select project_id, project_key, address, project_type, root_path, keeper_role, "
+                     "status, phase, description, decorators, tags, source_system, source_uuid, "
+                     "created_at::text as created_at from container.projects "
+                     f"where project_key = {_cl(_key)}")
+        if proj is None:
+            raise ValueError(
+                f"resolve_address: unknown project {_key!r} (address {addr!r}) — no container.projects "
+                f"row; {_crumb} (or create_project). Fail loud, never fabricate a project.")
+        if _path is None:
+            # the PROJECT node: record + containment edges (authored contains = scopes; members; the
+            # ledger label join = the derived IS-layer this project contains). Reverses (contained_by)
+            # are COMPOSED AT READ downstream, never stored (law 4).
+            scopes = _crows("select address, scope_key, scope_type, description from container.scopes "
+                            f"where project_id = {_cl(proj['project_id'])}::uuid order by scope_key")
+            members = _crows("select principal, member_type, role from container.members "
+                             f"where project_id = {_cl(proj['project_id'])}::uuid order by principal, role")
+            counts = _crow(f"select (select count(*) from container.resources r "
+                           f"        where r.project_id = {_cl(proj['project_id'])}::uuid)::int as resources, "
+                           f"(select count(*) from ledger.entry e "
+                           f"        where e.project_id = {_cl(proj['project_id'])}::uuid)::int as ledger_entries, "
+                           f"(select count(*) from ledger.run x "
+                           f"        where x.project_id = {_cl(proj['project_id'])}::uuid)::int as ledger_runs") or {}
+            proj["name"] = proj.get("project_key")            # the human identity key territory_label reads
+            return {"address": addr, "kind": "project", "record": proj,
+                    "contains": [{"address": s["address"], "kind": "scope", "key": s["scope_key"],
+                                  "scope_type": s.get("scope_type"), "description": s.get("description")}
+                                 for s in scopes],
+                    "members": members,
+                    "ledger": {"entries": counts.get("ledger_entries", 0),
+                               "runs": counts.get("ledger_runs", 0),
+                               "authored_resources": counts.get("resources", 0)}}
+        # an IN-PROJECT PATH: exact-match by level — resource first (deepest), then scope; else fail loud.
+        res = _crow("select r.address, r.resource_key, r.resource_type, r.title, r.content, r.uri_refs, "
+                    "r.decorators, r.tags, r.version, r.provenance, r.created_by, r.source_system, "
+                    "r.source_uuid, r.created_at::text as created_at, s.address as scope_address "
+                    "from container.resources r left join container.scopes s on s.scope_id = r.scope_id "
+                    f"where r.address = {_cl(addr)}")
+        if res is not None:
+            res["name"] = res.get("title") or res.get("resource_key")
+            return {"address": addr, "kind": "resource", "record": res,
+                    "contained_by": [a for a in (res.get("scope_address"), proj["address"]) if a]}
+        scp = _crow("select address, scope_key, scope_type, description, source_uuid, "
+                    "created_at::text as created_at, scope_id from container.scopes "
+                    f"where address = {_cl(addr)}")
+        if scp is not None:
+            rs = _crows("select address, resource_key, resource_type, title from container.resources "
+                        f"where scope_id = {_cl(scp['scope_id'])}::uuid order by resource_key")
+            scp["name"] = scp.get("description") or scp.get("scope_key")
+            return {"address": addr, "kind": "scope", "record": scp,
+                    "contains": [{"address": r["address"], "kind": "resource", "key": r["resource_key"],
+                                  "resource_type": r.get("resource_type"), "title": r.get("title")}
+                                 for r in rs],
+                    "contained_by": [proj["address"]]}
+        raise ValueError(
+            f"resolve_address: no scope or resource at {addr!r} (project {_key!r} exists; the in-project "
+            f"path {_path!r} matches no stored address) — {_crumb} (authored units land via the migration "
+            f"/ the back-write / create-circuits). Fail loud, never fabricate.")
     if sch is not None:
         # a REGISTERED scheme (blob/vec/ui/code/exchange) with no content-resolver wired into this
         # dispatcher yet (exchange:// is register-but-defer — recollection's capture/recall lane owns it).
