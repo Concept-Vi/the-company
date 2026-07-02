@@ -14,8 +14,15 @@ export default defineConfig({
     // allowedHosts: true so the phone reaches it by tailnet hostname OR IP (private tailnet — his devices only).
     allowedHosts: true,
     // /api = the Suite/bridge face (the SAME thick contract canvas/app uses — we are thin over it).
+    // /design = the design-system static server (:8775) proxied SAME-ORIGIN, so a design-system page
+    // (e.g. the glyphgraph generator) is served as its ONE source file yet can reach /api (the bridge
+    // has no CORS — this proxy is the union's transport, A4 of the Glyphic AI fusion; never copy the page).
     proxy: {
       '/api': process.env.VITE_API_TARGET || 'http://localhost:8770',
+      '/design': {
+        target: process.env.VITE_DESIGN_TARGET || 'http://127.0.0.1:8775',
+        rewrite: (p: string) => p.replace(/^\/design/, ''),
+      },
     },
   },
 })
