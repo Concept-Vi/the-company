@@ -161,38 +161,23 @@ def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb="_
     """
     from fabric import config as fcfg
     emb = fcfg.resolve_emb_layer(emb)                      # omit-emb callers (query_corpus/consult) -> pplx; explicit None -> bge. Read layer == write layer.
-    # X12-MATRIX fast-path: a cached per-space numpy matrix → cosine via ONE matmul (no per-query [{id,vector}]
-    # rebuild + np.asarray over 67k×2560 — the determine/extractions-query dominant cost). RANKING-IDENTICAL to
-    # index_corpus→nodes.retrieve (same ids, same float64 cosine, same stable-descending sort). Skipped when a
-    # `records` snapshot is passed (the scandir-once path — keep its semantics), or DEFAULT/ALL space (mtx=None
-    # → the safe path below). FALLS BACK to retrieve on any edge (dim-mismatch / zero-vector) so retrieve's
-    # FAIL-LOUD contract is preserved — never a silent wrong-but-fast cosine.
-    mtx = store.space_matrix(space, emb) if (records is None) else None
-    ranked = None
-    _total = None                                          # the index size in scope (for the with_note count) — set by whichever path runs
-    if mtx is not None:
-        _ids, _M = mtx
-        _total = len(_ids)
-        if not _ids or _M is None:
-            ranked = []                                    # honest-empty space
-        else:
-            try:
-                import numpy as _np
-                _q = _np.asarray(query_vector, dtype=_np.float64)
-                if _q.ndim == 1 and _M.shape[1] == _q.shape[0]:
-                    _qn = float(_np.linalg.norm(_q)); _mn = _np.linalg.norm(_M, axis=1)
-                    if _qn != 0.0 and not bool((_mn == 0).any()):
-                        _sc = (_M @ _q) / (_mn * _qn)
-                        _kk = min(int(k), len(_ids))
-                        _ord = _np.argsort(-_sc, kind="stable")[:_kk]
-                        ranked = [{"id": _ids[i], "score": float(_sc[i])} for i in _ord]
-            except Exception:
-                ranked = None                              # any trouble → the safe path below (fail-loud preserved)
-    if ranked is None:                                     # default/ALL space · records-path · matrix-edge → the reuse path
-        from nodes import retrieve                          # the existing cosine-ranking node — reused, not reimplemented
-        corpus = store.index_corpus(space=space, emb=emb, records=records)  # [{id,vector}] at the embedder LAYER
-        _total = len(corpus)
-        ranked = retrieve.run({"query": query_vector, "corpus": corpus}, {"k": k})
+    # ① CUTOVER (2026-07-02, Tim-authorized): the k-NN now runs IN POSTGRES — ledger.embedding's per-dim
+    # HNSW indexes (store/pg_vectors.search) — instead of pulling vectors into a numpy matrix in-process.
+    # The query DIM selects the halfvec column, so a wrong-dim query fails loud (PgVectorError) — the same
+    # guard the retrieve._cosine ValueError used to give. `records=` (the scandir-once snapshot seam) is
+    # RETIRED/ignored: it existed to amortize FILE scans across a multi-space recall; per-space HNSW queries
+    # are milliseconds, so each space just queries directly. emb=None (the legacy bare/BGE layer) matches
+    # the migrated 'unknown' emb_layer via the dim-column scoping (a 1024-dim query only ranks vec_1024).
+    from store import pg_vectors as _pgv
+    try:
+        ranked = store.search_vectors(query_vector, space=space, emb=(emb if isinstance(emb, str) else None), k=k)
+        _total = store.count_vectors(space) if with_note else None
+    except _pgv.PgVectorError:
+        raise                                               # fail loud with the breadcrumb — never a silent empty
+    # --- RETIRED file-store paths (pre-2026-07-02) — kept for legibility, not for use ---
+    # (the X12-MATRIX numpy fast-path over store.space_matrix + the nodes/retrieve reuse path over
+    #  store.index_corpus lived here; both read .data/store/vectors/*.json via _vector_records. Full
+    #  originals: store/fs_store_file_vectors.retired.py + git history of this file.)
     if not with_note:
         return ranked
     _scope = "default space" if space is None else (f"space '{space}'" if space is not store.ALL_SPACES else "all spaces")
