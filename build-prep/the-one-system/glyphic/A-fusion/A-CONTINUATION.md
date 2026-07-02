@@ -7,8 +7,31 @@
 > and the always-loaded running record is memory `project-glyphic-language.md`. Read those three + this.
 
 ## The one-line state
-**A0 (spine) DONE. A1 (the fusion seam) DONE + acceptance-verified. NEXT = A2 (point the seam at the Company) → A3
-(the glyph_meaning space on the shared vector store) → A4 meaning-resolution → A5 extract/compose roles → A6 collaborative AI.**
+**A0 DONE. A1 DONE. A2 DONE + PROVEN IN-BROWSER (2026-07-02 · this doc now lives in build-prep, restored from
+claude-ds git 3ac3a38 after the reorg move dropped it). NEXT = A3 (the glyph_meaning space) → A4 meaning-resolution
+→ A5 extract/compose roles → A6 collaborative AI.**
+
+## What A2 did (design-side d29d3c1+a475a15 in claude-ds · ~/company: roles/complete_text.py via the create-door + a6674ade)
+- `app/services/company.js` — the **company-http runtime kind**, registered through A1's `CV_HOST.registerKind` seam
+  (zero registry edits for dispatch). Config (api base + completeRole) lives ON the provider record. complete()/
+  runRole()/embed(); loud on non-2xx, transport (with the same-origin hint), ok:false-in-200, missing output.
+- `ai-seed.js` — the **'company' provider record** `{runtime:{kind:'company-http', api:'/api/cognition', completeRole:'complete_text'}}`.
+- `ai-registry.js` — `ROLE_PROVIDERS.embed='company'` + **setRoleProvider(role,id)** (the flip as a registry op, validates the entry, loud) + **CV_AI.embed(text)**.
+- `~/company/roles/complete_text.py` — the **passthrough completion role** (the union path: a completion IS a role;
+  fired via the EXISTING run_role; schema {text:str}; knobs.max_tokens=2048; no {utterance} placeholder — the
+  advisor's 3 trap-catches: file-drop is invisible to the live bridge's in-memory registry → used the create(kind='role')
+  door [import-gated, auto-reflects roles/AGENTS.md, rediscovers live]; max_tokens 256 default truncates; template is verbatim).
+- **ACCEPTANCE (in-browser, :5174 probe `surface/app/public/glyph-fusion-a2.html`):** real CV_AI stack loaded from :8775
+  (classic cross-origin scripts, one source) → setRoleProvider('text','company') → **CV_AI.complete() round-tripped in
+  651ms** (company-http → bridge → complete_text → chat-4b) + **CV_AI.embed() → 2560-dim pplx**. Loud-fail proven twice
+  for real: the stale completeRole 'complete' 400'd LOUD (fixed a475a15); embed on the static :8775 Studio throws honest
+  off-origin. Studio boot-check: 55 caps, distribution == baseline, 0 broken. **Shipped default binding stays text→claude**
+  — the flip is one registry op away, proven working.
+- **Ops notes:** the resident brain was DOWN (both chat-4b units stale-FAILED since Jun 30) — brought up `chat-4b` via
+  `company ensure chat-4b` (restart authority). A RAM squeeze blocked the first ensure: **mcp_face/server.py leaked to
+  ~14 GB** (PID 11522) — flagged, not killed (may be a live session's MCP face). `@interaction-fp8` no longer fits
+  (fitter says 21.1 GB > 16.4 — profile drift since it shipped; needs a loadout re-fit pass — ADDED TO SCOPE).
+  `~/company` ALSO tracks design/claude-ds files (dual-tracking with the nested repo — coordination item, ADDED TO SCOPE).
 
 ## Ground truth (verified live 2026-07-02 — don't re-discover)
 - Services UP: bridge `:8770` · embedder pplx-embed-context @ `:8007` (2560-dim) · `run_role` route live.
@@ -34,7 +57,11 @@ Goal: text/embed roles resolve to the Company over the bridge, so flipping `ROLE
 6. Verify by USE: flip `ROLE_PROVIDERS.text` to `company` in a served surface, confirm a real `run_role`/`complete` round-trips + the boot-check still holds. Keep `claude` as the default binding until proven.
 
 ## A3 — the glyph_meaning space (needs ~/company write → ADVISOR GATE first)
-Converged with embedding session (see below). NO fork — my A3 = ONE space on their store:
+**FRESH INTEL (2026-07-02, channel msg from the embedding session — VERIFY first-hand, never assume):** the VECTOR
+CUTOVER landed on main (commit 3e6c0915): store vectors now read/write/search Supabase ledger.embedding DIRECTLY
+(store/pg_vectors.py, HNSW in Postgres; file-store retired). So A3 may be simpler than below: ONE SPACES row in
+ops/build_embeddings.py + corpus_for_glyph() and vectors land live — NO separate migrate step. Any dim works
+(typed halfvec 2560 exists). Verify by use, then:
 1. **advisor() BEFORE the first substantive ~/company write.**
 2. VERIFY `ledger.embedding` @ :15432 + `ops/migrate_vectors_to_supabase.py` BY USE first (not-a-replacement law — run it, don't assume).
 3. Register `glyph_meaning` as ONE SPACES row in `ops/build_embeddings.py`: `kind='fabric', emb='pplx', dim=2560`.
