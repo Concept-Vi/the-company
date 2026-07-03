@@ -356,24 +356,31 @@
 
     // FORM = kind / what nature of thing. (circle/square/triangle/diamond per Tim;
     // the rest carry the shape registry's field, feeling-named.)
+    // THE REFERENT WORDS ARE FIELD DATA (A1, 2026-07-03): the word a form contributes to
+    // its noun phrase lives HERE — `kindWord` (a trailing noun: "… gateway") or `opWord`
+    // (a leading phrase: "action on …"). referent() AND parse() read them from the active
+    // profile, so authoring a word changes the read-out and the parse live (no code edit).
+    // circle/square carry NO word (the bare kind|instance soft cell). STARTER wording (A5).
     seed('form', 'circle',   'the kind itself',     ['a whole / an identity', 'the category', 'the concept — not a specific one']);
     seed('form', 'square',   'a specific one',      ['this particular', 'an instance', 'a bounded object']);
-    seed('form', 'triangle', 'an operation on it',  ['an action relative to the thing at the address', 'a step / a change']);
-    seed('form', 'diamond',  'interacting with it', ['using / operating it', 'deciding about it (one kind of interacting)']);
-    seed('form', 'pentagon', 'a feature',           ['a composed capability']);
-    seed('form', 'hex',      'a system',            ['an engine', 'a configurable set of parts']);
-    seed('form', 'heptagon', 'a special case',      ['a rare / specialised type']);
-    seed('form', 'octagon',  'a gateway',           ['an output / endpoint', 'an edge to the outside']);
+    seed('form', 'triangle', 'an operation on it',  ['an action relative to the thing at the address', 'a step / a change'], { opWord: 'action on' });
+    seed('form', 'diamond',  'interacting with it', ['using / operating it', 'deciding about it (one kind of interacting)'], { opWord: 'use of' });
+    seed('form', 'pentagon', 'a feature',           ['a composed capability'],                          { kindWord: 'feature' });
+    seed('form', 'hex',      'a system',            ['an engine', 'a configurable set of parts'],       { kindWord: 'system' });
+    seed('form', 'heptagon', 'a special case',      ['a rare / specialised type'],                      { kindWord: 'special type' });
+    seed('form', 'octagon',  'a gateway',           ['an output / endpoint', 'an edge to the outside'], { kindWord: 'gateway' });
     seed('form', 'none',     'untyped',             ['the symbol stands alone']);
 
     // FILL + OUTLINE = mode / definiteness — the realization gradient.
-    seed('fill', 'none',  'held as a concept', ['the kind, as an idea', 'the kind-as-subject', 'not any specific one']);
-    seed('fill', 'paper', 'here, in context', ['this kind, present', 'a member, in use']);
-    seed('fill', 'wash',  'featured',         ['highlighted', 'brought forward']);
+    // fill/outline DETERMINERS are field data too (A1): the article the noun phrase opens
+    // with. Precedence at read = outline first, then fill; no declared determiner → 'a'.
+    seed('fill', 'none',  'held as a concept', ['the kind, as an idea', 'the kind-as-subject', 'not any specific one'], { determiner: 'the' });
+    seed('fill', 'paper', 'here, in context', ['this kind, present', 'a member, in use'], { determiner: 'this' });
+    seed('fill', 'wash',  'featured',         ['highlighted', 'brought forward'],         { determiner: 'this' });
     seed('fill', 'tint',  'categorised',      ['grouped by its colour value']);
-    seed('fill', 'solid', 'full / set',       ['committed', 'complete', 'locked in']);     // aspirational: needs a solid-colour fill value in CV_GLYPHIC
+    seed('fill', 'solid', 'full / set',       ['committed', 'complete', 'locked in'], { determiner: 'the' });     // aspirational: needs a solid-colour fill value in CV_GLYPHIC
     seed('outline', 'solid',  'firm',      ['a settled edge']);
-    seed('outline', 'dashed', 'potential', ['could be here', 'could be added', 'an open slot']);
+    seed('outline', 'dashed', 'potential', ['could be here', 'could be added', 'an open slot'], { determiner: 'a possible' });
     seed('outline', 'none',   'open',      ['no bounding edge']);
 
     // COLOR = state / voice, on common connotation (the strongest field carrier).
@@ -527,21 +534,26 @@
     if (!rec) fail('no field for ' + facet + '="' + value + '" in profile "' + this.active + '" — loud, never a silent default');
     var feeling = rec.feeling || rec.meaning;
     if (!feeling) fail('field ' + facet + '/' + value + ' has no feeling/meaning');
-    return {
+    // THE FIELD CARRIES EVERYTHING THE AUTHOR DECLARED (2026-07-03 — design-for-the-class).
+    // A whitelisting normalizer here silently DROPPED declared data twice (negates/symbol
+    // pre-G2.4; directed/inverse at the edge-law build) — the dropped-field trap. Dissolved:
+    // the raw record is spread first, so any extra an author sets (kindWord, determiner,
+    // inverse, a future word) reaches every reader; the normalized keys are computed on top.
+    return Object.assign({}, rec, {
       facet: facet, value: value, feeling: feeling,
       senses: rec.senses || [rec.meaning].filter(Boolean),
       type: rec.type || MEANING_TYPES[facet] || fail('no meaning-type for facet "' + facet + '"'),
       token: rec.token || null, phrase: rec.phrase || null,
-      // operator metadata carried through (the SINGLE home of these flags is the seed):
+      // operator metadata (the SINGLE home of these flags is the seed):
       // `negates` (G2.4 — negation detected via .negates, never a string match),
       // `operator`/`symbol` (the universal-operator sign-class). null/false when absent.
       negates: !!rec.negates, operator: !!rec.operator, symbol: rec.symbol || null,
-      // THE EDGE LAW (A2) carried through: `directed` (true=a verb-pair, false=symmetric,
-      // undefined=predates the law — the inverse read throws naming it) + `inverse`
-      // ({feeling, senses?} — the opposite telling, declared once, composed at read).
+      // THE EDGE LAW (A2): `directed` (true=a verb-pair, false=symmetric, undefined=
+      // predates the law — the inverse read throws naming it) + `inverse` ({feeling,
+      // senses?} — the opposite telling, declared once, composed at read).
       directed: (typeof rec.directed === 'boolean') ? rec.directed : undefined,
       inverse: rec.inverse || null,
-    };
+    });
   };
 
   // (3) MODE — the combinatorial read of fill + outline + icon-presence (the one
@@ -684,21 +696,27 @@
   // The test: "can you hear the octagon?" — if it narrates the picture, it's wrong.
   // ==========================================================================
   function capF(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
-  var REFERENT_KIND = { octagon: 'gateway', hex: 'system', pentagon: 'feature', heptagon: 'special type' };
-  var REFERENT_OP   = { triangle: 'action on', diamond: 'use of' };
 
   // referent(spec) → the noun phrase a node refers to. form = the kind (circle/square
   // carry the kind↔instance feel — the SOFT CELL for Tim's ear); fill = definiteness.
+  // A1 (2026-07-03): EVERY word here is PROFILE DATA — the determiner comes from the
+  // outline/fill field's `determiner` (outline wins; none declared → 'a'), the kind/op
+  // word from the form field's `kindWord`/`opWord`. Nothing is a const; the author API
+  // reaches all of it (and parse() inverts the same fields, so both directions move together).
   CV_MEANING.referent = function (spec) {
     spec = spec || {};
     if (!spec.form) fail('referent: spec.form required (loud)');
-    this.field('form', spec.form);                                  // validate (throws on unknown form)
-    var det = 'a';
-    if (spec.outline === 'dashed') det = 'a possible';              // potential
-    else if (spec.fill === 'none') det = 'the';                     // the kind / concept
-    else if (spec.fill === 'paper' || spec.fill === 'wash') det = 'this';  // present
-    else if (spec.fill === 'solid') det = 'the';                    // full / set
-    else if ('fill' in spec && spec.fill != null) this.field('fill', spec.fill);  // present-unknown → loud
+    var formField = this.field('form', spec.form);                  // validate + the word source (throws on unknown form)
+    var det = null;
+    if ('outline' in spec && spec.outline != null) {
+      var of = this.field('outline', spec.outline);                 // present-unknown → loud
+      if (of.determiner) det = of.determiner;
+    }
+    if (!det && 'fill' in spec && spec.fill != null) {
+      var ffill = this.field('fill', spec.fill);                    // present-unknown → loud
+      if (ffill.determiner) det = ffill.determiner;
+    }
+    if (!det) det = 'a';                                            // the bare article — no field claimed it
     var thing = null;
     if (spec.symbol) {
       var ICN = window.CV_ICONS;
@@ -708,8 +726,8 @@
       thing = (P.symbolGloss && P.symbolGloss[spec.symbol]) || spec.symbol;
     }
     var phrase;
-    if (REFERENT_OP[spec.form]) phrase = det + ' ' + REFERENT_OP[spec.form] + (thing ? ' the ' + thing : '');
-    else phrase = det + (thing ? ' ' + thing : '') + (REFERENT_KIND[spec.form] ? ' ' + REFERENT_KIND[spec.form] : '');
+    if (formField.opWord) phrase = det + ' ' + formField.opWord + (thing ? ' the ' + thing : '');
+    else phrase = det + (thing ? ' ' + thing : '') + (formField.kindWord ? ' ' + formField.kindWord : '');
     return phrase.replace(/\s+/g, ' ').trim();
   };
 
@@ -1087,11 +1105,11 @@
   // free (that is G0.5 — authoring develops the language in BOTH directions).
   //
   // Why it lives INSIDE this IIFE (not a sibling glyph-parse.js): the forward
-  // referent() composes a noun phrase from THREE sources — profile fields (mood,
-  // relation, fill/outline), AND the module-private REFERENT_KIND / REFERENT_OP /
-  // determiner-ladder. A sibling file can't see those consts; copying them would be
-  // a second home that drifts. So parse() is the inverse of referent() in the same
-  // scope, reading the very same consts referent() writes from.
+  // referent() and this inverse share the module's private helpers (edgeClause,
+  // relationVerb, conditionPhrase…) — a sibling would need copies, a second home that
+  // drifts. Since A1 (2026-07-03) the WORDS themselves (kind words, op phrases, the
+  // determiner ladder) are all PROFILE FIELD DATA — both directions read the same
+  // fields, so an authored word moves the read-out and the parse together.
   //
   // LOSSY-FORWARD (verified, not assumed): referent() is many→one — "the home" comes
   // from circle|square × fill:none, and "the" comes from fill:none|solid. So a graph
@@ -1118,28 +1136,47 @@
     // ---- build the inverse vocabularies FROM THE ACTIVE PROFILE (+ the consts) ----
     var P = self.activeProfile();
 
-    // determiner ladder, INVERTED. Forward (referent): 'a possible'←outline:dashed ;
-    // 'the'←fill:none|solid ; 'this'←fill:paper|wash ; 'a'←default. Canonical inverse
-    // (the lossy picks, starter): 'the'→fill:none (the concept — the soft-cell default,
-    // mirrors harness example #6), 'this'→fill:paper, 'a possible'→outline:dashed,
-    // 'a'→fill:paper with no determiner-borne definiteness. Longest determiner first so
-    // "a possible" is matched before "a".
-    var DET = [
-      { det: 'a possible', apply: { outline: 'dashed', fill: 'paper' } },
-      { det: 'this',       apply: { fill: 'paper' } },
-      { det: 'the',        apply: { fill: 'none' } },
-      { det: 'a',          apply: { fill: 'paper' } },
-    ];
+    // determiner ladder, INVERTED FROM THE PROFILE (A1): every outline/fill field that
+    // declares a `determiner` contributes an entry — an authored determiner parses for
+    // free. Forward is many→one (referent: outline wins, then fill), so the CANONICAL
+    // inverse for a word claimed by several fields is the FIRST claimant in read
+    // precedence (outline values, then fill values in profile order — e.g. 'the'→
+    // fill:none not fill:solid; 'this'→fill:paper not wash — the documented lossy picks).
+    // An outline-borne determiner applies {outline, fill:'paper'} (a canonical instance
+    // fill so the node is complete); a fill-borne one applies {fill}. The bare article
+    // 'a' stays the fallback ({fill:'paper'}) unless a field claims it. Longest first.
+    var DET = [];
+    var seenDet = {};
+    ['outline', 'fill'].forEach(function (facet) {
+      var vals = self.valuesFor(facet);
+      Object.keys(vals).forEach(function (v) {
+        var f = self.field(facet, v);
+        if (!f.determiner || seenDet[f.determiner]) return;   // first claimant = the canonical inverse
+        seenDet[f.determiner] = true;
+        var apply = {};
+        if (facet === 'outline') { apply.outline = v; apply.fill = 'paper'; }
+        else apply.fill = v;
+        DET.push({ det: f.determiner, apply: apply });
+      });
+    });
+    if (!seenDet['a']) DET.push({ det: 'a', apply: { fill: 'paper' } });
+    DET.sort(function (a, b) { return b.det.length - a.det.length; });
 
-    // KIND words, INVERTED from the module-private consts (one home — the same consts
-    // referent() reads). REFERENT_KIND is a trailing word ("… gateway"); REFERENT_OP is
-    // a leading phrase ("action on …"/"use of …"). circle/square carry NO kind word, so
-    // a bare "<det> <thing>" with no kind word is the kind|instance soft cell → canonical
-    // circle (the concept) unless the determiner already forced fill:paper (then square).
+    // KIND words, INVERTED FROM THE FORM FIELDS (A1 — the same fields referent() reads).
+    // `kindWord` is a trailing word ("… gateway"); `opWord` is a leading phrase
+    // ("action on …"/"use of …"). circle/square carry NO word, so a bare "<det> <thing>"
+    // with no kind word is the kind|instance soft cell → canonical circle (the concept)
+    // unless the determiner already forced fill:paper (then square).
     var KIND_SUFFIX = {};  // word → form  (trailing)
-    Object.keys(REFERENT_KIND).forEach(function (form) { KIND_SUFFIX[REFERENT_KIND[form]] = form; });
-    var OP_PREFIX = {};    // phrase → form (leading: "action on" / "use of")
-    Object.keys(REFERENT_OP).forEach(function (form) { OP_PREFIX[REFERENT_OP[form]] = form; });
+    var OP_PREFIX = {};    // phrase → form (leading)
+    (function () {
+      var forms = self.valuesFor('form');
+      Object.keys(forms).forEach(function (formId) {
+        var f = self.field('form', formId);
+        if (f.kindWord) KIND_SUFFIX[f.kindWord] = formId;
+        if (f.opWord) OP_PREFIX[f.opWord] = formId;
+      });
+    })();
 
     // SYMBOL words, INVERTED. Forward referent() uses symbolGloss[symbol] || symbol. So
     // invert the gloss (word → icon id) first; else the raw token must be a real CV_ICONS
@@ -1200,7 +1237,7 @@
         }
       }
 
-      // 2) REFERENT_OP leading phrase ("action on X" / "use of X") → form + the thing
+      // 2) opWord leading phrase ("action on X" / "use of X") → form + the thing
       var opForm = null;
       Object.keys(OP_PREFIX).forEach(function (ph) {
         if (!opForm && (rest === ph || rest.indexOf(ph + ' ') === 0)) opForm = ph;
@@ -1211,7 +1248,7 @@
         if (rest.indexOf('the ') === 0) rest = rest.slice(4).trim();   // "the <thing>" object of the op
       }
 
-      // 3) trailing KIND word (REFERENT_KIND: "… gateway"/"… system"/…)
+      // 3) trailing kindWord ("… gateway"/"… system"/… — form-field data)
       var kindForm = null;
       if (!opForm) {
         Object.keys(KIND_SUFFIX).forEach(function (w) {
