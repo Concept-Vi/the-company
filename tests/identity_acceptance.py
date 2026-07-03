@@ -169,14 +169,14 @@ check("users reconciliation sums close (15 = 1 + 2 + 4 + 8)",
       and u["vi_agent_logins"] == 2 and u["humans_landed"] == 4 and u["archived"] == 8)
 ok, out = psql(PG["db"], "select count(*) from container.principal where kind='human'")
 check("4 human principals landed (grant + nick + phil + scott)", ok and out.strip() == "4")
-# RETIRED 2026-07-03 (Tim: retire the @example.com family-test accounts). Reversible: the principal
-# rows are PRESERVED with status='archived' + prev_status stamped; nick/phil/scott archived, grant stays active.
-ok, out = psql(PG["db"], "select status, count(*) from container.principal where kind='human' group by status order by status")
-check("the 3 @example.com family-test humans are RETIRED (1 active [grant] + 3 archived), reversibly",
-      ok and out.strip().replace(" ", "") == "active|1\narchived|3")
+# CORRECTED 2026-07-03 (Tim): @example.com is the PHONE-signup placeholder, NOT a test marker.
+# nick/phil/scott are REAL users (confirmed AU mobiles, signed in) — all 4 humans land ACTIVE.
+ok, out = psql(PG["db"], "select count(*) from container.principal where kind='human' and status='active'")
+check("all 4 human principals are ACTIVE (no real user wrongly archived)", ok and out.strip() == "4")
 ok, out = psql(PG["db"], "select count(*) from container.principal where kind='human' "
-                         "and metadata->>'family_test'='true' and status='archived' and metadata->>'retired' is not null")
-check("each retired family-test human carries its retire stamp (status=archived + retired date)", ok and out.strip() == "3")
+                         "and metadata->>'auth'='phone' and coalesce(metadata->>'phone','') <> ''")
+check("the phone-signup humans carry their phone as the real identifier (nick/phil/scott + grant)",
+      ok and int(out.strip()) >= 3)
 ok, out = psql(PG["db"], "select count(*) from container.exclusions where source_table='auth.users' "
                          "and (reason is null or reason='')")
 check("every archived user carries a REASON (excluded-with-reason, no blanks)", ok and out.strip() == "0")

@@ -118,31 +118,28 @@ def migrate_identity() -> dict:
         raise RuntimeError(f"container.principal missing — {BREADCRUMB}")
 
     # 1. read the 15 cloud auth.users (READ-ONLY).
-    users = _json_rows(CVI_DB, "select id::text as id, coalesce(email,'') as email from auth.users order by email")
+    users = _json_rows(CVI_DB, "select id::text as id, coalesce(email,'') as email, "
+                               "coalesce(phone,'') as phone, (last_sign_in_at is not null) as signed_in "
+                               "from auth.users order by email")
     total = len(users)
     login_set = {OPERATOR_LOGIN, *VI_LOGINS}
     humans = [u for u in users if u["email"] and u["id"] not in login_set]
     no_email = [u for u in users if not u["email"]]
     seeded_logins = [u for u in users if u["id"] in login_set]
 
-    # 2. HUMANS → human principals (curated). The @example.com family-test accounts are RETIRED per Tim
-    #    (2026-07-03): they land as human principals but ARCHIVED (status='archived', rewrite disposition
-    #    'archived') — reversible, the row is preserved with prev_status stamped. grant (real human) stays active.
+    # 2. HUMANS → active human principals. CORRECTED 2026-07-03 (Tim): an @example.com address is the
+    #    PLACEHOLDER Supabase writes for a PHONE signup — NOT a test marker. nick/phil/scott are REAL
+    #    users (confirmed AU mobiles, signed in) — they land ACTIVE with their phone as the real
+    #    identifier. No "family-test" heuristic. (The earlier retire was my error, reversed here.)
     minted_humans = []
     for u in humans:
         handle = _human_handle(u["email"])
-        family_test = u["email"].endswith("@example.com")
-        if family_test:
-            status, disposition = "archived", "archived"
-            note = ("@example.com family-test account — RETIRED per Tim 2026-07-03 (landed as a human "
-                    "principal, then archived; reversible: the row is preserved, status=archived).")
-            meta = {"email": u["email"], "family_test": True, "retired": "2026-07-03",
-                    "retired_by": "Tim: retire the @example.com family-test accounts",
-                    "retired_reversible": True, "prev_status": "active", "note": note}
-        else:
-            status, disposition = "active", "human"
-            note = "curated human principal."
-            meta = {"email": u["email"], "family_test": False, "note": note}
+        phone = (u.get("phone") or "").strip() or None
+        status, disposition = "active", "human"
+        note = ("real user — phone signup (the @example.com address is a placeholder; phone is the real "
+                "identifier)." if phone else "curated human principal.")
+        meta = {"email": u["email"], "phone": phone, "auth": ("phone" if phone else "email"),
+                "signed_in": bool(u.get("signed_in")), "note": note}
         _psql_script(PGCONF["db"], f"""
 begin;
 insert into container.principal (kind, handle, display, status, metadata, source_system, source_uuid)
@@ -166,9 +163,18 @@ commit;""")
         minted_humans.append(f"human://{handle}")
 
     # 3. the 8 NO-EMAIL users → ARCHIVED excluded-with-reason (NOT migrated; uuid_rewrite disposition=archived).
+    # No-email AND never-signed-in. Two honest kinds: obvious 5555-style test numbers, and real-format
+    # numbers that were confirmed but never signed in (possible real invitees — SURFACED to Tim, not
+    # called "debris"). All reversible (archived-with-reason; no principal minted).
     archived = 0
     for u in no_email:
-        reason = "no-email cloud auth.user — test debris (§3.4: archived, not migrated as a principal)."
+        phone = (u.get("phone") or "").strip()
+        is_test_number = phone.replace("+", "").startswith(("1555",))
+        if is_test_number:
+            reason = f"no-email, never-signed-in, 5555-style test/placeholder number ({phone or 'none'}) — archived."
+        else:
+            reason = (f"no-email cloud auth.user, phone {phone or 'none'}, CONFIRMED but NEVER signed in — "
+                      "archived PENDING Tim's confirmation (may be a real invitee who never onboarded, not debris).")
         _psql_script(PGCONF["db"], f"""
 begin;
 insert into container.exclusions (source_system, source_table, source_uuid, source_key, reason)
