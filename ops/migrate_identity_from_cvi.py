@@ -125,29 +125,40 @@ def migrate_identity() -> dict:
     no_email = [u for u in users if not u["email"]]
     seeded_logins = [u for u in users if u["id"] in login_set]
 
-    # 2. HUMANS → human principals (curated). @example.com flagged family-test in metadata (needs_tim).
+    # 2. HUMANS → human principals (curated). The @example.com family-test accounts are RETIRED per Tim
+    #    (2026-07-03): they land as human principals but ARCHIVED (status='archived', rewrite disposition
+    #    'archived') — reversible, the row is preserved with prev_status stamped. grant (real human) stays active.
     minted_humans = []
     for u in humans:
         handle = _human_handle(u["email"])
         family_test = u["email"].endswith("@example.com")
-        meta = {"email": u["email"], "family_test": family_test,
-                "note": ("@example.com — likely family/test account; landed as human per the §3.4 map, "
-                         "flagged for Tim's curation." if family_test else "curated human principal.")}
+        if family_test:
+            status, disposition = "archived", "archived"
+            note = ("@example.com family-test account — RETIRED per Tim 2026-07-03 (landed as a human "
+                    "principal, then archived; reversible: the row is preserved, status=archived).")
+            meta = {"email": u["email"], "family_test": True, "retired": "2026-07-03",
+                    "retired_by": "Tim: retire the @example.com family-test accounts",
+                    "retired_reversible": True, "prev_status": "active", "note": note}
+        else:
+            status, disposition = "active", "human"
+            note = "curated human principal."
+            meta = {"email": u["email"], "family_test": False, "note": note}
         _psql_script(PGCONF["db"], f"""
 begin;
 insert into container.principal (kind, handle, display, status, metadata, source_system, source_uuid)
-values ('human', {_dq(handle)}, {_dq(u['email'])}, 'active', {_dq(json.dumps(meta))}::jsonb,
+values ('human', {_dq(handle)}, {_dq(u['email'])}, {_dq(status)}, {_dq(json.dumps(meta))}::jsonb,
         'cvi_mine', {_dq(u['id'])}::uuid)
-on conflict (kind, handle) do update set source_uuid = excluded.source_uuid, metadata = excluded.metadata;
+on conflict (kind, handle) do update set source_uuid = excluded.source_uuid,
+       metadata = excluded.metadata, status = excluded.status;
 -- the auth edge (authentication is an edge to identity)
 insert into container.principal_auth (principal_id, auth_user_id, provider, is_primary, source_system)
 select p.principal_id, {_dq(u['id'])}::uuid, 'supabase', true, 'cvi_mine'
   from container.principal p where p.kind='human' and p.handle={_dq(handle)}
 on conflict (principal_id, auth_user_id) do nothing;
--- the uuid rewrite map row
+-- the uuid rewrite map row (disposition follows the retire decision)
 insert into container.uuid_rewrite_map (old_uuid, principal_id, principal_address, disposition, reason)
-select {_dq(u['id'])}::uuid, p.principal_id, 'human://'||{_dq(handle)}, 'human',
-       {_dq(meta['note'])}
+select {_dq(u['id'])}::uuid, p.principal_id, 'human://'||{_dq(handle)}, {_dq(disposition)},
+       {_dq(note)}
   from container.principal p where p.kind='human' and p.handle={_dq(handle)}
 on conflict (old_uuid) do update set principal_id=excluded.principal_id,
        principal_address=excluded.principal_address, disposition=excluded.disposition, reason=excluded.reason;
@@ -267,7 +278,10 @@ commit;""")
         email = cvi_email[0]["email"] if cvi_email else "(absent in cvi)"
         ok = True
         if s["disposition"] == "archived":
-            ok = (email == "")
+            # two legitimate archived kinds: no-email debris (no email, no principal) OR a RETIRED
+            # family-test human (@example.com, principal PRESERVED — reversible, Tim 2026-07-03).
+            ok = (email == "" and not s["principal_address"]) or \
+                 (email.endswith("@example.com") and bool(s["principal_address"]))
         elif s["disposition"] == "operator":
             ok = (s["old_uuid"] == OPERATOR_LOGIN and email == "t.geldard@conceptv.com.au")
         elif s["disposition"] == "agent":
