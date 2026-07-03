@@ -48,13 +48,35 @@
     means: function (id) { var k = this.kind(id); return k ? k.means : null; },
 
     // Resolve a partial edge-spec {kind, line?, direction?, ink?} → full facets, applying the kind's
-    // defaults. Loud: an unknown kind that also gives no facets falls back to 'face' but keeps the id
-    // visible so a typo is seen, never silently a different relation.
+    // defaults. LOUD (THE EDGE LAW, 2026-07-03): a relation without a kind, or with a kind that
+    // exists in NEITHER edge home (this look registry ∪ the CV_MEANING edge fields — the same union
+    // relationships-seed reconciles), throws. There is no silent 'face' default — an untyped or
+    // mistyped relation is a violation, never quietly a different relation.
+    // (The 2026-07-03 `verbs` motion table that briefly lived here was DRIFT — a second edge
+    // registry with no meaning fields and no opposites (G3.4 violation). Removed, not re-homed:
+    // nothing consumed it. A motion axis, if wanted, enters through CV_MEANING.author + a
+    // relationship Type WITH its inverse — the same doors as every relation.)
     resolve: function (spec) {
       spec = spec || {};
-      var k = this.kind(spec.kind) || {};
+      if (!spec.kind)
+        throw new Error('[CV_EDGES] resolve: an edge needs a kind (loud — no silent default relation). Known here: ' +
+          this.ids().join(', ') + '; meaning-only kinds resolve too (CV_MEANING edge fields).');
+      var k = this.kind(spec.kind);
+      if (!k) {
+        // not a look-registered kind — accept it ONLY if it is a real meaning-bearing edge kind
+        // (an operator like part-of/becomes, or an authored relation). Same union as the Type seed.
+        var M = window.CV_MEANING;
+        var known = false;
+        if (M && typeof M.valuesFor === 'function') {
+          try { known = !!(M.valuesFor('edge') || {})[spec.kind]; } catch (e) { known = false; }
+        }
+        if (!known)
+          throw new Error('[CV_EDGES] resolve: unknown edge kind "' + spec.kind + '" (loud — not in CV_EDGES ' +
+            'and not a CV_MEANING edge field). Author it via CV_MEANING.author.setRelation first.');
+        k = {};   // meaning-only kind: no bespoke look yet — honest generic facets below
+      }
       return {
-        kind: spec.kind || k.id || 'face',
+        kind: spec.kind,
         type: k.type || 'Relation',
         line: spec.line || k.line || 'dashed',
         direction: spec.direction || k.direction || 'to',

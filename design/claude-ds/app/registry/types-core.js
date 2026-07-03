@@ -342,6 +342,15 @@
       // are one model (tokens ARE the value-units of an axis).
       axis: t.axis || null,
       axisValue: t.axisValue || null,
+      // RELATION Types (relationships-seed): the bare edge kind the IR uses + the operator
+      // mirror + THE EDGE LAW pair (Tim, 2026-07-03 — {directed, inverse}, mirrored from the
+      // meaning home). Declared by the seed and previously DROPPED here (the dropped-field
+      // trap: a normalize that doesn't carry a field makes the entry silently inert).
+      relationKind: t.relationKind || null,
+      operatorSymbol: t.operatorSymbol || null,
+      negates: (typeof t.negates === 'boolean') ? t.negates : false,
+      directed: (typeof t.directed === 'boolean') ? t.directed : null,   // true=verb-pair · false=symmetric · null=undeclared
+      inverse: t.inverse || null,                                        // { feeling, senses? } — the opposite telling
       defaults: t.defaults || {},
       variables: t.variables || [],
       tags: t.tags || [],

@@ -73,6 +73,7 @@
   // so the Type carries provenance metadata without re-authoring it.
   function metaFor(kind) {
     var means = null, symbol = null, negates = false, look = null;
+    var directed = null, inverse = null;   // THE EDGE LAW (A2): mirrored from the meaning home
     var E = window.CV_EDGES;
     if (E && typeof E.kind === 'function') {
       var ek = E.kind(kind);
@@ -85,15 +86,19 @@
         if (f) {
           if (!means) means = f.feeling + (f.senses && f.senses.length ? ' (' + f.senses.join('; ') + ')' : '');
           if (f.symbol) symbol = f.symbol;
+          // THE EDGE LAW: the field declares direction + the inverse telling (the verb-pair).
+          // Mirrored, never re-authored — the Company relation_types shape ({directed, inverse}).
+          if (typeof f.directed === 'boolean') directed = f.directed;
+          if (f.inverse) inverse = f.inverse;
           // a profile field may carry operator/negates flags
           var raw = (M.valuesFor ? M.valuesFor('edge') : null);
           var rec = raw && raw[kind];
           if (rec && rec.negates) negates = true;
           if (rec && rec.symbol && !symbol) symbol = rec.symbol;
         }
-      } catch (e) { /* this kind has no edge meaning field (e.g. documents) — fine; CV_EDGES gave the means */ }
+      } catch (e) { /* this kind has no edge meaning field — fine; CV_EDGES gave the means */ }
     }
-    return { means: means, symbol: symbol, negates: negates, look: look };
+    return { means: means, symbol: symbol, negates: negates, look: look, directed: directed, inverse: inverse };
   }
 
   var defs = edgeKindUnion().map(function (kind) {
@@ -115,6 +120,11 @@
       // operator metadata, mirrored (not re-authored) from the meaning home
       operatorSymbol: m.symbol || null,
       negates: !!m.negates,
+      // THE EDGE LAW (Tim, 2026-07-03): a typed edge is a directional verb with an equal
+      // and opposite — the Type carries {directed, inverse} mirrored from its meaning field
+      // (the same shape as the Company's relation_types records; the G6.2 convergence face).
+      directed: m.directed,      // true | false | null (null = the field predates the law — loud at read)
+      inverse: m.inverse,        // { feeling, senses? } — the opposite telling, declared once
       // the relation's defining SOCKETS — source/target, each accepting node classes.
       // accepts() rejects an endpoint whose classification isn't a node class.
       sockets: {

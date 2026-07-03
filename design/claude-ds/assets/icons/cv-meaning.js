@@ -415,15 +415,40 @@
     seed('line', 'right-angled', 'routed',     ['structured', 'deliberate'],    { phrase: 'routes to' });
     seed('line', 'curved',       'organic',    ['eased', 'flowing'],            { phrase: 'eases to' });
     seed('line', 'free',         'loose',      ['human', 'sketched'],           { phrase: 'sketches to' });
-    seed('edge', 'face',         'the face of', ['the visible page of']);
-    seed('edge', 'higher-order', 'part of',     ['an instance of a higher concept']);
-    seed('edge', 'navigates',    'goes to',     ['moves to a related place']);
+    // THE EDGE LAW (Tim, 2026-07-03 — CRITERIA AMENDMENT A2): a valid typed edge is a
+    // DIRECTIONAL VERB with an EQUAL AND OPPOSITE. Each directed relation declares its
+    // inverse telling ONCE here ({directed:true, inverse:{feeling,senses}}); readGraph
+    // composes it at read time from focus — one stored edge, both tellings, never stored
+    // twice. A symmetric relation ({directed:false}) reads with its own words both ways.
+    // All wording is STARTER data, live-tuned via CV_MEANING.author (A5).
+    seed('edge', 'face',         'the face of', ['the visible page of'],
+         { directed: true, inverse: { feeling: 'faced by', senses: ['shown by', 'fronted by'] } });
+    seed('edge', 'documents',    'a guide to',  ['explains', 'teaches', 'a how-to for'],
+         { directed: true, inverse: { feeling: 'documented by', senses: ['explained by', 'taught by'] } });
+    seed('edge', 'higher-order', 'part of',     ['an instance of a higher concept'],
+         { directed: true, inverse: { feeling: 'the higher concept of', senses: ['generalises'] } });
+    seed('edge', 'navigates',    'goes to',     ['moves to a related place'],
+         { directed: false });   // contextual navigation runs both ways (its look already says direction:'both')
     // universal-operator relations (the `= ≠ + → ⊂` sign-class) — near-universal meaning, free logic/maths.
-    seed('edge', 'equals',  'equal to', ['the same as', 'is'],      { operator: true, symbol: '=' });
-    seed('edge', 'not',     'not',      ['is not', 'unequal to'],   { operator: true, symbol: '≠', negates: true });
-    seed('edge', 'and',     'and',      ['combined with', 'plus'],  { operator: true, symbol: '+' });
-    seed('edge', 'becomes', 'becomes',  ['leads to', 'turns into'], { operator: true, symbol: '→' });
-    seed('edge', 'part-of', 'part of',  ['inside', 'belongs to'],   { operator: true, symbol: '⊂' });
+    seed('edge', 'equals',  'equal to', ['the same as', 'is'],      { operator: true, symbol: '=', directed: false });
+    seed('edge', 'not',     'not',      ['is not', 'unequal to'],   { operator: true, symbol: '≠', negates: true, directed: false });
+    seed('edge', 'and',     'and',      ['combined with', 'plus'],  { operator: true, symbol: '+', directed: false });
+    seed('edge', 'becomes', 'becomes',  ['leads to', 'turns into'], { operator: true, symbol: '→',
+         directed: true, inverse: { feeling: 'the outcome of', senses: ['comes from', 'made from'] } });
+    seed('edge', 'part-of', 'part of',  ['inside', 'belongs to'],   { operator: true, symbol: '⊂',
+         directed: true, inverse: { feeling: 'the container of', senses: ['contains', 'holds'] } });
+    // the sign-class grown (2026-07-03, the language seat) — feelings are NOUN-PHRASES so the
+    // read-out composes: "A is the resolution of B", never "A is resolves B".
+    seed('edge', 'resolves',      'the resolution of',  ['derived from', 'computed from'],      { operator: true, symbol: '∴',
+         directed: true, inverse: { feeling: 'resolved into', senses: ['computes down to'] } });
+    seed('edge', 'projection-of', 'a projection of',    ['a view of', 'one face of'],           { operator: true, symbol: '⇢',
+         directed: true, inverse: { feeling: 'projected as', senses: ['viewed as'] } });
+    seed('edge', 'mirrors',       'the mirror of',      ['equal and opposite of', 'reflects'],  { operator: true, symbol: '≍',
+         directed: false });   // a mirror relation is its own opposite
+    seed('edge', 'seeds',         'the seed of',        ['grows into', 'the root of'],          { operator: true, symbol: '∗',
+         directed: true, inverse: { feeling: 'grown from', senses: ['rooted in'] } });
+    seed('edge', 'frames',        'the frame of',       ['the lens on', 'the way of seeing'],   { operator: true, symbol: '⌐',
+         directed: true, inverse: { feeling: 'framed by', senses: ['seen through'] } });
     seed('direction', 'to',   'acts on',     ['subject → object']);
     seed('direction', 'from', 'acted on by', ['object ← subject']);
     seed('direction', 'both', 'mutual',      ['both ways']);
@@ -450,7 +475,11 @@
     // SYMBOL is intrinsic (CV_ICONS) — not re-skinned. A small gloss maps an icon
     // id to its plain word; absent a gloss the icon's own id is used (its real
     // name, not a fabrication).
-    P.symbolGloss = Object.assign({ house: 'home' }, P.symbolGloss || {});
+    P.symbolGloss = Object.assign({ house: 'home',
+      // the language family (2026-07-03): each minted symbol arrives with its word
+      frame: 'frame', block: 'block', equation: 'law', window: 'window', seed: 'beginning',
+      weave: 'weave', judge: 'judge', ring: 'ring', corpus: 'memory', room: 'room',
+      territory: 'territory', operator: 'sign' }, P.symbolGloss || {});
   })();
 
   // (G0) AUTHORING — the language is WRITTEN over time, live, by Tim AND the AI, with EQUAL tools.
@@ -507,6 +536,11 @@
       // `negates` (G2.4 — negation detected via .negates, never a string match),
       // `operator`/`symbol` (the universal-operator sign-class). null/false when absent.
       negates: !!rec.negates, operator: !!rec.operator, symbol: rec.symbol || null,
+      // THE EDGE LAW (A2) carried through: `directed` (true=a verb-pair, false=symmetric,
+      // undefined=predates the law — the inverse read throws naming it) + `inverse`
+      // ({feeling, senses?} — the opposite telling, declared once, composed at read).
+      directed: (typeof rec.directed === 'boolean') ? rec.directed : undefined,
+      inverse: rec.inverse || null,
     };
   };
 
@@ -766,6 +800,25 @@
     return verb;
   }
 
+  // THE EDGE LAW (Tim, 2026-07-03 — A2): the INVERSE verb-phrase — the same stored edge
+  // told from its TARGET's side. A directed relation is a verb-pair (equal and opposite);
+  // the opposite telling is DECLARED ONCE on the meaning field (.inverse) and COMPOSED here
+  // at read time — never stored as a second edge. A symmetric relation (directed:false) and
+  // a kindless edge read with the same words both ways (edgeClause). LOUD: a directed kind
+  // with no declared inverse throws naming itself — the pair IS the grammar.
+  function edgeClauseInverse(self, edge) {
+    if (!edge || !edge.line) fail('readGraph: an edge needs a line (its mood)');
+    var mood = self.field('line', edge.line);
+    var rk = edge.kind ? self.field('edge', edge.kind) : null;
+    if (!rk || rk.directed === false) return edgeClause(self, edge);   // symmetric / kindless: its own opposite
+    if (rk.directed !== true || !rk.inverse || !rk.inverse.feeling)
+      fail('readGraph: edge kind "' + edge.kind + '" has no declared inverse telling (THE EDGE LAW: a ' +
+           'directed relation is a verb-pair — author it via CV_MEANING.author.setRelation(id, feeling, ' +
+           'senses, {directed:true, inverse:{feeling:…}}))');
+    // realise with the inverse wording; negation folds exactly as forward (isNegated reads the real field)
+    return relationVerb(self, edge, { feeling: rk.inverse.feeling, negates: rk.negates }, mood);
+  }
+
   // ==========================================================================
   // G10 — MULTI-TARGET transglyphing. The meaning IS the graph; a target is one
   // PROJECTION of it. The traversal (focus, the walk recursion, coordination/
@@ -794,6 +847,9 @@
       },
       // the verb-only clause (used when the subject is already on the page, e.g. a sibling edge).
       clause: function (edge, objText) { return edgeClause(self, edge) + ' ' + objText; },
+      // THE EDGE LAW: the verb-only INVERSE clause — the focus telling an INCOMING edge with
+      // the opposite verb ("… is the container of <source>"). Same shape as clause().
+      clauseInverse: function (edge, srcText) { return edgeClauseInverse(self, edge) + ' ' + srcText; },
       coordinate: function (parts) { return parts.join(', and '); },               // "A, and B"
       subordinate: function (ref, parts) { return ref + ', which ' + parts.join(', and '); },
       conditional: function (edge, text) { return conditionalWrap(edge, text); },  // "if … then …"
@@ -843,6 +899,10 @@
       // (threaded in by walk via the third arg). Same shape as relation() — negation folded,
       // conditional left to T.conditional.
       clause: function (edge, objExpr, subjId) { return neg(edge, '(' + kindToken(edge) + ' ' + subjId + ' ' + objExpr + ')'); },
+      // THE EDGE LAW at the structural target: the inverse telling NEVER inverts the STRUCTURE —
+      // the triple stays canonical (kind source focus). English swaps words; triples swap nothing.
+      // (This is the proof the inverse lives in the REALISER, not in the graph.)
+      clauseInverse: function (edge, srcExpr, focusId) { return neg(edge, '(' + kindToken(edge) + ' ' + srcExpr + ' ' + focusId + ')'); },
       coordinate: function (parts) { return parts.length > 1 ? '(and ' + parts.join(' ') + ')' : parts[0]; },
       subordinate: function (ref, parts) { return parts.length > 1 ? '(and ' + parts.join(' ') + ')' : parts[0]; },
       conditional: function (edge, text) {
@@ -944,7 +1004,27 @@
       return T.subordinate(ref, parts);
     }
     var v = {}; v[focus] = 1;
-    return T.finalize(walk(focus, v, opts.depth || 3), { focus: focus, kind: 'sentence' });
+    var text = walk(focus, v, opts.depth || 3);
+    // THE EDGE LAW (A2): the focus ALSO tells its INCOMING edges, with the inverse verb —
+    // ONE stored edge, BOTH tellings, realised from focus. The default focus is a pure
+    // source (no incoming), so every existing read is byte-identical; an explicit
+    // target-side focus now speaks instead of standing mute. Every target must supply
+    // the clauseInverse realiser (loud — the law binds all projections).
+    var inc = edges.filter(function (e) { return e.to === focus; });
+    if (inc.length) {
+      if (!T.clauseInverse) fail('readGraph: target "' + target + '" has no clauseInverse realiser (THE EDGE LAW binds every target)');
+      var hasOut = edges.some(function (e) { return e.from === focus; });
+      var focusRef = T.node(byId[focus]);
+      var invParts = inc.map(function (e) {
+        // starter scope: the inverse tail is the source's node-form (no subordinate recursion
+        // back through the source — that would re-tell the edge we are inverting).
+        return T.conditional(e, T.clauseInverse(e, T.node(byId[e.from]), focus));
+      });
+      text = (target === 'triples')
+        ? T.coordinate((hasOut ? [text] : []).concat(invParts))
+        : (hasOut ? text + ', and ' + T.coordinate(invParts) : focusRef + ' ' + T.coordinate(invParts));
+    }
+    return T.finalize(text, { focus: focus, kind: 'sentence' });
   };
 
   // ==========================================================================
@@ -1081,10 +1161,17 @@
     // edge feelings to peel the relation word off the verb-phrase. Longest first so
     // "part of" wins over a hypothetical "part".
     var edgeVals = self.valuesFor('edge');
-    var REL = Object.keys(edgeVals).map(function (id) {
+    var REL = [];
+    Object.keys(edgeVals).forEach(function (id) {
       var f = self.field('edge', id);               // LOUD if a seeded edge has no feeling
-      return { kind: id, feeling: f.feeling, negates: f.negates };
-    }).sort(function (a, b) { return b.feeling.length - a.feeling.length; });
+      REL.push({ kind: id, feeling: f.feeling, negates: f.negates });
+      // THE EDGE LAW: the INVERSE telling parses to the SAME canonical edge — swap:true
+      // marks that subject/object exchange back to the stored direction. Declared once
+      // on the field; the parser learns both sayings of every verb-pair for free.
+      if (f.directed && f.inverse && f.inverse.feeling)
+        REL.push({ kind: id, feeling: f.inverse.feeling, negates: f.negates, swap: true });
+    });
+    REL.sort(function (a, b) { return b.feeling.length - a.feeling.length; });
 
     // MOOD phrases, INVERTED from valuesFor('line'). Forward uses mood.phrase||feeling
     // as the verb head ("is"/"could be"/"flows to"…). Map each phrase → its line value.
@@ -1181,7 +1268,8 @@
       }
       var objPhrase = relHit ? afterMood.slice(relHit.feeling.length).trim() : afterMood;
       if (!objPhrase) fail('parse: clause "' + clauseText + '" names a relation but no object (loud)');
-      return { line: moodHit.line, kind: relHit ? relHit.kind : null, objPhrase: objPhrase };
+      return { line: moodHit.line, kind: relHit ? relHit.kind : null,
+               swap: !!(relHit && relHit.swap), objPhrase: objPhrase };
     }
 
     // ---- top level: subject, then one-or-more coordinated clauses ("… and …") ----
@@ -1248,7 +1336,11 @@
       var parsed = parseClause(cl);
       var obj = parseReferent(parsed.objPhrase);
       nodes.push(obj);
-      edges.push({ from: subject.id, to: obj.id, line: parsed.line, kind: parsed.kind });
+      // THE EDGE LAW: an inverse saying ("B is the container of A") stores the ONE canonical
+      // edge (A part-of B) — the swap puts subject/object back in the declared direction.
+      edges.push(parsed.swap
+        ? { from: obj.id, to: subject.id, line: parsed.line, kind: parsed.kind }
+        : { from: subject.id, to: obj.id, line: parsed.line, kind: parsed.kind });
     });
 
     return { graph: { nodes: nodes, edges: edges }, focus: subject.id,
