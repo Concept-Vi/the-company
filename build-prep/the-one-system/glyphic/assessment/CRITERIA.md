@@ -5,36 +5,36 @@
 > board-announce ops touches · copies-not-edits from counterpart · the STANDARD (product-level).
 
 ## W0 · TRUTH & HYGIENE
-- [ ] `core/cv-nodes.d.ts`: "glyphgraph" in CVGraphType union; line/direction/routing/lineColor declared
+- [x] `core/cv-nodes.d.ts`: "glyphgraph" in CVGraphType union; line/direction/routing/lineColor declared
       on CVGraphEdge. VERIFY: tsc-parse or a JSDoc-consumer check; grep confirms no other consumer breaks.
-- [ ] REGROUNDING + THE-GENERATIVE-LANGUAGE carry §1 staleness corrections (spacing-resolved, G1-rescope,
+- [x] REGROUNDING + THE-GENERATIVE-LANGUAGE carry §1 staleness corrections (spacing-resolved, G1-rescope,
       reactflow-dissolved, layout-jump-half-solved, counterpart-live). VERIFY: read-back.
-- [ ] ops/services.json chat-4b-fp8 gpu_util 0.9→0.44 (its own documented fitted value), board-announced.
+- [x] ops/services.json chat-4b-fp8 gpu_util 0.9→0.44 (its own documented fitted value), board-announced.
       VERIFY: `company status` shows the fitter accepting the interaction loadout again.
 
 ## W1 · THE FURNITURE PORT (all: additive files in claude-ds; provenance header naming the source commit)
-- [ ] `assets/icons/cv-organisms.js` — organisms.js ported; ~30 `--dna-*` vars re-pointed to claude-ds
+- [x] `assets/icons/cv-organisms.js` — organisms.js ported; ~30 `--dna-*` vars re-pointed to claude-ds
       tokens. VERIFY BY USE: a harness page renders mesh + hubNetwork + cascade + iconStrip re-tinting
       with the live tokens; zero raw hex (design-lint pass).
-- [ ] `core/cv-address.js` — the span/nested-fraction resolver (from resolve.mjs + address.json): spans,
+- [x] `core/cv-address.js` — the span/nested-fraction resolver (from resolve.mjs + address.json): spans,
       derived addresses, LCA-on-address-tree. VERIFY: the ported proofs pass (11/11 equivalents) in node.
-- [ ] `core/cv-arc.js` + `assets/icons/glyph-arc-seed.js` — the arc resolver (from resolve-sequence.mjs +
+- [x] `core/cv-arc.js` + `assets/icons/glyph-arc-seed.js` — the arc resolver (from resolve-sequence.mjs +
       sequence.json), renamed for conversation-growth events. VERIFY: 7/7-equivalent proofs pass.
-- [ ] `cv-edges.js` gains the `verb` facet (transport/gather(in|out)/descend/orbit) + the seam law,
+- [x] `cv-edges.js` gains the `verb` facet (transport/gather(in|out)/descend/orbit) + the seam law,
       additive to `kind`. VERIFY: resolve({kind,verb}) returns composed facets; existing 4 kinds unchanged.
 - [ ] Minted-glyph records adopt the co-located `voice` block convention (schema documented in
       LANGUAGE.md). VERIFY: the 12 language-family facets carry voice blocks; the read-out uses them.
 
 ## W2 · THE LIVING CANVAS
-- [ ] DiagramSolver's glyphgraph layout derives slot-position from the node's ADDRESS (cv-address spans),
+- [x] DiagramSolver's glyphgraph layout derives slot-position from the node's ADDRESS (cv-address spans),
       frozen on first placement; a drag writes an authored override. VERIFY BY USE: grow a graph 3→10
       nodes in the writer — ZERO existing node moves (screenshot before/after diff).
-- [ ] The growth animator: a graph mutation animates as the address-DIFF (changed = movers, LCA = the held
+- [x] The growth animator: a graph mutation animates as the address-DIFF (changed = movers, LCA = the held
       anchor); no teleports. VERIFY BY USE in chrome: add/remove/retarget — motion reads as the change.
-- [ ] Fields: an `ordinal` CV_AXES axis (the ramp, monotonic-lightness invariant) paintable onto a
+- [x] Fields: an `ordinal` CV_AXES axis (the ramp, monotonic-lightness invariant) paintable onto a
       glyphgraph's nodes by telling-order via the zone-wash mechanism. VERIFY: the writer shows order as
       temperature; toggling the field off returns neutral; no hex anywhere.
-- [ ] Read-out COVERAGE: every drawn relation appears in the spoken read-out (the sentence-coverage gap).
+- [x] Read-out COVERAGE: every drawn relation appears in the spoken read-out (the sentence-coverage gap).
       VERIFY: 5 authored graphs — picture-clause count == sentence-clause count.
 
 ## W3 · THE CITIZEN WRITER (the product face — FORM half is Tim's eye at the end)
