@@ -166,3 +166,29 @@ demonstrable. A surface is green on FORM only when a **design-critic** (browser,
 - **Reverse parser** (text → glyphgraph / semantic parsing) — the dream direction; needs G1–G6 solid first.
 - **Force-directed / DAG layout** — only if authored-position + layered layout proves insufficient.
 - **Multi-target transglyphing** (graph → code / other notations) — the signature generalises; targets later.
+
+
+---
+
+## THE CORRECTED LAWS (2026-07-03 — HOW-guidance for the amendments; criteria live in CRITERIA.md)
+
+**Meaning is a FIELD, everywhere.** Whenever tempted to write `X = 'one sentence'` or a fixed lookup
+table, the right shape already exists: a CV_MEANING field (feeling + senses + relation + gloss),
+authorable via CV_MEANING.author. Extend the language in ITS shape — never mint a private const the
+author API can't reach. The referent internals (REFERENT_KIND/OP, determiners) migrate into the profile
+exactly the way line fields already carry `phrase`.
+
+**Edges: one home, verb-pairs.** The flow is: meaning field ('edge', word) + relationship Type (family:
+'relationship', + directed/inverse) → the seed union picks it up → geometry stays in CV_SHAPES/cv-edges
+(look only). To add a verb: author the field, register the Type WITH its inverse, done — it renders,
+reads, parses. Inverses are DECLARED once and composed at read (readGraph realises "A contains B" or
+"B is contained by A" from ONE stored edge + focus) — never stored twice.
+
+**Placement: the address IS the position.** cv-address spans give every node a relative address in its
+parent frame; layout = resolving that address into the current viewport. A mutation re-partitions ONE
+parent span; resolution cascades only within that boundary. Movement = the address diff (bounded, angled,
+animated). Order-of-relation changes are the SAME operation on the ordinal dimension of the span. Authored
+drag = a per-node override field, still relative to the parent.
+
+**The wording loop.** Wording ships as seeded profile data; correction happens DURING generation in front
+of Tim through the author API (setGloss/setField live). Building the easy correction path IS the gate.

@@ -1,3 +1,13 @@
+# [RECONCILED 2026-07-03 — FOLDED INTO THE CANONICAL PLAN, no longer a plan of record]
+> This assessment was the drift: it superseded the original triad (`../CRITERIA.md` / GUIDE / SYNTHESIS /
+> ROADMAP) instead of folding into it — Tim's correction. It stays as a build-log of what the W-loop did.
+> Where each strand now lives:
+> - W0 ✔ kept (truth/hygiene) · W1 ports ✔ kept as machinery (disposition: ../CRITERIA.md AMENDMENT A4)
+> - W1 verbs + W2 placement/ordinal = DRIFT → redone under AMENDMENTS A2/A3/A4 (ROADMAP PHASE RECONCILE)
+> - W2 read-out coverage ✔ kept · W3 (writer) / W4 (company wires) → already in ROADMAP's LIVE-INSTRUMENT groups
+> - W5 "octagon decision" was a FALSE decision (nothing has one meaning — A1/A4); the register pass = A5's live-tune
+> The plan of record is `../CRITERIA.md` (+ its AMENDMENTS) · `../GUIDE.md` · `../SYNTHESIS.md` (Round 7) · `../ROADMAP.md`.
+
 # COMPLETION CRITERIA — the glyphic build (two-faced: FUNCTION + FORM; verified by USE)
 
 > Each criterion is checkable. A group is DONE when every row passes BY USE (not by code-read).

@@ -41,13 +41,42 @@
 Identify `/home/tim/repos/counterpart/design`'s unique parts (dna/ engine/ factory/ pieces/[56] surface/ supabase/)
 and FUSE the best into claude-ds; drop the parallel (islands-join-mainland). A scoped read+fuse pass.
 
+## PHASE RECONCILE — the 2026-07-03 correction, FIRST (CRITERIA AMENDMENTS A1-A5; drift → law)
+> This phase repairs what the W-loop drift broke and lands Tim's corrections as build. It PRECEDES
+> everything below because the pieces below stand on these homes (edges, placement, meaning-shape).
+- **R1 · The edge law (A2 + G6.2 in one move).** relationship Types gain `directed`+`inverse` (converging
+  the Company's relation_types shape); readGraph realises the inverse from focus (one stored edge, both
+  tellings); the cv-edges `verbs` table is dispositioned through the meaning/registration doors WITH
+  opposites; the soft kind-default goes loud; the existing kinds (face/documents/higher-order/navigates)
+  re-expressed as verb-pairs or surfaced to Tim in the live render. VERIFY: author a verb-pair at runtime
+  → it renders, reads BOTH directions, parses.
+- **R2 · Referent words → profile data (A1).** REFERENT_KIND/OP + the determiner ladder move into the
+  active profile as field data; referent() and parse() read them there. VERIFY: setField changes read-out
+  AND parse live, no code edit.
+- **R3 · Placement redo (A3) — the relative laws.** cv-address spans BECOME the position system (address
+  = relative span/angle in parent; mutation re-partitions ONE parent span; inside re-resolves bounded+
+  angled+animated, outside holds; SAME op for order-changes). Replaces the absolute-freeze DiagramSolver
+  edit. verify_g11 REWRITTEN to assert the laws (currently 19/21 broken); the left-vs-centred taste call
+  goes to Tim's eye in the live render.
+- **R4 · Meaning-shape repairs (A4).** 12 minted symbols → meaning FIELDS via the author API; ordinal
+  axis → contextual resolution + the corpus-sampled `--ramp-*` tokens (SYSTEM-GAPS' pre-existing intent);
+  gradient interpretation un-baked (one contextually-loaded meaning, field-shaped).
+- **R5 · The block system read.** The block/resolution system lives on the UPSTREAM claude.ai/design
+  remote — pull/read it (DesignSync) BEFORE G8/zones so those build on it, not beside it.
+
 ## PHASE REMAINING — the rest of the LIVE-INSTRUMENT groups (design against the vite surface A0 establishes)
+> Reconciled 2026-07-03: G9 parse, G10 targets, G8b binding engine, G2.4, G5 routing are BUILT+verified
+> (SYNTHESIS Round 7) — struck from this list. What genuinely remains:
 - **The interactive canvas/renderer decision** (reactflow vs extend the tldraw/glyphGraphView pattern) — now a real
   choice on the vite surface, under the one-IR law (a projection of the CVGraph, render nodes via CV_GLYPHIC).
-- **Incremental-stable placer** (freeze-x/y — C's pinning is the seed; the spatial-theorem placement modes).
-- **Data-binding + storage** (typed-glyphic deep-linked persistence; the domain schema; Supabase Realtime; `project://`).
-- **G8 self-describing** (guides + pages per glyphic thing; the authoring panel) — the dual AI+human surface.
-- **Zones** · the read-out wording live-tuning · reverse-parser + multi-target polish · the 3 gate-detectors (no-staleness).
+- **Data-binding persistence** (G8b.4: typed-glyphic deep-linked storage; the domain schema; Supabase
+  Realtime; `project://`; the ledger.assertion ASK at board://item-be541559) — the binding ENGINE is done.
+- **G8 self-describing** (guides + pages per glyphic thing; the USER authoring panel — the AI face exists)
+  — on the upstream block system per R5.
+- **Zones** · G9 subordination/conditional parse gaps (they throw naming themselves) · a `code` READGRAPH
+  target when needed · the 3 gate-detectors (no-staleness) · the G5 FORM taste flags (mixed routing,
+  arrowhead angle) + the writer FORM pass to Tim's eye.
+- **The wording live-tune** rides EVERY phase (A5: correctability-by-use, never a checkpoint).
 
 ## Standing rules (every step)
 Verify by USE (headless harness + chrome + the live services) · loud-fail (unknown→throw; guard the READ-4/6 silent-

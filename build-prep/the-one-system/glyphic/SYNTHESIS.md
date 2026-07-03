@@ -162,3 +162,52 @@ authoring + G8.
   VB/pitch) — count-independent, so still no-jump, but rows sit centred instead of hugging left. So the call is
   **left-anchored vs centred-on-fixed-capacity, BOTH stable — which reads better** — a taste call for Tim's eye
   in the live render (`system/language.html`), not a binary defect.
+
+
+---
+
+## ROUND 7 — the 2026-07-03 reconciliation (verifier ground-truth + the correction)
+
+**How this round exists:** the seat drifted — abandoned this triad for a self-made assessment
+(`assessment/`), built W0-W2 from it, and was corrected by Tim. A full first-hand read + a run of ALL
+13 `_demo/verify_*.js` harnesses followed (record: `READING-LEDGER.md`). This round folds what that
+established. **The assessment's "not done" claims were largely FALSE** — the verifiers prove the
+language engine is far more complete than it claimed.
+
+### 7.1 · Verifier ground-truth (all run 2026-07-03)
+g0 ✓ · language ✓ · g2 35/35 · g2_4 22/22 · g3 25/35→25/25 ✓ · g8b 32/32 · g9 9/9 · g10 30/30 ·
+readgraph ✓ · glyph ✓ · address 13/13 · arc 7/7 · **g11 19/21 — broken by the W2 absolute-freeze edit**
+(deep-chain compression + honest-overflow assertions invalidated without re-verification).
+Built since Round 6, beyond the plan's knowledge: **G9 parse** (deterministic inversion, inverse
+vocabularies from the ACTIVE PROFILE, starter gaps throw naming themselves) · **G10 READGRAPH_TARGETS**
+(english/triples realiser registry, extend-by-registration) · **G8b bindings** (binding=encoding-set,
+resolveBindings PURE) · **G2.4 negation** (single-homed `.negates`) · **G5 positioned edgeSVG + routing
+facet** · **relationships-seed.js** (Types live-reconciled from CV_EDGES ∪ CV_MEANING edge fields).
+
+### 7.2 · What the W-loop added and its standing (the drift, dispositioned in CRITERIA AMENDMENTS)
+KEPT AS MACHINERY: cv-organisms.js port · cv-address.js (span algebra — serves A3 directly) · cv-arc.js ·
+cv-nodes.d.ts drift fix · read-out coverage (picture-clauses == sentence-clauses) · generator field toggle.
+REDO: the DiagramSolver absolute-freeze placement (→ A3 relative laws) · verify_g11 (rewrite to assert
+the LAWS). RE-HOME: the cv-edges `verbs` table (→ A2, through the meaning/registration doors, with
+inverses). RESHAPE: 12 minted symbols' one-sentence definitions → meaning FIELDS · ordinal axis fixed
+stops → contextual + the corpus-sampled --ramp-* (SYSTEM-GAPS' pre-existing intent). ④ (counterpart/design)
+built on the committed stack — no reverts; reconcile forward.
+
+### 7.3 · Tim's corrections now standing as CRITERIA (see AMENDMENTS A1-A5)
+Nothing has one fixed meaning · edges = directional verbs with an equal-and-opposite ONLY ("is the face
+of" is a SENTENCE) · placement is RELATIVE, re-resolved inside its boundary, still outside, same laws for
+every relational mutation incl. order changes · the read-out gate = correctability-by-use, never a
+blocker · the referent words are profile data, not consts.
+
+### 7.4 · Convergence facts sharpened this round
+- Company `relation_types/` records carry `{id, directed, inverse, near, far}` — **Tim's edge law already
+  encoded on the Company side**; relationship Types here carry NEITHER directed NOR inverse. G6.2 = A2.
+- relationships-seed reconciles LIVE from CV_EDGES.ids() ∪ CV_MEANING.valuesFor('edge') — authored
+  operators auto-become Types; but verbs≠kinds: a styling-table entry does NOT flow in. The union is the
+  door; cv-edges is not.
+- SYSTEM-GAPS: the containment tree is the spine of every axis; the ordered ramp `#d6bf57→#c09d5d→#b98664`
+  should be tokenised `--ramp-*` distinct from the flat accent — the ordinal axis points at the wrong tokens.
+- Round 6's stable-slot layout was verified 21/21 WITH honest boundaries + a flagged left-vs-centred taste
+  call for Tim that was never surfaced — surface it in the A3 redo's live render.
+- The block system: NOT in this repo — lives on the upstream claude.ai/design remote (check via DesignSync
+  before G8/zones work).
