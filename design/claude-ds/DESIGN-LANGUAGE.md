@@ -140,3 +140,42 @@ a Glyphic *subscribes* to it). A component declares each part-slot as a **subscr
 `{ axis, groups?|values?, default }`; an editor/foundry shows exactly `CV_AXES.candidates(sub)`. New
 visual dimension = register an axis, not a per-consumer constant. (Spec: `system/glyphic-system.html`
 §08; plan: `analysis/AXIS-REFACTOR.md`.)
+
+## 19. Relations are directional verbs with an equal-and-opposite — the edge law
+A relationship in the system is not a label on a line; it is a **typed directional verb that declares
+its inverse**. Every edge kind has a `directed` flag, and every directed kind declares its `inverse`
+**once** (`contains ↔ contained by`, `has-face ↔ face-of`); the opposite telling is *composed at read*
+from the one stored edge and the reader's focus — never stored twice. Symmetric relations (`equals`,
+`and`, `navigates`, `mirrors`) declare `directed:false`. This makes the language two-way by
+construction: **whatever can be shown can be pointed at, and whatever can be generated can be read
+back** — a one-way surface is a drift on par with a hardcoded hex. The read-out (`readGraph`) realises
+"A contains B" or "B is contained by A" from the same edge; the reverse parser stores the one canonical
+edge from either saying. A *sentence* about a relation ("is the face of") lives in the read-out, never
+as an edge type-id. Edge kinds live in ONE home (the meaning field `('edge', word)` + a `relationship`
+Type carrying `{directed, inverse}` — the shape the Company's `relation_types` already use); geometry
+(line-style, colour, routing, arrowheads) stays in the shape layer and is *look only*. An edge's
+**line-colour is a data/status field** (red=blocked · green=approved · gold=active) resolved from the
+meaning — a status channel, distinct from the two brand voices of §6. To add a relation: author the
+field, register the Type with its inverse — it renders, reads both directions, and parses, with no code
+edit. (Engine: `assets/icons/cv-meaning.js` read-out + `cv-edges.js`; Types: `app/registry/
+relationships-seed.js`. Full law: `build-prep/the-one-system/glyphic/THE-GENERATIVE-LANGUAGE.md` §1.18.)
+
+## 20. Nothing has one fixed meaning — the read-out vocabulary is profile data
+Meaning in this system is a **field** (feeling + senses, contextual, combinatorial), never a single
+baked sentence, and **every word the language speaks is authorable profile data — never a private
+constant the author API cannot reach.** A fixed interpretation anywhere the author API can't touch is a
+violation of the one-home law (§13) applied to meaning. The referent words the read-out uses — the noun
+a form resolves to, the phrase an operator reads as, the determiner ladder ('a possible' / 'the' /
+'this' / 'a') — are **field data on the meaning profile** (`form.kindWord`, `form.opWord`,
+`fill`/`outline.determiner`), read by both `referent()` and the reverse `parse()`, so authoring a word
+moves the read-out AND the parse together, live, with no code edit. This is why "an octagon does not
+*mean* gateway": the glyph carries a meaning FIELD, not a fixed word — the read-out word is a
+correctable profile value, tuned during use, not a definition. (This is distinct from ConceptV's
+brand-entity **shape system** — Octagon = the Virtual Hubs product entity, etc. — which is observed
+brand DNA, not a language referent; see README. The entity-shape mapping is a domain fact and stays;
+the *read-out word* for a bare glyph is the field data described here.) Symbols remain the lone
+intrinsic-meaning exception (their meaning is not profile-governed). Correction happens DURING
+generation through the authoring API (`setField`/`setGloss`), never behind a build gate. Known small
+duplication, not yet unified: the axis-subscription helper exists twice (`sub()` in glyphic-type.js,
+`ax()` in components-type.js) — one concept, two homes, booked for union. (Engine:
+`assets/icons/cv-meaning.js`; the authoring API `CV_MEANING.author`.)

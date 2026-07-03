@@ -176,3 +176,69 @@ kind.graph: nodes socket accepts [glyphic,atom,block]; edges socket accepts [rel
 solver implements its own set — a small declaration/implementation drift). panel.composition-menu = the
 candidatesForSocket demonstration (a socket accepting a classification shows the matching library with
 zero bespoke wiring). kind.slide-system points at core/Slide.
+
+---
+
+## BUILD LOG — PHASE RECONCILE (from the updated plans, 2026-07-03)
+
+### R1 · THE EDGE LAW — BUILT + VERIFIED (commit 28e1a94d)
+- Meaning fields: every edge kind declares `directed`; every directed one declares `inverse`
+  (verb-pair, declared once). navigates + mirrors + equals/not/and = symmetric (directed:false).
+  `documents` gained its missing meaning field (was UNREADABLE — field('edge','documents') threw).
+- readGraph: focus tells INCOMING edges via T.clauseInverse — english swaps words, triples keep
+  `(kind src focus)` canonical (proof the inverse lives in the realiser, not the graph). Default
+  focus = pure source → all existing reads byte-identical (regression green).
+- parse: inverse feelings join REL with swap:true → the inverse saying stores the canonical edge.
+- Types: {directed, inverse} mirrored via metaFor; **types-core normalize was silently DROPPING
+  relationKind/operatorSymbol/negates too** (the dropped-field trap) — now carried.
+- cv-edges: verbs table REMOVED (disposition: drift, nothing consumed it — not re-homed);
+  resolve() loud (no kind → throw; unknown kind → throw; meaning-only kinds accepted via the union).
+- verify_edgelaw.js 15/15 (falsify-first: 2/15 pre-build). All other harnesses green; g11 19/21
+  unchanged (pre-existing W2 breakage = R3).
+- FLAGS for live-tune (A5): 'part of' is a HOMONYM (higher-order + part-of share the feeling —
+  parse picks one); "is becomes"-style mood+feeling seams; all inverse wordings are starter.
+- describeRelation (the 2-node inspector read) does not yet realise inverses — readGraph is the
+  language home; noted, in scope when the inspector read is next touched.
+
+### R2 · REFERENT WORDS → PROFILE DATA — BUILT + VERIFIED (commit follows R1)
+- REFERENT_KIND/OP consts + determiner ladder deleted; words now FIELD DATA (form.kindWord/
+  opWord; fill/outline.determiner). referent() + parse() read the SAME fields — authoring a
+  word moves both directions live (proven: octagon 'gateway'→'portal' changes read-out AND
+  parse; the old word throws loud, no ghost vocabulary; a new determiner parses for free).
+- field() DROPPED-FIELD CLASS dissolved (design-for-the-class): raw record spread first —
+  any authored extra reaches every reader; no more whitelist-normalizer silent drops.
+- Stricter (deliberate): a present-unknown OUTLINE value now throws in referent (was
+  unvalidated for non-dashed values) — the trichotomy law now uniform across facets.
+- verify_referent_data 12/12 (falsify-first 3/12 pre-build). All 14 harnesses green.
+
+### CORRECTION (2026-07-03, from the census team's first verified handoffs)
+- **My queue note was WRONG**: FINDINGS-LOG has NO slices for the stable-slot/G8b/G9/generator builds —
+  the log jumps Slice 79 → 78 (language-era → System Map); "stable-slot"/"pinning"/"g11" = zero hits
+  (verified by full-range read + grep). ADVISOR-AUDIT §6.1 inherited the same false premise. The actual
+  placement-rationale record: verify_g11.js itself, SYNTHESIS Round 6, REGROUNDING.md, + two drift-era
+  W-loop files (AREA-21-spatial-proportion-zones, AREA-D-canvas-spatial — only record, unreliable).
+  THE GAP IS ITSELF A FINDING: those builds never wrote their slices (discipline breach to book).
+- **Early handoff headlines from the completed history-deep read** (file landing as census/AREA-history-deep.md):
+  --ramp-1..4 tokens ALREADY EXIST (colors_and_type.css:76-79; A4's hexes are ramp-2..4 — point, don't
+  re-mint) · A4 internal collision: symbols are Tim's intrinsic exception (valuesFor('symbol') throws) —
+  meaning-fields for the 12 symbols belong on CV_ICONS records, not the profile · octagon='Gateway'
+  provenance = cv-shapes.js:79 shapeTypes (a pre-R2 fixed-meaning home CV_MEANING still seeds from) ·
+  the three-way icon fork (icon-paths.js + ConceptVIcon.jsx beside CV_ICONS) flagged Slice 34, STILL OPEN ·
+  glyphic-foundry.html silently falls back to demo candidates on model failure (loud-fail violation) ·
+  AXES.md:71-100 already states Tim's relative placement laws — A3's ORIGINAL-PLAN grounding.
+
+---
+
+## THE CENSUS — COMPLETE (2026-07-03, nine-reader team; evidence = census/AREA-*.md)
+Coverage: the glyphic-core corpus is now read ≈ in full, first-hand — engine homes (cv-glyphics/cv-shapes/
+cv-icons/cv-organisms/icon-paths/cv-vi-glyph full), core/ (all 17 files, DiagramSolver every line),
+app/registry 13/13, app/ai 7/7, the system pages (glyphic-system/language/the-whole-thing/system-map/
+glyphgraph-generator full), the canon docs (README/DESIGN-LANGUAGE/HANDOFF/SYSTEM-GAPS/AXES/UNIFICATION/
+INTEGRATION/LANGUAGE + the analysis remainder classified), the charter docs (THE-GENERATIVE-LANGUAGE/
+REGROUNDING), FINDINGS-LOG WHOLE (all 65 slices). Synthesis = SYNTHESIS.md Round 8; criteria = CRITERIA
+A6 (the unification slate); sequencing = ROADMAP R1b/R3-rewritten/R4-corrected/R6; the Tim queue =
+TIM-DECISIONS.md. Cross-read corrections recorded in Round 8.4 (incl. one census report's own false
+claim — registry-spine's "CV_HOST doesn't exist" — caught and corrected: host-runtime.js:429, 8 consumers).
+Lockstep debt CLOSED: DESIGN-LANGUAGE §19/§20 + README read-out bullet applied; HANDOFF "since Slice 3"
+addendum + SYSTEM-GAPS triage header applied. Remaining known-unread: none in the glyphic-core census
+scope; the upstream block system (R5) is the next NEW territory.

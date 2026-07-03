@@ -5,6 +5,63 @@
 > autonomous sessions don't repeat or contradict. Newest first.
 >
 
+## Slice 84 — Glyphic R2: the REFERENT WORDS are PROFILE DATA (A1 — a G0.1 completion)
+Tim's law (2026-07-03): "nothing has one fixed meaning" — a fixed interpretation anywhere the author API
+can't reach is a violation. The engine violated its own G0.1: `REFERENT_KIND` (octagon→'gateway'…),
+`REFERENT_OP` (triangle→'action on'…), and the determiner ladder were module-private consts.
+- **`assets/icons/cv-meaning.js`** — the consts DELETED. The words are field data now: `form` fields carry
+  `kindWord` (trailing noun) or `opWord` (leading phrase); `fill`/`outline` fields carry `determiner`
+  ('the'/'this'/'a possible'; outline wins, then fill, else 'a'). `referent()` reads them from the active
+  profile; `parse()` derives its inverse vocabularies (DET ladder, KIND_SUFFIX, OP_PREFIX) from the SAME
+  fields — an authored word moves the read-out AND the parse together, live, no code edit. Canonical-inverse
+  rule for a determiner claimed by several fields: first claimant in read precedence (outline values, then
+  fill in profile order) — the documented lossy picks unchanged ('the'→fill:none, 'this'→fill:paper).
+- **`field()` dropped-field class DISSOLVED** (design-for-the-class): the raw record is spread first, the
+  normalized keys computed on top — any authored extra reaches every reader. (The whitelist-normalizer had
+  silently dropped declared data three times: negates/symbol pre-G2.4, directed/inverse at R1, kindWord here.)
+- **Stricter (deliberate):** a present-unknown OUTLINE value now throws in referent() (was unvalidated for
+  non-dashed values) — the trichotomy law now uniform across facets.
+- **`_demo/verify_referent_data.js`** (NEW, falsify-first 3/12 pre-build) — **12/12**: words live on fields;
+  baseline wording unchanged; setField('form','octagon',…,{kindWord:'portal'}) changes read-out AND parse
+  live; the OLD word throws loud (no ghost vocabulary); an authored determiner parses for free; consts gone
+  from source. All 14 harnesses green. Commit `bac3ed16` (~/company main).
+- **Open:** the seeded words are STARTER (A5 live-tune); DESIGN-LANGUAGE/README lockstep entries pending
+  (drafted by the census team); browser-surface chrome pass recorded in Slice 83's open items.
+
+## Slice 83 — Glyphic R1: THE EDGE LAW — directed verb-pairs with declared inverses (A2 + G6.2)
+Tim's law (2026-07-03, verbatim-in-substance): "the only valid typed edges are DIRECTIONAL VERBS that have
+an EQUAL AND OPPOSITE. 'Is the face of' is a sentence, not an edge." Landed as data + composition:
+- **`assets/icons/cv-meaning.js`** — every edge meaning field now declares `directed`; every directed one
+  declares `inverse: {feeling, senses}` ONCE (never stored twice). Symmetric relations declared
+  `directed:false` (equals/not/and/navigates/mirrors — navigates' look already said direction:'both').
+  `documents` gained its MISSING meaning field ('a guide to' ↔ 'documented by') — it was previously
+  UNREADABLE (field('edge','documents') threw on any documents edge read).
+  - `edgeClauseInverse()` composes the opposite telling at read; `readGraph` now tells the focus's
+    INCOMING edges inverted via a new realiser hook `clauseInverse` — english swaps words, triples keep
+    the triple canonical `(kind src focus)` (the proof the inverse lives in the REALISER, not the graph).
+    Default focus is a pure source → all existing reads byte-identical (regression green).
+  - `parse()`: inverse feelings join the REL vocabulary with `swap:true` → the inverse saying stores the
+    ONE canonical edge (subject/object swapped back). Authored verb-pairs parse both ways for free.
+- **`assets/icons/cv-edges.js`** — the 2026-07-03 `verbs` motion table REMOVED (G3.4 drift: a second edge
+  registry, no meaning fields, no opposites, zero consumers — verified by grep; not re-homed). `resolve()`
+  now LOUD: no kind → throw; unknown kind → throw (accepts meaning-only kinds via the CV_EDGES ∪
+  CV_MEANING union — the same union relationships-seed reconciles). The silent kind→'face' default is dead.
+- **`app/registry/relationships-seed.js`** — relationship Types mirror `{directed, inverse}` from the
+  meaning home (the Company relation_types shape — the G6.2 convergence face).
+- **`app/registry/types-core.js`** — `normalize()` now carries relationKind/operatorSymbol/negates/
+  directed/inverse (it had been silently DROPPING the seed's declared fields — the dropped-field trap).
+- **`_demo/verify_edgelaw.js`** (NEW, falsify-first 2/15 pre-build) — **15/15**: fields declare the law;
+  Types mirror it; forward telling unchanged; inverse telling from target focus; triples stay canonical;
+  a runtime-authored verb-pair realises both tellings; inverse-saying parse round-trip; verbs table gone;
+  resolve loud ×3. Full regression green; g11 19/21 = the pre-existing W2 breakage (R3's scope). Commit
+  `28e1a94d` (~/company main).
+- **Open (Tim-visible, booked):** face + documents were law-CONFORMED not retired — whether they survive
+  as relations is Tim's call in the live render; the removed verbs table (does a motion axis return through
+  the doors?); the noun-phrase-vs-verb wording tension ('the container of' is not grammatically a verb);
+  'part of' is a HOMONYM (higher-order + part-of share the feeling — parse picks one). All starter wordings
+  live-tunable via author API (A5). No chrome pass over language.html/the-whole-thing.html/generator yet —
+  static consumer trace only (ADVISOR-AUDIT §4 verified no breakage, but page-green is still owed).
+
 ## Slice 82 — Glyphic G10: MULTI-TARGET transglyphing (the read-out generalises past English)
 Made `readGraph`'s `target` REAL (it was accepted-but-ignored — English was the only projection). The
 meaning IS the graph; a target is one PROJECTION of it. Factored so the TRAVERSAL is shared and only the

@@ -211,3 +211,62 @@ blocker · the referent words are profile data, not consts.
   call for Tim that was never surfaced — surface it in the A3 redo's live render.
 - The block system: NOT in this repo — lives on the upstream claude.ai/design remote (check via DesignSync
   before G8/zones work).
+
+
+---
+
+## ROUND 8 — THE CENSUS (2026-07-03): nine territories read in full by a reader team; census/AREA-*.md
+
+**Why:** Tim's directive after the advisor audit showed ~80% of the core corpus unopened: "figure out a
+way to read through all of them… team agents… collaboratively work on the design and implementation plan
+files… many parts that are currently separate should be brought in together." Nine readers (per-territory,
+every line, shared grounding chain, unification lens) + cross-verification. Coverage after: the glyphic-core
+corpus read ≈ in full (engine homes, core/, app/registry 13/13, app/ai 7/7, the system pages, the canon
+docs, the charter docs, FINDINGS-LOG whole, AXES/UNIFICATION/INTEGRATION). Evidence: census/AREA-*.md (9 files).
+
+### 8.1 · Tim's DiagramSolver hypothesis — VERIFIED, with a precision
+The solver predates the language (its base strata carry parallel edge/shape/state vocabularies + AXES-era
+headers) AND the language was already welded into it once (the G5 stratum resolves everything through the
+language's single sources). The fold-in is a FINISH, not a start. Deeper: ContainmentTree (nesting) and
+DiagramSolver (relation) are two projections of ONE placement law — cv-address states it ("children
+PARTITION a parent's span; an address is derived, never stored") — and R3 makes the graph side obey it.
+Glyphgraph itself is an unnamed THIRD solver bypassing the typeToNode bridge (A6.1/A6.2).
+
+### 8.2 · The recovered Tim-decision register (census/AREA-tim-canon §B — first-hand, verbatim, file:line)
+B1 naming ("Glyphic", facet names left OPEN) · B2 form axis n+1 0→8 (circle=∞ is an AI proposal, UNANSWERED)
+· B3 three independent regions, meanings MULTIPLY, "what it represents is a variable" · B4 fill is part of
+the ring; the element is a perfect square (Tim's self-correction) · B5 slots/sockets = Tim's coinage ·
+B6 universal component grammar = Tim's own architecture verbatim · B7 faithfulness-as-foundation ·
+B8 the conversational foundry is Tim's spec · B9 "meaning is a field" is DATED CANON (LANGUAGE.md, Tim
+2026-06-29) — correction #2 restates the system's own founding law · B10 routing values are Tim's additions ·
+B11 "addresses are the nouns, edges the verbs". PLUS the SIX UNANSWERED §7 questions (glyphic-system.html:481-488)
+now carried in TIM-DECISIONS.md. R2's seeded words MATCH the recorded canon (no invented forms); R1's
+inverse wordings are genuinely new starters (nothing recorded to prefer) — the tension is kinds + grammar
+(noun-phrases vs verbs), not vocabulary.
+
+### 8.3 · The unification inventory (→ CRITERIA A6 / ROADMAP R6)
+The third solver · the bridge bypass · system-map EDGE_TYPES (the edge law's independent twin — Tim's law
+corroborated AND duplicated) · the forgotten-but-verified glyphic-foundry (G8.3's seed) · cv-organisms
+(82K island, zero consumers) · the 4×-flagged icon fork · 11 orphaned component Types + ax()/sub()
+duplication · the System Map's childValues partition (A3's law, already working) · W6/CV_SCAN as G8
+mechanisms · the meaning-author serializer gap · glyphic.assist blind to the edge law · cv-edges' live
+`means:` second home · small loud-fail closures.
+
+### 8.4 · Corrections established by cross-reading (confident ≠ correct, proven inside the census itself)
+- The G11/stable-slot era wrote NO FINDINGS-LOG slices — the audit's §6.1 pre-read pointer was wrong;
+  the record lives in SYNTHESIS Round 6. The missing slices are themselves a booked discipline breach.
+- registry-spine's "CV_HOST doesn't exist" was FALSE (host-runtime.js:429, 8 consumers) — caught because
+  two readers covered adjacent territory; single-reader claims get verified before plan changes.
+- A1 role-indirection was already DONE in app/ai/ (the ROADMAP's forward framing was stale); A2 proven on
+  two; the generator's AI pipeline is built BOTH sides — A5's gap is end-to-end verification, not code.
+- The --ramp-* tokens A4 wanted minted already exist (Slice 1). The 12 symbols are the INTRINSIC exception —
+  profile is not their home. The octagon table was brand-grounded seed, not pure fabrication; the brand
+  entity-shape mapping (README) is a DIFFERENT layer that must survive the referent-word retirement.
+- HANDOFF.md is two eras stale (stops at Slice 3, no language engine) — a fresh session booting from it
+  would re-derive everything; the addendum is booked (R6).
+
+### 8.5 · Applied this round (the lockstep debt, closed)
+DESIGN-LANGUAGE.md gains §19 (the edge law) + §20 (nothing has one fixed meaning / read-out words are
+profile data); README v2 gains the read-out bullet — canon-docs' drafts, applied in each doc's voice.
+HANDOFF addendum + SYSTEM-GAPS header applied. TIM-DECISIONS.md created (the standing Tim-visible queue,
+defaults set). FINDINGS-LOG Slices 83-84 already in place.

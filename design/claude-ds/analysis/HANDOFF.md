@@ -1,5 +1,14 @@
 # ⭐ START HERE — Master Handoff
 
+> **SINCE THIS WAS WRITTEN (addendum 2026-07-03):** this briefing is accurate for the token/core era
+> (Slices 1-3) but is TWO BUILD ERAS STALE below. Since written: the **Glyphic LANGUAGE ENGINE**
+> (G0-G11 — meaning registry/read-out/reverse parser/multi-target/data-binding/the glyphgraph render)
+> was built + harness-verified, and **PHASE RECONCILE** (R1 the edge law · R2 referent-words-as-profile-
+> data) landed (FINDINGS-LOG Slices 79-84). Do NOT "pick up Slice 4" from §7/§9 — boot from
+> `~/company/build-prep/the-one-system/glyphic/REGROUNDING.md` + `CRITERIA.md` (+ its AMENDMENTS) +
+> `ROADMAP.md` for the current state; the census record is `…/glyphic/census/AREA-*.md`.
+
+
 > **You are taking over the build of the ConceptV Design System with no other instruction, no
 > user guidance you can rely on, and no developers involved. This document is your complete
 > briefing.** Read it fully before touching anything. By the end you should know the mission, the

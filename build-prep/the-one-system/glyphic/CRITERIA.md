@@ -183,6 +183,17 @@ line fields' `phrase` already uses); `referent()` and `parse()` read them from t
 already builds every OTHER inverse vocabulary live). DONE when: `author.setField('form','octagon', …,
 {kindWord:'…'})` changes the read-out AND the parse, live, no code edit. **Nothing has one fixed meaning
 — a fixed interpretation anywhere the author API can't reach is a violation** (Tim).
+**CENSUS NOTES (2026-07-03, R2 BUILT):** (a) the seeded kindWords are NOT fresh invention — they match
+the dated recorded vocabulary (analysis/LANGUAGE.md:33-35, Tim 2026-06-29) exactly; A1 freed them to be
+authorable, it did not replace an invented word with a better one (census/AREA-tim-canon §C1). (b) This
+law is CV_MEANING's FOUNDING law, Tim's own words at build-time: "every meaning-binding must be
+LOADABLE/swappable because meaning is contextual, EXCEPT symbols (a house is always a house)"
+(FINDINGS-LOG :850-874) — the consts were a later contribution's regression against the original design,
+the exact narrow-determination failure-mode, found in the system's own history (census/AREA-history-deep §D1).
+(c) The shape-table seeds were BRAND-GROUNDED ("circle=portal, hex=engine, octagon=output, diamond=AI" —
+the decks' real usage, FINDINGS-LOG :987-990) — field them, don't erase; and the ConceptV BRAND entity-shape
+mapping (README: Octagon=Virtual Hubs) is observed corpus DNA, a DIFFERENT layer from the retired read-out
+word — a future session must not "fix" the README table (census/AREA-canon-docs §B-1).
 
 ### A2 · THE EDGE LAW: valid typed edges are DIRECTIONAL VERBS with an EQUAL AND OPPOSITE (Tim)
 The Company's relation_types records already carry `{directed, inverse}` — the law encoded. ☐ Relationship
@@ -194,6 +205,24 @@ to the type id. ☐ The 2026-07-03 `verbs` table in cv-edges.js (transport/gathe
 uncoupled, a G3.4 violation) is DISPOSITIONED: verbs that survive enter as meaning FIELDS + relationship
 Types with inverses through the author/registration doors; the table is removed. ☐ cv-edges' soft default
 (absent kind → 'face') becomes loud. G6.2 (reuse relation_types/) is the convergence face of this law.
+**CENSUS NOTES (2026-07-03, R1 BUILT — the law landed; these are its OPEN TAILS, = ROADMAP R1b):**
+(a) 'documents' appears in NO Tim material and NO live demo graph — only cv-edges.js; R1's meaning-field
+for it is a STARTER pending the Tim-visible door, and the disposition default is RETIRE (census/AREA-tim-canon
+§D1). 'face' has a thin descriptive recorded basis (LANGUAGE.md:48 lists face/higher-order/navigates).
+(b) cv-edges' EDGE_KINDS still carries a live one-sentence `means:` per kind — a second, never-synced
+meaning home resolving on every call; delete it (nothing reads `.means` downstream — census/AREA-render-homes §B2).
+(c) **system-map.html:789-793 `EDGE_TYPES` is a SECOND home for this very law** (contains↔sits-inside,
+loads↔loaded-by, resolves↔resolves-into) — built for the System Map in June from Tim's OWN direction
+("edge types must map to a 2-way directional VERB", FINDINGS-LOG Slice 72) — independent corroboration
+the law is Tim's, AND an unreconciled twin with hardcoded hex + baked verb wordings; fold into the one
+edge home (census/AREA-history-recent §B-U1). (d) The AI face: glyphic.read absorbed R1/R2 FOR FREE
+(field() spreads the record); glyphic.author/-relation can WRITE the new fields but their declared params
+never name them (discoverability lag); **glyphic.assist's payload is BLIND to the law** (bare kind ids,
+no directed/inverse — the collaborative AI can't know which way an edge points); context.glyphic likewise
+(census/AREA-ai-layer §B.1). (e) describeRelation (the 2-node inspector read) doesn't realise inverses —
+same law, second read-path, pull into R1's closure (census/AREA-history-deep §C5). (f) Most seeded
+inverse wordings are NOUN-PHRASES not verbs; LANGUAGE.md:47 itself frames edge as "the relation-carrier,
+not a 'verb'" — a recorded tension with the verb-pair law, for Tim's ear (TIM-DECISIONS).
 
 ### A3 · PLACEMENT IS RELATIVE — total redo (Tim: "you applied an absolute rule to a relative system")
 ☐ Position = a RELATIVE address (span/angle within the parent frame), re-resolved on change — never fixed
@@ -203,22 +232,86 @@ span — siblings inside shift proportionally (bounded by the change budget, ang
 outside the boundary moves. ☐ The SAME laws govern every relational mutation: addition, removal, an ORDER
 change (before→after), retargeting, containment change. ☐ Major parts hold, locals adapt — "some things
 must move; that's the point — it's generative." ☐ The 2026-07-03 absolute-freeze implementation
-(DiagramSolver W2 edit + cv-address slotFor pixel projection) is redesigned to this; verify_g11 is
-rewritten to assert THE LAWS (scoped movement + outside-boundary stillness), and the left-anchored vs
-centred taste call FINALLY goes in front of Tim in the live render. Authored x/y (drag) stays the
-per-node override.
+(the DiagramSolver W2 edit — the freeze is implemented WHOLLY inline at DiagramSolver.jsx:76-126;
+cv-address is consumed by NOTHING today, its line-74 mention is a comment) is redesigned to this.
+cv-address's span/encode/lca/zones ARE the A3 algebra (its own header states the derive-never-store law);
+its `slotFor` freeze primitive encodes the overturned stable-slot law and is removed/re-derived with the
+redo. verify_g11 is REWRITTEN to assert THE LAWS (scoped movement · outside-boundary stillness ·
+order-change-is-the-same-op · bounded budget · derived-never-stored · in-frame honesty — the full list in
+census/AREA-canvas-engines §E), and the left-anchored vs centred taste call FINALLY goes in front of Tim
+in the live render (under span partition, centred is LAW-DERIVED: member k of n centres at (k−0.5)/n —
+the Round 6 alternative with n live). Authored x/y (drag) stays the per-node override.
+**CENSUS NOTES:** the System Map ALREADY implements the relative-within-boundary partition
+(`childValues(parentId)` — "zones must not move"; a child resizes only against its own siblings, never
+across the boundary; FINDINGS-LOG :449-458) and states the laws R3 must honour as principles: geometry
+authoritative+instant, FLIP animation is decoration never load-bearing (:424); never mix an absolute
+measure with a relative one (the unit-mismatch bug :444 = "an absolute rule on a relative system" in the
+wild); force-directed rejected BY MEASUREMENT (physics diverged scale→1e-129, :644). R3 FOLDS the two
+placements toward one law (census/AREA-history-recent §B-U2). The generator's contract is NARROW: only
+`nd.x/nd.y` (authored override) + `nd._pos` (resolved pixels) are public; `_slot` is solver-private —
+free to become an address path (census/AREA-generator-surface §E). The row-cumulative-lock walk
+(FINDINGS-LOG :933-943) proved "propagates inward, holds outside" for FACET composition before glyphic
+existed — confirming prior art. SCOPE (a Tim-default): R3 applies the relative law to the GLYPHGRAPH
+case first; the pre-language layouts (hub/pipeline/tree/…) follow as a later tail — they are relationship
+READINGS that become span projections, not a silent same-pass rewrite (census/AREA-history-deep §E.4).
 
 ### A4 · The 2026-07-03 drift reconciliation (undo/redo/generalise — each item dispositioned, none silent)
-☐ The 12 minted 'language'-family symbols: single-sentence descriptions → MEANING FIELDS (feeling +
-senses, combinatorial, authored via the API); the library caption demoted to depiction-for-search; glosses
-stay. ☐ The ordinal axis: fixed stop-labels + fixed interpretation → ONE contextually-loaded meaning
-(legitimate) resolved relative to the telling's extent; reconcile its token targets with the CORPUS-SAMPLED
-ramp SYSTEM-GAPS already specifies (`#d6bf57→#c09d5d→#b98664` as a tokenised --ramp-*, distinct from the
-flat accent) — the ramp intent pre-existed; point at ITS tokens when minted. ☐ cv-organisms.js /
+☐ The 12 minted 'language'-family symbols — **CENSUS CORRECTION: symbols are Tim's own INTRINSIC
+exception** ("a house is always a house" — valuesFor('symbol') throws BY DESIGN), so their meaning does
+NOT belong in the profile; the violation shape is only the one-sentence `description:` prose on the
+CV_ICONS records (cv-icons.js:438-449 — verbatim list in census/AREA-render-homes §E). TWO outcomes,
+a Tim call (TIM-DECISIONS, default = depiction-only): (a) DEPICTION-ONLY — rename description→caption
+(search text), keep name+tags+one-word glosses, done; (b) READ-OUT PARTICIPANTS — the prose becomes
+field-shaped meaning AND new read-out wiring lands (nothing today reads any symbol description). Glosses
+stay either way (right shape: a plain word). ☐ The ordinal axis: fixed stop-labels + fixed interpretation → ONE contextually-loaded meaning
+(legitimate) resolved relative to the telling's extent. **CENSUS CORRECTION: the ramp tokens ALREADY
+EXIST** — `--ramp-1..4` minted Slice 1, live at colors_and_type.css:76-79; A4's three hexes are exactly
+ramp-2..4 — POINT at them, never re-mint (census/AREA-history-deep). Keep the identity-vs-applied
+distinction (--accent-gold ≠ --ramp-*): the ramp tokens are applied stops (token graph); "ordinal
+position N" is contextual (meaning field) — two single-sources, properly separate (G0.3). ☐ cv-organisms.js /
 cv-address.js / cv-arc.js (the ports): KEEP as machinery, re-verify their disposition as A3/the build
 consumes them; the address algebra's span math serves A3 directly. ☐ assessment/SYNTHESIS.md's false
 "not done" claims: corrected by this reconciliation (the verifier run is the truth; READING-LEDGER.md
 holds the record).
+
+### A6 · THE UNIFICATION SLATE (census 2026-07-03 — Tim: "many parts currently separate should be
+### brought in together… others are disconnected, nothing in use; designing ahead of time is way better")
+The nine-territory census (census/AREA-*.md — the full evidence) found these separate/disconnected parts.
+Each is a criterion: DONE when unified through the named door or dispositioned Tim-visibly. = ROADMAP R6.
+1. ☐ **Glyphgraph is an unnamed THIRD solver.** AXES/UNIFICATION say "one type system, one rule engine,
+   two solvers"; glyphgraph is structurally a third (glyphic-spec nodes, meaning-bearing edges, own
+   placement). Name it in AXES.md/UNIFICATION.md ("…THREE solvers"); the deeper truth: the two solvers +
+   glyphgraph are PROJECTIONS of ONE placement law (nesting=CSS-resolved spans; relations=address-resolved
+   spans; LCA = the shared motion anchor) — R3 makes it so (census/AREA-history-deep §B1, AREA-canvas-engines §B-d).
+2. ☐ **Glyphgraph nodes bypass the typeToNode/RenderType bridge** (the one Type→render path W1 welded).
+   G6.1's address-bearing nodes route THROUGH typeToNode (a glyphgraph-node case), not a deeper bespoke
+   branch (census/AREA-history-deep §B2).
+3. ☐ **system-map EDGE_TYPES → the one edge home** (A2 census note c).
+4. ☐ **glyphic-foundry.html is the G8.3 seed** — a COMPLETE conversational authoring surface (propose→
+   feedback→save via CV_AI, verified end-to-end in its day: "Save grew library 126→127") that no plan file
+   mentioned; ALSO: its model-failure demo-fallback is silent (loud-fail violation). Boot-check it; fold
+   it forward; never build a second authoring surface beside it (census/AREA-history-deep §C1).
+   AtomiCity's stated destiny to absorb Studio canvases is a second orphaned intention to check (§C4).
+5. ☐ **cv-organisms.js dispositioned** — 82K dead island (zero consumers, own `DNA` namespace, parallel
+   icon dict + graph renderer + third token-naming layer). Wire the NON-overlapping furniture into a real
+   page OR retire; the overlapping parts (icon dict, graph renderer) never wire as-is (census/AREA-render-homes verdict).
+6. ☐ **The three-way icon fork retired** — icon-paths.js/ConceptVIcon.jsx: self-labeled deprecated,
+   4×-flagged never-retired; grep-and-retire (consumer today: build-system-map.js only) (census/AREA-history-deep §C2).
+7. ☐ **components-type.js's 11 orphaned Types decided** — fully declared, zero consumers, no thumb
+   dispatch case; wire a react-component case or disposition as named scaffolding — a decision, not
+   silence (census/AREA-registry-spine). Also: the `ax()` vs `sub()` axis-subscription duplication → one home.
+8. ☐ **G8.3/G8.4 build on existing mechanisms**: the W6 editable-atom pattern (onEdit + dotted-path
+   commit) for the user panel; CV_SCAN's extractor registry for "reach its authoring affordance through
+   the system" (census/AREA-history-deep §B3/§B4). And the G0.4 params-schema discoverability fix lands
+   FIRST (else the panel inherits the same gap).
+9. ☐ **The meaning-author serializer gap** — every other registry has a durable-write path through
+   CV_HOST serializers; authored meaning fields are memory/localStorage only. Add the meaning-field/
+   relationship-type serializer so the language's authoring is as durable as every other registry's
+   (census/AREA-ai-layer §C6).
+10. ☐ **Small loud-fail closures**: CV_COND unknown operator silently passes (conditions.js:95 → throw) ·
+   DiagramSolver's two silent catches (:359 raw-kind chip, :380 blank referent) → loud-with-notice ·
+   the one raw hex `--comm-line,#7CA85B` (DiagramSolver.jsx:516) → token · 'compare' CVGraphType declared
+   but falls to ring silently → implement or remove.
 
 ### A5 · The read-out "gate" is CORRECTABILITY-BY-USE (standing, never a blocker)
 G4.5 as written stands: wording = seeded starter data, tuned LIVE through the authoring surface while

@@ -1,5 +1,14 @@
 # System gaps — what the material has that the design system doesn't (yet)
 
+> **TRIAGE NOTE (2026-07-03, census/AREA-canon-docs §D):** ~75% of this file is SINCE-CLOSED — the
+> zoning ladder, the gold→bronze→tan ramp (now `--ramp-1..4`), grid/margins, colour-roles, texture,
+> depth, containment/LOD, register/density axes, and the diagram state-morph all graduated into
+> tokens/core during Slices 1-3 (see analysis/FINDINGS-LOG.md). STILL REAL: motion-placement rules,
+> the deck→app interactive bridge, some connective/narrative components, per-level collapse rules —
+> the Slice 4-5 tier, overlapping the glyphic product-integration work (REGROUNDING §6). Read entries
+> below as historical analysis, not an open to-do.
+
+
 Running log. Each entry: what it is, evidence (folder/page), and the proposed
 home in the system. Nothing here is built until confirmed across folders.
 
