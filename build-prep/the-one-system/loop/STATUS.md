@@ -122,3 +122,12 @@
 - **WIRINGS**: /api/query LIVE (GET probes + POST full-spec; teaching 400s; embedder-down 503) · fabric/embed_routing (code/symbol→nomic-3584 w/ num_ctx, else pplx-2560) shared by bridge + coordinate tool via ONE run_query · golden gate tests/ledger_query_acceptance.py 22 checks green.
 - **PERF DEBT flagged**: build_scale_pyramid does per-member psql get_vector calls (~20min for symbol) — fix = a store.get_vectors_bulk; also _member_hash reads default-space keys (returns None per member → hash constant-ish; harmless for fresh builds, weakens incrementality for symbol-scale spaces). Morning follow-on.
 - GATED ON TIM: window go · COMPANY_ACTIVATION_LOOP · arming scale-pyramids + heartbeat-durability's continuous fire.
+
+---
+## 2026-07-07 — TIM'S "DO ALL THE BACK" RUN (window deferred; mandate sharpened → charter §MANDATE SHARPENED)
+- **BOTH OPERATOR GATES FLIPPED on his word**: scale-pyramids armed · COMPANY_ACTIVATION_LOOP=1 (drop-in on company-bridge; activation-caller thread VERIFIED in the live process) — the system self-maintains every ~60s now.
+- **THE RECOLLECTION MOVE (0024)**: ledger.exchange (6,985 exchanges WITH full text + FTS) · ledger.tool_call (52,694) · links 23,608 → assertion provenance='derived' under 4 NEW exchange-* edge kinds (authored + assembled per ④'s procedure). All reconciled with denominators; sqlite stays source-of-record. VERIFIED: semantic exchange hits JOIN THEIR WORDS; generated-by resolves to real rows; produced_by graph queryable; FTS reaches transcripts.
+- **QUERY v3**: lexical.over='exchange' (transcript FTS through the ONE function) + exchange results enrich from their own words. Golden gate re-run green (22).
+- **PERF+CORRECTNESS**: content_hashes bulk prefetch in BOTH pyramid builders (was per-member psql AGAINST THE WRONG KEY — incrementality was silently membership-only); numpy/sklearn/scipy → .venv (env unified). Symbol-rebuild timing verify running.
+- **PROVENANCE BACKFILL**: ops/backfill_provenance.py (all ~10k session archives; write-tools → generated-by; project-roots normalization; mtime+line watermarks; counted discards). Probe verified; FULL WALK RUNNING; registered+ARMED as daily job 'provenance-backfill'.
+- **FACES**: `company query` CLI verb (verified) · jobs/coordinate/scope MCP tools live · orienteering dot-recollection updated · self-description refreshed, drift zero.
