@@ -34,7 +34,21 @@ class TriangulateMeshOutContradictions(BaseModel):
 class TriangulateMeshOutDormant(BaseModel):
     what: str = Field(default='', description='the dormant thing')
     where: str = Field(default='', description='its address/path')
-    verdict: Literal['forgotten', 'parked', 'unclear'] = Field(default='forgotten', description='genuinely forgotten vs deliberately condition-parked')
+    verdict: Literal['forgotten', 'parked', 'unclear'] = Field(default='forgotten', description='genuinely forgotten vs deliberately parked')
+
+    @field_validator('verdict', mode='before')
+    @classmethod
+    def _coerce_verdict(cls, v):
+        # LENIENT-IN, STRICT-OUT (2026-07-08 census crash): the prompt itself used the phrase
+        # "deliberately-parked" while the enum wants 'parked' — kimi obediently emitted the taught
+        # synonym 30+ times and every retry re-failed identically at temp 0 (deterministic near-miss).
+        # Coerce known synonyms; anything else honest-falls to 'unclear' (never a crash on a verdict word).
+        s = str(v or '').strip().lower()
+        if 'park' in s:
+            return 'parked'
+        if 'forgot' in s or 'abandon' in s:
+            return 'forgotten'
+        return s if s in ('forgotten', 'parked', 'unclear') else 'unclear'
 
 
 class TriangulateMeshOutNextTerritories(BaseModel):
@@ -83,7 +97,8 @@ ROLE = {'id': 'triangulate_mesh',
                     "  - DORMANT: from the lenses' dormant_candidates, the ones that look REAL "
                     '(evidence from more than one angle, or strong single evidence) — the '
                     'part-built forgotten things the mesh exists to resurface. Distinguish '
-                    'deliberately-parked (condition-addressed deferral) from genuinely forgotten '
+                    'PARKED (verdict word: parked — deliberate condition-addressed deferral) from FORGOTTEN '
+                    '(verdict word: forgotten) '
                     'where the evidence allows.\n'
                     "  - NEXT_TERRITORIES: choose the next round's territories FROM the evidence — "
                     "the lenses' next_territories suggestions, the contradictions, the thin spots. "
