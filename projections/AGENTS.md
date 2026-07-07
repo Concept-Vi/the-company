@@ -94,6 +94,7 @@ let a capture lens JUDGE (render-not-judge — K3) · ship a lens without reflec
 (the skill registry — same shape) · `build-prep/cognition-engine/COMPLETION-CRITERIA.md` (GROUP K/P).
 
 ## Agent-authored entries (auto-reflected)
+- **`mesh`** — agent-authored projection (created via the declarative-direct face). the MESH triangulation lens (2026-07-07, Tim's 'all the equipment and no mesh' directive): observation + triangulation records from the self
 - **`design_intent`** — agent-authored projection (created via the declarative-direct face). the memory-archaeology lens (sibling of `history`, 2026-07-07): one mine_design_intent extract per exchange — {gist, intents[{subject,kind,s
 - **`operators`** — agent-authored projection (created via the declarative-direct face). what each registered OPERATOR (role) does — the verb/role registry embedded as a vector SPACE so content no operator covers piles up → a can
 <!-- created live by the create face; one line per entry — keeps the
