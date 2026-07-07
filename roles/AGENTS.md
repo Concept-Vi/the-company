@@ -229,6 +229,7 @@ routing/verdict rule is a pure declared function — L2) · let a role emit `res
 `build-prep/concurrent-cognition/` (the G2 criteria + guide).
 
 ## Agent-authored entries (auto-reflected)
+- **`observe_territory`** — agent-authored role (created via the declarative-direct face). One OPEN LENS of the mesh triangulation swarm (2026-07-07): reads a TERRITORY of the Company estate (a bundle of real material — file conten
 - **`mine_design_intent`** — agent-authored role (created via the declarative-direct face). The MEMORY-ARCHAEOLOGY miner — the deep-understanding sibling of mine_exchange (which mines the SELF-IMPROVEMENT facet). Reads ONE conversat
 - **`glyph_assist`** — agent-authored role (created via the declarative-direct face). A6 of the Glyphic AI fusion — the COLLABORATIVE hand: turns a natural instruction about the CURRENT glyphgraph (with the human's live select
 - **`glyph_compose`** — agent-authored role (created via the declarative-direct face). A5 of the Glyphic AI fusion — the JUDGE half (extraction-vs-judgment): given a word and its top-k nearest glyph candidates from the glyph_me
