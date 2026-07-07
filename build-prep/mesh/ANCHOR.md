@@ -70,3 +70,9 @@ Deterministic work to code (material-gathering, address-verification); judgment 
 **Spirit note to every lens:** bring back what is THERE — the half-built, the dormant, the
 surprising, the contradicting. The "yes, but actually..." is the gold. You are not confirming a
 design; you are helping a system see itself for the first time.
+
+## → THE ONE IDEA (2026-07-08)
+The full statement this anchor grew into — Tim-endorsed, with amendments A1 (models run INSIDE the
+universe; dynamic context-from-variables; one-session-traced-to-root) and A2 (more dormant shapes;
+coverage no longer the constraint) — is **build-prep/mesh/THE-ONE-IDEA.md**, captured section-wise
+at mesh://doc/the-one-idea/*. Lenses: read it after this anchor.
