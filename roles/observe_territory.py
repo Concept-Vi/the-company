@@ -73,7 +73,7 @@ ROLE = {'id': 'observe_territory',
             "observations + the prior synthesis and chooses the next round's territories "
             '(triangulation-not-planning).',
  'render_hint': {'shape': 'observation', 'lane': 'observe_territory'},
- 'default_model': 'kimi-k2.6:cloud',
+ 'default_model': 'kimi-k2.7-code:cloud',
  'default_base_url': 'http://localhost:11434/v1',
     'output_schema': ObserveTerritoryOut,
 }
