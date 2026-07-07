@@ -463,7 +463,17 @@ def jobs_status(suite) -> dict:
         state = _load_trigger_state(suite)
     except RuntimeError as e:                        # corrupt state is REPORTED, not hidden
         state = {"_error": str(e)}
+    # the LOOP's truth lives in the BRIDGE process (it hosts the daemon thread) — own-env is only a
+    # fallback (a CLI subprocess without the var would otherwise misreport the armed loop as off).
     loop_armed = os.environ.get("COMPANY_ACTIVATION_LOOP", "") in ("1", "true", "on")
+    if not loop_armed:
+        try:
+            import subprocess as _sp
+            env_out = _sp.run(["systemctl", "--user", "show", "company-bridge.service", "-p", "Environment", "--value"],
+                              capture_output=True, text=True, timeout=10).stdout
+            loop_armed = "COMPANY_ACTIVATION_LOOP=1" in env_out
+        except Exception:
+            pass                                     # honest fallback: report own-env only
     rows = []
     for job in list_jobs(suite):
         jid = job["id"]
