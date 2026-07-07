@@ -4,7 +4,7 @@ OR via propose_role→operator-approve→apply_role (surfacing, kept available).
 by import-in-a-temp-dir (the correctness gate) before it reached the live roles/ tree. A declared
 role: the output_schema is a real BaseModel subclass (fail-loud requirement); rules are declared ASTs."""
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class TriangulateMeshOutConvergences(BaseModel):
@@ -13,9 +13,22 @@ class TriangulateMeshOutConvergences(BaseModel):
     seen_from: list[str] = Field(default_factory=list, description='the territories that saw it')
 
 
+class TriangulateMeshOutContradictionsFace(BaseModel):
+    # UPGRADED to the model's own richer emission (2026-07-07 round-1: kimi naturally attached a SOURCE
+    # to every conflicting claim — evidence-carrying faces beat bare strings for the mesh; schema follows).
+    claim: str = Field(default='', description='the conflicting reading')
+    source: str = Field(default='', description='where this reading came from (territory/path/address)')
+
+
 class TriangulateMeshOutContradictions(BaseModel):
     about: str = Field(default='', description='what the disagreement is about')
-    faces: list[str] = Field(default_factory=list, description='the conflicting readings (may be legitimate multiple jobs)')
+    faces: list[TriangulateMeshOutContradictionsFace] = Field(default_factory=list, description='the conflicting readings with their sources (may be legitimate multiple jobs)')
+
+    @field_validator('faces', mode='before')
+    @classmethod
+    def _coerce_faces(cls, v):
+        # accept both shapes: a bare string face → {claim: str} (never lose an observation to shape)
+        return [({'claim': f} if isinstance(f, str) else f) for f in (v or [])]
 
 
 class TriangulateMeshOutDormant(BaseModel):
@@ -33,8 +46,12 @@ class TriangulateMeshOut(BaseModel):
     convergences: list[TriangulateMeshOutConvergences] = Field(default_factory=list, description='the same thing seen independently from different territories')
     contradictions: list[TriangulateMeshOutContradictions] = Field(default_factory=list, description='observations that disagree — each usually the next place to look')
     dormant: list[TriangulateMeshOutDormant] = Field(default_factory=list, description='the real part-built/forgotten finds')
-    next_territories: list[TriangulateMeshOutNextTerritories] = Field(default_factory=list, description="the next round's territories, chosen from evidence — never invented")
-    mesh_note: str = Field(default='', description='3-6 sentences — what the mesh now understands about itself that it did not before')
+    # REQUIRED (no default) — the EMPTY-VALIDATES trap, caught by-use round 1 (2026-07-07): with every
+    # field defaulted, a bare `{}` passed the schema and a hollow synthesis read as success (silent-empty,
+    # the fail-loud law's exact target). A synthesis MUST steer (next_territories) and MUST say what the
+    # mesh learned (mesh_note) — an empty either now FAILS validation → complete() retries with feedback.
+    next_territories: list[TriangulateMeshOutNextTerritories] = Field(min_length=1, description="the next round's territories, chosen from evidence — never invented; REQUIRED (the loop steers by this)")
+    mesh_note: str = Field(min_length=40, description='3-6 sentences — what the mesh now understands about itself that it did not before; REQUIRED')
 
 
 ROLE = {'id': 'triangulate_mesh',
@@ -84,7 +101,14 @@ ROLE = {'id': 'triangulate_mesh',
                     "  - notes: the round's N observations (JSON), each tagged with its territory\n"
                     "  - prior: the previous round's synthesis (may be empty)\n"
                     "  - anchor: the mesh anchor's core (the shared partial picture — stress-test "
-                    "it, don't confirm it)",
+                    "it, don't confirm it)\n"
+                    '\n'
+                    # OUTPUT CONTRACT (2026-07-07, caught by-use round 1): without this line kimi writes a
+                    # MARKDOWN REPORT with **CONVERGENCES** headings — good content, unparseable. The
+                    # heading-structured prompt reads as a report request; say JSON explicitly.
+                    'Return ONLY a single JSON object with exactly these keys: convergences, '
+                    'contradictions, dormant, next_territories, mesh_note. No markdown, no headings, '
+                    'no prose outside the JSON.',
  'input_addresses': ['notes', 'prior', 'anchor'],
  'mode_scope': ['mesh'],
  'trigger': 'fired once per round by the mesh triangulation driver (build-prep/mesh/) after the '

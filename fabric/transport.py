@@ -217,10 +217,10 @@ def ollama_native_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ol
         if "think" in opts:
             body["think"] = bool(opts["think"])                # the whole point — /v1 can't carry this
         options = {}
-        if "temperature" in opts:
+        if opts.get("temperature") is not None:
             options["temperature"] = opts["temperature"]
-        if "max_tokens" in opts:
-            options["num_predict"] = opts["max_tokens"]        # ollama's max-output knob
+        if opts.get("max_tokens") is not None:                 # None = NO budget (cloud runs to completion,
+            options["num_predict"] = opts["max_tokens"]        # Tim 2026-07-07) — never send num_predict=None
         if options:
             body["options"] = options
         # structured output (best-effort; cloud-inconsistent — validate/retry is the guarantee, not this)

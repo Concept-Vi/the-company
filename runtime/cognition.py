@@ -502,10 +502,23 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
     from fabric import config as _fcfg
     _base_root = (base_url or "").rstrip("/")
     _is_ollama = ("11434" in _base_root) or (_base_root == _fcfg.DEFAULT_BASE_URL.rstrip("/"))
-    if eff_think is not None and _is_ollama:
+    # OLLAMA → ALWAYS the native /api/chat transport (widened 2026-07-07, caught by-use: triangulate_mesh
+    # on kimi-k2.7-code:cloud returned MARKDOWN through /v1 — ollama's OpenAI-compat layer SILENTLY IGNORES
+    # response_format for cloud models, so the G24 schema-constrained decode never reached the decoder and
+    # every schema fire relied on prompt-obedience + retry-burn. The native endpoint carries `format:
+    # <json schema>` (real structured output) AND `think` in one place. The old gate (`eff_think is not
+    # None and _is_ollama`) left every think-unset ollama fire on the ignoring /v1 path. vLLM/other bases
+    # are untouched (openai_transport, where response_format IS honoured).
+    if _is_ollama:
         t = transport.ollama_native_transport(base_url=base_url, timeout=timeout)
     else:
         t = transport.openai_transport(base_url=base_url, timeout=timeout)
+    # NO BUDGET FOR CLOUD MODELS (Tim 2026-07-07): a `:cloud` model's output cap is pure self-sabotage —
+    # the caller's small max_tokens (sized for local-VRAM/time budgets) TRUNCATES structured output
+    # mid-JSON (caught by-use: triangulate_mesh cut at its 2400 ceiling), then the retry net burns. Local
+    # models KEEP their budgets (VRAM/time are real there); a cloud fire simply omits num_predict and
+    # runs to completion.
+    _is_cloud = model.endswith(":cloud")
     # STRUCTURED-OUTPUT use-gate (deliverable d — DECLARATION IS TRUTH, no silent downgrade). A generate role
     # ALWAYS carries an output_schema (eff_schema) → it requests schema-constrained decode (client.complete
     # derives response_format.json_schema from `schema=`; the resident vLLM 0.21 guided-decode honours it).
@@ -585,6 +598,8 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
             _eff_temp = _fam_base["temperature"]
         if max_tokens is None and _rk.get("max_tokens") is None and _fam_base.get("max_tokens") is not None:
             _eff_max = _fam_base["max_tokens"]
+    if _is_cloud:
+        _eff_max = None                            # no budget for cloud (see _is_cloud above) — omit num_predict, run to completion
     # SYSTEM-WIDE LOOP-BREAKER (Tim 2026-06-30, hypothesis tested + confirmed): greedy decode + GUIDED-JSON
     # (schema-constrained, response_format=json_schema) makes this Qwen3.5-AWQ build RE-EMIT array objects
     # until max_tokens — the grammar masks EOS so the model can't stop (Qwen card: greedy → endless

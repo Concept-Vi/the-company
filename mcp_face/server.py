@@ -502,6 +502,22 @@ def cognition_info(section: str = "", role: str = "", detail: str = "concise") -
     return overview
 
 
+@mcp.tool(annotations=SAFE)               # READ-ONLY — the generative TYPE registry inspector (client-safe)
+def type_info() -> dict:
+    """INSPECT the generative TYPE registry (④ L3 — types/ + cascades/ + the fan-out state). REUSES
+    Suite.type_info() — the SAME envelope /api/type_info serves (one function, both faces; the honest
+    replacement for the cloud's fabricated all_type_registries). Returns:
+      types[]        — the discovered universal types (data_schema · faces · law-11 states/transitions).
+      cascades[]     — the discovered fan-out cascades (target · priority · requires · cloud_only).
+      completeness   — the fan-out ledger: every type × applicable cascade has an artifact or a recorded
+                       skip; drift[] (hand-removed artifacts) + ghosts[] (artifact rows whose source type
+                       file is gone) FAIL the drift test — both surfaced, never silent.
+      dispositions   — the 7 hollow cloud types' traceable dispositions (RECONSTRUCT/FUSE + the
+                       observation verdict; types/_fusion_map.py).
+    A NEW type is create(kind='type', spec) — a trivial data_schema is REFUSED with a teaching error."""
+    return SUITE.type_info()
+
+
 @mcp.tool(annotations=SAFE)               # READ-ONLY — model-fit lookup (client-safe)
 def models_for_role(requires: str = "", role: str = "") -> dict:
     """INSPECT (the MODEL select): which models fit. Pass EITHER:
@@ -765,6 +781,20 @@ def _fire_role_and_persist(r, utterance: str, inputs: dict, model: str, max_toke
         kw["think"] = think                                    # → cognition.run_role: native /api/chat think-control for ollama models
     if coordinate is not None:
         kw["coordinate"] = coordinate                          # → §5 resolved-slots: the prompt resolves from prompt_slot against this
+    # DECLARED-BINDING FIX (2026-07-07, caught by-use building the archaeology sweep): with NO explicit
+    # `model` override, a role's OWN declared binding (top-level default_model — the roles/AGENTS.md law)
+    # was silently IGNORED here — kw carried no model, so run_role fired the RESIDENT constant and a
+    # kimi-bound role (mine_design_intent; explain_role off-bridge) ran on the wrong brain with no signal.
+    # Now: explicit override > the role's declared default_model (+ its declared default_base_url) > the
+    # resident default. GUARDED: only a role that DECLARES default_model changes — every unbound role is
+    # byte-identical (kw stays modelless → RESIDENT, exactly as before).
+    if not model:
+        _spec = getattr(r, "spec", None) or {}
+        _decl = _spec.get("default_model") or ""
+        if _decl:
+            model = _decl
+            if _spec.get("default_base_url"):
+                kw["base_url"] = _spec["default_base_url"]
     if model:
         kw["model"] = model
         # ROUTING FIX (2026-06-20): a `model` override MUST carry its ENDPOINT, or run_role POSTs it to the
@@ -775,7 +805,7 @@ def _fire_role_and_persist(r, utterance: str, inputs: dict, model: str, max_toke
         # proxies ollama-cloud) → concurrent CLOUD cognition works at ZERO VRAM and survives a reboot. An
         # HF-path id keeps the resident base_url (its own vLLM service). reuse-don't-parallel: same
         # ollama-vs-vLLM split Suite.models_at already draws (suite.py ~1422 vs ~1442).
-        if "/" not in model:
+        if "/" not in model and "base_url" not in kw:
             from fabric import config as _fcfg
             kw["base_url"] = _fcfg.DEFAULT_BASE_URL
     if policy:
@@ -864,8 +894,20 @@ def _run_items_and_shape(r, items: list, max_tokens: int, temperature: float,
     the N units via `_cog.run_items` (the axis-inversion engine — never a parallel fan) and returns the
     agent-facing ItemsResult shape. FLOOR: a DRIVER — emits NO resolve/approve/dispatch."""
     turn_id = turn_prefix + "-" + _time.strftime("%Y%m%d-%H%M%S") + f"-{int(_time.monotonic()*1000) % 100000}"
+    # DECLARED-BINDING FIX (2026-07-07 — the run_items half; see _fire_role_and_persist for the story):
+    # the MAP fan had NO model path at all, so a role's declared binding (top-level default_model, the
+    # roles/AGENTS.md law) was silently ignored and every fan ran on the RESIDENT constant — a kimi-bound
+    # role (mine_design_intent) would batch on the wrong brain with no signal. GUARDED the same way:
+    # only a role DECLARING default_model changes; an unbound role fans byte-identically (no kwargs added).
+    _kw = {}
+    _spec = getattr(r, "spec", None) or {}
+    if _spec.get("default_model"):
+        _kw["model"] = _spec["default_model"]
+        _kw["base_url"] = (_spec.get("default_base_url")
+                           or (__import__("fabric.config", fromlist=["config"]).DEFAULT_BASE_URL
+                               if "/" not in _kw["model"] else _cog.RESIDENT_BASE_URL))
     res = _cog.run_items(r, list(items), SUITE.store, turn_id=turn_id, emit=_cog_emit,
-                         max_tokens=max_tokens, temperature=temperature)
+                         max_tokens=max_tokens, temperature=temperature, **_kw)
     return {"role": r.id, "turn_id": turn_id, "n_units": len(items),
             "addresses": res.addresses, "resolved": res.resolved,
             "finish_order": res.finish_order, "skipped": res.skipped, "wall_s": res.wall_s}
