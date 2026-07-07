@@ -113,3 +113,32 @@ for bad, frag in [({"bogus": 1}, "unknown spec key"),
 
 print(f"\nLEDGER QUERY ACCEPTANCE — {PASS} checks passed. Every axis + composition + refusals, "
       f"plan-echo asserted throughout (under-recall is never silent).")
+
+# ── 10. v4: TIME-TRAVEL (`at`) — an as-of query resolves a DIFFERENT run and answers from it ─────────
+now_n = int(q({"filter": {"path_under": "runtime/", "ext": [".py"]}, "count": {"by": "ext"}})["results"][0]["n"])
+then_r = q({"at": "2026-06-28", "filter": {"path_under": "runtime/", "ext": [".py"]}, "count": {"by": "ext"}})
+then_n = int(then_r["results"][0]["n"])
+check("time-travel: as-of count differs from now (the tree grew)", then_n < now_n)
+latest_run = q({"limit": 1})["meta"]["runs"][0]
+check("time-travel: a different run resolved", then_r["meta"]["runs"][0] != latest_run)
+check("time-travel: at echoed in meta", then_r["meta"]["at"] == "2026-06-28")
+
+# ── 11. v4: CROSS-PROJECT — named projects only, project-attributed results ──────────────────────────
+xp = q({"project": ["company", "claude-ds"], "lexical": {"text": "design tokens color system"}, "limit": 10})
+projs = {x.get("project") for x in xp["results"] if x.get("project")}
+check("cross-project: results span the named projects only", projs and projs <= {"company", "claude-ds"})
+check("cross-project: runs array carries one run per project", len(xp["meta"]["runs"]) == 2)
+
+# ── 12. v4: ORIGIN — a known-provenance file carries its creating exchange ───────────────────────────
+og = q({"addresses": ["code://company/runtime/jobs.py"], "origin": True, "limit": 1})
+o = og["results"][0].get("origin") or {}
+check("origin: the creating exchange attributed", str(o.get("exchange", "")).startswith("exchange://"))
+
+# ── 13. v4 refusals ──────────────────────────────────────────────────────────────────────────────────
+try:
+    q({"at": "run:00000000-0000-0000-0000-000000000000"})
+    check("refusal: at=run:<unknown>", False)
+except ValueError as e:
+    check("teaching refusal: at names no run", "names no run" in str(e))
+
+print(f"\nLEDGER QUERY ACCEPTANCE v4 — {PASS} checks total.")

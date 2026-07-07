@@ -21,17 +21,23 @@
 --   lexical   {text}                           — FTS over DURABLE interpretation
 --   count     {by: node_type|ext|language|kind|space|path_prefix}
 --             — the COUNT OPERATOR: aggregate the candidate set instead of ranking it
---   limit     20
+--   at        "<timestamp>" | "run:<uuid>"   — TIME-TRAVEL: resolve runs AS OF that moment (per project)
+--   origin    true                          — every result carries its latest generated-by exchange
+--   limit     20  (project also takes "*" or a list — cross-project, results project-attributed)
 -- RETURNS {results: […], meta: {run_id, project, candidates_n, plan}} — plan echoes every leg.
 
 create or replace function ledger.query(spec jsonb) returns jsonb
 language plpgsql stable as $fn$
 declare
     _known      text[] := array['project','addresses','filter','graph','paths','semantic','lexical',
-                                'scale','count','limit'];
+                                'scale','count','limit','at','origin'];
     _k          text;
     _project    text  := coalesce(spec->>'project', 'company');
     _run        uuid;
+    _runs       uuid[];                    -- Q2: one run per in-scope project (latest, or `at`-resolved)
+    _at         text  := spec->>'at';
+    _origin     boolean := coalesce((spec->>'origin')::boolean, false);
+    _projects   text[];
     _limit      int   := coalesce((spec->>'limit')::int, 20);
     _cands      text[];                    -- candidate addresses (null = unconstrained)
     _cands_n    int;
@@ -58,11 +64,41 @@ begin
         end if;
     end loop;
 
-    select run_id into _run from ledger.latest_run where project = _project;
-    if _run is null then
-        raise exception 'ledger.query: no runs for project % — projects with runs: %', _project,
-              (select string_agg(distinct project, ', ') from ledger.run);
+    -- ── RUN RESOLUTION: per-project latest, OR as-of `at` (time-travel), OR an explicit run pin ──
+    if jsonb_typeof(spec->'project') = 'array' then
+        select array_agg(x) into _projects from jsonb_array_elements_text(spec->'project') x;
+    elsif _project = '*' then
+        select array_agg(distinct project) into _projects from ledger.run;
+    else
+        _projects := array[_project];
     end if;
+    if _at is not null and _at like 'run:%' then                 -- an explicit run pin
+        _runs := array[substring(_at from 5)::uuid];
+        select project into _project from ledger.run where run_id = _runs[1];
+        if _project is null then
+            raise exception 'ledger.query: at=% names no run', _at;
+        end if;
+        _projects := array[_project];
+    elsif _at is not null then                                   -- AS-OF a moment: newest run started <= at
+        select array_agg(r.run_id) into _runs from (
+            select distinct on (project) run_id from ledger.run
+            where project = any(_projects) and started_at <= _at::timestamptz
+            order by project, started_at desc) r;
+        if _runs is null then
+            raise exception 'ledger.query: no runs at or before % for % — earliest runs: %', _at, _projects,
+                  (select string_agg(project || ':' || min(started_at)::date, ', ')
+                   from ledger.run where project = any(_projects) group by ());
+        end if;
+    else
+        select array_agg(r.run_id) into _runs from (
+            select distinct on (project) run_id from ledger.latest_run
+            where project = any(_projects) order by project) r;
+        if _runs is null then
+            raise exception 'ledger.query: no runs for % — projects with runs: %', _projects,
+                  (select string_agg(distinct project, ', ') from ledger.run);
+        end if;
+    end if;
+    _run := _runs[1];                                            -- back-compat for single-run consumers
 
     -- ── ADDRESS-SET seed (combinator): an explicit list IS the starting candidate set ──
     if spec->'addresses' is not null then
@@ -76,7 +112,7 @@ begin
             select e.address
             from ledger.entry e
             left join ledger.file_meta fm on fm.project = e.project and fm.path = e.path
-            where e.run_id = _run
+            where e.run_id = any(_runs)
               and (_flt->'path_under' is null or (
                      case when jsonb_typeof(_flt->'path_under') = 'array'
                           then exists (select 1 from jsonb_array_elements_text(_flt->'path_under') p
@@ -131,13 +167,13 @@ begin
             cross join lateral (
                 select split_part(g.to_resolved, '::', 1) as addr
                 from ledger.edge g
-                where g.run_id = _run and _dirn in ('out','both')
+                where g.run_id = any(_runs) and _dirn in ('out','both')
                   and (_gph->'kinds' is null or g.kind = any(select jsonb_array_elements_text(_gph->'kinds')))
                   and split_part(g.from_ref, '::', 1) = w.addr and g.to_resolved is not null
                 union
                 select split_part(g.from_ref, '::', 1)
                 from ledger.edge g
-                where g.run_id = _run and _dirn in ('in','both')
+                where g.run_id = any(_runs) and _dirn in ('in','both')
                   and (_gph->'kinds' is null or g.kind = any(select jsonb_array_elements_text(_gph->'kinds')))
                   and split_part(g.to_resolved, '::', 1) = w.addr
             ) nxt
@@ -212,7 +248,7 @@ begin
                 select jsonb_agg(jsonb_build_object('group', pfx, 'n', n) order by n desc)
                 from (select split_part(path,'/',1) || case when position('/' in path) > 0
                              then '/' || split_part(path,'/',2) else '' end as pfx, count(*) n
-                      from ledger.entry where run_id = _run
+                      from ledger.entry where run_id = any(_runs)
                         and (_cands is null or address = any(_cands))
                       group by 1 order by 2 desc limit 40) t), '[]'::jsonb),
                 'meta', jsonb_build_object('run_id', _run, 'plan', _plan || '{"operator":"count-by-path"}'::jsonb));
@@ -221,7 +257,7 @@ begin
                 select jsonb_agg(jsonb_build_object('group', g, 'n', n) order by n desc)
                 from (select case _cnt->>'by' when 'node_type' then node_type
                                               when 'ext' then ext else language end as g, count(*) n
-                      from ledger.entry where run_id = _run
+                      from ledger.entry where run_id = any(_runs)
                         and (_cands is null or address = any(_cands))
                       group by 1 order by 2 desc limit 40) t), '[]'::jsonb),
                 'meta', jsonb_build_object('run_id', _run, 'plan',
@@ -272,6 +308,10 @@ begin
                   from ledger.interpretation i
                   where i.fts @@ websearch_to_tsquery('english', _lex->>'text')
                     and (_cands is null or i.address = any(_cands))
+                    -- Q2 project scope: interpretation addresses are code://<project>/… — when the caller
+                    -- named projects and no candidate stage narrowed, scope here (else other projects leak)
+                    and (_cands is not null or _project = '*'
+                         or split_part(split_part(i.address, '://', 2), '/', 1) = any(_projects))
                   order by rank desc limit 60) t;
         end if;
         _plan := _plan || jsonb_build_object('lexical_hits', jsonb_array_length(_lex_rows));
@@ -313,9 +353,16 @@ begin
                        -- a unit enriches from the durable read; an EXCHANGE from its own words (0024)
                        'what_it_does', coalesce(left(u.what_it_does, 240),
                                                 left(regexp_replace(coalesce(x.user_text,''), '\s+', ' ', 'g'), 240)),
-                       'path', coalesce(u.path, x.archive_path), 'node_type', coalesce(u.node_type, case when x.address is not null then 'exchange' end))
+                       'project', u.project, 'path', coalesce(u.path, x.archive_path), 'node_type', coalesce(u.node_type, case when x.address is not null then 'exchange' end))
                 || case when _hops is not null and _hops ? (r.value->>'address')
                         then jsonb_build_object('hops', _hops->(r.value->>'address')) else '{}'::jsonb end
+                || case when _origin then jsonb_build_object('origin', (
+                        select jsonb_build_object('exchange', a.to_ref, 'ts', a.ts,
+                                   'said', left(regexp_replace(coalesce(x.user_text,''), '\s+', ' ', 'g'), 140))
+                        from ledger.assertion a
+                        left join ledger.exchange x on x.address = a.to_ref
+                        where a.kind = 'generated-by' and a.from_ref = r.value->>'address'
+                        order by a.ts desc nulls last limit 1)) else '{}'::jsonb end
                 || case when coalesce((_gph->>'expand')::boolean, false)
                         then jsonb_build_object('edges', coalesce((
                              select jsonb_agg(jsonb_build_object('kind', eu.kind, 'to', eu.to_resolved,
@@ -328,7 +375,7 @@ begin
             from jsonb_array_elements(coalesce(_fused, '[]'::jsonb)) r
             left join ledger.unit_latest u on u.address = r.value->>'address'
             left join ledger.exchange x on x.address = r.value->>'address'), '[]'::jsonb),
-        'meta', jsonb_build_object('run_id', _run, 'project', _project,
+        'meta', jsonb_build_object('run_id', _run, 'runs', to_jsonb(_runs), 'projects', to_jsonb(_projects), 'at', _at, 'project', _project,
                                    'candidates_n', _cands_n, 'plan', _plan));
 end
 $fn$;

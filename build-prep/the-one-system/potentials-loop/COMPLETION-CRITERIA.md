@@ -7,15 +7,15 @@ set it (armed). New standing triggers born PROPOSED except where Tim's blanket "
 maintenance class (arm with the operator stamp + say so).*
 
 ## Q · THE QUERY'S NEW REACHES (ledger.query v4 — one file, one function, both faces)
-- [ ] Q1 TIME-TRAVEL: spec key `at` ("<timestamp>"|"run:<uuid>") — resolves the run AS OF that moment
+- [x] Q1 TIME-TRAVEL: spec key `at` ("<timestamp>"|"run:<uuid>") — resolves the run AS OF that moment
       (started_at <= at, per project) instead of latest. VERIFIED: the same filter query at two `at`
       values returns the tree as it was then (counts differ, plan echoes the resolved run).
-- [ ] Q2 CROSS-PROJECT: `project` accepts "*" or a list — the candidate/filter/count stages union across
+- [x] Q2 CROSS-PROJECT: `project` accepts "*" or a list — the candidate/filter/count stages union across
       each project's own latest (or `at`-resolved) run. VERIFIED: one query returns company + claude-ds
       results, project attributed per result.
-- [ ] Q3 PROVENANCE-BY-DEFAULT: `origin: true` spec key — every result carries its latest generated-by
+- [x] Q3 PROVENANCE-BY-DEFAULT: `origin: true` spec key — every result carries its latest generated-by
       exchange (address + ts + a text snippet when indexed). VERIFIED on a known-provenance file.
-- [ ] Q4 the golden gate grows to cover Q1-Q3 (+ refusal shapes); re-run GREEN.
+- [x] Q4 the golden gate grows to cover Q1-Q3 (+ refusal shapes); re-run GREEN.
 
 ## S · SAVED QUERIES (questions as addressable, watchable things)
 - [ ] S1 a saved-query REGISTRY (ActionRegistry rows: id, label, spec, created_by) + `coordinate` tool ops
