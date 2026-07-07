@@ -581,11 +581,30 @@ def rebuild_scale_pyramids(spaces: str = "docs,desc,code,symbol", emb_map: str =
     st = FsStore(fcfg.STORE_DIR)
     emb_default = {"code": "nomic-code", "symbol": "nomic-code"}
     overrides = dict(p.split(":", 1) for p in emb_map.split(",") if ":" in p)
+    import hashlib
+    import json as _json
+    from store import pg_vectors as _pgv
+    fp_path = str(st.root / "pyramid_fingerprints.json")
+    try:
+        fps = _json.load(open(fp_path))
+    except Exception:
+        fps = {}
     out, errors = {}, []
     for sp in [s.strip() for s in spaces.split(",") if s.strip()]:
         emb = overrides.get(sp) or emb_default.get(sp, "pplx")
         try:
+            # WHOLE-SPACE early exit: clustering is the dominant cost (measured: ~60min for symbol even
+            # when 0 centroids re-persist). Fingerprint the space's (source→content_hash) map; unchanged
+            # since the last build → skip the space entirely (the daily job costs seconds, not an hour).
+            hashes = _pgv.content_hashes(getattr(st, "_pg_ns", "") + sp, emb)
+            fp = hashlib.blake2b(_json.dumps(sorted(hashes.items())).encode(), digest_size=16).hexdigest()
+            key = f"{sp}#emb={emb}"
+            if fps.get(key) == fp:
+                out[sp] = {"skipped_whole_space": True, "fingerprint": fp[:12]}
+                continue
             r = build_scale_pyramid(st, space=sp, emb=emb)
+            fps[key] = fp
+            _json.dump(fps, open(fp_path, "w"), indent=1)
             out[sp] = {"built": r["built"], "skipped": r["skipped"], "rows": r["member_rows"]}
         except Exception as e:
             errors.append(f"{sp}: {type(e).__name__}: {e}")
