@@ -43,11 +43,11 @@ maintenance class (arm with the operator stamp + say so).*
       once when crossed, then stays quiet.
 
 ## E · EMBEDDINGS AS AN OPERABLE SURFACE
-- [ ] E1 the `embeddings` MCP tool: op=spaces (each space: units, dims, lenses, pyramid rungs, freshness) ·
+- [x] E1 the `embeddings` MCP tool: op=spaces (each space: units, dims, lenses, pyramid rungs, freshness) ·
       op=route (the lens table) · op=build (run a space's builder via the jobs/handler path — proposes/
       fires bounded) · op=pyramid (rebuild rungs for a space). VERIFIED by use on a small space.
-- [ ] E2 `company embed` CLI verb — the same status + build faces in the terminal. VERIFIED.
-- [ ] E3 embed-build registered as jobs handlers (build_space, already-have rebuild_scale_pyramids) so
+- [x] E2 `company embed` CLI verb — the same status + build faces in the terminal. VERIFIED.
+- [x] E3 embed-build registered as jobs handlers (build_space, already-have rebuild_scale_pyramids) so
       every embed operation is schedulable/watchable like everything else.
 
 ## P · PARITY + FACES + CLOSE

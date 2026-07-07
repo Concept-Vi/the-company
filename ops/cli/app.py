@@ -29,6 +29,8 @@ stdlib-only. See README.md (use) and UPDATING.md (extend). Constitution: ../AGEN
   company telemetry        learned model load times + measured VRAM (vs estimates)
   company query "Q" [SPACE] [N]  ask the COORDINATE SPACE from the terminal (the same one
                            function the MCP tool + /api/query call; lens-routed embed)
+  company embed [SUB]      EMBEDDINGS operable: spaces (status) · route (the lens table) ·
+                           build SPACE · pyramid SPACE (same fns as the embeddings MCP tool)
   company jobs             THE HEARTBEAT, visible: every registered job + trigger posture
                            (proposed/armed) + live change/quiet-window state + recent fires
                            composed through the circuit clock-fold (a dead fire shows LAPSED)
@@ -289,6 +291,32 @@ def main():
             if x.get("what_it_does"):
                 print(f"         {x['what_it_does'][:100]}")
         return 0
+
+    if cmd == "embed":
+        # EMBEDDINGS, operable from the terminal (one implementation — runtime/embeddings_surface;
+        # this verb is a thin invoker; same fns as the embeddings MCP tool).
+        import subprocess, os as _os
+        sub = args[1] if len(args) > 1 else "spaces"
+        _repo = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+        if sub == "spaces" or sub == "status":
+            _code = ("import sys; sys.path.insert(0,'.'); from runtime.embeddings_surface import spaces_status, spaces_render; "
+                     "print(spaces_render(spaces_status()))")
+        elif sub == "route":
+            _code = ("import sys; sys.path.insert(0,'.'); from runtime.embeddings_surface import route_table, route_render; "
+                     "print(route_render(route_table()))")
+        elif sub in ("build", "pyramid"):
+            if len(args) < 3:
+                print(f"usage: company embed {sub} SPACE"); return 1
+            fn = "build_space" if sub == "build" else "pyramid_space"
+            _code = ("import sys, json; sys.path.insert(0,'.'); "
+                     f"from runtime.embeddings_surface import {fn}; "
+                     f"print(json.dumps({fn}({args[2]!r}), indent=1, default=str))")
+        else:
+            print("usage: company embed [spaces|route|build SPACE|pyramid SPACE]"); return 1
+        r = subprocess.run([_os.path.join(_repo, ".venv", "bin", "python"), "-c", _code],
+                           cwd=_repo, capture_output=True, text=True, timeout=1800)
+        print(r.stdout.strip() or r.stderr.strip()[:800])
+        return 0 if r.returncode == 0 else 1
 
     if cmd == "jobs":
         # THE HEARTBEAT'S CLI FACE (one implementation — runtime/jobs.jobs_status_render; this verb is a
