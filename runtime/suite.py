@@ -10453,6 +10453,31 @@ class Suite:
         if not isinstance(spec, dict):
             raise TypeError(f"create_role needs a dict spec, got {type(spec).__name__}")
         spec = dict(spec)
+        # `model` BINDS the role (the create-tool's documented contract: "`model` … its bound model").
+        # Was: silently ignored unless brain-drafting — caught BY-USE 2026-07-07 (create(kind='role',
+        # model='kimi-k2.7-code:cloud') rendered NO binding → the role fell to the cfg brain; the same
+        # family of miss as the roles/AGENTS.md nested-binding trap). Lands TOP-LEVEL (resolve_role
+        # reads spec['default_model'] directly — never nested inside model_binding). base_url pairs
+        # from the live provider catalog when the model is registered there, else the ollama host for
+        # a name:tag id (model+endpoint must match — the explain_role.py canonical pattern); an
+        # unknown shape binds the model alone (resolve_role's base falls to the cfg brain's endpoint,
+        # declared not silent).
+        if model:
+            spec.setdefault("default_model", model)
+            if not spec.get("default_base_url"):
+                _base = None
+                try:
+                    for _p in self.capability_providers().values():
+                        if _p.get("model") == model:
+                            _base = _p.get("base_url")
+                            break
+                except Exception:
+                    _base = None
+                if _base is None and ":" in model and "/" not in model:
+                    from fabric import config as _fc
+                    _base = _fc.OLLAMA_DIRECT
+                if _base:
+                    spec["default_base_url"] = _base
         # Brain-draft path (same as propose_role): a free-text brief → the brain drafts a field-set.
         if "brief" in spec and not spec.get("output_fields") and not spec.get("prompt_template"):
             drafted = self._draft_role_fields(spec["brief"], spec.get("id"), model=model)

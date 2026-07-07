@@ -85,5 +85,16 @@ ROLE = {'id': 'mine_design_intent',
             'exchange://<sid>/<i>; connects_to feeds the exchange://↔code:// cross-link (the '
             'transcript-address ↔ directory-address bridge).',
  'render_hint': {'shape': 'extract', 'lane': 'mine_design_intent'},
+ # KIMI-BOUND (2026-07-07, the archaeology decision): extraction of design-INTENT is judgment work —
+ # the measured A/B (build-prep/memory-archaeology/KIMI-VS-4B-MINE-SAMPLE.md) showed the strong model's
+ # repeatable edge is exactly the correction/intent-catching this role exists for. TOP-LEVEL binding
+ # (roles/AGENTS.md binding-trap law: a default_model nested in model_binding is silently unread) —
+ # explain_role.py is the canonical pattern; base_url = the ollama host where the cloud kimi runs
+ # (model+endpoint must match). create(kind='role')'s model= param was silently dropped at authoring
+ # time (fixed in Suite.create_role the same day); this explicit binding is the repair.
+ 'default_model': 'kimi-k2.7-code:cloud',
+ 'default_base_url': 'http://localhost:11434/v1',
+ 'model_binding': {'requires': ['chat', 'json'], 'default_model': 'kimi-k2.7-code:cloud',
+                   'default_base_url': 'http://localhost:11434/v1'},
     'output_schema': MineDesignIntentOut,
 }
