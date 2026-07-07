@@ -189,6 +189,14 @@ both nested → both resolved to `-pro`; the fix is moving it top-level). Verify
   `output_schema`, forbids `schema_slot` — grain is role-identity, requires the neutral fragment), so a row
   can SELECT a grain but never fork the locked superset or smuggle relevance into the neutral pass.
   PROTECTED (`edit_role`/`delete_role` refuse). Guarded by the dragnet-freeze block in `roles_acceptance.py`.
+- **`keeper_reader`** — the **keeper cast's answering leg** (④ THE CONTAINER · L7-KEEPER, 2026-07-02): when
+  `keeper_answer(project://<key>, question, token)` fires `cast_for_mode('keeper')`, this role reads the
+  question + the project's composed `[Project context]` (its LIVE ledger/status/members, folded into the
+  USER content by `runtime/keeper.py`) and returns a grounded, at-altitude answer `{answer, grounding_note}`
+  FOR the operator — invention-flagged. Its `prompt_slot` is a SELECT on `coordinate.response_style` (the
+  per-project STYLE resolved through the ONE ladder from `container.config_rung`), so writing a deeper
+  config rung changes its resolved framing WITHOUT a file edit (C7.3). In the **`keeper`** cast. (The
+  `keeper` cast also includes **`ground`** via its extended `mode_scope`.)
 
 **Where new things go:** a new role = a new file `roles/<id>.py` declaring its `ROLE` dict (its `id`
 MUST equal the file name). Put it in a mode's cast by adding that mode to its `mode_scope`. Make it a
@@ -221,6 +229,7 @@ routing/verdict rule is a pure declared function — L2) · let a role emit `res
 `build-prep/concurrent-cognition/` (the G2 criteria + guide).
 
 ## Agent-authored entries (auto-reflected)
+- **`mine_design_intent`** — agent-authored role (created via the declarative-direct face). The MEMORY-ARCHAEOLOGY miner — the deep-understanding sibling of mine_exchange (which mines the SELF-IMPROVEMENT facet). Reads ONE conversat
 - **`glyph_assist`** — agent-authored role (created via the declarative-direct face). A6 of the Glyphic AI fusion — the COLLABORATIVE hand: turns a natural instruction about the CURRENT glyphgraph (with the human's live select
 - **`glyph_compose`** — agent-authored role (created via the declarative-direct face). A5 of the Glyphic AI fusion — the JUDGE half (extraction-vs-judgment): given a word and its top-k nearest glyph candidates from the glyph_me
 - **`glyph_symbol_candidates`** — agent-authored role (created via the declarative-direct face). A5 of the Glyphic AI fusion — the FOUNDRY role: proposes N candidate ConceptV line-symbols for a brief, as STRUCTURED records (the schema en
