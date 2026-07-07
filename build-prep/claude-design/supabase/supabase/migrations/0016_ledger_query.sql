@@ -251,15 +251,29 @@ begin
             'space', coalesce(_sem->>'space','desc'), 'dim', _dim, 'hits', jsonb_array_length(_sem_rows)));
     end if;
 
-    -- ── LEXICAL leg: FTS over the DURABLE interpretation (websearch grammar) ──
+    -- ── LEXICAL leg: FTS — over the DURABLE interpretation (default), or over the TRANSCRIPT TEXT
+    -- itself when lexical.over='exchange' (0024: the conversation words joined the one store) ──
     if _lex is not null then
-        select coalesce(jsonb_agg(jsonb_build_object('address', address, 'score', rank) order by rank desc), '[]'::jsonb)
-        into _lex_rows
-        from (select i.address, ts_rank(i.fts, websearch_to_tsquery('english', _lex->>'text')) rank
-              from ledger.interpretation i
-              where i.fts @@ websearch_to_tsquery('english', _lex->>'text')
-                and (_cands is null or i.address = any(_cands))
-              order by rank desc limit 60) t;
+        if coalesce(_lex->>'over', 'interpretation') = 'exchange' then
+            select coalesce(jsonb_agg(jsonb_build_object('address', address, 'score', rank) order by rank desc), '[]'::jsonb)
+            into _lex_rows
+            from (select x.address, ts_rank(x.fts, websearch_to_tsquery('english', _lex->>'text')) rank
+                  from ledger.exchange x
+                  where x.fts @@ websearch_to_tsquery('english', _lex->>'text')
+                    and (_cands is null or x.address = any(_cands))
+                  order by rank desc limit 60) t;
+            _plan := _plan || jsonb_build_object('lexical_over', 'exchange');
+        elsif coalesce(_lex->>'over', 'interpretation') <> 'interpretation' then
+            raise exception 'ledger.query: lexical.over % — one of interpretation|exchange', quote_literal(_lex->>'over');
+        else
+            select coalesce(jsonb_agg(jsonb_build_object('address', address, 'score', rank) order by rank desc), '[]'::jsonb)
+            into _lex_rows
+            from (select i.address, ts_rank(i.fts, websearch_to_tsquery('english', _lex->>'text')) rank
+                  from ledger.interpretation i
+                  where i.fts @@ websearch_to_tsquery('english', _lex->>'text')
+                    and (_cands is null or i.address = any(_cands))
+                  order by rank desc limit 60) t;
+        end if;
         _plan := _plan || jsonb_build_object('lexical_hits', jsonb_array_length(_lex_rows));
     end if;
 
@@ -295,8 +309,11 @@ begin
         'results', coalesce((
             select jsonb_agg(
                 r.value
-                || jsonb_build_object('what_it_does', left(u.what_it_does, 240),
-                                      'path', u.path, 'node_type', u.node_type)
+                || jsonb_build_object(
+                       -- a unit enriches from the durable read; an EXCHANGE from its own words (0024)
+                       'what_it_does', coalesce(left(u.what_it_does, 240),
+                                                left(regexp_replace(coalesce(x.user_text,''), '\s+', ' ', 'g'), 240)),
+                       'path', coalesce(u.path, x.archive_path), 'node_type', coalesce(u.node_type, case when x.address is not null then 'exchange' end))
                 || case when _hops is not null and _hops ? (r.value->>'address')
                         then jsonb_build_object('hops', _hops->(r.value->>'address')) else '{}'::jsonb end
                 || case when coalesce((_gph->>'expand')::boolean, false)
@@ -309,7 +326,8 @@ begin
                         else '{}'::jsonb end
                 order by (r.value->>'score')::numeric desc nulls last)
             from jsonb_array_elements(coalesce(_fused, '[]'::jsonb)) r
-            left join ledger.unit_latest u on u.address = r.value->>'address'), '[]'::jsonb),
+            left join ledger.unit_latest u on u.address = r.value->>'address'
+            left join ledger.exchange x on x.address = r.value->>'address'), '[]'::jsonb),
         'meta', jsonb_build_object('run_id', _run, 'project', _project,
                                    'candidates_n', _cands_n, 'plan', _plan));
 end
