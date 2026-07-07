@@ -188,7 +188,7 @@ begin
         _plan := _plan || jsonb_build_object('graph_reachable', _cands_n, 'graph_direction', _dirn);
         if _cands_n = 0 then
             return jsonb_build_object('results', '[]'::jsonb,
-                'meta', jsonb_build_object('run_id', _run, 'candidates_n', 0, 'plan', _plan,
+                'meta', jsonb_build_object('run_id', _run, 'runs', to_jsonb(_runs), 'projects', to_jsonb(_projects), 'at', _at, 'candidates_n', 0, 'plan', _plan,
                     'note', 'graph walk reached nothing from the anchor — check the anchor address + kinds/direction'));
         end if;
     end if;
@@ -234,7 +234,7 @@ begin
                 from (select kind, count(*) n from ledger.edge_unified
                       where _cands is null or split_part(from_ref,'::',1) = any(_cands)
                       group by kind order by count(*) desc limit 40) t), '[]'::jsonb),
-                'meta', jsonb_build_object('run_id', _run, 'plan', _plan || '{"operator":"count-by-kind"}'::jsonb));
+                'meta', jsonb_build_object('run_id', _run, 'runs', to_jsonb(_runs), 'projects', to_jsonb(_projects), 'at', _at, 'plan', _plan || '{"operator":"count-by-kind"}'::jsonb));
         elsif _cnt->>'by' = 'space' then             -- embedding spaces covering the candidate set
             return jsonb_build_object('results', coalesce((
                 select jsonb_agg(jsonb_build_object('group', space, 'n', n) order by n desc)
@@ -242,7 +242,7 @@ begin
                       where space not like '\_\_root\_%' escape '\'
                         and (_cands is null or source_address = any(_cands))
                       group by space order by count(*) desc limit 40) t), '[]'::jsonb),
-                'meta', jsonb_build_object('run_id', _run, 'plan', _plan || '{"operator":"count-by-space"}'::jsonb));
+                'meta', jsonb_build_object('run_id', _run, 'runs', to_jsonb(_runs), 'projects', to_jsonb(_projects), 'at', _at, 'plan', _plan || '{"operator":"count-by-space"}'::jsonb));
         elsif _cnt->>'by' = 'path_prefix' then       -- the folder histogram (2 levels)
             return jsonb_build_object('results', coalesce((
                 select jsonb_agg(jsonb_build_object('group', pfx, 'n', n) order by n desc)
@@ -251,7 +251,7 @@ begin
                       from ledger.entry where run_id = any(_runs)
                         and (_cands is null or address = any(_cands))
                       group by 1 order by 2 desc limit 40) t), '[]'::jsonb),
-                'meta', jsonb_build_object('run_id', _run, 'plan', _plan || '{"operator":"count-by-path"}'::jsonb));
+                'meta', jsonb_build_object('run_id', _run, 'runs', to_jsonb(_runs), 'projects', to_jsonb(_projects), 'at', _at, 'plan', _plan || '{"operator":"count-by-path"}'::jsonb));
         else
             return jsonb_build_object('results', coalesce((
                 select jsonb_agg(jsonb_build_object('group', g, 'n', n) order by n desc)
@@ -260,7 +260,7 @@ begin
                       from ledger.entry where run_id = any(_runs)
                         and (_cands is null or address = any(_cands))
                       group by 1 order by 2 desc limit 40) t), '[]'::jsonb),
-                'meta', jsonb_build_object('run_id', _run, 'plan',
+                'meta', jsonb_build_object('run_id', _run, 'runs', to_jsonb(_runs), 'projects', to_jsonb(_projects), 'at', _at, 'plan',
                         _plan || jsonb_build_object('operator', 'count-by-' || (_cnt->>'by'))));
         end if;
     end if;
