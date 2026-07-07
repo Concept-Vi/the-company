@@ -11,7 +11,7 @@ THE SEAM (co-designed with the lead, who SERVES; this module CONSUMES — loads 
   • embeddings: POST the LEAD's served embedder at :8007/v1/embeddings, model pplx-embed-context-v1-4b,
     DOCUMENTS-mode {"documents":[[turn,turn,...]]} → per-turn CONTEXTUAL (late-chunking) vectors, dim 2560,
     int8/unnormalized → compare by COSINE. Index AND query embedded by the SAME maker (the golden rule).
-  • rerank: ops/rerank.py Reranker(backend="jina-v3", device="cpu") — a CPU library, 0 VRAM, no GPU contention.
+  • rerank: ops/rerank.py Reranker(backend="jina-v3") served at :8008 — GPU by default (~1.3GB bf16 since 2026-06-28; COMPANY_RERANK_DEVICE=cpu to pin CPU/0-VRAM).
 This path is SELF-CONTAINED: it does not depend on the substrate_mcp.embeddings bridge (which is currently
 broken — see channel-memory + the lead). Embedder down ⇒ TEACHING error ("company up embed-pplx"), never a
 silent empty result, never a silent fallback (repo law).
@@ -34,8 +34,11 @@ from runtime.session_scan import scan_session
 EMBED_URL = os.environ.get("PPLX_EMBED_URL", "http://127.0.0.1:8007/v1/embeddings")
 EMBED_MODEL = os.environ.get("PPLX_EMBED_MODEL", "perplexity-ai/pplx-embed-context-v1-4b")
 EMBED_DIM = 2560
-RERANK_URL = os.environ.get("RERANK_URL", "http://127.0.0.1:8008/rerank")   # the lead's served jina-v3 (CPU, bridge-free)
-RERANK_POOL = int(os.environ.get("RECALL_RERANK_POOL", "12"))               # CPU listwise: cap candidates sent to rerank
+RERANK_URL = os.environ.get("RERANK_URL", "http://127.0.0.1:8008/rerank")   # the lead's served jina-v3 (GPU by default since 2026-06-28, bridge-free)
+RERANK_POOL = int(os.environ.get("RECALL_RERANK_POOL", "0"))                # 0 = rerank the FULL cosine pool (`fetch`). The old cap of 12 was a CPU-era
+#                                                                             throttle; since jina-v3 moved to GPU (2026-06-28) the cost collapsed
+#                                                                             (~0.2s for 40) AND capping DEFEATS rerank — a doc cosine-ranked #13-40
+#                                                                             could be the true best answer but never reached the reranker. Set >0 to pin a cap.
 RERANK_TIMEOUT = int(os.environ.get("RECALL_RERANK_TIMEOUT", "180"))
 # group turns into documents that stay within the embedder's context (late-chunking happens WITHIN a group);
 # conservative char budget per group so a group never overflows the 32K-token window.
@@ -249,7 +252,7 @@ def _embed_one(q: str) -> list[float]:
 
 
 def _rerank_endpoint(query: str, texts: list[str], top_n: int) -> list[dict]:
-    """POST the lead's served jina-v3 reranker (:8008, CPU). Returns ranking[{orig_rank, rerank_score,…}].
+    """POST the lead's served jina-v3 reranker (:8008, GPU by default). Returns ranking[{orig_rank, rerank_score,…}].
     Served, not in-process: no torch dep, no overlord bridge (Tim's direction)."""
     body = json.dumps({"query": query, "candidates": texts, "top_n": top_n}).encode()
     req = urllib.request.Request(RERANK_URL, data=body, headers={"Content-Type": "application/json"})
@@ -356,12 +359,12 @@ def recall(jsonl_path: str, query: str, k: int = 8, *, rerank: bool = True,
                     key=lambda x: -x["score"])[:max(fetch, k)]
     if rerank and scored:
         try:
-            # CPU listwise rerank: cap candidates + truncate text (the decisive signal is in the first ~600 chars).
-            pool = scored[:RERANK_POOL]
+            # listwise rerank the FULL cosine pool (GPU, cheap) + truncate text (the decisive signal is in the first ~600 chars).
+            pool = scored if RERANK_POOL <= 0 else scored[:RERANK_POOL]
             order = _rerank_endpoint(query, [s["text"][:600] for s in pool], top_n=k)
             # the endpoint returns ranking with orig_rank (1-based index into what we sent) → map back
             ranked = [{**pool[o["orig_rank"] - 1], "rerank_score": o["rerank_score"]} for o in order]
-            rerank_note = f"jina-v3 (served :8008, CPU, pool={len(pool)})"
+            rerank_note = f"jina-v3 (served :8008, GPU, pool={len(pool)})"
         except RecallError:
             raise
         except Exception as e:

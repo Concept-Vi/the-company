@@ -21,7 +21,7 @@ _EXT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__
 _STOP = {"the", "a", "an", "of", "to", "and", "or", "in", "on", "for", "is", "are", "how", "what", "which",
          "with", "by", "as", "at", "it", "its", "be", "this", "that", "from", "into", "about"}
 
-# Reuse the SAME served reranker the recollection recall uses (jina-v3, CPU, :8008) — reuse-don't-parallel.
+# Reuse the SAME served reranker the recollection recall uses (jina-v3, GPU by default, :8008) — reuse-don't-parallel.
 # Env-configurable (no hardcoding): the URL, the timeout, and how much of each candidate to send (the
 # decisive relevance signal sits in the lead characters, mirroring session_recall's 600-char truncation).
 RERANK_URL = os.environ.get("RERANK_URL", "http://127.0.0.1:8008/rerank")

@@ -1,5 +1,5 @@
 [Unit]
-Description=jina-reranker-v3 listwise reranker (CPU, 0 VRAM) on port 8008 — the rerank stage for cross-session recall
+Description=jina-reranker-v3 listwise reranker (GPU by default ~1.3GB) on port 8008 — the rerank stage for cross-session recall
 After=default.target
 
 [Service]

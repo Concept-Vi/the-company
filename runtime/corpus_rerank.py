@@ -1,7 +1,7 @@
 """runtime/corpus_rerank.py — the OPTIONAL rerank PRECISION STAGE over corpus retrieval.
 
 pplx cosine top-K (query_corpus / common_knowledge) → jina-v3 cross-encoder REORDER (ops/rerank.py
-served at :8008, CPU / 0-VRAM, no GPU contention). A TOGGLE, FAIL-LOUD: once asked it reranks or
+served at :8008, GPU by default ~1.3GB since 2026-06-28). A TOGGLE, FAIL-LOUD: once asked it reranks or
 raises — never a fabricated/blank-text score.
 
 WHY a standalone reusable stage (reuse-don't-rebuild): the rerank component (ops/rerank.py) and the
@@ -32,7 +32,7 @@ from __future__ import annotations
 import json
 import urllib.request
 
-DEFAULT_RERANK_URL = "http://localhost:8008/rerank"
+DEFAULT_RERANK_URL = "http://127.0.0.1:8008/rerank"
 
 
 def _digest_text(store, source_address: str) -> str:

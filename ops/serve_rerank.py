@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ops/serve_rerank.py — the Company RERANK endpoint (jina-reranker-v3 listwise, CPU, 0 VRAM).
+"""ops/serve_rerank.py — the Company RERANK endpoint (jina-reranker-v3 listwise; GPU by default ~1.3GB since 2026-06-28, COMPANY_RERANK_DEVICE=cpu to pin CPU/0-VRAM).
 Surfaces ops/rerank.py:Reranker as an HTTP service (mirrors the embed/tts serving pattern) so the
 cross-session recall scanner can POST query+candidates → reranked order WITHOUT an in-process torch
 dep and WITHOUT a bridge to the overlord venv (Tim's direction 2026-06-14: no overlord bridge; served
@@ -79,5 +79,5 @@ class H(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     _reranker()  # load at startup so /health reflects readiness + first query isn't cold
-    sys.stderr.write(f"[serve_rerank] {BACKEND} on 127.0.0.1:{PORT} (CPU)\n")
+    sys.stderr.write(f"[serve_rerank] {BACKEND} on 127.0.0.1:{PORT} ({DEVICE.upper()})\n")
     ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()

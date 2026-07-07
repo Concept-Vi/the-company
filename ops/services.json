@@ -76,6 +76,13 @@
         "rerank-jina"
       ],
       "note": "VERSION loadout (WF2 2026-06-29, worked-out fit): the FP8-4B everyday that FITS the 16GB card. = interaction MINUS the resident reranker. WORKED OUT: chat-4b-fp8 (bigger than the AWQ the base interaction combo was sized for) + embed-pplx + rerank + voice is ~1GB over the card; rerank-jina is the service that tips it over, so it is ON-DEMAND here (recall loads it when needed). Brain + recall-embedder + ear + voice all resident (~14.5GB). FURTHER-TUNING (captured task): complete the kv_cache_dtype capability vocab (serve_values) + fp8 KV-cache + a measured _profile/auto-allocate on chat-4b-fp8 to shrink it enough to restore the resident reranker — marginal, may not close on 16GB."
+    },
+    "recall": {
+      "services": [
+        "embed-pplx",
+        "rerank-jina"
+      ],
+      "note": "The RECALL/SEARCH stack (2026-07-06, Tim): the live contextual embedder (pplx-embed-context-v1-4b, :8007, the main embedder — Tim confirmed 2026-07-06) + the listwise reranker (jina-reranker-v3, :8008) — the two-stage retrieve→rerank pair behind cross-session semantic recall (runtime/session_recall.py) and the determine pipeline (runtime/recall_determine.py). ~6.7GB, NO brain/voice — brings the search substrate up on its own after a reboot without loading a model or the full interaction loadout (`company up @recall`)."
     }
   },
   "groups": {
