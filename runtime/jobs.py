@@ -39,6 +39,8 @@ HANDLERS = {
                         "git-walk a project's history into ledger.file_meta (the run-independent time axis)"),
     "rebuild_scale_pyramids": ("runtime.scale", "rebuild_scale_pyramids",
                         "rebuild the named spaces' scale pyramids (rows-forward, incremental by content-hash)"),
+    "provenance_backfill": ("ops.backfill_provenance", "backfill_provenance",
+                        "walk the session archives for write-tool calls → generated-by assertions (incremental by mtime+line watermarks)"),
 }
 
 

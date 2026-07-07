@@ -27,6 +27,8 @@ stdlib-only. See README.md (use) and UPDATING.md (extend). Constitution: ../AGEN
   company combos           list runnable combinations (`company up @<name>` to start one)
   company bench KIND [args]       chat|embed|suite|long-ctx
   company telemetry        learned model load times + measured VRAM (vs estimates)
+  company query "Q" [SPACE] [N]  ask the COORDINATE SPACE from the terminal (the same one
+                           function the MCP tool + /api/query call; lens-routed embed)
   company jobs             THE HEARTBEAT, visible: every registered job + trigger posture
                            (proposed/armed) + live change/quiet-window state + recent fires
                            composed through the circuit clock-fold (a dead fire shows LAPSED)
@@ -257,6 +259,37 @@ def main():
         from runtime import orienteering_drift as _od
         print("\n" + _od.format_scan(_od.scan(repo)))
         return
+    if cmd == "query":
+        # THE COORDINATE QUERY's CLI face (one implementation — mcp_face.tools.coordinate.run_query, the
+        # same entry the MCP tool + the bridge /api/query call). `company query "text" [SPACE] [LIMIT]`
+        # for quick asks; SPACE routes the embed lens (code/symbol→nomic, else pplx).
+        import subprocess, os as _os, json as _json
+        if len(args) < 2:
+            print('usage: company query "your question" [SPACE=desc] [LIMIT=8]\n'
+                  '  spaces: desc·docs·code·symbol·history·exchange·extractions·repo·topics…\n'
+                  '  (full multi-axis specs: the coordinate MCP tool or POST /api/query)')
+            return 1
+        _text, _space = args[1], (args[2] if len(args) > 2 else "desc")
+        _lim = int(args[3]) if len(args) > 3 else 8
+        _repo = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+        _code = ("import sys, json; sys.path.insert(0, '.'); "
+                 "from mcp_face.tools.coordinate import run_query; "
+                 f"r = run_query({{'semantic': {{'text': {_text!r}, 'space': {_space!r}}}, 'limit': {_lim}}}); "
+                 "print(json.dumps(r))")
+        r = subprocess.run([_os.path.join(_repo, ".venv", "bin", "python"), "-c", _code],
+                           cwd=_repo, capture_output=True, text=True, timeout=180)
+        if r.returncode != 0:
+            print(r.stderr.strip()[:600]); return 1
+        out = _json.loads(r.stdout)
+        plan = out.get("meta", {}).get("plan", {})
+        print(f"QUERY over {_space!r} — plan: {_json.dumps(plan)}")
+        for x in out.get("results", []):
+            sc = x.get("score"); sc = f"{float(sc):.3f}" if sc is not None else "  ·  "
+            print(f"  {sc}  {x.get('address','')[:76]}")
+            if x.get("what_it_does"):
+                print(f"         {x['what_it_does'][:100]}")
+        return 0
+
     if cmd == "jobs":
         # THE HEARTBEAT'S CLI FACE (one implementation — runtime/jobs.jobs_status_render; this verb is a
         # thin invoker so the status logic lives ONCE and the CLI stays stdlib-only).

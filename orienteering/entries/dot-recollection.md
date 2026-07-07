@@ -38,3 +38,12 @@ Path `/home/tim/company/.recollection`, 1.2G. Newest file mtime 2026-06-26 14:35
 
 ## Notes / evidence
 Read: top-level + `self/` listing; traced the 3 Company code paths via grep (`write_self_marker.py`, `seed_self.py`, `session_scan.py`). NOT read: archive/index contents (bulk data; catalogue depth is role + structure). Unlike `[[corpora]]`/`[[cache-company]]`, this store IS fresh (06-26) because the `self/` markers are written on every live session, independent of the stalled export/reindex timers.
+
+## THE MOVE (2026-07-07 — the recollection→ledger move, migration 0024)
+The conversation-index sqlite's CONTENT now lives in the one Supabase store (:15432):
+`ledger.exchange` (6,985 exchanges WITH full user+assistant text + FTS) · `ledger.tool_call` (52,694) ·
+the mechanical links (23,608) as `ledger.assertion` provenance='derived' under the exchange-* edge kinds.
+**Reads should go to the ledger** (the coordinate query's lexical.over='exchange' + semantic exchange
+space reach it); the sqlite here REMAINS the immutable source-of-record (never mutated; the migration is
+idempotent re-runnable: `ops/migrate_recollection_full.py`). The 1,239 sqlite rows whose (session,line)
+collide are counted-skipped in the migration report, not lost — they exist in the sqlite.
