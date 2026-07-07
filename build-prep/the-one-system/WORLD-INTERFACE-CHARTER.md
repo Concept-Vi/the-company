@@ -47,3 +47,25 @@ The visible half of the common world. The ledger is a multi-axis coordinate spac
 
 ## Sequencing
 ② (population + shared functions + cutover) runs first/now — its two functions ARE this interface's first building blocks. The ③ MAPPING WAVE can fan out in parallel once ② building starts (mapping is read-only). Design wave gates on the mapping synthesis. Tim's recognition checkpoint gates the build.
+
+---
+## THE MANDATE SHARPENED (Tim, 2026-07-07 — BINDING on the L8 window design; supersedes any viewer-shaped reading)
+
+Tim's words, in substance: **"This is not just a viewer — it is the truest definition of the word
+interface."** The window must let Tim ACTION the system, not observe it:
+
+1. **Every kind of QUERY** — the full ledger.query vocabulary actionable from the surface: semantic,
+   lexical, graph (direction/depth/expand), paths, scale-drill, counts, address-sets, every filter — each
+   composable, none hidden behind an agent.
+2. **Every kind of FILTER and VIEW** — the axes as controls; views over any result set.
+3. **Every kind of MODEL RUN** — all the flows and models in the company MCP, runnable from the surface:
+   run_role/run_items/run_reduce/cascades/graphs/jobs — set up, configured, fired, watched.
+4. **EMBEDDINGS as an operable surface** — Tim must be able to SET, CONFIGURE and RUN embeddings from the
+   window (spaces, lenses/embedders, rebuild, pyramid rungs).
+5. **FULL design-system integration** — the front is built entirely on the design system (claude-ds
+   canonical), not adjacent to it.
+
+Implication for the projection contract + loop-prep: every capability the MCP face exposes needs a
+UI-face twin (one-function-two-faces held to its strongest reading). The feed side (ledger.query,
+/api/query, embed routing, jobs/cascade/role doors) already exists MCP-first; the window binds them.
+Sequencing (Tim, same message): the BACK first — the front is deferred until the back is whole.
