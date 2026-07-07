@@ -203,3 +203,20 @@ def space_matrix(space, emb):
     M = np.asarray(rows, dtype=np.float32)
     M /= (np.linalg.norm(M, axis=1, keepdims=True) + 1e-9)
     return ids, M
+
+
+def content_hashes(space, emb) -> dict:
+    """{source_address: content_hash} for a whole (space, emb) in ONE query — the pyramid builder's
+    incrementality prefetch (replaces a per-member get_vector round-trip; at symbol scale that was 6,201
+    psql calls per build, and against the WRONG key — the default space — so hashes read '∅' and
+    incrementality silently keyed on membership only)."""
+    cond = f"space={_lit(space)}"
+    if isinstance(emb, str) and emb:
+        cond += f" and emb_layer={_lit(emb)}"
+    out = _psql(f"select source_address, content_hash from ledger.embedding where {cond}", timeout=120)
+    d = {}
+    for l in out.splitlines():
+        if "|" in l:
+            a, h = l.rsplit("|", 1)
+            d[a] = h
+    return d

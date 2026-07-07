@@ -209,16 +209,16 @@ def default_rungs(n: int, *, floor: int = 4) -> list:
 
 
 # ── BUILD / RESOLVE over the persisted vector substrate ───────────────────────────────────────────────
-def _member_hash(store, source_addresses: list) -> str:
+def _member_hash(store, source_addresses: list, hashes: dict | None = None) -> str:
     """The incremental key for a centroid: the content_hash of its members' SORTED (source, content_hash)
-    pairs. So a centroid is re-persisted ONLY when its membership changes OR a member re-embeds (its unit
-    content_hash moves) — mirrors build_index's content-hash incrementality. Reuses vector_index.content_hash
-    (the same blake2b key the unit vectors were persisted under — not reimplemented)."""
+    pairs — re-persist ONLY when membership changes OR a member re-embeds. PERF+CORRECTNESS fix
+    (2026-07-07): `hashes` = a per-build PREFETCH ({source: content_hash} via pg_vectors.content_hashes,
+    ONE query for the whole space) replacing a per-member get_vector round-trip that ALSO read the wrong
+    key (the default space — named-space units aren't there, so content read '∅' and incrementality
+    silently keyed on membership only). Reuses vector_index.content_hash (not reimplemented)."""
     from store import vector_index as vx
-    parts = []
-    for src in sorted(source_addresses):
-        rec = store.get_vector(store.space_address(src, None))   # unit vectors live in the bare/default key under their own source
-        parts.append(f"{src}:{(rec or {}).get('content_hash', '∅')}")
+    hashes = hashes or {}
+    parts = [f"{src}:{hashes.get(src, '∅')}" for src in sorted(source_addresses)]
     return vx.content_hash("\n".join(parts))
 
 
@@ -269,6 +269,8 @@ def build_scale_pyramid(store, *, space: str, rungs: list | None = None, linkage
     # the embed model the units were built under (a centroid inherits it — it is a mean of those vectors)
     model = (store.get_vector(store.space_address(ids[0], space, emb)) or {}).get("model")
 
+    from store import pg_vectors as _pgv
+    _hashes = _pgv.content_hashes(getattr(store, "_pg_ns", "") + space, emb or "pplx")   # ONE query — the incrementality prefetch
     nv, cuts = agglomerate(vecs, linkage=linkage)
 
     built = skipped = 0
@@ -289,7 +291,7 @@ def build_scale_pyramid(store, *, space: str, rungs: list | None = None, linkage
             member_srcs = [ids[i] for i in idxs]
             cluster_addr = f"cluster://{space}/k{k}/{label}"
             store_key = store.space_address(cluster_addr, f"scale:{space}:k{k}", emb)
-            h = _member_hash(store, member_srcs)
+            h = _member_hash(store, member_srcs, _hashes)
             prior = store.get_vector(store_key)
             if force or prior is None or prior.get("content_hash") != h:
                 store.put_vector(store_key, cvec, h, dim=dim, model=model,
@@ -345,6 +347,8 @@ def build_scale_pyramid_kmeans(store, *, space: str, rungs: list | None = None, 
     from sklearn.cluster import MiniBatchKMeans
 
     corpus = store.index_corpus(space=space, emb=emb)
+    from store import pg_vectors as _pgv
+    _hashes = _pgv.content_hashes(getattr(store, "_pg_ns", "") + space, emb or "pplx")   # ONE query (perf+correctness fix, same as the ward path)
     n = len(corpus)
     if n == 0:
         raise ValueError(f"scale.build_scale_pyramid_kmeans: space {space!r} has NO unit vectors.")
@@ -392,7 +396,7 @@ def build_scale_pyramid_kmeans(store, *, space: str, rungs: list | None = None, 
             member_srcs = [ids[i] for i in idxs]
             exemplar = int(idxs[int((X[idxs] @ cvec).argmax())])  # member nearest the centroid (numpy)
             store_key = store.space_address(src, f"scale:{space}:k{k}", emb)
-            h = _member_hash(store, member_srcs)
+            h = _member_hash(store, member_srcs, _hashes)
             prior = store.get_vector(store_key)
             if force or prior is None or prior.get("content_hash") != h:
                 store.put_vector(store_key, cvec.tolist(), h, dim=dim, model=model,
