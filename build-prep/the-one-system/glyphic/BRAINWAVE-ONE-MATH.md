@@ -199,3 +199,97 @@ function → the time coordinate. Those are the two plugs.
 - **G6.1 rises in priority**: address = identity = the existence mechanism (not just convergence).
 - **The Supabase backend** (with the symbol-record expansion from Tim's same-day answer): addresses,
   identities, groups, symbol multi-field records — one persistence substrate for the address space.
+
+
+---
+
+# THE WAVE (2026-07-09) — nine areas grounded it; the idea comes back BIGGER and corrected
+> Evidence: wave-one-math/AREA-*.md (9 reports: design-machinery · canvases-app · tokens-axes ·
+> templates-kits · system-remainder · counterpart · company-spine · math-priors · rigor/skeptic).
+> Read whole, together. What follows is the anchor CORRECTED — the sharpened design supersedes the
+> corresponding §1-§11 claims where they conflict.
+
+## §12 · The kernel is FIVE primitives, not two (math-priors §B — every formula in the code catalogued)
+1. **partition(parent, weights)** — WEIGHTED from day one (uniform = the special case). Proven need:
+   the System Map's childValues discovered "the lens changes the ratio, never the currency" under real
+   pressure; Tim himself rejected uniform 2π/n on the sunburst (Slice 78). Tim's equations must accept
+   a weight argument, or they reproduce that failure on first contact with real content.
+2. **project(children, extent, mode: linear|angular, gap?)** — one law dissolving the THREE (four with
+   counterpart's organisms) independent hand-written 2π/n sites. Squarify/treemap is EXPLICITLY NOT a
+   mode — 2D area-packing is a different algorithm class, a registered sibling (never force-fit).
+3. **grow(...)** — the growth contract, DECIDED not inherited: cv-address's own header asserts derived-
+   never-stored AND frozen-at-insertion four lines apart (rigor A2). Resolution: freeze the INPUTS of a
+   derivation ({index, capacity}), never its OUTPUT; better, retire slotFor per R3's design.
+4. **order(items, roles) → beats WITH an explicit t** — today no time COORDINATE exists anywhere
+   (cv-arc emits array order only). Also: ONE declared fencepost law (ring divides by n, pipeline by
+   n-1, spans into n cells — three conventions, currently mixed silently).
+5. **fit(frame, content) → scale** — slide-fit's ratio, promoted to a named primitive (open: partition
+   in reverse?).
+
+## §13 · The corrections the skeptic proved (each survives-by-redesign, not by wishing)
+- **IDENTITY IS A MINTED ID THAT RESOLVES TO AN ADDRESS — the raw address is never the stored key.**
+  Derived addresses CHANGE on sibling insert (k of n → k of n+1); what's stable is the ancestry ABOVE
+  the mutated frame. Persisted things (rows, bindings, group members) key on minted ids and re-resolve.
+  This is exactly how the Company's resolver already treats every citizen — id first, position second.
+- **Group operations are TWO kinds, not one:** attribute ops (colour/state/token) = a plain map over
+  member ids, no LCA involved; structural ops (move/reform-as-one) REQUIRE minting a frame — the LCA of
+  a non-contiguous selection degenerates to the whole parent (proven by running lcaAll: cells 2,5,9 of
+  12 → root). Minting is the mechanism, not decoration.
+- **Split/merge/reform needs a THIRD animation primitive** ("spawn-from") beside glide and enter —
+  React keys are 1:1; one-becomes-two has no tween today. New machinery, scoped explicitly.
+- **Fill-level read-out speaks through MEANING FIELDS, never raw k-of-n** — "cell 7 of 12" is the
+  octagon-oracle failure one layer down. cv-arc's role-named beats are the working precedent.
+- **Ratios claim, bounded honestly:** positions/counts/order are pure ratios; per-unit visual
+  MAGNITUDES (the 2.1% wash step, a gap inset) remain authored tokens — a constant may buy breathing
+  room BETWEEN ratio-derived cells, never move which ratio produced the boundary.
+
+## §14 · The relation split is THREE buckets, not two (company-spine §B2)
+DERIVED (containment + pure sequence — from the address math) · AUTHORED PROVENANCE (who/what made
+this — created/authored-by/sourced-from: facts no address encodes) · SEMANTIC (declared meaning
+fields). The Company already ENFORCES bucket 1 as law (edge_kinds/AGENTS.md: "containment is derived,
+never stored" — 319 stored belongs_to rows DROPPED on landing) and holds the groups precedent
+(mind:// kind=composition: members + typed order edges behind ONE resolvable address — generalize it
+scheme-neutral, don't rebuild it).
+
+## §15 · Recovered canon that outranks the anchor (counterpart — Tim-ratified, import wholesale)
+- **motion.json's law-set** (anchor_is_the_lca · transition_is_the_diff · change_budget ·
+  boundary_carries_identity · arrival_relative_to_path · anticipatory_verb · spatial_persistence ·
+  expert_lane) — the movement axes, already Tim's law, more precise than §6.
+- **TWO CIRCLES, not one:** the SHARP mechanical circle (2π/n, address-generating) vs the SOFT semantic
+  circle (subject sectors needing an authored CUT before addresses exist). The equations socket (§10)
+  must say which it feeds. Some things are irreducibly authored — "everything resolves" is bounded.
+- **CASCADE vs COMPOSE** (RESOLUTION.md): containment nests (nearest-scope wins); other axes COMPOSE
+  (multiply, none wins) — two resolution mechanisms the build must not conflate. And the litmus law:
+  **"derive, never place — a value a person had to type for a specific case is a defect."**
+
+## §16 · Where the laws already operate (the anchor's claims, found running)
+project:// address DB-GENERATED from the key (identity=addressability in SQL) · containment-derived
+law enforced Company-side · navgraph's tree-is-spine/edges-are-web (tested) · the RG1→RG9 chain =
+minting identities over selections, end-to-end with Tim's consent gate (the §8 pipeline, built for
+ui://) · childValues weighted partition · wash=f(depth) · X11's structural+semantic sibling edges
+(degrade-honestly) · slide transitions + Workshop scale-fit = the frame axis live.
+
+## §17 · The disconnection harvest (headline items; full lists in the nine reports' §C/§E)
+glyph:// UNREGISTERED on the one resolver (hundreds of real glyph://symbol/* addresses invisible to
+resolve_address — small additive join, scoped) · relation_types/ fully built, ZERO consumers, dangling
+inverse ("follows") · glyph_assist accepts ANY caller-supplied edge kind (ungoverned third vocabulary
+path) · canvas identity = 7 hand-maintained lists, no registry row, Cmd+K provably stale · AIEngine's
+whole diff/undo system addresses by ARRAY INDEX (live correctness risk; swapping coordinates for
+address paths = the cleanest single migration found) · order = array position EVERYWHERE (ids that
+freeze creation-position into strings) · texture-axis promises 8 patterns, CSS implements 2, in
+absolute px · ordinal-axis points at the wrong tokens (not --ramp-*) · code-symbols vs code-edges
+94 vs 4908 (a documented half-done migration) · element-map stale by 22 addresses; a README claims 25
+of 505 · three field-synonyms for one concept (represents/roles/maps_to_feature) · build-system-map
+declares verb-pairs, emits only forward halves · fixed shape-tables STILL LIVE in 3 more places (one
+TEACHING the octagon table to the AI in a prompt) · 4 unreachable stub canvases with false copy ·
+undo computes the invertible diff then throws it away · AtomiCity's divergent boot + icon monkey-patch
+· counterpart's OWN two address systems (file-substrate live vs span-spec prose) — same primitive at
+two resolutions, unrecognized.
+
+## §18 · Supabase reality (corrects §11's assumption)
+NO address/identity backend exists yet anywhere. counterpart/supabase = only a CLI link to project
+`gctunhsuwpaxeatwlmuv` ("Concept-Vi's Project" — CONFIRM with Tim whether this is the main Vi backend;
+target it if so, never mint a parallel project). The Counterpart-handoff schema (kind/artifact/
+variable_binding/memory/preference + pgvector, resolution precedence explicit>preference>memory>ai>
+default) is the closest studied precedent for the persistence layer — a pattern to learn from, not a
+thing to consume.

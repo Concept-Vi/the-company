@@ -126,6 +126,40 @@ and FUSE the best into claude-ds; drop the parallel (islands-join-mainland). A s
 - **The wording live-tune** rides EVERY phase (A5: correctability-by-use, never a checkpoint).
 - **TIM-DECISIONS.md** (same folder) = the standing Tim-visible queue (defaults set, nothing gated).
 
+## PHASE ONE-MATH — the addressed-fill discovery, grounded (BRAINWAVE-ONE-MATH.md §12-§18; wave-one-math/*)
+> Tim's brainwave, nine-area wave-grounded 2026-07-09. R3 is its first consumer (all layouts, one pass —
+> Tim's call). The kernel receives his equations; everything below cites its evidence report.
+- **K1 · The kernel** — partition(parent, WEIGHTS) + project(linear|angular, gap) + grow (contract
+  DECIDED: freeze inputs never outputs; slotFor retired per R3) + order-with-explicit-t + fit; ONE
+  fencepost law declared; squarify registered as sibling. Lift childValues' weighted logic INTO
+  cv-address (math-priors §E). Tim's equations plug in here — they MUST take weights (rigor §D).
+- **K2 · Identity spine** — minted-id→resolves-to-address (never address-as-key); register `glyph` as
+  a SCHEME + resolve_address dispatch branch (the whole glyph corpus is currently invisible to the one
+  resolver — company-spine §E, small additive join); generalize mind://'s composition kind into a
+  scheme-neutral group primitive; groups = two operation kinds (attribute map vs minted-frame move).
+- **K3 · The addressed fill / computed texture** — texture-axis's 8 promised patterns become computed
+  partitions (2 static CSS today, absolute px); per-cell tokens/bindings (G8b gains grain); fill
+  read-out through MEANING FIELDS never k-of-n; ordinal-axis re-pointed at --ramp-* (confirmed drift).
+- **K4 · Movement axes** — import counterpart motion.json's Tim-ratified law-set wholesale; the third
+  animation primitive (spawn-from/collapse-into) scoped as NEW machinery; frame axis (slide/camera)
+  named beside content axes.
+- **K5 · Order everywhere** — AIEngine diffs from array-index to address paths (the cleanest single
+  migration found — undo/redo keeps working, gains insert-stability); the id-freezes-position class
+  swept; cv-arc wired as the time axis once t exists.
+- **K6 · The joins harvest** (each small, evidenced in wave reports §C/§E): canvas identity → ONE
+  kind.canvas registry row projecting all 7 hand-lists · find_relations wired to relation_types (or the
+  two Company edge vocabularies unified by scope) · glyph_assist's vocab governed (server-side gate) ·
+  build-system-map emits both verb halves or declares edges non-canonical · code-symbols re-pointed to
+  the ledger (the documented half-done migration) · element-map/README counts regenerated · the three
+  address-field synonyms reconciled · stub canvases + dead code swept · the two-ancestry question
+  (Type-extends vs spatial address) ANSWERED architecturally before core/ work.
+- **K7 · Persistence** — target the CONFIRMED Supabase project (ask Tim: is gctunhsuwpaxeatwlmuv the
+  main Vi backend?); schema learns from Counterpart-handoff's resolution-precedence pattern; carries
+  ids/addresses/groups/symbol multi-field records (Tim's symbol design: tags, requirements, file
+  addresses, sub-networks, tool relations, capabilities, states — a GRAPH under the higher
+  'universal language' identity, never a flat list).
+- **Standing:** LAWS-REGISTER.md carries the 22 evidence-grounded law candidates for Tim's recognition.
+
 ## Standing rules (every step)
 Verify by USE (headless harness + chrome + the live services) · loud-fail (unknown→throw; guard the READ-4/6 silent-
 fails: `satisfied`, `ok:false`-in-200, prompt-cap from live `max_model_len`, embed-fails-loud) · deep-link/resolve-
