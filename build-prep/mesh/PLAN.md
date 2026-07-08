@@ -5,12 +5,27 @@ full inventory, a top logical map of everything, and you update your plan wherev
 integrate... some parts have already been partly built; you will likely find more opportunities
 just by looking"). Every phase lands something alone-useful. Status column is live.*
 
-## Phase C — THE CENSUS (first: full inventory before building)
-| # | What | Status |
-|---|------|--------|
-| C.1 | Full-coverage observe fan over EVERY territory of the estate (all modules, registries, tools, ops, docs, corpus spaces) — the dragnet | **running** (build-prep/mesh/census.py) |
-| C.2 | Batched triangulation → THE-CENSUS.md: the top logical map + the partly-built/dormant inventory | pending C.1 |
-| C.3 | Integrate: update THIS plan wherever the census finds existing fragments/opportunities | pending C.2 |
+## Phase C — THE CENSUS ✅ DONE 2026-07-08 (THE-CENSUS.md · mesh://census/1 + /batch/1-10)
+77 territories · 42-item dormant register · top map: "a federation of self-registering modules
+(constitution + row-files + runtime loader + acceptance test) — load-bearing but SYSTEMATICALLY
+INCOMPLETE: constitutions enumerate smaller live sets than directories contain."
+**C.3 integrations (census → this plan):**
+- **Phase 0 fragment confirmed:** `ops/hooks/registry_freshness.py` IS the existing SessionStart
+  context-injection pattern (the boot-brief composer extends this seam; its "Python generalization"
+  was already parked — we're the return-condition).
+- **A1 fragments found:** `runtime/activation_driver.py` (an "always-on caller", dormant) +
+  supabase `realtime` container = the data-driven-trigger residents Phase 6 builds on. Also
+  `routines/dragnet_freshness.py` + `routines/guide_freshness.py` (dormant freshness beats —
+  the heartbeat absorbs them, not re-invents).
+- **Phase 6 gains a check:** constitution-vs-directory drift (the census's systematic finding —
+  e.g. mark_types 14 undocumented rows) becomes a standing heartbeat query.
+- **Real defect leads to verify:** the claimed chat-history regression (runtime/suite.py ~3756,
+  two sessions locate it differently) · edge_kinds inverse-law contradictions (authored_by declares
+  inverse authored; no authored.py exists) · 21 uncommitted files on main · 3 fully-merged
+  worktrees lingering (~/company-interactive, -night, -overnight).
+- **Known false-positive class (recorded, don't chase):** "truncated mid-dict" findings = my
+  gatherer's 900-char file heads (truncation-honesty gap in the MATERIAL, fix in gather());
+  "README says nothing implemented" = a stale README, itself a doc-drift find.
 
 ## Phase 0 — THE SURFACING LAYER (the storage≠memory gap Tim named)
 | # | What | Known existing fragments (census to complete) | Status |
