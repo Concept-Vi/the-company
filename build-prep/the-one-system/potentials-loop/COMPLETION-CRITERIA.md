@@ -18,12 +18,12 @@ maintenance class (arm with the operator stamp + say so).*
 - [x] Q4 the golden gate grows to cover Q1-Q3 (+ refusal shapes); re-run GREEN.
 
 ## S · SAVED QUERIES (questions as addressable, watchable things)
-- [ ] S1 a saved-query REGISTRY (ActionRegistry rows: id, label, spec, created_by) + `coordinate` tool ops
+- [x] S1 a saved-query REGISTRY (ActionRegistry rows: id, label, spec, created_by) + `coordinate` tool ops
       save/list/run-by-id; VERIFIED round-trip.
-- [ ] S2 the `watch_query` jobs HANDLER: run a saved query, fingerprint its result-set (addresses), diff vs
+- [x] S2 the `watch_query` jobs HANDLER: run a saved query, fingerprint its result-set (addresses), diff vs
       the last fingerprint (state json), and on CHANGE file a board note naming what appeared/vanished.
       VERIFIED: a watched query + a planted change → the note appears; no change → silent.
-- [ ] S3 a real standing watch registered as a job (schedule trigger; born proposed → armed under Tim's
+- [x] S3 a real standing watch registered as a job (schedule trigger; born proposed → armed under Tim's
       blanket with the stamp). VERIFIED via jobs status + a tick.
 
 ## M · MODEL RUNS AS JOBS (the run-kinds Tim named)
