@@ -31,7 +31,7 @@ maintenance class (arm with the operator stamp + say so).*
       (registry-validated at define; budget honored). VERIFIED: a job fires a real role run end-to-end.
 - [x] M2 run-kind `flow`: {flow, params} through the flows registry (proposes_only floor intact).
       VERIFIED with a real flow.
-- [ ] M3 the worked GENERATIVE example: "re-describe changed files" as ONE registered job — selector
+- [x] M3 the worked GENERATIVE example: "re-describe changed files" as ONE registered job — selector
       (changed_since watermark) → describe role over each → durability sync — runnable manually, armable.
       VERIFIED on a real changed-file set.
 
@@ -51,10 +51,10 @@ maintenance class (arm with the operator stamp + say so).*
       every embed operation is schedulable/watchable like everything else.
 
 ## P · PARITY + FACES + CLOSE
-- [ ] P1 `company timeline <file>` — the authorship timeline in the terminal (generated-by + file_meta +
+- [x] P1 `company timeline <file>` — the authorship timeline in the terminal (generated-by + file_meta +
       conversation snippets where indexed). VERIFIED on runtime/jobs.py.
-- [ ] P2 parity sweep recorded: a table (capability × MCP × CLI × HTTP) in docs; gaps named honestly.
-- [ ] P3 golden gates re-run (ledger_query + jobs-touching suites) GREEN; STATUS.md + board note; ④+glyph
+- [x] P2 parity sweep recorded: a table (capability × MCP × CLI × HTTP) in docs; gaps named honestly.
+- [x] P3 golden gates re-run (ledger_query + jobs-touching suites) GREEN; STATUS.md + board note; ④+glyph
       pinged with the new spec keys + tool ops; working tree clean.
 
 ## Order: Q1→Q4 (one file) → S1→S3 → M1→M3 → C1 → E1→E3 → P1→P3.

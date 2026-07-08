@@ -45,6 +45,8 @@ HANDLERS = {
                         "(re)build one embedding space's vectors (incremental by content_hash; params space+force)"),
     "watch_query": ("mcp_face.tools.coordinate", "watch_query",
                         "run a saved query, diff its result-set vs last time, surface changes to the board (params qid)"),
+    "redescribe_changed": ("ops.redescribe_changed", "redescribe_changed",
+                        "describe files whose content changed after their durable description (kimi via the ONE interpret pipeline; params project+cap)"),
 }
 
 

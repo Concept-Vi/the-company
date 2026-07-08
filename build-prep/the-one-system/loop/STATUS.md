@@ -135,3 +135,15 @@
 - **PROVENANCE WALK COMPLETE**: 9,344 session archives walked → 17,728 generated-by assertions over 4,757 distinct files = **27.3% of the latest company tree (was 2.5% — 11×)**; 13,055 writes outside the registered roots counted-not-guessed. A file's authorship TIMELINE is now a query (verified: runtime/jobs.py shows its own build morning, hour by hour). HONEST BOUND: the words-join works only for recollection-INDEXED sessions (6,985 exchanges have text; the new walk's exchange targets from unindexed sessions are addresses without text rows until recollection indexes them — the incremental sync's job). Remaining ceiling: files created by bash redirects/generators have no write-tool trace.
 
 - **PERF CLOSE (measured)**: the rebuild job's second fire = **0 seconds, all four spaces whole-space-skipped by fingerprint** (fire1 seeded: 1604s incl. symbol's one-time re-cluster). The armed daily job now costs nothing on quiet days and pays the clustering hour only when a space actually changed. THE BACK-RUN IS CLOSED.
+
+---
+## 2026-07-08 — THE POTENTIALS LOOP COMPLETE (all Q/S/M/C/E/P criteria green)
+- **Query v4**: time-travel (at=) · cross-project (list/'*', attributed; lexical leak caught+fixed) · origin-per-result · ONE meta shape at every return (the gate caught the count-operator divergence). Gate 29 checks.
+- **Saved queries + watches**: query://<id> rows (validated-by-running at save) · watch_query diffs + board signals (verified: real change → real board note) · watch-runtime-changes ARMED (6h).
+- **Model runs as jobs**: run-kinds role + flow (real fires verified; two real bugs caught: the door dropped the model knob; the cascade runner had NO per-step endpoint routing — N2 closed, one routing law both faces).
+- **Conditional triggers**: {sql, op, value} edge-detected, read-only-guarded (verified: fires once at the crossing, quiet while true).
+- **Embeddings operable**: runtime/embeddings_surface (spaces/route/build/pyramid) → the `embeddings` MCP tool + `company embed` + build_space handler (agent-built, lead-verified: desc build 0-embedded/1034-skipped through the face).
+- **M3 generative**: redescribe_changed — changed-set (durable time × description freshness) → kimi via the ONE interpret pipeline → ledger.interpretation. Verified live (4/4 described); ARMED daily.
+- **Faces + docs**: `company timeline PATH` (verified: jobs.py's build morning) · docs/faces-parity.md (capability × face, gaps named) · THE AGENT SUBSTRATE: 3 guides landed via guide_write (coordinate-query · schema-map · jobs-system, each referencing disk) + a response-rule auto-pointing ledger-SQL agents at them + agent 'ledger-session-fable' registered.
+- **The Docker outage mid-run**: diagnosed (load spike killed Docker Desktop; Windows interop permission-denied = the one unreachable failure class), surfaced to Tim, recovered clean; bridge restarted; nothing lost.
+- STANDING FLEET (armed): heartbeat-durability · scale-pyramids · provenance-backfill · watch-runtime-changes · redescribe-changed. The system maintains, describes, and watches ITSELF.
