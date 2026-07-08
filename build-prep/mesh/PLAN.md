@@ -105,3 +105,13 @@ not. Applied: mine_design_intent.kind · triangulate_mesh.verdict · observe_ter
 Corpus note: v2 kinds (pre-open) were decoder-constrained — an artifact distribution; statements/
 reaching_for/gist are open text and untouched, so the cluster layer canonicalizes from CONTENT (no
 re-mine needed); new captures carry the model's own words.
+
+## THE EXTERNAL-REFERENCE LAW (Tim, 2026-07-09 — coverage is a set-diff, never a feeling)
+"Only way to tell if coverage is complete is with external reference... otherwise it's subjective
+determination. You have no way of knowing there's nearly 80 tools, and would have proceeded with
+confident blindness." A completeness claim REQUIRES: (1) a DERIVED enumeration of the whole (the
+directory list / registry / tools-list — the address trick, cheap, applies everywhere), (2) a
+machine-readable record of what was processed and when (structured outputs, not memory), (3) the
+DIFF, computed by code. "Dry"/"done"/"complete" may only ever be asserted against the diff.
+Instances already paid: my 58-vs-77 tool survey; the archaeology's "dry" (true only against the
+11-session CURATED list, not the transcript directory); the census's 8 hand-picked sub-territories.
