@@ -155,10 +155,23 @@ def build_job(decl: dict, *, cascades: set) -> dict:
                               '"ledger:<table>" is the reserved post-outbox kind)',
                               fix={"trigger": {"kind": "change", "config": {"sources": ["git:/home/tim/company"],
                                                                             "quiet_window_s": 120}}})
+        elif trig["kind"] == "condition":
+            # when-X-do-Y as data: a read-only scalar SELECT evaluated on the tick (cheap predicate —
+            # never a resident poller); fires when <sql> <op> <value>; once-per-crossing via edge-detect.
+            sql = (cfg.get("sql") or "").strip()
+            if not sql.lower().startswith("select") or ";" in sql.rstrip(";") or any(
+                    w in sql.lower() for w in (" insert ", " update ", " delete ", " drop ", " alter ", " create ")):
+                return _teach("trigger.config.sql", sql[:80],
+                              "ONE read-only SELECT returning a single number (no ;-chains, no writes)",
+                              why="a condition is a cheap read predicate on the tick — never a write, never a script")
+            if cfg.get("op") not in (">", ">=", "<", "<=", "==", "!="):
+                return _teach("trigger.config.op", cfg.get("op"), "one of > >= < <= == !=")
+            if not isinstance(cfg.get("value"), (int, float)):
+                return _teach("trigger.config.value", cfg.get("value"), "a number to compare against")
         else:
             return _teach("trigger.kind", trig["kind"],
-                          "manual | schedule | change (event/condition kinds land with the event-cursor "
-                          "+ rules-AST work — see plan-a-jobs/DESIGN.md)")
+                          "manual | schedule | change | condition (the event kind lands with the "
+                          "event-cursor work — see plan-a-jobs/DESIGN.md)")
         trig_state = "proposed"                        # ALWAYS born proposed — arming is arm_job's transition
                                                        # only (trigger_state is not even an authorable field)
     job = {
@@ -463,6 +476,25 @@ def trigger_tick(suite, *, now: float | None = None) -> dict:
                 if not due:
                     out["skipped"].append(f"{jid}: schedule not due "
                                           f"({int(cfg['every_s'] - (now - st.get('last_fired_at', 0)))}s left)")
+            elif trig["kind"] == "condition":
+                from store.pg_marks import _psql as _cond_psql
+                val_s = _cond_psql(cfg["sql"].rstrip(";") + " \n-- condition-trigger (read-only)").strip()
+                try:
+                    val = float(val_s.splitlines()[0]) if val_s else 0.0
+                except ValueError:
+                    raise RuntimeError(f"condition sql for {jid!r} returned non-numeric {val_s[:60]!r} — "
+                                       "a condition must SELECT one number (fail loud, never a guess)")
+                opf = {">": val > cfg["value"], ">=": val >= cfg["value"], "<": val < cfg["value"],
+                       "<=": val <= cfg["value"], "==": val == cfg["value"], "!=": val != cfg["value"]}[cfg["op"]]
+                was_true = st.get("cond_true", False)
+                st["cond_true"], st["cond_last_value"] = bool(opf), val
+                if opf and not was_true:                        # EDGE-DETECT: fire once per crossing
+                    due = True
+                    fire_params = {}
+                elif opf:
+                    out["skipped"].append(f"{jid}: condition still true (fired at the crossing; value={val})")
+                else:
+                    out["skipped"].append(f"{jid}: condition false (value={val} {cfg['op']} {cfg['value']})")
             elif trig["kind"] == "change":
                 sig = "|".join(_git_sig(s[len("git:"):]) for s in cfg["sources"])
                 if sig != st.get("sig"):

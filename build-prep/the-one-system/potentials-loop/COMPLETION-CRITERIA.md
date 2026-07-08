@@ -36,7 +36,7 @@ maintenance class (arm with the operator stamp + say so).*
       VERIFIED on a real changed-file set.
 
 ## C · CONDITIONAL TRIGGERS (when-X-do-Y as data)
-- [ ] C1 trigger kind `condition`: config = {sql: "<a SELECT returning one number>", op: ">"|">="|…,
+- [x] C1 trigger kind `condition`: config = {sql: "<a SELECT returning one number>", op: ">"|">="|…,
       value: N, cursor?: bool} — evaluated on the tick as a cheap predicate (never a resident poller);
       fires when true; watermark/cursor semantics so one event fires once. Guardrails: read-only SQL
       (regex-refuse non-SELECT), timeout, teaching refusals. VERIFIED: a condition on a real count fires
