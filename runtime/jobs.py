@@ -25,7 +25,7 @@ import time
 # lift-ready so the eventual Supabase move (NORTH-STAR directive 4, deliberately later) is a copy, not a redesign.
 JOB_FIELDS = ("id", "label", "description", "run", "params", "allocations", "outputs",
               "trigger", "proposes_only", "enabled", "created_by", "created_at", "version")
-RUN_KINDS = ("cascade", "cascade_inline", "handler")   # flow/graph/agent step-kinds land later
+RUN_KINDS = ("cascade", "cascade_inline", "handler", "role", "flow")   # graph/agent land later
 TRIGGER_KINDS = ("manual", "schedule", "change", "event", "condition")  # skeleton fires manual only
 
 # THE HANDLER REGISTRY — the ONE place deterministic-python run-bodies live ("rows for everything; code
@@ -110,6 +110,11 @@ def build_job(decl: dict, *, cascades: set) -> dict:
                           closest=_closest(cname, cascades),
                           why="refs resolve at define-time so a job never fires into a dangling name",
                           fix={"run": {"cascade": (_closest(cname, cascades) or ['<save it first>'])[0]}})
+    elif rk == "role":
+        # a one-step model run: validated against the LIVE role registry at define (registry-is-truth)
+        pass                                           # checked in save_job/run_job against suite.role_registry
+    elif rk == "flow":
+        pass                                           # checked at fire against the flows registry (fresh-discovered)
     elif rk == "handler":
         hname = run["handler"]
         if hname not in HANDLERS:
@@ -159,7 +164,10 @@ def build_job(decl: dict, *, cascades: set) -> dict:
     job = {
         "name": jid,                                   # ActionRegistry keys on `name`; id IS the key
         "id": jid, "label": decl["label"], "description": decl["description"],
-        "run": {rk: run[rk]},
+        # the run dict keeps its kind key + the kind's declared extras (role: model/step_op) — the door
+        # normalizes unknown JUNK away but must not drop the knobs the executor reads (caught live: M1's
+        # model override vanished here and the fire hit the dead resident endpoint)
+        "run": {rk: run[rk], **({k: run[k] for k in ("model", "step_op") if run.get(k)} if rk == "role" else {})},
         "params": params,
         "allocations": decl.get("allocations") or {},
         "outputs": decl.get("outputs") or {"address": f"run://job/{jid}"},
@@ -264,6 +272,42 @@ def run_job(suite, *, job_id: str | None = None, job: dict | None = None, params
         rec = {"ok": state == "succeeded", "fire_id": fire_id, "job": job["id"], "state": state,
                "params": resolved, "handler": run["handler"], "result": result, "error": err,
                "intent": _intent,
+               "outputs": {"address": f"run://job/{job['id']}/{fire_id}"}}
+        suite._emit("job.done", f"job {job['id']!r} {state} (fire {fire_id})",
+                    job=job["id"], fire_id=fire_id, state=state, error=err)
+        return rec
+
+    if "role" in run:                                  # M1: a model run as a job — via the ONE cascade executor
+        rid = run["role"]
+        if rid not in suite.role_registry:
+            _circ.terminate(suite.store, _intent, outcome="cancelled", error=f"unknown role {rid!r}")
+            return {"ok": False, "refused": True, "at": "run.role", "got": rid,
+                    "expected": "a registered role id", "closest": _closest(rid, suite.role_registry),
+                    "why": "registry-is-truth: a job never fires into a dangling role"}
+        run = {"cascade_inline": {"name": f"_job:{job['id']}",
+                                  "steps": [{"op": run.get("step_op", "generate"), "kind": "role", "role": rid,
+                                             **({"model": run["model"]} if run.get("model") else {})}]}}
+    if "flow" in run:                                  # M2: a flow run as a job — through the flows registry
+        from runtime.flows import FlowRegistry
+        freg = FlowRegistry().discover()
+        fid = run["flow"]
+        if fid not in freg:
+            _circ.terminate(suite.store, _intent, outcome="cancelled", error=f"unknown flow {fid!r}")
+            return {"ok": False, "refused": True, "at": "run.flow", "got": fid,
+                    "expected": f"a registered flow — {sorted(r['id'] for r in freg.rows())}",
+                    "closest": _closest(fid, [r['id'] for r in freg.rows()]),
+                    "why": "registry-is-truth (flows are repo-committed rows; proposes_only floor intact)"}
+        suite._emit("job.run", f"fire job {job['id']!r} → flow {fid!r} (fire {fire_id})",
+                    job=job["id"], fire_id=fire_id, params=resolved)
+        try:
+            result = freg.get(fid).run(**resolved)
+            state, err = "succeeded", None
+        except Exception as e:
+            result, state, err = None, "failed", f"{type(e).__name__}: {e}"
+        _circ.terminate(suite.store, _intent, outcome=state,
+                        result=f"run://job/{job['id']}/{fire_id}", error=err)
+        rec = {"ok": state == "succeeded", "fire_id": fire_id, "job": job["id"], "state": state,
+               "params": resolved, "flow": fid, "result": result, "error": err, "intent": _intent,
                "outputs": {"address": f"run://job/{job['id']}/{fire_id}"}}
         suite._emit("job.done", f"job {job['id']!r} {state} (fire {fire_id})",
                     job=job["id"], fire_id=fire_id, state=state, error=err)

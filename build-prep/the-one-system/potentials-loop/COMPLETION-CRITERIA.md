@@ -27,9 +27,9 @@ maintenance class (arm with the operator stamp + say so).*
       blanket with the stamp). VERIFIED via jobs status + a tick.
 
 ## M · MODEL RUNS AS JOBS (the run-kinds Tim named)
-- [ ] M1 run-kind `role`: {role, op?, model?, inputs-from-params} through the EXISTING run_role path
+- [x] M1 run-kind `role`: {role, op?, model?, inputs-from-params} through the EXISTING run_role path
       (registry-validated at define; budget honored). VERIFIED: a job fires a real role run end-to-end.
-- [ ] M2 run-kind `flow`: {flow, params} through the flows registry (proposes_only floor intact).
+- [x] M2 run-kind `flow`: {flow, params} through the flows registry (proposes_only floor intact).
       VERIFIED with a real flow.
 - [ ] M3 the worked GENERATIVE example: "re-describe changed files" as ONE registered job — selector
       (changed_since watermark) → describe role over each → durability sync — runnable manually, armable.

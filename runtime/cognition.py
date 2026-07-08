@@ -2858,10 +2858,16 @@ def run_cascade(action: dict, store, *, turn_id: str,
                 f"or check step may omit it — all role-less: pure rule / semantic fetch / deterministic "
                 f"gate.) Fail loud (rule 8).")
         role = resolve_role(role_id) if role_id else None
-        # A per-step `model` override is honoured on the RESIDENT endpoint (the engine pins RESIDENT_BASE_URL).
-        # CLOUD-tier routing is N2 net-new transport in fabric/, NOT this lane — a cloud model id here FAILS
-        # LOUD downstream in the client (no silent fallback). needs-tim: a multi-endpoint per-step router (N2).
         step_model = step.get("model") or model
+        # PER-STEP ENDPOINT ROUTING (N2 closed, 2026-07-08 — the SAME rule the MCP face applies at
+        # server.py ~808): an ollama-served model id (':tag'/':cloud' — no '/' HF path) routes to the
+        # fabric ollama endpoint; an HF-path id keeps the resident vLLM base. Before this, a per-step
+        # ollama model fired at the (often down) resident :8000 → ConnectionRefused (caught live by the
+        # M1 job verification). One routing law, two applications — never a second dialect.
+        step_base_url = base_url
+        if step.get("model") and "/" not in step["model"]:
+            from fabric import config as _fcfg
+            step_base_url = _fcfg.DEFAULT_BASE_URL
         # A per-step `max_tokens` override (additive, validated at the save door — build_action). The
         # spec-compiler lesson: triad_synth's 3-doc JSON output died ("Unterminated string") at the
         # runner-wide default and needed ~5000 — an output BUDGET is per-step knowledge that belongs to
@@ -2991,7 +2997,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
             t0 = time.monotonic()
             if kind == "jury":
                 jres = run_jury(role, ctx, store, turn_id=f"{turn_id}-s{i}",
-                                base_url=base_url, model=step_model, max_tokens=step_max_tokens)
+                                base_url=step_base_url, model=step_model, max_tokens=step_max_tokens)
                 final_output = {"verdict": jres.verdict, "kind": "jury", "role": role.id}
                 label = role.id
             else:
@@ -3005,7 +3011,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
                                      f"registered verdict_panels/<id> row. Fail loud.")
                 prow = panel_resolver(pname)                 # KeyErrors loud on an unknown panel
                 final_output = run_panel(prow, ctx, store, turn_id=f"{turn_id}-s{i}",
-                                         resolve_role=resolve_role, base_url=base_url,
+                                         resolve_role=resolve_role, base_url=step_base_url,
                                          model=step_model, max_tokens=step_max_tokens)
                 label = pname
             ms = int((time.monotonic() - t0) * 1000)
@@ -3105,7 +3111,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
             res = run_items(role, units, store, turn_id=f"{turn_id}-s{i}", emit=None,
                             ctx=shared_block or None,                # S2 — the resolve-once shared inputs
                             unit_ctx=step.get("unit_ctx") or None,   # S1 — per-unit templated inputs
-                            base_url=base_url, model=step_model, **kw_common)
+                            base_url=step_base_url, model=step_model, **kw_common)
             ms = int((time.monotonic() - t0) * 1000)
             # FAIL LOUD ON A PROCESSING FAILURE (the lane law: "a missing step input / DOWN MODEL → fail
             # loud, never skip"; Tim's no-silent-failures rule). run_items is PER-UNIT RESILIENT by design
@@ -3148,7 +3154,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
                 primary = ""   # the role's default "Utterance:" framing (run_role default-input path)
             ctx = {**shared_block, "utterance": primary}     # S2 — the resolve-once shared inputs
             t0 = time.monotonic()
-            out = run_role(role, ctx, base_url=base_url, model=step_model, store=store, **kw_common)
+            out = run_role(role, ctx, base_url=step_base_url, model=step_model, store=store, **kw_common)
             ms = int((time.monotonic() - t0) * 1000)
             address = f"run://{turn_id}/{i}-{role.id}"
             cas = store.put_content(out)
