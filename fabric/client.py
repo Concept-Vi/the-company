@@ -138,6 +138,15 @@ def complete(transport: Callable, messages: list, model: str,
         except Exception as e:
             last = FabricError(f"schema validation failed: {e!r}")
             _escalate_if_truncated()                             # ← truncated → incomplete object → more budget
+            # DETERMINISTIC-NEAR-MISS BREAKER (2026-07-08, the census final seat): at temperature 0 a
+            # schema-validation miss (valid JSON, wrong/missing fields) reproduces BYTE-IDENTICALLY on
+            # every retry — four attempts, one outcome, retries wasted. When THIS failure class hits at
+            # temp 0, nudge subsequent attempts to 0.3 so the retry actually explores a different
+            # completion. Guarded: only after a VALIDATION failure, only when the caller ran greedy;
+            # parse/transport/empty failures keep their existing behaviour, and a caller's explicit
+            # temp>0 is never touched. Sibling of the budget-escalator above (same net, different leak).
+            if opts.get("temperature") == 0:
+                opts["temperature"] = 0.3
             _retry_sleep(sleep, attempt, retries); continue
 
     raise last or FabricError("no attempts made")

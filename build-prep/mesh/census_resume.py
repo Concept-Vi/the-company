@@ -31,15 +31,39 @@ def main():
     tb = s.resolve_role("triangulate_mesh")
     anchor = _read_head(os.path.join(REPO, "build-prep/mesh/ANCHOR.md"), 3000)
     batches = [observations[i:i+8] for i in range(0, len(observations), 8)]
+    # idempotent batch seats: each synthesis persists at mesh://census/batch/<n> the moment it lands
+    # (the first resume LOST 10 finished seats to a final-seat crash — in-memory-only intermediate
+    # results violate the capture-before-reduce rule the observations themselves already follow).
+    existing = {}
+    for r in s.find_corpus(projection="mesh"):
+        sa = r.get("source_address") or ""
+        if sa.startswith("mesh://census/batch/"):
+            rec = s.store.get_content(r["cas"])
+            if isinstance(rec, dict) and isinstance(rec.get("output"), dict):
+                existing[sa] = rec["output"]
     batch_syn = []
     for bi, chunk in enumerate(batches):
+        addr = f"mesh://census/batch/{bi+1}"
+        if addr in existing:
+            batch_syn.append(existing[addr]); print(f"batch {bi+1}/{len(batches)} cached", flush=True); continue
         syn = C.run_role(tri_role, {"notes": json.dumps(chunk)[:60000], "prior": "{}",
                           "anchor": anchor + f"\n\n[CENSUS batch {bi+1}/{len(batches)} — partial view; a final seat reduces the batch syntheses]"},
                          model=tb["model"], base_url=tb["base_url"], store=s.store)
-        batch_syn.append({"batch": bi+1, "territories": [c.get("territory") for c in chunk], **dict(syn)})
+        row = {"batch": bi+1, "territories": [c.get("territory") for c in chunk], **dict(syn)}
+        s.capture_corpus([{"source_address": addr, "output": row, "projection": "mesh"}],
+                         project="company", session="mesh-census", round="census-batches")
+        batch_syn.append(row)
         print(f"batch {bi+1}/{len(batches)} done", flush=True)
-    final = C.run_role(tri_role, {"notes": json.dumps(batch_syn)[:80000], "prior": "{}",
-                       "anchor": anchor + "\n\n[CENSUS FINAL seat: the notes are BATCH SYNTHESES (already triangulated chunks) — reduce them into the ONE top logical map of the whole estate]"},
+    # FINAL seat: slim the notes (drop per-batch territory lists + long claims) so the model's
+    # attention survives to the tail fields, and RE-DEMAND the required keys LAST (recency).
+    slim = [{"batch": b["batch"], "mesh_note": b.get("mesh_note",""),
+             "convergences": b.get("convergences", []), "dormant": b.get("dormant", []),
+             "contradictions": [{"about": c.get("about",""),
+                                 "faces": [f.get("claim","")[:160] for f in c.get("faces",[])]}
+                                for c in b.get("contradictions", [])],
+             "next_territories": b.get("next_territories", [])} for b in batch_syn]
+    final = C.run_role(tri_role, {"notes": json.dumps(slim)[:80000], "prior": "{}",
+                       "anchor": anchor + "\n\n[CENSUS FINAL seat: the notes are BATCH SYNTHESES (already triangulated chunks) — reduce them into the ONE top logical map of the whole estate. REMINDER: your JSON must contain ALL FIVE keys — convergences, contradictions, dormant, next_territories (choose from the batches' proposals), mesh_note (the top map paragraph). The last two are REQUIRED.]"},
                       model=tb["model"], base_url=tb["base_url"], store=s.store)
     s.capture_corpus([{"source_address": "mesh://census/1",
                        "output": dict(final, n_territories=len(observations), batches=len(batches)),
