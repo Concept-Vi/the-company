@@ -31,6 +31,8 @@ stdlib-only. See README.md (use) and UPDATING.md (extend). Constitution: ../AGEN
                            function the MCP tool + /api/query call; lens-routed embed)
   company embed [SUB]      EMBEDDINGS operable: spaces (status) · route (the lens table) ·
                            build SPACE · pyramid SPACE (same fns as the embeddings MCP tool)
+  company timeline PATH    a file's AUTHORSHIP TIMELINE: born/changed (git) + which
+                           conversations wrote it (generated-by), with words where indexed
   company jobs             THE HEARTBEAT, visible: every registered job + trigger posture
                            (proposed/armed) + live change/quiet-window state + recent fires
                            composed through the circuit clock-fold (a dead fire shows LAPSED)
@@ -317,6 +319,37 @@ def main():
                            cwd=_repo, capture_output=True, text=True, timeout=1800)
         print(r.stdout.strip() or r.stderr.strip()[:800])
         return 0 if r.returncode == 0 else 1
+
+    if cmd == "timeline":
+        # A FILE'S AUTHORSHIP TIMELINE from the terminal: when it was born + changed (git via file_meta),
+        # and WHICH CONVERSATIONS wrote it (generated-by assertions), with the words where indexed.
+        import subprocess, os as _os
+        if len(args) < 2:
+            print("usage: company timeline <repo-relative-path> [PROJECT=company]"); return 1
+        _path, _proj = args[1], (args[2] if len(args) > 2 else "company")
+        _repo = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+        _sql = f"""
+select 'meta' as k, to_char(fm.created_at,'YYYY-MM-DD')||' born · '||to_char(fm.last_modified_at,'YYYY-MM-DD HH24:MI')||' last changed · '||fm.change_count||' commits' as line, null::timestamptz as ts
+  from ledger.file_meta fm where fm.project='{_proj}' and fm.path='{_path}'
+union all
+select 'write', to_char(a.ts,'MM-DD HH24:MI')||'  '||a.to_ref||coalesce('  —  '||left(regexp_replace(x.user_text,'\\s+',' ','g'),70),''), a.ts
+  from ledger.assertion a left join ledger.exchange x on x.address=a.to_ref
+  where a.kind='generated-by' and a.from_ref='code://{_proj}/{_path}'
+order by ts nulls first limit 40"""
+        r = subprocess.run(["psql","-h","127.0.0.1","-p","15432","-U","postgres","-d","postgres","-tA","-F","|"],
+                           input=f"set search_path=ledger,public; {_sql};", capture_output=True, text=True,
+                           timeout=60, env={**_os.environ, "PGPASSWORD": "postgres"})
+        if r.returncode != 0:
+            print(r.stderr.strip()[:400]); return 1
+        lines = [l.split("|", 2) for l in r.stdout.splitlines() if l.strip() and "|" in l]
+        if not lines:
+            print(f"no timeline for code://{_proj}/{_path} — not in file_meta and no generated-by assertions "
+                  f"(is the path repo-relative? has the provenance walk covered its sessions?)"); return 1
+        print(f"TIMELINE — code://{_proj}/{_path}")
+        for row in lines:
+            k, line = row[0], (row[1] if len(row) > 1 else "")
+            print(("  " if k == "meta" else "  · ") + line)
+        return 0
 
     if cmd == "jobs":
         # THE HEARTBEAT'S CLI FACE (one implementation — runtime/jobs.jobs_status_render; this verb is a
