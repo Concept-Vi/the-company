@@ -65,3 +65,13 @@ same composer later feeds in-universe residents' turns.
 Measured gates before scale (A/B every new layer) · deterministic-work-to-code · no cloud token
 budgets · native structured output for ollama · declared bindings honoured · truncation always
 declared · faces never flattened · counts-not-confidence (G16) · extract-the-law-before-retiring.
+
+## THE TRUNCATION LAW (Tim, 2026-07-08 — standing, self-indicting)
+"Any time you find truncation you should remove it — that's just lazy design." Truncation caps were
+cost-era economics; the cost era is over (free local tiers, uncapped cloud). Sampling-by-truncation
+is the same disease as sampling-by-curation. WHERE A REAL LIMIT EXISTS (a context window), chunk
+COMPLETELY (late-chunking / reduce-tree — coverage-preserving), never cut. Known sites to purge:
+transcript_extract MAX_TIM=1200/MAX_REPLY=2000 (**the archaeology has been mining truncated
+exchanges — re-mine after fix**) · mesh gather() 900-char file-heads + 7KB cap (chunk→multiple
+units instead) · triangulator notes[:60000] (deepen the reduce tree instead) · session_recall's
+600-char rerank slice (reranker window permitting) · any [:N] on model-bound material anywhere.
