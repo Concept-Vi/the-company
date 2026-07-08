@@ -4,42 +4,25 @@ OR via propose_role→operator-approve→apply_role (surfacing, kept available).
 by import-in-a-temp-dir (the correctness gate) before it reached the live roles/ tree. A declared
 role: the output_schema is a real BaseModel subclass (fail-loud requirement); rules are declared ASTs."""
 from typing import Literal
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
-# LENIENT-IN, STRICT-OUT (2026-07-08 — the enum near-miss law, third occurrence: triangulate verdict,
-# census 'deliberately-parked', now `kind`): at temp 0 an off-enum synonym reproduces identically on
-# every retry → a handful of exchanges burned 8 attempts each and stalled the lossless re-mine's tail.
-# Coerce known synonym families onto the enum; anything else falls to the nearest honest bucket —
-# never crash the whole extract on a word.
-_KIND_MAP = {
-    'decision': 'decision', 'choice': 'decision', 'resolution': 'decision',
-    'aspiration': 'aspiration', 'goal': 'aspiration', 'vision': 'aspiration', 'intent': 'aspiration',
-    'principle': 'principle', 'law': 'principle', 'rule': 'principle', 'philosophy': 'principle',
-    'mechanism': 'mechanism', 'design': 'mechanism', 'architecture': 'mechanism', 'process': 'mechanism',
-    'implementation': 'mechanism', 'method': 'mechanism', 'pattern': 'mechanism',
-    'correction': 'correction', 'fix': 'correction', 'amendment': 'correction', 'redirect': 'correction',
-    'naming': 'naming', 'name': 'naming', 'terminology': 'naming', 'vocabulary': 'naming',
-    'constraint': 'constraint', 'limitation': 'constraint', 'requirement': 'constraint', 'boundary': 'constraint',
-}
+# OPEN VOCABULARY (Tim 2026-07-08 — the nucleation law, correcting my own enum+coercion): `kind` was a
+# closed Literal, then a coercion map onto MY seven words — predetermination twice over, and with
+# schema-constrained decoding it CENSORED the decoder (the model could not say what it saw; the whole
+# retry-burn class was the enum failing, not the model). The design we built: schema constrains SHAPE,
+# never MEANING. Novel kind-words are the NUCLEATION SIGNAL — they pile up, the cluster layer
+# (pattern_cluster / run_reduce(mode='cluster')) groups them, a kimi seat names/canonicalizes, outliers
+# escalate (proposed→clustered→canonical|escalated). Canonical kinds live as counts at the CANONICAL
+# layer (G16), never as a decode constraint. A closed set stays legitimate ONLY where CODE branches
+# deterministically on the value (design_weight below — an ordinal routing dial, kept + noted).
 
 
 class MineDesignIntentOutIntents(BaseModel):
     subject: str = Field(default='', description='the thing being designed/decided/named — short name')
-    kind: Literal['decision', 'aspiration', 'principle', 'mechanism', 'correction', 'naming', 'constraint'] = Field(default='decision', description='what sort of intent this is')
+    kind: str = Field(default='', description="what sort of intent this is — ONE lowercase word/phrase, the model's own; common so far: decision · aspiration · principle · mechanism · correction · naming · constraint — use one where it truly fits, COIN a new one where it doesn't (novel kinds are wanted signal, they nucleate the taxonomy)")
     statement: str = Field(default='', description='what was decided/asserted/designed — concrete and specific')
     reaching_for: str = Field(default='', description='the why behind it — the problem it solves, the future it assumes')
     special: str = Field(default='', description='a non-obvious property, gotcha, or deliberate choice a future agent would not guess (empty string if none stated)')
-
-    @field_validator('kind', mode='before')
-    @classmethod
-    def _coerce_kind(cls, v):
-        s = str(v or '').strip().lower()
-        if s in _KIND_MAP:
-            return _KIND_MAP[s]
-        for k, canon in _KIND_MAP.items():          # substring family match (e.g. 'design-decision')
-            if k in s:
-                return canon
-        return 'mechanism'                          # honest catch-all for a genuinely novel kind-word
 
 
 class MineDesignIntentOut(BaseModel):
@@ -89,8 +72,10 @@ ROLE = {'id': 'mine_design_intent',
                     'entry:\n'
                     '      - subject: the thing being designed/decided/named (a system, mechanism, '
                     'principle, or component — short name).\n'
-                    '      - kind: decision | aspiration | principle | mechanism | correction | '
-                    'naming | constraint.\n'
+                    '      - kind: ONE lowercase word/phrase naming the sort of intent — common so '
+                    'far: decision, aspiration, principle, mechanism, correction, naming, '
+                    'constraint. Use one where it truly fits; COIN a new word where it does not '
+                    '(a novel kind is wanted signal — the taxonomy grows from what you coin).\n'
                     '      - statement: WHAT was decided/asserted/designed about the subject — '
                     'concrete, specific.\n'
                     '      - reaching_for: the WHY BEHIND it — the problem it solves, the future '

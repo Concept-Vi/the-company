@@ -34,21 +34,11 @@ class TriangulateMeshOutContradictions(BaseModel):
 class TriangulateMeshOutDormant(BaseModel):
     what: str = Field(default='', description='the dormant thing')
     where: str = Field(default='', description='its address/path')
-    verdict: Literal['forgotten', 'parked', 'unclear'] = Field(default='forgotten', description='genuinely forgotten vs deliberately parked')
-
-    @field_validator('verdict', mode='before')
-    @classmethod
-    def _coerce_verdict(cls, v):
-        # LENIENT-IN, STRICT-OUT (2026-07-08 census crash): the prompt itself used the phrase
-        # "deliberately-parked" while the enum wants 'parked' — kimi obediently emitted the taught
-        # synonym 30+ times and every retry re-failed identically at temp 0 (deterministic near-miss).
-        # Coerce known synonyms; anything else honest-falls to 'unclear' (never a crash on a verdict word).
-        s = str(v or '').strip().lower()
-        if 'park' in s:
-            return 'parked'
-        if 'forgot' in s or 'abandon' in s:
-            return 'forgotten'
-        return s if s in ('forgotten', 'parked', 'unclear') else 'unclear'
+    # OPEN VOCABULARY (Tim 2026-07-08, the nucleation law — was a closed Literal, then a coercion map:
+    # predetermination twice over; the census crash was the ENUM failing, not the model. A verdict is a
+    # judgment-word feeding clustering/review, not a code switch — it stays the model's own word;
+    # canonical verdicts emerge at the cluster layer, never at the decoder.)
+    verdict: str = Field(default='', description="the model's own word for the dormancy state — common so far: forgotten (genuinely lost) · parked (deliberate, condition-addressed deferral) · unclear; coin a better word where none fits")
 
 
 class TriangulateMeshOutNextTerritories(BaseModel):

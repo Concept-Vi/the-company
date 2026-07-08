@@ -88,3 +88,20 @@ to it, never replace it. THE REAL THING IS BETWEEN THE ATTEMPTS. No agent has th
 goal state: cross the involution threshold — enough functioning parts, turned inward, self-referencing.
 Directive: keep going with the tools → then design/pin-out/lay out capabilities, goals, requirements,
 tools, dependencies + strategy for the whole.
+
+## THE OPEN-VOCABULARY LAW (Tim, 2026-07-08 — "how come there's an allow list?")
+Schema constrains SHAPE, never MEANING. A closed enum on a judgment-word is predetermination — and
+under schema-constrained decoding it is CENSORSHIP AT THE DECODER (the model cannot say what it saw;
+the census + kind retry-burns were the ENUMS failing, not the models). Coercion-onto-my-list is the
+same sin twice (it destroys the pile-up signal nucleation feeds on — the operators-space keystone:
+content no type covers piles up → a candidate new type). The lifecycle is the road between the two
+ditches (closed enum ↔ the 88%-noise ungoverned strings): OPEN word at the decoder → embed → cluster
+(pattern_cluster / run_reduce(cluster)) → a kimi seat names/canonicalizes → outliers escalate →
+canonical vocab lives as COUNTS + addressed registry rows (G16), cited in prompts as guidance-with-
+invitation-to-coin, NEVER as a decode constraint. A closed set is legitimate ONLY where CODE branches
+deterministically on it (an ordinal dial like design_weight) — and even then the raw word should
+survive. Shape-adapters (string→{claim}) that preserve the model's words are fine; word-mappers are
+not. Applied: mine_design_intent.kind · triangulate_mesh.verdict · observe_territory.state all opened.
+Corpus note: v2 kinds (pre-open) were decoder-constrained — an artifact distribution; statements/
+reaching_for/gist are open text and untouched, so the cluster layer canonicalizes from CONTENT (no
+re-mine needed); new captures carry the model's own words.

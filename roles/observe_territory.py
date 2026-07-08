@@ -10,7 +10,9 @@ from pydantic import BaseModel, Field
 class ObserveTerritoryOutSeen(BaseModel):
     what: str = Field(default='', description='short name of the thing')
     where: str = Field(default='', description='the path/address/row it lives at — verbatim from the material')
-    state: Literal['living', 'dormant', 'half-built', 'unknown'] = Field(default='living', description='life-state judged only from evidence; unknown is honest')
+    # OPEN VOCABULARY (Tim 2026-07-08, the nucleation law): life-state is a judgment-word feeding the
+    # cluster layer, not a code switch — the model's own word; canonical states emerge downstream.
+    state: str = Field(default='', description="life-state judged only from evidence, in the model's own word — common so far: living · dormant · half-built · unknown (honest); coin a better word where none fits")
     connects: list[str] = Field(default_factory=list, description='other things/addresses it references, verbatim')
     note: str = Field(default='', description='one line — the non-obvious bit')
 
