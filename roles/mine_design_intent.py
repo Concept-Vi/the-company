@@ -4,7 +4,23 @@ OR via propose_role→operator-approve→apply_role (surfacing, kept available).
 by import-in-a-temp-dir (the correctness gate) before it reached the live roles/ tree. A declared
 role: the output_schema is a real BaseModel subclass (fail-loud requirement); rules are declared ASTs."""
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+# LENIENT-IN, STRICT-OUT (2026-07-08 — the enum near-miss law, third occurrence: triangulate verdict,
+# census 'deliberately-parked', now `kind`): at temp 0 an off-enum synonym reproduces identically on
+# every retry → a handful of exchanges burned 8 attempts each and stalled the lossless re-mine's tail.
+# Coerce known synonym families onto the enum; anything else falls to the nearest honest bucket —
+# never crash the whole extract on a word.
+_KIND_MAP = {
+    'decision': 'decision', 'choice': 'decision', 'resolution': 'decision',
+    'aspiration': 'aspiration', 'goal': 'aspiration', 'vision': 'aspiration', 'intent': 'aspiration',
+    'principle': 'principle', 'law': 'principle', 'rule': 'principle', 'philosophy': 'principle',
+    'mechanism': 'mechanism', 'design': 'mechanism', 'architecture': 'mechanism', 'process': 'mechanism',
+    'implementation': 'mechanism', 'method': 'mechanism', 'pattern': 'mechanism',
+    'correction': 'correction', 'fix': 'correction', 'amendment': 'correction', 'redirect': 'correction',
+    'naming': 'naming', 'name': 'naming', 'terminology': 'naming', 'vocabulary': 'naming',
+    'constraint': 'constraint', 'limitation': 'constraint', 'requirement': 'constraint', 'boundary': 'constraint',
+}
 
 
 class MineDesignIntentOutIntents(BaseModel):
@@ -13,6 +29,17 @@ class MineDesignIntentOutIntents(BaseModel):
     statement: str = Field(default='', description='what was decided/asserted/designed — concrete and specific')
     reaching_for: str = Field(default='', description='the why behind it — the problem it solves, the future it assumes')
     special: str = Field(default='', description='a non-obvious property, gotcha, or deliberate choice a future agent would not guess (empty string if none stated)')
+
+    @field_validator('kind', mode='before')
+    @classmethod
+    def _coerce_kind(cls, v):
+        s = str(v or '').strip().lower()
+        if s in _KIND_MAP:
+            return _KIND_MAP[s]
+        for k, canon in _KIND_MAP.items():          # substring family match (e.g. 'design-decision')
+            if k in s:
+                return canon
+        return 'mechanism'                          # honest catch-all for a genuinely novel kind-word
 
 
 class MineDesignIntentOut(BaseModel):
