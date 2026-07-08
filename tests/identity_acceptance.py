@@ -164,15 +164,26 @@ check("re-run: identity row counts IDENTICAL (run twice = same result)",
 
 u = rep["sections"]["users"]
 print(f"        {rep['denominators']['users']}")
-check("users reconciliation sums close (15 = 1 + 2 + 4 + 8)",
+# CORRECTED 2026-07-07 (Tim): "there are other ones that have phone numbers … I do want them,
+# so that eventually they can be given access; none of them are active except for me."
+# → the 5 real-format never-signed-in numbers land as DORMANT humans; only 3 5555-style stay archived.
+check("users reconciliation sums close (15 = 1 + 2 + 9 + 3)",
       u["sums_match"] and u["source"] == 15 and u["operator_login"] == 1
-      and u["vi_agent_logins"] == 2 and u["humans_landed"] == 4 and u["archived"] == 8)
+      and u["vi_agent_logins"] == 2 and u["humans_landed"] == 9
+      and u.get("dormant_kept") == 5 and u["archived"] == 3)
 ok, out = psql(PG["db"], "select count(*) from container.principal where kind='human'")
-check("4 human principals landed (grant + nick + phil + scott)", ok and out.strip() == "4")
+check("9 human principals landed (grant + nick + phil + scott + 5 kept-for-future)", ok and out.strip() == "9")
 # CORRECTED 2026-07-03 (Tim): @example.com is the PHONE-signup placeholder, NOT a test marker.
-# nick/phil/scott are REAL users (confirmed AU mobiles, signed in) — all 4 humans land ACTIVE.
+# nick/phil/scott are REAL users (confirmed AU mobiles, signed in) — the 4 curated humans land ACTIVE.
 ok, out = psql(PG["db"], "select count(*) from container.principal where kind='human' and status='active'")
-check("all 4 human principals are ACTIVE (no real user wrongly archived)", ok and out.strip() == "4")
+check("the 4 curated human principals are ACTIVE (no real user wrongly archived)", ok and out.strip() == "4")
+ok, out = psql(PG["db"], "select count(*) from container.principal where kind='human' and status='dormant' "
+                         "and handle like 'person-%' and coalesce(metadata->>'phone','') <> ''")
+check("the 5 kept-for-future people are DORMANT with their phone as identifier", ok and out.strip() == "5")
+ok, out = psql(PG["db"], "select count(*) from container.members m "
+                         "join container.principal p on p.principal_id = m.principal_id "
+                         "where p.status='dormant'")
+check("dormant people hold NO memberships (kept, granted nothing yet)", ok and out.strip() == "0")
 ok, out = psql(PG["db"], "select count(*) from container.principal where kind='human' "
                          "and metadata->>'auth'='phone' and coalesce(metadata->>'phone','') <> ''")
 check("the phone-signup humans carry their phone as the real identifier (nick/phil/scott + grant)",

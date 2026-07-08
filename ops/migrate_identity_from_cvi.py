@@ -162,20 +162,19 @@ on conflict (old_uuid) do update set principal_id=excluded.principal_id,
 commit;""")
         minted_humans.append(f"human://{handle}")
 
-    # 3. the 8 NO-EMAIL users → ARCHIVED excluded-with-reason (NOT migrated; uuid_rewrite disposition=archived).
-    # No-email AND never-signed-in. Two honest kinds: obvious 5555-style test numbers, and real-format
-    # numbers that were confirmed but never signed in (possible real invitees — SURFACED to Tim, not
-    # called "debris"). All reversible (archived-with-reason; no principal minted).
+    # 3. the 8 NO-EMAIL users. CORRECTED 2026-07-07 (Tim): "there are other ones that have phone
+    #    numbers … I do want them, so that eventually they can be given access; none of them are
+    #    active except for me." → real-format phone numbers land as DORMANT human principals
+    #    (kept, grantable later, no delegations minted). Only obvious 5555-style test/placeholder
+    #    numbers stay archived excluded-with-reason.
     archived = 0
+    dormant = 0
     for u in no_email:
         phone = (u.get("phone") or "").strip()
         is_test_number = phone.replace("+", "").startswith(("1555",))
         if is_test_number:
             reason = f"no-email, never-signed-in, 5555-style test/placeholder number ({phone or 'none'}) — archived."
-        else:
-            reason = (f"no-email cloud auth.user, phone {phone or 'none'}, CONFIRMED but NEVER signed in — "
-                      "archived PENDING Tim's confirmation (may be a real invitee who never onboarded, not debris).")
-        _psql_script(PGCONF["db"], f"""
+            _psql_script(PGCONF["db"], f"""
 begin;
 insert into container.exclusions (source_system, source_table, source_uuid, source_key, reason)
 values ('cvi_mine', 'auth.users', {_dq(u['id'])}::uuid, NULL, {_dq(reason)})
@@ -184,15 +183,44 @@ insert into container.uuid_rewrite_map (old_uuid, principal_id, principal_addres
 values ({_dq(u['id'])}::uuid, NULL, NULL, 'archived', {_dq(reason)})
 on conflict (old_uuid) do update set disposition=excluded.disposition, reason=excluded.reason;
 commit;""")
-        archived += 1
+            archived += 1
+            continue
+        # a real-format number: a person Tim wants kept for future access
+        handle = f"person-{phone}" if phone else f"person-{u['id'][:8]}"
+        note = ("kept for future access (Tim 2026-07-07): real phone number, confirmed but never "
+                "signed in — dormant until Tim grants access; no delegations minted.")
+        meta = {"phone": phone or None, "auth": "phone", "signed_in": False, "note": note}
+        _psql_script(PGCONF["db"], f"""
+begin;
+insert into container.principal (kind, handle, display, status, metadata, source_system, source_uuid)
+values ('human', {_dq(handle)}, {_dq(phone or handle)}, 'dormant', {_dq(json.dumps(meta))}::jsonb,
+        'cvi_mine', {_dq(u['id'])}::uuid)
+on conflict (kind, handle) do update set source_uuid = excluded.source_uuid,
+       metadata = excluded.metadata, status = excluded.status;
+insert into container.principal_auth (principal_id, auth_user_id, provider, is_primary, source_system)
+select p.principal_id, {_dq(u['id'])}::uuid, 'supabase', true, 'cvi_mine'
+  from container.principal p where p.kind='human' and p.handle={_dq(handle)}
+on conflict (principal_id, auth_user_id) do nothing;
+insert into container.uuid_rewrite_map (old_uuid, principal_id, principal_address, disposition, reason)
+select {_dq(u['id'])}::uuid, p.principal_id, 'human://'||{_dq(handle)}, 'human', {_dq(note)}
+  from container.principal p where p.kind='human' and p.handle={_dq(handle)}
+on conflict (old_uuid) do update set principal_id=excluded.principal_id,
+       principal_address=excluded.principal_address, disposition=excluded.disposition, reason=excluded.reason;
+-- a previous run may have archived this uuid — the keep decision supersedes; withdraw the exclusion
+delete from container.exclusions
+ where source_system='cvi_mine' and source_table='auth.users' and source_uuid={_dq(u['id'])}::uuid;
+commit;""")
+        minted_humans.append(f"human://{handle}")
+        dormant += 1
 
     rep["sections"]["users"] = {
         "source": total, "operator_login": 1, "vi_agent_logins": len(VI_LOGINS),
-        "humans_landed": len(minted_humans), "archived": archived,
+        "humans_landed": len(minted_humans), "dormant_kept": dormant, "archived": archived,
         "sums_match": (1 + len(VI_LOGINS) + len(minted_humans) + archived) == total,
     }
     rep["denominators"]["users"] = (f"{total} cloud auth.users = 1 operator login + {len(VI_LOGINS)} "
-                                    f"vi-agent logins + {len(minted_humans)} humans + {archived} archived")
+                                    f"vi-agent logins + {len(minted_humans)} humans "
+                                    f"(incl. {dormant} dormant kept-for-future) + {archived} archived")
 
     # 4. DELEGATIONS (14 cloud rows) — the collapse + the L5 grant.
     dels = _json_rows(CVI_DB, "select delegation_id::text as delegation_id, user_id::text as user_id, "
@@ -293,7 +321,10 @@ commit;""")
         elif s["disposition"] == "agent":
             ok = (s["old_uuid"] in VI_LOGINS)
         elif s["disposition"] == "human":
-            ok = (email not in ("", "t.geldard@conceptv.com.au", "v.i@conceptv.com.au"))
+            # two legitimate human kinds: an email-bearing curated human, or a no-email
+            # DORMANT kept-for-future person (Tim 2026-07-07) — principal address person-*
+            ok = (email not in ("", "t.geldard@conceptv.com.au", "v.i@conceptv.com.au")) or \
+                 (email == "" and str(s["principal_address"] or "").startswith("human://person-"))
         spot.append({"old_uuid": s["old_uuid"], "cvi_email": email, "disposition": s["disposition"],
                      "principal": s["principal_address"], "verified": ok})
     rep["sections"]["uuid_rewrite_spotcheck"] = {"sampled": len(spot),
