@@ -86,3 +86,4 @@ TABLE relation, kind, status, register, coverage.last_read AS "last read"
 FROM "orienteering/entries"
 SORT relation ASC, kind ASC
 ```
+- [[supabase-ledger-docker]] — the local Supabase docker (postgres :15432, ledger.* schema, the pre-formed address tree; the mesh's destination substrate). ⚠ half-dead-proxy trap documented inside.
