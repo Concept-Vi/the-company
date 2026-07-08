@@ -860,7 +860,14 @@ DEFAULT_SESSION = os.environ.get("COMPANY_SESSION_ID", "session://consolidation-
 
 
 def _pgenv():
-    return {**os.environ, "PGPASSWORD": PGCONF["password"]}
+    # PGCONNECT_TIMEOUT (2026-07-08, the frozen-census lesson): when the docker engine dies, the
+    # Windows-side port proxy still ACCEPTS on :15432 and forwards into nothing — psql then waits on
+    # the protocol handshake FOREVER (0 CPU, no error), and every caller wrapping "best-effort
+    # try/except" never fires (Suite init hung system-wide for 7h). A connect timeout turns the
+    # half-dead-proxy case into a fast, catchable failure. Env-overridable; caller env wins.
+    env = {**os.environ, "PGPASSWORD": PGCONF["password"]}
+    env.setdefault("PGCONNECT_TIMEOUT", os.environ.get("COMPANY_LEDGER_CONNECT_TIMEOUT", "10"))
+    return env
 
 
 def _psql_base():
@@ -868,8 +875,18 @@ def _psql_base():
             "-d", PGCONF["db"], "-v", "ON_ERROR_STOP=1"]
 
 
-def _psql(sql: str) -> str:
-    r = subprocess.run(_psql_base() + ["-tAc", sql], capture_output=True, text=True, env=_pgenv())
+def _psql(sql: str, *, timeout: int | None = None) -> str:
+    # HARD BACKSTOP timeout (same lesson): PGCONNECT_TIMEOUT covers dead-connection; this covers
+    # wedged-mid-query. Default generous (ledger builds run long queries legitimately) —
+    # env-tunable; a TimeoutExpired raises loud, never hangs.
+    t = timeout if timeout is not None else int(os.environ.get("COMPANY_LEDGER_PSQL_TIMEOUT", "600"))
+    try:
+        r = subprocess.run(_psql_base() + ["-tAc", sql], capture_output=True, text=True,
+                           env=_pgenv(), timeout=t)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"psql TIMED OUT after {t}s (ledger down or query wedged — "
+                           f"check `docker ps` / the supabase containers on :{PGCONF['port']}). "
+                           "A hang is the worst silent failure; this raises instead.")
     if r.returncode != 0:
         raise RuntimeError(f"psql failed: {r.stderr.strip()}")
     return r.stdout.strip()
