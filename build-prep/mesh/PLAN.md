@@ -75,3 +75,16 @@ transcript_extract MAX_TIM=1200/MAX_REPLY=2000 (**the archaeology has been minin
 exchanges — re-mine after fix**) · mesh gather() 900-char file-heads + 7KB cap (chunk→multiple
 units instead) · triangulator notes[:60000] (deepen the reduce tree instead) · session_recall's
 600-char rerank slice (reranker window permitting) · any [:N] on model-bound material anywhere.
+
+## THE SPIRAL LAW (Tim, 2026-07-08 — the posture for everything found)
+"0 of it is trustworthy as the intent — it's all that spiral. Enough has become coherent that parts
+function, and I've been getting enough parts functioning so that it can be involuted." EVERYTHING any
+agent finds (tools, schemas, designs, docs) was made by other agents in conversations from Tim —
+attempts toward the same centre from multiple angles (deliberate: mitigates single-agent + Tim limits;
+plan-a-jobs/ + plan-b-coordinates/ are literally two named angles). Therefore: NOTHING found is spec;
+nothing on its own is right; ATTACK what you find (gaps, opportunities, what should be there that
+isn't); FOLD your own strengths/designs/laws over the existing work to smooth its edges — never defer
+to it, never replace it. THE REAL THING IS BETWEEN THE ATTEMPTS. No agent has the whole picture. The
+goal state: cross the involution threshold — enough functioning parts, turned inward, self-referencing.
+Directive: keep going with the tools → then design/pin-out/lay out capabilities, goals, requirements,
+tools, dependencies + strategy for the whole.
