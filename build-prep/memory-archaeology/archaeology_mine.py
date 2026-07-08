@@ -34,7 +34,12 @@ sys.path.insert(0, os.path.join(REPO, "build-prep/cognition-self-improvement"))
 STATE_DIR = os.path.join(REPO, "build-prep/memory-archaeology/.state")
 STATE = os.path.join(STATE_DIR, "archaeology_mine.json")
 ACTIVE_S = 3600          # 1h mtime ripening guard (a session being written right now is skipped)
-MAX_TOKENS = 900         # list-valued output (measured: 4-intent extracts fit well under this)
+MAX_TOKENS = None        # NO output budget — kimi is cloud (Tim 2026-07-08: no cloud budgets); a
+#                          full-intent extract over a now-UNTRUNCATED exchange runs to completion.
+MINE_VERSION = 2         # bumped 1→2 (2026-07-08): v1 mined TRUNCATED exchanges (extractor caps, now
+#                          removed at source). The skip-list only skips records at the CURRENT version,
+#                          so a bump RE-MINES every exchange on full text → supersedes the v1 records
+#                          (latest-seq capture). Idempotent again thereafter.
 
 # The CURATED sweep list (2026-07-07): the memory-system design sessions, mention-density ranked
 # (design-window scan) + the two known design-rich corpus-era sessions. Order = mining order.
@@ -79,16 +84,23 @@ def run_batch(time_budget_s: int = 600, max_new_per_file: int = 30) -> dict:
     binding = s.resolve_role("mine_design_intent")
     model, base_url = binding["model"], binding["base_url"]
 
-    # skip-list IS the corpus, per exchange (substrate-is-truth; mirrors g23).
+    # skip-list IS the corpus, per exchange (substrate-is-truth; mirrors g23) — BUT version-gated:
+    # only a record mined at the CURRENT MINE_VERSION counts as done, so a version bump re-mines
+    # everything on full (now-untruncated) text and supersedes the old records. Reads CAS for the
+    # version stamp (a few hundred records — cheap; fail-open so a stray shape never blocks re-mine).
     mined_idx: dict = {}
     for r in s.find_corpus(projection="design_intent"):
         sa = r.get("source_address") or ""
-        if sa.startswith("exchange://"):
+        if not sa.startswith("exchange://"):
+            continue
+        try:
+            rec = s.store.get_content(r["cas"])
+            if (rec.get("output") or {}).get("mine_version") != MINE_VERSION:
+                continue                                    # older version → NOT done → re-mine
             sid_, _, idx_ = sa.split("://")[1].partition("/")
-            try:
-                mined_idx.setdefault(sid_, set()).add(int(idx_))
-            except ValueError:
-                pass
+            mined_idx.setdefault(sid_, set()).add(int(idx_))
+        except (ValueError, KeyError, AttributeError):
+            pass
 
     state["round"] += 1
     rnd = f"arch-{state['round']}"
@@ -102,7 +114,7 @@ def run_batch(time_budget_s: int = 600, max_new_per_file: int = 30) -> dict:
             continue
         if now - os.stat(path).st_mtime < ACTIVE_S:
             continue                                        # being written right now — next batch
-        exchanges = extract_exchanges(path, max_exchanges=500)
+        exchanges = extract_exchanges(path)             # LOSSLESS, ALL exchanges (no cap — resume bounds the batch)
         have = mined_idx.get(sid, set())
         new = [(i, e) for i, e in enumerate(exchanges) if i not in have][:max_new_per_file]
         if not new:
@@ -126,7 +138,7 @@ def run_batch(time_budget_s: int = 600, max_new_per_file: int = 30) -> dict:
             json.dump(state, open(STATE, "w"), indent=1)
             continue
         records = [{"source_address": f"exchange://{sid}/{new[j][0]}",
-                    "output": dict(out, ts_source=new[j][1].get("ts")),
+                    "output": dict(out, ts_source=new[j][1].get("ts"), mine_version=MINE_VERSION),
                     "projection": "design_intent"}
                    for j, out in sorted(resolved.items()) if isinstance(out, dict)]
         cap = s.capture_corpus(records, project="company", session="archaeology-mine", round=rnd)

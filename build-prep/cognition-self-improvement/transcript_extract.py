@@ -14,9 +14,15 @@ toward the full 465 (the same incremental shape as exocortex_ingest). The floor:
 import json
 import os
 
-MAX_TIM = 1200          # per-exchange cap on Tim's message (the head carries the intent)
-MAX_REPLY = 2000        # per-exchange cap on the assistant reply (head + tail carry the substance)
-MIN_TIM = 25            # a Tim message shorter than this is a non-exchange (ack/handle)
+# TRUNCATION REMOVED AT SOURCE (Tim 2026-07-08: "any time you find truncation you should remove it —
+# that's just lazy design"). The old MAX_TIM=1200 / MAX_REPLY=2000 caps were cost-era economics that
+# fed the archaeology miner CUT conversations — a long design monologue lost its tail before any model
+# saw it. Extraction is now LOSSLESS: full text, every exchange. A genuinely over-model-window exchange
+# (kimi-2.7 = 256K tokens ≈ ~1M chars — no real exchange approaches it) is the ONE place a real limit
+# could bite; the discipline there is CHUNK-COMPLETELY downstream (late-chunking / reduce), NEVER cut
+# here — the fabric fails loud on an over-window fire rather than this module silently slicing.
+MIN_TIM = 25            # a Tim message shorter than this is a non-exchange (ack/handle) — a VALIDITY
+#                         filter (drops whole non-exchanges), NOT content truncation. Kept.
 
 
 def _text_of(content) -> str:
@@ -38,10 +44,17 @@ def _is_tool_result_record(rec: dict) -> bool:
     return False
 
 
-def extract_exchanges(path: str, *, max_exchanges: int = 40) -> list[dict]:
-    """One transcript → [{session, ts, tim, reply}] exchange units, capped. Resilient to bad lines."""
+def extract_exchanges(path: str, *, max_exchanges: int | None = None) -> list[dict]:
+    """One transcript → [{session, ts, tim, reply}] exchange units — LOSSLESS (full text, no
+    truncation). `max_exchanges` defaults to None = ALL exchanges (was 40 — a coverage cut; batch
+    bounding belongs to the caller's idempotent per-exchange resume, not to a silent drop here).
+    A caller MAY still pass an int to bound one pass. Resilient to bad lines."""
     session = os.path.basename(path).split(".")[0]
     out, tim_msg, tim_ts, reply_parts = [], None, None, []
+
+    def _capped() -> bool:
+        return max_exchanges is not None and len(out) >= max_exchanges
+
     try:
         fh = open(path, encoding="utf-8")
     except OSError:
@@ -55,23 +68,23 @@ def extract_exchanges(path: str, *, max_exchanges: int = 40) -> list[dict]:
             rtype = rec.get("type")
             msg = rec.get("message") or {}
             if rtype == "user" and not _is_tool_result_record(rec):
-                # a REAL Tim message → close the previous exchange first
+                # a REAL Tim message → close the previous exchange first (FULL text, uncut)
                 if tim_msg is not None and reply_parts:
                     out.append({"session": session, "ts": tim_ts, "tim": tim_msg,
-                                "reply": "\n".join(reply_parts)[:MAX_REPLY]})
-                    if len(out) >= max_exchanges:
+                                "reply": "\n".join(reply_parts)})
+                    if _capped():
                         return out
                 t = _text_of(msg.get("content")).strip()
-                tim_msg = t[:MAX_TIM] if len(t) >= MIN_TIM else None
+                tim_msg = t if len(t) >= MIN_TIM else None   # validity filter only — no truncation
                 tim_ts = rec.get("timestamp")
                 reply_parts = []
             elif rtype == "assistant" and tim_msg is not None:
                 t = _text_of(msg.get("content")).strip()
                 if t:
                     reply_parts.append(t)
-    if tim_msg is not None and reply_parts and len(out) < max_exchanges:
+    if tim_msg is not None and reply_parts and not _capped():
         out.append({"session": session, "ts": tim_ts, "tim": tim_msg,
-                    "reply": "\n".join(reply_parts)[:MAX_REPLY]})
+                    "reply": "\n".join(reply_parts)})
     return out
 
 
