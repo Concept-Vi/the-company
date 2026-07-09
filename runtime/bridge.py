@@ -74,6 +74,11 @@ BRIDGE_ROUTES = (
     "/api/revive-offer", "/api/build-intent", "/api/cognition/create_role", "/api/cognition/create_skill",
     "/api/cognition/create_context", "/api/act", "/api/annotate", "/api/apply", "/api/territory/write",
     "/api/territory/label",
+    # THE SUPERVISOR FACE: same-origin proxy for the UI (reads free; controls operator-token-gated)
+    "/api/supervisor/sessions", "/api/supervisor/health", "/api/supervisor/spawn",
+    "/api/supervisor/inject", "/api/supervisor/teardown", "/api/supervisor/interrupt",
+    # Tim's comment box: board-native comments as real items (commented_on edges)
+    "/api/board/comment",
     # THE TOOL FACE (GAP 3): the generic invoke door — FAIL-CLOSED operator gate (mirrors remote.py
     # _is_allowed + remote_exposure.json + operator-face deltas + the unified-floor attribution slot).
     "/api/tools/invoke",
@@ -567,6 +572,31 @@ import secrets as _secrets
 _OPERATOR_TOKENS: set = set()                                  # server-minted tokens (this process)
 _OPERATOR_TOKEN_ENFORCE = os.environ.get("COMPANY_OPERATOR_TOKEN_ENFORCE", "") == "1"   # A: decision-write gate (OFF)
 _SUPERVISED_POST_ENABLED = os.environ.get("COMPANY_SUPERVISED_POST", "") == "1"         # B: V-posts-when-live (OFF)
+
+
+def _supervisor_call(path: str, body: dict | None = None, timeout: int = 30) -> dict:
+    """Thin same-origin proxy to the session supervisor (127.0.0.1:8771) so the browser UI reaches it
+    through the bridge's /api (neither process speaks CORS — deliberate). Read routes proxy freely;
+    consequential ones are operator-token-gated at the route. Supervisor down → an honest 503 shape."""
+    import urllib.request as _ur
+    import urllib.error as _ue
+    url = f"http://127.0.0.1:8771{path}"
+    try:
+        if body is None:
+            r = _ur.urlopen(url, timeout=timeout)
+        else:
+            req = _ur.Request(url, data=json.dumps(body).encode(),
+                              headers={"Content-Type": "application/json"})
+            r = _ur.urlopen(req, timeout=timeout)
+        return {"_status": r.status, **json.loads(r.read().decode() or "{}")}
+    except _ue.HTTPError as e:
+        try:
+            return {"_status": e.code, **json.loads(e.read().decode() or "{}")}
+        except Exception:
+            return {"_status": e.code, "error": str(e)}
+    except Exception as e:
+        return {"_status": 503, "error": f"the session supervisor is not reachable at :8771 ({e}) — "
+                "start it: company up session-supervisor"}
 
 
 def _mint_operator_token() -> str:
@@ -1867,6 +1897,12 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps({"pages": _pf.list_pages(SUITE)}))
             elif path == "/api/registry/proposals":        # RG8: the pending registry-proposal batch (read)
                 self._send(200, json.dumps(SUITE.registry_proposals()))
+            elif path == "/api/supervisor/sessions":     # the live fleet, proxied same-origin for the UI
+                d = _supervisor_call("/sessions")
+                self._send(d.pop("_status", 200), json.dumps(d))
+            elif path == "/api/supervisor/health":
+                d = _supervisor_call("/health")
+                self._send(d.pop("_status", 200), json.dumps(d))
             elif path == "/api/scope":                     # S3: ui://→code://→scope[] (the address→code join)
                 self._send(200, json.dumps(SUITE.resolve_scope(q["address"])))
             elif path == "/api/address-help":              # D2: the COMPOSED affordance bundle for one ui:// address
@@ -3170,6 +3206,43 @@ class H(BaseHTTPRequestHandler):
                 # live interactive conversation (the ProposeAffordance card with its options+steer+approve).
                 b = self._body()
                 self._send(200, json.dumps(SUITE.revive_offer(b["id"])))
+            elif self.path in ("/api/supervisor/spawn", "/api/supervisor/inject",
+                               "/api/supervisor/teardown", "/api/supervisor/interrupt"):
+                # CONSEQUENTIAL: must carry the operator token the surface auto-mints (the
+                # /api/tools/invoke discipline — accidental/runaway posting is the boundary here).
+                _tok = self.headers.get("X-Operator-Session", "")
+                if not _is_genuine_operator(_tok):
+                    self._send(403, json.dumps({"error": "supervisor control needs a genuine operator "
+                                     "session — the surface mints one via GET /api/operator-session "
+                                     "(header X-Operator-Session). Agents drive sessions via "
+                                     "session_post, never this door."}))
+                    return
+                verb = self.path.rsplit("/", 1)[1]
+                d = _supervisor_call(f"/{verb}", body=self._body() or {}, timeout=60)
+                self._send(d.pop("_status", 200), json.dumps(d))
+            elif self.path == "/api/board/comment":
+                # Tim's comment box: file a board-native comment (a real item, commented_on edge —
+                # agents read it back via cc_board op='thread'). Operator-token-gated; author is the
+                # OPERATOR, so agents see Tim's voice, not a session's.
+                _tok = self.headers.get("X-Operator-Session", "")
+                if not _is_genuine_operator(_tok):
+                    self._send(403, json.dumps({"error": "board comments ride the operator session — "
+                                     "the surface mints one via GET /api/operator-session."}))
+                    return
+                _pb = self._body() or {}
+                _target = _pb.get("target", "")
+                _text = (_pb.get("text") or "").strip()
+                if not _target.startswith("board://") or not _text:
+                    self._send(400, json.dumps({"error": "need {target: 'board://<id>', text: "
+                                     "'<the comment>'} — target must be an existing board item address."}))
+                    return
+                from runtime import cc_board as _ccb2
+                try:
+                    item = _ccb2.comment(_target, _text, "operator-surface", author="operator://tim")
+                except Exception as e:
+                    self._send(400, json.dumps({"error": f"comment refused: {e}"}))
+                    return
+                self._send(200, json.dumps({"ok": True, "item": item}))
             elif self.path == "/api/query":                 # P2.1 POST: the FULL multi-axis spec body
                 try:
                     spec = self._body()
