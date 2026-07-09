@@ -34,6 +34,7 @@ from __future__ import annotations
 import glob
 import json
 import os
+import time as _time
 
 from runtime import cc_channels as cc
 from runtime import principals
@@ -363,6 +364,24 @@ def resolve(target: str, *, base: str | None = None, registry=None, deep: bool =
         except Exception:
             pass
     return None
+
+
+_last_reconcile = [0.0]
+
+
+def maybe_reconcile(chan_dir: str | None = None, min_interval: float = 180.0) -> "dict | None":
+    """Throttled self-heal: at most once per `min_interval` seconds, backfill empty-session_id regs so
+    a durable-channel post reaches those members by uuid. Called from ordinary fabric activity (a
+    channel post) — capture heals as the fabric is USED, no separate cron needed. Cheap when there's
+    nothing to recover; never raises."""
+    now = _time.time()
+    if now - _last_reconcile[0] < min_interval:
+        return None
+    _last_reconcile[0] = now
+    try:
+        return reconcile_registry(chan_dir)
+    except Exception:
+        return None
 
 
 if __name__ == "__main__":                                   # smoke: print the live fleet as JSON

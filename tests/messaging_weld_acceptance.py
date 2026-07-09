@@ -57,12 +57,10 @@ def main():
     reg = lambda sid: {"id": sid, "state": states.get(sid, "unsupervised-live"), "cwd": None}
     ch = sc.create_channel(s, name="weld work", members=["mA", "mB", "mC"], registry=reg)
 
-    def fake_resolve(target, **kw):
-        if target == "mA":
-            return {"uuid": "mA", "handle": "ch-mA", "transports": ["channel"], "state": "unsupervised-live",
-                    "reg": {"handle": "ch-mA", "port": port, "transport": "channel", "cwd": None}}
-        return None
-    identity.resolve = fake_resolve
+    # the fan indexes live .mjs members from cc_channels.live_sessions() (fast, no probe). Make mA the
+    # sole live channel member; recover_uuid reads its session_id -> "mA".
+    mA_reg = {"handle": "ch-mA", "session_id": "mA", "port": port, "cwd": None}
+    identity.cc.live_sessions = lambda: [mA_reg]
 
     out = sc.post_to_channel(s, ch["id"], "WELD PROBE", "session://sender", registry=reg)
     fan = {f["session"]: f for f in out["fan"]}

@@ -72,12 +72,10 @@ def main():
 
     sc.create_channel(store, name="unify demo", members=["mA", "mB"], registry=reg)
 
-    def fake_resolve(target, **kw):
-        if target == "mA":
-            return {"uuid": "mA", "handle": "ch-mA", "transports": ["channel"], "state": "unsupervised-live",
-                    "reg": {"handle": "ch-mA", "port": port, "transport": "channel", "cwd": None}}
-        return None
-    identity.resolve = fake_resolve
+    # r1 (channel) fans via cc_channels.live_sessions(); r2 (session) routes via identity.resolve.
+    mA_reg = {"handle": "ch-mA", "session_id": "mA", "port": port, "cwd": None}
+    identity.cc.live_sessions = lambda: [mA_reg]                 # mA is the live .mjs channel member
+    identity.resolve = lambda target, **kw: None                # router path: unknown target -> unreachable
 
     class FakeSuite:
         def __init__(self, s):
