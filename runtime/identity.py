@@ -109,8 +109,66 @@ def _uuid_from_fd(claude_pid) -> str | None:
     return None
 
 
-def recover_uuid(reg: dict) -> "tuple[str | None, str]":
-    """The handle→UUID ladder for one .mjs reg. Returns (uuid_or_None, how). Pure reads, no writes."""
+# ── the process-start ↔ transcript-first-event match (SAFE deep rung) ────────────────────────────
+# A live session's claude process started at a wall-clock time; a FRESH session's transcript first
+# event is within seconds of that. Match the ONE transcript in the session's cwd whose first-event ts
+# is UNIQUE within a tolerance of the process start → high-confidence, no-guess recovery for regs that
+# captured nothing else. (A --resume'd session's transcript predates its process start, so no match
+# lands inside the tolerance — correctly rejected, never mis-guessed. Two sessions starting within the
+# tolerance in one cwd → AMBIGUOUS → rejected. So a hit is unique + confident.)
+_HZ = os.sysconf("SC_CLK_TCK") if hasattr(os, "sysconf") else 100
+_BTIME = None
+for _ln in (open("/proc/stat") if os.path.exists("/proc/stat") else []):
+    if _ln.startswith("btime "):
+        try: _BTIME = int(_ln.split()[1])
+        except (ValueError, IndexError): pass
+        break
+
+
+def _proc_start_wall(pid) -> "float | None":
+    try:
+        d = open(f"/proc/{int(pid)}/stat").read()
+        fields = d[d.rindex(")") + 2:].split()        # after the (comm) group, field indexing is stable
+        return (_BTIME + int(fields[19]) / _HZ) if _BTIME is not None else None
+    except (OSError, ValueError, TypeError, IndexError):
+        return None
+
+
+def _transcript_first_ts(path: str) -> "float | None":
+    from datetime import datetime
+    try:
+        with open(path) as f:
+            for line in f:
+                try: o = json.loads(line)
+                except ValueError: continue
+                ts = o.get("timestamp")
+                if ts:
+                    return datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp()
+    except OSError:
+        return None
+    return None
+
+
+def _uuid_from_starttime(reg: dict, tolerance: float = 10.0) -> "str | None":
+    cp, cwd = reg.get("claude_pid"), reg.get("cwd")
+    if not cp or not cwd:
+        return None
+    ps = _proc_start_wall(cp)
+    if ps is None:
+        return None
+    pdir = os.path.join(session_scan.PROJECTS_DIR, session_scan._encode_cwd(cwd))
+    within = []
+    for tp in glob.glob(os.path.join(pdir, "*.jsonl")):
+        ft = _transcript_first_ts(tp)
+        if ft is not None and abs(ft - ps) <= tolerance:
+            within.append(os.path.basename(tp)[:-len(".jsonl")])
+    return within[0] if len(within) == 1 else None       # unique-within-tolerance ONLY (else no guess)
+
+
+def recover_uuid(reg: dict, *, deep: bool = False) -> "tuple[str | None, str]":
+    """The handle→UUID ladder for one .mjs reg. Returns (uuid_or_None, how). Pure reads, no writes.
+    `deep=True` adds the (slower) process-start↔transcript match as a final rung — correctness over
+    speed, used when resolving a specific target; the fleet LIST stays fast (deep=False)."""
     sid = (reg.get("session_id") or "").strip()
     if sid:
         return sid, "reg.session_id"
@@ -134,7 +192,44 @@ def recover_uuid(reg: dict) -> "tuple[str | None, str]":
         u = _uuid_from_fd(cp)                        # rung 5 (weak): a live open transcript, if any
         if u:
             return u, "proc-fd(claude_pid)"
+    if deep:                                        # rung 6 (deep): unique process-start↔transcript match
+        u = _uuid_from_starttime(reg)
+        if u:
+            return u, "proc-starttime-match"
     return None, "unrecovered"
+
+
+def reconcile_registry(chan_dir: str | None = None) -> dict:
+    """Self-healing capture: for every live .mjs reg with an empty session_id, DEEP-recover its durable
+    UUID and, on a CONFIDENT recovery (any ladder rung — all are ground-truth or unique-match, never a
+    guess), BACKFILL it into the reg file. Makes a session durably resolvable by uuid (surviving its
+    handle churn) + turns future reads into the fast rung-1 path. Mirrors write_self_marker/seed_self's
+    established reg-backfill. Returns {scanned, backfilled:[{handle,uuid,how}], skipped}."""
+    d = chan_dir or cc.CHAN_DIR
+    out = {"scanned": 0, "backfilled": [], "skipped": 0}
+    if not os.path.isdir(d):
+        return out
+    for fn in os.listdir(d):
+        if not fn.endswith(".json") or fn.startswith("_"):
+            continue
+        p = os.path.join(d, fn)
+        reg = cc._read_reg(p)
+        if not reg or (reg.get("session_id") or "").strip():
+            continue
+        out["scanned"] += 1
+        uuid, how = recover_uuid(reg, deep=True)
+        if not uuid:
+            out["skipped"] += 1
+            continue
+        reg["session_id"] = uuid
+        reg["session_id_recovered_by"] = how          # provenance (never silently rewrite identity)
+        try:
+            with open(p, "w", encoding="utf-8") as f:
+                json.dump(reg, f, indent=2)
+            out["backfilled"].append({"handle": reg.get("handle"), "uuid": uuid, "how": how})
+        except OSError:
+            out["skipped"] += 1
+    return out
 
 
 # ── the supervisor-owned (supervised-live) truth, by live probe ──────────────────────────────────
@@ -158,12 +253,12 @@ def _supervised_index(base: str | None = None) -> "tuple[bool, dict]":
     return reachable, idx
 
 
-def _row_from_channel_reg(reg: dict, supervised_idx: dict) -> dict:
+def _row_from_channel_reg(reg: dict, supervised_idx: dict, deep: bool = False) -> dict:
     """Build a PresenceRow for a live .mjs member. State is DERIVED: if the supervisor ALSO owns this
     session (its recovered uuid is in the supervised index) it is supervised-live; else it is a live-
     but-unowned session = unsupervised-live (the keystone) — reachable via the .mjs `channel` transport."""
     transport = cc._transport_of(reg)                        # "channel" (default) or "supervised"
-    uuid, how = recover_uuid(reg)
+    uuid, how = recover_uuid(reg, deep=deep)
     kind = principals.resolve_kind(reg).get("kind")
     sup = (uuid and supervised_idx.get(uuid)) or None
     if transport == "supervised" or sup:
@@ -183,7 +278,7 @@ def _row_from_channel_reg(reg: dict, supervised_idx: dict) -> dict:
     }
 
 
-def presence_all(base: str | None = None) -> list[dict]:
+def presence_all(base: str | None = None, deep: bool = False) -> list[dict]:
     """The unified LIVE fleet — every session reachable RIGHT NOW, as PresenceRows, deduped by durable
     uuid (falling back to handle when a uuid can't be recovered). Union of:
       • cc_channels.live_sessions()  — .mjs members (channel + cc_clone-supervised regs), pid-truth.
@@ -195,7 +290,7 @@ def presence_all(base: str | None = None) -> list[dict]:
     seen_uuids: set = set()
     seen_as: set = set()
     for reg in cc.live_sessions():
-        row = _row_from_channel_reg(reg, sup_idx)
+        row = _row_from_channel_reg(reg, sup_idx, deep=deep)
         key = row["uuid"] or f"handle:{row['handle']}"
         rows[key] = row
         if row["uuid"]:
@@ -227,13 +322,13 @@ class AmbiguousTarget(cc.ChannelError):
     cc_channels.find's contract, one identity notion)."""
 
 
-def resolve(target: str, *, base: str | None = None, registry=None) -> dict | None:
+def resolve(target: str, *, base: str | None = None, registry=None, deep: bool = True) -> dict | None:
     """Resolve ANY target form to ONE PresenceRow (or None if not live and not durably known).
     target = uuid | ch-handle | as-id | agent-id | cwd | 'session://…' | 'clone://…' | unique substring.
     Fail-loud on AMBIGUOUS (>1 live match). `registry` (optional suite.get_agent_session) lets a not-live
     target still be classified as a known-but-CLOSED session vs an unknown id — a truthful negative."""
     bare = _strip_scheme(target)
-    fleet = presence_all(base)
+    fleet = presence_all(base, deep=deep)
 
     # 1) exact match on any durable/near-durable key (uuid wins; then handle/as_id/agent_id/cwd)
     def _exact(r):
