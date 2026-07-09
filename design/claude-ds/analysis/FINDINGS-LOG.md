@@ -5,6 +5,34 @@
 > autonomous sessions don't repeat or contradict. Newest first.
 >
 
+## Slice 85 — Glyphic R1b: the edge law's tails (one meaning home · the law reaches every AI face)
+The census's R1 debts, closed in one pass (evidence: census/AREA-render-homes §B2, AREA-ai-layer §B.1,
+wave-one-math/AREA-company-spine §C):
+- **cv-edges.js** — the `means:` one-sentence home DELETED (it resolved on every call beside the
+  field-shaped meanings); `CV_EDGES.means()` removed; `resolve()` returns look only.
+  `relationships-seed.metaFor` reads the meaning field alone for the Type description.
+- **ai-glyphic-language.js** — `glyphic.assist` payload now law-carrying: `vocab.relations` = FULL
+  fields ({id, feeling, senses, directed, inverse, negates, symbol}) via a shared `buildVocab()`
+  member (also the test/panel surface); bare `edge_kinds` kept for role-schema compat.
+  `context.glyphic` surfaces per-relation {directed, inverse}. `glyphic.author` declares
+  kindWord/opWord/determiner/extra in params; `glyphic.author-relation` declares directed/inverse —
+  the write surface is now DISCOVERABLE (introspection matches capability; A5's correction path).
+- **cv-meaning.js** — `describeRelation(rel, {focus:'target'})` realises the INVERSE telling on the
+  inspector read-path (same one-stored-fact law as readGraph; loud on a directed kind with no
+  declared inverse; negation folds; the size comparison swaps with the telling). Default = source,
+  byte-identical to every existing call.
+- **ai-registry.js** — `normalize()` dropped-field class DISSOLVED (raw entry spread first, computed
+  keys on top) — the third registry cured of the trap CLAUDE.md §5 documents (types-core and
+  CV_MEANING.field were the first two).
+- **roles/glyph_assist.py** (~/company) — the role contract teaches the edge law: directed kinds
+  point from→to; the opposite telling = swap from/to (the declared inverse is how it reads); never
+  mint a reversed kind name. vocab.relations documented in the prompt template.
+- **_demo/verify_r1b.js** (NEW, falsify-first 1/10 pre-build) — **10/10**; full regression 14/14.
+- **Open (R1b remainder):** the system-map EDGE_TYPES fold (its own page pass — the wave found it
+  also only EMITS forward halves, build-system-map.js:152-154); 'documents' disposition rides
+  TIM-DECISIONS A (Tim wants the what/where evidence in the live render); 'face' becomes a typed
+  NODE per Tim's 2026-07-08 answer — lands with the edges≠relations grammar split (PHASE ONE-MATH).
+
 ## Slice 84 — Glyphic R2: the REFERENT WORDS are PROFILE DATA (A1 — a G0.1 completion)
 Tim's law (2026-07-03): "nothing has one fixed meaning" — a fixed interpretation anywhere the author API
 can't reach is a violation. The engine violated its own G0.1: `REFERENT_KIND` (octagon→'gateway'…),
