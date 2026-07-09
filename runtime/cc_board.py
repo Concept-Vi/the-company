@@ -609,13 +609,14 @@ def edit_item(item_id: str, *, title: str | None = None, body: str | None = None
 # ── general ANNOTATION on ANY address (comment / reply / thread) — the runtime the cc_images tool wrapped,
 #    now first-class on the board so it works on a block://, a code:// card, a decision://, anything ─────────
 def comment(target_addr: str, body: str, author_session: str, *, title: str = "Comment",
-            channel: str = "", item_type: str = "note", board_dir: str | None = None) -> dict:
+            channel: str = "", item_type: str = "note", board_dir: str | None = None,
+            author: str | None = None) -> dict:
     """COMMENT on any address: files a board item linked `commented_on` → `target_addr`. The comment is
     itself addressed (board://<id>), so it can be replied to (threading) and commented on in turn."""
     if not target_addr or not body or not author_session:
         raise BoardError("comment needs `target_addr`, `body`, and `author_session`. Fail loud.")
     return file_item(item_type, title, body, author_session, channel=channel,
-                     links=[{"kind": "commented_on", "target": target_addr}], board_dir=board_dir)
+                     links=[{"kind": "commented_on", "target": target_addr}], board_dir=board_dir, author=author)
 
 
 def reply(comment_addr: str, body: str, author_session: str, *, title: str = "Reply", channel: str = "",
