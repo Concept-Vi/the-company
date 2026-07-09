@@ -29,23 +29,22 @@
 (function () {
   'use strict';
 
-  // EDGE KINDS — the typed relations. `means` is the semantic (like shapeTypes.meaning).
+  // EDGE KINDS — the typed relations' LOOK ONLY (line/direction/ink). R1b (2026-07-09): the
+  // one-sentence `means:` strings that lived here were a SECOND meaning home resolving live beside
+  // the field-shaped meanings in CV_MEANING (edge.* fields carry feeling/senses/directed/inverse) —
+  // deleted, not migrated; the facts already live in the one home. Any semantic need reads
+  // CV_MEANING.field('edge', kind) — never a sentence stored here.
   var EDGE_KINDS = [
-    { id: 'face',         type: 'Face',         line: 'dashed', direction: 'to', ink: 'gold',
-      means: 'this thing has a viewable PAGE — the page is the visible face/projection of the source.' },
-    { id: 'documents',    type: 'Documents',    line: 'dashed', direction: 'to', ink: 'bronze',
-      means: 'the source explains/teaches the target — a how-to or guide for it.' },
-    { id: 'higher-order', type: 'Higher-order', line: 'lines',  direction: 'to', ink: 'sage',
-      means: 'the source connects UP to a higher-order concept it is an instance or part of.' },
-    { id: 'navigates',    type: 'Navigates',    line: 'dots',   direction: 'both', ink: 'muted',
-      means: 'contextual navigation — moving between related places in the system.' },
+    { id: 'face',         type: 'Face',         line: 'dashed', direction: 'to',   ink: 'gold'   },
+    { id: 'documents',    type: 'Documents',    line: 'dashed', direction: 'to',   ink: 'bronze' },
+    { id: 'higher-order', type: 'Higher-order', line: 'lines',  direction: 'to',   ink: 'sage'   },
+    { id: 'navigates',    type: 'Navigates',    line: 'dots',   direction: 'both', ink: 'muted'  },
   ];
 
   var CV_EDGES = {
     kinds: EDGE_KINDS,
     kind: function (id) { return EDGE_KINDS.find(function (k) { return k.id === id; }) || null; },
     ids: function () { return EDGE_KINDS.map(function (k) { return k.id; }); },
-    means: function (id) { var k = this.kind(id); return k ? k.means : null; },
 
     // Resolve a partial edge-spec {kind, line?, direction?, ink?} → full facets, applying the kind's
     // defaults. LOUD (THE EDGE LAW, 2026-07-03): a relation without a kind, or with a kind that
@@ -81,7 +80,6 @@
         line: spec.line || k.line || 'dashed',
         direction: spec.direction || k.direction || 'to',
         ink: spec.ink || k.ink || 'bronze',
-        means: k.means || null,
       };
     },
   };

@@ -657,18 +657,34 @@
   // G2: the edge's LINE-COLOUR (relation state) and a SIZE comparison between the two
   // nodes both fold into the verb-phrase — the edge says its state, the nodes their
   // relative weight, with no edge text label required.
-  CV_MEANING.describeRelation = function (rel) {
+  CV_MEANING.describeRelation = function (rel, opts) {
+    opts = opts || {};
     if (!rel || !rel.source || !rel.target) fail('describeRelation: needs {source, edge, target}');
     if (!rel.edge || !rel.edge.line) fail('describeRelation: edge.line is required (loud — the relation needs a mood)');
-    var subject = this.describe(rel.source);
-    var object = this.describe(rel.target);
+    // R1b — THE EDGE LAW on the inspector read-path too: opts.focus='target' tells the SAME stored
+    // edge from the target's side with the declared inverse (one fact, both tellings — exactly as
+    // readGraph already realises it). Default 'source' = byte-identical to every existing call.
+    var inverted = opts.focus === 'target';
+    var subject = this.describe(inverted ? rel.target : rel.source);
+    var object = this.describe(inverted ? rel.source : rel.target);
     var mood = this.field('line', rel.edge.line);                                    // throws if unknown line
-    var relkind = rel.edge.kind ? this.field('edge', rel.edge.kind) : null;          // the specific relation
+    var relkind0 = rel.edge.kind ? this.field('edge', rel.edge.kind) : null;         // the specific relation
+    var relkind = relkind0;
+    if (inverted && relkind0 && relkind0.directed !== false) {
+      if (relkind0.directed !== true || !relkind0.inverse || !relkind0.inverse.feeling)
+        fail('describeRelation: edge kind "' + rel.edge.kind + '" has no declared inverse telling (THE EDGE ' +
+             'LAW: a directed relation is a verb-pair — author it via CV_MEANING.author.setRelation(id, ' +
+             'feeling, senses, {directed:true, inverse:{feeling:…}}))');
+      // realise with the inverse wording; negation/operator flags ride the real field
+      relkind = Object.assign({}, relkind0, { feeling: relkind0.inverse.feeling });
+    }
     // line-colour = relation STATE. ABSENT contributes nothing; PRESENT-unknown throws.
     var state = ('lineColor' in rel.edge && rel.edge.lineColor != null && rel.edge.lineColor !== 'neutral')
                 ? this.field('lineColor', rel.edge.lineColor) : null;
-    // size comparison from the two AUTHORED node sizes (raw specs, not normalized).
-    var compare = this.compareSize(rel.source.size, rel.target.size);
+    // size comparison from the two AUTHORED node sizes (raw specs, not normalized) —
+    // subject-relative, so it swaps with the telling.
+    var compare = inverted ? this.compareSize(rel.target.size, rel.source.size)
+                           : this.compareSize(rel.source.size, rel.target.size);
     var subjPhrase = subject.sentence.replace(/\.$/, '');
     var objPhrase = object.sentence.replace(/\.$/, '');
     // verb-phrase: state (if any) precedes the relation verb; G2.4 NEGATION folds into the

@@ -158,7 +158,12 @@
   // ---------------------------------------------------------------------------
   function normalize(t) {
     const now = Date.now();
-    return {
+    // THE ENTRY CARRIES EVERYTHING THE AUTHOR DECLARED (R1b, 2026-07-09 — design-for-the-class).
+    // A whitelisting normalizer silently dropped declared members three times across the registries
+    // (types-core relation fields · CV_MEANING field extras · here it would drop e.g. buildVocab) —
+    // the trap this repo's own CLAUDE.md §5 documents. Dissolved: spread the raw entry first, so any
+    // member an author sets survives; the normalized keys are computed on top.
+    return Object.assign({}, t, {
       id: t.id,
       name: t.name || t.id,
       layer: t.layer || 'capability',
@@ -188,7 +193,7 @@
       updatedAt: t.updatedAt || now,
       version: t.version || 1,
       forkedFrom: t.forkedFrom || null,
-    };
+    });
   }
 
   // ---------------------------------------------------------------------------

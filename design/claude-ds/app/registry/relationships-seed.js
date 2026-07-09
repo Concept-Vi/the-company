@@ -77,7 +77,9 @@
     var E = window.CV_EDGES;
     if (E && typeof E.kind === 'function') {
       var ek = E.kind(kind);
-      if (ek) { means = ek.means || null; look = { line: ek.line, direction: ek.direction, ink: ek.ink }; }
+      // R1b: cv-edges carries LOOK only (its means: home deleted) — the description's semantic
+      // half now always comes from the meaning field below (the one home).
+      if (ek) { look = { line: ek.line, direction: ek.direction, ink: ek.ink }; }
     }
     var M = window.CV_MEANING;
     if (M && typeof M.field === 'function') {
