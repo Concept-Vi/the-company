@@ -369,19 +369,26 @@ def resolve(target: str, *, base: str | None = None, registry=None, deep: bool =
 _last_reconcile = [0.0]
 
 
-def maybe_reconcile(chan_dir: str | None = None, min_interval: float = 180.0) -> "dict | None":
-    """Throttled self-heal: at most once per `min_interval` seconds, backfill empty-session_id regs so
-    a durable-channel post reaches those members by uuid. Called from ordinary fabric activity (a
-    channel post) — capture heals as the fabric is USED, no separate cron needed. Cheap when there's
-    nothing to recover; never raises."""
+def maybe_reconcile(chan_dir: str | None = None, min_interval: float = 180.0) -> None:
+    """Throttled, NON-BLOCKING self-heal: at most once per `min_interval`, run reconcile_registry in a
+    DAEMON THREAD so the caller NEVER blocks on the transcript scan. It is called from a channel post,
+    which on the bridge sits on the request path — running the (multi-second) deep scan synchronously
+    there would stall the server (it did: a ~19s post). Backgrounded, the post returns immediately;
+    a member not-yet-backfilled simply queues on THIS post and resolves on the next (eventual). Capture
+    still heals as the fabric is USED, no separate cron. Returns immediately (None)."""
     now = _time.time()
     if now - _last_reconcile[0] < min_interval:
         return None
     _last_reconcile[0] = now
-    try:
-        return reconcile_registry(chan_dir)
-    except Exception:
-        return None
+
+    def _bg():
+        try:
+            reconcile_registry(chan_dir)
+        except Exception:
+            pass
+    import threading
+    threading.Thread(target=_bg, name="mu-reconcile", daemon=True).start()
+    return None
 
 
 if __name__ == "__main__":                                   # smoke: print the live fleet as JSON
