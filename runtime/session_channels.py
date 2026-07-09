@@ -710,6 +710,9 @@ def post_to_channel(store, cid: str, message: str, from_: str, *,
     import uuid as _uuid
     mail_thread = (thread.strip() if isinstance(thread, str) and thread.strip()
                    else f"chan-{row['id']}-{_uuid.uuid4().hex[:8]}")
+    # the weld's helpers (lazy import — no top-level cycle: identity/cc_channels never import this module)
+    from runtime import identity as _identity
+    from runtime import cc_channels as _cc
     fan = []
     for sid in targets:
         st = _state(sid)
@@ -734,13 +737,42 @@ def post_to_channel(store, cid: str, message: str, from_: str, *,
             body = {"channel": _chan_addr(row["id"]), "name": row.get("name"),
                     "from": from_.strip(), "message": message, "thread": mail_thread,
                     "participation": row["members"].get(sid, {}).get("participation")}
-        verb = "deliver" if st == "supervised-live" else "queue"
+        # ── THE WELD (map G7): route each member by PRESENCE, not by supervisor-ownership. A
+        # supervised-live member keeps its deliver-intent (the supervisor injects it — unchanged,
+        # proven path). A member reachable RIGHT NOW via its own live .mjs port is LIVE-PUSHED here
+        # and now (the transport a durable post never chose before — the exact "it shouldn't matter
+        # if the supervisor owns them" fix). Everyone else queues. The mail record is written
+        # REGARDLESS as the durable/inbox backstop (the .mjs push carries no ACK — a queued copy is
+        # the honest backstop, map G14). The fan carries the TRUE transport + a delivered flag per
+        # member — no phantom-OK (map G15/G16).
+        transport, delivered = None, None
+        if st == "supervised-live":
+            verb, transport, delivered = "deliver", "supervised", True   # supervisor injects the intent
+        else:
+            verb = "queue"                                               # durable/inbox copy; supervisor skips queue
+            pr = None
+            try:
+                pr = _identity.resolve(sid, registry=registry)
+            except Exception:
+                pr = None
+            if pr and "channel" in (pr.get("transports") or []) and pr.get("reg") is not None:
+                try:
+                    r = _cc.push(pr["reg"], message, meta={"from": from_.strip(),
+                                 "thread": mail_thread, "channel": row.get("name") or ""})
+                    delivered = bool(r.get("ok"))
+                except _cc.ChannelError:
+                    delivered = False
+                transport = "channel" if delivered else "queue"
+            else:
+                transport, delivered = "queue", False
         cas = store.put_content(body)
         out = store.append_agent_mail({
             "to": _addr(sid), "from": from_.strip(), "verb": verb, "cas": cas,
             "thread": mail_thread, "channel": _chan_addr(row["id"]), "channel_post": True,
+            "transport": transport, "delivered": delivered,
             "state_at_post": st, "source": "session_channels.post_to_channel"})
-        fan.append({"session": _addr(sid), "verb": verb, "mail_seq": out["seq"]})
+        fan.append({"session": _addr(sid), "verb": verb, "transport": transport,
+                    "delivered": delivered, "mail_seq": out["seq"]})
     ev = append_channel_event(store, {
         "kind": "channel.posted", "channel": row["id"], "from": from_.strip(),
         "cas": store.put_content(message), "thread": mail_thread, "mode": mode,
@@ -751,8 +783,10 @@ def post_to_channel(store, cid: str, message: str, from_: str, *,
             "what_happens": ("the coordinator session receives the channel context + your message "
                              "as one intent and works the members (watch the thread)"
                              if mode == "conducted" else
-                             "each live member gets a supervisor inject; others pick it up via "
-                             "sessions(op='inbox') at their next turn"),
+                             "every reachable member is LIVE-injected now — supervised via the "
+                             "supervisor, hand-started via its own .mjs port; the rest are queued for "
+                             "next-turn pull. The fan names the true transport + delivered per member "
+                             "(no phantom-OK)."),
             "replies": f"agent_mail_since(thread='{mail_thread}') / sessions(op='inbox', thread=…)"}
 
 
