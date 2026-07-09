@@ -99,6 +99,7 @@ skill without reflecting it in this drift home.
 (the context registry — same shape, the `context://` scheme).
 
 ## Agent-authored entries (auto-reflected)
+- **`email_and_correspondence`** — agent-authored skill (created via the declarative-direct face). 
 - **`querying_and_collecting`** — agent-authored skill (created via the declarative-direct face). 
 - **`corpus_and_coordinates`** — agent-authored skill (created via the declarative-direct face). 
 - **`reliable_structured_output`** — agent-authored skill (created via the declarative-direct face). 
