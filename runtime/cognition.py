@@ -66,6 +66,21 @@ RESIDENT_MODEL = "cyankiwi/Qwen3.5-4B-AWQ-4bit"
 ROLE_TIMEOUT = int(os.environ.get("COMPANY_ROLE_TIMEOUT", "600"))
 
 
+# CLOUD FAN CAP (2026-07-09, Tim: the ollama-cloud subscription admits 6-10 concurrent; cloud is
+# patchier than local): a fan onto a :cloud model must not inherit the LOCAL brain's slot budget
+# (SlotBudget derives from chat-4b's max_num_seqs/KV — meaningless for a remote endpoint). Cap the
+# fan width for cloud models; env-overridable as the subscription changes. Local fans untouched.
+CLOUD_FAN_SLOTS = int(os.environ.get("COMPANY_CLOUD_CONCURRENCY", "6"))
+
+
+def _cloud_capped(budget: "SlotBudget", model: str) -> "SlotBudget":
+    """Return a budget whose swarm_slots respects the cloud subscription for :cloud models."""
+    if model.endswith(":cloud") and budget.swarm_slots > CLOUD_FAN_SLOTS:
+        import dataclasses
+        return dataclasses.replace(budget, swarm_slots=CLOUD_FAN_SLOTS)
+    return budget
+
+
 def active_brain():
     """The ACTIVE resident brain — (model, base_url) of the RUNNING local brain service. THE ONE SOURCE:
     the brain that is actually loaded IS the active brain (registry-is-truth + the live card), so EVERYTHING
@@ -479,6 +494,26 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
                 eff_think = _resolve_slot(_tslot, coordinate)
         elif _tslot is not None:                           # a literal bool — fixed, coordinate-independent
             eff_think = _tslot
+    # CLOUD STRUCTURED-OUTPUT MECHANISM (2026-07-09 — measured on the wire + source-verified):
+    # ollama-CLOUD models do NOT honour `format`: the chat handler proxies to ollama.com BEFORE any
+    # format/think shaping runs (ollama server/routes.go:2468-2475; docs: "Ollama's Cloud currently
+    # does not support structured outputs"). Wire-tap proof: our request carried the full $defs schema
+    # + think:false, and kimi returned a MARKDOWN report — 4/4 identical retries (the long-misread
+    # "unparseable JSON: char 0" was markdown, never empty). For a :cloud model the ONLY decoder-side
+    # mechanism is the PROMPT, so on every schema fire the schema is injected as a hard OUTPUT CONTRACT
+    # (deterministic, automatic — no per-caller remembering), and fabric.client's parse/validate/retry
+    # remains the guarantee. `format` still rides (harmless; live the day the proxy supports it).
+    # Local models untouched — their grammar constraint is real (vLLM guided decode / ollama GBNF).
+    if model.endswith(":cloud") and eff_schema is not None:
+        try:
+            _schema_json = json.dumps(eff_schema.model_json_schema())
+        except Exception as _e:
+            raise TypeError(f"run_role({getattr(role, 'id', '?')!r}): could not serialize the output "
+                            f"schema for the cloud output-contract ({_e}) — fail loud.")
+        msgs[0]["content"] = (msgs[0]["content"] or "") + (
+            "\n\nOUTPUT CONTRACT (hard requirement): respond with ONLY a single JSON object that "
+            "validates against this JSON Schema — no markdown, no headings, no code fences, no prose "
+            "before or after the JSON object:\n" + _schema_json)
     # GUIDED-JSON ⊥ THINKING (Tim 2026-07-01, root-caused): a SCHEMA-constrained fire (response_format=
     # json_schema) forces valid JSON from the FIRST token — the model cannot emit the <think>…</think>
     # reasoning tokens (illegal under the grammar), so a thinking-ON schema fire degenerates to EMPTY/invalid
@@ -619,6 +654,8 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
         # meta, so `_complete_kw` carries nothing extra; the body only reads response_format + the allowlisted
         # sampling family, so a stray `meta` key can't pollute the request. OUT-PARAM only — NEVER in the return.
         _complete_kw = {} if meta is None else {"meta": meta}
+        if model.endswith(":cloud"):
+            _complete_kw["retries"] = 6                    # cloud is patchy (Tim 2026-07-09) — more, jittered-backoff attempts
         if eff_think is not None:
             _complete_kw["think"] = eff_think                  # → the transport, ONE key per stack (native: body.think;
             #                                                    vLLM: chat_template_kwargs.enable_thinking via _apply_thinking — NOW WIRED, deliverable b)
@@ -1589,6 +1626,7 @@ def run_swarm(roles: list, ctx: dict, store, *, turn_id: str,
     cannot silently lose a role)."""
     if budget is None:
         budget = SlotBudget.from_registry()
+    budget = _cloud_capped(budget, model)                 # :cloud fan → subscription cap (6-10), never the local KV math
     # The GLOBAL gate is sized to the FULL resident seq-cap (max_num_seqs) — NOT seq-cap−R. The
     # reservation comes from the SWARM POOL being capped at swarm_slots (= max_num_seqs − R) below:
     # the swarm can hold at most swarm_slots gate permits, so R permits ALWAYS remain free for a
@@ -1765,6 +1803,7 @@ def run_items(role: "Role", items: list, store, *, turn_id: str,
             f"— run_items maps a FIREABLE role over N units. Fail loud.")
     if budget is None:
         budget = SlotBudget.from_registry()
+    budget = _cloud_capped(budget, model)                 # :cloud fan → subscription cap (6-10), never the local KV math
     shared_ctx = dict(ctx or {})
     gate = global_vram_gate(budget.max_num_seqs)
 
@@ -2268,7 +2307,7 @@ def run_jury(role: "Role", ctx: dict, store, *, turn_id: str,
             f"run_jury: jury role {role.id!r} has no callable verdict_rule — a jury's verdict MUST be "
             f"a PURE declared function over the draws (L2). Fail loud.")
     n = role.draws
-    budget = SlotBudget.from_registry()
+    budget = _cloud_capped(SlotBudget.from_registry(), model)
     gate = global_vram_gate(budget.max_num_seqs)
     addresses = [f"run://{turn_id}/{role.id}#{i}" for i in range(n)]
     result = JuryResult(turn_id=turn_id, role_id=role.id, addresses=addresses)
