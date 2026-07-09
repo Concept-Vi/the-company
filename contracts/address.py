@@ -159,26 +159,22 @@ additive (mirrors the vi-vision precedent); no record-shape or schema_ver change
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "guide", "session", "cap", "board", "clone", "mind", "exchange", "file", "project", "vi-vision", "decision", "image", "extraction", "path", "mesh", "email", "slack", "gdrive")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "guide", "session", "cap", "board", "clone", "mind", "exchange", "file", "project", "vi-vision", "decision", "image", "extraction", "path", "mesh")
 # Note on `mesh://` (2026-07-07, the triangulation swarm): a *label* scheme like ui://·code:// — the
 # store does not resolve it; it keys the mesh self-model records (corpus space='mesh'):
 # mesh://territory/<slug> (an observed territory; rounds DEEPEN by re-capture, latest-seq-wins) and
 # mesh://round/<n> (a triangulation synthesis). Purely additive (the documented SCHEMES precedent).
 #
-# EXTERNAL-SOURCE SCHEMES (2026-07-09, the convergence multi-source law — Tim + ledger-session + ingest-
-# session-opus). Each named export source is a source-TYPE that self-identifies via its scheme (Tim's law:
-# "any address with a source auto-resolves the right way; the address carries its full chain"). The SCHEME
-# is the my-owned decision (locked here, additive); the intra-scheme KEY SHAPE is keyed on the source's OWN
-# native id (never synthesized where a real id exists) and is finalized by the L0 structural extractor that
-# owns each source-type (ingest-session-opus). Leaned forms (provisional, pending L0):
-#   email://<account>/<Message-ID>     — RFC5322 Message-ID (globally unique); account scopes provenance
-#   slack://<workspace>/<channel>/<ts> — slack ts (per-channel monotonic); the native permalink key
-#   gdrive://<fileId>[/<revision>]     — Drive fileId (globally unique); revision optional for versions
-# These are LABEL schemes (like code://·exchange://): the vector/graph layers key on them; the store does
-# not fetch the external bytes (raw immutable exports are CAS-hashed at their landing path — the ground
-# truth). Source-native TIME (email Date / slack ts / drive modifiedTime) does NOT live in git-keyed
-# file_meta — it needs a source-time home so at=/changed_after work uniformly across sources (OPEN, tracked
-# in the convergence anchors board://item-9af12302 + board://item-4243e4c0).
+# EXTERNAL SOURCES + THE ADDRESS-SPACE OVERHAUL (2026-07-09, convergence discovery — Tim's decision
+# board://item-21b3b8c0). I initially HARDCODED email://slack://gdrive:// here — BACKED OUT: that is the
+# exact antipattern Tim named. Binding decision: address space is HIERARCHICAL + DECLARATIVE-REGISTRY —
+# external sources nest UNDER source:// (source://<type>/<account>/<native-id>), the source-TYPE is a
+# LEVEL not its own top-level scheme, and address-KINDS become REGISTRY ROWS (declaring parse + GENERATE
+# rules + parent), NOT a hardcoded tuple — so they're findable, rule-generating, visible, and migratable
+# as DATA. This SCHEMES tuple is the flat/hardcoded legacy the overhaul replaces; the target converges
+# into the ledger.edge_kind pattern (runtime/edge_kinds.py: file-discovered rows → assemble → a ledger
+# table, validate + upsert + prune). To be DESIGNED in the discovery stage (channel://ch-28) — not
+# re-hardcoded here. No new source schemes land in this tuple; they land as address-kind rows.
 
 
 class Provenance(BaseModel):
