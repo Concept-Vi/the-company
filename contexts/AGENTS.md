@@ -62,3 +62,8 @@ in this drift home.
 ## Read next
 [[Company Map]] · `skills/AGENTS.md` (the sibling registry — same shape, the `skill://` scheme) ·
 [[roles — constitution]] (the registry pattern both mirror).
+
+## Agent-authored entries (auto-reflected)
+<!-- created live by the create face; one line per entry — keeps the
+     drift-home acceptance green; refine the prose by integration. -->
+- **`session_laws`** — agent-authored context (created via the declarative-direct face). 
