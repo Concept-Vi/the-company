@@ -97,3 +97,8 @@ skill without reflecting it in this drift home.
 ## Read next
 [[Company Map]] · [[roles — constitution]] (the sibling registry this mirrors) · `contexts/AGENTS.md`
 (the context registry — same shape, the `context://` scheme).
+
+## Agent-authored entries (auto-reflected)
+<!-- created live by the create face; one line per entry — keeps the
+     drift-home acceptance green; refine the prose by integration. -->
+- **`full_coverage_dragnet`** — agent-authored skill (created via the declarative-direct face). 
