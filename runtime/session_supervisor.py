@@ -133,6 +133,8 @@ SUPERVISOR_ROUTES = (
     ("POST", "/interrupt"),
     ("POST", "/teardown"),
     ("POST", "/bridge-session"),   # RAIL R1-prime: consent-gated wider-allowlist spawn (④ in-session git/LSP/web)
+    ("POST", "/channel-reply"),    # fabric: a channel session's `reply` tool POSTs here → cc_channels.route_reply
+    ("POST", "/channel-send"),     # fabric: HTTP twin of cc_channels.send — inject into a live channel session
 )
 MAIL_LEAF = "agent_sessions"           # naming law: agent_sessions everywhere (never fabric/, never sessions/)
 CURSOR_REF = "agent_sessions/cursor:supervisor"   # per-consumer mailbox cursor (a ref, §2.3 pattern)
@@ -1643,12 +1645,17 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, {"ok": True, **res})
                 return
             if u.path == "/channel-send":
-                # HTTP twin of cc_channels.send — message INTO a live channel session (record + push).
-                from runtime import cc_channels as _cc
-                res = _cc.send(str(body.get("to") or ""), str(body.get("message") or ""),
-                               frm=str(body.get("from") or "fabric"), thread=str(body.get("thread") or ""),
-                               topic=str(body.get("topic") or ""))
-                self._send(200, {"ok": True, **res})
+                # The presence-aware HTTP door (completed from a .mjs-only cc_channels.send twin, which
+                # had no callers). Routes via the unified router: `to` is any identity form or a live
+                # session — it reaches a supervised member OR a hand-started member's .mjs port, falls
+                # back to the durable mailbox (SUP.store), and returns a TRUTHFUL receipt. Back-compat:
+                # still accepts {to, message, from, thread}.
+                from runtime import router as _router
+                receipt = _router.route(str(body.get("to") or ""), str(body.get("message") or ""),
+                                        frm=str(body.get("from") or "fabric"),
+                                        thread=str(body.get("thread") or "") or None,
+                                        store=getattr(SUP, "store", None))
+                self._send(200, {"ok": bool(receipt.get("delivered") or receipt.get("queued")), **receipt})
                 return
             if u.path in ("/inject", "/interrupt", "/teardown"):
                 s = SUP.find(str(body.get("session") or ""))

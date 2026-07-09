@@ -634,6 +634,36 @@ def _post_event(store, cid: str, seq: int) -> dict | None:
     return None
 
 
+def _publish_shared_best_effort(store, cid: str, frm: str, message: str, thread: str) -> "dict | None":
+    """Complete the channel_boundary orphan: if channel `cid` is `shared`, publish THIS post outward to
+    Supabase channel_posts (so an external face — Claude-Design — sees the same channel, single-source).
+    NEVER raises and NEVER blocks the internal fan. Returns None for a non-shared channel.
+
+    DORMANT-SAFE: only attempts the outbound write when the boundary principal's creds are already in the
+    process env (COMPANY_CHANNEL_*). It deliberately does NOT auto-load .boundary.env — so a test/local
+    post to a shared channel never makes a surprise outbound write. A serving process activates the
+    publish by loading .boundary.env at startup (the receive half — the Realtime subscriber — is a
+    separate service to register). Any missing-cred/offline/FK failure → {ok:False,...}, fan unaffected."""
+    import os
+    try:
+        if not is_shared(store, cid):
+            return None
+    except Exception:
+        return None
+    if not os.environ.get("COMPANY_CHANNEL_SA_EMAIL"):
+        return {"ok": False, "dormant": True,
+                "reason": "shared channel, but boundary creds (COMPANY_CHANNEL_*) are not loaded in this "
+                          "process — load .boundary.env at service startup to enable outward publish."}
+    try:
+        from runtime.channel_boundary import build_post_row, publish_shared_post
+        from runtime.supabase_principal import SupabasePrincipal
+        principal = SupabasePrincipal("COMPANY_CHANNEL")
+        row = build_post_row(cid, frm, message, thread=thread, sender_kind="session")
+        return publish_shared_post(row, principal=principal)
+    except Exception as e:
+        return {"ok": False, "error": f"{type(e).__name__}: {e}"}
+
+
 def post_to_channel(store, cid: str, message: str, from_: str, *,
                     registry=None, thread: str | None = None,
                     reply_to: int | None = None) -> dict:
@@ -710,6 +740,25 @@ def post_to_channel(store, cid: str, message: str, from_: str, *,
     import uuid as _uuid
     mail_thread = (thread.strip() if isinstance(thread, str) and thread.strip()
                    else f"chan-{row['id']}-{_uuid.uuid4().hex[:8]}")
+    # the weld: index the LIVE .mjs channel members ONCE per post — FAST (pid-pruned regs + fast uuid
+    # rungs only; NO supervisor probe, NO transcript scan on this hot path). A member reachable via its
+    # own .mjs port is then live-pushed in the loop below. reconcile_registry() backfills empty regs so
+    # they appear here by durable uuid; a single-target send() uses the deeper resolve. (Lazy import —
+    # no top-level cycle: identity/cc_channels never import this module.)
+    from runtime import identity as _identity
+    from runtime import cc_channels as _cc
+    _identity.maybe_reconcile()          # throttled self-heal: backfill empty regs so members resolve by uuid
+    _chan_index = {}
+    try:
+        for _reg in _cc.live_sessions():
+            if _cc._transport_of(_reg) != "channel":
+                continue
+            _u, _ = _identity.recover_uuid(_reg)          # deep=False (fast rungs only)
+            for _k in (_u, _reg.get("handle")):
+                if _k:
+                    _chan_index.setdefault(_k, _reg)
+    except Exception:
+        _chan_index = {}
     fan = []
     for sid in targets:
         st = _state(sid)
@@ -734,25 +783,56 @@ def post_to_channel(store, cid: str, message: str, from_: str, *,
             body = {"channel": _chan_addr(row["id"]), "name": row.get("name"),
                     "from": from_.strip(), "message": message, "thread": mail_thread,
                     "participation": row["members"].get(sid, {}).get("participation")}
-        verb = "deliver" if st == "supervised-live" else "queue"
+        # ── THE WELD (map G7): route each member by PRESENCE, not by supervisor-ownership. A
+        # supervised-live member keeps its deliver-intent (the supervisor injects it — unchanged,
+        # proven path). A member reachable RIGHT NOW via its own live .mjs port is LIVE-PUSHED here
+        # and now (the transport a durable post never chose before — the exact "it shouldn't matter
+        # if the supervisor owns them" fix). Everyone else queues. The mail record is written
+        # REGARDLESS as the durable/inbox backstop (the .mjs push carries no ACK — a queued copy is
+        # the honest backstop, map G14). The fan carries the TRUE transport + a delivered flag per
+        # member — no phantom-OK (map G15/G16).
+        transport, delivered = None, None
+        if st == "supervised-live":
+            verb, transport, delivered = "deliver", "supervised", True   # supervisor injects the intent
+        else:
+            verb = "queue"                                               # durable/inbox copy; supervisor skips queue
+            _reg = _chan_index.get(sid)                                  # a live .mjs member (by uuid or handle)?
+            if _reg is not None:
+                try:
+                    r = _cc.push(_reg, message, meta={"from": from_.strip(),
+                                 "thread": mail_thread, "channel": row.get("name") or ""})
+                    delivered = bool(r.get("ok"))
+                except _cc.ChannelError:
+                    delivered = False
+                transport = "channel" if delivered else "queue"
+            else:
+                transport, delivered = "queue", False
         cas = store.put_content(body)
         out = store.append_agent_mail({
             "to": _addr(sid), "from": from_.strip(), "verb": verb, "cas": cas,
             "thread": mail_thread, "channel": _chan_addr(row["id"]), "channel_post": True,
+            "transport": transport, "delivered": delivered,
             "state_at_post": st, "source": "session_channels.post_to_channel"})
-        fan.append({"session": _addr(sid), "verb": verb, "mail_seq": out["seq"]})
+        fan.append({"session": _addr(sid), "verb": verb, "transport": transport,
+                    "delivered": delivered, "mail_seq": out["seq"]})
     ev = append_channel_event(store, {
         "kind": "channel.posted", "channel": row["id"], "from": from_.strip(),
         "cas": store.put_content(message), "thread": mail_thread, "mode": mode,
         "coordinator": row.get("coordinator") if mode == "conducted" else None, "fan": fan,
         "reply_to": root_reply_to})
+    # shared channel → ALSO publish outward (completes the channel_boundary orphan; fail-soft, dormant
+    # without boundary creds — never breaks the internal fan). None for a non-shared channel.
+    shared_publish = _publish_shared_best_effort(store, row["id"], from_.strip(), message, mail_thread)
     return {"posted": ev["seq"], "channel": _chan_addr(row["id"]), "mode": mode,
             "thread": mail_thread, "fan": fan, "reply_to": root_reply_to,
+            "shared_publish": shared_publish,
             "what_happens": ("the coordinator session receives the channel context + your message "
                              "as one intent and works the members (watch the thread)"
                              if mode == "conducted" else
-                             "each live member gets a supervisor inject; others pick it up via "
-                             "sessions(op='inbox') at their next turn"),
+                             "every reachable member is LIVE-injected now — supervised via the "
+                             "supervisor, hand-started via its own .mjs port; the rest are queued for "
+                             "next-turn pull. The fan names the true transport + delivered per member "
+                             "(no phantom-OK)."),
             "replies": f"agent_mail_since(thread='{mail_thread}') / sessions(op='inbox', thread=…)"}
 
 

@@ -86,13 +86,20 @@ def _format_inject(row: dict) -> tuple[str, dict]:
 
 
 def make_inject():
-    """inject(handle, row) → deliver into a live session via cc_channels.push (PUSH-only, no local record).
-    Raises propagate to on_insert (which logs + continues past a dead session)."""
-    from runtime import cc_channels
+    """inject(target, row) → deliver an inbound SHARED-channel post into a live company session via the
+    UNIFIED router (presence-aware: reaches a supervised OR a hand-started member by its best transport,
+    surviving handle churn; falls back to the durable mailbox — never a silent drop). Raises propagate to
+    on_insert (which logs + continues past a dead session). (Was a raw cc_channels.push by handle; folded
+    onto runtime.router so the inbound half uses the same one delivery layer as the outbound fan.)"""
+    from runtime import router, cc_channels
 
-    def inject(handle: str, row: dict):
+    def inject(target: str, row: dict):
         content, meta = _format_inject(row)
-        cc_channels.push(handle, content, meta=meta)   # PUSH-only: delivery, no _mail.jsonl (single-source)
+        receipt = router.route(target, content, frm=meta.get("from") or "boundary",
+                               thread=meta.get("thread") or None, store=_store())
+        if not (receipt.get("delivered") or receipt.get("queued")):
+            raise cc_channels.ChannelError(
+                f"boundary inject to {target!r} not delivered: {receipt.get('reason')}")
     return inject
 
 
@@ -126,7 +133,11 @@ def _log_status(kind: str, detail: str):
 def post_to_channel(principal, channel: str, content: str, from_session: str, *,
                     thread: str | None = None, to_session: str | None = None,
                     sender_kind: str = "session") -> dict:
-    """The shared-aware POST (the publish hook): a company session posting to `channel` →
+    """SUPERSEDED (kept for the standalone verify path): the shared-publish hook is now folded INTO the
+    real fan — session_channels.post_to_channel calls _publish_shared_best_effort at the end of every
+    post, so shared channels publish outward through the ONE post act. Prefer that; this stays only for
+    channel_boundary_run's own verify/entrypoint use. Original doc:
+    The shared-aware POST (the publish hook): a company session posting to `channel` →
       • SHARED (session_channels.is_shared) → publish to Supabase channel_posts (single-source; the boundary
         sub delivers to members + CD). Returns publish_shared_post's {ok, status, id?, error?}.
       • INTERNAL → the existing LOCAL path (broadcast to session_channels.channel_members via the
@@ -195,6 +206,14 @@ def run_boundary(*, env_file: str | None = None, block: bool = True):
     keys = load_env_file(env_file)
     print(f"[boundary] env loaded: {len(keys)} key(s) {sorted(keys) or '(file absent — prod sets vars directly)'}",
           flush=True)
+    if not os.environ.get("COMPANY_CHANNEL_SA_EMAIL"):
+        # DORMANT-SAFE: no boundary creds → do NOT build/start the subscriber (SupabasePrincipal would
+        # raise). A registered service can then be started harmlessly; it self-parks until .boundary.env
+        # (or COMPANY_CHANNEL_* in the env) is present. The inward Realtime subscriber is the operator-
+        # activated half; the outward publish is already folded into session_channels.post_to_channel.
+        print("[boundary] DORMANT — no COMPANY_CHANNEL_* creds; the inward Realtime subscriber is not "
+              "started. Provide .boundary.env / set COMPANY_CHANNEL_* to activate.", flush=True)
+        return None, None, None
     sub, principal = build_subscriber()
     thread = sub.start()
     print(f"[boundary] Realtime sub started → {_REALTIME_TOPIC} (skip-by-origin, MODEL-1 single-source)", flush=True)

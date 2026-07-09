@@ -188,7 +188,21 @@ def _author_of(author_session: str | None) -> str:
         return a
     if a.lower() in _OPERATOR_HANDLES:
         return "operator://tim"
-    if a.startswith("ch-") or a.startswith("as-"):   # a Claude Code / agent-session handle
+    if a.startswith("ch-") or a.startswith("as-"):   # a Claude Code / agent-session handle (EPHEMERAL)
+        # DURABLE-IDENTITY LAW (contracts/address.py:93 — a provenance address must hold the STABLE id,
+        # not the churning handle): resolve the handle -> its session UUID and record THAT, so authorship
+        # survives a handle churn. Fast + probe-free (read the reg + the fast recovery rungs); fall back
+        # to the handle only when the uuid can't be recovered (still addressable, honestly).
+        try:
+            import os as _os
+            from runtime import cc_channels as _cc, identity as _identity
+            reg = _cc._read_reg(_os.path.join(_cc.CHAN_DIR, f"{a}.json"))
+            if reg:
+                u, _how = _identity.recover_uuid(reg)     # deep=False — fast rungs, no probe/scan
+                if u:
+                    return f"session://{u}"
+        except Exception:
+            pass
         return f"session://{a}"
     return f"agent://{a}"
 

@@ -101,29 +101,37 @@ mcp.setRequestHandler(ListToolsRequestSchema, async () => ({
 }))
 
 async function postSupervisor(pathname, obj) {
+  // Returns {ok, status, error?} — the TRUTH about the POST. Previously this swallowed every error and
+  // returned nothing, so the `reply` tool told the model "delivered" even when the supervisor was down
+  // and the reply was never recorded (map G13 — the phantom-OK the whole build is removing).
   const body = JSON.stringify(obj)
-  await new Promise((resolve) => {
+  return await new Promise((resolve) => {
     try {
       const u = new URL(SUPERVISOR + pathname)
       const req = http.request({ hostname: u.hostname, port: u.port, path: u.pathname, method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } },
-        (res) => { res.resume(); res.on('end', resolve) })
-      req.on('error', resolve)   // best-effort; the mail log is the durable backstop
+        (res) => { res.resume(); res.on('end', () => resolve({ ok: res.statusCode === 200, status: res.statusCode })) })
+      req.on('error', (e) => resolve({ ok: false, status: 0, error: String((e && e.message) || e) }))
       req.write(body); req.end()
-    } catch { resolve() }
+    } catch (e) { resolve({ ok: false, status: 0, error: String((e && e.message) || e) }) }
   })
 }
 
 mcp.setRequestHandler(CallToolRequestSchema, async (req) => {
   const a = req.params.arguments || {}
   if (req.params.name === 'reply') {
-    await postSupervisor('/channel-reply', { from: HANDLE, thread: a.thread || '', text: a.text })
-    return { content: [{ type: 'text', text: 'reply delivered to the fabric' }] }
+    const r = await postSupervisor('/channel-reply', { from: HANDLE, thread: a.thread || '', text: a.text })
+    if (r.ok) return { content: [{ type: 'text', text: 'reply delivered to the fabric' }] }
+    return { content: [{ type: 'text', text: `reply NOT delivered — supervisor ${r.status || 'unreachable'}`
+      + (r.error ? ` (${r.error})` : '') + '. It was not recorded; retry or check the supervisor (:8771).' }],
+      isError: true }
   }
   if (req.params.name === 'announce') {
     DESCRIPTION = String(a.description || '')
-    updateReg({ description: DESCRIPTION })
-    return { content: [{ type: 'text', text: 'announced: ' + DESCRIPTION }] }
+    const ok = updateReg({ description: DESCRIPTION })
+    return { content: [{ type: 'text', text: ok ? 'announced: ' + DESCRIPTION
+      : 'announce set in-memory but FAILED to persist to the registry (not writable) — `list` may not show it' }],
+      isError: !ok }
   }
   if (req.params.name === 'profile') {
     // the agent writes its OWN profile (it knows its handle). Merge the supplied self-described fields
@@ -134,8 +142,9 @@ mcp.setRequestHandler(CallToolRequestSchema, async (req) => {
     const patch = { profile: PROFILE }
     if (a.description != null) { DESCRIPTION = String(a.description); patch.description = DESCRIPTION }
     if (a.model != null) patch.model = String(a.model)
-    updateReg(patch)
-    return { content: [{ type: 'text', text: 'profile written: ' + JSON.stringify(PROFILE) }] }
+    const ok = updateReg(patch)
+    return { content: [{ type: 'text', text: (ok ? 'profile written: ' : 'profile set in-memory but FAILED to persist: ')
+      + JSON.stringify(PROFILE) }], isError: !ok }
   }
   throw new Error('unknown tool: ' + req.params.name)
 })
