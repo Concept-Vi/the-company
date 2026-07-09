@@ -115,3 +115,13 @@ machine-readable record of what was processed and when (structured outputs, not 
 DIFF, computed by code. "Dry"/"done"/"complete" may only ever be asserted against the diff.
 Instances already paid: my 58-vs-77 tool survey; the archaeology's "dry" (true only against the
 11-session CURATED list, not the transcript directory); the census's 8 hand-picked sub-territories.
+
+## THE CLASS LAW (Tim, 2026-07-09 — on the structured-output failure)
+"Always look for the CLASS, see more than you looked for. No one knows how these were set up.
+NO guesses, no 'probably'." A failure is never one bug — it is one INSTANCE of a class of unverified
+assumptions, and the class must be enumerated (external-reference law applied to assumptions):
+derive the full list of what the code ASSUMES at a seam (every field sent/omitted per transport,
+every default trusted, every behavior believed), then MEASURE each — no claim without evidence
+(Measured / Documented-with-source / Unknown; 'probably' is banned vocabulary). The instance that
+bit (format+reasoning+omitted num_predict on ollama-cloud) belongs to the class: EVERY serving-seam
+default in the fabric is unverified because no one knows how these were set up.
