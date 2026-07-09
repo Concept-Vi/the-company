@@ -439,12 +439,20 @@ def route_reply(from_handle: str, thread: str, text: str) -> dict:
     origin = info.get("originator")
     if not origin or origin == "fabric":
         return {"recorded": True, "delivered": False, "reason": "originator is the fabric/agent — read via mail log", "thread": thread}
-    # push the reply back into the originator's live session
+    # push the reply back into the originator's live session — inspect the push RESULT, not just the
+    # exception. push() raises ChannelError on a connection failure but RETURNS {ok:False} on a non-200
+    # (the transport was reached but the message was not confirmed). Reporting delivered:True on that
+    # non-200 was the phantom-OK that made every failed reply look delivered (map G11). Report the truth.
     try:
-        push(origin, f"(reply from {from_handle}): {text}", meta={"from": from_handle, "thread": thread})
-        return {"recorded": True, "delivered": True, "to": origin, "thread": thread}
+        res = push(origin, f"(reply from {from_handle}): {text}", meta={"from": from_handle, "thread": thread})
     except ChannelError as e:
-        return {"recorded": True, "delivered": False, "reason": str(e), "thread": thread}
+        return {"recorded": True, "delivered": False, "to": origin, "reason": str(e), "thread": thread}
+    if res.get("ok"):
+        return {"recorded": True, "delivered": True, "to": origin,
+                "transport": res.get("transport"), "thread": thread}
+    return {"recorded": True, "delivered": False, "to": origin, "transport": res.get("transport"),
+            "reason": "push reached the transport but it did not confirm delivery (non-200) — recorded, "
+                      "not confirmed live", "thread": thread}
 
 
 def mail(thread: str = "", limit: int = 50) -> list:
