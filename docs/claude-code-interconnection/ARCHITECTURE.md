@@ -97,3 +97,36 @@ peer-channel message, not direct user intent) may do. Knowing them is the operat
   launching unsupervised agents = needs the operator.* This is why auto-join (the SessionStart hook
   in startup config) needs Tim's explicit ok, while new skills + new tools could be added autonomously.
 
+## 8. The unified presence-aware layer (2026-07-09 — the weld)
+§1–§6 describe TWO live-inject transports for two ownership classes: the `.mjs` port push (sessions the
+fabric does NOT own) and the supervisor stdin inject (sessions it spawned). They are complementary, but
+the durable channel fan historically chose between them by OWNERSHIP alone — it only injected to
+supervisor-owned members and queued everyone else, so a hand-started session that was reachable *right
+now* via its `.mjs` port silently queued. The unification chooses by PRESENCE instead:
+- **`runtime/identity.py`** — one resolver + a read-time presence view over the SAME registries
+  (`.data/channels/*.json` handle space ∪ the supervisor `/sessions` probe ∪ the `agent_sessions`
+  UUID space). It DERIVES the state at read time (the `now()` presence precedent) and emits nothing —
+  the supervisor keeps its single-writer monopoly on `agent_sessions.*`. It answers, for any target
+  (uuid | handle | as-id | agent-id | cwd | `session://X`), "who is this and how do I reach them
+  now", surviving handle churn.
+- **`runtime/router.py`** — given a resolved target, picks the transport that actually reaches them
+  (supervisor inject OR `.mjs` push), falls back to the durable mailbox, and returns a truthful
+  receipt (`delivered` / `queued` / `transport` / `verb` / `reason`). It never claims a delivery it
+  cannot confirm and never silently drops.
+- **`session_channels.post_to_channel`** delegates its per-member live delivery to this router; the
+  `.mjs` push is now a transport UNDER the one channel layer, not a parallel world.
+- **`mcp_face/tools/send.py`** — `send(to, message)`, the single front door. `cc_channel` /
+  `channel_act` / `session_post` remain as thin surfaces over the same welded functions.
+Reachability is universal only where a live `.mjs` session's durable UUID is recoverable (its reg
+carries `session_id`, or a claude_pid-keyed self-marker exists). Sessions launched in `~/company` are
+covered by the SessionStart hook; making capture reliable for every cwd is the open follow-on.
+
+## 9. The substrate inbox (mechanism C) — the third, pull-only path
+Beyond the two live transports there is a durable, pull-only inbox on the LOCAL Supabase (agent_mcp):
+`allocate(to_agent, …)` inserts a row into `agent_mcp.allocations`; the target agent drains it with
+`my_allocations(agent_id)`. It is keyed by a self-chosen **agent id** (free text — `ledger-session-fable`),
+has NO live push, and lives in a SEPARATE server (`mcp-supabase-admin`), not this repo. There is no
+code join between an agent id and a session UUID/handle — `runtime/identity.py` is where that bridge
+belongs (best-effort today). Use it for "leave this for whoever is `X`, they'll pick it up"; use the
+channel layer (§8) for "reach a live session now."
+

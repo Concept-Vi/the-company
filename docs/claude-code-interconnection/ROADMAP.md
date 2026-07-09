@@ -11,6 +11,33 @@
 - **Two-session live collaboration** — a lead + a time-travelled fork of it coordinated over the
   channel to divide and build.
 
+## ✅ Built + proven by use (2026-07-09) — the presence-aware UNIFICATION (branch messaging-unification / PR #2)
+The two channel worlds are welded into ONE presence-aware delivery layer. "It shouldn't matter if the
+supervisor owns them" — a durable channel post now LIVE-injects a hand-started (unsupervised-live)
+member via its own .mjs port, not just supervisor-owned ones.
+- **`runtime/identity.py`** — the ONE resolver + read-time presence view. Unifies the three identity
+  spaces (ephemeral handle · durable session UUID · substrate agent id) by PROBE, derives the F1.2
+  state (supervised-live | unsupervised-live | closed) at read time (no `agent_sessions.*` emit —
+  single-writer-safe), and recovers a live handle's durable UUID (reg → transcript_path → /proc
+  environ → self-marker → fd). `resolve(target)` accepts uuid | ch-handle | as-id | agent-id | cwd |
+  session://X and fails loud on ambiguity; `session://<handle>` now RESOLVES instead of raising.
+- **`runtime/router.py`** — the ladder: best LIVE transport (supervisor /inject OR .mjs port push) →
+  durable mailbox queue → loud-unreachable. Returns a TRUTHFUL receipt {delivered, queued, transport,
+  verb, reason}; never a phantom-OK (inspects push().ok), never a silent drop.
+- **`session_channels.post_to_channel`** — routes each member by presence: supervised-live keeps its
+  deliver-intent; a port-live member is live-pushed here-and-now; the rest queue. The fan names the
+  true transport + delivered per member.
+- **`mcp_face/tools/send.py`** — the ONE front door: `send(to, message)` for a session or a channel
+  (by name or id). `cc_channel`/`channel_act`/`session_post` keep working (they route through the same
+  welded functions).
+- **Phantom-OK removed** at `route_reply` and the .mjs `reply`/`announce`/`profile` — they report the
+  truth (delivered vs recorded-not-confirmed, persisted vs in-memory).
+Tests: `tests/messaging_weld_acceptance.py`, `tests/messaging_send_acceptance.py`.
+STILL OPEN: reliable UUID capture for non-`~/company` cwds (a durable post reaches a .mjs session only
+if its UUID is recoverable) · fold `channel_boundary` shared-publish into the fan · migrate the
+`_channels/*.json` named channels · complete `/channel-send` as the router's HTTP door · the
+operator-launched live inject+churn verification.
+
 ## 🔧 In progress
 - **Clone → channel** (the fork's lane): combine `session_pointintime.materialize_at_point` (R3.4,
   proven) with an interactive channel launch so a session cloned *at a point in time* auto-registers

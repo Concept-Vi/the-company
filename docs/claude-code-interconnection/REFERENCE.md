@@ -23,6 +23,21 @@ claude --mcp-config /home/tim/company/channels/channel.mcp.json \
 `to` resolves a handle, an exact cwd, or a unique substring of cwd/description (fail-loud on
 ambiguous). A **closed** session is not reachable by channel — use `session_post` wake/consult.
 
+## The unified tool: `mcp__company__send` (presence-aware — prefer this)
+| arg | | does |
+|---|---|---|
+| `to` | required | a SESSION (uuid · ch-handle · as-id · agent-id · cwd · `session://<id>`) **or** a CHANNEL (`channel://<name-or-id>`) |
+| `message` | required | the text |
+| `frm` | optional | your `session://<id>` so a reply routes home |
+| `thread` | optional | continue a conversation |
+
+One call. It resolves WHO the target is (surviving handle churn), routes to the transport that
+actually reaches them now (the owning supervisor's inject, or the session's own live `.mjs` port),
+else queues to the durable mailbox — and returns a truthful receipt naming the transport +
+`delivered` vs `queued`. Never a phantom-OK, never a silent drop. A channel fans to every member by
+their best path. `cc_channel` / `channel_act` / `session_post` still work (they route through the same
+welded layer); `send` is the single door. (runtime: `runtime/identity.py` resolver + `runtime/router.py`.)
+
 ## The MCP tool: `mcp__company__cc_voice` (give text a voice)
 | op | args | does |
 |---|---|---|
