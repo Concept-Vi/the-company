@@ -133,6 +133,8 @@ SUPERVISOR_ROUTES = (
     ("POST", "/interrupt"),
     ("POST", "/teardown"),
     ("POST", "/bridge-session"),   # RAIL R1-prime: consent-gated wider-allowlist spawn (④ in-session git/LSP/web)
+    ("POST", "/channel-reply"),    # fabric: a channel session's `reply` tool POSTs here → cc_channels.route_reply
+    ("POST", "/channel-send"),     # fabric: HTTP twin of cc_channels.send — inject into a live channel session
 )
 MAIL_LEAF = "agent_sessions"           # naming law: agent_sessions everywhere (never fabric/, never sessions/)
 CURSOR_REF = "agent_sessions/cursor:supervisor"   # per-consumer mailbox cursor (a ref, §2.3 pattern)
