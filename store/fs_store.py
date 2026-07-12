@@ -594,7 +594,14 @@ class FsStore:
         # Whether the event log needs cross-process seq-uniqueness is a deliberate shared-semantics
         # decision (AGENTS.md rule 7 — surface cross-cutting, don't decide unilaterally), so it is
         # surfaced, not silently built into the hottest write path.
-        with self._event_lock:
+        # F5 RESOLVED WITH EVIDENCE (operator-surface, 2026-06-29): the deferred question is answered —
+        # the live log was found carrying 1,151 DUPLICATED seqs (multiple faces/sessions DO write
+        # cross-process; the risk was real, not theoretical). So the flock is now paid: the same
+        # graph_lock primitive the mailbox already uses wraps the read-last→+1→append section, making
+        # seq atomic+unique ACROSS PROCESSES. Historical dups remain as archaeology (events are
+        # append-only); tests/event_seq_acceptance.py gates that no NEW dup ever lands (post-cutover)
+        # and proves cross-process uniqueness by hammering from concurrent subprocesses.
+        with self.graph_lock("events:seq"), self._event_lock:
             seq = 0
             if path.exists():
                 # last line's seq + 1 (append-only; order is preserved by the file itself)
