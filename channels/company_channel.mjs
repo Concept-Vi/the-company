@@ -15,7 +15,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const HANDLE = process.env.COMPANY_CHANNEL_HANDLE || ('ch-' + Math.random().toString(36).slice(2, 10))
-const SESSION_ID = process.env.COMPANY_SESSION_ID || ''
+// Capture the durable session UUID at registration. COMPANY_SESSION_ID is only set for launcher-pinned
+// clones; the ORDINARY interactive/alias launch never sets it — but Claude Code exports
+// CLAUDE_CODE_SESSION_ID into this (child) .mjs process's env, so read it as the fallback. Without this
+// the reg's session_id was empty ~85% of the time, which is what made durable-id reachability fail
+// (identity recovery then had nothing to recover). Capture at birth, upstream of any recovery ladder.
+const SESSION_ID = process.env.COMPANY_SESSION_ID || process.env.CLAUDE_CODE_SESSION_ID || ''
 const PORT = parseInt(process.env.COMPANY_CHANNEL_PORT || '0', 10)
 const REPO = process.env.COMPANY_ROOT || process.cwd()
 let DESCRIPTION = process.env.COMPANY_CHANNEL_DESC || ''
