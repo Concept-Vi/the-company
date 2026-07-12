@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -629,8 +630,43 @@ def comment(target_addr: str, body: str, author_session: str, *, title: str = "C
     itself addressed (board://<id>), so it can be replied to (threading) and commented on in turn."""
     if not target_addr or not body or not author_session:
         raise BoardError("comment needs `target_addr`, `body`, and `author_session`. Fail loud.")
-    return file_item(item_type, title, body, author_session, channel=channel,
-                     links=[{"kind": "commented_on", "target": target_addr}], board_dir=board_dir, author=author)
+    rec = file_item(item_type, title, body, author_session, channel=channel,
+                    links=[{"kind": "commented_on", "target": target_addr}], board_dir=board_dir, author=author)
+    _route_mentions(rec, board_dir=board_dir)
+    return rec
+
+
+_MENTION_RE = re.compile(r"(?<![\w./-])@([A-Za-z0-9][A-Za-z0-9_-]{1,63})\b")
+
+
+def _route_mentions(rec: dict, *, board_dir: str | None = None) -> list:
+    """@handle in a comment body INJECTS the comment into that member's LIVE session via the channel
+    transport (the same push path chat uses) — so a mentioned agent KNOWS to reply, board→session, no
+    polling. Delivery is best-effort per handle but always RECORDED: the outcome list persists on the
+    comment record as `mentions` (possible since the frontmatter opened, F3) — undelivered is visible,
+    never silent. The comment itself always stands regardless of delivery (the board is the durable half).
+    A handle = a live channel member (`.data/channels/<handle>.json`); resolution rides cc_channels.find."""
+    handles = sorted(set(_MENTION_RE.findall(rec.get("body", "") or "")))
+    if not handles:
+        return []
+    from runtime import cc_channels as cc   # lazy — no import cycle (verified: cc_channels ∌ cc_board)
+    author = rec.get("author_session", "board")
+    outcomes = []
+    for h in handles:
+        if h == author:
+            continue                          # no self-ping
+        try:
+            r = cc.send(h, f"[board mention · {rec.get('channel','')} · from {author}]\n"
+                           f"You were mentioned on {rec['address']} (re: {rec.get('links',[{}])[0].get('target','')}):\n\n"
+                           f"{rec.get('body','')}",
+                        frm=author, thread=f"board-{rec['id']}")
+            outcomes.append({"handle": h, "delivered": bool(r.get("ok"))})
+        except Exception as e:  # noqa: BLE001 — the comment stands; the failure is recorded, not raised
+            outcomes.append({"handle": h, "delivered": False, "error": str(e)[:200]})
+    if outcomes:
+        rec["mentions"] = outcomes
+        _write(board_dir, rec)
+    return outcomes
 
 
 def reply(comment_addr: str, body: str, author_session: str, *, title: str = "Reply", channel: str = "",
