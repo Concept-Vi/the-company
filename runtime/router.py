@@ -98,14 +98,17 @@ def _record_lenient(store, uuid, content, frm, thread, *, delivered: bool,
 
 
 def route(target: str, content: str, *, frm: str = "fabric", thread: str | None = None,
-          base: str | None = None, registry=None, store=None, dry_run: bool = False) -> dict:
+          base: str | None = None, registry=None, store=None, dry_run: bool = False,
+          deep: bool = True) -> dict:
     """Deliver `content` to `target` by the best LIVE transport, falling back to the durable mailbox,
     returning a truthful receipt. NEVER silently drops; NEVER claims unconfirmed delivery.
       target   : any form identity.resolve accepts (uuid|handle|as-id|agent-id|cwd|session://X|substring)
       registry : optional suite.get_agent_session — lets a not-live target resolve as known-closed
       store    : optional suite.store — enables the durable queue rung (needs the target's uuid)
-      dry_run  : resolve + choose transport + build receipt WITHOUT sending (safe live verification)"""
-    pr = identity.resolve(target, base=base, registry=registry)
+      dry_run  : resolve + choose transport + build receipt WITHOUT sending (safe live verification)
+      deep     : False = fast recovery rungs only in resolution (hot paths, e.g. per-mention routing);
+                 True (default) = the full ladder incl. the proc-starttime match (single-target sends)"""
+    pr = identity.resolve(target, base=base, registry=registry, deep=deep)
     if pr is None:
         return _receipt(target, None, delivered=False, transport="none", verb="unreachable", state=None,
                         reason="unresolved: not a live session and not a known durable id — failing loud, "

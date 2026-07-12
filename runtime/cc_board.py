@@ -705,48 +705,74 @@ def _resolve_member_token(token: str) -> str:
         return token
 
 
+def _bus_store():
+    """The durable store the mention router queues into — the SAME lazy handle the bus emitter uses
+    (_BUS_CACHE; COMPANY_STORE-honouring). Best-effort: None disables only the queue rung, never the
+    push, and the outcome stays loud either way."""
+    try:
+        path = os.environ.get("COMPANY_STORE") or os.path.join(REPO, ".data", "store")
+        store = _BUS_CACHE.get(path)
+        if store is None:
+            from store.fs_store import FsStore
+            store = _BUS_CACHE[path] = FsStore(path)
+        return store
+    except Exception:  # noqa: BLE001 — queue-rung enablement is best-effort
+        return None
+
+
 def _route_mentions(rec: dict, *, board_dir: str | None = None) -> list:
-    """@handle in a comment body INJECTS the comment into that member's LIVE session via the channel
-    transport (the same push path chat uses) — so a mentioned agent KNOWS to reply, board→session, no
-    polling. Delivery is best-effort per handle but always RECORDED: the outcome list persists on the
-    comment record as `mentions` (possible since the frontmatter opened, F3) — undelivered is visible,
-    never silent. The comment itself always stands regardless of delivery (the board is the durable half).
-    A handle = a live channel member (`.data/channels/<handle>.json`); resolution rides cc_channels.find."""
+    """@handle in a comment body reaches that member by the UNIFIED ROUTER (FL2, lead-approved with the
+    loudness condition, board://item-c15c9ffe): live .mjs member → the same live inject as before;
+    SUPERVISED member → the supervisor inject (mentionable at last — raw cc.send could never reach
+    them); neither → the DURABLE MAIL QUEUE (mailbox pickup — the leg mentions never had) with the
+    pull guarantee (pending_mentions + the nag) unchanged on top. Outcomes are RECORDED per mention,
+    richer than before ({delivered | queued, transport, error}) and persist on the comment (F3);
+    the sender-side loudness (Tim 2026-07-13 — bus event + delivery_warning) is PRESERVED for every
+    not-live-delivered mention. The comment itself always stands (the board is the durable half)."""
     tokens = sorted(set(_MENTION_RE.findall(rec.get("body", "") or "")))
     if not tokens:
         return []
-    from runtime import cc_channels as cc   # lazy — no import cycle (verified: cc_channels ∌ cc_board)
+    from runtime import router as _router   # lazy — no import cycle (router/identity never import cc_board)
     author = rec.get("author_session", "board")
     kind = rec.get("message_type") or "mention"
+    store = _bus_store()
     outcomes = []
     for t in tokens:
         h = _resolve_member_token(t)          # @name resolves to the handle; unresolved passes through
         if h == author or t == author:
             continue                          # no self-ping
+        msg = (f"[board {kind} · {rec.get('channel','')} · from {author}]\n"
+               f"You were addressed on {rec['address']} (re: {rec.get('links',[{}])[0].get('target','')}). "
+               f"Reply must land ON THE BOARD (reply_to_mention):\n\n{rec.get('body','')}")
         try:
-            r = cc.send(h, f"[board {kind} · {rec.get('channel','')} · from {author}]\n"
-                           f"You were addressed on {rec['address']} (re: {rec.get('links',[{}])[0].get('target','')}). "
-                           f"Reply must land ON THE BOARD (reply_to_mention):\n\n{rec.get('body','')}",
-                        frm=author, thread=f"board-{rec['id']}")
-            outcomes.append({"handle": h, "delivered": bool(r.get("ok"))})
+            rcpt = _router.route(h, msg, frm=author, thread=f"board-{rec['id']}",
+                                 store=store, deep=False)   # fast rungs only — the board comment path
+            o = {"handle": h, "delivered": bool(rcpt.get("delivered")),
+                 "queued": bool(rcpt.get("queued")), "transport": rcpt.get("transport")}
+            if not o["delivered"] and not o["queued"]:
+                o["error"] = (rcpt.get("reason") or "unreachable")[:200]
+            outcomes.append(o)
         except Exception as e:  # noqa: BLE001 — the comment stands; the failure is recorded, not raised
-            outcomes.append({"handle": h, "delivered": False, "error": str(e)[:200]})
+            outcomes.append({"handle": h, "delivered": False, "queued": False, "error": str(e)[:200]})
     if outcomes:
         rec["mentions"] = outcomes
         _write(board_dir, rec)
         undel = [o for o in outcomes if not o.get("delivered")]
         if undel:
             # SENDER-SIDE LOUDNESS (Tim, 2026-07-13 — the @lead failure: a recorded-but-unseen refusal is
-            # SILENT in practice). An undelivered mention emits a bus event (channel-stamped, F1) so the
-            # stream/needs-me/any watcher SEES it, and the return carries an explicit warning the sender
-            # cannot miss. The board record + the mail queue still hold the message (nothing lost).
+            # SILENT in practice). Preserved verbatim in spirit; the note now tells the TRUTH per class:
+            # queued = a durable mailbox copy EXISTS (+ the nag pull); unreachable = recorded loud only.
+            q = [o["handle"] for o in undel if o.get("queued")]
+            u = [o["handle"] for o in undel if not o.get("queued")]
             _emit_board_event("mention.undelivered",
                               {"id": rec["id"], "address": rec["address"], "channel": rec.get("channel", ""),
-                               "handles": [o["handle"] for o in undel],
-                               "note": "no live door — will surface at the member's next turn boundary"})
-            rec["delivery_warning"] = (f"NOT LIVE-DELIVERED to {[o['handle'] for o in undel]} — queued; "
-                                       f"they see it at their next turn boundary, not now. If this needs "
-                                       f"immediate action, the member must be live (announced listener).")
+                               "handles": [o["handle"] for o in undel], "queued": q, "unreachable": u,
+                               "note": "no live door — queued have a durable mailbox copy + the nag pull; "
+                                       "unreachable are recorded on the comment only"})
+            rec["delivery_warning"] = (f"NOT LIVE-DELIVERED — queued durably: {q or 'none'}; "
+                                       f"unreachable: {u or 'none'}. Queued members get it via mailbox + "
+                                       f"their next turn boundary, not now. If this needs immediate "
+                                       f"action, the member must be live (announced listener).")
     return outcomes
 
 
