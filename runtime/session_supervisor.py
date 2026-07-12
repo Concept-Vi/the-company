@@ -152,6 +152,16 @@ def fabric_concurrency() -> int:
     return int(os.environ.get("COMPANY_FABRIC_CONCURRENCY", "3"))
 
 
+def agent_consent_default() -> bool:
+    """RT2 (Tim's ruling, 2026-06-29: AGENTS CAN SPAWN AGENTS — runaway-safety is a TUNABLE guard,
+    never a wall). The wider-spawn consent beat's DEFAULT, call-time env read (the fabric_concurrency
+    pattern): COMPANY_FABRIC_AGENT_CONSENT=1 → a bridge-session call that carries NO explicit
+    operator_consent inherits consent (agents open the wider surface without the per-call beat; the
+    concurrency cap + git-revert stay as the guards). Unset/0 (the default) → the per-call consent
+    beat is required, exactly as before. Explicit operator_consent=True always works either way."""
+    return os.environ.get("COMPANY_FABRIC_AGENT_CONSENT", "0").strip().lower() in ("1", "true", "yes", "on")
+
+
 def fabric_permission() -> str:
     """Live permission posture for supervised sessions (call-time read; default plan = read-only)."""
     return os.environ.get("COMPANY_FABRIC_PERMISSION", "plan")
@@ -928,13 +938,14 @@ class SessionSupervisor:
         service. The cmd-BUILDER (_build_bridge_session_cmd) is unit-tested without spawning; the live
         round-trip (a real wider session committing via Bash-git, an LSP nav returning prose) is the
         build lead's to verify — NEVER claimed live here, NEVER green-painted."""
-        if not operator_consent:
+        if not operator_consent and not agent_consent_default():
             raise TeachingRefusal(
                 "REFUSED — a bridge-session opens a WIDER tool surface (Bash/git/LSP/web + file writes) "
                 "than the fabric floor (mcp__company-only). This rail is consent-gated, not locked: pass "
                 "operator_consent=true (the operator-vantage consent beat — the same gate /api/resolve "
-                "uses) to open it. The capability is available the moment consent rides the call; without "
-                "it an agent cannot widen the surface. `git revert` backstops anything irreversible.")
+                "uses), or set COMPANY_FABRIC_AGENT_CONSENT=1 (RT2 — Tim's agents-can-spawn ruling: the "
+                "tunable default; the concurrency cap + git revert remain the guards). Without either an "
+                "agent cannot widen the surface.")
         # resolve+validate the wider toolset BEFORE registering a session (no half-built record, the
         # spawn() guard pattern). A host/rail-boundary capability (computer/browser) refuses here, loud.
         claude_bin = _panel._find_claude()
