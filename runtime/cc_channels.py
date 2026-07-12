@@ -464,6 +464,38 @@ def route_reply(from_handle: str, thread: str, text: str) -> dict:
                       "not confirmed live", "thread": thread}
 
 
+def mail_since(idx: int = -1, *, to_any: "set | None" = None, frm: str | None = None,
+               limit: int = 50) -> dict:
+    """Cursor'd read of the transport mail log (_mail.jsonl) — the agent_mail_since twin for THIS leaf
+    (additive P2 helper for the `mailbox` door; `mail()` below stays the thread-transcript view).
+    `idx` = the 0-based line index of the last row already consumed (-1 = everything), OLDEST-first;
+    each returned row carries its `idx`; `next_idx` is the last returned (or last scanned) index — the
+    client-held cursor, pagination never skips. Filters: `to_any` (a set of handles — a session's
+    inbox across its churned handles), `frm`. Malformed lines are skipped but still advance the scan."""
+    out = []
+    next_idx = idx
+    if not os.path.exists(MAIL_LOG):
+        return {"rows": [], "next_idx": idx}
+    with open(MAIL_LOG, encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            if i <= idx:
+                continue
+            next_idx = i
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if to_any is not None and r.get("to") not in to_any:
+                continue
+            if frm and r.get("frm") != frm:
+                continue
+            r["idx"] = i
+            out.append(r)
+            if limit and len(out) >= limit:
+                break
+    return {"rows": out, "next_idx": next_idx}
+
+
 def mail(thread: str = "", limit: int = 50) -> list:
     """Read the channel mail log (optionally one thread), newest last."""
     if not os.path.exists(MAIL_LOG):
