@@ -22,20 +22,9 @@ os.environ.setdefault("COMPANY_STORE", os.path.join(REPO, ".data", "store"))
 
 try:
     from runtime import cc_channels as cc
+    from runtime.door import compose_card
     reg = cc.register_self()
-    who = reg.get("name") or reg["handle"]
-    print(f"""<fabric-membership handle="{reg['handle']}" name="{reg.get('name','')}">
-You are a registered member of the company fabric ({who}). The board is the shared workspace across
-all sessions — none of us holds the full picture; the board does. The verbs:
-- COMMENT on any board block to critique/extend it; REPLY to answer. @handle or @name in a comment
-  reaches that member's live session; typed kinds carry obligations (mention/ask→reply,
-  review_request→verdict, handoff→ack, fyi→none) — an unmet obligation re-surfaces in your context
-  until your reply lands ON THE BOARD (reply_to_mention).
-- Set your NAME once so others can @you readably: cc_channels.register_self(name='<your-role>').
-DEPTH (read when needed, not now): guide://channel_collaboration (the handbook) · the D0 protocol
-block on the active tracker (board://item-4696f705) · message_types/ (the verb registry —
-guide://adding_message_verbs to add one).
-</fabric-membership>""")
+    print(compose_card(reg))     # RESOLVED live from the registries — never baked prose (Tim's check)
 except Exception:  # noqa: BLE001 — fail-soft: never break a session
     pass
 sys.exit(0)
