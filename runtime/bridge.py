@@ -2209,6 +2209,11 @@ class H(BaseHTTPRequestHandler):
             cursor = int(since)
         except (TypeError, ValueError):
             cursor = -1
+        # F1 (operator-surface): ?channel= — a SERVER-SIDE filter; only events STAMPED with that channel
+        # flow (a phone watching one channel doesn't eat the whole firehose). Honest by construction: an
+        # event with no channel stamp is not that channel's event → skipped; the filter shows exactly the
+        # stamped set, never a guess. No ?channel= → the full bus, byte-identical to before.
+        chan = q.get("channel") or None
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
@@ -2218,10 +2223,12 @@ class H(BaseHTTPRequestHandler):
         try:
             while True:
                 for ev in SUITE.events_since(cursor):
+                    cursor = ev["seq"]                       # advance ALWAYS — a skipped event must not stall the tail
+                    if chan is not None and ev.get("channel") != chan:
+                        continue
                     self.wfile.write(
                         f"id: {ev['seq']}\ndata: {json.dumps(ev)}\n\n".encode())
                     self.wfile.flush()
-                    cursor = ev["seq"]
                 if time.monotonic() - last_beat >= 15:
                     self.wfile.write(b": keepalive\n\n")
                     self.wfile.flush()

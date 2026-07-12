@@ -214,20 +214,40 @@ def _author_of(author_session: str | None) -> str:
 # avoids a cycle); the emitter is INJECTED. The MCP tool wires it to suite.emit_run_record at the
 # register(mcp, suite) boundary (mirrors decision_decided_signal's floor-clean record emit). Lenient like
 # every telemetry emit: a failure is SURFACED on the return (emit_error), never breaks the file write.
-_BOARD_EMITTER = None
+_UNSET_EMITTER = object()   # sentinel: "never configured" ≠ "explicitly off (None)"
+_BOARD_EMITTER = _UNSET_EMITTER
+_BUS_CACHE: dict = {}       # {store_path: FsStore} — the default emitter's lazy store handle
 
 
 def set_board_emitter(fn) -> None:
     """Install the process's board-event emitter — a callable emit(event: str, fields: dict). Called by the
-    MCP face (suite.emit_run_record) and by tests (a capturing subscriber). None = no emit (pure file I/O)."""
+    MCP face (suite.emit_run_record) and by tests (a capturing subscriber). None = EXPLICITLY off (pure
+    file I/O). UNSET (the default) = the durable-bus default emitter (F1): board activity lands on the
+    shared events.jsonl, channel-stamped, so /api/stream?channel= and every event consumer see the board
+    move — previously board events went NOWHERE unless a face wired an emitter."""
     global _BOARD_EMITTER
     _BOARD_EMITTER = fn
+
+
+def _default_bus_emitter(event: str, fields: dict) -> None:
+    """F1 — the durable-bus default: append `board.<event>` onto the shared event log (COMPANY_STORE),
+    carrying the CHANNEL stamp already present in the fields (the item.filed/transitioned fields include
+    `channel`/`scope`). Lenient posture is enforced by the caller (_emit_board_event); the store handle is
+    cached per path."""
+    path = os.environ.get("COMPANY_STORE") or os.path.join(REPO, ".data", "store")
+    store = _BUS_CACHE.get(path)
+    if store is None:
+        from store.fs_store import FsStore
+        store = _BUS_CACHE[path] = FsStore(path)
+    store.append_event({"kind": f"board.{event}",
+                        "summary": f"{event}: {fields.get('title') or fields.get('id') or ''}",
+                        **fields})
 
 
 def _emit_board_event(event: str, fields: dict, *, emit=None) -> str | None:
     """Emit a board event leniently. `emit` (per-call) overrides the module emitter. Returns an error string
     on failure (surfaced on the record, never raised) or None on success/no-emitter."""
-    fn = emit if emit is not None else _BOARD_EMITTER
+    fn = emit if emit is not None else (_default_bus_emitter if _BOARD_EMITTER is _UNSET_EMITTER else _BOARD_EMITTER)
     if fn is None:
         return None
     try:
