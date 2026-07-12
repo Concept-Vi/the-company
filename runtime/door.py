@@ -22,8 +22,19 @@ import os
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOOR_DIR = os.path.join(REPO, "door")
-DOOR_FIELDS = ("id", "line", "depth", "order")
+# The generalised row (Tim 2026-06-29: moments × scopes × conditions — "nothing that isn't structurally
+# known at join/create/registration exists"):
+#   moment   — WHICH mechanical moment shows this line: register (default) | channel-join |
+#              channel-create | project-join | project-create | all.
+#   scope    — WHERE it applies: global (default — the "+default" every card carries) |
+#              channel:<name> | project:<id> (the per-channel/per-project MODIFICATION rows).
+#   audience — WHO sees it (role-dependent): omitted = everyone; else a comma list matched against the
+#              member's name/handle.
+#   until    — WHEN it stops (temporal/open items): ISO date/datetime; an expired row silently leaves
+#              the card (the LIVE resolution — no stale standing orders). Standing rows omit it.
+DOOR_FIELDS = ("id", "line", "depth", "order", "moment", "scope", "audience", "until")
 REQUIRED = ("id", "line", "depth")
+MOMENTS = ("register", "channel-join", "channel-create", "project-join", "project-create", "all")
 
 
 def _load(path: str):
@@ -57,8 +68,37 @@ def door_rows(door_dir: str | None = None) -> list[dict]:
             raise ValueError(f"door/{name}.py: missing required {missing}. Fail loud.")
         if decl["id"] != name:
             raise ValueError(f"door/{name}.py: id {decl['id']!r} != filename {name!r}. Fail loud.")
+        if decl.get("moment", "register") not in MOMENTS:
+            raise ValueError(f"door/{name}.py: unknown moment {decl['moment']!r} — valid {list(MOMENTS)}. Fail loud.")
         rows.append(decl)
     return sorted(rows, key=lambda r: (r.get("order", 100), r["id"]))
+
+
+def _row_applies(r: dict, *, moment: str, channel: str | None, project: str | None,
+                 reg: dict, now: str | None = None) -> bool:
+    """The LIVE condition resolution — evaluated at compose time, so the card is always the current set:
+    moment gate · scope gate (global rows everywhere; channel:/project: rows only in their scope) ·
+    audience gate (role-dependent) · until gate (temporal — expired rows leave the card)."""
+    m = r.get("moment", "register")
+    if m != "all" and m != moment:
+        return False
+    scope = r.get("scope", "global")
+    if scope.startswith("channel:") and scope.split(":", 1)[1] != (channel or ""):
+        return False
+    if scope.startswith("project:") and scope.split(":", 1)[1] != (project or ""):
+        return False
+    aud = r.get("audience")
+    if aud:
+        who = {(reg.get("name") or "").lower(), (reg.get("handle") or "").lower()}
+        if not ({a.strip().lower() for a in aud.split(",")} & who):
+            return False
+    until = r.get("until")
+    if until:
+        from datetime import datetime, timezone
+        ts = now or datetime.now(timezone.utc).isoformat()
+        if ts[:len(until)] > until:                    # ISO prefix compare — date or datetime both work
+            return False
+    return True
 
 
 def verb_table(message_types_dir: str | None = None) -> str:
@@ -76,14 +116,30 @@ def verb_table(message_types_dir: str | None = None) -> str:
     return " · ".join(parts)
 
 
-def compose_card(reg: dict, *, door_dir: str | None = None, message_types_dir: str | None = None) -> str:
-    """The RESOLVED top card for a just-registered member `reg` ({handle, name, ...}). Every section is
-    live-folded: identity from the registration, verbs from message_types/, entries from door/. Nothing
-    here is baked — a registry edit IS a card edit."""
+def compose_card(reg: dict, *, moment: str = "register", channel: str | None = None,
+                 project: str | None = None, door_dir: str | None = None,
+                 message_types_dir: str | None = None, now: str | None = None) -> str:
+    """The RESOLVED card for a mechanical MOMENT (register · channel-join · channel-create ·
+    project-join/create). Every section is live-folded at compose time: identity from the registration,
+    verbs from message_types/, entries from door/ filtered by moment × scope × audience × until — so a
+    channel card = the global default rows + that channel's modification rows, temporal rows expire out,
+    role rows show only to their audience. Nothing is baked — a registry edit IS a card edit; a card can
+    never show anything but the current set (the anti-drift property, Tim 2026-06-29)."""
+    if moment not in MOMENTS:
+        raise ValueError(f"compose_card: unknown moment {moment!r} — valid {list(MOMENTS)}. Fail loud.")
     who = reg.get("name") or reg.get("handle", "?")
-    lines = [f'<fabric-membership handle="{reg.get("handle","?")}" name="{reg.get("name","")}">',
-             f"You are a registered member of the company fabric ({who}). The board is the shared "
-             "workspace across all sessions — none of us holds the full picture; the board does.",
+    at = f' channel="{channel}"' if channel else (f' project="{project}"' if project else "")
+    head = {"register": f"You are a registered member of the company fabric ({who}).",
+            "channel-join": f"You ({who}) just JOINED channel '{channel}'.",
+            "channel-create": f"You ({who}) just CREATED channel '{channel}' — you are its steward: "
+                              f"seed its board, set its purpose, and add its door rows "
+                              f"(scope 'channel:{channel}') so joiners get YOUR channel's card.",
+            "project-join": f"You ({who}) just joined project '{project}'.",
+            "project-create": f"You ({who}) just created project '{project}'.",
+            }[moment if moment != "all" else "register"]
+    lines = [f'<fabric-card moment="{moment}" handle="{reg.get("handle","?")}" name="{reg.get("name","")}"{at}>',
+             head + " The board is the shared workspace across all sessions — none of us holds the "
+                    "full picture; the board does.",
              "",
              f"THE VERBS (typed messages; the obligation is enforced until your reply lands on the board): {verb_table(message_types_dir)}",
              "  reply: cc_board.reply_to_mention('text'[, comment_addr='<ID>' when several are open])",
@@ -91,6 +147,7 @@ def compose_card(reg: dict, *, door_dir: str | None = None, message_types_dir: s
              "",
              "DEPTH (each line is one resolve away — read when needed, never all at once):"]
     for r in door_rows(door_dir):
-        lines.append(f"- {r['line']} → {r['depth']}")
-    lines.append("</fabric-membership>")
+        if _row_applies(r, moment=moment, channel=channel, project=project, reg=reg, now=now):
+            lines.append(f"- {r['line']} → {r['depth']}")
+    lines.append("</fabric-card>")
     return "\n".join(lines)

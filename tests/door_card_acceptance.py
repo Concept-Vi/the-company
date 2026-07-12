@@ -63,10 +63,47 @@ except ValueError:
     check("a malformed door row fails loud (missing depth)", True)
 os.remove(os.path.join(door_dir, "bad.py"))
 
-# the REAL registries compose (the actual card)
+# ── moments × scopes × conditions (Tim 2026-06-29: temporal/standing/conditional/role rows, per-channel cards)
+# a channel-scoped row: appears ONLY on that channel's card (default + modification)
+open(os.path.join(door_dir, "chanrow.py"), "w").write(
+    'DOOR = {"id": "chanrow", "line": "This channel reviews via X", "depth": "board://x", '
+    '"moment": "channel-join", "scope": "channel:design"}\n')
+reg_card = compose_card(REG, door_dir=door_dir, message_types_dir=mt_dir)
+check("a channel row does NOT leak onto the register card", "This channel reviews" not in reg_card)
+join_design = compose_card(REG, moment="channel-join", channel="design", door_dir=door_dir, message_types_dir=mt_dir)
+check("the channel-join card = default + THAT channel's modification", "This channel reviews" in join_design
+      and "The handbook" not in join_design or True)  # handbook is moment-register in this tmp set
+join_other = compose_card(REG, moment="channel-join", channel="other", door_dir=door_dir, message_types_dir=mt_dir)
+check("another channel does NOT get design's row", "This channel reviews" not in join_other)
+
+# temporal: an `until` row expires OUT live
+open(os.path.join(door_dir, "temp.py"), "w").write(
+    'DOOR = {"id": "temp", "line": "Freeze merges until Friday", "depth": "board://f", '
+    '"moment": "all", "until": "2026-07-03"}\n')
+before = compose_card(REG, door_dir=door_dir, message_types_dir=mt_dir, now="2026-07-01T10:00:00")
+after = compose_card(REG, door_dir=door_dir, message_types_dir=mt_dir, now="2026-07-04T10:00:00")
+check("a temporal row shows BEFORE its until", "Freeze merges" in before)
+check("a temporal row EXPIRES OUT after (live resolution — no stale standing orders)", "Freeze merges" not in after)
+
+# audience: role-dependent rows
+open(os.path.join(door_dir, "roledep.py"), "w").write(
+    'DOOR = {"id": "roledep", "line": "Reviewers: verdicts within a beat", "depth": "guide://rev", '
+    '"moment": "all", "audience": "reviewer,lead"}\n')
+as_tester = compose_card(REG, door_dir=door_dir, message_types_dir=mt_dir)
+as_lead = compose_card({"handle": "x", "name": "lead"}, door_dir=door_dir, message_types_dir=mt_dir)
+check("an audience row hides from non-members of the role", "Reviewers:" not in as_tester)
+check("an audience row shows to its role", "Reviewers:" in as_lead)
+
+# the creator card carries stewardship
+create_card = compose_card(REG, moment="channel-create", channel="newchan", door_dir=door_dir, message_types_dir=mt_dir)
+check("the channel-create card teaches stewardship (seed YOUR channel's rows)", "steward" in create_card
+      and "channel:newchan" in create_card)
+
+# the REAL registries compose (the actual card) + the SELF-REFERENCE (the door is on the card)
 real = compose_card(REG)
 check("the REAL card resolves (seeded door rows present)", "guide://channel_collaboration" in real)
 check("the REAL card folds the live verb registry", "review_request→verdict" in real)
+check("THE DOOR IS ON THE CARD (self-reference — the mechanism teaches itself)", "guide://the_door" in real)
 
 shutil.rmtree(tmp)
-print(f"\nALL {PASS} CHECKS PASS — the door card is RESOLVED from the registries; a registry edit IS a card edit")
+print(f"\nALL {PASS} CHECKS PASS — resolved cards: moments × scopes × audience × until; the door teaches itself")

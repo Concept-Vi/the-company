@@ -398,7 +398,18 @@ def create_channel(store, *, name: str, purpose: str = "", members: list[dict] |
             "name": name.strip(), "purpose": purpose or "", "mode": mode,
             "coordinator": coord, "members": norm, "origin": origin,
             "shared": bool(shared)})
-    return get_channel(store, new_cid)
+    row = get_channel(store, new_cid)
+    # THE DOOR (Tim 2026-06-29): the creator receives the channel-create CARD at the mechanical moment
+    # itself — resolved live (never baked), telling them to seed the channel's own door rows. Fail-soft:
+    # the card is knowledge, not the op; its failure must never fail the create.
+    try:
+        from runtime.door import compose_card
+        from runtime.session_scan import resolve_self_member
+        row["card"] = compose_card(resolve_self_member() or {}, moment="channel-create",
+                                   channel=row.get("name") or new_cid)
+    except Exception:  # noqa: BLE001
+        pass
+    return row
 
 
 def add_member(store, cid: str, session: str, *, participation: str = "awake",
@@ -429,7 +440,17 @@ def add_member(store, cid: str, session: str, *, participation: str = "awake",
     append_channel_event(store, {"kind": "channel.member_added", "channel": row["id"],
                                  "session": sid, "participation": participation,
                                  "member_kind": kind, "label": label})
-    return get_channel(store, cid)
+    row2 = get_channel(store, cid)
+    # THE DOOR: the joiner's channel-join CARD rides the op result (the mechanical moment). The card is
+    # for the JOINED member (their identity when resolvable via the sid), scoped to this channel —
+    # default rows + the channel's own modification rows. Fail-soft: knowledge never fails the op.
+    try:
+        from runtime.door import compose_card
+        row2["card"] = compose_card({"handle": sid, "name": (label or "")}, moment="channel-join",
+                                    channel=row2.get("name") or cid)
+    except Exception:  # noqa: BLE001
+        pass
+    return row2
 
 
 def remove_member(store, cid: str, session: str) -> dict:
