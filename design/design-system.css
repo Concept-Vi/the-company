@@ -87,7 +87,119 @@
   --shadow:0 18px 40px -22px var(--shadow-color);
   --elev-1:0 1px 0 rgba(255,255,255,.02), 0 8px 24px -16px var(--shadow-color);
   --elev-2:0 1px 0 rgba(255,255,255,.03), 0 24px 60px -28px var(--shadow-color);
+  /* density — the size axis base (F4; scales via data-density, floor-guarded for touch) */
+  /* absorbed from claude-ds/tokens/density.css (islands-join-mainland). --density is the ONE multiplier. */
+  --density:1;
+  --touch-min:44px;
+  --d-1:calc(4px * var(--density));
+  --d-2:calc(8px * var(--density));
+  --d-3:calc(12px * var(--density));
+  --d-4:calc(16px * var(--density));
+  --d-6:calc(24px * var(--density));
+  --d-8:calc(32px * var(--density));
+  --d-12:calc(48px * var(--density));
+  --control-h:max(var(--touch-min), calc(40px * var(--density)));
+  --control-h-sm:max(36px, calc(32px * var(--density)));
+  --row-h:calc(44px * var(--density));
   font-size:14px;
+}
+
+/* theme dim — soft warm dark. absorbed VERBATIM from design/claude-ds/tokens/theme.css (islands-join-mainland; additive vocabulary — zero collisions). A mainland-vocabulary light/dim remap of the warm-gold tokens is a DESIGN pass that walks through Tim — not invented here. */
+[data-theme="dim"]{
+  --zone-ground:#221D17;
+  --zone-ground-soft:#261F18;
+  --zone-intensity:1.5;
+  --ink:#ECE6DA;
+  --ink-2:#CFC6B5;
+  --ink-3:#A1957E;
+  --ink-4:#7A6E58;
+  --ink-5:#564D3E;
+  --ink-inverse:#221D17;
+  --paper:#221D17;
+  --paper-2:#281F18;
+  --paper-3:#2E251C;
+  --bg-canvas:#1F1A14;
+  --bg-surface:#2A231B;
+  --bg-muted:#271F18;
+  --bg-sunken:#1A1610;
+  --border-faint:color-mix(in oklch, var(--ink) 9%,  transparent);
+  --border-soft:color-mix(in oklch, var(--ink) 12%, transparent);
+  --border-default:color-mix(in oklch, var(--ink) 16%, transparent);
+  --border-strong:color-mix(in oklch, var(--ink) 26%, transparent);
+  --shadow-c:hsl(20 30% 3% / 1);
+  --grain-opacity:0.07;
+  color-scheme:dark;
+}
+
+/* theme dark — full warm dark. absorbed VERBATIM from design/claude-ds/tokens/theme.css (islands-join-mainland; additive vocabulary — zero collisions). A mainland-vocabulary light/dim remap of the warm-gold tokens is a DESIGN pass that walks through Tim — not invented here. */
+[data-theme="dark"]{
+  --zone-ground:#151109;
+  --zone-ground-soft:#1A140C;
+  --zone-intensity:1.7;
+  --gold-intensity:1.15;
+  --ink:#F4EFE4;
+  --ink-2:#D9D0BF;
+  --ink-3:#A89B83;
+  --ink-4:#7C7058;
+  --ink-5:#574E3E;
+  --ink-inverse:#151109;
+  --paper:#151109;
+  --paper-2:#1C150C;
+  --paper-3:#241B10;
+  --bg-canvas:#120E07;
+  --bg-surface:#1E1810;
+  --bg-muted:#1A140C;
+  --bg-sunken:#0E0B05;
+  --border-faint:color-mix(in oklch, var(--ink) 8%,  transparent);
+  --border-soft:color-mix(in oklch, var(--ink) 11%, transparent);
+  --border-default:color-mix(in oklch, var(--ink) 15%, transparent);
+  --border-strong:color-mix(in oklch, var(--ink) 24%, transparent);
+  --shadow-c:hsl(20 40% 2% / 1);
+  --grain-opacity:0.08;
+  color-scheme:dark;
+}
+
+/* theme contrast — HIGH-CONTRAST LIGHT (accessibility; the island's contrast is light, not dark). absorbed VERBATIM from design/claude-ds/tokens/theme.css (islands-join-mainland; additive vocabulary — zero collisions). A mainland-vocabulary light/dim remap of the warm-gold tokens is a DESIGN pass that walks through Tim — not invented here. */
+[data-theme="contrast"]{
+  --zone-ground:#FFFFFF;
+  --zone-ground-soft:#FFFFFF;
+  --zone-intensity:1.45;
+  --ink:#100C06;
+  --ink-2:#241D12;
+  --ink-3:#463A26;
+  --ink-4:#6B5C40;
+  --border-faint:#D9CEB0;
+  --border-soft:#CFC299;
+  --border-default:#B6A876;
+  --border-strong:#8A7C52;
+  --shadow-c:hsl(28 25% 12% / 1);
+}
+
+/* ground clean — the white sub-axis of light (orthogonal to data-theme) */
+[data-ground="clean"]{
+  --zone-ground:#FFFFFF;
+  --zone-ground-soft:#FFFEFB;
+}
+
+/* ground warm — the ivory sub-axis of light */
+[data-ground="warm"]{
+  --zone-ground:#FCFAF2;
+  --zone-ground-soft:#FBF7EC;
+}
+
+/* density compact — 0.8× (claude-ds density.css) */
+[data-density="compact"]{
+  --density:0.8;
+}
+
+/* density comfortable — 1× (explicit default) */
+[data-density="comfortable"]{
+  --density:1;
+}
+
+/* density spacious — 1.25× */
+[data-density="spacious"]{
+  --density:1.25;
 }
 
 /* COMPONENT STYLES (template) — appended verbatim after the emitted :root block.

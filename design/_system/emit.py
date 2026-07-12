@@ -33,6 +33,32 @@ def emit(data: dict) -> str:
     for k, v in data.get("root_extra", {}).items():
         out.append(f"  {k}:{v};")
     out.append("}")
+    # F4 — AXES (operator-surface, 2026-07-13): attribute-conditional token blocks — the ONE generic
+    # mechanism behind data-theme / data-density (and any future axis). Each row emits
+    # `[<attr>="<value>"]{ --token:value; extra }` AFTER :root, so the default (no attribute) stays
+    # byte-identical and toggling the attribute retunes the vars live. Rows are data (registry-is-truth):
+    # a new mode = a new row in tokens.json, zero code. Values may `ref` primitives like any token.
+    for ax in data.get("axes", []):
+        for req in ("attr", "value", "tokens"):
+            if req not in ax:
+                raise ValueError(f"axis row missing '{req}' (fail loud): {ax.get('attr')}={ax.get('value')}")
+        out.append("")
+        if ax.get("note"):
+            out.append(f"/* {ax['note']} */")
+        out.append(f'[{ax["attr"]}="{ax["value"]}"]{{')
+        for name, spec in ax["tokens"].items():
+            if isinstance(spec, dict) and "ref" in spec:
+                if spec["ref"] not in prims:
+                    raise KeyError(f"axis token --{name} refs unknown primitive '{spec['ref']}' (fail loud)")
+                val = prims[spec["ref"]]
+            elif isinstance(spec, dict) and "v" in spec:
+                val = spec["v"]
+            else:
+                raise ValueError(f"axis token --{name} has neither 'v' nor 'ref' (fail loud)")
+            out.append(f"  --{name}:{val};")
+        for k, v in ax.get("extra", {}).items():
+            out.append(f"  {k}:{v};")
+        out.append("}")
     return "\n".join(out) + "\n"
 
 
