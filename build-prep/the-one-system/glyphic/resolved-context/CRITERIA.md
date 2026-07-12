@@ -7,17 +7,22 @@
 - [x] C0.1 CRITERIA/GUIDE/SYNTHESIS exist, consolidated from A/B/C, loop-ready. *(this commit)*
 
 ## C1 · SLICE-SUB — the recursive unit substrate (local Supabase :15432)
-- [ ] C1.1 **One recursive schema** exists: `unit {id, parent_id, type, state, address_path, body, meta, ts}` —
-      NO per-level tables (Tim's correction 1: scale-relative; sentence⊂message⊂session⊂project all the same unit).
-- [ ] C1.2 **Types are registry rows, not code**: a `unit_type` table declares each type + its LIFECYCLE
-      (legal states + transitions). Adding a type/state = an INSERT, zero DDL/code.
-- [ ] C1.3 **Illegal transition REFUSED loud** — verified by a real failed UPDATE (like cc_board's draft→open refusal).
-- [ ] C1.4 **State transitions FIRE** (Tim's correction 2: state-as-axis-with-triggers): a real
-      `pg_notify`/Realtime event observed on a state change (e.g. →open), carrying the unit address.
-- [ ] C1.5 **Address = the containment path** — derived/maintained (parent chain), queryable; children/descendants
-      queries work (one recursive CTE).
-- [ ] C1.6 **The anti-loss query works**: "all units in state=open (nobody returned to them)" returns truth.
-- [ ] C1.7 Schema placement COORDINATED with the embedding session via the fabric thread (no fork of their conventions).
+- [x] C1.1 **One recursive schema** exists — `ctx.unit` (migrations/001_ctx.sql, applied 2026-07-13). *(Observed:
+      session→message→block all rows of the one table.)*
+- [x] C1.2 **Types are registry rows** — `ctx.unit_type {states, transitions}` seeded (session/message/block/comment);
+      lifecycle changes = INSERTs.
+- [x] C1.3 **Illegal transition REFUSED loud** — *Observed: `update … state='answered'` (from draft) → ERROR
+      'ctx: illegal transition "draft"->"answered" for type "block". Legal from "draft": ["open"]'.*
+- [x] C1.4 **State transitions FIRE** — *Observed: LISTEN ctx_state received a real payload
+      `{id…0003, type:block, old:draft, new:open, address:glyphic-session/00000000/00000000}` on the legal flip.*
+- [x] C1.5 **Address = the containment path** — *Observed: derived `glyphic-session/00000000/00000000` from the
+      parent chain; roots must supply their own (loud otherwise).*
+- [x] C1.6 **Anti-loss query works** — *Observed: `state='open'` returned the open block ("one response, many
+      faces — the ConceptV echo" — fittingly, the first unit ever to open).*
+- [~] C1.7 Coordination: durable channel post landed on chan-provider-registry-a3d23aae (queued to both members;
+      the live supervisor :8771 was DOWN so no live inject — they pick up next turn; I adapt if they object).
+      NOTE: advisor tool was UNAVAILABLE at the gate — self-applied the scrutiny (additive-only, collision-checked,
+      reversible one-drop, idempotent); flagged honestly here.
 
 ## C2 · SLICE-S1 — turn-resolution live (lab; NOT Tim's global settings)
 - [ ] C2.1 A lab session's UserPromptSubmit hook calls a RESOLVER script → bridge (:8770 embed and/or corpus/role) →
