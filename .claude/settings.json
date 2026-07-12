@@ -38,6 +38,16 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/tim/company/.venv/bin/python /home/tim/company/ops/hooks/obligations_stop_gate.py"
+          }
+        ]
+      }
     ]
   }
 }

@@ -531,6 +531,52 @@ def mail(thread: str = "", limit: int = 50) -> list:
 # remove_member, archive_channel, fold_channels, get_channel} (each takes a `store` as its first arg).
 
 
+def _discover_live_listener(cp: int) -> int:
+    """LIVE-BY-DEFAULT (Tim, 2026-07-13 — after the @lead delivery failure): a session's channel
+    LISTENER (channels/company_channel.mjs, a child of the claude process) is its live-injection
+    door — but it only self-registers when the session ANNOUNCES, which most never do. So
+    registration DISCOVERS the door: walk /proc for a company_channel.mjs whose ancestry reaches
+    this claude pid, and read its listening port. Returns 0 when no door exists (pull-only —
+    which registration then reports LOUDLY, never silently)."""
+    try:
+        import subprocess
+        cand = []
+        for pid in os.listdir("/proc"):
+            if not pid.isdigit():
+                continue
+            try:
+                cmd = open(f"/proc/{pid}/cmdline", "rb").read().replace(b"\0", b" ").decode(errors="ignore")
+            except OSError:
+                continue
+            if "company_channel.mjs" not in cmd:
+                continue
+            cur = pid
+            for _ in range(5):                       # ancestry walk up to 5 hops
+                try:
+                    cur = open(f"/proc/{cur}/stat").read().split()[3]
+                except OSError:
+                    cur = None
+                    break
+                if cur == str(cp):
+                    cand.append(pid)
+                    break
+                if cur in ("0", "1", None):
+                    break
+        if not cand:
+            return 0
+        out = subprocess.run(["ss", "-ltnp"], capture_output=True, text=True, timeout=5).stdout
+        for ln in out.splitlines():
+            for pid in cand:
+                if f"pid={pid}," in ln:
+                    import re as _re
+                    m = _re.search(r":(\d+)\s", ln)
+                    if m:
+                        return int(m.group(1))
+    except Exception:  # noqa: BLE001 — discovery is best-effort; NO port is the loud outcome, not a crash
+        pass
+    return 0
+
+
 def register_self(handle: str | None = None, *, name: str = "", description: str = "", port: int = 0) -> dict:
     """SELF-REGISTRATION — any session joins the fabric (Tim 2026-06-29). Writes .data/channels/<handle>.json
     for THIS session, keyed by its session-unique claude-ancestor PID, so `self`/`reply` resolve for it and
@@ -543,11 +589,35 @@ def register_self(handle: str | None = None, *, name: str = "", description: str
     cp = _claude_ancestor_pid()
     if cp is None:
         raise ChannelError("register_self: no claude-ancestor PID — not a live Claude Code session. Fail loud.")
-    existing = resolve_self_member()
+    # MERGE, never duplicate: gather EVERY registration for this claude_pid; the port-carrying row
+    # wins as the base (the live door); extra rows are absorbed + removed (one member, one row).
+    rows = []
+    try:
+        for fn in os.listdir(CHAN_DIR):
+            if not fn.endswith(".json") or fn.startswith("_"):
+                continue
+            try:
+                r = json.load(open(os.path.join(CHAN_DIR, fn)))
+            except (OSError, ValueError):
+                continue
+            if r.get("claude_pid") == cp:
+                r["_file"] = fn
+                rows.append(r)
+    except OSError:
+        pass
+    rows.sort(key=lambda r: (0 if r.get("port") else 1))     # port-carrying row first
+    existing = rows[0] if rows else None
     if existing:
-        handle = existing.get("handle")
+        handle = handle or existing.get("handle")
+        for extra in rows[1:]:                               # absorb duplicates (one member, one row)
+            try:
+                os.remove(os.path.join(CHAN_DIR, extra["_file"]))
+            except OSError:
+                pass
     if not handle:
         handle = f"ch-{uuid.uuid4().hex[:8]}"
+    if not port and not (existing or {}).get("port"):
+        port = _discover_live_listener(cp)                   # adopt the session's live door if one exists
     sid = ""
     try:
         sid = (resolve_own_session() or {}).get("session_id", "") or ""
@@ -561,7 +631,13 @@ def register_self(handle: str | None = None, *, name: str = "", description: str
            "port": port or (existing or {}).get("port", 0),
            "transport": "channel" if (port or (existing or {}).get("port")) else "mail",
            "started": (existing or {}).get("started") or _time.strftime("%Y-%m-%dT%H:%M:%S")}
+    reg.pop("_file", None)
     os.makedirs(CHAN_DIR, exist_ok=True)
     with open(os.path.join(CHAN_DIR, f"{handle}.json"), "w", encoding="utf-8") as f:
         json.dump(reg, f, indent=2)
+    if reg["transport"] == "mail":
+        reg["warning"] = ("PULL-ONLY: no live listener found for this session — @mentions will NOT "
+                          "inject live; they surface at your next turn boundary (the nag/stop hooks). "
+                          "Live injection needs the channel listener (announce via the company-channel "
+                          "MCP, or register with an explicit port).")
     return reg

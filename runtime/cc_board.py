@@ -734,6 +734,19 @@ def _route_mentions(rec: dict, *, board_dir: str | None = None) -> list:
     if outcomes:
         rec["mentions"] = outcomes
         _write(board_dir, rec)
+        undel = [o for o in outcomes if not o.get("delivered")]
+        if undel:
+            # SENDER-SIDE LOUDNESS (Tim, 2026-07-13 — the @lead failure: a recorded-but-unseen refusal is
+            # SILENT in practice). An undelivered mention emits a bus event (channel-stamped, F1) so the
+            # stream/needs-me/any watcher SEES it, and the return carries an explicit warning the sender
+            # cannot miss. The board record + the mail queue still hold the message (nothing lost).
+            _emit_board_event("mention.undelivered",
+                              {"id": rec["id"], "address": rec["address"], "channel": rec.get("channel", ""),
+                               "handles": [o["handle"] for o in undel],
+                               "note": "no live door — will surface at the member's next turn boundary"})
+            rec["delivery_warning"] = (f"NOT LIVE-DELIVERED to {[o['handle'] for o in undel]} — queued; "
+                                       f"they see it at their next turn boundary, not now. If this needs "
+                                       f"immediate action, the member must be live (announced listener).")
     return outcomes
 
 

@@ -50,4 +50,14 @@ rec4 = cb.comment(target["address"], "plain comment, nothing to route", "author-
 back4 = cb.get_item(rec4["id"], board_dir=bd)
 check("a plain comment carries no mentions field", "mentions" not in back4)
 
+# 7: SENDER-SIDE LOUDNESS (the @lead failure class): an undelivered mention EMITS a bus event
+#    and the return carries an unmissable delivery_warning — recorded-but-unseen is not loud.
+from store.fs_store import FsStore
+_store = FsStore(os.environ["COMPANY_STORE"])
+evs = [e for e in _store.events_since(-1) if e.get("kind") == "board.mention.undelivered"]
+check("an undelivered mention lands board.mention.undelivered on the bus (watchers SEE it)",
+      any("no-such-member-xyz" in (e.get("handles") or []) for e in evs))
+check("the sender's return carries an explicit delivery_warning",
+      "delivery_warning" in rec and "NOT LIVE-DELIVERED" in rec["delivery_warning"])
+
 print(f"\nALL {PASS} CHECKS PASS — board @mentions route toward live members + outcomes persist loud (D-wire 1)")
