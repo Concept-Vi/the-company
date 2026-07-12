@@ -16,31 +16,31 @@
     position:absolute; top:10px; right:10px; z-index:2;
     display:inline-flex; align-items:center; gap:5px;
     font:600 10px/1 var(--font-body); letter-spacing:.04em;
-    color:var(--accent-gold-deep,#9F772C);
-    background:var(--accent-gold-50,#FBF4C8);
-    border:1px solid var(--accent-gold-dashed,#D8C040);
+    color:var(--accent-gold-deep);
+    background:var(--accent-gold-50);
+    border:1px solid var(--accent-gold-dashed);
     border-radius:999px; padding:4px 9px; cursor:pointer;
     box-shadow:var(--shadow-sm); transition:all 140ms var(--ease-out);
   }
-  .dsa-face-marker:hover{ background:var(--accent-gold-soft,#F4E89A); border-color:var(--accent-gold,#E0C010); }
+  .dsa-face-marker:hover{ background:var(--accent-gold-soft); border-color:var(--accent-gold); }
   /* preview style — an inline strip on the real tile (the other tweak option) */
-  .dsa-face-strip{ margin-top:10px; border-top:1px dashed var(--accent-gold-soft,#F4E89A); padding-top:9px;
+  .dsa-face-strip{ margin-top:10px; border-top:1px dashed var(--accent-gold-soft); padding-top:9px;
     display:flex; flex-direction:column; gap:5px; cursor:pointer; }
-  .dsa-face-strip .ex{ font:400 11px/1.45 var(--font-body); color:var(--fg-secondary,#6B5F47);
+  .dsa-face-strip .ex{ font:400 11px/1.45 var(--font-body); color:var(--fg-secondary);
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-  .dsa-face-strip .open{ font:600 11px/1 var(--font-body); color:var(--accent-gold-deep,#9F772C); align-self:flex-start; }
-  .dsa-face-strip:hover .open{ color:var(--accent-gold,#E0C010); }
+  .dsa-face-strip .open{ font:600 11px/1 var(--font-body); color:var(--accent-gold-deep); align-self:flex-start; }
+  .dsa-face-strip:hover .open{ color:var(--accent-gold); }
   /* relational style — ONLY positioning. The glyph itself (shapes, textured line, arrow) is GENERATED
      by CV_GLYPHIC.composeRelation as inline SVG; no hand-drawn shape here (the self-test: this block
      carries no geometry, yet the relational marker still renders, because it's a real glyphic). */
   .dsa-face-glyph{ position:absolute; top:8px; right:8px; cursor:pointer; line-height:0; }
   /* inline style — a small face panel sitting in the tile */
-  .dsa-face-inline-tile{ margin-top:10px; border-top:1px dashed var(--accent-gold-soft,#F4E89A); padding-top:9px;
+  .dsa-face-inline-tile{ margin-top:10px; border-top:1px dashed var(--accent-gold-soft); padding-top:9px;
     display:flex; flex-direction:column; gap:2px; cursor:pointer; }
-  .dsa-face-inline-tile .cap{ font:600 9px/1 var(--font-body); letter-spacing:.08em; text-transform:uppercase; color:var(--fg-muted,#A89678); }
-  .dsa-face-inline-tile .ttl{ font:700 12px/1.25 var(--font-display); color:var(--ink,#1F1A12); }
-  .dsa-face-inline-tile .open{ font:600 11px/1 var(--font-body); color:var(--accent-gold-deep,#9F772C); align-self:flex-start; margin-top:2px; }
-  .dsa-face-inline-tile:hover .open{ color:var(--accent-gold,#E0C010); }
+  .dsa-face-inline-tile .cap{ font:600 9px/1 var(--font-body); letter-spacing:.08em; text-transform:uppercase; color:var(--fg-muted); }
+  .dsa-face-inline-tile .ttl{ font:700 12px/1.25 var(--font-display); color:var(--ink); }
+  .dsa-face-inline-tile .open{ font:600 11px/1 var(--font-body); color:var(--accent-gold-deep); align-self:flex-start; margin-top:2px; }
+  .dsa-face-inline-tile:hover .open{ color:var(--accent-gold); }
 
   /* ---- the 4 face treatments (the switcher) ---- */
   .dsa-face-empty{ color:var(--fg-muted); font:400 13px/1.5 var(--font-body); }
@@ -56,7 +56,7 @@
   .dsa-face-tile .cap{ padding:12px 15px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .dsa-face-tile .name{ font:700 14px/1.2 var(--font-display); color:var(--fg-primary); }
   .dsa-face-tile .of{ font:400 11px/1.3 var(--font-body); color:var(--accent-bronze); font-style:italic; margin-top:2px; }
-  .dsa-face-tile .open,.dsa-face-row .open,.dsa-face-inline .open{ font:600 12px/1 var(--font-body); color:var(--accent-gold-deep,#9F772C); background:none; border:none; cursor:pointer; }
+  .dsa-face-tile .open,.dsa-face-row .open,.dsa-face-inline .open{ font:600 12px/1 var(--font-body); color:var(--accent-gold-deep); background:none; border:none; cursor:pointer; }
 
   /* B · relational rows */
   .dsa-face-rows{ display:flex; flex-direction:column; gap:10px; }
@@ -67,17 +67,17 @@
   .dsa-face-row .sh.diamond{ transform:rotate(45deg); border-radius:2px; }
   .dsa-face-row .sh.circle{ border-radius:50%; }
   .dsa-face-row .sh.hex{ clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%); background:var(--accent-bronze); border:none; }
-  .dsa-face-row .conn{ flex:none; width:30px; height:0; border-top:1.5px dashed var(--accent-bronze-warm,#C09D5D); position:relative; }
-  .dsa-face-row .conn::after{ content:""; position:absolute; right:-1px; top:-3px; border:3px solid transparent; border-left-color:var(--accent-bronze-warm,#C09D5D); }
-  .dsa-face-row .pagechip{ flex:none; display:inline-flex; align-items:center; gap:5px; background:var(--accent-gold-50,#FBF4C8);
-    border:1px solid var(--accent-gold-dashed,#D8C040); border-radius:var(--r-md); padding:5px 9px; font:600 11px/1 var(--font-body); color:var(--accent-gold-deep,#9F772C); }
+  .dsa-face-row .conn{ flex:none; width:30px; height:0; border-top:1.5px dashed var(--accent-bronze-warm); position:relative; }
+  .dsa-face-row .conn::after{ content:""; position:absolute; right:-1px; top:-3px; border:3px solid transparent; border-left-color:var(--accent-bronze-warm); }
+  .dsa-face-row .pagechip{ flex:none; display:inline-flex; align-items:center; gap:5px; background:var(--accent-gold-50);
+    border:1px solid var(--accent-gold-dashed); border-radius:var(--r-md); padding:5px 9px; font:600 11px/1 var(--font-body); color:var(--accent-gold-deep); }
   .dsa-face-row .mid{ flex:1; min-width:0; }
   .dsa-face-row .mid .name{ font:700 14px/1.2 var(--font-display); color:var(--fg-primary); }
   .dsa-face-row .mid .of{ font:400 11.5px/1.3 var(--font-body); color:var(--accent-bronze); font-style:italic; margin-top:2px; }
 
   /* C · inline at the thing */
   .dsa-face-inline-list{ display:flex; flex-direction:column; gap:14px; }
-  .dsa-face-inline{ display:grid; grid-template-columns:1fr 220px; border:1px solid var(--border-default,#E8DFC5);
+  .dsa-face-inline{ display:grid; grid-template-columns:1fr 220px; border:1px solid var(--border-default);
     border-radius:var(--r-lg); overflow:hidden; background:var(--bg-surface); box-shadow:var(--shadow-card); }
   .dsa-face-inline .l{ padding:18px 20px; }
   .dsa-face-inline .k{ font:600 10px/1 var(--font-body); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-bronze); margin-bottom:7px; }
@@ -85,7 +85,7 @@
   .dsa-face-inline .l p{ font:400 13px/1.55 var(--font-body); color:var(--ink-3); margin:0 0 14px; }
   .dsa-face-inline .r{ border-left:1px solid var(--border-faint); background:var(--paper-2); padding:14px; display:flex; flex-direction:column; gap:8px; }
   .dsa-face-inline .r .cap{ font:500 10px/1 var(--font-body); letter-spacing:.06em; text-transform:uppercase; color:var(--fg-muted); }
-  .dsa-face-inline .r .pageblock{ flex:1; background:var(--bg-surface); border:1px solid var(--border-default,#E8DFC5);
+  .dsa-face-inline .r .pageblock{ flex:1; background:var(--bg-surface); border:1px solid var(--border-default);
     border-radius:var(--r-sm); padding:12px; font:700 12px/1.3 var(--font-display); color:var(--ink); }
 
   /* D · lens markers */
@@ -105,6 +105,38 @@
      the app (the same code the DS bundle compiles), so the app renders Types
      through the one engine. No fallback: any load/parse error throws loudly.
      Sets the window.__cv* globals RenderType/Slide/the registry previews read. -->
+<!-- the ONE graph layout engine (core/graph-layout.js) — must load BEFORE
+     DiagramSolver, which resolves node positions through window.CV_GRAPH_LAYOUT. -->
+<script src="../core/graph-layout.js"></script>
+<script src="../core/world-camera.js"></script><!-- the world camera: --world-zoom derived per .skin-ground -->
+<script src="../core/morph.js"></script><!-- the morph law: flip · crossfadeSkin · expand -->
+<script src="../core/layout-fit.js"></script><!-- the ratio-fit law -->
+<script>
+// SKIN SCOPE (UNIFICATION-SWEEP §2.2) — the flagship is a SKINNED SURFACE.
+// glass is the un-scoped default binding, so this attribute is inert until the
+// dial moves — but it makes the app addressable by every skin law. When React
+// mounts the shell, its root becomes the ground and couples to the camera.
+document.body.setAttribute('data-skin', 'glass');
+new MutationObserver(function (muts, obs) {
+  var shell = document.querySelector('#app > *');
+  if (!shell) return;
+  shell.classList.add('skin-ground');
+  window.CV_WORLD_CAMERA.observe(shell);        // derive zoom + stamp materials
+  obs.disconnect();
+}).observe(document.getElementById('app'), { childList: true });
+// switching: one attribute, the whole world re-binds — morphed, never cut.
+window.cvSetSkin = function (id) {
+  var shell = document.querySelector('#app > *.skin-ground') || document.body;
+  var old = document.body.getAttribute('data-skin');
+  if (id === old) return;
+  window.CV_MORPH.crossfadeSkin(shell, old, function () {
+    window.CV_MORPH.flip(shell, function () {
+      document.body.setAttribute('data-skin', id);
+      window.CV_WORLD_CAMERA.stampMaterials(shell);
+    }, { stagger: 'world' });
+  });
+};
+</script>
 <script>
 window.__coreReady = (async () => {
   const files = ['DiagramSolver', 'ContainmentTree', 'Slide', 'RenderType'];
@@ -144,12 +176,19 @@ window.__coreReady = (async () => {
 <script src="../axes/motion/motion-axis.js"></script>
 <script src="../axes/texture/texture-axis.js"></script>
 <script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/material/material-axis.js"></script><!-- the MATERIAL axis (tokens/material.css is its value home) -->
+<script src="../axes/flow/flow-axis.js"></script><!-- the FLOW axis (tokens/layout.css §FLOW is its mechanism) -->
+<script src="../axes/level/level-axis.js"></script><!-- the LEVEL axis — the containment ladder (blocks' depth coordinate) -->
+<script src="../axes/density/density-axis.js"></script><!-- the DENSITY axis (tokens/density.css is its mechanism) -->
+<script src="../axes/skin/skin-axis.js"></script><!-- the SKIN registry (tokens/skins.css is its value home) -->
+<script src="../axes/ground/ground-axis.js"></script><!-- the GROUND axis — skin backdrop plane (--tex-* in tokens/skins.css) -->
 <script src="../axes/fill/fill-axis.js"></script>
 <script src="../axes/form/form-axis.js"></script>
 <script src="../axes/symbol/symbol-axis.js"></script>
 <script src="../assets/icons/cv-meaning.js"></script>
 <script src="../assets/icons/cv-glyphics.js"></script>
-<script src="../face-index.js"></script><!-- GENERATED: window.CV_FACES from the live page-face bindings -->
+<!-- (removed dead ../face-index.js reference — the GENERATED file never existed
+     and nothing in the project consumes window.CV_FACES; see sweep ledger §3) -->
 <script type="text/babel" src="../assets/icons/CvIcon.jsx"></script>
 
 <!-- Universal Type Registry — core, seed, hooks, Vi helpers, adapter -->
@@ -164,6 +203,11 @@ window.__coreReady = (async () => {
 <!-- the Glyphic as the reference universal component: parts · slots · sockets,
      registered into CV_REGISTRY (needs CV_REGISTRY + CV_GLYPHIC above). -->
 <script src="registry/glyphic-type.js"></script>
+<!-- the BLOCK as the container universal component: ground + material surface +
+     depth coordinates + ordered content/action sockets (needs CV_ACTIONS lazily). -->
+<script src="registry/block-type.js"></script>
+<!-- typed TEXT — the primitive that fills content sockets; budgets from tokens/text.css -->
+<script src="registry/text-type.js"></script>
 <!-- total component coverage: every UI component registered as a Type -->
 <script src="registry/components-type.js"></script>
 <!-- other universal-component kinds: composition-menu panel + graph/slide refs -->
@@ -190,6 +234,12 @@ window.__coreReady = (async () => {
 <script src="ai/ai-capabilities-canvas.js"></script>
 <!-- AI glyphic-foundry: generate + save symbol records into CV_ICONS. -->
 <script src="ai/ai-glyphic.js"></script>
+<!-- AI block-foundry: compose page/section block specs, validated against the live axes. -->
+<script src="ai/ai-block.js"></script>
+<!-- AI wall foundry: relational graph-wall specs (NODES+THREADS) from a brief — structure from the model, geometry from the solver. -->
+<script src="ai/ai-layout.js"></script>
+<!-- AI imagery: skin-conditioned render generation for block wells (prompt from the skin axis; bytes via openai-image). -->
+<script src="ai/ai-imagery.js"></script>
 <script src="ai/ai-glyphic-language.js"></script><!-- the Glyphic LANGUAGE in CV_AI: dual user+AI authoring of meaning -->
 
 <!-- CV_HOST — the Environment / Host layer. Pluggable runtimes (sandbox review

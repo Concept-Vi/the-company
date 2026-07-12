@@ -47,7 +47,7 @@ function classifyRole(p, ext) {
   if (p === 'assets/icons/cv-glyphics.js') return 'glyphic-core';
   if (p === 'assets/icons/cv-glyphic.css') return 'glyphic-css';
   if (p === 'assets/icons/cv-meaning.js') return 'meaning';
-  if (['assets/icons/cv-shapes.js','assets/icons/cv-icons.js','assets/icons/cv-vi-glyph.js','assets/icons/icon-paths.js'].includes(p)) return 'value-source';
+  if (['assets/icons/cv-shapes.js','assets/icons/cv-icons.js','assets/icons/cv-vi-glyph.js'].includes(p)) return 'value-source';
   if (p.startsWith('app/registry/') && ext === 'js') return 'registry';
   if (p.startsWith('app/ai/')) return 'ai';
   if (p.startsWith('core/') && ['jsx','ts','js'].includes(ext)) return 'engine';

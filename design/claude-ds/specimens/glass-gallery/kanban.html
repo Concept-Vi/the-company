@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Glass · Board</title>
+<link rel="stylesheet" href="../../styles.css"/>
+<link rel="stylesheet" href="glass-app.css"/>
+<style>
+  .brd{ display: grid; grid-template-rows: 56px 1fr; gap: var(--s-4); }
+  .b-top{ display: flex; align-items: center; gap: var(--s-3); padding-inline: var(--s-3); border-radius: var(--r-xl); }
+  .b-main{ overflow: hidden; }
+  .cols{ height: 100%; overflow-x: auto; display: flex; gap: var(--s-4); padding: var(--s-4); align-items: flex-start; }
+  .col{ width: 300px; flex: none; display: flex; flex-direction: column; max-height: 100%; }
+  .col-h{ display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3) var(--s-3) var(--s-2); }
+  .col-h .dot{ width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .col-h .n{ font-size: var(--fs-caption); font-weight: 600; color: var(--ink); }
+  .col-h .ct{ font-size: var(--fs-meta); color: var(--ink-4); background: color-mix(in oklch,var(--ink) 8%,transparent); padding: 1px 8px; border-radius: var(--r-pill); }
+  .col-body{ overflow: auto; padding: var(--s-2) var(--s-2) var(--s-3); display: flex; flex-direction: column; gap: var(--s-3); }
+  .kcard{ padding: var(--s-3); display: flex; flex-direction: column; gap: var(--s-2); cursor: grab; }
+  .kcard .tt{ font-size: var(--fs-caption); font-weight: 500; color: var(--ink); line-height: 1.4; }
+  .kcard .foot{ display: flex; align-items: center; gap: var(--s-2); }
+  .tags{ display: flex; gap: 5px; }
+  .tag{ height: 5px; width: 26px; border-radius: var(--r-pill); }
+  .addcard{ display: flex; align-items: center; gap: var(--s-2); padding: var(--s-2) var(--s-3); color: var(--ink-4); font-size: var(--fs-caption); cursor: pointer; border-radius: var(--r-md); }
+  .addcard:hover{ background: color-mix(in oklch,var(--ink) 5%,transparent); color: var(--ink-2); }
+</style>
+</head>
+<body>
+<div class="gg-field"><span class="a"></span><span class="b"></span><span class="c"></span></div>
+<div class="gg-app brd">
+
+  <header class="b-top glass">
+    <div class="gg-brand"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 5l8 14 8-14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div style="font-weight:600;letter-spacing:var(--tracking-snug)">Product · Sprint 24</div>
+    <div class="gg-seg glass--inset"><button class="gg-pill on">Board</button><button class="gg-pill">Timeline</button><button class="gg-pill">Table</button></div>
+    <div style="flex:1"></div>
+    <div style="display:flex"><div class="gg-avatar" style="margin-right:-8px">MK</div><div class="gg-avatar" style="margin-right:-8px">DT</div><div class="gg-avatar gold">+3</div></div>
+    <button class="cv-btn cv-btn--primary cv-btn--sm">Add task</button>
+  </header>
+
+  <main class="b-main glass">
+    <div class="cols">
+
+      <div class="col">
+        <div class="col-h"><span class="dot" style="background:var(--ink-4)"></span><span class="n">Backlog</span><span class="ct gg-num">5</span></div>
+        <div class="col-body">
+          <div class="kcard glass--inset"><div class="tags"><span class="tag" style="background:var(--viz-1)"></span></div><div class="tt">Audit color contrast across all four themes</div><div class="foot"><span class="gg-sub gg-num">CV-118</span><div style="flex:1"></div><div class="gg-avatar" style="width:24px;height:24px;font-size:10px">RS</div></div></div>
+          <div class="kcard glass--inset"><div class="tags"><span class="tag" style="background:var(--viz-3)"></span><span class="tag" style="background:var(--viz-2)"></span></div><div class="tt">Document the glass material tokens</div><div class="foot"><span class="gg-sub gg-num">CV-121</span><div style="flex:1"></div><div class="gg-avatar" style="width:24px;height:24px;font-size:10px">AL</div></div></div>
+          <div class="kcard glass--inset"><div class="tags"><span class="tag" style="background:var(--viz-4)"></span></div><div class="tt">Investigate backdrop-blur perf on low-end</div><div class="foot"><span class="gg-sub gg-num">CV-124</span><div style="flex:1"></div></div></div>
+        </div>
+        <div class="addcard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Add card</div>
+      </div>
+
+      <div class="col">
+        <div class="col-h"><span class="dot" style="background:var(--viz-1)"></span><span class="n">In progress</span><span class="ct gg-num">3</span></div>
+        <div class="col-body">
+          <div class="kcard glass--inset"><div class="tags"><span class="tag" style="background:var(--viz-key)"></span></div><div class="tt">Build liquid-glass application shell specimen</div><div class="foot"><span class="cv-badge cv-badge--gold">Priority</span><div style="flex:1"></div><div class="gg-avatar" style="width:24px;height:24px;font-size:10px">MK</div></div></div>
+          <div class="kcard glass--inset"><div class="tags"><span class="tag" style="background:var(--viz-2)"></span></div><div class="tt">Mobile onboarding flow — three steps</div><div class="foot"><span class="gg-sub gg-num">CV-131</span><div style="flex:1"></div><div class="gg-avatar" style="width:24px;height:24px;font-size:10px">DT</div></div></div>
+        </div>
+        <div class="addcard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Add card</div>
+      </div>
+
+      <div class="col">
+        <div class="col-h"><span class="dot" style="background:var(--viz-6)"></span><span class="n">Review</span><span class="ct gg-num">2</span></div>
+        <div class="col-body">
+          <div class="kcard glass--inset"><div class="tags"><span class="tag" style="background:var(--viz-3)"></span></div><div class="tt">Refactor .cv-zone--frosted onto glass tokens</div><div class="foot"><span class="cv-badge cv-badge--warning">Needs QA</span><div style="flex:1"></div><div class="gg-avatar" style="width:24px;height:24px;font-size:10px">AL</div></div></div>
+          <div class="kcard glass--inset"><div class="tt">Gallery page — 4-mode theme switcher</div><div class="foot"><span class="gg-sub gg-num">CV-134</span><div style="flex:1"></div><div class="gg-avatar" style="width:24px;height:24px;font-size:10px">JL</div></div></div>
+        </div>
+        <div class="addcard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Add card</div>
+      </div>
+
+      <div class="col">
+        <div class="col-h"><span class="dot" style="background:var(--viz-2)"></span><span class="n">Done</span><span class="ct gg-num">4</span></div>
+        <div class="col-body">
+          <div class="kcard glass--inset"><div class="tt">Create tokens/glass.css single home</div><div class="foot"><span class="cv-badge cv-badge--success">Shipped</span><div style="flex:1"></div><div class="gg-avatar" style="width:24px;height:24px;font-size:10px">MK</div></div></div>
+          <div class="kcard glass--inset"><div class="tt">Wire glass import into styles.css</div><div class="foot"><span class="cv-badge cv-badge--success">Shipped</span><div style="flex:1"></div></div></div>
+          <div class="kcard glass--inset"><div class="tt">Ambient light-field background</div><div class="foot"><span class="cv-badge cv-badge--success">Shipped</span><div style="flex:1"></div></div></div>
+        </div>
+        <div class="addcard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Add card</div>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

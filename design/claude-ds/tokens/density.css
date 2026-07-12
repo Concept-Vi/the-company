@@ -26,6 +26,7 @@
 
   /* control sizing scales with density but never below the touch floor */
   --control-h:    max(var(--touch-min), calc(40px * var(--density))); /* @kind spacing */
+  --control-h-md: max(38px, calc(36px * var(--density))); /* @kind spacing */ /* mid controls (form fields, tokens/controls.css) — was a masked 38px fallback */
   --control-h-sm: max(36px, calc(32px * var(--density))); /* @kind spacing */
   --row-h:        calc(44px * var(--density)); /* @kind spacing */
 }

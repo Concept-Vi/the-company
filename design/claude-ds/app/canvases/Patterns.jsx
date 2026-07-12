@@ -692,7 +692,7 @@ function MotionPanel({ base, get, setEdit, isLocked, toggleLock, editsObj, copy 
                     <div key={playKey + '-' + t.name + '-' + value} style={{
                       width:14,height:14,borderRadius:'50%',background:'var(--accent-gold)',
                       position:'absolute',top:'50%',left:0,marginTop:-7,
-                      animation: `dsa-pat-slide ${value} var(--ease-out, ease-out) 1 forwards`,
+                      animation: `dsa-pat-slide ${value} var(--ease-out) 1 forwards`,
                     }}/>
                   </div>
                   <input
@@ -784,7 +784,7 @@ function PatternPreviewBlock({ label, edits }) {
           <div style={{font:'700 18px/1.1 var(--font-display)',color:'var(--fg-primary)',letterSpacing:'-0.02em',marginBottom:'var(--s-2)'}}>Tower East</div>
           <div style={{font:'400 12px/1.5 var(--font-body)',color:'var(--fg-secondary)',marginBottom:'var(--s-4)'}}>2 bed apartment with north-east aspect.</div>
           <div style={{display:'flex',gap:'var(--s-2)',flexWrap:'wrap'}}>
-            <button style={{background:'var(--accent-gold)',color:'var(--fg-primary)',border:'none',padding:'var(--s-2) var(--s-3)',borderRadius:'var(--r-md)',font:'600 11px/1 var(--font-body)',cursor:'pointer',boxShadow:'var(--shadow-sm)',transition:'box-shadow var(--dur-fast, 120ms) var(--ease-out)'}}>Publish</button>
+            <button style={{background:'var(--accent-gold)',color:'var(--fg-primary)',border:'none',padding:'var(--s-2) var(--s-3)',borderRadius:'var(--r-md)',font:'600 11px/1 var(--font-body)',cursor:'pointer',boxShadow:'var(--shadow-sm)',transition:'box-shadow var(--dur-fast) var(--ease-out)'}}>Publish</button>
             <button style={{background:'transparent',color:'var(--fg-primary)',border:'1.5px solid var(--accent-gold)',padding:'var(--s-2) var(--s-3)',borderRadius:'var(--r-md)',font:'600 11px/1 var(--font-body)',cursor:'pointer'}}>Preview</button>
           </div>
         </div>

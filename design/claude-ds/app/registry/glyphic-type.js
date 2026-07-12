@@ -44,13 +44,21 @@
         form:      sub('form'),
         thickness: { axis: null, vocab: 'CV_SHAPES.markBox.stroke', default: 2.5, means: 'ring line weight' },
         color:     sub('color', { groups: ['brand', 'semantic', 'communication'], default: 'gold', means: 'ring colour' }),
-        texture:   sub('texture'),
+        outline:   { axis: null, values: ['solid', 'dashed', 'none'], default: 'solid', means: 'ring edge style — firm / potential / open' },
+        texture:   sub('texture', { means: 'ring edge texture (a line rhythm)' }),
+        motion:    sub('motion', { means: 'the ring’s own movement' }),
       },
       sockets: {
         innerSpace: { label: 'Inner space (fill)', accepts: ['fill'], optional: true,
                       means: 'the plane between ring and symbol; α-0 = none' },
         outerSpace: { label: 'Outer space', accepts: ['fill', 'glyphic'], optional: true,
                       means: 'ring → square edge; normally α-0, available when needed' },
+      },
+      // the fill is a SUB-PART of the ring (it occupies the ring's innerSpace), not
+      // a peer of ring/symbol — a glyphic is ring{ fill } + symbol. flatValueSlots
+      // walks the whole subtree, so the fill facet still surfaces in the projection.
+      parts: {
+        fill: { type: 'glyphic-fill' },
       },
       conditions: ['texture requires fill != none'],
     },
@@ -61,16 +69,17 @@
       icon: 'star',
       valueSlots: {
         symbol:  sub('symbol'),
-        color:   sub('color', { default: 'bronze', means: 'symbol colour' }),
-        texture: sub('texture'),
+        color:   sub('color', { groups: ['brand', 'semantic', 'ink', 'communication'], default: 'bronze', means: 'symbol colour' }),
+        texture: sub('texture', { means: 'symbol stroke texture (a line rhythm)' }),
+        motion:  sub('motion', { means: 'the symbol’s own movement' }),
       },
     },
     {
       id: 'glyphic-fill', name: 'Fill', kind: 'fill', layer: 'token',
       family: 'glyphic-part', classification: ['fill'],
-      description: 'A space treatment that occupies the ring’s inner (or outer) space socket. Its zero is α-0 (none).',
+      description: 'A space treatment that occupies the ring’s inner (or outer) space socket. Its zero is α-0 (none). Texture applies to the fill FACE (per-part texture, distinct from the ring’s edge texture and the symbol’s texture).',
       icon: 'square',
-      valueSlots: { fill: sub('fill'), color: sub('color', { groups: ['brand', 'neutral'], default: 'gold-soft' }) },
+      valueSlots: { fill: sub('fill'), color: sub('color', { groups: ['brand', 'neutral'], default: 'gold-soft' }), texture: sub('texture', { means: 'fill-face texture (an area pattern)' }), motion: sub('motion', { means: 'the fill plane’s own movement' }) },
     },
   ];
 
@@ -94,13 +103,31 @@
       ring:   { label: 'Outer ring', accepts: ['ring'],   address: 'glyphic-ring' },
       symbol: { label: 'Symbol',     accepts: ['symbol'], address: 'glyphic-symbol' },
     },
-    // the part-tree, inlined so the parent's declaration is self-contained
+    // the part-tree, inlined so the parent's declaration is self-contained. A
+    // glyphic is its outer RING (which itself contains the FILL plane as a
+    // sub-part — see glyphic-ring.parts) plus the SYMBOL on top. Paint order,
+    // outer→inner: ring (+ its fill) then symbol. Declaring fill under the ring
+    // (not as a peer here) is what makes the composition tree semantically true;
+    // flatValueSlots walks the whole subtree so fill still reaches the projection
+    // from the ONE source (the fill axis).
     parts: {
       ring:   { type: 'glyphic-ring' },
       symbol: { type: 'glyphic-symbol' },
     },
     conditions: ['symbol meaning is intrinsic (never profile-governed)'],
     defaults: (G && G.defaults) || {},
+    // a kind declares its own LIBRARIES (view ids) — the visual sets you pick from
+    // when working on it. "Start from a glyphic" opens these. Data, not code: add a
+    // view here and it appears as a library tab for this kind.
+    spec: { libraries: ['view.palette-symbol', 'view.palette-form', 'view.palette-color'],
+      // data-field SLOTS: when a system populates this glyphic, these are the
+      // fields its behaviours read (the universal inputs). Backend-agnostic.
+      dataSlots: [
+        { field: 'status', label: 'Status', icon: 'circle-check', values: ['active', 'pending', 'error', 'done'] },
+        { field: 'priority', label: 'Priority', icon: 'flag', values: ['low', 'normal', 'high', 'urgent'] },
+        { field: 'count', label: 'Count', icon: 'hash', values: ['0', '1', '10', '100'] },
+        { field: 'online', label: 'Online', icon: 'bolt', values: ['true', 'false'] }
+      ] },
     tags: ['glyphic', 'mark', 'icon', 'universal-component'],
   };
 

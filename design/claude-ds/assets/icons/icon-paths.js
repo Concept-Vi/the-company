@@ -33,7 +33,7 @@ window.CONCEPTV_ICONS = {
   // Row 1
   'chat-arrow':         { set: 'core', cat: 'Comms', body: `<path d="M3 5 h13 a2 2 0 0 1 2 2 v6 a2 2 0 0 1 -2 2 H8 L4 18 V15 H3 V5 Z"/><path d="M9 11 L13 11 L11.5 9.5 M13 11 L11.5 12.5"/>` },
   'chats-double':       { set: 'core', cat: 'Comms', body: `<path d="M3 5 h11 a2 2 0 0 1 2 2 v5 a2 2 0 0 1 -2 2 H7 L4 16 V14 H3 V5 Z"/><path d="M8 9 h10 a2 2 0 0 1 2 2 v6 a2 2 0 0 1 -2 2 h-3 L12 21 V19 H8 a2 2 0 0 1 -2 -2 v-6 a2 2 0 0 1 2 -2 Z"/>` },
-  'checklist-double':   { set: 'core', cat: 'Files', body: `<rect x="5" y="3" width="14" height="16" rx="1"/><rect x="3" y="5" width="14" height="16" rx="1" fill="var(--cv-icon-bg, #fff)"/><path d="M6 11 l2 2 l4 -4"/>` },
+  'checklist-double':   { set: 'core', cat: 'Files', body: `<rect x="5" y="3" width="14" height="16" rx="1"/><rect x="3" y="5" width="14" height="16" rx="1" fill="var(--cv-icon-bg)"/><path d="M6 11 l2 2 l4 -4"/>` },
   'filter':             { set: 'core', cat: 'Action', body: `<path d="M3 5 H21 L14 13 V20 L10 18 V13 L3 5 Z"/>` },
   'sort-vertical':      { set: 'core', cat: 'Action', body: `<path d="M7 3 V21 M4 6 L7 3 L10 6"/><path d="M17 21 V3 M14 18 L17 21 L20 18"/>` },
   'search':             { set: 'core', cat: 'Action', body: `<circle cx="11" cy="11" r="7"/><path d="M16 16 L21 21"/>` },
@@ -44,11 +44,11 @@ window.CONCEPTV_ICONS = {
 
   // Row 2
   'checkbox-empty':     { set: 'core', cat: 'Action', body: `<rect x="4" y="4" width="16" height="16" rx="2"/>` },
-  'checkbox-checked':   { set: 'core', cat: 'Action', body: `<rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor"/><path d="M8 12 L11 15 L16 9" stroke="var(--cv-icon-bg, #fff)"/>` },
+  'checkbox-checked':   { set: 'core', cat: 'Action', body: `<rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor"/><path d="M8 12 L11 15 L16 9" stroke="var(--cv-icon-bg)"/>` },
   'network-people-bg':  { set: 'core', cat: 'People', body: `<circle cx="6" cy="9" r="2.2"/><circle cx="18" cy="9" r="2.2"/><circle cx="12" cy="17" r="2.2"/><path d="M8 9 H16 M7 11 L11 15 M17 11 L13 15"/>` },
   'hand-clock':         { set: 'core', cat: 'Action', body: `<path d="M3 19 a5 5 0 0 1 5 -5 h6 a5 5 0 0 1 5 5 V21 H3 Z"/><circle cx="11" cy="8" r="5"/><path d="M11 6 V8 L12.5 9.5"/>` },
   'file-settings':      { set: 'core', cat: 'Files',  body: `<path d="M5 3 H14 L19 8 V21 H5 Z"/><path d="M14 3 V8 H19"/><circle cx="12" cy="15" r="2.5"/><path d="M12 11.5 V12.5 M12 17.5 V18.5 M15.5 15 H14.5 M9.5 15 H8.5"/>` },
-  'globe-thumb':        { set: 'core', cat: 'Action', body: `<circle cx="12" cy="12" r="9"/><path d="M3 12 H21 M12 3 a14 14 0 0 1 0 18 M12 3 a14 14 0 0 0 0 18"/><path d="M10 10 L12 8 L14 10 V14 H10 Z" fill="var(--cv-icon-bg, #fff)"/>` },
+  'globe-thumb':        { set: 'core', cat: 'Action', body: `<circle cx="12" cy="12" r="9"/><path d="M3 12 H21 M12 3 a14 14 0 0 1 0 18 M12 3 a14 14 0 0 0 0 18"/><path d="M10 10 L12 8 L14 10 V14 H10 Z" fill="var(--cv-icon-bg)"/>` },
   'handshake':          { set: 'core', cat: 'People', body: `<path d="M2 11 L7 6 L12 8 L17 6 L22 11"/><path d="M5 14 L9 10 L13 12 L17 9 L21 13"/><path d="M9 18 L12 15 L15 18"/>` },
   'team-bulb':          { set: 'core', cat: 'People', body: `<circle cx="8" cy="9" r="2.5"/><circle cx="16" cy="9" r="2.5"/><path d="M3 19 a5 5 0 0 1 5 -5 h0 a5 5 0 0 1 5 5"/><path d="M11 19 a5 5 0 0 1 5 -5 h0 a5 5 0 0 1 5 5"/><circle cx="12" cy="4" r="1.5"/><path d="M12 5.5 V7"/>` },
   'devices-multi':      { set: 'core', cat: 'Tech',   body: `<rect x="3" y="6" width="13" height="9" rx="1"/><rect x="14" y="9" width="7" height="11" rx="1"/><path d="M5 18 H10 M8 15 V18"/>` },
@@ -68,7 +68,7 @@ window.CONCEPTV_ICONS = {
   'cube-iso':           { set: 'core', cat: 'Arch',   body: `<path d="M12 3 L21 8 V17 L12 22 L3 17 V8 Z"/><path d="M12 12 V22 M3 8 L12 12 L21 8"/>` },
   'world-network':      { set: 'core', cat: 'Tech',   body: `<circle cx="12" cy="12" r="9"/><circle cx="6" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/><circle cx="6" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/><circle cx="12" cy="12" r="1.5"/><path d="M7.5 7.5 L10.5 10.5 M16.5 7.5 L13.5 10.5 M7.5 16.5 L10.5 13.5 M16.5 16.5 L13.5 13.5"/>` },
   'handshake-simple':   { set: 'core', cat: 'People', body: `<path d="M3 12 L7 8 L12 13 L17 8 L21 12"/><path d="M7 13 L12 18 L17 13"/>` },
-  'pie-chart':          { set: 'core', cat: 'Data',   body: `<path d="M12 3 a9 9 0 1 0 9 9 H12 Z" fill="currentColor" stroke="none"/><path d="M12 3 a9 9 0 1 0 9 9 H12 Z"/><path d="M14 3 a9 9 0 0 1 7 7 H14 Z" fill="var(--cv-icon-bg, #fff)"/>` },
+  'pie-chart':          { set: 'core', cat: 'Data',   body: `<path d="M12 3 a9 9 0 1 0 9 9 H12 Z" fill="currentColor" stroke="none"/><path d="M12 3 a9 9 0 1 0 9 9 H12 Z"/><path d="M14 3 a9 9 0 0 1 7 7 H14 Z" fill="var(--cv-icon-bg)"/>` },
   'browser-house':      { set: 'core', cat: 'Tech',   body: `<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 9 H21"/><circle cx="6" cy="7" r=".5" fill="currentColor"/><circle cx="8" cy="7" r=".5" fill="currentColor"/><path d="M9 17 V13 L12 11 L15 13 V17 Z M11 17 V15 H13 V17"/>` },
   'browser-house-info': { set: 'core', cat: 'Tech',   body: `<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 9 H21"/><circle cx="6" cy="7" r=".5" fill="currentColor"/><circle cx="8" cy="7" r=".5" fill="currentColor"/><path d="M5 16 V13 L8 11 L11 13 V16 Z"/><path d="M13 13 H19 M13 15 H17"/>` },
   'browser-analytics':  { set: 'core', cat: 'Data',   body: `<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 9 H21"/><circle cx="6" cy="7" r=".5" fill="currentColor"/><circle cx="8" cy="7" r=".5" fill="currentColor"/><circle cx="8" cy="14" r="2.2"/><path d="M11 17 L14 13 L16 15 L19 12"/>` },
@@ -113,19 +113,19 @@ window.CONCEPTV_ICONS = {
   'area-m2':            { set: 'core', cat: 'Arch',   body: `<path d="M4 4 V20 H20"/><path d="M4 7 H6 M4 10 H7 M4 13 H6 M4 16 H7"/><path d="M7 20 V18 M10 20 V17 M13 20 V18 M16 20 V17"/><text x="9" y="11" font-size="6" font-weight="700" fill="currentColor" stroke="none">m</text><text x="15" y="9" font-size="3.5" fill="currentColor" stroke="none">2</text>` },
   'tile-stack':         { set: 'core', cat: 'Arch',   body: `<path d="M4 11 L12 7 L20 11 L12 15 Z"/><path d="M4 15 L12 19 L20 15"/><path d="M8 9 L12 11 M14 9 L10 11"/>` },
   'calendar':           { set: 'core', cat: 'Time',   body: `<rect x="3" y="5" width="18" height="16" rx="1"/><path d="M3 9 H21 M8 3 V7 M16 3 V7"/><path d="M7 13 H8 M11 13 H12 M15 13 H16 M7 17 H8 M11 17 H12 M15 17 H16"/>` },
-  'image-stack':        { set: 'core', cat: 'Media',  body: `<rect x="3" y="7" width="14" height="11" rx="1"/><rect x="7" y="5" width="14" height="11" rx="1" fill="var(--cv-icon-bg, #fff)"/><circle cx="11" cy="9" r="1.5"/><path d="M7 14 L11 11 L15 14 L18 12 L21 14"/>` },
+  'image-stack':        { set: 'core', cat: 'Media',  body: `<rect x="3" y="7" width="14" height="11" rx="1"/><rect x="7" y="5" width="14" height="11" rx="1" fill="var(--cv-icon-bg)"/><circle cx="11" cy="9" r="1.5"/><path d="M7 14 L11 11 L15 14 L18 12 L21 14"/>` },
   'sitemap':            { set: 'core', cat: 'Process',body: `<rect x="9"  y="3"  width="6" height="4" rx="1"/><rect x="3"  y="17" width="6" height="4" rx="1"/><rect x="9"  y="17" width="6" height="4" rx="1"/><rect x="15" y="17" width="6" height="4" rx="1"/><path d="M12 7 V12 M6 17 V14 H18 V17 M12 14 V12"/>` },
 
   // ============================================================
   // EXT-STATUS — semantic status icons (fill-style for emphasis)
   // ============================================================
-  'success':            { set: 'ext-status', cat: 'Status', body: `<circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="M7.5 12.5 L11 16 L16.5 9" stroke="var(--cv-icon-bg, #fff)"/>` },
+  'success':            { set: 'ext-status', cat: 'Status', body: `<circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="M7.5 12.5 L11 16 L16.5 9" stroke="var(--cv-icon-bg)"/>` },
   'success-outline':    { set: 'ext-status', cat: 'Status', body: `<circle cx="12" cy="12" r="9"/><path d="M7.5 12.5 L11 16 L16.5 9"/>` },
-  'warning':            { set: 'ext-status', cat: 'Status', body: `<path d="M12 3 L22 20 H2 Z" fill="currentColor" stroke="none"/><path d="M12 10 V14 M12 17 V17.01" stroke="var(--cv-icon-bg, #fff)"/>` },
+  'warning':            { set: 'ext-status', cat: 'Status', body: `<path d="M12 3 L22 20 H2 Z" fill="currentColor" stroke="none"/><path d="M12 10 V14 M12 17 V17.01" stroke="var(--cv-icon-bg)"/>` },
   'warning-outline':    { set: 'ext-status', cat: 'Status', body: `<path d="M12 3 L22 20 H2 Z"/><path d="M12 10 V14 M12 17 V17.01"/>` },
-  'error':              { set: 'ext-status', cat: 'Status', body: `<circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="M8.5 8.5 L15.5 15.5 M15.5 8.5 L8.5 15.5" stroke="var(--cv-icon-bg, #fff)"/>` },
+  'error':              { set: 'ext-status', cat: 'Status', body: `<circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="M8.5 8.5 L15.5 15.5 M15.5 8.5 L8.5 15.5" stroke="var(--cv-icon-bg)"/>` },
   'error-outline':      { set: 'ext-status', cat: 'Status', body: `<circle cx="12" cy="12" r="9"/><path d="M8.5 8.5 L15.5 15.5 M15.5 8.5 L8.5 15.5"/>` },
-  'info':               { set: 'ext-status', cat: 'Status', body: `<circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="M12 11 V16.5 M12 7.5 V8.5" stroke="var(--cv-icon-bg, #fff)"/>` },
+  'info':               { set: 'ext-status', cat: 'Status', body: `<circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="M12 11 V16.5 M12 7.5 V8.5" stroke="var(--cv-icon-bg)"/>` },
   'pending-dot':        { set: 'ext-status', cat: 'Status', body: `<circle cx="12" cy="12" r="9"/><circle cx="8" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="16" cy="12" r="1" fill="currentColor"/>` },
 
   // ============================================================

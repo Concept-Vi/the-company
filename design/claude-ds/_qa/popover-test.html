@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>popover/select/tooltip test</title>
+<link rel="stylesheet" href="../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head><body style="background:var(--zone-ground);padding:40px;font-family:var(--font-body)">
+<div id="app"></div>
+<div id="log" style="margin-top:24px;font:12px/1.5 monospace;white-space:pre-wrap"></div>
+<script>
+async function loadComp(path){
+  var src = await (await fetch(path)).text();
+  // strip ES module syntax so we can eval against UMD React
+  src = src.replace(/^import\s.+?;?\s*$/gm, '').replace(/export\s+default\s+\w+;?/g, '').replace(/export\s+function/g, 'function');
+  var code = Babel.transform(src, {presets:['react']}).code;
+  (0,eval)(code + '\n;window.__exp = window.__exp || {};');
+  return code;
+}
+(async function(){
+  var logEl = document.getElementById('log'); var log=[];
+  try {
+    // eval each into global scope; Popover assigns window.CV_POPOVER
+    var pop = await (await fetch('../components/Popover.jsx')).text();
+    pop = pop.replace(/^import\s.+?;?\s*$/gm,'').replace(/export\s+default\s+\w+;?/g,'').replace(/export\s+function/g,'window.Popover = function');
+    (0,eval)(Babel.transform(pop,{presets:['react']}).code);
+    var tip = await (await fetch('../components/Tooltip.jsx')).text();
+    tip = tip.replace(/^import\s.+?;?\s*$/gm,'').replace(/export\s+default\s+\w+;?/g,'').replace(/export\s+function/g,'window.Tooltip = function');
+    (0,eval)(Babel.transform(tip,{presets:['react']}).code);
+    var sel = await (await fetch('../components/Select.jsx')).text();
+    sel = sel.replace(/^import\s.+?;?\s*$/gm,'').replace(/export\s+default\s+\w+;?/g,'').replace(/export\s+function/g,'window.Select = function');
+    (0,eval)(Babel.transform(sel,{presets:['react']}).code);
+
+    log.push('CV_POPOVER.place: '+typeof window.CV_POPOVER.place);
+    log.push('CV_POPOVER.Component: '+typeof window.CV_POPOVER.Component);
+
+    var h = React.createElement;
+    function Demo(){
+      var [v,setV] = React.useState('three');
+      return h('div',{style:{display:'flex',gap:40,alignItems:'flex-start'}},
+        h('div',{style:{width:240}},
+          h('div',{style:{font:'700 10px/1 monospace',marginBottom:8}},'SELECT (value='+v+')'),
+          h(window.Select,{ options:[{value:'studio',label:'Studio'},{value:'one',label:'One-bed'},{value:'three',label:'Three-bed apartment'},{value:'pent',label:'Penthouse'},{value:'town',label:'Townhouse',disabled:true}], value:v, onChange:setV })),
+        h('div',null,
+          h('div',{style:{font:'700 10px/1 monospace',marginBottom:8}},'TOOLTIP (hover me)'),
+          h(window.Tooltip,{ label:'Floor area, internal only', placement:'top' },
+            h('button',{className:'cv-btn cv-btn--outline'},'Net area'))));
+    }
+    ReactDOM.createRoot(document.getElementById('app')).render(h(Demo));
+    log.push('mounted OK');
+    window.__test = { ok:true, log:log };
+  } catch(e){
+    log.push('ERROR: '+e.message); window.__test = { ok:false, log:log, err:e.message };
+  }
+  logEl.textContent = log.join('\n');
+})();
+</script>
+</body></html>

@@ -496,11 +496,11 @@ function AIRegistryPanel() {
   const byLayer = AI.LAYERS.map(layer => ({ layer, info: AI.LAYER_INFO[layer], items: AI.query({ layer }) }));
   const total = byLayer.reduce((n, g) => n + g.items.length, 0);
   return (
-    <section className="rs-ai-reg" style={{ borderBottom: '1px solid var(--rule, rgba(0,0,0,.08))', padding: '10px 12px' }}>
+    <section className="rs-ai-reg" style={{ borderBottom: '1px solid var(--rule)', padding: '10px 12px' }}>
       <button
         onClick={() => setOpen(o => !o)}
-        style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: '100%', font: '600 11px/1.3 var(--font-body)', color: 'var(--ink-2, #5b4628)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
-        <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: 2, background: 'var(--accent-gold, #E0C010)' }}></span>
+        style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: '100%', font: '600 11px/1.3 var(--font-body)', color: 'var(--ink-2)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+        <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: 2, background: 'var(--accent-gold)' }}></span>
         AI registry
         <span style={{ opacity: .6, fontWeight: 500 }}>{total} · CV_AI</span>
         {active && <span style={{ marginLeft: 'auto', fontWeight: 500, opacity: .7, textTransform: 'none', letterSpacing: 0 }}>on: {active}</span>}
@@ -510,21 +510,21 @@ function AIRegistryPanel() {
         <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {byLayer.map(g => (
             <div key={g.layer}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: '600 10px/1.2 var(--font-body)', color: 'var(--ink-3, #7E6539)', marginBottom: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: '600 10px/1.2 var(--font-body)', color: 'var(--ink-3)', marginBottom: 4 }}>
                 <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: g.info.swatch }}></span>
                 {g.info.label}<span style={{ opacity: .55 }}>{g.items.length}</span>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                 {g.items.map(t => (
                   <span key={t.id} title={t.description || t.id}
-                    style={{ font: '500 10px/1.4 var(--font-mono, monospace)', padding: '1px 6px', borderRadius: 4, background: 'var(--zone-1, rgba(0,0,0,.04))', color: 'var(--ink-2, #5b4628)', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.06)' }}>
+                    style={{ font: '500 10px/1.4 var(--font-mono)', padding: '1px 6px', borderRadius: 4, background: 'color-mix(in srgb, var(--ink) 4%, transparent)', color: 'var(--ink-2)', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.06)' }}>
                     {t.id}{t.provenance !== 'built-in' ? ' ·' + t.provenance : ''}
                   </span>
                 ))}
               </div>
             </div>
           ))}
-          <p style={{ font: '500 10px/1.4 var(--font-body)', color: 'var(--ink-3, #7E6539)', opacity: .8, margin: '2px 0 0' }}>
+          <p style={{ font: '500 10px/1.4 var(--font-body)', color: 'var(--ink-3)', opacity: .8, margin: '2px 0 0' }}>
             Every Vi move resolves from this catalogue — the interface and the AI read one source.
           </p>
         </div>

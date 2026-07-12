@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Axis System" name="Colour Axis — families, pairing, roles" subtitle="The colour axis as a self-describing relational graph: families that know their role/voice/pairing, values that carry their legible ink + structural roles + theme-behaviour + aliases, and ONE axis resolving different families per component type (a mark gets brand/semantic; a surface gets zoning). Everything below is read live from CV_AXES — a projection, not a copy." viewport="1280x1640" -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Colour Axis</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../tonal-zoning.css">
+<script src="../axes/axis-core.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--zone-ground); color: var(--fg-primary); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .doc { max-width: 1180px; margin: 0 auto; padding: 52px 48px 120px; }
+  .mast { padding-bottom: 22px; border-bottom: 2px solid var(--accent-gold); margin-bottom: 30px; }
+  .kicker { font: 600 11px/1 var(--font-mono); letter-spacing: .22em; text-transform: uppercase; color: var(--accent-bronze); }
+  h1 { margin: 12px 0 10px; font: 800 38px/1.03 var(--font-display); letter-spacing: -0.02em; }
+  .stand { font: 400 15px/1.55 var(--font-body); color: var(--fg-secondary); max-width: 90ch; text-wrap: pretty; }
+  .stand code { font: 500 13px/1 var(--font-mono); color: var(--accent-bronze); }
+  h2 { font: 700 13px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-bronze); margin: 48px 0 4px; }
+  .h2sub { font: 400 13px/1.5 var(--font-body); color: var(--fg-muted); margin: 0 0 18px; max-width: 88ch; }
+
+  /* families */
+  .fams { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .fam { border: 1px solid var(--border-faint); border-radius: 14px; background: var(--paper); padding: 16px 18px; box-shadow: var(--shadow-card); }
+  .fam .top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .fam .fn { font: 700 17px/1 var(--font-display); letter-spacing: -0.01em; }
+  .tag { font: 600 8.5px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; }
+  .tag.voice { background: color-mix(in srgb, var(--accent-gold) 16%, transparent); color: var(--accent-gold-deep); }
+  .tag.struct { background: color-mix(in srgb, var(--accent-bronze) 13%, transparent); color: var(--accent-bronze-2); }
+  .fam .role { font: 400 12.5px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 12px; text-wrap: pretty; }
+  .fam .meta { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; font: 500 11px/1 var(--font-mono); color: var(--fg-muted); }
+  .fam .sw-row { display: flex; gap: 4px; margin-top: 12px; }
+  .fam .sw-row .sw { width: 22px; height: 22px; border-radius: 5px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg-primary) 12%, transparent); }
+  .pairchip { display: inline-flex; align-items: center; gap: 0; border-radius: 6px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--fg-primary) 12%, transparent); }
+  .pairchip .on { padding: 3px 8px; font: 700 10px/1.2 var(--font-mono); }
+
+  /* value table */
+  .vtable { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .vtable th { text-align: left; font: 600 9px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-muted); padding: 0 10px 8px; border-bottom: 1px solid var(--border-default); }
+  .vtable td { padding: 7px 10px; border-bottom: 1px solid var(--border-faint); vertical-align: middle; }
+  .vtable tr:hover td { background: color-mix(in srgb, var(--accent-gold) 4%, transparent); }
+  .vsw { width: 30px; height: 24px; border-radius: 5px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg-primary) 12%, transparent); }
+  .vid { font: 600 12px/1 var(--font-mono); color: var(--fg-primary); }
+  .vtok { font: 500 11px/1 var(--font-mono); color: var(--accent-bronze); }
+  .roles { display: inline-flex; gap: 3px; }
+  .rl { font: 600 8px/1 var(--font-mono); padding: 3px 5px; border-radius: 4px; background: color-mix(in srgb, var(--accent-bronze) 10%, transparent); color: var(--accent-bronze-2); text-transform: uppercase; letter-spacing: .04em; }
+  .famtag { font: 600 9px/1 var(--font-mono); padding: 3px 7px; border-radius: 999px; background: color-mix(in srgb, var(--accent-gold) 9%, transparent); color: var(--accent-gold-deep); }
+  .lock { font-size: 12px; }
+  .aliasnote { font: 500 10px/1 var(--font-mono); color: var(--fg-soft); font-style: italic; }
+  .vpair { display: inline-flex; border-radius: 5px; overflow: hidden; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg-primary) 12%, transparent); }
+  .vpair span { padding: 4px 7px; font: 700 10px/1.1 var(--font-mono); }
+
+  /* per-type columns */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .col { border: 1px solid var(--border-faint); border-radius: 14px; background: var(--paper); padding: 18px; box-shadow: var(--shadow-card); }
+  .col h3 { margin: 0 0 3px; font: 700 16px/1.1 var(--font-display); }
+  .col .sub { font: 400 11.5px/1.45 var(--font-body); color: var(--fg-muted); margin: 0 0 14px; }
+  .col .sub code { font-family: var(--font-mono); color: var(--accent-bronze); }
+  .chipwrap { display: flex; flex-wrap: wrap; gap: 7px; }
+  .cchip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px 5px 5px; border: 1px solid var(--border-faint); border-radius: 8px; font: 500 11px/1 var(--font-mono); color: var(--fg-secondary); }
+  .cchip .d { width: 18px; height: 18px; border-radius: 4px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg-primary) 10%, transparent); }
+  .note { margin-top: 40px; font: 400 12px/1.55 var(--font-body); color: var(--fg-muted); border-top: 1px solid var(--border-faint); padding-top: 16px; max-width: 92ch; }
+  .note b { color: var(--accent-gold-deep); font-weight: 600; }
+  .note code { font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+<div class="doc">
+  <header class="mast" data-screen-label="Colour Axis masthead">
+    <div class="kicker">ConceptV · Axis System · Living Projection</div>
+    <h1>The Colour Axis</h1>
+    <p class="stand">Tokens are the <b>matter</b> (the hex, written once in <code>colors_and_type.css</code>); the axis is the <b>grammar</b>. It adds what a token can't know about itself — its <b>family</b>, the legible ink it <b>pairs on</b>, its structural <b>roles</b>, whether it holds across <b>theme</b> flips, and whether it's an <b>alias</b>. Families are a small <b>relational graph</b> (voice vs structure, who-pairs-on-whom), computed once and read everywhere. Everything below is rendered live from <code>window.CV_AXES.resolve('color')</code> — a projection of the axis, not a copy.</p>
+  </header>
+
+  <h2>Families — a relational graph</h2>
+  <p class="h2sub">Each family declares what it's <em>for</em>, whether it's a saturated <em>voice</em> or quiet <em>structure</em>, and the foreground family it <em>pairs on</em>. A rule lives at the most general level it's true; values only override when they genuinely differ.</p>
+  <div class="fams" id="fams"></div>
+
+  <h2>Values — self-describing</h2>
+  <p class="h2sub">Every value points at its single-source <code>token</code>. The <b>pairing</b> column shows the value as a background with its legible ink drawn on it — resolved by <code>CV_AXES.pairCSS()</code>, the one home for "text on a colour" (it dissolved the hardcoded <code>--on-gold</code>). 🔒 = theme-invariant (holds on dark).</p>
+  <table class="vtable"><thead><tr>
+    <th>swatch</th><th>id</th><th>family</th><th>token</th><th>pairing</th><th>roles</th><th>theme</th><th></th>
+  </tr></thead><tbody id="vrows"></tbody></table>
+
+  <h2>One axis · different families per type</h2>
+  <p class="h2sub">A component type declares which families its colour slot resolves — the value-side twin of a socket's <code>accepts</code>. Same axis, different declared subscription. A glyphic <em>mark</em> can't pick a zone wash; a <em>surface</em> can't pick brand gold. The picker is just the axis filtered by the type's slot rule.</p>
+  <div class="cols">
+    <div class="col" data-screen-label="Glyphic colour subscription">
+      <h3>A Glyphic (mark)</h3>
+      <p class="sub">colour slot → <code>groups: brand · semantic · communication</code></p>
+      <div class="chipwrap" id="glyphic-sub"></div>
+    </div>
+    <div class="col" data-screen-label="Surface zone subscription">
+      <h3>A Surface (panel)</h3>
+      <p class="sub">surface slot → <code>groups: zoning</code></p>
+      <div class="chipwrap" id="surface-sub"></div>
+    </div>
+  </div>
+
+  <p class="note" id="foot"></p>
+</div>
+
+<script>
+(function () {
+  var C = window.CV_AXES.resolve('color');
+  function css(id) { return C.resolveCSS(id) || 'transparent'; }
+
+  // ---- families ----
+  document.getElementById('fams').innerHTML = C.groups().map(function (g) {
+    var vals = C.valuesIn(g.id);
+    var swrow = vals.slice(0, 8).map(function (v) { return '<span class="sw" style="background:' + css(v.id) + '"></span>'; }).join('');
+    var pair = g.pairsOn ? '<span class="pairchip" style="background:' + css(vals[0] && vals[0].id) + '"><span class="on" style="color:' + css(g.pairsOn) + '">Aa</span></span> pairs on <b style="color:var(--fg-secondary)">' + g.pairsOn + '</b>'
+                         : '<span style="color:var(--fg-soft)">pairs on its own ink</span>';
+    return '<div class="fam">' +
+      '<div class="top"><span class="fn">' + g.label + '</span>' +
+        '<span class="tag ' + (g.voice ? 'voice">voice' : 'struct">structure') + '</span></div>' +
+      '<p class="role">' + (g.role || '') + '</p>' +
+      '<div class="meta"><span>' + pair + '</span>' +
+        '<span>roles · ' + (g.roles ? g.roles.join(' / ') : '—') + '</span>' +
+        '<span>' + vals.length + ' values</span></div>' +
+      '<div class="sw-row">' + swrow + '</div></div>';
+  }).join('');
+
+  // ---- value table ----
+  document.getElementById('vrows').innerHTML = C.values().map(function (v) {
+    var pairCSS = C.pairCSS(v.id);
+    var pairCell = pairCSS
+      ? '<span class="vpair" style="background:' + css(v.id) + '"><span style="color:' + pairCSS + '">Aa</span></span>'
+      : '<span style="color:var(--fg-soft)">—</span>';
+    var roles = C.rolesOf(v.id).map(function (r) { return '<span class="rl">' + r + '</span>'; }).join('');
+    var lock = C.themeInvariant(v.id) ? '<span class="lock" title="theme-invariant">🔒</span>' : '<span style="color:var(--fg-soft)">↻</span>';
+    var alias = v.alias ? '<span class="aliasnote">= ' + v.alias + '</span>' : '';
+    return '<tr>' +
+      '<td><span class="vsw" style="background:' + css(v.id) + '"></span></td>' +
+      '<td><span class="vid">' + v.id + '</span></td>' +
+      '<td><span class="famtag">' + v.group + '</span></td>' +
+      '<td><span class="vtok">--' + (v.token || (v.meta && v.meta.ink) || '?') + '</span></td>' +
+      '<td>' + pairCell + '</td>' +
+      '<td><span class="roles">' + roles + '</span></td>' +
+      '<td>' + lock + '</td>' +
+      '<td>' + alias + '</td></tr>';
+  }).join('');
+
+  // ---- per-type subscriptions (the slot rule, resolved live) ----
+  function chips(sub) {
+    return C.candidates(sub).map(function (v) {
+      return '<span class="cchip"><span class="d" style="background:' + css(v.id) + '"></span>' + v.id + '</span>';
+    }).join('');
+  }
+  document.getElementById('glyphic-sub').innerHTML = chips({ axis: 'color', groups: ['brand', 'semantic', 'communication'], canonicalOnly: true });
+  document.getElementById('surface-sub').innerHTML = chips({ axis: 'color', groups: ['zoning'] });
+
+  // ---- footer ----
+  var n = C.values().length, fams = C.groups().length, aliases = C.values().filter(function (v) { return v.alias; }).length;
+  var fillSafe = C.byRole('fill').length, textSafe = C.byRole('text').length, invariant = C.values().filter(function (v) { return C.themeInvariant(v.id); }).length;
+  document.getElementById('foot').innerHTML =
+    '<b>' + n + '</b> values across <b>' + fams + '</b> families (' + aliases + ' aliases). ' +
+    '<b>' + fillSafe + '</b> fill-safe · <b>' + textSafe + '</b> text-safe · <b>' + invariant + '</b> theme-invariant — all queryable via <code>CV_AXES.byRole()</code> / <code>themeInvariant()</code>. ' +
+    'No hex is written here: every swatch is <code>var(--token)</code>, every pairing is <code>pairCSS()</code>, every chip-set is <code>candidates(slotRule)</code>. The card is a projection of the one axis.';
+})();
+</script>
+</body>
+</html>

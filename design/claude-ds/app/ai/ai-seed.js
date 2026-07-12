@@ -47,6 +47,13 @@
   }, { silent: true });
 
   AI.register({
+    id: 'local-swarm', name: 'Local Swarm', layer: 'provider', family: 'text',
+    description: 'The user\'s 4B-parameter concurrent swarm models over the local bridge — high-parallel text/JSON generation for generative layout and content. Resolves when the swarm runtime is connected; loud-fail otherwise (never a silent fallback).',
+    runtime: { kind: 'swarm-http', api: '/api/swarm', completeRole: 'complete_text' },
+    modality: ['text', 'parallel'],
+  });
+
+  AI.register({
     id: 'vision', name: 'Vision', layer: 'provider', family: 'image',
     description: 'Multimodal image understanding — reads screenshots/moodboards for layout, type feel, voice and palette. Resolves to a real vision runtime when AtomiCity is exported with one connected; in the browser sandbox it is unavailable and callers fall back to local pixel analysis.',
     runtime: { kind: 'vision' }, modality: ['image', 'text'],
@@ -64,6 +71,15 @@
     description: 'The house voice every Vi output speaks in — sentence case, second person, no exclamation/emoji, concrete numbers, canonical product names.',
     text: 'Brand voice: sentence case, second-person ("you"), no exclamation marks, no emoji. Concrete numbers. ConceptV names: User Portal, Property Wizard, Virtual Hub (a.k.a. Hub or Linked Hub), Capture, Vi.',
     icon: 'feather', provenance: 'built-in', tags: ['voice', 'always-on'],
+  }, { silent: true });
+
+  // language rule — text length budgets (tokens/text.css). Copy is written
+  // TO its slot's budget; truncation is never the plan.
+  AI.register({
+    id: 'copy.budgets', name: 'Text length budgets', layer: 'behaviour', family: 'voice',
+    description: 'Every generated string targets a TYPED slot with a declared length budget (tokens/text.css); copy must fit its budget — layout never truncates designed text.',
+    text: 'Length budgets (hard limits): zone/stage markers & badges ≤ 8 chars; control/segment labels & nav items ≤ 12; card/panel titles ≤ 32; one-line descriptions ≤ 64. If a slot declares full+short alternates, write BOTH (short ≤ 5 chars, a designed form — an accepted abbreviation, symbol or scalar, never a chopped word). Never produce copy that relies on truncation to fit.',
+    icon: 'ruler', provenance: 'built-in', tags: ['voice', 'always-on', 'layout'],
   }, { silent: true });
 
   // angle behaviour — one entry, parameterised by params.angle (the field

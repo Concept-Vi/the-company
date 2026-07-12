@@ -138,7 +138,7 @@ A consistent eye-path is engineered:
 
 ## 13 · Texture & depth (was under-weighted first pass)
 **Background textures (3, layered by opacity):**
-1. **Blueprint ghost** — architectural linework, technical annotations, very faint, **top-weighted**, fading down. The "industry" substrate.
+1. **Blueprint ghost** — architectural линework, technical annotations, very faint, **top-weighted**, fading down. The "industry" substrate.
 2. **Diagonal gold hatch** — as full-width **bands** behind metrics and as the **bottom baseline rule**. ~45° fine lines.
 3. **Paper-fine grain / pure white** — dominant negative space.
 
@@ -181,7 +181,7 @@ Status traffic-light set · embedded product-UI component vocabulary · frosted-
 - **Titles use manual *balanced* line breaks** — broken into two near-equal lines (e.g. "Property Design and Construction / is a Complex Undertaking"), never ragged or widow'd. Tight leading (~1.05). → titles want `text-wrap: balance` + tight `--lh-tight`.
 - **Bullets are hanging-indented** — the gold triangle sits in the margin and wrapped lines align to the *text* start, not under the triangle. ~3%-of-width marker→text gutter.
 - **Number formatting is a system:** compact suffixes (`k / M / B / T`), `+` for "or more", unit attached with a slash (`/year`, `/wk`), `x` for multiples (`91x`), `%` inline. Numbers are **gold + tabular**, trailing label **grey**, set inline ("**$430B+/year** in rework") or as a left-aligned number→label row.
-- **Curly punctuation** throughout ('We've', "Property"). Typographic quotes, not straight.
+- **Curly punctuation** throughout ('We've', ''Property''). Typographic quotes, not straight.
 - **Modular scale (measured, % frame-height):** title ~4.6% (~50px) · section-header ~2.4% (~26px) · body/bullet ~1.8% (~20px) · caption ~1.6% (~18px) · micro-label ~1.2% (~13px). Ratio ≈ **1.25 per step, with a ~1.9 display jump** title→section.
 - **Caps reserved** for tiny eyebrow/label text only; body + headings sentence case.
 

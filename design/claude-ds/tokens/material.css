@@ -1,0 +1,227 @@
+/* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+:root {
+  --ground-texture-paint: none;
+  --ground-texture-size: auto;
+}
+/* ============================================================
+   ConceptV · MATERIAL — the substance a Block's surface is made of
+   ------------------------------------------------------------
+   The liquid-glass work proved surfaces have a MATERIAL dimension:
+   glass is one value of it, not the system. This file makes the
+   dimension real: one consuming utility (.material + its depth
+   modifiers) reading ONE set of roles (--mat-*), and a scope per
+   material that binds those roles to its own single-source tokens.
+
+   · GLASS binds to tokens/glass.css (glass stays defined THERE —
+     this file never re-declares a glass literal).
+   · PARCHMENT / STONE are defined here (this is their home).
+   · Every material derives from --zone-ground / --ink, so all of
+     them recompute for light / dim / dark / contrast, same as the
+     zone roles (declared on the theme selector list for the same
+     var()-of-a-var() scoping reason glass.css documents).
+
+   The typed view is the MATERIAL AXIS (axes/material/material-axis
+   .js) — a Block's surface part subscribes to it; values here are
+   the axis's value-units, exactly as tokens are for every axis.
+
+   Depth modifiers mirror the glass ladder and snap to the radius
+   ramp: base (panel) · raised (overlay) · inset (well).
+   ============================================================ */
+
+/* ---- the ONE consumer ------------------------------------- */
+.material {
+  position: relative;
+  background: var(--mat-sheen), var(--mat-texture), var(--mat-fill);
+  -webkit-backdrop-filter: blur(var(--mat-blur)) saturate(var(--mat-saturate));
+          backdrop-filter: blur(var(--mat-blur)) saturate(var(--mat-saturate));
+  border: 1px solid var(--mat-edge);
+  border-radius: var(--mat-radius, var(--r-2xl));
+  box-shadow: inset 0 1px 0 var(--mat-highlight), var(--mat-shadow);
+}
+.material--raised {
+  background: var(--mat-sheen), var(--mat-texture-raised, var(--mat-texture)), var(--mat-fill-raised, var(--mat-fill));
+  box-shadow: inset 0 1px 0 var(--mat-highlight), var(--mat-shadow-lifted, var(--mat-shadow));
+}
+.material--inset {
+  background: var(--mat-sheen-inset, var(--mat-sheen)), var(--mat-texture-inset, var(--mat-texture)), var(--mat-fill-inset, var(--mat-fill));
+  border-color: var(--mat-edge-soft, var(--mat-edge));
+  border-radius: var(--mat-radius-inner, var(--r-lg));
+  box-shadow: inset 0 1px 0 var(--mat-highlight);
+}
+
+/* ---- WORLD-POSITION MATERIAL SAMPLING ------------------------
+   One texture, every block its own patch: the texture layer paints in
+   VIEWPORT (world) coordinates (background-attachment: fixed), so each
+   block shows the region of the ONE shared texture that sits under its
+   world position — any number of blocks, automatically decorrelated,
+   still a single operation. The layer MULTIPLIES with the fill beneath,
+   so the semantic colour tokens keep tinting the material THROUGH the
+   texture (one resolution). Skins declare textures at NATIVE tile scale
+   (never stretched); --mat-texture-inset is the slot for a different
+   texture on inset zones — more depth-type slots can be added the same
+   way. */
+.material, .material--raised {
+  background-blend-mode: normal, var(--mat-tex-blend), normal;
+  background-attachment: scroll, scroll, scroll;
+  /* WORLD SAMPLING (the real mechanism): position the texture layer (2nd of 3)
+     at this block's stamped world offset. MUST be a longhand on the block's OWN
+     rule — burying var(--mat-tex-pos) inside the inherited --skin-mat-texture
+     token resolves it at the SKIN SCOPE (the stage, unstamped → 0 0), so the
+     grain repeats. background-attachment:fixed is dead here: filter/transform
+     (depth shadows, morph) silently demote it to scroll. */
+  background-position: 0 0, var(--mat-tex-pos), 0 0;
+}
+.material--inset {
+  background-blend-mode: normal, var(--mat-tex-blend), normal;
+  background-attachment: scroll, scroll, scroll;
+  background-position: 0 0, var(--mat-tex-pos), 0 0;
+}
+/* depth picks the SLOT: wells (rank 4) get their own material — the ladder
+   chooses, never the instance. More depth-type slots register the same way. */
+[data-depth="4"] {
+  /* the ladder picks the WELL material slot at rank 4 (consumed by
+     .material--inset's texture layer; inherits harmlessly deeper) */
+  --mat-texture-inset: var(--mat-texture-well); /* @kind other */
+}
+
+/* ---- GLASS — binds to its existing home (tokens/glass.css) -- */
+[data-material="glass"] {
+  --mat-fill:          var(--glass-fill);
+  --mat-fill-raised:   var(--glass-fill-raised);
+  --mat-fill-inset:    var(--glass-fill-inset);
+  --mat-sheen:         var(--glass-sheen); /* @kind other */
+  --mat-edge:          var(--glass-edge);
+  --mat-edge-soft:     var(--glass-edge-soft);
+  --mat-highlight:     var(--glass-highlight);
+  --mat-blur:          var(--glass-blur);
+  --mat-saturate:      var(--glass-saturate);
+  --mat-shadow:        var(--glass-shadow);
+  --mat-shadow-lifted: var(--glass-shadow-lifted);
+  --mat-radius:        var(--glass-radius);
+  --mat-radius-inner:  var(--glass-radius-inner);
+}
+
+/* ---- PARCHMENT — warm opaque paper (its home is HERE) -------
+   An opaque material: no blur (nothing reads through paper). The
+   fibre texture is two faint crossing line rhythms. Fills mix from
+   --glass-ground (the possibly zone-TINTED ground, tokens/glass.css)
+   so the tint whisper flows through every material, one mechanism. */
+:root,
+[data-theme],
+[data-ground],
+[data-glass-zone],
+.zone-palette-cooler,
+.zone-palette-warmer {
+  --parchment-fill:        color-mix(in oklch, var(--glass-ground) 62%, oklch(0.92 0.025 85));
+  --parchment-fill-raised: color-mix(in oklch, var(--glass-ground) 52%, oklch(0.94 0.025 85));
+  --parchment-fill-inset:  color-mix(in oklch, var(--glass-ground) 74%, oklch(0.9 0.03 82));
+  --parchment-edge:        color-mix(in oklch, var(--ink) 18%, transparent);
+  --parchment-texture:
+    repeating-linear-gradient(93deg,  color-mix(in oklch, var(--ink) 3%, transparent) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(177deg, color-mix(in oklch, var(--ink) 2%, transparent) 0 1px, transparent 1px 11px);
+}
+[data-material="parchment"] {
+  --mat-fill:          var(--parchment-fill);
+  --mat-fill-raised:   var(--parchment-fill-raised);
+  --mat-fill-inset:    var(--parchment-fill-inset);
+  --mat-texture:       var(--parchment-texture); /* @kind other */
+  --mat-edge:          var(--parchment-edge);
+  --mat-edge-soft:     color-mix(in oklch, var(--ink) 10%, transparent);
+  --mat-highlight:     color-mix(in srgb, white 30%, transparent);
+  --mat-shadow:        var(--elev-2);
+  --mat-shadow-lifted: var(--elev-4);
+}
+
+/* ---- STONE — cool dense mineral (its home is HERE) ----------
+   Opaque, heavier edge, speckle texture, sits lower (less lift). */
+:root,
+[data-theme],
+[data-ground],
+[data-glass-zone],
+.zone-palette-cooler,
+.zone-palette-warmer {
+  --stone-fill:        color-mix(in oklch, var(--glass-ground) 68%, oklch(0.52 0.008 250));
+  --stone-fill-raised: color-mix(in oklch, var(--glass-ground) 58%, oklch(0.56 0.008 250));
+  --stone-fill-inset:  color-mix(in oklch, var(--glass-ground) 78%, oklch(0.46 0.008 250));
+  --stone-edge:        color-mix(in oklch, var(--ink) 24%, transparent);
+  --stone-texture:
+    radial-gradient(circle at 20% 30%, color-mix(in oklch, var(--ink) 4%, transparent) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 70% 60%, color-mix(in oklch, var(--ink) 3%, transparent) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 45% 85%, color-mix(in oklch, var(--ink) 3%, transparent) 0 1px, transparent 1.5px);
+}
+[data-material="stone"] {
+  --mat-fill:          var(--stone-fill);
+  --mat-fill-raised:   var(--stone-fill-raised);
+  --mat-fill-inset:    var(--stone-fill-inset);
+  --mat-texture:       var(--stone-texture); /* @kind other */
+  --mat-edge:          var(--stone-edge);
+  --mat-edge-soft:     color-mix(in oklch, var(--ink) 12%, transparent);
+  --mat-highlight:     color-mix(in srgb, white 12%, transparent);
+  --mat-shadow:        var(--elev-1);
+  --mat-shadow-lifted: var(--elev-3);
+  --mat-radius:        var(--r-xl);   /* stone cuts a little squarer */
+  --mat-radius-inner:  var(--r-md);
+}
+
+/* ---- VELUM — translucent milky vellum (its home is HERE) ----
+   Between glass and parchment: light reads through, detail does
+   not. Softer blur, whiter body, gentle edges. */
+:root,
+[data-theme],
+[data-ground],
+[data-glass-zone],
+.zone-palette-cooler,
+.zone-palette-warmer {
+  --velum-fill:        color-mix(in oklch, color-mix(in oklch, var(--glass-ground) 55%, white) 72%, transparent);
+  --velum-fill-raised: color-mix(in oklch, color-mix(in oklch, var(--glass-ground) 48%, white) 84%, transparent);
+  --velum-fill-inset:  color-mix(in oklch, color-mix(in oklch, var(--glass-ground) 65%, white) 58%, transparent);
+  --velum-edge:        color-mix(in oklch, var(--ink) 12%, transparent);
+}
+[data-material="velum"] {
+  --mat-fill:          var(--velum-fill);
+  --mat-fill-raised:   var(--velum-fill-raised);
+  --mat-fill-inset:    var(--velum-fill-inset);
+  --mat-edge:          var(--velum-edge);
+  --mat-edge-soft:     color-mix(in oklch, var(--ink) 7%, transparent);
+  --mat-highlight:     color-mix(in srgb, white 34%, transparent);
+  --mat-blur:          14px;
+  --mat-saturate:      1.1; /* @kind other */
+  --mat-shadow:        var(--elev-2);
+  --mat-shadow-lifted: var(--elev-4);
+}
+
+/* ---- NONE — the zero (a block with no surface: pure layout) - */
+[data-material="none"] {
+  --mat-fill: transparent; --mat-edge: transparent; --mat-shadow: none;
+  --mat-highlight: transparent; --mat-texture: none; /* @kind other */ --mat-sheen: none; /* @kind other */ --mat-blur: 0px;
+}
+
+/* ---- GROUND textures — the plane BEHIND a surface -----------
+   The ground part's texture slot subscribes to the FULL texture
+   axis (axes/texture/texture-axis.js); every axis value has a
+   consuming scope here. Zero = none (no ::before painted). */
+[data-ground-texture]:not([data-ground-texture="none"])::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  border-radius: inherit;
+  /* longhands + a size VAR — a background shorthand here would reset
+     background-size at higher specificity than any per-texture rule. */
+  background-image: var(--ground-texture-paint);
+  background-size: var(--ground-texture-size);
+}
+[data-ground-texture="hatch"] { --ground-texture-paint:
+  repeating-linear-gradient(135deg, color-mix(in oklch, var(--ink) 4%, transparent) 0 1px, transparent 1px 9px); }
+[data-ground-texture="lines"] { --ground-texture-paint:
+  repeating-linear-gradient(180deg, color-mix(in oklch, var(--ink) 4%, transparent) 0 1px, transparent 1px 9px); }
+[data-ground-texture="vert"] { --ground-texture-paint:
+  repeating-linear-gradient(90deg, color-mix(in oklch, var(--ink) 4%, transparent) 0 1px, transparent 1px 9px); }
+[data-ground-texture="cross"] { --ground-texture-paint:
+  repeating-linear-gradient(135deg, color-mix(in oklch, var(--ink) 3%, transparent) 0 1px, transparent 1px 10px),
+  repeating-linear-gradient(45deg,  color-mix(in oklch, var(--ink) 3%, transparent) 0 1px, transparent 1px 10px); }
+[data-ground-texture="grid"] { --ground-texture-size: 56px 56px; --ground-texture-paint:
+  linear-gradient(color-mix(in oklch, var(--ink) 5%, transparent) 1px, transparent 1px),
+  linear-gradient(90deg, color-mix(in oklch, var(--ink) 5%, transparent) 1px, transparent 1px);
+  }
+[data-ground-texture="dense"] { --ground-texture-paint:
+  repeating-linear-gradient(135deg, color-mix(in oklch, var(--ink) 4%, transparent) 0 1px, transparent 1px 4px); }
+[data-ground-texture="dots"] { --ground-texture-size: 14px 14px; --ground-texture-paint:
+  radial-gradient(circle, color-mix(in oklch, var(--ink) 7%, transparent) 1px, transparent 1.5px); }

@@ -79,6 +79,16 @@ If the user invokes this skill without other guidance, ask what they want to bui
 
 To add new icons: open `assets/icons/cv-icons.js`, append to `CV_ICONS.data`, then re-run the SVG-generation script (or simply use the JS data — the explorer + React component pick it up immediately).
 
+## Skinned worlds (how any page joins the material system)
+
+The whole interface can resolve through a **skin** — glass · stone · parchment · carbon (`tokens/skins.css`, the skin axis). To make any page a skinned surface:
+
+1. `data-skin="<id>"` on the page scope (`<html>`/`<body>`/stage). Glass is the un-scoped default, so `data-skin="glass"` is inert but addressable.
+2. `.skin-ground` class on the stage element — it paints the world's ground and couples to the camera (`CV_WORLD_CAMERA.observe(el)` derives `--world-zoom`; it auto-couples grounds present at load).
+3. After **your own layout passes**, call `CV_WORLD_CAMERA.stampMaterials(ground)` so every material surface samples its own patch of the world texture (decorrelated grain).
+4. Blocks: render through `CV_BLOCK.chrome()` (emits `data-material`/`data-depth`/`data-morph-id`) or hand-mark `.material` + `data-material="skin"` + `data-depth="<rank>"`.
+5. Switching: change `data-skin` inside `CV_MORPH.crossfadeSkin(...)` + `CV_MORPH.flip(...)` (see `window.cvSetSkin` in `app/index.html`) — worlds dissolve and settle, nothing teleports.
+
 ## Open questions / flagged substitutions
 
 - **Fonts** are substituted (Sora + DM Sans). The product's actual UI font is unknown — ask the user for `.woff2`/`.ttf` files if a tighter match is required.

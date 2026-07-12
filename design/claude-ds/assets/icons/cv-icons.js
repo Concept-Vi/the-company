@@ -35,7 +35,7 @@ window.CV_ICONS.data = {
   'person-add':   `<path d="M10 12 a4 4 0 1 0 0 -8 a4 4 0 0 0 0 8 Z M3 20 a7 7 0 0 1 14 0"/><path d="M19 6 V12 M16 9 H22"/>`,
   'person-clock': `<path d="M9 11 a3.5 3.5 0 1 0 0 -7 a3.5 3.5 0 0 0 0 7 Z M2.5 19 a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="16" r="4.5"/><path d="M17.5 13.5 V16 L19.5 17.5"/>`,
   'handshake':    `<path d="M2 11 L5.5 8 L11 12"/><path d="M22 11 L18.5 8 L13 12"/><path d="M11 12 L12 13 a1.4 1.4 0 0 0 2 0 L15 11.5"/><path d="M5.5 8 V13 a1.5 1.5 0 0 0 1.5 1.5 L11 18 a1.4 1.4 0 0 0 2 -0.3"/><path d="M18.5 8 V13 a1.5 1.5 0 0 1 -1.5 1.5"/><path d="M8.2 13.5 a1.3 1.3 0 0 1 1.9 0 M9.9 15.2 a1.3 1.3 0 0 1 1.9 0"/>`,
-  'team':         `<circle cx="7" cy="8" r="2.6"/><path d="M2.6 16 a4.4 4.4 0 0 1 8.8 0"/><circle cx="17" cy="8" r="2.6"/><path d="M12.6 16 a4.4 4.4 0 0 1 8.8 0"/><circle cx="12" cy="13.5" r="2.8" fill="var(--cv-icon-bg,#FBF7EC)"/><path d="M6.6 22 a5.4 5.4 0 0 1 10.8 0" fill="var(--cv-icon-bg,#FBF7EC)"/>`,
+  'team':         `<circle cx="7" cy="8" r="2.6"/><path d="M2.6 16 a4.4 4.4 0 0 1 8.8 0"/><circle cx="17" cy="8" r="2.6"/><path d="M12.6 16 a4.4 4.4 0 0 1 8.8 0"/><circle cx="12" cy="13.5" r="2.8" fill="var(--cv-icon-bg)"/><path d="M6.6 22 a5.4 5.4 0 0 1 10.8 0" fill="var(--cv-icon-bg)"/>`,
   'user-network': `<circle cx="12" cy="5" r="2.2"/><path d="M9.4 9.5 a3 3 0 0 1 5.2 0"/><circle cx="5" cy="18" r="2.2"/><path d="M2.4 22 a3 3 0 0 1 5.2 0"/><circle cx="19" cy="18" r="2.2"/><path d="M16.4 22 a3 3 0 0 1 5.2 0"/><path d="M11 9.5 L6.2 14.5 M13 9.5 L17.8 14.5"/>`,
   'user-card':    `<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M5.5 17 a4 4 0 0 1 7 0"/><path d="M14.5 10 H19 M14.5 13 H18 M14.5 16 H17"/>`,
 
@@ -91,7 +91,7 @@ window.CV_ICONS.data = {
   'dashboard':       `<path d="M4 13 a8 8 0 0 1 16 0 V14 H4 Z"/><path d="M12 13 L15.5 9.5"/><circle cx="12" cy="13" r="1.1" fill="currentColor" stroke="none"/><path d="M6 13 V12.3 M8 9.5 L8.5 10.1 M16 9.5 L15.5 10.1 M18 13 V12.3"/><path d="M4 18 H20"/>`,
   'video-player':    `<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10.5 9.2 L15 12 L10.5 14.8 Z" fill="currentColor" stroke="none"/>`,
   'image':           `<rect x="3" y="4" width="18" height="16" rx="1.5"/><circle cx="8" cy="10" r="1.5"/><path d="M3 16 L9 11 L14 16 L17 14 L21 18"/>`,
-  'image-stack':     `<rect x="7" y="7" width="14" height="13" rx="1.5"/><circle cx="11.5" cy="12" r="1.5"/><path d="M7 17.5 L11.5 13.5 L15 16.5 L17.5 14.5 L21 17.5"/><path d="M4 5 H17 M4 5 V18 H7" fill="var(--cv-icon-bg,#FBF7EC)"/>`,
+  'image-stack':     `<rect x="7" y="7" width="14" height="13" rx="1.5"/><circle cx="11.5" cy="12" r="1.5"/><path d="M7 17.5 L11.5 13.5 L15 16.5 L17.5 14.5 L21 17.5"/><path d="M4 5 H17 M4 5 V18 H7" fill="var(--cv-icon-bg)"/>`,
 
   // ===== Actions =====
   'plus':    `<path d="M12 5 V19 M5 12 H19"/>`,
@@ -181,13 +181,65 @@ window.CV_ICONS.data = {
 
   // ===== Additional master line glyphs (from the image NN reference set) =====
   'people-network':    `<circle cx="12" cy="11" r="1.5"/><path d="M9.8 15 a2.4 2.4 0 0 1 4.4 0"/><circle cx="5" cy="5" r="1.4"/><path d="M3 8.3 a2.2 2.2 0 0 1 4 0"/><circle cx="19" cy="5" r="1.4"/><path d="M17 8.3 a2.2 2.2 0 0 1 4 0"/><path d="M7 7 L10.3 9.8 M17 7 L13.7 9.8"/>`,
-  'world-network':     `<circle cx="12" cy="12" r="9"/><path d="M3 12 H21"/><path d="M12 3 a13 13 0 0 1 0 18 a13 13 0 0 1 0 -18 Z"/><path d="M4.5 7.5 Q 12 10 19.5 7.5 M4.5 16.5 Q 12 14 19.5 16.5"/><circle cx="12" cy="3" r="1.3" fill="var(--cv-icon-bg,#FBF7EC)"/><circle cx="4.5" cy="16.5" r="1.3" fill="var(--cv-icon-bg,#FBF7EC)"/><circle cx="19.5" cy="7.5" r="1.3" fill="var(--cv-icon-bg,#FBF7EC)"/>`,
-  'checklist-double':  `<rect x="7" y="3" width="14" height="14" rx="2"/><rect x="3" y="7" width="14" height="14" rx="2" fill="var(--cv-icon-bg,#FBF7EC)"/><path d="M6.5 14 L9 16.5 L13.5 11"/>`,
+  'world-network':     `<circle cx="12" cy="12" r="9"/><path d="M3 12 H21"/><path d="M12 3 a13 13 0 0 1 0 18 a13 13 0 0 1 0 -18 Z"/><path d="M4.5 7.5 Q 12 10 19.5 7.5 M4.5 16.5 Q 12 14 19.5 16.5"/><circle cx="12" cy="3" r="1.3" fill="var(--cv-icon-bg)"/><circle cx="4.5" cy="16.5" r="1.3" fill="var(--cv-icon-bg)"/><circle cx="19.5" cy="7.5" r="1.3" fill="var(--cv-icon-bg)"/>`,
+  'checklist-double':  `<rect x="7" y="3" width="14" height="14" rx="2"/><rect x="3" y="7" width="14" height="14" rx="2" fill="var(--cv-icon-bg)"/><path d="M6.5 14 L9 16.5 L13.5 11"/>`,
   'comments-fill':     `<path d="M3 5 a1.5 1.5 0 0 1 1.5 -1.5 H13 a1.5 1.5 0 0 1 1.5 1.5 V10 a1.5 1.5 0 0 1 -1.5 1.5 H7.5 L4.5 14 V11.5 A1.5 1.5 0 0 1 3 10 Z" fill="currentColor" stroke="none"/><path d="M10 13.5 V15.5 a1.5 1.5 0 0 0 1.5 1.5 H17 L20 19.5 V17 a1.5 1.5 0 0 0 1.5 -1.5 V11 a1.5 1.5 0 0 0 -1.5 -1.5 H14.5" fill="currentColor" stroke="none"/>`,
   'transfer':          `<path d="M8 20 V5 M5 8 L8 5 L11 8"/><path d="M16 4 V19 M13 16 L16 19 L19 16"/>`,
-  'tile-stack':        `<rect x="7" y="4" width="13" height="13" rx="1"/><rect x="4" y="7" width="13" height="13" rx="1" fill="var(--cv-icon-bg,#FBF7EC)"/><path d="M7 13.5 L10.5 10 M10.5 17 L17 10.5 M7 17 L13.5 10.5"/>`,
+  'tile-stack':        `<rect x="7" y="4" width="13" height="13" rx="1"/><rect x="4" y="7" width="13" height="13" rx="1" fill="var(--cv-icon-bg)"/><path d="M7 13.5 L10.5 10 M10.5 17 L17 10.5 M7 17 L13.5 10.5"/>`,
   'markup-box':        `<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M11 16 L16 11 L18.5 13.5 L13.5 18.5 H11 Z"/><path d="M14.5 12.5 L17 15"/>`,
   'browser-analytics': `<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8 H21"/><circle cx="6" cy="6" r="0.6" fill="currentColor" stroke="none"/><circle cx="8" cy="6" r="0.6" fill="currentColor" stroke="none"/><circle cx="10" cy="6" r="0.6" fill="currentColor" stroke="none"/><path d="M6 17 V11.5"/><path d="M6 17 H18"/><path d="M9 17 V13.5 M12 17 V11 M15 17 V14"/>`,
+
+  // ── THE LANGUAGE FAMILY (minted 2026-07-03, the language seat) — the vocabulary the
+  // one-system argument needs: frames, blocks, laws, the window, the loop's parts. Full
+  // citizens: every one carries domain/kind/tags + name/description in facets, a gloss +
+  // meaning in CV_MEANING's seed, and enters glyph_meaning on the next corpus re-emit.
+  'frame':     `<path d="M4 8 V5.5 A1.5 1.5 0 0 1 5.5 4 H8 M16 4 h2.5 A1.5 1.5 0 0 1 20 5.5 V8 M20 16 v2.5 a1.5 1.5 0 0 1 -1.5 1.5 H16 M8 20 H5.5 A1.5 1.5 0 0 1 4 18.5 V16"/><circle cx="12" cy="12" r="2.2"/>`,
+  'block':     `<path d="M12 3 L20 7.5 V16.5 L12 21 L4 16.5 V7.5 Z"/><path d="M4 7.5 L12 12 L20 7.5 M12 12 V21"/>`,
+  'equation':  `<path d="M4 9.5 H14 M4 14.5 H14"/><path d="M17 12 H21 M19.2 9.8 L21.4 12 L19.2 14.2"/>`,
+  'window':    `<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 12 H20 M12 12 V19"/><circle cx="8" cy="8.5" r="1" fill="currentColor" stroke="none"/>`,
+  'seed':      `<path d="M12 21 V12"/><path d="M12 12 C12 8.2 9.2 6 5.5 6 C5.5 9.8 8.2 12 12 12 Z"/><path d="M12 12 C12 9.2 14.6 7.2 18.5 7.2 C18.5 10.4 15.9 12 12 12"/><path d="M5 21 H19"/>`,
+  'weave':     `<path d="M6 4 V20 M12 4 V20 M18 4 V20"/><path d="M3.5 8.5 H20.5 M3.5 15.5 H20.5" stroke-dasharray="3.4 2.6"/>`,
+  'judge':     `<path d="M12 4.5 V19 M8 19 H16 M5 7 H19"/><path d="M7 7 L4.4 12 a2.9 2.9 0 0 0 5.2 0 Z"/><path d="M17 7 L14.4 12 a2.9 2.9 0 0 0 5.2 0 Z"/>`,
+  'ring':      `<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.4" stroke-dasharray="2.6 2.6"/>`,
+  'corpus':    `<path d="M5 4 H15 a2 2 0 0 1 2 2 V20 H7 a2 2 0 0 1 -2 -2 Z"/><path d="M17 8 h2 v10 a2 2 0 0 1 -2 2"/><path d="M8.5 9 h5 M8.5 12.5 h5 M8.5 16 h3"/>`,
+  'room':      `<path d="M4 21 H20 M6 21 V10 a6 6 0 0 1 12 0 V21"/><circle cx="14.4" cy="13.5" r="0.9" fill="currentColor" stroke="none"/>`,
+  'territory': `<path d="M12 2.8 L20.8 9.2 L17.4 19.6 H6.6 L3.2 9.2 Z"/><path d="M12 11.5 L12 2.8 M12 11.5 L20.8 9.2 M12 11.5 L17.4 19.6 M12 11.5 L6.6 19.6 M12 11.5 L3.2 9.2"/><circle cx="12" cy="11.5" r="1.6"/>`,
+  'operator':  `<circle cx="12" cy="12" r="8.6"/><path d="M8.2 10 H15.8 M8.2 14 H15.8"/>`,
+
+  // ===== W4a — the 32 used-but-undrawn (every id below was already referenced
+  // by the registries/seeds; the vocabulary outran the drawings — registry/GAPS.md) =====
+  'activity':    `<path d="M2.5 12 H7 L9.5 5.5 L14.5 18.5 L17 12 H21.5"/>`,
+  'arrow-right': `<path d="M4 12 H20 M14 6 L20 12 L14 18"/>`,
+  'bar-chart':   `<path d="M5 20 V10 M12 20 V4 M19 20 V14"/>`,
+  'bolt':        `<path d="M13 2.5 L5.5 13.5 H11 L10 21.5 L18.5 10.5 H13 Z"/>`,
+  'book':        `<path d="M20 22 H6.5 A2.5 2.5 0 0 1 4 19.5 V4.5 A2.5 2.5 0 0 1 6.5 2 H20 V17 H6.5 A2.5 2.5 0 0 0 4 19.5"/><path d="M20 17 V22"/>`,
+  'book-open':   `<path d="M2.5 5 C5 4 8 4.5 12 6.5 C16 4.5 19 4 21.5 5 V18.5 C19 17.5 16 18 12 20 C8 18 5 17.5 2.5 18.5 Z"/><path d="M12 6.5 V20"/>`,
+  'box':         `<path d="M12 2.5 L21 7 V17 L12 21.5 L3 17 V7 Z"/><path d="M3 7 L12 11.5 L21 7 M12 11.5 V21.5"/>`,
+  'circle-check':`<circle cx="12" cy="12" r="9.5"/><path d="M7.5 12.5 L10.5 15.5 L16.5 8.5"/>`,
+  'component':   `<path d="M12 2.5 L15 5.5 L12 8.5 L9 5.5 Z"/><path d="M18.5 9 L21.5 12 L18.5 15 L15.5 12 Z"/><path d="M12 15.5 L15 18.5 L12 21.5 L9 18.5 Z"/><path d="M5.5 9 L8.5 12 L5.5 15 L2.5 12 Z"/>`,
+  'crosshair':   `<circle cx="12" cy="12" r="8"/><path d="M12 2 V6 M12 18 V22 M2 12 H6 M18 12 H22"/>`,
+  'cursor':      `<path d="M5.5 3.5 L20 12 L13 13.5 L10 20.5 Z"/>`,
+  'desktop':     `<rect x="3" y="4" width="18" height="12.5" rx="2"/><path d="M9.5 21 H14.5 M12 16.5 V21"/>`,
+  'droplet':     `<path d="M12 3 C15.5 7.5 18.5 11 18.5 14.5 A6.5 6.5 0 0 1 5.5 14.5 C5.5 11 8.5 7.5 12 3 Z"/>`,
+  'feather':     `<path d="M19.5 4.5 C16.5 1.5 11.5 2 9 5.5 L4.5 12 V19.5 H12 L18.5 15 C22 12.5 22.5 7.5 19.5 4.5 Z"/><path d="M4.5 19.5 L16 8 M9 15 H14.8"/>`,
+  'file-plus':   `<path d="M6 3 H14 L18 7 V21 H6 Z M14 3 V7 H18"/><path d="M12 11 V17 M9 14 H15"/>`,
+  'flag':        `<path d="M5.5 21.5 V3.5 C8 2 10.5 2 12.5 3.5 C14.5 5 17 5 19.5 3.5 V13.5 C17 15 14.5 15 12.5 13.5 C10.5 12 8 12 5.5 13.5"/>`,
+  'grid':        `<rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/>`,
+  'hash':        `<path d="M9.5 3.5 L7.5 20.5 M16.5 3.5 L14.5 20.5 M4 8.5 H20.5 M3.5 15.5 H20"/>`,
+  'hexagon':     `<path d="M12 2.5 L20.2 7.25 V16.75 L12 21.5 L3.8 16.75 V7.25 Z"/>`,
+  'layers':      `<path d="M12 2.5 L21.5 7.5 L12 12.5 L2.5 7.5 Z"/><path d="M2.5 12 L12 17 L21.5 12 M2.5 16.5 L12 21.5 L21.5 16.5"/>`,
+  'layout':      `<rect x="3" y="3.5" width="18" height="17" rx="2"/><path d="M3 9 H21 M9.5 9 V20.5"/>`,
+  'list':        `<path d="M8.5 6 H20.5 M8.5 12 H20.5 M8.5 18 H20.5"/><circle cx="4.5" cy="6" r="0.8" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="0.8" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="0.8" fill="currentColor" stroke="none"/>`,
+  'mic':         `<rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 11.5 a7 7 0 0 0 14 0 M12 18.5 V21.5 M8.5 21.5 H15.5"/>`,
+  'palette':     `<path d="M12 2.5 a9.5 9.5 0 1 0 0 19 c1.5 0 2.2 -1 1.6 -2.2 c-0.7 -1.4 0.2 -2.8 1.8 -2.8 H18 a3.5 3.5 0 0 0 3.5 -3.5 C21.5 7 17 2.5 12 2.5 Z"/><circle cx="7.5" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="7" r="1" fill="currentColor" stroke="none"/><circle cx="16.5" cy="10" r="1" fill="currentColor" stroke="none"/>`,
+  'plus-circle': `<circle cx="12" cy="12" r="9.5"/><path d="M12 8 V16 M8 12 H16"/>`,
+  'plus-square': `<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M12 8 V16 M8 12 H16"/>`,
+  'server':      `<rect x="3" y="3.5" width="18" height="7" rx="1.5"/><rect x="3" y="13.5" width="18" height="7" rx="1.5"/><circle cx="7" cy="7" r="0.8" fill="currentColor" stroke="none"/><circle cx="7" cy="17" r="0.8" fill="currentColor" stroke="none"/>`,
+  'shuffle':     `<path d="M3 6.5 H7 C9 6.5 10 8 11 10 M3 17.5 H7 C9 17.5 10 16 11 14 M13 10 C14 8 15 6.5 17 6.5 H21 M13 14 C14 16 15 17.5 17 17.5 H21"/><path d="M18 3.5 L21 6.5 L18 9.5 M18 14.5 L21 17.5 L18 20.5"/>`,
+  'sparkles':    `<path d="M10 3.5 L11.8 8.7 L17 10.5 L11.8 12.3 L10 17.5 L8.2 12.3 L3 10.5 L8.2 8.7 Z"/><path d="M18 13.5 L18.9 16.1 L21.5 17 L18.9 17.9 L18 20.5 L17.1 17.9 L14.5 17 L17.1 16.1 Z"/><path d="M17.5 3 V7 M15.5 5 H19.5"/>`,
+  'square':      `<rect x="4" y="4" width="16" height="16" rx="2"/>`,
+  'type':        `<path d="M5 7 V4.5 H19 V7 M12 4.5 V19.5 M9 19.5 H15"/>`,
+  'wand':        `<path d="M4 20 L13.5 10.5 M12 9 L15 12"/><path d="M18 2.5 V6.5 M16 4.5 H20 M20.5 9 V12 M19 10.5 H22 M13.5 3 V5.5 M12.25 4.25 H14.75"/>`,
 };
 
 // =====================================================================
@@ -258,6 +310,7 @@ window.CV_ICONS.taxonomy = {
     action:        { label: 'Action',        desc: 'Verbs & controls — add, edit, search, filter' },
     system:        { label: 'System',        desc: 'Settings, cloud, security, status, time' },
     feature:       { label: 'Feature',       desc: 'ConceptV product features (named, customer-facing)' },
+    language:      { label: 'Language',      desc: 'The generative language itself — frames, blocks, laws, operators, the window, the loop' },
   },
   // The kind facet: what TYPE of thing the symbol denotes.
   kinds: {
@@ -415,6 +468,20 @@ window.CV_ICONS.facets = {
   'web':{domain:'feature',kind:'object',tags:['responsive','browser','online'],brand:true},
   'gyro':{domain:'feature',kind:'concept',tags:['360','orbit','rotate'],brand:true},
   'color-swatches':{domain:'feature',kind:'object',tags:['palette','colours','style'],brand:true},
+
+  // ── THE LANGUAGE FAMILY (2026-07-03) — full facet records: name, description, family, kind, tags.
+  'frame':{domain:'language',kind:'concept',name:'Frame',description:'A way of seeing — rules of projection over data that never changes; every viewer is one, and is a node in the space it views.',tags:['view','lens','perspective','coordinate','reader']},
+  'block':{domain:'language',kind:'object',name:'Block',description:'The atomic composable unit — typed, addressed, nestable; every boundary the root of its own cascade.',tags:['unit','composable','atom','nest','boundary']},
+  'equation':{domain:'language',kind:'concept',name:'Equation',description:'A law that computes — a value derived from relations, never placed by hand.',tags:['law','derive','rule','calculate','invariant']},
+  'window':{domain:'language',kind:'object',name:'Window',description:'The visible half of the world — the coordinate space made touchable: see, point, direct.',tags:['see','point','direct','world-map','interface']},
+  'seed':{domain:'language',kind:'object',name:'Seed',description:'The start that carries the whole — every telling grows root-first from it, complete at every stage.',tags:['root','start','grow','origin','generation']},
+  'weave':{domain:'language',kind:'concept',name:'Weave',description:'Descent and traverse woven — the multiaxial reading; any forward walk through the lattice is a valid telling.',tags:['warp','weft','descend','traverse','lattice','walk']},
+  'judge':{domain:'language',kind:'action',name:'Judge',description:'The one that weighs — extraction proposes in parallel, judgment composes the one answer.',tags:['decide','weigh','verify','compose','abstain']},
+  'ring':{domain:'language',kind:'concept',name:'Ring',description:'The boundary that carries identity through change — interior change is state, boundary change is becoming.',tags:['boundary','identity','becoming','anchor','continuity']},
+  'corpus':{domain:'language',kind:'object',name:'Corpus',description:'The remembered whole — everything spoken, kept addressed; the transcripts are the root of all data.',tags:['memory','store','transcript','vault','provenance']},
+  'room':{domain:'language',kind:'object',name:'Room',description:'A place of work — a session, a bench, a gallery; rooms are places and the camera slides between them.',tags:['session','place','workshop','bench','gallery']},
+  'territory':{domain:'language',kind:'concept',name:'Territory',description:'A subject around its origin — soft-edged sectors radial about a centre; the cut and the route make a telling of it.',tags:['subject','sector','polygon','origin','map']},
+  'operator':{domain:'language',kind:'concept',name:'Operator',description:'A universal sign — a relation whose meaning arrives free because everyone already holds it.',tags:['sign','relation','universal','logic','edge']},
 };
 
 // Symbol-level queries (read the facets above — single source).

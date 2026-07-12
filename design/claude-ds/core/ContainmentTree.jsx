@@ -30,7 +30,7 @@ function visibleAtLOD(node, lod) {
   return true;
 }
 
-const BULLET = { dot: "▸", leads: "→", done: "✓" };    // ▸ → ✓
+const BULLET = { dot: "\u25B8", leads: "\u2192", done: "\u2713" };    // ▸ → ✓
 
 // ---- Entity shape vocabulary (the brand's shape system) -----------
 //  circle = User Portal · hex = Property Wizard · octagon = Virtual
@@ -72,13 +72,13 @@ function TimePlayer(props) {
   const n = items.length;
   const [i, setI] = React.useState(0);
   const cur = Math.min(i, Math.max(0, n - 1));
-  const btn = { font: "var(--weight-semibold,600) var(--fs-body) var(--font-body)", width: "28px", height: "28px", borderRadius: "50%", border: "1px solid var(--hairline-strong)", background: "var(--zone-ground)", color: "var(--ink-2)", cursor: "pointer" };
+  const btn = { font: "var(--weight-semibold) var(--fs-body) var(--font-body)", width: "28px", height: "28px", borderRadius: "50%", border: "1px solid var(--hairline-strong)", background: "var(--zone-ground)", color: "var(--ink-2)", cursor: "pointer" };
   return h("div", { style: { display: "flex", flexDirection: "column", gap: "var(--d-3)", minWidth: 0 } },
     h("div", { className: "moves", style: { minWidth: 0 } }, items[cur]),
     h("div", { style: { display: "flex", gap: "var(--d-2)", alignItems: "center" } },
-      h("button", { style: Object.assign({}, btn, cur === 0 ? { opacity: 0.4, cursor: "default" } : null), onClick: () => setI(x => Math.max(0, x - 1)) }, "‹"),
-      h("span", { style: { font: "var(--weight-medium,500) var(--fs-caption)/1 var(--font-mono)", color: "var(--ink-3)" } }, (cur + 1) + " / " + n),
-      h("button", { style: Object.assign({}, btn, cur >= n - 1 ? { opacity: 0.4, cursor: "default" } : null), onClick: () => setI(x => Math.min(n - 1, x + 1)) }, "›"),
+      h("button", { style: Object.assign({}, btn, cur === 0 ? { opacity: 0.4, cursor: "default" } : null), onClick: () => setI(x => Math.max(0, x - 1)) }, "\u2039"),
+      h("span", { style: { font: "var(--weight-medium) var(--fs-caption)/1 var(--font-mono)", color: "var(--ink-3)" } }, (cur + 1) + " / " + n),
+      h("button", { style: Object.assign({}, btn, cur >= n - 1 ? { opacity: 0.4, cursor: "default" } : null), onClick: () => setI(x => Math.min(n - 1, x + 1)) }, "\u203A"),
       h("div", { style: { display: "flex", gap: "5px", marginLeft: "auto" } },
         items.map((_, j) => h("span", { key: j, onClick: () => setI(j), style: { width: "7px", height: "7px", borderRadius: "50%", cursor: "pointer", background: j === cur ? "var(--accent-gold)" : "var(--hairline-strong)" } })))));
 }
@@ -87,10 +87,10 @@ function TimePlayer(props) {
 // a toggle that raises it to full in place. Local LOD = expand a section.
 function Disclose(props) {
   const [open, setOpen] = React.useState(false);
-  const link = { alignSelf: "flex-start", font: "var(--weight-semibold,600) var(--fs-caption)/1 var(--font-body)", color: "var(--accent-gold)", background: "none", border: "none", padding: "var(--d-1) 0", cursor: "pointer" };
+  const link = { alignSelf: "flex-start", font: "var(--weight-semibold) var(--fs-caption)/1 var(--font-body)", color: "var(--accent-gold)", background: "none", border: "none", padding: "var(--d-1) 0", cursor: "pointer" };
   return h("div", { style: { display: "flex", flexDirection: "column", gap: "var(--d-3)", minWidth: 0 } },
     open ? props.full : props.summary,
-    h("button", { style: link, onClick: () => setOpen(o => !o) }, open ? "− Show less" : "+ Show more"));
+    h("button", { style: link, onClick: () => setOpen(o => !o) }, open ? "\u2212 Show less" : "+ Show more"));
 }
 function edit(path, content, props, tag) {
   tag = tag || "span";
@@ -113,18 +113,18 @@ const ATOM_RENDERERS = {
   metric(node, key) {
     return h("div", { key, className: "cv-atom", style: { display: "flex", flexDirection: "column", gap: "var(--d-1)" } },
       edit(node.editValue, node.value, { style: {
-        font: "var(--weight-bold,700) var(--fs-h2)/1 var(--font-display)",
+        font: "var(--weight-bold) var(--fs-h2)/1 var(--font-display)",
         color: "var(--accent-gold)", fontVariantNumeric: "tabular-nums",
-        letterSpacing: "var(--tracking-tight,-0.02em)",
+        letterSpacing: "var(--tracking-tight)",
       } }),
       node.label ? edit(node.editLabel, node.label, { style: {
-        font: "var(--weight-medium,500) var(--fs-caption)/1.3 var(--font-body)",
+        font: "var(--weight-medium) var(--fs-caption)/1.3 var(--font-body)",
         color: "var(--ink-3)", textWrap: "balance",
       } }) : null,
       node.delta ? h("span", { style: {
-        font: "var(--weight-semibold,600) var(--fs-meta)/1 var(--font-body)",
+        font: "var(--weight-semibold) var(--fs-meta)/1 var(--font-body)",
         color: node.deltaKind === "down" ? "var(--zone-reject-ink)" : "var(--zone-success-ink)",
-      } }, (node.deltaKind === "down" ? "▼ " : "▲ ") + node.delta) : null,
+      } }, (node.deltaKind === "down" ? "\u25BC " : "\u25B2 ") + node.delta) : null,
     );
   },
 
@@ -136,12 +136,12 @@ const ATOM_RENDERERS = {
     if (kind === "bar") {
       return h("div", { key, className: "cv-atom", style: { display: "flex", flexDirection: "column", gap: "var(--d-1)" } },
         h("div", { className: "viz-bar", style: { "--val": node.value || 0 } }, h("div", { className: "fill" })),
-        node.label ? h("span", { style: { font: "var(--weight-medium,500) var(--fs-caption)/1.3 var(--font-body)", color: "var(--ink-3)" } }, node.label) : null);
+        node.label ? h("span", { style: { font: "var(--weight-medium) var(--fs-caption)/1.3 var(--font-body)", color: "var(--ink-3)" } }, node.label) : null);
     }
     if (kind === "gauge") {
       return h("div", { key, className: "cv-atom", style: { display: "flex", alignItems: "center", gap: "var(--d-2)" } },
         h("div", { className: "viz-gauge", style: { "--val": node.value || 0 } }, (node.value || 0) + "%"),
-        node.label ? h("span", { style: { font: "var(--weight-medium,500) var(--fs-caption)/1.3 var(--font-body)", color: "var(--ink-3)" } }, node.label) : null);
+        node.label ? h("span", { style: { font: "var(--weight-medium) var(--fs-caption)/1.3 var(--font-body)", color: "var(--ink-3)" } }, node.label) : null);
     }
     const pts = (node.points || []).map(Number);
     const W = 100, H = 28;
@@ -152,7 +152,7 @@ const ATOM_RENDERERS = {
       h("svg", { className: "viz-spark", viewBox: "0 0 " + W + " " + H, preserveAspectRatio: "none", style: { width: "100%", height: "36px" } },
         pts.length ? h("polygon", { className: "area", points: "0," + H + " " + xy.join(" ") + " " + W + "," + H }) : null,
         pts.length ? h("polyline", { points: xy.join(" ") }) : null),
-      node.label ? h("span", { style: { font: "var(--weight-medium,500) var(--fs-caption)/1.3 var(--font-mono)", color: "var(--ink-3)" } }, node.label) : null);
+      node.label ? h("span", { style: { font: "var(--weight-medium) var(--fs-caption)/1.3 var(--font-mono)", color: "var(--ink-3)" } }, node.label) : null);
   },
 
   // embossed hero metric — a raised/inset light chip (texture & depth §13).
@@ -166,12 +166,12 @@ const ATOM_RENDERERS = {
       boxShadow: "var(--elev-2), inset 0 1px 0 rgba(255,255,255,.6)",
     } },
       edit(node.editValue, node.value, { style: {
-        font: "var(--weight-bold,700) var(--fs-display)/0.95 var(--font-display)",
+        font: "var(--weight-bold) var(--fs-display)/0.95 var(--font-display)",
         color: "var(--accent-gold)", fontVariantNumeric: "tabular-nums",
-        letterSpacing: "var(--tracking-tight,-0.02em)",
+        letterSpacing: "var(--tracking-tight)",
       } }),
       node.label ? edit(node.editLabel, node.label, { style: {
-        font: "var(--weight-medium,500) var(--fs-caption)/1.3 var(--font-body)",
+        font: "var(--weight-medium) var(--fs-caption)/1.3 var(--font-body)",
         color: "var(--ink-2)", textWrap: "balance",
       } }) : null,
     );
@@ -183,8 +183,8 @@ const ATOM_RENDERERS = {
     return h("div", { key, className: "cv-atom", style: { display: "flex", gap: "var(--d-2)", alignItems: "baseline" } },
       h("span", { style: { color: isLeads ? "var(--accent-gold)" : "var(--accent-bronze)", flex: "none", fontSize: "0.85em", lineHeight: "1.5" } }, mark),
       h("div", { style: { minWidth: 0 } },
-        node.title ? edit(node.editTitle, node.title, { style: { font: "var(--weight-semibold,600) var(--fs-body)/1.4 var(--font-body)", color: "var(--ink)", marginRight: node.text ? "0.35em" : 0 } }) : null,
-        node.text ? edit(node.editText, node.text, { className: "measure", style: { font: "var(--weight-regular,400) var(--fs-body)/1.5 var(--font-body)", color: node.title ? "var(--ink-3)" : "var(--ink-2)" } }) : null,
+        node.title ? edit(node.editTitle, node.title, { style: { font: "var(--weight-semibold) var(--fs-body)/1.4 var(--font-body)", color: "var(--ink)", marginRight: node.text ? "0.35em" : 0 } }) : null,
+        node.text ? edit(node.editText, node.text, { className: "measure", style: { font: "var(--weight-regular) var(--fs-body)/1.5 var(--font-body)", color: node.title ? "var(--ink-3)" : "var(--ink-2)" } }) : null,
       ),
     );
   },
@@ -203,31 +203,31 @@ const ATOM_RENDERERS = {
     const clip = SHAPE_CLIP[shape];
     const isVi = shape === "diamond";
     const face = h("div", { style: {
-      width: "var(--badge-size,68px)", height: "var(--badge-size,68px)", flex: "none",
+      width: "var(--badge-size)", height: "var(--badge-size)", flex: "none",
       display: "grid", placeItems: "center", textAlign: "center",
       background: node.tone === "active" ? "var(--vi-surface)"
         : "color-mix(in oklch, var(--pig-content) calc(5% * var(--zone-intensity)), var(--zone-ground))",
       boxShadow: node.tone === "active" ? "var(--glow-active)" : "var(--elev-1)",
       border: "1px solid " + (node.tone === "active" ? "var(--vi-edge)" : "var(--dgm-node-edge)"),
-      borderRadius: shape === "circle" ? "50%" : "var(--r-sm,6px)",
+      borderRadius: shape === "circle" ? "50%" : "var(--r-sm)",
       clipPath: clip || undefined,
     } },
       isVi
-        ? h("span", { style: { font: "var(--weight-bold,700) var(--fs-h3)/1 var(--font-display)", color: "var(--ink)" } },
+        ? h("span", { style: { font: "var(--weight-bold) var(--fs-h3)/1 var(--font-display)", color: "var(--ink)" } },
             "V", h("sub", { style: { color: "var(--accent-gold)", fontSize: "0.7em" } }, "i"))
-        : h("span", { style: { font: "var(--weight-semibold,600) var(--fs-caption)/1.05 var(--font-body)", color: "var(--ink)", padding: "0 4px" } }, node.label || node.title));
+        : h("span", { style: { font: "var(--weight-semibold) var(--fs-caption)/1.05 var(--font-body)", color: "var(--ink)", padding: "0 4px" } }, node.label || node.title));
     // caption below the shape only when explicitly given (else the shape carries the label inside)
     if (!node.caption) return h("div", { key, className: "cv-atom", style: { display: "flex", justifyContent: "center" } }, face);
     return h("div", { key, className: "cv-atom", style: { display: "flex", flexDirection: "column", gap: "var(--d-1)", alignItems: "center", textAlign: "center" } },
       face,
-      h("span", { style: { font: "var(--weight-semibold,600) var(--fs-caption)/1.2 var(--font-body)", color: "var(--ink-2)", textWrap: "balance" } }, node.caption));
+      h("span", { style: { font: "var(--weight-semibold) var(--fs-caption)/1.2 var(--font-body)", color: "var(--ink-2)", textWrap: "balance" } }, node.caption));
   },
 
   // italic bronze synthesis line — the connective tissue between scenes
   // (pitch-deck §10). A distinct register from body copy.
   note(node, key) {
     return edit(node.edit, node.text || node.title || "", { key, className: "cv-atom measure", style: {
-      font: "italic var(--weight-medium,500) var(--fs-meta)/1.5 var(--font-display)",
+      font: "italic var(--weight-medium) var(--fs-meta)/1.5 var(--font-display)",
       color: "var(--accent-bronze)", margin: 0, textWrap: "pretty",
     } }, "p");
   },
@@ -241,12 +241,12 @@ const ATOM_RENDERERS = {
       boxShadow: "inset 0 0 0 1px var(--hairline-strong)", background: "var(--zone-ground)",
     } },
       h("div", { style: {
-        width: "var(--qr-size,96px)", height: "var(--qr-size,96px)", borderRadius: "var(--r-sm,6px)",
+        width: "var(--qr-size)", height: "var(--qr-size)", borderRadius: "var(--r-sm)",
         backgroundColor: "var(--zone-ground)",
         backgroundImage: "repeating-conic-gradient(var(--ink-3) 0% 25%, var(--zone-ground) 0% 50%)",
         backgroundSize: "16px 16px", opacity: 0.5,
       } }),
-      h("span", { style: { font: "var(--weight-semibold,600) var(--fs-caption)/1.2 var(--font-body)", color: "var(--ink-2)", textTransform: "uppercase", letterSpacing: "var(--tracking-caps,0.1em)" } }, node.label || node.text || "Virtual tour"),
+      h("span", { style: { font: "var(--weight-semibold) var(--fs-caption)/1.2 var(--font-body)", color: "var(--ink-2)", textTransform: "uppercase", letterSpacing: "var(--tracking-caps)" } }, node.label || node.text || "Virtual tour"),
     );
   },
 
@@ -254,10 +254,10 @@ const ATOM_RENDERERS = {
   // proposal cards). Never a fetched mark; the brand NAME set in a neutral tile.
   logo(node, key) {
     return h("div", { key, className: "cv-atom", style: {
-      display: "grid", placeItems: "center", minHeight: "var(--logo-h,46px)", padding: "var(--d-2) var(--d-3)",
-      borderRadius: "var(--r-sm,6px)", background: "var(--zone-ground)", boxShadow: "inset 0 0 0 1px var(--hairline)",
+      display: "grid", placeItems: "center", minHeight: "var(--logo-h)", padding: "var(--d-2) var(--d-3)",
+      borderRadius: "var(--r-sm)", background: "var(--zone-ground)", boxShadow: "inset 0 0 0 1px var(--hairline)",
     } },
-      h("span", { style: { font: "var(--weight-semibold,600) var(--fs-caption)/1.1 var(--font-body)", color: "var(--ink-3)", textAlign: "center", letterSpacing: "var(--tracking-snug,-0.01em)" } }, edit(node.edit, node.label || node.text || "Logo", null)));
+      h("span", { style: { font: "var(--weight-semibold) var(--fs-caption)/1.1 var(--font-body)", color: "var(--ink-3)", textAlign: "center", letterSpacing: "var(--tracking-snug)" } }, edit(node.edit, node.label || node.text || "Logo", null)));
   },
 
   // ramp-bordered reason card (capital-raise p18) — an outline card whose STROKE
@@ -270,21 +270,28 @@ const ATOM_RENDERERS = {
       padding: "var(--d-3) var(--d-4)", borderRadius: "var(--r-md)", background: "var(--zone-ground)",
       boxShadow: "inset 0 0 0 1.5px color-mix(in oklch, " + tint + " 72%, transparent), var(--elev-1)",
     } },
-      node.title ? h("span", { style: { font: "var(--weight-bold,700) var(--fs-body)/1.2 var(--font-display)", color: "var(--ink)" } }, edit(node.editTitle, node.title, null)) : null,
-      node.text ? edit(node.editText, node.text, { className: "measure", style: { font: "var(--weight-regular,400) var(--fs-caption)/1.45 var(--font-body)", color: "var(--ink-3)" } }) : null);
+      node.title ? h("span", { style: { font: "var(--weight-bold) var(--fs-body)/1.2 var(--font-display)", color: "var(--ink)" } }, edit(node.editTitle, node.title, null)) : null,
+      node.text ? edit(node.editText, node.text, { className: "measure", style: { font: "var(--weight-regular) var(--fs-caption)/1.45 var(--font-body)", color: "var(--ink-3)" } }) : null);
   },
 
   // image / media placeholder — striped sunken tile + mono caption of what
   // belongs there (never a hand-drawn illustration).
   image(node, key) {
     const cover = node.cover;
-    return h("div", { key, className: "cv-atom", style: {
-      width: "100%", height: cover ? "100%" : undefined, aspectRatio: cover ? undefined : (node.ratio || "16 / 10"), borderRadius: cover ? 0 : "var(--r-md)",
+    return h("div", { key, className: "cv-atom",
+      // RATIO-FIT LAW: a real asset's box IS its measured ratio — stamped by
+      // the one law (core/layout-fit.js) when src is given; the declared ratio
+      // is only the pre-measure/placeholder fallback.
+      ref: node.src && typeof window !== "undefined" && window.CV_LAYOUT_FIT
+        ? ((el) => { if (el && !el.__cvArStamped) { el.__cvArStamped = 1; window.CV_LAYOUT_FIT.stampMedia(el, node.src); } })
+        : undefined,
+      style: {
+      width: "100%", height: cover ? "100%" : undefined, aspectRatio: cover ? undefined : "" + (node.ratio || "var(--asset-ar)") + "", borderRadius: cover ? 0 : "var(--r-md)",
       display: "grid", placeItems: "center", overflow: "hidden",
-      backgroundColor: "var(--bg-sunken, color-mix(in oklch, var(--pig-content) 8%, var(--zone-ground)))",
+      backgroundColor: "var(--bg-sunken)",
       backgroundImage: "repeating-linear-gradient(45deg, transparent 0 11px, color-mix(in oklch, var(--ink) 5%, transparent) 11px 12px)",
     } },
-      h("span", { style: { font: "var(--weight-medium,500) var(--fs-caption)/1.2 var(--font-mono)", color: "var(--ink-3)", textAlign: "center", padding: "var(--d-2)" } }, edit(node.edit, node.label || node.text || "image", null)));
+      h("span", { style: { font: "var(--weight-medium) var(--fs-caption)/1.2 var(--font-mono)", color: "var(--ink-3)", textAlign: "center", padding: "var(--d-2)" } }, edit(node.edit, node.label || node.text || "image", null)));
   },
 
   // icon — first-class content (DIAGRAMS.md): a CV icon from window.CV_ICONS,
@@ -297,22 +304,22 @@ const ATOM_RENDERERS = {
     return h("div", { key, className: "cv-atom", style: { display: "flex", flexDirection: "column", gap: "var(--d-1)", alignItems: "center", minWidth: 0 } },
       body
         ? h("svg", { viewBox: "0 0 24 24", width: sz, height: sz, fill: "none", stroke: tone, strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", dangerouslySetInnerHTML: { __html: body } })
-        : h("div", { style: { width: sz + "px", height: sz + "px", borderRadius: "var(--r-sm,6px)", boxShadow: "inset 0 0 0 1px var(--dgm-node-edge)" } }),
-      node.label ? edit(node.editLabel, node.label, { style: { font: "var(--weight-medium,500) var(--fs-caption)/1.2 var(--font-body)", color: "var(--ink-3)", textAlign: "center" } }) : null);
+        : h("div", { style: { width: sz + "px", height: sz + "px", borderRadius: "var(--r-sm)", boxShadow: "inset 0 0 0 1px var(--dgm-node-edge)" } }),
+      node.label ? edit(node.editLabel, node.label, { style: { font: "var(--weight-medium) var(--fs-caption)/1.2 var(--font-body)", color: "var(--ink-3)", textAlign: "center" } }) : null);
   },
 
   // default: a line / paragraph of text
   text(node, key) {
     return edit(node.edit, node.text || node.title || "", { key, className: "cv-atom measure",
-      style: { font: "var(--weight-regular,400) var(--fs-body)/1.55 var(--font-body)", color: "var(--ink-2)", margin: 0 } }, "p");
+      style: { font: "var(--weight-regular) var(--fs-body)/1.55 var(--font-body)", color: "var(--ink-2)", margin: 0 } }, "p");
   },
 
   // display-weight title for an overlay/divider (product cover/closing, photo
   // divider) — bigger than `text`, the cover/section title treatment.
   headline(node, key) {
     return edit(node.edit, node.text || node.title || "", { key, className: "cv-atom", style: {
-      font: "var(--weight-bold,700) var(--fs-h2)/var(--lh-tight,1.08) var(--font-display)",
-      color: "var(--ink)", letterSpacing: "var(--tracking-tight,-0.02em)", margin: 0, textWrap: "balance",
+      font: "var(--weight-bold) var(--fs-h2)/var(--lh-tight) var(--font-display)",
+      color: "var(--ink)", letterSpacing: "var(--tracking-tight)", margin: 0, textWrap: "balance",
     } }, "h2");
   },
 };
@@ -351,7 +358,7 @@ function skeletonFor(node, key) {
     h("div", { className: "skeleton", style: { width: "2.2em", height: "1.4em" } }),
     h("div", { className: "skeleton text", style: { width: "4.5em" } }));
   if (role === "icon" || role === "badge") return h("div", { key, className: "skeleton circle", style: { width: "26px", height: "26px" } });
-  if (role === "image" || role === "chart" || role === "qr") return h("div", { key, className: "skeleton", style: { width: "100%", aspectRatio: role === "qr" ? "1" : "16/9", borderRadius: "var(--r-md,10px)" } });
+  if (role === "image" || role === "chart" || role === "qr") return h("div", { key, className: "skeleton", style: { width: "100%", aspectRatio: role === "qr" ? "1" : "16/9", borderRadius: "var(--r-md)" } });
   // text / bullet / note: a couple of shimmer lines
   return h("div", { key, className: "cv-atom", style: { display: "flex", flexDirection: "column", gap: "var(--d-1)", width: "100%" } },
     h("div", { className: "skeleton text", style: { width: "100%" } }),
@@ -372,8 +379,8 @@ function renderNode(node, axis, depth, key, DiagramSolver) {
     case "band":
       return h("section", { key, className: "cv-band" + (node.bleed ? " cv-band--bleed" : ""), "data-surface": axis.surface || "slide", "data-ground": node.ground || undefined, "data-screen-label": node.title },
         node.title ? h("h2", { style: {
-          font: "var(--weight-bold,700) var(--fs-h1)/var(--lh-tight,1.05) var(--font-display)",
-          color: "var(--ink)", letterSpacing: "var(--tracking-tight,-0.02em)", margin: 0, textWrap: "balance",
+          font: "var(--weight-bold) var(--fs-h1)/var(--lh-tight) var(--font-display)",
+          color: "var(--ink)", letterSpacing: "var(--tracking-tight)", margin: 0, textWrap: "balance",
         } }, edit(node.editTitle, node.title, null)) : null,
         withMotion(kids));
 
@@ -396,11 +403,16 @@ function renderNode(node, axis, depth, key, DiagramSolver) {
       // cover/closing): node.place = "<align> <justify>" grid keywords.
       const place = node.place ? { alignSelf: node.place.split(" ")[0], justifySelf: node.place.split(" ")[1] || node.place.split(" ")[0] } : null;
       return h("div", { key, className: "cv-zone" + (auth === "vi" ? " vi-authored" : "") + (node.frosted ? " cv-zone--frosted" : ""), "data-tone": node.tone || "warm",
+        // THE DEPTH COORDINATE (unification sweep): nesting depth IS the ladder
+        // rung — stamped so skins can resolve zones to 3D physics the moment a
+        // zone opts into a material surface. Coordinate always; physics binds
+        // to .material, so plain tonal zones are visually unchanged.
+        "data-depth": String(Math.min(depth + 1, 5)),
         "data-raised": node.raised ? "" : undefined, "data-author": auth || undefined,
         style: Object.assign({ "--zone-depth": depth }, place, node.maxw ? { maxWidth: node.maxw } : null) },
         (node.title || auth) ? h("div", { style: { display: "flex", alignItems: "baseline", gap: "var(--d-2)" } },
           node.title ? h("div", { style: {
-            font: "var(--weight-semibold,600) var(--fs-h4)/1.15 var(--font-display)",
+            font: "var(--weight-semibold) var(--fs-h4)/1.15 var(--font-display)",
             color: "var(--ink)", margin: 0, flex: 1, minWidth: 0,
           } }, edit(node.editTitle, node.title, null)) : h("span", { style: { flex: 1 } }),
           auth ? h("span", { className: "by by-" + auth, style: { flex: "none" } }, byLabel[auth] || auth) : null

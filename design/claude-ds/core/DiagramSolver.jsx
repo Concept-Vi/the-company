@@ -61,21 +61,23 @@ function layout(graph) {
       nodes.forEach(nd => { pos[nd.id] = { x: 40 + (nd.x ?? 0.5) * (VB - 80), y: VB - 40 - (nd.y ?? 0.5) * (VB - 80) }; });
       break;
     case "glyphgraph": {       // G5: a meaning-graph of full glyphics.
-      // Position priority: (1) AUTHORED x/y in 0..1 (like quadrant — the author placed it),
-      // else (2) a LAYERED fallback — rank nodes by longest-path-from-a-source (a simple DAG
-      // layering) into rows, spread evenly across each row; a cyclic/source-less graph falls
-      // back to a ring. No external layout lib (CSP/bundle) — closed-form, like the siblings.
-      const authored = nodes.every(nd => nd.x != null && nd.y != null);
-      if (authored) {
-        nodes.forEach(nd => { pos[nd.id] = { x: 30 + nd.x * (VB - 60), y: 30 + nd.y * (VB - 60) }; });
-        break;
-      }
+      // W2 · FROZEN-ADDRESS placement (the layout-jump fix, per the assessment):
+      // Position priority PER NODE: (1) AUTHORED nd.x/nd.y in 0..1 (the author/drag placed it) →
+      // (2) the node's FROZEN address nd._slot {row, slot}, assigned ONCE at first layout and
+      // NEVER recomputed. Rank (longest-path layering) runs ONLY to seed a NEW node's row —
+      // existing nodes keep their frozen row even if the live rank math would now re-row them
+      // (an edge addition must never move a placed node; the reading grew, the places did not).
+      // Both pitches are CONSTANTS (never the live count): growth runs off the frame edges
+      // honestly (the declared scope boundary) rather than re-packing — no green-paint
+      // compression, same law as the left-anchor. The flat-graph ring is gone for glyphgraphs:
+      // ring angles are f(count) = every insertion moves every node — the exact jump this fixes.
+      // (The address IS the CV_ADDRESS shape — row/slot as a frozen path; the pixel mapping is
+      // this bounded viewbox's projection of it.)
       const E = graph.edges || [];
-      // rank = longest distance from any source (a node that is never a target). BFS-ish relax.
+      // rank = longest distance from any source — computed for NEW (address-less) nodes only.
       const tos = {}; E.forEach(e => { tos[e.to] = 1; });
       const rank = {}; nodes.forEach(nd => { rank[nd.id] = tos[nd.id] ? null : 0; });
-      // sources start at 0; if every node is a target (cycle), seed the first node at 0.
-      if (nodes.every(nd => rank[nd.id] == null)) rank[nodes[0].id] = 0;
+      if (nodes.every(nd => rank[nd.id] == null) && nodes[0]) rank[nodes[0].id] = 0;
       let changed = true, guard = 0;
       while (changed && guard++ < nodes.length + 2) {
         changed = false;
@@ -86,37 +88,41 @@ function layout(graph) {
           }
         });
       }
-      nodes.forEach(nd => { if (rank[nd.id] == null) rank[nd.id] = 0; });   // orphans → row 0
-      // group by rank → rows top→bottom. PUSH order = the node's AUTHOR order, so a node's slot
-      // index within its row is stable (the order it was authored, not "who's present now").
-      const rows = {}; nodes.forEach(nd => { (rows[rank[nd.id]] = rows[rank[nd.id]] || []).push(nd); });
-      const rankKeys = Object.keys(rows).map(Number).sort((a, b) => a - b);
-      const nR = rankKeys.length;
-      if (nR <= 1) { ring(nodes, R); break; }   // flat (no structure) → ring
-      // G11 · STABLE-SLOT placement (staged-reveal stability). Each node sits at a slot whose
-      // coordinate is a function of its FIXED slot index + a FIXED pitch — NEVER the live count.
-      // So adding a same-rank sibling does NOT move any existing node (the old even-spread
-      // `ci*(VB-88)/(m-1)` re-centred the whole row on every addition — a 116px jump on a 320
-      // canvas, verified). Growth is absorbed by the unused slots / margin, not by reflow.
-      // Pitch is derived from a FIXED reference glyphic size (LAY_SIZE) — independent of the
-      // count-dependent RENDER size, so crossing the 4/6-node render-shrink thresholds does not
-      // move positions either. Slots/row beyond CAP is the declared SCOPE boundary (bounded
-      // viewbox + unbounded fan-out cannot both hold) — extra slots run off the right edge
-      // honestly rather than silently re-packing the row (no green-paint compression).
+      nodes.forEach(nd => { if (rank[nd.id] == null) rank[nd.id] = 0; });
       const LAY_SIZE = 58;                       // fixed overlap floor (== glyphGraphView's max node size)
-      const LAY_PITCH = LAY_SIZE * 1.55;         // slot stride: a node + a gap (~90px)
+      const LAY_PITCH = LAY_SIZE * 1.55;         // slot stride — CONSTANT, never the live count
       const LAY_MARGIN = 44;                     // edge gutter (matches the sibling layouts)
-      const LAY_ROW_PITCH = (VB - 2 * LAY_MARGIN) / Math.max(1, nR - 1);  // row stride; nR only grows when a NEW RANK appears (out of same-rank-sibling scope)
-      rankKeys.forEach((rk, ri) => {
-        const row = rows[rk];
-        const y = nR === 1 ? cy : LAY_MARGIN + ri * LAY_ROW_PITCH;
-        // ANCHOR LEFT (slot 0 at the margin). The honest staged-reveal tradeoff: in a bounded
-        // viewbox you cannot BOTH keep existing nodes pinned AND re-centre the row when a sibling
-        // appears — centring would move every node. We pin (left-anchor by fixed slot), accept an
-        // off-centre / left-hugging row. The visual consequence (graph hugs the left, right gutter
-        // empty for small rows) is FLAGGED for Tim — not papered over.
-        row.forEach((nd, ci) => { pos[nd.id] = { x: LAY_MARGIN + ci * LAY_PITCH, y }; });
+      const LAY_ROW_PITCH = 116;                 // row stride — CONSTANT ((VB−2·44)/2; rows run off honestly)
+      // assign frozen addresses to the new nodes: row = rank AT INSERTION; slot = next free in row.
+      const used = {};
+      nodes.forEach(nd => { if (nd._slot) used[nd._slot.row] = Math.max(used[nd._slot.row] ?? -1, nd._slot.slot); });
+      nodes.forEach(nd => {
+        if (!nd._slot && (nd.x == null || nd.y == null)) {
+          const row = rank[nd.id];
+          used[row] = (used[row] ?? -1) + 1;
+          nd._slot = { row, slot: used[row] };   // FROZEN — the graph carries its addresses (one IR)
+        }
       });
+      const maxRow = nodes.reduce((m, nd) => nd._slot ? Math.max(m, nd._slot.row) : m, 0);
+      nodes.forEach(nd => {
+        if (nd.x != null && nd.y != null) {      // authored/drag override — per NODE, highest priority
+          pos[nd.id] = { x: 30 + nd.x * (VB - 60), y: 30 + nd.y * (VB - 60) };
+        } else {
+          const s = nd._slot;
+          // BRICK-WRAP within the row (still pure f(frozen slot) — never the live count): slots
+          // beyond what the frame fits wrap onto staggered sub-lines (a brick course: each line
+          // offset half a pitch), so a wide fan-out stays VISIBLE instead of running off the edge.
+          // Deterministic: slot k always lands at the same place, forever. Sub-lines can reach the
+          // next rank row after ~3 courses — the (much further) honest scope boundary.
+          const PER_LINE = 3;                    // slots the frame holds fully (f(VB), a constant)
+          const SUB_PITCH = 40;                  // brick course height
+          const col = s.slot % PER_LINE, line = Math.floor(s.slot / PER_LINE);
+          const rowY = maxRow === 0 ? cy : LAY_MARGIN + s.row * LAY_ROW_PITCH;
+          pos[nd.id] = { x: LAY_MARGIN + col * LAY_PITCH + (line % 2) * (LAY_PITCH / 2),
+                         y: rowY + line * SUB_PITCH };
+        }
+        nd._pos = pos[nd.id];                    // the computed place, written back — surfaces read
+      });                                        // THIS, never re-derive the layout (one home)
       break;
     }
     case "tree": {             // root top, children spread below
@@ -137,7 +143,7 @@ function layout(graph) {
 const EDGE_CLASS = { flow: "dgm-edge dgm-edge--flow", dependency: "dgm-edge dgm-edge--dep", reference: "dgm-edge dgm-edge--ref", rejected: "dgm-edge dgm-edge--rej", communication: "dgm-edge dgm-edge--comm", bidirectional: "dgm-edge dgm-edge--bi" };
 const SHAPE = {
   circle:  (s) => ({ borderRadius: "50%" }),
-  square:  (s) => ({ borderRadius: "var(--r-sm,6px)" }),
+  square:  (s) => ({ borderRadius: "var(--r-sm)" }),
   hex:     (s) => ({ clipPath: "polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)" }),
   octagon: (s) => ({ clipPath: "polygon(29% 0,71% 0,100% 29%,100% 71%,71% 100%,29% 100%,0 71%,0 29%)" }),
   diamond: (s) => ({ clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)" }),
@@ -161,7 +167,7 @@ const SOFT_CARD = {
   background: "var(--zone-ground)", borderRadius: "var(--r-lg)",
   boxShadow: "var(--elev-2), inset 0 1px 0 rgba(255,255,255,.6)",
 };
-const CAP = { font: "var(--weight-semibold,600) var(--fs-caption)/1.15 var(--font-body)", color: "var(--ink-3)" };
+const CAP = { font: "var(--weight-semibold) var(--fs-caption)/1.15 var(--font-body)", color: "var(--ink-3)" };
 function shapedNode(label, shape, opts) {
   opts = opts || {};
   const active = opts.tone === "active";
@@ -170,7 +176,7 @@ function shapedNode(label, shape, opts) {
   const size = opts.size || "86px";
   const base = { position: "relative", display: "grid", placeItems: "center", textAlign: "center", boxSizing: "border-box",
     minWidth: size, minHeight: "54px", padding: "var(--d-2) var(--d-3)",
-    font: "var(--weight-semibold,600) var(--fs-caption)/1.1 var(--font-body)", color: "var(--ink)" };
+    font: "var(--weight-semibold) var(--fs-caption)/1.1 var(--font-body)", color: "var(--ink)" };
   // circle / square keep a real CSS border (border-radius doesn't clip it).
   if (shape === "circle")
     return h("div", { style: Object.assign({}, base, { borderRadius: "50%", aspectRatio: "1", background: fill, border: "1.5px solid " + stroke, boxShadow: active ? "var(--glow-active)" : "var(--elev-1)" }) }, label);
@@ -198,7 +204,7 @@ function orbitalView(graph, onEdit) {
       const a = -Math.PI / 2 + (i * 2 * Math.PI) / Math.max(1, verbs.length);
       const rad = 42;
       return h("div", { key: "v" + i, style: { position: "absolute", left: (50 + rad * Math.cos(a)) + "%", top: (50 + rad * Math.sin(a)) + "%", transform: "translate(-50%,-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" } },
-        h("span", { style: { font: "var(--weight-bold,700) var(--fs-caption)/1 var(--font-body)", letterSpacing: "var(--tracking-caps,0.08em)", textTransform: "uppercase", color: "var(--accent-bronze)" } }, edLabel(onEdit, v.edit, v.label || v)));
+        h("span", { style: { font: "var(--weight-bold) var(--fs-caption)/1 var(--font-body)", letterSpacing: "var(--tracking-caps)", textTransform: "uppercase", color: "var(--accent-bronze)" } }, edLabel(onEdit, v.edit, v.label || v)));
     }));
 }
 
@@ -207,9 +213,9 @@ function orbitalView(graph, onEdit) {
 // `+` join nodes and shape-coding honoured. Bidirectional-friendly.
 function stackedView(graph, onEdit) {
   const nodes = graph.nodes || [];
-  const member = (m, pos) => h("div", { key: pos + (m.label || m), style: { font: "var(--weight-medium,500) var(--fs-meta)/1.2 var(--font-body)", color: "var(--ink-2)", background: "var(--zone-ground)", borderRadius: "var(--r-sm,6px)", boxShadow: "var(--elev-1)", padding: "3px 9px", whiteSpace: "nowrap" } }, m.label || m);
-  const chev = (d) => h("span", { style: { color: "var(--accent-gold)", font: "var(--weight-bold,700) 0.7em/1 var(--font-body)" } }, d === "up" ? "⌃" : "⌬");
-  const arrow = (plus) => h("div", { style: { flex: "none", display: "grid", placeItems: "center", color: "var(--accent-gold)", width: plus ? "26px" : "22px", height: plus ? "26px" : "auto", alignSelf: "center", border: plus ? "1.5px solid var(--accent-gold)" : "none", borderRadius: plus ? "50%" : 0, font: "var(--weight-bold,700) var(--fs-body) var(--font-body)" } }, plus ? "+" : "→");
+  const member = (m, pos) => h("div", { key: pos + (m.label || m), style: { font: "var(--weight-medium) var(--fs-meta)/1.2 var(--font-body)", color: "var(--ink-2)", background: "var(--zone-ground)", borderRadius: "var(--r-sm)", boxShadow: "var(--elev-1)", padding: "3px 9px", whiteSpace: "nowrap" } }, m.label || m);
+  const chev = (d) => h("span", { style: { color: "var(--accent-gold)", font: "var(--weight-bold) 0.7em/1 var(--font-body)" } }, d === "up" ? "⌃" : "⌬");
+  const arrow = (plus) => h("div", { style: { flex: "none", display: "grid", placeItems: "center", color: "var(--accent-gold)", width: plus ? "26px" : "22px", height: plus ? "26px" : "auto", alignSelf: "center", border: plus ? "1.5px solid var(--accent-gold)" : "none", borderRadius: plus ? "50%" : 0, font: "var(--weight-bold) var(--fs-body) var(--font-body)" } }, plus ? "+" : "→");
   const out = [];
   nodes.forEach((nd, i) => {
     const top = nd.top || [], bottom = nd.bottom || [];
@@ -233,15 +239,15 @@ function spectrumView(graph, onEdit) {
   const track = { position: "relative", margin: "0 8%" };   // inset so edge cards/labels never clip
   return h("div", { className: "cv-diagram cv-diagram--spectrum", style: { position: "relative", width: "100%", padding: "var(--d-6) 0" } },
     h("div", { style: Object.assign({}, track, { height: "18px", marginBottom: "var(--d-2)" }) },
-      segs.map((s, i) => h("span", { key: "s" + i, style: { position: "absolute", left: ((s.at != null ? s.at : 0.5) * 100) + "%", transform: "translateX(-50%)", whiteSpace: "nowrap", font: "var(--weight-semibold,600) var(--fs-caption) var(--font-body)", color: "var(--ink-2)" } }, edLabel(onEdit, s.edit, s.label)))),
+      segs.map((s, i) => h("span", { key: "s" + i, style: { position: "absolute", left: ((s.at != null ? s.at : 0.5) * 100) + "%", transform: "translateX(-50%)", whiteSpace: "nowrap", font: "var(--weight-semibold) var(--fs-caption) var(--font-body)", color: "var(--ink-2)" } }, edLabel(onEdit, s.edit, s.label)))),
     h("div", { style: Object.assign({}, track, { height: "7px", borderRadius: "999px", background: "linear-gradient(90deg, var(--ramp-1), var(--ramp-4))" }) },
-      hatch ? h("div", { style: { position: "absolute", top: "-7px", bottom: "-7px", left: (hatch[0] * 100) + "%", width: ((hatch[1] - hatch[0]) * 100) + "%", backgroundImage: "repeating-linear-gradient(45deg, transparent 0 6px, color-mix(in oklch, var(--accent-gold) 30%, transparent) 6px 7px)", border: "1px dashed color-mix(in oklch, var(--accent-gold) 40%, transparent)", borderRadius: "var(--r-sm,6px)" } }) : null,
+      hatch ? h("div", { style: { position: "absolute", top: "-7px", bottom: "-7px", left: (hatch[0] * 100) + "%", width: ((hatch[1] - hatch[0]) * 100) + "%", backgroundImage: "repeating-linear-gradient(45deg, transparent 0 6px, color-mix(in oklch, var(--accent-gold) 30%, transparent) 6px 7px)", border: "1px dashed color-mix(in oklch, var(--accent-gold) 40%, transparent)", borderRadius: "var(--r-sm)" } }) : null,
       h("span", { style: { position: "absolute", left: "-16px", top: "50%", transform: "translateY(-50%)", fontSize: "0.7em", color: "var(--ramp-1)" } }, "◀"),
       h("span", { style: { position: "absolute", right: "-16px", top: "50%", transform: "translateY(-50%)", fontSize: "0.7em", color: "var(--ramp-4)" } }, "▶")),
     h("div", { style: Object.assign({}, track, { height: "40px", marginTop: "var(--d-2)" }) },
       cards.map((cd, i) => h("div", { key: "c" + i, style: { position: "absolute", left: (cd.at * 100) + "%", top: 0, transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" } },
         h("span", { style: { width: "1px", height: "8px", background: "var(--hairline-strong)" } }),
-        h("span", { style: Object.assign({}, SOFT_CARD, { padding: "4px 10px", font: "var(--weight-semibold,600) var(--fs-caption)/1.1 var(--font-body)", color: "var(--ink)", whiteSpace: "nowrap" }) }, edLabel(onEdit, cd.edit, cd.label))))),
+        h("span", { style: Object.assign({}, SOFT_CARD, { padding: "4px 10px", font: "var(--weight-semibold) var(--fs-caption)/1.1 var(--font-body)", color: "var(--ink)", whiteSpace: "nowrap" }) }, edLabel(onEdit, cd.edit, cd.label))))),
     h("div", { style: { display: "flex", justifyContent: "space-between", marginTop: "var(--d-1)", padding: "0 1%" } },
       h("span", { style: Object.assign({}, CAP, { color: "var(--ink)", fontWeight: 700 }) }, ends[0]),
       h("span", { style: Object.assign({}, CAP, { color: "var(--ink)", fontWeight: 700, textAlign: "right" }) }, ends[1])));
@@ -255,13 +261,13 @@ function manifoldView(graph, onEdit) {
     h("div", { style: { display: "grid", gridTemplateColumns: "repeat(" + Math.max(1, branches.length) + ", 1fr)", gap: "var(--d-4)" } },
       branches.map((b, i) => h("div", { key: "b" + i, style: { display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "var(--d-1)" } },
         b.title ? h("span", { style: CAP }, edLabel(onEdit, b.editTitle, b.title)) : null,
-        h("span", { style: { font: "var(--weight-bold,700) var(--fs-h3)/1 var(--font-display)", color: "var(--accent-gold)", fontVariantNumeric: "tabular-nums" } }, edLabel(onEdit, b.editValue, b.value)),
+        h("span", { style: { font: "var(--weight-bold) var(--fs-h3)/1 var(--font-display)", color: "var(--accent-gold)", fontVariantNumeric: "tabular-nums" } }, edLabel(onEdit, b.editValue, b.value)),
         b.label ? h("span", { style: CAP }, edLabel(onEdit, b.editLabel, b.label)) : null))),
     h("div", { style: { height: "1px", borderTop: "1.5px dashed var(--accent-gold)", margin: "var(--d-1) 0" } }),
     h("div", { style: { width: "1px", height: "14px", borderLeft: "1.5px dashed var(--accent-gold)", alignSelf: "center" } }),
     h("div", { style: { alignSelf: "center", display: "flex", alignItems: "center", gap: "var(--d-3)" } },
-      h("span", { style: Object.assign({}, SOFT_CARD, { padding: "var(--d-3) var(--d-5)", font: "var(--weight-bold,700) var(--fs-h2)/1 var(--font-display)", color: "var(--accent-gold)", fontVariantNumeric: "tabular-nums" }) }, edLabel(onEdit, total.editValue, total.value)),
-      total.label ? h("span", { style: { font: "var(--weight-medium,500) var(--fs-body)/1.3 var(--font-body)", color: "var(--ink-2)", maxWidth: "14ch" } }, edLabel(onEdit, total.editLabel, total.label)) : null));
+      h("span", { style: Object.assign({}, SOFT_CARD, { padding: "var(--d-3) var(--d-5)", font: "var(--weight-bold) var(--fs-h2)/1 var(--font-display)", color: "var(--accent-gold)", fontVariantNumeric: "tabular-nums" }) }, edLabel(onEdit, total.editValue, total.value)),
+      total.label ? h("span", { style: { font: "var(--weight-medium) var(--fs-body)/1.3 var(--font-body)", color: "var(--ink-2)", maxWidth: "14ch" } }, edLabel(onEdit, total.editLabel, total.label)) : null));
 }
 
 // PROGRESSIVE-FIDELITY stepper (flow×timeline, capital-raise p22): a VERTICAL
@@ -273,15 +279,15 @@ function fidelityView(graph, onEdit) {
   const n = steps.length;
   return h("div", { className: "cv-diagram cv-diagram--fidelity", style: { display: "grid", gridTemplateColumns: "minmax(140px, 0.8fr) 1fr", columnGap: "var(--d-5)", rowGap: "var(--d-2)", alignItems: "stretch", width: "100%" } },
     steps.map((st, i) => [
-      st.inter ? h("div", { key: "i" + i, style: { gridColumn: "1", justifySelf: "center", font: "var(--weight-semibold,600) var(--fs-meta)/1 var(--font-body)", color: "var(--ink-3)", background: "var(--zone-ground)", border: "1px solid var(--hairline-strong)", borderRadius: "999px", padding: "2px 10px", margin: "2px 0" } }, edLabel(onEdit, st.editInter, st.inter)) : null,
+      st.inter ? h("div", { key: "i" + i, style: { gridColumn: "1", justifySelf: "center", font: "var(--weight-semibold) var(--fs-meta)/1 var(--font-body)", color: "var(--ink-3)", background: "var(--zone-ground)", border: "1px solid var(--hairline-strong)", borderRadius: "999px", padding: "2px 10px", margin: "2px 0" } }, edLabel(onEdit, st.editInter, st.inter)) : null,
       h("div", { key: "p" + i, style: Object.assign({ gridColumn: "1", display: "flex", flexDirection: "column", gap: "2px", padding: "var(--d-3) var(--d-4)", borderRadius: "var(--r-md)", border: "1.5px solid var(--accent-gold)", background: "color-mix(in oklch, " + RAMP[Math.min(i, RAMP.length - 1)] + " 18%, var(--zone-ground))" }) },
-        h("span", { style: { font: "var(--weight-bold,700) var(--fs-caption)/1.15 var(--font-body)", color: "var(--ink)" } }, edLabel(onEdit, st.editLabel, st.label)),
-        st.text ? h("span", { style: { font: "var(--weight-regular,400) var(--fs-meta)/1.35 var(--font-body)", color: "var(--ink-3)" } }, edLabel(onEdit, st.editText, st.text)) : null),
+        h("span", { style: { font: "var(--weight-bold) var(--fs-caption)/1.15 var(--font-body)", color: "var(--ink)" } }, edLabel(onEdit, st.editLabel, st.label)),
+        st.text ? h("span", { style: { font: "var(--weight-regular) var(--fs-meta)/1.35 var(--font-body)", color: "var(--ink-3)" } }, edLabel(onEdit, st.editText, st.text)) : null),
       h("div", { key: "m" + i, style: { gridColumn: "2", gridRow: "auto", position: "relative", borderRadius: "var(--r-md)", overflow: "hidden", minHeight: "58px",
         backgroundColor: "color-mix(in oklch, var(--pig-content) 8%, var(--zone-ground))",
         backgroundImage: "repeating-linear-gradient(45deg, transparent 0 " + (12 - i * 2) + "px, color-mix(in oklch, var(--ink) " + (4 + i * 2) + "%, transparent) " + (12 - i * 2) + "px " + (13 - i * 2) + "px)",
         opacity: (0.55 + 0.45 * (n > 1 ? i / (n - 1) : 1)), display: "grid", placeItems: "end start" } },
-        h("span", { style: { margin: "6px", font: "var(--weight-medium,500) var(--fs-meta)/1.1 var(--font-mono)", color: "var(--ink-3)", display: "flex", gap: "2px", alignItems: "center" } },
+        h("span", { style: { margin: "6px", font: "var(--weight-medium) var(--fs-meta)/1.1 var(--font-mono)", color: "var(--ink-3)", display: "flex", gap: "2px", alignItems: "center" } },
           Array.from({ length: n }, (_, k) => h("span", { key: k, style: { width: "6px", height: "6px", borderRadius: "1px", background: k <= i ? "var(--accent-gold)" : "var(--hairline-strong)" } })),
           h("span", { style: { marginLeft: "4px" } }, edLabel(onEdit, st.editImage, st.image || "render")))),
     ]));
@@ -353,14 +359,26 @@ function glyphGraphView(graph) {
     if (!txt && e.kind && ME && ME.field) { try { txt = ME.field("edge", e.kind).feeling; } catch (_) { txt = e.kind; } }
     if (!txt) return null;
     return h("div", { key: "lbl" + i, style: { position: "absolute", left: (mx / VB * 100) + "%", top: (my / VB * 100) + "%", transform: "translate(-50%,-50%)",
-      font: "var(--weight-semibold,600) var(--fs-meta)/1 var(--font-body)", color: "var(--ink-3)", background: "var(--zone-ground)", border: "1px solid var(--hairline)", borderRadius: "var(--r-sm,6px)", padding: "1px 6px", whiteSpace: "nowrap", pointerEvents: "none" } }, txt);
+      font: "var(--weight-semibold) var(--fs-meta)/1 var(--font-body)", color: "var(--ink-3)", background: "var(--zone-ground)", border: "1px solid var(--hairline)", borderRadius: "var(--r-sm)", padding: "1px 6px", whiteSpace: "nowrap", pointerEvents: "none" } }, txt);
   }).filter(Boolean) : [];
 
   const nodeEls = graph.nodes.map((nd) => {
     const p = pos[nd.id]; if (!p) return null;
     const html = GL.render(nd, { size });                // FULL glyphic — facets read at node top-level
-    return h("div", { key: nd.id, title: (function () { try { return ME && ME.referent ? ME.referent(nd) : ""; } catch (_) { return ""; } })(),
-      style: { position: "absolute", left: (p.x / VB * 100) + "%", top: (p.y / VB * 100) + "%", transform: "translate(-50%,-50%)", lineHeight: 0 },
+    // W2 · the FIELD halo: nd._field = a TOKEN NAME (from the ordinal axis by telling-order) —
+    // painted as a soft wash BEHIND the glyph via the zone-wash color-mix mechanism (orientation
+    // without reading; never hex, never a semantic state — states stay on nd.value/the ring).
+    const fieldBg = nd._field
+      ? { background: "radial-gradient(circle, color-mix(in oklch, var(--" + nd._field + ") 26%, transparent) 0%, transparent 68%)",
+          padding: Math.round(size * 0.33) + "px", margin: (-Math.round(size * 0.33)) + "px", borderRadius: "50%" }
+      : null;
+    // .gg-node + data-node-id = the growth animator's handle (transitions live in tokens/diagram.css;
+    // React keys keep placed nodes' elements alive, so a style change GLIDES and a new key ENTERS —
+    // with frozen-address placement the diff is minimal by construction: only the changed node moves,
+    // the LCA-anchor law satisfied structurally at this scale).
+    return h("div", { key: nd.id, className: "gg-node", "data-node-id": nd.id,
+      title: (function () { try { return ME && ME.referent ? ME.referent(nd) : ""; } catch (_) { return ""; } })(),
+      style: Object.assign({ position: "absolute", left: (p.x / VB * 100) + "%", top: (p.y / VB * 100) + "%", transform: "translate(-50%,-50%)", lineHeight: 0 }, fieldBg),
       dangerouslySetInnerHTML: { __html: html } });
   }).filter(Boolean);
 
@@ -415,7 +433,7 @@ export function DiagramSolver(props) {
           marginLeft: first ? 0 : "-" + notch,
           display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--d-1)",
           padding: "var(--d-3) var(--d-4) var(--d-3) " + (first ? "var(--d-4)" : "calc(var(--d-4) + " + notch + ")"),
-          font: "var(--weight-semibold,600) var(--fs-caption)/1.1 var(--font-body)",
+          font: "var(--weight-semibold) var(--fs-caption)/1.1 var(--font-body)",
           color: on ? "var(--ink)" : "var(--ink-3)", textAlign: "center",
           background: on
             ? "color-mix(in oklch, " + tint + " 34%, var(--zone-ground))"
@@ -453,7 +471,7 @@ export function DiagramSolver(props) {
     const p = pos[nd.id]; if (!p) return null;
     const isCenter = (graph.center || (graph.type === "hub" && graph.nodes[0].id)) === nd.id;
     const shapeStyle = (SHAPE[nd.shape] || SHAPE.circle)();
-    return h("div", { key: nd.id,
+    return h("div", { key: nd.id, className: "dgm-node",  // .dgm-node: position tweens via motion tokens (tokens/diagram.css) — the morph type's before↔after animates, nothing teleports
       style: {
         position: "absolute", left: (p.x / VB * 100) + "%", top: (p.y / VB * 100) + "%",
         transform: "translate(-50%,-50%)",
@@ -462,10 +480,10 @@ export function DiagramSolver(props) {
         background: TONE_FILL[nd.tone || (isCenter ? "active" : "warm")],
         boxShadow: isCenter ? "var(--glow-active)" : "var(--elev-1)",
         border: "1px solid " + (isCenter ? "var(--vi-edge)" : "var(--dgm-node-edge)"),
-        font: "var(--weight-semibold,600) var(--fs-caption)/1.1 var(--font-body)",
+        font: "var(--weight-semibold) var(--fs-caption)/1.1 var(--font-body)",
         color: "var(--ink)", padding: "var(--d-1)", boxSizing: "border-box",
         ...shapeStyle,
-        transition: "left var(--dur-move,280ms) var(--ease-emphasized), top var(--dur-move,280ms) var(--ease-emphasized)",
+        transition: "left var(--dur-move) var(--ease-emphasized), top var(--dur-move) var(--ease-emphasized)",
       } },
       (function () {
         const ic = nd.icon && typeof window !== "undefined" && window.CV_ICONS && window.CV_ICONS.data && window.CV_ICONS.data[nd.icon];
@@ -495,7 +513,7 @@ export function DiagramSolver(props) {
         h("marker", { id: "cv-arrow-back", markerWidth: 8, markerHeight: 8, refX: 0, refY: 3, orient: "auto", markerUnits: "strokeWidth" },
           h("path", { d: "M6,0 L0,3 L6,6 z", fill: "var(--accent-gold)" })),
         h("marker", { id: "cv-arrow-comm", markerWidth: 8, markerHeight: 8, refX: 6, refY: 3, orient: "auto", markerUnits: "strokeWidth" },
-          h("path", { d: "M0,0 L6,3 L0,6 z", fill: "var(--comm-line, #7CA85B)" }))),
+          h("path", { d: "M0,0 L6,3 L0,6 z", fill: "var(--comm-line)" }))),
       edges),
     axisEls,
     nodeEls);

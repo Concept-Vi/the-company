@@ -56,7 +56,7 @@ function Bridge() {
             <div key={r.id} style={{
               display: 'flex', alignItems: 'flex-start', gap: 14, padding: '14px 16px',
               border: '1px solid var(--border-soft)', borderRadius: 'var(--r-lg)',
-              background: r.available ? 'var(--accent-gold-50, #FBF4D8)' : 'var(--bg-surface)',
+              background: r.available ? 'var(--accent-gold-50)' : 'var(--bg-surface)',
               opacity: r.supported ? 1 : 0.55,
             }}>
               <Dot on={r.available} />
@@ -66,7 +66,7 @@ function Bridge() {
                   <span style={{ font: '500 11px var(--font-mono)', color: 'var(--fg-muted)' }}>
                     {Object.keys(r.caps).filter(k => r.caps[k]).map(k => CAP_LABEL[k]).join(' · ') || 'staging only'}
                   </span>
-                  {r.available && <span style={{ marginLeft: 'auto', font: '600 11px var(--font-mono)', color: 'var(--status-success, #2E7D32)' }}>ACTIVE</span>}
+                  {r.available && <span style={{ marginLeft: 'auto', font: '600 11px var(--font-mono)', color: 'var(--status-success)' }}>ACTIVE</span>}
                 </div>
                 <p style={{ font: '400 12.5px/1.55 var(--font-body)', color: 'var(--fg-secondary)', margin: '4px 0 0' }}>{r.description}</p>
                 {r.canActivate && !r.available && (
@@ -90,7 +90,7 @@ function Bridge() {
       <Section title="When there's no disk access" sub="How a committed change is handed off in the sandbox. It is always staged below; these add to that.">
         <div style={{ display: 'grid', gap: 8 }}>
           {Object.entries(d.handoff.modes).map(([k, m]) => (
-            <label key={k} style={{ display: 'flex', gap: 10, padding: '11px 14px', border: '1px solid var(--border-soft)', borderRadius: 'var(--r-md)', cursor: 'pointer', background: d.handoff.mode === k ? 'var(--accent-gold-50,#FBF4D8)' : 'transparent' }}>
+            <label key={k} style={{ display: 'flex', gap: 10, padding: '11px 14px', border: '1px solid var(--border-soft)', borderRadius: 'var(--r-md)', cursor: 'pointer', background: d.handoff.mode === k ? 'var(--accent-gold-50)' : 'transparent' }}>
               <input type="radio" name="handoff" checked={d.handoff.mode === k} onChange={() => HOST.setHandoffMode(k)} style={{ marginTop: 3 }} />
               <div>
                 <strong style={{ font: '600 13px var(--font-body)', color: 'var(--fg-primary)' }}>{m.label}</strong>
@@ -147,8 +147,8 @@ function EnvCard({ d }) {
         {Object.entries(d.capabilities).map(([k, on]) => (
           <span key={k} style={{
             font: '600 11px var(--font-mono)', padding: '4px 9px', borderRadius: 999,
-            background: on ? 'var(--accent-gold, #E0C010)' : 'rgba(255,255,255,.08)',
-            color: on ? 'var(--bg-dark, #1F1A12)' : 'rgba(255,255,255,.5)',
+            background: on ? 'var(--accent-gold)' : 'rgba(255,255,255,.08)',
+            color: on ? 'var(--bg-dark)' : 'rgba(255,255,255,.5)',
           }}>{CAP_LABEL[k]}</span>
         ))}
       </div>
@@ -176,7 +176,7 @@ function Changes({ HOST, d }) {
 function ChangeRow({ c, HOST, canWrite }) {
   const [open, setOpen] = useState_br(false);
   const [busy, setBusy] = useState_br(false);
-  const statusColor = { staged: 'var(--accent-bronze)', applied: 'var(--status-success,#2E7D32)', rejected: 'var(--fg-muted)' }[c.status];
+  const statusColor = { staged: 'var(--accent-bronze)', applied: 'var(--status-success)', rejected: 'var(--fg-muted)' }[c.status];
   async function apply() {
     setBusy(true);
     try { await HOST.changes.apply(c.id); window.dsaToast?.('Written to ' + c.serialized.file); }
@@ -190,7 +190,7 @@ function ChangeRow({ c, HOST, canWrite }) {
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
             <strong style={{ font: '600 14px var(--font-body)', color: 'var(--fg-primary)' }}>{c.title}</strong>
             <span style={{ font: '600 10px var(--font-mono)', color: statusColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{c.status}</span>
-            <span style={{ font: '500 11px var(--font-mono)', color: c.provenance === 'vi' ? 'var(--accent-gold-deep,#B7973C)' : 'var(--fg-muted)' }}>{c.provenance}</span>
+            <span style={{ font: '500 11px var(--font-mono)', color: c.provenance === 'vi' ? 'var(--accent-gold-deep)' : 'var(--fg-muted)' }}>{c.provenance}</span>
           </div>
           <div style={{ font: '500 11.5px var(--font-mono)', color: 'var(--fg-muted)', marginTop: 2 }}>→ {c.serialized.file} <span style={{ opacity: 0.6 }}>· {c.serialized.strategy}</span></div>
           {c.rationale && <p style={{ font: '400 12px/1.5 var(--font-body)', color: 'var(--fg-secondary)', margin: '4px 0 0' }}>{c.rationale}</p>}
@@ -218,7 +218,7 @@ function Section({ title, sub, children }) {
 }
 
 function Dot({ on }) {
-  return <span style={{ width: 9, height: 9, borderRadius: 999, marginTop: 5, flex: 'none', background: on ? 'var(--status-success,#2E7D32)' : 'var(--border-strong,#c9bfa8)' }} />;
+  return <span style={{ width: 9, height: 9, borderRadius: 999, marginTop: 5, flex: 'none', background: on ? 'var(--status-success)' : 'var(--border-strong)' }} />;
 }
 
 window.Bridge = Bridge;

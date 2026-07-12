@@ -4,74 +4,77 @@
 <title>Glyphgraph Generator — write by meaning</title>
 <link rel="stylesheet" href="../styles.css">
 <style>
-  body{background:var(--paper,#FCFAF2);color:var(--ink,#1F1A12);font-family:var(--font-body),system-ui,sans-serif;margin:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--font-body),system-ui,sans-serif;margin:0}
   .wrap{max-width:1300px;margin:0 auto;padding:24px 22px 80px}
-  h1{font:700 25px/1.05 var(--font-display),sans-serif;letter-spacing:-.02em;color:var(--accent-bronze,#988058);margin:0 0 3px}
-  .lede{color:var(--ink-3,#6B5F47);font-size:13.5px;margin:0 0 16px;max-width:82ch}
-  .lede b{color:var(--ink-2,#3A3026)}
+  h1{font:700 25px/1.05 var(--font-display),sans-serif;letter-spacing:-.02em;color:var(--accent-bronze);margin:0 0 3px}
+  .lede{color:var(--ink-3);font-size:13.5px;margin:0 0 16px;max-width:82ch}
+  .lede b{color:var(--ink-2)}
   /* the compose surface — the hero */
-  .compose{background:var(--bg-surface,#fff);border:1.5px solid var(--accent-gold-dashed,#D8C040);border-radius:14px;padding:14px 15px;margin-bottom:16px;box-shadow:var(--shadow-card,0 1px 2px rgba(31,26,18,.04),0 6px 18px rgba(31,26,18,.05))}
+  .compose{background:var(--bg-surface);border:1.5px solid var(--accent-gold-dashed);border-radius:14px;padding:14px 15px;margin-bottom:16px;box-shadow:var(--shadow-card)}
   .compose .top{display:flex;gap:8px;align-items:flex-start}
   .compose .pen{font-size:18px;flex:none;opacity:.7;margin-top:8px}
-  .compose textarea{flex:1;border:none;background:transparent;font:500 16px/1.45 var(--font-body),sans-serif;color:var(--ink,#1F1A12);outline:none;resize:none;min-height:30px;padding-top:6px}
-  .compose textarea::placeholder{color:var(--fg-muted,#A89678)}
+  .compose textarea{flex:1;border:none;background:transparent;font:500 16px/1.45 var(--font-body),sans-serif;color:var(--ink);outline:none;resize:none;min-height:30px;padding-top:6px}
+  .compose textarea::placeholder{color:var(--fg-muted)}
   .compose .btns{display:flex;gap:8px;flex:none}
-  .egrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-faint,#EFE7D2)}
-  .egrow .lb{font:600 9.5px/1.6 var(--font-mono),monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted,#A89678);margin-right:2px}
-  .eg{font:500 12px/1 var(--font-body);color:var(--accent-bronze-2,#7A6A48);background:var(--paper-2,#F6F1E4);border:1px solid var(--border-default,#E8DFC5);border-radius:999px;padding:6px 11px;cursor:pointer}
-  .eg:hover{background:var(--accent-gold-50,#FBF4C8);border-color:var(--accent-gold-dashed,#D8C040)}
-  button{font:600 12.5px/1 var(--font-body),sans-serif;color:var(--paper,#FCFAF2);background:var(--accent-bronze,#988058);border:none;border-radius:9px;padding:10px 14px;cursor:pointer;transition:background .12s}
-  button:hover{background:var(--accent-bronze-2,#7A6A48)}
-  button.ghost{color:var(--accent-bronze-2,#7A6A48);background:transparent;border:1px solid var(--border-default,#E8DFC5)}
-  button.ghost:hover{background:var(--paper-2,#F6F1E4)}
+  .egrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-faint)}
+  .egrow .lb{font:600 9.5px/1.6 var(--font-mono),monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted);margin-right:2px}
+  .eg{font:500 12px/1 var(--font-body);color:var(--accent-bronze-2);background:var(--paper-2);border:1px solid var(--border-default);border-radius:999px;padding:6px 11px;cursor:pointer}
+  .eg:hover{background:var(--accent-gold-50);border-color:var(--accent-gold-dashed)}
+  .eg .cv-glyphic{vertical-align:-3px;margin-right:2px}
+  .eg.fld{color:var(--fg-muted);cursor:default;font-style:italic}
+  .eg.fld:hover{background:var(--paper-2);border-color:var(--border-default)}
+  button{font:600 12.5px/1 var(--font-body),sans-serif;color:var(--paper);background:var(--accent-bronze);border:none;border-radius:9px;padding:10px 14px;cursor:pointer;transition:background .12s}
+  button:hover{background:var(--accent-bronze-2)}
+  button.ghost{color:var(--accent-bronze-2);background:transparent;border:1px solid var(--border-default)}
+  button.ghost:hover{background:var(--paper-2)}
   .grid{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
-  .panel{background:var(--bg-surface,#fff);border:1px solid var(--border-default,#E8DFC5);border-radius:14px;padding:16px;box-shadow:var(--shadow-card)}
-  h2{font:600 11px/1 var(--font-body),sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--fg-muted,#A89678);margin:0 0 10px}
-  .stage{min-height:420px;display:flex;align-items:center;justify-content:center;background:var(--paper-2,#F6F1E4);border-radius:11px;overflow:hidden;position:relative}
-  .stage .hint{color:var(--fg-muted,#A89678);font:500 13px/1.5 var(--font-body);text-align:center;max-width:34ch}
-  .readbar{margin-top:14px;padding-top:13px;border-top:1px solid var(--border-faint,#EFE7D2)}
-  .readlabel{font:600 10px/1 var(--font-mono),monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-muted,#A89678);margin-bottom:6px}
-  .sentence{font:500 18px/1.5 var(--font-body),sans-serif;color:var(--ink,#1F1A12);margin:0;min-height:1.5em}
+  .panel{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:14px;padding:16px;box-shadow:var(--shadow-card)}
+  h2{font:600 11px/1 var(--font-body),sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--fg-muted);margin:0 0 10px}
+  .stage{min-height:420px;display:flex;align-items:center;justify-content:center;background:var(--paper-2);border-radius:11px;overflow:hidden;position:relative}
+  .stage .hint{color:var(--fg-muted);font:500 13px/1.5 var(--font-body);text-align:center;max-width:34ch}
+  .readbar{margin-top:14px;padding-top:13px;border-top:1px solid var(--border-faint)}
+  .readlabel{font:600 10px/1 var(--font-mono),monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:6px}
+  .sentence{font:500 18px/1.5 var(--font-body),sans-serif;color:var(--ink);margin:0;min-height:1.5em}
   .valid{font:600 11.5px/1 var(--font-body);margin-top:9px}
-  .valid.ok{color:var(--accent-communication,#5A8A4A)} .valid.bad{color:var(--status-error,#B5482E)}
+  .valid.ok{color:var(--accent-communication)} .valid.bad{color:var(--status-error)}
   /* the meaning panel (primary) */
-  .mean-empty{color:var(--fg-muted,#A89678);font:500 13px/1.5 var(--font-body)}
-  .mean-ref{font:600 16px/1.4 var(--font-body);color:var(--ink,#1F1A12);margin:0 0 3px}
-  .mean-sub{font:500 12px/1.3 var(--font-body);color:var(--ink-3,#6B5F47);margin:0 0 12px}
+  .mean-empty{color:var(--fg-muted);font:500 13px/1.5 var(--font-body)}
+  .mean-ref{font:600 16px/1.4 var(--font-body);color:var(--ink);margin:0 0 3px}
+  .mean-sub{font:500 12px/1.3 var(--font-body);color:var(--ink-3);margin:0 0 12px}
   .field{margin-bottom:13px}
-  .field .lbl{font:600 10px/1 var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3,#6B5F47);margin-bottom:6px;display:flex;justify-content:space-between}
-  .field .lbl .v{color:var(--accent-bronze,#988058);text-transform:none;letter-spacing:0;font-weight:700}
+  .field .lbl{font:600 10px/1 var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;display:flex;justify-content:space-between}
+  .field .lbl .v{color:var(--accent-bronze);text-transform:none;letter-spacing:0;font-weight:700}
   .chips{display:flex;flex-wrap:wrap;gap:6px}
-  .chip{display:inline-flex;align-items:center;justify-content:center;background:var(--paper-2,#F6F1E4);border:1.5px solid transparent;border-radius:9px;padding:5px;cursor:pointer;line-height:0;transition:border-color .1s,background .1s}
-  .chip:hover{background:var(--accent-gold-50,#FBF4C8)}
-  .chip.on{border-color:var(--accent-gold,#E0C010);background:var(--accent-gold-50,#FBF4C8)}
-  .chip.txt{font:600 11.5px/1 var(--font-body);color:var(--ink-2,#3A3026);padding:7px 10px;line-height:1}
+  .chip{display:inline-flex;align-items:center;justify-content:center;background:var(--paper-2);border:1.5px solid transparent;border-radius:9px;padding:5px;cursor:pointer;line-height:0;transition:border-color .1s,background .1s}
+  .chip:hover{background:var(--accent-gold-50)}
+  .chip.on{border-color:var(--accent-gold);background:var(--accent-gold-50)}
+  .chip.txt{font:600 11.5px/1 var(--font-body);color:var(--ink-2);padding:7px 10px;line-height:1}
   .sw{width:26px;height:26px;border-radius:6px;border:1px solid rgba(0,0,0,.08)}
   .rel-list{display:flex;flex-direction:column;gap:5px}
-  .rel-item{font:500 12px/1.4 var(--font-body);color:var(--ink-2,#3A3026);background:var(--paper-2,#F6F1E4);border-radius:7px;padding:6px 9px;display:flex;align-items:center;gap:6px}
-  .rel-item .x{margin-left:auto;cursor:pointer;color:var(--fg-muted,#A89678);font-weight:700}
-  .rel-item .x:hover{color:var(--status-error,#B5482E)}
-  details.refine{margin-top:6px;border-top:1px solid var(--border-faint,#EFE7D2);padding-top:10px}
-  details.refine>summary{font:600 10px/1 var(--font-body);letter-spacing:.07em;text-transform:uppercase;color:var(--fg-muted,#A89678);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}
-  details.refine>summary::before{content:'▸';font-size:10px;color:var(--accent-bronze,#988058)}
+  .rel-item{font:500 12px/1.4 var(--font-body);color:var(--ink-2);background:var(--paper-2);border-radius:7px;padding:6px 9px;display:flex;align-items:center;gap:6px}
+  .rel-item .x{margin-left:auto;cursor:pointer;color:var(--fg-muted);font-weight:700}
+  .rel-item .x:hover{color:var(--status-error)}
+  details.refine{margin-top:6px;border-top:1px solid var(--border-faint);padding-top:10px}
+  details.refine>summary{font:600 10px/1 var(--font-body);letter-spacing:.07em;text-transform:uppercase;color:var(--fg-muted);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}
+  details.refine>summary::before{content:'▸';font-size:10px;color:var(--accent-bronze)}
   details.refine[open]>summary::before{content:'▾'}
   details.refine .body{padding-top:12px}
-  .iconsearch{width:100%;box-sizing:border-box;border:1px solid var(--border-default,#E8DFC5);background:var(--paper-2,#F6F1E4);border-radius:8px;padding:7px 9px;font:500 12px/1 var(--font-body);color:var(--ink);margin-bottom:7px;outline:none}
+  .iconsearch{width:100%;box-sizing:border-box;border:1px solid var(--border-default);background:var(--paper-2);border-radius:8px;padding:7px 9px;font:500 12px/1 var(--font-body);color:var(--ink);margin-bottom:7px;outline:none}
   .icongrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;max-height:132px;overflow-y:auto;padding-right:4px}
   .tray{display:flex;flex-wrap:wrap;gap:8px;min-height:44px}
   .tnode{position:relative;cursor:pointer;border:2px solid transparent;border-radius:12px;padding:3px;line-height:0}
-  .tnode:hover{border-color:var(--accent-gold-soft,#F4E89A)}
-  .tnode.sel{border-color:var(--accent-gold,#E0C010)}
-  .tnode .id{position:absolute;top:-6px;left:-4px;font:700 9px/1 var(--font-mono),monospace;color:var(--accent-bronze-2,#7A6A48);background:var(--paper,#FCFAF2);border-radius:4px;padding:1px 3px}
-  .hr{height:1px;background:var(--border-faint,#EFE7D2);margin:15px 0}
+  .tnode:hover{border-color:var(--accent-gold-soft)}
+  .tnode.sel{border-color:var(--accent-gold)}
+  .tnode .id{position:absolute;top:-6px;left:-4px;font:700 9px/1 var(--font-mono),monospace;color:var(--accent-bronze-2);background:var(--paper);border-radius:4px;padding:1px 3px}
+  .hr{height:1px;background:var(--border-faint);margin:15px 0}
   .aistrip{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
   .badge{font:600 9.5px/1 var(--font-mono),monospace;letter-spacing:.05em;text-transform:uppercase;border-radius:6px;padding:4px 7px}
-  .badge.live{background:color-mix(in srgb,var(--accent-communication,#5A8A4A) 18%,transparent);color:var(--accent-communication,#4A7A3C)}
-  .badge.demo{background:var(--accent-gold-50,#FBF4C8);color:var(--accent-gold-deep,#9F772C)}
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink,#1F1A12);color:var(--paper,#FCFAF2);font:500 13px/1.4 var(--font-body);padding:10px 16px;border-radius:10px;box-shadow:var(--shadow-pop);opacity:0;transition:opacity .2s;pointer-events:none;max-width:64ch;text-align:center}
+  .badge.live{background:color-mix(in srgb,var(--accent-communication) 18%,transparent);color:var(--accent-communication)}
+  .badge.demo{background:var(--accent-gold-50);color:var(--accent-gold-deep)}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);font:500 13px/1.4 var(--font-body);padding:10px 16px;border-radius:10px;box-shadow:var(--shadow-pop);opacity:0;transition:opacity .2s;pointer-events:none;max-width:64ch;text-align:center}
   .toast.show{opacity:1}
-  .err{color:var(--status-error,#B5482E);font:500 12.5px/1.5 var(--font-mono),monospace;white-space:pre-wrap}
-  .note{font-size:11px;color:var(--fg-muted,#A89678);margin-top:5px}
+  .err{color:var(--status-error);font:500 12.5px/1.5 var(--font-mono),monospace;white-space:pre-wrap}
+  .note{font-size:11px;color:var(--fg-muted);margin-top:5px}
 </style></head><body><div class="wrap">
 <h1>Glyphgraph Generator</h1>
 <p class="lede">Write a sentence in the Glyphic language <b>by meaning</b>. Describe <b>what things are and how they relate</b> — <i>is · part-of · could be · leads to · before · with</i> — and the system resolves it into a glyphgraph. <b>Form is resolved from meaning, not picked</b> (designing marks is the glyph studio's job). The picture renders through the real solver and reads itself back.</p>
@@ -88,6 +91,9 @@
     <span class="eg">a person is part of a team</span>
     <span class="eg">a file could be the face of a web page</span>
   </div>
+  <!-- A4 · the meaning-resolution strip: top-k nearest (symbols teach-by-click; fields shown as
+       composition-level) for an unknown word. Filled live from /api/corpus-query on glyph_meaning. -->
+  <div class="egrow" id="suggest" style="border-top:none;margin-top:0;padding-top:0"></div>
 </div>
 
 <div class="grid">
@@ -105,6 +111,15 @@
     <h2 id="mean-title">Meaning</h2>
     <div id="mean-body"><div class="mean-empty">Describe something, or click a node below, to see and adjust what it <b>means</b>.</div></div>
 
+    <!-- A6 · the collaborative hand: tell the AI what to do with the graph / your selection.
+         Ops come back TYPED from the glyph_assist role, validated atomically, applied through
+         the same paths the mouse uses (one graph, two hands). -->
+    <div class="hr"></div>
+    <h2>Tell the AI <span style="text-transform:none;letter-spacing:0">— it sees your selection</span></h2>
+    <input class="iconsearch" id="assist" placeholder="e.g. select two nodes → “make these blocked” ↵" autocomplete="off" style="margin-bottom:0">
+    <button class="ghost" id="field-toggle" style="margin-top:8px;font-size:11.5px;padding:7px 11px">Field: telling-order</button>
+    <div class="note" id="assist-note"></div>
+
     <div class="hr"></div>
     <h2>The nodes — click one to select</h2>
     <div class="tray" id="tray"><div class="note">none yet</div></div>
@@ -116,7 +131,7 @@
       <button class="ghost" id="ai-icon">Make an icon…</button>
       <span class="badge" id="ai-mode">…</span>
     </div>
-    <div class="note">Writing-by-meaning uses the reverse parser (no model yet). Teach-a-word authors a gloss live. Rich meaning→glyph resolution (pplx embeddings) and real generation arrive with the Company AI fusion.</div>
+    <div class="note">Writing-by-meaning: the reverse parser + <b>meaning-resolution</b> — an unknown word finds its nearest symbols by embedding (pplx, the glyph_meaning space); click one to teach it and the sentence re-writes. Served via :5174/design/… the model is the <b>Company</b>; on the static :8775 resolution greys out honestly. Icon generation goes fully live with the foundry role (A5).</div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -137,6 +152,8 @@
 <script src="../axes/fill/fill-axis.js"></script>
 <script src="../axes/form/form-axis.js"></script>
 <script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../axes/ordinal/ordinal-axis.js"></script><!-- W2: the FIELD axis (telling-order ramp) -->
+<script src="../core/cv-address.js"></script><!-- W2: the address algebra (frozen placement rides it) -->
 <script src="../assets/icons/cv-edges.js"></script>
 <script src="../assets/icons/cv-meaning.js"></script>
 <script src="../assets/icons/cv-glyphics.js"></script>
@@ -144,6 +161,10 @@
 <script src="../app/ai/ai-seed.js"></script>
 <script src="../app/ai/ai-glyphic.js"></script>
 <script src="../app/ai/ai-glyphic-language.js"></script>
+<!-- the CV_HOST seam + the company-http runtime (A2/A4): lets this page resolve the 'company'
+     provider when served same-origin to the bridge (:5174/design/…); off-origin it fails loud. -->
+<script src="../app/ai/host-runtime.js"></script>
+<script src="../app/services/company.js"></script>
 <script>
 (async function () {
   var M = window.CV_MEANING, GL = window.CV_GLYPHIC, ICN = window.CV_ICONS, AI = window.CV_AI;
@@ -165,6 +186,17 @@
     // glosses so the writer knows these words (the parser resolves word→glyph via gloss/kind)
     [['file','file'],['folder','project'],['browser','web page'],['person','owner'],['gear','engine'],['house','home'],['team','team'],['star','feature'],['atom','the AI'],['document','document'],['chat','message']]
       .forEach(function(g){ M.author.setGloss(g[0], g[1]); });
+    // A5 · the language REMEMBERS what it's taught: restore persisted glosses over the seeds, and
+    // persist on every teach (the profile's own JSON round-trip — no second format). One storage key.
+    var GLOSS_KEY = 'cvstudio:glyph:taught-glosses';
+    try {
+      var saved = JSON.parse(localStorage.getItem(GLOSS_KEY) || '{}');
+      Object.keys(saved).forEach(function(sym){ try{ M.author.setGloss(sym, saved[sym]); }catch(_){} });
+    } catch(_){}
+    function persistGloss(){
+      try { localStorage.setItem(GLOSS_KEY, JSON.stringify(M.resolve(M.active).symbolGloss || {})); }
+      catch(e){ toast('gloss persist failed: '+e.message); }
+    }
 
     var graph = { type:'glyphgraph', nodes:[], edges:[] }, seq = 0;
     var selection = new Set();                         // the SHARED selection (ids)
@@ -177,24 +209,30 @@
 
     // n/x proportional ring — only for nodes without a pinned position (a drag/insert PINS x/y = the
     // spatial theorem: a manual move writes a new frozen address; auto-placement never overrides it).
-    function place(){
-      var free = graph.nodes.filter(function(n){ return n.x==null || n.y==null; });
-      var N = free.length; if(!N) return;
-      var placed = graph.nodes.length - N;
-      free.forEach(function(n,i){
-        if(graph.nodes.length===1){ n.x=0.5; n.y=0.5; return; }
-        var idx = placed + i, tot = graph.nodes.length;
-        var a=-Math.PI/2 + (idx/tot)*2*Math.PI;
-        n.x=+(0.5+0.34*Math.cos(a)).toFixed(3); n.y=+(0.5+0.34*Math.sin(a)).toFixed(3);
-      });
-    }
+    // place() RETIRED (W2): the ring pre-authored every node with angle = f(live count) — the
+    // layout-jump itself. Un-authored nodes now flow to DiagramSolver's FROZEN-ADDRESS layout
+    // (assigned once, never recomputed); dblclick/drag still author real x/y overrides.
+    function place(){}
 
     // ------- render picture + read-out -------
     function redraw(){
       place();
+      if (typeof applyField === 'function' && fieldOn) applyField();
       if(graph.nodes.length){ root.render(React.createElement(DiagramSolver, { graph: Object.assign({}, graph) })); requestAnimationFrame(wireCanvas); }
       else stage.innerHTML='<div class="hint">Describe something above, or double-click here to drop a node — it draws and reads back as a sentence.</div>';
-      try{ sentEl.textContent = graph.nodes.length ? M.readGraph(graph).sentence : '—'; }
+      try{
+        if(!graph.nodes.length){ sentEl.textContent='—'; }
+        else if(!graph.edges.length){ sentEl.textContent = M.readGraph(graph).sentence; }
+        else {
+          // W2 COVERAGE floor: per-edge subgraph reads, joined — every drawn relation is spoken
+          // (the whole-graph focus-walk can drop clauses; it returns as the PATH voice with W5's
+          // register pass — wording itself untouched here, Tim's ear owns it).
+          var byId={}; graph.nodes.forEach(function(n){ byId[n.id]=n; });
+          sentEl.textContent = graph.edges.map(function(e){
+            return M.readGraph({ type:'glyphgraph', nodes:[byId[e.from], byId[e.to]], edges:[e] }).sentence;
+          }).join(' ');
+        }
+      }
       catch(e){ sentEl.innerHTML='<span class="err">'+esc(e.message)+'</span>'; }
       if(window.CV_GLYPHGRAPH && graph.edges.length){
         try{ window.CV_GLYPHGRAPH.validateGlyphgraph(graph); validEl.className='valid ok'; validEl.textContent='✓ well-formed'; }
@@ -209,7 +247,14 @@
     function ggBox(){ var el=stage.querySelector('.cv-diagram--glyphgraph'); return el?el.getBoundingClientRect():null; }
     function ptFrac(box,cx,cy){ return { fx:(cx-box.left)/box.width, fy:(cy-box.top)/box.height }; }
     function fracToXY(f){ return { x: Math.max(0,Math.min(1,(f.fx*VB-MARG)/SPAN)), y: Math.max(0,Math.min(1,(f.fy*VB-MARG)/SPAN)) }; }
-    function xyToFrac(n){ return { fx:(MARG+(n.x||.5)*SPAN)/VB, fy:(MARG+(n.y||.5)*SPAN)/VB }; }
+    // the node's EFFECTIVE place: authored x/y, else the solver's written-back _pos (one home —
+    // the layout math lives in DiagramSolver only; W2 frozen-address placement).
+    function xyToFrac(n){
+      if(n.x!=null && n.y!=null) return { fx:(MARG+n.x*SPAN)/VB, fy:(MARG+n.y*SPAN)/VB };
+      if(n._pos) return { fx:n._pos.x/VB, fy:n._pos.y/VB };
+      return { fx:.5, fy:.5 };
+    }
+    function authorFracOf(n){ var f=xyToFrac(n); return { x:(f.fx*VB-MARG)/SPAN, y:(f.fy*VB-MARG)/SPAN }; }
     function hitNode(box,f){ var r=(nodeSizePx()/2)/box.width, best=null, bd=1e9;
       graph.nodes.forEach(function(n){ var c=xyToFrac(n); var d=Math.hypot(f.fx-c.fx,f.fy-c.fy); if(d<r*1.15 && d<bd){ bd=d; best=n; } }); return best; }
     var canvasWired=false, band=null;
@@ -220,7 +265,7 @@
       Array.prototype.slice.call(stage.querySelectorAll('.gg-selring')).forEach(function(x){ x.remove(); });
       selection.forEach(function(id){ var n=graph.nodes.find(function(x){return x.id===id;}); if(!n)return;
         var f=xyToFrac(n); var d=document.createElement('div'); d.className='gg-selring';
-        d.style.cssText='position:absolute;left:'+(f.fx*100)+'%;top:'+(f.fy*100)+'%;width:'+(nodeSizePx()+14)+'px;height:'+(nodeSizePx()+14)+'px;transform:translate(-50%,-50%);border:2px solid var(--accent-gold,#E0C010);border-radius:14px;pointer-events:none;z-index:5';
+        d.style.cssText='position:absolute;left:'+(f.fx*100)+'%;top:'+(f.fy*100)+'%;width:'+(nodeSizePx()+14)+'px;height:'+(nodeSizePx()+14)+'px;transform:translate(-50%,-50%);border:2px solid var(--accent-gold);border-radius:14px;pointer-events:none;z-index:5';
         el.appendChild(d);
       });
       if(canvasWired) return; canvasWired=true;
@@ -232,15 +277,16 @@
         if(n){ // select (+shift add) then drag
           if(ev.shiftKey||ev.metaKey||ev.ctrlKey){ if(selection.has(n.id)) selection.delete(n.id); else selection.add(n.id); }
           else if(!selection.has(n.id)){ selection.clear(); selection.add(n.id); }
-          var ids=selArr(); var start={}; ids.forEach(function(id){ var nd=graph.nodes.find(function(x){return x.id===id;}); start[id]={x:nd.x,y:nd.y}; });
+          var ids=selArr(); var start={}; ids.forEach(function(id){ var nd=graph.nodes.find(function(x){return x.id===id;}); start[id]=(nd.x!=null&&nd.y!=null)?{x:nd.x,y:nd.y}:authorFracOf(nd); });
           var s0=fracToXY(f); var moved=false; try{ stage.setPointerCapture(ev.pointerId); }catch(_){}
+          var dgEl=stage.querySelector('.cv-diagram--glyphgraph'); if(dgEl) dgEl.classList.add('gg-dragging');
           var mv=function(e2){ var b2=ggBox(); var f2=ptFrac(b2,e2.clientX,e2.clientY); var s2=fracToXY(f2); var dx=s2.x-s0.x, dy=s2.y-s0.y; if(Math.abs(dx)+Math.abs(dy)>0.005) moved=true;
             ids.forEach(function(id){ var nd=graph.nodes.find(function(x){return x.id===id;}); nd.x=Math.max(0,Math.min(1,start[id].x+dx)); nd.y=Math.max(0,Math.min(1,start[id].y+dy)); }); requestAnimationFrame(function(){ root.render(React.createElement(DiagramSolver,{graph:Object.assign({},graph)})); requestAnimationFrame(wireCanvas); }); };
-          var up=function(){ stage.removeEventListener('pointermove',mv); stage.removeEventListener('pointerup',up); redraw(); };
+          var up=function(){ if(dgEl) dgEl.classList.remove('gg-dragging'); stage.removeEventListener('pointermove',mv); stage.removeEventListener('pointerup',up); redraw(); };
           stage.addEventListener('pointermove',mv); stage.addEventListener('pointerup',up);
         } else { // rubber-band group-select on empty
           if(!(ev.shiftKey||ev.metaKey||ev.ctrlKey)) selection.clear();
-          var f0=f; band=document.createElement('div'); band.style.cssText='position:absolute;border:1.5px dashed var(--accent-gold,#E0C010);background:color-mix(in srgb,var(--accent-gold,#E0C010) 12%,transparent);z-index:6;pointer-events:none'; stage.appendChild(band);
+          var f0=f; band=document.createElement('div'); band.style.cssText='position:absolute;border:1.5px dashed var(--accent-gold);background:color-mix(in srgb,var(--accent-gold) 12%,transparent);z-index:6;pointer-events:none'; stage.appendChild(band);
           var mv=function(e2){ var b2=ggBox(); var f2=ptFrac(b2,e2.clientX,e2.clientY);
             var x1=Math.min(f0.fx,f2.fx),y1=Math.min(f0.fy,f2.fy),x2=Math.max(f0.fx,f2.fx),y2=Math.max(f0.fy,f2.fy);
             var r=el.getBoundingClientRect(), sr=stage.getBoundingClientRect();
@@ -341,18 +387,182 @@
         var s=document.createElement('div'); s.className='sw'; try{ s.style.background=tokenFor(val); }catch(e){ s.style.background='var(--fg-muted)'; } chip.appendChild(s);
         chip.title=val||'none'; chip.onclick=function(){ onPick(val); }; c.appendChild(chip); }); }
 
-    // ------- WRITE BY MEANING: describe → parse → graph (the reverse parser) -------
+    // ------- A4 · MEANING-RESOLUTION over the glyph_meaning embedding space -------
+    // The ONE place the space id lives (it names the SPACES row in ~/company/ops/build_embeddings.py;
+    // the corpus behind it is GENERATED by _system/emit_glyph_corpus.js from this very engine).
+    var MEANING_SPACE = 'glyph_meaning';
+    // Same-origin bridge detection (the union's transport): served via the vite /design proxy (:5174)
+    // the bridge is reachable at /api; on the static :8775 it is NOT — resolution greys out HONESTLY
+    // (parse-only still works) and any attempted call fails loud. No silent fallback.
+    var bridgeLive = false;
+    async function detectBridge(){
+      // probe the REAL resolution route (the bare /api/ root is 404 on the bridge) — a 200 here means
+      // the whole path works: same-origin proxy → bridge → the glyph_meaning space. One tiny embed.
+      try { var r = await fetch('/api/corpus-query?text=ping&space='+MEANING_SPACE+'&k=1'); bridgeLive = r.ok; }
+      catch(_){ bridgeLive = false; }
+      if (bridgeLive) {
+        try { AI.setRoleProvider('text','company'); } catch(e){ /* provider entry absent = loud elsewhere */ }
+      }
+      paintBadge();
+    }
+    async function resolveMeaning(phrase){
+      if(!bridgeLive) throw new Error('meaning-resolution needs the bridge (serve this page via :5174/design/… — the static :8775 cannot reach /api)');
+      var r = await fetch('/api/corpus-query?text='+encodeURIComponent(phrase)+'&space='+MEANING_SPACE+'&k=5');
+      if(!r.ok) throw new Error('/api/corpus-query → HTTP '+r.status);
+      var j = await r.json();
+      if(j && j.error) throw new Error('corpus-query error: '+j.error);
+      return (j && j.hits) || [];
+    }
+
+    // ------- A5 · the EXTRACT→JUDGE→COMPOSE pipeline (Company roles, structured) -------
+    // fire any Company role through the 'company' provider runtime (the union: roles own their
+    // prompts + schemas server-side; this page sends only the raw utterance). Loud off-origin.
+    async function fireRole(role, utterance, extra){
+      var rt = AI.resolveProvider('company');
+      if (typeof rt.runRole !== 'function') throw new Error('company runtime has no runRole()');
+      var j = await rt.runRole(role, utterance, extra || {});
+      return j.output;
+    }
+    // resolve ONE word → a symbol id: known gloss/id first (free), else meaning-space top-k →
+    // the glyph_compose JUDGE (never trust #1 — the thin-margin law). Returns:
+    //   {sym}                 resolved (auto-taught when the judge chose)
+    //   {ask: hits}           the judge abstained → the human picks (the A4 strip)
+    function knownSymbolFor(word){
+      if (ICN.data[word]) return word;
+      try { var inv = M.resolve(M.active).symbolGloss || {}; for (var s in inv) if (String(inv[s]).toLowerCase() === word.toLowerCase()) return s; } catch(_){}
+      return null;
+    }
+    async function resolveWord(word, context){
+      var k = knownSymbolFor(word); if (k) return { sym: k };
+      var hits = (await resolveMeaning(word)).filter(function(h){ return /^glyph:\/\/symbol\//.test(h.address); });
+      if (!hits.length) return { ask: [] };
+      var cands = hits.map(function(h){ return { id: h.address.replace('glyph://symbol/',''), text: h.head || h.address, score: +h.score.toFixed(3) }; });
+      var verdict = null;
+      try { verdict = await fireRole('glyph_compose', JSON.stringify({ word: word, context: context, candidates: cands })); }
+      catch(e){ verdict = null; }                    // judge unavailable → fall through to asking (honest)
+      if (verdict && verdict.confident && verdict.chosen && ICN.data[verdict.chosen]) {
+        try { await AI.execute('glyphic.author-gloss', { params: { symbol: verdict.chosen, word: word } }); persistGloss(); } catch(_){}
+        return { sym: verdict.chosen, judged: true };
+      }
+      return { ask: hits };
+    }
+    // relation phrase → an edge kind: the parser's own vocabulary first, else the meaning-space's
+    // edge FIELDS; an unresolved phrase leaves the pair UNCONNECTED + says so (never a fabricated kind).
+    async function resolvePhrase(phrase){
+      var known = Object.keys(M.valuesFor('edge'));
+      var pl = phrase.toLowerCase();
+      for (var i=0;i<known.length;i++){
+        var kw = known[i];
+        var feel=''; try{ feel = (M.field('edge',kw).feeling||'').toLowerCase(); }catch(_){}
+        if (pl.indexOf(kw.replace(/-/g,' '))>=0 || (feel && pl.indexOf(feel)>=0)) return kw;
+      }
+      var hits = (await resolveMeaning(phrase)).filter(function(h){ return /^glyph:\/\/field\/edge\//.test(h.address); });
+      if (hits.length && hits[0].score > 0.3) return hits[0].address.replace('glyph://field/edge/','');
+      return null;
+    }
+    // the COMPOSER: glyph_extract on the whole utterance → resolve every word + phrase → ONE graph.
+    // Compound sentences work here (the starter parser's known limit). Unresolved words go to the
+    // A4 strip one at a time; unresolved phrases leave nodes unconnected + a loud toast.
+    async function composeViaCompany(text){
+      toast('Extracting meaning…');
+      var ex = await fireRole('glyph_extract', text, { max_tokens: 1024 });
+      if (!ex || !Array.isArray(ex.nodes) || !ex.nodes.length) throw new Error('extract returned no nodes');
+      var byWord = {}, nodes = [], pend = null;
+      for (var i=0;i<ex.nodes.length;i++){
+        var w = ex.nodes[i].word;
+        var res = await resolveWord(w, text);
+        if (res.sym){ var id='n'+(i+1); byWord[w]=id; nodes.push({ id:id, form: ex.nodes[i].kind==='person'?'circle':'square', symbol: res.sym, fill:'paper' }); }
+        else { pend = { word: w, hits: res.ask }; break; }   // settle one word at a time (teach → re-write)
+      }
+      if (pend){ showSuggestions(pend.word, pend.hits, text); toast('“'+pend.word+'” needs you — pick its glyph (or make one), then it re-writes.'); return null; }
+      var edges = [], loose = [];
+      for (var j2=0;j2<(ex.relations||[]).length;j2++){
+        var r = ex.relations[j2];
+        var kind = await resolvePhrase(r.phrase);
+        if (!kind){ loose.push(r.phrase); continue; }
+        var e = { from: byWord[r.from_word], to: byWord[r.to_word], kind: kind, line: r.mood==='could'?'dashed':'solid' };
+        if (r.mood==='not') e.negate = true;
+        if (e.from && e.to) edges.push(e);
+      }
+      if (loose.length) toast('No edge-meaning yet for: “'+loose.join('”, “')+'” — those pairs are left unconnected (teach the relation in the meaning registry).');
+      return { nodes: nodes, edges: edges };
+    }
+    // The suggestion strip: top-k hits for an unknown word — SYMBOL hits teach-by-click (gloss →
+    // re-write); FIELD hits shown honestly as composition-level (A5). Never trust #1 blindly (the
+    // thin-margin law from A3) — the human picks from the k.
+    function showSuggestions(word, hits, originalText){
+      var host = document.getElementById('suggest');
+      host.innerHTML = '<span class="lb">“'+esc(word)+'” — nearest by meaning</span>';
+      var any = false;
+      hits.forEach(function(h){
+        var mSym = /^glyph:\/\/symbol\/(.+)$/.exec(h.address);
+        var mFld = /^glyph:\/\/field\/([^/]+)\/(.+)$/.exec(h.address);
+        var chip = document.createElement('span'); chip.className = 'eg';
+        if (mSym) {
+          var id = mSym[1];
+          chip.innerHTML = (GL ? GL.render({form:'none',symbol:id},{size:16}) : '') + ' ' + esc(id) + ' · ' + h.score.toFixed(2);
+          chip.title = 'teach: “'+word+'” reads as the '+id+' symbol, then re-write';
+          chip.onclick = async function(){
+            try { await AI.execute('glyphic.author-gloss',{params:{symbol:id, word:word}}); persistGloss(); }
+            catch(e){ toast('teach failed: '+e.message); return; }
+            host.innerHTML=''; toast('Taught: '+id+' ↔ “'+word+'”. Re-writing…');
+            write(originalText);
+          };
+          any = true;
+        } else if (mFld) {
+          chip.className = 'eg fld';
+          chip.textContent = mFld[1]+'='+mFld[2]+' · '+h.score.toFixed(2);
+          chip.title = 'a meaning-FIELD (mood/state) — applies through composition, not as a noun (A5)';
+        } else { chip.textContent = h.address; }
+        host.appendChild(chip);
+      });
+      var mk = document.createElement('span'); mk.className='eg';
+      mk.textContent = '✎ none fit — make an icon for “'+word+'”';
+      mk.onclick = function(){ host.innerHTML=''; makeIcon(word, originalText); };
+      host.appendChild(mk);
+      if(!any) toast('No close symbol for “'+word+'” — make an icon, or teach one manually.');
+    }
+
+    // ------- WRITE BY MEANING -------
+    // Bridge live (the :5174/design serving): the A5 pipeline — glyph_extract → resolve every word
+    // (gloss → meaning-space → the glyph_compose judge) → resolve phrases → ONE graph. Handles the
+    // compound sentences the starter parser refuses. Off-origin: the starter parser, parse-only, honest.
+    function applyGraph(g){
+      graph.nodes = g.nodes||[]; graph.edges = g.edges||[]; seq = graph.nodes.length; selection.clear();
+      graph.nodes.forEach(function(n,i){ if(!n.id) n.id='n'+(i+1); });
+      redraw();
+      toast('Wrote → '+graph.nodes.length+' nodes, '+graph.edges.length+' relation'+(graph.edges.length===1?'':'s'));
+    }
+    var writing = false;
     function write(text){
-      if(!text.trim()) return;
+      if(!text.trim() || writing) return;
+      document.getElementById('suggest').innerHTML='';
+      if (bridgeLive) {
+        writing = true;
+        composeViaCompany(text)
+          .then(function(g){ if (g) applyGraph(g); })
+          .catch(function(e){ toast('compose failed: '+e.message+' — falling back to the starter parser'); writeStarter(text); })
+          .finally(function(){ writing = false; });
+      } else {
+        writeStarter(text);
+      }
+    }
+    function writeStarter(text){
       try{
         var parsed = M.parse(text); var g = parsed.graph || parsed;
-        graph.nodes = g.nodes||[]; graph.edges = g.edges||[]; seq = graph.nodes.length; selection.clear();
-        graph.nodes.forEach(function(n,i){ if(!n.id) n.id='n'+(i+1); });
-        redraw();
-        toast('Wrote → '+graph.nodes.length+' nodes, '+graph.edges.length+' relation'+(graph.edges.length===1?'':'s'));
+        applyGraph(g);
       }catch(e){
         var m=/unknown content token "([^"]+)"/.exec(e.message);
-        if(m) toast('New word: “'+m[1]+'”. Teach it (below), then write again.');
+        if(m){
+          var word = m[1];
+          if (bridgeLive) {
+            toast('New word “'+word+'” — resolving by meaning…');
+            resolveMeaning(word).then(function(hits){ showSuggestions(word, hits, text); })
+              .catch(function(err){ toast('resolution failed: '+err.message); });
+          } else {
+            toast('New word: “'+word+'”. Teach it (below) — or serve this page via :5174/design/… for meaning-resolution.');
+          }
+        }
         else toast('Couldn’t resolve that yet: '+e.message);
       }
     }
@@ -368,21 +578,110 @@
       var word=prompt('Teach a word.\nWhich SYMBOL id? (e.g. "handshake")'); if(!word) return;
       if(!ICN.data[word]){ toast('No symbol “'+word+'” yet — use “Make an icon” to create it.'); return; }
       var gloss=prompt('What should “'+word+'” read as? (e.g. "a deal")'); if(!gloss) return;
-      try{ await AI.execute('glyphic.author-gloss',{params:{symbol:word,word:gloss}}); toast('Taught: '+word+' → “'+gloss+'”. It parses + reads now.'); }
+      try{ await AI.execute('glyphic.author-gloss',{params:{symbol:word,word:gloss}}); persistGloss(); toast('Taught: '+word+' → “'+gloss+'”. It parses + reads now.'); }
       catch(e){ toast('Author failed: '+e.message); }
     };
-    var live=false;  // resolve through the REGISTRY (A1: the text role's binding, no direct window.claude probe)
-    try { AI.resolveProvider(AI.providerForRole('text')); live=true; } catch(e){ live=false; }
-    document.getElementById('ai-mode').className='badge '+(live?'live':'demo');
-    document.getElementById('ai-mode').textContent=live?'model: live':'model: demo';
-    document.getElementById('ai-icon').onclick=async function(){
-      var brief=prompt('Describe the icon you need (CV_AI.execute → glyphic.generate):'); if(!brief) return;
-      try{ var cands=await AI.execute('glyphic.generate',{params:{brief:brief,count:1}});
-        var rec=(cands&&cands[0]&&(cands[0].record||cands[0]))||null;
-        if(!rec||!rec.svg){ toast('No candidate'+(live?'':' — no model bound (demo)')); return; }
-        await AI.execute('glyphic.save',{params:{record:rec}}); toast('Saved “'+(rec.id||rec.name)+'” — searchable in Refine.');
-      }catch(e){ toast('Generate: '+e.message+(live?'':' (bind a model for live)')); }
+    // badge: resolve through the REGISTRY (A1) and NAME the bound provider (A4) — never a direct window.claude probe.
+    var live=false;
+    function paintBadge(){
+      var pid=''; live=false;
+      try { pid = AI.providerForRole('text'); AI.resolveProvider(pid); live=true; } catch(e){ live=false; }
+      document.getElementById('ai-mode').className='badge '+(live?'live':'demo');
+      document.getElementById('ai-mode').textContent = live ? ('model: '+pid) : 'model: demo';
+    }
+    paintBadge();
+    detectBridge();   // async: flips text→company when the bridge is same-origin, then repaints the badge
+    // GENERATE-ON-MISS (A5 · Tim's foundry flow): 4 STRUCTURED candidates from the glyph_symbol_candidates
+    // ROLE (the schema enforces validity — no JSON-in-text escaping), rendered live as glyphics in the strip;
+    // click one → save + teach + re-write; or type feedback → regenerate (the brief carries the thread);
+    // the reindex commands are surfaced honestly (no bridge route for the rebuild exists yet).
+    async function makeIcon(word, rewriteText, feedbackThread){
+      var brief;
+      if (feedbackThread) { brief = feedbackThread; }
+      else {
+        brief = prompt('Describe the icon:', word ? ('an icon meaning "'+word+'"') : ''); if(!brief) return;
+      }
+      var host = document.getElementById('suggest');
+      host.innerHTML = '<span class="lb">drawing 4 takes…</span>';
+      var out;
+      try { out = await fireRole('glyph_symbol_candidates', brief, { max_tokens: 2048 }); }
+      catch(e){ host.innerHTML=''; toast('Foundry: '+e.message+(bridgeLive?'':' (needs the :5174/design serving)')); return; }
+      var cands = (out && out.candidates || []).filter(function(c){ return c.id && c.svg; });
+      if (!cands.length){ host.innerHTML=''; toast('The foundry returned no drawable candidates — try rewording the brief.'); return; }
+      host.innerHTML = '<span class="lb">pick one'+(word?(' for “'+esc(word)+'”'):'')+' — or give feedback below</span>';
+      cands.forEach(function(c){
+        var chip = document.createElement('span'); chip.className='eg';
+        // render the candidate AS a glyphic: temporarily register its body so CV_GLYPHIC can draw it
+        var drawn=''; try { ICN.data['__cand__'] = c.svg; drawn = GL.render({form:'none',symbol:'__cand__'},{size:18}); delete ICN.data['__cand__']; } catch(e){ drawn=''; }
+        chip.innerHTML = drawn + ' ' + esc(c.name || c.id);
+        chip.title = c.description || c.id;
+        chip.onclick = async function(){
+          try{
+            await AI.execute('glyphic.save',{params:{record:{ id:c.id, name:c.name, description:c.description, svg:c.svg, facets:{ domain:c.domain||'feature', kind:c.kind||'object', tags:c.tags||[] } }}});
+            if(word){ try{ await AI.execute('glyphic.author-gloss',{params:{symbol:c.id, word:word}}); persistGloss(); }catch(e){ toast('saved, but gloss failed: '+e.message); } }
+            host.innerHTML='';
+            toast('Saved “'+c.id+'”'+(word?' (reads as “'+word+'”)':'')+' with its description + tags. Meaning-searchable after: node _system/emit_glyph_corpus.js && python3 ~/company/ops/build_embeddings.py --space '+MEANING_SPACE);
+            if(word && rewriteText) write(rewriteText);
+          }catch(e){ toast('Save: '+e.message); }
+        };
+        host.appendChild(chip);
+      });
+      // the feedback loop: regenerate with the running thread (Tim: "give feedback to regenerate until it looked right")
+      var fb = document.createElement('input');
+      fb.placeholder = 'not right? say what to change ↵'; fb.className='iconsearch'; fb.style.cssText='flex:1;min-width:220px;margin:0';
+      fb.addEventListener('keydown', function(ev){ if(ev.key==='Enter' && fb.value.trim()){
+        makeIcon(word, rewriteText, brief + '\nFEEDBACK on the last 4: ' + fb.value.trim() + ' — draw 4 NEW takes honouring this.');
+      }});
+      host.appendChild(fb);
+    }
+    document.getElementById('ai-icon').onclick=function(){ makeIcon(null, null, null); };
+
+    // ------- A6 · the collaborative hand: instruction → typed ops → the SAME edit paths -------
+    async function applyOps(ops){
+      var narrated = [];
+      for (var i=0;i<ops.length;i++){
+        var o = ops[i];
+        if (o.op==='set_state'){ o.ids.forEach(function(id){ var n=graph.nodes.find(function(x){return x.id===id;}); if(n) n.value=o.value; }); }
+        else if (o.op==='add_edge'){ graph.edges.push({ from:o.from_id, to:o.to_id, kind:o.kind, line:o.line||'solid' }); }
+        else if (o.op==='remove'){ o.ids.forEach(function(id){ graph.nodes=graph.nodes.filter(function(x){return x.id!==id;}); graph.edges=graph.edges.filter(function(e){return e.from!==id&&e.to!==id;}); selection.delete(id); }); }
+        else if (o.op==='add_node'){
+          var res = await resolveWord(o.value, 'added by the AI: '+o.value);
+          if (res.sym){ graph.nodes.push({ id:'n'+(++seq), form:'square', symbol:res.sym, fill:'paper' }); }
+          else { toast('couldn’t resolve “'+o.value+'” to a glyph — write it in the composer to teach it'); }
+        }
+        else if (o.op==='narrate'){ narrated.push(o.text); }
+      }
+      redraw();
+      if (narrated.length) toast(narrated.join(' · '));
+    }
+    // ── W2 · the ORDINAL FIELD (orientation without reading): telling-order → the warm-metal
+    // ramp as a halo behind each glyph. Order = insertion order (the arc's beat-order arrives
+    // when arcs drive composition). Data-only: sets nd._field (a TOKEN name); the solver paints.
+    var fieldOn = false;
+    function applyField(){
+      var n = graph.nodes.length;
+      graph.nodes.forEach(function(nd, i){
+        if (fieldOn && n > 0) nd._field = window.CV_ORDINAL.tokenFor(i, n);
+        else delete nd._field;
+      });
+    }
+    var fieldBtn = document.getElementById('field-toggle');
+    if (fieldBtn) fieldBtn.onclick = function(){
+      fieldOn = !fieldOn;
+      fieldBtn.textContent = fieldOn ? 'Field: telling-order (on)' : 'Field: telling-order';
+      fieldBtn.classList.toggle('on', fieldOn);
+      applyField(); redraw();
     };
+
+    var assistEl = document.getElementById('assist'), assistNote = document.getElementById('assist-note');
+    assistEl.addEventListener('keydown', function(ev){
+      if (ev.key!=='Enter' || !assistEl.value.trim()) return;
+      var instruction = assistEl.value.trim();
+      assistNote.textContent = '…thinking (selection: '+(selArr().join(', ')||'none')+')…'; assistNote.style.color='';
+      AI.execute('glyphic.assist', { params: { instruction: instruction } })
+        .then(function(ops){ return applyOps(ops).then(function(){ assistNote.textContent='✓ '+ops.length+' op'+(ops.length===1?'':'s')+' applied'; assistEl.value=''; }); })
+        .catch(function(e){ assistNote.textContent='✗ '+e.message; assistNote.style.color='var(--status-error)'; });
+    });
 
     // seed with a real sentence so it opens alive (single-relation — the starter parser's grammar;
     // compound/subordinate clauses ("…, which…") are a known starter limit → richer parsing lands with the AI fusion).

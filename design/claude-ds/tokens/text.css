@@ -1,0 +1,76 @@
+/* ============================================================
+   ConceptV · TYPED TEXT — length budgets & authored alternates
+   ------------------------------------------------------------
+   Doctrine: TRUNCATION IS NOT DESIGN. In this system the copy is
+   authored or generated, so text length is an INPUT under our
+   control, not an accident to clip after the fact. Every text
+   slot is a typed thing with a declared LENGTH BUDGET: layout
+   reserves room for the budget, and the copy is written to it —
+   the language rule lives in the AI registry as behaviour
+   `copy.budgets` (app/ai/ai-seed.js), so Vi never writes a string
+   that breaks its slot's budget. If a string can't fit its slot,
+   the DESIGN is wrong: fix the budget, the layout floor, or the
+   copy — never clip it.
+
+   Ellipsis (.truncate / .line-clamp in tokens/sizing.css) is
+   demoted to a LAST RESORT for uncontrolled user strings only
+   (filenames, emails, pasted titles) — never designed UI labels.
+
+   Budgets are per type-ladder role, in ch of the role's own font.
+   ============================================================ */
+:root {
+  --len-micro:  8ch; /* @kind other */ /* zone/stage markers, badges, dial captions */
+  --len-label: 12ch; /* @kind other */ /* control & segment labels, nav items       */
+  --len-title: 32ch; /* @kind other */ /* card / panel titles                       */
+  --len-desc:  64ch; /* @kind other */ /* one-line descriptions                     */
+  --len-src:   24ch; /* @kind other */ /* evidence/source rows — 'source · 14 sessions' */
+  /* long copy uses .measure (tokens/sizing.css) — the reading-width cap */
+}
+
+/* ---- AUTHORED ALTERNATES ------------------------------------
+   When a slot can be narrower than its budget, the answer is a
+   DESIGNED shorter form — srcset for words — not clipping. Author
+   both forms in the markup; the nearest .q container swaps them
+   at a per-instance threshold:
+
+     <div class="dial q">
+       <button>
+         <span class="alt-full">Comfortable</span>
+         <span class="alt-short">1×</span>        ← designed, not chopped
+       </button>
+     </div>
+
+     ​@container (max-width: 240px) {
+       .dial .alt-full  { display: none; }
+       .dial .alt-short { display: inline; }
+     }
+
+   The threshold is per-use (it depends on option count and font),
+   so the @container rule lives at the use site; the mechanism —
+   the classes and the measuring container — lives HERE, once. */
+.q { container-type: inline-size; }
+.alt-short { display: none; }
+
+/* ---- TYPED TEXT ROLES — the consuming classes -----------------
+   The TEXT primitive (app/registry/text-type.js) resolves a role
+   to one of these. Each class = the role's type-ladder voice + its
+   LENGTH BUDGET as a max-inline-size, so a typed text node cannot
+   outgrow its declared slot. One home for how each role renders. */
+.t-micro { font: 700 var(--fs-micro)/1.4 var(--font-mono);
+  letter-spacing: var(--tracking-caps); text-transform: uppercase;
+  color: var(--ink-3); max-inline-size: var(--len-micro); display: inline-block; }
+.t-label { font: 600 var(--fs-caption)/1.4 var(--font-body);
+  letter-spacing: var(--tracking-snug); color: var(--ink-2);
+  max-inline-size: var(--len-label); display: inline-block; }
+.t-title { font: 650 var(--fs-h4)/1.25 var(--font-display, var(--font-body));
+  letter-spacing: var(--tracking-snug); color: var(--ink); margin: 0;
+  max-inline-size: var(--len-title); }
+.t-desc  { font: 400 var(--fs-caption)/1.5 var(--font-body);
+  color: var(--ink-3); max-inline-size: var(--len-desc); display: block; }
+.t-body  { font: 400 var(--fs-body)/1.6 var(--font-body);
+  color: var(--ink-2); max-inline-size: var(--measure); display: block; }
+/* src — the EVIDENCE role (pack-007 item 10): a card's traceability hint.
+   Mono, caps, quiet; skins may voice the bead/color through their scopes. */
+.t-src   { font: 600 var(--fs-micro)/1.4 var(--font-mono);
+  letter-spacing: var(--tracking-caps); text-transform: uppercase;
+  color: var(--ink-3); max-inline-size: var(--len-src); display: inline-block; }

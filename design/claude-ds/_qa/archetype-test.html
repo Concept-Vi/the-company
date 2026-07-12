@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../styles.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>body{margin:0;padding:24px;background:var(--zone-ground);font-family:var(--font-body)}
+.grid{display:grid;grid-template-columns:1fr;gap:18px;max-width:1100px;margin:0 auto}
+.cap{font:700 10px/1 var(--font-mono);color:var(--accent-bronze);margin-bottom:6px;display:block}
+.frame{position:relative;border:1px solid var(--zone-base-edge);border-radius:10px;overflow:hidden;box-shadow:var(--elev-2);background:var(--zone-ground)}
+.artboard{width:1100px;transform-origin:top left}</style>
+</head>
+<body>
+<div class="grid" id="slides"></div>
+<script>
+async function boot() {
+  async function load(path) {
+    const txt = await (await fetch(path)).text();
+    const stripped = txt.replace(/^export default .*;?$/gm, "").replace(/^export \{[^}]*\};?$/gm, "").replace(/^export /gm, "");
+    return Babel.transform(stripped, { presets: ["react"] }).code;
+  }
+  function build(code, name) { return new Function("React", "window", code + "\nreturn " + name + ";")(React, window); }
+  build(await load("../core/DiagramSolver.jsx"), "DiagramSolver");
+  build(await load("../core/ContainmentTree.jsx"), "ContainmentTree");
+  const Slide = build(await load("../core/Slide.jsx"), "Slide");
+  const e = React.createElement;
+
+  const cases = [
+    ["metric-band · full", "metric-band", "full", { title: "What changes when teams adopt ConceptV", metrics:[
+      {value:"70+",label:"Virtual Hubs delivered"},{value:"$430B",label:"annual rework addressed"},{value:"41,500+",label:"unique users"}], note:"Median across Stage-3 deliveries." }],
+    ["split · full", "split", "full", { title:"Translation, not re-drawing", visual:"chaos → order diagram", heading:"The shift",
+      bullets:[{title:"One source of truth",text:"tokens flow to every surface.",bullet:"leads"},{title:"Computed, not hand-set",text:"same spec, every ratio."},{title:"Nothing drifts",bullet:"done"}], note:"The layout itself makes the pitch." }],
+    ["compare · full", "compare", "full", { title:"Current practice vs Virtual Hubs",
+      left:{title:"Current practice", bullets:["Files emailed around","Versions drift","Sign-off takes weeks"]},
+      right:{title:"Virtual Hubs", bullets:[{text:"Single live source",bullet:"done"},{text:"Everyone sees the same thing",bullet:"done"}]},
+      note:"Same inputs, a calmer process." }],
+    ["triptych · full", "triptych", "full", { title:"Three things the data tells us", cards:[
+      {title:"Top drivers",value:"70%",metricLabel:"want accuracy"},{title:"Top barriers",value:"67%",metricLabel:"cost of software"},{title:"Why fail",value:"36%",metricLabel:"poor fit"}] }],
+    ["terms · pitch", "terms", "pitch", { title:"$800k committed to fuel growth", panels:[
+      {title:"This round", hero:{value:"91×",label:"multiple from this round"}, bullets:["5-year exit goal","$6.5M buy-back in 12 months"]},
+      {title:"Series A", hero:{value:"$50M",label:"target valuation"}, bullets:["$5M planned raise","within 2 years"]}] }],
+    ["stepper", "stepper", "full", { title:"Strategic rollout across disciplines", steps:["Design","Marketing","Sales","Construction"], active:1, lede:"The accent slides along the gold→bronze ramp as stages activate." }],
+    ["profile · full", "profile", "full", { title:"Grant brings financial and strategic support", name:"Grant Plummer", role:"Chief Sales Officer", initials:"GP", shape:"circle",
+      stats:[{value:"25+",label:"years experience"},{value:"$3B+",label:"residential sales"}], bullets:["$100k invested to date","$800k committed by July"] }],
+    ["diagram · hub", "diagram", "full", { title:"The AI framework powering our systems", lede:"Vi sits at the centre.",
+      graph:{ type:"hub", center:"Vi", nodes:[{id:"Vi",shape:"diamond",tone:"active"},{id:"Portal",label:"User Portal",shape:"circle"},{id:"Wizard",label:"Property Wizard",shape:"hex"},{id:"Hubs",label:"Virtual Hubs",shape:"octagon"}],
+        edges:["Portal","Wizard","Hubs"].map(t=>({from:"Vi",to:t,kind:"flow"})) } }],
+    ["closing", "closing", "full", { title:"Let's talk", lines:[{label:"Phone",value:"0421 849 615"},{label:"Email",value:"t.geldard@conceptv.com.au"},{label:"Web",value:"conceptv.com.au"}], subtitle:"Book a walkthrough of a live Virtual Hub.", actions:["Schedule a call","See a hub"], note:"Revit → Enscape → ConceptV." }],
+  ];
+
+  const root = document.getElementById("slides");
+  cases.forEach(([cap, arch, lod, content]) => {
+    const col = document.createElement("div");
+    col.innerHTML = '<span class="cap">'+cap+'</span>';
+    const f = document.createElement("div"); f.className = "frame";
+    const art = document.createElement("div"); art.className = "artboard"; f.appendChild(art);
+    col.appendChild(f); root.appendChild(col);
+    ReactDOM.createRoot(art).render(e(Slide, { archetype: arch, content, lod, surface: "slide", density: "compact" }));
+    const fit = () => { const s = f.clientWidth/1100; art.style.transform = "scale("+s+")"; f.style.height = (art.offsetHeight*s)+"px"; };
+    requestAnimationFrame(fit); new ResizeObserver(fit).observe(f); setTimeout(fit, 350);
+  });
+  window.__ready = true;
+}
+boot().catch(err => { document.body.innerHTML = '<pre style="color:red">'+err.stack+'</pre>'; });
+</script>
+</body>
+</html>

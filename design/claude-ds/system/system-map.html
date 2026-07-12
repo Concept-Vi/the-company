@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ConceptV · System Map</title>
-<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../styles.css">
 <script src="../assets/icons/cv-icons.js"></script>
 <script src="../assets/icons/cv-vi-glyph.js"></script>
 <script src="../assets/icons/cv-shapes.js"></script>
@@ -126,6 +126,27 @@
   .rhub { font: 700 12px/1 var(--font-display); fill: rgba(255,255,255,.85); text-anchor: middle; pointer-events: none; }
   .rhub.sub { font: 500 9px/1 var(--font-body); fill: rgba(255,255,255,.45); }
   .rrim { font: 700 10px/1 var(--font-body); letter-spacing: .01em; pointer-events: none; }
+  .rtxt { font-family: var(--font-body); font-weight: 600; letter-spacing: .005em; pointer-events: none; paint-order: stroke; stroke: rgba(10,8,5,.55); stroke-width: 2.4px; stroke-linejoin: round; stroke-linecap: round; }
+  .rtxt.fold { font-weight: 800; stroke: rgba(10,8,5,.7); stroke-width: 3px; stroke-linejoin: round; stroke-linecap: round; }
+  /* human-friendly explainer panel */
+  #explain { position: fixed; left: 14px; top: 62px; bottom: 14px; width: 300px; z-index: 30; display: none; flex-direction: column;
+    background: rgba(22,19,15,.93); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,.5); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); overflow: hidden; }
+  #explain.show { display: flex; }
+  .exhd { display: flex; align-items: center; gap: 8px; padding: 13px 14px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .extitle { font: 800 13px/1.1 var(--font-display); color: var(--paper); flex: 1; letter-spacing: -.01em; }
+  .exhd button { background: rgba(255,255,255,.08); color: var(--paper); border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font: 700 13px/1 var(--font-body); }
+  .exbody { overflow: auto; padding: 14px; display: flex; flex-direction: column; gap: 13px; }
+  .exsec h4 { margin: 0 0 5px; font: 700 9px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent-gold); }
+  .exsec p { margin: 0; font: 400 12.5px/1.55 var(--font-body); color: rgba(255,255,255,.82); }
+  #explain-open { position: fixed; left: 14px; top: 62px; z-index: 29; width: 32px; height: 32px; border-radius: 9px;
+    background: rgba(22,19,15,.9); color: var(--accent-gold); border: 1px solid rgba(255,255,255,.16); cursor: pointer; font: 800 15px/1 var(--font-display); display: none; }
+  body.noexplain #explain { display: none; }
+  body.noexplain #explain-open { display: block; }
+  .arc.fold.dive { stroke-dasharray: none; }
+  .arc.dive:hover { stroke: var(--accent-gold); stroke-width: 2; }
+  .rcenter { cursor: default; transition: fill .16s; }
+  .rcenter.up { cursor: pointer; }
+  .rcenter.up:hover { fill: #221c14; }
   .chip { position: absolute; border-radius: 4px; cursor: pointer; overflow: hidden;
     border: 1px solid rgba(0,0,0,.22); display: flex; align-items: center; padding: 0 4px; gap: 3px; z-index: 3;
     transition: transform .5s cubic-bezier(.45,0,.2,1), background .4s, border-color .4s; }
@@ -173,12 +194,12 @@
     border-radius: 7px; padding: 7px 10px; font: 600 11px/1 var(--font-body); cursor: pointer; white-space: nowrap; }
   #etb button:hover { background: rgba(255,255,255,.16); }
   #etb button.danger:hover { background: rgba(224,106,80,.32); border-color: rgba(224,106,80,.6); }
-  #etb #opcount { display: inline-block; min-width: 15px; padding: 1px 5px; margin-left: 3px; border-radius: 8px; background: var(--accent-gold,#E0C010); color: #1c1a16; font-weight: 800; }
+  #etb #opcount { display: inline-block; min-width: 15px; padding: 1px 5px; margin-left: 3px; border-radius: 8px; background: var(--accent-gold); color: #1c1a16; font-weight: 800; }
   #etb .etbsep { width: 1px; height: 20px; background: rgba(255,255,255,.16); margin: 0 3px; }
   #etb[data-hint]::before { content: attr(data-hint); position: absolute; left: 50%; top: -30px; transform: translateX(-50%);
-    white-space: nowrap; background: var(--accent-gold,#E0C010); color: #1c1a16; font: 700 11px/1 var(--font-body); padding: 6px 10px; border-radius: 7px; }
+    white-space: nowrap; background: var(--accent-gold); color: #1c1a16; font: 700 11px/1 var(--font-body); padding: 6px 10px; border-radius: 7px; }
   body.moving #map { cursor: crosshair; }
-  body.moving .box.click:hover { outline: 2px solid var(--accent-gold,#E0C010); outline-offset: -2px; }
+  body.moving .box.click:hover { outline: 2px solid var(--accent-gold); outline-offset: -2px; }
   #opsdrawer { position: fixed; right: 14px; bottom: 70px; width: 360px; max-height: 56vh; z-index: 41; display: none;
     flex-direction: column; background: rgba(24,22,19,.97); border: 1px solid rgba(255,255,255,.18); border-radius: 12px; box-shadow: 0 16px 44px rgba(0,0,0,.55); overflow: hidden; }
   #opsdrawer.show { display: flex; }
@@ -191,7 +212,7 @@
   .oprow { display: flex; align-items: baseline; gap: 8px; padding: 6px 8px; border-radius: 6px; }
   .oprow:nth-child(odd) { background: rgba(255,255,255,.03); }
   .opn { color: rgba(255,255,255,.4); font: 700 10px/1 var(--font-mono); min-width: 16px; }
-  .opk { color: var(--accent-gold,#E0C010); font: 700 10px/1 var(--font-mono); text-transform: uppercase; min-width: 64px; }
+  .opk { color: var(--accent-gold); font: 700 10px/1 var(--font-mono); text-transform: uppercase; min-width: 64px; }
   .opp { color: rgba(255,255,255,.8); font: 500 11px/1.35 var(--font-mono); word-break: break-all; }
   .opsfoot { padding: 9px 12px; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.45); font-size: 10px; line-height: 1.5; }
   .opsfoot code { color: rgba(255,255,255,.7); }
@@ -206,6 +227,8 @@
     <input class="search" id="q" placeholder="Find a file…">
   </div>
   <div id="map"><div id="canvas"></div><svg id="edges" preserveAspectRatio="none"></svg></div>
+  <aside id="explain" class="show"><div class="exhd"><span class="extitle">What am I looking at?</span><button id="explain-close" title="Hide">×</button></div><div class="exbody" id="exbody"></div></aside>
+  <button id="explain-open" title="What is this?">?</button>
   <div class="lh"><span class="legend" id="legend"></span><span class="legend" id="elegend" title="Toggle a relationship type on/off"></span></div>
   <div id="pop" class="pop" hidden></div>
   <div id="movehint"></div>
@@ -226,6 +249,18 @@
   "use strict";
   var DATA=null, NODE={}, KIDS={}, OUT={}, IN={}, DEFINES={}, DEFINER={}, RECT={}, selected=null;
   var hidden={}, wiring=true, EDGES=[];
+  var zoom=1, panX=0, panY=0, radIntro=true;   // radial scroll-zoom (transform on #canvas/#edges)
+  // ===== MOTION registry: ONE home for the map's animations — rule-driven, applied via the Web
+  // Animations API from data specs (no hardcoded CSS keyframes scattered in the view). Honours
+  // prefers-reduced-motion. Mirrors the system's registry pattern; add a motion = one spec entry.
+  var MOTION = {
+    reduce: !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches),
+    specs: {
+      "label.in": { keyframes:[{opacity:0},{opacity:1}], options:{duration:200, easing:"cubic-bezier(.4,0,.2,1)", fill:"both"} }
+    },
+    apply: function(els, id){ if(this.reduce||!els)return; var sp=this.specs[id]; if(!sp)return;
+      [].slice.call(els).forEach(function(el){ try{ el.animate(sp.keyframes, sp.options); }catch(e){} }); }
+  };
 
   // ===== specific relationship vocabulary (per registry) =====
   var SYS = {
@@ -411,14 +446,27 @@
   // Treemap normalises siblings within each parent, so every leaf size is automatically
   // RELATIVE to the others in its own folder/zone, whichever metric is chosen.
   function deg(n){ return resolveOut(n.id).length + resolveIn(n.id).length; }
-  var SIZERS = {
-    importance:{label:"Role",      hint:"system importance",      leaf:function(n){return leafW(n);}},
-    size:      {label:"File size", hint:"bytes, relative within folder", leaf:function(n){return n.size!=null?Math.max(n.size,1):1;}},
-    links:     {label:"Links",     hint:"total connections",      leaf:function(n){return Math.max(deg(n),0.35);}},
-    influence: {label:"Used by",   hint:"how many depend on it",   leaf:function(n){return Math.max(resolveIn(n.id).length,0.3);}},
-    even:      {label:"Even",      hint:"pure folder structure",  leaf:function(){return 1;}}
-  };
-  var SIZE_ORDER=["importance","size","links","influence","even"], sizeMode="importance";
+  // map-mechanics: a node's raw value for a size FACET (the facet is declared by the encoding set;
+  // the computation lives here because it reads the map's own model).
+  function metricFacet(n,facet){
+    if(facet==="bytes")  return n.size!=null?Math.max(n.size,1):1;
+    if(facet==="links")  return Math.max(deg(n),0.35);
+    if(facet==="usedBy") return Math.max(resolveIn(n.id).length,0.3);
+    return 1;
+  }
+  // SIZERS is PROJECTED from CV_MEANING's size-channel encoding sets (single home for "size = f(facet)")
+  // plus two map-intrinsic lenses (Role = structural importance, Even = pure folders). buildSizers()
+  // runs on reload once ENC is set; the Size menu reads SIZE_ORDER/SIZERS.
+  var SIZERS={}, SIZE_ORDER=[], sizeMode="importance";
+  function buildSizers(){
+    SIZERS={ importance:{label:"Role", hint:"system importance", leaf:function(n){return leafW(n);}} };
+    SIZE_ORDER=["importance"];
+    if(ENC&&ENC.sets) Object.keys(ENC.sets).forEach(function(k){ var st=ENC.sets[k]; if(st.channel!=="size")return;
+      SIZERS[k]={label:st.label, hint:st.description||"", facet:st.facet, leaf:(function(f){return function(n){return metricFacet(n,f);};})(st.facet)};
+      SIZE_ORDER.push(k); });
+    SIZERS.even={label:"Even", hint:"pure folder structure", leaf:function(){return 1;}}; SIZE_ORDER.push("even");
+    if(!SIZERS[sizeMode]) sizeMode="importance";
+  }
   // ZONES stay stable (sized by system importance) so spatial memory holds across lens switches;
   // only FILES resize within their own folder by the chosen metric — "relative to others in that folder".
   function stableFolder(n){ if(n.__sw!=null)return n.__sw;
@@ -515,36 +563,114 @@
   //   districts → kind         (regroup by SYSTEM/role, ignoring folders — the system by type)
   //   layers    → resolution   (strata by how depended-on a file is — foundations at the base)
   // Switching is a FLIP morph (applyLayout). Add a layout = one entry here; it appears in the menu.
+  // Concentric directory layout: DEPTH = RING. A node sits on its depth's ring band, within its
+  // parent's angular slice, so the radial position preserves the directory's nesting (a child is
+  // always on the ring just outside its parent, inside the parent's wedge). Leaf folders' files are
+  // packed as a 2D BLOCK GRID (not spokes). inward=tunnel: rings go outer→inner to the centre (no
+  // hole); equalRoot=every root folder gets the same outer-ring slice.
+  function concentricLayout(W,H,opts){ opts=opts||{}; var inward=!!opts.inward;
+    var cx=W/2, cy=H/2; LAYOUT_CENTER={cx:cx,cy:cy};
+    if(!NODE[radialFocus]) radialFocus="__root";
+    var outerR=Math.min(W,H)/2 - 22, innerR= inward ? 0 : 44;
+    // binary-split squarify inside an annular region — keeps children CONTAINED within the parent.
+    function squ(items,a0,a1,r0,r1,depth){ if(!items.length)return;
+      if(items.length===1){ place(items[0].node,a0,a1,r0,r1,depth); return; }
+      var total=0; items.forEach(function(it){total+=it.value;});
+      var acc=0,i=0; while(i<items.length-1 && acc+items[i].value<total/2){acc+=items[i].value;i++;}
+      var A=items.slice(0,i+1),B=items.slice(i+1); if(!B.length){A=items.slice(0,i);B=items.slice(i);}
+      var wA=0; A.forEach(function(it){wA+=it.value;});
+      var midR=(r0+r1)/2, arc=(a1-a0)*midR, rad=(r1-r0);
+      if(arc>=rad){ var am=a0+(a1-a0)*wA/total; squ(A,a0,am,r0,r1,depth); squ(B,am,a1,r0,r1,depth); }
+      else { var rm=r0+(r1-r0)*wA/total; squ(A,a0,a1,r0,rm,depth); squ(B,a0,a1,rm,r1,depth); } }
+    // Folder = CONTAINER: fills its region, reserves a header band for its label, and packs its
+    // childValues() (the SAME weighting the Nested view uses) INSIDE with a gutter — so a file is
+    // always a small block contained within its folder, computed exactly like the square views.
+    function place(n,a0,a1,r0,r1,depth){ var isFile=n.type!=="folder";
+      if(isFile){ RECT[n.id]={x:cx,y:cy,w:0,h:0,depth:depth,arc:{a0:a0,a1:a1,r0:r0,r1:r1,file:true}}; return; }
+      var kids=childValues(n.id);
+      if(!kids.length || (r1-r0)<11 || (a1-a0)*((r0+r1)/2)<10){ RECT[n.id]={x:cx,y:cy,w:0,h:0,depth:depth,arc:{a0:a0,a1:a1,r0:r0,r1:r1,folder:true,leaf:!!kids.length}}; return; }
+      var hd=Math.min(12,Math.max(5,(r1-r0)*0.16)), hr0,hr1,c0,c1;
+      if(inward){ hr0=r1-hd; hr1=r1; c0=r0; c1=r1-hd-2; } else { hr0=r0; hr1=r0+hd; c0=r0+hd+2; c1=r1; }
+      RECT[n.id]={x:cx,y:cy,w:0,h:0,depth:depth,arc:{a0:a0,a1:a1,r0:r0,r1:r1,folder:true,container:true,hr0:hr0,hr1:hr1}};
+      var pa=Math.min(0.012,(a1-a0)*0.04);
+      squ(kids,a0+pa,a1-pa,c0,c1,depth+1); }
+    var rk=childValues(radialFocus); if(!rk.length)return;
+    if(opts.equalRoot){ var step=2*Math.PI/rk.length, a=-Math.PI/2;
+      rk.forEach(function(c){ place(c.node,a+0.004,a+step-0.004,innerR,outerR,1); a+=step; }); }
+    else { squ(rk,-Math.PI/2,1.5*Math.PI,innerR,outerR,1); }
+  }
+  // Tunnel is its OWN kind of view (not the containment treemap): concentric depth-RINGS going
+  // inward — root folders fill the outer ring at equal size, each level deeper is the next ring in,
+  // leaf folders' files gridded as blocks. Travelling inward = drilling down.
+  function tunnelLayout(W,H){ var cx=W/2, cy=H/2; LAYOUT_CENTER={cx:cx,cy:cy};
+    if(!NODE[radialFocus]) radialFocus="__root";
+    var outerR=Math.min(W,H)/2 - 22, innerR=0, CAP=6, maxD=1;
+    (function p(id,d){ if(d>=CAP)return; (KIDS[id]||[]).forEach(function(k){ if(k.type==="folder"){ if(d+1>maxD)maxD=d+1; p(k.id,d+1);} }); })(radialFocus,0);
+    var ringT=(outerR-innerR)/maxD;
+    function wOf(n){ return n.type==="folder" ? stableFolder(n) : Math.max(metricLeaf(n),0.001); }
+    function band(depth){ var r1=outerR-(depth-1)*ringT; return [Math.max(innerR,r1-ringT+1.5), r1]; }
+    function gridFiles(files,a0,a1,r0,r1,depth){ var n=files.length; if(!n)return;
+      var midR=(r0+r1)/2, aspect=((a1-a0)*midR)/Math.max(1,(r1-r0));
+      var cols=Math.max(1,Math.min(n,Math.round(Math.sqrt(n*aspect)))), rows=Math.ceil(n/cols);
+      var sorted=files.slice().sort(function(x,y){return wOf(y)-wOf(x);}), k=0;
+      for(var rr=0; rr<rows; rr++){ var q0=r0+(r1-r0)*rr/rows, q1=r0+(r1-r0)*(rr+1)/rows, inRow=Math.min(cols,n-rr*cols);
+        for(var cc=0; cc<inRow; cc++){ var ca0=a0+(a1-a0)*cc/inRow, ca1=a0+(a1-a0)*(cc+1)/inRow, f=sorted[k++];
+          RECT[f.id]={x:cx,y:cy,w:0,h:0,depth:depth,arc:{a0:ca0,a1:ca1,r0:q0+0.5,r1:q1-0.5,file:true}}; } } }
+    function lay(id,a0,a1,depth){ if(depth>maxD)return;
+      var kids=(KIDS[id]||[]).slice().sort(function(a,b){ return (b.type==="folder")-(a.type==="folder")||a.name.localeCompare(b.name); });
+      if(!kids.length)return;
+      var allFiles=kids.every(function(k){return k.type!=="folder";});
+      if(allFiles || depth===maxD){ gridFiles(kids,a0,a1,innerR,outerR-(depth-1)*ringT,depth); return; }
+      var b=band(depth), tot=0; kids.forEach(function(k){ tot+=wOf(k); }); if(tot<=0)return;
+      var ca=a0, gap=Math.min(0.008,(a1-a0)*0.015);
+      kids.forEach(function(k){ var da=(a1-a0)*wOf(k)/tot, sa0=ca+gap/2, sa1=ca+da-gap/2, isF=k.type!=="folder";
+        RECT[k.id]={x:cx,y:cy,w:0,h:0,depth:depth,arc:{a0:sa0,a1:sa1,r0:b[0],r1:b[1],folder:!isF,file:isF,leaf:!isF&&(KIDS[k.id]||[]).length>0}};
+        if(!isF) lay(k.id,sa0,sa1,depth+1); ca+=da; }); }
+    var rk=(KIDS[radialFocus]||[]).slice().sort(function(a,b){ return (b.type==="folder")-(a.type==="folder")||a.name.localeCompare(b.name); });
+    if(!rk.length)return; var b1=band(1), step=2*Math.PI/rk.length, a=-Math.PI/2;
+    rk.forEach(function(k){ var sa0=a+0.004, sa1=a+step-0.004, isF=k.type!=="folder";
+      RECT[k.id]={x:cx,y:cy,w:0,h:0,depth:1,arc:{a0:sa0,a1:sa1,r0:b1[0],r1:b1[1],folder:!isF,file:isF,leaf:!isF&&(KIDS[k.id]||[]).length>0}};
+      if(!isF) lay(k.id,sa0,sa1,2); a+=step; }); }
   var LAYOUTS = {
     nested: { label:"Nested", hint:"folders as boxes within boxes — where each file lives",
       build:function(W,H){ var roots=childValues("__root");
         squarify(roots, 8, 8, W-16, H-16).forEach(function(r){ place(r.node.id, r.x, r.y, r.w, r.h, 1); }); } },
 
-    sunburst: { label:"Sunburst", hint:"radial — folders are inner-ring sectors, files are spokes whose LENGTH = size",
+    sunburst: { label:"Sunburst", hint:"zoomable rings — click a folder to dive in, the centre to back out",
       radial:true,
       build:function(W,H){ var cx=W/2, cy=H/2; LAYOUT_CENTER={cx:cx,cy:cy};
-        var R=Math.min(W,H)/2 - 30, inner=24;
-        // folder depth (rings) + leaf counts (angle) — memoised
-        var maxFD=1; (function s(id,d){ (KIDS[id]||[]).forEach(function(k){ if(k.type==="folder"){ if(d>maxFD)maxFD=d; s(k.id,d+1);} }); })("__root",1);
+        if(!NODE[radialFocus]) radialFocus="__root";
+        var R=Math.min(W,H)/2 - 34, inner=44, RINGS=2;       // show focus + 2 levels below (dive for more)
+        // leaf-count = angular weight (every file gets a fair, equal-ish slice within its branch)
         var LC={}; function leaves(id){ if(LC[id]!=null)return LC[id]; var n=NODE[id];
           if(n && n.type!=="folder") return LC[id]=1;
           var kids=KIDS[id]||[]; if(!kids.length) return LC[id]=1;
           var c=0; kids.forEach(function(k){ c+=leaves(k.id); }); return LC[id]=Math.max(c,1); }
-        var folderZone=inner+(R-inner)*0.42, ringW=(folderZone-inner)/maxFD, fileMax=R-folderZone;
-        // size normalisation across files (current size-lens metric) → spoke length
-        var mins=Infinity, maxs=0; DATA.nodes.forEach(function(n){ if(n.type!=="folder"){ var v=metricLeaf(n); if(v<mins)mins=v; if(v>maxs)maxs=v; } });
-        if(!(maxs>mins)){ mins=0; maxs=1; }
-        function frac(n){ return 0.14 + 0.86*((metricLeaf(n)-mins)/(maxs-mins||1)); }
-        function sortKids(arr){ return arr.slice().sort(function(a,b){ return (b.type==="folder")-(a.type==="folder") || a.name.localeCompare(b.name); }); }
+        // ANGULAR weight = sqrt(leaf-count): proportional but COMPRESSED, so a 271-file asset dump
+        // doesn't swallow the circle and squeeze the 11-file system folders into unreadable slivers
+        // (same softening the Layers layout uses for band heights). Files keep weight 1 (equal).
+        function aw(id){ var n=NODE[id]; return (n&&n.type!=="folder")?1:Math.sqrt(leaves(id)); }
+        // how deep does the focus subtree actually go (capped at RINGS)?
+        var shown=1; (function probe(id,d){ if(d>=RINGS)return; (KIDS[id]||[]).forEach(function(k){ if(d+1>shown)shown=d+1; if(k.type==="folder")probe(k.id,d+1); }); })(radialFocus,0);
+        var ringW=(R-inner)/Math.max(shown,1);
         function node(id,a0,a1,depth){ var n=NODE[id], mid=(a0+a1)/2;
-          if(n && n.type!=="folder"){ var r1=folderZone+fileMax*frac(n), mr=(folderZone+r1)/2;
-            RECT[id]={x:cx+mr*Math.cos(mid), y:cy+mr*Math.sin(mid), w:0, h:0, depth:depth, arc:{a0:a0,a1:a1,r0:folderZone,r1:r1,file:true}}; return; }
-          var r0=inner+(depth-1)*ringW, r1=inner+depth*ringW, mr=(r0+r1)/2;
-          RECT[id]={x:cx+mr*Math.cos(mid), y:cy+mr*Math.sin(mid), w:0, h:0, depth:depth, arc:{a0:a0,a1:a1,r0:r0,r1:r1,folder:true}};
-          var kids=sortKids(KIDS[id]||[]), tot=0; kids.forEach(function(k){ tot+=leaves(k.id); }); if(tot<=0)return;
-          var span=a1-a0, ca=a0; kids.forEach(function(k){ var da=span*leaves(k.id)/tot; node(k.id, ca, ca+da, depth+1); ca+=da; }); }
-        var roots=sortKids(KIDS["__root"]||[]), rtot=0; roots.forEach(function(k){ rtot+=leaves(k.id); }); if(rtot<=0)return;
-        var GAP=0.014, a=-Math.PI/2; roots.forEach(function(k){ var da=2*Math.PI*leaves(k.id)/rtot; node(k.id, a+GAP/2, a+da-GAP/2, 1); a+=da; }); } },
+          var r0=inner+(depth-1)*ringW, r1=inner+depth*ringW, mr=(r0+r1)/2, isFile=n&&n.type!=="folder";
+          RECT[id]={x:cx+mr*Math.cos(mid), y:cy+mr*Math.sin(mid), w:0, h:0, depth:depth,
+            arc:{a0:a0,a1:a1,r0:r0,r1:r1,file:isFile,folder:!isFile,leaf:depth>=RINGS}};
+          if(isFile || depth>=RINGS) return;                  // stop at file or ring cap (deeper folders are dive points)
+          var kids=KIDS[id]||[]; kids=kids.slice().sort(function(a,b){ return (b.type==="folder")-(a.type==="folder") || a.name.localeCompare(b.name); });
+          var tot=0; kids.forEach(function(k){ tot+=aw(k.id); }); if(tot<=0)return;
+          var span=a1-a0, gap=Math.min(0.012, span*0.04/Math.max(kids.length,1)), ca=a0;
+          kids.forEach(function(k){ var da=span*aw(k.id)/tot; node(k.id, ca+gap/2, ca+da-gap/2, depth+1); ca+=da; }); }
+        var kids=(KIDS[radialFocus]||[]).slice().sort(function(a,b){ return (b.type==="folder")-(a.type==="folder") || a.name.localeCompare(b.name); });
+        var rtot=0; kids.forEach(function(k){ rtot+=aw(k.id); }); if(rtot<=0)return;
+        var TG=kids.length>1?0.02:0, a=-Math.PI/2; kids.forEach(function(k){ var da=2*Math.PI*aw(k.id)/rtot; node(k.id, a+TG/2, a+da-TG/2, 1); a+=da; }); } },
+
+    "circle": { label:"Circle", hint:"the directory as concentric rings — each folder is a ring band and its contents nest in the ring just outside it; files are blocks. Scroll to zoom, click a folder to dive.", radial:true,
+      build:function(W,H){ concentricLayout(W,H,{inward:false}); } },
+
+    "tunnel": { label:"Tunnel", hint:"a different kind of view — concentric rings: the top folders fill the OUTER ring equally, each level deeper is the next ring inward. Travelling inward = drilling down.", radial:true,
+      build:function(W,H){ tunnelLayout(W,H); } },
 
     districts: { label:"Districts", hint:"regroup by SYSTEM, ignoring folders — see the system by kind",
       build:function(W,H){ var pad=8, byRole={};
@@ -574,31 +700,58 @@
           squarify(items, pad+4, y+hd+2, W-2*pad-8, bh-hd-6).forEach(function(r){ RECT[r.node.id]={x:r.x,y:r.y,w:r.w,h:r.h,depth:2}; });
           y+=bh; }); } }
   };
-  var LAYOUT_ORDER=["nested","sunburst","districts","layers"], layoutMode="nested", radialFocus="__root";
+  var LAYOUT_ORDER=["nested","districts","layers","sunburst","circle","tunnel"], layoutMode="nested", radialFocus="__root";
 
   function computeRECT(){
     var board=document.getElementById("map"), W=board.clientWidth, H=board.clientHeight;
     if(W<=0||H<=0) return false;
     RECT={}; LAYOUT_REGIONS=[]; DATA.nodes.forEach(function(n){ n.__w=null; });
     (LAYOUTS[layoutMode]||LAYOUTS.nested).build(W,H);
+    // radial layouts position nodes by arc; set each node's centre to its arc CENTROID so resolution
+    // edges (centre→centre chords) connect real positions instead of collapsing to the hub.
+    if(isRadial()){ var C=LAYOUT_CENTER; Object.keys(RECT).forEach(function(id){ var a=RECT[id].arc; if(a){ var mid=(a.a0+a.a1)/2, mr=(a.r0+a.r1)/2; RECT[id].x=C.cx+mr*Math.cos(mid); RECT[id].y=C.cy+mr*Math.sin(mid); } }); }
     return true;
+  }
+  // NO TRUNCATION: a label renders only if its FULL name fits the arc at the current zoom; otherwise it
+  // is omitted (it returns as you zoom in, and is always available on hover via the arc's <title>).
+  // Font is counter-scaled by zoom so it stays ~constant screen size while #canvas is CSS-scaled.
+  function arcLabel(C,a,name,fill,bold){ var rmid=(a.r0+a.r1)/2, z=zoom||1, fs=11;
+    var mid=(a.a0+a.a1)/2, c=Math.abs(Math.cos(mid)), s=Math.abs(Math.sin(mid));
+    var Wh=(name.length*fs*0.56)/2, Hh=(fs*0.72)/2;                 // half text box (screen px)
+    var radHalf=((a.r1-a.r0)*z)/2, tanHalf=((a.a1-a.a0)*rmid*z)/2;  // cell half-extents (screen px)
+    // Horizontal text must fit ENTIRELY inside the (rotated) cell: project the text box onto the
+    // cell's radial & tangential axes. If it doesn't fit, show NO label — never overflow, never
+    // truncate. Same rule for every cell → labels appear evenly + stay inside their shape.
+    if(Wh*c+Hh*s > radHalf || Wh*s+Hh*c > tanHalf) return "";
+    var lx=C.cx+rmid*Math.cos(mid), ly=C.cy+rmid*Math.sin(mid);
+    return '<text class="rtxt'+(bold?" fold":"")+'" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" style="font-size:'+(fs/z).toFixed(2)+'px" text-anchor="middle" dominant-baseline="middle" fill="'+fill+'">'+esc(name)+'</text>';
   }
   function radialHTML(){
     var board=document.getElementById("map"), W=board.clientWidth, H=board.clientHeight, C=LAYOUT_CENTER;
-    var R=Math.min(W,H)/2-30;
     var s='<svg class="rsvg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
-    // folder ring sectors first (behind), then file spokes (in front)
-    var folders="", files="", labels="";
-    Object.keys(RECT).forEach(function(id){ var n=NODE[id], Rc=RECT[id]; if(!n||!Rc.arc)return; var a=Rc.arc, col=colorOf(n);
-      if(a.folder){ var gap=Math.min(0.01,(a.a1-a.a0)*0.04);
-        folders+='<path class="arc fold" data-id="'+esc(id)+'" d="'+annular(C.cx,C.cy,a.r0+0.8,a.r1-0.8,a.a0+gap,a.a1-gap)+'" fill="'+tint(col,Rc.depth===1?.34:.2)+'" stroke="'+tint(col,.85)+'" stroke-width="0.7"><title>'+esc(n.name+" — "+shortWhat(n))+'</title></path>';
-        if(Rc.depth===1 && (a.a1-a.a0)>0.05){ var mid=(a.a0+a.a1)/2, lr=R+9, lx=C.cx+lr*Math.cos(mid), ly=C.cy+lr*Math.sin(mid);
-          var deg=mid*180/Math.PI, flip=Math.cos(mid)<0, rot=flip?deg+180:deg, anc=flip?"end":"start";
-          labels+='<text class="rrim" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" text-anchor="'+anc+'" transform="rotate('+rot.toFixed(1)+' '+lx.toFixed(1)+' '+ly.toFixed(1)+')" fill="'+lift(col)+'">'+esc(n.name)+'</text>'; }
-      } else { files+='<path class="arc" data-id="'+esc(id)+'" d="'+annular(C.cx,C.cy,a.r0+0.5,a.r1,a.a0,a.a1)+'" fill="'+tint(col,.62)+'" stroke="'+tint(col,.8)+'" stroke-width="0.35"><title>'+esc(n.name+" — "+shortWhat(n))+'</title></path>'; }
+    var rings="", arcs="", labels="";
+    Object.keys(RECT).sort(function(x,y){return (RECT[x].depth||0)-(RECT[y].depth||0);}).forEach(function(id){ var n=NODE[id], Rc=RECT[id]; if(!n||!Rc.arc)return; var a=Rc.arc, col=colorOf(n);
+      if(a.folder){ var dive=a.leaf && (KIDS[id]||[]).length;
+        rings+='<path class="arc fold'+(dive?" dive":"")+'" data-id="'+esc(id)+'" d="'+annular(C.cx,C.cy,a.r0,a.r1,a.a0,a.a1)+'" fill="'+tint(col,a.container?.12:(Rc.depth===1?.5:.32))+'" stroke="'+lift(col)+'" stroke-width="1.3"><title>'+esc(n.name+(dive?" — click to dive in":" — "+shortWhat(n)))+'</title></path>';
+        var la=(a.hr0!=null)?{a0:a.a0,a1:a.a1,r0:a.hr0,r1:a.hr1}:a;
+        labels+=arcLabel(C,la,n.name+(dive?" \u203a":""),lift(col),true);
+      } else {
+        arcs+='<path class="arc" data-id="'+esc(id)+'" d="'+annular(C.cx,C.cy,a.r0+0.5,a.r1-0.5,a.a0,a.a1)+'" fill="'+tint(col,.62)+'" stroke="'+tint(col,.85)+'" stroke-width="0.4"><title>'+esc(n.name+" — "+shortWhat(n))+'</title></path>';
+        labels+=arcLabel(C,a,pretty(n.name),"#15120e",false);
+      }
     });
-    s+=folders+files+labels;
-    s+='<circle cx="'+C.cx+'" cy="'+C.cy+'" r="22" fill="#15120e" stroke="rgba(255,255,255,.18)"/><text class="rhub" x="'+C.cx+'" y="'+(C.cy+4)+'">root</text></svg>';
+    s+=rings+arcs+labels;
+    // centre = focus folder; click to go up a level
+    var fn=NODE[radialFocus], up=radialFocus!=="__root", fname=radialFocus==="__root"?"root":(fn?fn.name:"root");
+    var crumb=radialFocus==="__root"?"the whole tree":radialFocus;
+    var hubR=(layoutMode==="tunnel")?20:40;
+    s+='<circle class="rcenter'+(up?" up":"")+'" cx="'+C.cx+'" cy="'+C.cy+'" r="'+hubR+'" fill="#15120e" stroke="rgba(255,255,255,.22)" stroke-width="1.2"/>';
+    if(hubR>=40){ if(up) s+='<text class="rhub sub" x="'+C.cx+'" y="'+(C.cy-12)+'">\u2039 back</text>';
+      s+='<text class="rhub" x="'+C.cx+'" y="'+(C.cy+(up?4:2))+'">'+esc(fname)+'</text>';
+      if(!up) s+='<text class="rhub sub" x="'+C.cx+'" y="'+(C.cy+15)+'">click a ring \u203a</text>'; }
+    else if(up){ s+='<text class="rhub sub" x="'+C.cx+'" y="'+(C.cy+3)+'">\u2039</text>'; }
+    s+='<title>'+esc(crumb)+'</title>';
+    s+='</svg>';
     return s;
   }
   function buildMap(){
@@ -619,12 +772,18 @@
     });
     }
     var canvas=document.getElementById("canvas"); canvas.innerHTML=html;
+    if(isRadial()){ MOTION.apply(canvas.querySelectorAll(".rtxt"),"label.in"); }
     EL={}; canvas.querySelectorAll("[data-id]").forEach(function(e){ EL[e.dataset.id]=e; });
     canvas.querySelectorAll(".chip,.box.click,.arc").forEach(function(el){ el.addEventListener("click",function(e){ e.stopPropagation();
       if(window.__dragHappened) return;
       var id=el.dataset.id, n=NODE[id];
       if(moveSrc){ var dest = (n&&n.type==="folder")?id:(n?n.parent:null); finishMove(dest); return; }
+      // in Sunburst: clicking a folder ring dives INTO it (re-roots); files just select
+      if(isRadial() && n && n.type==="folder" && (KIDS[id]||[]).length){ radialFocus=id; applyLayout(); select(id,true,true); return; }
       select(id,true); }); });
+    if(isRadial()){ var ctr=canvas.querySelector(".rcenter"); if(ctr) ctr.addEventListener("click",function(e){ e.stopPropagation();
+      if(radialFocus==="__root")return; var par=NODE[radialFocus]?NODE[radialFocus].parent:null; radialFocus=par||"__root"; applyLayout(); }); }
+    applyOverlay();
     buildEdges(); drawEdges();
   }
   // apply a new SIZE lens — geometry is AUTHORITATIVE & INSTANT (computed === inline immediately,
@@ -653,7 +812,10 @@
   // Layout switches (and size-lens changes in region layouts) change the SET of nodes on screen, so
   // a full DOM rebuild is needed — relayout only repositions existing elements. applyLayout rebuilds
   // and FLIP-morphs the survivors from their previous rects; new nodes appear, removed ones vanish.
-  function applyLayout(){ var prev=captureRects(); buildMap(); flipFrom(prev); if(selected && NODE[selected]) select(selected,true,true); }
+  function applyLayout(){ zoom=1; panX=0; panY=0; var prev=captureRects(); buildMap(); applyZoomTransform(); flipFrom(prev); if(selected && NODE[selected]) select(selected,true,true); renderExplain(); }
+  function applyZoomTransform(){ var c=document.getElementById("canvas"), e=document.getElementById("edges");
+    var t = isRadial() ? ("translate("+panX.toFixed(1)+"px,"+panY.toFixed(1)+"px) scale("+zoom.toFixed(3)+")") : "none";
+    if(c){ c.style.transformOrigin="0 0"; c.style.transform=t; } if(e){ e.style.transformOrigin="0 0"; e.style.transform=t; } }
   function reflow(){ if(isRadial() || (LAYOUT_REGIONS && LAYOUT_REGIONS.length)) applyLayout(); else relayout(); }
   // re-tint to a new COLOUR lens — in place, no relayout
   function recolor(){
@@ -661,9 +823,55 @@
       if(n.type==="folder"){ var R=RECT[id]; if(R&&R.depth===1){ el.style.background=tint(col,.05); el.style.borderColor=tint(col,.42); } var bl=el.firstChild, sw=bl&&bl.firstChild; if(sw)sw.style.background=col; }
       else { el.style.background=tint(col,.26); el.style.borderColor=tint(col,.6); var cl=el.firstChild; if(cl)cl.style.color=lift(col); }
     });
+    applyOverlay();
   }
   function fillSel(id,order,reg,cur){ var s=document.getElementById(id); if(!s)return;
     s.innerHTML=order.map(function(k){return '<option value="'+k+'"'+(k===cur?' selected':'')+'>'+reg[k].label+'</option>';}).join(""); }
+
+  // ===== OVERLAY channels (Piece 4 made live): texture / border / glow, projected from CV_MEANING =====
+  // The drafted encoding SETS in CV_MEANING (channel: texture|border|glow) become live here. Overlay
+  // touches ONLY backgroundImage / outline / boxShadow — properties the base render never sets inline
+  // — so toggling an overlay never clobbers the colour/size base. Projected into an Overlay glyph menu.
+  var OVERLAYS={none:{label:"Off",hint:"no overlay"}}, OVERLAY_ORDER=["none"], overlayMode="none";
+  function buildOverlays(){ OVERLAYS={none:{label:"Off",hint:"No overlay channel."}}; OVERLAY_ORDER=["none"];
+    if(!ENC||!ENC.sets)return; Object.keys(ENC.sets).forEach(function(k){ var st=ENC.sets[k];
+      if(["texture","border","glow"].indexOf(st.channel)<0)return; OVERLAYS[k]={label:st.label,hint:st.description,set:st,channel:st.channel}; OVERLAY_ORDER.push(k); }); }
+  // role → broad kind (matches the kind-texture set's facet values)
+  function roleGroup(role){ var r=role||"other";
+    if(["token","axis-css","glyphic-css"].indexOf(r)>=0)return "token";
+    if(["doc","spec"].indexOf(r)>=0)return "doc";
+    if(["archive"].indexOf(r)>=0)return "archive";
+    if(["ingest","inspo","upload","shot"].indexOf(r)>=0)return "ingest";
+    if(["other","specimen","card","template","ui_kit","ui-kit","folder"].indexOf(r)>=0)return "asset";
+    return "code"; }
+  function facetVal(n,facet){ if(facet==="roleGroup")return roleGroup(n.role);
+    if(facet==="depth"){ var R=RECT[n.id]; return R?R.depth:(n.path.split("/").length); }
+    if(facet==="state"){ if(editMode && EDITS.some(function(o){return o.path===n.id||o.to===n.id||o.from===n.id;}))return "changed";
+      return (n.type==="file" && deg(n)===0)?"unwired":"none"; }
+    return null; }
+  // CSS background-image for a texture pattern id, in a faint ink that reads over any fill
+  function texturePattern(pat,ink){ ink=ink||"rgba(255,255,255,.16)";
+    switch(pat){
+      case "grid":  return "repeating-linear-gradient(0deg,"+ink+" 0 1px,transparent 1px 7px),repeating-linear-gradient(90deg,"+ink+" 0 1px,transparent 1px 7px)";
+      case "lines": return "repeating-linear-gradient(45deg,"+ink+" 0 1px,transparent 1px 6px)";
+      case "hatch": return "repeating-linear-gradient(-45deg,"+ink+" 0 1px,transparent 1px 6px)";
+      case "cross": return "repeating-linear-gradient(45deg,"+ink+" 0 1px,transparent 1px 7px),repeating-linear-gradient(-45deg,"+ink+" 0 1px,transparent 1px 7px)";
+      case "dots":  return "radial-gradient("+ink+" 1px,transparent 1.4px)";
+      default: return "";
+    } }
+  var GLOW_COL={gold:"#E0C010",clay:"#B5482E",blue:"#6BA0E0",sage:"#5C8A4C",none:""};
+  function applyOverlay(){ var ov=OVERLAYS[overlayMode], st=ov&&ov.set;
+    Object.keys(EL).forEach(function(id){ var el=EL[id], n=NODE[id]; if(!n)return;
+      var isPath=el.tagName&&el.tagName.toLowerCase()==="path";
+      // reset overlay-only props
+      if(isPath){ el.style.filter=""; } else { el.style.backgroundImage=""; el.style.outline=""; el.style.outlineOffset=""; el.style.boxShadow=""; }
+      if(!st)return; var ch=st.channel, fv=facetVal(n,st.facet), val=st.values?st.values[fv]:null;
+      if(ch==="texture"){ if(isPath)return; var bg=texturePattern(val); if(bg){ el.style.backgroundImage=bg; el.style.backgroundSize=(val==="dots")?"7px 7px":"auto"; } }
+      else if(ch==="border"){ var d=fv||1, w=Math.max(0.5,3.2-d*0.7), light=Math.min(.85,.3+d*0.16);
+        if(isPath){ el.style.strokeWidth=w.toFixed(2); } else { el.style.outline=w.toFixed(2)+"px solid rgba(255,255,255,"+light.toFixed(2)+")"; el.style.outlineOffset="-"+w.toFixed(2)+"px"; } }
+      else if(ch==="glow"){ var gc=GLOW_COL[val]||""; if(!gc)return; if(isPath){ el.style.filter="drop-shadow(0 0 4px "+gc+")"; } else { el.style.boxShadow="0 0 0 1px "+gc+", 0 0 10px "+tint(gc,.7); } }
+    }); }
+
 
   // ===== EDITOR (Piece 5): structural edits → typed OPERATION QUEUE + live morph + persistence =====
   // The preview can't write project files; edits mutate the in-memory model, morph the canvas, and
@@ -795,13 +1003,18 @@
   function edgeType(kind){ if(kind==="loads")return "loads"; if(kind==="contains")return "contains"; return "resolves"; }
 
   // ===== resolution edges drawn across the structure =====
+  // map a node to its nearest PLACED ancestor (radial layouts collapse deep/tiny folders, so a deep
+  // file may not be in RECT — aggregate its edge up to whatever folder IS visible). Square layouts
+  // place everything, so this returns the node itself (no change there).
+  function placedNode(id){ var n=NODE[id]; while(n && !RECT[n.id]) n=NODE[n.parent]; return n?n.id:null; }
   function buildEdges(){ EDGES=[]; DATA.edges.forEach(function(e){
     var t=(e.type&&EDGE_TYPES[e.type])?e.type:edgeType(e.kind);
     if(t==="contains")return;
     var to=e.to;
     if(t==="resolves"&&e.kind.indexOf("uses:")===0){ var f=DEFINER[e.kind.split(":")[1]]; if(!f)return; to=f; }
-    if(!RECT[e.from]||!RECT[to]||e.from===to)return;
-    EDGES.push({from:e.from,to:to,type:t}); }); }
+    var from=placedNode(e.from); to=placedNode(to);
+    if(!from||!to||from===to)return;
+    EDGES.push({from:from,to:to,type:t}); }); }
   function ctr(id){ var R=RECT[id]; return R?{x:R.x+R.w/2,y:R.y+R.h/2}:null; }
   function drawEdges(){
     var svg=document.getElementById("edges"), b=document.getElementById("map");
@@ -813,7 +1026,7 @@
       var involved = selected && (e.from===selected||e.to===selected);
       var d='M'+a.x.toFixed(1)+' '+a.y.toFixed(1)+' Q '+((a.x+c.x)/2).toFixed(1)+' '+((a.y+c.y)/2).toFixed(1)+' '+c.x.toFixed(1)+' '+c.y.toFixed(1);
       if(involved){ hi+='<path d="'+d+'" fill="none" stroke="'+et.color+'" stroke-width="2" opacity=".95"/>'; }
-      else if(wiring && !isRadial()){ var strong=e.type==="resolves", op=selected?0.02:(strong?0.14:0.07); base+='<path d="'+d+'" fill="none" stroke="'+et.color+'" stroke-width="'+(strong?0.8:0.6)+'" opacity="'+op+'"/>'; }
+      else if(wiring){ var strong=e.type==="resolves", rad=isRadial(), op=selected?0.02:(strong?(rad?0.10:0.14):(rad?0.05:0.07)); base+='<path d="'+d+'" fill="none" stroke="'+et.color+'" stroke-width="'+(strong?0.8:0.6)+'" opacity="'+op+'"/>'; }
     });
     svg.innerHTML=base+hi;
   }
@@ -883,8 +1096,8 @@
   var lastGen=0;
   function updateStatus(){ var f=0,d=0; DATA.nodes.forEach(function(n){ n.type==="folder"?d++:f++; });
     var el=document.getElementById("stat"); if(el) el.textContent=f+" files \u00b7 "+d+" folders"; }
-  function reload(j){ var prev=selected;
-    DATA=j; ENC=j.encoding||null; NODE={};KIDS={};OUT={};IN={};DEFINES={};DEFINER={};
+  function reload(j){ var prev=selected; zoom=1; panX=0; panY=0;
+    DATA=j; ENC=j.encoding||null; buildOverlays(); buildSizers(); NODE={};KIDS={};OUT={};IN={};DEFINES={};DEFINER={};
     index(); NODE["__root"]={id:"__root",type:"folder",name:"root"};
     HEATMAX=1; DATA.nodes.forEach(function(n){ if(n.type==="file"){ var d=deg(n); if(d>HEATMAX)HEATMAX=d; } });
     buildMap(); lastGen=j.generatedAt; updateStatus();
@@ -896,7 +1109,7 @@
   fetchModel().then(function(j){ diskModel=j; var saved=loadEdits();
     reload(saved&&saved.data&&saved.data.nodes?saved.data:j);
     if(saved&&saved.ops){ EDITS=saved.ops; }
-    renderOps(); buildToolbar(); setupDrag(); }).catch(function(e){ document.getElementById("canvas").innerHTML='<div style="color:#fff;padding:40px">Could not load map data: '+esc(e.message)+'</div>'; });
+    renderOps(); buildToolbar(); setupDrag(); renderExplain(); }).catch(function(e){ document.getElementById("canvas").innerHTML='<div style="color:#fff;padding:40px">Could not load map data: '+esc(e.message)+'</div>'; });
 
   // ===== GLYPHIC TOOLBAR — every control is a composed Glyphic (the universal unit) =====
   // Each control's icon is CV_GLYPHIC.render({form,symbol,fill,color,…}) — the same
@@ -911,6 +1124,7 @@
     layout:   {form:'hexagon', symbol:'hierarchy',     color:{ring:'gold',symbol:'gold'}},
     size:     {form:'hexagon', symbol:'ruler',         color:{ring:'gold',symbol:'gold'}},
     colour:   {form:'hexagon', symbol:'color-swatches',color:{ring:'gold',symbol:'gold'}},
+    overlay:  {form:'hexagon', symbol:'filters',       color:{ring:'gold',symbol:'gold'}},
     links:    {form:'circle',  symbol:'network',       color:{ring:'blue',symbol:'blue'}},
     rescan:   {form:'circle',  symbol:'refresh',       color:{ring:'muted',symbol:'muted'}},
     edit:     {form:'square',  symbol:'edit',          color:{ring:'gold',symbol:'gold'}},
@@ -937,6 +1151,7 @@
         menuBtn("layout",function(){return "Layout — "+LAYOUTS[layoutMode].label;},layoutMenu),
         menuBtn("size",function(){return "Size — "+SIZERS[sizeMode].label;},sizeMenu),
         menuBtn("colour",function(){return "Colour — "+COLORERS[colorMode].label;},colourMenu),
+        menuBtn("overlay",function(){return "Overlay — "+(OVERLAYS[overlayMode]?OVERLAYS[overlayMode].label:"Off");},overlayMenu),
       ]},
       {items:[ menuBtn("links",function(){return wiring?"Relationships — wiring on":"Relationships — wiring off";},linksMenu) ]},
       {items:[ btn("rescan","Rescan from disk",doRescan), toggleBtn("edit",function(){return editMode;},"Edit structure",toggleEdit) ]},
@@ -967,7 +1182,7 @@
     order.forEach(function(k){ var it=reg[k]; var mi=document.createElement("button"); mi.className="mi"+(k===cur()?" sel":"");
       mi.innerHTML='<span class="mit"><span class="mil">'+esc(it.label)+'</span>'+(it.hint?'<span class="mih">'+esc(it.hint)+'</span>':'')+'</span><span class="mick">\u2713</span>';
       mi.addEventListener("click",function(){ pick(k); closePop(); syncToolbar(); }); parent.appendChild(mi); }); }
-  function layoutMenu(p){ modeMenu(p,"Layout",LAYOUT_ORDER,LAYOUTS,function(){return layoutMode;},function(k){ layoutMode=k; applyLayout(); }); }
+  function layoutMenu(p){ modeMenu(p,"Layout",LAYOUT_ORDER,LAYOUTS,function(){return layoutMode;},function(k){ layoutMode=k; if(k==="sunburst")radialFocus="__root"; applyLayout(); }); }
   function sizeMenu(p){ modeMenu(p,"Size",SIZE_ORDER,SIZERS,function(){return sizeMode;},function(k){ sizeMode=k; reflow(); }); }
   function colourMenu(p){ modeMenu(p,"Colour",COLOR_ORDER,COLORERS,function(){return colorMode;},function(k){ colorMode=k; if(isRadial())applyLayout(); else recolor(); });
     var hd=document.createElement("div"); hd.className="pophd"; hd.textContent="Filter systems"; p.appendChild(hd);
@@ -975,6 +1190,13 @@
     LEGEND_ROLES.forEach(function(r){ var s=document.createElement("span"); s.className="lg"+(hidden[r[0]]?" off":""); s.innerHTML='<span class="sw" style="background:'+rc(r[0])+'"></span>'+esc(r[1]);
       s.addEventListener("click",function(){ hidden[r[0]]=!hidden[r[0]]; s.classList.toggle("off",hidden[r[0]]); applyFilters(); }); wrap.appendChild(s); });
     p.appendChild(wrap); }
+  function overlayMenu(p){ modeMenu(p,"Overlay",OVERLAY_ORDER,OVERLAYS,function(){return overlayMode;},function(k){ overlayMode=k; applyOverlay(); });
+    var d=OVERLAYS[overlayMode]&&OVERLAYS[overlayMode].set;
+    if(d&&d.values){ var hd=document.createElement("div"); hd.className="pophd"; hd.textContent="Key"; p.appendChild(hd);
+      var wrap=document.createElement("div"); wrap.className="legend";
+      Object.keys(d.values).forEach(function(v){ var s=document.createElement("span"); s.className="lg"; s.style.pointerEvents="none";
+        s.innerHTML='<span class="sw" style="background:rgba(255,255,255,.18)"></span>'+esc(v+" → "+d.values[v]); wrap.appendChild(s); });
+      p.appendChild(wrap); } }
   function linksMenu(p){ p.innerHTML='<div class="pophd">Relationships</div>';
     var w=document.createElement("button"); w.className="mi"+(wiring?" sel":"");
     w.innerHTML='<span class="mit"><span class="mil">Show wiring</span><span class="mih">Draw resolution lines across the map</span></span><span class="mick">\u2713</span>';
@@ -1015,7 +1237,35 @@
   document.getElementById("opsexport").addEventListener("click",exportOps);
   document.getElementById("opsclear").addEventListener("click",function(){ if(confirm("Clear the queued operations and the local edited view? (Resets to the last disk scan.)")){ clearEdits(); undoStack=[]; redoStack=[]; if(diskModel)reload(diskModel); syncToolbar(); } });
   document.getElementById("opsclose").addEventListener("click",function(){ document.getElementById("opsdrawer").classList.remove("show"); });
+  // ===== human-friendly explainer (per layout) =====
+  var LAYOUT_EXPLAIN={
+    nested:{what:"The whole codebase as nested boxes — every folder is a box, and the files and sub-folders it holds sit inside it. Bigger boxes are the more important parts of the system.",read:"Each system has its own colour; find a region by colour, then read its labels.",nav:"Click any box to select it and light up its connections."},
+    districts:{what:"The same files, but regrouped by what KIND of thing they are (ignoring which folder they live in) — so you see the system by type, not by location.",read:"Each titled region is one system (Tokens, Catalogues, Assets…); the tiles inside are its files.",nav:"Click a tile to trace its connections."},
+    layers:{what:"The files stacked by how depended-on they are — the foundations everything else is built from sit at the bottom, the leaves that nothing builds on sit at the top.",read:"Four bands: Foundations → Core → Used → Leaves. Gold = the single sources.",nav:"Click a tile to see what resolves from it."},
+    sunburst:{what:"A ring view of the folders — the centre is where you are, each ring outward is one level deeper into the folders.",read:"Colours are systems; the wider a wedge, the more it contains.",nav:"Click a ring to dive into that folder; click the centre to come back out."},
+    "circle":{what:"The directory as concentric rings — each folder is a ring band, and everything it contains nests in the ring just outside it, so distance from the centre = how deep in the folders you are. Files are blocks.",read:"Centre-out = deeper into the tree. Colour = system; a wider wedge holds more.",nav:"Scroll to zoom in — more labels appear in place, nothing is ever cut off. Click a folder to dive in; the centre takes you back."},
+    "tunnel":{what:"The inverted ring view — the top folders all sit on the OUTER ring at equal size, and each level deeper sits further IN. Zooming in feels like travelling down a tunnel toward the centre.",read:"Outer ring = the top folders; the deeper a thing, the closer to the centre.",nav:"Scroll to zoom inward; click a folder to dive in."}
+  };
+  function renderExplain(){ var b=document.getElementById("exbody"); if(!b)return; var L=LAYOUTS[layoutMode]||{}, E=LAYOUT_EXPLAIN[layoutMode]||{};
+    var here = (typeof radialFocus!=="undefined" && isRadial() && radialFocus!=="__root") ? '<div class="exsec"><h4>You are here</h4><p>Inside <b>'+esc(radialFocus)+'</b> — click the centre to go back out.</p></div>' : '';
+    b.innerHTML='<div class="exsec"><h4>'+esc(L.label||layoutMode)+'</h4><p>'+esc(E.what||L.hint||"")+'</p></div>'+
+      (E.read?'<div class="exsec"><h4>How to read it</h4><p>'+esc(E.read)+'</p></div>':'')+
+      (E.nav?'<div class="exsec"><h4>Getting around</h4><p>'+esc(E.nav)+'</p></div>':'')+ here +
+      '<div class="exsec"><h4>The thin lines</h4><p>The faint gold &amp; blue lines are resolution links — they show how one file is built from others (a component from its tokens, the Glyphic from its axes). Click anything to light up just its own links.</p></div>';
+  }
+  document.getElementById("explain-close").addEventListener("click",function(){ document.body.classList.add("noexplain"); });
+  document.getElementById("explain-open").addEventListener("click",function(){ document.body.classList.remove("noexplain"); });
   document.getElementById("q").addEventListener("input",applyFilters);
+  (function(){ var map=document.getElementById("map"), zrt;
+    map.addEventListener("wheel",function(ev){ if(!isRadial())return; ev.preventDefault();
+      var r=map.getBoundingClientRect(), mx=ev.clientX-r.left, my=ev.clientY-r.top;
+      var f=Math.exp(-ev.deltaY*0.0016), nz=Math.max(1,Math.min(14,zoom*f)); if(nz===zoom)return;
+      panX=mx-(mx-panX)*(nz/zoom); panY=my-(my-panY)*(nz/zoom); zoom=nz;
+      if(zoom<=1.001){ zoom=1; panX=0; panY=0; }
+      applyZoomTransform();
+      clearTimeout(zrt); zrt=setTimeout(function(){ if(isRadial()){ var ps=selected; buildMap(); applyZoomTransform(); if(ps&&NODE[ps])select(ps,true,true); } },130);
+    },{passive:false});
+  })();
   document.addEventListener("keydown",function(e){ var tag=e.target.tagName; if(tag==="INPUT"||tag==="TEXTAREA")return; var mod=e.metaKey||e.ctrlKey;
     if(mod && e.key.toLowerCase()==="z"){ e.preventDefault(); e.shiftKey?redo():undo(); }
     else if(mod && e.key.toLowerCase()==="y"){ e.preventDefault(); redo(); }

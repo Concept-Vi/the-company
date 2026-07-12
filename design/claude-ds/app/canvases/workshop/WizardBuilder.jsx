@@ -80,7 +80,7 @@ async function viDraftWizard(brief, kindId) {
   const prompt = `You are Vi, drafting a multi-step wizard inside ConceptV Studio.
 
 ${window.CV_AI.get('voice.conceptv').text}
-Canonical shapes: Property Wizard → hexagon, Virtual Hub → octagon, Vi → diamond, User Portal → circle.
+Canonical shapes: Property Wizard \u2192 hexagon, Virtual Hub \u2192 octagon, Vi \u2192 diamond, User Portal \u2192 circle.
 
 User's brief: "${brief}"
 

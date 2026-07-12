@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Glass · Settings</title>
+<link rel="stylesheet" href="../../styles.css"/>
+<link rel="stylesheet" href="glass-app.css"/>
+<style>
+  .set{ display: grid; grid-template-columns: 244px 1fr; grid-template-rows: 56px 1fr;
+    grid-template-areas: "top top" "side main"; gap: var(--s-4); }
+  .s-top{ grid-area: top; display: flex; align-items: center; gap: var(--s-3); padding-inline: var(--s-3); border-radius: var(--r-xl); }
+  .s-side{ grid-area: side; display: flex; flex-direction: column; padding: var(--s-3); }
+  .s-main{ grid-area: main; overflow: hidden; }
+  .s-main .in{ height: 100%; overflow: auto; padding: var(--s-7); display: flex; flex-direction: column; gap: var(--s-5); max-width: 760px; }
+  .navcap{ padding: var(--s-3) var(--s-3) var(--s-1); }
+  .field{ display: flex; align-items: center; gap: var(--s-4); padding: var(--s-4) 0; border-top: 1px solid var(--glass-edge-soft); }
+  .field:first-child{ border-top: 0; }
+  .field .lab{ flex: 1; }
+  .field .lab .t{ font-size: var(--fs-body); font-weight: 500; color: var(--ink); }
+  .field .lab .d{ font-size: var(--fs-caption); color: var(--ink-3); margin-top: 2px; }
+  .seg2{ display: inline-flex; gap: var(--s-1); padding: var(--s-1); border-radius: var(--r-lg); }
+  .seg2 button{ font-size: var(--fs-meta); font-weight: 600; padding: 5px var(--s-3); border-radius: var(--r-sm); color: var(--ink-3); border: 0; background: transparent; cursor: pointer; font-family: inherit; }
+  .seg2 button.on{ color: var(--ink); background: color-mix(in oklch, var(--ink) 10%, transparent); }
+  .sect-h{ display: flex; align-items: center; gap: var(--s-3); }
+</style>
+</head>
+<body>
+<div class="gg-field"><span class="a"></span><span class="b"></span><span class="c"></span></div>
+<div class="gg-app set">
+
+  <header class="s-top glass">
+    <div class="gg-brand"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 5l8 14 8-14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div style="font-weight:600;letter-spacing:var(--tracking-snug)">Settings</div>
+    <div style="flex:1"></div>
+    <button class="cv-btn cv-btn--ghost cv-btn--sm">Discard</button>
+    <button class="cv-btn cv-btn--primary cv-btn--sm">Save changes</button>
+    <div class="gg-avatar gold">A</div>
+  </header>
+
+  <nav class="s-side glass">
+    <div class="navcap gg-lbl">Settings</div>
+    <div class="gg-row on"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.7"/></svg><span class="gg-grow">Profile</span></div>
+    <div class="gg-row"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3l2.5 2 3-.5 1 3 2.5 1.5-1 3 1 3-2.5 1.5-1 3-3-.5L12 21l-2.5-2-3 .5-1-3L3 15l1-3-1-3 2.5-1.5 1-3 3 .5L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.5"/></svg><span class="gg-grow">Preferences</span></div>
+    <div class="gg-row"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.7"/></svg><span class="gg-grow">Notifications</span></div>
+    <div class="gg-row"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7"/></svg><span class="gg-grow">Security</span></div>
+    <div class="gg-row"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.7"/></svg><span class="gg-grow">Billing</span></div>
+    <div class="gg-row"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.7.3-.7.8-.7 1.6M12 17h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="gg-grow">Help</span></div>
+  </nav>
+
+  <main class="s-main glass">
+    <div class="in">
+      <div class="sect-h"><div><div class="gg-h-lg">Profile</div><div class="gg-sub">How you appear across the workspace</div></div><div style="flex:1"></div><div class="gg-avatar gold" style="width:52px;height:52px;font-size:var(--fs-body)">JL</div></div>
+
+      <div class="glass--inset gg-pad">
+        <div class="field"><div class="lab"><div class="t">Display name</div><div class="d">Shown on comments and shared work</div></div><input class="cv-input" style="max-width:260px" value="Jordan Lee"/></div>
+        <div class="field"><div class="lab"><div class="t">Email</div><div class="d">Used for sign-in and alerts</div></div><input class="cv-input" style="max-width:260px" value="jordan@atlas.co"/></div>
+        <div class="field"><div class="lab"><div class="t">Role</div><div class="d">Determines what you can edit</div></div><span class="cv-badge cv-badge--gold">Administrator</span></div>
+      </div>
+
+      <div class="sect-h"><div class="gg-h">Appearance</div></div>
+      <div class="glass--inset gg-pad">
+        <div class="field"><div class="lab"><div class="t">Theme</div><div class="d">The glass material recomputes per mode</div></div>
+          <div class="seg2 glass--inset"><button>Light</button><button>Dim</button><button class="on">Dark</button><button>Contrast</button></div></div>
+        <div class="field"><div class="lab"><div class="t">Reduce motion</div><div class="d">Calms the ambient background drift</div></div><button class="gg-switch" aria-label="Reduce motion"></button></div>
+        <div class="field"><div class="lab"><div class="t">Compact density</div><div class="d">Tighter spacing on data-heavy views</div></div><button class="gg-switch on" aria-label="Compact density"></button></div>
+      </div>
+
+      <div class="sect-h"><div class="gg-h">Notifications</div></div>
+      <div class="glass--inset gg-pad">
+        <div class="field"><div class="lab"><div class="t">Product updates</div><div class="d">New features and improvements</div></div><button class="gg-switch on"></button></div>
+        <div class="field"><div class="lab"><div class="t">Mentions</div><div class="d">When someone @s you</div></div><button class="gg-switch on"></button></div>
+        <div class="field"><div class="lab"><div class="t">Weekly digest</div><div class="d">A Monday summary email</div></div><button class="gg-switch"></button></div>
+      </div>
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

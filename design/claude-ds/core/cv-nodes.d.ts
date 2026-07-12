@@ -69,7 +69,8 @@ export interface CVNode {
 // ---- Graph side (relational solver) --------------------------
 export type CVGraphType =
   | "network" | "hub" | "morph" | "pipeline"
-  | "timeline" | "quadrant" | "tree" | "compare" | "stack" | "stepper";
+  | "timeline" | "quadrant" | "tree" | "compare" | "stack" | "stepper"
+  | "glyphgraph";  // the language's sentence-graph (nodes = typed glyphics; W0 drift-fix — the solver already handles it)
 
 export interface CVGraphNode {
   id: string;
@@ -87,9 +88,19 @@ export interface CVGraphNode {
 export interface CVGraphEdge {
   from: string;
   to: string;
-  /** edge semantic — flow (gold) · dependency (dashed) · reference (dotted) · rejected */
-  kind?: "flow" | "dependency" | "reference" | "rejected";
+  /** edge semantic — flow (gold) · dependency (dashed) · reference (dotted) · rejected;
+   *  glyphgraph edges use CV_MEANING's open edge-kind vocabulary (face/part-of/becomes/…) */
+  kind?: string;
   label?: string;
+  /** glyphgraph edge facets (W0 drift-fix — glyphGraphView already consumes these):
+   *  line = the relation's MOOD (solid=is · dashed=could · dotted=might · lines=flows) */
+  line?: "solid" | "dashed" | "dotted" | "lines" | "right-angled" | "curved" | "free";
+  /** direction = the ROLE (subject→object) */
+  direction?: "to" | "from" | "both" | "none";
+  /** routing = the path character (straight | elbow | curve) */
+  routing?: string;
+  /** lineColor = a CV_MEANING lineColor field id (state carried by the stroke), resolved to a token — never hex */
+  lineColor?: string;
 }
 
 export interface CVGraph {

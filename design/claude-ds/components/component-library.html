@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="../styles.css"/>
 <style>
   body { margin: 0; background: var(--zone-ground); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; padding: 36px 40px 64px; }
-  h1 { font: var(--weight-bold,700) var(--fs-h2)/1 var(--font-display); letter-spacing: -.02em; margin: 0 0 4px; }
+  h1 { font: var(--weight-bold) var(--fs-h2)/1 var(--font-display); letter-spacing: -.02em; margin: 0 0 4px; }
   .sub { color: var(--ink-3); font-size: var(--fs-meta); margin: 0 0 30px; max-width: 80ch; }
   h2 { font: 700 11px/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--accent-bronze); margin: 36px 0 14px; display: flex; align-items: center; gap: 10px; }
   h2::before { content: ""; width: 7px; height: 7px; background: var(--accent-gold); transform: rotate(45deg); border-radius: 1px; }
@@ -17,7 +17,7 @@
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .cap { font: 700 10px/1 var(--font-mono); color: var(--ink-4); margin: 0 0 8px; letter-spacing: .04em; }
   .stack { display: flex; flex-direction: column; gap: 8px; }
-  .darkwrap { background: var(--bg-dark, #1F1A12); border-radius: var(--r-lg); padding: 20px; }
+  .darkwrap { background: var(--bg-dark); border-radius: var(--r-lg); padding: 20px; }
 </style>
 </head>
 <body data-ground="warm">
@@ -180,6 +180,41 @@
         <button class="cv-btn cv-btn--ghost cv-btn--sm">Cancel</button>
         <button class="cv-btn cv-btn--primary cv-btn--sm">Publish</button>
       </div>
+    </div>
+  </div>
+
+  <h2>Select · tooltip · popover</h2>
+  <div class="row" style="gap:40px;align-items:flex-start">
+    <div class="stack" style="width:240px">
+      <p class="cap">SELECT — closed</p>
+      <div class="cv-select">
+        <button class="cv-select__btn" aria-haspopup="listbox" aria-expanded="false">
+          <span class="cv-select__value">Three-bed apartment</span>
+          <span class="cv-select__caret" aria-hidden="true">▾</span>
+        </button>
+      </div>
+    </div>
+    <div class="stack" style="width:240px">
+      <p class="cap">SELECT — open (listbox)</p>
+      <div class="cv-select">
+        <button class="cv-select__btn" aria-haspopup="listbox" aria-expanded="true">
+          <span class="cv-select__value">Three-bed apartment</span>
+          <span class="cv-select__caret" aria-hidden="true">▾</span>
+        </button>
+        <div class="cv-popover is-open" data-placement="bottom" role="listbox" style="position:static;min-width:100%;margin-top:6px">
+          <div class="cv-select__menu">
+            <button class="cv-select__opt" role="option">Studio</button>
+            <button class="cv-select__opt" role="option">One-bed apartment</button>
+            <button class="cv-select__opt" role="option" aria-selected="true">Three-bed apartment</button>
+            <button class="cv-select__opt" role="option">Penthouse</button>
+            <button class="cv-select__opt" role="option" aria-disabled="true">Townhouse (sold out)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="stack" style="width:200px">
+      <p class="cap">TOOLTIP — hint bubble</p>
+      <span class="cv-tooltip">Floor area, internal only</span>
     </div>
   </div>
 

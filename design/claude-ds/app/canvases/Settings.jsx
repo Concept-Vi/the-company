@@ -216,6 +216,25 @@ function Settings() {
         {/* ====== Storage ====== */}
         <section className="cv-st-section">
           <header>
+            <h3>World</h3>
+            <p>The skin the whole studio resolves through — one dial, every block, thread and shadow re-binds (tokens/skins.css). Switching morphs; nothing teleports.</p>
+          </header>
+          <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+            {(window.CV_AXES && window.CV_AXES.has && window.CV_AXES.has('skin')
+              ? window.CV_AXES.resolve('skin').values() : []).map(v => (
+              <button key={v.id}
+                className={'dsa-btn ' + (document.body.getAttribute('data-skin') === v.id ? 'dsa-btn--primary' : 'dsa-btn--outline')}
+                onClick={(e) => { window.cvSetSkin(v.id); const p = e.currentTarget.parentElement;
+                  [...p.children].forEach(b => b.className = 'dsa-btn dsa-btn--outline');
+                  e.currentTarget.className = 'dsa-btn dsa-btn--primary'; }}>
+                {v.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="cv-st-section">
+          <header>
             <h3>Local storage</h3>
             <p>All your imagery and studio state lives in this browser. Clearing wipes everything you've adopted.</p>
           </header>

@@ -1,0 +1,737 @@
+/* ============================================================
+   ConceptV · SKINS — coordinated resolutions of the block world
+   ------------------------------------------------------------
+   A SKIN is not a new system: it is a COORDINATED POINT across
+   the existing axes (ground × material × shadow × edge × state),
+   scoped by data-skin. It re-binds ROLE variables only — never a
+   consumer rule — so the SAME blocks, tokens, and page specs
+   resolve to a fully different world. (analysis/SKINS.md; the
+   six May-2026 reference boards are the stone skin's quality bar.)
+
+   · material "skin" = "the skin's own surface": the DEFAULT a
+     block gets when it doesn't force an explicit material.
+     Bound per skin scope below. Explicit materials still force.
+   · Block STATES (is-selected / is-potential / is-stacked) speak
+     each skin's own glow/ghost language through role vars.
+   · THREADS (the graph side's luminous connectors) read per-skin
+     edge roles.
+
+   The registry face is axes/skin/skin-axis.js — add a skin =
+   ONE scope block here + ONE axis value there.
+   ============================================================ */
+
+/* ============ THE GLASS SKIN (the system default) ============
+   Glass's tokens stay in tokens/glass.css — these bindings only
+   POINT there. Declared un-scoped so a page with no data-skin is
+   byte-identical to pre-skin behaviour; [data-skin="glass"] is
+   the same binding made explicit. */
+/* ============ GL HANDOVER (todo 87.2 — the ghosting rule) ============
+   While a live GL scene owns the surfaces ([data-scene-live] on the ground),
+   the DOM materials DROP their painted fills/shadows/borders entirely — the
+   canvas renders every slab; the DOM keeps only CONTENT (text, charts, wells).
+   One rule, every skin: without it the CSS fills paint over the GL slabs as a
+   double image. */
+.skin-ground[data-scene-live] .material,
+.skin-ground[data-scene-live] .material[data-depth][data-depth] {
+  background: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+.skin-ground[data-scene-live] .material::before,
+.skin-ground[data-scene-live] .material::after {
+  content: none;
+}
+
+/* ============ MATERIAL "skin" — the active skin's own surface ====
+   ONE binding, single-attribute scope: it reads --skin-mat-* roles
+   (inherited from the data-skin scope) and falls back to GLASS — so
+   a page with no data-skin is byte-identical to pre-skin behaviour,
+   and each skin re-binds by declaring --skin-mat-* on ITS scope. */
+/* REGISTRATION: the --mat-* roles as design-system tokens, with their GLASS
+   defaults (at :root the --skin-mat-* refs are unset, so these substitute to
+   the glass chain — byte-identical to the previous unset-→-fallback path).
+   The [data-material="skin"] block below RE-BINDS them per element so each
+   skin scope substitutes its own --skin-mat-* values. */
+:root {
+  /* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+  --shadow-contact: 0 0 0 transparent; /* shadow-type zero: valid alone, in lists, in drop-shadow; skins override */
+
+  /* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+  --depth: 2;
+  --depth-halo: 0 0 0 transparent;
+  --depth-shadow-mid: color-mix(in srgb, var(--shadow-c-warm) 16%, transparent);
+  --depth-shadow-tight: color-mix(in srgb, var(--shadow-c-warm) 22%, transparent);
+  --depth-side: 0 0 0 transparent;
+  --depth-tint: transparent;
+  --gl-dom-tilt-x: 0deg;
+  --gl-dom-tilt-y: 0deg;
+  --glass-highlight: rgba(255,255,255,.12);
+  --key-light: white;
+  --r-active: none;
+  --scene-opt-in: none;
+  --shadow-c-warm: black;
+  --skin-mat-highlight: rgba(255,255,255,.12);
+  --skin-mat-texture: none;
+  --thread-w: 1.2;
+  --world-pan-x: 0px;
+  --world-pan-y: 0px;
+  --world-zoom: 1;
+
+  --key-shadow-x: 0.55; /* @kind other */ /* the one key light's horizontal vector: shadow x = y × this (see the .depth filter below) — was a masked fallback */
+  --mat-fill:          var(--skin-mat-fill, var(--glass-fill)); /* @kind other */
+  --mat-fill-raised:   var(--skin-mat-fill-raised, var(--glass-fill-raised)); /* @kind other */
+  --mat-fill-inset:    var(--skin-mat-fill-inset, var(--glass-fill-inset)); /* @kind other */
+  --mat-sheen:         var(--skin-mat-sheen, var(--glass-sheen)); /* @kind other */
+  --mat-sheen-inset:   var(--skin-mat-sheen-inset, var(--skin-mat-sheen, var(--glass-sheen))); /* @kind other */ /* slot: inset zones — mirrors --mat-texture-inset; was a masked fallback */
+  --mat-texture:       var(--skin-mat-texture); /* @kind other */
+  --mat-texture-inset: var(--skin-mat-texture-inset, var(--skin-mat-texture)); /* @kind other */
+  --mat-texture-well:  var(--skin-mat-texture-well, var(--skin-mat-texture-inset, var(--skin-mat-texture))); /* @kind other */
+  --mat-texture-raised: var(--skin-mat-texture-raised, var(--skin-mat-texture)); /* @kind other */
+  --mat-edge:          var(--skin-mat-edge, var(--glass-edge)); /* @kind color */
+  --mat-edge-soft:     var(--skin-mat-edge-soft, var(--glass-edge-soft)); /* @kind color */
+  --mat-highlight:     var(--skin-mat-highlight, var(--glass-highlight)); /* @kind color */
+  --mat-blur:          var(--skin-mat-blur, var(--glass-blur)); /* @kind spacing */
+  --mat-saturate:      var(--skin-mat-saturate, var(--glass-saturate)); /* @kind other */
+  --mat-shadow:        var(--skin-mat-shadow, var(--glass-shadow)); /* @kind shadow */
+  --mat-shadow-lifted: var(--skin-mat-shadow-lifted, var(--glass-shadow-lifted)); /* @kind shadow */
+  --mat-radius:        var(--skin-mat-radius, var(--glass-radius)); /* @kind radius */
+  --mat-radius-inner:  var(--skin-mat-radius-inner, var(--glass-radius-inner)); /* @kind radius */
+}
+[data-material="skin"] {
+  --mat-fill:          var(--skin-mat-fill, var(--glass-fill)); /* @kind other */
+  --mat-fill-raised:   var(--skin-mat-fill-raised, var(--glass-fill-raised)); /* @kind other */
+  --mat-fill-inset:    var(--skin-mat-fill-inset, var(--glass-fill-inset)); /* @kind other */
+  --mat-sheen:         var(--skin-mat-sheen, var(--glass-sheen)); /* @kind other */
+  --mat-sheen-inset:   var(--skin-mat-sheen-inset, var(--skin-mat-sheen, var(--glass-sheen))); /* @kind other */ /* slot: inset zones — mirrors --mat-texture-inset; was a masked fallback */
+  --mat-texture:       var(--skin-mat-texture); /* @kind other */
+  --mat-texture-inset: var(--skin-mat-texture-inset, var(--skin-mat-texture)); /* @kind other */ /* slot: inset zones (cards, rank 3) */
+  --mat-texture-well: var(--skin-mat-texture-well, var(--skin-mat-texture-inset, var(--skin-mat-texture))); /* @kind other */ /* slot: wells (rank 4) */
+  --mat-texture-raised: var(--skin-mat-texture-raised, var(--skin-mat-texture)); /* @kind other */ /* slot: raised/overlay (rank 5) */
+  --mat-edge:          var(--skin-mat-edge, var(--glass-edge)); /* @kind color */
+  --mat-edge-soft:     var(--skin-mat-edge-soft, var(--glass-edge-soft)); /* @kind color */
+  --mat-highlight:     var(--skin-mat-highlight, var(--glass-highlight)); /* @kind color */
+  --mat-blur:          var(--skin-mat-blur, var(--glass-blur)); /* @kind spacing */
+  --mat-saturate:      var(--skin-mat-saturate, var(--glass-saturate)); /* @kind other */
+  --mat-shadow:        var(--skin-mat-shadow, var(--glass-shadow)); /* @kind shadow */
+  --mat-shadow-lifted: var(--skin-mat-shadow-lifted, var(--glass-shadow-lifted)); /* @kind shadow */
+  --mat-radius:        var(--skin-mat-radius, var(--glass-radius)); /* @kind radius */
+  --mat-radius-inner:  var(--skin-mat-radius-inner, var(--glass-radius-inner)); /* @kind radius */
+}
+:root,
+[data-skin="glass"] {
+  --edge-thread: color-mix(in oklch, var(--accent-gold) 55%, transparent); /* @kind color */
+  --edge-glow:   color-mix(in srgb, var(--accent-gold) 35%, transparent);  /* @kind color */
+  --edge-dot:    var(--accent-gold);                                        /* @kind color */
+  --state-glow:  color-mix(in srgb, var(--accent-gold) 30%, transparent);  /* @kind color */
+  --state-rim:   color-mix(in oklch, var(--accent-gold) 60%, transparent); /* @kind color */
+}
+
+/* ============ SKIN TEXTURE ASSETS — the ONE home for each file path ====
+   Real photographic textures (user-generated, uploaded Jul-2026). Each
+   asset URL lives here ONCE as a token; skins reference the token, never
+   the path — so a consumer that re-skins gets the image for free and the
+   path can move in one edit. url() resolves relative to THIS file
+   (tokens/), so ../assets/... works from any page that @imports styles.css. */
+:root {
+  --tex-plaster:    url("../assets/textures/plaster.png");     /* @kind other */ /* warm champagne plaster wall */
+  --tex-plaster-card: url("../assets/textures/plaster-card.png"); /* @kind other */ /* WHISPER plaster tile for CARD surfaces (porcelain is smooth) */
+  --tex-plaster-soft: url("../assets/textures/plaster-soft.png"); /* @kind other */ /* cream-lifted wall tile — fine tooth, no blotches */
+  --tex-plaster-lit:  url("../assets/textures/plaster-lit.png");  /* @kind other */ /* BAKED: normal+roughness maps lit from top-left — the card face material */
+  --tex-plaster-wall-lit: url("../assets/textures/plaster-wall-lit.png"); /* @kind other */ /* BAKED wall: softer relief */
+  --tex-linen-lit:    url("../assets/textures/linen-lit.png");    /* @kind other */ /* BAKED linen for parchment sheets */
+  --tex-stone-face-lit: url("../assets/textures/stone-face-lit.png"); /* @kind other */ /* BAKED champagne honed stone + stone-pore maps — THE card face */
+  --tex-plaster-fine-lit: url("../assets/textures/plaster-fine-lit.png"); /* @kind other */ /* BAKED sanded fine plaster — wells */
+  --tex-plaster-polished-lit: url("../assets/textures/plaster-polished-lit.png"); /* @kind other */ /* BAKED honed polished — raised/overlay */
+  --tex-paper-fine-lit: url("../assets/textures/paper-fine-lit.png"); /* @kind other */ /* BAKED fine paper — parchment wells */
+  --tex-graphite-fine-lit: url("../assets/textures/graphite-fine-lit.png"); /* @kind other */ /* BAKED fine graphite + its own maps — carbon face */
+  /* PACK-007 ROLE TILES (inspected clean — _qa/pack007-inspection-board.png):
+     the material-ROLE ladder from assets/roles/material-role-map.json.
+     m0527 RECALIBRATION: pack tiles baked the right SEPARATION but a dark
+     khaki KEY (wall 172 / card 219) — the whole world went mud vs the good
+     state (uploads/pasted-1783487652819-0.png). cal-* tiles = same grain,
+     photometrically lifted to the calibrated key: wall 224 → ghost 234 →
+     card 242 → active 244 (+2.5% r/b khaki cut). Originals kept for re-derive. */
+  --tex-role-wall: url("../assets/roles/cal-wall-depth-warm-plaster.png"); /* @kind other */
+  --tex-role-card: url("../assets/roles/cal-card-face-lifted-ivory.png"); /* @kind other */
+  --tex-role-card-active: url("../assets/roles/cal-card-face-active-champagne.png"); /* @kind other */
+  --tex-role-card-ghost: url("../assets/roles/cal-card-face-ghost-matte.png"); /* @kind other */
+  --tex-role-trough: url("../assets/roles/cal-command-trough-paper.png"); /* @kind other */
+  --tex-role-plaque: url("../assets/roles/cal-origin-plaque-stone.png"); /* @kind other */
+  --tex-role-detail: url("../assets/roles/cal-source-detail-card.png"); /* @kind other */
+  --span-trough: 640px; /* @kind other */ /* MANIFEST-BOUND: command.trough spanPx */
+  --span-plaque: 520px; /* @kind other */ /* MANIFEST-BOUND: origin.plaque spanPx */
+  --span-detail: 420px; /* @kind other */ /* MANIFEST-BOUND: source.detail spanPx */
+  --tex-ink-depth-deep: url("../assets/textures/ink-depth-deep.webp"); /* @kind other */ /* deeper atmospheric ground (range) */
+  /* ASSET WORLD-SPAN fields: the CSS footprint each tile covers at zoom 1 —
+     a FIELD OF THE ASSET (physical grain coverage), never its pixel count.
+     One world unit, so wall and slab grain stay in sync automatically. */
+  --span-wall: 1250px; /* @kind other */ /* MANIFEST-BOUND: assets/materials/manifest.json warm-plaster-wall.worldSpanPx (pack-004 span contract — the asset declares its own physical footprint) */
+  /* face span is MANIFEST-BOUND too (champagne-honed-stone.worldSpanPx); a skin
+     whose face material declares another span overrides in its own scope */
+  --span-face: 460px; /* @kind other */
+  --tex-ink-depth:  url("../assets/textures/ink-depth.png");   /* @kind other */ /* dark atmospheric ground */
+  --tex-linen:      url("../assets/textures/linen.png");       /* @kind other */ /* woven linen */
+  --tex-linen-card: url("../assets/textures/linen-card.png");  /* @kind other */ /* whisper linen tile for CARD surfaces */
+  --tex-linen-soft: url("../assets/textures/linen-soft.png"); /* @kind other */ /* cream-lifted linen wall tile */
+  --tex-plaster-cool: url("../assets/textures/plaster-cool.webp"); /* @kind other */ /* greige/cool plaster variant */
+  --tex-paper-fiber:  url("../assets/textures/paper-fiber.webp");  /* @kind other */ /* warm vellum fiber close-up */
+  --tex-paper-fiber-card: url("../assets/textures/paper-fiber-card.png"); /* @kind other */ /* faded fiber tile for CARDS */
+  --tex-graphite:     url("../assets/textures/graphite.webp");    /* @kind other */ /* dark brushed graphite */
+  --tex-graphite-card: url("../assets/textures/graphite-card.png"); /* @kind other */ /* faded graphite tile for CARDS */
+  --tex-foliage:    url("../assets/textures/foliage-shadow-v2.png"); /* @kind other */ /* leaf-shadow overlay, TRUE ALPHA (v2) */
+  --tex-light-pool: url("../assets/textures/light-pool-v2.png");  /* @kind other */ /* window-light bloom, TRUE ALPHA (v2) */
+}
+/* glass world ground: the dark atmospheric texture behind the ambient field */
+:root, [data-skin="glass"] {
+  --skin-ground: var(--tex-ink-depth) center / cover, var(--bg-canvas); /* @kind other */
+}
+
+/* ============ THE STONE SKIN (home: HERE) ====================
+   Warm champagne plaster wall + matte porcelain blocks laid on
+   it. Opaque; light from the top; shadows always warm. */
+[data-skin="stone"] {
+  /* GL PLANE CALIBRATION DIALS — the ONLY values GL tuning may touch (plane
+     split, m0509). Numeric calibration via canvas readback. @kind other */
+  --gl-light-boost: 2.41; /* @kind other */ /* calibrated by readback: wall luminance to cal-tile target */
+  --gl-exposure: 1.0; /* @kind other */
+  --gl-env-intensity: 0.55; /* @kind other */
+  --gl-wall-tint: #d4d5d8; /* per-channel calibrated: neutralizes the key's warm cast so the wall reads luminous ivory, not tan @kind color */
+  --gl-slab-tint: #fffdf6; /* calibrated by readback (m0510 rebuild): slab albedo near-white; the champagne map carries the warmth @kind color */
+  --gl-slab-emissive: #554b3e; /* @kind color */
+  --gl-slab-emissive-intensity: 2.2; /* @kind other */ /* readback-calibrated: card 239 / zone 230 / wall 219 — the role ladder under GL light */
+  /* RELIEF DIALS (sectors 2/3/7, m0510): thickness per containment rung —
+     2D layout is untouched; 3D is only these tokens. @kind other */
+  --gl-thick-unit: 3.2; /* @kind other */ /* card slab px per depth rung */
+  --gl-thick-zone: 1.4; /* @kind other */ /* nested zones size a LITTLE out of the card face */
+  --gl-side-tint: #a89e8c; /* side faces darker than caps — role-ladder side-face rung @kind color */
+  --gl-zone-dim: 0.94; /* @kind other */ /* zone tonal step toward the wall (ghost rung) */
+
+  /* ground — real PLASTER photo (--tex-plaster) as the wall, warmed by a
+     top-light gradient and a bronze floor-glow; the plaster-0 colour backs
+     it so tint math (--glass-ground mixes) still resolves. Procedural noise
+     retired in favour of the photographic texture. */
+  --plaster-0: oklch(0.945 0.016 88);  /* @kind color */  /* the wall base — pale luminous cream (reference: near-smooth, never tan) */
+  --skin-ground:
+    radial-gradient(130% 95% at 32% 8%, color-mix(in srgb, white 42%, transparent), transparent 62%),
+    radial-gradient(150% 110% at 85% 110%, color-mix(in oklch, var(--accent-bronze-warm) 9%, transparent), transparent 65%),
+    var(--tex-role-wall) 0 0 / calc(var(--world-zoom) * var(--span-wall)) auto repeat,
+    var(--plaster-0); /* @kind other */ /* pack-007 wall tile: broad matte grain, base of the luminance ladder (167) */
+
+  /* the theme roles this skin implies (it is a LIGHT world) */
+  --zone-ground: var(--plaster-0);
+
+  /* porcelain — the skin's block surface */
+  --porcelain-fill:        color-mix(in oklch, var(--glass-ground) 42%, oklch(0.982 0.01 90));
+  --porcelain-fill-raised: color-mix(in oklch, var(--glass-ground) 34%, oklch(0.988 0.008 92));
+  --porcelain-fill-inset:  color-mix(in oklch, var(--glass-ground) 49%, oklch(0.972 0.011 88)); /* wells sit ONE hair below the card — recess reads from bevel+shadow+tone-law, not a flat colour jump (was 62%, too grey vs the 42% card) */
+
+  /* two-part warm shadows: tight contact + wide ambient. Never black. */
+  --shadow-c-warm: oklch(0.42 0.014 80);   /* @kind color */ /* desaturated warm-taupe — a brown shadow pigment muddies the cream (the "brown glow" bug) */
+  --shadow-contact: 0 1px 2px color-mix(in srgb, var(--shadow-c-warm) 12%, transparent);  /* @kind shadow */
+  --shadow-ambient: 0 22px 52px -16px color-mix(in srgb, var(--shadow-c-warm) 30%, transparent); /* @kind shadow */ /* reference: BIG diffuse warm shadow = the thickness read */
+  --shadow-ambient-lifted: 0 34px 74px -22px color-mix(in srgb, var(--shadow-c-warm) 36%, transparent); /* @kind shadow */
+
+  /* edge/thread + state language — GOLD DISCIPLINE (gap G1): this world's
+     gold is the ANTIQUE end — bronze-leaning, low sat — never the lemon
+     brand-yellow. One role every accent consumer in the skin reads. */
+  --stone-gold: color-mix(in oklch, var(--accent-gold) 48%, var(--accent-bronze)); /* @kind color */
+  --edge-thread: color-mix(in oklch, var(--stone-gold) 72%, white);
+  --edge-glow:   color-mix(in srgb, var(--stone-gold) 32%, transparent);
+  --edge-dot:    var(--stone-gold);
+  --state-glow:  color-mix(in srgb, var(--stone-gold) 28%, transparent);
+  --state-rim:   color-mix(in oklch, var(--stone-gold) 55%, white);
+  --thread-w: 1.4; /* @kind other */ /* pack-007 hierarchy: the ACTIVE path must read; secondary/ghost states drop from this via their own multipliers */
+  /* text sharpened (pack-007 item 1): stone's cream wall eats contrast — the
+     skin re-binds ink DARKER (this is the skin's own voice, one home) */
+  --ink: oklch(0.24 0.02 75); /* @kind color */
+  --ink-2: oklch(0.38 0.022 78); /* @kind color */
+}
+/* the stone skin's own surface — hoisted onto the SKIN scope as
+   --skin-mat-* roles (read by the [data-material="skin"] binding). */
+[data-skin="stone"] {
+  --skin-mat-fill:          var(--porcelain-fill);
+  --skin-mat-fill-raised:   var(--porcelain-fill-raised);
+  --skin-mat-fill-inset:    var(--porcelain-fill-inset);
+  --skin-mat-sheen:         linear-gradient(160deg, color-mix(in srgb, var(--key-light) 26%, transparent), transparent 36%); /* @kind other */ /* whisper of the room key; face stays uniform luminous ivory — depth lives at the EDGES */
+  --skin-mat-texture:       var(--tex-role-card) var(--mat-tex-pos) / calc(var(--world-zoom) * var(--span-face)) auto repeat; /* @kind other */ /* pack-007 card.default: lifted ivory, +14% over wall, smoother grain */
+  --skin-mat-texture-inset:  var(--tex-role-detail) var(--mat-tex-pos) / calc(var(--world-zoom) * var(--span-detail)) auto repeat; /* @kind other */ /* pack-007 source.detail: wells hint at evidence */
+  --skin-mat-texture-well:    var(--tex-role-detail) var(--mat-tex-pos) / calc(var(--world-zoom) * var(--span-detail)) auto repeat; /* @kind other */ /* same detail face — wells ARE the source layer */
+  --skin-mat-texture-raised:  var(--tex-role-trough) var(--mat-tex-pos) / calc(var(--world-zoom) * var(--span-trough)) auto repeat; /* @kind other */ /* pack-007 command.trough: the composer is a paper trough, not a chat bar */
+  --skin-mat-edge:          color-mix(in srgb, white 28%, transparent);   /* near-invisible — edge definition is the bevel light */
+  /* PBR MAP SLOTS (pack-004) — UNLIT maps for the GL renderer only; the CSS
+     pipeline keeps its calibrated relief-baked tiles. One token family, every
+     skin; core/render-scene.js resolves these per world. */
+  /* QUARANTINED (m0493 — user caught it): the warm-plaster-wall maps carry a
+     BAKED diamond/weave lattice (see _qa/map-inspection-board.png) — the whole
+     pack-004 plaster family is poisoned; re-request logged in
+     assets/renders/PROMPTS.md. Wall map slots stay EMPTY until clean maps land
+     (GL wall falls back to its flat calibrated color). Face maps (champagne
+     honed stone) inspected CLEAN and stay bound.
+     m0527: wall maps RE-BOUND — height/normal/rough DERIVED in-house from the
+     pack-007 wall tile (inspected clean, no lattice) — the wall is now a real
+     displaced, lit SURFACE in GL, not an image in the back.
+     m0538 PLANE-SPLIT ENFORCED: GL diffuse has its OWN slot — NOT the CSS
+     role tile — so one file edit can never cross-poison both planes.
+     m0570 (todo 90 DONE): the derived stopgap maps (assets/maps/*) are
+     RETIRED — the wall now binds the AUTHORED pack-004 warm-plaster-wall set
+     (unlit albedo + normal + rough + ao + displacement, worldSpanPx 1250 =
+     --span-wall). The derived albedo was near-flat cool grey — the washed
+     grey wall in the m0570 screenshot. */
+  --gl-map-wall-diffuse: url("../assets/materials/warm-plaster-wall/diffuse.webp"); /* @kind other */
+  --gl-map-wall-normal: url("../assets/materials/warm-plaster-wall/normal.png"); /* @kind other */
+  --gl-map-wall-rough: url("../assets/materials/warm-plaster-wall/roughness.png"); /* @kind other */
+  --gl-map-wall-ao: url("../assets/materials/warm-plaster-wall/ao.png"); /* @kind other */
+  --gl-map-wall-displacement: url("../assets/materials/warm-plaster-wall/displacement.png"); /* @kind other */
+  /* GL stone calibration (m0570): near-white wall multiplier — the authored
+     diffuse carries the warmth, a tinted multiplier drabbed it; emissive floor
+     dialled DOWN — full strength read as the flat brown glow over every slab */
+  --gl-wall-tint: #efe9dd; /* @kind color */
+  --gl-slab-emissive-intensity: 0.4; /* @kind other */
+  --gl-map-face-diffuse: url("../assets/materials/champagne-honed-stone/diffuse.webp"); /* @kind other */
+  --gl-map-face-normal:  url("../assets/materials/champagne-honed-stone/normal.png"); /* @kind other */
+  --gl-map-face-rough:   url("../assets/materials/champagne-honed-stone/roughness.png"); /* @kind other */
+  --gl-map-face-ao:      url("../assets/materials/champagne-honed-stone/ao.png"); /* @kind other */
+  --skin-mat-edge-soft:     color-mix(in oklch, var(--ink) 4%, transparent);
+  --skin-mat-highlight:     color-mix(in srgb, var(--key-light) 58%, transparent);
+  --skin-mat-blur:          0px; /* @kind spacing */ /* porcelain is opaque */
+  --skin-mat-saturate:      1; /* @kind other */
+  --skin-mat-shadow:        var(--shadow-contact), var(--shadow-ambient); /* @kind shadow */
+  --skin-mat-shadow-lifted: var(--shadow-contact), var(--shadow-ambient-lifted); /* @kind shadow */
+  --skin-mat-radius:        var(--r-xl);
+  --skin-mat-radius-inner:  var(--r-lg);
+}
+/* porcelain wells read DEBOSSED: inner top shade + light bottom lip */
+[data-skin="stone"] [data-material="skin"].material--inset {
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, var(--shadow-c-warm) 16%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, white 55%, transparent);
+  border-color: color-mix(in oklch, var(--ink) 7%, transparent);
+}
+
+/* ============ PIGMENT TRANSLATION — semantics through each world =======
+   The semantic pigments live ONCE in colors_and_type.css as -raw primitives;
+   a skin re-binds the LIVE --pig-* through its world (same mechanism as the
+   .zone-palette-* variants). Every consumer of the roles — zone washes, chart
+   inks, thread labels — translates automatically. Glass is the zero point
+   (raw, untouched). */
+[data-skin="stone"], [data-skin="parchment"] {
+  /* warm worlds: pigments settle INTO the plaster/vellum — mixed toward the
+     ground, slightly muted, like mineral pigment absorbed by the wall */
+  --pig-source:  color-mix(in oklch, var(--pig-source-raw) 74%, var(--zone-ground));
+  --pig-review:  color-mix(in oklch, var(--pig-review-raw) 74%, var(--zone-ground));
+  --pig-success: color-mix(in oklch, var(--pig-success-raw) 74%, var(--zone-ground));
+  --pig-warning: color-mix(in oklch, var(--pig-warning-raw) 74%, var(--zone-ground));
+  --pig-reject:  color-mix(in oklch, var(--pig-reject-raw) 74%, var(--zone-ground));
+  --pig-package: color-mix(in oklch, var(--pig-package-raw) 74%, var(--zone-ground));
+}
+[data-skin="carbon"] {
+  /* machined world: pigments read as anodised steel — cooled and LIFTED so
+     they hold contrast on the dark slabs */
+  --pig-source:  color-mix(in oklch, var(--pig-source-raw) 78%, oklch(0.78 0.02 260));
+  --pig-review:  color-mix(in oklch, var(--pig-review-raw) 78%, oklch(0.78 0.02 260));
+  --pig-success: color-mix(in oklch, var(--pig-success-raw) 78%, oklch(0.78 0.02 260));
+  --pig-warning: color-mix(in oklch, var(--pig-warning-raw) 78%, oklch(0.78 0.02 260));
+  --pig-reject:  color-mix(in oklch, var(--pig-reject-raw) 78%, oklch(0.78 0.02 260));
+  --pig-package: color-mix(in oklch, var(--pig-package-raw) 78%, oklch(0.78 0.02 260));
+}
+
+/* ============ THE WORLD CAMERA — zoom is a DERIVATION =================
+   --world-zoom is COMPUTED by core/world-camera.js: stageWidth / 1440 (the
+   design reference frame), set per .skin-ground by one ResizeObserver — the
+   camera and the content share a coupled coordinate system: resize the frame
+   and the texture world scales with it, like a camera moving toward the wall.
+   The declaration below is only the un-observed fallback. */
+
+/* the skin's ground painter — put on the stage/page scope element.
+   background-position reads the CAMERA's pan vars — sliding the camera
+   moves the whole world through one pair of values (core/world-camera.js). */
+.skin-ground { background: var(--skin-ground); background-position: var(--world-pan-x) var(--world-pan-y); position: relative; }
+
+/* ============ THE DEPTH LADDER — containment resolved to 3D ============
+   A block's data-depth (stamped by the block solver from its LEVEL rank:
+   page 0 · region 1 · panel 2 · card 3 · well 4 · overlay 5) resolves,
+   PER SKIN, to physical depth: lift shadows scale with the rank, a bevel
+   models the slab's edge, and surface MAP ADDRESSES resolve so both CSS
+   and the 3D well solver read the same home. Ghost/potential blocks are
+   the OPPOSITE depth — engraved below the surface instead of lifted.  */
+[data-depth="1"] { --depth: 1; /* @kind other */ } [data-depth="2"] { --depth: 2; /* @kind other */ }
+[data-depth="3"] { --depth: 3; /* @kind other */ } [data-depth="4"] { --depth: 4; /* @kind other */ }
+[data-depth="5"] { --depth: 5; /* @kind other */ }
+
+/* the generic physics — every skin feeds it via the 4 --depth-* roles.
+   (doubled attr = specificity bump so the ladder wins over per-skin material
+   rules in EVERY skin — depth is a coordinate, not a suggestion) */
+/* CROSS-DEPTH TONE LAW — depth is also a TONE coordinate: each rank below
+   its parent shifts one shade toward the skin's shadow pigment, so a well
+   always reads as the SAME world recessed, never a separate sticker. One
+   rule, every skin: the tint mixes the skin's own --shadow-c-warm. */
+[data-depth="4"] { --depth-tint: color-mix(in srgb, var(--shadow-c-warm) 4%, transparent); }
+[data-depth="5"] { --depth-tint: color-mix(in srgb, var(--shadow-c-warm) 8%, transparent); }
+.material--inset[data-depth]::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: var(--depth-tint); pointer-events: none; z-index: 2;
+}
+
+.material[data-depth][data-depth] {
+  box-shadow:
+    var(--skin-mat-bevel),
+    var(--depth-side),
+    var(--depth-halo),
+    var(--shadow-contact);
+  /* CAST SHADOW: true gaussian chain — each drop-shadow re-diffuses the
+     previous, giving a physical penumbra (dense core, smooth melt) that
+     box-shadow's blur model cannot produce. Scaled by depth rank. */
+  /* shadow DIRECTION derives from the one key light (top-left, the same L
+     vector the bake pass uses): x = y × --key-shadow-x. One light, one home. */
+  filter:
+    drop-shadow(calc(var(--depth) * 0.9px * var(--key-shadow-x)) calc(var(--depth) * 0.9px) calc(var(--depth) * 1.1px)
+      var(--depth-shadow-tight))
+    drop-shadow(calc(var(--depth) * 2.6px * var(--key-shadow-x)) calc(var(--depth) * 2.6px) calc(var(--depth) * 3.4px)
+      var(--depth-shadow-mid))
+    drop-shadow(calc(var(--depth) * 5.5px * var(--key-shadow-x)) calc(var(--depth) * 5.5px) calc(var(--depth) * 8px)
+      var(--depth-shadow));
+}
+/* ghosts: opposite depth — carved INTO the surface, no lift at all */
+.material[data-depth][data-depth].is-potential {
+  filter: none; /* a ghost is IN the wall — it casts nothing */
+  box-shadow:
+    inset 0 calc(var(--depth) * 1px) calc(var(--depth) * 3px)
+      var(--depth-shadow),
+    inset 0 -1px 0 var(--skin-mat-highlight);
+}
+
+/* per-skin depth resolution: physics scale + surface map addresses */
+:root, [data-skin="glass"] {
+  --depth-lift-y: 4px; --depth-lift-blur: 12px;                     /* @kind other */
+  --depth-shadow: color-mix(in srgb, black 38%, transparent);       /* @kind color */
+  --skin-mat-bevel: inset 0 1px 0 var(--glass-highlight); /* @kind shadow */
+  --skin-map-normal: url("../assets/textures/maps/glass-normal.png"); /* @kind other */ --skin-map-roughness: none; /* @kind other */ /* micro-ripple normal (round 3); glass still refracts */
+}
+[data-skin="stone"] {
+  --depth-halo: 0 0 0 transparent; /* @kind shadow */ /* NO default halo — reference halos the SELECTED card only (state-glow) */
+  /* reference language: depth-3 card = 21px/51px — BIG diffuse warm shadow */
+  --depth-lift-y: 5px; --depth-lift-blur: 12px;                     /* @kind other */ /* depth-3 card = 15px/36px: dense under the slab, fast falloff */
+  --depth-shadow-tight: color-mix(in srgb, var(--shadow-c-warm) 22%, transparent); /* @kind color */
+  --depth-shadow-mid:   color-mix(in srgb, var(--shadow-c-warm) 16%, transparent); /* @kind color */
+  --depth-shadow:       color-mix(in srgb, var(--shadow-c-warm) 20%, transparent); /* @kind color */ /* the WIDE layer */
+  /* edge light = the WALL's key light (warm ivory), never pure white — a
+     white rim reads as a separate lighting rig and detaches the slab. */
+  --key-light: color-mix(in oklch, white 78%, var(--plaster-0)); /* @kind color */
+  --skin-mat-bevel:
+    inset 0 1.5px 0 color-mix(in srgb, var(--key-light) 72%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--shadow-c-warm) 7%, transparent); /* @kind shadow */ /* lit lip in the room's own light + faint underside */
+  --depth-side:
+    0 1.5px 0 -0.5px color-mix(in oklch, var(--porcelain-fill) 91%, var(--shadow-c-warm)),
+    0 3px 4px -3px color-mix(in srgb, var(--shadow-c-warm) 17%, transparent); /* @kind shadow */ /* the slab underside: near-tone hairline + quiet contact — reflective strips detach the slab */
+  --skin-map-normal: url("../assets/textures/maps/plaster-normal.png"); /* @kind other */
+  --skin-map-roughness: url("../assets/textures/maps/plaster-roughness.png"); /* @kind other */
+}
+[data-skin="parchment"] {
+  --depth-halo: 0 0 0 transparent; /* @kind shadow */
+  --depth-lift-y: 4px; --depth-lift-blur: 11px;                     /* @kind other */ /* paper sits flatter than stone, still soft */
+  --depth-shadow: color-mix(in srgb, var(--shadow-c-warm) 26%, transparent); /* @kind color */
+  --skin-mat-bevel:
+    inset 0 1px 0 color-mix(in srgb, white 60%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, var(--shadow-c-warm) 10%, transparent); /* @kind shadow */ /* deckled sheet edge */
+  --skin-map-normal: url("../assets/textures/maps/linen-normal.png"); /* @kind other */
+  --skin-map-roughness: url("../assets/textures/maps/linen-roughness.png");   /* @kind other */
+}
+[data-skin="carbon"] {
+  --depth-lift-y: 6px; --depth-lift-blur: 15px;                     /* @kind other */
+  --depth-shadow: color-mix(in srgb, black 55%, transparent);       /* @kind color */
+  --skin-mat-bevel:
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, black 40%, transparent);    /* @kind shadow */ /* machined chamfer */
+  --skin-map-normal: url("../assets/textures/maps/graphite-normal.png"); /* @kind other */ --skin-map-roughness: url("../assets/textures/maps/graphite-roughness.png"); /* @kind other */ /* round 3, DELIVERED */
+}
+
+/* ============ THE PARCHMENT SKIN (home: HERE) ================
+   Woven linen ground + cream vellum sheets laid on it. A LIGHT,
+   warm, fibrous world — softer and warmer than stone; shadows
+   sepia, edges deckled-soft, accents in aged ink. */
+[data-skin="parchment"] {
+  --vellum-0: oklch(0.945 0.018 92); /* @kind color */ /* the sheet base */
+  --skin-ground:
+    radial-gradient(120% 90% at 30% 0%, color-mix(in srgb, white 24%, transparent), transparent 60%),
+    radial-gradient(150% 110% at 80% 110%, color-mix(in oklch, var(--accent-bronze-warm) 10%, transparent), transparent 65%),
+    var(--tex-linen-soft) 0 0 / calc(var(--world-zoom) * var(--span-wall)) auto repeat,
+    var(--vellum-0); /* @kind other */
+  --zone-ground: var(--vellum-0);
+
+  --vellum-fill:        color-mix(in oklch, var(--glass-ground) 45%, oklch(0.98 0.012 90));
+  --vellum-fill-raised: color-mix(in oklch, var(--glass-ground) 35%, oklch(0.988 0.01 92));
+  --vellum-fill-inset:  color-mix(in oklch, var(--glass-ground) 70%, oklch(0.95 0.016 88));
+
+  /* sepia shadows — softer + closer than stone's (paper sits flatter) */
+  --shadow-c-warm: oklch(0.40 0.016 80); /* @kind color */ /* desaturated sepia-taupe */
+  --shadow-contact: 0 1px 2px color-mix(in srgb, var(--shadow-c-warm) 18%, transparent); /* @kind shadow */
+  --shadow-ambient: 0 10px 24px -10px color-mix(in srgb, var(--shadow-c-warm) 24%, transparent); /* @kind shadow */
+  --shadow-ambient-lifted: 0 16px 38px -14px color-mix(in srgb, var(--shadow-c-warm) 30%, transparent); /* @kind shadow */
+
+  /* aged-ink accent — the sepia end of the gold ramp */
+  --parch-ink: color-mix(in oklch, var(--accent-bronze) 70%, var(--ink)); /* @kind color */
+  --edge-thread: color-mix(in oklch, var(--parch-ink) 65%, white);
+  --edge-glow:   color-mix(in srgb, var(--parch-ink) 26%, transparent);
+  --edge-dot:    var(--parch-ink);
+  --state-glow:  color-mix(in srgb, var(--parch-ink) 24%, transparent);
+  --state-rim:   color-mix(in oklch, var(--parch-ink) 50%, white);
+  --thread-w: 1; /* @kind other */
+
+  --skin-mat-fill:          var(--vellum-fill);
+  --skin-mat-fill-raised:   var(--vellum-fill-raised);
+  --skin-mat-fill-inset:    var(--vellum-fill-inset);
+  --skin-mat-sheen:         linear-gradient(178deg, color-mix(in srgb, white 30%, transparent), transparent 20%); /* @kind other */
+  --skin-mat-texture:       var(--tex-linen-lit) var(--mat-tex-pos) / calc(var(--world-zoom) * var(--span-face)) auto repeat; /* @kind other */ /* fibrous sheet, world-sampled per block */
+  --skin-mat-texture-well:  var(--tex-paper-fine-lit) var(--mat-tex-pos) / calc(var(--world-zoom) * var(--span-face)) auto repeat; /* @kind other */ /* fine paper (round 3, DELIVERED) */
+  --span-face: 350px; /* @kind other */ /* MANIFEST-BOUND: fine-laid-paper.worldSpanPx */
+  --gl-map-face-diffuse: url("../assets/materials/fine-laid-paper/diffuse.webp"); /* @kind other */
+  --gl-map-face-normal:  url("../assets/materials/fine-laid-paper/normal.png"); /* @kind other */
+  --gl-map-face-rough:   url("../assets/materials/fine-laid-paper/roughness.png"); /* @kind other */
+  --gl-map-face-ao:      url("../assets/materials/fine-laid-paper/ao.png"); /* @kind other */
+  --skin-mat-edge:          color-mix(in oklch, white 50%, var(--vellum-0));
+  --skin-mat-edge-soft:     color-mix(in oklch, var(--ink) 10%, transparent);
+  --skin-mat-highlight:     color-mix(in srgb, white 65%, transparent);
+  --skin-mat-blur:          0px; /* @kind spacing */
+  --skin-mat-saturate:      1; /* @kind other */
+  --skin-mat-shadow:        var(--shadow-contact), var(--shadow-ambient); /* @kind shadow */
+  --skin-mat-shadow-lifted: var(--shadow-contact), var(--shadow-ambient-lifted); /* @kind shadow */
+  --skin-mat-radius:        var(--r-lg); /* paper corners are tighter than stone */
+  --skin-mat-radius-inner:  var(--r-md);
+}
+[data-skin="parchment"] [data-material="skin"].material--inset {
+  box-shadow:
+    inset 0 2px 3px color-mix(in srgb, var(--shadow-c-warm) 14%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, white 50%, transparent);
+  border-color: color-mix(in oklch, var(--ink) 8%, transparent);
+}
+
+/* ============ THE CARBON SKIN (home: HERE) ===================
+   Deep ink-depth ground + graphite slab blocks. A DARK, matte,
+   engineered world — the opaque sibling of glass: same darkness,
+   no translucency; shadows are true dark ambient, accents cool
+   steel-gold. */
+[data-skin="carbon"] {
+  --carbon-0: oklch(0.235 0.012 260); /* @kind color */ /* the slab base */
+  --skin-ground:
+    radial-gradient(120% 90% at 30% 0%, color-mix(in srgb, white 5%, transparent), transparent 55%),
+    var(--tex-ink-depth) center / cover,
+    oklch(0.16 0.01 260); /* @kind other */
+  --zone-ground: oklch(0.16 0.01 260);
+
+  --carbon-fill:        color-mix(in oklch, var(--carbon-0) 92%, white);
+  --carbon-fill-raised: color-mix(in oklch, var(--carbon-0) 84%, white);
+  --carbon-fill-inset:  color-mix(in oklch, var(--carbon-0) 88%, black);
+
+  /* dark ambient shadows — deeper and tighter than the light worlds */
+  --shadow-c-cool: oklch(0.1 0.01 260); /* @kind color */
+  --shadow-contact: 0 1px 2px color-mix(in srgb, var(--shadow-c-cool) 55%, transparent); /* @kind shadow */
+  --shadow-ambient: 0 14px 30px -10px color-mix(in srgb, var(--shadow-c-cool) 65%, transparent); /* @kind shadow */
+  --shadow-ambient-lifted: 0 22px 46px -14px color-mix(in srgb, var(--shadow-c-cool) 75%, transparent); /* @kind shadow */
+
+  /* steel-gold accent: the cool, desaturated end of the gold ramp */
+  --carbon-gold: color-mix(in oklch, var(--accent-gold) 60%, oklch(0.75 0.02 260)); /* @kind color */
+  --edge-thread: color-mix(in oklch, var(--carbon-gold) 70%, transparent);
+  --edge-glow:   color-mix(in srgb, var(--carbon-gold) 30%, transparent);
+  --edge-dot:    var(--carbon-gold);
+  --state-glow:  color-mix(in srgb, var(--carbon-gold) 26%, transparent);
+  --state-rim:   color-mix(in oklch, var(--carbon-gold) 55%, transparent);
+  --thread-w: 1; /* @kind other */
+
+  --skin-mat-fill:          var(--carbon-fill);
+  --skin-mat-fill-raised:   var(--carbon-fill-raised);
+  --skin-mat-fill-inset:    var(--carbon-fill-inset);
+  --skin-mat-sheen:         linear-gradient(178deg, color-mix(in srgb, white 7%, transparent), transparent 24%); /* @kind other */
+  --skin-mat-texture:       var(--tex-graphite-fine-lit) var(--mat-tex-pos) / calc(var(--world-zoom) * var(--span-face)) auto repeat; /* @kind other */ /* fine graphite, relief-baked with its own maps (round 3) */
+  --mat-tex-blend: overlay; /* @kind other */ /* dark world: multiply would only darken — overlay keeps the brushed variation */
+  --gl-map-face-diffuse: url("../assets/materials/fine-graphite/diffuse.webp"); /* @kind other */
+  --gl-map-face-normal:  url("../assets/materials/fine-graphite/normal.png"); /* @kind other */
+  --gl-map-face-rough:   url("../assets/materials/fine-graphite/roughness.png"); /* @kind other */
+  --gl-map-face-ao:      url("../assets/materials/fine-graphite/ao.png"); /* @kind other */
+  --skin-mat-texture-well:    var(--tex-graphite-fine-lit) var(--mat-tex-pos) / calc(var(--world-zoom) * var(--span-face)) auto repeat; /* @kind other */ /* fine graphite (round 3, DELIVERED) */
+  --skin-mat-edge:          color-mix(in oklch, white 14%, var(--carbon-0));
+  --skin-mat-edge-soft:     color-mix(in oklch, white 9%, transparent);
+  --skin-mat-highlight:     color-mix(in srgb, white 12%, transparent);
+  --skin-mat-blur:          0px; /* @kind spacing */ /* opaque — carbon is glass without the light through it */
+  --skin-mat-saturate:      1; /* @kind other */
+  --skin-mat-shadow:        var(--shadow-contact), var(--shadow-ambient); /* @kind shadow */
+  --skin-mat-shadow-lifted: var(--shadow-contact), var(--shadow-ambient-lifted); /* @kind shadow */
+  --skin-mat-radius:        var(--r-xl);
+  --skin-mat-radius-inner:  var(--r-lg);
+}
+[data-skin="carbon"] [data-material="skin"].material--inset {
+  box-shadow:
+    inset 0 2px 5px color-mix(in srgb, black 45%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, white 8%, transparent);
+  border-color: color-mix(in oklch, white 7%, transparent);
+}
+
+/* the stone world is PHYSICAL: the true-alpha FOLIAGE-SHADOW (v2) cast from
+   the top-left (multiply) and the true-alpha LIGHT-POOL bloom (v2, screen —
+   reinstated now that the asset carries real transparency instead of an
+   opaque wash), plus a soft floor seam where wall meets ground. */
+[data-skin="stone"].skin-ground::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: var(--tex-foliage) top left / 38% auto no-repeat;
+  mix-blend-mode: multiply; opacity: .12;
+}
+[data-skin="stone"].skin-ground::after {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    var(--tex-light-pool) 65% 0% / 70% auto no-repeat,
+    linear-gradient(180deg, transparent 88%,
+      color-mix(in srgb, var(--shadow-c-warm) 10%, transparent) 96%,
+      color-mix(in srgb, var(--shadow-c-warm) 16%, transparent) 100%);
+  mix-blend-mode: screen; opacity: .5;
+}
+
+/* the HUB node — the graph's root mark (the Vi disc in the boards):
+   a disc with a fine gold ring standing off the surface + the skin's glow. */
+.node-hub {
+  border-radius: 50% !important;
+  box-shadow:
+    /* torus depth (gap G4): bevelled inner face */
+    inset 0 3px 8px color-mix(in srgb, white 70%, transparent),
+    inset 0 -4px 10px color-mix(in srgb, var(--shadow-c-warm, var(--ink)) 14%, transparent),
+    0 0 0 5px var(--mat-fill-raised),
+    0 0 0 6.5px var(--edge-thread),
+    0 0 34px var(--edge-glow),
+    var(--mat-shadow);
+}
+/* pack-007 origin.plaque — STONE's hub is a carved stone medallion, not a
+   soft bubble (scoped: other skins keep their own hub voice). */
+[data-skin="stone"] .node-hub {
+  background-image: var(--tex-role-plaque);
+  background-size: calc(var(--world-zoom) * var(--span-plaque)) auto;
+}
+/* NOTE: no hub ::after light-pool either — same painting-order trap as the
+   selected pool (negative-z child paints INSIDE the hub). The hub's glow is
+   already carried by its box-shadow (0 0 34px var(--edge-glow)) above. */
+
+/* expanded — a block morphs into the SCREEN rung: the page is itself a block,
+   so expanding is just moving UP the depth ladder (geometry comes from
+   CV_MORPH.expand — the one motion law; these rules are only the STATE's
+   material language). The rest of the wall RECEDES. One rule, every skin. */
+.is-expanded {
+  z-index: 30;
+  --depth-tint: transparent;
+}
+.has-expanded > [data-morph-id]:not(.is-expanded) {
+  opacity: 0.35;
+  transition: opacity var(--dur-move) var(--ease-emphasized);
+  pointer-events: none;
+}
+.has-expanded .thread-svg { opacity: 0.12; transition: opacity var(--dur-move) var(--ease-emphasized); }
+
+/* THE SCENE GATE — ultra rendering as a TOKEN (core/render-scene.js).
+   'gl' hands the world to a real WebGL scene: blocks become lit, extruded
+   slabs; the camera is the same CV_WORLD_CAMERA; the Vi light-pool is a real
+   light. Any skin may dial it; stone is the ultra exemplar. One token flips
+   an entire world between DOM-CSS and 3D — blocks don't care, they resolve. */
+[data-skin="stone"] .skin-ground, .skin-ground[data-skin="stone"] { --scene-mode: var(--scene-opt-in); /* @kind other */ } /* REGRESSION RECOVERY m0454: GL is OPT-IN (set --scene-opt-in: gl) until it matches screenshots/stone-gl-stage.png — the CSS pipeline is the calibrated look */
+/* glass IS glass: the gate is dialled — in GL its slabs are real transmission
+   material refracting the dark ground (physical ior/attenuation), exactly as
+   stone's are real lit stone. Pages not loading the scene law are unaffected. */
+[data-skin="glass"] .skin-ground, .skin-ground[data-skin="glass"] { --scene-material: glass; /* @kind other */ --scene-mode: var(--scene-opt-in); /* @kind other */ --gl-light-boost: 1.35; /* @kind other */ --gl-env-intensity: 1.5; /* @kind other */ } /* same opt-in gate as stone (m0454); glass GL dials (todo 84/93): brighter rig + stronger env so transmission sparkles over the dark ground */
+/* while the scene is live, GL owns the block SURFACES; the DOM keeps content.
+   (doubled attr = beat the depth ladder's own doubled-attr physics rules) */
+[data-scene-live][data-scene-live] .material[data-depth],
+[data-scene-live][data-scene-live] .material--inset[data-depth] {
+  background: none; box-shadow: none; filter: none;
+}
+[data-scene-live][data-scene-live] .material--inset[data-depth]::after { background: none; }
+/* TEXT-PINNING (m0570): the DOM content layer mirrors the GL pivot tilt (the
+   engine writes the deg vars in sync()/setTilt — one camera, both planes) so
+   labels ride their slabs' faces instead of floating. Identity at tilt 0. */
+[data-scene-live] { perspective: 1400px; perspective-origin: 50% 50%; }
+[data-scene-live] > :not([data-scene-canvas]) {
+  transform: rotateX(var(--gl-dom-tilt-x)) rotateY(var(--gl-dom-tilt-y));
+  transform-style: preserve-3d;
+}
+/* CONTENT survives the handover: a render well's imagery is CONTENT, not
+   surface — GL takes the material stack, the DOM keeps the render layer. */
+[data-scene-live][data-scene-live] .render-well[data-depth] {
+  background: var(--r-active) center / contain no-repeat;
+}
+
+/* ============ BLOCK STATES — each skin's own language ========= */
+/* selected — the gold voice: rim + soft outer glow (one per view),
+   and LIGHT POOLED ON THE GROUND around the node (gap G3). */
+/* pack-007 state FACES (stone): selected cards lift to the champagne face,
+   ghost/potential cards drop to the matte face — the state ladder is
+   MATERIAL, not just glow. Full background recomposition (same layers as
+   .material), no custom-prop re-binds. */
+[data-skin="stone"] .is-selected[data-material="skin"] {
+  background: var(--mat-sheen), var(--tex-role-card-active) var(--mat-tex-pos) / calc(var(--world-zoom) * var(--span-face)) auto repeat, var(--mat-fill, var(--zone-ground));
+  background-blend-mode: normal, multiply, normal;
+}
+[data-skin="stone"] .is-potential[data-material="skin"] {
+  background: var(--mat-sheen), var(--tex-role-card-ghost) var(--mat-tex-pos) / calc(var(--world-zoom) * var(--span-face)) auto repeat, var(--mat-fill, var(--zone-ground));
+  background-blend-mode: normal, multiply, normal;
+}
+.is-selected {
+  box-shadow:
+    0 0 0 1.5px var(--state-rim),
+    0 0 18px var(--state-glow),
+    0 0 44px 6px var(--state-glow),
+    var(--mat-shadow);
+}
+/* NOTE: no ::after light-pool — a negative-z child paints ABOVE its own
+   element's background (CSS painting order), so a pool-child renders INSIDE
+   the card. The selected halo is box-shadow — light outside the slab. */
+/* potential — a ghost: dashed hairline, no body, muted content */
+.is-potential {
+  background: transparent;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  border: 1px dashed color-mix(in oklch, var(--ink) 26%, transparent);
+  box-shadow: none;
+  color: var(--ink-3);
+}
+.is-potential .t-title, .is-potential .t-label { color: var(--ink-3); }
+/* stacked — a deck: offset sheets behind the front card */
+.is-stacked.is-stacked { position: relative; overflow: visible; } /* a deck's sheets legitimately exist outside the front sheet's box — the contain rule yields */
+.is-stacked::before, .is-stacked::after {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit; background: inherit;
+  border: inherit; box-shadow: var(--mat-shadow);
+}
+.is-stacked::before { transform: translate(7px, 9px) rotate(0.6deg); opacity: .7; }
+.is-stacked::after  { transform: translate(14px, 18px) rotate(1.2deg); opacity: .4; }
+
+/* ============ THREADS — the graph side's connectors ===========
+   UNIFIED with the diagram edge vocabulary (tokens/diagram.css): the
+   kinds (flow · dependency · reference · rejected) and their dash
+   patterns (--dgm-connector-dash-*) live there, ONCE. A skin only
+   re-tints the FLOW colour — via --edge-thread, which tokens/diagram.css
+   reads as --dgm-edge-flow — so both the graph solver and this painter
+   speak one edge language and follow the skin together. The thread
+   painter adds only what the boards' threads have beyond diagram edges:
+   the soft glow and particle sparkle. */
+.thread-svg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: visible; }
+.thread-svg path {
+  fill: none; stroke: var(--edge-thread); stroke-width: var(--thread-w);
+  stroke-linecap: round; stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px var(--edge-glow));
+}
+/* potential/future path = the dependency kind's dash, single-sourced */
+.thread-svg path.potential { stroke-dasharray: var(--dgm-connector-dash-dep); filter: none; opacity: .6; }
+.thread-svg path.reference { stroke-dasharray: var(--dgm-connector-dash-ref); }
+.thread-svg circle { fill: var(--edge-dot); filter: drop-shadow(0 0 5px var(--edge-glow)); }
+/* small circular ICON-PILL node — the hub's satellites / tool pills */
+.node-pill { display: grid; place-items: center; border-radius: 50% !important; aspect-ratio: 1; }
+.node-pill .sat-glyph { position: relative; z-index: 1; width: 58%; display: grid; place-items: center; color: var(--edge-dot); }
+.node-pill .sat-glyph svg { width: 100%; height: auto; display: block; }
+/* gold discipline reaches composed glyphics: CSS overrides the compositor's
+   presentation-attribute stroke (core compose() re-bind is logged, todo 35) */
+.node-pill .sat-glyph .cv-mark circle { stroke: var(--edge-dot); }
+/* corner "+" — the actions socket projected as the boards' mini affordance */
+.corner-plus { position: absolute; right: 8px; bottom: 8px; z-index: 2; width: 18px; height: 18px; border-radius: 50%;
+  display: grid; place-items: center; font: 600 12px/1 var(--font-body); color: var(--edge-dot);
+  background: var(--mat-fill-raised);
+  box-shadow: var(--shadow-contact, var(--elev-1)); }
+/* particle sparkle along a thread (painted by the thread painter) */
+.thread-svg circle.spark { fill: color-mix(in srgb, white 55%, var(--edge-dot)); }
+/* a label node's leading connector dot (text sitting on the wall) */
+.node-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex: none;
+  background: var(--edge-dot); box-shadow: 0 0 7px var(--edge-glow);
+}

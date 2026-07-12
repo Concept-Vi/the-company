@@ -105,6 +105,23 @@ system that is not part of the system"). Use the questions tool only to BATCH
 genuinely-blocking options; otherwise decide and proceed.
 
 ## STATUS LOG (newest first) — mirror key moves in FINDINGS-LOG.md
+- **CV_DECORATORS + §09 open items** (slice 92). Seventh registry `app/registry/decorators.js` →
+  `window.CV_DECORATORS`: one catalogue of every cross-cutting annotation (20 decorators / 6 groups),
+  RETROSPECTIVE (each `derive(node)` reads the existing field — no second home), with behaviour
+  (find/gate/generate/edit) + socket requires/forbids. §09 open items landed: ctx threaded through
+  `CV_NODE.resolve` (cross-layer conditions verified), value-socket path folded into
+  `CV_REGISTRY.accepts` (one matcher), `CV_NODE.tokens()` token-node view. Proof decorators-test 20/20
+  + cv-node-test 18/18. Spec §10 + DESIGN-LANGUAGE §19. NEXT: the one inspector (applicable +
+  decoratorsOf); "fill any socket" foundry; Decorators @dsCard.
+- **THE COLLAPSE — CV_NODE** (slice 91). `core/cv-node.js` → `window.CV_NODE`: a lens + recursive
+  resolver welding the four homes into one unit / one relation / one mechanic (copies nothing,
+  loud-fail). `lens()` projects Type / axis-value(token) / glyphic spec into one canonical shape;
+  `socketsOf()`+`accepts()`+`candidates()` take one path for value-sockets (axis) and thing-sockets
+  (classification); `resolve()` fills sockets by address + recurses, `render()` dispatches to pluggable
+  kind-solvers (glyphic→CV_GLYPHIC.compose, token→axis.resolveCSS, *→__cvRenderType). Proof
+  `_qa/cv-node-test.html` 18/18. Spec §09 + live demo. Wired into app/index.html. NEXT: CV_AXES as a
+  token-node query-view; merged accepts folded into CV_REGISTRY; ctx threaded through resolve for
+  cross-layer conditions; one inspector + "fill any socket" foundry.
 - **Universal grammar completion + total coverage** (slice 61). Condition evaluator
   `app/registry/conditions.js` → CV_COND (structured / string-DSL / predicate; used by
   accepts()/slotEnabled/subscription-validate — one rule everywhere). Event-sockets +

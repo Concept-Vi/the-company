@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Generation-from-data (views) — proven</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<script src="../app/registry/vars.js"></script>
+<script src="../app/registry/query.js"></script>
+<script src="../app/registry/conditions.js"></script>
+<script src="../app/registry/decorators.js"></script>
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<script src="../app/ai/ai-registry.js"></script>
+<script src="../app/ai/ai-glyphic.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../app/registry/glyphic-type.js"></script>
+<script src="../app/registry/components-type.js"></script>
+<script src="../app/registry/kinds-type.js"></script>
+<script src="../app/registry/views.js"></script>
+<script src="../core/cv-node.js"></script>
+<script src="../app/registry/actions.js"></script>
+<script src="../app/registry/events.js"></script>
+<script src="../app/registry/project.js"></script>
+<style>
+  body { margin: 0; padding: 28px 32px 80px; background: var(--zone-ground, #FCFAF2); color: var(--fg-primary, #211C14); font-family: var(--font-body, system-ui, sans-serif); }
+  h1 { font: 800 25px/1.1 var(--font-display, sans-serif); margin: 0 0 4px; letter-spacing: -.02em; }
+  .sub { font: 400 13px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 20px; max-width: 86ch; }
+  h2 { font: 700 13px/1.2 var(--font-mono, monospace); letter-spacing: .04em; text-transform: uppercase; color: var(--accent-bronze); margin: 26px 0 10px; }
+  table { border-collapse: collapse; width: 100%; max-width: 1040px; font: 400 12.5px/1.4 var(--font-mono, monospace); }
+  th, td { text-align: left; padding: 7px 12px; border-bottom: 1px solid color-mix(in srgb, var(--accent-bronze) 18%, transparent); vertical-align: top; }
+  th { color: var(--accent-gold-deep, #9F772C); font-weight: 700; }
+  td.k { color: var(--fg-secondary); max-width: 440px; }
+  .pass { color: #2F7D4F; font-weight: 700; } .fail { color: #B5482E; font-weight: 700; }
+  .pill { display: inline-block; font: 700 10px/1 var(--font-mono); padding: 4px 8px; border-radius: 999px; }
+  .pill.ok { background: color-mix(in srgb, #2F7D4F 16%, transparent); color: #2F7D4F; }
+  .pill.no { background: color-mix(in srgb, #B5482E 16%, transparent); color: #B5482E; }
+  #summary { font: 800 18px/1.2 var(--font-display); margin: 8px 0 0; }
+  code { background: color-mix(in srgb, var(--accent-bronze) 9%, transparent); padding: 1px 5px; border-radius: 4px; color: var(--accent-bronze); }
+</style>
+</head>
+<body>
+<h1>Generation-from-data (views) — proven</h1>
+<p class="sub">A <b>view</b> is a node (kind 'view') = a query + a projector. <code>CV_PROJECT.toCollection</code> turns it into a live list — so every collection-UI is generated from data, reacts to registry changes, and wires back to the one action layer. Plus selection-as-node.</p>
+<div id="summary">running…</div>
+
+<h2>1 · Views project collections from data</h2>
+<table id="t-v"><thead><tr><th>view</th><th>toCollection → rows</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<h2>2 · Reactive · clickable · selection-as-node</h2>
+<table id="t-r"><thead><tr><th>check</th><th>result</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<script>
+(function () {
+  var results = [];
+  function rec(ok) { results.push(!!ok); return ok; }
+  function yn(b) { return { html: b ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>' }; }
+  function row(tb, c) { var tr = document.createElement('tr'); c.forEach(function (x, i) { var td = document.createElement('td'); if (x && typeof x === 'object' && x.html != null) td.innerHTML = x.html; else { td.textContent = x; if (i === 0) td.className = 'k'; } tr.appendChild(td); }); document.querySelector(tb + ' tbody').appendChild(tr); }
+
+  var P = window.CV_PROJECT, R = window.CV_REGISTRY, A = window.CV_ACTIONS, N = window.CV_NODE;
+
+  // ---- 1 · views project collections ---------------------------------------
+  var views = ['view.palette-form', 'view.palette-symbol', 'view.palette-color', 'view.library', 'view.actions', 'view.decorators', 'view.views'];
+  views.forEach(function (id) {
+    var rows = P.toCollection(id, {});
+    var ok = rows.length > 0 && rows[0].id != null && rows[0].label != null;
+    rec(ok);
+    row('#t-v', [id, rows.length + ' rows · e.g. ' + rows.slice(0, 3).map(function (r) { return r.label; }).join(', '), yn(ok)]);
+  });
+  // palette-color rows carry a token (for swatches)
+  var colorRows = P.toCollection('view.palette-color', {});
+  var hasToken = colorRows.some(function (r) { return r.token; });
+  rec(hasToken); row('#t-v', ['view.palette-color rows carry .token', hasToken ? 'e.g. ' + (colorRows.find(function (r) { return r.token; }).token) : 'none', yn(hasToken)]);
+  // a view of views
+  var vv = P.toCollection('view.views', {});
+  rec(vv.length >= 7); row('#t-v', ['view.views (a view OF views)', vv.length + ' views', yn(vv.length >= 7)]);
+
+  // ---- 2 · reactive · clickable · selection --------------------------------
+  // reactive: define a kind → view.library grows + includes it (no UI code)
+  var before = P.toCollection('view.library', {}).length;
+  A.invoke('define-kind', { id: 'qa-view-dot', kind: 'qa-view-dot', layer: 'atom', classification: 'mark' }, {});
+  var after = P.toCollection('view.library', {});
+  var grew = after.length === before + 1 && after.some(function (r) { return r.id === 'qa-view-dot'; });
+  rec(grew); row('#t-r', ['reactive: define-kind → view.library', before + ' → ' + after.length + ' rows, includes qa-view-dot: ' + after.some(function (r) { return r.id === 'qa-view-dot'; }), yn(grew)]);
+
+  // clickable: a palette row wires back to the one action layer via onPick
+  var formRows = P.toCollection('view.palette-form', {});
+  var oct = formRows.find(function (r) { return r.id === 'octagon'; });
+  rec(oct && oct.onPick === 'set-value'); row('#t-r', ['palette row carries onPick + pickArgs', oct ? oct.onPick + ' ' + JSON.stringify(oct.pickArgs) : 'none', yn(oct && oct.onPick === 'set-value')]);
+  var node = { form: 'circle', symbol: 'house' };
+  A.invoke(oct.onPick, oct.pickArgs, { node: node, item: oct.entry });   // resolves {{ item.id }} → octagon
+  rec(node.form === 'octagon'); row('#t-r', ['clicking a palette row → set-value via CV_VARS', 'node.form = ' + node.form + ' (from {{ item.id }})', yn(node.form === 'octagon')]);
+
+  // selection-as-node
+  var sel = N.selection(['glyphic', 'qa-view-dot']);
+  rec(sel.kind === 'selection' && sel.payload.members.length === 2); row('#t-r', ['CV_NODE.selection([a,b])', 'kind=' + sel.kind + ' · members=' + JSON.stringify(sel.payload.members) + ' · mode=' + sel.payload.mode, yn(sel.kind === 'selection' && sel.payload.members.length === 2)]);
+  var selKind = R.get('kind.selection');
+  rec(!!selKind); row('#t-r', ['selection registered as a kind', selKind ? 'CV_REGISTRY · classification ' + (selKind.classification || []).join(',') : 'missing', yn(!!selKind)]);
+
+  var passed = results.filter(Boolean).length, total = results.length;
+  document.getElementById('summary').innerHTML = (passed === total)
+    ? '<span class="pill ok">ALL ' + total + ' CHECKS PASS</span>'
+    : '<span class="pill no">' + passed + ' / ' + total + ' PASS</span>';
+  window.__qa = { passed: passed, total: total, ok: passed === total };
+})();
+</script>
+</body>
+</html>

@@ -62,6 +62,26 @@
     params: { brief: '', count: 4, thread: [] }, icon: 'plus', provenance: 'built-in',
     description: 'Propose candidate symbol records (24px line glyphs + tags/domain/kind) from a brief; multi-step by threading prior turns. Candidates validate against CV_GLYPHIC.schema; save with glyphic.save.',
     run: function (a) {
+      // A6 sweep: when the bound text provider can fire ROLES (the Company), use the
+      // glyph_symbol_candidates ROLE — its output_schema enforces valid records mechanically
+      // (the prompt-built JSON-array path breaks on JSON-in-text escaping; proven in A4).
+      // A non-role runtime (e.g. the claude sandbox) keeps the original build→complete→parse path.
+      var rt = AI.resolveProvider(AI.providerForRole('text'));
+      if (typeof rt.runRole === 'function') {
+        var p0 = a.params || {};
+        var brief0 = p0.brief || a.brief || '';
+        var thread0 = (p0.thread || []).map(function (t) { return (t.role || 'user') + ': ' + t.text; }).join('\n');
+        var utter = (thread0 ? ('Earlier turns:\n' + thread0 + '\n\n') : '') + 'Brief: ' + brief0;
+        return Promise.resolve(rt.runRole('glyph_symbol_candidates', utter, { max_tokens: 2048 })).then(function (j) {
+          var GLr = window.CV_GLYPHIC;
+          return ((j.output && j.output.candidates) || []).map(function (c) {
+            var rec = { id: c.id, name: c.name, description: c.description, svg: c.svg,
+                        facets: { domain: c.domain || 'feature', kind: c.kind || 'object', tags: c.tags || [] } };
+            var problems = GLr && GLr.validateSymbol ? GLr.validateSymbol(rec) : [];
+            return { record: rec, valid: problems.length === 0, problems: problems };
+          });
+        });
+      }
       var prompt = buildPrompt(a);
       var complete = AI.complete ? AI.complete.bind(AI) : (a.provider && a.provider.complete);
       if (!complete) throw new Error('glyphic.generate: no completion provider (CV_AI.complete / provider.complete)');

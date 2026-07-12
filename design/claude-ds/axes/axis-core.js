@@ -48,9 +48,28 @@
     var groupOrder = [];
 
     (spec.groups || []).forEach(function (g) {
-      groups[g.id] = { id: g.id, label: g.label || g.id, parent: g.parent || null, description: g.description || '' };
+      groups[g.id] = normGroup(g);
       groupOrder.push(g.id);
     });
+
+    // A FAMILY (group) is self-describing: beyond id/label it can declare its
+    // ROLE (what the family is for), the family it PAIRS-ON (the legible
+    // foreground family to use when a value of this family is a background —
+    // single source for "text on a colour"), whether it is a VOICE vs STRUCTURE,
+    // and arbitrary meta. Relationships between families live here so they are
+    // computed once and read everywhere (the axis is a small relational graph of
+    // families, not a flat list).
+    function normGroup(g) {
+      return {
+        id: g.id, label: g.label || g.id, parent: g.parent || null,
+        description: g.description || '',
+        role: g.role || null,            // what this family is FOR
+        pairsOn: g.pairsOn || null,      // value-id (or family-id) of the legible foreground
+        voice: !!g.voice,                // a saturated "voice" (gold/sage) vs structure/neutral
+        roles: g.roles || null,          // structural roles values of this family default to (['fill','line','text'])
+        meta: g.meta || {},
+      };
+    }
 
     function addValue(v) {
       if (!v || !v.id) fail('value in axis "' + spec.id + '" needs an id');
@@ -64,6 +83,11 @@
         id: v.id, label: v.label || v.id, group: v.group || null,
         token: v.token || null, css: v.css || null, resolve: v.resolve || null,
         zero: !!v.zero, meta: v.meta || {},
+        // self-description (all optional; fall back to the family's rule):
+        on: v.on || null,                          // value-id of the legible foreground ON this colour
+        roles: v.roles || null,                    // ['fill','line','text'] this value is safe for
+        themeInvariant: v.themeInvariant != null ? !!v.themeInvariant : null, // does NOT flip in dark/dim
+        alias: v.alias || null,                    // canonical value-id this is a synonym of
       };
       return byId[v.id];
     }
@@ -79,7 +103,7 @@
 
       // --- the shared verbs ---
       register: function (v) { return addValue(v); },                 // add/override a value
-      registerGroup: function (g) { groups[g.id] = { id: g.id, label: g.label || g.id, parent: g.parent || null, description: g.description || '' }; if (groupOrder.indexOf(g.id) < 0) groupOrder.push(g.id); return groups[g.id]; },
+      registerGroup: function (g) { groups[g.id] = normGroup(g); if (groupOrder.indexOf(g.id) < 0) groupOrder.push(g.id); return groups[g.id]; },
       has: function (id) { return !!byId[id]; },
       resolve: function (id) { var v = byId[id]; if (!v) fail('axis "' + spec.id + '" has no value "' + id + '" (have: ' + order.join(', ') + ')'); return v; },
       tryResolve: function (id) { return byId[id] || null; },
@@ -87,7 +111,43 @@
       ids: function () { return order.slice(); },
       groups: function () { return groupOrder.map(function (id) { return groups[id]; }); },
       group: function (id) { return groups[id] || null; },
+      family: function (id) { return groups[id] || null; },   // families ARE groups (Info's wording)
       valuesIn: function (groupId) { return order.map(function (i) { return byId[i]; }).filter(function (v) { return v.group === groupId; }); },
+
+      // --- self-description queries (two-tier: VALUE wins, else its FAMILY) ---
+      // canonical(id): resolve an alias to its real value-id (amber → warning).
+      canonical: function (id) { var v = byId[id]; return (v && v.alias) ? v.alias : id; },
+      isAlias: function (id) { var v = byId[id]; return !!(v && v.alias); },
+      // pairOn(id): the value-id of the legible FOREGROUND to put ON this colour.
+      // Value-level `on` wins; else the family's `pairsOn`. The ONE source for
+      // "what text/ink sits legibly on this colour" — dissolves hardcoded on-*.
+      pairOn: function (id) {
+        var v = byId[id]; if (!v) return null;
+        if (v.on) return v.on;
+        var g = v.group && groups[v.group]; return (g && g.pairsOn) || null;
+      },
+      pairCSS: function (id, ctx) {
+        var p = this.pairOn(id);
+        if (p) return this.resolveCSS(p, ctx);
+        // a value may carry its own paired ink directly as a token (e.g. a zone
+        // wash pairs on its OWN ink, not a global foreground) — single-sourced.
+        var v = byId[id];
+        if (v && v.meta && v.meta.ink) return 'var(--' + v.meta.ink + ')';
+        return null;
+      },
+      // rolesOf(id): structural roles (fill/line/text) — value-level, else family.
+      rolesOf: function (id) {
+        var v = byId[id]; if (!v) return [];
+        if (v.roles) return v.roles.slice();
+        var g = v.group && groups[v.group]; return (g && g.roles) ? g.roles.slice() : [];
+      },
+      byRole: function (role) { var self = this; return this.values().filter(function (v) { return self.rolesOf(v.id).indexOf(role) >= 0; }); },
+      // themeInvariant(id): does this colour hold across theme flips? value, else family voice.
+      themeInvariant: function (id) {
+        var v = byId[id]; if (!v) return false;
+        if (v.themeInvariant != null) return v.themeInvariant;
+        var g = v.group && groups[v.group]; return !!(g && g.meta && g.meta.themeInvariant);
+      },
       default: function () { return defId; },
       setDefault: function (id) { this.resolve(id); defId = id; return id; },
       zero: function () { var z = order.map(function (i) { return byId[i]; }).filter(function (v) { return v.zero; }); return z.length ? z[0].id : null; },
@@ -110,9 +170,12 @@
       // candidates allowed by a subscription against THIS axis.
       candidates: function (sub) {
         sub = sub || {};
+        var self = this;
         var out = this.values();
         if (sub.groups && sub.groups.length) out = out.filter(function (v) { return sub.groups.indexOf(v.group) >= 0; });
         if (sub.values && sub.values.length) out = out.filter(function (v) { return sub.values.indexOf(v.id) >= 0; });
+        if (sub.roles && sub.roles.length) out = out.filter(function (v) { return sub.roles.some(function (r) { return self.rolesOf(v.id).indexOf(r) >= 0; }); });
+        if (sub.canonicalOnly) out = out.filter(function (v) { return !v.alias; });
         return out;
       },
 

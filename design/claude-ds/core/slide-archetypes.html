@@ -10,9 +10,9 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="../_ds_bundle.js"></script>
 <style>
-  body { margin: 0; background: var(--zone-ground, #fff); color: var(--ink);
+  body { margin: 0; background: var(--zone-ground); color: var(--ink);
          font-family: var(--font-body); -webkit-font-smoothing: antialiased; padding: 36px 38px 60px; }
-  h1 { font: var(--weight-bold,700) var(--fs-h2)/1 var(--font-display); letter-spacing: -.02em; margin: 0 0 4px; }
+  h1 { font: var(--weight-bold) var(--fs-h2)/1 var(--font-display); letter-spacing: -.02em; margin: 0 0 4px; }
   .sub { color: var(--ink-3); font-size: var(--fs-meta); margin: 0 0 28px; max-width: 76ch; }
   h2 { font: 700 12px/1 var(--font-body); letter-spacing:.12em; text-transform:uppercase;
        color: var(--accent-bronze); margin: 40px 0 6px; display:flex; align-items:center; gap:10px; }
@@ -112,7 +112,7 @@
   const newKeys = ["product-cover", "photo-divider", "logo-wall", "team", "dashboard", "reasons", "orbital", "stacked", "spectrum", "manifold", "fidelity", "product-closing"];
   const gallery2 = document.getElementById("gallery2");
   newKeys.forEach((key) => {
-    const cap = key + "  ·  " + ((META[key] && META[key].name) || key);
+    const cap = key + "  \u00b7  " + ((META[key] && META[key].name) || key);
     frameInto(gallery2, cap, (art) =>
       ReactDOM.createRoot(art).render(e(Slide, { archetype: key, content: defaultsOf(key), lod: "full", surface: "slide", density: "compact" })));
   });

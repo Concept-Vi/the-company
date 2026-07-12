@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Studio substrate — proven</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<script src="../app/registry/vars.js"></script>
+<script src="../app/registry/conditions.js"></script>
+<script src="../app/registry/decorators.js"></script>
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<script src="../app/ai/ai-registry.js"></script>
+<script src="../app/ai/ai-glyphic.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../app/registry/glyphic-type.js"></script>
+<script src="../app/registry/components-type.js"></script>
+<script src="../app/registry/kinds-type.js"></script>
+<script src="../core/cv-node.js"></script>
+<script src="../app/registry/actions.js"></script>
+<script src="../app/registry/project.js"></script>
+<script src="../app/ai/ai-studio.js"></script>
+<style>
+  body { margin: 0; padding: 28px 32px 80px; background: var(--zone-ground, #FCFAF2); color: var(--fg-primary, #211C14); font-family: var(--font-body, system-ui, sans-serif); }
+  h1 { font: 800 26px/1.1 var(--font-display, sans-serif); margin: 0 0 4px; letter-spacing: -.02em; }
+  .sub { font: 400 13px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 22px; max-width: 84ch; }
+  h2 { font: 700 13px/1.2 var(--font-mono, monospace); letter-spacing: .04em; text-transform: uppercase; color: var(--accent-bronze); margin: 26px 0 10px; }
+  table { border-collapse: collapse; width: 100%; max-width: 1060px; font: 400 12.5px/1.4 var(--font-mono, monospace); }
+  th, td { text-align: left; padding: 7px 12px; border-bottom: 1px solid color-mix(in srgb, var(--accent-bronze) 18%, transparent); vertical-align: top; }
+  th { color: var(--accent-gold-deep, #9F772C); font-weight: 700; }
+  td.k { color: var(--fg-secondary); max-width: 360px; }
+  .pass { color: #2F7D4F; font-weight: 700; } .fail { color: #B5482E; font-weight: 700; }
+  .pill { display: inline-block; font: 700 10px/1 var(--font-mono); padding: 4px 8px; border-radius: 999px; }
+  .pill.ok { background: color-mix(in srgb, #2F7D4F 16%, transparent); color: #2F7D4F; }
+  .pill.no { background: color-mix(in srgb, #B5482E 16%, transparent); color: #B5482E; }
+  #summary { font: 800 18px/1.2 var(--font-display); margin: 8px 0 0; }
+  pre { background: var(--fg-primary,#211C14); color: #F3EEDF; border-radius: 10px; padding: 12px 14px; overflow-x: auto; font: 500 11px/1.5 var(--font-mono); max-width: 1060px; }
+</style>
+</head>
+<body>
+<h1>Studio substrate — proven</h1>
+<p class="sub">CV_VARS (one variable mechanism) · CV_ACTIONS (verbs with skills + variable params) · CV_PROJECT (one node → both UI inspector and AI tool schema) · the chat/voice→action loop, and the dissolved <code>generatable</code> hardcode (now a query over CV_AI).</p>
+<div id="summary">running…</div>
+
+<h2>1 · CV_VARS — the one variable mechanism</h2>
+<table id="t-vars"><thead><tr><th>spec</th><th>resolved against ctx</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<h2>2 · CV_ACTIONS — verbs, variable params, invoke mutates</h2>
+<table id="t-act"><thead><tr><th>check</th><th>result</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<h2>3 · CV_PROJECT — one node → UI + AI, coherent</h2>
+<table id="t-proj"><thead><tr><th>check</th><th>result</th><th>ok</th></tr></thead><tbody></tbody></table>
+<pre id="schema"></pre>
+
+<h2>4 · The loop + the dissolved hardcode</h2>
+<table id="t-loop"><thead><tr><th>check</th><th>result</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<script>
+(function () {
+  var results = [];
+  function rec(ok, l) { results.push(!!ok); return ok; }
+  function yn(b) { return { html: b ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>' }; }
+  function row(tb, c) { var tr = document.createElement('tr'); c.forEach(function (x, i) { var td = document.createElement('td'); if (x && typeof x === 'object' && x.html != null) td.innerHTML = x.html; else { td.textContent = x; if (i === 0) td.className = 'k'; } tr.appendChild(td); }); document.querySelector(tb + ' tbody').appendChild(tr); }
+
+  var V = window.CV_VARS, A = window.CV_ACTIONS, P = window.CV_PROJECT, N = window.CV_NODE, COND = window.CV_COND, AI = window.CV_AI, DEC = window.CV_DECORATORS;
+
+  // ---- 1 · CV_VARS ---------------------------------------------------------
+  var ctx = { selection: 'glyphic', node: { kind: 'glyphic', fill: 'wash' }, items: [{ label: 'A' }, { label: 'B' }], hover: { id: 'ring' } };
+  var cases = [
+    ['literal 42', 42, 42],
+    ['"{{ selection }}"', '{{ selection }}', 'glyphic'],
+    ['"for {{ node.kind }}"', 'for {{ node.kind }}', 'for glyphic'],
+    ['{var:"items.1.label"}', { var: 'items.1.label' }, 'B'],
+    ['{var:"missing",default:"—"}', { var: 'missing', default: '—' }, '—'],
+    ['{op:"coalesce",args:[null,"{{hover.id}}"]}', { op: 'coalesce', args: [null, '{{ hover.id }}'] }, 'ring'],
+    ['"{{ missing | n/a }}"', '{{ missing | n/a }}', 'n/a']
+  ];
+  cases.forEach(function (c) {
+    var got = V.resolve(c[1], ctx);
+    var ok = JSON.stringify(got) === JSON.stringify(c[2]);
+    rec(ok, 'vars ' + c[0]);
+    row('#t-vars', [c[0], JSON.stringify(got), yn(ok)]);
+  });
+  // conditions still work (delegating getField to CV_VARS)
+  var condOK = COND.test('node.fill != none', ctx) === true && COND.test('node.fill == none', ctx) === false;
+  rec(condOK, 'conditions delegate to CV_VARS');
+  row('#t-vars', ['CV_COND uses CV_VARS path-read', String(condOK), yn(condOK)]);
+
+  // ---- 2 · CV_ACTIONS ------------------------------------------------------
+  rec(A.all().length >= 6, 'actions registered');
+  row('#t-act', ['actions registered', A.all().map(function (a) { return a.id; }).join(', '), yn(A.all().length >= 6)]);
+
+  var glyNode = N.lens('glyphic');
+  var appl = A.applicable(glyNode);
+  rec(appl.length >= 4, 'applicable(glyphic)');
+  row('#t-act', ['applicable(glyphic)', appl.map(function (a) { return a.id + '·' + a.actionType; }).join(', '), yn(appl.length >= 4)]);
+
+  // invoke mutates a live node spec via variable-resolved args
+  var liveNode = N.lens({ form: 'circle', symbol: 'person', fill: 'paper' });
+  var state = { node: liveNode.payload, selection: 'glyphic' };
+  A.invoke('set-value', { slot: 'form', value: 'octagon' }, { node: liveNode.payload, state: state });
+  var mutated = liveNode.payload.form === 'octagon';
+  rec(mutated, 'invoke set-value mutates');
+  row('#t-act', ['invoke set-value(form=octagon)', 'node.form = ' + liveNode.payload.form, yn(mutated)]);
+
+  // variable-resolved args: value comes from ctx via {{ }}
+  A.invoke('set-value', { slot: 'symbol', value: '{{ pick }}' }, { node: liveNode.payload, pick: 'gear' });
+  var vmut = liveNode.payload.symbol === 'gear';
+  rec(vmut, 'invoke resolves {{var}} args');
+  row('#t-act', ['invoke set-value(value="{{ pick }}")', 'node.symbol = ' + liveNode.payload.symbol, yn(vmut)]);
+
+  // param options resolve live from the axis
+  var setVal = A.resolve('set-value');
+  var formOpts = A.paramOptions(setVal, 'value', glyNode, { slot: 'form' });
+  rec(formOpts && formOpts.indexOf('octagon') >= 0, 'param options live from axis');
+  row('#t-act', ['paramOptions(set-value.value | slot=form)', (formOpts || []).length + ' values', yn(formOpts && formOpts.indexOf('octagon') >= 0)]);
+
+  // missing required param → loud
+  var loud = false; try { A.invoke('set-value', { slot: 'form' }, { node: {} }); } catch (e) { loud = true; }
+  rec(loud, 'missing required param throws');
+  row('#t-act', ['invoke set-value (no value)', loud ? 'threw (loud)' : 'silent!', yn(loud)]);
+
+  // ---- 3 · CV_PROJECT ------------------------------------------------------
+  var insp = P.toInspector('glyphic');
+  var tools = P.toToolSchema('glyphic');
+  rec(insp.slots.length > 0 && insp.actions.length > 0, 'inspector has slots + actions');
+  row('#t-proj', ['toInspector(glyphic)', insp.slots.length + ' slots · ' + insp.sockets.length + ' sockets · ' + insp.actions.length + ' actions · ' + insp.decorators.length + ' decorators', yn(insp.slots.length > 0 && insp.actions.length > 0)]);
+
+  rec(tools.length > 0 && tools[0].parameters && tools[0].parameters.type === 'object', 'tool schema well-formed');
+  row('#t-proj', ['toToolSchema(glyphic)', tools.length + ' functions: ' + tools.map(function (t) { return t.name; }).join(', '), yn(tools.length > 0)]);
+
+  // THE coherence proof: UI actions === AI tool names (one source)
+  var coh = P.coherent('glyphic');
+  rec(coh, 'UI actions === AI tools (one source)');
+  row('#t-proj', ['coherent(glyphic): UI action set === AI tool set', String(coh), yn(coh)]);
+
+  // slot options in UI === enum in AI schema (same axis source)
+  var setTool = tools.find(function (t) { return t.name === 'set-value'; });
+  var uiSlotNames = insp.slots.map(function (s) { return s.name; }).sort();
+  var slotEnum = setTool && setTool.parameters.properties.slot && setTool.parameters.properties.slot.enum;
+  var slotMatch = slotEnum && JSON.stringify(slotEnum.slice().sort()) === JSON.stringify(uiSlotNames);
+  rec(slotMatch, 'UI slots === AI slot enum');
+  row('#t-proj', ['set-value.slot enum === inspector slots', (slotEnum || []).join(', '), yn(slotMatch)]);
+
+  document.getElementById('schema').textContent = JSON.stringify(setTool, null, 2);
+
+  // ---- 4 · the loop + the dissolved hardcode -------------------------------
+  // generatable is now a QUERY over CV_AI (no hardcoded map): glyphic.generate
+  // declares generates:['glyphic','symbol','mark'].
+  var gen = DEC.decoratorsOf(window.CV_REGISTRY.resolve('glyphic')).find(function (d) { return d.id === 'generatable'; });
+  rec(gen && gen.value === 'glyphic.generate', 'generatable resolved by querying CV_AI');
+  row('#t-loop', ['generatable(glyphic) via CV_AI.generates', gen ? gen.value : '(none)', yn(gen && gen.value === 'glyphic.generate')]);
+
+  // the AI command capability builds a prompt containing the live tool schema
+  var cap = AI.resolve('studio.command');
+  var prompt = cap.build(null, { spec: 'glyphic' }, { node: { spec: 'glyphic' } }, { instruction: 'make it an octagon' });
+  var hasTools = /set-value/.test(prompt) && /tool/i.test(prompt);
+  rec(hasTools, 'studio.command prompt carries the live tool schema');
+  row('#t-loop', ['studio.command.build() includes tools', hasTools ? 'tools embedded ✓' : 'missing', yn(hasTools)]);
+
+  // voice + local providers registered (the provider registry for connecting others)
+  var voice = AI.get('voice.openai'), local = AI.get('provider.local');
+  rec(voice && local, 'voice + local providers registered');
+  row('#t-loop', ['providers voice.openai / provider.local', (voice ? voice.runtime.kind : '—') + ' / ' + (local ? local.runtime.kind : '—'), yn(voice && local)]);
+
+  // end-to-end (no live model): simulate the AI choosing an action, app invokes it
+  var liveNode2 = N.lens({ form: 'circle', symbol: 'house' });
+  var chosen = { action: 'set-value', args: { slot: 'form', value: 'hex' } };  // what studio.command would return
+  A.invoke(chosen.action, chosen.args, { node: liveNode2.payload });
+  var looped = liveNode2.payload.form === 'hex';
+  rec(looped, 'chat→action loop mutates the node');
+  row('#t-loop', ['invoke(parsed command) → re-render', 'node.form = ' + liveNode2.payload.form, yn(looped)]);
+
+  var passed = results.filter(Boolean).length, total = results.length;
+  document.getElementById('summary').innerHTML = (passed === total)
+    ? '<span class="pill ok">ALL ' + total + ' CHECKS PASS</span>'
+    : '<span class="pill no">' + passed + ' / ' + total + ' PASS</span>';
+  window.__qa = { passed: passed, total: total, ok: passed === total };
+})();
+</script>
+</body>
+</html>

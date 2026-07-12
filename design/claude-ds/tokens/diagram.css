@@ -20,15 +20,18 @@
      kind ∈ flow | dependency | reference | rejected
    ============================================================ */
 :root {
+  /* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+  --comm-line: #7CA85B;
+
   /* ---- Stroke weights -------------------------------------- */
   --dgm-stroke-hair:    1px;
   --dgm-stroke-regular: 1.5px;
   --dgm-stroke-bold:    2.5px;
-  --dgm-stroke-color:       var(--hairline-strong, color-mix(in srgb, var(--ink) 30%, transparent));
-  --dgm-stroke-color-faint: var(--hairline, color-mix(in srgb, var(--ink) 14%, transparent));
+  --dgm-stroke-color:       var(--hairline-strong);
+  --dgm-stroke-color-faint: var(--hairline);
 
   /* ---- Nodes ----------------------------------------------- */
-  --dgm-node-radius:    var(--r-md, 10px);   /* rounded-rect default */
+  --dgm-node-radius:    var(--r-md);   /* rounded-rect default */
   --dgm-node-pad:       var(--s-3) var(--s-4);
   --dgm-node-min-w:     128px;
   --dgm-node-gap:       var(--space-fluid-md);
@@ -50,10 +53,10 @@
 
   /* ---- Edge-kind colour map (reuses zone inks) ------------- */
   --dgm-edge-flow:      var(--accent-gold);          /* active path  */
-  --dgm-edge-dependency:var(--zone-panel-ink, #6b6357);
-  --dgm-edge-reference: var(--zone-source-ink, #3a5780);
-  --dgm-edge-rejected:  var(--zone-reject-ink, #9a3a44);
-  --dgm-edge-communication: var(--comm-line, #7CA85B); /* relationship / positive flow (the green legend) */
+  --dgm-edge-dependency:var(--zone-panel-ink);
+  --dgm-edge-reference: var(--zone-source-ink);
+  --dgm-edge-rejected:  var(--zone-reject-ink);
+  --dgm-edge-communication: var(--comm-line); /* relationship / positive flow (the green legend) */
 }
 
 /* ============================================================
@@ -95,7 +98,7 @@
   flex: none;
   width: var(--dgm-icon-box); height: var(--dgm-icon-box);
   display: grid; place-items: center;
-  border-radius: var(--r-sm, 6px);
+  border-radius: var(--r-sm);
   color: var(--zone-ink, var(--accent-bronze));
   background: color-mix(in srgb, currentColor 10%, transparent);
 }
@@ -110,3 +113,25 @@
 .dgm-edge--rej   { stroke: var(--dgm-edge-rejected);   stroke-dasharray: var(--dgm-connector-dash-dep); }
 .dgm-edge--comm  { stroke: var(--dgm-edge-communication); }   /* communication / relationship — the green voice */
 .dgm-edge--bi    { stroke: var(--dgm-edge-flow); }            /* bidirectional ↔ — markers on both ends (set in the solver) */
+
+/* ── glyphgraph GROWTH MOTION (W2, the living canvas) ─────────────────────────────
+   Placed nodes NEVER move (frozen addresses) — so a left/top change is always MEANT
+   (an authored override or an AI op) and glides; a NEW node enters by scale+fade
+   (mount-only: React keys keep existing elements alive). During a drag the surface
+   sets .gg-dragging on the diagram — transitions off, the hand stays 1:1. */
+.cv-diagram--glyphgraph .gg-node {
+  transition: left var(--dur-move) var(--ease-out),
+              top  var(--dur-move) var(--ease-out);
+  animation: gg-enter var(--dur-enter) var(--ease-out) backwards;
+}
+/* the general solver's nodes tween the same way — the morph type's
+   before↔after (network→hub) animates through the motion tokens.
+   Same law, one home; re-render with stable keys = motion for free. */
+.cv-diagram .dgm-node {
+  transition: left var(--dur-move) var(--ease-emphasized),
+              top  var(--dur-move) var(--ease-emphasized),
+              width var(--dur-move) var(--ease-emphasized),
+              height var(--dur-move) var(--ease-emphasized);
+}
+.cv-diagram--glyphgraph.gg-dragging .gg-node { transition: none; animation: none; }
+@keyframes gg-enter { from { opacity: 0; scale: 0.6; } to { opacity: 1; scale: 1; } }

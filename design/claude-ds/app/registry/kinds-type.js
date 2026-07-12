@@ -30,6 +30,11 @@
         title:  { kind: 'text', default: 'Insert', means: 'panel heading' },
         layout: { kind: 'enum', values: ['grid', 'list', 'reel'], default: 'grid', means: 'how items lay out' },
         density: { axis: 'space', groups: ['inner'], default: 's2', means: 'gap between items' },
+        // PER-TYPE COLOUR SUBSCRIPTION: a panel is a SURFACE, so its colour slot
+        // resolves the `zoning` family of the colour axis (the tonal-zone washes)
+        // — NOT brand/semantic, which is what a glyphic mark subscribes to. Same
+        // axis, different declared families per component type (the slot rule).
+        surface: { axis: 'color', groups: ['zoning'], default: 'zone-panel', means: 'the tonal zone this panel sits in (surface wash)' },
       },
       sockets: {
         // THE demonstration: a socket accepting glyphics. candidatesForSocket
@@ -69,6 +74,18 @@
       },
       runtime: { kind: 'engine', key: 'Slide' },
       tags: ['kind', 'slide', 'deck', 'universal-component'],
+    },
+    {
+      id: 'kind.selection', name: 'Selection', kind: 'selection', layer: 'system', family: 'interaction',
+      classification: ['selection', 'container'], icon: 'cursor',
+      description: 'A selection is itself a NODE (Root Unity: everything is the one unit) whose members are the selected nodes. Actions apply to a selection uniformly — set-value on a selection sets it on every member; it has a socket that holds its members.',
+      valueSlots: {
+        mode: { kind: 'enum', values: ['single', 'multi'], default: 'single', means: 'how many members' },
+      },
+      sockets: {
+        members: { label: 'Members', accepts: ['*'], multiple: true, means: 'the selected nodes (by address)' },
+      },
+      tags: ['kind', 'selection', 'interaction', 'universal-component'],
     },
   ];
 

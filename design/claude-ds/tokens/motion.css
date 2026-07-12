@@ -14,6 +14,9 @@
    everything is gated behind prefers-reduced-motion.
    ============================================================ */
 :root {
+  /* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+  --i: 0;
+
   /* ---- Durations (extends colors_and_type.css dur-fast/base/slow) */
   --dur-instant:    90ms; /* @kind other */
   --dur-quick:     160ms; /* @kind other */
@@ -27,6 +30,7 @@
   --ease-exit:      cubic-bezier(0.55, 0, 1, 0.45); /* @kind other */
   --ease-emphasized:cubic-bezier(0.2, 0, 0, 1); /* @kind other */
   --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1); /* @kind other */
+  --ease-soft:      ease-in-out; /* @kind other */ /* ambient loops (mo-breathe/mo-pulse, axes/motion) — gentle symmetric ease; was a masked fallback */
 
   /* ---- Travel distances — how far things move ----------------*/
   --move-xs:  8px;
@@ -69,7 +73,7 @@
 .exit-right  { animation: cvExitRight  var(--dur-exit) var(--ease-exit) both; }
 
 /* Stagger — set --i (0-based index) on each child of a .stagger row. */
-.stagger > * { animation-delay: calc(min(var(--i, 0), var(--stagger-max)) * var(--stagger-step)); }
+.stagger > * { animation-delay: calc(min(var(--i), var(--stagger-max)) * var(--stagger-step)); }
 
 /* ============================================================
    MOVE (reposition) — never teleport between layouts

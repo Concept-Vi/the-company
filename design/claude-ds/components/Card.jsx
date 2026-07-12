@@ -26,7 +26,11 @@ export function Card(props) {
         sub != null ? h("p", { key: "s", className: "cv-card__sub" }, sub) : null)
     : null;
   const foot = footer != null ? h("div", { key: "f", className: "cv-card__foot" }, footer) : null;
-  return h(as, Object.assign({ className: cls }, rest), header, children, foot);
+  // MATERIAL SLOT (unification sweep §2.6): the attribute binds the skin's
+  // --mat-* roles on this card; the consuming rule ([data-skin] .cv-card,
+  // tokens/controls.css) only fires under a skin scope — un-skinned pages
+  // are byte-identical.
+  return h(as, Object.assign({ className: cls, "data-material": "skin" }, rest), header, children, foot);
 }
 
 export default Card;

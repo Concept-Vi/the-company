@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Root Unity — the self-building layer, proven</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<script src="../app/registry/vars.js"></script>
+<script src="../app/registry/query.js"></script>
+<script src="../app/registry/conditions.js"></script>
+<script src="../app/registry/decorators.js"></script>
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<script src="../app/ai/ai-registry.js"></script>
+<script src="../app/ai/ai-glyphic.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../app/registry/glyphic-type.js"></script>
+<script src="../app/registry/components-type.js"></script>
+<script src="../app/registry/kinds-type.js"></script>
+<script src="../core/cv-node.js"></script>
+<script src="../app/registry/actions.js"></script>
+<script src="../app/registry/events.js"></script>
+<script src="../app/registry/project.js"></script>
+<script src="../app/ai/ai-studio.js"></script>
+<style>
+  body { margin: 0; padding: 28px 32px 80px; background: var(--zone-ground, #FCFAF2); color: var(--fg-primary, #211C14); font-family: var(--font-body, system-ui, sans-serif); }
+  h1 { font: 800 25px/1.1 var(--font-display, sans-serif); margin: 0 0 4px; letter-spacing: -.02em; }
+  .sub { font: 400 13px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 20px; max-width: 86ch; }
+  h2 { font: 700 13px/1.2 var(--font-mono, monospace); letter-spacing: .04em; text-transform: uppercase; color: var(--accent-bronze); margin: 26px 0 10px; }
+  table { border-collapse: collapse; width: 100%; max-width: 1060px; font: 400 12.5px/1.4 var(--font-mono, monospace); }
+  th, td { text-align: left; padding: 7px 12px; border-bottom: 1px solid color-mix(in srgb, var(--accent-bronze) 18%, transparent); vertical-align: top; }
+  th { color: var(--accent-gold-deep, #9F772C); font-weight: 700; }
+  td.k { color: var(--fg-secondary); max-width: 420px; }
+  .pass { color: #2F7D4F; font-weight: 700; } .fail { color: #B5482E; font-weight: 700; }
+  .pill { display: inline-block; font: 700 10px/1 var(--font-mono); padding: 4px 8px; border-radius: 999px; }
+  .pill.ok { background: color-mix(in srgb, #2F7D4F 16%, transparent); color: #2F7D4F; }
+  .pill.no { background: color-mix(in srgb, #B5482E 16%, transparent); color: #B5482E; }
+  #summary { font: 800 18px/1.2 var(--font-display); margin: 8px 0 0; }
+  code { background: color-mix(in srgb, var(--accent-bronze) 9%, transparent); padding: 1px 5px; border-radius: 4px; color: var(--accent-bronze); }
+</style>
+</head>
+<body>
+<h1>Root Unity — the self-building layer, proven</h1>
+<p class="sub">CV_QUERY (derive-by-query, the generalised fix) · meta-actions (build the backend through the interface) · CV_EVENTS (attention→highlight as a rule) · undo-as-inverse · macros-as-actions · the <code>{query}</code> value-spec.</p>
+<div id="summary">running…</div>
+
+<h2>1 · CV_QUERY — derive-by-query (the generalised class)</h2>
+<table id="t-q"><thead><tr><th>check</th><th>result</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<h2>2 · Meta-actions — the system builds itself</h2>
+<table id="t-meta"><thead><tr><th>meta-action</th><th>effect on a registry (single source)</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<h2>3 · CV_EVENTS — attention → highlight, as a rule</h2>
+<table id="t-ev"><thead><tr><th>emit</th><th>reactive result</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<h2>4 · My ideas, built: undo-as-inverse · macros-as-actions</h2>
+<table id="t-mine"><thead><tr><th>check</th><th>result</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<script>
+(function () {
+  var results = [];
+  function rec(ok) { results.push(!!ok); return ok; }
+  function yn(b) { return { html: b ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>' }; }
+  function row(tb, c) { var tr = document.createElement('tr'); c.forEach(function (x, i) { var td = document.createElement('td'); if (x && typeof x === 'object' && x.html != null) td.innerHTML = x.html; else { td.textContent = x; if (i === 0) td.className = 'k'; } tr.appendChild(td); }); document.querySelector(tb + ' tbody').appendChild(tr); }
+
+  var Q = window.CV_QUERY, A = window.CV_ACTIONS, E = window.CV_EVENTS, N = window.CV_NODE, R = window.CV_REGISTRY, AX = window.CV_AXES, DEC = window.CV_DECORATORS, V = window.CV_VARS;
+  var gly = N.lens('glyphic');
+
+  // ---- 1 · CV_QUERY --------------------------------------------------------
+  var fromAI = Q.from('ai').length;
+  rec(fromAI > 0); row('#t-q', ['CV_QUERY.from("ai")', fromAI + ' entries', yn(fromAI > 0)]);
+  var defs = Q.find('actions', { actionType: 'define' });
+  rec(defs.length >= 7); row('#t-q', ['find("actions",{actionType:"define"})', defs.length + ' meta-actions: ' + defs.map(function (d) { return d.id; }).join(', '), yn(defs.length >= 7)]);
+  var rel = Q.relation(gly, { from: 'ai', field: 'generates' });
+  rec(rel === 'glyphic.generate'); row('#t-q', ['relation(glyphic,{from:"ai",field:"generates"})', String(rel), yn(rel === 'glyphic.generate')]);
+  var gen = DEC.decoratorsOf(R.resolve('glyphic')).find(function (d) { return d.id === 'generatable'; });
+  rec(gen && gen.value === 'glyphic.generate'); row('#t-q', ['generatable decorator routes through CV_QUERY', gen ? gen.value : '(none)', yn(gen && gen.value === 'glyphic.generate')]);
+  var qv = V.resolve({ query: { relation: true, from: 'ai', field: 'generates', select: 'id' } }, { node: gly });
+  rec(qv && qv.indexOf('glyphic.generate') >= 0); row('#t-q', ['CV_VARS {query} spec → derive-by-query', JSON.stringify(qv), yn(qv && qv.indexOf('glyphic.generate') >= 0)]);
+
+  // ---- 2 · META-ACTIONS ----------------------------------------------------
+  A.invoke('define-kind', { id: 'qa-badge-dot', kind: 'qa-badge-dot', layer: 'atom', classification: 'mark' }, {});
+  var k = R.get('qa-badge-dot');
+  rec(k && k.kind === 'qa-badge-dot'); row('#t-meta', ['define-kind(qa-badge-dot)', k ? 'CV_REGISTRY.get → kind ' + k.kind + ' · cls ' + (k.classification || []).join(',') : 'missing', yn(!!k)]);
+
+  A.invoke('add-field', { target: 'qa-badge-dot', field: 'tags', value: 'status pinned' }, {});
+  var k2 = R.get('qa-badge-dot');
+  rec(k2 && k2.tags && k2.tags.indexOf('status') >= 0); row('#t-meta', ['add-field(qa-badge-dot, tags="status pinned")', 'tags = ' + JSON.stringify(k2 && k2.tags), yn(k2 && k2.tags && k2.tags.indexOf('status') >= 0)]);
+
+  // relate onto the THROWAWAY qa kind — never a built-in production Type. (A
+  // prior version related onto 'glyphic' itself, which forks the built-in into
+  // the user layer and PERSISTS it to shared localStorage — corrupting the
+  // canonical glyphic for every page. Tests must not mutate built-ins.)
+  A.invoke('relate', { from: 'qa-badge-dot', socket: 'qaExtra', accepts: 'mark' }, {});
+  var g2 = R.get('qa-badge-dot');
+  var related = g2 && g2.sockets && g2.sockets.qaExtra && (g2.sockets.qaExtra.accepts || []).indexOf('mark') >= 0;
+  rec(related); row('#t-meta', ['relate(qa-badge-dot.qaExtra accepts mark)', related ? 'socket added · accepts ' + JSON.stringify(g2.sockets.qaExtra.accepts) : 'missing', yn(related)]);
+  // and the new socket now accepts the new kind, via the one matcher — no bespoke code
+  var accepts = N.accepts({ accepts: ['mark'] }, N.lens('qa-badge-dot'));
+  rec(accepts); row('#t-meta', ['↳ N.accepts(socket, qa-badge-dot) — declared, not coded', String(accepts), yn(accepts)]);
+
+  A.invoke('define-rule', { target: 'qa-badge-dot', condition: 'size != none' }, {});
+  var k3 = R.get('qa-badge-dot');
+  rec(k3 && (k3.conditions || []).indexOf('size != none') >= 0); row('#t-meta', ['define-rule(qa-badge-dot, "size != none")', 'conditions = ' + JSON.stringify(k3 && k3.conditions), yn(k3 && (k3.conditions || []).indexOf('size != none') >= 0)]);
+
+  A.invoke('define-axis', { id: 'qa-weight', values: 'light,regular,bold' }, {});
+  rec(AX.has('qa-weight') && AX.resolve('qa-weight').ids().length === 3); row('#t-meta', ['define-axis(qa-weight, light/regular/bold)', AX.has('qa-weight') ? 'CV_AXES.has · ' + AX.resolve('qa-weight').ids().join(',') : 'missing', yn(AX.has('qa-weight'))]);
+
+  A.invoke('define-decorator', { id: 'qa-pinned', group: 'lifecycle', form: 'marker', applies: '*' }, {});
+  rec(DEC.tryResolve('qa-pinned')); row('#t-meta', ['define-decorator(qa-pinned)', DEC.tryResolve('qa-pinned') ? 'in CV_DECORATORS · group ' + DEC.tryResolve('qa-pinned').group : 'missing', yn(!!DEC.tryResolve('qa-pinned'))]);
+
+  A.invoke('define-trigger', { id: 'qa-trig', on: 'qa.evt', do: 'highlight', args: '{"target":"{{ event.target }}"}' }, {});
+  var trig = E.query({ on: 'qa.evt' }).length > 0;
+  rec(trig); row('#t-meta', ['define-trigger(on qa.evt → highlight)', trig ? 'registered in CV_EVENTS' : 'missing', yn(trig)]);
+
+  // ---- 3 · EVENTS ----------------------------------------------------------
+  var st = { node: gly, highlight: null };
+  E.emit('ai.focus', { target: 'glyphic' }, { state: st });
+  rec(st.highlight && st.highlight.target === 'glyphic'); row('#t-ev', ['emit("ai.focus",{target:"glyphic"})', 'state.highlight = ' + JSON.stringify(st.highlight) + '  (the AI didn’t call highlight — the rule did)', yn(st.highlight && st.highlight.target === 'glyphic')]);
+  E.emit('ai.blur', {}, { state: st });
+  rec(st.highlight === null); row('#t-ev', ['emit("ai.blur")', 'state.highlight = ' + JSON.stringify(st.highlight), yn(st.highlight === null)]);
+  // the user-defined trigger fires too
+  var st2 = { highlight: null };
+  E.emit('qa.evt', { target: 'qa-badge-dot' }, { state: st2 });
+  rec(st2.highlight && st2.highlight.target === 'qa-badge-dot'); row('#t-ev', ['emit("qa.evt") (user-defined trigger)', 'state.highlight = ' + JSON.stringify(st2.highlight), yn(st2.highlight && st2.highlight.target === 'qa-badge-dot')]);
+
+  // ---- 4 · undo-as-inverse + macros-as-actions -----------------------------
+  var node = { form: 'circle', symbol: 'person' };
+  var res = A.invoke('set-value', { slot: 'form', value: 'octagon' }, { node: node });
+  var inv = A.inverse('set-value', { slot: 'form', value: 'octagon' }, res);
+  A.invoke(inv.action, inv.args, { node: node });
+  rec(node.form === 'circle'); row('#t-mine', ['undo: set-value then invoke its inverse', 'form back to ' + node.form + ' (inverse = ' + JSON.stringify(inv) + ')', yn(node.form === 'circle')]);
+
+  A.invoke('define-macro', { id: 'qa-octa-gear', steps: '[{"action":"set-value","args":{"slot":"form","value":"octagon"}},{"action":"set-value","args":{"slot":"symbol","value":"gear"}}]' }, {});
+  var node2 = { form: 'circle', symbol: 'person' };
+  A.invoke('qa-octa-gear', {}, { node: node2 });
+  rec(node2.form === 'octagon' && node2.symbol === 'gear'); row('#t-mine', ['macro-as-action: define-macro then invoke it', 'node = ' + JSON.stringify(node2) + '  (a Skill that is steps, not a prompt)', yn(node2.form === 'octagon' && node2.symbol === 'gear')]);
+  rec(A.resolve('qa-octa-gear').actionType === 'macro'); row('#t-mine', ['the macro is itself a registered action', 'CV_ACTIONS.resolve("qa-octa-gear").actionType = ' + A.resolve('qa-octa-gear').actionType, yn(A.resolve('qa-octa-gear').actionType === 'macro')]);
+
+  var passed = results.filter(Boolean).length, total = results.length;
+  document.getElementById('summary').innerHTML = (passed === total)
+    ? '<span class="pill ok">ALL ' + total + ' CHECKS PASS</span>'
+    : '<span class="pill no">' + passed + ' / ' + total + ' PASS</span>';
+  window.__qa = { passed: passed, total: total, ok: passed === total };
+})();
+</script>
+</body>
+</html>

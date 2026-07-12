@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <title>Type System</title>
-<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="../axes/motion/motion.css">
 <!-- the axis + glyphic stack (glyphic-type subscribes to axes) -->
 <script src="../axes/axis-core.js"></script>
@@ -32,7 +32,7 @@
 <script src="../app/registry/kinds-type.js"></script>
 <style>
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--zone-ground, #FCFAF2); color: var(--fg-primary); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  body { margin: 0; background: var(--zone-ground); color: var(--fg-primary); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
   .doc { max-width: 1080px; margin: 0 auto; padding: 56px 56px 120px; }
   .mast { padding-bottom: 26px; border-bottom: 2px solid var(--accent-gold); margin-bottom: 12px; }
   .kicker { font: 600 11px/1 var(--font-mono); letter-spacing: .22em; text-transform: uppercase; color: var(--accent-bronze); }
@@ -62,6 +62,19 @@
   .chip.evt { background: color-mix(in srgb, var(--status-warning) 16%, transparent); color: color-mix(in srgb, var(--status-warning) 88%, var(--ink)); }
   .note { margin-top: 30px; font: 400 12px/1.5 var(--font-body); color: var(--fg-muted); border-top: 1px solid var(--border-faint); padding-top: 16px; }
   .note code { font-family: var(--font-mono); }
+
+  /* inheritance lineage — extends trees (atom→block→system…) */
+  .lineage { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 30px; }
+  .ltree { border: 1px solid var(--border-faint); border-radius: 14px; background: var(--paper); box-shadow: var(--shadow-card); padding: 14px 16px; }
+  .lnode { position: relative; }
+  .lnode .lrow { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  .lnode .lnm { font: 700 12.5px/1.2 var(--font-display); letter-spacing: -.01em; }
+  .lnode .lkd { font: 600 8px/1 var(--font-mono); letter-spacing: .07em; text-transform: uppercase; color: var(--accent-bronze); background: var(--accent-gold-50); border: 1px solid color-mix(in srgb, var(--accent-gold) 30%, transparent); border-radius: 999px; padding: 3px 7px; }
+  .lnode .lroot > .lrow .lnm { font-size: 14px; }
+  .lnode .lroot > .lrow::before { content: "root"; font: 600 7.5px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-soft); border: 1px dashed var(--border-default); border-radius: 4px; padding: 2px 4px; }
+  .lkids { margin-left: 11px; padding-left: 15px; border-left: 2px solid color-mix(in srgb, var(--accent-gold) 38%, transparent); display: flex; flex-direction: column; }
+  .lnode .ldesc { font: 400 10.5px/1.4 var(--font-body); color: var(--fg-muted); margin: 0 0 2px; }
+  .lcount { font: 500 9px/1 var(--font-mono); color: var(--fg-soft); margin-left: auto; }
 </style>
 </head>
 <body>
@@ -71,6 +84,11 @@
     <h1>The Type System</h1>
     <p class="stand">Everything on an interface is a <b>universal component</b> — a typed thing that declares its <b>parts</b>, its <b>value-slots</b> (parameters that take an axis value), and its <b>sockets</b> (typed attachment points where other components, or events, plug in). This page is a <b>live projection</b> of <code>window.CV_REGISTRY</code>: the Glyphic, all 11 UI components, the panel / graph / slide kinds, and the block/surface/doc library — one grammar, total coverage. Acceptance is declarative, so <code>candidatesForSocket()</code> shows what fits a socket with no bespoke code. Model: <code>system/glyphic-system.html</code>.</p>
   </header>
+  <section class="layer" id="lineage-sec" data-screen-label="Inheritance lineage" style="display:none">
+    <h2>inheritance · extends</h2>
+    <p class="ld">Single-inheritance lineage — a Type <code>extends</code> a parent and inherits its parts, slots and sockets (flattened by <code>CV_REGISTRY.resolve</code>). These are the trees where that relationship is live. This is the home for type inheritance; the file map shows file resolution, not type lineage.</p>
+    <div class="lineage" id="lineage"></div>
+  </section>
   <div id="layers"></div>
   <p class="note" id="foot"></p>
 </div>
@@ -150,6 +168,33 @@
   }
 
   var all = R.all();
+
+  // ===== inheritance lineage (extends trees) =====
+  (function () {
+    var byId = {}; all.forEach(function (t) { byId[t.id] = t; });
+    var kids = {}; all.forEach(function (t) { if (t.extends && byId[t.extends]) { (kids[t.extends] = kids[t.extends] || []).push(t); } });
+    function descCount(id) { var c = (kids[id] || []).length; (kids[id] || []).forEach(function (k) { c += descCount(k.id); }); return c; }
+    // roots = types that are NOT a child but DO have children (the tops of real trees)
+    var roots = all.filter(function (t) { return (!t.extends || !byId[t.extends]) && kids[t.id] && kids[t.id].length; });
+    roots.sort(function (a, b) { return descCount(b.id) - descCount(a.id); });
+    function node(t, isRoot) {
+      var kk = (kids[t.id] || []).slice().sort(function (a, b) { return (a.name || a.id).localeCompare(b.name || b.id); });
+      var h = '<div class="lnode' + (isRoot ? ' lroot' : '') + '" data-screen-label="Type: ' + t.id + '">' +
+        '<div class="lrow"><span class="lnm">' + (t.name || t.id) + '</span>' +
+        (t.kind ? '<span class="lkd">' + t.kind + '</span>' : '') +
+        (kk.length ? '<span class="lcount">' + kk.length + ' direct · ' + descCount(t.id) + ' total</span>' : '') +
+        '</div>';
+      if (kk.length) h += '<div class="lkids">' + kk.map(function (k) { return node(k, false); }).join('') + '</div>';
+      h += '</div>';
+      return h;
+    }
+    var host = document.getElementById('lineage');
+    if (roots.length) {
+      document.getElementById('lineage-sec').style.display = '';
+      host.innerHTML = roots.map(function (r) { return '<div class="ltree">' + node(r, true) + '</div>'; }).join('');
+    }
+  })();
+
   // headline kinds first within each layer (those with a kind / sockets)
   LAYER_ORDER.forEach(function (layer) {
     var types = all.filter(function (t) { return t.layer === layer; });

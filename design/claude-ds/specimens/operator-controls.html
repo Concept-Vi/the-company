@@ -1,0 +1,259 @@
+<!-- @dsCard group="Components" name="Operator Controls — toast · sheet · list · menu · check · shell" subtitle="The operator-grade set: notifier, slide-in panel, rows, action menu, gold selection controls, console chrome — token-pure, density- and theme-aware" viewport="1280x1900" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Operator Controls</title>
+<link rel="stylesheet" href="../styles.css"/>
+<script src="../assets/icons/cv-icons.js"></script>
+<style>
+  body { margin: 0; background: var(--zone-ground); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; padding: 36px 40px 64px; }
+  h1 { font: var(--weight-bold) var(--fs-h2)/1 var(--font-display); letter-spacing: -.02em; margin: 0 0 4px; }
+  .sub { color: var(--ink-3); font-size: var(--fs-meta); margin: 0 0 30px; max-width: 84ch; }
+  h2 { font: 700 11px/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--accent-bronze); margin: 36px 0 14px; display: flex; align-items: center; gap: 10px; }
+  h2::before { content: ""; width: 7px; height: 7px; background: var(--accent-gold); transform: rotate(45deg); border-radius: 1px; }
+  .row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+  .cap { font: 700 10px/1 var(--font-mono); color: var(--ink-4); margin: 0 0 8px; letter-spacing: .04em; }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  /* containment frames — fixed-position chrome (sheets, the toast stack) is
+     demonstrated INSIDE a frame: transform creates a containing block so
+     position:fixed resolves against the frame, not the page. */
+  .frame { position: relative; overflow: hidden; transform: translateZ(0);
+    border: 1px solid var(--hairline-strong); border-radius: var(--r-lg); background: var(--zone-base-surface); }
+  .frame--sheet { width: 340px; height: 300px; }
+  .frame--shell { width: 560px; height: 340px; }
+  .frame--shell-m { width: 260px; height: 340px; }
+</style>
+</head>
+<body data-ground="warm">
+  <h1>Operator Controls</h1>
+  <p class="sub">The operator-grade component set — <code>Toast</code> · <code>Sheet</code> · <code>List</code> · <code>Menu</code> · <code>Checkbox</code>/<code>Radio</code> · <code>AppShell</code> — plus the React wrappers over the CSS-only trio (<code>Table</code> · <code>Search</code> · <code>Skeleton</code>). Everything below is the <code>cv-*</code> classes the components render, generated from data. Tones ride the Badge vocabulary; selection is gold (the decision colour); row heights ride <code>--row-h</code>; the shell rides <code>tokens/device.css</code> chrome and the <code>data-surface</code> machinery.</p>
+
+  <h2>Toast — the global notifier</h2>
+  <p class="cap">TONES — THE BADGE VOCABULARY (gold · success · warning · error · comm) + ACTION SLOT</p>
+  <div class="stack" id="toasts" style="max-width:360px"></div>
+
+  <h2>Sheet — slide-in panel (Modal's mobile-first sibling)</h2>
+  <div class="row" id="sheets"></div>
+
+  <h2>List — rows with leading · primary/secondary · trailing</h2>
+  <div class="row">
+    <div style="flex:1;min-width:300px;max-width:460px">
+      <p class="cap">DEFAULT DENSITY · .interactive SELECTION</p>
+      <div class="cv-list cv-list--divided" id="list-default"></div>
+    </div>
+    <div style="flex:1;min-width:300px;max-width:460px" data-density="compact">
+      <p class="cap">data-density="compact" — SAME MARKUP, --row-h RECOMPUTES</p>
+      <div class="cv-list cv-list--divided" id="list-compact"></div>
+    </div>
+  </div>
+
+  <h2>Menu — action menu on the shared popover surface</h2>
+  <div class="row" id="menus"></div>
+
+  <h2>Checkbox · Radio — gold = selection / decision</h2>
+  <div class="row" id="checks"></div>
+
+  <h2>AppShell — nav rail (desktop) → bottom tab bar (mobile)</h2>
+  <div class="row" id="shells"></div>
+
+  <h2>The CSS-only trio behind the React wrappers</h2>
+  <div class="row">
+    <div style="flex:2;min-width:340px">
+      <p class="cap">TABLE — .cv-table--striped · __num · __feature</p>
+      <table class="cv-table cv-table--striped" id="table"></table>
+    </div>
+    <div style="flex:1;min-width:240px" class="stack">
+      <p class="cap">SEARCH — .cv-search</p>
+      <div class="cv-search"><input placeholder="Search apartments…" aria-label="Search apartments"/></div>
+      <p class="cap" style="margin-top:10px">SKELETON — .skeleton (resolves, never pops)</p>
+      <div class="stack" id="skeletons"></div>
+    </div>
+  </div>
+
+  <h2>Dark theme — the same markup under data-theme="dark"</h2>
+  <div data-theme="dark" style="background:var(--zone-ground);border-radius:var(--r-lg);padding:22px;max-width:460px">
+    <div class="cv-list cv-list--divided" id="list-dark"></div>
+  </div>
+
+<script>
+  // ---------- data ----------
+  const TOASTS = [
+    { tone:'gold',    title:'Vi picked a candidate', msg:'Frame 04 marked as the lead option.', action:'View' },
+    { tone:'success', title:'Package sent',          msg:'The buyer pack went to 3 stakeholders.' },
+    { tone:'warning', title:'Render incomplete',     msg:'2 of 6 frames still processing.' },
+    { tone:'error',   title:'Upload failed',         msg:'floorplan_L2.png — connection lost.', action:'Retry' },
+    { tone:'comm',    title:'New reply',             msg:'Sarah commented on the lighting pass.' },
+  ];
+  const LIST_ROWS = [
+    { init:'OA', primary:'Oakman Residences',  secondary:'12 frames · updated today',  meta:'ready',  selected:true },
+    { init:'HB', primary:'Harbourline B2',     secondary:'brochure + virtual tour',    meta:'draft' },
+    { init:'GW', primary:'Gatehouse West',     secondary:'awaiting client review',     meta:'sent' },
+  ];
+  const MENU_ITEMS = [
+    { icon:'edit',      label:'Rename' },
+    { icon:'duplicate', label:'Duplicate' },
+    { icon:'share',     label:'Share…' },
+    { sep:true },
+    { icon:'archive',   label:'Archive', disabled:true },
+    { icon:'trash',     label:'Delete',  danger:true },
+  ];
+  const NAV = [
+    { icon:'dashboard', label:'Overview', active:true },
+    { icon:'files-stack', label:'Projects' },
+    { icon:'image', label:'Gallery' },
+    { icon:'gear', label:'Settings' },
+  ];
+  const TABLE = {
+    cols: [ {k:'plan',label:'Plan'}, {k:'area',label:'Area',num:true}, {k:'price',label:'Price',num:true,feature:true}, {k:'status',label:'Status'} ],
+    rows: [
+      { plan:'Studio 04',    area:'38 m²',  price:'$412,000', status:'available' },
+      { plan:'One-bed 12',   area:'55 m²',  price:'$589,000', status:'reserved' },
+      { plan:'Three-bed 07', area:'104 m²', price:'$1.24M',   status:'available' },
+    ],
+  };
+  const icon = (name, size) => {
+    const b = window.CV_ICONS && window.CV_ICONS.data && window.CV_ICONS.data[name];
+    return b ? `<svg class="icon" style="width:${size||16}px;height:${size||16}px" viewBox="0 0 24 24">${b}</svg>` : '';
+  };
+
+  // ---------- toast ----------
+  document.getElementById('toasts').innerHTML = TOASTS.map(t => `
+    <div class="cv-toast cv-toast--${t.tone}" role="status">
+      <span class="cv-toast__dot"></span>
+      <div class="cv-toast__body">
+        <div class="cv-toast__title">${t.title}</div>
+        <div class="cv-toast__msg">${t.msg}</div>
+      </div>
+      ${t.action ? `<button class="cv-toast__action">${t.action}</button>` : ''}
+      <button class="cv-toast__close" aria-label="Dismiss">×</button>
+    </div>`).join('');
+
+  // ---------- sheet ----------
+  document.getElementById('sheets').innerHTML = [
+    { side:'bottom', cap:'side="bottom" — DRAG HANDLE ON THE TOUCH FLOOR' },
+    { side:'right',  cap:'side="right" — THE DESKTOP-LEANING DRAWER' },
+  ].map(s => `
+    <div>
+      <p class="cap">${s.cap}</p>
+      <div class="frame frame--sheet">
+        <div class="cv-sheet-overlay" style="position:absolute">
+          <div class="cv-sheet is-open" data-side="${s.side}" style="position:relative">
+            ${s.side === 'bottom' ? '<div class="cv-sheet__handle-hit"><span class="cv-sheet__handle"></span></div>' : ''}
+            <div class="cv-modal__head">
+              <h2 class="cv-modal__title">Filters</h2>
+              <button class="cv-modal__close" aria-label="Close">×</button>
+            </div>
+            <div class="cv-field">
+              <label class="cv-label">Stage</label>
+              <div class="pill-group"><span class="cv-chip cv-chip--active">All</span><span class="cv-chip">Draft</span><span class="cv-chip">Sent</span></div>
+            </div>
+            <div class="cv-modal__foot"><button class="cv-btn cv-btn--ghost">Reset</button><button class="cv-btn cv-btn--primary">Apply</button></div>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  // ---------- list ----------
+  const listRow = r => `
+    <div class="cv-list-row interactive" role="option" tabindex="0" aria-selected="${!!r.selected}">
+      <span class="cv-list-row__leading"><span class="cv-avatar" style="--avatar-size:32px">${r.init}</span></span>
+      <span class="cv-list-row__body min0">
+        <span class="cv-list-row__primary truncate">${r.primary}</span>
+        <span class="cv-list-row__secondary truncate">${r.secondary}</span>
+      </span>
+      <span class="cv-list-row__trailing"><span class="cv-badge${r.selected ? ' cv-badge--gold' : ''}">${r.meta}</span></span>
+    </div>`;
+  ['list-default','list-compact','list-dark'].forEach(id => {
+    document.getElementById(id).innerHTML = LIST_ROWS.map(listRow).join('');
+  });
+
+  // ---------- menu ----------
+  document.getElementById('menus').innerHTML = `
+    <div>
+      <p class="cap">role="menu" — ICON + LABEL · SEPARATOR · DISABLED · DANGER TONE</p>
+      <div class="cv-popover is-open" style="position:relative;display:inline-block">
+        <div class="cv-menu" role="menu">
+          ${MENU_ITEMS.map((it,i) => it.sep
+            ? '<div class="cv-menu__sep" role="separator"></div>'
+            : `<button class="cv-menu__item${it.danger ? ' cv-menu__item--danger' : ''}${i===0 ? ' is-focused' : ''}" role="menuitem" ${it.disabled ? 'aria-disabled="true"' : ''}>
+                 <span class="cv-menu__icon">${icon(it.icon)}</span><span class="cv-menu__label">${it.label}</span>
+               </button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+
+  // ---------- checkbox / radio ----------
+  document.getElementById('checks').innerHTML = `
+    <div class="stack">
+      <p class="cap">CHECKBOX — unchecked · checked (gold) · indeterminate · disabled · field stack</p>
+      <span class="cv-check-row"><input type="checkbox" class="cv-checkbox" id="cb-a"/><label class="cv-label" for="cb-a">Include floorplans</label></span>
+      <span class="cv-check-row"><input type="checkbox" class="cv-checkbox" checked id="cb-b"/><label class="cv-label" for="cb-b">Include virtual tour</label></span>
+      <span class="cv-check-row"><input type="checkbox" class="cv-checkbox" id="ind"/><label class="cv-label" for="ind">Some frames</label></span>
+      <span class="cv-check-row"><input type="checkbox" class="cv-checkbox" disabled id="cb-d"/><label class="cv-label" for="cb-d">Archived assets</label></span>
+      <div class="cv-field">
+        <span class="cv-check-row"><input type="checkbox" class="cv-checkbox" checked id="cb-e"/><label class="cv-label" for="cb-e">Notify stakeholders</label></span>
+        <span class="cv-hint">Everyone on the share list gets the update.</span>
+      </div>
+    </div>
+    <div class="stack">
+      <p class="cap">RADIO — the same field stack, single-select</p>
+      <span class="cv-check-row"><input type="radio" name="r1" class="cv-radio" checked id="rd-a"/><label class="cv-label" for="rd-a">Send as brochure</label></span>
+      <span class="cv-check-row"><input type="radio" name="r1" class="cv-radio" id="rd-b"/><label class="cv-label" for="rd-b">Send as link</label></span>
+      <span class="cv-check-row"><input type="radio" name="r1" class="cv-radio" disabled id="rd-c"/><label class="cv-label" for="rd-c">Print pack</label></span>
+    </div>`;
+  document.getElementById('ind').indeterminate = true;
+
+  // ---------- appshell ----------
+  const railItem = it => `
+    <button class="cv-rail-item" ${it.active ? 'aria-current="page"' : ''}>
+      <span class="cv-rail-item__icon">${icon(it.icon, 18)}</span><span class="truncate">${it.label}</span>
+    </button>`;
+  const tabItem = it => `
+    <button class="cv-tab" aria-selected="${!!it.active}">${icon(it.icon, 18)}<span>${it.label}</span></button>`;
+  document.getElementById('shells').innerHTML = `
+    <div>
+      <p class="cap">data-surface="desktop" — THE NAV RAIL</p>
+      <div class="frame frame--shell" data-surface="desktop">
+        <div class="cv-appshell" style="height:100%">
+          <div class="cv-appbar"><span class="cv-appbar__title cv-appbar__title--sm">Operator Console</span></div>
+          <div class="cv-appshell__body">
+            <nav class="cv-appshell__rail" aria-label="Primary">${NAV.map(railItem).join('')}</nav>
+            <div class="cv-appshell__content"><div class="cv-appshell__scroll" style="padding:var(--d-4)">
+              <div class="cv-card cv-card--soft"><h3 class="cv-card__title">Content region</h3><p class="cv-card__sub">Scrolls between the fixed chrome.</p></div>
+            </div></div>
+          </div>
+          <nav class="cv-tabbar cv-appshell__tabbar" aria-label="Primary">${NAV.map(tabItem).join('')}</nav>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="cap">data-surface="mobile-portrait" — SAME MARKUP, TAB BAR</p>
+      <div class="frame frame--shell-m" data-surface="mobile-portrait">
+        <div class="cv-appshell" style="height:100%">
+          <div class="cv-appbar"><span class="cv-appbar__title cv-appbar__title--sm">Console</span></div>
+          <div class="cv-appshell__body">
+            <nav class="cv-appshell__rail" aria-label="Primary">${NAV.map(railItem).join('')}</nav>
+            <div class="cv-appshell__content"><div class="cv-appshell__scroll" style="padding:var(--d-3)">
+              <div class="cv-card cv-card--soft cv-card--pad-sm"><h3 class="cv-card__title">Content</h3></div>
+            </div></div>
+          </div>
+          <nav class="cv-tabbar cv-appshell__tabbar" aria-label="Primary">${NAV.map(tabItem).join('')}</nav>
+        </div>
+      </div>
+    </div>`;
+
+  // ---------- table / skeleton ----------
+  const tbl = document.getElementById('table');
+  tbl.innerHTML = '<thead><tr>' + TABLE.cols.map(c => `<th${c.num ? ' class="cv-table__num"' : ''}>${c.label}</th>`).join('') + '</tr></thead>'
+    + '<tbody>' + TABLE.rows.map(r => '<tr>' + TABLE.cols.map(c =>
+      `<td class="${[c.num ? 'cv-table__num' : '', c.feature ? 'cv-table__feature' : ''].filter(Boolean).join(' ')}">${r[c.k]}</td>`).join('') + '</tr>').join('') + '</tbody>';
+  document.getElementById('skeletons').innerHTML = `
+    <span class="skeleton text" style="width:70%"></span>
+    <span class="skeleton text" style="width:50%"></span>
+    <span class="skeleton line" style="width:100%"></span>
+    <span class="skeleton circle" style="width:32px;height:32px"></span>`;
+</script>
+</body>
+</html>

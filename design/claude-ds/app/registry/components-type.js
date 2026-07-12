@@ -129,6 +129,146 @@
       },
       tags: ['component', 'overlay', 'container'],
     },
+    // ---- the floating-layer trio (components landed Jul 9; they had no Type
+    //      rows — registered here with the operator set so the catalogue is total)
+    {
+      id: 'component.popover', name: 'Popover', kind: 'popover', layer: 'surface', family: 'overlay',
+      classification: ['overlay', 'surface', 'container'], icon: 'window',
+      description: 'The shared anchored floating layer (window.CV_POPOVER) — flips/shifts to stay in view. Select, Tooltip and Menu all position through it; never a second positioning engine.',
+      valueSlots: {
+        placement: en(['top-start', 'top-center', 'top-end', 'bottom-start', 'bottom-center', 'bottom-end', 'left-start', 'left-center', 'left-end', 'right-start', 'right-center', 'right-end'], 'bottom-start', 'anchor side + alignment'),
+        matchWidth: bool(false, 'min-width follows the anchor'),
+        bare: bool(false, 'positioning only, no surface chrome'),
+      },
+      sockets: { body: content('Body', { multiple: true }) },
+      tags: ['component', 'overlay'],
+    },
+    {
+      id: 'component.select', name: 'Select', kind: 'select', layer: 'block', family: 'control',
+      classification: ['control', 'block', 'form'], icon: 'sort',
+      description: 'Trigger that reads like an Input, opening a listbox through the shared Popover engine.',
+      valueSlots: {},
+      sockets: { options: { label: 'Options', accepts: ['text'], multiple: true } },
+      tags: ['component', 'control', 'form'],
+    },
+    {
+      id: 'component.tooltip', name: 'Tooltip', kind: 'tooltip', layer: 'atom', family: 'overlay',
+      classification: ['overlay', 'atom'], icon: 'info',
+      description: 'Dark hint bubble on hover/focus — positioned through the shared Popover engine.',
+      valueSlots: { placement: en(['top', 'bottom', 'left', 'right'], 'top', 'anchor side') },
+      sockets: { label: content('Label', { accepts: ['text'] }), anchor: { label: 'Anchor', accepts: ['control', 'atom', 'glyphic'] } },
+      tags: ['component', 'overlay'],
+    },
+    // ---- the operator set (U6) --------------------------------------------
+    {
+      id: 'component.toast', name: 'ToastHost', kind: 'toast', layer: 'surface', family: 'overlay',
+      classification: ['overlay', 'surface', 'status'], icon: 'bell',
+      description: 'Global notifier — a window-level queue (window.CV_TOAST.show) rendered by one ToastHost per page. Tones ride the Badge tone vocabulary; auto-dismiss + action slot; enter/exit via the motion primitives (reduced-motion respected).',
+      valueSlots: {
+        position: en(['top-right', 'top-center', 'top-left', 'bottom-right', 'bottom-center', 'bottom-left'], 'top-right', 'stack corner'),
+        tone: en(['gold', 'success', 'warning', 'error', 'comm'], null, 'voice / state (per toast — the Badge vocabulary)'),
+      },
+      sockets: { action: { label: 'Action', accepts: ['control', 'action'], optional: true } },
+      tags: ['component', 'overlay', 'status', 'notify'],
+    },
+    {
+      id: 'component.sheet', name: 'Sheet', kind: 'sheet', layer: 'surface', family: 'overlay',
+      classification: ['overlay', 'surface', 'container'], icon: 'sidebar-close',
+      description: 'Slide-in panel — the mobile-first sibling of Modal (same overlay/esc/backdrop conventions; reuses the modal head/foot chrome). side=right drawer or bottom sheet with a touch-floor drag handle.',
+      valueSlots: {
+        open: bool(false, 'visibility'),
+        side: en(['right', 'bottom'], 'bottom', 'entry edge'),
+      },
+      sockets: {
+        title:  content('Title', { accepts: ['text', 'glyphic'] }),
+        body:   content('Body', { multiple: true }),
+        footer: content('Footer'),
+        trigger: { label: 'Opened by', kind: 'event', event: 'click', accepts: ['control', 'action'], optional: true, onPick: 'open', address: 'component.sheet' },
+      },
+      tags: ['component', 'overlay', 'container'],
+    },
+    {
+      id: 'component.list', name: 'List', kind: 'list', layer: 'block', family: 'collection',
+      classification: ['collection', 'block', 'container'], icon: 'file-list',
+      description: 'Rows — leading glyph/avatar slot, primary+secondary text on the typed-text length budgets (--len-title/--len-desc), trailing meta/action. Selection rides .interactive; row height rides --row-h (density-aware).',
+      valueSlots: { divided: bool(true, 'hairline between rows') },
+      sockets: {
+        rows: { label: 'Rows', accepts: ['atom', 'block', 'text'], multiple: true },
+        leading: { label: 'Leading (per row)', accepts: ['glyphic', 'symbol', 'atom'], optional: true },
+        trailing: { label: 'Trailing (per row)', accepts: ['atom', 'control', 'text'], optional: true },
+      },
+      tags: ['component', 'collection'],
+    },
+    {
+      id: 'component.menu', name: 'Menu', kind: 'menu', layer: 'block', family: 'overlay',
+      classification: ['overlay', 'block', 'nav'], icon: 'checklist-double',
+      description: 'Action menu riding the shared Popover engine — items with icon+label+danger tone, separators, disabled; keyboard navigable (arrows/enter/esc); role=menu.',
+      valueSlots: {
+        placement: en(['bottom-start', 'bottom-end', 'top-start', 'top-end'], 'bottom-start', 'anchor side + alignment'),
+      },
+      sockets: {
+        trigger: { label: 'Trigger', accepts: ['control', 'action'] },
+        items: { label: 'Items', accepts: ['text', 'action'], multiple: true },
+      },
+      tags: ['component', 'overlay', 'nav', 'action'],
+    },
+    {
+      id: 'component.checkbox', name: 'Checkbox', kind: 'checkbox', layer: 'atom', family: 'control',
+      classification: ['control', 'atom', 'form'], icon: 'check-square',
+      description: 'Token-styled checkbox — gold checked state (gold = selection/decision). Label+hint ride the same .cv-field stack as Input.',
+      valueSlots: { checked: bool(false, 'on/off'), indeterminate: bool(false, 'dash state') },
+      sockets: { label: content('Label', { accepts: ['text'] }), hint: content('Hint', { accepts: ['text'] }) },
+      tags: ['component', 'control', 'form'],
+    },
+    {
+      id: 'component.radio', name: 'Radio', kind: 'radio', layer: 'atom', family: 'control',
+      classification: ['control', 'atom', 'form'], icon: 'check',
+      description: 'Token-styled radio — gold checked state (gold = selection/decision). Label+hint ride the same .cv-field stack as Input.',
+      valueSlots: { checked: bool(false, 'selected') },
+      sockets: { label: content('Label', { accepts: ['text'] }), hint: content('Hint', { accepts: ['text'] }) },
+      tags: ['component', 'control', 'form'],
+    },
+    {
+      id: 'component.appshell', name: 'AppShell', kind: 'appshell', layer: 'surface', family: 'chrome',
+      classification: ['chrome', 'surface', 'container', 'nav'], icon: 'devices',
+      description: 'The console chrome — desktop nav rail that becomes a bottom tab bar on mobile, riding tokens/device.css appbar/tabbar chrome and the data-surface/breakpoint machinery. Slots: header, nav items (icon+label), content.',
+      valueSlots: {},
+      sockets: {
+        header: content('Header'),
+        nav: { label: 'Nav items', accepts: ['text', 'action'], multiple: true },
+        body: { label: 'Content', accepts: ['glyphic', 'atom', 'block', 'text'], multiple: true },
+      },
+      tags: ['component', 'chrome', 'nav', 'container'],
+    },
+    {
+      id: 'component.table', name: 'Table', kind: 'table', layer: 'block', family: 'collection',
+      classification: ['collection', 'block', 'data'], icon: 'dashboard',
+      description: 'React wrapper over the CSS-only .cv-table (comparison/pricing). Columns declare num (tabular numerals) and feature (the gold offer column); striped variant.',
+      valueSlots: { striped: bool(false, 'zebra rows') },
+      sockets: {
+        columns: { label: 'Columns', accepts: ['text'], multiple: true },
+        rows: { label: 'Rows', accepts: ['text', 'atom'], multiple: true },
+      },
+      tags: ['component', 'collection', 'data'],
+    },
+    {
+      id: 'component.search', name: 'Search', kind: 'search', layer: 'atom', family: 'control',
+      classification: ['control', 'atom', 'form'], icon: 'search',
+      description: 'React wrapper over the CSS-only .cv-search pill — leading icon + input, gold focus-within ring, optional trailing slot.',
+      valueSlots: {},
+      sockets: {
+        icon: { label: 'Leading icon', accepts: ['glyphic', 'symbol'], optional: true },
+        trailing: { label: 'Trailing', accepts: ['text', 'atom', 'control'], optional: true },
+      },
+      tags: ['component', 'control', 'form'],
+    },
+    {
+      id: 'component.skeleton', name: 'Skeleton', kind: 'skeleton', layer: 'atom', family: 'status',
+      classification: ['status', 'atom'], icon: 'frame',
+      description: 'React wrapper over the CSS-only .skeleton shimmer placeholder (tokens/states.css) — content resolves, never pops. Reduced-motion gated in the token home.',
+      valueSlots: { variant: en(['text', 'line', 'circle', 'block'], 'line', 'placeholder shape') },
+      tags: ['component', 'status', 'loading'],
+    },
   ];
 
   // attach the shared runtime pointer + provenance, then register.

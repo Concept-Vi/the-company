@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Block System" name="Skins — one composition, every world" subtitle="The SKIN registry: the same block spec resolving to every registered skin — glass, stone (champagne plaster + porcelain, per the May-2026 reference boards) — graph layout, luminous threads, selected/potential/stacked states" viewport="1280x2200" -->
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Skins — one composition, every world</title>
+<link rel="stylesheet" href="../styles.css"/>
+<link rel="stylesheet" href="../assets/icons/cv-glyphic.css"/>
+<script src="../axes/axis-core.js"></script>
+<script src="../core/graph-layout.js"></script><!-- the ONE graph layout engine -->
+<script src="../core/world-camera.js"></script><!-- --world-zoom DERIVED per .skin-ground (frame/1440) -->
+<script src="../core/render3d.js"></script><!-- scoped token-lit 3D well solver -->
+<script src="../core/render-scene.js"></script><!-- THE SCENE LAW: --scene-mode:gl → the whole wall is a lit WebGL scene -->
+<script src="./gl-inspector.js"></script><!-- DEV: camera tilt + live --gl-* dial window; shows only in GL mode -->
+<!-- CV_AI (registry → seed → wall foundry) — the wall is GENERATIVE: cvComposeWall(brief) resolves a new layout through the same grammar+solver. -->
+<script src="../app/ai/ai-registry.js"></script>
+<script src="../app/ai/ai-seed.js"></script>
+<script src="../app/ai/ai-layout.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/material/material-axis.js"></script>
+<script src="../axes/flow/flow-axis.js"></script>
+<script src="../axes/level/level-axis.js"></script>
+<script src="../axes/density/density-axis.js"></script>
+<script src="../axes/skin/skin-axis.js"></script>
+<script src="../axes/ground/ground-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<script src="../app/registry/vars.js"></script>
+<script src="../app/registry/conditions.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../core/cv-node.js"></script>
+<script src="../app/registry/actions.js"></script>
+<script src="../app/registry/block-type.js"></script>
+<script src="../core/layout-fit.js"></script>
+<script src="../core/morph.js"></script>
+<script src="../app/registry/text-type.js"></script>
+<style>
+  :root { --asset-ar: 2.1; /* this page's stage tuning (was a fallback) */ }
+
+  *{ box-sizing: border-box; }
+  body{ margin: 0; background: var(--bg-canvas); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .wrap{ max-width: 1200px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-16); }
+  .eyebrow{ display: inline-flex; align-items: center; gap: 9px; font: 700 var(--fs-micro)/1 var(--font-body);
+    letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--accent-bronze); }
+  .eyebrow::before{ content: ""; width: 20px; height: 1px; background: var(--accent-gold); }
+  h1{ font: 700 var(--fs-h1)/1.1 var(--font-display, var(--font-body)); letter-spacing: var(--tracking-tight); margin: var(--s-3) 0; }
+  h1 em{ font-style: italic; color: var(--accent-bronze); }
+  p{ font-size: var(--fs-body); color: var(--ink-2); line-height: 1.6; max-width: 74ch; }
+  code{ font-family: var(--font-mono); font-size: .85em; background: color-mix(in oklch, var(--ink) 8%, transparent); padding: 1px 5px; border-radius: var(--r-xs); }
+
+  .skinbar{ display: flex; gap: var(--s-1); padding: var(--s-1); border-radius: var(--r-md); margin: var(--s-5) 0;
+    background: color-mix(in oklch, var(--ink) 6%, transparent); border: 1px solid color-mix(in oklch, var(--ink) 8%, transparent); width: max-content; }
+  .skinbar button{ flex: 1 1 auto; font: 600 var(--fs-caption) var(--font-body); padding: 7px var(--s-5); border-radius: var(--r-sm);
+    border: 0; background: transparent; color: var(--ink-3); cursor: pointer; }
+  .skinbar button.on{ color: var(--ink); background: color-mix(in oklch, var(--ink) 11%, transparent); }
+
+  /* the stage — the page block IS the skinned world */
+  #stage{ position: relative; aspect-ratio: 16 / 10; border-radius: var(--r-2xl); overflow: hidden;
+    border: 1px solid color-mix(in oklch, var(--ink) 12%, transparent); }
+  /* the glass world keeps its ambient light field behind everything */
+  #stage[data-skin="glass"] .field{ display: block; }
+  #stage .field{ display: none; position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  #stage .field span{ position: absolute; border-radius: 50%; filter: blur(90px); opacity: .2; }
+  #stage .field .a{ width: 42%; aspect-ratio: 1; left: -10%; top: -12%; background: radial-gradient(circle, var(--accent-gold), transparent 70%); }
+  #stage .field .b{ width: 38%; aspect-ratio: 1; right: -8%; bottom: -16%; background: radial-gradient(circle, var(--accent-bronze-warm), transparent 70%); }
+
+  /* graph nodes: absolutely placed by the DECLARED layout (%) */
+  .gnode{ position: absolute; z-index: 1; translate: -50% -50%; } /* centre via the TRANSLATE property so the transform channel stays free for FLIP morph */
+  .gnode .t-title{ font-size: var(--fs-body); }
+  /* pack-007 item 10: the SOURCE ROW — a card hints it opens into evidence.
+     Gold bead = the connector language landing inside the card. */
+  .t-src{ display: flex; align-items: center; gap: 6px; margin-top: 4px;
+    font: 600 8.5px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase;
+    color: color-mix(in oklch, var(--stone-gold, var(--edge-dot)) 62%, var(--ink)); cursor: pointer; }
+  .t-src::before{ content: ""; width: 7px; height: 7px; border-radius: 50%; flex: none;
+    background: radial-gradient(circle at 35% 30%, color-mix(in oklch, var(--edge-thread) 70%, white), var(--edge-dot) 65%);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--shadow-c-warm) 30%, transparent), 0 0 6px var(--edge-glow); }
+  .hub{ display: grid; place-items: center; border-radius: 50% !important; aspect-ratio: 1; }
+  .hub .vi{ font: 700 30px/1 var(--font-display); color: var(--edge-dot); letter-spacing: -0.02em; }
+  /* satellite pills: round, centered, sized — the glyphic inside inherits the
+     skin (its strokes read the token roles; the pill surface is .material,
+     so it carries the skin's card texture too). */
+  /* GLYPH NODES — the rule: a glyphic node is NOT a container. Its diameter
+     derives from the control rung (--glyph-d), it takes NO keyline (padding 0
+     beats the rung inset), and everything inside centers on the same pivot the
+     solver anchored — so the circle IS the glyph. */
+  #stage{ --glyph-d: 44px; --hub-d: calc(var(--glyph-d) * 2.6); }
+  .node-pill{ display: grid; place-items: center; border-radius: 50% !important;
+    width: var(--glyph-d); aspect-ratio: 1; padding: 0 !important; }
+  .hub{ width: var(--hub-d); padding: 0 !important; }
+  .sat-glyph{ position: relative; z-index: 1; display: grid; place-items: center; width: 100%; height: 100%; }
+  .sat-glyph svg{ display: block; width: 55%; height: 55%; }
+  .labelnode{ display: flex; align-items: center; gap: var(--s-2); }
+  .labelnode .t-label{ color: color-mix(in oklch, var(--edge-dot) 55%, var(--ink-3)); font-weight: 500; }
+  .thumb{ height: 56px; border-radius: var(--r-md); display: grid; place-items: center; color: var(--ink-4);
+    background: repeating-linear-gradient(135deg, color-mix(in oklch, var(--ink) 5%, transparent) 0 8px, transparent 8px 16px); }
+  /* skin-conditioned imagery well: same slot, the render of the skin's WORLD
+     (light worlds share the stone set; dark worlds the glass set) */
+  /* the render is a LAYER ON TOP of the well's material stack — setting
+     background-image alone replaced the whole stack and left the bare white
+     fill (the "white strip" bug) */
+  .render-well{ height: auto; min-height: 52px; aspect-ratio: var(--asset-ar); border-radius: var(--r-md); --r-active: var(--r-stone);
+    background: var(--r-active) center / contain no-repeat,
+                var(--mat-sheen-inset, var(--mat-sheen)),
+                var(--mat-texture-inset, var(--mat-texture)),
+                var(--mat-fill-inset, var(--mat-fill));
+    background-position: center, 0 0, var(--mat-tex-pos), 0 0;
+    background-blend-mode: normal, normal, var(--mat-tex-blend), normal; }
+  [data-skin="glass"] .render-well, [data-skin="carbon"] .render-well{ --r-active: var(--r-glass); }
+  /* chart wells: real dataviz drawn from the skin's token roles (edge-dot
+     accent + ink ramp) — the SAME svg recolors per skin, no per-skin art. */
+  .chart-well{ height: 64px; border-radius: var(--r-md); display: grid; place-items: center; padding: 4px 8px; }
+  .chart-well svg{ display: block; width: 100%; height: 100%; overflow: visible; }
+  .chart-well .ck-accent{ stroke: var(--edge-dot); } .chart-well .ck-accent-f{ fill: var(--edge-dot); }
+  .chart-well .ck-muted{ stroke: color-mix(in oklch, var(--ink) 18%, transparent); }
+  .chart-well .ck-muted-f{ fill: color-mix(in oklch, var(--ink) 14%, transparent); }
+  .badge-check{ position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--edge-dot); color: var(--on-gold); font-size: 12px; box-shadow: 0 0 10px var(--state-glow); z-index: 2; }
+  /* COMPOSER RULE: height = control rung (×1.45); width + position are
+     DERIVED from the solved column grid (see reflowColumns) — the bar spans
+     column 0's left edge to the last column's right edge. No stage-%. */
+  .composer{ display: flex; align-items: center; gap: var(--s-3); border-radius: var(--r-pill) !important;
+    height: calc(var(--glyph-d) * 1.45); padding-block: 0 !important; }
+  .pillnode{ display: flex; align-items: center; justify-content: center; border-radius: var(--r-pill) !important; padding-block: var(--s-2) !important; }
+  .vi-word{ font: 700 26px/1 var(--font-display); color: var(--edge-dot); position: relative; z-index: 1; margin-right: var(--s-3); }
+  .composer .ph{ flex: 1; color: var(--ink-4); font-size: var(--fs-caption); position: relative; z-index: 1; }
+  .roundbtn{ width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; cursor: pointer;
+    color: var(--accent-bronze); background: var(--mat-fill-raised);
+    border: 1px solid var(--mat-edge-soft); box-shadow: var(--shadow-contact); position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="eyebrow">The skin registry</span>
+  <h1>One composition, <em>every world</em></h1>
+  <p>A <b>skin</b> is a coordinated point across the existing axes — ground, the default block surface, shadow character, thread language, state glow — scoped by <code>data-skin</code> and registered on the <b>skin axis</b>. The graph below is ONE spec: blocks as nodes, luminous threads as relations, states (<code>selected</code> · <code>potential</code> · <code>stacked</code>) as slots. Flip the skin and every role re-binds — the dark refractive <b>glass</b> world, the champagne-plaster <b>stone</b> world of the reference boards, fibrous <b>parchment</b>, machined <b>carbon</b>, and whatever is registered next — same tokens, same blocks, same resolutions.</p>
+
+  <div class="skinbar" id="skinbar"></div>
+  <div id="stage" class="skin-ground" data-skin="glass">
+    <div class="field"><span class="a"></span><span class="b"></span></div>
+    <svg class="thread-svg" id="threads"></svg>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var B = window.CV_BLOCK, N = window.CV_NODE, AX = window.CV_AXES;
+  if (!B || !N) { document.body.insertAdjacentHTML('beforeend', '<p style="color:#b00">Registries failed to load.</p>'); return; }
+  B.ensureSolver(); if (window.CV_REGISTRY.text) window.CV_REGISTRY.text.ensureSolver();
+
+  function text(role, value) { return { occupant: 'text', role: role, value: value }; }
+
+  // ---- ONE spec: nodes (blocks) + relations. Positions are COMPUTED by the
+  // shared graph engine (core/graph-layout.js, type "column") from each node's
+  // RELATIONAL fields — hub / orbit / col / fx,fy — never declared pixels.
+  // Everything else (surface, shadows, states, text) resolves per skin.
+  var NODES = [
+    // — top chrome: furniture, fixed fractional position (fx,fy in 0..1) —
+    { name: 'wordmark', fx: 0.10, fy: 0.06, w: 16, level: 'region', material: 'none', cls: 'labelnode',
+      html: '<span class="vi-word">Vi</span><span class="t-label" style="position:relative;z-index:1">First Contact</span>' },
+    { name: 'account', fx: 0.91, fy: 0.06, w: 10, level: 'panel', cls: 'pillnode',
+      body: [text('label', 'My Vi \u2304')] },
+    // — the hub + its orbiting satellites (gap G5) + the breadcrumb chain (G6) —
+    { name: 'hub', hub: true, level: 'panel', cls: 'hub node-hub', tint: 'vi', html: '<span class="vi">Vi</span>' },
+    { name: 'sat1', orbit: 'hub', level: 'panel', cls: 'node-pill', glyph: 'chat' },
+    { name: 'sat2', orbit: 'hub', level: 'panel', cls: 'node-pill', glyph: 'link' },
+    { name: 'sat3', orbit: 'hub', level: 'panel', cls: 'node-pill', glyph: 'image' },
+    { name: 'chain', fx: 0.13, fy: 0.68, w: 14, level: 'region', material: 'none', cls: 'labelnode', dot: true,
+      html: '<span style="position:relative;z-index:1"><span class="t-label" style="display:block">Product design</span><span class="t-desc">Selected</span></span>' },
+    // — column 0: Understanding —
+    { name: 'lbl-understanding', col: 0, w: 15, level: 'region', material: 'none', cls: 'labelnode', dot: true,
+      body: [text('label', 'Understanding')] },
+    { name: 'interviews', col: 0, w: 17, level: 'card',
+      body: [{ occupant: 'chart', kind: 'bars' }, text('label', 'User interviews'), text('desc', '12 insights'), text('src', 'source · 14 sessions'), { occupant: 'plus' }] },
+    { name: 'research', col: 0, w: 17, level: 'card',
+      body: [{ occupant: 'chart', kind: 'donut', data: [0.62], caption: 'signal coverage' }, text('label', 'Market research'), text('desc', '7 signals'), { occupant: 'plus' }] },
+    // — column 1: Directions —
+    { name: 'lbl-directions', col: 1, w: 13, level: 'region', material: 'none', cls: 'labelnode', dot: true,
+      body: [text('label', 'Directions')] },
+    { name: 'dir1', col: 1, w: 17, level: 'card',
+      body: [{ occupant: 'render', stone: 'stone-podium', glass: 'glass-slabs' }, text('label', 'Direction 01'), text('desc', 'Human warmth')] },
+    { name: 'dir2', col: 1, w: 17, level: 'card', state: 'selected', check: true,
+      body: [{ occupant: 'render', stone: 'stone-cloth', glass: 'glass-twist' }, text('label', 'Direction 02'), text('desc', 'Quiet precision')] },
+    { name: 'dir3', col: 1, w: 17, level: 'card',
+      body: [{ occupant: 'render3d', geometry: 'knot' }, text('label', 'Direction 03'), text('desc', 'Light & open')] },
+    // — column 2: Prototypes → Future explorations —
+    { name: 'lbl-proto', col: 2, w: 12, level: 'region', material: 'none', cls: 'labelnode', dot: true,
+      body: [text('label', 'Prototypes')] },
+    { name: 'proto', col: 2, w: 16, level: 'card', state: 'stacked',
+      body: [{ occupant: 'chart', kind: 'gantt' }, text('label', 'Prototype 02.B'), text('desc', 'Refined form \u2192')] },
+    { name: 'lbl-future', col: 2, w: 17, level: 'region', material: 'none', cls: 'labelnode', dot: true,
+      body: [text('label', 'Future explorations')] },
+    { name: 'future1', col: 2, w: 16, level: 'card', state: 'potential',
+      body: [text('label', 'Material exploration')] },
+    { name: 'future2', col: 2, w: 16, level: 'card', state: 'potential',
+      body: [text('label', 'Ecosystem integration')] },
+    // — composer furniture —
+    { name: 'composer-t', fx: 0.225, fy: 0.9, level: 'panel', cls: 'node-pill', html: '<span class="t-label" style="position:relative;z-index:1;font-weight:700">T</span>' },
+    { name: 'composer', fx: 0.50, fy: 0.9, level: 'panel', cls: 'composer material--raised', /* width derived from column grid; RAISED = the trough material (pack-007 command.trough) */
+      html: '<span class="ph">Ask Vi or share anything\u2026</span><span class="roundbtn">\u2191</span>' },
+  ];
+  // the relational spec handed to the shared engine (id === node.name).
+  // aspect 1.6 = the stage's 16:10 so the hub's satellite orbit is a true
+  // circle in pixels; hubX nudged right so the left satellite stays on-screen.
+  var GRAPH = { type: 'column', aspect: 1.6, hubX: 0.12, pad: { left: 0.30 }, nodes: NODES.map(function (n) {
+    return { id: n.name, hub: n.hub, orbit: n.orbit, col: n.col, fx: n.fx, fy: n.fy };
+  }) };
+  var THREADS = [
+    ['sat1', 'hub'], ['sat2', 'hub'], ['sat3', 'hub'], ['hub', 'chain'], ['chain', 'interviews'], ['chain', 'research'],
+    ['interviews', 'dir1'], ['interviews', 'dir2'], ['research', 'dir3'],
+    ['dir2', 'proto'],
+    ['lbl-future', 'future1', 'potential'], ['future1', 'future2', 'potential'],
+    ['hub', 'composer'],
+  ];
+
+  // ---- build every node through THE resolution ------------------------------
+  var stage = document.getElementById('stage');
+  var els = {};
+  var disposers = [];
+  function renderOccupant(occ) {
+    if (occ.occupant === 'text') {
+      var r = N.render('text', { spec: occ });
+      var el = document.createElement(r.tag);
+      el.className = r.classes.join(' ');
+      el.textContent = r.text;
+      el.style.position = 'relative'; el.style.zIndex = '1'; el.style.display = 'block';
+      return el;
+    }
+    if (occ.occupant === 'thumb') {
+      var t = document.createElement('div'); t.className = 'thumb material--inset';
+      t.style.position = 'relative'; t.style.zIndex = '1'; t.textContent = '\u25A6';
+      return t;
+    }
+    if (occ.occupant === 'render') {
+      // a skin-conditioned imagery well: the SAME slot resolves to the stone
+      // render or the glass render by skin (CSS swaps via --r-stone/--r-glass).
+      var rw = document.createElement('div'); rw.className = 'render-well material--inset'; rw.setAttribute('data-depth', '4');
+      rw.style.position = 'relative'; rw.style.zIndex = '1';
+      if (occ.stone) rw.style.setProperty('--r-stone', 'url(../assets/renders/' + occ.stone + '.png)');
+      if (occ.glass) rw.style.setProperty('--r-glass', 'url(../assets/renders/' + occ.glass + '.png)');
+      // RATIO-FIT LAW: measure the asset, stamp --asset-ar, re-solve. The well's
+      // box becomes the asset's own ratio — dead letterbox impossible.
+      window.CV_LAYOUT_FIT.stampMedia(rw, '../assets/renders/' + (occ.stone || occ.glass) + '.png', function () {
+        var card = rw.closest('.gnode'); if (card) window.CV_LAYOUT_FIT.arrange(card);
+        reflowColumns(); drawThreads();
+      });
+      return rw;
+    }
+    if (occ.occupant === 'chart') {
+      // a real dataviz well — drawn from the skin's token roles (ck-* classes),
+      // so the SAME chart re-skins with the world. Kinds: donut · bars · gantt.
+      var cw = document.createElement('div'); cw.className = 'chart-well material--inset'; cw.setAttribute('data-depth', '4');
+      cw.style.position = 'relative'; cw.style.zIndex = '1';
+      cw.style.setProperty('--asset-ar', '2.31'); // the chart viewBox's own ratio (120/52) — same field as measured media
+      var d = occ.data || [];
+      if (occ.kind === 'donut') {
+        var pct = d[0] != null ? d[0] : 0.62, r = 20, C = 2 * Math.PI * r;
+        cw.innerHTML = '<svg viewBox="0 0 120 52">' +
+          '<circle cx="26" cy="26" r="' + r + '" fill="none" stroke-width="7" class="ck-muted"></circle>' +
+          '<circle cx="26" cy="26" r="' + r + '" fill="none" stroke-width="7" class="ck-accent" stroke-linecap="round" stroke-dasharray="' + (C * pct) + ' ' + C + '" transform="rotate(-90 26 26)"></circle>' +
+          '<text x="60" y="23" font-size="13" font-weight="700" fill="currentColor" opacity="0.85">' + Math.round(pct * 100) + '%</text>' +
+          '<text x="60" y="38" font-size="8" fill="currentColor" opacity="0.45">' + (occ.caption || '') + '</text></svg>';
+      } else if (occ.kind === 'bars') {
+        var bars = d.length ? d : [0.35, 0.6, 0.45, 0.8, 0.55, 0.9];
+        var bw = 110 / bars.length;
+        cw.innerHTML = '<svg viewBox="0 0 120 52">' + bars.map(function (v, i) {
+          var h = v * 40, cls = i === bars.length - 1 ? 'ck-accent-f' : 'ck-muted-f';
+          return '<rect x="' + (4 + i * bw) + '" y="' + (46 - h) + '" width="' + (bw - 5) + '" height="' + h + '" rx="2" class="' + cls + '"></rect>';
+        }).join('') + '</svg>';
+      } else if (occ.kind === 'gantt') {
+        var rows = d.length ? d : [[2, 40, 0], [16, 52, 0], [40, 76, 1], [58, 108, 0]];
+        cw.innerHTML = '<svg viewBox="0 0 120 52">' + rows.map(function (rr, i) {
+          var cls = rr[2] ? 'ck-accent-f' : 'ck-muted-f';
+          return '<rect x="' + rr[0] + '" y="' + (6 + i * 11) + '" width="' + (rr[1] - rr[0]) + '" height="7" rx="3.5" class="' + cls + '"></rect>';
+        }).join('') + '<line x1="64" y1="2" x2="64" y2="50" stroke-width="1" stroke-dasharray="2 3" class="ck-accent"></line></svg>';
+      }
+      return cw;
+    }
+    if (occ.occupant === 'render3d') {
+      // a LIVE 3D well — the scene's lights are computed from this well's
+      // resolved skin tokens at mount (core/render3d.js). Re-skinning rebuilds
+      // the wells, so the same well re-lights per world.
+      var w3 = document.createElement('div'); w3.className = 'well3d material--inset'; w3.setAttribute('data-depth', '4');
+      // the 3D well obeys the SAME ratio law as media wells (--asset-ar), not a
+      // hardcoded px height — the fit/compression rules govern it like any well
+      w3.style.cssText = 'position:relative;z-index:1;width:100%;aspect-ratio:var(--asset-ar);border-radius:var(--r-md);overflow:hidden';
+      w3.style.setProperty('--asset-ar', '2.1');
+      if (!window.CV_RENDER3D) throw new Error('[skin-system] CV_RENDER3D not loaded');
+      disposers.push(window.CV_RENDER3D.mount(w3, { geometry: occ.geometry, maps: occ.maps }));
+      return w3;
+    }
+    return document.createTextNode('');
+  }
+  function build() {
+    disposers.forEach(function (d) { try { d(); } catch (e) {} });
+    disposers = [];
+    Object.keys(els).forEach(function (k) { els[k].remove(); });
+    els = {};
+    if (!window.CV_GRAPH_LAYOUT) throw new Error('[skin-system] CV_GRAPH_LAYOUT (core/graph-layout.js) not loaded — layout unification broken');
+    // TANGENCY LAW inputs: measure the rungs the CSS actually resolves
+    // (--glyph-d is the control rung; the hub is its declared multiple) and
+    // stamp them on the graph — the solver floors the orbit radius at
+    // hubR + satR + gap so satellites can NEVER sit on the hub, whatever
+    // the rung tokens resolve to.
+    var glyphD = parseFloat(getComputedStyle(stage).getPropertyValue('--glyph-d')) || 44;
+    GRAPH.satPx = glyphD; GRAPH.hubPx = glyphD * 2.6;
+    GRAPH.gapPx = glyphD * 0.35; GRAPH.stagePx = stage.clientWidth || 1;
+    var POS = window.CV_GRAPH_LAYOUT.solve(GRAPH, { w: 100, h: 100 }); // 0..100 = %
+    NODES.forEach(function (n) {
+      var c = B.chrome(n);                                   // ← THE resolution
+      var el = document.createElement(c.tag);
+      el.className = 'gnode ' + (n.cls || '') + ' ' + c.classes.join(' ');
+      Object.keys(c.attrs).forEach(function (k) { el.setAttribute(k, c.attrs[k]); });
+      Object.keys(c.style).forEach(function (k) { el.style.setProperty(k, c.style[k]); });
+      // COMPUTED position — every node center-anchored on its solved point, so
+      // a column's cards align by construction (shared width → shared centre x).
+      var p = POS[n.name] || { x: 50, y: 50 };
+      el.style.left = p.x + '%'; el.style.top = p.y + '%';
+      if (n.w != null) el.style.width = n.w + '%'; // glyph nodes have NO w: their size derives from --glyph-d (the rule, not a stage-%)
+      el.setAttribute('data-morph-id', n.name); // stable identity for the morph law (FLIP)
+      if (n.dot) { var d = document.createElement('span'); d.className = 'node-dot'; el.appendChild(d); }
+      if (n.glyph && window.CV_GLYPHIC) {
+        try {
+          var g = window.CV_GLYPHIC.compose({ form: 'circle', symbol: n.glyph }, { size: 22 });
+          var host = document.createElement('span'); host.className = 'sat-glyph';
+          if (typeof g === 'string') host.innerHTML = g; else if (g && g.svg) host.innerHTML = g.svg; else if (g && g.nodeType) host.appendChild(g);
+          el.appendChild(host);
+        } catch (e) { el.textContent = '\u26A0'; }
+      }
+      (n.body || []).forEach(function (o) { el.appendChild(renderOccupant(o)); });
+      if (n.body && window.CV_LAYOUT_FIT) window.CV_LAYOUT_FIT.arrange(el);
+      if (n.html) el.insertAdjacentHTML('beforeend', n.html);
+      if (n.check) { var b = document.createElement('span'); b.className = 'badge-check'; b.textContent = '\u2713'; el.appendChild(b); }
+      stage.appendChild(el);
+      els[n.name] = el;
+    });
+    reflowColumns();
+    drawThreads();
+  }
+
+  // ---- content-aware column reflow (the measured second pass) --------------
+  // The graph solver owns the RELATIONAL structure (which column, order, x) but
+  // can't know rendered card heights. This pass MEASURES each column's nodes and
+  // stacks them top→down with a gap, centering the group in the card band — so
+  // overlap is impossible no matter how tall the content (renders, more text).
+  function reflowColumns() {
+    var sb = stage.getBoundingClientRect(); if (!sb.height) return;
+    var bandTop = 0.115 * sb.height, bandBot = 0.86 * sb.height, gap = 10;
+    // FURNITURE-AWARE band: a column whose x-span crosses ANY fixed-furniture
+    // box (composer, chain, pills — every fx/fy node) in the band's lower half
+    // must stop above the highest such box; columns clear of furniture use the
+    // full height. The no-overlap rule applied per column against ALL furniture,
+    // not a hardcoded composer check.
+    var furniture = NODES.filter(function (n) { return n.fx != null && els[n.name]; })
+      .map(function (n) { return els[n.name].getBoundingClientRect(); })
+      .filter(function (r) { return (r.top - sb.top) > bandTop + (bandBot - bandTop) * 0.4; });
+    var byCol = {};
+    NODES.forEach(function (n) { if (n.col != null) { (byCol[n.col] = byCol[n.col] || []).push(n); } });
+    Object.keys(byCol).forEach(function (ci) {
+      var items = byCol[ci];
+      var first = els[items[0].name].getBoundingClientRect();
+      var colL = first.left - sb.left, colR = first.right - sb.left;
+      var myBot = bandBot;
+      furniture.forEach(function (fr) {
+        var fL = fr.left - sb.left, fR = fr.right - sb.left;
+        if (colR > fL && colL < fR) myBot = Math.min(myBot, (fr.top - sb.top) - gap);
+      });
+      // RESILIENCE (m0521): a node that failed to build (loud-fail upstream)
+      // must not blank the whole composition — skip absentees, solve the rest.
+      items = items.filter(function (n) { return els[n.name]; });
+      if (!items.length) return;
+      var hs = items.map(function (n) { var e = els[n.name];
+        // OFFSET height, not gBCR: gBCR includes live FLIP/morph transforms, so a
+        // reflow mid-animation baked WRONG stacking (the m0468 overlap). offsetHeight
+        // is layout truth — transform-immune. Stacked decks add their sheet offset.
+        return e.offsetHeight + (e.classList.contains('is-stacked') ? 18 : 0); });
+      var myGap = gap;
+      var total = hs.reduce(function (a, b) { return a + b; }, 0) + myGap * (items.length - 1);
+      // OVERFLOW COMPRESSION — the no-overlap doctrine says overlap must be
+      // IMPOSSIBLE: if the measured stack exceeds this column's band, compress
+      // (1) the gaps (floor 4px), then (2) the flexible wells (charts / renders
+      // / 3D, floor 28px) by the remaining deficit, re-measuring after.
+      var avail = myBot - bandTop;
+      if (total > avail) {
+        var over = total - avail;
+        var gapGive = Math.min(over, (myGap - 4) * Math.max(0, items.length - 1));
+        if (items.length > 1 && gapGive > 0) { myGap = myGap - gapGive / (items.length - 1); over -= gapGive; }
+        if (over > 0) {
+          var wells = [];
+          items.forEach(function (n) { var wl = els[n.name].querySelector('.well3d, .chart-well, .render-well'); if (wl) wells.push(wl); });
+          wells.forEach(function (wl) {
+            var cur = wl.offsetHeight;
+            wl.style.height = Math.max(28, cur - over / wells.length) + 'px';
+          });
+          hs = items.map(function (n) { return els[n.name].offsetHeight; });
+          total = hs.reduce(function (a, b) { return a + b; }, 0) + myGap * (items.length - 1);
+        }
+      }
+      // top-align every column so section labels sit on one line across columns
+      // (matches the boards; the compact media wells keep the tallest column
+      // clear of the composer, so no centering fudge is needed).
+      var cursor = bandTop;
+      items.forEach(function (n, i) {
+        els[n.name].style.top = (cursor + hs[i] / 2) / sb.height * 100 + '%';
+        cursor += hs[i] + myGap;
+      });
+    });
+    // ---- WORLD-POSITION SAMPLING stamp: each block samples the ONE texture
+    // at its own world offset (fixed-attachment breaks under filter/transform,
+    // so the solver stamps the offset explicitly — same machinery family as
+    // the asset-span rule: both are fields resolved from world coordinates).
+    // world sampling: THE law lives in the camera now (one home) — re-stamp
+    // after this layout pass so every material surface samples its own patch.
+    window.CV_WORLD_CAMERA.stampMaterials(stage);
+    // THE SCENE LAW: if this skin dials --scene-mode:gl the solved layout is
+    // projected into the live WebGL scene (attach is idempotent; a CSS-mode
+    // skin detaches). Same layout truth, two renderers, one token.
+    if (window.CV_SCENE) window.CV_SCENE.attach(stage);
+    // ---- composer derived from the column grid (twice-derived: the columns
+    // came from the graph solver; the bar spans their extents) --------------
+    var colEls = NODES.filter(function (n) { return n.col != null && els[n.name]; }).map(function (n) { return els[n.name].getBoundingClientRect(); });
+    if (colEls.length && els['composer']) {
+      var L = Math.min.apply(null, colEls.map(function (r) { return r.left; })) - sb.left;
+      var Rr = Math.max.apply(null, colEls.map(function (r) { return r.right; })) - sb.left;
+      var c = els['composer'];
+      c.style.width = ((Rr - L) / sb.width * 100) + '%';
+      c.style.left = (((L + Rr) / 2) / sb.width * 100) + '%';
+      if (els['composer-t']) {
+        // the T glyph sits one gap left of the bar's left edge, same baseline
+        var d = els['composer-t'].getBoundingClientRect().width || 44;
+        els['composer-t'].style.left = ((L - gap - d / 2) / sb.width * 100) + '%';
+        els['composer-t'].style.top = c.style.top;
+      }
+    }
+  }
+
+  // ---- the thread painter: relations → luminous beziers + junction dots ----
+  function cubicAt(t, p0, p1, p2, p3) {
+    var u = 1 - t;
+    return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3;
+  }
+  function drawThreads() {
+    var svg = document.getElementById('threads');
+    var sb = stage.getBoundingClientRect();
+    svg.setAttribute('viewBox', '0 0 ' + sb.width + ' ' + sb.height);
+    svg.innerHTML = '';
+    // obstacles for THE ROUTING LAW: every material block (threads flow
+    // BETWEEN blocks, never across) — endpoints excluded per thread below.
+    var allBlocks = Array.prototype.map.call(stage.querySelectorAll('.gnode.material, .gnode .material'), function (el) {
+      return { el: el.closest('.gnode') || el, r: el.getBoundingClientRect() };
+    });
+    THREADS.forEach(function (t) {
+      var a = els[t[0]], b = els[t[1]]; if (!a || !b) return;
+      var ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+      var x1 = ra.right - sb.left, y1 = ra.top + ra.height / 2 - sb.top;
+      var x2 = rb.left - sb.left,  y2 = rb.top + rb.height / 2 - sb.top;
+      if (x2 < x1) { x1 = ra.left + ra.width / 2 - sb.left; y1 = ra.bottom - sb.top; x2 = rb.left + rb.width / 2 - sb.left; y2 = rb.top - sb.top; }
+      var obstacles = allBlocks.filter(function (o) { return o.el !== a && o.el !== b; }).map(function (o) {
+        return { left: o.r.left - sb.left, right: o.r.right - sb.left, top: o.r.top - sb.top, bottom: o.r.bottom - sb.top };
+      });
+      var rt = window.CV_GRAPH_LAYOUT.route({ x: x1, y: y1 }, { x: x2, y: y2 }, obstacles);
+      var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('d', rt.d);
+      if (t[2] === 'potential') p.setAttribute('class', 'potential');
+      svg.appendChild(p);
+      var mid = rt.at(0.5);
+      var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', mid.x); dot.setAttribute('cy', mid.y); dot.setAttribute('r', 2.2);
+      svg.appendChild(dot);
+      // particle sparkle: small bright points sampled along the ROUTED curve
+      if (t[2] !== 'potential') [0.22, 0.55, 0.82].forEach(function (tt, i) {
+        var pt = rt.at(tt);
+        var s = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        s.setAttribute('class', 'spark');
+        s.setAttribute('cx', pt.x); s.setAttribute('cy', pt.y); s.setAttribute('r', i === 1 ? 1.5 : 1);
+        svg.appendChild(s);
+      });
+    });
+  }
+
+  // ---- the skin dial: options from the SKIN AXIS (the registry) -------------
+  var bar = document.getElementById('skinbar');
+  AX.resolve('skin').values().forEach(function (v) {
+    var b = document.createElement('button');
+    b.dataset.v = v.id; b.textContent = v.label;
+    if (v.id === AX.resolve('skin').default()) b.classList.add('on');
+    bar.appendChild(b);
+  });
+  bar.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (!b.hasAttribute('data-v')) return; // not a skin choice (e.g. the render dial) — its own handler owns it
+    Array.prototype.forEach.call(bar.children, function (x) { x.classList.toggle('on', x === b); });
+    var oldSkin = stage.getAttribute('data-skin');
+    // MORPH LAW: skin change dissolves as coordinated sand — a frozen snapshot
+    // of the old world crossfades out (materials can't tween) WHILE every block
+    // FLIP-settles into the new skin. Nothing teleports (DESIGN-LANGUAGE §24).
+    var apply = function () {
+      stage.setAttribute('data-skin', b.dataset.v);
+      var meta = (AX.resolve('skin').values().filter(function (v) { return v.id === b.dataset.v; })[0] || {}).meta || {};
+      document.documentElement.setAttribute('data-theme', meta.theme || 'dark');
+      if (window.CV_MORPH) window.CV_MORPH.flip(stage, build, { stagger: 'world' });
+      else build();
+    };
+    if (window.CV_MORPH && window.CV_MORPH.crossfadeSkin) window.CV_MORPH.crossfadeSkin(stage, oldSkin, apply);
+    else apply();
+  });
+  window.addEventListener('resize', drawThreads);
+  // SETTLE PASS: fonts and late image decodes change card heights after the
+  // last reflow — one final solve when everything is truly loaded (same
+  // no-overlap law, run at the moment measurements are final).
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { reflowColumns(); drawThreads(); });
+  window.addEventListener('load', function () { setTimeout(function () { reflowColumns(); drawThreads(); }, 60); });
+
+  // ---- the RENDER dial: the scene-mode gate as UI (CSS ↔ GL) --------------
+  // A projection of the ONE token contract (--scene-opt-in gates --scene-mode,
+  // tokens/skins.css): the dial only sets/clears the token and lets the
+  // resolution cascade do the rest — same pattern as the skin dial.
+  (function () {
+    var bar = document.getElementById('skinbar');
+    var wrap = document.createElement('span');
+    wrap.id = 'renderdial';
+    wrap.style.cssText = 'display:inline-flex;gap:4px;margin-left:14px;align-items:center';
+    var lab = document.createElement('span'); lab.textContent = 'render'; lab.style.cssText = 'font-size:11px;opacity:0.55;margin-right:2px';
+    wrap.appendChild(lab);
+    var proto = bar.querySelector('button');
+    ['css', 'gl'].forEach(function (v) {
+      var b = document.createElement('button');
+      b.textContent = v.toUpperCase(); b.setAttribute('data-r', v);
+      if (proto) b.className = proto.className;
+      if (v === 'css') b.setAttribute('data-active', '');
+      b.addEventListener('click', function () {
+        wrap.querySelectorAll('button').forEach(function (x) { x.removeAttribute('data-active'); });
+        b.setAttribute('data-active', '');
+        if (v === 'gl') stage.style.setProperty('--scene-opt-in', 'gl');
+        else stage.style.removeProperty('--scene-opt-in');
+        if (window.CV_SCENE) { if (v === 'gl') CV_SCENE.attach(stage); else CV_SCENE.detach(stage); }
+        if (window.CV_WORLD_CAMERA && CV_WORLD_CAMERA.stampMaterials) CV_WORLD_CAMERA.stampMaterials(stage);
+        // the GL inspector (camera + live --gl-* dials) is a projection of the
+        // scene state — it shows only in GL mode, hides in CSS.
+        if (window.CV_GL_INSPECTOR) CV_GL_INSPECTOR.toggle(stage, v === 'gl');
+      });
+      wrap.appendChild(b);
+    });
+    bar.appendChild(wrap);
+    // DEEP-LINK LAW: ?skin=<id>&render=css|gl — every axis state is
+    // addressable by URL (QA loads land directly in a state; shareable).
+    // The hook drives the SAME buttons — a projection, not a second path.
+    try {
+      var q = new URLSearchParams(location.search);
+      var qs = q.get('skin'), qr = q.get('render');
+      if (qs) { var sb = bar.querySelector('button[data-v="' + qs + '"]'); if (sb) sb.click(); }
+      if (qr) { var rb = wrap.querySelector('button[data-r="' + qr + '"]'); if (rb) rb.click(); }
+    } catch (e) { console.error('deep-link: ' + e.message); }
+  })();
+
+  // EXPAND — any card with a well morphs into the screen rung through the one
+  // law (CV_MORPH.expand + coupled camera step). Click again or Esc collapses.
+  stage.addEventListener('click', function (e) {
+    if (!window.CV_MORPH || !window.CV_MORPH.expand) return;
+    var open = stage.querySelector('.is-expanded');
+    var g = e.target.closest('.gnode');
+    if (open) { if (!g || g === open || open.contains(e.target)) window.CV_MORPH.expand(open); return; }
+    if (!g || !g.querySelector('.render-well, .chart-well, .well3d')) return;
+    window.CV_MORPH.expand(g);
+  });
+
+  build();
+
+  // GENERATIVE WALL — the layout itself is a resolution (STONE ULTRA ·2).
+  // A brief goes through CV_AI layout.compose (grammar-validated, geometry
+  // from the SAME solver), then morphs in through the SAME motion law.
+  // opts.provider:'local-swarm' routes to the 4B concurrent swarm when the
+  // local bridge is connected (loud-fail otherwise — never a silent fallback).
+  window.cvComposeWall = function (brief, opts) {
+    if (!window.CV_AI) throw new Error('cvComposeWall: CV_AI not loaded');
+    return window.CV_AI.execute('layout.compose', { params: Object.assign({ brief: brief }, opts || {}) })
+      .then(function (spec) {
+        NODES = spec.nodes;
+        THREADS = spec.threads;
+        GRAPH = { type: 'column', aspect: 1.6, hubX: 0.12, pad: { left: 0.30 }, nodes: NODES.map(function (n) {
+          return { id: n.name, hub: n.hub, orbit: n.orbit, col: n.col, fx: n.fx, fy: n.fy };
+        }) };
+        if (window.CV_MORPH) window.CV_MORPH.flip(stage, build, { stagger: 'world' }); else build();
+        return spec;
+      });
+  };
+  // grammar SELF-TEST: the hand-authored wall must satisfy the generative
+  // grammar — proves authored and generated walls are the same species.
+  if (window.CV_LAYOUT_GRAMMAR) {
+    var probs = window.CV_LAYOUT_GRAMMAR.validate({ nodes: NODES, threads: THREADS });
+    if (probs.length) console.error('[wall grammar] authored wall violates the grammar:\n' + probs.join('\n'));
+  }
+})();
+</script>
+</body>
+</html>

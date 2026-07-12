@@ -1,0 +1,39 @@
+/* ============================================================
+   EXPERIMENT · TONAL GLASS — demo-only remnants
+   ------------------------------------------------------------
+   The tint MECHANISM this file pioneered (zone → pigment whisper
+   threaded through the glass ground) GRADUATED into its core home:
+   tokens/glass.css (§TINT + the [data-glass-zone] scopes). Loading
+   this file adds nothing to the material system anymore.
+
+   What remains here is demo furniture used by the experiment page
+   and the block-system spec: the spatial reference grid and the
+   zone label chip.
+   ============================================================ */
+
+/* ---- SPATIAL GRID — the tonal system's architectural ground ------
+   Shows through the gaps BETWEEN glass panels, never behind content
+   (glass occludes it via its fill). Reference --spatial-faint. */
+.glass-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--spatial-faint) 1px, transparent 1px),
+    linear-gradient(90deg, var(--spatial-faint) 1px, transparent 1px);
+  background-size: 56px 56px;
+  opacity: calc(0.6 * var(--spatial-opacity));
+  -webkit-mask-image: radial-gradient(130% 100% at 50% -5%, #000, transparent 80%);
+          mask-image: radial-gradient(130% 100% at 50% -5%, #000, transparent 80%);
+}
+
+/* ---- a zone label chip (mono caps + tinted square) --------------- */
+.tg-zone-label {
+  display: inline-flex; align-items: center; gap: 7px;
+  font: 700 var(--fs-micro)/1 var(--font-mono);
+  letter-spacing: var(--tracking-caps); text-transform: uppercase;
+  white-space: nowrap;
+  color: color-mix(in oklch, var(--glass-edge-pig) 46%, var(--ink-2));
+}
+.tg-zone-label::before {
+  content: ""; width: 6px; height: 6px; border-radius: 2px; flex: none;
+  background: color-mix(in oklch, var(--glass-edge-pig) 78%, var(--ink-3)); opacity: .95;
+}

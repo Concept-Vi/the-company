@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>CV_NODE — the collapse, proven</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="../assets/icons/cv-glyphic.css"/>
+<!-- the four homes, in load order -->
+<script src="../app/registry/conditions.js"></script>
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../app/registry/glyphic-type.js"></script>
+<script src="../app/registry/components-type.js"></script>
+<script src="../app/registry/kinds-type.js"></script>
+<!-- the unifier under test -->
+<script src="../core/cv-node.js"></script>
+<style>
+  body { margin: 0; padding: 28px 32px 80px; background: var(--zone-ground, #FCFAF2); color: var(--fg-primary, #211C14); font-family: var(--font-body, system-ui, sans-serif); }
+  h1 { font: 800 26px/1.1 var(--font-display, sans-serif); margin: 0 0 4px; letter-spacing: -.02em; }
+  .sub { font: 400 13px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 22px; max-width: 80ch; }
+  h2 { font: 700 14px/1.2 var(--font-mono, monospace); letter-spacing: .04em; text-transform: uppercase; color: var(--accent-bronze); margin: 28px 0 10px; }
+  table { border-collapse: collapse; width: 100%; max-width: 1000px; font: 400 12.5px/1.4 var(--font-mono, monospace); }
+  th, td { text-align: left; padding: 7px 12px; border-bottom: 1px solid color-mix(in srgb, var(--accent-bronze) 18%, transparent); vertical-align: top; }
+  th { color: var(--accent-gold-deep, #9F772C); font-weight: 700; }
+  td.k { color: var(--fg-secondary); }
+  .pass { color: #2F7D4F; font-weight: 700; }
+  .fail { color: #B5482E; font-weight: 700; }
+  .pill { display: inline-block; font: 700 10px/1 var(--font-mono); padding: 4px 8px; border-radius: 999px; }
+  .pill.ok { background: color-mix(in srgb, #2F7D4F 16%, transparent); color: #2F7D4F; }
+  .pill.no { background: color-mix(in srgb, #B5482E 16%, transparent); color: #B5482E; }
+  #summary { font: 800 18px/1.2 var(--font-display); margin: 8px 0 0; }
+  .glyrow { display: flex; gap: 16px; align-items: center; margin-top: 8px; }
+  .glyrow .cell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .glyrow .cap { font: 500 10px/1 var(--font-mono); color: var(--fg-muted); }
+  pre { background: var(--fg-primary, #211C14); color: #F3EEDF; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font: 500 11.5px/1.55 var(--font-mono); max-width: 1000px; }
+  .em { color: var(--accent-gold-deep); }
+</style>
+</head>
+<body>
+<h1>CV_NODE — the collapse, proven</h1>
+<p class="sub">One unit (a token, an axis value, a glyphic, a UI component, a panel, a slide all lens to the <em>same</em> shape) · one relation (a value-socket and a thing-socket take the <em>same</em> accepts/candidates call) · one mechanic (<code>resolve()</code> fills sockets by address and recurses; <code>render()</code> dispatches to the kind solver). Nothing here copies a value — CV_NODE references the four existing homes.</p>
+<div id="summary">running…</div>
+
+<h2>1 · One unit — everything lenses to the same shape</h2>
+<table id="t-shape"><thead><tr><th>source</th><th>id</th><th>kind</th><th>layer</th><th>classification</th><th>has the canonical keys?</th></tr></thead><tbody></tbody></table>
+
+<h2>2 · One relation — value-socket &amp; thing-socket, one call</h2>
+<table id="t-rel"><thead><tr><th>socket</th><th>kind</th><th>accepts</th><th>candidates()</th><th>accepts(good)</th><th>accepts(bad)</th></tr></thead><tbody></tbody></table>
+
+<h2>3 · One mechanic — resolve recurses, render dispatches</h2>
+<table id="t-mech"><thead><tr><th>check</th><th>result</th><th>ok</th></tr></thead><tbody></tbody></table>
+<div class="glyrow" id="glyrow"></div>
+
+<h2>Resolved glyphic IR (recursion: glyphic → ring/symbol parts)</h2>
+<pre id="ir"></pre>
+
+<script>
+(function () {
+  var results = [];
+  function rec(ok, label) { results.push(!!ok); return ok; }
+  function row(tb, cells) {
+    var tr = document.createElement('tr');
+    cells.forEach(function (c, i) {
+      var td = document.createElement('td');
+      if (typeof c === 'object' && c.html != null) { td.innerHTML = c.html; if (c.cls) td.className = c.cls; }
+      else { td.textContent = c; if (i === 0) td.className = 'k'; }
+      tr.appendChild(td);
+    });
+    document.querySelector(tb + ' tbody').appendChild(tr);
+  }
+  function yn(b) { return { html: b ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>' }; }
+
+  var N = window.CV_NODE, R = window.CV_REGISTRY, AX = window.CV_AXES, GL = window.CV_GLYPHIC;
+  var CANON = ['id','kind','layer','classification','axis','axisValue','valueSlots','sockets','parts','conditions','payload'];
+  function hasCanon(node) { return CANON.every(function (k) { return k in node; }); }
+
+  // ---- 1 · ONE UNIT --------------------------------------------------------
+  var samples = [
+    ['axis value (token)', N.lens(Object.assign({ axis: 'color' }, AX.resolve('color').values()[0]))],
+    ['glyphic spec',       N.lens({ form: 'octagon', symbol: 'house', color: { ring: 'gold', symbol: 'bronze' }, fill: 'wash' })],
+    ['Type · glyphic',     N.lens('glyphic')],
+    ['Type · glyphic-ring',N.lens('glyphic-ring')],
+  ];
+  // a UI component + a panel + a slide Type — same shape, different kind
+  [['component.button','button'],['component.card','card'],['component.modal','modal'],
+   ['panel.composition-menu','panel'],['kind.slide-system','slide'],['kind.graph','graph']].forEach(function (pair) {
+    if (R.get(pair[0])) samples.push(['Type · ' + pair[1], N.lens(pair[0])]);
+  });
+  samples.forEach(function (s) {
+    var node = s[1], ok = hasCanon(node);
+    rec(ok, 'shape ' + s[0]);
+    row('#t-shape', [s[0], node.id, node.kind, node.layer, (node.classification || []).join(', '), yn(ok)]);
+  });
+
+  // ---- 2 · ONE RELATION ----------------------------------------------------
+  // a) value-socket: the ring's form slot accepts the FORM axis
+  var glyType = R.resolve('glyphic-ring');
+  var sk = N.socketsOf(glyType);
+  // form value-slot
+  (function () {
+    var s = sk.form; if (!s) { rec(false, 'ring.form slot present'); return; }
+    var cands = N.candidates(s);
+    var good = AX.resolve('form').values()[1].id;     // a real form value
+    var aGood = N.accepts(s, { axisValue: good });
+    var aBad  = N.accepts(s, { axisValue: '__nope__' });
+    rec(s.kind === 'value' && cands.length > 0 && aGood && !aBad, 'value-socket form');
+    row('#t-rel', ['ring.form', s.kind, String(s.accepts), cands.length + ' values',
+      { html: aGood ? '<span class="pass">'+good+' ✓</span>' : '<span class="fail">'+good+' ✗</span>' },
+      { html: !aBad ? '<span class="pass">rejected ✓</span>' : '<span class="fail">accepted ✗</span>' }]);
+  })();
+  // b) thing-socket: the glyphic parent's `ring` socket accepts classification 'ring'
+  (function () {
+    var parent = R.resolve('glyphic');
+    var psk = N.socketsOf(parent);
+    var s = psk.ring; if (!s) { rec(false, 'glyphic.ring socket present'); return; }
+    var cands = N.candidates(s);
+    var ringNode = N.lens('glyphic-ring');
+    var symNode  = N.lens('glyphic-symbol');
+    var aGood = N.accepts(s, ringNode);
+    var aBad  = N.accepts(s, symNode);
+    rec(s.kind === 'thing' && aGood && !aBad, 'thing-socket ring');
+    row('#t-rel', ['glyphic.ring', s.kind, JSON.stringify(s.accepts), cands.length + ' types',
+      { html: aGood ? '<span class="pass">ring ✓</span>' : '<span class="fail">ring ✗</span>' },
+      { html: !aBad ? '<span class="pass">symbol rejected ✓</span>' : '<span class="fail">symbol accepted ✗</span>' }]);
+  })();
+  // c) panel socket that accepts a glyphic (declarative acceptance — no bespoke code)
+  if (R.get('panel.composition-menu')) {
+    var menu = R.resolve('panel.composition-menu');
+    var msk = N.socketsOf(menu);
+    if (msk.items) {
+      var s = msk.items;
+      var cands = N.candidates(s);
+      var takesGlyphic = cands.some(function (c) { return c.id === 'glyphic'; });
+      rec(takesGlyphic, 'panel accepts glyphic');
+      row('#t-rel', ['composition-menu.items', s.kind, JSON.stringify(s.accepts), cands.length + ' types',
+        { html: takesGlyphic ? '<span class="pass">glyphic in list ✓</span>' : '<span class="fail">missing ✗</span>' }, '—']);
+    }
+    // d) event-socket: clicking an item opens something at an address
+    if (msk.onItemClick) {
+      var es = msk.onItemClick;
+      rec(es.kind === 'thing' && es.event === 'click', 'event-socket present');
+      row('#t-rel', ['composition-menu.onItemClick', es.kind + ' · on:' + es.event, JSON.stringify(es.accepts), N.candidates(es).length + ' types',
+        { html: '<span class="pass">event ✓</span>' }, '—']);
+    }
+  }
+
+  // ---- 3 · ONE MECHANIC ----------------------------------------------------
+  // token render → CSS var
+  var tokNode = N.lens(Object.assign({ axis: 'color' }, AX.resolve('color').resolve('gold')));
+  var css = N.render(tokNode);
+  rec(/^var\(--/.test(String(css)), 'token render → var()');
+  row('#t-mech', ['render(token color.gold) → CSS', String(css), yn(/^var\(--/.test(String(css)))]);
+
+  // glyphic resolve → recursion fills ring + symbol parts
+  var gNode = N.lens({ form: 'octagon', symbol: 'house', color: { ring: 'gold', symbol: 'bronze' }, fill: 'wash', motion: 'glow' });
+  var gIR = N.resolve(gNode);
+  var recursed = gIR.resolved && gIR.parts && gIR.parts.ring && gIR.parts.symbol;
+  rec(recursed, 'glyphic resolve recurses into parts');
+  row('#t-mech', ['resolve(glyphic).parts', Object.keys(gIR.parts).join(', '), yn(recursed)]);
+
+  // glyphic render → real SVG from the existing compositor
+  var gOut = N.render(gNode);
+  var hasSVG = gOut && gOut.svg && /<svg/.test(gOut.svg);
+  rec(hasSVG, 'glyphic render → svg');
+  row('#t-mech', ['render(glyphic).svg', hasSVG ? '<svg…> ' + gOut.svg.length + ' chars' : '(none)', yn(hasSVG)]);
+
+  // the SAME call at three radii: token (leaf) · glyphic (interior) · Type (interior)
+  var threeRadii = N.hasSolver('token') && N.hasSolver('glyphic') && N.hasSolver('*');
+  rec(threeRadii, 'one mechanic spans radii (token/glyphic/*)');
+  row('#t-mech', ['solvers registered', Object.keys(N._solvers).join(', '), yn(threeRadii)]);
+
+  // visual proof — render a few glyphics through CV_NODE.render
+  var gr = document.getElementById('glyrow');
+  [{ form: 'circle', symbol: 'check', color: { ring: 'sage', symbol: 'sage' } },
+   { form: 'hex', symbol: 'gear', fill: 'wash' },
+   { form: 'octagon', symbol: 'house', color: { ring: 'gold', symbol: 'bronze' }, fill: 'tint' },
+   { form: 'none', symbol: 'globe' }].forEach(function (spec, i) {
+    var out = N.render(spec, { opts: { size: 64 } });
+    var cell = document.createElement('div'); cell.className = 'cell';
+    cell.innerHTML = '<span class="cv-glyphic ' + (out.motionClass || '') + '" style="display:inline-flex">' + out.svg + '</span><span class="cap">via CV_NODE.render</span>';
+    gr.appendChild(cell);
+  });
+
+  document.getElementById('ir').textContent = JSON.stringify({
+    id: gIR.id, kind: gIR.kind, layer: gIR.layer, classification: gIR.classification,
+    parts: gIR.parts, resolved: gIR.resolved
+  }, null, 2);
+
+  // ---- summary -------------------------------------------------------------
+  var passed = results.filter(Boolean).length, total = results.length;
+  var el = document.getElementById('summary');
+  el.innerHTML = (passed === total)
+    ? '<span class="pill ok">ALL ' + total + ' CHECKS PASS</span>'
+    : '<span class="pill no">' + passed + ' / ' + total + ' PASS</span>';
+  window.__qa = { passed: passed, total: total, ok: passed === total };
+})();
+</script>
+</body>
+</html>

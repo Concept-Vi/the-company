@@ -1,0 +1,847 @@
+# GAPS — claude-ds address-map gap list (derived; rerun _system/substrate-map.py)
+_generated 2026-07-12T23:04:08Z · files 1546 · edges 8201_
+
+## GHOST FILES — referenced but do not exist (live zones) (31)
+
+- `assets/roles/overlays/card-edge-highlight-top-left.png` ← 4 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/materials/card-face-lifted-ivory.webp` ← 2 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/materials/card-face-active-champagne.webp` ← 2 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/materials/card-face-ghost-matte.webp` ← 2 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/materials/command-trough-paper.webp` ← 2 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/materials/origin-plaque-stone.webp` ← 2 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/materials/source-detail-card.webp` ← 2 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/overlays/card-contact-shadow.png` ← 2 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/overlays/active-card-contact-shadow.png` ← 2 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/overlays/command-trough-shadow.png` ← 2 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/overlays/origin-plaque-shadow.png` ← 2 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/materials/wall-depth-warm-plaster.webp` ← 1 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/materials/warm-shadow-side-face.webp` ← 1 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/overlays/warm-underside-side-face.png` ← 1 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/overlays/active-gold-path-glow.png` ← 1 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/overlays/ghost-gold-dash-path.png` ← 1 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/overlays/source-detail-hint-glow.png` ← 1 refs (e.g. from `assets/roles/material-role-map.json`)
+- `assets/roles/overlays/active-card-selection-rim.png` ← 1 refs (e.g. from `assets/roles/state-model.json`)
+- `assets/roles/overlays/ghost-card-veil.png` ← 1 refs (e.g. from `assets/roles/state-model.json`)
+- `assets/roles/components/evidence-stack-card.png` ← 1 refs (e.g. from `assets/roles/state-model.json`)
+- `assets/roles/overlays/evidence-source-halo.png` ← 1 refs (e.g. from `assets/roles/state-model.json`)
+- `assets/roles/components/node-bead-active-gold.png` ← 1 refs (e.g. from `assets/roles/state-model.json`)
+- `assets/roles/components/node-bead-secondary-gold.png` ← 1 refs (e.g. from `assets/roles/state-model.json`)
+- `assets/roles/components/node-bead-ghost-gold.png` ← 1 refs (e.g. from `assets/roles/state-model.json`)
+- `assets/roles/overlays/visited-path-memory.png` ← 1 refs (e.g. from `assets/roles/state-model.json`)
+- `assets/materials/materials/champagne-honed-stone/normal(+Y).png` ← 1 refs (e.g. from `assets/materials/manifest.json`)
+- `assets/materials/materials/fine-sanded-plaster/normal(+Y).png` ← 1 refs (e.g. from `assets/materials/manifest.json`)
+- `assets/materials/materials/fine-laid-paper/normal(+Y).png` ← 1 refs (e.g. from `assets/materials/manifest.json`)
+- `assets/materials/materials/fine-graphite/normal(+Y).png` ← 1 refs (e.g. from `assets/materials/manifest.json`)
+- `assets/materials/materials/warm-plaster-wall/normal(+Y).png` ← 1 refs (e.g. from `assets/materials/manifest.json`)
+- `assets/materials/materials/cool-plaster-wall/normal(+Y).png` ← 1 refs (e.g. from `assets/materials/manifest.json`)
+
+## PATH DRIFT — reference healed by suffix-match (path in file ≠ layout) (32)
+
+- `app/components/Sidebar.jsx` says `../assets/logos/conceptv-wordmark-black.png` → actually `assets/logos/conceptv-wordmark-black.png`
+- `app/canvases/Icons.jsx` says `../assets/icons/index.html` → actually `assets/icons/index.html`
+- `app/canvases/Imagery.jsx` says `../assets/illustrations/staged_delivery.png` → actually `assets/illustrations/staged_delivery.png`
+- `app/canvases/Imagery.jsx` says `../assets/illustrations/platform_overview.png` → actually `assets/illustrations/platform_overview.png`
+- `app/canvases/Imagery.jsx` says `../assets/illustrations/vi_ai_framework.jpg` → actually `assets/illustrations/vi_ai_framework.jpg`
+- `app/canvases/Imagery.jsx` says `../assets/illustrations/sales_flywheel.png` → actually `assets/illustrations/sales_flywheel.png`
+- `app/canvases/Imagery.jsx` says `../assets/illustrations/stats_panels.png` → actually `assets/illustrations/stats_panels.png`
+- `app/canvases/Imagery.jsx` says `../assets/illustrations/stakeholders_network.jpg` → actually `assets/illustrations/stakeholders_network.jpg`
+- `assets/materials/manifest.json` says `materials/champagne-honed-stone/diffuse.webp` → actually `assets/materials/champagne-honed-stone/diffuse.webp`
+- `assets/materials/manifest.json` says `materials/champagne-honed-stone/roughness.png` → actually `assets/materials/champagne-honed-stone/roughness.png`
+- `assets/materials/manifest.json` says `materials/champagne-honed-stone/ao.png` → actually `assets/materials/champagne-honed-stone/ao.png`
+- `assets/materials/manifest.json` says `materials/champagne-honed-stone/displacement.png` → actually `assets/materials/champagne-honed-stone/displacement.png`
+- `assets/materials/manifest.json` says `materials/fine-sanded-plaster/diffuse.webp` → actually `assets/materials/fine-sanded-plaster/diffuse.webp`
+- `assets/materials/manifest.json` says `materials/fine-sanded-plaster/roughness.png` → actually `assets/materials/fine-sanded-plaster/roughness.png`
+- `assets/materials/manifest.json` says `materials/fine-sanded-plaster/ao.png` → actually `assets/materials/fine-sanded-plaster/ao.png`
+- `assets/materials/manifest.json` says `materials/fine-sanded-plaster/displacement.png` → actually `assets/materials/fine-sanded-plaster/displacement.png`
+- `assets/materials/manifest.json` says `materials/fine-laid-paper/diffuse.webp` → actually `assets/materials/fine-laid-paper/diffuse.webp`
+- `assets/materials/manifest.json` says `materials/fine-laid-paper/roughness.png` → actually `assets/materials/fine-laid-paper/roughness.png`
+- `assets/materials/manifest.json` says `materials/fine-laid-paper/ao.png` → actually `assets/materials/fine-laid-paper/ao.png`
+- `assets/materials/manifest.json` says `materials/fine-laid-paper/displacement.png` → actually `assets/materials/fine-laid-paper/displacement.png`
+- `assets/materials/manifest.json` says `materials/fine-graphite/diffuse.webp` → actually `assets/materials/fine-graphite/diffuse.webp`
+- `assets/materials/manifest.json` says `materials/fine-graphite/roughness.png` → actually `assets/materials/fine-graphite/roughness.png`
+- `assets/materials/manifest.json` says `materials/fine-graphite/ao.png` → actually `assets/materials/fine-graphite/ao.png`
+- `assets/materials/manifest.json` says `materials/fine-graphite/displacement.png` → actually `assets/materials/fine-graphite/displacement.png`
+- `assets/materials/manifest.json` says `materials/warm-plaster-wall/diffuse.webp` → actually `assets/materials/warm-plaster-wall/diffuse.webp`
+- `assets/materials/manifest.json` says `materials/warm-plaster-wall/roughness.png` → actually `assets/materials/warm-plaster-wall/roughness.png`
+- `assets/materials/manifest.json` says `materials/warm-plaster-wall/ao.png` → actually `assets/materials/warm-plaster-wall/ao.png`
+- `assets/materials/manifest.json` says `materials/warm-plaster-wall/displacement.png` → actually `assets/materials/warm-plaster-wall/displacement.png`
+- `assets/materials/manifest.json` says `materials/cool-plaster-wall/diffuse.webp` → actually `assets/materials/cool-plaster-wall/diffuse.webp`
+- `assets/materials/manifest.json` says `materials/cool-plaster-wall/roughness.png` → actually `assets/materials/cool-plaster-wall/roughness.png`
+- `assets/materials/manifest.json` says `materials/cool-plaster-wall/ao.png` → actually `assets/materials/cool-plaster-wall/ao.png`
+- `assets/materials/manifest.json` says `materials/cool-plaster-wall/displacement.png` → actually `assets/materials/cool-plaster-wall/displacement.png`
+
+## GHOST TOKENS (hard) — var(--x) with NO fallback, --x defined nowhere (0)
+
+
+## GHOST TOKENS (family, fallback-masked) — name in a defined family, token missing (the --fs-micro class) (0)
+
+
+## GHOST GLOBALS — window.CV_* consumed, assigned nowhere (2)
+
+- `CV_HOST_NATIVE` consumed in: `app/ai/host-runtime.js`, `app/ai/host-serializer.js`
+- `CV_STUDIO` consumed in: `app/ai/ai-studio.js`
+
+## GHOST ICONS — icon id used, not in CV_ICONS.data (0)
+
+
+## GHOST AXES — axis id resolved, never registered (0)
+
+
+## GHOST ACTIONS — invoked / wired (do:/onPick:), never registered (1)
+
+- `insert` invoked in: `app/registry/components-type.js`, `app/registry/kinds-type.js`
+
+## GHOST TYPES — resolved / used as occupant, never registered (8)
+
+- `chart` consumed in: `system/skin-system.html`
+- `num` consumed in: `system/block-system.html`
+- `plus` consumed in: `system/skin-system.html`
+- `relationship.equals` consumed in: `_demo/verify_edgelaw.js`
+- `relationship.part-of` consumed in: `_demo/verify_edgelaw.js`
+- `render` consumed in: `system/skin-system.html`
+- `render3d` consumed in: `system/skin-system.html`
+- `row` consumed in: `system/block-system.html`
+
+## GHOST SKINS — in the skin axis / applied, but no [data-skin] scope in tokens/skins.css (0)
+
+
+## DEAD-LETTER EVENTS — emitted, no trigger listens (0)
+
+
+## DEAF TRIGGERS — a trigger listens for an event nothing emits (3)
+
+- `ai.blur` listened in: `app/registry/events.js`
+- `data.change` listened in: `app/registry/actions.js`, `system/glyphic-system.html`, `system/studio-ng.html`, `system/studio.html`
+- `selection.change` listened in: `app/registry/events.js`
+
+## ORPHAN TOKENS — defined, consumed nowhere (143)
+
+- `--accent-communication-soft`
+- `--ai`
+- `--ar-hero`
+- `--ar-landscape`
+- `--ar-portrait`
+- `--ar-square`
+- `--ar-ultrawide`
+- `--blueprint-color`
+- `--blueprint-opacity`
+- `--blur-lg`
+- `--blur-md`
+- `--blur-sm`
+- `--border-dark`
+- `--border-w-hairline`
+- `--border-w-ring`
+- `--border-w-strong`
+- `--bp-desktop`
+- `--bp-mobile`
+- `--bp-tablet`
+- `--bp-wide`
+- `--bronze-warm`
+- `--comm`
+- `--d-12`
+- `--danger`
+- `--dashed`
+- `--depth-lift-blur`
+- `--depth-lift-y`
+- `--dgm-arrow-size`
+- `--dgm-connector-dash`
+- `--dgm-corner-radius`
+- `--dgm-stroke-bold`
+- `--dot`
+- `--dur-slow`
+- `--edgeband`
+- `--filled`
+- `--frame-a4-l-h`
+- `--frame-desktop-h`
+- `--frame-mobile-l-h`
+- `--frame-tablet-h`
+- `--frame-web-ar`
+- `--frame-web-w`
+- `--fs-lead`
+- `--ghost`
+- `--gl-env-intensity`
+- `--gl-exposure`
+- `--gl-light-boost`
+- `--gl-map-face-ao`
+- `--gl-map-face-diffuse`
+- `--gl-map-face-normal`
+- `--gl-map-face-rough`
+- `--gl-map-wall-ao`
+- `--gl-map-wall-diffuse`
+- `--gl-map-wall-displacement`
+- `--gl-map-wall-normal`
+- `--gl-map-wall-rough`
+- `--gl-side-tint`
+- `--gl-slab-emissive`
+- `--gl-slab-emissive-intensity`
+- `--gl-slab-tint`
+- `--gl-thick-unit`
+- `--gl-thick-zone`
+- `--gl-wall-tint`
+- `--gl-zone-dim`
+- `--gold-hover`
+- `--grid-band`
+- `--grid-split`
+- `--hatch-opacity`
+- `--icon-cap`
+- `--icon-join`
+- `--ink-5`
+- `--interactive`
+- `--layout-chat-max`
+- `--layout-chat-min`
+- `--layout-gutter`
+- `--layout-rail-max`
+- `--layout-rail-min`
+- `--lh-body`
+- `--lh-loose`
+- `--move-lg`
+- `--move-off`
+- `--outline`
+- `--page-letter-h`
+- `--page-letter-w`
+- `--primary`
+- `--s-0`
+- `--s-14`
+- `--s-24`
+- `--scale-base`
+- `--scale-ratio`
+- `--scene-material`
+- `--scene-mode`
+- `--scrim-blur`
+- `--scrim-fill`
+- `--shadow-hue`
+- `--size-hero`
+- `--size-lg`
+- `--size-md`
+- `--size-sm`
+- `--size-xl`
+- `--size-xs`
+- `--skin-map-normal`
+- `--skin-map-roughness`
+- `--slide-4x3-h`
+- `--slide-4x3-w`
+- `--space-fluid-sm`
+- `--space-fluid-xl`
+- `--start`
+- `--status-info-bg`
+- `--status-pending`
+- `--status-pending-bg`
+- `--surface`
+- `--tex-graphite`
+- `--tex-graphite-card`
+- `--tex-ink-depth-deep`
+- `--tex-linen`
+- `--tex-linen-card`
+- `--tex-paper-fiber`
+- `--tex-paper-fiber-card`
+- `--tex-plaster`
+- `--tex-plaster-card`
+- `--tex-plaster-cool`
+- `--tex-plaster-fine-lit`
+- `--tex-plaster-lit`
+- `--tex-plaster-polished-lit`
+- `--tex-plaster-soft`
+- `--tex-plaster-wall-lit`
+- `--tex-stone-face-lit`
+- `--tracking-normal`
+- `--vi-line`
+- `--viz-5`
+- `--z-base`
+- `--z-command`
+- `--z-max`
+- `--z-nav`
+- `--z-overlay`
+- `--z-sticky`
+- `--zone-base-ink`
+- `--zone-package-strong`
+- `--zone-reject-strong`
+- `--zone-review-strong`
+- `--zone-source-strong`
+- `--zone-success-strong`
+- `--zone-warning-strong`
+
+## ORPHAN ICONS — registered, no live consumer (98)
+
+- `3d-cube`
+- `annotate`
+- `area`
+- `axes-3d`
+- `block`
+- `brochure`
+- `browser-analytics`
+- `browser-info`
+- `building-dollar`
+- `building-tall`
+- `change-style`
+- `check-square-fill`
+- `clipboard`
+- `close`
+- `comment`
+- `comments`
+- `comments-fill`
+- `convenient`
+- `corpus`
+- `crane`
+- `day-night`
+- `daynight`
+- `drone-view`
+- `easy`
+- `easy-setup`
+- `equation`
+- `eye-off`
+- `file-download`
+- `file-edit`
+- `file-gear`
+- `file-upload`
+- `filters`
+- `finishes`
+- `floor-pattern`
+- `floorplan`
+- `flythrough`
+- `folder-gear`
+- `fpv`
+- `furniture`
+- `guided-tour`
+- `gyro`
+- `handshake`
+- `house-multi`
+- `judge`
+- `lighting`
+- `like`
+- `location-pin`
+- `lock`
+- `m2`
+- `maps`
+- `markup`
+- `markup-box`
+- `megaphone`
+- `megaphone-link`
+- `monitor-house`
+- `no-symbol`
+- `operator`
+- `output`
+- `ownership`
+- `paint`
+- `partnership`
+- `pause`
+- `people-network`
+- `person-add`
+- `person-clock`
+- `pin-route`
+- `price`
+- `redo`
+- `refresh`
+- `responsive`
+- `restyle`
+- `ring`
+- `room`
+- `samples`
+- `seed`
+- `settings`
+- `shop-cart`
+- `square-meters`
+- `stages`
+- `sun-moon`
+- `sync`
+- `team`
+- `territory`
+- `thumbs-up`
+- `tile-stack`
+- `tour`
+- `transfer`
+- `undo`
+- `unlock`
+- `update`
+- `upload`
+- `user-card`
+- `user-network`
+- `users`
+- `weave`
+- `web`
+- `workstation`
+- `world-network`
+
+## ORPHAN GLOBALS — defined, no live consumer (4)
+
+- `CV_AXIS`
+- `CV_REGISTRY_SEED`
+- `CV_RELATIONSHIPS_SEED`
+- `CV_TONES`
+
+## ORPHAN AXES — registered, no live consumer (1)
+
+- `ground`
+
+## ORPHAN ACTIONS — registered, never invoked/wired (9)
+
+- `add-field`
+- `define-action`
+- `define-axis`
+- `define-decorator`
+- `define-macro`
+- `define-rule`
+- `define-trigger`
+- `relate`
+- `select`
+
+## ORPHAN TYPES — registered, never resolved (galleries render all; static named use only) (132)
+
+- `angle`
+- `atom.icon`
+- `atom.shape-glyph`
+- `atom.stamp`
+- `atom.status-dot`
+- `atomicity.interpret`
+- `atomicity.learn`
+- `block-ground`
+- `block-surface`
+- `block.`
+- `block.compose`
+- `claude`
+- `company`
+- `component.appshell`
+- `component.avatar`
+- `component.badge`
+- `component.button`
+- `component.card`
+- `component.checkbox`
+- `component.input`
+- `component.list`
+- `component.menu`
+- `component.modal`
+- `component.popover`
+- `component.radio`
+- `component.search`
+- `component.segmented`
+- `component.select`
+- `component.sheet`
+- `component.skeleton`
+- `component.stepper`
+- `component.switch`
+- `component.table`
+- `component.tabs`
+- `component.toast`
+- `component.tooltip`
+- `context.atomicity`
+- `context.generic`
+- `context.glyphic`
+- `context.pages`
+- `context.studio`
+- `context.widget`
+- `context.wizard`
+- `copy.budgets`
+- `deck.titlechain`
+- `diversity`
+- `doc.brochure`
+- `doc.deck`
+- `doc.widget`
+- `doc.wizard`
+- `doc.wizard.generic`
+- `doc.wizard.onboarding`
+- `doc.wizard.property`
+- `ds.apply`
+- `ds.propose`
+- `explore.promote`
+- `explore.run`
+- `explore.variations`
+- `glyphic-fill`
+- `glyphic-ring`
+- `glyphic-symbol`
+- `glyphic.assist`
+- `glyphic.author`
+- `glyphic.author-gloss`
+- `glyphic.author-relation`
+- `glyphic.describe`
+- `glyphic.generate`
+- `glyphic.read`
+- `glyphic.save`
+- `host-fs`
+- `image.edit`
+- `image.generate`
+- `imagery.render`
+- `kind.selection`
+- `kind.slide-system`
+- `layout.compose`
+- `local-swarm`
+- `mcp-tools`
+- `native-model`
+- `new.`
+- `openai-image`
+- `provider.local`
+- `qa-badge-dot`
+- `qa-view-dot`
+- `repo.list`
+- `repo.read`
+- `shot.setLimit`
+- `skill.theme`
+- `source.analyze`
+- `source.recognize`
+- `source.synthesize`
+- `studio.command`
+- `surface.deck-slide.`
+- `surface.deck-slide.content`
+- `surface.deck-slide.section`
+- `surface.deck-slide.title`
+- `surface.widget.dashboard`
+- `surface.widget.embed`
+- `surface.widget.hub`
+- `surface.wizard-step.capture`
+- `surface.wizard-step.celebrate`
+- `surface.wizard-step.choice`
+- `surface.wizard-step.form`
+- `surface.wizard-step.review`
+- `system.widget.hybrid`
+- `system.widget.kpi`
+- `system.widget.media`
+- `token.color.bronze`
+- `token.color.canvas`
+- `token.color.gold`
+- `token.color.ink`
+- `token.shape.circle`
+- `token.shape.diamond`
+- `token.shape.hexagon`
+- `token.shape.octagon`
+- `token.type.body`
+- `token.type.display`
+- `token.type.mono`
+- `view.actions`
+- `view.decorators`
+- `view.library`
+- `view.palette-color`
+- `view.palette-form`
+- `view.palette-symbol`
+- `view.views`
+- `vision`
+- `vision.diff`
+- `vision.read`
+- `voice.conceptv`
+- `voice.eg.`
+- `voice.openai`
+- `voice.write`
+
+## RAW COLOURS — literal colours in live styling files, outside var() fallbacks (should use tokens) (324)
+
+- `#e0c010` ×48 in 24 file(s) — TOKEN EXISTS: `--accent-gold` (mechanical fix) · e.g. `system/system-atlas.html`, `system/system-map.html`, `app/registry.css`
+- `#988058` ×44 in 18 file(s) — TOKEN EXISTS: `--accent-bronze` (mechanical fix) · e.g. `system/system-atlas.html`, `system/glyphic-foundry.html`, `system/system-map.html`
+- `#fff` ×36 in 13 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`, `system/glyphic-parts.html`, `system/root-unity-mark.html`
+- `#1f1a12` ×29 in 19 file(s) — TOKEN EXISTS: `--bg-dark` (mechanical fix) · e.g. `system/system-atlas.html`, `app/components/Pano360.jsx`, `app/components/CommandPalette.jsx`
+- `#fbf7ec` ×25 in 13 file(s) — TOKEN EXISTS: `--zone-ground-soft` (mechanical fix) · e.g. `system/studio.css`, `app/components/CommandPalette.jsx`, `app/components/ChatRail.jsx`
+- `#2a2208` ×18 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `system/studio.css`, `system/root-unity-mark.html`
+- `#000` ×18 in 5 file(s) — no exact token (needs a naming/design call) · e.g. `system/the-whole-thing.html`, `atomicity/atomicity.css`, `experiments/tonal-glass.css`
+- `rgba(251,247,236,.06)` ×13 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/canvases/workshop/Export.jsx`
+- `rgba(31,26,18,.08)` ×11 in 6 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/canvases/Components.jsx`, `app/canvases/Voice.jsx`
+- `#c09d5d` ×10 in 4 file(s) — TOKEN EXISTS: `--ramp-3` (mechanical fix) · e.g. `system/system-atlas.html`, `system/system-map.html`, `app/canvases/Colors.jsx`
+- `#6b6354` ×10 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(251,247,236,.75)` ×10 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(255,255,255,.16)` ×9 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(251,247,236,.08)` ×9 in 4 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/canvases/Components.jsx`, `app/canvases/workshop/Export.jsx`
+- `#4a78b8` ×8 in 6 file(s) — TOKEN EXISTS: `--status-info` (mechanical fix) · e.g. `system/system-atlas.html`, `app/components/CommandPalette.jsx`, `app/canvases/Components.jsx`
+- `#c24a3c` ×8 in 6 file(s) — TOKEN EXISTS: `--status-error` (mechanical fix) · e.g. `system/system-atlas.html`, `app/components/CommandPalette.jsx`, `app/canvases/Components.jsx`
+- `#ffffff` ×8 in 4 file(s) — TOKEN EXISTS: `--bg-surface` (mechanical fix) · e.g. `system/root-unity-mark.html`, `app/canvases/Colors.jsx`, `ui_kits/platform/screens/BrandKit.jsx`
+- `rgba(255,255,255,.08)` ×8 in 4 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`, `app/workshop.css`, `app/canvases/Bridge.jsx`
+- `#f4e89a` ×8 in 5 file(s) — TOKEN EXISTS: `--accent-gold-soft` (mechanical fix) · e.g. `system/system-map.html`, `app/canvases/Colors.jsx`, `app/canvases/workshop/Export.jsx`
+- `#5a8a4a` ×8 in 5 file(s) — TOKEN EXISTS: `--status-success` (mechanical fix) · e.g. `app/components/CommandPalette.jsx`, `app/canvases/Components.jsx`, `app/canvases/Colors.jsx`
+- `#9f772c` ×7 in 2 file(s) — TOKEN EXISTS: `--accent-gold-deep` (mechanical fix) · e.g. `system/system-atlas.html`, `_demo/glyphic-board.html`
+- `#6b5f47` ×7 in 5 file(s) — TOKEN EXISTS: `--ink-3` (mechanical fix) · e.g. `system/system-atlas.html`, `app/canvases/Colors.jsx`, `app/canvases/workshop/Export.jsx`
+- `rgba(255,255,255,.5)` ×6 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`, `system/system-map.html`, `app/canvases/Bridge.jsx`
+- `rgba(0,0,0,.1)` ×6 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(0,0,0,.5)` ×6 in 4 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`, `system/system-map.html`, `ui_kits/virtual-hub/hub.css`
+- `rgba(0,0,0,.12)` ×6 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `#7a6a48` ×6 in 2 file(s) — TOKEN EXISTS: `--accent-bronze-2` (mechanical fix) · e.g. `system/system-atlas.html`, `_demo/glyphic-board.html`
+- `#a89678` ×6 in 5 file(s) — TOKEN EXISTS: `--fg-muted` (mechanical fix) · e.g. `system/system-atlas.html`, `system/system-map.html`, `app/canvases/Colors.jsx`
+- `rgba(251,247,236,.04)` ×6 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(224,192,16,.10)` ×6 in 4 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/app.css`, `app/deck.css`
+- `#e5c547` ×6 in 5 file(s) — TOKEN EXISTS: `--status-pending` (mechanical fix) · e.g. `app/components/CommandPalette.jsx`, `app/canvases/Components.jsx`, `app/canvases/Colors.jsx`
+- `#fbf4c8` ×6 in 3 file(s) — TOKEN EXISTS: `--paper-warm` (mechanical fix) · e.g. `app/canvases/Colors.jsx`, `app/canvases/workshop/Export.jsx`, `_demo/glyphic-board.html`
+- `rgba(255,255,255,.6)` ×5 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`, `core/ContainmentTree.jsx`, `core/DiagramSolver.jsx`
+- `rgba(0,0,0,.06)` ×5 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`, `app/canvases/RegistryInspector.jsx`
+- `#5e7ca6` ×5 in 2 file(s) — TOKEN EXISTS: `--pig-source-raw` (mechanical fix) · e.g. `system/system-atlas.html`, `system/system-map.html`
+- `rgba(255,255,255,.18)` ×5 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`, `app/workshop.css`
+- `#5b4628` ×5 in 4 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`, `app/ai/ai-registry.js`, `app/registry/types-core.js`
+- `rgba(152,128,88,.04)` ×5 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/canvases/workshop/Export.jsx`
+- `rgba(251,247,236,.7)` ×5 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/canvases/workshop/Export.jsx`, `ui_kits/virtual-hub/HubApp.jsx`
+- `rgba(224,192,16,.18)` ×5 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/app.css`, `ui_kits/vi/vi.css`
+- `rgba(31, 26, 18, 0.04)` ×5 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/canvases/Patterns.jsx`
+- `rgba(31,26,18,.92)` ×5 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `app/components/KitPreviews.jsx`, `app/canvases/Components.jsx`, `ui_kits/virtual-hub/hub.css`
+- `#e8e2cc` ×5 in 3 file(s) — TOKEN EXISTS: `--bg-sunken` (mechanical fix) · e.g. `app/canvases/Components.jsx`, `app/canvases/Colors.jsx`, `app/canvases/workshop/Export.jsx`
+- `rgba(0,0,0,.15)` ×4 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(255,255,255,.85)` ×4 in 4 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`, `system/system-map.html`, `app/canvases/Colors.jsx`
+- `#5c8a4c` ×4 in 2 file(s) — TOKEN EXISTS: `--pig-success-raw` (mechanical fix) · e.g. `system/system-atlas.html`, `system/system-map.html`
+- `#b98664` ×4 in 3 file(s) — TOKEN EXISTS: `--ramp-4` (mechanical fix) · e.g. `system/system-atlas.html`, `system/system-map.html`, `app/canvases/Colors.jsx`
+- `#ccc` ×4 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-atlas.html`
+- `rgba(255,255,255,.06)` ×4 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`, `ui_kits/virtual-hub/hub.css`, `atomicity/atomicity.css`
+- `rgba(255,255,255,.12)` ×4 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`, `atomicity/atomicity.css`
+- `#1c1a16` ×4 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#15120e` ×4 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#6ba0e0` ×4 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(31, 26, 18, 0.12)` ×4 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`, `app/canvases/Patterns.jsx`
+- `rgba(31,26,18,.05)` ×4 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/canvases/workshop/Export.jsx`
+- `rgba(224,192,16,.08)` ×4 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/app.css`
+- `#4a3e2e` ×4 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `app/components/KitPreviews.jsx`, `ui_kits/vi/vi.css`, `ui_kits/virtual-hub/hub.css`
+- `#c9a86e` ×4 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `app/components/KitPreviews.jsx`, `ui_kits/vi/vi.css`, `ui_kits/virtual-hub/hub.css`
+- `#8b7251` ×4 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `app/components/KitPreviews.jsx`, `ui_kits/vi/vi.css`, `ui_kits/virtual-hub/hub.css`
+- `rgba(31,26,18,.7)` ×4 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `app/components/KitPreviews.jsx`, `ui_kits/virtual-hub/hub.css`, `ui_kits/virtual-hub/HubApp.jsx`
+- `rgba(0,0,0,1)` ×4 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/components/MaskEditor.jsx`
+- `#e5a547` ×4 in 2 file(s) — TOKEN EXISTS: `--status-warning` (mechanical fix) · e.g. `app/canvases/Colors.jsx`, `ui_kits/platform/platform.css`
+- `rgba(31, 26, 18, 0.06)` ×4 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/Patterns.jsx`
+- `#d8c040` ×4 in 1 file(s) — TOKEN EXISTS: `--accent-gold-dashed` (mechanical fix) · e.g. `_demo/glyphic-board.html`
+- `rgba(0,0,0,.25)` ×3 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `#c9a34a` ×3 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`, `core/render-scene.js`, `core/render3d.js`
+- `#f3eedf` ×3 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `system/glyphic-system.html`, `system/studio.css`, `system/root-unity-mark.html`
+- `#d6bf57` ×3 in 3 file(s) — TOKEN EXISTS: `--ramp-2` (mechanical fix) · e.g. `system/system-atlas.html`, `system/system-map.html`, `app/canvases/Colors.jsx`
+- `#7ca85b` ×3 in 2 file(s) — TOKEN EXISTS: `--accent-communication` (mechanical fix) · e.g. `system/system-atlas.html`, `system/system-map.html`
+- `#d0c098` ×3 in 3 file(s) — TOKEN EXISTS: `--accent-tan` (mechanical fix) · e.g. `system/system-atlas.html`, `system/system-map.html`, `app/canvases/Components.jsx`
+- `#8c8a7e` ×3 in 2 file(s) — TOKEN EXISTS: `--pig-panel-raw` (mechanical fix) · e.g. `system/system-atlas.html`, `system/system-map.html`
+- `rgba(255,255,255,.45)` ×3 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(255,255,255,.22)` ×3 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(224,192,16,.07)` ×3 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`, `app/workshop.css`
+- `rgba(255,255,255,.1)` ×3 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#9c8c6e` ×3 in 2 file(s) — TOKEN EXISTS: `--ink-4` (mechanical fix) · e.g. `system/system-map.html`, `_demo/glyphic-board.html`
+- `#3a342a` ×3 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(251, 247, 236, 0.92)` ×3 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(251,247,236,.6)` ×3 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `ui_kits/virtual-hub/hub.css`
+- `rgba(224,192,16,.06)` ×3 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/app.css`, `app/canvases/workshop/Export.jsx`
+- `rgba(152,128,88,.10)` ×3 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(31,26,18,.025)` ×3 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(31,26,18,.04)` ×3 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/canvases/workshop/Export.jsx`, `_demo/glyphic-board.html`
+- `rgba(31,26,18,0.55)` ×3 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `#6b5a3f` ×3 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `app/components/KitPreviews.jsx`, `ui_kits/vi/vi.css`, `ui_kits/virtual-hub/hub.css`
+- `#e4cc9e` ×3 in 3 file(s) — no exact token (needs a naming/design call) · e.g. `app/components/KitPreviews.jsx`, `ui_kits/vi/vi.css`, `ui_kits/virtual-hub/hub.css`
+- `#f04325` ×3 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/Components.jsx`, `ui_kits/platform/platform.css`
+- `#c8ab0e` ×3 in 2 file(s) — TOKEN EXISTS: `--accent-gold-hover` (mechanical fix) · e.g. `app/canvases/Colors.jsx`, `app/canvases/workshop/Export.jsx`
+- `rgba(31, 26, 18, 0.05)` ×3 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/Patterns.jsx`
+- `rgba(31,26,18,…)` ×3 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/Patterns.jsx`
+- `#29261b` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(0,0,0,.18)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(41,38,27,.45)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(0,0,0,.2)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(255,255,255,.9)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`, `app/workshop.css`
+- `rgba(0,0,0,.78)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(0,0,0,.3)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`, `atomicity/picker.js`
+- `#cccccc` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `#8a7d64` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `#4a4236` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `rgba(120,105,80,0.3)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `#b00` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `system/type-system.html`, `system/skin-system.html`
+- `#8c8472` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `system/glyphic-system.html`, `system/studio.css`
+- `#b5482e` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `system/glyphic-system.html`, `system/system-map.html`
+- `#c9b999` ×2 in 2 file(s) — TOKEN EXISTS: `--ink-5` (mechanical fix) · e.g. `system/system-atlas.html`, `app/canvases/Colors.jsx`
+- `rgba(255,255,255,.7)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(255,255,255,.14)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(224,192,16,.16)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`, `app/app.css`
+- `rgba(224,192,16,.5)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`, `app/app.css`
+- `rgba(0,0,0,.55)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(255,255,255,.09)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(224,192,16,.14)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`, `app/app.css`
+- `rgba(0,0,0,.4)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`, `ui_kits/virtual-hub/hub.css`
+- `rgba(255,255,255,.8)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#c8920e` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#c9b58a` ×2 in 2 file(s) — TOKEN EXISTS: `--accent-bronze-soft` (mechanical fix) · e.g. `system/system-map.html`, `app/canvases/Colors.jsx`
+- `#e0a23c` ×2 in 1 file(s) — TOKEN EXISTS: `--pig-warning-raw` (mechanical fix) · e.g. `system/system-map.html`
+- `rgba(255,255,255,0.08)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(31, 26, 18, 0.15)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(251,247,236,.12)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(251,247,236,.18)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(152,128,88,.08)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/canvases/workshop/Export.jsx`
+- `rgba(31,26,18,.15)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/canvases/workshop/Export.jsx`
+- `rgba(251,247,236,.9)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/canvases/workshop/Export.jsx`
+- `rgba(31,26,18,0.02)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `app/app.css`
+- `rgba(31,26,18,.5)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`, `ui_kits/vi/vi.css`
+- `rgba(224,192,16,0)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/app.css`, `ui_kits/vi/vi.css`
+- `rgba(31,26,18,0.04)` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/app.css`, `app/canvases/Patterns.jsx`
+- `rgba(31,26,18,0.6)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(31,26,18,0.9)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(31,26,18,0.7)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(251,247,236,0.35)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(152,128,88,0.04)` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/deck.css`
+- `#b7973c` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/ai/ai-registry.js`, `app/registry/types-core.js`
+- `#7e6539` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `app/ai/ai-registry.js`, `app/registry/types-core.js`
+- `#fbf1c0` ×2 in 2 file(s) — TOKEN EXISTS: `--status-pending-bg` (mechanical fix) · e.g. `app/canvases/Components.jsx`, `ui_kits/platform/platform.css`
+- `#e6efdb` ×2 in 2 file(s) — TOKEN EXISTS: `--status-success-bg` (mechanical fix) · e.g. `app/canvases/Components.jsx`, `ui_kits/platform/platform.css`
+- `#dce7f3` ×2 in 2 file(s) — TOKEN EXISTS: `--status-info-bg` (mechanical fix) · e.g. `app/canvases/Components.jsx`, `ui_kits/platform/platform.css`
+- `#888888` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/Workshop.jsx`
+- `#f1ecdc` ×2 in 1 file(s) — TOKEN EXISTS: `--bg-muted` (mechanical fix) · e.g. `app/canvases/Colors.jsx`
+- `#e8dfc5` ×2 in 2 file(s) — TOKEN EXISTS: `--border-default` (mechanical fix) · e.g. `app/canvases/workshop/Export.jsx`, `_demo/glyphic-board.html`
+- `#7e5ab8` ×2 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/platform/platform.css`
+- `#000000` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `atomicity/kit.jsx`, `core/render3d.js`
+- `#202226` ×2 in 2 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`, `core/render3d.js`
+- `rgba(250,249,247,.78)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(41,38,27,.55)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(41,38,27,.72)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(41,38,27,.5)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `#34c759` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(41,38,27,.6)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(0,0,0,.88)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(0,0,0,.85)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `tweaks-panel.jsx`
+- `rgba(42,33,26,' + (v.meta.opacity || 0)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/axis-system.html`
+- `#2b2620` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `rgba(250,248,243,0.94)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `rgba(120,105,80,0.28)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `rgba(60,50,35,0.22)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `rgba(120,105,80,0.18)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `#9a8b6e` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `rgba(255,255,255,0.5)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `#b8923a` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `#2b2410` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/gl-inspector.js`
+- `#e0c56a` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/glyphic-system.html`
+- `#b7d6a8` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/glyphic-system.html`
+- `#2f7d4f` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/glyphic-system.html`
+- `rgba(0,0,0,.08)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/glyphgraph-generator.html`
+- `#f3ecda` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/studio.css`
+- `#e6dcc2` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/studio.css`
+- `#f4eedd` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/studio.css`
+- `rgba(90,70,40,.05)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/studio.css`
+- `rgba(90,70,40,.4)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/studio.css`
+- `rgba(90,70,40,.06)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/studio.css`
+- `rgba(90,70,40,.5)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/studio.css`
+- `#1c1813` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/studio.css`
+- `#e6cc6a` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/studio.css`
+- `#7e96b8` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-atlas.html`
+- `#b8860b` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-atlas.html`
+- `#e8c84a` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-atlas.html`
+- `rgba('+parseint(h.slice(0,2)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-atlas.html`
+- `#333` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-atlas.html`
+- `rgba(42,33,26,'+(v.meta.opacity||.2)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-atlas.html`
+- `rgba(90,70,40,' + (0.1 + i * 0.06)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/studio.html`
+- `rgba(31,26,18,.9)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(255,255,255,.2)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#1b1712` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(255,255,255,.55)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(24,21,16,.98)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(181,72,46,.28)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#2a2620` ×1 in 1 file(s) — TOKEN EXISTS: `--bg-dark-2` (mechanical fix) · e.g. `system/system-map.html`
+- `rgba(255,255,255,.014)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(255,255,255,.17)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(10,8,5,.55)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(10,8,5,.7)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(22,19,15,.93)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(255,255,255,.82)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(22,19,15,.9)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#221c14` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(0,0,0,.22)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(28,26,22,.92)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(255,255,255,.07)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(224,106,80,.32)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(224,106,80,.6)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(24,22,19,.97)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(255,255,255,.03)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(255,255,255,.4)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#e06a50` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#b49a5c` ×1 in 1 file(s) — TOKEN EXISTS: `--pig-base-raw` (mechanical fix) · e.g. `system/system-map.html`
+- `#5a5048` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#5b7676` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#7d709a` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#5f6b7e` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#46423a` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgb('+math.round(f[0]+(g[0]-f[0])` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba('+c[0]+','+c[1]+','+c[2]+','+a+')` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgb('+c[0]+','+c[1]+','+c[2]+')` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(255,255,255,"+light.tofixed(2)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `#7ca0d0` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `system/system-map.html`
+- `rgba(216, 67, 21, 0.06)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(31, 26, 18, 0.5)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `#c9a742` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `#d8c394` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `#b0cfae` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(224, 192, 16, 0.18)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(255,255,255,0.15)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `#ddd` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `#555` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(31, 26, 18, 0.08)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(31, 26, 18, 0.88)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(31, 26, 18, 0.35)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(31, 26, 18, 0.1)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(31, 26, 18, 0.18)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(31, 26, 18, 0.55)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `rgba(31, 26, 18, 0.4)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry.css`
+- `#d8e3ea` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `#e8dcc7` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `#d4cdc1` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(152,128,88,.05)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(251,247,236,.65)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(251,247,236,.45)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(251,247,236,.85)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(251,247,236,.92)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(251,247,236,.55)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(31,26,18,.42)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(224,192,16,.12)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(31, 26, 18, 0.10)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/workshop.css`
+- `rgba(31,26,18,0.65)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(31,26,18,0.85)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(224,192,16,0.2)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(31,26,18,0.4)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(251,247,236,0.8)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(224,192,16,0.05)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(224,192,16,0.06)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(31,26,18,0.03)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/imagery.css`
+- `rgba(152, 128, 88, 0.06)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/deck.css`
+- `rgba(31,26,18,.4)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/components/ExportPatch.jsx`
+- `rgba(31,26,18,.35)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/components/CommandPalette.jsx`
+- `#3d2f1b` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/registry/types-core.js`
+- `rgba(0,0,0,0.15)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/Architecture.jsx`
+- `#6e5bbe` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/Build.jsx`
+- `#b3793a` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/Build.jsx`
+- `#3a7f6e` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/Build.jsx`
+- `#dad364` ×1 in 1 file(s) — TOKEN EXISTS: `--ramp-1` (mechanical fix) · e.g. `app/canvases/Colors.jsx`
+- `rgba(31, 26, 18, 0.22)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/Patterns.jsx`
+- `rgba(255,255,255,0.6)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/Patterns.jsx`
+- `#2a78c6` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/workshop/WidgetBuilder.jsx`
+- `#deeaf7` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `app/canvases/workshop/WidgetBuilder.jsx`
+- `rgba(224,192,16,.0)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/vi/vi.css`
+- `#fbeeec` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/vi/vi.css`
+- `rgba(224,192,16,.6)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/vi/vi.css`
+- `#0e0b07` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `rgba(216,184,32,.08)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `rgba(140,110,70,.35)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `rgba(50,40,30,.6)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `rgba(31,26,18,.45)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `rgba(31,26,18,.06)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `rgba(255,255,255,.01)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `rgba(0,0,0,.45)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `rgba(251,247,236,.4)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `rgba(251,247,236,.5)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `rgba(31,26,18,.65)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `rgba(152,128,88,.06)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/hub.css`
+- `#e8d7c2` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/CaptureComment.jsx`
+- `#d8d5cb` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/virtual-hub/CaptureComment.jsx`
+- `#dcd5bc` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/platform/platform.css`
+- `#faf1b6` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/platform/platform.css`
+- `#fbebc8` ×1 in 1 file(s) — TOKEN EXISTS: `--status-warning-bg` (mechanical fix) · e.g. `ui_kits/platform/platform.css`
+- `#f5d7d2` ×1 in 1 file(s) — TOKEN EXISTS: `--status-error-bg` (mechanical fix) · e.g. `ui_kits/platform/platform.css`
+- `#e9dff4` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/platform/platform.css`
+- `#ece8da` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/platform/platform.css`
+- `#d8b820` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `ui_kits/platform/screens/BrandKit.jsx`
+- `rgba(255,255,255,.62)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `atomicity/atomicity.css`
+- `rgba(31,26,18,.20)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `atomicity/picker.js`
+- `#fcfaf2` ×1 in 1 file(s) — TOKEN EXISTS: `--paper` (mechanical fix) · e.g. `_demo/glyphic-board.html`
+- `#f8f3e1` ×1 in 1 file(s) — TOKEN EXISTS: `--paper-2` (mechanical fix) · e.g. `_demo/glyphic-board.html`
+- `#f2ead0` ×1 in 1 file(s) — TOKEN EXISTS: `--paper-3` (mechanical fix) · e.g. `_demo/glyphic-board.html`
+- `#f0e9d2` ×1 in 1 file(s) — TOKEN EXISTS: `--border-faint` (mechanical fix) · e.g. `_demo/glyphic-board.html`
+- `rgba(31,26,18,.03)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `_demo/glyphic-board.html`
+- `rgba(90,70,40,.24)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `axes/shadow/shadow-axis.js`
+- `rgba(90,70,40,.3)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `axes/shadow/shadow-axis.js`
+- `rgba(90,70,40,.32)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `axes/shadow/shadow-axis.js`
+- `rgba(90,70,40,.34)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `axes/shadow/shadow-axis.js`
+- `#fff9ee` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#e8e2d4` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#b8b2a4` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#7d8598` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#262b36` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#04050a` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `rgba(255,255,255,0.95)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `rgba(255,246,225,0.92)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `rgb(' + math.round(r / n)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#808080` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#d2cbbb` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#b9bcc4` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#fffdf8` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#3a3f4a` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#40352a` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#0a0c12` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `rgba(0,0,0,0.34)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `rgba(0,0,0,0.14)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `rgba(0,0,0,0)` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `#a89e8c` ×1 in 1 file(s) — TOKEN EXISTS: `--gl-side-tint` (mechanical fix) · e.g. `core/render-scene.js`
+- `#14171e` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render-scene.js`
+- `rgb(' + d[0] + ', ' + d[1] + ', ' + d[2] + ')` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `core/render3d.js`
+- `#cfc7b6` ×1 in 1 file(s) — no exact token (needs a naming/design call) · e.g. `specimens/theme-modes.html`

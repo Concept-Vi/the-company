@@ -39,8 +39,8 @@ export function Glyphic({
         style={{
           display: "inline-flex", alignItems: "center", justifyContent: "center",
           width: size, height: size, borderRadius: 8,
-          border: "2px dashed var(--accent-bronze, #988058)",
-          color: "var(--accent-bronze, #988058)", font: "600 10px/1 monospace",
+          border: "2px dashed var(--accent-bronze)",
+          color: "var(--accent-bronze)", font: "600 10px/1 monospace",
           ...style,
         }}
         {...rest}

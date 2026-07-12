@@ -11,6 +11,9 @@
    not seen.
    ============================================================ */
 :root {
+  /* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+  --grid-margin: 12%;
+
   /* diagonal gold hatch — bands behind metrics + bottom baseline rule */
   --hatch-angle:   45deg;  /* @kind other */
   --hatch-gap:     6px;    /* @kind other */
@@ -46,7 +49,7 @@
     transparent var(--hatch-weight) var(--hatch-gap));
   -webkit-mask-image: linear-gradient(90deg, #000 55%, transparent);
           mask-image: linear-gradient(90deg, #000 55%, transparent);
-  opacity: var(--spatial-opacity, 1);
+  opacity: var(--spatial-opacity);
 }
 
 /* BLUEPRINT GHOST — drop on any surface that wants the technical substrate.
@@ -80,9 +83,9 @@
 .bullet {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: var(--s-3, 12px);
+  gap: var(--s-3);
   align-items: start;
-  color: var(--ink-2, #3A3026);
+  color: var(--ink-2);
 }
 .bullet::before {
   content: "\25B6";                 /* ▶ plain (default) */
@@ -91,7 +94,7 @@
   line-height: 1.7;
 }
 .bullet[data-kind="flow"]::before { content: "\2192"; font-size: 1em; line-height: 1.4; } /* → leads-to */
-.bullet[data-kind="check"]::before { content: "\2713"; color: var(--status-success, #5A8A4A); } /* ✓ done */
+.bullet[data-kind="check"]::before { content: "\2713"; color: var(--status-success); } /* ✓ done */
 
 /* ============================================================
    FRAME SIGNATURE — the per-page binding present on ~every analytical
@@ -101,14 +104,14 @@
 .frame-signature { position: relative; }
 .frame-signature::after {
   content: "";
-  position: absolute; left: var(--grid-margin, 12%); bottom: 2.5%;
+  position: absolute; left: var(--grid-margin); bottom: 2.5%;
   width: 48%; height: 8px;
   background-image: repeating-linear-gradient(
     var(--hatch-angle), var(--hatch-color) 0 var(--hatch-weight),
     transparent var(--hatch-weight) var(--hatch-gap));
   -webkit-mask-image: linear-gradient(90deg, #000 60%, transparent);
           mask-image: linear-gradient(90deg, #000 60%, transparent);
-  opacity: var(--spatial-opacity, 1);
+  opacity: var(--spatial-opacity);
   pointer-events: none;
 }
 /* the V mark itself is the logo asset / CvIcon — placed bottom-right by the

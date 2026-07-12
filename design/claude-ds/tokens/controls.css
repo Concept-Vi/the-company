@@ -1,3 +1,10 @@
+/* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+:root {
+  --avatar-size: 44px;
+  --mat-tex-blend: multiply;
+  --mat-tex-pos: 0 0;
+  --zone-reject-surface: color-mix(in oklch, var(--pig-reject) 12%, var(--zone-ground));
+}
 /* ============================================================
    ConceptV Design System · CONTROLS & COMPONENTS  (the component layer)
    ------------------------------------------------------------
@@ -25,22 +32,22 @@
    tokens (no per-component custom-prop declarations — keeps the token registry
    clean). Default = quiet text-weight action. */
 .cv-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--d-2, 8px);
-  box-sizing: border-box; min-height: var(--control-h); padding-inline: var(--d-5, 18px);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--d-2);
+  box-sizing: border-box; min-height: var(--control-h); padding-inline: var(--d-5);
   border-radius: var(--r-md); border: 1.5px solid transparent;
   background: transparent; color: var(--ink);
-  font: var(--weight-semibold, 600) var(--fs-caption)/1 var(--font-body);
+  font: var(--weight-semibold) var(--fs-caption)/1 var(--font-body);
   white-space: nowrap; text-decoration: none; cursor: pointer; user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transition: background var(--dur-quick, 140ms) var(--ease-out, ease),
-              border-color var(--dur-quick, 140ms) var(--ease-out, ease),
-              color var(--dur-quick, 140ms) var(--ease-out, ease),
-              box-shadow var(--dur-quick, 140ms) var(--ease-out, ease),
-              transform var(--dur-instant, 90ms) var(--ease-out, ease);
+  transition: background var(--dur-quick) var(--ease-out),
+              border-color var(--dur-quick) var(--ease-out),
+              color var(--dur-quick) var(--ease-out),
+              box-shadow var(--dur-quick) var(--ease-out),
+              transform var(--dur-instant) var(--ease-out);
 }
 .cv-btn:active { transform: translateY(0.5px); }
 .cv-btn:disabled, .cv-btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; transform: none; }
-.cv-btn:focus-visible { outline: var(--focus-ring-width, 2px) solid var(--focus-ring); outline-offset: var(--focus-ring-offset, 2px); }
+.cv-btn:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
 
 /* primary — the gold decision/action voice (FIXED dark label on the fixed gold
    surface — --on-gold, never the theme-flipping --ink) */
@@ -58,7 +65,7 @@
 
 /* ghost — text only, hover wash (toolbar / low-emphasis) */
 .cv-btn--ghost { color: var(--ink-2); }
-.cv-btn--ghost:hover { background: var(--state-hover, color-mix(in oklch, var(--ink) 6%, transparent)); }
+.cv-btn--ghost:hover { background: var(--state-hover); }
 
 /* soft — gold-tinted low-emphasis fill (theme-aware: tint + ink both flip) */
 .cv-btn--soft { background: var(--vi-surface); color: var(--ink); }
@@ -70,8 +77,8 @@
 
 /* shape + size modifiers */
 .cv-btn--pill  { border-radius: var(--r-pill); }
-.cv-btn--sm    { min-height: var(--control-h-sm); padding-inline: var(--d-3, 12px); font-size: var(--fs-meta); }
-.cv-btn--lg    { min-height: calc(var(--control-h) + 8px); padding-inline: var(--d-6, 24px); font-size: var(--fs-body); }
+.cv-btn--sm    { min-height: var(--control-h-sm); padding-inline: var(--d-3); font-size: var(--fs-meta); }
+.cv-btn--lg    { min-height: calc(var(--control-h) + 8px); padding-inline: var(--d-6); font-size: var(--fs-body); }
 .cv-btn--block { display: flex; width: 100%; }
 .cv-btn--icon  { padding-inline: 0; aspect-ratio: 1; }
 
@@ -82,8 +89,20 @@
   background: var(--zone-ground); color: var(--ink);
   border: 1px solid transparent; box-shadow: var(--shadow-card);
 }
+/* React components consume the MATERIAL SLOTS when a skin governs the page
+   (unification sweep §2.6): under any [data-skin] scope the card's surface,
+   edge and texture resolve from the skin's material roles — flip the skin and
+   every Card follows. Un-skinned pages keep the classic bindings below,
+   byte-identical. Variant modifiers still win (they come later in the file). */
+[data-skin] .cv-card {
+  background: var(--mat-sheen), var(--mat-texture), var(--mat-fill, var(--zone-ground));
+  background-blend-mode: normal, var(--mat-tex-blend), normal;
+  background-position: 0 0, var(--mat-tex-pos), 0 0;
+  border-color: var(--mat-edge-soft);
+}
+
 /* the soft cream deck panel (warm undertone over the ground) */
-.cv-card--soft    { background: color-mix(in oklch, var(--pig-content) calc(4% * var(--zone-intensity, 1)), var(--zone-ground)); }
+.cv-card--soft    { background: color-mix(in oklch, var(--pig-content) calc(4% * var(--zone-intensity)), var(--zone-ground)); }
 /* the white content card (images / dashboards) that lifts off the paper */
 .cv-card--surface { background: var(--bg-surface, var(--zone-ground)); }
 /* stroke-only panel (the outlined gold panel — capital-raise p27) */
@@ -92,25 +111,25 @@
 .cv-card--raised  { box-shadow: var(--shadow-pop); }
 .cv-card--pad-lg  { padding: var(--d-6); }
 .cv-card--pad-sm  { padding: var(--d-3); }
-.cv-card--interactive { cursor: pointer; transition: box-shadow var(--dur-quick, 140ms) var(--ease-out, ease), transform var(--dur-quick, 140ms) var(--ease-out, ease); }
+.cv-card--interactive { cursor: pointer; transition: box-shadow var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out); }
 .cv-card--interactive:hover { box-shadow: var(--shadow-pop); transform: translateY(-1px); }
 .cv-card__head { display: flex; align-items: baseline; gap: var(--d-2); }
-.cv-card__title { margin: 0; font: var(--weight-semibold, 600) var(--fs-h4)/1.2 var(--font-display); color: var(--ink); }
-.cv-card__sub   { margin: 0; font: var(--weight-regular, 400) var(--fs-caption)/1.4 var(--font-body); color: var(--ink-3); }
+.cv-card__title { margin: 0; font: var(--weight-semibold) var(--fs-h4)/1.2 var(--font-display); color: var(--ink); }
+.cv-card__sub   { margin: 0; font: var(--weight-regular) var(--fs-caption)/1.4 var(--font-body); color: var(--ink-3); }
 .cv-card__foot  { display: flex; align-items: center; gap: var(--d-2); margin-top: auto; padding-top: var(--d-2); }
 
 /* ---- FIELD / INPUT ---------------------------------------- */
 .cv-field { display: flex; flex-direction: column; gap: var(--d-1); min-width: 0; }
-.cv-label { font: var(--weight-semibold, 600) var(--fs-caption)/1.2 var(--font-body); color: var(--ink-2); }
-.cv-hint  { font: var(--weight-regular, 400) var(--fs-meta)/1.35 var(--font-body); color: var(--ink-3); }
+.cv-label { font: var(--weight-semibold) var(--fs-caption)/1.2 var(--font-body); color: var(--ink-2); }
+.cv-hint  { font: var(--weight-regular) var(--fs-meta)/1.35 var(--font-body); color: var(--ink-3); }
 .cv-hint--error { color: var(--pig-reject); }
 
 .cv-input, .cv-textarea, .cv-select {
   box-sizing: border-box; width: 100%; min-height: var(--control-h);
   padding-inline: var(--d-3); border-radius: var(--r-md);
   border: 1px solid var(--hairline-strong); background: var(--bg-surface, var(--zone-ground)); color: var(--ink);
-  font: var(--weight-regular, 400) var(--fs-caption)/1.4 var(--font-body);
-  transition: border-color var(--dur-quick, 140ms) var(--ease-out, ease), box-shadow var(--dur-quick, 140ms) var(--ease-out, ease);
+  font: var(--weight-regular) var(--fs-caption)/1.4 var(--font-body);
+  transition: border-color var(--dur-quick) var(--ease-out), box-shadow var(--dur-quick) var(--ease-out);
 }
 .cv-textarea { min-height: calc(var(--control-h) * 2.2); padding-block: var(--d-2); resize: vertical; line-height: 1.5; }
 .cv-select { appearance: none; padding-right: var(--d-6);
@@ -127,49 +146,49 @@
 .cv-search { display: inline-flex; align-items: center; gap: var(--d-2); box-sizing: border-box; min-height: var(--control-h);
   padding-inline: var(--d-3); border-radius: var(--r-pill); border: 1px solid var(--hairline-strong); background: var(--bg-surface, var(--zone-ground)); }
 .cv-search:focus-within { border-color: var(--accent-gold); box-shadow: 0 0 0 3px var(--accent-gold-soft); }
-.cv-search > input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; color: var(--ink); font: var(--weight-regular, 400) var(--fs-caption)/1 var(--font-body); }
+.cv-search > input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; color: var(--ink); font: var(--weight-regular) var(--fs-caption)/1 var(--font-body); }
 
 /* ---- BADGE / PILL / CHIP / TAG ---------------------------- */
 /* badge — a small status label */
 .cv-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: var(--r-pill);
-  font: var(--weight-semibold, 600) var(--fs-meta)/1.3 var(--font-body);
+  font: var(--weight-semibold) var(--fs-meta)/1.3 var(--font-body);
   background: color-mix(in oklch, var(--ink) 7%, transparent); color: var(--ink-2); }
 .cv-badge--gold    { background: var(--accent-gold-faint); color: var(--accent-bronze-2); }
 .cv-badge--success { background: var(--zone-success-surface); color: var(--zone-success-ink); }
 .cv-badge--warning { background: color-mix(in oklch, var(--pig-warning) 16%, var(--zone-ground)); color: color-mix(in oklch, var(--pig-warning) 62%, var(--ink)); }
-.cv-badge--error   { background: var(--zone-reject-surface, color-mix(in oklch, var(--pig-reject) 12%, var(--zone-ground))); color: var(--zone-reject-ink); }
+.cv-badge--error   { background: var(--zone-reject-surface); color: var(--zone-reject-ink); }
 .cv-badge--comm    { background: var(--comm-surface); color: var(--comm-ink); }
 .cv-badge--dot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
 
 /* stat pill — embossed value + label (the deck statpills / metric chips) */
 .cv-pill { display: inline-flex; align-items: baseline; gap: 10px; box-sizing: border-box; padding: 10px 18px; border-radius: var(--r-md);
-  background: var(--zone-ground); box-shadow: var(--shadow-inset, inset 0 1px 0 rgba(255,255,255,.6)), var(--shadow-sm); }
-.cv-pill__v { font: var(--weight-bold, 700) var(--fs-h3)/1 var(--font-display); color: var(--accent-gold); font-variant-numeric: tabular-nums; letter-spacing: var(--tracking-tight, -0.02em); }
-.cv-pill__l { font: var(--weight-medium, 500) var(--fs-caption)/1.3 var(--font-body); color: var(--ink-3); }
+  background: var(--zone-ground); box-shadow: var(--shadow-inset), var(--shadow-sm); }
+.cv-pill__v { font: var(--weight-bold) var(--fs-h3)/1 var(--font-display); color: var(--accent-gold); font-variant-numeric: tabular-nums; letter-spacing: var(--tracking-tight); }
+.cv-pill__l { font: var(--weight-medium) var(--fs-caption)/1.3 var(--font-body); color: var(--ink-3); }
 
 /* chip — a keyword / token / filter chip (hairline ring) */
 .cv-chip { display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; padding: 5px 12px; border-radius: var(--r-pill);
   background: var(--zone-ground); box-shadow: inset 0 0 0 1px var(--hairline-strong);
-  font: var(--weight-medium, 500) var(--fs-caption)/1 var(--font-body); color: var(--ink-2); cursor: default; }
+  font: var(--weight-medium) var(--fs-caption)/1 var(--font-body); color: var(--ink-2); cursor: default; }
 .cv-chip--active { box-shadow: inset 0 0 0 1.5px var(--accent-gold); background: var(--vi-surface); color: var(--ink); }   /* theme-aware tint so it stays legible on dark grounds */
-button.cv-chip, a.cv-chip { cursor: pointer; transition: box-shadow var(--dur-quick,140ms) var(--ease-out,ease); }
+button.cv-chip, a.cv-chip { cursor: pointer; transition: box-shadow var(--dur-quick) var(--ease-out); }
 button.cv-chip:hover, a.cv-chip:hover { box-shadow: inset 0 0 0 1.5px var(--accent-gold); }
 
 /* tag — tiny mono label (versions / kinds) */
 .cv-tag { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: var(--r-sm);
-  font: var(--weight-medium, 500) var(--fs-meta)/1.2 var(--font-mono); letter-spacing: var(--tracking-caps, 0.06em); text-transform: uppercase;
+  font: var(--weight-medium) var(--fs-meta)/1.2 var(--font-mono); letter-spacing: var(--tracking-caps); text-transform: uppercase;
   color: var(--accent-bronze); background: color-mix(in oklch, var(--accent-bronze) 10%, transparent); }
 
 /* ---- TABLE (comparison / pricing) -------------------------- */
-.cv-table { width: 100%; border-collapse: collapse; font: var(--weight-regular, 400) var(--fs-caption)/1.4 var(--font-body); color: var(--ink-2); }
+.cv-table { width: 100%; border-collapse: collapse; font: var(--weight-regular) var(--fs-caption)/1.4 var(--font-body); color: var(--ink-2); }
 .cv-table th { text-align: left; padding: var(--d-2) var(--d-3); border-bottom: 1.5px solid var(--hairline-strong);
-  font: var(--weight-semibold, 600) var(--fs-caption)/1.2 var(--font-body); color: var(--accent-bronze);
-  text-transform: uppercase; letter-spacing: var(--tracking-caps, 0.08em); }
+  font: var(--weight-semibold) var(--fs-caption)/1.2 var(--font-body); color: var(--accent-bronze);
+  text-transform: uppercase; letter-spacing: var(--tracking-caps); }
 .cv-table td { padding: var(--d-2) var(--d-3); border-bottom: 1px solid var(--hairline); }
 .cv-table tr:last-child td { border-bottom: none; }
 .cv-table--striped tbody tr:nth-child(even) td { background: color-mix(in oklch, var(--ink) 2.5%, transparent); }
 .cv-table__num { text-align: right; font-variant-numeric: tabular-nums; }
-.cv-table__feature { color: var(--accent-gold); font-weight: var(--weight-bold, 700); }   /* the highlighted offer column */
+.cv-table__feature { color: var(--accent-gold); font-weight: var(--weight-bold); }   /* the highlighted offer column */
 
 /* ---- DIVIDER ---------------------------------------------- */
 .cv-divider { height: 1px; border: none; background: var(--hairline); margin-block: var(--d-3); }
@@ -179,17 +198,17 @@ button.cv-chip:hover, a.cv-chip:hover { box-shadow: inset 0 0 0 1.5px var(--acce
 /* ---- TABS (product dashboard: SCREENSHOT · CAPTURES · ARCHIVE) -- *
    Text tabs on a hairline baseline; the active tab carries the gold underline
    (gold = the active voice). */
-.cv-tabs { display: flex; gap: var(--d-4, 16px); border-bottom: 1px solid var(--hairline-strong); }
+.cv-tabs { display: flex; gap: var(--d-4); border-bottom: 1px solid var(--hairline-strong); }
 .cv-tab {
   appearance: none; background: none; border: none; cursor: pointer;
   padding: var(--d-2) 2px var(--d-3); margin-bottom: -1px;
-  font: var(--weight-semibold, 600) var(--fs-caption)/1 var(--font-body); color: var(--ink-3);
+  font: var(--weight-semibold) var(--fs-caption)/1 var(--font-body); color: var(--ink-3);
   border-bottom: 2px solid transparent;
-  transition: color var(--dur-quick, 140ms) var(--ease-out, ease), border-color var(--dur-quick, 140ms) var(--ease-out, ease);
+  transition: color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out);
 }
 .cv-tab:hover { color: var(--ink-2); }
 .cv-tab[aria-selected="true"], .cv-tab.is-active { color: var(--ink); border-bottom-color: var(--accent-gold); }
-.cv-tab:focus-visible { outline: var(--focus-ring-width, 2px) solid var(--focus-ring); outline-offset: 2px; border-radius: var(--r-sm); }
+.cv-tab:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: 2px; border-radius: var(--r-sm); }
 
 /* ---- SEGMENTED CONTROL (landing audience toggle) -------------- *
    A pill track of 2–3 options; the active one lifts onto a surface. */
@@ -197,8 +216,8 @@ button.cv-chip:hover, a.cv-chip:hover { box-shadow: inset 0 0 0 1.5px var(--acce
 .cv-segmented__opt {
   appearance: none; background: none; border: none; cursor: pointer; white-space: nowrap;
   padding: var(--d-1) var(--d-4); border-radius: var(--r-pill);
-  font: var(--weight-semibold, 600) var(--fs-caption)/1.4 var(--font-body); color: var(--ink-3);
-  transition: background var(--dur-quick, 140ms) var(--ease-out, ease), color var(--dur-quick, 140ms) var(--ease-out, ease), box-shadow var(--dur-quick, 140ms) var(--ease-out, ease);
+  font: var(--weight-semibold) var(--fs-caption)/1.4 var(--font-body); color: var(--ink-3);
+  transition: background var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out), box-shadow var(--dur-quick) var(--ease-out);
 }
 .cv-segmented__opt[aria-selected="true"], .cv-segmented__opt.is-active { background: var(--bg-surface, var(--zone-ground)); color: var(--ink); box-shadow: var(--shadow-sm); }
 
@@ -206,40 +225,49 @@ button.cv-chip:hover, a.cv-chip:hover { box-shadow: inset 0 0 0 1.5px var(--acce
    The track goes gold when on (gold = active). Drive with [aria-checked] or .is-on. */
 .cv-switch { position: relative; display: inline-flex; flex: none; align-items: center; width: 40px; height: 24px; padding: 0; border: none; cursor: pointer;
   border-radius: var(--r-pill); background: color-mix(in oklch, var(--ink) 18%, transparent);
-  transition: background var(--dur-quick, 140ms) var(--ease-out, ease); }
-.cv-switch::after { content: ""; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--bg-surface, #fff); box-shadow: var(--shadow-sm);
-  transition: transform var(--dur-quick, 140ms) var(--ease-out, ease); }
+  transition: background var(--dur-quick) var(--ease-out); }
+.cv-switch::after { content: ""; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--bg-surface); box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-quick) var(--ease-out); }
 .cv-switch[aria-checked="true"], .cv-switch.is-on { background: var(--accent-gold); }
 .cv-switch[aria-checked="true"]::after, .cv-switch.is-on::after { transform: translateX(16px); }
-.cv-switch:focus-visible { outline: var(--focus-ring-width, 2px) solid var(--focus-ring); outline-offset: 2px; }
+.cv-switch:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: 2px; }
 
 /* ---- AVATAR (team / personnel) ------------------------------- *
    Circular initials/photo holder (the team rows). Size via --avatar-size. */
 .cv-avatar { display: inline-grid; place-items: center; flex: none; box-sizing: border-box;
-  width: var(--avatar-size, 44px); height: var(--avatar-size, 44px); border-radius: 50%; overflow: hidden;
+  width: var(--avatar-size); height: var(--avatar-size); border-radius: 50%; overflow: hidden;
   background: color-mix(in oklch, var(--pig-content) 7%, var(--zone-ground)); box-shadow: inset 0 0 0 1px var(--hairline-strong);
-  font: var(--weight-semibold, 600) var(--fs-caption)/1 var(--font-body); color: var(--accent-bronze); }
+  font: var(--weight-semibold) var(--fs-caption)/1 var(--font-body); color: var(--accent-bronze); }
 .cv-avatar > img { width: 100%; height: 100%; object-fit: cover; }
 .cv-avatar--gold { color: var(--on-gold); background: var(--accent-gold); box-shadow: none; }
 
 /* ---- TOOLTIP (dark bubble) ----------------------------------- */
 .cv-tooltip { display: inline-block; padding: var(--d-1) var(--d-3); border-radius: var(--r-sm);
   background: var(--ink); color: var(--ink-inverse); box-shadow: var(--shadow-pop);
-  font: var(--weight-medium, 500) var(--fs-meta)/1.4 var(--font-body); max-width: 240px; }
+  font: var(--weight-medium) var(--fs-meta)/1.4 var(--font-body); max-width: 240px; }
 
 /* ---- MODAL (overlay + panel) -------------------------------- *
    Warm-dim backdrop + a raised surface panel. Drive open/close from the host
    (the React Modal toggles [data-open]); the panel is a .cv-card by nature. */
-.cv-modal-overlay { position: fixed; inset: 0; z-index: var(--z-modal, 1000); display: grid; place-items: center; padding: var(--d-5);
+/* floating surfaces consume the MATERIAL SLOTS under a skin scope, same law
+   as .cv-card above — flip the skin, every modal/popover/menu follows.
+   Un-skinned pages byte-identical (rules require [data-skin]). */
+[data-skin] .cv-modal, [data-skin] .cv-popover {
+  background: var(--mat-sheen), var(--mat-texture), var(--mat-fill, var(--bg-surface, var(--zone-ground)));
+  background-blend-mode: normal, var(--mat-tex-blend), normal;
+  border-color: var(--mat-edge, var(--hairline-strong));
+}
+
+.cv-modal-overlay { position: fixed; inset: 0; z-index: var(--z-modal); display: grid; place-items: center; padding: var(--d-5);
   background: color-mix(in oklch, var(--ink) 48%, transparent); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
 .cv-modal { box-sizing: border-box; width: min(520px, 100%); max-height: 86vh; overflow: auto;
   display: flex; flex-direction: column; gap: var(--d-4); padding: var(--d-6); border-radius: var(--r-xl);
   background: var(--bg-surface, var(--zone-ground)); color: var(--ink); box-shadow: var(--shadow-modal); }
 .cv-modal__head { display: flex; align-items: flex-start; gap: var(--d-3); }
-.cv-modal__title { margin: 0; flex: 1; font: var(--weight-semibold, 600) var(--fs-h3)/1.2 var(--font-display); color: var(--ink); }
+.cv-modal__title { margin: 0; flex: 1; font: var(--weight-semibold) var(--fs-h3)/1.2 var(--font-display); color: var(--ink); }
 .cv-modal__close { appearance: none; flex: none; width: var(--control-h-sm); aspect-ratio: 1; border: none; cursor: pointer; border-radius: var(--r-md);
-  background: transparent; color: var(--ink-3); font: var(--weight-bold, 700) var(--fs-body)/1 var(--font-body); }
-.cv-modal__close:hover { background: var(--state-hover, color-mix(in oklch, var(--ink) 6%, transparent)); color: var(--ink); }
+  background: transparent; color: var(--ink-3); font: var(--weight-bold) var(--fs-body)/1 var(--font-body); }
+.cv-modal__close:hover { background: var(--state-hover); color: var(--ink); }
 .cv-modal__foot { display: flex; justify-content: flex-end; gap: var(--d-2); margin-top: var(--d-1); }
 
 /* ---- STEPPER (linear numbered progress) --------------------- *
@@ -252,9 +280,219 @@ button.cv-chip:hover, a.cv-chip:hover { box-shadow: inset 0 0 0 1.5px var(--acce
 .cv-step:first-child::before { display: none; }
 .cv-step__dot { position: relative; z-index: 1; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
   background: var(--zone-ground); box-shadow: inset 0 0 0 2px var(--hairline-strong); color: var(--ink-3);
-  font: var(--weight-bold, 700) var(--fs-meta)/1 var(--font-body); }
-.cv-step__label { font: var(--weight-semibold, 600) var(--fs-meta)/1.3 var(--font-body); color: var(--ink-3); max-width: 14ch; }
+  font: var(--weight-bold) var(--fs-meta)/1 var(--font-body); }
+.cv-step__label { font: var(--weight-semibold) var(--fs-meta)/1.3 var(--font-body); color: var(--ink-3); max-width: 14ch; }
 .cv-step.is-done   .cv-step__dot { background: var(--accent-gold); box-shadow: none; color: var(--on-gold); }
 .cv-step.is-done::before { background: var(--accent-gold); }
 .cv-step.is-active .cv-step__dot { box-shadow: inset 0 0 0 2px var(--accent-gold); color: var(--ink); }
 .cv-step.is-active .cv-step__label, .cv-step.is-done .cv-step__label { color: var(--ink); }
+
+/* ---- POPOVER (shared floating surface) ----------------------- *
+   The anchored floating layer behind Tooltip and Select. Positioned by the
+   shared engine (window.CV_POPOVER, defined in components/Popover.jsx): it
+   flips and shifts to stay in the viewport. Fixed-position; z above modals' peers. */
+.cv-popover { position: fixed; z-index: var(--z-popover); box-sizing: border-box;
+  background: var(--bg-surface, var(--zone-ground)); color: var(--ink);
+  border: 1px solid var(--hairline-strong, var(--hairline)); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-pop); padding: var(--d-2);
+  opacity: 0; transform: translateY(-2px); transition: opacity var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out); }
+.cv-popover.is-open { opacity: 1; transform: none; }
+.cv-popover[data-placement^="top"]    { transform: translateY(2px); } .cv-popover[data-placement^="top"].is-open { transform: none; }
+/* bare variant — positioning only, no surface chrome (Tooltip supplies its own bubble) */
+.cv-pop-bare { position: fixed; z-index: var(--z-popover); opacity: 0; transform: translateY(-2px);
+  transition: opacity var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out); }
+.cv-pop-bare.is-open { opacity: 1; transform: none; }
+.cv-tooltip-anchor { display: inline-flex; }
+
+/* ---- SELECT (button + listbox popover) ----------------------- *
+   A trigger that reads like an Input; the menu is a .cv-popover listbox. */
+.cv-select { position: relative; display: inline-block; }
+.cv-select__btn { box-sizing: border-box; display: inline-flex; align-items: center; gap: var(--d-2); width: 100%;
+  min-height: var(--control-h-md); padding: 0 var(--d-3); border-radius: var(--r-md);
+  background: var(--bg-surface); color: var(--ink); border: 1px solid var(--hairline-strong, var(--hairline));
+  font: var(--weight-medium) var(--fs-body)/1 var(--font-body); cursor: pointer; text-align: left; }
+.cv-select__btn:hover { border-color: var(--accent-gold-soft, var(--accent-gold)); }
+.cv-select__btn[aria-expanded="true"] { border-color: var(--accent-gold); box-shadow: 0 0 0 3px var(--accent-gold-faint); }
+.cv-select__value { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cv-select__value.is-placeholder { color: var(--ink-3); }
+.cv-select__caret { flex: none; color: var(--ink-3); transition: transform var(--dur-quick) var(--ease-out); }
+.cv-select__btn[aria-expanded="true"] .cv-select__caret { transform: rotate(180deg); }
+.cv-select__menu { min-width: 100%; max-height: 280px; overflow: auto; display: flex; flex-direction: column; gap: 1px; }
+.cv-select__opt { display: flex; align-items: center; gap: var(--d-2); padding: var(--d-2) var(--d-3); border-radius: var(--r-sm);
+  background: transparent; border: none; cursor: pointer; text-align: left; color: var(--ink);
+  font: var(--weight-medium) var(--fs-body)/1.3 var(--font-body); white-space: nowrap; }
+.cv-select__opt:hover, .cv-select__opt.is-active { background: var(--state-hover); }
+.cv-select__opt[aria-selected="true"] { color: var(--ink); font-weight: var(--weight-semibold); }
+.cv-select__opt[aria-selected="true"]::after { content: "\2713"; margin-left: auto; color: var(--accent-gold); }
+.cv-select__opt[aria-disabled="true"] { opacity: .4; cursor: not-allowed; }
+
+/* ---- TOAST (global notifier) --------------------------------- *
+   The host is a fixed corner stack (window-level queue, one <ToastHost/>
+   per page); each toast rides the Badge tone vocabulary via a left
+   accent + status dot. Enter/exit are the tokens/motion.css primitives
+   (.enter-*/.exit-*) applied by the host — reduced-motion is honoured
+   for free (those keyframes already gate on prefers-reduced-motion). */
+.cv-toast-host { position: fixed; z-index: var(--z-toast); box-sizing: border-box;
+  top: var(--d-5); right: var(--d-5); display: flex; flex-direction: column; gap: var(--d-2);
+  max-width: min(360px, calc(100vw - 2 * var(--d-5))); pointer-events: none; }
+.cv-toast-host[data-position^="bottom"] { top: auto; bottom: var(--d-5); }
+.cv-toast-host[data-position$="center"] { left: 50%; right: auto; transform: translateX(-50%); align-items: center; }
+.cv-toast-host[data-position$="left"]   { left: var(--d-5); right: auto; }
+
+.cv-toast { pointer-events: auto; display: flex; align-items: flex-start; gap: var(--d-3); box-sizing: border-box;
+  width: min(360px, 100%); padding: var(--d-3) var(--d-4); border-radius: var(--r-lg);
+  background: var(--bg-surface, var(--zone-ground)); color: var(--ink); box-shadow: var(--shadow-pop);
+  border: 1px solid var(--hairline-strong); border-left: 3px solid var(--ink-4); }
+[data-skin] .cv-toast {
+  background: var(--mat-sheen), var(--mat-texture), var(--mat-fill, var(--bg-surface, var(--zone-ground)));
+  background-blend-mode: normal, var(--mat-tex-blend), normal;
+  border-color: var(--mat-edge, var(--hairline-strong));
+}
+.cv-toast--gold    { border-left-color: var(--accent-gold); }
+.cv-toast--success { border-left-color: var(--zone-success-ink); }
+.cv-toast--warning { border-left-color: color-mix(in oklch, var(--pig-warning) 62%, var(--ink)); }
+.cv-toast--error   { border-left-color: var(--zone-reject-ink); }
+.cv-toast--comm    { border-left-color: var(--comm-ink); }
+.cv-toast__dot { flex: none; width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--ink-4); }
+.cv-toast--gold    .cv-toast__dot { background: var(--accent-gold); }
+.cv-toast--success .cv-toast__dot { background: var(--zone-success-ink); }
+.cv-toast--warning .cv-toast__dot { background: color-mix(in oklch, var(--pig-warning) 62%, var(--ink)); }
+.cv-toast--error   .cv-toast__dot { background: var(--zone-reject-ink); }
+.cv-toast--comm    .cv-toast__dot { background: var(--comm-ink); }
+.cv-toast__body  { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cv-toast__title { font: var(--weight-semibold) var(--fs-caption)/1.3 var(--font-body); color: var(--ink); }
+.cv-toast__msg   { font: var(--weight-regular) var(--fs-meta)/1.4 var(--font-body); color: var(--ink-3); }
+.cv-toast__action { flex: none; appearance: none; background: none; border: none; cursor: pointer; padding: 0;
+  font: var(--weight-semibold) var(--fs-meta)/1 var(--font-body); color: var(--accent-gold-deep); }
+.cv-toast__action:hover { text-decoration: underline; }
+.cv-toast__close { flex: none; appearance: none; background: none; border: none; cursor: pointer;
+  width: 20px; height: 20px; border-radius: var(--r-sm); color: var(--ink-3);
+  font: var(--weight-bold) var(--fs-caption)/1 var(--font-body); line-height: 1; }
+.cv-toast__close:hover { background: var(--state-hover); color: var(--ink); }
+
+/* ---- SHEET (mobile-first slide-in panel — Modal's touch sibling) -- *
+   Shares Modal's overlay/backdrop/esc conventions; slides from an edge
+   instead of scaling in place. bottom sheet carries a --touch-min-
+   guarded drag handle. Reuses .cv-modal__head/__title/__close/__foot
+   for the header/footer — one home for dialog chrome, never a second. */
+.cv-sheet-overlay { position: fixed; inset: 0; z-index: var(--z-modal); display: flex;
+  background: color-mix(in oklch, var(--ink) 48%, transparent);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+.cv-sheet { box-sizing: border-box; display: flex; flex-direction: column; gap: var(--d-4);
+  background: var(--bg-surface, var(--zone-ground)); color: var(--ink); box-shadow: var(--shadow-modal);
+  transition: transform var(--dur-enter) var(--ease-entrance); }
+[data-skin] .cv-sheet {
+  background: var(--mat-sheen), var(--mat-texture), var(--mat-fill, var(--bg-surface, var(--zone-ground)));
+  background-blend-mode: normal, var(--mat-tex-blend), normal;
+  border-color: var(--mat-edge, var(--hairline-strong));
+}
+.cv-sheet.is-closing { transition-duration: var(--dur-exit); transition-timing-function: var(--ease-exit); }
+.cv-sheet[data-side="right"] { margin-left: auto; height: 100%; width: min(420px, 92vw);
+  padding: var(--d-6); border-radius: var(--r-xl) 0 0 var(--r-xl); overflow: auto; transform: translateX(100%); }
+.cv-sheet[data-side="right"].is-open { transform: translateX(0); }
+.cv-sheet[data-side="bottom"] { margin-top: auto; width: 100%; max-height: 88vh;
+  padding: var(--d-2) var(--d-6) calc(var(--d-6) + var(--safe-bottom)); border-radius: var(--r-xl) var(--r-xl) 0 0;
+  overflow: auto; transform: translateY(100%); }
+.cv-sheet[data-side="bottom"].is-open { transform: translateY(0); }
+.cv-sheet__handle-hit { flex: none; display: flex; align-items: center; justify-content: center;
+  min-height: var(--touch-min); margin: calc(-1 * var(--d-2)) calc(-1 * var(--d-2)) 0; cursor: grab; }
+.cv-sheet__handle { width: 36px; height: 4px; border-radius: var(--r-pill); background: var(--hairline-strong); }
+@media (prefers-reduced-motion: reduce) { .cv-sheet { transition-duration: 1ms; } }
+
+/* ---- LIST (rows: leading slot · primary/secondary text · trailing) -- *
+   Row height rides --row-h (density-aware, tokens/density.css); primary/
+   secondary text sizes reference the SAME length-budget tokens as
+   tokens/text.css (--len-title/--len-desc) so a row's text budget is
+   the typed-text rule, not a re-invented number. Selection/hover rides
+   .interactive (tokens/states.css) — no second interaction language. */
+.cv-list { display: flex; flex-direction: column; }
+.cv-list--divided > .cv-list-row + .cv-list-row { border-top: 1px solid var(--hairline); }
+.cv-list-row { display: flex; align-items: center; gap: var(--d-3); box-sizing: border-box;
+  min-height: var(--row-h); padding-inline: var(--d-3); border-radius: var(--r-md); }
+.cv-list-row__leading { flex: none; display: flex; align-items: center; justify-content: center; }
+.cv-list-row__body { flex: 1; display: flex; flex-direction: column; gap: 1px; justify-content: center; }
+.cv-list-row__primary { font: var(--weight-semibold) var(--fs-caption)/1.3 var(--font-body); color: var(--ink);
+  max-inline-size: var(--len-title); }
+.cv-list-row__secondary { font: var(--weight-regular) var(--fs-meta)/1.35 var(--font-body); color: var(--ink-3);
+  max-inline-size: var(--len-desc); }
+.cv-list-row__trailing { flex: none; display: flex; align-items: center; gap: var(--d-2); color: var(--ink-3);
+  font: var(--weight-medium) var(--fs-meta)/1 var(--font-body); }
+
+/* ---- MENU (action menu riding the shared Popover engine) -------- *
+   .cv-menu is the popover's content (mount it as the Popover's child,
+   never a second floating-layer implementation). Keyboard nav (arrows/
+   enter/esc) is owned by the Menu component; esc/outside-click already
+   close via Popover's onRequestClose. */
+.cv-menu { display: flex; flex-direction: column; gap: 1px; min-width: 190px; padding: var(--d-1); }
+.cv-menu__item { display: flex; align-items: center; gap: var(--d-2); box-sizing: border-box; width: 100%;
+  min-height: var(--control-h-sm); padding-inline: var(--d-3); border-radius: var(--r-sm);
+  background: transparent; border: none; cursor: pointer; text-align: left; color: var(--ink);
+  font: var(--weight-medium) var(--fs-body)/1.2 var(--font-body); white-space: nowrap; }
+.cv-menu__item:hover, .cv-menu__item.is-focused { background: var(--state-hover); }
+.cv-menu__item[aria-disabled="true"] { opacity: var(--disabled-opacity); cursor: not-allowed; pointer-events: none; }
+.cv-menu__item--danger { color: var(--zone-reject-ink); }
+.cv-menu__item--danger:hover, .cv-menu__item--danger.is-focused { background: var(--zone-reject-surface); }
+.cv-menu__icon { flex: none; display: flex; color: var(--ink-3); }
+.cv-menu__item--danger .cv-menu__icon { color: inherit; }
+.cv-menu__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cv-menu__sep { flex: none; height: 1px; margin: var(--d-1) var(--d-2); background: var(--hairline); }
+
+/* ---- CHECKBOX / RADIO (gold = selection/decision) --------------- *
+   Native input, restyled; the row wrapper guards the --touch-min hit
+   target since the visual box is smaller. Field stack reuses .cv-field/
+   .cv-label/.cv-hint — the same labelled stack as Input, never a
+   second one. */
+.cv-checkbox, .cv-radio { appearance: none; -webkit-appearance: none; flex: none; margin: 0;
+  width: 18px; height: 18px; box-sizing: border-box; cursor: pointer;
+  border: 1.5px solid var(--hairline-strong); background: var(--bg-surface, var(--zone-ground));
+  display: inline-grid; place-items: center;
+  transition: background var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
+.cv-checkbox { border-radius: var(--r-xs); }
+.cv-radio    { border-radius: 50%; }
+.cv-checkbox:checked, .cv-radio:checked, .cv-checkbox:indeterminate { background: var(--accent-gold); border-color: var(--accent-gold); }
+.cv-checkbox:checked::after { content: ""; width: 5px; height: 9px; border: solid var(--on-gold);
+  border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
+.cv-checkbox:indeterminate::after { content: ""; width: 8px; height: 2px; background: var(--on-gold); border-radius: 1px; }
+.cv-radio:checked::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--on-gold); }
+.cv-checkbox:disabled, .cv-radio:disabled { opacity: var(--disabled-opacity); cursor: not-allowed; }
+.cv-checkbox:focus-visible, .cv-radio:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+.cv-check-row { display: inline-flex; align-items: center; gap: var(--d-2); min-height: var(--touch-min); cursor: pointer; }
+.cv-check-row .cv-label { cursor: pointer; margin: 0; }
+
+/* ---- APPSHELL (the console chrome) ------------------------------ *
+   Desktop = header + nav rail + content; mobile = header + content +
+   bottom tab bar. Header/tabbar RIDE tokens/device.css's .cv-appbar/
+   .cv-tabbar verbatim (never a hand-rolled phone chrome — the rail is
+   the only genuinely-new chrome, since device.css only covers phone).
+   Surface switching prefers the explicit [data-surface] attribute
+   (higher specificity, wins inside a MultiSurface harness frame) and
+   falls back to real @media breakpoints (mirroring --bp-tablet from
+   tokens/surfaces.css, which documents this exact CSS-var limitation)
+   for standalone production use with no wrapping [data-surface]. */
+.cv-appshell { display: flex; flex-direction: column; min-height: 100%; background: var(--bg-canvas, var(--zone-ground)); color: var(--ink); }
+.cv-appshell__body { display: flex; flex: 1; min-height: 0; }
+.cv-appshell__rail { flex: none; width: 232px; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--d-1);
+  padding: var(--d-4) var(--d-3); border-right: 1px solid var(--hairline); background: var(--zone-panel-surface); overflow-y: auto; }
+.cv-appshell__content { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+.cv-appshell__scroll { flex: 1; overflow-y: auto; overflow-x: hidden; }
+.cv-rail-item { display: flex; align-items: center; gap: var(--d-3); box-sizing: border-box; width: 100%;
+  min-height: var(--control-h); padding-inline: var(--d-3); border-radius: var(--r-md);
+  background: none; border: none; cursor: pointer; text-align: left; color: var(--ink-3);
+  font: var(--weight-medium) var(--fs-caption)/1 var(--font-body); }
+.cv-rail-item:hover { background: var(--state-hover); color: var(--ink); }
+.cv-rail-item[aria-current="page"], .cv-rail-item.is-active { background: var(--vi-surface); color: var(--ink); font-weight: var(--weight-semibold); }
+.cv-rail-item[aria-current="page"] .cv-rail-item__icon, .cv-rail-item.is-active .cv-rail-item__icon { color: var(--accent-gold); }
+.cv-rail-item__icon { flex: none; display: flex; color: var(--ink-3); }
+/* real-viewport default (no wrapping [data-surface] — standalone/production use) */
+@media (max-width: 768px) {
+  .cv-appshell__rail   { display: none; }
+  .cv-appshell__tabbar { display: flex; }
+}
+@media (min-width: 769px) {
+  .cv-appshell__tabbar { display: none; }
+}
+/* explicit surface override — wins inside the MultiSurface harness regardless of real viewport width */
+[data-surface="desktop"] .cv-appshell__rail, [data-surface="tablet"] .cv-appshell__rail   { display: flex; }
+[data-surface="desktop"] .cv-appshell__tabbar, [data-surface="tablet"] .cv-appshell__tabbar { display: none; }
+[data-surface^="mobile"] .cv-appshell__rail   { display: none; }
+[data-surface^="mobile"] .cv-appshell__tabbar { display: flex; }

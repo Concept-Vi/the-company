@@ -28,7 +28,7 @@
   width: var(--page-w, var(--page-a4-w));
   min-height: var(--page-h, var(--page-a4-h));
   margin-inline: auto;
-  background: var(--zone-ground, #fff);
+  background: var(--zone-ground);
   box-shadow: var(--elev-3);
   padding: var(--page-margin);
   box-sizing: border-box;

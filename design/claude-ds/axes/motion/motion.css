@@ -15,17 +15,17 @@
 [class*="mo-"] { transform-origin: center; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .mo-breathe { animation: cvmo-breathe 3.6s var(--ease-soft, ease-in-out) infinite; }
-  .mo-pulse   { animation: cvmo-pulse   1.8s var(--ease-soft, ease-in-out) infinite; }
-  .mo-bob     { animation: cvmo-bob     2.4s var(--ease-soft, ease-in-out) infinite; }
-  .mo-tilt    { animation: cvmo-tilt    4s   var(--ease-soft, ease-in-out) infinite; }
+  .mo-breathe { animation: cvmo-breathe 3.6s var(--ease-soft) infinite; }
+  .mo-pulse   { animation: cvmo-pulse   1.8s var(--ease-soft) infinite; }
+  .mo-bob     { animation: cvmo-bob     2.4s var(--ease-soft) infinite; }
+  .mo-tilt    { animation: cvmo-tilt    4s   var(--ease-soft) infinite; }
   .mo-spin    { animation: cvmo-spin    2.2s linear infinite; }
-  .mo-float   { animation: cvmo-float   4.2s var(--ease-soft, ease-in-out) infinite; }
-  .mo-glow    { animation: cvmo-glow    2.6s var(--ease-soft, ease-in-out) infinite; }
+  .mo-float   { animation: cvmo-float   4.2s var(--ease-soft) infinite; }
+  .mo-glow    { animation: cvmo-glow    2.6s var(--ease-soft) infinite; }
 }
 
 /* hover-intent (interactive group) stays under reduced-motion — user-initiated, brief */
-.mo-tilt:hover { animation-play-state: paused; transform: rotate(-3deg) scale(1.04); transition: transform .25s var(--ease-soft, ease-out); }
+.mo-tilt:hover { animation-play-state: paused; transform: rotate(-3deg) scale(1.04); transition: transform .25s var(--ease-soft); }
 
 @keyframes cvmo-breathe { 0%,100% { transform: scale(1); }      50% { transform: scale(1.045); } }
 @keyframes cvmo-pulse   { 0%,100% { opacity: 1; }               50% { opacity: .55; } }

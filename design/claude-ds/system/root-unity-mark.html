@@ -1,0 +1,62 @@
+<!-- @dsCard group="Root Unity" name="Root Unity — the mark" subtitle="√(unit): every part is the same one unit; the system is the root of it. The radicand is the Glyphic anatomy — square element · inscribed ring · centre symbol. Three placements, one single-source mark (CV_ROOT_UNITY_MARK)." viewport="900x520" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Root Unity — the mark</title>
+<link rel="stylesheet" href="../styles.css"/>
+<script src="../assets/brand/root-unity-mark.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--zone-ground); color: var(--fg-primary); font-family: var(--font-body); }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 36px 32px 60px; }
+  .kick { font: 600 11px/1 var(--font-mono); letter-spacing: .22em; text-transform: uppercase; color: var(--accent-bronze); }
+  h1 { margin: 10px 0 6px; font: 800 34px/1.04 var(--font-display); letter-spacing: -.02em; }
+  .stand { margin: 0 0 28px; font: 400 15px/1.55 var(--font-body); color: var(--fg-secondary); max-width: 70ch; text-wrap: pretty; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .cell { border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 34px 18px; min-height: 230px; border: 1px solid color-mix(in srgb, var(--accent-bronze) 16%, transparent); }
+  .cell .cap { font: 600 11px/1.3 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
+  .c-canvas { background: var(--paper); }
+  .c-canvas .cap { color: var(--accent-bronze); }
+  .c-gold { background: var(--accent-gold); }
+  .c-gold .cap { color: #2A2208; }
+  .c-dark { background: var(--fg-primary); }
+  .c-dark .cap { color: color-mix(in srgb, var(--accent-gold) 80%, #fff); }
+  .lockup { display: flex; align-items: center; gap: 16px; margin-top: 30px; padding: 22px 26px; border-radius: 16px; background: var(--paper); border: 1px solid color-mix(in srgb, var(--accent-bronze) 16%, transparent); }
+  .lockup .wm { font: 800 30px/1 var(--font-display); letter-spacing: -.02em; color: var(--fg-primary); }
+  .lockup .wm .sub { display: block; font: 500 11px/1.4 var(--font-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--accent-bronze); margin-top: 5px; }
+  .note { margin-top: 26px; font: 400 13px/1.6 var(--font-body); color: var(--fg-secondary); max-width: 74ch; text-wrap: pretty; border-top: 1px solid color-mix(in srgb, var(--accent-bronze) 16%, transparent); padding-top: 16px; }
+  .note b { color: var(--fg-primary); }
+  code { font: 500 12px/1 var(--font-mono); background: color-mix(in srgb, var(--accent-bronze) 9%, transparent); color: var(--accent-bronze); padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kick">ConceptV · Root Unity</div>
+  <h1>The Root Unity mark</h1>
+  <p class="stand">One mark for the whole system, drawn as the thing it describes: <b>√(unit)</b> — the root of the one unit that every component, token, slot, action and rule is an instance of. The radicand is the Glyphic anatomy itself: a square element, an inscribed ring, a centre symbol.</p>
+
+  <div class="row">
+    <div class="cell c-canvas"><span id="m1"></span><span class="cap">On canvas</span></div>
+    <div class="cell c-gold"><span id="m2"></span><span class="cap">On gold</span></div>
+    <div class="cell c-dark"><span id="m3"></span><span class="cap">On dark</span></div>
+  </div>
+
+  <div class="lockup">
+    <span id="m4"></span>
+    <span class="wm">Root&nbsp;Unity<span class="sub">√ the unit · one system</span></span>
+  </div>
+
+  <p class="note"><b>Why this mark.</b> The name is the thesis: everything is the same one unit (Unity), and the system is the <b>root</b> from which every instance grows — <b>√(unit)</b>. The radicand literally draws the universal node's anatomy, so the brand and the architecture are the same picture. Single source: the geometry lives only in <code>assets/brand/root-unity-mark.js</code> (<code>CV_ROOT_UNITY_MARK.svg()</code>); every placement here, and the app, read it from there — change it once, it changes everywhere.</p>
+</div>
+<script>
+(function () {
+  var M = window.CV_ROOT_UNITY_MARK;
+  document.getElementById('m1').innerHTML = M.svg({ size: 96 });
+  document.getElementById('m2').innerHTML = M.svg({ size: 96, ink: '#2A2208', ring: '#FFFFFF', dot: '#2A2208' });
+  document.getElementById('m3').innerHTML = M.svg({ size: 96, ink: '#F3EEDF', ring: 'var(--accent-gold)', dot: 'var(--accent-gold)' });
+  document.getElementById('m4').innerHTML = M.svg({ size: 52 });
+})();
+</script>
+</body>
+</html>

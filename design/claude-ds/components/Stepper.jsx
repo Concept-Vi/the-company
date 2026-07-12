@@ -10,7 +10,7 @@ export function Stepper(props) {
       const label = s && typeof s === "object" ? s.label : s;
       const state = i < active ? "is-done" : i === active ? "is-active" : "";
       return h("div", { key: i, className: ["cv-step", state].filter(Boolean).join(" ") },
-        h("span", { className: "cv-step__dot" }, i < active ? "✓" : String(i + 1)),
+        h("span", { className: "cv-step__dot" }, i < active ? "\u2713" : String(i + 1)),
         h("span", { className: "cv-step__label" }, label));
     }));
 }

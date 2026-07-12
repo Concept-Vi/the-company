@@ -12,7 +12,7 @@
    ============================================================ */
 :root {
   --author-vi:        var(--accent-gold);
-  --author-human:     var(--zone-source-ink, #3a5780);
+  --author-human:     var(--zone-source-ink);
   --author-suggested: var(--accent-bronze);
 }
 

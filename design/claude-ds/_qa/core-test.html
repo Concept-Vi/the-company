@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../styles.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>body{margin:0;padding:24px;background:var(--zone-ground);font-family:var(--font-body)}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.cap{font:700 10px/1 var(--font-mono);color:var(--accent-bronze);margin-bottom:6px;display:block}
+.frame{position:relative;border:1px solid var(--zone-base-edge);border-radius:10px;overflow:hidden;box-shadow:var(--elev-2)}
+.artboard{width:1100px;transform-origin:top left}</style>
+</head>
+<body>
+<div class="row" id="lod"></div>
+<div class="row" id="dgm"></div>
+<script>
+async function boot() {
+  async function load(path) {
+    const txt = await (await fetch(path)).text();
+    const stripped = txt.replace(/^export default .*;?$/gm, "").replace(/^export /gm, "");
+    return Babel.transform(stripped, { presets: ["react"] }).code;
+  }
+  function build(code, name) { return new Function("React", "window", code + "\nreturn " + name + ";")(React, window); }
+  const dsCode = await load("../core/DiagramSolver.jsx");
+  const ctCode = await load("../core/ContainmentTree.jsx");
+  const DiagramSolver = build(dsCode, "DiagramSolver");
+  const ContainmentTree = build(ctCode, "ContainmentTree");
+  const e = React.createElement;
+
+  const spec = { kind:"band", title:"Why teams switch", children:[
+    { kind:"section", title:"The shift", priority:1, children:[
+      { kind:"cluster", flow:"grid", children:[
+        { kind:"zone", children:[{kind:"atom",role:"metric",value:"3.2×",label:"faster handoff",priority:1}] },
+        { kind:"zone", tone:"neutral", children:[{kind:"atom",role:"metric",value:"12k",label:"assets",priority:2}] },
+      ]},
+    ]},
+    { kind:"section", title:"What changes", priority:2, children:[
+      { kind:"zone", children:[
+        {kind:"atom",role:"bullet",bullet:"leads",title:"One source of truth",text:"tokens flow everywhere.",priority:1,detail:"support"},
+        {kind:"atom",role:"bullet",bullet:"done",title:"Nothing drifts",text:"every value is a token.",priority:3,detail:"support"},
+      ]},
+    ]},
+  ]};
+  [["summary","SUMMARY"],["pitch","PITCH"],["full","FULL"]].forEach(([lod,cap])=>{
+    const col=document.createElement("div");
+    col.innerHTML='<span class="cap">'+cap+'</span>';
+    const f=document.createElement("div"); f.className="frame";
+    const art=document.createElement("div"); art.className="artboard"; f.appendChild(art);
+    col.appendChild(f);
+    document.getElementById("lod").appendChild(col);
+    ReactDOM.createRoot(art).render(e(ContainmentTree,{node:spec,lod,surface:"slide",density:"compact",DiagramSolver}));
+    const fit=()=>{const s=f.clientWidth/1100;art.style.transform="scale("+s+")";f.style.height=(art.offsetHeight*s)+"px";};
+    requestAnimationFrame(fit); new ResizeObserver(fit).observe(f); setTimeout(fit,300);
+  });
+
+  const N=(ids)=>ids.map(id=>({id,label:id}));
+  [["hub",{type:"hub",center:"Vi",nodes:N(["Vi","Decks","Web","App","Brand"]),edges:["Decks","Web","App","Brand"].map(t=>({from:"Vi",to:t,kind:"flow"}))}],
+   ["pipeline",{type:"pipeline",nodes:N(["Design","Review","Ship"]),edges:[{from:"Design",to:"Review",kind:"flow"},{from:"Review",to:"Ship",kind:"flow"}]}],
+   ["quadrant",{type:"quadrant",axes:["Effort","Value"],nodes:[{id:"A",label:"Win",x:0.2,y:0.8},{id:"B",label:"Bet",x:0.8,y:0.85}]}],
+  ].forEach(([cap,graph])=>{
+    const col=document.createElement("div");
+    col.innerHTML='<span class="cap">'+cap+'</span>';
+    const m=document.createElement("div"); col.appendChild(m);
+    document.getElementById("dgm").appendChild(col);
+    ReactDOM.createRoot(m).render(e(DiagramSolver,{graph}));
+  });
+  window.__ready = true;
+}
+boot().catch(err => { document.body.innerHTML = '<pre style="color:red">'+err.stack+'</pre>'; });
+</script>
+</body>
+</html>

@@ -38,6 +38,11 @@
 
   function getField(ctx, path) {
     if (!ctx) return undefined;
+    // single source for dotted-path reads: delegate to CV_VARS when present
+    // (so "a.b.c" means the same thing in conditions, actions, vars, projection).
+    if (typeof window !== 'undefined' && window.CV_VARS && window.CV_VARS.getPath) {
+      return window.CV_VARS.getPath(ctx, path);
+    }
     return String(path).split('.').reduce(function (o, k) { return (o == null ? undefined : o[k]); }, ctx);
   }
 

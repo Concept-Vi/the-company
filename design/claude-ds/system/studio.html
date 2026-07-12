@@ -1,0 +1,618 @@
+<!-- @dsCard group="Studio" name="Studio — talk + click, one action layer" subtitle="The node Studio: a Make view for regular people and a Build view for system authors are the SAME projection at two audiences. Glyphic-native, zone-coloured, human copy, responsive. Voice is just another provider on the loop." viewport="1440x900" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Root Unity — Studio</title>
+<link rel="stylesheet" href="../styles.css"/>
+<link rel="stylesheet" href="../tonal-zoning.css"/>
+<link rel="stylesheet" href="../assets/icons/cv-glyphic.css"/>
+<link rel="stylesheet" href="../tokens/motion.css"/>
+<link rel="stylesheet" href="../axes/motion/motion.css"/>
+<script src="../app/registry/vars.js"></script>
+<script src="../app/registry/query.js"></script>
+<script src="../app/registry/conditions.js"></script>
+<script src="../app/registry/decorators.js"></script>
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../axes/glow/glow-axis.js"></script>
+<script src="../axes/shadow/shadow-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<script src="../assets/brand/root-unity-mark.js"></script>
+<script src="../app/ai/ai-registry.js"></script>
+<script src="../app/ai/ai-glyphic.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../app/registry/glyphic-type.js"></script>
+<script src="../app/registry/components-type.js"></script>
+<script src="../app/registry/kinds-type.js"></script>
+<script src="../app/registry/views.js"></script>
+<script src="../core/cv-node.js"></script>
+<script src="../app/registry/actions.js"></script>
+<script src="../app/registry/events.js"></script>
+<script src="../app/registry/project.js"></script>
+<script src="../app/ai/ai-studio.js"></script>
+<link rel="stylesheet" href="studio.css">
+</head>
+<body data-mode="make">
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><span class="mk" id="mark"></span><span class="bn">Root Unity<span class="bs">Studio</span></span></div>
+    <span class="spacer"></span>
+    <div class="modes" id="modes">
+      <button class="mode on" data-mode="make"><span class="ico" id="ic-make"></span>Make<span class="mh">for anyone</span></button>
+      <button class="mode" data-mode="build"><span class="ico" id="ic-build2"></span>Build<span class="mh">the system</span></button>
+    </div>
+  </header>
+
+  <aside class="rail">
+    <div class="railtabs">
+      <button class="rt on" data-rt="start"><span class="ico" id="ic-lib"></span>Start from</button>
+      <button class="rt" data-rt="chat" id="rt-chat-btn" style="display:none"><span class="ico" id="ic-chat"></span>Chat</button>
+      <button class="rt" data-rt="rules"><span class="ico" id="ic-rules"></span>Behaviours</button>
+    </div>
+    <div class="rtpane on" id="rtp-start">
+      <section>
+        <div class="sech"><span class="t">Starting points</span><span class="s" id="gallery-sub"></span></div>
+        <div class="gallery" id="gallery"></div>
+        <div class="railnote" id="librarynote"></div>
+      </section>
+      <section id="buildsec" style="display:none">
+        <div class="sech"><span class="ico" id="ic-build"></span><span class="t">Build the system</span><span class="s">authoring</span></div>
+        <div id="metapane"></div>
+      </section>
+      <div class="railnote" id="footnote" style="margin-top:auto"></div>
+    </div>
+    <div class="rtpane" id="rtp-chat"><div class="log" id="log"></div></div>
+    <div class="rtpane" id="rtp-rules"></div>
+  </aside>
+
+  <main class="canvas">
+    <div class="canvastop">
+      <div class="ct"><span class="ctk">Your mark</span><span class="cdesc" id="v-id"></span></div>
+      <button id="undo" class="undobtn" disabled><span class="ico" id="ic-undo"></span>Undo</button>
+    </div>
+    <div class="stagearea">
+      <div class="stage" id="stagewrap"><div class="hltag" id="hltag"><span class="ico" id="ic-eye"></span>Vi is looking</div><div id="stage"></div></div>
+      <div class="stagecap"><div class="human" id="human"></div><div class="spec" id="specline"></div></div>
+    </div>
+    <div class="omni">
+      <div class="composer">
+        <button class="mic" id="mic" title="Voice — connect a provider to talk"><span class="ico" id="ic-mic"></span></button>
+        <div class="field"><input id="chatin" placeholder="Tell Vi what you want — “make it a hexagon”, “add a gear”, “give it a glow”"/></div>
+        <button class="send" id="send"><span class="ico" id="ic-send"></span>Send</button>
+      </div>
+    </div>
+  </main>
+
+  <aside class="inspect">
+    <div class="tabs" id="rtabs">
+      <button class="rtab on" data-pane="inspector"><span class="ico" id="ic-insp"></span>Edit</button>
+      <button class="rtab dev" data-pane="toolschema"><span class="ico" id="ic-ai"></span>What Vi sees</button>
+      <button class="rtab dev" data-pane="contextpane"><span class="ico" id="ic-ctx"></span>Context</button>
+    </div>
+    <div class="panebody">
+      <div class="pane on" id="pane-inspector"><div id="inspector"></div></div>
+      <div class="pane" id="pane-toolschema"><div class="panehead">The same mark, handed to the AI as callable tools — <b>one source, two projections</b>.</div><pre id="toolschema"></pre></div>
+      <div class="pane" id="pane-contextpane"><div class="panehead">What Vi knows about where you are — the shared <b>context</b>, resolved live.</div><pre id="contextpane"></pre></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  var N = window.CV_NODE, A = window.CV_ACTIONS, P = window.CV_PROJECT, GL = window.CV_GLYPHIC, AX = window.CV_AXES, AI = window.CV_AI, E = window.CV_EVENTS, R = window.CV_REGISTRY, IC = window.CV_ICONS;
+
+  // icons resolve to REAL CV_ICONS glyphs (alias the names the system uses to the
+  // glyphs that exist; a clean square if truly absent — never a meaningless dot).
+  var IALIAS = { cursor: 'eye', 'arrow-right': 'play', 'arrow-left': 'undo', sparkles: 'lightbulb', sliders: 'adjustments', send: 'play', mic: 'megaphone', insp: 'adjustments', make: 'edit', build: 'gear', wand: 'lightbulb', hexagon: 'change-style' };
+  function icon(name, sz) {
+    var key = IALIAS[name] || name;
+    var body = (IC && IC.get && IC.get(key)) || (IC && IC.get && IC.get(name)) || '';
+    if (!body) body = '<rect x="4" y="4" width="16" height="16" rx="4"/>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:' + (sz || 100) + (sz ? 'px' : '%') + ';height:' + (sz || 100) + (sz ? 'px' : '%') + '">' + body + '</svg>';
+  }
+  function setIcon(id, name) { var el = document.getElementById(id); if (el) el.innerHTML = icon(name); }
+  function thumb(spec, size) { try { var o = N.render(spec, { opts: { size: size || 32 } }); return '<span class="cv-glyphic ' + (o.motionClass || '') + '" style="display:inline-flex">' + o.svg + '</span>'; } catch (e) { return ''; } }
+  function human(axis, id) {
+    if (id == null) return '';
+    try { var v = AX.resolve(axis).tryResolve(id); if (v && v.label) return v.label.split('—')[0].trim().toLowerCase(); } catch (e) {}
+    return String(id).replace(/-/g, ' ');
+  }
+  var ART = function (w) { return /^[aeiou]/i.test(w) ? 'an ' : 'a '; };
+  function describe(n) {
+    var fw = n.form && n.form !== 'none' ? human('form', n.form) : null;
+    var sym = (n.symbol || '').replace(/-/g, ' ');
+    var p = [fw ? ART(fw) + '<b>' + fw + '</b> holding ' + ART(sym) + '<b>' + sym + '</b>' : 'a bare <b>' + sym + '</b> mark'];
+    var fill = { none: 'no fill', paper: 'a paper fill', wash: 'a soft gold wash', tint: 'a colour tint' }[n.fill]; if (fill) p.push(fill);
+    if (n.texture && n.texture !== 'none') p.push('a ' + human('texture', n.texture) + ' texture');
+    p.push(!n.motion || n.motion === 'none' ? 'sitting still' : 'with a gentle ' + human('motion', n.motion));
+    var s = p.join(', '); return s.charAt(0).toUpperCase() + s.slice(1) + '.';
+  }
+
+  var mode = 'make';   // audience: 'make' → maker, 'build' → author/dev
+  var activeKind = 'glyphic', activeLib = null;   // the kind you're working on + its open library
+  function aud() { return mode === 'build' ? 'author' : 'maker'; }
+  var state = { surface: 'studio', selection: 'glyphic', node: { form: 'octagon', symbol: 'house', fill: 'wash', texture: 'none', motion: 'none' }, log: [] };
+  var history = [];
+  function ctx() { return { node: state.node, state: state, surface: 'studio', audience: aud() }; }
+  function act(action, args, extra) {
+    var res = A.invoke(action, args, Object.assign(ctx(), extra || {}));
+    var inv = A.inverse(action, args, res); if (inv) history.push(inv);
+    updateUndo(); return res;
+  }
+  function updateUndo() { var b = document.getElementById('undo'); if (b) b.disabled = !history.length; }
+  function undo() { if (!history.length) return; var inv = history.pop(); A.invoke(inv.action, inv.args, ctx()); log('Vi', 'undid that — ' + inv.args.slot + ' back to ' + human(inv.args.slot, inv.args.value) + '.', 'act'); render(); }
+
+  function log(who, text, cls) {
+    state.log.push({ who: who, text: text, cls: cls });
+    var el = document.getElementById('log'); if (!el) return;
+    // the transcript is the CONVERSATION only — internal setting/action logs ('act') are hidden
+    var conv = state.log.filter(function (m) { return m.cls !== 'act'; });
+    el.innerHTML = conv.slice(-12).map(function (m) { return '<div class="msg ' + (m.who === 'Vi' ? 'vi' : '') + '"><span class="who">' + m.who + '</span><span>' + m.text + '</span></div>'; }).join('');
+    el.scrollTop = el.scrollHeight;
+    if (conv.length) { var cb = document.getElementById('rt-chat-btn'); if (cb) cb.style.display = ''; }
+  }
+  function showChat() { var b = document.querySelector('.railtabs .rt[data-rt="chat"]'); if (b && b.style.display !== 'none') b.click(); }
+
+  // every editable facet of the selected kind, each shown the right way:
+  // form/symbol as glyphic tiles, colour as swatches, the rest as labelled chips.
+  var FACETS = [
+    { name: 'form', kind: 'glyph' },
+    { name: 'symbol', kind: 'glyph', scroll: true, cap: 64 },
+    { name: 'color', kind: 'glyph' },
+    { name: 'fill', kind: 'glyph' },
+    { name: 'texture', kind: 'glyph' },
+    { name: 'motion', kind: 'glyph' },
+    { name: 'size', kind: 'glyph' },
+    { name: 'depth', kind: 'glyph' }
+  ];
+  function colorCSS(id) { try { return AX.resolve('color').resolveCSS(id) || 'var(--accent-gold)'; } catch (e) { return 'var(--accent-gold)'; } }
+  function render() {
+    var szIds = AX.has('size') ? AX.resolve('size').ids() : [];
+    var si = szIds.indexOf(state.node.size);
+    var vpx = si >= 0 ? Math.round(150 + (si / Math.max(1, szIds.length - 1)) * 150) : 200;
+    var out = N.render(state.node, { opts: { size: vpx, flat: true } });
+    document.getElementById('stage').innerHTML = '<span class="cv-glyphic ' + (out.motionClass || '') + '" style="display:inline-flex">' + out.svg + '</span>';
+    document.getElementById('specline').textContent = JSON.stringify(state.node);
+    document.getElementById('human').innerHTML = describe(state.node);
+    document.getElementById('v-id').textContent = human('form', state.node.form) + ' · ' + (state.node.symbol || '').replace(/-/g, ' ');
+
+    var insp = P.toInspector(activeKind, { audience: aud() });
+    var slotMap = {}; insp.slots.forEach(function (s) { slotMap[s.name] = s; });
+    var html = '';
+    // SELECTION MODE: when a behaviour is choosing its target value, the RIGHT
+    // panel becomes the picker (reusing this exact library) instead of a 2nd one.
+    if (state.pickMode) {
+      var pm = state.pickMode, pax = pm.axis;
+      var popts = AX.has(pax) ? AX.resolve(pax).values().map(function (v) { return { id: v.id, label: v.label }; }) : [];
+      html = '<div class="pickhead"><div><div class="pkt">Choose a ' + pax + '</div><div class="pks">for: when ' + pm.label + '</div></div><button class="pkx" id="pk-cancel">' + icon('x') + '</button></div>';
+      html += '<div class="field-block"><div class="tiles">' + popts.map(function (o) {
+        var th; if (pax === 'color') th = '<span class="sw" style="background:' + colorCSS(o.id) + '"></span>';
+        else { var ov = {}; ov[pax] = o.id; var sp = Object.assign({}, state.node, ov); if (pax === 'motion') sp.motion = 'none'; th = thumb(sp, 30); }
+        return '<button class="tile' + (o.id === pm.current ? ' on' : '') + '" data-pick="' + o.id + '" title="' + (o.label || o.id) + '">' + th + '</button>';
+      }).join('') + '</div></div>';
+      document.getElementById('inspector').innerHTML = html;
+      document.getElementById('pk-cancel').onclick = function () { state.pickMode = null; render(); };
+      document.querySelectorAll('#inspector .tile[data-pick]').forEach(function (b) { b.onclick = function () { pm.onPick(b.dataset.pick); }; });
+      updateUndo();
+      return;
+    }
+    FACETS.forEach(function (f) {
+      var s = slotMap[f.name];
+      var opts = (s && s.options && s.options.length) ? s.options
+        : (AX.has(f.name) ? AX.resolve(f.name).values().map(function (v) { return { id: v.id, label: v.label, token: v.token, zero: !!v.zero }; }) : null);
+      if (!opts || !opts.length) return;
+      var cur = f.name === 'color' ? (state.colorId || 'gold') : (state.node[f.name] != null ? state.node[f.name] : (s && s.current));
+      var body;
+      if (f.kind === 'glyph') {
+        body = '<div class="tiles' + (f.scroll ? ' scroll' : '') + '">' + opts.slice(0, f.cap || 999).map(function (o, i) {
+          var sp, isCur, attr;
+          if (f.name === 'color') { var css = colorCSS(o.id); sp = Object.assign({}, state.node, { color: { ring: css, symbol: css } }); isCur = (o.id === (state.colorId || 'gold')); attr = 'data-color="' + o.id + '"'; }
+          else { var ov = {}; ov[f.name] = o.id; sp = Object.assign({}, state.node, ov); if (f.name === 'symbol' || f.name === 'form') sp.motion = 'none'; isCur = (o.id === cur); attr = 'data-slot="' + f.name + '" data-val="' + o.id + '"'; }
+          var px = f.scroll ? 26 : 32;
+          if (f.name === 'size') px = 16 + Math.min(i, 6) * 5;            // tiles grow so size reads visually
+          var th = thumb(sp, px);
+          if (f.name === 'motion' && !state.motionPreview) th = th.replace(/ mo-[\w-]+/g, '');
+          if (f.name === 'depth') th = '<span style="display:inline-flex;filter:drop-shadow(0 ' + (1 + i * 1.3).toFixed(1) + 'px ' + (1 + i).toFixed(0) + 'px rgba(90,70,40,' + (0.1 + i * 0.06).toFixed(2) + '))">' + th + '</span>';
+          return '<button class="tile' + (isCur ? ' on' : '') + '" ' + attr + ' title="' + (o.label || o.id) + '">' + th + '</button>';
+        }).join('') + '</div>';
+      } else if (f.kind === 'swatch') {
+        body = '<div class="tiles">' + opts.map(function (o) {
+          return '<button class="tile' + (o.id === cur ? ' on' : '') + '" data-color="' + o.id + '" title="' + (o.label || o.id) + '"><span class="sw" style="background:' + colorCSS(o.id) + '"></span></button>';
+        }).join('') + '</div>';
+      } else {
+        body = '<div class="chips">' + opts.map(function (o) {
+          return '<button class="chip' + (o.id === cur ? ' on' : '') + '" data-slot="' + f.name + '" data-val="' + o.id + '">' + human(f.name, o.id) + '</button>';
+        }).join('') + '</div>';
+      }
+      var playBtn = f.name === 'motion' ? '<button class="playtgl' + (state.motionPreview ? ' on' : '') + '" title="Preview motion on/off">' + icon(state.motionPreview ? 'pause' : 'play') + '</button>' : '';
+      html += '<div class="field-block"><div class="fl"><span class="fn">' + f.name + '</span>' + playBtn + '<span class="fv">' + (f.name === 'color' ? cur : human(f.name, cur)) + '</span></div>' + body + '</div>';
+    });
+
+    // actions (audience-filtered): in Make, set-value/remove are handled inline by
+    // the tiles, so the action row shows only verbs that aren't inline (generate…).
+    var rowActions = insp.actions.filter(function (a) { return mode === 'build' || ['set-value', 'remove'].indexOf(a.id) < 0; });
+    var actBtns = rowActions.map(function (a) {
+      var def = A.tryResolve(a.id);
+      var prim = a.id === 'generate' ? ' primary' : '';
+      return '<button class="actbtn' + prim + '" data-action="' + a.id + '"><span class="ico">' + icon((def && def.icon) || 'play') + '</span>' + a.verb + '</button>';
+    }).join('');
+    if (actBtns) html += '<div class="secdiv"><span class="ico">' + icon('lightbulb') + '</span><span class="t">Do more</span></div><div class="acts">' + actBtns + '</div>';
+
+    // decorators — only in build (audience hides them for makers)
+    if (insp.decorators.length) {
+      var decs = insp.decorators.map(function (d) {
+        var def = window.CV_DECORATORS && window.CV_DECORATORS.tryResolve(d.id);
+        var nm = def ? def.label.replace(/^@/, '') : d.id;
+        var val = (d.value === true || Array.isArray(d.value)) ? '' : ' ' + d.value;
+        return '<span class="dec' + (d.behaviour ? ' beh' : '') + '" title="' + ((def && def.description) || '').replace(/"/g, '') + '"><span class="ico">' + icon(d.behaviour ? 'lightbulb' : 'tag') + '</span>' + nm + val + '</span>';
+      }).join('');
+      html += '<div class="secdiv"><span class="ico">' + icon('tag') + '</span><span class="t">What\u2019s true of it</span></div><div class="decs">' + decs + '</div>';
+    }
+    document.getElementById('inspector').innerHTML = html;
+
+    var tools = P.toToolSchema('glyphic', { audience: aud() });
+    document.getElementById('toolschema').innerHTML = tools.map(function (t) {
+      var ps = Object.keys(t.parameters.properties).map(function (k) { var pr = t.parameters.properties[k]; return '  <span class="dim">' + k + (t.parameters.required.indexOf(k) >= 0 ? '*' : '') + ':</span> ' + pr.type + (pr.enum ? ' <span class="dim">enum[' + pr.enum.length + ']</span>' : ''); }).join('\n');
+      return '<span class="fn">' + t.name + '</span>(\n' + ps + '\n)';
+    }).join('\n\n');
+    document.getElementById('contextpane').textContent = JSON.stringify(P.toContext(state), null, 2);
+
+    var sw = document.getElementById('stagewrap');
+    if (sw) { if (state.highlight) sw.classList.add('hl'); else sw.classList.remove('hl'); }
+    updateUndo(); wire();
+  }
+
+  function wire() {
+    document.querySelectorAll('#inspector .tile[data-slot]').forEach(function (t) { t.onclick = function () { setSlot(t.dataset.slot, t.dataset.val); }; });
+    document.querySelectorAll('#inspector .tile[data-color]').forEach(function (t) { t.onclick = function () { setColour(t.dataset.color); }; });
+    document.querySelectorAll('#inspector .chip').forEach(function (c) { c.onclick = function () { setSlot(c.dataset.slot, c.dataset.val); }; });
+    document.querySelectorAll('#inspector .playtgl').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); state.motionPreview = !state.motionPreview; render(); }; });
+    document.querySelectorAll('#inspector .actbtn').forEach(function (b) {
+      b.onclick = function () {
+        var id = b.dataset.action;
+        if (id === 'generate') { log('Vi', 'I\u2019d propose fresh options here — connect a model and they appear, then keep the one you like.', ''); return; }
+        log('You', '“' + id + '” needs a target — pick from the canvas or tell me.', 'act');
+      };
+    });
+  }
+  function setColour(id) {
+    var css = colorCSS(id); state.colorId = id;
+    act('set-value', { slot: 'color', value: { ring: css, symbol: css, fill: (state.node.color && state.node.color.fill) || null } });
+    log('You', 'set its colour to ' + human('color', id) + '.', 'act'); render();
+  }
+  function setSlot(slot, value) {
+    act('set-value', { slot: slot, value: value });
+    log('You', 'set its ' + slot + ' to ' + human(slot, value) + '.', 'act');
+    render();
+  }
+
+  // ---- LEFT "Start from" = starting glyphics you load into the canvas (fully live) ----
+  var PRESETS = [
+    { name: 'House', spec: { form: 'octagon', symbol: 'house', fill: 'wash', texture: 'none', motion: 'none' } },
+    { name: 'Person', spec: { form: 'circle', symbol: 'person', fill: 'paper', texture: 'none', motion: 'none' } },
+    { name: 'Idea', spec: { form: 'hex', symbol: 'lightbulb', fill: 'tint', texture: 'none', motion: 'glow' } },
+    { name: 'Data', spec: { form: 'square', symbol: 'database', fill: 'wash', texture: 'grid', motion: 'none' } },
+    { name: 'Network', spec: { form: 'diamond', symbol: 'network', fill: 'none', texture: 'none', motion: 'none' } },
+    { name: 'Alert', spec: { form: 'triangle', symbol: 'bell', fill: 'tint', texture: 'none', motion: 'pulse' } }
+  ];
+  function sameSpec(p) { return ['form', 'symbol', 'fill', 'texture', 'motion'].every(function (k) { return p.spec[k] === state.node[k]; }); }
+  function renderGallery() {
+    var el = document.getElementById('gallery'); if (!el) return;
+    el.innerHTML = PRESETS.map(function (p, i) {
+      return '<button class="gcard' + (sameSpec(p) ? ' on' : '') + '" data-i="' + i + '"><span class="gt">' + thumb(p.spec, 32) + '</span><span class="gl">' + p.name + '</span></button>';
+    }).join('');
+    el.querySelectorAll('.gcard').forEach(function (b) {
+      b.onclick = function () {
+        var p = PRESETS[+b.dataset.i];
+        state.node = Object.assign({}, p.spec); state.colorId = 'gold'; history = [];
+        log('Vi', 'Started you from <b>' + p.name + '</b> — now make it yours; every change shows live.', '');
+        render(); renderGallery();
+      };
+    });
+    document.getElementById('gallery-sub').textContent = PRESETS.length + ' starting points';
+    document.getElementById('librarynote').innerHTML = 'Pick a starting point, then shape it — the canvas updates live with every change.';
+  }
+
+  function renderMeta() {
+    var el = document.getElementById('metapane'); if (!el) return;
+    var metas = A.query({ actionType: 'define' });
+    el.innerHTML = metas.slice(0, 6).map(function (m) { return '<div class="metarow"><span class="ico">' + icon(m.icon || 'plus') + '</span><span class="mv">' + m.verb + '</span><span class="ms">' + m.id + '</span></div>'; }).join('') +
+      '<div class="metaform"><input id="newkind" placeholder="name a new block…"/><button id="runkind">Create</button></div>' +
+      '<div class="metacount"><span class="ico">' + icon('check') + '</span>' + R.all().length + ' blocks · ' + A.all().length + ' actions, all live</div>';
+    var btn = document.getElementById('runkind');
+    if (btn) btn.onclick = function () {
+      var id = (document.getElementById('newkind').value || '').trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-'); if (!id) return;
+      try { A.invoke('define-kind', { id: id, kind: id, layer: 'atom', classification: 'mark', name: id }, {}); log('Vi', 'made a new block, <b>' + id + '</b> — it\u2019s part of the system now.', 'act'); document.getElementById('newkind').value = ''; renderMeta(); renderGallery(); } catch (e) { log('Vi', 'couldn\u2019t: ' + e.message, ''); }
+    };
+  }
+
+  // a kind's OWN libraries (declared in kind.spec.libraries) as clean visual tiles
+  function renderKindLib() {
+    var sec = document.getElementById('kindlibsec'); if (!sec) return;
+    var k = R.get(activeKind);
+    var bi = R._builtin && R._builtin.get(activeKind);
+    var libs = (bi && bi.spec && bi.spec.libraries) || (k && k.spec && k.spec.libraries) || [];
+    document.getElementById('kl-title').textContent = (k ? k.name : 'Library') + ' library';
+    document.getElementById('ic-kl').innerHTML = icon((k && k.icon) || 'tile-stack');
+    if (!libs.length) { document.getElementById('kltabs').innerHTML = ''; document.getElementById('kgrid').innerHTML = ''; document.getElementById('klnote').innerHTML = 'No visual library for this kind yet — coming soon.'; document.getElementById('kl-sub').textContent = ''; return; }
+    if (libs.indexOf(activeLib) < 0) activeLib = libs[0];
+    document.getElementById('kltabs').innerHTML = libs.map(function (v) { var vw = R.get(v); return '<button class="libtab' + (v === activeLib ? ' on' : '') + '" data-v="' + v + '">' + (vw ? vw.name.replace('Palette — ', '') : v) + '</button>'; }).join('');
+    document.querySelectorAll('#kltabs .libtab').forEach(function (b) { b.onclick = function () { activeLib = b.dataset.v; renderKindLib(); }; });
+    var rows = P.toCollection(activeLib, { node: state.node });
+    var isColor = activeLib === 'view.palette-color';
+    var facet = activeLib === 'view.palette-form' ? 'form' : activeLib === 'view.palette-symbol' ? 'symbol' : 'color';
+    var cur = facet === 'form' ? state.node.form : facet === 'symbol' ? state.node.symbol : null;
+    document.getElementById('kgrid').innerHTML = rows.slice(0, isColor ? 40 : 80).map(function (r, i) {
+      var th = isColor ? '<span class="sw" style="background:var(--' + (r.token || 'accent-gold') + ')"></span>' : (facet === 'form' ? thumb({ form: r.id, symbol: state.node.symbol }, 28) : thumb({ form: state.node.form, symbol: r.id }, 28));
+      return '<button class="ktile' + (r.id === cur ? ' on' : '') + '" data-i="' + i + '" title="' + human(facet, r.id) + '">' + th + '</button>';
+    }).join('');
+    document.querySelectorAll('#kgrid .ktile').forEach(function (b) { var r = rows[+b.dataset.i]; b.onclick = function () { if (!r.onPick) return; try { act(r.onPick, r.pickArgs, { item: r.entry }); log('You', 'picked ' + human(facet, r.id) + ' from the library.', 'act'); render(); renderKindLib(); } catch (e) { log('Vi', 'couldn’t: ' + e.message, ''); } }; });
+    document.getElementById('kl-sub').textContent = rows.length;
+    document.getElementById('klnote').innerHTML = 'Pick one to apply it to your mark.';
+  }
+
+  // ---- chat → action loop; vocabularies derived from the axes ----
+  var ALIASES = { hexagon: 'hex' };
+  function matchVocab(t, axis, skipZero) { if (!AX.has(axis)) return null; var ids = AX.resolve(axis).ids(); for (var i = 0; i < ids.length; i++) { var v = ids[i]; if (skipZero && v === 'none') continue; if (new RegExp('\\b' + v + '\\b').test(t)) return v; } return null; }
+  function interpret(text) {
+    var t = text.toLowerCase();
+    if (/\b(generate|make me|draw|create)\b/.test(t) && /\bicon|symbol|glyph\b/.test(t)) return { action: 'generate', args: { brief: text } };
+    var m = t.match(/set\s+(\w+)\s+(\w[\w-]*)/); if (m) return { action: 'set-value', args: { slot: m[1], value: ALIASES[m[2]] || m[2] } };
+    Object.keys(ALIASES).forEach(function (w) { t = t.replace(new RegExp('\\b' + w + '\\b', 'g'), ALIASES[w]); });
+    var f = matchVocab(t, 'form'); if (f) return { action: 'set-value', args: { slot: 'form', value: f } };
+    var mo = matchVocab(t, 'motion', true); if (mo) return { action: 'set-value', args: { slot: 'motion', value: mo } };
+    var tx = matchVocab(t, 'texture', true); if (tx) return { action: 'set-value', args: { slot: 'texture', value: tx } };
+    var fl = matchVocab(t, 'fill', true); if (fl && /\bfill|background\b/.test(t)) return { action: 'set-value', args: { slot: 'fill', value: fl } };
+    var sym = matchVocab(t, 'symbol'); if (sym) return { action: 'set-value', args: { slot: 'symbol', value: sym } };
+    return null;
+  }
+  function handle(text) {
+    if (!text.trim()) return; log('You', text); showChat();
+    var cmd = interpret(text);
+    if (!cmd) { log('Vi', 'I can change its shape, symbol, fill, texture or motion — try \u201cmake it a hexagon\u201d or \u201cadd a gear\u201d.', ''); return; }
+    if (cmd.action === 'generate') { log('Vi', 'That\u2019s a generate — connect a model and I\u2019ll propose options right here.', ''); return; }
+    try { E.emit('ai.focus', { target: 'glyphic' }, { state: state }); act(cmd.action, cmd.args); log('Vi', 'done — its ' + cmd.args.slot + ' is now ' + human(cmd.args.slot, cmd.args.value) + '.', ''); render(); setTimeout(function () { state.highlight = null; render(); }, 1500); } catch (e) { log('Vi', 'couldn\u2019t: ' + e.message, ''); }
+  }
+
+  document.getElementById('undo').onclick = undo;
+  document.getElementById('send').onclick = function () { var i = document.getElementById('chatin'); handle(i.value); i.value = ''; };
+  document.getElementById('chatin').addEventListener('keydown', function (e) { if (e.key === 'Enter') { handle(this.value); this.value = ''; } });
+  document.getElementById('mic').onclick = function () { log('Vi', 'Voice plugs in as a provider — connect one and just talk; it feeds this same loop.', ''); };
+
+  document.querySelectorAll('.railtabs .rt').forEach(function (b) { b.onclick = function () { document.querySelectorAll('.railtabs .rt').forEach(function (x) { x.classList.toggle('on', x === b); }); document.querySelectorAll('.rail .rtpane').forEach(function (p) { p.classList.toggle('on', p.id === 'rtp-' + b.dataset.rt); }); }; });
+
+  document.querySelectorAll('#rtabs .rtab').forEach(function (b) { b.onclick = function () { document.querySelectorAll('#rtabs .rtab').forEach(function (x) { x.classList.toggle('on', x === b); }); document.querySelectorAll('.panebody .pane').forEach(function (p) { p.classList.toggle('on', p.id === 'pane-' + b.dataset.pane); }); }; });
+
+  // mode toggle = the audience projection
+  document.querySelectorAll('#modes .mode').forEach(function (b) {
+    b.onclick = function () {
+      mode = b.dataset.mode; document.body.setAttribute('data-mode', mode);
+      document.querySelectorAll('#modes .mode').forEach(function (x) { x.classList.toggle('on', x === b); });
+      document.getElementById('buildsec').style.display = mode === 'build' ? '' : 'none';
+      if (mode === 'make') { document.querySelector('#rtabs .rtab[data-pane="inspector"]').click(); }
+      render(); renderGallery(); renderMeta(); renderKindLib();
+      log('Vi', mode === 'build' ? 'Build view — now you see the system itself: actions, decorators, what I see, and the meta-tools to grow it.' : 'Make view — just the controls that shape your mark.', '');
+    };
+  });
+
+  if (window.CV_ROOT_UNITY_MARK) document.getElementById('mark').innerHTML = window.CV_ROOT_UNITY_MARK.svg({ size: 24 });
+  setIcon('ic-make', 'edit'); setIcon('ic-build2', 'gear'); setIcon('ic-lib', 'tile-stack'); setIcon('ic-chat', 'chat'); setIcon('ic-rules', 'decision-tree'); setIcon('ic-build', 'gear'); setIcon('ic-undo', 'undo'); setIcon('ic-eye', 'eye'); setIcon('ic-mic', 'megaphone'); setIcon('ic-send', 'play'); setIcon('ic-insp', 'adjustments'); setIcon('ic-ai', 'eye'); setIcon('ic-ctx', 'globe');
+  document.getElementById('footnote').innerHTML = 'Everything here is <b>drawn from the system itself</b> — the same projection serves a regular maker and a system author; switch with <b>Make / Build</b> above.';
+
+  log('Vi', 'Shape your mark with the tiles, or just tell me what you want. Switch to <b>Build</b> to see and grow the system underneath.', '');
+  // ---- BEHAVIOURS: "when the data says X, the mark looks like Y". Everything is
+  //      PICKED from libraries/slots — no text or operator jargon. A behaviour is
+  //      a data-field SLOT (the universal input) bound to an axis change, persisted
+  //      as a CV_EVENTS trigger tied to the glyphic so it travels into real systems.
+  //      The condition runs through CV_COND; the value-set through the axes. ----
+  function axisOpts(ax) { return AX.has(ax) ? AX.resolve(ax).ids() : []; }
+  function applyRuleSet(node, r) { if (r.axis === 'color') { var css = colorCSS(r.set); node.color = { ring: css, symbol: css }; state.colorId = r.set; } else { node[r.axis] = r.set; } }
+  function num(v) { return (v !== '' && !isNaN(+v)) ? +v : v; }
+
+  // the glyphic's DATA SCHEMA — the field slots a system would populate, sourced
+  // from the kind's registry (spec.dataSlots), not invented in the UI. Backend-
+  // agnostic; each field declares its values. Falls back to a sample set.
+  var biGly = (R._builtin && R._builtin.get('glyphic')) || R.get('glyphic');
+  state.schema = state.schema || (biGly && biGly.spec && biGly.spec.dataSlots) || [
+    { field: 'status', label: 'Status', icon: 'circle-check', values: ['active', 'pending', 'error', 'done'] },
+    { field: 'priority', label: 'Priority', icon: 'flag', values: ['low', 'normal', 'high', 'urgent'] },
+    { field: 'count', label: 'Count', icon: 'hash', values: ['0', '1', '10', '100'] },
+    { field: 'online', label: 'Online', icon: 'bolt', values: ['true', 'false'] }
+  ];
+  function fieldDef(f) { return state.schema.filter(function (s) { return s.field === f; })[0]; }
+  // human comparators (no ==/!= jargon) → CV_COND ops
+  var CMP = [{ id: 'is', op: '==', label: 'is' }, { id: 'isnt', op: '!=', label: 'is not' }, { id: 'over', op: '>', label: 'is over' }, { id: 'under', op: '<', label: 'is under' }];
+  function cmpOp(id) { return (CMP.filter(function (c) { return c.id === id; })[0] || CMP[0]).op; }
+  function cmpLabel(id) { return (CMP.filter(function (c) { return c.id === id; })[0] || CMP[0]).label; }
+  state.rules = state.rules || [];
+  var rb = state.rb || (state.rb = { field: 'status', cmp: 'is', value: 'active', axis: 'color', set: 'sage' });
+
+  // the axes a behaviour can drive — each as a pickable visual facet
+  var RULE_AXES = ['color', 'form', 'fill', 'texture', 'motion', 'glow', 'shadow'];
+
+  // persist a rule as a CV_EVENTS trigger tied to this glyphic (the unification:
+  // behaviours ARE events on the glyphic's data-field slots → an action).
+  function persistTrigger(r, i) {
+    if (!E || !E.register) return;
+    try {
+      E.register({
+        id: 'glyphic.behaviour.' + i + '.' + r.field, on: 'data.change',
+        when: [r.field + ' ' + cmpOp(r.cmp) + ' ' + r.value],
+        do: 'set-value', args: { slot: r.axis, value: r.set },
+        provenance: 'user', description: 'When ' + r.field + ' ' + cmpLabel(r.cmp) + ' ' + r.value + ', set ' + r.axis + ' to ' + r.set + '.'
+      });
+    } catch (e) {}
+  }
+
+  // a visual chooser row: chips (with optional glyph/swatch thumb) for an option set
+  function chipRow(opts, cur, mapper) {
+    return '<div class="bchips">' + opts.map(function (o) {
+      var id = mapper ? mapper.id(o) : o, lab = mapper ? mapper.label(o) : human('', o), th = mapper && mapper.thumb ? mapper.thumb(o) : '';
+      return '<button class="bchip' + (id === cur ? ' on' : '') + '" data-v="' + id + '">' + th + lab + '</button>';
+    }).join('') + '</div>';
+  }
+  // visual value picker for the chosen axis (same library look as the right panel)
+  function axisValueChips(axis, cur) {
+    var ids = axisOpts(axis);
+    return '<div class="bchips wrap">' + ids.map(function (v) {
+      var th;
+      if (axis === 'color') th = '<span class="sw" style="background:' + colorCSS(v) + '"></span>';
+      else { var ov = {}; if (axis === 'color') {} else ov[axis] = v; var sp = Object.assign({}, state.node, ov); if (axis === 'form') sp.symbol = state.node.symbol; if (axis === 'motion') sp.motion = 'none'; th = thumb(sp, 24); }
+      return '<button class="btile' + (v === cur ? ' on' : '') + '" data-v="' + v + '" title="' + human(axis, v) + '">' + th + '</button>';
+    }).join('') + '</div>';
+  }
+
+  function renderRules() {
+    var el = document.getElementById('rtp-rules'); if (!el) return;
+    if (!state.rules) state.rules = [];
+    var fdef = fieldDef(rb.field) || state.schema[0];
+    var pv = Object.assign({}, state.node); applyRuleSet(pv, { axis: rb.axis, set: rb.set });
+    var fieldLab = (fdef.label || rb.field);
+
+    // adding a value to a field, or a whole field, uses a tiny inline namer
+    var addingVal = state.addingVal, addingField = state.addingField;
+
+    el.innerHTML =
+      '<div class="bh"><div class="bht">Behaviours</div><div class="bhs">How the mark reacts to its data, once a system fills it in.</div></div>' +
+
+      // ---- the sentence builder, one consistent card ----
+      '<div class="bcard">' +
+        '<div class="bclbl"><span class="ico">' + icon('decision-tree') + '</span>New rule</div>' +
+        '<div class="sentence">' +
+          '<span class="sct">When the</span>' +
+          '<button class="tok tok-field" id="tk-field"><span class="ti">' + icon(fdef.icon || 'hash') + '</span>' + fieldLab + '</button>' +
+          '<button class="tok" id="tk-cmp">' + cmpLabel(rb.cmp) + '</button>' +
+          '<button class="tok tok-val" id="tk-val">' + rb.value + '</button>' +
+          '<span class="sct">, make its</span>' +
+          '<button class="tok" id="tk-axis">' + rb.axis + '</button>' +
+          '<button class="tok tok-set" id="tk-set"><span class="setpv">' + thumb(pv, 18) + '</span>' + human(rb.axis, rb.set) + '</button>' +
+        '</div>' +
+        '<div class="bopts" id="bopts"></div>' +
+        '<button class="badd" id="r-add"><span class="ico">' + icon('plus') + '</span>Add this behaviour</button>' +
+      '</div>' +
+
+      // ---- existing rules ----
+      '<div class="bclbl mt"><span class="ico">' + icon('list') + '</span>Active rules<span class="cnt">' + state.rules.length + '</span></div>' +
+      '<div class="rulelist" id="rulelist"></div>' +
+
+      // ---- data fields (the schema) — addable ----
+      '<div class="bcard mt">' +
+        '<div class="bclbl"><span class="ico">' + icon('database') + '</span>Data fields<span class="bcsub">the columns a system fills in</span></div>' +
+        '<div class="fieldlist" id="fieldlist"></div>' +
+      '</div>' +
+
+      // ---- try a row ----
+      '<div class="bcard">' +
+        '<div class="bclbl"><span class="ico">' + icon('bolt') + '</span>Preview with data</div>' +
+        '<div class="samples" id="samples"></div>' +
+      '</div>';
+
+    // ---- token → reveal its options inline (or open the right panel for the set value) ----
+    var bopts = el.querySelector('#bopts');
+    function closeOpts() { state.openTok = null; bopts.innerHTML = ''; el.querySelectorAll('.tok').forEach(function (t) { t.classList.remove('open'); }); }
+    function openTok(which, btn, inner) { if (state.openTok === which) { closeOpts(); return; } state.openTok = which; el.querySelectorAll('.tok').forEach(function (t) { t.classList.toggle('open', t === btn); }); bopts.innerHTML = inner; bindOpts(which); }
+    function optChips(items, cur, idf, labf, thf) {
+      return items.map(function (o) { var id = idf(o); return '<button class="opt' + (id === cur ? ' on' : '') + '" data-v="' + id + '">' + (thf ? thf(o) : '') + labf(o) + '</button>'; }).join('');
+    }
+    function bindOpts(which) {
+      bopts.querySelectorAll('.opt[data-v]').forEach(function (b) {
+        b.onclick = function () {
+          var v = b.dataset.v;
+          if (which === 'field') { rb.field = v; var d = fieldDef(v); if (d && d.values.indexOf(rb.value) < 0) rb.value = d.values[0]; }
+          else if (which === 'cmp') rb.cmp = v;
+          else if (which === 'val') rb.value = v;
+          else if (which === 'axis') { rb.axis = v; rb.set = axisOpts(rb.axis)[0]; }
+          state.openTok = null; renderRules();
+        };
+      });
+    }
+    el.querySelector('#tk-field').onclick = function () { openTok('field', this, '<div class="opts">' + optChips(state.schema, rb.field, function (s) { return s.field; }, function (s) { return s.label; }, function (s) { return '<span class="oi">' + icon(s.icon || 'hash') + '</span>'; }) + '</div>'); };
+    el.querySelector('#tk-cmp').onclick = function () { openTok('cmp', this, '<div class="opts">' + optChips(CMP, rb.cmp, function (c) { return c.id; }, function (c) { return c.label; }) + '</div>'); };
+    el.querySelector('#tk-val').onclick = function () { openTok('val', this, '<div class="opts">' + optChips(fdef.values.map(function (v) { return { v: v }; }), rb.value, function (o) { return o.v; }, function (o) { return o.v; }) + '<button class="opt add" id="addval">' + icon('plus') + 'add</button></div>'); var a = bopts.querySelector('#addval'); if (a) a.onclick = function () { state.addingVal = rb.field; promptName('Add a ' + fieldLab.toLowerCase() + ' value', function (name) { var d = fieldDef(rb.field); if (d && name) { d.values.push(name); rb.value = name; persistSchema(); } state.addingVal = null; renderRules(); }); }; };
+    el.querySelector('#tk-axis').onclick = function () { openTok('axis', this, '<div class="opts">' + optChips(RULE_AXES.map(function (a) { return { a: a }; }), rb.axis, function (o) { return o.a; }, function (o) { return o.a; }, function (o) { return '<span class="oi">' + icon(axisIcon(o.a)) + '</span>'; }) + '</div>'); };
+    // the SET value reuses the right-panel library in selection mode (no 2nd picker)
+    el.querySelector('#tk-set').onclick = function () {
+      closeOpts();
+      state.pickMode = { axis: rb.axis, current: rb.set, label: fieldLab + ' ' + cmpLabel(rb.cmp) + ' ' + rb.value, onPick: function (v) { rb.set = v; state.pickMode = null; render(); renderRules(); } };
+      render();
+      log('Vi', 'Pick the ' + rb.axis + ' on the right \u2014 the same library you edit with.', '');
+    };
+
+    el.querySelector('#r-add').onclick = function () {
+      // route through the SAME CV_ACTION the AI calls (add-behaviour) — one path
+      A.invoke('add-behaviour', { field: rb.field, op: cmpOp(rb.cmp), value: rb.value, axis: rb.axis, set: rb.set }, { kind: activeKind });
+      state.rules.push({ field: rb.field, cmp: rb.cmp, value: rb.value, axis: rb.axis, set: rb.set });
+      log('Vi', 'Added: when <b>' + fieldLab + ' ' + cmpLabel(rb.cmp) + ' ' + rb.value + '</b>, its ' + rb.axis + ' becomes <b>' + human(rb.axis, rb.set) + '</b>.', ''); showChat();
+      renderRules();
+    };
+
+    // ---- rule list ----
+    var lst = el.querySelector('#rulelist');
+    lst.innerHTML = state.rules.length ? state.rules.map(function (r, i) {
+      var sp = Object.assign({}, state.node); applyRuleSet(sp, r); var d = fieldDef(r.field) || { label: r.field };
+      return '<div class="rule"><span class="rthumb">' + thumb(sp, 26) + '</span><span class="rt2"><b>' + d.label + ' ' + cmpLabel(r.cmp) + ' ' + r.value + '</b><span class="rt2s">' + r.axis + ' \u2192 ' + human(r.axis, r.set) + '</span></span><button class="rdel" data-i="' + i + '" title="Remove">' + icon('trash') + '</button></div>';
+    }).join('') : '<div class="empty">No rules yet \u2014 build one above.</div>';
+    lst.querySelectorAll('.rdel').forEach(function (b) { b.onclick = function () { state.rules.splice(+b.dataset.i, 1); renderRules(); }; });
+
+    // ---- data fields list (addable) ----
+    var fl = el.querySelector('#fieldlist');
+    fl.innerHTML = state.schema.map(function (s) {
+      return '<div class="frow"><span class="fi">' + icon(s.icon || 'hash') + '</span><span class="fn2">' + s.label + '</span><span class="fvals">' + s.values.slice(0, 4).map(function (v) { return '<span class="fv2">' + v + '</span>'; }).join('') + (s.values.length > 4 ? '<span class="fv2 more">+' + (s.values.length - 4) + '</span>' : '') + '</span></div>';
+    }).join('') + '<button class="badd ghost" id="addfield"><span class="ico">' + icon('plus') + '</span>Add a data field</button>';
+    fl.querySelector('#addfield').onclick = function () { promptName('Name the data field (e.g. region)', function (name) { if (name) { A.invoke('add-data-field', { field: name.toLowerCase().replace(/[^a-z0-9_]+/g, '_'), label: name, values: ['yes', 'no'] }, { kind: activeKind }); state.schema = (R.get(activeKind).spec || {}).dataSlots || state.schema; } renderRules(); }); };
+
+    // ---- sample rows ----
+    var samp = el.querySelector('#samples');
+    var rows = sampleRows();
+    samp.innerHTML = rows.map(function (row, i) { return '<button class="srow" data-i="' + i + '"><span class="ico">' + icon('play') + '</span>' + state.schema.slice(0, 3).map(function (s) { return '<b>' + s.label + '</b> ' + (row[s.field] != null ? row[s.field] : '\u2013'); }).join('  \u00b7  ') + '</button>'; }).join('');
+    samp.querySelectorAll('.srow').forEach(function (b) { b.onclick = function () { runData(rows[+b.dataset.i]); }; });
+  }
+
+  // a tiny modeless namer for authoring schema fields/values (the one place free
+  // text is legitimate: naming a data column or a domain value)
+  function promptName(label, cb) {
+    var ov = document.createElement('div'); ov.className = 'namer';
+    ov.innerHTML = '<div class="namerbox"><div class="namerl">' + label + '</div><input class="nameri" autofocus/><div class="namerb"><button class="nc">Cancel</button><button class="no">Add</button></div></div>';
+    document.body.appendChild(ov);
+    var inp = ov.querySelector('.nameri'); inp.focus();
+    function done(v) { document.body.removeChild(ov); cb(v); }
+    ov.querySelector('.nc').onclick = function () { done(null); };
+    ov.querySelector('.no').onclick = function () { done(inp.value.trim()); };
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') done(inp.value.trim()); if (e.key === 'Escape') done(null); });
+    ov.onclick = function (e) { if (e.target === ov) done(null); };
+  }
+  function axisIcon(a) { return ({ color: 'palette', form: 'hexagon', fill: 'square', texture: 'grid', motion: 'bolt', glow: 'sun', shadow: 'cloud' })[a] || 'circle'; }
+  // persist the edited schema back onto the glyphic kind so behaviours' fields travel with it
+  function persistSchema() { try { var k = R.get('glyphic'); if (k) { k.spec = k.spec || {}; k.spec.dataSlots = state.schema; } } catch (e) {} }
+  // representative data rows built from the live schema's own values
+  function sampleRows() {
+    function pv(s, i) { return s.values[Math.min(i, s.values.length - 1)]; }
+    return [0, 1, 2, 3].map(function (i) { var row = {}; state.schema.forEach(function (s) { row[s.field] = pv(s, [2, 1, 3, 0][i] || 0); }); return row; });
+  }
+  function runData(data) {
+    var applied = [];
+    state.rules.forEach(function (r) { if (CV_COND.test({ field: r.field, op: cmpOp(r.cmp), value: num(r.value) }, data)) { applyRuleSet(state.node, r); applied.push(r.axis + ' = ' + human(r.axis, r.set)); } });
+    render();
+    var desc = Object.keys(data).map(function (k) { return k + ' ' + data[k]; }).join(', ');
+    log('Vi', applied.length ? ('Data row (' + desc + ') \u2192 ' + applied.join(', ') + '.') : ('Data row (' + desc + ') matched no behaviour.'), ''); showChat();
+  }
+
+  // init — after every render* function + the behaviours block's vars are defined
+  render(); renderGallery(); renderMeta(); renderKindLib(); renderRules();
+})();
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
    deck.css — reusable primitives extracted from the ConceptV
    pitch deck. These are the *building blocks* every surface in
    the studio should use to stay on-brand and consistent.
-
+   
    Import order matters: load AFTER colors_and_type.css but
    BEFORE any canvas-specific stylesheets.
    ============================================================ */

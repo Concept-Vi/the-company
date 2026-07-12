@@ -1,0 +1,291 @@
+{
+ "_ported_from": "counterpart/design@212ba23 dna/sequence.json (glyphic W1, 2026-07-03, copy-not-edit)",
+ "_note": "the ARC face: narrative roles + elastic arcs + tiers. Seed vocabulary = the deck-evidenced set; the glyphgraph grows its own event-kinds over the same machinery (roles are DATA).",
+ "narrative_roles": {
+  "open": {
+   "does": "sets the feeling before any argument — brand, one line, almost no words",
+   "archetype_affinity": [
+    "immersive"
+   ],
+   "evidence": "deck s1",
+   "dial_envelope": {
+    "warmth": [
+     70,
+     100
+    ],
+    "register": [
+     "immersive"
+    ],
+    "density": "spacious"
+   }
+  },
+  "argue": {
+   "does": "states the problem or claim with one big visual beside the words",
+   "archetype_affinity": [
+    "split-bleed",
+    "duo"
+   ],
+   "evidence": "deck s2, s3",
+   "dial_envelope": {
+    "warmth": [
+     25,
+     45
+    ],
+    "register": [
+     "explanatory"
+    ],
+    "density": "standard-rich"
+   }
+  },
+  "show": {
+   "does": "shows the thing itself — media-heavy, before/after, the work in motion",
+   "archetype_affinity": [
+    "duo",
+    "grid",
+    "trio"
+   ],
+   "evidence": "deck s4–s8",
+   "dial_envelope": {
+    "warmth": [
+     40,
+     60
+    ],
+    "register": [
+     "explanatory"
+    ],
+    "density": "standard"
+   }
+  },
+  "prove": {
+   "does": "evidence in numbers and third parties — stat bands, checklists, partner marks",
+   "archetype_affinity": [
+    "stack",
+    "grid"
+   ],
+   "evidence": "deck s9–s11",
+   "dial_envelope": {
+    "warmth": [
+     30,
+     45
+    ],
+    "register": [
+     "credible"
+    ],
+    "density": "rich"
+   }
+  },
+  "plan": {
+   "does": "time and intention — the route forward",
+   "archetype_affinity": [
+    "split-bleed"
+   ],
+   "evidence": "deck s12",
+   "dial_envelope": {
+    "warmth": [
+     30,
+     45
+    ],
+    "register": [
+     "precise",
+     "explanatory"
+    ],
+    "density": "standard"
+   },
+   "affinity_note": "the split-bleed here carries the timeline cascade (deck s12)"
+  },
+  "people": {
+   "does": "the humans and the terms — bios, commitments, figures",
+   "archetype_affinity": [
+    "stack",
+    "duo"
+   ],
+   "evidence": "deck s13–s15",
+   "dial_envelope": {
+    "warmth": [
+     40,
+     55
+    ],
+    "register": [
+     "credible"
+    ],
+    "density": "standard"
+   }
+  },
+  "close": {
+   "does": "returns to the feeling — contact, the mark, warmth",
+   "archetype_affinity": [
+    "immersive"
+   ],
+   "evidence": "deck s16",
+   "dial_envelope": {
+    "warmth": [
+     70,
+     100
+    ],
+    "register": [
+     "immersive"
+    ],
+    "density": "spacious"
+   }
+  }
+ },
+ "arcs": {
+  "pitch": {
+   "runs": [
+    {
+     "role": "open",
+     "count": [
+      1,
+      1
+     ]
+    },
+    {
+     "role": "argue",
+     "count": [
+      1,
+      2
+     ]
+    },
+    {
+     "role": "show",
+     "count": [
+      2,
+      5
+     ]
+    },
+    {
+     "role": "prove",
+     "count": [
+      2,
+      3
+     ]
+    },
+    {
+     "role": "plan",
+     "count": [
+      0,
+      1
+     ]
+    },
+    {
+     "role": "people",
+     "count": [
+      1,
+      3
+     ]
+    },
+    {
+     "role": "close",
+     "count": [
+      1,
+      1
+     ]
+    }
+   ],
+   "evidence": "the deck at n=16: open s1 · argue s2–3 · show s4–8 · prove s9–11 · plan s12 · people s13–15 · close s16",
+   "growth_policy": "listed-order"
+  }
+ },
+ "tiers": {
+  "_status": "PREDICTED FROM PRINCIPLE (2026-06-10) — Tim holds a multi-count set of the same story made at different times; these fusion maps are FALSIFIABLE PREDICTIONS to test at ingestion. Where his evidence disagrees, the evidence wins.",
+  "tagline": {
+   "pages": 0,
+   "is": "the root line alone — the tree at depth zero"
+  },
+  "one-pager": {
+   "pages": 1,
+   "fusion": [
+    [
+     "open",
+     "argue",
+     "show",
+     "prove",
+     "plan",
+     "people",
+     "close"
+    ]
+   ],
+   "is": "every role on one page — the page becomes a stack whose bands are the roles",
+   "strategies": {
+    "fuse": "every role on one page (the original prediction — still valid for dense leave-behinds)",
+    "extract": "the strongest fragment stands alone (Tim's practice: the current→solution duo + title + foot)",
+    "evidence": "corpus-direct (HARVEST-3, 2026-06-12) — vi-onepager"
+   }
+  },
+  "teaser": {
+   "pages": 3,
+   "fusion": [
+    [
+     "open",
+     "argue"
+    ],
+    [
+     "show",
+     "prove"
+    ],
+    [
+     "plan",
+     "people",
+     "close"
+    ]
+   ],
+   "is": "the classic problem / solution / ask — fusion produces it naturally"
+  },
+  "short": {
+   "pages": [
+    6,
+    8
+   ],
+   "fusion": [
+    [
+     "open"
+    ],
+    [
+     "argue"
+    ],
+    [
+     "show"
+    ],
+    [
+     "show",
+     "prove"
+    ],
+    [
+     "prove"
+    ],
+    [
+     "plan",
+     "people"
+    ],
+    [
+     "close"
+    ]
+   ],
+   "is": "roles mostly separate; adjacent roles may still share a page"
+  },
+  "full": {
+   "pages": [
+    12,
+    20
+   ],
+   "fusion": null,
+   "is": "no fusion — every role runs at its own length (the source deck, n=16)"
+  },
+  "_verdict": "CORPUS VERDICT (2026-06-12): the real one-pager (vi-onepager) EXTRACTS the strongest fragment — the current→solution duo standing alone — rather than fusing all roles. TWO STRATEGIES now: FUSE (roles as bands) and EXTRACT (one node, whole); extract wins when a single fragment materializes the root claim. Fusion is separately CONFIRMED across revisions (digitisation trio: full page in 15p, fused third in 17p; value tetrad: plates 2024 → chips 2025)."
+ },
+ "content_role_map": {
+  "_note": "what kind of content unit wants which role — the step that turns 'format a deck' into 'compose an argument'",
+  "brand-moment": "open | close",
+  "claim": "argue",
+  "problem": "argue",
+  "capability": "show",
+  "demo": "show",
+  "stat": "prove",
+  "proof": "prove",
+  "partner": "prove",
+  "timeline": "plan",
+  "person": "people",
+  "terms": "people",
+  "contact": "close"
+ }
+}

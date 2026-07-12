@@ -48,6 +48,12 @@
   --grain-scale:   180px;
   --hairline:      color-mix(in srgb, var(--shadow-c) 12%, transparent);
   --hairline-strong: color-mix(in srgb, var(--shadow-c) 22%, transparent);
+
+  /* ---- Backdrop blur scale — promoted from the chrome glass/frost
+     presets into a reusable ramp; consumed by overlays + frosted chrome. */
+  --blur-sm: 6px; /* @kind other */
+  --blur-md: 8px; /* @kind other */
+  --blur-lg: 10px; /* @kind other */
 }
 
 /* elevation helper classes */

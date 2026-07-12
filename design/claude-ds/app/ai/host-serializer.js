@@ -35,7 +35,7 @@
     if (typeof val === 'function') return reindent(val.toString(), indent);
     if (typeof val === 'string') {
       // a function smuggled through JSON as "ƒ…" (CV_HOST.safeClone) → revive
-      if (val[0] === 'ƒ') return reindent(val.slice(1), indent);
+      if (val[0] === '\u0192') return reindent(val.slice(1), indent);
       return JSON.stringify(val);
     }
     if (typeof val === 'number' || typeof val === 'boolean') return String(val);
@@ -131,7 +131,7 @@
   // ---------------------------------------------------------------------------
   AI.register({
     id: 'host-fs', name: 'Host filesystem', layer: 'provider', family: 'host',
-    description: 'The environment’s file surface — sandbox review by default, real disk when a browser/native runtime is connected. Resolved by CV_HOST.',
+    description: 'The environment\u2019s file surface — sandbox review by default, real disk when a browser/native runtime is connected. Resolved by CV_HOST.',
     runtime: { kind: 'host-fs' }, modality: ['fs'], caps: { read: true, write: true },
     icon: 'files-stack', provenance: 'built-in', tags: ['host', 'fs'],
   }, { silent: true });

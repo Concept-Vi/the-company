@@ -1,0 +1,82 @@
+<!-- @dsCard group="Components" name="Controls — live (Select · Tooltip · Popover)" subtitle="The real React components mounted from the compiled bundle — open the Select, hover the Tooltip, anchor a Popover. Positioning flips & shifts to stay in view." viewport="1180x720" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Controls — live</title>
+<link rel="stylesheet" href="../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: var(--zone-ground); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; padding: 40px 44px 64px; }
+  h1 { font: var(--weight-bold) var(--fs-h2)/1 var(--font-display); letter-spacing: -.02em; margin: 0 0 4px; }
+  .sub { color: var(--ink-3); font-size: var(--fs-meta); margin: 0 0 30px; max-width: 80ch; }
+  h2 { font: 700 11px/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--accent-bronze); margin: 34px 0 14px; display: flex; align-items: center; gap: 10px; }
+  h2::before { content: ""; width: 7px; height: 7px; background: var(--accent-gold); transform: rotate(45deg); border-radius: 1px; }
+  .row { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+  .stack { display: flex; flex-direction: column; gap: 8px; }
+  .cap { font: 700 10px/1 var(--font-mono); color: var(--ink-4); margin: 0; letter-spacing: .04em; }
+  .val { font: 500 11px/1 var(--font-mono); color: var(--accent-gold-deep); }
+  .err { color: var(--status-error); font: 500 13px/1.5 var(--font-body); }
+</style>
+</head>
+<body>
+  <h1>Controls — live</h1>
+  <p class="sub">The actual <code>Select</code>, <code>Tooltip</code> and <code>Popover</code> components, mounted from <code>_ds_bundle.js</code> via <code>window.ConceptVDesignSystem_c8f43c</code> — not static markup. Positioning is single-sourced through <code>window.CV_POPOVER</code> (flips when out of room, shifts to stay on screen).</p>
+  <div id="app"></div>
+
+<script>
+(function () {
+  var NS = window.ConceptVDesignSystem_c8f43c || {};
+  var Select = NS.Select, Tooltip = NS.Tooltip, Popover = NS.Popover;
+  var e = React.createElement;
+  var mount = document.getElementById("app");
+  if (!Select || !Tooltip) {
+    mount.innerHTML = '<p class="err">Components not on the namespace yet — the bundle rebuilds at end of turn; reload then.</p>';
+    return;
+  }
+  function Demo() {
+    var unit = React.useState("three"); var v = unit[0], setV = unit[1];
+    var pop = React.useState(false); var open = pop[0], setOpen = pop[1];
+    var anchor = React.useRef(null);
+    return e("div", null,
+      e("h2", null, "Select"),
+      e("div", { className: "row" },
+        e("div", { className: "stack", style: { width: 260 } },
+          e("p", { className: "cap" }, "PROPERTY TYPE"),
+          e(Select, {
+            options: [
+              { value: "studio", label: "Studio" },
+              { value: "one", label: "One-bed apartment" },
+              { value: "three", label: "Three-bed apartment" },
+              { value: "pent", label: "Penthouse" },
+              { value: "town", label: "Townhouse (sold out)", disabled: true },
+            ], value: v, onChange: setV,
+          }),
+          e("p", { className: "cap" }, "value → ", e("span", { className: "val" }, v)))),
+      e("h2", null, "Tooltip"),
+      e("div", { className: "row" },
+        e("div", { className: "stack" },
+          e("p", { className: "cap" }, "HOVER OR FOCUS"),
+          e(Tooltip, { label: "Net internal floor area, excludes balconies", placement: "top" },
+            e("button", { className: "cv-btn cv-btn--outline" }, "Net area")),
+        ),
+        e("div", { className: "stack" },
+          e("p", { className: "cap" }, "PLACEMENT FLIPS NEAR EDGES"),
+          e(Tooltip, { label: "Stays in view — flips below when there's no room above", placement: "top" },
+            e("button", { className: "cv-btn cv-btn--soft" }, "Hover me")))),
+      e("h2", null, "Popover (anchored)"),
+      e("div", { className: "row" },
+        e("div", { className: "stack" },
+          e("p", { className: "cap" }, "CLICK TO ANCHOR A SURFACE"),
+          e("button", { ref: anchor, className: "cv-btn cv-btn--primary", onClick: function () { setOpen(!open); } }, open ? "Close" : "Open popover"),
+          open ? e(Popover, { open: true, anchorRef: anchor, placement: "bottom-start", onRequestClose: function () { setOpen(false); } },
+            e("div", { style: { maxWidth: 240, font: "500 12px/1.5 var(--font-body)", color: "var(--ink)" } },
+              "A freely-anchored surface. Click outside or press Escape to dismiss; it shifts to stay on screen.")) : null)));
+  }
+  ReactDOM.createRoot(mount).render(e(Demo));
+})();
+</script>
+</body>
+</html>

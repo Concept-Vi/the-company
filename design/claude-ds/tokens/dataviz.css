@@ -10,15 +10,23 @@
    generative component that draws from these tokens.
    ============================================================ */
 :root {
+  /* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+  --val: 0;
+  --zone-package-ink: #8a6a30;
+  --zone-panel-ink: #6b6357;
+  --zone-review-ink: #8a6a1e;
+  --zone-source-ink: #3a5780;
+  --zone-success-ink: #3c6b2e;
+
   /* categorical series — zone inks, ordered for contrast.
      Series 1 is gold ONLY when it's the key/primary series. */
   --viz-key:    var(--accent-gold);
-  --viz-1:      var(--zone-source-ink,  #3a5780);
-  --viz-2:      var(--zone-success-ink, #3c6b2e);
-  --viz-3:      var(--zone-package-ink, #8a6a30);
-  --viz-4:      var(--zone-panel-ink,   #6b6357);
-  --viz-5:      var(--zone-reject-ink,  #9a3a44);
-  --viz-6:      var(--zone-review-ink,  #8a6a1e);
+  --viz-1:      var(--zone-source-ink);
+  --viz-2:      var(--zone-success-ink);
+  --viz-3:      var(--zone-package-ink);
+  --viz-4:      var(--zone-panel-ink);
+  --viz-5:      var(--zone-reject-ink);
+  --viz-6:      var(--zone-review-ink);
 
   --viz-track:    color-mix(in oklch, var(--ink) 8%, transparent);  /* unfilled bar/gauge */
   --viz-grid:     color-mix(in oklch, var(--ink) 9%, transparent);  /* gridlines */
@@ -42,7 +50,7 @@
 /* BAR TRACK — horizontal proportion. Set --val (0–100). */
 .viz-bar { height: 8px; border-radius: 999px; background: var(--viz-track); overflow: hidden; }
 .viz-bar > .fill {
-  height: 100%; width: calc(var(--val, 0) * 1%);
+  height: 100%; width: calc(var(--val) * 1%);
   background: var(--bar-color, var(--viz-key)); border-radius: inherit;
   transition: width var(--dur-move) var(--ease-emphasized);
 }
@@ -53,8 +61,8 @@
   width: var(--size); height: var(--size); border-radius: 50%;
   display: grid; place-items: center;
   background:
-    radial-gradient(closest-side, var(--zone-ground, #fff) 72%, transparent 73%),
-    conic-gradient(var(--gauge-color, var(--viz-key)) calc(var(--val, 0) * 1%), var(--viz-track) 0);
+    radial-gradient(closest-side, var(--zone-ground) 72%, transparent 73%),
+    conic-gradient(var(--gauge-color, var(--viz-key)) calc(var(--val) * 1%), var(--viz-track) 0);
   font: 700 var(--fs-meta)/1 var(--font-display); color: var(--ink-2);
 }
 

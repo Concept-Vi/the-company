@@ -11,6 +11,15 @@
    per-instance custom props noted on each.
    ============================================================ */
 :root {
+  /* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+  --align: center;
+  --content-min: 60%;
+  --justify: flex-start;
+  --min: 100%;
+  --ratio: 16 / 9;
+  --side: 280px;
+  --threshold: 460px;
+
   /* ---- Z-index layering scale — the only legal stacking order */
   --z-base:     0;   /* @kind other */
   --z-raised:   10;  /* @kind other */
@@ -22,6 +31,11 @@
   --z-toast:    600; /* @kind other */
   --z-command:  700; /* @kind other */  /* command palette — top */
   --z-max:      9999;/* @kind other */
+
+  /* ---- Overlay scrim — the dim layer behind an open modal/crate.
+     Mixes var(--ink), so it theme-flips for free (no per-theme override). */
+  --scrim-fill: color-mix(in oklch, var(--ink) 44%, transparent); /* @kind color */
+  --scrim-blur: 6px; /* @kind other */
 }
 
 /* STACK — vertical rhythm; even gap between children.
@@ -34,8 +48,8 @@
 .cluster {
   display: flex; flex-wrap: wrap;
   gap: var(--gap, var(--d-2));
-  align-items: var(--align, center);
-  justify-content: var(--justify, flex-start);
+  align-items: var(--align);
+  justify-content: var(--justify);
   min-width: 0;
 }
 
@@ -44,8 +58,8 @@
    Per-instance: --side (rail width), --content-min (wrap threshold),
    --side-edge ("left"|"right" by source order). */
 .sidebar { display: flex; flex-wrap: wrap; gap: var(--gap, var(--space-fluid-md)); }
-.sidebar > .side    { flex: 1 1 var(--side, 280px); }
-.sidebar > .content { flex: 999 1 var(--content-min, 60%); min-width: min(var(--content-min, 60%), 100%); }
+.sidebar > .side    { flex: 1 1 var(--side); }
+.sidebar > .content { flex: 999 1 var(--content-min); min-width: min(var(--content-min), 100%); }
 
 /* CENTER — horizontally center a measure-capped column.
    Per-instance: --max (default --measure). */
@@ -58,7 +72,7 @@
 
 /* COVER — vertically centered region with optional top/bottom slots.
    Use .cover > .cover-main for the centered piece. Per-instance: --min. */
-.cover { display: flex; flex-direction: column; min-height: var(--min, 100%); gap: var(--gap, var(--d-4)); }
+.cover { display: flex; flex-direction: column; min-height: var(--min); gap: var(--gap, var(--d-4)); }
 .cover > .cover-main { margin-block: auto; }
 
 /* REEL — single-row horizontal scroller (carousels, thumbnail rails).
@@ -73,14 +87,14 @@
 
 /* FRAME — lock a media box to an aspect ratio, crop the contents.
    Per-instance: --ratio (default 16/9). */
-.frame-ratio { aspect-ratio: var(--ratio, 16 / 9); overflow: hidden; }
+.frame-ratio { aspect-ratio: var(--ratio); overflow: hidden; }
 .frame-ratio > img, .frame-ratio > video { width: 100%; height: 100%; object-fit: cover; }
 
 /* GRID — responsive auto-fit; see also .auto-grid in sizing.css.
    Per-instance: --col-min, --gap. */
 .grid-fit {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(var(--col-min, 240px), 100%), 1fr));
+  --col-min: 240px; grid-template-columns: repeat(auto-fit, minmax(min(var(--col-min), 100%), 1fr));
   gap: var(--gap, var(--space-fluid-md));
 }
 
@@ -88,4 +102,112 @@
    then all snap to a column together (not one-by-one).
    Per-instance: --threshold, --gap. */
 .switcher { display: flex; flex-wrap: wrap; gap: var(--gap, var(--d-4)); }
-.switcher > * { flex-grow: 1; flex-basis: calc((var(--threshold, 460px) - 100%) * 999); }
+.switcher > * { flex-grow: 1; flex-basis: calc((var(--threshold) - 100%) * 999); }
+
+/* ============================================================
+   CONTAINMENT + KEYLINE
+   ------------------------------------------------------------
+   The two rules that stop content crossing a surface's edge and
+   keep a column of surfaces aligned. Industry-standard concepts:
+   overflow containment, and Material's "keylines" (shared content
+   inset). This is the single home for "nothing spills its rounded
+   box" and "sibling surfaces line up on one inset". They COMPOSE
+   with the overflow-safe text utilities in tokens/sizing.css
+   (.min0 / .truncate / .line-clamp) — those keep the TEXT honest;
+   these keep the SURFACE honest.
+   ============================================================ */
+:root {
+  /* the shared content inset every surface in a column pads to, so
+     their content lines up on one vertical keyline. One value →
+     change it once and cards + panels stay aligned by construction.
+     Derives from the DENSITY axis: compact tightens every keyline
+     uniformly — alignment holds because it is still ONE value. */
+  --keyline: var(--d-5); /* @kind other */
+}
+
+/* CONTAIN — clip flowing content to the surface's (rounded) box, so a
+   long label or wide child can never cross the border. `clip` respects
+   border-radius and adds no scroll box (unlike `hidden`). Put on any
+   rounded surface that holds flowing content: cards, list panels, media.
+   (Do NOT put on a surface that intentionally overflows — a menu/tooltip
+   host; use it on the content card, not the popover shell.) */
+.contain { overflow: clip; }
+
+/* KEYLINE — pad a surface to the shared inset. Two sibling surfaces in
+   the same column that both carry .keyline align their content on one
+   vertical line by construction — no more "the panel doesn't line up
+   with the cards above it." Override per-instance with --keyline. */
+.keyline { padding: var(--keyline); }
+
+/* ============================================================
+   FLOW — the Group/Cluster arrangement AXIS (parametric)
+   ------------------------------------------------------------
+   AXES.md: every container level has a COLLAPSE RULE; design is
+   computed from dials, never hand-set. This is that rule for the
+   Group level, made a real dial. A group of N siblings declares
+   its INPUTS and the layout is CALCULATED:
+
+     --count      how many siblings the group holds (the content input)
+     --item-min   the legibility floor — narrower than this is a crush
+     --flow-gap   breathing room; derives from the DENSITY axis (--d-4)
+
+   Derived (never set directly):
+     --flow-basis = max(item-min, (100% − (count−1)·gap) / count)
+     → "each track wants width/count, but never less than item-min."
+     Columns therefore COMPUTE as: min(count, floor width/item-min).
+
+   The remaining choice is INTENT — what to do when the container
+   can't fit --count columns at --item-min. That's the data-flow dial:
+     data-flow="wrap"   (default) surplus items wrap to new rows
+     data-flow="reel"   one row is sacred → horizontal scroll + snap
+                        (pipelines, stage flows, timelines)
+     data-flow="fixed"  always --count columns; tracks may go below
+                        item-min (ONLY for known-width surfaces:
+                        print, fixed slides — never fluid UI)
+   ============================================================ */
+:root {
+  --count: 4;        /* @kind other */
+  --item-min: 128px; /* @kind spacing */
+  --flow-gap: var(--d-4); /* density-aware by derivation */
+}
+
+.flow {
+  /* derived HERE, not :root — a var()-of-a-var() resolves where it is
+     declared (same rule as the glass/zone roles), so declaring on .flow
+     lets per-instance inputs (--count/--item-min/--flow-gap on the
+     element) actually recompute the basis. */
+  --flow-basis: max(var(--item-min), calc((100% - (var(--count) - 1) * var(--flow-gap)) / var(--count)));
+  /* reel's bleed default lives on the BASE rule so a per-instance
+     override (.myGroup{--reel-bleed:…}) isn't beaten by specificity. */
+  --reel-bleed: var(--keyline);
+  display: grid;
+  gap: var(--flow-gap);
+  grid-template-columns: repeat(auto-fit, minmax(var(--flow-basis), 1fr));
+}
+.flow > * { min-width: 0; }
+
+.flow[data-flow="fixed"] { grid-template-columns: repeat(var(--count), minmax(0, 1fr)); }
+
+.flow[data-flow="reel"] {
+  display: flex;
+  overflow-x: auto;
+  /* becoming a scroll container zeroes a flex-item's automatic minimum
+     size — inside a height-squeezed column the reel would crush to 0px
+     and clip its cards invisible. The reel scrolls HORIZONTALLY only;
+     vertically it must always fit its content. */
+  min-height: fit-content;
+  /* FULL-BLEED: extend the reel to its parent surface's borders, so
+     cards slide under the container's edge (a natural sideways slide)
+     instead of cutting off sharply at the parent's inset. The padding
+     puts the resting cards back on the keyline; scroll-padding makes
+     snap stops honour it. Set --reel-bleed to the PARENT's inset
+     (defaults to the shared keyline). */
+  margin-inline: calc(-1 * var(--reel-bleed));
+  padding-inline: var(--reel-bleed);
+  scroll-padding-inline: var(--reel-bleed);
+  scroll-snap-type: x proximity;
+  /* the scrollbar belongs to the theme, not the UA default */
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--ink) 24%, transparent) transparent;
+}
+.flow[data-flow="reel"] > * { flex: 0 0 var(--flow-basis); scroll-snap-align: start; }

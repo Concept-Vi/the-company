@@ -1,0 +1,158 @@
+/* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+:root {
+  --h: 40%;
+}
+/* ============================================================
+   ConceptV · GLASS-APP KIT  (specimens/glass-gallery)
+   ------------------------------------------------------------
+   Structural chrome primitives shared by every liquid-glass
+   surface in this gallery. It owns NO colours, radii, or spacing
+   of its own — every value references a system token (--s-* space,
+   --r-* radii, --ink/--gold roles, the .glass material). This is
+   what makes the surfaces feel like rules, not ad-hoc: one home
+   for the chrome rhythm, referenced by all screens.
+   Load AFTER ../../styles.css.
+   ============================================================ */
+
+*{ box-sizing: border-box; }
+html,body{ height: 100%; }
+body{
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--bg-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- themed scrollbars (slim, ink thumb) — one rule, everywhere -- */
+*{ scrollbar-width: thin; scrollbar-color: color-mix(in oklch, var(--ink) 22%, transparent) transparent; }
+::-webkit-scrollbar{ width: 10px; height: 10px; }
+::-webkit-scrollbar-track{ background: transparent; }
+::-webkit-scrollbar-thumb{ background: color-mix(in oklch, var(--ink) 20%, transparent);
+  border-radius: var(--r-pill); border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover{ background: color-mix(in oklch, var(--ink) 30%, transparent); }
+/* inside a phone: no scrollbars (iOS-style overlay) */
+.cv-device__screen *{ scrollbar-width: none; }
+.cv-device__screen ::-webkit-scrollbar{ width: 0; height: 0; }
+
+/* mobile content column + section caption helpers used by the screens: */
+.m-col{ padding: var(--gutter-mobile); display: flex; flex-direction: column; gap: var(--s-4); }
+.m-cap{ padding: 0 var(--s-1) 2px; font-family: var(--font-mono); font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--ink-4); }
+
+/* ---- ambient light field the glass refracts ---------------- */
+.gg-field{ position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.gg-field span{ position: absolute; border-radius: 50%; filter: blur(90px); opacity: .5; }
+.gg-field .a{ width: 44vmax; height: 44vmax; left: -8vmax; top: -12vmax;
+  background: radial-gradient(circle, var(--accent-gold), transparent 70%); animation: gg-d1 34s var(--ease-in-out) infinite; }
+.gg-field .b{ width: 40vmax; height: 40vmax; right: -8vmax; bottom: -14vmax;
+  background: radial-gradient(circle, var(--accent-bronze-warm), transparent 70%); animation: gg-d2 42s var(--ease-in-out) infinite; }
+.gg-field .c{ width: 30vmax; height: 30vmax; left: 42%; top: 30%;
+  background: radial-gradient(circle, var(--pig-source), transparent 70%); opacity: .35; animation: gg-d3 48s var(--ease-in-out) infinite; }
+@keyframes gg-d1{ 50%{ transform: translate(6vmax,5vmax) scale(1.1);} }
+@keyframes gg-d2{ 50%{ transform: translate(-5vmax,-4vmax) scale(1.08);} }
+@keyframes gg-d3{ 50%{ transform: translate(-5vmax,6vmax) scale(1.12);} }
+@media (prefers-reduced-motion: reduce){ .gg-field span{ animation: none; } }
+
+/* the app sits above the field */
+.gg-app{ position: relative; z-index: var(--z-raised); height: 100vh; padding: var(--s-4); }
+
+/* ---- shared inner rhythm: every panel breathes on --s-* ---- */
+.gg-pad   { padding: var(--s-5); }
+.gg-pad-sm{ padding: var(--s-3); }
+
+/* ---- text roles ------------------------------------------- */
+.gg-h    { font-size: var(--fs-h4); font-weight: 600; letter-spacing: var(--tracking-snug); color: var(--ink); }
+.gg-h-lg { font-size: var(--fs-h3); font-weight: 600; letter-spacing: var(--tracking-tight); color: var(--ink); }
+.gg-sub  { font-size: var(--fs-caption); color: var(--ink-3); }
+.gg-lbl  { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--ink-4); }
+.gg-num  { font-variant-numeric: tabular-nums; letter-spacing: var(--tracking-tight); }
+
+/* ---- icon button — ONE size, ONE shape everywhere ---------- */
+.gg-icon{ width: 34px; height: 34px; border-radius: var(--r-md); display: grid; place-items: center; cursor: pointer;
+  color: var(--ink-2); background: transparent; border: 1px solid transparent; flex: none; }
+.gg-icon:hover{ background: color-mix(in oklch, var(--ink) 7%, transparent); border-color: var(--glass-edge-soft); }
+.gg-icon.sm{ width: 28px; height: 28px; border-radius: var(--r-sm); }
+
+/* round variant (composer / player) */
+.gg-round{ width: 34px; height: 34px; border-radius: var(--r-pill); display: grid; place-items: center; cursor: pointer;
+  color: var(--ink-2); background: color-mix(in oklch, var(--ink) 6%, transparent); border: 1px solid var(--glass-edge-soft); flex: none; }
+.gg-round:hover{ color: var(--ink); background: color-mix(in oklch, var(--ink) 11%, transparent); }
+
+/* ---- avatar ----------------------------------------------- */
+.gg-avatar{ width: 34px; height: 34px; border-radius: var(--r-pill); flex: none; display: grid; place-items: center;
+  background: color-mix(in oklch, var(--ink) 12%, transparent); border: 1px solid var(--glass-edge);
+  color: var(--ink-2); font-size: var(--fs-meta); font-weight: 600; overflow: hidden; }
+.gg-avatar.gold{ background: var(--accent-gold); color: var(--on-gold); border-color: transparent; }
+
+/* ---- brand mark ------------------------------------------- */
+.gg-brand{ width: 36px; height: 36px; border-radius: var(--r-md); flex: none; display: grid; place-items: center;
+  background: var(--accent-gold); color: var(--on-gold); box-shadow: var(--shadow-sm); }
+
+/* ---- segmented control (glass inset track) ---------------- */
+.gg-seg{ display: inline-flex; gap: var(--s-1); padding: var(--s-1); border-radius: var(--r-lg); }
+.gg-seg .gg-pill{ font-size: var(--fs-caption); font-weight: 600; letter-spacing: var(--tracking-snug);
+  padding: 6px var(--s-3); border-radius: var(--r-md); color: var(--ink-3); cursor: pointer; border: 0; background: transparent; font-family: inherit; white-space: nowrap; }
+.gg-seg .gg-pill.on{ color: var(--ink); background: color-mix(in oklch, var(--ink) 10%, transparent); box-shadow: inset 0 1px 0 var(--glass-highlight); }
+
+/* ---- search field ----------------------------------------- */
+.gg-search{ display: inline-flex; align-items: center; gap: var(--s-2); min-height: 34px; padding: 0 var(--s-3);
+  border-radius: var(--r-pill); background: color-mix(in oklch, var(--ink) 6%, transparent); border: 1px solid var(--glass-edge-soft); color: var(--ink-3); }
+.gg-search input{ flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 500 var(--fs-caption) var(--font-body); }
+.gg-search input::placeholder{ color: var(--ink-4); }
+
+/* ---- list rows -------------------------------------------- */
+.gg-row{ display: flex; align-items: center; gap: var(--s-3); padding: var(--s-2) var(--s-3); border-radius: var(--r-md); cursor: pointer; }
+.gg-row:hover{ background: color-mix(in oklch, var(--ink) 6%, transparent); }
+.gg-row.on{ background: color-mix(in oklch, var(--ink) 9%, transparent); }
+.gg-row .gg-grow{ flex: 1; min-width: 0; }
+.gg-ellip{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- hairline separators (glass world) -------------------- */
+.gg-rule{ border: 0; border-top: 1px solid var(--glass-edge-soft); margin: 0; }
+.gg-vrule{ width: 1px; align-self: stretch; background: var(--glass-edge-soft); }
+
+/* ---- KPI / stat card (inset well) ------------------------- */
+.gg-kpi{ display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-4); }
+.gg-kpi .v{ font-size: var(--fs-h3); font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: var(--tracking-tight); white-space: nowrap; }
+.gg-kpi .k{ font-size: var(--fs-caption); color: var(--ink-3); }
+.gg-delta{ display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-meta); font-weight: 600; }
+.gg-delta.up{ color: var(--zone-success-ink); }
+.gg-delta.down{ color: var(--zone-reject-ink); }
+
+/* ---- chips ------------------------------------------------ */
+.gg-chip{ display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--r-pill);
+  font-size: var(--fs-meta); font-weight: 500; color: var(--ink-2);
+  background: color-mix(in oklch, var(--ink) 6%, transparent); border: 1px solid var(--glass-edge-soft); }
+
+/* ---- tiny bar chart (tokens for series) ------------------- */
+.gg-bars{ display: flex; align-items: flex-end; gap: var(--s-2); height: 96px; }
+.gg-bars i{ flex: 1; height: 100%; border-radius: var(--viz-bar-radius) var(--viz-bar-radius) 0 0; background: var(--viz-track); position: relative; }
+.gg-bars i::after{ content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: var(--h);
+  border-radius: var(--viz-bar-radius) var(--viz-bar-radius) 0 0; background: var(--c, var(--viz-1)); }
+.gg-bars i.key::after{ background: var(--viz-key); }
+
+/* ---- placeholder image slot (striped) --------------------- */
+.gg-slot{ position: relative; display: grid; place-items: center; overflow: hidden;
+  background:
+    repeating-linear-gradient(135deg, color-mix(in oklch, var(--ink) 4%, transparent) 0 10px, transparent 10px 20px),
+    color-mix(in oklch, var(--zone-ground) 30%, transparent);
+  color: var(--ink-4); }
+.gg-slot .ring{ width: 56px; height: 56px; border-radius: var(--r-pill);
+  border: 1.5px dashed color-mix(in oklch, var(--ink) 22%, transparent); display: grid; place-items: center; }
+
+/* ---- toggle switch (reuse cv-switch look, token-driven) ---- */
+.gg-switch{ position: relative; width: 42px; height: 25px; border-radius: var(--r-pill); flex: none; cursor: pointer;
+  background: color-mix(in oklch, var(--ink) 18%, transparent); border: 0; transition: background var(--dur-quick) var(--ease-out); }
+.gg-switch::after{ content: ""; position: absolute; top: 3px; left: 3px; width: 19px; height: 19px; border-radius: 50%;
+  background: var(--zone-ground); box-shadow: var(--shadow-sm); transition: transform var(--dur-quick) var(--ease-out); }
+.gg-switch.on{ background: var(--accent-gold); }
+.gg-switch.on::after{ transform: translateX(17px); }
+
+/* ============================================================
+/* ============================================================
+   PHONE — the device frame, status bar & tab bar now live in the
+   SYSTEM (tokens/device.css: .cv-device / .cv-statusbar / .cv-appbar
+   / .cv-tabbar / .cv-tab). The gallery consumes those classes; only
+   the ambient field + glass primitives above are gallery-local.
+   ============================================================ */

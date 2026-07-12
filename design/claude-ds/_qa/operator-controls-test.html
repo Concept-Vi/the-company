@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>operator controls test</title>
+<link rel="stylesheet" href="../styles.css">
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head><body style="background:var(--zone-ground);padding:40px;font-family:var(--font-body)">
+<div id="app"></div>
+<div id="log" style="margin-top:24px;font:12px/1.5 monospace;white-space:pre-wrap"></div>
+<script>
+// Babel-harness pattern (_qa/core-test.html / popover-test.html): fetch the REAL
+// .jsx, strip ES module syntax, transform, eval — so the exact source that ships
+// is what runs, bundle-independent.
+async function loadComp(path, names){
+  var src = await (await fetch(path)).text();
+  src = src.replace(/^import\s.+?;?\s*$/gm, '').replace(/export\s+default\s+\w+;?/g, '');
+  names.forEach(function(n){
+    src = src.replace(new RegExp('export\\s+function\\s+' + n + '\\b'), 'window.' + n + ' = function ' + n);
+  });
+  src = src.replace(/export\s+function\s+(\w+)/g, 'window.$1 = function $1'); // any leftover named exports
+  (0,eval)(Babel.transform(src, {presets:['react']}).code);
+}
+function tick(ms){ return new Promise(function(r){ setTimeout(r, ms == null ? 30 : ms); }); }
+
+(async function(){
+  var logEl = document.getElementById('log');
+  var results = [];
+  function check(name, cond){ results.push({name:name, ok:!!cond}); }
+  var h, root, mount = document.getElementById('app');
+  function render(el){ return new Promise(function(res){ root.render(el); requestAnimationFrame(function(){ requestAnimationFrame(res); }); }); }
+
+  try {
+    // Popover first — Menu positions through window.CV_POPOVER.Component
+    await loadComp('../components/Popover.jsx', ['Popover']);
+    await loadComp('../components/Toast.jsx',   ['ToastHost']);
+    await loadComp('../components/Sheet.jsx',   ['Sheet']);
+    await loadComp('../components/List.jsx',    ['List','ListRow']);
+    await loadComp('../components/Menu.jsx',    ['Menu']);
+    await loadComp('../components/Checkbox.jsx',['Checkbox']);
+    await loadComp('../components/Radio.jsx',   ['Radio']);
+    await loadComp('../components/AppShell.jsx',['AppShell']);
+    await loadComp('../components/Table.jsx',   ['Table']);
+    await loadComp('../components/Search.jsx',  ['Search']);
+    await loadComp('../components/Skeleton.jsx',['Skeleton']);
+    check('all components eval + Popover engine present', typeof window.CV_POPOVER.Component === 'function' && typeof window.CV_TOAST.show === 'function');
+
+    h = React.createElement;
+    root = ReactDOM.createRoot(mount);
+
+    // ---- Toast ------------------------------------------------------------
+    await render(h(window.ToastHost, {position:'top-right'}));
+    var actioned = false;
+    window.CV_TOAST.show({tone:'gold', title:'Vi picked', message:'frame 04', action:{label:'View', onClick:function(){ actioned = true; }}, duration:0});
+    window.CV_TOAST.show({tone:'error', title:'Upload failed', duration:0});
+    await tick();
+    var toasts = document.querySelectorAll('.cv-toast');
+    check('Toast: queue renders 2 toasts', toasts.length === 2);
+    check('Toast: tone class rides the Badge vocabulary (cv-toast--gold)', !!document.querySelector('.cv-toast--gold'));
+    check('Toast: enter motion primitive applied (.enter-down for a top stack)', !!document.querySelector('.cv-toast.enter-down'));
+    check('Toast: title + action slot render', document.querySelector('.cv-toast__title').textContent === 'Vi picked' && !!document.querySelector('.cv-toast__action'));
+    document.querySelector('.cv-toast__action').click();
+    await tick(400);
+    check('Toast: action fires + dismisses its toast', actioned && document.querySelectorAll('.cv-toast').length === 1);
+    document.querySelector('.cv-toast__close').click();
+    await tick(400);
+    check('Toast: close empties the queue (host renders null)', document.querySelectorAll('.cv-toast').length === 0);
+
+    // ---- Sheet ------------------------------------------------------------
+    var sheetClosed = false;
+    await render(h(window.Sheet, {open:true, side:'bottom', title:'Filters', onClose:function(){ sheetClosed = true; }}, h('p', null, 'body')));
+    await tick(60);
+    var sheet = document.querySelector('.cv-sheet');
+    check('Sheet: mounts with data-side="bottom" + is-open', !!sheet && sheet.getAttribute('data-side') === 'bottom' && sheet.classList.contains('is-open'));
+    check('Sheet: bottom sheet carries the touch-floor drag handle', !!document.querySelector('.cv-sheet__handle-hit .cv-sheet__handle'));
+    check('Sheet: reuses Modal head chrome (one dialog-chrome home)', !!document.querySelector('.cv-sheet .cv-modal__head .cv-modal__title'));
+    document.dispatchEvent(new KeyboardEvent('keydown', {key:'Escape'}));
+    check('Sheet: Escape requests close (Modal convention)', sheetClosed);
+    await render(h(window.Sheet, {open:true, side:'right', title:'Drawer', onClose:function(){}}));
+    await tick(30);
+    var right = document.querySelector('.cv-sheet[data-side="right"]');
+    check('Sheet: side="right" renders the drawer (no drag handle)', !!right && !right.querySelector('.cv-sheet__handle'));
+
+    // ---- List ---------------------------------------------------------------
+    var picked = null;
+    await render(h(window.List, {rows:[
+      {leading:'A', primary:'Oakman Residences', secondary:'12 frames', trailing:'ready', selected:true, onSelect:function(){ picked = 'a'; }},
+      {primary:'Harbourline B2', secondary:'brochure'},
+      {primary:'Gatehouse West'},
+    ]}));
+    check('List: renders 3 rows + divided variant', document.querySelectorAll('.cv-list-row').length === 3 && !!document.querySelector('.cv-list--divided'));
+    var row0 = document.querySelectorAll('.cv-list-row')[0];
+    check('List: selectable row rides .interactive + aria-selected', row0.classList.contains('interactive') && row0.getAttribute('aria-selected') === 'true');
+    check('List: primary/secondary/trailing slots compute their classes',
+      row0.querySelector('.cv-list-row__primary').textContent === 'Oakman Residences'
+      && !!row0.querySelector('.cv-list-row__secondary') && !!row0.querySelector('.cv-list-row__trailing'));
+    row0.click();
+    check('List: onSelect fires', picked === 'a');
+
+    // ---- Menu ---------------------------------------------------------------
+    var renamed = false;
+    await render(h(window.Menu, {
+      trigger: h('button', {className:'cv-btn'}, 'Actions'),
+      items: [
+        {icon:'edit', label:'Rename', onSelect:function(){ renamed = true; }},
+        {separator:true},
+        {icon:'trash', label:'Delete', danger:true},
+        {label:'Archive', disabled:true},
+      ],
+    }));
+    var trig = mount.querySelector('button.cv-btn');
+    check('Menu: trigger carries aria-haspopup="menu"', trig.getAttribute('aria-haspopup') === 'menu');
+    trig.click();
+    await tick(60);
+    var menuEl = document.querySelector('.cv-menu[role="menu"]');
+    check('Menu: opens role="menu" through the shared Popover engine', !!menuEl && !!menuEl.closest('.cv-popover'));
+    check('Menu: items + separator + danger + disabled compute their classes',
+      menuEl.querySelectorAll('.cv-menu__item').length === 3
+      && !!menuEl.querySelector('.cv-menu__sep')
+      && !!menuEl.querySelector('.cv-menu__item--danger')
+      && !!menuEl.querySelector('.cv-menu__item[aria-disabled="true"]'));
+    menuEl.dispatchEvent(new KeyboardEvent('keydown', {key:'ArrowDown', bubbles:true}));
+    await tick();
+    menuEl = document.querySelector('.cv-menu[role="menu"]');
+    check('Menu: ArrowDown moves focus (.is-focused)', !!menuEl.querySelector('.cv-menu__item.is-focused'));
+    menuEl.querySelectorAll('.cv-menu__item')[0].click();
+    await tick(60);
+    check('Menu: Enter/click selects + closes', renamed && !document.querySelector('.cv-menu'));
+
+    // ---- Checkbox / Radio ---------------------------------------------------
+    await render(h('div', null,
+      h(window.Checkbox, {label:'Include floorplans', hint:'All levels', id:'cb1', defaultChecked:true}),
+      h(window.Checkbox, {indeterminate:true, id:'cb2'}),
+      h(window.Radio, {label:'Send as link', name:'r', id:'rd1', defaultChecked:true})));
+    var cb1 = document.getElementById('cb1');
+    check('Checkbox: computes .cv-checkbox inside the shared .cv-field stack',
+      cb1.classList.contains('cv-checkbox') && !!cb1.closest('.cv-field') && !!document.querySelector('label[for="cb1"].cv-label'));
+    check('Checkbox: hint renders through .cv-hint (Input convention)', !!document.querySelector('.cv-hint'));
+    check('Checkbox: checked + indeterminate states', cb1.checked === true && document.getElementById('cb2').indeterminate === true);
+    var rd = document.getElementById('rd1');
+    check('Radio: computes .cv-radio, checked', rd.classList.contains('cv-radio') && rd.checked === true);
+
+    // ---- AppShell -----------------------------------------------------------
+    var navved = null;
+    await render(h(window.AppShell, {
+      title:'Operator Console', activeId:'projects',
+      nav:[{id:'over', label:'Overview', icon:'dashboard'}, {id:'projects', label:'Projects', icon:'files-stack'}],
+      onNavigate:function(id){ navved = id; },
+    }, h('p', null, 'content')));
+    check('AppShell: mounts .cv-appshell with the device.css appbar', !!document.querySelector('.cv-appshell .cv-appbar .cv-appbar__title'));
+    check('AppShell: rail renders items, active carries aria-current="page"',
+      document.querySelectorAll('.cv-rail-item').length === 2
+      && document.querySelectorAll('.cv-rail-item')[1].getAttribute('aria-current') === 'page');
+    check('AppShell: tab bar rides device.css .cv-tabbar/.cv-tab (same nav data)',
+      !!document.querySelector('.cv-tabbar.cv-appshell__tabbar')
+      && document.querySelectorAll('.cv-tabbar .cv-tab').length === 2
+      && document.querySelectorAll('.cv-tabbar .cv-tab')[1].getAttribute('aria-selected') === 'true');
+    document.querySelectorAll('.cv-rail-item')[0].click();
+    check('AppShell: onNavigate fires with the item id', navved === 'over');
+
+    // ---- Table / Search / Skeleton -------------------------------------------
+    await render(h('div', null,
+      h(window.Table, {striped:true,
+        columns:[{key:'plan', label:'Plan'}, {key:'price', label:'Price', num:true, feature:true}],
+        rows:[{plan:'Studio 04', price:'$412,000'}, {plan:'One-bed 12', price:'$589,000'}]}),
+      h(window.Search, {value:'oak', onChange:function(){}, placeholder:'Search…'}),
+      h(window.Skeleton, {variant:'circle', width:32, height:32})));
+    check('Table: computes .cv-table--striped with thead + rows', !!document.querySelector('table.cv-table.cv-table--striped') && document.querySelectorAll('tbody tr').length === 2);
+    check('Table: num + feature column classes land on cells', !!document.querySelector('td.cv-table__num.cv-table__feature'));
+    check('Search: computes .cv-search with a bound input', !!document.querySelector('.cv-search input') && document.querySelector('.cv-search input').value === 'oak');
+    check('Skeleton: computes .skeleton.circle with sized style', (function(){ var s = document.querySelector('.skeleton.circle'); return !!s && s.style.width === '32px'; })());
+
+  } catch(e){
+    results.push({name:'EXCEPTION: ' + e.message, ok:false});
+    console.error(e);
+  }
+
+  var passed = results.filter(function(r){ return r.ok; }).length;
+  window.__qa = { passed: passed, total: results.length, ok: passed === results.length && results.length > 0 };
+  logEl.textContent = results.map(function(r){ return (r.ok ? 'PASS  ' : 'FAIL  ') + r.name; }).join('\n')
+    + '\n\n' + passed + '/' + results.length + (window.__qa.ok ? '  ALL GREEN' : '  FAILURES');
+})();
+</script>
+</body></html>

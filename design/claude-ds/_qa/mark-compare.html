@@ -1,0 +1,29 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<style>
+  body { margin:0; background:#fff; font-family:sans-serif; }
+  .grid { display:grid; grid-template-columns:repeat(4,180px); gap:10px; padding:16px; }
+  .col { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .h { font:600 11px sans-serif; color:#555; }
+  .box { width:170px; height:170px; display:flex; align-items:center; justify-content:center; border:1px solid #eee; }
+  .box img { width:100%; height:100%; object-fit:contain; }
+  .box svg { width:160px; height:160px; }
+  .lbl { font:700 12px sans-serif; grid-column:1/-1; margin-top:8px; color:#222; }
+</style></head>
+<body>
+<div class="grid" id="g"></div>
+<script>
+const S = window.CV_SHAPES;
+const map = [['userPortal','user-portal'],['propertyWizard','property-wizard'],['virtualHubs','virtual-hub'],['vi','vi']];
+let html = '<div class="lbl">TOP = source PNG · BOTTOM = my markSVG render</div>';
+for (const [id, file] of map) {
+  html += `<div class="col"><span class="h">${id} · source</span><div class="box"><img src="../assets/brand-marks/${file}.png"></div></div>`;
+}
+for (const [id, file] of map) {
+  html += `<div class="col"><span class="h">${id} · render</span><div class="box">${S.markSVG(id,{size:160})}</div></div>`;
+}
+document.getElementById('g').innerHTML = html;
+</script>
+</body></html>

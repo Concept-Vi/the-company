@@ -1,0 +1,87 @@
+{
+  "packId": "vi-awesome-pass-pack-007",
+  "purpose": "State-role model for Claude Design / implementation of the Vi First Contact material hierarchy.",
+  "states": {
+    "card": {
+      "default": {
+        "material": "materials/card-face-lifted-ivory.webp",
+        "overlays": [
+          "overlays/card-contact-shadow.png",
+          "overlays/card-edge-highlight-top-left.png"
+        ],
+        "lumaRelativeToWall": "+8% to +14%",
+        "depth": 1
+      },
+      "active": {
+        "material": "materials/card-face-active-champagne.webp",
+        "overlays": [
+          "overlays/active-card-contact-shadow.png",
+          "overlays/active-card-selection-rim.png",
+          "overlays/card-edge-highlight-top-left.png"
+        ],
+        "lumaRelativeToWall": "+14% to +22%",
+        "depth": 2
+      },
+      "ghost": {
+        "material": "materials/card-face-ghost-matte.webp",
+        "overlays": [
+          "overlays/ghost-card-veil.png"
+        ],
+        "opacityRange": [
+          0.54,
+          0.74
+        ],
+        "depth": 0.5
+      },
+      "sourceHint": {
+        "material": "materials/source-detail-card.webp",
+        "component": "components/evidence-stack-card.png",
+        "overlays": [
+          "overlays/evidence-source-halo.png"
+        ],
+        "depth": 3
+      }
+    },
+    "path": {
+      "active": {
+        "stroke": "#d9b24f",
+        "width": 2.7,
+        "glow": true,
+        "node": "components/node-bead-active-gold.png"
+      },
+      "secondary": {
+        "stroke": "rgba(201,154,68,0.58)",
+        "width": 1.6,
+        "glow": false,
+        "node": "components/node-bead-secondary-gold.png"
+      },
+      "ghost": {
+        "stroke": "rgba(201,154,68,0.32)",
+        "width": 1.3,
+        "dash": [
+          7,
+          11
+        ],
+        "node": "components/node-bead-ghost-gold.png"
+      },
+      "visited": {
+        "overlay": "overlays/visited-path-memory.png"
+      }
+    },
+    "origin": {
+      "material": "materials/origin-plaque-stone.webp",
+      "overlays": [
+        "overlays/origin-plaque-shadow.png",
+        "overlays/card-edge-highlight-top-left.png"
+      ],
+      "role": "raised spatial anchor"
+    },
+    "commandTrough": {
+      "material": "materials/command-trough-paper.webp",
+      "overlays": [
+        "overlays/command-trough-shadow.png"
+      ],
+      "role": "surface-bound command slot, not a generic chat bar"
+    }
+  }
+}

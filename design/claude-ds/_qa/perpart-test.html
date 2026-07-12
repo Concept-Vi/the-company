@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../assets/icons/cv-glyphic.css">
+<link rel="stylesheet" href="../axes/motion/motion.css">
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/axis-core.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<style>body{margin:0;background:var(--paper);font-family:monospace;padding:30px}
+.row{display:flex;gap:34px;align-items:flex-end;flex-wrap:wrap}
+.cell{text-align:center;font:600 10px/1.4 monospace;color:#7A6A48}
+.cap{margin-top:10px;max-width:110px}</style>
+</head><body>
+<div class="row" id="row"></div>
+<script>
+var GL = window.CV_GLYPHIC;
+var tests = [
+  ['flat (back-compat)', { form:'octagon', symbol:'house', fill:'wash', color:'gold' }],
+  ['flat solid status', { form:'hex', symbol:'gear', fill:'solid', color:'success' }],
+  ['per-part COLOUR', { form:'hex', symbol:'star', fill:'tint', parts:{ ring:{color:'error'}, fill:{color:'sage-soft'}, symbol:{color:'info'} } }],
+  ['per-part TEXTURE', { form:'octagon', symbol:'database', fill:'paper', parts:{ ring:{texture:'dots'}, fill:{texture:'grid'}, symbol:{texture:'lines'} } }],
+  ['per-part MOTION', { form:'circle', symbol:'bell', fill:'wash', parts:{ ring:{motion:'spin'}, symbol:{motion:'pulse'} } }],
+  ['whole motion', { form:'diamond', symbol:'atom', fill:'tint', color:'gold', motion:'glow' }],
+  ['bare symbol', { form:'none', symbol:'lightbulb', color:'gold' }],
+];
+document.getElementById('row').innerHTML = tests.map(function(t){
+  var r = GL.compose(t[1], { size: 92 });
+  return '<div class="cell"><span class="cv-glyphic '+r.motionClass+'" style="display:inline-flex">'+r.svg+'</span><div class="cap">'+t[0]+'</div></div>';
+}).join('');
+</script>
+</body></html>

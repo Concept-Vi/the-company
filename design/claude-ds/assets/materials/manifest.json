@@ -1,0 +1,91 @@
+{
+  "packId": "vi-pbr-material-pack-004",
+  "createdFor": "WebGL pipeline core/render-scene.js",
+  "mapContract": {
+    "diffuse": "2048x2048 WebP RGB, tileable, UNLIT/albedo-style, no baked shadows/vignette",
+    "normal": "2048x2048 PNG RGB tangent-space normal, +Y convention",
+    "roughness": "2048x2048 PNG grayscale",
+    "ao": "2048x2048 PNG grayscale, white = unoccluded",
+    "displacement": "2048x2048 PNG grayscale, mid-gray centered height"
+  },
+  "spanContract": "worldSpanPx is the CSS-px footprint of one tile at zoom 1. Engine tokens --span-* and GL repeat scale from it.",
+  "negatives": [
+    "no baked lighting/shadows/vignette",
+    "true seamless tiling",
+    "no checkerboards/watermarks"
+  ],
+  "assets": [
+    {
+      "id": "champagne-honed-stone",
+      "role": "Card face / raised object stone; honed champagne limestone/travertine support material",
+      "worldSpanPx": 460,
+      "maps": {
+        "diffuse": "materials/champagne-honed-stone/diffuse.webp",
+        "normal": "materials/champagne-honed-stone/normal(+Y).png",
+        "roughness": "materials/champagne-honed-stone/roughness.png",
+        "ao": "materials/champagne-honed-stone/ao.png",
+        "displacement": "materials/champagne-honed-stone/displacement.png"
+      }
+    },
+    {
+      "id": "fine-sanded-plaster",
+      "role": "Card face / secondary stone-light fill; fine sanded plaster grain",
+      "worldSpanPx": 460,
+      "maps": {
+        "diffuse": "materials/fine-sanded-plaster/diffuse.webp",
+        "normal": "materials/fine-sanded-plaster/normal(+Y).png",
+        "roughness": "materials/fine-sanded-plaster/roughness.png",
+        "ao": "materials/fine-sanded-plaster/ao.png",
+        "displacement": "materials/fine-sanded-plaster/displacement.png"
+      }
+    },
+    {
+      "id": "fine-laid-paper",
+      "role": "Parchment/card paper surface; tight vellum fiber",
+      "worldSpanPx": 350,
+      "maps": {
+        "diffuse": "materials/fine-laid-paper/diffuse.webp",
+        "normal": "materials/fine-laid-paper/normal(+Y).png",
+        "roughness": "materials/fine-laid-paper/roughness.png",
+        "ao": "materials/fine-laid-paper/ao.png",
+        "displacement": "materials/fine-laid-paper/displacement.png"
+      }
+    },
+    {
+      "id": "fine-graphite",
+      "role": "Carbon/glass-dark card face; fine brushed graphite",
+      "worldSpanPx": 460,
+      "maps": {
+        "diffuse": "materials/fine-graphite/diffuse.webp",
+        "normal": "materials/fine-graphite/normal(+Y).png",
+        "roughness": "materials/fine-graphite/roughness.png",
+        "ao": "materials/fine-graphite/ao.png",
+        "displacement": "materials/fine-graphite/displacement.png"
+      }
+    },
+    {
+      "id": "warm-plaster-wall",
+      "role": "Stone-light wall ground; warm champagne plaster wall",
+      "worldSpanPx": 1250,
+      "maps": {
+        "diffuse": "materials/warm-plaster-wall/diffuse.webp",
+        "normal": "materials/warm-plaster-wall/normal(+Y).png",
+        "roughness": "materials/warm-plaster-wall/roughness.png",
+        "ao": "materials/warm-plaster-wall/ao.png",
+        "displacement": "materials/warm-plaster-wall/displacement.png"
+      }
+    },
+    {
+      "id": "cool-plaster-wall",
+      "role": "Cool/greige wall ground; neutral plaster wall variant",
+      "worldSpanPx": 1250,
+      "maps": {
+        "diffuse": "materials/cool-plaster-wall/diffuse.webp",
+        "normal": "materials/cool-plaster-wall/normal(+Y).png",
+        "roughness": "materials/cool-plaster-wall/roughness.png",
+        "ao": "materials/cool-plaster-wall/ao.png",
+        "displacement": "materials/cool-plaster-wall/displacement.png"
+      }
+    }
+  ]
+}

@@ -143,13 +143,20 @@
   }
 
   function remove(id, opts = {}) {
-    if (BUILTIN.has(id)) return false; // can't remove built-ins
+    // Remove the USER-OWNED layer for this id. A built-in id may carry a user
+    // override (a fork created by update()/relate() on edit); removing it REVERTS
+    // to the canonical built-in rather than deleting the type. A pure built-in
+    // (no override) has nothing user-owned to drop, so this returns false — you
+    // can't delete a built-in, only revert your fork of it. This is the only path
+    // back to canonical after a fork, so a polluted built-in is recoverable.
     let removed = false;
     if (USER.delete(id)) removed = true;
     if (TEMPLATES.delete(id)) removed = true;
     if (removed && !opts.silent) { saveUserTypes(); saveTemplates(); notify(); }
     return removed;
   }
+  // explicit intent alias — revert(id) reads as "drop my fork, restore canonical".
+  function revert(id, opts = {}) { return remove(id, opts); }
 
   function get(id) {
     if (!id) return null;
@@ -252,6 +259,17 @@
     // evaluator so the rule is the same in validation and in the editor UI.
     if (slot.conditions && window.CV_COND && !window.CV_COND.testAll(slot.conditions, ctx || {})) return false;
     const acc = slot.accepts || {};
+    // value-socket path (the collapse, spec §09): when `accepts` names an AXIS
+    // (a bare axis id, or { axis }), this is a value-socket — admit it if the
+    // candidate's value is in the axis subscription. One matcher, both relations.
+    const axisId = (typeof acc === 'string' && window.CV_AXES && window.CV_AXES.has && window.CV_AXES.has(acc)) ? acc
+                 : (acc && acc.axis) ? acc.axis
+                 : (slot.axis || null);
+    if (axisId && window.CV_AXES) {
+      const sub = { axis: axisId, groups: slot.groups, values: slot.values };
+      const vid = (type && type.axisValue) || (type && type.id) || type;
+      return window.CV_AXES.resolve(axisId).candidates(sub).some(v => v.id === vid);
+    }
     // classification-based acceptance (the universal-component path): a socket
     // lists the classifications it admits; a type lists what it's classified as.
     if (Array.isArray(acc)) {
@@ -342,16 +360,15 @@
       // are one model (tokens ARE the value-units of an axis).
       axis: t.axis || null,
       axisValue: t.axisValue || null,
-      // RELATION Types (relationships-seed): the bare edge kind the IR uses + the operator
-      // mirror + THE EDGE LAW pair (Tim, 2026-07-03 — {directed, inverse}, mirrored from the
-      // meaning home). Declared by the seed and previously DROPPED here (the dropped-field
-      // trap: a normalize that doesn't carry a field makes the entry silently inert).
-      relationKind: t.relationKind || null,
-      operatorSymbol: t.operatorSymbol || null,
-      negates: (typeof t.negates === 'boolean') ? t.negates : false,
-      directed: (typeof t.directed === 'boolean') ? t.directed : null,   // true=verb-pair · false=symmetric · null=undeclared
-      inverse: t.inverse || null,                                        // { feeling, senses? } — the opposite telling
       defaults: t.defaults || {},
+      // spec: an open, kind-specific declaration blob (e.g. a 'view' kind's
+      // { query, project } — generation-from-data; a future kind's own config).
+      // Carried generically so new kinds need no normalize change.
+      spec: t.spec || null,
+      // audience: who a thing is FOR — projections filter by the active audience
+      // ('maker' = a regular person, 'author' = system-builder, 'dev' = debug).
+      // null = visible to all. The one mechanism that separates user from author UI.
+      audience: t.audience || null,
       variables: t.variables || [],
       tags: t.tags || [],
       provenance: t.provenance || 'user',
@@ -377,7 +394,7 @@
   // ---------------------------------------------------------------------------
   window.CV_REGISTRY = {
     LAYERS, LAYER_INFO,
-    register, registerMany, update, remove,
+    register, registerMany, update, remove, revert,
     get, all, query, resolve, lineage, children, descendants,
     accepts, candidatesForSlot, candidatesForSocket, slotEnabled, socketInfo,
     subscribe,

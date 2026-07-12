@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Glass · Inbox</title>
+<link rel="stylesheet" href="../../styles.css"/>
+<link rel="stylesheet" href="glass-app.css"/>
+<style>
+  .inb{ display: grid; grid-template-columns: 200px 320px 1fr; grid-template-rows: 56px 1fr;
+    grid-template-areas: "top top top" "side list read"; gap: var(--s-4); }
+  .i-top{ grid-area: top; display: flex; align-items: center; gap: var(--s-3); padding-inline: var(--s-3); border-radius: var(--r-xl); }
+  .i-side{ grid-area: side; display: flex; flex-direction: column; padding: var(--s-3); }
+  .i-list{ grid-area: list; overflow: hidden; display: flex; flex-direction: column; }
+  .i-read{ grid-area: read; overflow: hidden; display: flex; flex-direction: column; }
+  .list-scroll{ flex: 1; overflow: auto; padding: var(--s-2); }
+  .navcap{ padding: var(--s-3) var(--s-3) var(--s-1); }
+  .mail{ display: flex; gap: var(--s-3); padding: var(--s-3); border-radius: var(--r-md); cursor: pointer; }
+  .mail:hover{ background: color-mix(in oklch, var(--ink) 5%, transparent); }
+  .mail.on{ background: color-mix(in oklch, var(--ink) 9%, transparent); }
+  .mail .body{ flex: 1; min-width: 0; }
+  .mail .top{ display: flex; align-items: baseline; gap: var(--s-2); }
+  .mail .from{ font-size: var(--fs-caption); font-weight: 600; color: var(--ink); }
+  .mail .time{ margin-left: auto; font-size: var(--fs-meta); color: var(--ink-4); flex: none; }
+  .mail .subj{ font-size: var(--fs-caption); color: var(--ink-2); margin-top: 1px; }
+  .mail .snip{ font-size: var(--fs-caption); color: var(--ink-4); margin-top: 2px; }
+  .unread{ width: 7px; height: 7px; border-radius: 50%; background: var(--accent-gold); flex: none; margin-top: 6px; }
+  .read-head{ padding: var(--s-5) var(--s-6); border-bottom: 1px solid var(--glass-edge-soft); }
+  .read-body{ flex: 1; overflow: auto; padding: var(--s-6); font-size: var(--fs-body); line-height: 1.7; color: var(--ink-2); }
+  .read-body p{ margin: 0 0 var(--s-4); }
+  .reply{ margin: var(--s-4); padding: var(--s-3); }
+</style>
+</head>
+<body>
+<div class="gg-field"><span class="a"></span><span class="b"></span><span class="c"></span></div>
+<div class="gg-app inb">
+
+  <header class="i-top glass">
+    <div class="gg-brand"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 5l8 14 8-14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div style="font-weight:600;letter-spacing:var(--tracking-snug)">Inbox</div>
+    <div class="gg-vrule"></div>
+    <div class="gg-search" style="width:300px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input placeholder="Search mail…"/></div>
+    <div style="flex:1"></div>
+    <button class="cv-btn cv-btn--primary cv-btn--sm">Compose</button>
+    <div class="gg-avatar gold">A</div>
+  </header>
+
+  <nav class="i-side glass">
+    <div class="navcap gg-lbl">Mail</div>
+    <div class="gg-row on"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.6"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.6"/></svg><span class="gg-grow">Inbox</span><span class="cv-badge cv-badge--gold">12</span></div>
+    <div class="gg-row"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L19 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="gg-grow">Sent</span></div>
+    <div class="gg-row"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 4h14v16l-7-4-7 4V4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="gg-grow">Starred</span></div>
+    <div class="gg-row"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M6 7l1 13h10l1-13M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="gg-grow">Trash</span></div>
+    <div class="navcap gg-lbl" style="margin-top:var(--s-3)">Labels</div>
+    <div class="gg-row"><span class="unread" style="background:var(--viz-1);margin:0"></span><span class="gg-grow">Team</span></div>
+    <div class="gg-row"><span class="unread" style="background:var(--viz-2);margin:0"></span><span class="gg-grow">Clients</span></div>
+    <div class="gg-row"><span class="unread" style="background:var(--viz-key);margin:0"></span><span class="gg-grow">Priority</span></div>
+  </nav>
+
+  <section class="i-list glass">
+    <div style="display:flex;align-items:center;gap:var(--s-2);padding:var(--s-3) var(--s-4)"><div class="gg-h">All mail</div><div style="flex:1"></div><span class="gg-chip">Unread ▾</span></div>
+    <hr class="gg-rule"/>
+    <div class="list-scroll">
+      <div class="mail on"><div class="gg-avatar">MK</div><div class="body"><div class="top"><span class="from">Maya Kaur</span><span class="time">9:41</span></div><div class="subj">Q3 report is ready for review</div><div class="snip gg-ellip">I've pulled the retention cohorts and the funnel…</div></div><div class="unread"></div></div>
+      <div class="mail"><div class="gg-avatar">DT</div><div class="body"><div class="top"><span class="from">Dev Team</span><span class="time">8:12</span></div><div class="subj">Deploy 4.8 shipped to production</div><div class="snip gg-ellip">All checks passed. Rollout at 100%…</div></div></div>
+      <div class="mail"><div class="gg-avatar">RS</div><div class="body"><div class="top"><span class="from">Riya Sharma</span><span class="time">Yesterday</span></div><div class="subj">Re: pricing page copy</div><div class="snip gg-ellip">Looks great — one small tweak on the hero…</div></div><div class="unread"></div></div>
+      <div class="mail"><div class="gg-avatar">FN</div><div class="body"><div class="top"><span class="from">Finance</span><span class="time">Mon</span></div><div class="subj">Invoice #2048 paid</div><div class="snip gg-ellip">Payment of $4,200 has been received…</div></div></div>
+      <div class="mail"><div class="gg-avatar">AL</div><div class="body"><div class="top"><span class="from">Alex Lin</span><span class="time">Mon</span></div><div class="subj">Design review notes</div><div class="snip gg-ellip">Left comments on the glass shell frames…</div></div></div>
+    </div>
+  </section>
+
+  <section class="i-read glass">
+    <div class="read-head">
+      <div style="display:flex;align-items:center;gap:var(--s-3)">
+        <div class="gg-avatar" style="width:42px;height:42px">MK</div>
+        <div style="flex:1"><div class="gg-h">Q3 report is ready for review</div><div class="gg-sub">Maya Kaur · to me · 9:41 AM</div></div>
+        <div class="gg-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 4h14v16l-7-4-7 4V4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+        <div class="gg-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 15L4 20m0 0h5m-5 0v-5M15 9l5-5m0 0h-5m5 0v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
+      </div>
+    </div>
+    <div class="read-body">
+      <p>Hi Jordan,</p>
+      <p>The Q3 report is ready. I've pulled the retention cohorts and the funnel breakdown — the headline is that organic activation is up 12% quarter over quarter, driven mostly by the new onboarding flow.</p>
+      <p>A couple of things I'd love your eyes on: the paid channel efficiency dipped in September, and I flagged two pages with unusually high bounce. Details are in the dashboard.</p>
+      <p>Let me know if you want to walk through it before the leadership sync.</p>
+      <p>Best,<br/>Maya</p>
+    </div>
+    <div class="reply glass--inset">
+      <div style="color:var(--ink-4);font-size:var(--fs-body)">Reply to Maya…</div>
+      <div style="display:flex;align-items:center;gap:var(--s-2);margin-top:var(--s-2)">
+        <div class="gg-round"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div style="flex:1"></div>
+        <button class="cv-btn cv-btn--primary cv-btn--sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Send</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

@@ -17,7 +17,7 @@ Every design exists on **three canonical surfaces at once**, and is never consid
 
 **Method — author once, present many.** Build a single responsive source using fluid sizing + container queries. The *MultiSurface harness* (component, built once the language settles) frames that source at each viewport simultaneously, so portrait and landscape mobile are always in view next to desktop. Where a layout must genuinely differ — a side rail becoming a bottom tab bar — branch explicitly on `[data-surface]`, never on guesswork. Everything else should adapt without a branch.
 
-Touch targets are never smaller than `--touch-min` (44px). Mobile respects safe-area insets via `.surface-shell`.
+Touch targets are never smaller than `--touch-min` (44px). Mobile respects safe-area insets via `.surface-shell`. The mobile device chrome is a system component set in `tokens/device.css` — `.cv-device` (bezel) → `.cv-device__screen` (a flex column) holding `.cv-statusbar`, `.cv-appbar`, a `.cv-screen-scroll` body, and `.cv-tabbar`/`.cv-tab`, all sized from `--mobile-*`/`--safe-*`. Bars are flex-none siblings and the body scrolls *between* them, so a bar never floats over the frame or the content. Never hand-roll a phone frame, status bar, or tab bar — consume these.
 
 ## 2. Responsive & computed — nothing is sized by its content alone
 
@@ -26,8 +26,26 @@ The recurring bugs (text spilling out, pills stretching a row) are banned by con
 - **Type is fluid** — use `--fs-*` clamps, never fixed px for content text.
 - **Every flex child that holds text gets `.min0`** so it can shrink; pair with `.truncate` or `.line-clamp`.
 - **Pill/chip rows use `.pill-group`** — they wrap as a set; individual pills truncate their label past `--pill-max` rather than stretching.
-- **Grids use `.auto-grid`** — columns fit to available width, no media queries.
+- **Grids use `.auto-grid`** — columns fit to available width, no media queries; set `--col-min` so cards never crush below a legible width instead of spilling their labels.
+- **Groups of N siblings use the `.flow` axis** — declare the inputs (`--count`, `--item-min`, `--flow-gap` ← density) and the columns *compute*; declare overflow **intent** with `data-flow` (`wrap` rows · `reel` one sacred row with themed horizontal scroll · `fixed` for known-width surfaces only). Never hand-set a column count in fluid UI.
 - **Long copy gets a `.measure`** cap so line length stays readable.
+- **Depth is a coordinate, not a style** (`tokens/skins.css` §DEPTH LADDER): every material block carries
+  `data-depth` — its level-axis rank from root (page 0 → region 1 → panel 2 → card 3 → well 4 → overlay 5),
+  stamped by the block solver. Skins resolve the rank to physics: lift shadows scale with depth, a per-skin
+  bevel models the slab edge, and `--skin-map-normal`/`--skin-map-roughness` resolve surface map addresses
+  shared by CSS and the 3D well solver. Ghost/potential blocks are the OPPOSITE depth — carved into the
+  surface (inset, no lift). A zone within a zone is a level; a level is depth; depth is physical.
+- **Materials sample the world** (`tokens/material.css`): a skin's block texture is ONE image painted in
+  world (viewport) coordinates — each block shows the patch under its own position, so no two blocks repeat,
+  with zero per-instance configuration. The texture multiplies with the fill beneath it, so semantic colour
+  tokens tint through the material. Textures tile at native resolution × `--world-zoom` (the camera dial) —
+  never stretched, never `cover` for a tile. Inset zones may declare their own material via
+  `--skin-mat-texture-inset`.
+- **A glyphic node is not a container**: its diameter comes from the control rung (`--glyph-d`), it takes no
+  keyline, and its symbol centers on the solver's anchor — the circle IS the glyph.
+- **Text is typed with a length budget** (`tokens/text.css`): every label/title slot has a declared budget (`--len-micro/label/title/desc`), copy is *written to it* (the `copy.budgets` behaviour in the AI registry makes this a language rule), and layout reserves room for it. When a slot can legitimately be narrower than its budget, author a **designed short form** — `.alt-full`/`.alt-short` swapped by the nearest `.q` container — never clip. **Truncation is not design**: `.truncate`/`.line-clamp` are last resorts for uncontrolled user strings (filenames, pasted titles) only.
+- **Surfaces contain and align by rule, not by coincidence** — a rounded surface holding flowing content gets `.contain` (clips to the radius, so no label crosses the border); sibling surfaces in a column get `.keyline` (the shared `--keyline` inset) so their content lines up on one vertical line by construction. These live in `tokens/layout.css` and compose with `.min0`/`.truncate` (which keep the *text* honest — `.contain`/`.keyline` keep the *surface* honest).
+- **Containers are BLOCKS** (`analysis/BLOCKS.md`, `app/registry/block-type.js`): the container universal component — ground + material surface (**material axis**: glass · velum · parchment · stone · none, `tokens/material.css`; default **`skin`** = the active skin's surface) + a containment-depth coordinate (`page → region → panel → card → well`, which *derives* the depth-modifier) + ordered content sockets (order = reading order) + action sockets (verbs from CV_ACTIONS, filled by address). Pages are compositions of blocks; every surface resolves through `CV_BLOCK.chrome()` / the `block` solver in `CV_NODE` — never hand-assembled chrome. **Skins** (`tokens/skins.css` + the skin axis) re-bind the whole world — ground, surface, shadows, threads, state glow — so one spec resolves to the glass world or the stone (plaster + porcelain) world in full.
 
 If something *can* overflow, it has an explicit truncation or wrap strategy. No exceptions.
 
@@ -118,7 +136,25 @@ component**: a Type in `window.CV_REGISTRY` that **declares its parts, value-slo
   or an enum; the vocabulary resolves from the axis/contract, never copied.
 - **socket** — an attachment point that takes a *typed thing* (another component) or an *event*
   (`kind:'event'`, e.g. onClick→open at an `address`), gated by `accepts`/`forbid` + conditions.
-- **part** — a named sub-component with its own slots/sockets (the Glyphic's ring + symbol).
+- **part** — a named sub-component with its own slots/sockets (the Glyphic's ring + **fill** + symbol).
+  A facet that lives on a part (the glyphic's `fill`, on the `glyphic-fill` part-type) only reaches the
+  projection if the parent **declares that part**: `flatValueSlots` walks `parts` and merges their slots, so
+  `toInspector`/the AI tool-schema see one flat facet set. If a facet is missing from an editor, the cause
+  is almost always a part the parent never declared — fix it by declaring the part, **never** by reading the
+  axis directly in the consumer (that is a second home; the projection is the one source).
+- **Per-part independence** — each part owns *every* axis (colour · texture · motion · …), cleanly separate,
+  while the whole unit still scales/elevates/moves as one. The canonical glyphic form is a **part tree**
+  (`CV_GLYPHIC.expandParts`): `whole` + `ring`/`fill`/`symbol`, each with its own values; the flat spec is
+  the expand-time default (back-compat), `spec.parts.<part>.<axis>` overrides. The renderer is a **layered
+  compositor** — `compose` stacks one `markSVG` layer per part, each with its own colour/texture/motion class
+  (`markSVG` stays monolithic for other consumers; texture maps per medium — a *face* gets the pattern, a
+  *line* gets a dash). The editor reads `toInspector().partGroups` (`CV_NODE.partSlots`, not collapsed) and
+  shows a **section per part**; a per-part edit is `set-value({slot, value, part})` onto the same part tree
+  the renderer reads, so edit and render can't drift. (Card: `system/glyphic-parts.html`.)
+- **Forking & revert** — `update()`/`relate()` on a built-in **fork it into the user layer** (persisted), and
+  `get()` returns the user override first. The only way back to canonical is **`CV_REGISTRY.revert(id)`**
+  (= `remove()` of the user-owned layer); a pure built-in with no fork can't be removed. So a built-in
+  customised or polluted at runtime is always recoverable — and tests must `revert` what they fork.
 - **condition** — any slot/socket/declaration can carry conditions, evaluated by the one shared
   evaluator `window.CV_COND` (`"texture requires fill != none"`), so the rule is identical in
   validation and in the editor.
@@ -141,41 +177,204 @@ a Glyphic *subscribes* to it). A component declares each part-slot as a **subscr
 visual dimension = register an axis, not a per-consumer constant. (Spec: `system/glyphic-system.html`
 §08; plan: `analysis/AXIS-REFACTOR.md`.)
 
-## 19. Relations are directional verbs with an equal-and-opposite — the edge law
-A relationship in the system is not a label on a line; it is a **typed directional verb that declares
-its inverse**. Every edge kind has a `directed` flag, and every directed kind declares its `inverse`
-**once** (`contains ↔ contained by`, `has-face ↔ face-of`); the opposite telling is *composed at read*
-from the one stored edge and the reader's focus — never stored twice. Symmetric relations (`equals`,
-`and`, `navigates`, `mirrors`) declare `directed:false`. This makes the language two-way by
-construction: **whatever can be shown can be pointed at, and whatever can be generated can be read
-back** — a one-way surface is a drift on par with a hardcoded hex. The read-out (`readGraph`) realises
-"A contains B" or "B is contained by A" from the same edge; the reverse parser stores the one canonical
-edge from either saying. A *sentence* about a relation ("is the face of") lives in the read-out, never
-as an edge type-id. Edge kinds live in ONE home (the meaning field `('edge', word)` + a `relationship`
-Type carrying `{directed, inverse}` — the shape the Company's `relation_types` already use); geometry
-(line-style, colour, routing, arrowheads) stays in the shape layer and is *look only*. An edge's
-**line-colour is a data/status field** (red=blocked · green=approved · gold=active) resolved from the
-meaning — a status channel, distinct from the two brand voices of §6. To add a relation: author the
-field, register the Type with its inverse — it renders, reads both directions, and parses, with no code
-edit. (Engine: `assets/icons/cv-meaning.js` read-out + `cv-edges.js`; Types: `app/registry/
-relationships-seed.js`. Full law: `build-prep/the-one-system/glyphic/THE-GENERATIVE-LANGUAGE.md` §1.18.)
+**An axis is self-describing and relational, not a flat list (Colour leads — `axes/color/color-axis.js`).**
+Tokens are the *matter* (the literal, one home in the stylesheet); the axis is the *grammar* — it carries
+what a token can't know about itself, in **two tiers** (a rule lives at the most general level it's true):
+- **Families (groups) self-describe + relate**: `role` (what the family is for), `pairsOn` (the legible
+  foreground family/value), `voice` (a saturated voice vs quiet structure), default `roles`. Families form a
+  small relational graph, computed once, read everywhere.
+- **Values override only when they differ**: `on` (this colour's legible ink), `roles`
+  (`fill`/`line`/`text`), `themeInvariant` (holds across theme flips), `alias` (synonym of a canonical id).
+- **One home for derived facts** via `CV_AXES`: `pairOn`/`pairCSS` (the single source for *"what ink sits on
+  this colour"* — it dissolved the hardcoded `--on-gold`; the compositor's solid-fill ink reads it), `rolesOf`/
+  `byRole`, `themeInvariant`, `canonical`/`isAlias`. A token home stays the single source of the *value*; the
+  axis never copies a literal.
+- **Same axis, different families per type** — a component declares which families its colour slot resolves
+  (`groups:[…]`), the value-side twin of a socket's `accepts`: a glyphic *mark* subscribes to
+  `brand·semantic·communication`; a *surface* subscribes to `zoning` (the tonal-zone washes, themselves axis
+  values). The picker is just `candidates(slotRule)`. (Card: `system/colour-axis.html`.) **Audit note:** a
+  role token must reference its primitive (`--fg-primary: var(--ink)`), never re-copy the hex — duplicate-hex
+  clusters in `colors_and_type.css` are a reconciliation backlog, not the pattern.
 
-## 20. Nothing has one fixed meaning — the read-out vocabulary is profile data
-Meaning in this system is a **field** (feeling + senses, contextual, combinatorial), never a single
-baked sentence, and **every word the language speaks is authorable profile data — never a private
-constant the author API cannot reach.** A fixed interpretation anywhere the author API can't touch is a
-violation of the one-home law (§13) applied to meaning. The referent words the read-out uses — the noun
-a form resolves to, the phrase an operator reads as, the determiner ladder ('a possible' / 'the' /
-'this' / 'a') — are **field data on the meaning profile** (`form.kindWord`, `form.opWord`,
-`fill`/`outline.determiner`), read by both `referent()` and the reverse `parse()`, so authoring a word
-moves the read-out AND the parse together, live, with no code edit. This is why "an octagon does not
-*mean* gateway": the glyph carries a meaning FIELD, not a fixed word — the read-out word is a
-correctable profile value, tuned during use, not a definition. (This is distinct from ConceptV's
-brand-entity **shape system** — Octagon = the Virtual Hubs product entity, etc. — which is observed
-brand DNA, not a language referent; see README. The entity-shape mapping is a domain fact and stays;
-the *read-out word* for a bare glyph is the field data described here.) Symbols remain the lone
-intrinsic-meaning exception (their meaning is not profile-governed). Correction happens DURING
-generation through the authoring API (`setField`/`setGloss`), never behind a build gate. Known small
-duplication, not yet unified: the axis-subscription helper exists twice (`sub()` in glyphic-type.js,
-`ax()` in components-type.js) — one concept, two homes, booked for union. (Engine:
-`assets/icons/cv-meaning.js`; the authoring API `CV_MEANING.author`.)
+## 19. The collapse — one node, and the @decorator vocabulary
+The four registries stop *mirroring* each other and become **one substrate**. `window.CV_NODE`
+(`core/cv-node.js`) is the weld (like `RenderType` welded type-system to engine): it references the
+existing homes and copies nothing.
+- **One unit** — `CV_NODE.lens(x)` projects a Type, an axis value (a token), or a glyphic spec into the
+  *same* canonical node `{id,kind,layer,classification,axis,axisValue,valueSlots,sockets,parts,
+  conditions,payload}`. A token is a leaf (`kind:'token'`); the rest interior. Unity is in the
+  **mechanic, not in flattening type** — `kind` still carries the solver/behaviour, so a token and a
+  deck are the same node but never interchangeable.
+- **One relation** — a slot and a socket are one attachment point with `accepts`. `accepts` names an
+  **axis** → a value-socket; a **classification** → a thing-socket. **`CV_REGISTRY.accepts` now handles
+  both** (the fold), so there is one matcher.
+- **One mechanic** — `CV_NODE.resolve(node, ctx)` fills sockets by **address** (by reference, never a
+  copy), resolves parts, and **recurses, threading `ctx` downward** so a condition deep in the tree
+  reads ancestor state (a ring's "texture requires fill != none" reads the glyphic's fill).
+  `render(node)` dispatches to a **pluggable per-kind solver** (glyphic→`CV_GLYPHIC.compose`,
+  token→axis `resolveCSS`, *→`__cvRenderType`); CV_NODE invents no renderer.
+
+**Decorators** are the cross-cutting vocabulary (the **seventh registry**, `window.CV_DECORATORS`,
+`app/registry/decorators.js`). Where `kind` is *what a thing IS*, a decorator is *what is ALSO true of
+it, or what it can ALSO do*: `provenance · classification · tags · layer · axis · zero · token ·
+optional · multiple · event · address · accepts · conditions · means · intrinsic · deprecated ·
+experimental · generatable · editable`, plus the source `@dsCard` / `@template` annotations — **one
+catalogue**. It is **retrospective**: each decorator's `derive(node)` *reads* the value from the node's
+existing field, so the vocabulary lives here while the value stays in its single home (no second home).
+Decorators **do things**: `find({decorator,value})` searches the whole system; a `condition` decorator
+gates via `CV_COND`; a `generatable` decorator routes to a `CV_AI` capability; an `editable` decorator
+names an inspector's fields; a socket may `requires`/`forbids` decorators and `CV_NODE.accepts` honours
+it. New aspect = one entry — instantly searchable, and if it's a behaviour, instantly runnable. (Spec:
+`system/glyphic-system.html` §09–§10; proof: `_qa/cv-node-test.html`, `_qa/decorators-test.html`.)
+
+## 20. The Studio — one projection to UI and AI; one action layer
+The system is editable both by **assembling** (click a library/inspector) and by **talking** (chat +
+two-way voice) — and these are not two systems. The thesis: **`ui = project(node)` and
+`tools = project(node)` are the same `project`.** A node declares itself (kind · value-slots · sockets ·
+parts · decorators · conditions); **actions** declare what can be done to it; one projection emits both
+the inspector you click and the function schema the AI calls.
+- **`CV_VARS`** (`app/registry/vars.js`) — the ONE variable-resolution mechanism (`literal` ·
+  `"{{ path }}"` · `{var,default}` · `{ref}` · `{op,args}`) resolved against a context. Used by actions'
+  params, the shared context, projection, and conditions (`CV_COND` delegates its path-read here) — so a
+  path means the same thing everywhere.
+- **`CV_ACTIONS`** (`app/registry/actions.js`, the **eighth registry**) — every verb/tool/function: an
+  `actionType`, variable-resolved `params`, a per-action **Skill** (its AI how/when), `targets`, a `run`.
+  `applicable(node)` filters by classification; `invoke()` resolves args via `CV_VARS` then runs;
+  generative verbs route to `CV_AI`.
+- **`CV_PROJECT`** (`app/registry/project.js`) — `toInspector(node)` (UI) + `toToolSchema(node)` (AI
+  function-calling) + `toContext(state)` (the shared context blob), all from one declaration.
+  `coherent(node)` proves the UI action set === the AI tool set, so click and talk can't drift.
+- **`CV_INSPECTOR`** (`app/registry/inspector.js`) — the ONE editing surface. `mount(el, {typeId?, node,
+  audience?, captions?, onChange?, onAction?})` renders the WHOLE `CV_PROJECT.toInspector` output for ANY
+  kind: value-slots, **sockets** (each with its live `CV_NODE.candidates`; event-sockets open an address),
+  decorators, actions. The **preview rule is universal** — every slot option is previewed by rendering the
+  node through `CV_NODE.render` with that one slot overridden (a recoloured glyph IS the colour preview),
+  so there is no per-facet branching; size/motion read via the option's own axis, not a facet-name check.
+  A `pick:{axis,current,base,onPick}` mode renders a single-axis value picker (the behaviours panel's
+  "choose a target value"). Every edit goes through `CV_ACTIONS.invoke` (set-value/fill-socket/open) — the
+  same verbs the AI calls. **Logic is unified here; the skin is the host's** (a consumer restyles the
+  `.ci-*` classes / hides captions to match its look), so adopting it never loses a surface's look. Surfaces
+  that still hand-roll an editor (the Studio's FACETS renderer, the behaviours panel) are consumers to
+  migrate onto this — there must be no second home for "how to edit a node."
+- **Providers, context, command** live in the existing `CV_AI` (`app/ai/ai-studio.js`): a **voice**
+  provider and a **local-provider** pattern (bound via `CV_HOST` — `resolveProvider` already delegates
+  unknown runtimes there, so you connect your own); a **studio context** resolver; and `studio.command`
+  (instruction → one action call from the live tool schema). Voice is just a provider feeding the same
+  loop.
+
+**One action layer:** a dropdown change, an action button, a typed command, or a voice transcript all
+become `CV_ACTIONS.invoke(action, args, ctx)`; the node mutates; the viewer re-projects. **Rule:** a
+hardcode is a class to dissolve or a capability to build — applied this slice by dissolving the
+`generatable` kind→capability map into a query over `CV_AI` (a capability declares `generates:[…]`).
+(Concept + live proof: `system/glyphic-system.html` §11; working demo: `system/studio.html`; plan:
+`analysis/STUDIO.md`; proof: `_qa/studio-test.html`.)
+
+## 21. Root Unity — the self-building system; lookups are queries, not maps
+The system is named **Root Unity** — **√(unit)**: every part is the same one unit, and the system is the
+root from which each instance grows (mark: `assets/brand/root-unity-mark.js`). Two principles codified
+this slice:
+- **A lookup is a query over a single source, never a stored map.** `CV_QUERY` (`app/registry/query.js`)
+  is the named pattern: `relations(node, {from, field})` computes a relationship by asking the registry
+  that owns the fact. The `generatable` decorator was a `kind→capability` map; it is now
+  `CV_QUERY.relation(node, {from:'ai', field:'generates'})` (the capability declares what it
+  `generates`). **If you write `MAP[x]=y`, stop — find the registry that already knows y for x and query
+  it.** Available as a `{query}` value-spec in `CV_VARS` too.
+- **The system builds itself through its own verbs (meta-actions).** `CV_ACTIONS` carries the
+  construction verbs — `define-kind · add-field · relate · define-rule · define-axis · define-decorator
+  · define-trigger · define-action · define-macro` — each writing to the one home for what it defines.
+  New layers, distinct parts, what-slots-into-what, and rules are all declared *through the interface*,
+  not hand-coded.
+
+**Events are rules, not intentional calls.** `CV_EVENTS` (`app/registry/events.js`, the **ninth
+registry**) binds an event to an action: `{ on, when?, do, args }`. A process emits where it is
+(`emit('ai.focus', {target})`) and a declared trigger reacts (`ai.focus → highlight`) — so what the AI
+is attending to highlights automatically. Events compose actions + conditions + variables; no new
+mechanism. Two more substrate ideas landed: **undo-as-inverse** (each mutating verb declares
+`invert`; `CV_ACTIONS.inverse()` returns the opposite invocation — history for free) and
+**macros-as-actions** (a recorded chain is itself a registered `actionType:'macro'` — a Skill that is
+steps, not a prompt). (Spec: `system/glyphic-system.html` §12; demo: `system/studio.html`; proof:
+`_qa/meta-test.html`.)
+
+## 22. Generation from data — every collection-UI is a view (query + projector)
+The derive-by-query principle (§21) generalises from *lookups* to *whole interfaces*. A **view** is a node
+(`kind:'view'`) whose `spec` is a **query + a projector**; `CV_PROJECT.toCollection(view, ctx)` turns it
+into a live list of rows. So a library, a palette, a menu, a gallery are **generated from the registries,
+dynamically, with no per-surface code** — "the interface is a projection of the registries" made literal
+and reactive. Register a Type / axis value / action / decorator and it appears in the relevant view
+automatically (verified: defining a kind grows `view.library` with zero UI code). Seed views:
+`view.palette-form|symbol|colour`, `view.library`, `view.actions`, `view.decorators`, and `view.views`
+(a **view of views** — a view is itself a node, so generation-from-data goes all the way down). A view's
+`onPick` wires each row back to an **action**, so a palette is *assemble-from-library*: click a row →
+`CV_ACTIONS.invoke`, the same action layer as the inspector and the AI. Data flows in (registry → query →
+rows), intent flows out (row → action → mutation → re-projection). Also this slice: **selection-as-node**
+(a selection is a `kind:'selection'` node so actions apply to it uniformly), and another hardcode
+dissolved — the Studio's chat interpreter now derives its vocabularies from the axes
+(`CV_AXES.resolve(axis).ids()`) instead of mirroring them in lists. (Spec:
+`system/glyphic-system.html` §13; demo: the Studio Library panel; proof: `_qa/views-test.html`.)
+
+## 23. Interface craft — the Studio must use the system on itself (a living projection)
+The Studio is **for a regular person**, not a developer, and it is a **perpetual work-in-progress
+projection** — it will keep being upgraded as more of Root Unity becomes functional. Two standing rules:
+- **The interface uses the system's own mechanics on itself.** Don't dump raw technical strings in a
+  patchwork of paper cards. Use: **glyphics as the visual currency** (library items, thumbnails, status
+  marks — render real glyphics via `CV_NODE.render`, not text pills); **tonal zoning** for surface
+  hierarchy (rail/canvas/inspector at different zone depths, not all flat paper); **proportional panels**
+  and an **8px rhythm** with even alignment; **iconography** (CV_ICONS) on actions/sections/tabs; **colour
+  + subtlety** (gold reserved for the live/primary, gentle motion, hover states); and **human text, not
+  machine text** — the canvas reads "an octagon holding a house, soft gold wash, still", with the raw
+  spec/JSON kept to the technical panes.
+
+### 23a. The audience axis — one projection, two surfaces (maker vs author)
+The reason an interface dumps everything is it has no notion of *who a thing is for*. So **`audience`** is
+now a first-class field across the registries (`CV_REGISTRY` / `CV_ACTIONS` / `CV_DECORATORS` normalize:
+`audience: [...] | null`), and **`CV_PROJECT` filters by the active audience**. Values: **`maker`** (a
+regular person), **`author`** (system-builder), **`dev`** (debug). `null` = everyone. The seeded
+decorators default to `['author','dev']` (a maker never sees raw `provenance`/`classification`/`intrinsic`
+chips); system verbs (`select`/`insert`/`open`/`highlight`) are `['author','dev']`; `set-value`/`generate`/
+`remove` are for everyone. So the **Make** and **Build** views of the Studio are the *same projection at
+two audiences* — Build reveals the meta-actions, decorators, the AI/Context panes and the JSON; Make hides
+them by projection, not by hand. New rule: tag what a thing is *for*; never hand-hide. This is the
+generalized capability the Studio instance demanded.
+- **Text is live data, generated from where you are.** Extend generation-from-data to *copy*: titles,
+  descriptions, helper microcopy and status all resolve from the current node/selection/context (via
+  `CV_VARS` / a `describe(node)` humaniser), so the words update as the user moves — the interface
+  narrates itself. Decorators, axes and actions carry human descriptions the UI surfaces (the registries
+  should *describe* themselves; keep extending those descriptions).
+- **Native responsive — mobile and landscape.** The shell must reflow to phone portrait and landscape,
+  not just desktop. (Status: first attentive pass done in `system/studio.html`; flagged for continued
+  upgrade — the interface is a projection and is expected to keep improving.) (Spec:
+  `system/glyphic-system.html` §13; demo: `system/studio.html`.)
+
+
+## 24. The material world — skins are physical laws, and layout is solved from ratios
+The skin system (`tokens/skins.css` + the skin axis) renders the interface as a PHYSICAL WORLD, and
+every quality of that world is a computed law with one home — never a per-element setting:
+
+- **One light.** The key light is a single constant shared by the texture bake pass and the shadow
+  chain (`--key-shadow-x`): every baked highlight and every cast shadow agree on direction by
+  construction. A raised slab is LIGHTER than the ground it stands on (value follows elevation).
+- **World-coordinate sampling.** Every material surface — recursively, wells included — samples the
+  ONE texture at its own world offset (`--mat-tex-pos`, stamped by the solver after layout). Two
+  blocks can never show the same grain phase. (`background-attachment: fixed` is banned: it silently
+  dies under filter/transform.)
+- **Asset span fields.** A texture's on-screen footprint is a field OF THE ASSET (its physical grain
+  coverage — `--span-wall`, `--span-face` = wall × ratio), scaled by the one `--world-zoom` camera.
+  Ground and slab grain share a single world scale and cannot drift.
+- **Cross-depth tone law.** Depth is also a tone coordinate: each rank below its parent shifts one
+  shade toward the skin's own shadow pigment (`--depth-tint`), so a well reads as the same world
+  recessed — never a separate sticker.
+- **The ratio-fit law** (`core/layout-fit.js`, one home for solver + its CSS): media boxes ARE their
+  measured aspect ratio (`--asset-ar`, stamped from the asset — letterboxing is geometrically
+  impossible); arrangement is SOLVED by comparing the ratios of everything in the container
+  (portrait/square media sits beside the text stack in the 42% minor column — imagery outweighs
+  words; wide media spans). Gaps and paddings derive from the control rung. "Fit the height, take
+  the whole row" flat rules are banned.
+- **The motion mandate (forward doctrine).** This mode is an animated realism machine: skin changes
+  and block state changes MORPH (stone/glass behaving as liquid or coordinated sand — FLIP
+  transitions on the solved layout), the camera zooms/slides across the infinite wall with Vi at its
+  centre, and all of it stays a resolution cascade — one value change (`data-skin`) re-binds the
+  entire world. Perfect the stone world first; other skins are then parameter tweaks, because the
+  laws live in the shared homes.
+
+(Homes: `tokens/skins.css`, `core/layout-fit.js`, `core/world-camera.js`, `core/render3d.js`;
+demo: `system/skin-system.html`.)

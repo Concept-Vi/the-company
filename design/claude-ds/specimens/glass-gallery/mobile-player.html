@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-surface="mobile-portrait">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Glass · Mobile player</title>
+<link rel="stylesheet" href="../../styles.css"/>
+<link rel="stylesheet" href="glass-app.css"/>
+<style>
+  body{ display: grid; place-items: center; min-height: 100vh; }
+  .p-col{ padding: var(--s-2) var(--s-5) var(--s-5); display: flex; flex-direction: column; height: 100%; }
+  .art{ aspect-ratio: 1; border-radius: var(--r-2xl); }
+  .titles{ margin-top: var(--s-5); text-align: center; }
+  .titles .t{ font-size: var(--fs-h3); font-weight: 700; color: var(--ink); letter-spacing: var(--tracking-tight); }
+  .titles .a{ font-size: var(--fs-caption); color: var(--ink-3); margin-top: 3px; }
+  .scrub{ margin-top: var(--s-5); }
+  .bar{ height: 5px; border-radius: var(--r-pill); background: var(--viz-track); overflow: hidden; }
+  .bar i{ display: block; height: 100%; width: 38%; border-radius: var(--r-pill); background: var(--accent-gold); }
+  .times{ display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+  .ctrls{ display: flex; align-items: center; justify-content: center; gap: var(--s-5); margin-top: var(--s-5); }
+  .play{ width: 64px; height: 64px; border-radius: var(--r-pill); display: grid; place-items: center; flex: none;
+    background: var(--accent-gold); color: var(--on-gold); box-shadow: var(--elev-3); cursor: pointer; }
+  .extra{ display: flex; align-items: center; justify-content: space-between; margin-top: var(--s-5); color: var(--ink-3); }
+  .upnext{ margin-top: var(--s-5); }
+</style>
+</head>
+<body>
+<div class="gg-field"><span class="a"></span><span class="b"></span><span class="c"></span></div>
+
+<div class="cv-device">
+  <div class="cv-device__notch"></div>
+  <div class="cv-device__screen">
+
+    <div class="cv-statusbar"><span>9:41</span><span class="cv-statusbar__radios">
+      <svg width="16" height="11" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="1" width="3" height="11" rx="1"/><rect x="15" y="4" width="3" height="8" rx="1" opacity=".4"/></svg>
+      <svg width="16" height="12" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 5.5a11 11 0 0 1 16 0M5 9a6.5 6.5 0 0 1 10 0"/><circle cx="10" cy="12" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <svg width="24" height="12" viewBox="0 0 26 13" fill="none"><rect x="1" y="1.5" width="21" height="10" rx="2.5" stroke="currentColor" stroke-opacity=".5"/><rect x="3" y="3.5" width="15" height="6" rx="1" fill="currentColor"/><rect x="23" y="4.5" width="2" height="4" rx="1" fill="currentColor" fill-opacity=".5"/></svg>
+    </span></div>
+
+    <div class="cv-appbar">
+      <div class="gg-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="cv-appbar__title cv-appbar__title--sm" style="text-align:center">Now playing</div>
+      <div class="gg-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg></div>
+    </div>
+
+    <div class="cv-screen-scroll">
+      <div class="p-col">
+        <div class="gg-slot art"><div class="ring" style="width:70px;height:70px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.4"/></svg></div></div>
+
+        <div class="titles"><div class="t">Ambient Drift</div><div class="a">Vesper · Long Exposure</div></div>
+
+        <div class="scrub">
+          <div class="bar"><i></i></div>
+          <div class="times"><span>2:14</span><span>5:48</span></div>
+        </div>
+
+        <div class="ctrls">
+          <div class="gg-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6v12M16 12L7 6v12l9-6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div>
+          <div class="play"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="5" width="4" height="14" rx="1.2"/><rect x="13" y="5" width="4" height="14" rx="1.2"/></svg></div>
+          <div class="gg-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 6v12M8 12l9-6v12l-9-6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div>
+        </div>
+
+        <div class="extra">
+          <div class="gg-icon sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0 1 8-8v3l4-4-4-4v3a11 11 0 1 0 11 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <div class="gg-icon sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.3-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.2 1.2 4 2.3C10.8 7.2 12 6 14 6c3.6 0 5.2 3.6 3.5 6.5C19 16.7 12 21 12 21Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+          <div class="gg-icon sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M4 6h16M4 18h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
+          <div class="gg-icon sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12v7h16v-7M12 3v13m0-13l-4 4m4-4l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+
+        <div style="flex:1"></div>
+        <div class="upnext glass--inset gg-pad-sm">
+          <div style="display:flex;align-items:center;gap:var(--s-3)">
+            <div class="gg-slot" style="width:40px;height:40px;border-radius:var(--r-sm)"></div>
+            <div style="flex:1;min-width:0"><div style="font-size:var(--fs-caption);color:var(--ink);font-weight:500">Next: Slow Tide</div><div class="gg-sub" style="font-size:11px">Vesper</div></div>
+            <div class="gg-round" style="width:30px;height:30px"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7L8 5Z"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="cv-device__home"></div>
+</div>
+</body>
+</html>

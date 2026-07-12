@@ -6,6 +6,10 @@
 <title>ConceptV — Icon Library</title>
 <link rel="stylesheet" href="../../colors_and_type.css">
 <style>
+  :root { /* loud-fail wave B: hoisted defaults */
+  --d: 0ms;
+  }
+
   * { box-sizing: border-box; }
   body { margin: 0; padding: 32px 40px 80px; background: var(--bg-canvas); color: var(--fg-primary); font-family: var(--font-body); }
   .hero { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; margin-bottom: 28px; padding-bottom: 22px; border-bottom: 1px solid var(--border-faint); }
@@ -72,7 +76,7 @@
     100% { transform: scale(1) rotate(0);        opacity: 1; }
   }
   .tile-glyph > * { transition: opacity 180ms var(--ease-out); }
-  .tile-glyph.morph > * { animation: morphPop 460ms var(--ease-out) both; animation-delay: var(--d, 0ms); }
+  .tile-glyph.morph > * { animation: morphPop 460ms var(--ease-out) both; animation-delay: var(--d); }
 
   .copy-toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -263,14 +267,16 @@ function copy(name) {
   });
 }
 
-// Colour tokens — ring and icon each pick one independently (the Mark's two
-// colour facets). All resolve from the design-token graph.
-const COLOR_TOKENS = {
-  bronze: 'var(--accent-bronze)',
-  gold:   'var(--accent-gold)',
-  ink:    'var(--fg-primary)',
-  sage:   'var(--accent-communication, #5A8A4A)',
-};
+// Colour facet → CSS. SINGLE SOURCE: the colour AXIS (CV_AXES). No local
+// token map (that would be a second home that drifts — and re-hardcode a hex).
+// The ring/icon pickers above are a curated SUBSET of axis ids; resolution is
+// the axis's job. Loud-ish: an unknown id throws in CV_GLYPHIC.tok, so fall back
+// to the axis default rather than a private literal.
+function colorTok(id) {
+  var AX = window.CV_AXES;
+  if (!AX || !AX.has || !AX.has('color')) throw new Error('icons/index: colour axis not loaded (single source for colour)');
+  return AX.resolve('color').resolveCSS(id);
+}
 
 // Geometry is single-sourced from CV_SHAPES (the shape system) — not redrawn
 // here. Fallback literals only if CV_SHAPES failed to load.
@@ -289,8 +295,8 @@ function brandStroke(size) { return Math.max(1.55, Math.min(2, 1.5 + (size - 16)
 
 function renderIcon(name) {
   const body = (window.CV_ICONS.get ? window.CV_ICONS.get(name) : window.CV_ICONS.data[name]) || '';
-  const ring = COLOR_TOKENS[state.ringColor] || COLOR_TOKENS.gold;   // outer-ring colour facet
-  const ink  = COLOR_TOKENS[state.iconColor] || COLOR_TOKENS.bronze; // inner-icon colour facet
+  const ring = colorTok(state.ringColor);   // outer-ring colour facet
+  const ink  = colorTok(state.iconColor);   // inner-icon colour facet
   const sz = state.size;
   const sw = brandStroke(sz);
   const ghost = state.ghost;
@@ -314,7 +320,7 @@ function renderIcon(name) {
   const ringStroke = Math.max(1.25, sz * 0.06);
   const isFilled = state.style === 'filled';
   const ringFill = isFilled ? (ghost ? `color-mix(in srgb, ${ring} 32%, transparent)` : ring) : 'transparent';
-  const glyphStroke = isFilled ? 'var(--paper, #fff)' : ink;
+  const glyphStroke = isFilled ? 'var(--paper)' : ink;
   const borderStyle = ghost ? 'dashed' : 'solid';
   const ringOp = ghost ? 0.6 : 1;
   return `<span style="

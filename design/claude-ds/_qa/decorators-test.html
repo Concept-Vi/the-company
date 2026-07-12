@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>CV_DECORATORS — the vocabulary, proven</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<!-- the homes, in load order -->
+<script src="../app/registry/conditions.js"></script>
+<script src="../app/registry/decorators.js"></script>
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<script src="../app/ai/ai-registry.js"></script>
+<script src="../app/ai/ai-glyphic.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../app/registry/glyphic-type.js"></script>
+<script src="../app/registry/components-type.js"></script>
+<script src="../app/registry/kinds-type.js"></script>
+<script src="../core/cv-node.js"></script>
+<style>
+  body { margin: 0; padding: 28px 32px 80px; background: var(--zone-ground, #FCFAF2); color: var(--fg-primary, #211C14); font-family: var(--font-body, system-ui, sans-serif); }
+  h1 { font: 800 26px/1.1 var(--font-display, sans-serif); margin: 0 0 4px; letter-spacing: -.02em; }
+  .sub { font: 400 13px/1.5 var(--font-body); color: var(--fg-secondary); margin: 0 0 22px; max-width: 84ch; }
+  h2 { font: 700 13px/1.2 var(--font-mono, monospace); letter-spacing: .04em; text-transform: uppercase; color: var(--accent-bronze); margin: 28px 0 10px; }
+  table { border-collapse: collapse; width: 100%; max-width: 1040px; font: 400 12.5px/1.4 var(--font-mono, monospace); }
+  th, td { text-align: left; padding: 7px 12px; border-bottom: 1px solid color-mix(in srgb, var(--accent-bronze) 18%, transparent); vertical-align: top; }
+  th { color: var(--accent-gold-deep, #9F772C); font-weight: 700; }
+  td.k { color: var(--fg-secondary); }
+  .pass { color: #2F7D4F; font-weight: 700; } .fail { color: #B5482E; font-weight: 700; }
+  .pill { display: inline-block; font: 700 10px/1 var(--font-mono); padding: 4px 8px; border-radius: 999px; }
+  .pill.ok { background: color-mix(in srgb, #2F7D4F 16%, transparent); color: #2F7D4F; }
+  .pill.no { background: color-mix(in srgb, #B5482E 16%, transparent); color: #B5482E; }
+  #summary { font: 800 18px/1.2 var(--font-display); margin: 8px 0 0; }
+  code { background: color-mix(in srgb, var(--accent-bronze) 9%, transparent); padding: 1px 5px; border-radius: 4px; color: var(--accent-bronze); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font: 600 10px/1 var(--font-mono); padding: 4px 8px; border-radius: 999px; background: color-mix(in srgb, var(--accent-gold) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent-gold) 32%, transparent); color: var(--accent-gold-deep); }
+</style>
+</head>
+<body>
+<h1>CV_DECORATORS — the @decorator vocabulary, proven</h1>
+<p class="sub">One catalogue of every cross-cutting annotation. It is <b>retrospective</b>: each decorator <code>derive(node)</code> reads the value from the node's existing field — nothing is copied to a second home. Decorators can <b>find</b> (search by annotation), <b>gate</b> (a condition), <b>generate</b> (route to a CV_AI capability), <b>edit</b> (name an inspector's fields) and <b>accept</b> (a socket can require/forbid them).</p>
+<div id="summary">running…</div>
+
+<h2>1 · The vocabulary — catalogued, grouped</h2>
+<table id="t-vocab"><thead><tr><th>group</th><th>decorators</th></tr></thead><tbody></tbody></table>
+
+<h2>2 · Retrospective derive — decorators READ from existing fields</h2>
+<table id="t-derive"><thead><tr><th>node</th><th>decorators present (derived, not copied)</th></tr></thead><tbody></tbody></table>
+
+<h2>3 · Find — search the whole system by decorator</h2>
+<table id="t-find"><thead><tr><th>query</th><th>matches</th><th>sample</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<h2>4 · Behaviour &amp; acceptance — what decorators DO</h2>
+<table id="t-beh"><thead><tr><th>check</th><th>result</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<h2>5 · §09 open items — ctx-threaded conditions + folded matcher</h2>
+<table id="t-nine"><thead><tr><th>check</th><th>result</th><th>ok</th></tr></thead><tbody></tbody></table>
+
+<script>
+(function () {
+  var results = [];
+  function rec(ok, l) { results.push(!!ok); return ok; }
+  function yn(b) { return { html: b ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>' }; }
+  function row(tb, cells) {
+    var tr = document.createElement('tr');
+    cells.forEach(function (c, i) {
+      var td = document.createElement('td');
+      if (c && typeof c === 'object' && c.html != null) td.innerHTML = c.html;
+      else { td.textContent = c; if (i === 0) td.className = 'k'; }
+      tr.appendChild(td);
+    });
+    document.querySelector(tb + ' tbody').appendChild(tr);
+  }
+
+  var DEC = window.CV_DECORATORS, R = window.CV_REGISTRY, N = window.CV_NODE, AX = window.CV_AXES;
+
+  // ---- 1 · vocabulary catalogue -------------------------------------------
+  var groups = {};
+  DEC.all().forEach(function (d) { (groups[d.group] = groups[d.group] || []).push(d.id); });
+  Object.keys(groups).forEach(function (g) {
+    row('#t-vocab', [g, { html: '<div class="chips">' + groups[g].map(function (id) { return '<span class="chip">' + id + '</span>'; }).join('') + '</div>' }]);
+  });
+  rec(DEC.all().length >= 18, 'vocabulary has >=18 decorators');
+
+  // ---- 2 · retrospective derive -------------------------------------------
+  var subjects = [
+    ['Type · glyphic', R.resolve('glyphic')],
+    ['Type · glyphic-symbol', R.resolve('glyphic-symbol')],
+    ['Type · component.button', R.get('component.button') && R.resolve('component.button')],
+    ['axis value · color.gold', Object.assign({ axis: 'color' }, AX.resolve('color').resolve('gold'))],
+    ['socket · panel.items', (function () { var p = R.get('panel.composition-menu'); return p && N.socketsOf(R.resolve('panel.composition-menu')).items; })()]
+  ].filter(function (s) { return s[1]; });
+  subjects.forEach(function (s) {
+    var decs = DEC.decoratorsOf(s[1]);
+    rec(decs.length > 0, 'derive ' + s[0]);
+    row('#t-derive', [s[0], { html: '<div class="chips">' + decs.map(function (d) {
+      var v = Array.isArray(d.value) ? d.value.join('|') : (d.value === true ? '' : (': ' + d.value));
+      return '<span class="chip">' + d.id + (v && v.length < 40 ? v : '') + '</span>';
+    }).join('') + '</div>' }]);
+  });
+  // PROOF of single-source: the derived classification IS the node's own field (same array ref)
+  var gly = R.resolve('glyphic');
+  var clsDec = DEC.decoratorsOf(gly).find(function (d) { return d.id === 'classification'; });
+  rec(clsDec && clsDec.value === gly.classification, 'derive reads the field itself (no copy)');
+  row('#t-derive', ['↳ single-source check', { html: clsDec && clsDec.value === gly.classification ? '<span class="pass">classification decorator === glyphic.classification (same reference, not a copy)</span>' : '<span class="fail">copied!</span>' }]);
+
+  // ---- 3 · find ------------------------------------------------------------
+  var finds = [
+    ['provenance = built-in', { decorator: 'provenance', value: 'built-in' }],
+    ['classification = glyphic', { decorator: 'classification', value: 'glyphic' }],
+    ['generatable (anything Vi can make)', { decorator: 'generatable' }],
+    ['has conditions (gated things)', { decorator: 'condition' }],
+    ['classification = control', { decorator: 'classification', value: 'control' }]
+  ];
+  finds.forEach(function (f) {
+    var hits = DEC.find(f[1]);
+    var ok = hits.length > 0;
+    rec(ok, 'find ' + f[0]);
+    row('#t-find', [f[0], hits.length + ' types', (hits.slice(0, 3).map(function (h) { return h.id; }).join(', ') || '—'), yn(ok)]);
+  });
+
+  // ---- 4 · behaviour & acceptance -----------------------------------------
+  // generatable behaviour → resolves a CV_AI capability id (without a live model)
+  var genDec = DEC.all().find(function (d) { return d.id === 'generatable'; });
+  var glyGen = DEC.decoratorsOf(R.resolve('glyphic')).find(function (d) { return d.id === 'generatable'; });
+  rec(glyGen && glyGen.value === 'glyphic.generate', 'generatable → capability id');
+  row('#t-beh', ['glyphic.generatable → capability', glyGen ? glyGen.value : '(none)', yn(glyGen && glyGen.value === 'glyphic.generate')]);
+
+  // condition behaviour → CV_COND eval through the decorator
+  var ringT = R.resolve('glyphic-ring');
+  var condOK = DEC.run('condition', ringT, { fill: 'wash', texture: 'hatch' });   // texture requires fill!=none → true
+  var condNO = DEC.run('condition', ringT, { fill: 'none', texture: 'hatch' });   // → false
+  rec(condOK === true && condNO === false, 'condition behaviour gates via CV_COND');
+  row('#t-beh', ['ring condition (fill=wash / fill=none)', String(condOK) + ' / ' + String(condNO), yn(condOK === true && condNO === false)]);
+
+  // editable behaviour → the value-slot names an inspector exposes
+  var editList = DEC.run('editable', R.resolve('glyphic'));
+  rec(Array.isArray(editList) && editList.length > 0, 'editable behaviour → field list');
+  row('#t-beh', ['editable(glyphic) → fields', (editList || []).join(', '), yn(Array.isArray(editList) && editList.length > 0)]);
+
+  // a socket that REQUIRES a decorator: accept glyphic (built-in) / reject if it required 'experimental'
+  var reqSocket = { accepts: ['glyphic'], requires: 'provenance' };  // must carry provenance
+  var forbidSocket = { accepts: ['glyphic'], forbids: 'provenance' }; // must NOT carry provenance
+  var glyNode = N.lens('glyphic');
+  var aReq = N.accepts(reqSocket, glyNode);
+  var aForbid = N.accepts(forbidSocket, glyNode);
+  rec(aReq === true && aForbid === false, 'socket requires/forbids decorator');
+  row('#t-beh', ['socket requires provenance / forbids provenance', String(aReq) + ' / ' + String(aForbid), yn(aReq === true && aForbid === false)]);
+
+  // parseAnnotations recognises the @-vocabulary in a source comment
+  var ann = DEC.parseAnnotations('<!-- @dsCard group="X" name="Y" --> and @template name="Z"');
+  rec(ann.length === 2, 'parseAnnotations finds @dsCard + @template');
+  row('#t-beh', ['parseAnnotations(@dsCard … @template)', ann.map(function (a) { return '@' + a.id; }).join(' '), yn(ann.length === 2)]);
+
+  // ---- 5 · §09 open items --------------------------------------------------
+  // ctx threads cross-layer: a ring condition reads the PARENT glyphic's fill
+  var irNone = N.resolve(N.lens('glyphic'), { fill: 'none', texture: 'hatch' });
+  var irWash = N.resolve(N.lens('glyphic'), { fill: 'wash', texture: 'hatch' });
+  var ringNone = irNone.parts && irNone.parts.ring;
+  var ringWash = irWash.parts && irWash.parts.ring;
+  var crossLayer = ringNone && ringWash && ringNone.enabled === false && ringWash.enabled === true;
+  rec(crossLayer, 'ctx threads cross-layer (ring reads glyphic.fill)');
+  row('#t-nine', ['resolve(glyphic).parts.ring.enabled @ fill=none / wash', String(ringNone && ringNone.enabled) + ' / ' + String(ringWash && ringWash.enabled), yn(crossLayer)]);
+
+  // the FOLD: CV_REGISTRY.accepts now handles a value-socket (axis) directly
+  var formGood = AX.resolve('form').values()[1].id;
+  var regValueAccept = R.accepts({ accepts: 'form' }, { axisValue: formGood });
+  var regValueReject = R.accepts({ accepts: 'form' }, { axisValue: '__nope__' });
+  rec(regValueAccept === true && regValueReject === false, 'CV_REGISTRY.accepts handles value-sockets (folded)');
+  row('#t-nine', ['CV_REGISTRY.accepts(form axis, ' + formGood + ' / bad)', String(regValueAccept) + ' / ' + String(regValueReject), yn(regValueAccept === true && regValueReject === false)]);
+
+  // tokens-as-nodes VIEW
+  var colorTokens = N.tokens('color');
+  var allTokens = N.tokens();
+  var viewOK = colorTokens.length > 0 && colorTokens[0].kind === 'token' && allTokens.length > colorTokens.length;
+  rec(viewOK, 'tokens() view projects axis values as nodes');
+  row('#t-nine', ['N.tokens(color) / N.tokens()', colorTokens.length + ' / ' + allTokens.length + ' token-nodes', yn(viewOK)]);
+
+  // ---- summary -------------------------------------------------------------
+  var passed = results.filter(Boolean).length, total = results.length;
+  document.getElementById('summary').innerHTML = (passed === total)
+    ? '<span class="pill ok">ALL ' + total + ' CHECKS PASS</span>'
+    : '<span class="pill no">' + passed + ' / ' + total + ' PASS</span>';
+  window.__qa = { passed: passed, total: total, ok: passed === total };
+})();
+</script>
+</body>
+</html>

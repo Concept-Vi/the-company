@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Glass · Analytics dashboard</title>
+<link rel="stylesheet" href="../../styles.css"/>
+<link rel="stylesheet" href="glass-app.css"/>
+<style>
+  .dash{ display: grid; grid-template-columns: 236px 1fr; grid-template-rows: 56px 1fr;
+    grid-template-areas: "top top" "side main"; gap: var(--s-4); }
+  .d-top{ grid-area: top; display: flex; align-items: center; gap: var(--s-3); padding-inline: var(--s-3); border-radius: var(--r-xl); }
+  .d-side{ grid-area: side; display: flex; flex-direction: column; padding: var(--s-3); }
+  .d-main{ grid-area: main; overflow: hidden; }
+  .d-main .in{ height: 100%; overflow: auto; padding: var(--s-6); display: flex; flex-direction: column; gap: var(--s-5); }
+  .navcap{ padding: var(--s-3) var(--s-3) var(--s-1); }
+  .kpis{ display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); }
+  .charts{ display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--s-4); }
+  .card-h{ display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-4); }
+  table.gg{ width: 100%; border-collapse: collapse; font-size: var(--fs-caption); }
+  table.gg th{ text-align: left; color: var(--ink-4); font-weight: 600; font-size: var(--fs-meta);
+    text-transform: uppercase; letter-spacing: var(--tracking-caps); padding: var(--s-2) var(--s-3); }
+  table.gg td{ padding: var(--s-3); border-top: 1px solid var(--glass-edge-soft); color: var(--ink-2); }
+  table.gg td:first-child{ color: var(--ink); font-weight: 500; }
+  .legend{ display: flex; flex-direction: column; gap: var(--s-3); }
+  .legrow{ display: flex; align-items: center; gap: var(--s-3); font-size: var(--fs-caption); color: var(--ink-2); }
+  .swatch{ width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .track{ flex: 1; height: 6px; border-radius: var(--r-pill); background: var(--viz-track); overflow: hidden; }
+  .track i{ display: block; height: 100%; border-radius: var(--r-pill); }
+</style>
+</head>
+<body>
+<div class="gg-field"><span class="a"></span><span class="b"></span><span class="c"></span></div>
+<div class="gg-app dash">
+
+  <header class="d-top glass">
+    <div class="gg-brand"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 5l8 14 8-14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div style="font-weight:600;letter-spacing:var(--tracking-snug)">Atlas Analytics</div>
+    <div class="gg-vrule"></div>
+    <div class="gg-seg glass--inset">
+      <button class="gg-pill on">Overview</button><button class="gg-pill">Cohorts</button><button class="gg-pill">Revenue</button>
+    </div>
+    <div style="flex:1"></div>
+    <div class="gg-search" style="width:220px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input placeholder="Search metrics…"/></div>
+    <div class="gg-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.7"/></svg></div>
+    <div class="gg-avatar gold">A</div>
+  </header>
+
+  <nav class="d-side glass">
+    <div class="navcap gg-lbl">Workspace</div>
+    <div class="gg-row on"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.7"/><rect x="13" y="3" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.7"/><rect x="3" y="13" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.7"/><rect x="13" y="13" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.7"/></svg><span class="gg-grow">Dashboard</span></div>
+    <div class="gg-row"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 19V5m0 14h16M8 15v-4m4 4V8m4 7v-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="gg-grow">Reports</span></div>
+    <div class="gg-row"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="gg-grow">Audiences</span></div>
+    <div class="gg-row"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="gg-grow">Funnels</span></div>
+    <div class="navcap gg-lbl" style="margin-top:var(--s-3)">Saved</div>
+    <div class="gg-row"><span class="swatch" style="background:var(--viz-key)"></span><span class="gg-grow">Q3 growth</span></div>
+    <div class="gg-row"><span class="swatch" style="background:var(--viz-1)"></span><span class="gg-grow">Retention v2</span></div>
+    <div style="flex:1"></div>
+    <div class="gg-row"><div class="gg-avatar">JL</div><span class="gg-grow"><div style="font-size:var(--fs-caption);font-weight:600">Jordan Lee</div><div class="gg-sub">Pro plan</div></span></div>
+  </nav>
+
+  <main class="d-main glass">
+    <div class="in">
+      <div style="display:flex;align-items:flex-end;gap:var(--s-3)">
+        <div><div class="gg-h-lg">Overview</div><div class="gg-sub">Last 30 days · updated 4m ago</div></div>
+        <div style="flex:1"></div>
+        <button class="cv-btn cv-btn--ghost cv-btn--sm">Export</button>
+        <button class="cv-btn cv-btn--primary cv-btn--sm">New report</button>
+      </div>
+
+      <div class="kpis">
+        <div class="gg-kpi glass--inset"><div class="k">Active users</div><div class="v">48.2k</div><span class="gg-delta up">▲ 12.4%</span></div>
+        <div class="gg-kpi glass--inset"><div class="k">Revenue</div><div class="v">$186k</div><span class="gg-delta up">▲ 8.1%</span></div>
+        <div class="gg-kpi glass--inset"><div class="k">Conversion</div><div class="v">3.9%</div><span class="gg-delta down">▼ 0.6%</span></div>
+        <div class="gg-kpi glass--inset"><div class="k">Avg. session</div><div class="v">6m 12s</div><span class="gg-delta up">▲ 4.2%</span></div>
+      </div>
+
+      <div class="charts">
+        <div class="glass--inset gg-pad">
+          <div class="card-h"><div class="gg-h">Weekly active users</div><div style="flex:1"></div><span class="gg-chip">This year</span></div>
+          <div class="gg-bars">
+            <i style="--h:38%"></i><i style="--h:52%"></i><i style="--h:44%"></i><i style="--h:61%"></i><i style="--h:55%"></i>
+            <i style="--h:70%"></i><i style="--h:64%"></i><i class="key" style="--h:88%"></i><i style="--h:74%"></i>
+            <i style="--h:80%"></i><i style="--h:69%"></i><i style="--h:92%"></i>
+          </div>
+        </div>
+        <div class="glass--inset gg-pad">
+          <div class="card-h"><div class="gg-h">Channels</div></div>
+          <div class="legend">
+            <div class="legrow"><span class="swatch" style="background:var(--viz-key)"></span><span style="width:74px">Organic</span><span class="track"><i style="width:64%;background:var(--viz-key)"></i></span><span class="gg-num">64%</span></div>
+            <div class="legrow"><span class="swatch" style="background:var(--viz-1)"></span><span style="width:74px">Referral</span><span class="track"><i style="width:41%;background:var(--viz-1)"></i></span><span class="gg-num">41%</span></div>
+            <div class="legrow"><span class="swatch" style="background:var(--viz-2)"></span><span style="width:74px">Social</span><span class="track"><i style="width:33%;background:var(--viz-2)"></i></span><span class="gg-num">33%</span></div>
+            <div class="legrow"><span class="swatch" style="background:var(--viz-3)"></span><span style="width:74px">Email</span><span class="track"><i style="width:22%;background:var(--viz-3)"></i></span><span class="gg-num">22%</span></div>
+            <div class="legrow"><span class="swatch" style="background:var(--viz-4)"></span><span style="width:74px">Paid</span><span class="track"><i style="width:15%;background:var(--viz-4)"></i></span><span class="gg-num">15%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass--inset gg-pad">
+        <div class="card-h"><div class="gg-h">Top pages</div><div style="flex:1"></div><button class="cv-btn cv-btn--ghost cv-btn--sm">View all</button></div>
+        <table class="gg">
+          <thead><tr><th>Page</th><th>Views</th><th>Unique</th><th>Avg. time</th><th>Bounce</th></tr></thead>
+          <tbody>
+            <tr><td>/home</td><td class="gg-num">128,402</td><td class="gg-num">92,100</td><td>2m 48s</td><td><span class="cv-badge cv-badge--success">32%</span></td></tr>
+            <tr><td>/pricing</td><td class="gg-num">64,220</td><td class="gg-num">51,880</td><td>3m 12s</td><td><span class="cv-badge cv-badge--success">28%</span></td></tr>
+            <tr><td>/docs</td><td class="gg-num">41,905</td><td class="gg-num">30,442</td><td>5m 04s</td><td><span class="cv-badge cv-badge--warning">44%</span></td></tr>
+            <tr><td>/blog</td><td class="gg-num">38,110</td><td class="gg-num">29,006</td><td>1m 52s</td><td><span class="cv-badge cv-badge--error">61%</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<!-- @dsCard group="System" name="The One Inspector" subtitle="One projection-driven editor for the whole system: the SAME module edits a glyphic, a panel and a token — slots, the sockets half (finally visible), decorators and actions — read live from CV_PROJECT.toInspector, every option previewed THROUGH CV_NODE.render. No per-kind code." viewport="1240x1180" -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The One Inspector</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../tonal-zoning.css">
+<link rel="stylesheet" href="../assets/icons/cv-glyphic.css">
+<link rel="stylesheet" href="../tokens/motion.css">
+<link rel="stylesheet" href="../axes/motion/motion.css">
+<!-- the registry chain (same order app/index.html uses) -->
+<script src="../app/registry/vars.js"></script>
+<script src="../app/registry/query.js"></script>
+<script src="../app/registry/conditions.js"></script>
+<script src="../app/registry/decorators.js"></script>
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<script src="../app/ai/ai-registry.js"></script>
+<script src="../app/ai/ai-glyphic.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../app/registry/glyphic-type.js"></script>
+<script src="../app/registry/components-type.js"></script>
+<script src="../app/registry/kinds-type.js"></script>
+<script src="../app/registry/views.js"></script>
+<script src="../core/cv-node.js"></script>
+<script src="../app/registry/actions.js"></script>
+<script src="../app/registry/events.js"></script>
+<script src="../app/registry/project.js"></script>
+<script src="../app/registry/inspector.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--zone-ground); color: var(--fg-primary); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .doc { max-width: 1180px; margin: 0 auto; padding: 52px 48px 110px; }
+  .mast { padding-bottom: 24px; border-bottom: 2px solid var(--accent-gold); margin-bottom: 28px; }
+  .kicker { font: 600 11px/1 var(--font-mono); letter-spacing: .22em; text-transform: uppercase; color: var(--accent-bronze); }
+  h1 { margin: 12px 0 10px; font: 800 36px/1.04 var(--font-display); letter-spacing: -0.02em; }
+  .stand { font: 400 15px/1.55 var(--font-body); color: var(--fg-secondary); max-width: 84ch; text-wrap: pretty; }
+  .stand code { font: 500 13px/1 var(--font-mono); color: var(--accent-bronze); }
+
+  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
+  .col { border: 1px solid var(--border-faint); border-radius: 16px; background: var(--paper); box-shadow: var(--shadow-card); overflow: hidden; display: flex; flex-direction: column; }
+  .col > header { padding: 14px 16px; background: color-mix(in srgb, var(--accent-gold) 5%, var(--paper)); border-bottom: 1px solid var(--border-faint); }
+  .col .ck { font: 600 9px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-bronze); }
+  .col .cn { margin: 6px 0 2px; font: 700 17px/1.1 var(--font-display); letter-spacing: -0.01em; }
+  .col .cd { font: 400 11.5px/1.45 var(--font-body); color: var(--fg-muted); margin: 0; }
+  .subject { min-height: 132px; display: flex; align-items: center; justify-content: center; padding: 18px; background: color-mix(in srgb, var(--accent-bronze) 4%, var(--paper)); border-bottom: 1px dashed var(--border-faint); }
+  .insp-wrap { padding: 16px; }
+
+  /* panel subject mock */
+  .panelmock { width: 100%; border: 1px solid var(--border-faint); border-radius: 10px; background: var(--paper); overflow: hidden; }
+  .panelmock .pm-h { font: 700 11px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-bronze); padding: 9px 11px; border-bottom: 1px solid var(--border-faint); background: color-mix(in srgb, var(--accent-gold) 4%, var(--paper)); }
+  .panelmock .pm-items { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; min-height: 56px; }
+  .panelmock .pm-empty { font: 400 11px/1.4 var(--font-body); color: var(--fg-soft); font-style: italic; }
+  .tokenswatch { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .tokenswatch .sw { width: 92px; height: 92px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--fg-primary) 10%, transparent); }
+  .tokenswatch .tk { font: 500 11px/1 var(--font-mono); color: var(--fg-muted); }
+
+  .note { margin-top: 30px; font: 400 12px/1.5 var(--font-body); color: var(--fg-muted); border-top: 1px solid var(--border-faint); padding-top: 16px; }
+  .note code { font-family: var(--font-mono); }
+  .note b { color: var(--accent-gold-deep); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="doc">
+  <header class="mast" data-screen-label="One Inspector masthead">
+    <div class="kicker">ConceptV · Living Projection</div>
+    <h1>The One Inspector</h1>
+    <p class="stand">The spec asks for it repeatedly: <b>build the socket inspector once</b> over <code>CV_NODE.candidates</code>, so the same panel edits a token, a glyphic, a panel, or a slide. This is that one module — <code>window.CV_INSPECTOR</code>. Each column below is the <b>identical</b> <code>CV_INSPECTOR.mount()</code> call on a different kind; it reads <code>CV_PROJECT.toInspector(node)</code> and renders the whole projection — value-slots, the <b>sockets</b> half (previously invisible everywhere in the UI), decorators and actions — with <b>every option previewed by rendering the node through <code>CV_NODE.render</code></b>. No per-kind code. Edits go through the one action layer (<code>CV_ACTIONS.invoke</code>) — the same verbs the AI calls.</p>
+  </header>
+
+  <div class="cols">
+    <section class="col" data-screen-label="Inspector: glyphic">
+      <header><div class="ck">atom · kind glyphic</div><div class="cn">A Glyphic</div><p class="cd">The rich case: whole-unit slots + the ring &amp; symbol parts' slots, flattened. Pick any tile — the mark above re-renders live.</p></header>
+      <div class="subject" id="subj-glyphic"></div>
+      <div class="insp-wrap"><div id="insp-glyphic"></div></div>
+    </section>
+
+    <section class="col" data-screen-label="Inspector: panel">
+      <header><div class="ck">surface · kind panel</div><div class="cn">A Composition Menu</div><p class="cd">The socket case: its <code>items</code> socket accepts the <code>glyphic</code> classification — so the inspector shows the matching library, resolved live. Pick one to place it.</p></header>
+      <div class="subject" id="subj-panel"></div>
+      <div class="insp-wrap"><div id="insp-panel"></div></div>
+    </section>
+
+    <section class="col" data-screen-label="Inspector: token">
+      <header><div class="ck">token · the floor</div><div class="cn">A Colour token</div><p class="cd">The leaf: a token is a node too — the floor of the recursion. The same module renders it; there is nothing to compose, only what it <i>is</i>.</p></header>
+      <div class="subject" id="subj-token"></div>
+      <div class="insp-wrap"><div id="insp-token"></div></div>
+    </section>
+  </div>
+
+  <p class="note" id="foot"></p>
+</div>
+
+<script>
+(function () {
+  var GL = window.CV_GLYPHIC, N = window.CV_NODE, AX = window.CV_AXES, INS = window.CV_INSPECTOR;
+
+  // ---- 1 · GLYPHIC — a live spec; the inspector mutates it in place ----
+  var glyphicNode = { form: 'octagon', symbol: 'house', fill: 'wash', color: 'gold', texture: 'none', motion: 'none', size: 56, depth: 'normal' };
+  function paintGlyphic() {
+    document.getElementById('subj-glyphic').innerHTML = GL.render(glyphicNode, { size: 96, flat: true });
+  }
+  paintGlyphic();
+  INS.mount(document.getElementById('insp-glyphic'), {
+    typeId: 'glyphic', node: glyphicNode, audience: 'maker', size: 28,
+    onChange: paintGlyphic,
+  });
+
+  // ---- 2 · PANEL — a live instance; the inspector fills its sockets ----
+  var panelNode = { kind: 'panel', kindId: 'panel.composition-menu', title: 'Insert', layout: 'grid', filled: {} };
+  function paintPanel() {
+    var items = panelNode.filled && panelNode.filled.items;
+    var list = items ? (Array.isArray(items) ? items : [items]) : [];
+    var chips = list.length
+      ? list.map(function (id) {
+          // a placed glyphic-classified thing → show a sample mark + its id
+          var mark = (id === 'glyphic') ? GL.render({ form: 'hex', symbol: 'star', fill: 'paper' }, { size: 30, flat: true }) : '';
+          return '<span style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-faint);border-radius:8px;padding:4px 8px;font:500 11px/1 var(--font-mono);color:var(--fg-secondary)">' + mark + id + '</span>';
+        }).join('')
+      : '<span class="pm-empty">empty — pick from the items socket below</span>';
+    document.getElementById('subj-panel').innerHTML =
+      '<div class="panelmock"><div class="pm-h">' + (panelNode.title || 'Insert') + ' · ' + panelNode.layout + '</div><div class="pm-items">' + chips + '</div></div>';
+  }
+  paintPanel();
+  INS.mount(document.getElementById('insp-panel'), {
+    typeId: 'panel.composition-menu', node: panelNode, audience: 'author', size: 28,
+    onChange: paintPanel,
+  });
+
+  // ---- 3 · TOKEN — a node too (the floor). Lensed from a colour-axis value ----
+  var tokenNode = N.lens({ axis: 'color', value: 'gold' });
+  function paintToken() {
+    var css = AX.css('color', tokenNode.axisValue) || 'var(--accent-gold)';
+    document.getElementById('subj-token').innerHTML =
+      '<div class="tokenswatch"><div class="sw" style="background:' + css + '"></div><div class="tk">color · ' + tokenNode.axisValue + ' → ' + css + '</div></div>';
+  }
+  paintToken();
+  INS.mount(document.getElementById('insp-token'), { node: tokenNode, audience: 'author', size: 28 });
+
+  // ---- footer: prove it is ONE call, three kinds ----
+  try {
+    var dg = INS.describe({ typeId: 'glyphic', node: glyphicNode });
+    var dp = INS.describe({ typeId: 'panel.composition-menu', node: panelNode });
+    var dt = INS.describe({ node: tokenNode });
+    document.getElementById('foot').innerHTML =
+      'One module — <code>CV_INSPECTOR.mount()</code> — three kinds. ' +
+      'Glyphic: <b>' + dg.slots.filter(function (s) { return s.options && s.options.length; }).length + '</b> editable slots · <b>' + dg.sockets.length + '</b> sockets. ' +
+      'Panel: <b>' + dp.slots.filter(function (s) { return s.options && s.options.length; }).length + '</b> slots · <b>' + dp.sockets.length + '</b> sockets (its <code>items</code> socket resolves <b>' + ((dp.sockets[0] && dp.sockets[0].candidates) || []).length + '</b> candidates live). ' +
+      'Token: a leaf — <b>' + dt.slots.length + '</b> slots, classified <b>' + (tokenNode.classification || []).join(' · ') + '</b>. ' +
+      'Every slot tile is the node re-rendered through <code>CV_NODE.render</code>; every socket candidate comes from <code>CV_NODE.candidates</code>. The interface is a projection of the registries — here, literally.';
+  } catch (e) {
+    document.getElementById('foot').textContent = e.message;
+  }
+})();
+</script>
+</body>
+</html>

@@ -75,9 +75,9 @@
   // colour tokens a facet value can resolve to (single source = the token graph)
   var COLOR_TOKENS = {
     gold: 'var(--accent-gold)', bronze: 'var(--accent-bronze)', ink: 'var(--fg-primary)',
-    sage: 'var(--accent-communication, #5A8A4A)', amber: 'var(--status-warning, #C8881F)',
-    clay: 'var(--status-error, #B5482E)', blue: 'var(--status-info, #3E6F9E)',
-    muted: 'var(--fg-muted, #9A8E78)', paper: 'var(--paper, #fff)',
+    sage: 'var(--accent-communication)', amber: 'var(--status-warning)',
+    clay: 'var(--status-error)', blue: 'var(--status-info)',
+    muted: 'var(--fg-muted)', paper: 'var(--paper)',
   };
   function tok(c) { return COLOR_TOKENS[c] || c || 'currentColor'; }
 
@@ -93,7 +93,7 @@
   // shape-accurate drop-shadow can't be a CSS box-shadow (it must follow the
   // polygon, not the square element), so the geometry lives here while the TINT
   // single-sources from --shadow-c (tokens/depth.css) so palette swaps carry.
-  var DEPTH_TINT = 'var(--shadow-c, #2a211a)';
+  var DEPTH_TINT = 'var(--shadow-c)';
   var DEPTHS = {
     flat: null,                                                  // = --elev-0
     d1: { color: DEPTH_TINT, dx: 0.4, dy: 1,   blur: 1,   opacity: 0.16 },
@@ -291,7 +291,7 @@
         else if (s.fill === 'tint') o.fill = [tok((s.color && s.color.ring) || 'gold'), 'var(--paper)', 'var(--paper)'];
         else if (s.fill === 'solid') {                                   // 'full / set / committed' — a flat colour fill
           o.fill = (valTok || tok((s.color && s.color.ring) || 'gold')); // single colour → markSVG renders a flat plane
-          o.ink = 'var(--paper, #FCFAF2)';                               // light icon/label for contrast on the solid plane
+          o.ink = 'var(--paper)';                               // light icon/label for contrast on the solid plane
         }
         if (s.depth === 'flat') o.flat = true;
         else if (DEPTHS[s.depth]) o.shadow = DEPTHS[s.depth];

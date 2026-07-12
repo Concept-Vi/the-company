@@ -1,0 +1,143 @@
+/* ============================================================
+   ConceptV · GLASS — the frosted / liquid-glass MATERIAL
+   ------------------------------------------------------------
+   Glass has been in the source DNA from the start (analysis/
+   pitch-deck.md §"frosted glass", capital-raise cover/closing,
+   SYSTEM-GAPS "→ new component/utility .glass") but never had a
+   single home — it lived as one-off backdrop-filter literals in
+   core/containers.css (.cv-zone--frosted) and across app chrome.
+   This file is that home. Everything glass now references THESE
+   tokens; there is no second place for the material to drift.
+
+   A "glass" surface = a translucent wash over whatever is behind
+   it + a real backdrop blur + a hairline edge + a bright top
+   specular highlight + soft elevation. It is a MATERIAL layered
+   ON TOP of the theme, not a colour role: the fill mixes toward
+   --zone-ground and the edge from --ink, so glass recomputes for
+   light / dim / dark / contrast automatically (declared on the
+   same selector list as the zone roles, for the same reason —
+   a var()-of-a-var() is substituted where it's declared, so any
+   scope that flips the ground must redeclare these to pick it up).
+
+   Depth reads through THREE nesting levels, each snapped to the
+   radius ramp so nested glass never invents a corner:
+     .glass         floating panel        --r-2xl  (outer chrome)
+     .glass--raised menu / popover / modal --r-2xl  (more opaque, higher elev)
+     .glass--inset  a well inside glass    --r-lg   (recessed, no shadow)
+   ============================================================ */
+
+:root {
+  /* ---- Material knobs — retune the whole material from here -- */
+  --glass-blur:            26px;     /* @kind other */  /* backdrop blur radius */
+  --glass-saturate:        1.5;      /* @kind other */  /* pop the colour behind the frost */
+  --glass-opacity:         0.55;     /* @kind other */  /* floating-panel translucency */
+  --glass-opacity-raised:  0.72;     /* @kind other */  /* overlays sit more opaque so text stays legible */
+  --glass-opacity-inset:   0.40;     /* @kind other */  /* recessed wells read more transparent */
+
+  /* the light the glass catches — a MATERIAL constant (specular
+     highlight is light-source, not theme, coloured). One home. */
+  --glass-specular:        #FFFFFF;  /* @kind color */
+
+  /* glass corners snap to the radius ramp — never a bespoke value */
+  --glass-radius:          var(--r-2xl);
+  --glass-radius-inner:    var(--r-lg);
+}
+
+/* ---- DERIVED ROLES — recompute per theme / ground / palette --- *
+   Same selector list as the zone roles in colors_and_type.css so
+   the fill (→ ground) and edge (→ ink) follow every theme flip.
+
+   TINT (graduated from experiments/tonal-glass.css, slices 107-113):
+   a surface may declare a ZONE (data-glass-zone) and the frost mixes
+   a whisper of that zone's PIGMENT into the ground before the glass
+   opacity applies. Defaults are 0% — untagged glass is byte-identical
+   to pre-tint glass. The tonal doctrine holds: depth is the primary
+   zoning, tone is felt more than seen, gold is reserved for Vi. */
+:root,
+[data-theme],
+[data-ground],
+.zone-palette-cooler,
+.zone-palette-warmer,
+[data-glass-zone] {
+  --glass-tint-pig: var(--zone-ground);   /* default = ground → no tint */
+  --glass-tint-amt: 0%;
+  --glass-edge-pig: var(--ink);           /* default edge = ink */
+  --glass-edge-amt: 14%;
+
+  /* the (possibly tinted) ground every material's frost mixes from */
+  --glass-ground: color-mix(in oklch, var(--glass-tint-pig) var(--glass-tint-amt), var(--zone-ground));
+
+  --glass-fill:        color-mix(in oklch, var(--glass-ground) calc(var(--glass-opacity)        * 100%), transparent);
+  --glass-fill-raised: color-mix(in oklch, var(--glass-ground) calc(var(--glass-opacity-raised) * 100%), transparent);
+  --glass-fill-inset:  color-mix(in oklch, var(--glass-ground) calc(var(--glass-opacity-inset)  * 100%), transparent);
+
+  /* diagonal sheen — a faint specular gradient across the top-left */
+  --glass-sheen: linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--glass-specular) 7%, transparent),
+      transparent 44%);
+
+  --glass-edge:      color-mix(in oklch, var(--glass-edge-pig) var(--glass-edge-amt), transparent);
+  --glass-edge-soft: color-mix(in oklch, var(--glass-edge-pig) calc(var(--glass-edge-amt) * 0.6), transparent);
+  --glass-highlight: color-mix(in srgb, var(--glass-specular) 18%, transparent);  /* bright top edge */
+  --glass-shadow:    var(--elev-4);
+  --glass-shadow-lifted: var(--elev-5);
+}
+
+/* ---- ZONE SCOPES — meaning → tint (pigments are the ONE source).
+   Amounts echo the zone registry's own percentages: a whisper that
+   survives the frost. Gold is the one tone allowed to read (Vi). */
+[data-glass-zone="content"] { --glass-tint-pig: var(--pig-content); --glass-tint-amt: 3%; --glass-edge-pig: var(--pig-content); --glass-edge-amt: 12%; }
+[data-glass-zone="panel"]   { --glass-tint-pig: var(--pig-panel);   --glass-tint-amt: 4%; --glass-edge-pig: var(--pig-panel);   --glass-edge-amt: 12%; }
+[data-glass-zone="source"]  { --glass-tint-pig: var(--pig-source);  --glass-tint-amt: 4%; --glass-edge-pig: var(--pig-source);  --glass-edge-amt: 13%; }
+[data-glass-zone="package"] { --glass-tint-pig: var(--pig-package); --glass-tint-amt: 5%; --glass-edge-pig: var(--pig-package); --glass-edge-amt: 13%; }
+[data-glass-zone="review"]  { --glass-tint-pig: var(--pig-review);  --glass-tint-amt: 5%; --glass-edge-pig: var(--pig-review);  --glass-edge-amt: 13%; }
+[data-glass-zone="success"] { --glass-tint-pig: var(--pig-success); --glass-tint-amt: 5%; --glass-edge-pig: var(--pig-success); --glass-edge-amt: 14%; }
+[data-glass-zone="warning"] { --glass-tint-pig: var(--pig-warning); --glass-tint-amt: 5%; --glass-edge-pig: var(--pig-warning); --glass-edge-amt: 15%; }
+[data-glass-zone="reject"]  { --glass-tint-pig: var(--pig-reject);  --glass-tint-amt: 5%; --glass-edge-pig: var(--pig-reject);  --glass-edge-amt: 14%; }
+[data-glass-zone="comm"]    { --glass-tint-pig: var(--accent-communication); --glass-tint-amt: 5%; --glass-edge-pig: var(--accent-communication); --glass-edge-amt: 14%; }
+[data-glass-zone="vi"]      { --glass-tint-pig: var(--accent-gold);  --glass-tint-amt: 7%; --glass-edge-pig: var(--accent-gold);  --glass-edge-amt: 22%; }
+
+/* ============================================================
+   UTILITIES  ·  compose these; never re-declare the literals
+   ============================================================ */
+
+/* the base floating panel — the app-chrome surface */
+.glass {
+  position: relative;
+  background: var(--glass-sheen), var(--glass-fill);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--glass-radius);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow);
+}
+
+/* raised — menus, popovers, modals, the composer well's send affordance.
+   More opaque (legibility) and lifted higher in the elevation ramp. */
+.glass--raised {
+  background: var(--glass-sheen), var(--glass-fill-raised);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow-lifted);
+}
+
+/* inset — a recessed well INSIDE a glass panel (the composer input,
+   a preview frame). Reads as carved-in: no drop shadow, tighter radius. */
+.glass--inset {
+  position: relative;
+  background: var(--glass-fill-inset);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-edge-soft);
+  border-radius: var(--glass-radius-inner);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+/* hairline divider that belongs to the glass world (edge-soft, not a token border) */
+.glass-rule { border: 0; border-top: 1px solid var(--glass-edge-soft); margin: 0; }
+
+/* a thin vertical separator for inside toolbars */
+.glass-vrule { width: 1px; align-self: stretch; background: var(--glass-edge-soft); }

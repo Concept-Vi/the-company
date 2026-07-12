@@ -68,12 +68,18 @@ computing it on the node in the generator (or deriving it in the map) and refere
   selector currently implements these as `SIZERS`; they mirror these sets 1:1 and should resolve
   from here once Claude Code unifies them.)
 
-**Draft — Claude Code to build live** (`draft:true`, data + intent only):
-- `depth-border` — border ← depth. Deeper files → lighter/thinner border so shallow structure reads
-  bolder.
+**Now LIVE too** (built into the map's **Overlay** glyph menu — `draft:true` retained as provenance):
+- `depth-border` — border ← depth. Shallow folders get a thick outline, deep files thin (rendered as
+  `outline`, so it never clobbers the base border).
 - `kind-texture` — texture ← roleGroup. code=plain, token=grid, asset=dots, doc=lines, archive=cross,
-  ingest=hatch. Lets kind read without spending colour.
-- `state-glow` — glow ← state. changed=gold, unwired=clay, none. Glow = liveness only.
+  ingest=hatch (rendered as `background-image` patterns over the fill).
+- `state-glow` — glow ← state. changed=gold (pending edits), unwired=clay (file with no edges), none
+  (rendered as `box-shadow` / SVG `drop-shadow`). Glow = liveness only.
+
+The Overlay menu is a projection of every encoding set whose `channel` is texture/border/glow — add
+such a set and it appears as an overlay option automatically. Overlay touches ONLY
+`background-image`, `outline`, and `box-shadow` (never base colour/size props), so it composes with
+any Colour/Size lens.
 
 ## How the map consumes it (the projection)
 

@@ -1,5 +1,9 @@
-/* preview/_card.css — shared frame for design-system cards */
-@import url('../colors_and_type.css');
+/* preview/_card.css — shared frame for design-system cards.
+   Imports the ONE stylesheet (every token home incl. skins), not bare
+   colors_and_type — so all 35 specimens are addressable by the full system
+   through this single frame. styles.css @imports colors_and_type, so this is
+   a strict superset: no specimen changes visually. */
+@import url('../styles.css');
 
 html, body { margin: 0; padding: 0; }
 body {

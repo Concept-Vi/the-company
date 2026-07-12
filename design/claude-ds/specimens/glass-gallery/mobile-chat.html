@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-surface="mobile-portrait">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Glass · Mobile chat</title>
+<link rel="stylesheet" href="../../styles.css"/>
+<link rel="stylesheet" href="glass-app.css"/>
+<style>
+  body{ display: grid; place-items: center; min-height: 100vh; }
+  .msgs{ padding: var(--gutter-mobile); display: flex; flex-direction: column; gap: var(--s-3); }
+  .bub{ max-width: 82%; padding: var(--s-3) var(--s-4); border-radius: var(--r-lg); font-size: var(--fs-caption); line-height: 1.5; }
+  .bub.ai{ align-self: flex-start; background: color-mix(in oklch,var(--ink) 8%,transparent); color: var(--ink); border-bottom-left-radius: var(--r-xs); }
+  .bub.me{ align-self: flex-end; background: var(--accent-gold); color: var(--on-gold); border-bottom-right-radius: var(--r-xs); }
+  .status-pill{ align-self: flex-start; display: flex; align-items: center; gap: var(--s-2); padding: var(--s-2) var(--s-3);
+    border-radius: var(--r-pill); font-size: var(--fs-meta); font-weight: 600; color: var(--ink); }
+  .status-pill .bolt{ color: var(--accent-gold); display: inline-flex; }
+  .composer{ flex: none; margin: var(--s-3); padding: var(--s-2) var(--s-2) var(--s-2) var(--s-3); display: flex; align-items: center; gap: var(--s-2); }
+  .composer .ph{ flex: 1; color: var(--ink-4); font-size: var(--fs-caption); }
+</style>
+</head>
+<body>
+<div class="gg-field"><span class="a"></span><span class="b"></span><span class="c"></span></div>
+
+<div class="cv-device">
+  <div class="cv-device__notch"></div>
+  <div class="cv-device__screen">
+
+    <div class="cv-statusbar"><span>9:41</span><span class="cv-statusbar__radios">
+      <svg width="16" height="11" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="1" width="3" height="11" rx="1"/><rect x="15" y="4" width="3" height="8" rx="1" opacity=".4"/></svg>
+      <svg width="16" height="12" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 5.5a11 11 0 0 1 16 0M5 9a6.5 6.5 0 0 1 10 0"/><circle cx="10" cy="12" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <svg width="24" height="12" viewBox="0 0 26 13" fill="none"><rect x="1" y="1.5" width="21" height="10" rx="2.5" stroke="currentColor" stroke-opacity=".5"/><rect x="3" y="3.5" width="15" height="6" rx="1" fill="currentColor"/><rect x="23" y="4.5" width="2" height="4" rx="1" fill="currentColor" fill-opacity=".5"/></svg>
+    </span></div>
+
+    <div class="cv-appbar">
+      <div class="gg-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="gg-brand" style="width:30px;height:30px;border-radius:var(--r-sm)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 5l8 14 8-14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div style="flex:1;min-width:0"><div style="font-size:var(--fs-caption);font-weight:600">Vi Assistant</div><div class="gg-sub" style="font-size:11px">Opus 4.8 · online</div></div>
+      <div class="gg-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg></div>
+    </div>
+
+    <div class="cv-screen-scroll">
+      <div class="msgs">
+        <div class="bub ai">Hey Jordan — I pulled the Q3 numbers. Want the headline or the full breakdown?</div>
+        <div class="bub me">Headline first, then the funnel.</div>
+        <div class="status-pill glass--inset"><span class="bolt"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg></span>Analyzing 4 sources…</div>
+        <div class="bub ai">Organic activation is up <b>12%</b> QoQ — the new onboarding flow is doing the heavy lifting. Paid dipped in September though.</div>
+        <div class="bub me">Nice. Chart the funnel for me.</div>
+        <div class="bub ai">On it — building a four-stage funnel now.</div>
+      </div>
+    </div>
+
+    <div class="composer glass--inset">
+      <div class="gg-round" style="width:30px;height:30px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="ph">Message Vi…</div>
+      <button class="cv-btn cv-btn--primary cv-btn--sm" style="min-height:32px;padding-inline:10px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+
+  </div>
+  <div class="cv-device__home"></div>
+</div>
+</body>
+</html>

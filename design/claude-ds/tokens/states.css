@@ -9,7 +9,7 @@
 :root {
   --skeleton-base:   color-mix(in oklch, var(--ink) 8%, transparent);
   --skeleton-sheen:  color-mix(in oklch, var(--ink) 14%, transparent);
-  --skeleton-radius: var(--r-sm, 6px);
+  --skeleton-radius: var(--r-sm);
 
   --focus-ring:        var(--accent-gold);
   --focus-ring-width:  2px;
@@ -19,6 +19,18 @@
   --state-press:    color-mix(in oklch, var(--ink) 9%, transparent);
   --state-selected: var(--vi-strong);
   --disabled-opacity: 0.45; /* @kind other */
+}
+
+/* A PLAIN alias (--x: var(--y)) declared at :root bakes :root's value and
+   does NOT recompute under a theme/ground scope (unlike the color-mix()
+   wash tokens, which late-resolve) — so the selected wash went light-on-
+   light under data-theme="dark" (surfaced by the List's aria-selected row).
+   Re-declaring the SAME reference inside each scope re-substitutes it
+   against that scope's ground. Still one source (--vi-strong) — this is a
+   resolution point, not a second value. */
+[data-theme="dim"], [data-theme="dark"], [data-theme="contrast"],
+[data-ground="clean"], [data-ground="warm"] {
+  --state-selected: var(--vi-strong);
 }
 
 /* ---- Skeleton / shimmer ---------------------------------- *
@@ -39,7 +51,7 @@
   position: absolute; inset: 0;
   transform: translateX(-100%);
   background: linear-gradient(90deg, transparent, var(--skeleton-sheen), transparent);
-  animation: cvShimmer 1.4s var(--ease-in-out, ease) infinite;
+  animation: cvShimmer 1.4s var(--ease-in-out) infinite;
 }
 @keyframes cvShimmer { to { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) {
@@ -53,7 +65,7 @@
 .state-block {
   display: flex; flex-direction: column; align-items: center; text-align: center;
   gap: var(--d-3); padding: var(--space-fluid-lg);
-  border-radius: var(--r-lg, 14px);
+  border-radius: var(--r-lg);
   border: 1px dashed var(--border-default);
   color: var(--ink-3);
   max-width: 42ch; margin-inline: auto;
@@ -87,5 +99,5 @@
 :where(a, button, [tabindex], input, select, textarea, .interactive):focus-visible {
   outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: var(--focus-ring-offset);
-  border-radius: var(--r-sm, 6px);
+  border-radius: var(--r-sm);
 }

@@ -1,58 +1,5 @@
 // canvases/Overview.jsx — system health dashboard
-
-// ── FaceMarker: the page-face marker that sits ON a real thing that has a face ──────────────────
-// window.CV_FACES is keyed by the real Studio thing's id ('colors' → the Colors canvas's OWN face,
-// model-authored from its real tokens). The marker only appears where a real thing actually has a
-// face; clicking it opens that thing's real page (:8774). HOW it presents is the `style` prop,
-// which is driven by a real TweakRadio variable (window.useTweaks) — flip it and every marker re-renders.
-function FaceMarker({ id, style, mode }) {
-  // MODE GATE — faces/how-tos only surface when the surface is in a relational mode (system-creator,
-  // "show how it works", higher-order, contextual-nav). In normal use they're hidden — an end user
-  // isn't meant to see them without purpose. `off` = hidden everywhere.
-  if (mode === 'off') return null;
-  const face = (window.CV_FACES || {})[id];
-  if (!face) return null;                                  // no face on this thing → no marker (the real lens)
-  const open = (e) => { if (e) e.stopPropagation(); window.open(face.url, '_blank', 'noopener'); };
-  const tip = 'Open the page — ' + face.title;
-  // FOUR presentations of the same real face, all sitting ON the real tile, all opening the real page.
-  if (style === 'preview') {                               // A — the page's real excerpt, in-tile
-    return (
-      <div className="dsa-face-strip" onClick={open} title={tip}>
-        <span className="ex">{face.excerpt}</span>
-        <span className="open">▦ Open face ↗</span>
-      </div>
-    );
-  }
-  if (style === 'relational') {                            // B — the relation, as a GENERATED glyphic
-    // The marker is composed by CV_GLYPHIC.composeRelation from the typed registry data (face.rel:
-    // source node-type → edge kind → target/page node-type). NOT hand-drawn — delete the old hand-CSS
-    // and this still renders, because the shape/line/arrow come out of the engine (Glyphics + CV_EDGES).
-    const GL = typeof window !== 'undefined' ? window.CV_GLYPHIC : null;
-    if (GL && GL.composeRelation && face.rel) {
-      const r = GL.composeRelation(face.rel, { nodeSize: 22, edgeLength: 26 });
-      return <div className="dsa-face-glyph" onClick={open} title={tip}
-                  dangerouslySetInnerHTML={{ __html: r.html }}/>;
-    }
-    return <button className="dsa-face-marker" onClick={open} title={tip}>▦ Face ↗</button>;
-  }
-  if (style === 'inline') {                                // C — a small face panel inline on the tile
-    return (
-      <div className="dsa-face-inline-tile" onClick={open} title={tip}>
-        <span className="cap">Its face</span>
-        <span className="ttl">{face.title}</span>
-        <span className="open">Open ↗</span>
-      </div>
-    );
-  }
-  return (                                                 // D — the compact lens badge (default)
-    <button className="dsa-face-marker" onClick={open} title={tip}>▦ Face ↗</button>
-  );
-}
-
 function Overview({ counts, onNav, recentActivity, onExport, onReset, onSearch }) {
-  // the marker presentation is a REAL tweak variable (the system's own tweak mechanism)
-  const [tw, setTweak] = window.useTweaks({ faceStyle: 'relational', faceMode: 'explain' });
-
   const stats = [
     { id: 'colors',   icon: 'color-swatches', label: 'Colors',   value: counts.colorCount,   sub: 'tokens',     to: 'colors',   delta: '+2 this week', deltaKind: 'up' },
     { id: 'icons',    icon: 'star',           label: 'Icons',    value: counts.iconCount,    sub: 'glyphs',     to: 'icons',    delta: '+12 new',      deltaKind: 'up' },
@@ -74,7 +21,6 @@ function Overview({ counts, onNav, recentActivity, onExport, onReset, onSearch }
         title="Overview"
         sub="Everything ConceptV owns, at a glance. Click any tile to dive into that part of the system."
         actions={<>
-          <button className="dsa-btn dsa-btn--ghost" onClick={() => window.postMessage({type:'__activate_edit_mode'}, '*')} title="Tweak how page-faces show">⚙ Face tweak</button>
           <button className="dsa-btn dsa-btn--ghost" onClick={onSearch} title="Search everything · ⌘K">
             <CvIcon name="search" size={14}/> Search <span style={{font:'500 10px/1 var(--font-mono)',color:'var(--fg-muted)',background:'var(--bg-muted)',padding:'2px 5px',borderRadius:3,marginLeft:6}}>⌘K</span>
           </button>
@@ -94,8 +40,7 @@ function Overview({ counts, onNav, recentActivity, onExport, onReset, onSearch }
           </div>
           <div className="dsa-stat-grid">
             {stats.map(s => (
-              <div key={s.id} className="dsa-stat" onClick={() => onNav(s.to)} style={{position:'relative'}}>
-                <FaceMarker id={s.to} style={tw.faceStyle} mode={tw.faceMode}/>
+              <div key={s.id} className="dsa-stat" onClick={() => onNav(s.to)}>
                 <div className="label">
                   <span className="gly"><CvIcon name={s.icon} size={14}/></span>
                   {s.label}
@@ -114,8 +59,7 @@ function Overview({ counts, onNav, recentActivity, onExport, onReset, onSearch }
           </div>
           <div className="dsa-canvas-grid">
             {canvases.map(c => (
-              <div key={c.id} className="dsa-canvas-tile" onClick={() => onNav(c.id)} style={{position:'relative'}}>
-                <FaceMarker id={c.id} style={tw.faceStyle} mode={tw.faceMode}/>
+              <div key={c.id} className="dsa-canvas-tile" onClick={() => onNav(c.id)}>
                 <div className="preview">
                   <CvIcon name={c.icon} size={36} tone="bronze"/>
                 </div>
@@ -147,17 +91,6 @@ function Overview({ counts, onNav, recentActivity, onExport, onReset, onSearch }
         </div>
 
       </div>
-
-      {/* the marker presentation is a real tweak — flip it, every marker on the surface re-renders */}
-      <TweaksPanel title="Page-faces">
-        <TweakSection label="Mode"/>
-        <TweakRadio label="Faces visible in" value={tw.faceMode} options={['off', 'explain']}
-                    onChange={(v) => setTweak('faceMode', v)}/>
-        <TweakSection label="Page-face marker"/>
-        <TweakRadio label="Show as" value={tw.faceStyle}
-                    options={['badge', 'preview', 'relational', 'inline']}
-                    onChange={(v) => setTweak('faceStyle', v)}/>
-      </TweaksPanel>
     </>
   );
 }

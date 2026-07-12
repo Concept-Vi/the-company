@@ -3,6 +3,11 @@
 // the project root, '../_ds/<folder>' one level down) — one line to edit.
 (() => {
   const base = '../..';
+  // SKIN SCOPE (UNIFICATION-SWEEP §2.3): templates are SKINNED SURFACES.
+  // glass is the un-scoped default binding, so this is inert until a template
+  // (or its consumer) dials another world — but it makes every template
+  // addressable by the skin laws. Never overrides an authored choice.
+  if (!document.documentElement.hasAttribute('data-skin')) document.documentElement.setAttribute('data-skin', 'glass');
   for (const p of ["styles.css"]) { // styles.css @imports every token file + core/containers.css
     const l = document.createElement('link');
     l.rel = 'stylesheet'; l.href = base + '/' + p;

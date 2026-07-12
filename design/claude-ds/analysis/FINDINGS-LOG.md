@@ -5,6 +5,78 @@
 > autonomous sessions don't repeat or contradict. Newest first.
 >
 
+## Slice 87 — U6 (operator-app lane): the MISSING operator-grade components, into the one home
+The console-app set the DS lacked, built as system citizens (CSS in `tokens/controls.css` L2 +
+thin token-class wrappers in `components/` + Type rows in `app/registry/components-type.js` +
+one specimen), never app-local:
+- **Toast** (`components/Toast.jsx`) — `window.CV_TOAST` window-level queue (the CV_* global-home
+  pattern Popover established) + one `<ToastHost/>` per page; tones RIDE the Badge tone vocabulary
+  (gold/success/warning/error/comm → `.cv-toast--*` left-accent + dot); auto-dismiss (duration:0
+  disables) + action slot; enter/exit are the `tokens/motion.css` primitives (`.enter-down`/
+  `.exit-up` per corner) so reduced-motion is honoured in the token home, and the JS removal delay
+  also collapses to 0 under reduced motion.
+- **Sheet** (`Sheet.jsx`) — slide-in `side="right"|"bottom"`, the mobile-first Modal sibling:
+  same overlay/esc/backdrop conventions, and REUSES `.cv-modal__head/__title/__close/__foot`
+  (one dialog-chrome home, no second). Bottom sheet's drag handle sits in a `--touch-min`-guarded
+  hit area; stays mounted through the exit transition (nothing teleports); safe-area padded.
+- **List** (`List.jsx`) — leading · primary/secondary · trailing rows; row height `--row-h`
+  (density-aware — the specimen shows the same markup under `data-density="compact"`); text
+  budgets REFERENCE `--len-title`/`--len-desc` (tokens/text.css), not re-invented numbers;
+  selection/hover RIDES `.interactive` (states.css) — no second interaction language.
+- **Menu** (`Menu.jsx`) — rides `window.CV_POPOVER.Component` (never a second positioning
+  engine); icon+label+danger+disabled items, separators; arrows/Home/End/Enter keyboard nav,
+  esc/outside-click via Popover's `onRequestClose`; `role="menu"`.
+- **Checkbox + Radio** (`Checkbox.jsx`/`Radio.jsx`) — native inputs restyled (`.cv-checkbox`/
+  `.cv-radio`), GOLD checked state per the colour discipline (gold = selection/decision, ink on
+  gold = `--on-gold`); indeterminate supported; label+hint reuse the `.cv-field`/`.cv-label`/
+  `.cv-hint` stack (Input's — one labelled-field home). `.cv-check-row` guards the touch floor.
+- **AppShell** (`AppShell.jsx`) — the console chrome: desktop nav rail → mobile bottom tab bar.
+  The tab bar and header RIDE `tokens/device.css`'s `.cv-tabbar`/`.cv-tab`/`.cv-appbar` verbatim
+  (the DESIGN-LANGUAGE never-hand-roll-phone-chrome law); only the rail is new CSS. Switching:
+  explicit `[data-surface]` wins (harness frames), real `@media` at the documented `--bp-tablet`
+  mirror is the standalone fallback (surfaces.css names this exact CSS-var limitation).
+- **Table / Search / Skeleton wrappers** (`Table.jsx`/`Search.jsx`/`Skeleton.jsx`) — thin React
+  faces over the existing CSS-only `.cv-table` (columns declare `num`/`feature`), `.cv-search`,
+  `.skeleton` — zero new visual homes.
+- **Registry**: 10 new Type rows + the Jul-9 trio (Popover/Select/Tooltip) which had NO Type rows
+  — registered in the same pass so the component catalogue is total (13 rows added). All icons
+  referenced resolve in cv-icons.js TODAY (bell, sidebar-close, file-list, checklist-double,
+  check-square, check, devices, dashboard, search, frame, window, sort, info).
+- **Specimen**: `specimens/operator-controls.html` (@dsCard, one styles.css link, all content
+  generated from JS data arrays, density/theme via data-*; fixed-position chrome demonstrated in
+  transform-containing frames).
+- **TOKEN DEFECT FOUND + FIXED (pre-existing, surfaced by the List's selected row under dark):**
+  `--state-selected: var(--vi-strong)` (states.css :root) is a PLAIN alias — it bakes :root's
+  light-ground value and does NOT recompute under a theme scope (unlike the color-mix() washes,
+  which late-resolve — verified empirically in-browser: direct `var(--vi-strong)` under dark →
+  oklch L≈0.31, via the alias → L≈0.97, light-on-light). Fixed in the token's home: the same
+  reference re-declared under the `[data-theme]`/`[data-ground]` scopes (a resolution point, not
+  a second value). Selected rows now legible in dark (screenshot-verified).
+- **CONVENTION CHOICE (per the lane brief):** new components MATCH THE NEWEST convention —
+  ES `import React from "react"` + `const h = React.createElement` (the Jul-9 Popover/Select/
+  Tooltip trio), not the older global-React style of Button/Badge/etc. No JSX syntax — plain
+  createElement, so the files run through the Babel harness AND as plain scripts.
+- **VERIFIED BY USE** (chrome-devtools, real browser, served over HTTP):
+  `_qa/operator-controls-test.html` (the exact core-test/popover-test Babel-harness pattern —
+  fetch real .jsx, strip module syntax, transform, eval, mount, assert) — **33/33 green**
+  (`window.__qa = {passed:33, total:33, ok:true}`), covering mount + computed cv-* classes +
+  behaviour (toast queue/dismiss/action, sheet esc + sides, list selection, menu keyboard nav +
+  popover riding, checkbox/radio states + field stack, appshell rail/tabbar/aria-current,
+  table num/feature cells, search binding, skeleton geometry). All 13 Type rows resolve live
+  through `CV_REGISTRY.resolve` with correct runtime globals. Specimen screenshot LOOKED AT
+  (full-page + dark-section: `_qa/shots/operator-controls-specimen.jpeg`,
+  `operator-controls-dark-fixed.jpeg`); a11y label associations cleaned to zero real issues.
+- **NOT verified:** the compiled `_ds_bundle.js` is STALE this turn (compiled output, never
+  hand-edited — CLAUDE.md §5; it rebuilds end-of-turn, when `components/controls-live.html`-style
+  bundle consumers pick the new components up); no real phone hardware (safe-area insets, sheet
+  drag physics — the handle is visual, drag-to-dismiss not implemented); AppShell not exercised
+  inside the real MultiSurface harness (only [data-surface] frames in the specimen).
+- **Open:** Menu item icons resolve through `window.CvIcon` when present (guarded null when the
+  icon runtime isn't loaded — a plain-page consumer gets label-only items, no throw: deliberate,
+  matching Select's Popover-absent guard); drag-to-dismiss for the bottom sheet; a Toast
+  `progress`/pause-on-hover refinement; registering the operator set into the block/glyphic
+  socket vocabularies where panels want to accept them.
+
 ## Slice 86 — U4 + U10 (operator-app lanes): the packaging entry · self-hosted fonts
 Two file-disjoint upgrades (concurrent with the components/controls.css lane — untouched here).
 

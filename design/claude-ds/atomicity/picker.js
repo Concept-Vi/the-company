@@ -15,10 +15,10 @@
     if (box) return;
     box = document.createElement('div');
     box.id = 'cv-pick-box';
-    box.style.cssText = 'position:fixed;z-index:2147483646;pointer-events:none;border:2px solid var(--accent-gold,#E0C010);border-radius:5px;box-shadow:0 0 0 9999px rgba(31,26,18,.20);transition:left .07s ease,top .07s ease,width .07s ease,height .07s ease;display:none';
+    box.style.cssText = 'position:fixed;z-index:2147483646;pointer-events:none;border:2px solid var(--accent-gold);border-radius:5px;box-shadow:0 0 0 9999px rgba(31,26,18,.20);transition:left .07s ease,top .07s ease,width .07s ease,height .07s ease;display:none';
     label = document.createElement('div');
     label.id = 'cv-pick-label';
-    label.style.cssText = 'position:fixed;z-index:2147483647;pointer-events:none;font:600 11px/1 var(--font-mono,ui-monospace,monospace);background:#1F1A12;color:#E0C010;padding:4px 9px;border-radius:6px;display:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.3)';
+    label.style.cssText = 'position:fixed;z-index:2147483647;pointer-events:none;font:600 11px/1 var(--font-mono);background:#1F1A12;color:#E0C010;padding:4px 9px;border-radius:6px;display:none;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.3)';
     document.body.appendChild(box); document.body.appendChild(label);
   }
   function excluded(el) { return !el || (el.closest && el.closest('#cv-pick-box,#cv-pick-label,.ac-vi-panel,.ac-vi-fab,.ac-cmd-back,.ac-top,.dsa-toast')); }

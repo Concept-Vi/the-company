@@ -1,0 +1,95 @@
+{
+  "packId": "vi-material-hierarchy-support-pack-006",
+  "purpose": "Support assets and implementation tokens for the material-depth hierarchy pass requested after the current Claude Design screenshot.",
+  "materialRoles": {
+    "wall": {
+      "material": "materials/wall-depth-warm-plaster.webp",
+      "spanPx": 1250,
+      "zRole": "base wall; broad matte grain"
+    },
+    "card.default": {
+      "material": "materials/card-face-lifted-ivory.webp",
+      "spanPx": 460,
+      "zRole": "raised card face, brighter and smoother than wall"
+    },
+    "card.active": {
+      "material": "materials/card-face-active-champagne.webp",
+      "spanPx": 460,
+      "zRole": "selected/active card face"
+    },
+    "card.ghost": {
+      "material": "materials/card-face-ghost-matte.webp",
+      "spanPx": 460,
+      "zRole": "future/ghost card face"
+    },
+    "command.trough": {
+      "material": "materials/command-trough-paper.webp",
+      "spanPx": 640,
+      "zRole": "bottom command slot, not generic chat bar"
+    },
+    "origin.plaque": {
+      "material": "materials/origin-plaque-stone.webp",
+      "spanPx": 520,
+      "zRole": "left Vi origin medallion/plaque"
+    },
+    "source.detail": {
+      "material": "materials/source-detail-card.webp",
+      "spanPx": 420,
+      "zRole": "source-backed detail hint card"
+    },
+    "side.face": {
+      "material": "materials/warm-shadow-side-face.webp",
+      "spanPx": 460,
+      "zRole": "undersides/side faces"
+    }
+  },
+  "overlayRoles": {
+    "card.shadow": "overlays/card-contact-shadow.png",
+    "card.activeShadow": "overlays/active-card-contact-shadow.png",
+    "card.edgeHighlight": "overlays/card-edge-highlight-top-left.png",
+    "card.underside": "overlays/warm-underside-side-face.png",
+    "path.activeGlow": "overlays/active-gold-path-glow.png",
+    "path.ghostDash": "overlays/ghost-gold-dash-path.png",
+    "source.glow": "overlays/source-detail-hint-glow.png",
+    "command.shadow": "overlays/command-trough-shadow.png",
+    "origin.shadow": "overlays/origin-plaque-shadow.png"
+  },
+  "hierarchyLadder": [
+    {
+      "layer": "wall",
+      "relativeLuminance": "base",
+      "textureScale": "wide",
+      "elevation": 0
+    },
+    {
+      "layer": "inactiveCard",
+      "relativeLuminance": "+8% to +14% vs wall",
+      "textureScale": "smaller/smoother",
+      "elevation": 1
+    },
+    {
+      "layer": "activeCard",
+      "relativeLuminance": "+14% to +22% vs wall",
+      "textureScale": "smoothest",
+      "elevation": 2
+    },
+    {
+      "layer": "objectRender",
+      "relativeLuminance": "highest local highlights",
+      "textureScale": "crisp asset",
+      "elevation": 3
+    },
+    {
+      "layer": "connectors",
+      "relativeLuminance": "gold state ladder",
+      "textureScale": "line/glow",
+      "elevation": 4
+    },
+    {
+      "layer": "sourceDetailHint",
+      "relativeLuminance": "clear but restrained",
+      "textureScale": "structured mini content",
+      "elevation": 3
+    }
+  ]
+}

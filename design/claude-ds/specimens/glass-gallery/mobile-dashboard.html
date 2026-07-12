@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-surface="mobile-portrait">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Glass · Mobile home</title>
+<link rel="stylesheet" href="../../styles.css"/>
+<link rel="stylesheet" href="glass-app.css"/>
+<style>
+  body{ display: grid; place-items: center; min-height: 100vh; }
+  .greet .g{ font-size: var(--fs-caption); color: var(--ink-3); }
+  .greet .n{ font-size: var(--fs-h3); font-weight: 700; color: var(--ink); letter-spacing: var(--tracking-tight); }
+  .kpi2{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
+  .k{ padding: var(--s-3) var(--s-4); display: flex; flex-direction: column; gap: 5px; }
+  .k .v{ font-size: var(--fs-h3); font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: var(--tracking-tight); white-space: nowrap; }
+  .k .l{ font-size: var(--fs-meta); color: var(--ink-3); }
+  .card{ padding: var(--s-4); }
+  .card-h{ display: flex; align-items: center; margin-bottom: var(--s-3); }
+  .act{ display: grid; grid-template-columns: repeat(4,1fr); gap: var(--s-2); }
+  .act .a{ display: flex; flex-direction: column; align-items: center; gap: 6px; padding: var(--s-3) 0; border-radius: var(--r-md); cursor: pointer; }
+  .act .ic{ width: 42px; height: 42px; border-radius: var(--r-md); display: grid; place-items: center; background: color-mix(in oklch,var(--ink) 8%,transparent); color: var(--ink-2); }
+  .act .t{ font-size: 10px; color: var(--ink-3); font-weight: 600; }
+  .arow{ display: flex; align-items: center; gap: var(--s-3); padding: var(--s-2) 0; }
+  .arow + .arow{ border-top: 1px solid var(--glass-edge-soft); }
+</style>
+</head>
+<body>
+<div class="gg-field"><span class="a"></span><span class="b"></span><span class="c"></span></div>
+
+<div class="cv-device">
+  <div class="cv-device__notch"></div>
+  <div class="cv-device__screen">
+
+    <div class="cv-statusbar"><span>9:41</span><span class="cv-statusbar__radios">
+      <svg width="16" height="11" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="1" width="3" height="11" rx="1"/><rect x="15" y="4" width="3" height="8" rx="1" opacity=".4"/></svg>
+      <svg width="16" height="12" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 5.5a11 11 0 0 1 16 0M5 9a6.5 6.5 0 0 1 10 0"/><circle cx="10" cy="12" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <svg width="24" height="12" viewBox="0 0 26 13" fill="none"><rect x="1" y="1.5" width="21" height="10" rx="2.5" stroke="currentColor" stroke-opacity=".5"/><rect x="3" y="3.5" width="15" height="6" rx="1" fill="currentColor"/><rect x="23" y="4.5" width="2" height="4" rx="1" fill="currentColor" fill-opacity=".5"/></svg>
+    </span></div>
+
+    <div class="cv-appbar">
+      <div class="greet" style="flex:1;min-width:0"><div class="g">Good morning</div><div class="n">Jordan</div></div>
+      <div class="gg-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.7"/></svg></div>
+      <div class="gg-avatar gold" style="width:38px;height:38px">JL</div>
+    </div>
+
+    <div class="cv-screen-scroll">
+      <div class="m-col">
+        <div class="kpi2">
+          <div class="k glass--inset"><span class="l">Active users</span><span class="v">48.2k</span><span class="gg-delta up">▲ 12.4%</span></div>
+          <div class="k glass--inset"><span class="l">Revenue</span><span class="v">$186k</span><span class="gg-delta up">▲ 8.1%</span></div>
+        </div>
+
+        <div class="card glass--inset">
+          <div class="card-h"><div class="gg-h" style="font-size:var(--fs-body)">This week</div><div style="flex:1"></div><span class="gg-chip" style="font-size:11px">WAU</span></div>
+          <div class="gg-bars" style="height:76px">
+            <i style="--h:44%"></i><i style="--h:60%"></i><i style="--h:52%"></i><i style="--h:74%"></i><i class="key" style="--h:90%"></i><i style="--h:70%"></i><i style="--h:82%"></i>
+          </div>
+        </div>
+
+        <div class="act">
+          <div class="a"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 19V5m0 14h16M8 15v-4m4 4V8m4 7v-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div><span class="t">Reports</span></div>
+          <div class="a"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.7"/></svg></div><span class="t">People</span></div>
+          <div class="a"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div><span class="t">Funnels</span></div>
+          <div class="a"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div><span class="t">Live</span></div>
+        </div>
+
+        <div class="card glass--inset">
+          <div class="card-h"><div class="gg-h" style="font-size:var(--fs-body)">Recent activity</div></div>
+          <div class="arow"><div class="gg-avatar" style="width:30px;height:30px;font-size:11px">MK</div><div style="flex:1;min-width:0"><div style="font-size:var(--fs-caption);color:var(--ink)">Maya shared Q3 report</div><div class="gg-sub" style="font-size:11px">9:41 AM</div></div></div>
+          <div class="arow"><div class="gg-avatar" style="width:30px;height:30px;font-size:11px">DT</div><div style="flex:1;min-width:0"><div style="font-size:var(--fs-caption);color:var(--ink)">Deploy 4.8 shipped</div><div class="gg-sub" style="font-size:11px">8:12 AM</div></div><span class="cv-badge cv-badge--success" style="font-size:10px">Live</span></div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="cv-tabbar">
+      <button class="cv-tab is-active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="3" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="13" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="13" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.8"/></svg>Home</button>
+      <button class="cv-tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 19V5m0 14h16M8 15v-4m4 4V8m4 7v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Stats</button>
+      <button class="cv-tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.7"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.7"/></svg>Inbox</button>
+      <button class="cv-tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.8"/></svg>You</button>
+    </nav>
+
+  </div>
+  <div class="cv-device__home"></div>
+</div>
+</body>
+</html>

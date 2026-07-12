@@ -1,0 +1,890 @@
+{
+ "_generated": "by _system/emit_glyph_corpus.js from CV_ICONS + CV_MEANING (the one source) — DO NOT hand-edit; re-run the emitter",
+ "_counts": {
+  "symbols": 144,
+  "fields": 76,
+  "total": 220
+ },
+ "entries": [
+  {
+   "address": "glyph://symbol/person",
+   "text": "person · domain: people · kind: object · tags: user, profile, avatar"
+  },
+  {
+   "address": "glyph://symbol/people",
+   "text": "people · domain: people · kind: object · tags: users, group, audience"
+  },
+  {
+   "address": "glyph://symbol/person-add",
+   "text": "person add · domain: people · kind: action · tags: invite, signup, add user"
+  },
+  {
+   "address": "glyph://symbol/person-clock",
+   "text": "person clock · domain: people · kind: state · tags: pending, waiting, schedule"
+  },
+  {
+   "address": "glyph://symbol/handshake",
+   "text": "handshake · domain: people · kind: concept · tags: partnership, deal, agreement"
+  },
+  {
+   "address": "glyph://symbol/team",
+   "text": "team · domain: people · kind: object · tags: group, staff, collaborators"
+  },
+  {
+   "address": "glyph://symbol/user-network",
+   "text": "user network · domain: people · kind: concept · tags: org, connections, referral"
+  },
+  {
+   "address": "glyph://symbol/user-card",
+   "text": "user card · domain: people · kind: object · tags: profile, contact, id"
+  },
+  {
+   "address": "glyph://symbol/file",
+   "text": "file · domain: document · kind: object · tags: document, page"
+  },
+  {
+   "address": "glyph://symbol/files-stack",
+   "text": "files stack · domain: document · kind: object · tags: documents, batch"
+  },
+  {
+   "address": "glyph://symbol/file-upload",
+   "text": "file upload · domain: document · kind: action · tags: upload, import"
+  },
+  {
+   "address": "glyph://symbol/file-download",
+   "text": "file download · domain: document · kind: action · tags: download, export"
+  },
+  {
+   "address": "glyph://symbol/file-pdf",
+   "text": "file pdf · domain: document · kind: object · tags: pdf, export"
+  },
+  {
+   "address": "glyph://symbol/file-list",
+   "text": "file list · domain: document · kind: object · tags: report, listing"
+  },
+  {
+   "address": "glyph://symbol/file-edit",
+   "text": "file edit · domain: document · kind: action · tags: edit, revise"
+  },
+  {
+   "address": "glyph://symbol/file-gear",
+   "text": "file gear · domain: document · kind: action · tags: process, config"
+  },
+  {
+   "address": "glyph://symbol/folder",
+   "text": "folder · domain: document · kind: object · tags: directory, collection"
+  },
+  {
+   "address": "glyph://symbol/folder-gear",
+   "text": "folder gear · domain: document · kind: action · tags: manage, config, setup"
+  },
+  {
+   "address": "glyph://symbol/brochure",
+   "text": "brochure · domain: document · kind: object · tags: marketing, collateral, flyer"
+  },
+  {
+   "address": "glyph://symbol/document",
+   "text": "document · domain: document · kind: object · tags: page, text"
+  },
+  {
+   "address": "glyph://symbol/clipboard",
+   "text": "clipboard · domain: document · kind: object · tags: form, checklist, notes"
+  },
+  {
+   "address": "glyph://symbol/chat",
+   "text": "chat · domain: communication · kind: object · tags: message, talk"
+  },
+  {
+   "address": "glyph://symbol/chat-double",
+   "text": "chat double · domain: communication · kind: object · tags: conversation, thread"
+  },
+  {
+   "address": "glyph://symbol/chat-tree",
+   "text": "chat tree · domain: communication · kind: concept · tags: threads, branching"
+  },
+  {
+   "address": "glyph://symbol/megaphone",
+   "text": "megaphone · domain: communication · kind: object · tags: announce, broadcast"
+  },
+  {
+   "address": "glyph://symbol/megaphone-link",
+   "text": "megaphone link · domain: communication · kind: concept · tags: campaign, reach"
+  },
+  {
+   "address": "glyph://symbol/bell",
+   "text": "bell · domain: communication · kind: object · tags: notify, alert, reminder"
+  },
+  {
+   "address": "glyph://symbol/share",
+   "text": "share · domain: communication · kind: action · tags: send, distribute"
+  },
+  {
+   "address": "glyph://symbol/link",
+   "text": "link · domain: communication · kind: action · tags: url, connect"
+  },
+  {
+   "address": "glyph://symbol/email",
+   "text": "email · domain: communication · kind: object · tags: mail, message"
+  },
+  {
+   "address": "glyph://symbol/house",
+   "text": "house · reads as: home · domain: property · kind: object · tags: home, listing, residence"
+  },
+  {
+   "address": "glyph://symbol/house-multi",
+   "text": "house multi · domain: property · kind: object · tags: estate, development, units"
+  },
+  {
+   "address": "glyph://symbol/building-tall",
+   "text": "building tall · domain: property · kind: object · tags: tower, apartment, commercial"
+  },
+  {
+   "address": "glyph://symbol/building-dollar",
+   "text": "building dollar · domain: property · kind: concept · tags: valuation, investment, price"
+  },
+  {
+   "address": "glyph://symbol/crane",
+   "text": "crane · domain: property · kind: object · tags: construction, development, build"
+  },
+  {
+   "address": "glyph://symbol/m2",
+   "text": "m2 · domain: property · kind: concept · tags: area, size, square meters"
+  },
+  {
+   "address": "glyph://symbol/floorplan",
+   "text": "floorplan · domain: property · kind: object · tags: layout, plan, rooms"
+  },
+  {
+   "address": "glyph://symbol/blueprint",
+   "text": "blueprint · domain: visualization · kind: object · tags: plan, draft, technical"
+  },
+  {
+   "address": "glyph://symbol/axes-3d",
+   "text": "axes 3d · domain: visualization · kind: concept · tags: 3d, space, coordinates"
+  },
+  {
+   "address": "glyph://symbol/floor-pattern",
+   "text": "floor pattern · domain: property · kind: object · tags: tiling, material, floor"
+  },
+  {
+   "address": "glyph://symbol/vr-headset",
+   "text": "vr headset · domain: visualization · kind: object · tags: vr, immersive, virtual"
+  },
+  {
+   "address": "glyph://symbol/drone",
+   "text": "drone · domain: visualization · kind: object · tags: aerial, uav, quadcopter"
+  },
+  {
+   "address": "glyph://symbol/3d-cube",
+   "text": "3d cube · domain: visualization · kind: object · tags: 3d, model, volume"
+  },
+  {
+   "address": "glyph://symbol/browser",
+   "text": "browser · domain: interface · kind: object · tags: web, window, page"
+  },
+  {
+   "address": "glyph://symbol/browser-house",
+   "text": "browser house · domain: interface · kind: object · tags: listing page, portal"
+  },
+  {
+   "address": "glyph://symbol/browser-info",
+   "text": "browser info · domain: interface · kind: object · tags: details, about"
+  },
+  {
+   "address": "glyph://symbol/browser-chart",
+   "text": "browser chart · domain: interface · kind: object · tags: analytics, report"
+  },
+  {
+   "address": "glyph://symbol/browser-pen",
+   "text": "browser pen · domain: interface · kind: object · tags: edit page, design"
+  },
+  {
+   "address": "glyph://symbol/monitor-house",
+   "text": "monitor house · domain: property · kind: object · tags: listing, virtual tour, preview"
+  },
+  {
+   "address": "glyph://symbol/devices",
+   "text": "devices · domain: interface · kind: object · tags: responsive, multi-device"
+  },
+  {
+   "address": "glyph://symbol/dashboard",
+   "text": "dashboard · domain: interface · kind: object · tags: gauge, overview, control"
+  },
+  {
+   "address": "glyph://symbol/video-player",
+   "text": "video player · domain: media · kind: object · tags: video, playback"
+  },
+  {
+   "address": "glyph://symbol/image",
+   "text": "image · domain: media · kind: object · tags: photo, picture"
+  },
+  {
+   "address": "glyph://symbol/image-stack",
+   "text": "image stack · domain: media · kind: object · tags: gallery, photos"
+  },
+  {
+   "address": "glyph://symbol/plus",
+   "text": "plus · domain: action · kind: action · tags: add, create, new"
+  },
+  {
+   "address": "glyph://symbol/minus",
+   "text": "minus · domain: action · kind: action · tags: remove, subtract"
+  },
+  {
+   "address": "glyph://symbol/check",
+   "text": "check · domain: action · kind: action · tags: confirm, done, approve"
+  },
+  {
+   "address": "glyph://symbol/close",
+   "text": "close · domain: action · kind: action · tags: cancel, dismiss, x"
+  },
+  {
+   "address": "glyph://symbol/sidebar-close",
+   "text": "sidebar close · domain: action · kind: action · tags: collapse, panel"
+  },
+  {
+   "address": "glyph://symbol/edit",
+   "text": "edit · domain: action · kind: action · tags: modify, pencil, write"
+  },
+  {
+   "address": "glyph://symbol/eye",
+   "text": "eye · domain: action · kind: action · tags: view, show, preview"
+  },
+  {
+   "address": "glyph://symbol/eye-off",
+   "text": "eye off · domain: action · kind: action · tags: hide, conceal"
+  },
+  {
+   "address": "glyph://symbol/search",
+   "text": "search · domain: action · kind: action · tags: find, lookup, magnify"
+  },
+  {
+   "address": "glyph://symbol/filter",
+   "text": "filter · domain: action · kind: action · tags: refine, narrow"
+  },
+  {
+   "address": "glyph://symbol/sort",
+   "text": "sort · domain: action · kind: action · tags: order, arrange"
+  },
+  {
+   "address": "glyph://symbol/swap",
+   "text": "swap · domain: action · kind: action · tags: exchange, toggle"
+  },
+  {
+   "address": "glyph://symbol/refresh",
+   "text": "refresh · domain: action · kind: action · tags: reload, sync, update"
+  },
+  {
+   "address": "glyph://symbol/undo",
+   "text": "undo · domain: action · kind: action · tags: undo, revert, back, history"
+  },
+  {
+   "address": "glyph://symbol/redo",
+   "text": "redo · domain: action · kind: action · tags: redo, forward, history"
+  },
+  {
+   "address": "glyph://symbol/duplicate",
+   "text": "duplicate · domain: action · kind: action · tags: copy, clone, duplicate"
+  },
+  {
+   "address": "glyph://symbol/archive",
+   "text": "archive · domain: action · kind: action · tags: archive, store, box, stow"
+  },
+  {
+   "address": "glyph://symbol/trash",
+   "text": "trash · domain: action · kind: action · tags: delete, remove, bin, discard"
+  },
+  {
+   "address": "glyph://symbol/ruler",
+   "text": "ruler · domain: action · kind: object · tags: size, measure, scale, dimension"
+  },
+  {
+   "address": "glyph://symbol/gear",
+   "text": "gear · domain: system · kind: object · tags: settings, config, cog"
+  },
+  {
+   "address": "glyph://symbol/cloud-upload",
+   "text": "cloud upload · domain: system · kind: action · tags: upload, backup, sync"
+  },
+  {
+   "address": "glyph://symbol/cloud-download",
+   "text": "cloud download · domain: system · kind: action · tags: download, fetch, output"
+  },
+  {
+   "address": "glyph://symbol/cloud",
+   "text": "cloud · domain: system · kind: object · tags: storage, hosting, sync"
+  },
+  {
+   "address": "glyph://symbol/database",
+   "text": "database · domain: data · kind: object · tags: storage, records, db"
+  },
+  {
+   "address": "glyph://symbol/dollar-circle",
+   "text": "dollar circle · domain: commerce · kind: object · tags: price, money, cost"
+  },
+  {
+   "address": "glyph://symbol/info-circle",
+   "text": "info circle · domain: system · kind: state · tags: info, help, detail"
+  },
+  {
+   "address": "glyph://symbol/lightbulb",
+   "text": "lightbulb · domain: system · kind: concept · tags: idea, tip, insight"
+  },
+  {
+   "address": "glyph://symbol/location-pin",
+   "text": "location pin · domain: place · kind: object · tags: map, location, address"
+  },
+  {
+   "address": "glyph://symbol/pin-route",
+   "text": "pin route · domain: place · kind: concept · tags: directions, journey, path"
+  },
+  {
+   "address": "glyph://symbol/calendar",
+   "text": "calendar · domain: system · kind: object · tags: date, schedule, time"
+  },
+  {
+   "address": "glyph://symbol/color-swatches",
+   "text": "color swatches · domain: feature · kind: object · tags: palette, colours, style"
+  },
+  {
+   "address": "glyph://symbol/sun-moon",
+   "text": "sun moon"
+  },
+  {
+   "address": "glyph://symbol/adjustments",
+   "text": "adjustments · domain: action · kind: object · tags: controls, settings, sliders"
+  },
+  {
+   "address": "glyph://symbol/network",
+   "text": "network · domain: data · kind: concept · tags: graph, nodes, mesh"
+  },
+  {
+   "address": "glyph://symbol/decision-tree",
+   "text": "decision tree · domain: data · kind: concept · tags: logic, branching, flow"
+  },
+  {
+   "address": "glyph://symbol/hierarchy",
+   "text": "hierarchy · domain: data · kind: concept · tags: org, structure, tree"
+  },
+  {
+   "address": "glyph://symbol/atom",
+   "text": "atom · domain: data · kind: concept · tags: core, engine, science"
+  },
+  {
+   "address": "glyph://symbol/globe",
+   "text": "globe · domain: place · kind: object · tags: world, global, international"
+  },
+  {
+   "address": "glyph://symbol/pie-chart",
+   "text": "pie chart · domain: data · kind: object · tags: stats, share, breakdown"
+  },
+  {
+   "address": "glyph://symbol/path-flow",
+   "text": "path flow · domain: data · kind: concept · tags: process, pipeline, flow"
+  },
+  {
+   "address": "glyph://symbol/check-square",
+   "text": "check square · domain: action · kind: state · tags: checkbox, selected"
+  },
+  {
+   "address": "glyph://symbol/check-square-fill",
+   "text": "check square fill · domain: action · kind: state · tags: checked, complete"
+  },
+  {
+   "address": "glyph://symbol/no-symbol",
+   "text": "no symbol · domain: action · kind: state · tags: forbidden, blocked, none"
+  },
+  {
+   "address": "glyph://symbol/play",
+   "text": "play · domain: media · kind: action · tags: start, run"
+  },
+  {
+   "address": "glyph://symbol/pause",
+   "text": "pause · domain: media · kind: action · tags: hold, stop"
+  },
+  {
+   "address": "glyph://symbol/lock",
+   "text": "lock · domain: system · kind: state · tags: secure, private, locked"
+  },
+  {
+   "address": "glyph://symbol/unlock",
+   "text": "unlock · domain: system · kind: state · tags: open, access, unlocked"
+  },
+  {
+   "address": "glyph://symbol/star",
+   "text": "star · domain: action · kind: state · tags: favorite, rate, feature"
+  },
+  {
+   "address": "glyph://symbol/tag",
+   "text": "tag · domain: system · kind: object · tags: label, category, meta"
+  },
+  {
+   "address": "glyph://symbol/workstation",
+   "text": "workstation · domain: interface · kind: object · tags: desktop, studio"
+  },
+  {
+   "address": "glyph://symbol/connector",
+   "text": "connector · domain: system · kind: object · tags: plug, integration, api"
+  },
+  {
+   "address": "glyph://symbol/shop-cart",
+   "text": "shop cart · domain: commerce · kind: object · tags: buy, checkout, order"
+  },
+  {
+   "address": "glyph://symbol/guided-tour",
+   "text": "guided tour · domain: feature · kind: concept · tags: tour, walkthrough, play"
+  },
+  {
+   "address": "glyph://symbol/change-style",
+   "text": "change style · domain: feature · kind: concept · tags: restyle, theme, paint"
+  },
+  {
+   "address": "glyph://symbol/finishes",
+   "text": "finishes · domain: feature · kind: object · tags: materials, samples, swatch"
+  },
+  {
+   "address": "glyph://symbol/drone-view",
+   "text": "drone view · domain: feature · kind: concept · tags: fpv, aerial, flythrough"
+  },
+  {
+   "address": "glyph://symbol/day-night",
+   "text": "day night · domain: feature · kind: concept · tags: lighting, time of day, toggle"
+  },
+  {
+   "address": "glyph://symbol/filters",
+   "text": "filters · domain: feature · kind: object · tags: refine, options, sliders"
+  },
+  {
+   "address": "glyph://symbol/markup",
+   "text": "markup · domain: feature · kind: action · tags: annotate, comment, draw"
+  },
+  {
+   "address": "glyph://symbol/stages",
+   "text": "stages · domain: feature · kind: concept · tags: process, phases, progress"
+  },
+  {
+   "address": "glyph://symbol/furniture",
+   "text": "furniture · domain: feature · kind: object · tags: staging, interior, sofa"
+  },
+  {
+   "address": "glyph://symbol/lighting",
+   "text": "lighting · domain: feature · kind: object · tags: lamp, illumination, mood"
+  },
+  {
+   "address": "glyph://symbol/convenient",
+   "text": "convenient · domain: feature · kind: concept · tags: easy, quick, time-saving"
+  },
+  {
+   "address": "glyph://symbol/easy",
+   "text": "easy · domain: feature · kind: concept · tags: simple, effortless"
+  },
+  {
+   "address": "glyph://symbol/unique",
+   "text": "unique · domain: feature · kind: concept · tags: fingerprint, distinct, custom"
+  },
+  {
+   "address": "glyph://symbol/web",
+   "text": "web · domain: feature · kind: object · tags: responsive, browser, online"
+  },
+  {
+   "address": "glyph://symbol/gyro",
+   "text": "gyro · domain: feature · kind: concept · tags: 360, orbit, rotate"
+  },
+  {
+   "address": "glyph://symbol/thumbs-up",
+   "text": "thumbs up · domain: action · kind: state · tags: like, approve, positive"
+  },
+  {
+   "address": "glyph://symbol/ownership",
+   "text": "ownership · domain: commerce · kind: concept · tags: title, own, rights"
+  },
+  {
+   "address": "glyph://symbol/comments",
+   "text": "comments · domain: communication · kind: object · tags: feedback, discussion"
+  },
+  {
+   "address": "glyph://symbol/people-network",
+   "text": "people network · domain: people · kind: concept · tags: org, connections, community"
+  },
+  {
+   "address": "glyph://symbol/world-network",
+   "text": "world network · domain: place · kind: concept · tags: global, reach, worldwide"
+  },
+  {
+   "address": "glyph://symbol/checklist-double",
+   "text": "checklist double · domain: document · kind: state · tags: tasks, done, approved"
+  },
+  {
+   "address": "glyph://symbol/comments-fill",
+   "text": "comments fill · domain: communication · kind: object · tags: feedback, active"
+  },
+  {
+   "address": "glyph://symbol/transfer",
+   "text": "transfer · domain: action · kind: action · tags: move, migrate, exchange"
+  },
+  {
+   "address": "glyph://symbol/tile-stack",
+   "text": "tile stack · domain: interface · kind: object · tags: cards, gallery, grid"
+  },
+  {
+   "address": "glyph://symbol/markup-box",
+   "text": "markup box · domain: feature · kind: action · tags: annotate, region, note"
+  },
+  {
+   "address": "glyph://symbol/browser-analytics",
+   "text": "browser analytics · domain: interface · kind: object · tags: stats, metrics"
+  },
+  {
+   "address": "glyph://symbol/frame",
+   "text": "frame · Frame · A way of seeing — rules of projection over data that never changes; every viewer is one, and is a node in the space it views. · domain: language · kind: concept · tags: view, lens, perspective, coordinate, reader"
+  },
+  {
+   "address": "glyph://symbol/block",
+   "text": "block · Block · The atomic composable unit — typed, addressed, nestable; every boundary the root of its own cascade. · domain: language · kind: object · tags: unit, composable, atom, nest, boundary"
+  },
+  {
+   "address": "glyph://symbol/equation",
+   "text": "equation · Equation · A law that computes — a value derived from relations, never placed by hand. · reads as: law · domain: language · kind: concept · tags: law, derive, rule, calculate, invariant"
+  },
+  {
+   "address": "glyph://symbol/window",
+   "text": "window · Window · The visible half of the world — the coordinate space made touchable: see, point, direct. · domain: language · kind: object · tags: see, point, direct, world-map, interface"
+  },
+  {
+   "address": "glyph://symbol/seed",
+   "text": "seed · Seed · The start that carries the whole — every telling grows root-first from it, complete at every stage. · reads as: beginning · domain: language · kind: object · tags: root, start, grow, origin, generation"
+  },
+  {
+   "address": "glyph://symbol/weave",
+   "text": "weave · Weave · Descent and traverse woven — the multiaxial reading; any forward walk through the lattice is a valid telling. · domain: language · kind: concept · tags: warp, weft, descend, traverse, lattice, walk"
+  },
+  {
+   "address": "glyph://symbol/judge",
+   "text": "judge · Judge · The one that weighs — extraction proposes in parallel, judgment composes the one answer. · domain: language · kind: action · tags: decide, weigh, verify, compose, abstain"
+  },
+  {
+   "address": "glyph://symbol/ring",
+   "text": "ring · Ring · The boundary that carries identity through change — interior change is state, boundary change is becoming. · domain: language · kind: concept · tags: boundary, identity, becoming, anchor, continuity"
+  },
+  {
+   "address": "glyph://symbol/corpus",
+   "text": "corpus · Corpus · The remembered whole — everything spoken, kept addressed; the transcripts are the root of all data. · reads as: memory · domain: language · kind: object · tags: memory, store, transcript, vault, provenance"
+  },
+  {
+   "address": "glyph://symbol/room",
+   "text": "room · Room · A place of work — a session, a bench, a gallery; rooms are places and the camera slides between them. · domain: language · kind: object · tags: session, place, workshop, bench, gallery"
+  },
+  {
+   "address": "glyph://symbol/territory",
+   "text": "territory · Territory · A subject around its origin — soft-edged sectors radial about a centre; the cut and the route make a telling of it. · domain: language · kind: concept · tags: subject, sector, polygon, origin, map"
+  },
+  {
+   "address": "glyph://symbol/operator",
+   "text": "operator · Operator · A universal sign — a relation whose meaning arrives free because everyone already holds it. · reads as: sign · domain: language · kind: concept · tags: sign, relation, universal, logic, edge"
+  },
+  {
+   "address": "glyph://field/form/none",
+   "text": "form = none · untyped · senses: the symbol stands alone"
+  },
+  {
+   "address": "glyph://field/form/circle",
+   "text": "form = circle · the kind itself · senses: a whole / an identity, the category, the concept — not a specific one"
+  },
+  {
+   "address": "glyph://field/form/triangle",
+   "text": "form = triangle · an operation on it · senses: an action relative to the thing at the address, a step / a change"
+  },
+  {
+   "address": "glyph://field/form/square",
+   "text": "form = square · a specific one · senses: this particular, an instance, a bounded object"
+  },
+  {
+   "address": "glyph://field/form/diamond",
+   "text": "form = diamond · interacting with it · senses: using / operating it, deciding about it (one kind of interacting)"
+  },
+  {
+   "address": "glyph://field/form/pentagon",
+   "text": "form = pentagon · a feature · senses: a composed capability"
+  },
+  {
+   "address": "glyph://field/form/hex",
+   "text": "form = hex · a system · senses: an engine, a configurable set of parts"
+  },
+  {
+   "address": "glyph://field/form/heptagon",
+   "text": "form = heptagon · a special case · senses: a rare / specialised type"
+  },
+  {
+   "address": "glyph://field/form/octagon",
+   "text": "form = octagon · a gateway · senses: an output / endpoint, an edge to the outside"
+  },
+  {
+   "address": "glyph://field/fill/none",
+   "text": "fill = none · held as a concept · senses: the kind, as an idea, the kind-as-subject, not any specific one"
+  },
+  {
+   "address": "glyph://field/fill/paper",
+   "text": "fill = paper · here, in context · senses: this kind, present, a member, in use"
+  },
+  {
+   "address": "glyph://field/fill/wash",
+   "text": "fill = wash · featured · senses: highlighted, brought forward"
+  },
+  {
+   "address": "glyph://field/fill/tint",
+   "text": "fill = tint · categorised · senses: grouped by its colour value"
+  },
+  {
+   "address": "glyph://field/fill/solid",
+   "text": "fill = solid · full / set · senses: committed, complete, locked in"
+  },
+  {
+   "address": "glyph://field/color/neutral",
+   "text": "color = neutral · the quiet default · senses: structural, grounded, secondary"
+  },
+  {
+   "address": "glyph://field/color/active",
+   "text": "color = active · active · senses: live, the decision, look here"
+  },
+  {
+   "address": "glyph://field/color/positive",
+   "text": "color = positive · good — go · senses: grow, healthy, safe, the relationship voice"
+  },
+  {
+   "address": "glyph://field/color/warning",
+   "text": "color = warning · caution · senses: pending, in-between, slow down"
+  },
+  {
+   "address": "glyph://field/color/error",
+   "text": "color = error · stop — wrong · senses: blocked, danger, urgent"
+  },
+  {
+   "address": "glyph://field/color/info",
+   "text": "color = info · information · senses: calm, reference, cool"
+  },
+  {
+   "address": "glyph://field/color/muted",
+   "text": "color = muted · de-emphasised · senses: inactive, archival, past"
+  },
+  {
+   "address": "glyph://field/texture/none",
+   "text": "texture = none · plain · senses: no sub-classification"
+  },
+  {
+   "address": "glyph://field/texture/hatch",
+   "text": "texture = hatch · worked-on · senses: in-progress, drafted, shaded in"
+  },
+  {
+   "address": "glyph://field/texture/dense",
+   "text": "texture = dense · heavy · senses: saturated, complex"
+  },
+  {
+   "address": "glyph://field/texture/cross",
+   "text": "texture = cross · crossed-out · senses: locked, cancelled, excluded"
+  },
+  {
+   "address": "glyph://field/texture/grid",
+   "text": "texture = grid · structured · senses: engineered, mathematical, systematic"
+  },
+  {
+   "address": "glyph://field/texture/lines",
+   "text": "texture = lines · directional · senses: ruled, striated, flowing"
+  },
+  {
+   "address": "glyph://field/texture/vert",
+   "text": "texture = vert · Queued / sequential."
+  },
+  {
+   "address": "glyph://field/texture/dots",
+   "text": "texture = dots · partial · senses: sampled, scattered, estimated"
+  },
+  {
+   "address": "glyph://field/depth/flat",
+   "text": "depth = flat · inactive · senses: background, disabled"
+  },
+  {
+   "address": "glyph://field/depth/d1",
+   "text": "depth = d1 · Barely raised — subtle grouping."
+  },
+  {
+   "address": "glyph://field/depth/d2",
+   "text": "depth = d2 · Low elevation."
+  },
+  {
+   "address": "glyph://field/depth/d3",
+   "text": "depth = d3 · Resting / base card level."
+  },
+  {
+   "address": "glyph://field/depth/d4",
+   "text": "depth = d4 · interactive · senses: raised, hoverable"
+  },
+  {
+   "address": "glyph://field/depth/d5",
+   "text": "depth = d5 · selected · senses: lifted above its peers"
+  },
+  {
+   "address": "glyph://field/depth/d6",
+   "text": "depth = d6 · on top · senses: modal, dragged"
+  },
+  {
+   "address": "glyph://field/depth/normal",
+   "text": "depth = normal · settled · senses: system default standing"
+  },
+  {
+   "address": "glyph://field/motion/none",
+   "text": "motion = none · at rest · senses: settled, nothing happening"
+  },
+  {
+   "address": "glyph://field/motion/breathe",
+   "text": "motion = breathe · idle-alive · senses: ambient"
+  },
+  {
+   "address": "glyph://field/motion/pulse",
+   "text": "motion = pulse · wants attention · senses: new, unread"
+  },
+  {
+   "address": "glyph://field/motion/bob",
+   "text": "motion = bob · Playful / interactive hint."
+  },
+  {
+   "address": "glyph://field/motion/tilt",
+   "text": "motion = tilt · Hover / responsive feedback."
+  },
+  {
+   "address": "glyph://field/motion/spin",
+   "text": "motion = spin · working · senses: processing, loading"
+  },
+  {
+   "address": "glyph://field/motion/float",
+   "text": "motion = float · Detached / draggable / floating."
+  },
+  {
+   "address": "glyph://field/motion/glow",
+   "text": "motion = glow · live · senses: energised, active now"
+  },
+  {
+   "address": "glyph://field/outline/solid",
+   "text": "outline = solid · firm · senses: a settled edge"
+  },
+  {
+   "address": "glyph://field/outline/dashed",
+   "text": "outline = dashed · potential · senses: could be here, could be added, an open slot"
+  },
+  {
+   "address": "glyph://field/outline/none",
+   "text": "outline = none · open · senses: no bounding edge"
+  },
+  {
+   "address": "glyph://field/line/solid",
+   "text": "line = solid · holds now · senses: asserted, actual"
+  },
+  {
+   "address": "glyph://field/line/dashed",
+   "text": "line = dashed · could · senses: potential, possible"
+  },
+  {
+   "address": "glyph://field/line/dotted",
+   "text": "line = dotted · tentative · senses: weak, inferred"
+  },
+  {
+   "address": "glyph://field/line/lines",
+   "text": "line = lines · ongoing · senses: a flow, a stream"
+  },
+  {
+   "address": "glyph://field/line/right-angled",
+   "text": "line = right-angled · routed · senses: structured, deliberate"
+  },
+  {
+   "address": "glyph://field/line/curved",
+   "text": "line = curved · organic · senses: eased, flowing"
+  },
+  {
+   "address": "glyph://field/line/free",
+   "text": "line = free · loose · senses: human, sketched"
+  },
+  {
+   "address": "glyph://field/lineColor/blocked",
+   "text": "lineColor = blocked · blocked · senses: stopped, cannot proceed, held back"
+  },
+  {
+   "address": "glyph://field/lineColor/approved",
+   "text": "lineColor = approved · approved · senses: cleared, agreed, gone through"
+  },
+  {
+   "address": "glyph://field/lineColor/active",
+   "text": "lineColor = active · active · senses: live now, in motion, the current one"
+  },
+  {
+   "address": "glyph://field/lineColor/pending",
+   "text": "lineColor = pending · pending · senses: waiting, not yet decided"
+  },
+  {
+   "address": "glyph://field/lineColor/neutral",
+   "text": "lineColor = neutral · plain · senses: no special state"
+  },
+  {
+   "address": "glyph://field/edge/face",
+   "text": "edge = face · the face of · senses: the visible page of"
+  },
+  {
+   "address": "glyph://field/edge/higher-order",
+   "text": "edge = higher-order · part of · senses: an instance of a higher concept"
+  },
+  {
+   "address": "glyph://field/edge/navigates",
+   "text": "edge = navigates · goes to · senses: moves to a related place"
+  },
+  {
+   "address": "glyph://field/edge/equals",
+   "text": "edge = equals · equal to · senses: the same as, is"
+  },
+  {
+   "address": "glyph://field/edge/not",
+   "text": "edge = not · not · senses: is not, unequal to"
+  },
+  {
+   "address": "glyph://field/edge/and",
+   "text": "edge = and · and · senses: combined with, plus"
+  },
+  {
+   "address": "glyph://field/edge/becomes",
+   "text": "edge = becomes · becomes · senses: leads to, turns into"
+  },
+  {
+   "address": "glyph://field/edge/part-of",
+   "text": "edge = part-of · part of · senses: inside, belongs to"
+  },
+  {
+   "address": "glyph://field/edge/resolves",
+   "text": "edge = resolves · the resolution of · senses: derived from, computed from"
+  },
+  {
+   "address": "glyph://field/edge/projection-of",
+   "text": "edge = projection-of · a projection of · senses: a view of, one face of"
+  },
+  {
+   "address": "glyph://field/edge/mirrors",
+   "text": "edge = mirrors · the mirror of · senses: equal and opposite of, reflects"
+  },
+  {
+   "address": "glyph://field/edge/seeds",
+   "text": "edge = seeds · the seed of · senses: grows into, the root of"
+  },
+  {
+   "address": "glyph://field/edge/frames",
+   "text": "edge = frames · the frame of · senses: the lens on, the way of seeing"
+  },
+  {
+   "address": "glyph://field/direction/to",
+   "text": "direction = to · acts on · senses: subject → object"
+  },
+  {
+   "address": "glyph://field/direction/from",
+   "text": "direction = from · acted on by · senses: object ← subject"
+  },
+  {
+   "address": "glyph://field/direction/both",
+   "text": "direction = both · mutual · senses: both ways"
+  }
+ ]
+}

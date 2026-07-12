@@ -17,22 +17,22 @@
   <div style="max-width: 1280px; margin: 0 auto;">
 
     <header style="display: flex; align-items: baseline; gap: 14px; margin: 0 0 8px; flex-wrap: wrap;">
-      <span style="font: var(--weight-semibold,600) var(--fs-caption)/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-bronze); display: inline-flex; align-items: center; gap: 8px;">
+      <span style="font: var(--weight-semibold) var(--fs-caption)/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-bronze); display: inline-flex; align-items: center; gap: 8px;">
         <span style="width: 7px; height: 7px; background: var(--accent-gold); transform: rotate(45deg); border-radius: 1px;"></span>
         ConceptV
       </span>
-      <span style="font: var(--weight-medium,500) var(--fs-meta)/1 var(--font-body); color: var(--ink-3);">Capital raise · computed from the generative core</span>
-      <span style="margin-left: auto; font: var(--weight-medium,500) var(--fs-caption)/1 var(--font-mono); color: var(--ink-3);">lod = {{ lod }} · density = {{ density }}</span>
+      <span style="font: var(--weight-medium) var(--fs-meta)/1 var(--font-body); color: var(--ink-3);">Capital raise · computed from the generative core</span>
+      <span style="margin-left: auto; font: var(--weight-medium) var(--fs-caption)/1 var(--font-mono); color: var(--ink-3);">lod = {{ lod }} · density = {{ density }}</span>
     </header>
 
-    <p style="font: var(--weight-regular,400) var(--fs-meta)/1.5 var(--font-body); color: var(--ink-3); margin: 0 0 24px; max-width: 80ch;">Read the slide titles top to bottom: they form <b style="color: var(--ink-2);">one running sentence</b> — the argument is legible from the title rail alone (DESIGN-LANGUAGE §16).</p>
+    <p style="font: var(--weight-regular) var(--fs-meta)/1.5 var(--font-body); color: var(--ink-3); margin: 0 0 24px; max-width: 80ch;">Read the slide titles top to bottom: they form <b style="color: var(--ink-2);">one running sentence</b> — the argument is legible from the title rail alone (DESIGN-LANGUAGE §16).</p>
 
     <sc-for list="{{ slides }}" as="slide" hint-placeholder-count="5">
       <div data-deck-slide="" data-screen-label="{{ slide.no }}" class="cv-slide-frame" style="border: 1px solid var(--zone-base-edge); box-shadow: var(--elev-2); margin-bottom: 28px;">
         <div class="cv-slide-stage">
           <x-import component-from-global-scope="ConceptVDesignSystem_c8f43c.Slide" archetype="{{ slide.archetype }}" content="{{ slide.content }}" register="{{ register }}" lod="{{ lod }}" density="{{ density }}" surface="slide" style="display:block;width:100%;" hint-size="1280px,720px">Loading slide…</x-import>
         </div>
-        <span style="position: absolute; right: 16px; bottom: 12px; z-index: 3; font: var(--weight-medium,500) var(--fs-caption)/1 var(--font-mono); color: var(--ink-3); letter-spacing: 0.04em;">{{ slide.no }}</span>
+        <span style="position: absolute; right: 16px; bottom: 12px; z-index: 3; font: var(--weight-medium) var(--fs-caption)/1 var(--font-mono); color: var(--ink-3); letter-spacing: 0.04em;">{{ slide.no }}</span>
       </div>
     </sc-for>
 

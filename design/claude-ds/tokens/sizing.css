@@ -13,6 +13,15 @@
    font sizes.
    ============================================================ */
 :root {
+  /* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+  --badge-size: 68px;
+  --dc-inv-zoom: 1;
+  --glyph-d: 44px;
+  --lines: 2;
+  --logo-h: 46px;
+  --pill-max: 22ch;
+  --qr-size: 96px;
+
   /* ---- Fluid type scale — clamp(min, preferred, max) -------- *
      Min protects mobile legibility; max protects desktop from
      over-scaling. Preferred is viewport-relative. Swap the family
@@ -22,6 +31,7 @@
      clamp pairs below are its responsive expression. (analysis REQUIREMENTS B3.) */
   --scale-ratio: 1.25; /* @kind other */
   --scale-base:  16px; /* @kind other */
+  --fs-micro:   clamp(10px, 0.66rem + 0.12vw, 11px); /* @kind other */  /* the referenced-but-undefined micro step (text.css .t-micro); below caption */
   --fs-caption: clamp(11px, 0.70rem + 0.15vw, 13px); /* @kind other */
   --fs-meta:    clamp(12px, 0.78rem + 0.15vw, 14px); /* @kind other */
   --fs-body:    clamp(14px, 0.86rem + 0.25vw, 16px); /* @kind other */
@@ -67,8 +77,12 @@
    OVERFLOW-SAFE UTILITIES
    ============================================================ */
 
-/* Single-line ellipsis. REQUIRES the element (and its flex
-   ancestors) to allow shrinking — see .min0 below. */
+/* Single-line ellipsis. LAST RESORT — for UNCONTROLLED user strings
+   only (filenames, emails, pasted titles). Designed / AI-authored
+   labels must fit their slot's length budget instead (tokens/text.css,
+   behaviour `copy.budgets`) or carry an authored short form — never
+   ship a UI label that needs clipping. REQUIRES the element (and its
+   flex ancestors) to allow shrinking — see .min0 below. */
 .truncate {
   min-width: 0;
   overflow: hidden;
@@ -80,8 +94,8 @@
 .line-clamp {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: var(--lines, 2);
-  line-clamp: var(--lines, 2);
+  -webkit-line-clamp: var(--lines);
+  line-clamp: var(--lines);
   overflow: hidden;
 }
 
@@ -127,7 +141,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--s-1);
-  max-width: var(--pill-max, 22ch);
+  max-width: var(--pill-max);
   min-width: 0;
   flex: 0 1 auto;             /* may shrink, won't grow to fill */
   padding: var(--s-1) var(--s-3);
@@ -146,6 +160,6 @@
    at --col-min wide, then wrap. No media queries needed. */
 .auto-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(var(--col-min, 240px), 100%), 1fr));
+  --col-min: 240px; grid-template-columns: repeat(auto-fill, minmax(min(var(--col-min), 100%), 1fr));
   gap: var(--space-fluid-md);
 }

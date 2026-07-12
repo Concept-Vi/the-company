@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <title>Glyphic System — the compositional model</title>
-<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="../tokens/texture.css">
 <link rel="stylesheet" href="../tokens/motion.css">
 <link rel="stylesheet" href="../axes/motion/motion.css">
@@ -23,28 +23,45 @@
 <script src="../axes/symbol/symbol-axis.js"></script>
 <script src="../assets/icons/cv-meaning.js"></script>
 <script src="../assets/icons/cv-glyphics.js"></script>
+<script src="../app/ai/ai-registry.js"></script>
+<script src="../app/ai/ai-glyphic.js"></script>
+<script src="../app/registry/vars.js"></script>
+<script src="../app/registry/query.js"></script>
+<script src="../app/registry/conditions.js"></script>
+<script src="../app/registry/decorators.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../app/registry/glyphic-type.js"></script>
+<script src="../app/registry/components-type.js"></script>
+<script src="../app/registry/kinds-type.js"></script>
+<script src="../app/registry/views.js"></script>
+<script src="../core/cv-node.js"></script>
+<script src="../app/registry/actions.js"></script>
+<script src="../app/registry/events.js"></script>
+<script src="../app/registry/project.js"></script>
+<script src="../app/ai/ai-studio.js"></script>
+<script src="../assets/brand/root-unity-mark.js"></script>
 <link rel="stylesheet" href="../assets/icons/cv-glyphic.css">
 <style>
   :root { --maxw: 1080px; }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--zone-ground, #FCFAF2);
-    color: var(--fg-primary, #211C14);
-    font-family: var(--font-body, "DM Sans", system-ui, sans-serif);
+    margin: 0; background: var(--zone-ground);
+    color: var(--fg-primary);
+    font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
   }
   .doc { max-width: var(--maxw); margin: 0 auto; padding: 56px 56px 120px; }
 
   /* ---- masthead ---- */
   .mast { display: flex; flex-direction: column; gap: 14px; padding-bottom: 30px; border-bottom: 2px solid var(--accent-gold); margin-bottom: 8px; }
-  .mast .kicker { font: 600 11px/1 var(--font-mono, "JetBrains Mono", monospace); letter-spacing: .22em; text-transform: uppercase; color: var(--accent-bronze); }
-  .mast h1 { margin: 0; font: 800 40px/1.04 var(--font-display, "Sora", sans-serif); letter-spacing: -0.02em; color: var(--fg-primary); }
+  .mast .kicker { font: 600 11px/1 var(--font-mono); letter-spacing: .22em; text-transform: uppercase; color: var(--accent-bronze); }
+  .mast h1 { margin: 0; font: 800 40px/1.04 var(--font-display); letter-spacing: -0.02em; color: var(--fg-primary); }
   .mast .stand { font: 400 16px/1.55 var(--font-body); color: var(--fg-secondary); max-width: 76ch; text-wrap: pretty; }
   .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-  .badge { font: 600 10px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-bronze); background: var(--accent-gold-50, color-mix(in srgb, var(--accent-gold) 14%, transparent)); border: 1px solid color-mix(in srgb, var(--accent-gold) 40%, transparent); border-radius: 999px; padding: 6px 11px; }
+  .badge { font: 600 10px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-bronze); background: var(--accent-gold-50); border: 1px solid color-mix(in srgb, var(--accent-gold) 40%, transparent); border-radius: 999px; padding: 6px 11px; }
 
   section { margin-top: 52px; scroll-margin-top: 30px; }
-  .secnum { font: 700 11px/1 var(--font-mono); letter-spacing: .12em; color: var(--accent-gold-deep, #9F772C); }
+  .secnum { font: 700 11px/1 var(--font-mono); letter-spacing: .12em; color: var(--accent-gold-deep); }
   h2 { margin: 8px 0 4px; font: 700 26px/1.12 var(--font-display); letter-spacing: -0.015em; color: var(--fg-primary); }
   .lede { font: 400 14.5px/1.6 var(--font-body); color: var(--fg-secondary); max-width: 80ch; margin: 10px 0 0; text-wrap: pretty; }
   h3 { margin: 30px 0 10px; font: 700 16px/1.2 var(--font-display); color: var(--fg-primary); letter-spacing: -0.01em; }
@@ -57,13 +74,13 @@
   ul li::before { content: ""; position: absolute; left: 2px; top: 9px; width: 7px; height: 7px; background: var(--accent-gold); border-radius: 1px; transform: rotate(45deg); }
 
   /* ---- verbatim brief ---- */
-  .brief { margin-top: 22px; border-left: 3px solid var(--accent-gold); background: var(--paper, #fff); border-radius: 0 12px 12px 0; padding: 22px 26px; box-shadow: var(--shadow-card, 0 2px 10px rgba(152,128,88,.1)); }
+  .brief { margin-top: 22px; border-left: 3px solid var(--accent-gold); background: var(--paper); border-radius: 0 12px 12px 0; padding: 22px 26px; box-shadow: var(--shadow-card); }
   .brief .by { font: 600 11px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-bronze); margin-bottom: 12px; }
   .brief p { color: var(--fg-primary); font-size: 14px; line-height: 1.66; max-width: none; white-space: pre-wrap; margin: 0; }
 
   /* ---- facet table ---- */
   .facets { margin-top: 22px; display: flex; flex-direction: column; gap: 14px; }
-  .facet { display: grid; grid-template-columns: 120px 1fr; gap: 0; border: 1px solid var(--border-faint, color-mix(in srgb, var(--accent-bronze) 18%, transparent)); border-radius: 14px; overflow: hidden; background: var(--paper); box-shadow: var(--shadow-card, 0 1px 6px rgba(152,128,88,.08)); }
+  .facet { display: grid; grid-template-columns: 120px 1fr; gap: 0; border: 1px solid var(--border-faint); border-radius: 14px; overflow: hidden; background: var(--paper); box-shadow: var(--shadow-card); }
   .facet .demo { background: color-mix(in srgb, var(--accent-gold) 5%, var(--paper)); display: flex; align-items: center; justify-content: center; padding: 16px; border-right: 1px solid var(--border-faint); }
   .facet .demo svg, .facet .demo .stub { display: block; }
   .facet .body { padding: 15px 18px; }
@@ -76,9 +93,9 @@
 
   /* ---- matrices ---- */
   .matrix { margin-top: 18px; display: flex; flex-direction: column; gap: 16px; }
-  .mrow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border-faint, color-mix(in srgb, var(--accent-bronze) 16%, transparent)); }
+  .mrow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border-faint); }
   .mrow .mlabel { width: 158px; flex: none; }
-  .mrow .mlabel .ax { display: block; font: 700 13px/1.2 var(--font-display); color: var(--accent-gold-deep, #9F772C); }
+  .mrow .mlabel .ax { display: block; font: 700 13px/1.2 var(--font-display); color: var(--accent-gold-deep); }
   .mrow .mlabel .lk { display: block; margin-top: 3px; font: 400 10.5px/1.4 var(--font-body); color: var(--fg-muted); }
   .mcells { display: flex; gap: 10px; flex: 1; flex-wrap: nowrap; justify-content: space-between; align-items: center; }
   .mcell { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
@@ -86,12 +103,12 @@
   .mcell.lockend .cap { color: var(--accent-gold-deep); font-weight: 700; }
 
   /* ---- callout ---- */
-  .callout { margin-top: 22px; background: linear-gradient(150deg, var(--accent-gold-50, #FBF1D6), color-mix(in srgb, var(--accent-gold) 7%, var(--paper))); border: 1px solid color-mix(in srgb, var(--accent-gold) 36%, transparent); border-radius: 14px; padding: 20px 24px; }
+  .callout { margin-top: 22px; background: linear-gradient(150deg, var(--accent-gold-50), color-mix(in srgb, var(--accent-gold) 7%, var(--paper))); border: 1px solid color-mix(in srgb, var(--accent-gold) 36%, transparent); border-radius: 14px; padding: 20px 24px; }
   .callout .ctitle { font: 700 14px/1.2 var(--font-display); color: var(--accent-gold-deep); margin: 0 0 8px; letter-spacing: -0.01em; }
   .callout p { color: var(--fg-primary); margin: 0; max-width: none; }
 
   /* ---- code-ish schema block ---- */
-  pre { margin: 16px 0 0; background: var(--fg-primary, #211C14); color: #F3EEDF; border-radius: 12px; padding: 18px 20px; overflow-x: auto; font: 500 12px/1.6 var(--font-mono); }
+  pre { margin: 16px 0 0; background: var(--fg-primary); color: #F3EEDF; border-radius: 12px; padding: 18px 20px; overflow-x: auto; font: 500 12px/1.6 var(--font-mono); }
   pre .k { color: #E0C56A; } pre .s { color: #B7D6A8; } pre .c { color: #8C8472; }
 
   /* ---- research cards ---- */
@@ -511,6 +528,206 @@
     <p class="note">This section tracks an in-flight autonomous build; it updates as each axis lands. The authoritative, detailed scope is <code>analysis/AXIS-REFACTOR.md</code>.</p>
   </section>
 
+  <!-- ============================ 9 · THE COLLAPSE ============================ -->
+  <section data-screen-label="The collapse">
+    <div class="secnum">09 / THE COLLAPSE — ONE UNIT, ONE RELATION, ONE MECHANIC</div>
+    <h2>The endpoint: a Glyphic, a token, a panel, a slide are <i>one thing</i> <span style="color:var(--accent-gold-deep);font-size:0.58em;vertical-align:middle">· UNIFIER BUILT</span></h2>
+    <p class="lede">Your steer, in your words: <b>"every component, every content on a screen is the same fundamental unit as a Glyphic. All tokens, all slots and sockets — one mechanic, one thing, instanced into everything."</b> The earlier sections built the <i>parts</i> of that — the node shape (§5e), the slot/socket grammar (§5c), the axes (§08). This section is the <b>collapse</b>: stop having the registries <i>mirror</i> each other and make them <b>one substrate holding one kind of thing</b>. It is now built as a thin lens + resolver — <code>window.CV_NODE</code> (<code>core/cv-node.js</code>) — that <b>references the four existing homes and copies nothing</b>. Proof harness: <code>_qa/cv-node-test.html</code> (18/18 green).</p>
+
+    <div class="callout">
+      <p class="ctitle">Already true before this section (the 85%)</p>
+      <p>The bones were in place: <code>CV_REGISTRY.normalize()</code> already stamps <b>one node shape</b> on every entry (<code>kind · classification · slots/sockets · valueSlots · parts · conditions · axis · axisValue</code>); <b>slot and socket are already aliases</b>; <code>accepts()</code> already resolves classification-based sockets; <code>CV_COND</code> is a working condition engine; <b>event-sockets and addresses</b> exist (<code>socketInfo</code>); and <code>CV_AXES</code> already declares the deep claim — <b>"tokens are the value-units of an axis."</b> What was missing was the final weld: the three remaining <i>shapes</i> (a Type, an axis value, a glyphic) made demonstrably one, and a single recursive call that runs at every radius.</p>
+    </div>
+
+    <h3>1 · One unit — everything lenses to the same node</h3>
+    <p>A token, an axis value, a glyphic spec, a button, a panel, a slide, a deck all project — via <code>CV_NODE.lens(x)</code> — into the <b>identical shape</b>. A token is a <b>leaf</b> (<code>kind:'token'</code>, the floor of the recursion); the rest are <b>interior</b> nodes. The unity is in the <i>mechanic</i>, not in flattening type: <code>kind</code> still carries the solver and the behaviour, so a token and a deck are the same node but never interchangeable. Live, read straight from the registries on this page:</p>
+    <div class="facets" id="nine-shape" style="margin-top:14px"><!-- injected --></div>
+
+    <h3>2 · One relation — a slot and a socket are one attachment point</h3>
+    <p>You named them well, and the distinction stays useful to authors — but underneath they are identical: an attachment point with an <code>accepts</code>. <b>A socket whose <code>accepts</code> names an axis is a slot</b> (a value/token plugs in); a socket whose <code>accepts</code> names a classification is a socket (a component plugs in). <code>CV_NODE.accepts()</code> / <code>.candidates()</code> take <b>one path that branches only on what <code>accepts</code> names</b> — so "pick a colour for a ring" and "pick a glyphic for a panel region" are the <i>same call</i>. That means one inspector for the whole system, built once.</p>
+    <pre><span class="c">// the SAME two calls, whatever the socket — value or thing</span>
+CV_NODE.candidates(ringFormSlot)      <span class="c">// → form axis values (a value-socket)</span>
+CV_NODE.candidates(panelItemsSocket)  <span class="c">// → the glyphic library  (a thing-socket)</span>
+CV_NODE.accepts(socket, candidate, ctx) <span class="c">// one matcher; conditions gate both via CV_COND</span></pre>
+
+    <h3>3 · One mechanic — resolve fills by address, recurses, dispatches by kind</h3>
+    <p><code>CV_NODE.resolve(node)</code> fills every socket with its occupant <b>by address — never a copy</b> (the §05c anti-drift rule, now extended from tokens to <i>whole components</i>), resolves its parts, and recurses; <code>CV_NODE.render(node)</code> hands the resolved IR to that node's <b>kind solver</b>. <b>token → ring → glyphic → panel → slide → deck is the same call at every radius</b> — the fractal of §05/§5b, made real. CV_NODE invents no renderer: the solvers re-point at the homes that already draw (glyphic → <code>CV_GLYPHIC.compose</code>, token → the axis's <code>resolveCSS</code>, block/surface/doc → <code>__cvRenderType</code>). These four glyphics were drawn on this page <i>through</i> <code>CV_NODE.render</code>:</p>
+    <div class="glyrow" id="nine-glyphs" style="display:flex;gap:18px;align-items:center;margin-top:12px"><!-- injected --></div>
+
+    <div class="callout">
+      <p class="ctitle">What the collapse buys — in your terms</p>
+      <p><b>"Instanced into everything"</b> = a node holds an <b>address</b> to its occupant, never a copy — edit the one home, every instance updates; the anti-drift guarantee you had for tokens now covers entire components. <b>One editor for the whole system</b> — click any socket on anything → the same <code>candidates()</code> library. <b>The foundry generalises</b> from "generate a glyphic" to "generate a node for <i>this</i> socket" — the socket's <code>accepts</code> + <code>conditions</code> <i>are</i> the prompt context.</p>
+    </div>
+
+    <h3>The discipline — so it's depth, not soup (the <code>CLAUDE.md</code> mandate)</h3>
+    <ul>
+      <li><b>One <i>shape</i>, many <i>kinds</i>.</b> The unity lives in the mechanic, not in erasing type. A token and a deck are the same node but never interchangeable — <code>kind</code> carries the solver and behaviour. "Everything is a node" must not flatten meaningful typing.</li>
+      <li><b>Addresses, not copies; loud fail, never silent.</b> <code>resolve()</code> throws on a missing occupant/solver/home rather than degrading — which is exactly what makes instancing <i>safe</i> instead of a tangle.</li>
+      <li><b>The genuinely-hard, still-open part</b> is the <b>recursive resolve + conditions across layers</b> at production depth. <code>accepts()</code> and <code>CV_COND</code> work per-level today and <code>CV_NODE.resolve</code> recurses through parts + addressed sockets — but threading <code>ctx</code> (state/selection/surface) top-to-bottom so a condition deep in a slide reads the deck's state, with no special case per kind, is where the real work and risk remain. That, not the schema, is where to spend the effort.</li>
+    </ul>
+
+    <h3>Build order from here</h3>
+    <div class="steps">
+      <div class="step"><div class="n"></div><div><div class="stitle">The unifier + proof <span style="color:var(--accent-gold-deep)">· BUILT</span></div><p><code>core/cv-node.js</code> (<code>lens · socketsOf · accepts · candidates · resolve · render · solver</code>) + <code>_qa/cv-node-test.html</code> proving ten sources lens to one shape, both socket kinds resolve through one call, and <code>resolve</code> recurses (18/18).</p></div></div>
+      <div class="step"><div class="n"></div><div><div class="stitle">Tokens &amp; axis values as first-class nodes</div><p>Make <code>CV_AXES</code> a <b>query view</b> of token-layer nodes rather than a parallel store, so a token <i>is</i> a node you can resolve, address, and socket — not just a value the lens wraps.</p></div></div>
+      <div class="step"><div class="n"></div><div><div class="stitle">Fold the merged <code>accepts</code> back into the registry</div><p>Promote <code>CV_NODE.accepts</code>'s value+thing merge into <code>CV_REGISTRY.accepts</code> itself so there is one matcher, not a lens wrapping a narrower one.</p></div></div>
+      <div class="step"><div class="n"></div><div><div class="stitle">Thread <code>ctx</code> through <code>resolve</code> for live conditions</div><p>The hard part: a context object (state · selection · surface · axis-dials) flowing top-to-bottom so conditions deep in the tree read ancestor state — one evaluator, every layer.</p></div></div>
+      <div class="step"><div class="n"></div><div><div class="stitle">One inspector + the generalised foundry</div><p>Build the socket inspector once over <code>CV_NODE.candidates</code>; generalise the foundry from "make a glyphic" to "fill any socket." Routed through <code>CV_AI.execute</code>.</p></div></div>
+    </div>
+    <p class="note">This is the welding layer — like <code>RenderType</code> welded the type-system to the engine, <code>CV_NODE</code> welds the four registries into one unit/relation/mechanic. It has no duplicated literals: every value it returns is resolved live from its single home. Mark up the order or the framing — nothing downstream is committed until you've steered it.</p>
+  </section>
+
+  <!-- ============================ 10 · DECORATORS ============================ -->
+  <section data-screen-label="Decorators">
+    <div class="secnum">10 / DECORATORS — THE CROSS-CUTTING VOCABULARY</div>
+    <h2>One vocabulary for every annotation — search, gate, generate, edit <span style="color:var(--accent-gold-deep);font-size:0.58em;vertical-align:middle">· REGISTRY BUILT</span></h2>
+    <p class="lede">Your steer: <b>"a @decorators vocabulary so it's easy to search / find / use — and other things decorators can do — then a registry for it, retrospectively."</b> The system was already full of decorators, scattered and un-named: <code>provenance</code>, <code>classification</code>, <code>tags</code>, <code>zero</code>, <code>optional</code>, <code>conditions</code>, <code>means</code>, <code>axis</code>, and the source <code>@dsCard</code> / <code>@template</code> tags. <code>window.CV_DECORATORS</code> (<code>app/registry/decorators.js</code>) is now their <b>one catalogue</b> — the seventh registry, same shape as the rest. Proof: <code>_qa/decorators-test.html</code> (20/20).</p>
+
+    <div class="callout">
+      <p class="ctitle">Kind vs decorator — the distinction</p>
+      <p>A node's <b>kind</b> answers <i>"what IS this"</i> (glyphic · panel · slide · token). A <b>decorator</b> answers <i>"what is ALSO TRUE of it, or what can it ALSO do."</i> It is a <b>cross-cutting</b> aspect that attaches to many kinds without being part of their structural identity — which is exactly why it deserves its own vocabulary rather than living as ad-hoc fields.</p>
+    </div>
+
+    <h3>Retrospective — the vocabulary lives here, the values do not</h3>
+    <p>This is the anti-drift move (<code>CLAUDE.md</code>): the registry catalogues the <b>vocabulary</b>, but <b>copies no value</b>. Each decorator carries a <code>derive(node)</code> that <i>reads</i> the value from the node's existing single-source field — so a glyphic's <code>classification</code> decorator <b>is the very array</b> on the glyphic Type, not a copy of it. Add a decorator = catalogue an aspect that already exists; never relocate the data.</p>
+    <div class="facets" id="ten-vocab" style="margin-top:14px"><!-- injected: the live vocabulary, grouped --></div>
+
+    <h3>What decorators DO — "other things decorators can do"</h3>
+    <ul>
+      <li><b>Find</b> — every decorator is searchable. <code>CV_DECORATORS.find({decorator:'provenance', value:'vi'})</code> = everything Vi made; <code>{decorator:'classification', value:'glyphic'}</code> = everything that counts as a glyphic; <code>{decorator:'generatable'}</code> = everything Vi can generate. One call, across the whole system.</li>
+      <li><b>Gate</b> — a <code>condition</code> decorator carries a <code>CV_COND</code> rule; <code>run('condition', node, ctx)</code> evaluates it (the one engine).</li>
+      <li><b>Generate</b> — a <code>generatable</code> decorator names a <code>CV_AI</code> capability; its behaviour routes through <code>CV_AI.execute</code> — never the raw model.</li>
+      <li><b>Edit</b> — an <code>editable</code> decorator names the value-slots an inspector should expose; the one inspector reads it instead of hard-coding fields.</li>
+      <li><b>Accept</b> — a socket can <code>requires</code> / <code>forbids</code> decorators (e.g. "only non-experimental things here"); <code>CV_NODE.accepts</code> honours it. Decorators participate in the grammar, not just describe it.</li>
+    </ul>
+    <div id="ten-find" class="research" style="margin-top:14px"><!-- injected: live find() results --></div>
+
+    <div class="callout">
+      <p class="ctitle">The @-tag and the field are one vocabulary</p>
+      <p>The source annotations you've used (<code>@dsCard</code>, <code>@template</code>) and the runtime fields (<code>provenance</code>, <code>classification</code>…) are now <b>the same catalogue</b> — annotation-form decorators on files, field-form decorators on nodes. <code>CV_DECORATORS.parseAnnotations(text)</code> reads the <code>@</code>-tags out of source; <code>decoratorsOf(node)</code> reads the fields off a node. One vocabulary, two surfaces. New aspect = one entry; it's instantly searchable, and (if it's a behaviour) instantly runnable.</p>
+    </div>
+    <p class="note">Built as a registry mirroring the other six (register · resolve · query · subscribe · find · decoratorsOf · applicable · run · parseAnnotations), wired into <code>app/index.html</code>. The natural next step is the <b>one inspector</b> — it reads <code>applicable(node)</code> for the empty slots and <code>decoratorsOf(node)</code> for the present ones, so the same panel edits a token, a glyphic, a panel, or a slide. Mark up the vocabulary — rename, regroup, add aspects I've missed.</p>
+  </section>
+
+  <!-- ============================ 11 · THE STUDIO ============================ -->
+  <section data-screen-label="The Studio">
+    <div class="secnum">11 / THE STUDIO — ONE PROJECTION TO UI AND AI</div>
+    <h2>You click it, or you talk to it — one action layer, one projection <span style="color:var(--accent-gold-deep);font-size:0.56em;vertical-align:middle">· SUBSTRATE BUILT · DEMO LIVE</span></h2>
+    <p class="lede">Your steer: a <b>Studio</b> where you assemble from a library and tools onto a live viewer/editor <i>and</i> talk to it — chat and two-way voice, with tool/verb calls from an actions registry, live context-sharing, variable resolution as one mechanism, and the single node system using <b>the same mechanism to project to both your UI and the AI</b>. That last clause is the whole design. It's built as substrate + a working concept demo (<a href="studio.html">Studio — concept</a>); the full editor is the next build (<code>analysis/STUDIO.md</code>).</p>
+
+    <div class="callout">
+      <p class="ctitle">The thesis: <code>ui = project(node)</code> and <code>tools = project(node)</code> are the same <code>project</code></p>
+      <p>A node already declares everything about itself (§5e/§09: kind · value-slots · sockets · parts · decorators · conditions). Add <b>actions</b> (what can be DONE to it). Then <b>one</b> projection (<code>CV_PROJECT</code>) emits the <b>inspector you click</b> AND the <b>tool schema the AI calls</b> — from the same declaration, with options resolved from the same axes. Clicking, typing, and speaking are three inputs to <b>one action layer</b> (<code>CV_ACTIONS</code>); the viewer re-projects after any of them. They can't drift — a new action or axis-value appears in both at once.</p>
+    </div>
+
+    <h3>The pieces — each a single home, mirroring the rest</h3>
+    <div class="research">
+      <div class="rcard"><h4>CV_VARS — one variable mechanism</h4><div class="file">app/registry/vars.js</div><p>Resolves a value-spec (<code>literal</code> · <code>"{{ path }}"</code> · <code>{var,default}</code> · <code>{ref}</code> · <code>{op,args}</code>) against a context. Used by actions' params, the shared context, projection, and <b>conditions</b> (<code>CV_COND</code> now delegates its path-read here) — so a path means the same thing everywhere.</p></div>
+      <div class="rcard"><h4>CV_ACTIONS — the verbs</h4><div class="file">app/registry/actions.js</div><p>Every "thing the system can DO" is a registered verb: an <code>actionType</code>, variable-resolved <code>params</code>, a per-action <b>Skill</b> (its AI how/when), <code>targets</code>, and a <code>run</code>. <code>applicable(node)</code> filters by classification; <code>invoke()</code> resolves args via CV_VARS then runs. Generative verbs route to <code>CV_AI</code>.</p></div>
+      <div class="rcard"><h4>CV_PROJECT — the one projection</h4><div class="file">app/registry/project.js</div><p><code>toInspector(node)</code> → UI controls; <code>toToolSchema(node)</code> → AI function schema; <code>toContext(state)</code> → the shared context blob. <code>coherent(node)</code> proves the UI action set === the AI tool set.</p></div>
+      <div class="rcard"><h4>Providers · context · command — in CV_AI</h4><div class="file">app/ai/ai-studio.js</div><p>A <b>voice</b> provider + a <b>local-provider</b> pattern (bound via <code>CV_HOST</code> — connect your own); a <b>studio context</b> resolver; and <code>studio.command</code> — instruction → one action call from the live tool schema. No parallel system; entries in the existing AI registry.</p></div>
+    </div>
+
+    <h3>Live proof — the same node, projected two ways</h3>
+    <p>Read live from a Glyphic node on this page: the <b>actions</b> the inspector would show, and the <b>tool functions</b> the AI is handed — the same set, from one source (<code>CV_PROJECT.coherent</code>).</p>
+    <div class="research" style="grid-template-columns:1fr 1fr"><div class="rcard"><h4>→ your UI (inspector)</h4><div id="st-ui" class="file"></div></div><div class="rcard"><h4>→ the AI (tool schema)</h4><div id="st-ai" class="file"></div></div></div>
+    <div class="callout" id="st-coherent" style="margin-top:14px"></div>
+
+    <h3>The loop, and how voice fits</h3>
+    <ul>
+      <li><b>One action layer.</b> A dropdown change, an action button, a typed command, or a voice transcript all become <code>CV_ACTIONS.invoke(action, args, ctx)</code>; args are resolved by <code>CV_VARS</code> against the shared context; the node mutates; the viewer re-projects.</li>
+      <li><b>Context sharing is the same variable mechanism.</b> <code>toContext(state)</code> builds one blob (<code>selection · node · hover · clicks · screen</code>); the AI prompt reads it via the <code>context.studio</code> resolver, actions read it via <code>CV_VARS</code> — one set of paths, both consumers.</li>
+      <li><b>Voice is just a provider.</b> <code>CV_AI.resolveProvider</code> already delegates unknown runtimes to <code>CV_HOST</code>, so <code>voice.openai</code> — or your own local/remote model or voice engine — binds the same way. A transcript feeds the same <code>studio.command</code> → action loop. No separate path; loud-fail until a runtime is connected.</li>
+    </ul>
+
+    <div class="callout">
+      <p class="ctitle">A hardcode I dissolved (the principle in action)</p>
+      <p>You flagged that hardcoding signals a class to dissolve or a capability to build. The <code>generatable</code> decorator had a static <code>kind → capability</code> map; it now <b>queries CV_AI</b> — a capability declares <code>generates: [classifications]</code> as its single source (<code>glyphic.generate</code> declares it produces glyphic/symbol/mark). "What's generatable" is computed, not copied. Logged in <code>analysis/STUDIO.md</code>.</p>
+    </div>
+    <p class="note">Substrate proven: <code>_qa/studio-test.html</code> (22/22) + <code>_qa/cv-node-test.html</code> (18/18) + <code>_qa/decorators-test.html</code> (20/20). The next build is the full editor — a tree of nodes, drag-from-library into sockets, undo as action-inverses, then the live model + voice on this same loop. Plan + carried scope: <code>analysis/STUDIO.md</code>. Steer it there.</p>
+  </section>
+
+  <!-- ============================ 12 · ROOT UNITY ============================ -->
+  <section data-screen-label="Root Unity">
+    <div class="secnum">12 / ROOT UNITY — THE SELF-BUILDING SYSTEM</div>
+    <h2>The system grows itself, by its own verbs — <span id="ru-glyph" style="display:inline-block;vertical-align:middle"></span> <span style="color:var(--accent-gold-deep);font-size:0.56em;vertical-align:middle">· SUBSTRATE BUILT</span></h2>
+    <p class="lede">The whole thing has a name now: <b>Root Unity</b> — <b>√(unit)</b>. Everything is the same one unit; the system is the root from which every instance grows. Your steer for this layer: be able to <b>build more of the concept through the interface itself</b> — identify new layers and distinct parts, declare what slots into what and what rules things follow; have the AI tag and extend the registries, relate things, and <b>select/highlight as a rule</b> (what it's looking at highlights automatically), not as an intentional call. All of it follows the one principle — and where a hardcode was hiding, it's dissolved.</p>
+
+    <div class="callout">
+      <p class="ctitle">Build the backend through the interface — meta-actions</p>
+      <p>The construction verbs are themselves in the actions registry: <code>define-kind</code> (a new distinct part — still the same one unit, like the Glyphic), <code>add-field</code>/tag, <code>relate</code> (what slots into what), <code>define-rule</code> (a condition), <code>define-axis</code>, <code>define-decorator</code>, <code>define-trigger</code>, <code>define-action</code>/<code>define-macro</code>. Each writes to the <b>one home</b> for what it defines. So the system can grow itself — you or Vi invoke a verb, and a new kind / field / relation / rule / dimension appears, composable and projectable at once. Live in the Studio's "Build the backend" panel (<a href="studio.html">studio.html</a>).</p>
+      <div id="ru-metas" class="research" style="grid-template-columns:1fr 1fr;margin-top:14px"></div>
+    </div>
+
+    <div class="callout">
+      <p class="ctitle">Attention → highlight, as a rule (not an intentional call)</p>
+      <p>A new registry — <code>CV_EVENTS</code> (triggers) — binds an <b>event</b> to an <b>action</b> under a condition: <code>{ on, when?, do, args }</code>. The AI doesn't decide to highlight; it just <b>emits where it's looking</b> (<code>emit('ai.focus', {target})</code>), and the declared rule <code>ai.focus → highlight</code> reacts. What Vi is attending to lights up automatically — a rule/event-trigger, exactly as you described. The same bus carries <code>selection.change</code>, <code>hover</code>, <code>action.before/after</code>; anything can emit, anything can trigger. Events compose actions + conditions + variables — no new mechanism.</p>
+    </div>
+
+    <h3>The hardcode you flagged — dissolved as a <i>class</i>, not patched once</h3>
+    <p>You said a hardcode signals a class to dissolve or a capability to build, and that the <code>generatable</code> case is "in many places." So beyond fixing that one, the pattern is named: <code>CV_QUERY</code> — <b>derive-by-query</b>. A relationship is <b>computed by querying the single source that owns the fact</b>, never stored as a map. <code>generatable</code> is now <code>CV_QUERY.relation(node, {from:'ai', field:'generates'})</code> — the capability declares what it <code>generates</code>; the decorator asks. The same one call dissolves every "kind → thing" table across the system, and it's even available as a <code>{query}</code> value-spec in <code>CV_VARS</code>.</p>
+    <div id="ru-query" class="callout" style="margin-top:0"></div>
+
+    <h3>Your earlier ideas, built into the substrate</h3>
+    <ul>
+      <li><b>Undo as action-inverses.</b> Each mutating verb declares its <code>invert(args, result)</code>; <code>CV_ACTIONS.inverse()</code> returns the opposite invocation, so history is free and single-sourced (no separate undo stack of state snapshots). Live in the Studio's Undo button.</li>
+      <li><b>Macros as actions.</b> A recorded chain of invocations is itself a registered action (<code>actionType:'macro'</code>, via <code>define-macro</code>) — a "Skill" that is <i>steps</i>, not a prompt. Invoking it replays the chain through the same <code>invoke</code>.</li>
+      <li><b>Selection as a node</b> (next): a multi-selection is itself a node so actions apply to it uniformly — keeps "everything is the one unit" honest at the interaction layer.</li>
+    </ul>
+
+    <p class="note">Proven: <code>_qa/meta-test.html</code> (19/19) — meta-actions build kind/field/relation/rule/axis/decorator/trigger live; <code>CV_EVENTS</code> turns an emit into a reactive highlight; <code>CV_QUERY</code> dissolves the generatable class; undo-as-inverse and macros-as-actions both run. Mark: <code>system/root-unity-mark.html</code>. Plan + carried scope: <code>analysis/STUDIO.md</code>. New registries this slice: <code>CV_QUERY</code>, <code>CV_EVENTS</code> — the system can now describe, build, and react to itself, all in its own one grammar.</p>
+  </section>
+
+  <!-- ============================ 13 · GENERATION FROM DATA ============================ -->
+  <section data-screen-label="Generation from data">
+    <div class="secnum">13 / GENERATION FROM DATA — VIEWS</div>
+    <h2>Every collection-UI is a live query-projection <span style="color:var(--accent-gold-deep);font-size:0.56em;vertical-align:middle">· BUILT</span></h2>
+    <p class="lede">The derive-by-query idea (§12) generalises all the way up: not just <i>lookups</i> but <b>whole interfaces</b> are generated from data. A <b>view</b> is a node (<code>kind:'view'</code>) whose spec is a <b>query + a projector</b>; <code>CV_PROJECT.toCollection</code> turns it into a live list. So a library, a palette, a menu, a gallery are all <b>generated from the registries, dynamically, with no per-surface code</b> — "the interface is a projection of the registries" made literal. Register a Type, an axis value, an action, a decorator → it appears in the relevant view automatically. Proof: <code>_qa/views-test.html</code> (14/14); live in the Studio's Library panel.</p>
+
+    <div class="callout">
+      <p class="ctitle">A view is a node — generation-from-data, both ways</p>
+      <p>Because a view is itself a node, there is a <b>view of views</b>, and a view can be projected/edited like anything (Root Unity: everything is the one unit). A view's <code>onPick</code> wires each row back to an <b>action</b> — so a palette is <i>assemble-from-library</i>: click a row → <code>CV_ACTIONS.invoke</code>, the same action layer as the inspector and the AI. Data flows <b>in</b> (registry → query → projected rows) and intent flows <b>out</b> (row → action → mutation → re-projection), both registry-driven.</p>
+      <div id="views-live" class="research" style="grid-template-columns:1fr 1fr;margin-top:14px"></div>
+    </div>
+
+    <h3>And I dissolved another hardcode while here</h3>
+    <p>The Studio's chat interpreter had hardcoded vocabularies (lists of forms, motions, textures, fills) that mirrored the axes — the exact class you flagged. They're gone: the interpreter now <b>derives every vocabulary from the axes</b> (<code>CV_AXES.resolve(axis).ids()</code>), so adding a form or motion value needs no edit to the interpreter. Same principle, one more place.</p>
+    <p class="note">New this slice: the <code>view</code> kind + <code>CV_PROJECT.toCollection</code> + seven seed views (form/symbol/colour palettes · the composable-Type library · actions · decorators · a view of views), plus <b>selection-as-node</b> (a selection is a <code>kind:'selection'</code> node so actions apply to it uniformly). Reactivity verified: defining a kind grows the library view with no UI code. Proof: <code>_qa/views-test.html</code>. Next: the full node-tree editor consuming these views as its library/tools rail; live model + voice on the same loop.</p>
+  </section>
+
+  <!-- ============================ 14 · AUDIENCE ============================ -->
+  <section data-screen-label="Audience">
+    <div class="secnum">14 / AUDIENCE — ONE PROJECTION, MANY SURFACES</div>
+    <h2>The same node serves a maker, an author, and the AI <span style="color:var(--accent-gold-deep);font-size:0.56em;vertical-align:middle">· BUILT</span></h2>
+    <p class="lede">An interface dumps everything when it has no notion of <i>who a thing is for</i>. So <b>audience</b> is now a first-class field across the registries — <code>CV_REGISTRY</code>, <code>CV_ACTIONS</code>, <code>CV_DECORATORS</code> each carry <code>audience: [...] | null</code> — and <code>CV_PROJECT</code> filters by the <b>active audience</b>. It is the generalised capability the Studio demanded: instead of hand-hiding developer controls, you <b>tag what a thing is for</b> and the projection does the rest.</p>
+    <div class="callout">
+      <p class="ctitle">Three audiences, one filter</p>
+      <p><b>maker</b> — a regular person shaping a mark; <b>author</b> — someone building the system itself; <b>dev</b> — debug surfaces. <code>null</code> = everyone. The seeded decorators default to <code>['author','dev']</code>, so a maker never sees raw <code>provenance</code>/<code>classification</code>/<code>intrinsic</code> chips; system verbs (<code>select</code>·<code>insert</code>·<code>open</code>·<code>highlight</code>) are author/dev; <code>set-value</code>·<code>generate</code>·<code>remove</code> are for everyone. The Studio's <b>Make / Build</b> toggle is literally this filter made visible — Build reveals the meta-actions, decorators, the AI-tool and Context panes; Make hides them <i>by projection, not by hand</i>.</p>
+    </div>
+    <p class="note">The rule: a thing declares its audience; the projection separates surfaces by the system's own mechanic. The same node is a maker's simple editor, an author's full registry view, and the AI's tool schema — three projections of one declaration. (Codified: <code>DESIGN-LANGUAGE.md</code> §23a; demo: <code>system/studio.html</code>.)</p>
+  </section>
+
+  <!-- ============================ 15 · BEHAVIOURS ============================ -->
+  <section data-screen-label="Behaviours">
+    <div class="secnum">15 / BEHAVIOURS — DATA-DRIVEN MARKS</div>
+    <h2>"When the data says X, the mark looks like Y" <span style="color:var(--accent-gold-deep);font-size:0.56em;vertical-align:middle">· BUILT</span></h2>
+    <p class="lede">A glyphic isn't only authored by hand — when a real system fills it with data, it should <b>react</b>. A <b>behaviour</b> binds a <i>data-field slot</i> (the universal input) to an <i>axis change</i> through a condition: <span style="white-space:nowrap">when <code>status</code> is <code>error</code> → set <code>colour</code> to <code>red</code>.</span> It is the same slot/socket + condition + axis grammar as everything else — no new mechanism, just data flowing into the marks' variable slots.</p>
+    <div class="callout">
+      <p class="ctitle">The unification — behaviours are slots, conditions, axes, events</p>
+      <ul>
+        <li><b>Data-field slots</b> — a glyphic kind declares <code>spec.dataSlots</code> (the columns a system, e.g. Supabase, would populate). These are the variable inputs a behaviour reads; backend-agnostic.</li>
+        <li><b>Condition</b> — evaluated by the one <code>CV_COND</code> engine (human "is / is not / is over / is under" → <code>== != &gt; &lt;</code>).</li>
+        <li><b>Axis change</b> — the "look" half resolves through the axes (colour/form/fill/texture/motion/glow/shadow), the same libraries the inspector edits with.</li>
+        <li><b>Persisted as events</b> — each behaviour registers a <code>CV_EVENTS</code> trigger (<code>on:'data.change'</code>) and is stored on the kind (<code>spec.behaviours</code>), so it <i>travels</i> with the glyphic into real systems.</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <p class="ctitle">Built into the AI by construction</p>
+      <p>Authoring a behaviour and adding a data field are <code>CV_ACTIONS</code> (<code>add-behaviour</code>, <code>add-data-field</code>), so they project into Vi's tool schema via <code>CV_PROJECT.toToolSchema</code> automatically — the Studio's own buttons invoke the <i>same</i> actions. So Vi can author a mark's data-reactions by conversation exactly as a person clicks them: one action layer, one path. (New axes this era: <code>glow</code> and <code>shadow</code>, registered like any other; demo + design: <code>system/studio.html</code> Behaviours tab, <code>DESIGN-LANGUAGE.md</code> §23.)</p>
+    </div>
+    <p class="note">This is the last quarter of the thesis made concrete: a glyphic is one unit that you compose by hand, the AI composes by tool-call, <i>and</i> a live system composes by feeding it data — all through the same slots. The interface, the AI, and the data are three inputs to one node.</p>
+  </section>
+
 </div>
 
 <script>
@@ -563,7 +780,7 @@
     none: null,
     paper:        ['var(--bg-surface)','var(--paper)','var(--paper-2)'],
     bronze:       ['color-mix(in srgb, var(--accent-bronze) 17%, var(--paper))','color-mix(in srgb, var(--accent-bronze) 9%, var(--paper))','var(--paper)'],
-    sage:         ['color-mix(in srgb, var(--accent-communication,#5A8A4A) 18%, var(--paper))','color-mix(in srgb, var(--accent-communication,#5A8A4A) 9%, var(--paper))','var(--paper)'],
+    sage:         ['color-mix(in srgb, var(--accent-communication) 18%, var(--paper))','color-mix(in srgb, var(--accent-communication) 9%, var(--paper))','var(--paper)'],
     ink:          ['color-mix(in srgb, var(--fg-primary) 13%, var(--paper))','color-mix(in srgb, var(--fg-primary) 6%, var(--paper))','var(--paper)'],
     'gold-soft':  ['var(--accent-gold-soft)','var(--accent-gold-50)','var(--accent-gold-soft)'],
     'gold':       ['var(--accent-gold)','var(--accent-gold-soft)','var(--accent-gold)'],
@@ -571,17 +788,17 @@
     // muted brand-hue fills for the Fill walk — each a different colour, low mix toward paper
     'f-gold':   ['color-mix(in srgb, var(--accent-gold) 22%, var(--paper))','color-mix(in srgb, var(--accent-gold) 12%, var(--paper))','var(--paper)'],
     'f-bronze': ['color-mix(in srgb, var(--accent-bronze) 20%, var(--paper))','color-mix(in srgb, var(--accent-bronze) 11%, var(--paper))','var(--paper)'],
-    'f-sage':   ['color-mix(in srgb, var(--accent-communication,#5A8A4A) 20%, var(--paper))','color-mix(in srgb, var(--accent-communication,#5A8A4A) 11%, var(--paper))','var(--paper)'],
-    'f-amber':  ['color-mix(in srgb, var(--status-warning,#C8881F) 20%, var(--paper))','color-mix(in srgb, var(--status-warning,#C8881F) 11%, var(--paper))','var(--paper)'],
-    'f-blue':   ['color-mix(in srgb, var(--status-info,#3E6F9E) 18%, var(--paper))','color-mix(in srgb, var(--status-info,#3E6F9E) 10%, var(--paper))','var(--paper)'],
-    'f-clay':   ['color-mix(in srgb, var(--status-error,#B5482E) 17%, var(--paper))','color-mix(in srgb, var(--status-error,#B5482E) 9%, var(--paper))','var(--paper)'],
+    'f-sage':   ['color-mix(in srgb, var(--accent-communication) 20%, var(--paper))','color-mix(in srgb, var(--accent-communication) 11%, var(--paper))','var(--paper)'],
+    'f-amber':  ['color-mix(in srgb, var(--status-warning) 20%, var(--paper))','color-mix(in srgb, var(--status-warning) 11%, var(--paper))','var(--paper)'],
+    'f-blue':   ['color-mix(in srgb, var(--status-info) 18%, var(--paper))','color-mix(in srgb, var(--status-info) 10%, var(--paper))','var(--paper)'],
+    'f-clay':   ['color-mix(in srgb, var(--status-error) 17%, var(--paper))','color-mix(in srgb, var(--status-error) 9%, var(--paper))','var(--paper)'],
     'f-ink':    ['color-mix(in srgb, var(--fg-primary) 13%, var(--paper))','color-mix(in srgb, var(--fg-primary) 7%, var(--paper))','var(--paper)']
   };
   var COLORS = {
-    bronze:'var(--accent-bronze-2, #7E6539)', gold:'var(--accent-gold, #E0C010)',
-    sage:'var(--accent-communication, #5A8A4A)', warning:'var(--status-warning, #C8881F)',
-    error:'var(--status-error, #B5482E)', info:'var(--status-info, #3E6F9E)',
-    ink:'var(--fg-primary, #211C14)', muted:'var(--fg-muted, #9A8E78)'
+    bronze:'var(--accent-bronze-2)', gold:'var(--accent-gold)',
+    sage:'var(--accent-communication)', warning:'var(--status-warning)',
+    error:'var(--status-error)', info:'var(--status-info)',
+    ink:'var(--fg-primary)', muted:'var(--fg-muted)'
   };
 
   function iconOnly(name, color, size){
@@ -654,6 +871,139 @@
     st[row.field] = row.vals[row.vals.length - 1][0];
   });
   document.getElementById('matrix').innerHTML = html;
+})();
+</script>
+
+<script>
+// §09 — live proof of the collapse, read straight from CV_NODE + the registries
+(function () {
+  var N = window.CV_NODE, R = window.CV_REGISTRY, AX = window.CV_AXES, GL = window.CV_GLYPHIC;
+  if (!N || !R) return;
+
+  // 1 · ONE UNIT — lens several sources; show they share the shape
+  var rows = [];
+  try { rows.push(['a token (axis value)', N.lens(Object.assign({ axis: 'color' }, AX.resolve('color').resolve('gold')))]); } catch (e) {}
+  try { rows.push(['a glyphic spec', N.lens({ form: 'octagon', symbol: 'house', fill: 'wash' })]); } catch (e) {}
+  [['glyphic','a Glyphic (Type)'],['component.button','a Button (Type)'],['panel.composition-menu','a Panel (Type)'],['kind.slide-system','a Slide (Type)']].forEach(function (p) {
+    if (R.get(p[0])) { try { rows.push([p[1], N.lens(p[0])]); } catch (e) {} }
+  });
+  var CANON = ['id','kind','layer','classification','valueSlots','sockets','parts','conditions','payload'];
+  var shapeEl = document.getElementById('nine-shape');
+  if (shapeEl) shapeEl.innerHTML = rows.map(function (r) {
+    var node = r[1], same = CANON.every(function (k) { return k in node; });
+    return '<div class="facet" style="grid-template-columns:1fr"><div class="body">' +
+      '<div class="ftitle"><span class="fname">' + r[0] + '</span><span class="fhome">kind&nbsp;·&nbsp;' + node.kind + '&nbsp;&nbsp;layer&nbsp;·&nbsp;' + node.layer + '</span></div>' +
+      '<p class="fdesc">classified <b>' + (node.classification || []).join(' · ') + '</b></p>' +
+      '<div class="fmeta"><span>canonical node shape&nbsp;&nbsp;<b style="color:' + (same ? '#2F7D4F' : '#B5482E') + '">' + (same ? '✓ identical' : '✗') + '</b></span>' +
+      '<span>value-slots&nbsp;<b>' + Object.keys(node.valueSlots || {}).length + '</b></span>' +
+      '<span>sockets&nbsp;<b>' + Object.keys(node.sockets || {}).length + '</b></span>' +
+      '<span>parts&nbsp;<b>' + Object.keys(node.parts || {}).length + '</b></span></div>' +
+      '</div></div>';
+  }).join('');
+
+  // 3 · ONE MECHANIC — render glyphics THROUGH CV_NODE.render
+  var glyEl = document.getElementById('nine-glyphs');
+  if (glyEl && GL) {
+    var specs = [
+      [{ form: 'circle', symbol: 'check', color: { ring: 'sage', symbol: 'sage' } }, 'token→glyph'],
+      [{ form: 'hex', symbol: 'gear', fill: 'wash' }, 'ring+fill+symbol'],
+      [{ form: 'octagon', symbol: 'house', color: { ring: 'gold', symbol: 'bronze' }, fill: 'tint' }, 'composed'],
+      [{ form: 'none', symbol: 'globe' }, 'symbol alone (0-ring)']
+    ];
+    glyEl.innerHTML = specs.map(function (s) {
+      var out;
+      try { out = N.render(s[0], { opts: { size: 64 } }); } catch (e) { return ''; }
+      return '<div style="display:flex;flex-direction:column;align-items:center;gap:6px">' +
+        '<span class="cv-glyphic ' + (out.motionClass || '') + '" style="display:inline-flex">' + out.svg + '</span>' +
+        '<span style="font:500 9px/1.2 var(--font-mono);color:var(--fg-muted)">' + s[1] + '</span></div>';
+    }).join('');
+  }
+
+  // §10 — the decorator vocabulary + live find(), read from CV_DECORATORS
+  var DEC = window.CV_DECORATORS;
+  if (DEC) {
+    var groups = {};
+    DEC.all().forEach(function (d) { (groups[d.group] = groups[d.group] || []).push(d); });
+    var vocabEl = document.getElementById('ten-vocab');
+    if (vocabEl) vocabEl.innerHTML = Object.keys(groups).map(function (g) {
+      var chips = groups[g].map(function (d) {
+        return '<span style="display:inline-block;font:600 10px/1.4 var(--font-mono);padding:4px 9px;border-radius:999px;background:color-mix(in srgb,var(--accent-gold) 11%,transparent);border:1px solid color-mix(in srgb,var(--accent-gold) 30%,transparent);color:var(--accent-gold-deep)" title="' + (d.description || '').replace(/"/g, '') + '">' + d.id + '</span>';
+      }).join(' ');
+      return '<div class="facet" style="grid-template-columns:1fr"><div class="body"><div class="ftitle"><span class="fname" style="text-transform:capitalize">' + g + '</span><span class="fhome">' + groups[g].length + ' decorators</span></div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">' + chips + '</div></div></div>';
+    }).join('');
+
+    var findEl = document.getElementById('ten-find');
+    if (findEl && R) {
+      var qs = [
+        ['provenance = built-in', { decorator: 'provenance', value: 'built-in' }],
+        ['classification = glyphic', { decorator: 'classification', value: 'glyphic' }],
+        ['generatable (Vi can make)', { decorator: 'generatable' }],
+        ['has conditions (gated)', { decorator: 'condition' }]
+      ];
+      findEl.innerHTML = qs.map(function (q) {
+        var hits = DEC.find(q[1]);
+        return '<div class="rcard"><h4>' + q[0] + '</h4>' +
+          '<div class="file">CV_DECORATORS.find(' + JSON.stringify(q[1]) + ')</div>' +
+          '<p><b>' + hits.length + '</b> matches' + (hits.length ? ' — ' + hits.slice(0, 4).map(function (h) { return h.id; }).join(', ') + (hits.length > 4 ? '…' : '') : '') + '</p></div>';
+      }).join('');
+    }
+  }
+
+  // §11 — the Studio dual projection, read live from CV_PROJECT
+  var PR = window.CV_PROJECT;
+  if (PR) {
+    try {
+      var insp = PR.toInspector('glyphic');
+      var tools = PR.toToolSchema('glyphic');
+      var uiEl = document.getElementById('st-ui'), aiEl = document.getElementById('st-ai');
+      if (uiEl) uiEl.innerHTML = insp.actions.map(function (a) {
+        return '<div style="margin:4px 0"><b style="color:var(--accent-gold-deep)">' + a.verb + '</b> <span style="color:var(--fg-muted)">· ' + a.actionType + '</span></div>';
+      }).join('');
+      if (aiEl) aiEl.innerHTML = tools.map(function (t) {
+        var ps = Object.keys(t.parameters.properties).map(function (k) { return k + (t.parameters.required.indexOf(k) >= 0 ? '*' : ''); }).join(', ');
+        return '<div style="margin:4px 0"><b style="color:var(--accent-gold-deep)">' + t.name + '</b>(' + ps + ')</div>';
+      }).join('');
+      var coh = PR.coherent('glyphic');
+      var cEl = document.getElementById('st-coherent');
+      if (cEl) cEl.innerHTML = '<p class="ctitle">CV_PROJECT.coherent(glyphic) = ' + coh + '</p>' +
+        '<p>The inspector\u2019s ' + insp.actions.length + ' actions and the AI\u2019s ' + tools.length + ' tool functions are the <b>same set, from one source</b>. Add a verb to <code>CV_ACTIONS</code> and it becomes a button <i>and</i> a tool at once \u2014 they cannot drift.</p>';
+    } catch (e) {
+      var cEl2 = document.getElementById('st-coherent'); if (cEl2) cEl2.innerHTML = '<p>' + e.message + '</p>';
+    }
+  }
+
+  // §12 — Root Unity: the mark, the meta-actions, the dissolved hardcode
+  var M = window.CV_ROOT_UNITY_MARK;
+  if (M) { var g = document.getElementById('ru-glyph'); if (g) g.innerHTML = M.svg({ size: 34 }); }
+  var ACTr = window.CV_ACTIONS, Qr = window.CV_QUERY;
+  if (ACTr) {
+    var metasEl = document.getElementById('ru-metas');
+    if (metasEl) metasEl.innerHTML = ACTr.query({ actionType: 'define' }).map(function (a) {
+      return '<div class="rcard"><h4>' + a.verb + '</h4><div class="file">' + a.id + '</div><p>' + (a.description || '') + '</p></div>';
+    }).join('');
+  }
+  if (Qr) {
+    var qEl = document.getElementById('ru-query');
+    try {
+      var rel = Qr.relation(N.lens('glyphic'), { from: 'ai', field: 'generates' });
+      if (qEl) qEl.innerHTML = '<p><code>CV_QUERY.relation(glyphic, {from:\'ai\', field:\'generates\'})</code> &rarr; <b>' + rel + '</b> &mdash; computed by asking the capability what it <code>generates</code>, no stored map. The same call generalises every \u201ckind \u2192 thing\u201d lookup; it\u2019s also a <code>{query}</code> value-spec in <code>CV_VARS</code>.</p>';
+    } catch (e) { if (qEl) qEl.innerHTML = '<p>' + e.message + '</p>'; }
+  }
+
+  // §13 — generation from data: project a couple of views live
+  if (PR && PR.toCollection) {
+    var vEl = document.getElementById('views-live');
+    if (vEl) {
+      var demos = [['view.palette-form', 'a palette generated from the Form axis'], ['view.library', 'the composable-Type library']];
+      vEl.innerHTML = demos.map(function (d) {
+        var rows;
+        try { rows = PR.toCollection(d[0], {}); } catch (e) { return '<div class="rcard"><h4>' + d[0] + '</h4><p>' + e.message + '</p></div>'; }
+        return '<div class="rcard"><h4>' + d[0] + '</h4><div class="file">CV_PROJECT.toCollection · ' + rows.length + ' rows</div>' +
+          '<p>' + d[1] + ' &mdash; ' + rows.slice(0, 6).map(function (r) { return r.label; }).join(', ') + (rows.length > 6 ? '\u2026' : '') + '</p></div>';
+      }).join('');
+    }
+  }
 })();
 </script>
 </body>

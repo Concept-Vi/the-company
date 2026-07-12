@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../styles.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>body{margin:0;padding:24px;background:var(--zone-ground);font-family:var(--font-body)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:24px}
+.cap{font:700 10px/1 var(--font-mono);color:var(--accent-bronze);margin-bottom:6px;display:block}
+.frame{position:relative;border:1px solid var(--zone-base-edge);border-radius:10px;overflow:hidden;box-shadow:var(--elev-2);background:var(--zone-ground)}
+.artboard{width:1100px;transform-origin:top left}</style>
+</head>
+<body>
+<div class="grid" id="arch"></div>
+<div class="grid" id="dgm"></div>
+<script>
+async function boot() {
+  async function load(path) {
+    const txt = await (await fetch(path)).text();
+    const stripped = txt.replace(/^export default .*;?$/gm, "").replace(/^export /gm, "");
+    return Babel.transform(stripped, { presets: ["react"] }).code;
+  }
+  function build(code, name) { return new Function("React", "window", code + "\nreturn " + name + ";")(React, window); }
+  // 1) the single-source catalogue (plain IIFE → sets window.CV_ARCHETYPE_*)
+  (new Function((await (await fetch("../core/archetype-catalog.js")).text())))();
+  // 2) the engine + bridge, in dependency order (each sets its window.__cv* global)
+  const DiagramSolver   = build(await load("../core/DiagramSolver.jsx"),   "DiagramSolver");
+  const ContainmentTree = build(await load("../core/ContainmentTree.jsx"), "ContainmentTree");
+  build(await load("../core/RenderType.jsx"), "RenderType");
+  const Slide = build(await load("../core/Slide.jsx"), "Slide");
+  const e = React.createElement;
+
+  function frameInto(parent, cap, render) {
+    const col = document.createElement("div");
+    col.innerHTML = '<span class="cap">' + cap + '</span>';
+    const f = document.createElement("div"); f.className = "frame";
+    const art = document.createElement("div"); art.className = "artboard"; f.appendChild(art);
+    col.appendChild(f); parent.appendChild(col);
+    render(art);
+    const fit = () => { const s = f.clientWidth / 1100; art.style.transform = "scale(" + s + ")"; f.style.height = (art.offsetHeight * s) + "px"; };
+    requestAnimationFrame(fit); new ResizeObserver(fit).observe(f); setTimeout(fit, 350);
+  }
+
+  // ---- every NEW archetype, from its registered default content ----
+  const CAT = window.CV_ARCHETYPE_CATALOG, META = window.CV_ARCHETYPE_META;
+  const defaultsOf = (k) => { const s = CAT.find(t => t.id === "surface.deck-slide." + k); return (s && s.defaults) || {}; };
+  ["product-cover","product-closing","photo-divider","logo-wall","team","dashboard","reasons","orbital","stacked","spectrum","manifold","fidelity"]
+    .forEach((k) => frameInto(document.getElementById("arch"), k + "  ·  " + (META[k] ? META[k].name : k),
+      (art) => ReactDOM.createRoot(art).render(e(Slide, { archetype: k, content: defaultsOf(k), lod: "full", surface: "slide", density: "compact" }))));
+
+  // ---- the 5 new diagram sub-types, straight to the graph solver ----
+  [
+    ["orbital", { type: "orbital", center: { label: "Property Wizard", shape: "hex" }, verbs: [{ label: "Configure" }, { label: "Output" }, { label: "Update" }, { label: "Upload" }] }],
+    ["stacked", { type: "stacked", nodes: [{ label: "Networks", top: ["Research"], bottom: ["Referrals"] }, { label: "Developers", top: ["Architects"], bottom: ["Designers"] }, { label: "User Portal", shape: "circle" }, { label: "Virtual Tours", shape: "octagon" }, { label: "Sales", top: ["Onsellers"], bottom: ["Subscribers"] }, { label: "Organic", shape: "circle", join: "plus" }] }],
+    ["spectrum", { type: "spectrum", ends: ["Technical", "Non-technical"], segments: [{ label: "Design", at: 0.28 }, { label: "Marketing & sales", at: 0.72 }], cards: [{ label: "Architect SW", at: 0.08 }, { label: "Visualisation", at: 0.34 }, { label: "Rendering", at: 0.62 }, { label: "360° tours", at: 0.9 }], hatch: [0, 0.18] }],
+    ["manifold", { type: "manifold", branches: [{ title: "Architects", value: "$120–210k", label: "AR" }, { title: "Developers", value: "$440–720k", label: "AR" }, { title: "Builders", value: "$215–365k", label: "ARR" }], total: { value: "$1,035,000", label: "ARR in 6-mo pipeline" } }],
+    ["fidelity", { type: "fidelity", steps: [{ label: "Stage 1", text: "Placeholders", inter: "1–2 weeks", image: "grey massing" }, { label: "Stage 2", text: "Some elements defined", inter: "Revision", image: "part-textured" }, { label: "Stage 3", text: "High detail", inter: "Revision", image: "full render" }, { label: "Marketing", text: "Renders + collateral", image: "hero kitchen" }] }],
+    ["hub (regression)", { type: "hub", center: "Vi", nodes: [{ id: "Vi", shape: "diamond", tone: "active" }, { id: "Portal", label: "Portal", shape: "circle" }, { id: "Wizard", label: "Wizard", shape: "hex" }, { id: "Hubs", label: "Hubs", shape: "octagon" }], edges: ["Portal", "Wizard", "Hubs"].map(t => ({ from: "Vi", to: t, kind: "flow" })) }],
+  ].forEach(([cap, graph]) => frameInto(document.getElementById("dgm"), cap, (art) => ReactDOM.createRoot(art).render(e(DiagramSolver, { graph }))));
+
+  window.__ready = true;
+}
+boot().catch(err => { document.body.innerHTML = '<pre style="color:red;white-space:pre-wrap">' + err.stack + '</pre>'; });
+</script>
+</body>
+</html>

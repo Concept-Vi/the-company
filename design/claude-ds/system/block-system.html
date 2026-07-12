@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Block System" name="Block System — containers as the universal component" subtitle="The living spec: a BLOCK = ground + material surface (glass·velum·parchment·stone) + depth coordinate + ordered content/action sockets holding typed occupants — pages are compositions of blocks, every surface and every word below produced by resolutions" viewport="1180x3400" -->
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Block System — containers as the universal component</title>
+<link rel="stylesheet" href="../styles.css"/>
+<link rel="stylesheet" href="../assets/icons/cv-glyphic.css"/>
+<script src="../axes/axis-core.js"></script>
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/space/space-axis.js"></script>
+<script src="../axes/size/size-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../axes/form/form-axis.js"></script>
+<script src="../axes/symbol/symbol-axis.js"></script>
+<script src="../axes/material/material-axis.js"></script>
+<script src="../axes/flow/flow-axis.js"></script>
+<script src="../axes/level/level-axis.js"></script>
+<script src="../axes/density/density-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+<script src="../app/registry/vars.js"></script>
+<script src="../app/registry/query.js"></script>
+<script src="../app/registry/conditions.js"></script>
+<script src="../app/registry/decorators.js"></script>
+<script src="../app/registry/types-core.js"></script>
+<script src="../app/registry/glyphic-type.js"></script>
+<script src="../app/registry/views.js"></script>
+<script src="../core/cv-node.js"></script>
+<script src="../app/registry/actions.js"></script>
+<script src="../app/registry/events.js"></script>
+<script src="../app/registry/project.js"></script>
+<script src="../app/registry/inspector.js"></script>
+<script src="../app/registry/block-type.js"></script>
+<script src="../app/registry/text-type.js"></script>
+<style>
+  *{ box-sizing: border-box; }
+  body{ margin: 0; background: var(--bg-canvas); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .wrap{ max-width: 1080px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-16); position: relative; z-index: 1; }
+
+  .eyebrow{ display: inline-flex; align-items: center; gap: 9px; font: 700 var(--fs-micro)/1 var(--font-body);
+    letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--accent-bronze); }
+  .eyebrow::before{ content: ""; width: 20px; height: 1px; background: var(--accent-gold); }
+  h1{ font: 700 var(--fs-h1)/1.1 var(--font-display, var(--font-body)); letter-spacing: var(--tracking-tight); margin: var(--s-3) 0 var(--s-3); }
+  h1 em{ font-style: italic; color: var(--accent-bronze); }
+  h2{ font: 650 var(--fs-h3)/1.2 var(--font-display, var(--font-body)); letter-spacing: var(--tracking-snug); margin: var(--s-9) 0 var(--s-2); }
+  .lede, p{ font-size: var(--fs-body); color: var(--ink-2); line-height: 1.6; max-width: 72ch; }
+  .lede{ font-size: var(--fs-h4); }
+  code{ font-family: var(--font-mono); font-size: 0.85em; background: color-mix(in oklch, var(--ink) 8%, transparent); padding: 1px 5px; border-radius: var(--r-xs); }
+  .mono{ font-family: var(--font-mono); font-size: 0.9em; color: var(--accent-bronze); }
+
+  table{ width: 100%; border-collapse: collapse; font-size: var(--fs-caption); margin-top: var(--s-4); }
+  th{ text-align: left; font: 600 var(--fs-micro)/1 var(--font-mono); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--ink-4); padding: var(--s-2) var(--s-3); }
+  td{ padding: var(--s-2) var(--s-3); border-top: 1px solid color-mix(in oklch, var(--ink) 10%, transparent); color: var(--ink-2); vertical-align: top; }
+  td b{ color: var(--ink); font-weight: 600; }
+
+  /* the dials lay out by ACCOMMODATING math: flex rows always fill (items
+     grow), so no empty tracks; buttons grow to fill their rail, so no blank
+     tail inside it. Blank space is as illegal as clipped text. */
+  .dials{ display: flex; flex-wrap: wrap; gap: var(--s-4) var(--s-5); align-items: start; margin: var(--s-5) 0; padding: var(--s-4); }
+  .dial{ flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: var(--s-2); }
+  .dial.wide{ flex-basis: 100%; }
+  .dial > label{ font: 600 var(--fs-micro)/1 var(--font-body); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--ink-3); }
+  .segbtns{ display: flex; flex-wrap: wrap; min-width: 0; gap: var(--s-1); padding: var(--s-1); border-radius: var(--r-md);
+    background: color-mix(in oklch, var(--ink) 6%, transparent); border: 1px solid color-mix(in oklch, var(--ink) 8%, transparent); }
+  .segbtns button{ flex: 1 1 auto; min-width: 0; text-align: center; font: 600 var(--fs-meta) var(--font-body); padding: 5px var(--s-3); border-radius: var(--r-sm);
+    border: 0; background: transparent; color: var(--ink-3); cursor: pointer; white-space: nowrap; }
+  .segbtns button.on{ color: var(--ink); background: color-mix(in oklch, var(--ink) 11%, transparent); }
+
+  #stage{ position: relative; border-radius: var(--r-2xl); overflow: hidden;
+    background: var(--bg-canvas); border: 1px solid color-mix(in oklch, var(--ink) 12%, transparent); }
+  #stage .field{ position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  #stage .field span{ position: absolute; border-radius: 50%; filter: blur(80px); opacity: .32; }
+  #stage .field .a{ width: 40%; aspect-ratio: 1; left: -8%; top: -14%; background: radial-gradient(circle, var(--accent-gold), transparent 70%); }
+  #stage .field .b{ width: 36%; aspect-ratio: 1; right: -6%; bottom: -16%; background: radial-gradient(circle, var(--accent-bronze-warm), transparent 70%); }
+
+  .b-num{ font-size: var(--fs-h3); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: var(--tracking-tight); color: var(--ink); }
+  .occ-row{ display: flex; align-items: center; gap: var(--s-2); position: relative; z-index: 1; }
+  .occ-glyphic{ width: 30px; height: 30px; flex: none; display: grid; place-items: center; }
+  .occ-glyphic svg{ width: 100%; height: 100%; }
+  .coord{ position: absolute; top: 4px; right: 8px; z-index: 3; font: 600 9px/1.6 var(--font-mono); color: var(--accent-bronze);
+    background: color-mix(in oklch, var(--zone-ground) 80%, transparent); padding: 0 6px; border-radius: var(--r-pill);
+    opacity: 0; pointer-events: none; }
+  #stage.show-coords .coord{ opacity: 1; }
+  .log{ font: 500 var(--fs-micro)/1.7 var(--font-mono); color: var(--ink-3); padding: var(--s-3) var(--s-4);
+    margin-top: var(--s-4); border-radius: var(--r-lg); background: color-mix(in oklch, var(--ink) 5%, transparent); min-height: 2.2em; }
+  .log b{ color: var(--accent-gold); }
+  #inspector{ margin-top: var(--s-4); }
+  .insp-err{ font: 500 var(--fs-caption)/1.5 var(--font-mono); color: var(--zone-reject-ink); padding: var(--s-3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="eyebrow">The container universal component</span>
+  <h1>Blocks — the <em>tangible units</em> of zones</h1>
+  <p class="lede">The Glyphic proved the grammar for marks: parts · slots · sockets, every value resolved from an axis. The <b>Block</b> is the same grammar for containers — what glyphics, typed text, and every primitive live <i>inside</i>. A block has a <b>ground</b> (the plane behind it, texture from the full texture axis), a material <b>surface</b> (glass, velum, parchment, stone — or none), a <b>coordinate in depth</b> (the level axis: the containment ladder, which <i>derives</i> the depth treatment and the spacing rhythm), <b>ordered sockets</b> holding <b>typed occupants</b>, and <b>action sockets</b> (verbs from the actions registry). Whole pages are compositions of blocks; every surface <i>and every word</i> below is produced by resolutions of the one operation.</p>
+
+  <h2>The grammar — projected live from the registry</h2>
+  <p>This table is not written here: it is <code>CV_NODE.socketsOf(CV_BLOCK.type())</code> — the spec page reads the same single source every editor reads.</p>
+  <div id="grammar"></div>
+
+  <h2>The ladder — coordinates in depth</h2>
+  <p>The <b>level axis</b>: <span id="ladder" class="mono"></span>. Each rung derives the material depth-modifier <i>and</i> its spacing rhythm (deeper breathes tighter) — read off the coordinate, never styled by hand.</p>
+
+  <h2>One page, resolved</h2>
+  <p>Every surface class, attribute, layout, <i>and text node</i> on the stage comes from resolutions — <code>CV_BLOCK.chrome()</code> for surfaces and arrangement, the <code>text</code> and <code>glyphic</code> solvers for occupants. Switch the dials and the same composition re-resolves.</p>
+
+  <div class="dials material contain" data-material="glass" id="dialsPanel">
+    <div class="dial"><label>Surface material</label><div class="segbtns" id="d-mat"></div></div>
+    <div class="dial"><label>Density</label><div class="segbtns" id="d-density"></div></div>
+    <div class="dial"><label>Theme</label>
+      <div class="segbtns" id="d-theme"><button data-v="light">Light</button><button data-v="dim">Dim</button><button data-v="dark" class="on">Dark</button><button data-v="contrast">Contrast</button></div>
+    </div>
+    <div class="dial"><label>Coordinates</label>
+      <div class="segbtns" id="d-coord"><button data-v="off" class="on">Hidden</button><button data-v="on">Shown</button></div>
+    </div>
+    <div class="dial wide"><label>Ground texture (texture axis)</label><div class="segbtns" id="d-ground"></div></div>
+  </div>
+
+  <div id="stage"><div class="field"><span class="a"></span><span class="b"></span></div></div>
+  <div class="log" id="log">Click the gold action in the Vi panel — its <code>primary</code> socket holds a CV_ACTIONS verb.</div>
+
+  <h2>The one inspector, over a block</h2>
+  <p>The same universal inspector that edits a glyphic edits a block — <code>CV_INSPECTOR.mount()</code> over the Vi panel instance below. Change its level, material, or tint and the stage re-resolves. No block-specific editor code exists.</p>
+  <div id="inspector" class="material contain keyline" data-material="glass"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var B = window.CV_BLOCK, N = window.CV_NODE, AX = window.CV_AXES, ACT = window.CV_ACTIONS, GL = window.CV_GLYPHIC;
+  if (!B || !N) { document.getElementById('grammar').textContent = 'Registries failed to load.'; return; }
+  B.ensureSolver();
+  if (window.CV_REGISTRY.text) window.CV_REGISTRY.text.ensureSolver();
+
+  // ---- grammar table: a PROJECTION of the registry ------------------------
+  var t = B.type();
+  var rows = B.orderedSockets().map(function (s) {
+    return '<tr><td><b>' + s.name + '</b> <span class="mono">#' + (s.order || '–') + '</span></td>' +
+      '<td>' + (Array.isArray(s.accepts) ? s.accepts.join(' · ') : (s.accepts || '—')) + (s.event ? ' <span class="mono">event</span>' : '') + '</td>' +
+      '<td>' + (s.means || s.label || '') + '</td></tr>';
+  });
+  var slotRows = Object.keys(t.valueSlots).map(function (k) {
+    var s = t.valueSlots[k];
+    var vocab = s.axis ? ('axis: <span class="mono">' + s.axis + '</span>') : ('values: <span class="mono">' + (s.values || []).join(' · ') + '</span>');
+    return '<tr><td><b>' + k + '</b></td><td>' + vocab + '</td><td>' + (s.means || '') + '</td></tr>';
+  });
+  document.getElementById('grammar').innerHTML =
+    '<table><tr><th>Socket (ordered)</th><th>Accepts</th><th>Means</th></tr>' + rows.join('') + '</table>' +
+    '<table style="margin-top:var(--s-5)"><tr><th>Value slot</th><th>Vocabulary (live)</th><th>Means</th></tr>' + slotRows.join('') + '</table>';
+  document.getElementById('ladder').textContent = B.levels().map(function (l) { return l.id + '(' + l.rank + ' · keyline ' + l.keyline + ')'; }).join(' → ');
+
+  // ---- dial options: resolved live from the axes ---------------------------
+  function fillSeg(id, ids, on, short) {
+    var seg = document.getElementById(id);
+    ids.forEach(function (v) {
+      var b = document.createElement('button');
+      b.dataset.v = v; b.textContent = short ? v.slice(0, 5) : (v.charAt(0).toUpperCase() + v.slice(1));
+      if (v === on) b.classList.add('on');
+      seg.appendChild(b);
+    });
+  }
+  fillSeg('d-mat', AX.resolve('material').ids().filter(function (v) { return v !== 'none'; }), AX.resolve('material').default());
+  fillSeg('d-ground', AX.resolve('texture').ids(), 'none', true);
+  fillSeg('d-density', AX.resolve('density').ids(), AX.resolve('density').default());
+
+  // ---- the page spec: ONE persistent composition (typed occupants as data) --
+  function text(role, value) { return { occupant: 'text', role: role, value: value }; }
+  function glyphic(symbol, form) { return { occupant: 'glyphic', symbol: symbol, form: form }; }
+  function card(name, tint, sym, num, lbl) {
+    return { name: name, level: 'card', tint: tint,
+      sockets: { body: [ { occupant: 'row', items: [glyphic(sym, 'hex'), text('micro', name.replace('card-', ''))] },
+                         { occupant: 'num', value: num }, text('desc', lbl) ] } };
+  }
+  var PAGE = {
+    name: 'page', level: 'page', material: 'none', groundTexture: 'none',
+    sockets: { body: [
+      { name: 'top', level: 'region',
+        sockets: { body: [ { occupant: 'row', items: [text('title', 'Atlas Pipeline'), text('desc', 'a page of blocks — every word a typed occupant')] } ] } },
+      { name: 'main', level: 'region', material: 'none', arrange: 'split', cols: '1fr 300px',
+        sockets: { body: [
+          { name: 'pipe', level: 'panel',
+            sockets: { body: [
+              text('title', 'Stages'),
+              { name: 'stages', level: 'region', material: 'none', arrange: 'flow', count: 3, flow: 'wrap', gap: 's3',
+                sockets: { body: [
+                  card('card-source', 'source', 'database', '24', 'datasets ingested'),
+                  card('card-review', 'review', 'eye', '7', 'awaiting sign-off'),
+                  card('card-ready', 'success', 'check-square', '12', 'approved to ship'),
+                ] } },
+            ] } },
+          { name: 'vi', level: 'panel', tint: 'vi',
+            primary: { action: 'open', label: 'Promote 3', address: 'promotion-review' },
+            sockets: { body: [
+              text('title', 'Vi'),
+              text('desc', '3 datasets in review have passed all checks. Promote them to ready.'),
+              { name: 'note', level: 'well',
+                sockets: { body: [ text('desc', 'Bounce on crm_export.json spiked 18% — likely schema drift.') ] } },
+            ] } },
+        ] } },
+    ] },
+  };
+  var state = { material: AX.resolve('material').default() };
+  function applyMaterial(node) {
+    if (node.material !== 'none') node.material = state.material;
+    ((node.sockets && node.sockets.body) || []).forEach(function (c) { if (c && !c.occupant) applyMaterial(c); });
+  }
+
+  // ---- occupant renderers: EVERYTHING through resolution --------------------
+  function renderOccupant(occ) {
+    if (occ.occupant === 'text') {
+      var r = N.render('text', { spec: occ });                    // ← the text solver
+      var el = document.createElement(r.tag);
+      el.className = r.classes.join(' ');
+      Object.keys(r.style || {}).forEach(function (k) { el.style.setProperty(k, r.style[k]); });
+      el.textContent = r.text;
+      el.style.position = 'relative'; el.style.zIndex = '1';
+      return el;
+    }
+    if (occ.occupant === 'glyphic') {
+      var host = document.createElement('span');
+      host.className = 'occ-glyphic';
+      try {
+        var g = GL ? GL.compose({ symbol: occ.symbol, form: occ.form }, { size: 30 }) : null;  // ← the glyphic solver's engine
+        if (g == null) throw new Error('CV_GLYPHIC not loaded');
+        if (typeof g === 'string') host.innerHTML = g;
+        else if (g.svg) host.innerHTML = g.svg;
+        else if (g.nodeType) host.appendChild(g);
+        else throw new Error('unexpected compose() result');
+      } catch (e) { host.textContent = '⚠ ' + e.message; }
+      return host;
+    }
+    if (occ.occupant === 'row') {
+      var row = document.createElement('div'); row.className = 'occ-row';
+      (occ.items || []).forEach(function (i) { row.appendChild(renderOccupant(i)); });
+      return row;
+    }
+    if (occ.occupant === 'num') {
+      var n = document.createElement('div'); n.className = 'b-num'; n.textContent = occ.value;
+      n.style.position = 'relative'; n.style.zIndex = '1';
+      return n;
+    }
+    var err = document.createElement('div'); err.className = 'insp-err'; err.textContent = 'unknown occupant "' + occ.occupant + '"';
+    return err;
+  }
+
+  // ---- render: EVERY block = one chrome() resolution ------------------------
+  function build(node, parentPath) {
+    var path = parentPath ? parentPath + '/' + node.name : node.name;
+    var c = B.chrome(node);                                        // ← THE resolution
+    var el = document.createElement(c.tag);
+    el.setAttribute('data-block', node.level);
+    el.setAttribute('data-path', path);
+    el.className = c.classes.join(' ');
+    Object.keys(c.attrs).forEach(function (k) { el.setAttribute(k, c.attrs[k]); });
+    Object.keys(c.style).forEach(function (k) { el.style.setProperty(k, c.style[k]); });
+    el.style.position = 'relative';
+    ((node.sockets && node.sockets.body) || []).forEach(function (k) {
+      el.appendChild(k && k.occupant ? renderOccupant(k) : build(k, path));
+    });
+    if (node.primary && ACT) {
+      var btn = document.createElement('button');
+      btn.className = 'cv-btn cv-btn--primary cv-btn--sm';
+      btn.style.position = 'relative'; btn.style.zIndex = '1'; btn.style.justifySelf = 'start';
+      btn.textContent = node.primary.label;
+      btn.addEventListener('click', function () {
+        var res = ACT.invoke(node.primary.action, { address: node.primary.address }, { state: {} });
+        document.getElementById('log').innerHTML = 'socket <b>primary</b> → <b>action:' + node.primary.action + '</b> invoked → ' + JSON.stringify(res);
+      });
+      btn.setAttribute('data-socket', 'primary');
+      el.appendChild(btn);
+    }
+    return el;
+  }
+
+  function render() {
+    applyMaterial(PAGE);
+    var stage = document.getElementById('stage');
+    stage.querySelectorAll('[data-block]').forEach(function (el) { el.remove(); });
+    var root = build(PAGE, null);
+    root.style.position = 'relative'; root.style.zIndex = '1';
+    stage.appendChild(root);
+    var byPath = {};
+    B.walk(PAGE, function (node, coord) { byPath[coord.path] = coord; });
+    stage.querySelectorAll('[data-path]').forEach(function (el) {
+      var c = byPath[el.getAttribute('data-path')];
+      if (!c) return;
+      var tag = document.createElement('span');
+      tag.className = 'coord'; tag.textContent = c.path + ' · d' + c.depth;
+      el.appendChild(tag);
+    });
+  }
+
+  // ---- the one inspector over the Vi panel instance -------------------------
+  function mountInspector() {
+    var host = document.getElementById('inspector');
+    if (!window.CV_INSPECTOR) { host.innerHTML = '<div class="insp-err">CV_INSPECTOR failed to load.</div>'; return; }
+    var viNode = PAGE.sockets.body[1].sockets.body[1];             // the Vi panel spec (live object)
+    viNode.kindId = 'block';
+    try {
+      window.CV_INSPECTOR.mount(host, { node: viNode, typeId: 'block', onChange: function () { render(); } });
+    } catch (e) {
+      host.innerHTML = '<div class="insp-err">inspector: ' + e.message + '</div>';
+    }
+  }
+
+  // ---- dials ---------------------------------------------------------------
+  function seg(id, fn) {
+    document.getElementById(id).addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      Array.prototype.forEach.call(this.children, function (x) { x.classList.toggle('on', x === b); });
+      fn(b.dataset.v);
+    });
+  }
+  seg('d-mat', function (v) { state.material = v; document.getElementById('dialsPanel').setAttribute('data-material', v); render(); });
+  seg('d-ground', function (v) { PAGE.groundTexture = v; render(); });
+  seg('d-density', function (v) { PAGE.density = v; document.documentElement.setAttribute('data-density', v); render(); });
+  seg('d-theme', function (v) { document.documentElement.setAttribute('data-theme', v); });
+  seg('d-coord', function (v) { document.getElementById('stage').classList.toggle('show-coords', v === 'on'); });
+
+  render();
+  mountInspector();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>glyphic test</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="../assets/icons/cv-icons.js"></script>
+<script src="../assets/icons/cv-vi-glyph.js"></script>
+<script src="../assets/icons/cv-shapes.js"></script>
+<!-- the axes are the SINGLE SOURCE for fill/texture/motion/depth/colour vocab;
+     cv-glyphics loud-fails without them (no duplicate fallback lists). -->
+<script src="../axes/axis-core.js"></script>
+<script src="../axes/color/color-axis.js"></script>
+<script src="../axes/motion/motion-axis.js"></script>
+<script src="../axes/texture/texture-axis.js"></script>
+<script src="../axes/depth/depth-axis.js"></script>
+<script src="../axes/fill/fill-axis.js"></script>
+<script src="../assets/icons/cv-meaning.js"></script>
+<script src="../assets/icons/cv-glyphics.js"></script>
+</head><body style="background:#FCFAF2;padding:24px;font-family:monospace">
+<div id="out"></div>
+<div id="render" style="display:flex;gap:14px;margin-top:20px"></div>
+<script>
+var log = [];
+function t(label, v){ log.push(label + ' → ' + JSON.stringify(v)); }
+t('MEANING active', CV_MEANING.active);
+t('MEANING form hex', CV_MEANING.meaningOf('form','hex'));
+t('MEANING color values', Object.keys(CV_MEANING.valuesFor('color')));
+t('MEANING token for active', CV_MEANING.tokenForValue('active'));
+t('GL colorForValue warning', CV_GLYPHIC.colorForValue('warning'));
+// load an alternate context profile + switch
+CV_MEANING.load({ id:'process-map', label:'Process map', bindings:{ color:{ active:{token:'blue',meaning:'current step'}, positive:{token:'sage',meaning:'done'} } } });
+CV_MEANING.use('process-map');
+t('after switch, token for active', CV_MEANING.tokenForValue('active'));
+CV_MEANING.use('conceptv-default');
+t('switched back', CV_MEANING.tokenForValue('active'));
+t('symbols are NOT meaning facet (expect throw)', (function(){ try { CV_MEANING.valuesFor('symbol'); return 'NO THROW (bug)'; } catch(e){ return 'threw ok'; } })());
+t('form values', CV_GLYPHIC.valuesOf('form').length + ' incl none='+(CV_GLYPHIC.valuesOf('form')[0]));
+t('texture values', CV_GLYPHIC.valuesOf('texture'));
+t('meaningOf hex', CV_GLYPHIC.meaningOf('hex'));
+t('validate good', CV_GLYPHIC.validate({form:'octagon',symbol:'globe'}));
+t('validate bad', CV_GLYPHIC.validate({form:'nonagon',symbol:'nope',texture:'plaid'}));
+t('symbols domain=property', CV_GLYPHIC.symbols({domain:'property'}));
+t('symbols kind=action count', CV_GLYPHIC.symbols({kind:'action'}).length);
+t('search drone', CV_GLYPHIC.symbols('aerial'));
+document.getElementById('out').innerHTML = log.map(l=>'<div>'+l+'</div>').join('');
+// render a few composed glyphics
+var specs = [
+  {form:'circle',symbol:'person',fill:'paper',color:{ring:'gold',symbol:'bronze'}},
+  {form:'octagon',symbol:'globe',value:'positive'},
+  {form:'octagon',symbol:'globe',value:'warning'},
+  {form:'octagon',symbol:'globe',value:'error'},
+  {form:'none',symbol:'drone',color:{symbol:'ink'}},
+  {form:'diamond',symbol:'atom',fill:'tint',color:{ring:'blue',symbol:'ink'},depth:'d5',motion:'glow'},
+];
+document.getElementById('render').innerHTML = specs.map(s=>CV_GLYPHIC.render(s,{size:72})).join('');
+window.__test = { log: log, rendered: document.getElementById('render').children.length };
+</script>
+</body></html>

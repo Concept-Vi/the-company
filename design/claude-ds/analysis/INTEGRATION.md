@@ -99,5 +99,5 @@ The token rule generalises: **one registry home per concept; consumers hold refe
 
 > Net (all four registries): there is exactly one home for every value, type, archetype, move,
 > provider, and the voice. Everything else references it. Change the home → it propagates everywhere.
-> That is the whole system: **`design = f(content, axisPosition)` and `ai = f(capability, context, params)`,
+> That is the whole system: **`design = f(content, axis)` and `ai = f(capability, context, params)`,
 > both computed from registries that have no duplicated literals to drift from.**
