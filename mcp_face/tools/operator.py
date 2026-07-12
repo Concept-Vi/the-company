@@ -12,7 +12,7 @@ from mcp.types import ToolAnnotations    # posture="safe" → remote.py:_tool_po
 
 def register(mcp, suite):
     # READ-ONLY on this face — operator-memory reads only (rules/describe/proposed); no write op. Client-safe.
-    @mcp.tool(annotations=ToolAnnotations(posture="safe"))
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False, posture="safe"))
     def operator(op: Literal["rules", "describe", "proposed"], rule: str = "") -> dict:
         """READ THE SYSTEM'S MEMORY OF ITS OPERATOR (Tim) — the confirmed rules for working with him,
         each carrying his verbatim words as evidence. IF YOU ARE ABOUT TO INTERACT WITH TIM, SURFACE

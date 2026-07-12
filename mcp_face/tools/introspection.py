@@ -103,7 +103,7 @@ def register(mcp, suite):
     discovery loop — no server.py edit required (S5 / the file-drop contract)."""
 
     # READ-ONLY across every op (list/get/search/describe/snapshot — all read the in-memory registry). Client-safe.
-    @mcp.tool(annotations=ToolAnnotations(posture="safe"))
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False, posture="safe"))
     def capability(
         op: Literal["list", "get", "search", "describe", "snapshot"],
         id: str = "",

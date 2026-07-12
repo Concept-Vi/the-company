@@ -15,7 +15,7 @@ from mcp.types import ToolAnnotations    # posture="safe" → remote.py:_tool_po
 
 def register(mcp, suite):
     # READ-ONLY across every op (query/list/find/read/neighbours/determine — all reads, no writes). Client-safe.
-    @mcp.tool(annotations=ToolAnnotations(posture="safe"))
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False, posture="safe"))
     def corpus(op: Literal["query", "list", "find", "read", "neighbours", "determine"], project: str = "", kind: str = "", projection: str = "",
                source_address: str = "", address: str = "", text: str = "", space: str = "",
                k: int = 8, rerank: bool = False, top_n: int = 0, emb: str = "pplx", min_score: float = 0.0,
