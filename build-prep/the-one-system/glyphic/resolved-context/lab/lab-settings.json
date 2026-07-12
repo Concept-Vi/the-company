@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/resolver.sh\"" } ] }
+    ],
+    "SessionStart": [
+      { "matcher": "compact",
+        "hooks": [ { "type": "command", "command": "echo 'POST-COMPACT RE-INJECTION: standing context survives the boundary (marker CTXLAB-COMPACT-OK).' && bash \"$CLAUDE_PROJECT_DIR/resolver.sh\"" } ] },
+      { "matcher": "resume",
+        "hooks": [ { "type": "command", "command": "echo 'RESUME RE-INJECTION: (marker CTXLAB-RESUME-OK).' && bash \"$CLAUDE_PROJECT_DIR/resolver.sh\"" } ] }
+    ]
+  }
+}

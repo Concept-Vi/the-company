@@ -25,13 +25,17 @@
       reversible one-drop, idempotent); flagged honestly here.
 
 ## C2 · SLICE-S1 — turn-resolution live (lab; NOT Tim's global settings)
-- [ ] C2.1 A lab session's UserPromptSubmit hook calls a RESOLVER script → bridge (:8770 embed and/or corpus/role) →
-      injects resolved context on stdout — and the model DEMONSTRABLY USES it (answers from injected facts it
-      could not otherwise know).
-- [ ] C2.2 The resolver reads the SUBSTRATE too (units in Supabase) — recall from the unit store, not just prose.
-- [ ] C2.3 SessionStart matcher:"compact" re-injection verified in the lab (context survives a compaction boundary).
-- [ ] C2.4 Resolver is loud-fail (bridge down → visible error in hook output, never silent) + logs each resolution
-      (what was injected, why) somewhere queryable.
+- [x] C2.1 **PROVEN**: lab `claude -p` (haiku) asked for the codeword/open decisions → answered **MOSSWOOD-9** +
+      the open UI-decision — facts existing ONLY in the substrate, delivered by the UserPromptSubmit resolver.
+      *(Artifacts: lab/resolver.sh + lab/lab-settings.json; lab at scratchpad/ctxlab.)*
+- [x] C2.2 **PROVEN**: the resolver reads ctx.unit live (state-weighted [open]+relevance query) — the injected
+      block listed the three matching units with their addresses. (v0 relevance = ILIKE+state; embed-match = v1 open.)
+- [~] C2.3 **Resume-boundary PROVEN**: SessionStart matcher:"resume" re-injection observed (model quoted
+      CTXLAB-RESUME-OK on --resume). The compact matcher is wired IDENTICALLY (same mechanism; source=compact
+      doc-confirmed) but an actual compaction could not be forced headless — honestly: resume proven, compact
+      wired+doc-confirmed, live-compact test with Tim's session later.
+- [x] C2.4 **PROVEN loud-fail**: resolver at a dead PG port printed `RESOLVER ERROR: ctx substrate unreachable…
+      Connection refused` into the hook output (never silent); resolutions logged to resolutions.jsonl (evidence copy committed).
 
 ## C3 · SLICE-JUDGES — the ledger fills itself + laws become grammar
 - [ ] C3.1 `roles/ctx_salience.py` exists (file-discovered, output_schema, fail-loud — mirrors the proven role shape):
