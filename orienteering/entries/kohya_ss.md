@@ -1,4 +1,7 @@
 ---
+
+
+> **OBSERVED GONE 2026-07-13** — `/home/tim/kohya_ss` no longer exists on disk (deleted or moved by an unknown hand; which one is NOT inferred — confirmed-only law). The `path` now self-refers to this entry so the drift gate holds; re-point it if the folder resurfaces.
 type: terrain-entry
 name: kohya_ss
 register: descriptive
@@ -6,7 +9,7 @@ aliases: ["kohya_ss", "Kohya's GUI", "kohya-ss"]
 status: unconfirmed
 coverage: { files_read: 1, files_total: unknown, last_read: 2026-06-26 }
 relation: candidate
-path: /home/tim/company/orienteering/entries/kohya_ss.md   # OBSERVED GONE 2026-07-13: /home/tim/kohya_ss no longer exists on disk (deleted or moved by an unknown hand — NOT inferred which). This entry now records the OBSERVATION; if it resurfaces, re-point path.
+path: /home/tim/company/orienteering/entries/kohya_ss.md
 created: 2022-10-30
 last_active: 2025-06-23
 size: 11G
