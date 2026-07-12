@@ -74,6 +74,7 @@ CHANNEL_OPS = (
     "channel.posted",         # {channel, from, cas, thread, mode, fan:[{session, verb, mail_seq}], coordinator?, reply_to?}
     "channel.mode_set",       # {channel, mode, coordinator?}
     "channel.shared_set",     # {channel, shared}  — the shared-edge flag (publish-to-Supabase gate)
+    "channel.project_set",    # {channel, project} — P1: (re)parent a channel to a container project (None = detach)
     "channel.reaction_added", # {channel, message, member, emoji}  — a reaction event on a message (fusion inc.3)
     "channel.reaction_removed", # {channel, message, member, emoji}  — un-react (set semantics)
     "channel.archived",       # {channel}
@@ -224,6 +225,7 @@ def _apply_channel_event(rows: dict, e: dict) -> None:
             "origin": e.get("origin"), "created": e.get("ts"),
             "last_activity": e.get("ts"), "posts": 0, "seq": e.get("seq"),
             "shared": bool(e.get("shared")),   # the shared-edge flag (default INTERNAL; publish-gate)
+            "project": e.get("project"),       # P1: the owning project (container.projects key) — None = unparented
             "reactions": {},   # {message_ref → {emoji → [member, …]}} — folded from reaction events (inc.3)
         }
         return
@@ -235,6 +237,11 @@ def _apply_channel_event(rows: dict, e: dict) -> None:
                                                  # hand-corrupted leaf; describe() fails loud on unknown ids.
     row["last_activity"] = e.get("ts")
     row["seq"] = e.get("seq")
+    if k == "channel.project_set":
+        row = rows.get(cid)
+        if row is not None:
+            row["project"] = e.get("project")   # None = detach (back to unparented)
+
     if k == "channel.member_added":
         row["members"][e["session"]] = {"participation": e.get("participation", "awake"),
                                         "kind": e.get("member_kind", "live-session"),
@@ -305,6 +312,7 @@ def create_channel(store, *, name: str, purpose: str = "", members: list[dict] |
                    mode: str = "direct", coordinator: str | None = None,
                    kind: str = "channel", origin: dict | None = None,
                    cid: str | None = None, shared: bool = False,
+                   project: str | None = None,
                    registry=None) -> dict:
     """Mint a channel (R2.2) or gathering (R2.3 — same primitive, kind discriminates: universal
     composition, one relational mechanism reused). `members` = [{session, participation?}…];
@@ -397,7 +405,8 @@ def create_channel(store, *, name: str, purpose: str = "", members: list[dict] |
             "kind": "channel.created", "channel": new_cid, "channel_kind": kind,
             "name": name.strip(), "purpose": purpose or "", "mode": mode,
             "coordinator": coord, "members": norm, "origin": origin,
-            "shared": bool(shared)})
+            "shared": bool(shared),
+            "project": _validated_project(project)})
     row = get_channel(store, new_cid)
     # THE DOOR (Tim 2026-06-29): the creator receives the channel-create CARD at the mechanical moment
     # itself — resolved live (never baked), telling them to seed the channel's own door rows. Fail-soft:
@@ -1035,3 +1044,47 @@ def channels_for_self(store) -> dict:
                             "mode": row.get("mode", ""), "participation": (m or {}).get("participation", "")})
     return {"handle": me["handle"], "name": me.get("name", ""), "session_id": sid,
             "channels": sorted(out, key=lambda r: r["id"])}
+
+
+def _validated_project(project: str | None) -> str | None:
+    """P1 — validate a project key against the EXISTING project entity (schema `container`, the
+    container lane's Postgres registry — NO parallel file registry; convergence law). None passes
+    (a channel without a project is Tim's declared special case). Unknown keys RAISE with the
+    container breadcrumb; a down DB RAISES legibly (registry-is-truth — never stamp an unverifiable
+    key silently)."""
+    if project is None:
+        return None
+    if not isinstance(project, str) or not project.strip():
+        raise ValueError("project must be a non-empty key or None (the unparented special case).")
+    key = project.strip()
+    from runtime.scope import _q as _cq, _lit as _cl   # the ONE ledger-Postgres convention (reuse)
+    ok, out = _cq(f"select project_key from container.projects where project_key = {_cl(key)}")
+    if not ok:
+        raise ValueError(
+            f"project validation could not reach schema `container` ({out!r}) — fail loud, never "
+            f"stamp an unverifiable project. (0013_container.sql; runtime/scope.py _PG.)")
+    if not out:
+        raise ValueError(
+            f"unknown project {key!r} — not a row in container.projects (registry-is-truth; create "
+            f"the project first, or pass None for an unparented channel).")
+    return key
+
+
+def set_channel_project(store, cid: str, project: str | None) -> dict:
+    """P1 — (re)parent a channel to a project (or None to detach). Tim's model: a PROJECT groups
+    MULTIPLE channels; a channel CAN exist without one. Validates against container.projects
+    (fail-loud) and appends a channel.project_set event (the fold carries it; audited like every
+    channel move). Returns the folded row."""
+    row = get_channel(store, cid)
+    _require_active(row, "set_channel_project")
+    append_channel_event(store, {"kind": "channel.project_set", "channel": cid,
+                                 "project": _validated_project(project)})
+    return get_channel(store, cid)
+
+
+def channels_of_project(store, project: str) -> list[dict]:
+    """P1 — the project→channels fold (project 1→N channels): every ACTIVE channel row carrying
+    `project`. The read side scoping (home/inbox/search) rides this."""
+    return sorted((r for r in fold_channels(store).values()
+                   if r.get("project") == project and r.get("status") != "archived"),
+                  key=lambda r: r["id"])
