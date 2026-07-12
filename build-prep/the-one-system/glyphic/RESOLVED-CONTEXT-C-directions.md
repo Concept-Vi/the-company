@@ -146,6 +146,23 @@ conversation); judges still mine the implicit; both feed ctx.*; his OWN messages
 (g) fabric objects: block:// + chain:// join the one address scheme; a chain can be a channel ATTACHMENT or be
 PROMOTED to a channel (gathering→channel promotion exists); chains as sub-sessions = "the session has nested."
 
+## 4.7 · TIM'S TWO CORRECTIONS on the block model (2026-07-12 — [Tim's word], binding)
+1. **Frame/node is SCALE-RELATIVE, across every scale.** "A node and a frame are the same thing — it's just
+   relative to what you focus on." Bounded units all the way: sentence ⊂ message ⊂ session ⊂ project ⊂ … The
+   container/contained description is correct AT EVERY STEP along the containment axis, not at one privileged
+   "block" level. (Already written down in one of Tim's projects — a source to mine WHEN HE POINTS at it.)
+   → CONSEQUENCE: no hardcoded levels. ONE recursive unit schema {id, parent, type, state, …}; the address is
+   the PATH down the containment axis; "block" = whatever unit is in focus; comment-attachment/chains/LOD work
+   identically at ANY level (comment on a sentence or on a whole session — same primitive). This is the glyphic
+   fractal law (a glyphic IS a graph at another zoom) stated for conversation.
+2. **Anti-loss's underlying mechanism is just STATE — another AXIS, part of a type's declaration.** The state
+   value at an address (e.g. open) TRIGGERS things in a data-driven architecture — Postgres triggers /
+   Supabase Realtime / listen-notify. → CONSEQUENCE: no bespoke anti-loss feature; typed units carry a state
+   axis (declared in the type's lifecycle — the board already enforces registry-declared transitions: our
+   draft→open was refused, draft→active allowed); state transitions at addresses FIRE consequences (route to a
+   fork, surface to Tim, schedule a judge, notify a channel) from the DATA layer, not agent code. Open-blocks
+   query, chain routing, attention — all just state-axis machinery.
+
 ## 5 · Status + honest reality
 Exists today: registration (importer/supervisor), profiles {model, role, focus, expertise}, channels + members +
 posts + threads, boards (typed items + links + scopes: project://|channel://|global; authors as addresses),
