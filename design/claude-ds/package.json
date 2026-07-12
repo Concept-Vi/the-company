@@ -1,0 +1,44 @@
+{
+  "name": "conceptv-design-system",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ConceptV Design System — the sanctioned import surface (index.js) in front of the compiled bundle + the four single-source-of-truth registries (CV_REGISTRY, CV_AI, CV_AXES, CV_NODE/CV_ACTIONS/CV_HOST). See CLAUDE.md for the constitution.",
+  "main": "index.js",
+  "module": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./styles.css": "./styles.css",
+    "./colors_and_type.css": "./colors_and_type.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "styles.css",
+    "colors_and_type.css",
+    "tokens/",
+    "core/",
+    "components/",
+    "axes/",
+    "app/",
+    "assets/",
+    "_ds_bundle.js",
+    "_ds_manifest.json",
+    "DESIGN-LANGUAGE.md",
+    "README.md",
+    "CLAUDE.md"
+  ],
+  "dependencies": {},
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": false },
+    "react-dom": { "optional": false }
+  },
+  "_peerDependencies_note": "React/ReactDOM are NOT bundled or npm-installed here — this DS's compiled bundle (_ds_bundle.js, see CLAUDE.md §5) consumes React as a runtime GLOBAL (window.React / window.ReactDOM), the same way every consumer surface already loads it via <script> before the bundle. peerDependencies above documents the version expectation for tooling (npm ls, lockfile resolution) without adding a real dependency edge — there is nothing to `npm install` for React here; provide the global at the page level.",
+  "sideEffects": [
+    "*.css"
+  ],
+  "_type_field_note": "Deliberately no top-level \"type\" field. index.js uses ES `export` syntax (required so a browser <script type=\"module\"> can `import` it directly — the real consumption path; browsers ignore package.json entirely). This directory ALSO holds many pre-existing CommonJS scripts (_demo/verify_*.js, _system/emit_glyph_corpus.js) that use require(). Setting \"type\":\"module\" here would break every one of them; setting \"type\":\"commonjs\" explicitly disables Node's ES-module auto-detection and makes `import('./index.js')` fail outright. Leaving \"type\" unset lets Node's content-sniffing fallback load index.js as ESM (emits a one-time harmless MODULE_TYPELESS_PACKAGE_JSON perf warning under Node — irrelevant in the browser) while every existing require()-based script keeps working unmodified. Verified empirically: see _demo/verify_entry.js."
+}

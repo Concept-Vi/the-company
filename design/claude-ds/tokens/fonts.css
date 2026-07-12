@@ -1,0 +1,86 @@
+/* ============================================================
+   ConceptV Design System — Self-hosted webfonts
+   ------------------------------------------------------------
+   U10: replaces the fonts.googleapis.com @import that used to sit
+   at the top of colors_and_type.css. That @import was a live
+   network dependency — it broke offline / tailnet use of the DS
+   (specimens, mockups, the bundle) whenever fonts.googleapis.com
+   wasn't reachable. This file @font-face's the SAME three families
+   at the SAME weights from local files, so the rendered font stack
+   (`--font-display` / `--font-body` / `--font-mono` in
+   colors_and_type.css) is byte-for-byte unchanged — only the
+   transport changed (network → local), never the look.
+
+   Files live in ../assets/fonts/ (paths below are relative to this
+   file, i.e. tokens/fonts.css → ../assets/fonts/*.woff2). Each
+   family ships as ONE variable-font file per Latin subset (that's
+   what fonts.gstatic.com actually serves for these three families —
+   the CSS2 API returns duplicate @font-face blocks per static
+   weight, but they all point at the same variable file per subset),
+   so a single @font-face per subset with a font-weight RANGE covers
+   every weight the system uses:
+     - Sora        400–700  (display: 600/700 per DESIGN-LANGUAGE.md /
+                              README.md "VISUAL FOUNDATIONS"; 400/500
+                              also present in colors_and_type.css)
+     - DM Sans     400–700  (body/UI: 400/500 primary, 600/700 used
+                              for emphasis in colors_and_type.css)
+     - JetBrains Mono 400–500 (mono: code/IDs/URLs)
+   Subsets kept: latin + latin-ext (matches what the original Google
+   Fonts request served — dropping latin-ext would silently regress
+   accented Latin characters, which is a fidelity change, not a
+   minimalism win). No cyrillic/greek/vietnamese — the DS carries no
+   content in those scripts, so those subsets from the original
+   request are correctly NOT mirrored here (minimal = used weights
+   AND used subsets only).
+   ============================================================ */
+
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/sora-latin-variable.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/sora-latin-ext-variable.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/dm-sans-latin-variable.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/dm-sans-latin-ext-variable.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('../assets/fonts/jetbrains-mono-latin-variable.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('../assets/fonts/jetbrains-mono-latin-ext-variable.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}

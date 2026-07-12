@@ -5,6 +5,67 @@
 > autonomous sessions don't repeat or contradict. Newest first.
 >
 
+## Slice 86 — U4 + U10 (operator-app lanes): the packaging entry · self-hosted fonts
+Two file-disjoint upgrades (concurrent with the components/controls.css lane — untouched here).
+
+**U4 — THE PACKAGING ENTRY.** Audit: `_adherence.oxlintrc.json`'s `no-restricted-imports`
+message says "Import design-system components from 'index.js'" — but no index.js/package.json
+existed anywhere; the only real consumption door was the compiled `_ds_bundle.js` mounting
+`window.ConceptVDesignSystem_c8f43c` (hash-suffixed — unnameable by consumers). Built the
+minimal honest entry, a THIN loud-fail accessor layer (no second home — core/, components/,
+and the registries stay the single sources):
+- **`index.js`** (NEW) — `getDS()` → the bundle namespace, THROWS if `_ds_bundle.js` isn't
+  loaded (never a silent undefined); `getRegistry(id)` → the named registry globals
+  (CV_REGISTRY, CV_AI, CV_AXES, CV_NODE, CV_ACTIONS, CV_HOST, CV_ICONS, CV_GLYPHIC,
+  CV_MEANING, CV_BLOCK, CV_LAYOUT_GRAMMAR — every id verified present as `window.X =` in the
+  bundle), throws on unknown-id AND on not-yet-mounted; `listRegistries()` diagnostics
+  (never throws). Header documents the load-order contract (bundle `<script>` first, then
+  `import { getDS } from './index.js'`). Zero work at import time — throws happen on CALL.
+- **`package.json`** (NEW) — name `conceptv-design-system`, private, main/module/exports →
+  index.js, files list, NO dependencies; React documented as a runtime GLOBAL via
+  `peerDependencies` + `_peerDependencies_note` (window.React — the DS's existing model).
+  Deliberately NO top-level `"type"` field — `"module"` would break all 17 require()-based
+  `_demo/verify_*.js` + `_system/emit_glyph_corpus.js`; `"commonjs"` breaks `import('./index.js')`.
+  Unset = Node content-sniffs index.js as ESM (one harmless perf warning) and every existing
+  CJS script keeps working — verified empirically both ways (`_type_field_note` records this).
+- **`_demo/verify_entry.js`** (NEW, follows the verify_*.js pattern: fake window, OK/XX,
+  exit 1) — **16/16**: loud-fail with bundle/registry absent, message names the missing
+  global, unknown-id throw lists the real ids, resolution once a stub is present, no
+  cross-talk (a stubbed sibling doesn't un-throw an unstubbed registry). Full `_demo` sweep
+  re-run: same pass/fail as with my files stashed (verify_edgelaw 13/15 and verify_g11 19/21
+  are PRE-EXISTING failures, evidenced by stash-test; all others green).
+
+**U10 — SELF-HOSTED FONTS.** `colors_and_type.css:8` @imported Sora + DM Sans + JetBrains
+Mono from fonts.googleapis.com — a live network dependency (offline/tailnet = no fonts).
+- **`assets/fonts/`** (NEW, 6 woff2) — the REAL files fonts.gstatic.com serves for the exact
+  original request: these three families ship as ONE variable font per subset (the CSS2 API's
+  per-weight blocks all point at the same file — verified by parsing the served CSS), so
+  latin + latin-ext per family covers Sora 400–700, DM Sans 400–700, JetBrains Mono 400–500
+  (the weights the DS uses: audit of colors_and_type.css + tokens/*.css found font-weights
+  400/500/600/700 only; the two outliers `font: 650` (text.css) and `font: 800`
+  (tonal-zoning.css) synthesize from the variable range/700 exactly as they did from Google's
+  files). Cyrillic/greek/vietnamese subsets deliberately NOT mirrored (no content in those
+  scripts). ~175KB total.
+- **`tokens/fonts.css`** (NEW) — @font-face rules, `font-display: swap`, weight RANGES
+  (400 700 / 400 500), unicode-range per subset, paths relative to tokens/.
+- **`colors_and_type.css`** — the googleapis @import REPLACED with
+  `@import url('tokens/fonts.css')` (colors_and_type is the fonts' home because ~16 surfaces
+  link it directly without styles.css — the import had to move WITH the file, not into
+  styles.css's chain). `styles.css` header updated to document this.
+- **VERIFIED by use** (python http.server + chrome-devtools): `specimens/theme-modes.html`
+  loads with **zero** fonts.googleapis.com/gstatic requests — all 32 network requests are
+  127.0.0.1 (3 local woff2 fetched, 200); computed font-family of an H3 =
+  `Sora, ui-sans-serif, system-ui, sans-serif`, weight 700 — the stack is UNCHANGED.
+  Screenshot: `screenshots/u10-selfhosted-fonts-theme-modes.png`.
+- **Open:** other HTML under `_qa/`/`system/`/`ui_kits/` that link colors_and_type.css
+  directly inherit the fix by construction (same @import chain) — spot-render of a second
+  surface pending. AND: `_ds_bundle.js:26585` still builds a fonts.googleapis.com `<link>`
+  on the deck-EXPORT path (exported STANDALONE html — deliberately network-fonted so an
+  export renders on machines without this repo; grep found exactly this one hit). The DS's
+  own surfaces are offline-clean; whether exports should instead EMBED the woff2 as data
+  URIs is a separate call (bundle = compiled output, source lives in the export writer) —
+  flagged, not silently changed under U10's token-chain scope.
+
 ## Slice 85 — Glyphic R1b: the edge law's tails (one meaning home · the law reaches every AI face)
 The census's R1 debts, closed in one pass (evidence: census/AREA-render-homes §B2, AREA-ai-layer §B.1,
 wave-one-math/AREA-company-spine §C):

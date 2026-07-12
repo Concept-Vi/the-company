@@ -7,11 +7,18 @@
 
    IMPORT ORDER (matters — later files reference earlier tokens):
      1. colors_and_type.css  — colour, surface-zone registry, type,
-                                spacing (--s-*), base motion, layout
+                                spacing (--s-*), base motion, layout.
+                                Self-hosts webfonts via its own
+                                @import of tokens/fonts.css (U10 —
+                                no live fonts.googleapis.com fetch).
      2. tokens/surfaces.css  — breakpoints, canonical frames,
                                 orientation, container-query convention
      3. tokens/sizing.css    — fluid type/space, overflow-safe utils
      4. tokens/depth.css     — elevation ramp, texture/grain
+     3b.tokens/text.css      — typed text: length budgets + authored alternates
+     4b.tokens/glass.css     — the frosted / liquid-glass material
+     4c.tokens/material.css  — the MATERIAL dimension: glass · parchment · stone
+     4d.tokens/skins.css     — SKINS: coordinated worlds (glass · stone) + block states + threads
      5. tokens/motion.css    — "nothing teleports" motion language
      6. tokens/diagram.css   — diagram vocabulary (uses zones + depth)
      7. tokens/theme.css     — light / dim / dark / contrast modes
@@ -29,6 +36,8 @@
     19. core/containers.css  — the typed containment ladder (generative core)
     20. tokens/controls.css   — the component layer (buttons, cards, fields,
                                 badges, pills, chips, tables, dividers)
+    21. tokens/device.css     — mobile device frame + on-screen chrome
+                                (status bar, top app bar, bottom tab bar)
 
    App- and kit-specific chrome (app/*.css, ui_kits/*.css, preview/*)
    are implementation details loaded by their own surfaces — NOT here.
@@ -36,7 +45,11 @@
 @import url("colors_and_type.css");
 @import url("tokens/surfaces.css");
 @import url("tokens/sizing.css");
+@import url("tokens/text.css");
 @import url("tokens/depth.css");
+@import url("tokens/glass.css");
+@import url("tokens/material.css");
+@import url("tokens/skins.css");
 @import url("tokens/motion.css");
 @import url("tokens/diagram.css");
 @import url("tokens/theme.css");
@@ -53,3 +66,4 @@
 @import url("tokens/texture.css");
 @import url("core/containers.css");
 @import url("tokens/controls.css");
+@import url("tokens/device.css");

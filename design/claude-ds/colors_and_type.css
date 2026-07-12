@@ -5,9 +5,20 @@
    ============================================================ */
 
 /* ---------- Webfonts ---------- */
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* U10: self-hosted (was a live fonts.googleapis.com @import — broke
+   offline/tailnet use). Same three families, same weights, same
+   rendered stack — see tokens/fonts.css for the @font-face rules and
+   assets/fonts/ for the woff2 files. */
+@import url('tokens/fonts.css');
 
 :root {
+  /* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+  --zone-reject-ink: #9a3a44;
+
+  /* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
+  --rule: rgba(0,0,0,.08);
+  --weight-*: N;
+
   /* ===== Surfaces — paper-first system, calibrated to the pitch deck ===== */
 
   /* The page is a near-white off-cream — the deck's "paper" surface. Panels
@@ -112,6 +123,12 @@
   --border-dashed:     #D9B84A;
   --border-dark:       #3A332A;
 
+  /* Border WIDTHS — the stroke weights (the --border-* above are COLOURS).
+     One home for hairline / strong / ring so 1px literals stop scattering. */
+  --border-w-hairline: 1px; /* @kind other */
+  --border-w-strong:   1.5px; /* @kind other */
+  --border-w-ring:     2.5px; /* @kind other */
+
   /* ===== Shadows — deck-quiet ===== */
   /* The deck never shows hard shadows; cards float on the page with just a
      touch of warm depth. We re-tuned these to be quieter than before. */
@@ -168,6 +185,13 @@
   --tracking-normal:   0em;
   --tracking-wide:     0.04em;
   --tracking-caps:     0.08em;
+
+  /* Font weights — compiled from the DNA weight roles so the widely-used
+     var(--weight-*, N) references resolve to a real token, not the fallback. */
+  --weight-regular:  400; /* @kind other */
+  --weight-medium:   500; /* @kind other */
+  --weight-semibold: 600; /* @kind other */
+  --weight-bold:     700; /* @kind other */
 
   /* Motion */
   --ease-out: cubic-bezier(.2, .8, .2, 1); /* @kind other */
@@ -342,15 +366,27 @@
   --zone-ground:      #FFFFFF; /* @kind color */
   --zone-ground-soft: #FFFEFB; /* @kind color */
 
-  --pig-base:     #B49A5C;   /* warm parchment — the workspace ground   */
-  --pig-content:  #D8B86A;   /* warm ivory — primary readable surface   */
-  --pig-panel:    #8C8A7E;   /* warm grey-stone — supporting structure  */
-  --pig-review:   #E4C24C;   /* soft cream — creative review state      */
-  --pig-source:   #5E7CA6;   /* cool blue-grey — factual / provenance   */
-  --pig-package:  #C79A52;   /* manila / sand — formal handoff          */
-  --pig-success:  #5C8A4C;   /* sage — passed / ready                   */
-  --pig-warning:  #E0A23C;   /* amber — incomplete (NOT brand gold)     */
-  --pig-reject:   #C4505A;   /* rose-coral — anti-pattern memory        */
+  --pig-base-raw:     #B49A5C; /* @kind color */
+  --pig-content-raw:  #D8B86A; /* @kind color */
+  --pig-panel-raw:    #8C8A7E; /* @kind color */
+  --pig-review-raw:   #E4C24C; /* @kind color */
+  --pig-source-raw:   #5E7CA6; /* @kind color */
+  --pig-package-raw:  #C79A52; /* @kind color */
+  --pig-success-raw:  #5C8A4C; /* @kind color */
+  --pig-warning-raw:  #E0A23C; /* @kind color */
+  --pig-reject-raw:   #C4505A; /* @kind color */
+  /* the LIVE pigments — default to raw; a SKIN may re-bind these through its
+     world (tokens/skins.css §PIGMENT TRANSLATION) exactly as the palette
+     variants below do. Consumers always read --pig-*, never -raw. */
+  --pig-base:     var(--pig-base-raw);   /* warm parchment — the workspace ground   */
+  --pig-content:  var(--pig-content-raw);/* warm ivory — primary readable surface   */
+  --pig-panel:    var(--pig-panel-raw);  /* warm grey-stone — supporting structure  */
+  --pig-review:   var(--pig-review-raw); /* soft cream — creative review state      */
+  --pig-source:   var(--pig-source-raw); /* cool blue-grey — factual / provenance   */
+  --pig-package:  var(--pig-package-raw);/* manila / sand — formal handoff          */
+  --pig-success:  var(--pig-success-raw);/* sage — passed / ready                   */
+  --pig-warning:  var(--pig-warning-raw);/* amber — incomplete (NOT brand gold)     */
+  --pig-reject:   var(--pig-reject-raw); /* rose-coral — anti-pattern memory        */
 }
 
 /* ── DERIVED ZONE ROLES ──────────────────────────────────────
