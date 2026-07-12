@@ -74,3 +74,30 @@ operator-launched live inject+churn verification.
 - Replies route THROUGH the mailbox AND are pushed into the right session (recipient never polls).
 - Group = the fabric `channels` concept (members = live sessions).
 - The GPU loadout is a registry concern (`@xsession`); swap engines via the registry, not by hand.
+
+## ✅ Built + proven by use (2026-07-13) — the TOOL-SURFACE REDESIGN v2 (branch fabric-surface-redesign)
+The ~30 hazard-grown doors reshaped into intent-named doors over the UNCHANGED runtime (invariant: no
+runtime signature or supervisor route changed — ~60 programmatic callers untouched; old tools keep
+working, no flag-day). Per design v2 (board://item-de33cdf8), corrected by a 6-lens adversarial review:
+- **Phase 0 defects fixed**: the session-uuid CAPTURE one-liner (the .mjs now reads CLAUDE_CODE_SESSION_ID
+  — the root cause of 85% empty session_id / dead durable-id reachability) · cc_retire un-broken (2/3 ops
+  crashed on moved functions) · transport "mail" real (PULL-only, fail-loud push, router queues — no more
+  phantom-live members) · cc_gate transitions emit fabric events + the /interrupt result recorded ·
+  the router is RECORD-AND-DELIVER (live delivery also writes the durable backstop record — history
+  never silently lost) · the address grammar unified (channel:// agent:// operator:// registered; one
+  scheme list, identity.py's private copy collapsed).
+- **New doors**: `directory` (one faceted who/what-exists: registry+live+CLONES joined — the hidden
+  fleet visible; rooms their own shape) · `mailbox` (the fabric inbox: durable mail + churn-spanning
+  channel mail + fail-soft federated allocations; distinct from operator inbox()/decisions()) ·
+  `principal`/`principal_act` (one identity read: resolve/roster/whoami; describe write; register
+  TEACHES the substrate path — access stays its own fail-closed door) · `board`/`board_act` (CQRS split
+  + the since-cursor) · `send` grew the GROUP fan (ad-hoc broadcast, per-target receipts, one thread) ·
+  `channel_act` grew `retire` + the archive coverage GATE (archiving un-harvested members refuses,
+  teaching; force=True explicit).
+- **Config**: the 3 bare supervisor-address literals now honor COMPANY_SUPERVISOR_BASE.
+- Exposure postures preserved/declared per door (safe reads tagged; writes operator-tier; the board
+  split deliberately does NOT widen the public boundary).
+Tests: fabric_reads · fabric_principal · fabric_channel_lifecycle · fabric_board_cqrs (+ grown
+messaging_send) — 12-suite sweep green. STILL OPEN: the remote-safe-subset acceptance test over
+remote.py's gate itself · the agent_register cross-repo fold (needs the session↔role join designed) ·
+live operator verification of gate-pause/interrupt.
