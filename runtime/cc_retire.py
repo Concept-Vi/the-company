@@ -29,7 +29,7 @@ import os
 from runtime import corpus as _corpus
 from runtime import cc_board as _board
 from runtime import cc_attachments as _att
-from runtime import cc_channels as _chan
+from runtime import session_channels as _sc   # channel_members/archive_channel live here (moved 2026-06-29)
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HARVEST_DIR = os.path.join(REPO, "build-prep", "the-one-application", "harvest")
@@ -47,11 +47,11 @@ def _harvest_files() -> list[str]:
     return [f for f in os.listdir(HARVEST_DIR) if f.endswith(".md")]
 
 
-def harvest_status(channel: str) -> dict:
+def harvest_status(store, channel: str) -> dict:
     """COVERAGE LEDGER for a channel's retirement: each member → has it crystallized a harvest? A member is
     'harvested' if a harvest file names its handle OR a board item carries author_session==handle. Returns
     {members, harvested, missing, complete} — the fail-loud coverage proof before a channel closes."""
-    members = _chan.channel_members(channel)
+    members = _sc.channel_members(store, channel)
     files = _harvest_files()
     harvested, missing = [], []
     for m in members:
@@ -100,7 +100,7 @@ def retire_channel(store, channel: str, *, author_session: str, summary: str = "
     (an honest 'these members did not harvest' is recorded), and NEVER auto-archives a live channel."""
     if not author_session:
         raise RetireError("retire_channel needs `author_session` (who is performing the retirement).")
-    cov = harvest_status(channel)
+    cov = harvest_status(store, channel)
     manifest = _att.manifest(channel).get("attachments", {})
     board_items = [i for i in _board.list_items() if i.get("channel") == channel]
     harvest_files = [f for f in _harvest_files()]
@@ -128,7 +128,13 @@ def retire_channel(store, channel: str, *, author_session: str, summary: str = "
                             author_session, channel=channel, links=links)
     archived = False
     if archive:
-        _chan.archive_channel(channel)              # EXPLICIT opt-in only — never a side effect
+        _row = _sc.get_channel(store, channel)
+        if (_row or {}).get("kind") == "gathering":
+            raise RetireError(
+                f"retire_channel: {channel!r} is a GATHERING — gatherings DISPERSE, they do not archive "
+                f"(archive_channel refuses a non-channel). The totality is crystallized above; call "
+                f"channel_act(action='disperse', channel=…) to close it.")
+        _sc.archive_channel(store, channel)         # EXPLICIT opt-in only — never a side effect
         archived = True
     return {"corpus": ev["address"], "board": item["address"], "coverage": cov,
             "archived": archived, "attachments": record["attachments"]}

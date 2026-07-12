@@ -34,7 +34,7 @@ def register(mcp, suite):
         if op == "status":
             if not channel:
                 raise ValueError("cc_retire(op='status') needs `channel`.")
-            return {"op": "status", **cr.harvest_status(channel)}
+            return {"op": "status", **cr.harvest_status(store, channel)}
         if op == "member":
             if not session or not claims:
                 raise ValueError("cc_retire(op='member') needs `session` + `claims` (each {text, status}; "
