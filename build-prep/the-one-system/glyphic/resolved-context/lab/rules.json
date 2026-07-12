@@ -1,0 +1,18 @@
+{
+  "_what": "FORM RULES as DATA (C3.4) — the validator reads these; adding a law = adding a row, zero code.",
+  "rules": [
+    {
+      "id": "no-time-estimates",
+      "description": "Tim's law: never give time estimates (hours/days/weeks/ETAs), ever.",
+      "violation_regex": "\\b\\d+(\\.\\d+)?\\s*(hours?|hrs?|days?|weeks?|months?)\\b|\\bETA\\b|\\bestimated? time\\b",
+      "feedback": "FORM VIOLATION (no-time-estimates): the draft contains a time estimate. Tim's standing law: never give time estimates. Rewrite the response without any duration/ETA language."
+    },
+    {
+      "id": "completion-claims-need-evidence",
+      "description": "Tim's law: never claim done/complete/fixed/working without verification evidence.",
+      "violation_regex": "\\b(is (now )?(done|complete|fixed|working)|successfully (completed|fixed|implemented))\\b",
+      "absolver_regex": "\\b(verified|observed|tested|proven|exit 0|passed)\\b",
+      "feedback": "FORM VIOLATION (completion-claims-need-evidence): the draft claims completion without verification evidence (no 'verified/observed/tested' nearby). Tim's standing law: completion claims require execution evidence. Either add the observed evidence or soften the claim."
+    }
+  ]
+}

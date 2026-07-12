@@ -38,13 +38,20 @@
       Connection refused` into the hook output (never silent); resolutions logged to resolutions.jsonl (evidence copy committed).
 
 ## C3 · SLICE-JUDGES — the ledger fills itself + laws become grammar
-- [ ] C3.1 `roles/ctx_salience.py` exists (file-discovered, output_schema, fail-loud — mirrors the proven role shape):
-      given a span/unit body → `{kind, salience, supersedes?, lod}` validated JSON, fired via run_role.
-- [ ] C3.2 Verdicts LAND in the substrate (units gain verdict data; queryable: "all decisions", "all superseded").
-- [ ] C3.3 A **Stop-hook validator** in the lab checks a draft response against ≥2 of Tim's laws (no time-estimates;
-      evidence-marking on completion claims) and **BOUNCES a violating response** (observed: the model retries) while
-      passing a clean one.
-- [ ] C3.4 The laws the validator enforces are DATA (a rules table/file), not hardcoded in the script.
+- [x] C3.1 **PROVEN live**: `roles/ctx_salience.py` (file-discovered — NO restart needed, registry re-discovers
+      fresh per call) fired via run_role → `{kind: decision, salience: 1.0, lod: full}` on the real UI-decision
+      block, **0.56s**, schema-validated. *(Infra note: found bridge+litellm+chat-4b brain all DOWN overnight —
+      recovered via restart-authority: systemctl bridge, serve_litellm.sh [:4100 not the stale :8000 note],
+      `company up chat-4b --evict` [policy evicted embed-pplx — rebalance with the wake-ritual combo in the morning].)*
+- [x] C3.2 **PROVEN**: all 5 seeded units judged + verdicts written to `ctx.unit.meta.verdict`; ledger query
+      "all decisions" returned exactly the decision block. The ledger fills itself.
+- [~] C3.3 **Validator logic PROVEN by unit test**: violating draft → exit 2 + the rule's feedback (observed);
+      claim WITH evidence → absolver passes it (observed). **Live bounce NOT observed headless — REAL FINDING:
+      the Stop hook does NOT fire in `claude -p` print mode** (transcript forensics: 1 assistant msg, no bounce;
+      docs imply per-turn). Interactive-session bounce = verify WITH TIM tomorrow. (Also fixed a real validator
+      bug the live test caught: double stdin redirection made python execute the JSON as its script.)
+- [x] C3.4 Rules are DATA (`rules.json`: violation_regex + optional absolver_regex + feedback per law) —
+      adding a law = adding a row. Artifacts committed at resolved-context/lab/.
 
 ## C4 · SLICE-CHAINS — backend only
 - [ ] C4.1 **Reference edges** between units exist (`unit_edge {from, to, kind}`, kinds registry-declared) — a reply/

@@ -56,3 +56,12 @@
    supersededness — + vector recall), beside `ledger.*`.
 4. **The viewport/LOD idea holds** but is realised through *what the resolver injects* (semantic zoom = the
    resolver choosing full-text vs gloss vs omit per span), NOT by editing the raw transcript in place.
+
+## Addendum (2026-07-13, SLICE-JUDGES): Stop-hook headless finding
+- **V4 · The Stop hook does NOT fire in `claude -p` (headless print) mode** — observed: a deliberately violating
+  response passed with zero Stop-hook activity in the transcript (1 assistant msg, no feedback records), while the
+  same validator logic unit-tests correctly (exit 2 + feedback). Consequence: form-validators guard INTERACTIVE
+  sessions (+ presumably SDK loops); headless one-shots bypass Stop. Design around it: validate -p output at the
+  caller when it matters.
+- **V5 · Role discovery is per-call** (cognition.py role_registry(): "re-discovered fresh") — dropping roles/*.py
+  is live immediately, no restart. ctx_salience proved it: file → import-validate → run_role fired, 0.56s.
