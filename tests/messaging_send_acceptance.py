@@ -106,6 +106,24 @@ def main():
     except ValueError:
         check("empty `to` raises", True)
 
+    # ── GROUP send (P3): ad-hoc broadcast through the one door ──
+    live_row = {"uuid": "mA", "handle": "ch-mA", "as_id": None, "agent_id": None, "cwd": None,
+                "description": "", "model": "", "kind": "agent", "state": "unsupervised-live",
+                "transports": ["channel"], "reachable": True, "port": port, "pid": 1, "claude_pid": 1,
+                "forked_from": None, "reg": mA_reg, "sources": ["cc_channels"]}
+    identity.resolve = lambda target, **kw: dict(live_row) if target in ("mA", "session://mA") else None
+    n_before = len(got)
+    r3 = send(to="mA, session://nope-xyz", message="group hello", frm="session://sender")
+    check("group send recognized (kind=group)", r3.get("kind") == "group")
+    check("group mints ONE shared thread", (r3.get("thread") or "").startswith("g-"))
+    check("reachable target delivered live under the group thread",
+          r3.get("delivered_live") == 1 and len(got) == n_before + 1
+          and got[-1].get("content") == "group hello" and got[-1].get("meta", {}).get("thread") == r3["thread"])
+    check("bad target isolated + LOUD (unreachable=1, run not blocked)",
+          r3.get("unreachable") == 1 and len(r3.get("results", [])) == 2)
+    check("per-target receipts truthful",
+          r3["results"][0].get("delivered") is True and r3["results"][1].get("delivered") is False)
+
     if FAIL:
         print(f"\nFAIL — {len(FAIL)} failed")
         sys.exit(1)

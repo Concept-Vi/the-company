@@ -45,28 +45,32 @@ def register(mcp, suite):
 
     @mcp.tool()
     def send(to: str, message: str, thread: str = "", frm: str = "fabric") -> dict:
-        """Send `message` to ONE target and get a TRUTHFUL receipt. `to` is either:
+        """Send `message` and get a TRUTHFUL receipt. `to` is one of:
           • a SESSION — a durable uuid, a ch-handle, an as-id, an agent-id, a cwd, or session://<id>
-            (all resolve to the same actor even after its ephemeral handle churns), OR
-          • a CHANNEL — channel://<name-or-id> (fans to every member by their best path).
-        Routes to the best LIVE transport (the owning supervisor's inject, or the session's own live
-        .mjs port), else queues to the durable mailbox — it NEVER silently drops and NEVER reports a
-        delivery it cannot confirm. `frm` = your session://<id> so a reply can route home; `thread`
-        continues a conversation. Returns {kind:'session'|'channel', ...} naming the true transport(s)
-        and whether each target got it LIVE or was queued for next-turn pull."""
+            (all resolve to the same actor even after its ephemeral handle churns);
+          • a CHANNEL — channel://<name-or-id> (fans to every member by their best path);
+          • a GROUP — a comma-separated list of session targets (an ad-hoc broadcast: each routed
+            independently under ONE shared thread, per-target receipts — one bad target never blocks
+            the rest).
+        Routes each to the best LIVE transport (the owning supervisor's inject, or the session's own
+        live .mjs port), else queues to the durable mailbox — it NEVER silently drops and NEVER reports
+        a delivery it cannot confirm (an unreachable target is named, loud, in its receipt). `frm` =
+        your session://<id> so a reply can route home; `thread` continues a conversation. Returns
+        {kind:'session'|'channel'|'group', ...} naming the true transport(s) per target."""
         from runtime import router as _router
         from runtime import session_channels as _sc
 
         store = suite.store
         reg = getattr(suite, "get_agent_session", None)
         if not isinstance(to, str) or not to.strip():
-            raise ValueError("send: `to` is required — a session (uuid/handle/agent-id/cwd/session://X) "
-                             "or a channel (channel://<name-or-id>).")
+            raise ValueError("send: `to` is required — a session (uuid/handle/agent-id/cwd/session://X), "
+                             "a channel (channel://<name-or-id>), or a comma-separated group.")
         if not isinstance(message, str) or not message.strip():
             raise ValueError("send: `message` is empty — nothing to send.")
         target = to.strip()
         frm = (frm or "fabric").strip()
 
+        # a CHANNEL resolves on the WHOLE string first (so a comma in a channel NAME never mis-splits)
         cid = _resolve_channel(store, target)
         if cid is not None:
             res = _sc.post_to_channel(store, cid, message, frm, registry=reg, thread=thread or None)
@@ -75,6 +79,30 @@ def register(mcp, suite):
             return {"kind": "channel", "channel": res.get("channel"), "members": len(fan),
                     "delivered_live": live, "queued": len(fan) - live, "thread": res.get("thread"),
                     "fan": fan, "what_happens": res.get("what_happens")}
+
+        # a GROUP — the ad-hoc broadcast through the one door (P3): one shared thread, per-target
+        # receipts, per-target error isolation (parity with cc_channel op=broadcast, plus the queue
+        # fallback + durable record that op=broadcast never had).
+        if "," in target:
+            targets = [t.strip() for t in target.split(",") if t.strip()]
+            if len(targets) < 2:
+                raise ValueError("send: a group needs ≥2 comma-separated targets.")
+            import uuid as _uuid
+            grp = thread.strip() or f"g-{_uuid.uuid4().hex[:8]}"
+            results = []
+            for t in targets:
+                try:
+                    results.append(_router.route(t, message, frm=frm, thread=grp,
+                                                 store=store, registry=reg))
+                except Exception as e:  # noqa: BLE001 — one bad target never blocks the rest
+                    results.append({"target": t, "delivered": False, "queued": False,
+                                    "transport": "none", "verb": "error", "reason": str(e)})
+            return {"kind": "group", "thread": grp, "targets": len(targets),
+                    "delivered_live": sum(1 for r in results if r.get("delivered")),
+                    "queued": sum(1 for r in results if r.get("queued")),
+                    "unreachable": sum(1 for r in results
+                                       if not r.get("delivered") and not r.get("queued")),
+                    "results": results}
 
         receipt = _router.route(target, message, frm=frm, thread=thread or None,
                                 store=store, registry=reg)
