@@ -313,8 +313,17 @@ def register(mcp, suite):
                     f"first (channel_act(action='retire', channel=…, from_session=…) records the "
                     f"coverage gap honestly), or pass force=True to close anyway.")
             row = sc.archive_channel(store, channel)
-        return {"action": action, "channel": f"channel://{row['id']}", "status": row["status"],
-                "mode": row["mode"], "coordinator": row.get("coordinator"),
-                "members": sorted(row["members"])}
+        out = {"action": action, "channel": f"channel://{row['id']}", "status": row["status"],
+               "mode": row["mode"], "coordinator": row.get("coordinator"),
+               "members": sorted(row["members"])}
+        # THE DOOR rides through (2026-07-13): add_member composes the joiner's card (identity + verbs +
+        # depth rows + THE ROOM) and mails it to the joined member; the CALLER's op result must carry it
+        # too — dropping it here silently severed the caller-visible half of the join orientation.
+        if action == "add":
+            if row.get("card"):
+                out["card"] = row["card"]
+            if "card_mailed" in row:
+                out["card_mailed"] = row["card_mailed"]
+        return out
 
     return channels, channel_act
