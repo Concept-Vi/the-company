@@ -1009,3 +1009,29 @@ def edges_for(store, session: str, *, limit: int = 100) -> dict:
                                      "joins your existing conversation with them."}
     return {"session": me, "edges": rows, "total": len(edges),
             "source": "agent_sessions/mail.jsonl (the durable talk itself — no second write path)"}
+
+
+def channels_for_self(store) -> dict:
+    """P2 (operator-surface) — the SELF→CHANNEL-MEMBERSHIP join (Tim: search/inbox default to the
+    caller's own channel). Resolves WHO I AM (the fabric registration, via the claude-ancestor PID —
+    session_scan.resolve_self_member) and folds WHICH channels carry me as a member (this module's ONE
+    membership store — the fold rows' members are keyed by sid). Returns
+        {handle, name, session_id, channels: [{id, name, kind, mode, participation}, ...]}
+    channels=[] honestly when the session is registered but joined nowhere. FAIL-LOUD when self does not
+    resolve (register first: cc_channels.register_self) — a scoping default must never guess who's asking."""
+    from runtime.session_scan import resolve_self_member   # lazy — session_scan imports nothing from here
+    me = resolve_self_member()
+    if not me or not me.get("handle"):
+        raise ValueError(
+            "channels_for_self: SELF does not resolve — this session has no fabric registration. "
+            "Join first: cc_channels.register_self(). Fail loud (a scope default never guesses the caller).")
+    sid = me.get("session_id") or ""
+    out = []
+    if sid:
+        for cid, row in fold_channels(store).items():
+            m = (row.get("members") or {}).get(sid)
+            if m is not None and row.get("status") != "archived":
+                out.append({"id": cid, "name": row.get("name", ""), "kind": row.get("kind", "channel"),
+                            "mode": row.get("mode", ""), "participation": (m or {}).get("participation", "")})
+    return {"handle": me["handle"], "name": me.get("name", ""), "session_id": sid,
+            "channels": sorted(out, key=lambda r: r["id"])}
