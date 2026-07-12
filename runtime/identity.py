@@ -262,8 +262,14 @@ def _row_from_channel_reg(reg: dict, supervised_idx: dict, deep: bool = False) -
     uuid, how = recover_uuid(reg, deep=deep)
     kind = principals.resolve_kind(reg).get("kind")
     sup = (uuid and supervised_idx.get(uuid)) or None
+    reachable = True
     if transport == "supervised" or sup:
         state, transports = "supervised-live", ["supervised"]
+    elif transport == "mail":
+        # register_self without a port: the session is ALIVE (claude_pid anchors presence) but PULL-only —
+        # no live transport exists. The router sees neither "channel" nor "supervised" here and falls to
+        # the durable queue rung — exactly the delivery this member signed up for (P0.3: no phantom-live).
+        state, transports, reachable = "unsupervised-live", ["mail"], False
     else:
         state, transports = "unsupervised-live", ["channel"]
     return {
@@ -272,7 +278,7 @@ def _row_from_channel_reg(reg: dict, supervised_idx: dict, deep: bool = False) -
         "as_id": (sup or {}).get("as_id") or reg.get("supervisor_session"),
         "agent_id": reg.get("agent_id") or (reg.get("profile") or {}).get("agent_id"),
         "cwd": reg.get("cwd"), "description": reg.get("description"), "model": reg.get("model"),
-        "kind": kind, "state": state, "transports": transports, "reachable": True,
+        "kind": kind, "state": state, "transports": transports, "reachable": reachable,
         "port": reg.get("port"), "pid": reg.get("pid"), "claude_pid": reg.get("claude_pid"),
         "forked_from": reg.get("forked_from"),
         "reg": reg, "sources": ["cc_channels"] + (["supervisor"] if sup else []),

@@ -96,9 +96,12 @@ def _read_reg(path: str):
 def _transport_of(reg: dict) -> str:
     """A member's transport (the unified per-member dispatch axis). BACK-COMPAT: a registration with
     no explicit `transport` (the original portful channel-session shape, or any reg carrying a `port`)
-    is a "channel" member — the HTTP-POST-to-port transport that shipped first."""
+    is a "channel" member — the HTTP-POST-to-port transport that shipped first.
+    "mail" (register_self without a port) = PULL-only: no live push exists; delivery is the durable
+    queue (pending-mentions fold + the nag hook). Previously this fell through to "channel", producing
+    a phantom-live member whose port-0 push always failed (P0.3 fix — recognize it, fail loud on push)."""
     t = reg.get("transport")
-    if t in ("channel", "supervised"):
+    if t in ("channel", "supervised", "mail"):
         return t
     return "channel"
 
@@ -224,6 +227,12 @@ def push(handle_or_reg, content: str, *, meta: "dict | None" = None, base_timeou
     transport = _transport_of(reg)
     if transport == "supervised":
         return _push_supervised(reg, content, meta=meta or {}, base_timeout=base_timeout)
+    if transport == "mail":
+        raise ChannelError(
+            f"member {reg.get('handle')!r} is PULL-only (transport 'mail' — registered without a live "
+            f"port). There is no live push; deliver via the durable queue (send/router queues it; the "
+            f"member picks it up via its inbox / the pending-mentions nag). Fail loud, never a "
+            f"phantom port-0 push.")
     port = reg["port"]
     body = json.dumps({"content": content, "meta": meta or {}}).encode()
     req = urllib.request.Request(f"http://127.0.0.1:{port}", data=body, method="POST",
