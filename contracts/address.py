@@ -159,7 +159,20 @@ additive (mirrors the vi-vision precedent); no record-shape or schema_ver change
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "guide", "session", "cap", "board", "clone", "mind", "exchange", "file", "project", "vi-vision", "decision", "image", "extraction", "path", "mesh")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "guide", "session", "cap", "board", "clone", "mind", "exchange", "file", "project", "vi-vision", "decision", "image", "extraction", "path", "mesh", "channel", "agent", "operator")
+# Note on `channel://` + `agent://` + `operator://` (P0.6, tool-surface redesign v2 — the grammar
+# unification): these three address forms were ALREADY STORED across the fabric — channel://<id> keys
+# the named-channel objects (session_channels), and agent://<role> / operator://tim are the principal
+# author/scope addresses cc_board derives and container.principal GENERATES (0017_identity.sql) — but
+# were never registered here, so scheme() returned None and resolve_address fail-louded "unknown" on
+# addresses the system itself writes (the addressing review's finding: the one grammar couldn't parse
+# 3 of the 6 advertised forms, and identity.py grew a divergent private scheme list to compensate).
+# Registered as *label* schemes (the ui://·code:// precedent): the store does not resolve them —
+# channel:// resolves via session_channels, agent://·operator:// via the principal layers; until a
+# dispatch branch is wired, resolve_address raises its documented teaching "registered, no
+# content-resolver yet" (the extensible seam, not a silent empty). Purely additive; no record-shape or
+# schema_ver change. identity.py now derives its actor-scheme subset FROM this tuple (one list, never
+# two diverging).
 # Note on `mesh://` (2026-07-07, the triangulation swarm): a *label* scheme like ui://·code:// — the
 # store does not resolve it; it keys the mesh self-model records (corpus space='mesh'):
 # mesh://territory/<slug> (an observed territory; rounds DEEPEN by re-capture, latest-seq-wins) and

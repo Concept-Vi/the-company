@@ -40,10 +40,18 @@ from runtime import cc_channels as cc
 from runtime import principals
 from runtime import session_scan
 
-# The address schemes a target may arrive dressed in (contracts/address.py grammar). We strip the
-# scheme and resolve the bare id — R5: `session://ch-h8xvlf6i` must RESOLVE, not raise (the traced
-# broken circuit). clone://<sid>/<at> carries the source sid as its first path segment.
-_SCHEMES = ("session://", "agent://", "clone://")
+# The ACTOR address schemes this resolver strips to a bare id — R5: `session://ch-h8xvlf6i` must
+# RESOLVE, not raise (the traced broken circuit). clone://<sid>/<at> carries the source sid as its
+# first path segment. P0.6: this is a SUBSET OF THE ONE GRAMMAR (contracts.address.SCHEMES), asserted
+# at import so the two lists can never silently diverge again (the addressing review found this module
+# carrying a private scheme list the grammar didn't know — two competing vocabularies for one notion).
+# channel:// is deliberately NOT stripped here: a channel is a ROOM, not an actor — send() resolves it
+# via session_channels before the router ever calls this resolver.
+from contracts.address import SCHEMES as _GRAMMAR_SCHEMES
+_ACTOR_SCHEMES = ("session", "agent", "clone")
+assert all(s in _GRAMMAR_SCHEMES for s in _ACTOR_SCHEMES), \
+    "identity: actor schemes missing from contracts.address.SCHEMES — the one grammar must declare them"
+_SCHEMES = tuple(f"{s}://" for s in _ACTOR_SCHEMES)
 
 
 def _strip_scheme(target: str) -> str:
