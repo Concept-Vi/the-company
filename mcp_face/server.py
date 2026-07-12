@@ -92,7 +92,10 @@ mcp = FastMCP("company")
 # low-harm tools (queries · reads · lists · describes · recall) are tagged — never a tool that writes,
 # mutates, deletes, spawns/wakes sessions or clones, changes config, runs graphs/cascades, posts to
 # channels, or self-modifies. When unsure: leave it untagged (operator-only is the safe default).
-SAFE = ToolAnnotations(posture="safe")
+SAFE = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True,
+                       openWorldHint=False, posture="safe")   # hints now TELL THE TRUTH the doc above
+                                                              # already promised (FL1: the safe tier is
+                                                              # read-only by construction, machine-checkably)
 
 
 def build_mcp(suite=None):

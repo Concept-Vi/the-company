@@ -30,7 +30,7 @@ from mcp.types import ToolAnnotations    # posture="safe" → remote.py:_tool_po
 
 def register(mcp, suite):
     # READ-ONLY — marks(by=target|type|findings) are all reads; the mark WRITE is the separate `mark` tool. Client-safe.
-    @mcp.tool(annotations=ToolAnnotations(posture="safe"))
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False, posture="safe"))
     def marks(by: Literal["target", "type", "findings"], target: str = "", mark_type: str = "", address: str = "",
               detail: str = "concise", limit: int = 100) -> dict:
         """READ marks / findings (the detection layer — what a mark-pass left). Read-only. Pick `by`:
