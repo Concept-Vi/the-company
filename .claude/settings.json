@@ -29,6 +29,14 @@
             "command": "/home/tim/company/.venv/bin/python /home/tim/company/ops/hooks/pending_mentions_nag.py"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/tim/company/.venv/bin/python /home/tim/company/ops/hooks/ctx_resolver.py"
+          }
+        ]
       }
     ]
   }
