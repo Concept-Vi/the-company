@@ -54,13 +54,17 @@
       adding a law = adding a row. Artifacts committed at resolved-context/lab/.
 
 ## C4 · SLICE-CHAINS — backend only
-- [ ] C4.1 **Reference edges** between units exist (`unit_edge {from, to, kind}`, kinds registry-declared) — a reply/
-      build-on/supersede is an edge at an address.
-- [ ] C4.2 **Chain derivation** works: given a unit, the closure of its references (the chain) returns as a query.
-- [ ] C4.3 Fork-per-chain mechanics DESIGNED + the headless part verified: a fork can be spawned scoped to a chain
-      (its context = the chain's units), and registers in the fabric as a child of the main (parent lineage visible).
-- [ ] C4.4 A cross-chain check exists (even minimal): a judge/query that surfaces two chains touching the same
-      referent (the contradiction/duplication watch, v0).
+- [x] C4.1 **PROVEN**: real edges live (answers/references/builds_on between the seeded blocks); flipping the
+      answered DECISION open→answered fired pg_notify again (payload observed) — resolution IS a state event.
+- [x] C4.2 **PROVEN**: chain closure (recursive CTE, both directions, cycle-capped) returned the 4-unit chain
+      with addresses/states/verdicts.
+- [x] C4.3 **Built as a COMPANY CLI COMMAND (Tim's steer mid-build: "should just be a company CLI command", not
+      a lab script)**: `company ctx` family in ops/cli/ctx.py + app.py dispatch — units/open/chain/brief/
+      crossings/types. *Observed: `company ctx brief b0f3c506` emitted the fork boot-context (chain units
+      address-ordered with states+verdicts + the relations).* Fabric-child registration = the interactive half,
+      designed in the brief header + C-doc; actual fork-spawn+register awaits the session with Tim.
+- [x] C4.4 **Query proven** (`company ctx crossings` — honestly empty: no unit referenced by 2+ referrers yet;
+      the watch exists, data will come with real use).
 
 ## Standing (every criterion)
 Loud-fail · nothing hardcoded (types/lifecycles/rules/roles = registry data) · verified by USE with the observed

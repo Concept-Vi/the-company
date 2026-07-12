@@ -392,6 +392,13 @@ order by ts nulls first limit 40"""
         import clone as _clone
         _clone.run(args[1:])
         return
+    if cmd == "ctx":
+        # The RESOLVED-CONTEXT substrate view — conversation units/chains/ledger (the ctx schema in the
+        # local Supabase PG; build-prep/the-one-system/glyphic/resolved-context owns it). units/open/chain/
+        # brief/crossings/types. `company ctx brief <unit>` emits the boot-context a chain-scoped fork
+        # receives (Tim 2026-07-13: a company CLI command, not a lab script). Thin: all logic in ctx.py.
+        import ctx as _ctx
+        return _ctx.run(args[1:])
     if cmd == "combos":
         cs = registry.combos(reg)
         if not cs:
