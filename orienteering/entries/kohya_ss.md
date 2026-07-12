@@ -6,7 +6,7 @@ aliases: ["kohya_ss", "Kohya's GUI", "kohya-ss"]
 status: unconfirmed
 coverage: { files_read: 1, files_total: unknown, last_read: 2026-06-26 }
 relation: candidate
-path: /home/tim/kohya_ss
+path: /home/tim/company/orienteering/entries/kohya_ss.md   # OBSERVED GONE 2026-07-13: /home/tim/kohya_ss no longer exists on disk (deleted or moved by an unknown hand — NOT inferred which). This entry now records the OBSERVATION; if it resurfaces, re-point path.
 created: 2022-10-30
 last_active: 2025-06-23
 size: 11G
