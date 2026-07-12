@@ -163,6 +163,31 @@ PROMOTED to a channel (gathering→channel promotion exists); chains as sub-sess
    fork, surface to Tim, schedule a judge, notify a channel) from the DATA layer, not agent code. Open-blocks
    query, chain routing, attention — all just state-axis machinery.
 
+## 4.8 · DISCOVERABILITY (Tim, 2026-07-13: "how do agents know — without being told?" — the design)
+Files-on-disk require knowing-to-look → ride the paths agents ALREADY traverse, ALL of them simultaneously:
+(1) **boot injection** — ~/company/CLAUDE.md paragraph (auto-injected) + a SessionStart resolver hook (the
+self-hosting answer: the resolved-context system announces itself through its own mechanism — needs Tim's eye
+for global settings); (2) **the tool list** — MCP tools are self-announcing (a ctx face on the company MCP =
+automatic discovery, THE strongest channel); (3) **the moment of action** — supabase_admin response_rules
+(rule_add: conditioned messages in tool responses — tell agents about ctx WHEN they touch psql/context work) +
+TEACHING ERRORS (fail-loud messages that name the next step = in-situ docs, already the ctx style); (4) **recall**
+— semantic search finds the docs by meaning; (5) **the covenant paths** — orienteering ledger entry [DONE
+b867d9c7], MAP.md, AGENTS.md, board cards. For UPDATING: registry-is-truth self-description (`company ctx types`
+reads the LIVE registry) + the extend-path stated in errors/help. Principle: never one channel — boot + tools +
+action + failure + recall together, so reader/doer/searcher/stuck agents all meet it on their own path.
+TO WIRE (scope): the CLAUDE.md paragraph · the company-MCP ctx tool face · 2-3 response_rules · the SessionStart
+hook (with Tim) · MAP.md entry.
+
+## 4.9 · EXTENSIONS LANDED + THE DATA LAYER JUDGES ITSELF (2026-07-13, Tim: "pretty much all those")
+22 extensions installed (31 total): pg_cron, pgmq, pg_jsonschema, pg_graphql, **postgis** (Tim wants), pgroonga,
+rum, hstore, citext, fuzzystrmatch, unaccent, btree_gin/gist, intarray, cube, earthdistance, hypopg,
+index_advisor, pgtap, pg_hashids, pgrouting, wrappers. **002_ltree**: `address ltree` native containment
+(ancestor @> / descendant <@ verified by use; GiST-indexed; Tim's catch — reach for the stack). **003_pgnet
+self-judge — THE PROOF**: INSERT a unit → the DATABASE calls the bridge (pg_net from inside docker via
+host.docker.internal) → ctx_salience judges → pg_cron sweep folds the verdict into meta.verdict — observed
+end-to-end with ZERO agents in the loop (the discoverability-preference unit came back kind=preference/0.8,
+via=pg_net). The state axis now ACTS, not just announces. ctx.judge_call keeps failed calls visible (loud).
+
 ## 5 · Status + honest reality
 Exists today: registration (importer/supervisor), profiles {model, role, focus, expertise}, channels + members +
 posts + threads, boards (typed items + links + scopes: project://|channel://|global; authors as addresses),
