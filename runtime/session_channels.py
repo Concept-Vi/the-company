@@ -457,10 +457,46 @@ def add_member(store, cid: str, session: str, *, participation: str = "awake",
     # THE DOOR: the joiner's channel-join CARD rides the op result (the mechanical moment). The card is
     # for the JOINED member (their identity when resolvable via the sid), scoped to this channel —
     # default rows + the channel's own modification rows. Fail-soft: knowledge never fails the op.
+    # 2026-07-13 (Tim, join-orientation): the card now ALSO carries THE ROOM (live state — purpose,
+    # counts, the channel-scoped board's open items, recent exchange) and is GUARANTEED to reach the
+    # JOINED member: it rides the op result (the caller's view) AND lands in the joined live-session's
+    # own mailbox — a member added BY someone else still receives their arrival card.
     try:
         from runtime.door import compose_card
-        row2["card"] = compose_card({"handle": sid, "name": (label or "")}, moment="channel-join",
-                                    channel=row2.get("name") or cid)
+        room: dict = {"purpose": row2.get("purpose") or "",
+                      "members": len(row2.get("members") or [])}
+        try:  # recent exchange + post count (live fold; absent on error, never fabricated)
+            hist = channel_history(store, cid, limit=3)
+            posts = hist.get("posts") or []
+            room["posts"] = len(posts)
+            room["recent"] = [(p.get("from", "?"), (p.get("message") or "").replace("\n", " ")[:120])
+                              for p in posts[-3:]]
+        except Exception:  # noqa: BLE001
+            pass
+        try:  # the channel-scoped board: the room's unfinished business
+            from runtime import cc_board as _cb
+            items = _cb.list_items(scope=_chan_addr(row2["id"])) or []
+            live = [i for i in items if i.get("state") not in ("archived", "resolved", "done")]
+            room["board_open_count"] = len(live)
+            room["open_board"] = [(i.get("id", "?"), (i.get("title") or "")[:80]) for i in live[:3]]
+        except Exception:  # noqa: BLE001
+            pass
+        card = compose_card({"handle": sid, "name": (label or "")}, moment="channel-join",
+                            channel=row2.get("name") or cid, room=room)
+        row2["card"] = card
+        # the DELIVERY guarantee: the joined member's own mailbox (next-turn pickup), not only the
+        # caller's op result. Live-session members only (a human/model member has no inbox).
+        if kind == "live-session":
+            try:
+                mail = store.append_agent_mail({
+                    "to": _addr(sid), "from": "door://channel-join", "verb": "queue",
+                    "cas": store.put_content(card), "thread": f"chan-{row2['id']}-join-{sid[:8]}",
+                    "channel": _chan_addr(row2["id"]), "channel_post": False,
+                    "transport": "queue", "delivered": False,
+                    "source": "session_channels.add_member/door-card"})
+                row2["card_mailed"] = {"to": _addr(sid), "mail_seq": mail["seq"]}
+            except Exception:  # noqa: BLE001
+                row2["card_mailed"] = None  # visible: the mail half didn't land (the op is unaffected)
     except Exception:  # noqa: BLE001
         pass
     return row2

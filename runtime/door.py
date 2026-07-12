@@ -118,13 +118,20 @@ def verb_table(message_types_dir: str | None = None) -> str:
 
 def compose_card(reg: dict, *, moment: str = "register", channel: str | None = None,
                  project: str | None = None, door_dir: str | None = None,
-                 message_types_dir: str | None = None, now: str | None = None) -> str:
+                 message_types_dir: str | None = None, now: str | None = None,
+                 room: dict | None = None) -> str:
     """The RESOLVED card for a mechanical MOMENT (register · channel-join · channel-create ·
     project-join/create). Every section is live-folded at compose time: identity from the registration,
     verbs from message_types/, entries from door/ filtered by moment × scope × audience × until — so a
     channel card = the global default rows + that channel's modification rows, temporal rows expire out,
     role rows show only to their audience. Nothing is baked — a registry edit IS a card edit; a card can
-    never show anything but the current set (the anti-drift property, Tim 2026-06-29)."""
+    never show anything but the current set (the anti-drift property, Tim 2026-06-29).
+
+    `room` (2026-07-13, the join-orientation extension): the LIVE state of the room being entered,
+    supplied by the caller who holds it (session_channels — the door renders, it does not fetch):
+    {purpose, members: int, posts: int, open_board: [(id, title), …], board_open_count: int,
+     recent: [(from, text), …]} — every key optional; only present keys render (conditioned, like
+    the rows). Joining a room mid-conversation should FEEL like being handed the room's state."""
     if moment not in MOMENTS:
         raise ValueError(f"compose_card: unknown moment {moment!r} — valid {list(MOMENTS)}. Fail loud.")
     who = reg.get("name") or reg.get("handle", "?")
@@ -149,5 +156,24 @@ def compose_card(reg: dict, *, moment: str = "register", channel: str | None = N
     for r in door_rows(door_dir):
         if _row_applies(r, moment=moment, channel=channel, project=project, reg=reg, now=now):
             lines.append(f"- {r['line']} → {r['depth']}")
+    if room:
+        lines.append("")
+        lines.append("THE ROOM (live state at this moment — resolved, never baked):")
+        if room.get("purpose"):
+            lines.append(f"  purpose: {room['purpose']}")
+        counts = []
+        if room.get("members") is not None:
+            counts.append(f"{room['members']} members")
+        if room.get("posts") is not None:
+            counts.append(f"{room['posts']} posts")
+        if counts:
+            lines.append("  " + " · ".join(counts))
+        if room.get("board_open_count"):
+            lines.append(f"  board — {room['board_open_count']} item(s) awaiting attention "
+                         f"(cc_board list, scope channel://{channel}):")
+            for bid, title in (room.get("open_board") or [])[:3]:
+                lines.append(f"    - {bid} · {title}")
+        for frm, txt in (room.get("recent") or [])[:3]:
+            lines.append(f"  recent · {frm}: {txt}")
     lines.append("</fabric-card>")
     return "\n".join(lines)
