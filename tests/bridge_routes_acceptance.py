@@ -49,6 +49,12 @@ def dispatched_routes() -> set:
     # (self.)path.startswith("/…")  — the prefix routes (e.g. /mockups/)
     for m in re.finditer(r'(?:self\.)?path\.startswith\(\s*"(/[^"]*)"', body):
         routes.add(m.group(1))
+    # (self.)path in ("/…", "/…")  — the tuple-membership form (the supervisor quartet dispatches
+    # through it; the extractor missing it made those four REAL routes look phantom — found 2026-07-13
+    # while adding /app, fixed as the class: every dispatch form the file actually uses is extracted)
+    for m in re.finditer(r'(?:self\.)?path\s+in\s+\(([^)]*)\)', body):
+        for s in re.finditer(r'"(/[^"]*)"', m.group(1)):
+            routes.add(s.group(1))
     return routes
 
 

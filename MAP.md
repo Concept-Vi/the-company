@@ -61,6 +61,7 @@ flowchart TD
 | `nodes/` | the node library (incl. `portal`, `rhm_mode`, `model_of_tim`) | [[nodes — constitution]] | C2 |
 | `voice/` | two-way voice — STT provider + local TTS | [[voice — constitution]] | — |
 | `canvas/` | the frontend + the extensions runtime | [[canvas — constitution]] | S5, D3 |
+| `operator/` | the operator's own console surfaces (`app/` = the B1 shell served by the bridge at `/app`, claude-ds-only styling per the K0 contract) | [[operator — constitution]] (app: [[operator app — constitution]]) | K0–K3 (board://item-67e34f0c) |
 | `panels/` | brain-authored declarative UI panels (JSON) | [[panels — constitution]] | — |
 | `tests/` | acceptance suites (the proofs) | [[tests — constitution]] | — |
 | `introspection/` | the platform-agnostic Mirror-Registry engine (DISCOVER→CLASSIFY→PROJECT→REFRESH over a `PlatformEntry` + the 5 closed rules) + the instance-#1 CLI adapters — Level-1, ZERO platform-name literals (the lift, F-FIX-10). **+ the two Level-2 registries (LANE-REGISTRIES):** `registry.py` = `CapabilityRegistry` (the binary-discovered capability-leaf table behind a CACHED singleton — `set_capability_registry`/`capability_registry()`, a NEW pattern justified by expensive discovery, F-FIX-1); `platforms.py` = `PlatformRegistry` (a standalone importlib copy loading `platforms/*.py` `PLATFORM` rows via `model_validate`, deriving transport_invariants at load) | [[introspection — constitution]] | Mirror-Registry System |

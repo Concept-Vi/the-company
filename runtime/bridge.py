@@ -8,6 +8,7 @@ Run: python3 runtime/bridge.py [port]   then open http://localhost:8770
 """
 from __future__ import annotations
 import json
+import mimetypes as _mimetypes
 import os
 import sys
 import time
@@ -45,6 +46,14 @@ CANVAS = os.path.join(ROOT, "canvas", "index.html")
 BRIDGE_ROUTES = (
     # served pages / static (non-/api — in the table, excluded from api_verbs by the prefix projection)
     "/studio", "/design-system.css", "/mockups/",
+    # the OPERATOR APP (B1 — operator/app, its K1 home) + the DS home it consumes (K0: one chain, one home)
+    "/app", "/app/", "/ds/",
+    # the canvas document (dispatched via `path in ("/", "/index.html")` — the tuple form the drift
+    # test's extractor was blind to until 2026-07-13; declared now that the teeth actually see them)
+    "/", "/index.html",
+    # G4.7 voice-service lifecycle (same tuple-form blindness, same declare-now fix)
+    "/api/voice/services", "/api/voice/ears", "/api/voice/load", "/api/voice/ear/load",
+    "/api/voice/unload", "/api/voice/ear/unload",
     # --- GET routes ---
     "/api/stream", "/api/mockup-feedback", "/api/mockup-feedback/status", "/api/corpus", "/api/graph",
     "/api/graphs", "/api/object_info", "/api/cognition_info", "/api/type_info", "/api/types", "/api/layers", "/api/layer-dims", "/api/models",
@@ -150,6 +159,8 @@ BRIDGE_ROUTES = (
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
 FEEDBACK_DIR = os.path.join(MOCKUPS_DIR, ".feedback")           # one JSONL per mockup (filename-keyed)
 DESIGN_CSS = os.path.join(ROOT, "design", "design-system.css")  # the generated corpus stylesheet
+APP_DIST = os.path.join(ROOT, "operator", "app", "dist")        # the BUILT operator app (B1 — served at /app)
+DS_DIR = os.path.join(ROOT, "design", "claude-ds")              # the DS home (served read-only at /ds/*)
 
 
 def _safe_mockup_path(name):
@@ -1505,6 +1516,47 @@ class H(BaseHTTPRequestHandler):
                 else:
                     with open(DESIGN_CSS, "rb") as f:
                         self._send(200, f.read(), "text/css; charset=utf-8")
+            elif path == "/app" or path.startswith("/app/"):
+                # THE OPERATOR APP (B1 — operator/app is its K1 home; the bridge serves the BUILT app so
+                # /api is SAME-ORIGIN, the K0 law the DS's company provider depends on). STATIC, READ-ONLY:
+                # /app + /app/ → dist/index.html; /app/<asset> → the dist file (vite base is /app/), realpath-
+                # contained under dist; an extensionless miss falls back to index.html (client-side view state).
+                # FAIL LOUD when dist is missing — a teaching 503, never a silent 404 (root AGENTS.md rule 4).
+                # ⚠️ LOCAL-ONLY (127.0.0.1): do NOT expose this on the tailnet — B4 leg (a) auth is not green.
+                if not os.path.isfile(os.path.join(APP_DIST, "index.html")):
+                    self._send(503, "operator/app/dist is missing — the app is not built. Build it:\n"
+                                    "  cd " + os.path.join(ROOT, "operator", "app") + " && npm install && npm run build\n"
+                                    "then reload. (The bridge serves the BUILT app; `npm run dev` on :5175 is the dev path.)",
+                               "text/plain; charset=utf-8")
+                else:
+                    rel = path[len("/app"):].lstrip("/")
+                    fp = os.path.realpath(os.path.join(APP_DIST, rel)) if rel else os.path.join(APP_DIST, "index.html")
+                    if not fp.startswith(os.path.realpath(APP_DIST) + os.sep) and fp != os.path.join(APP_DIST, "index.html"):
+                        self._send(400, "{}")               # path escape → malformed request (mirror _safe_mockup_path)
+                    elif os.path.isfile(fp):
+                        ctype = _mimetypes.guess_type(fp)[0] or "application/octet-stream"
+                        with open(fp, "rb") as f:
+                            self._send(200, f.read(), ctype)
+                    elif "." not in os.path.basename(rel):  # extensionless → the SPA document (view state is client-side)
+                        with open(os.path.join(APP_DIST, "index.html"), "rb") as f:
+                            self._send(200, f.read(), "text/html; charset=utf-8")
+                    else:
+                        self._send(404, "{}")               # a well-formed but missing asset → explicit 404
+            elif path.startswith("/ds/"):
+                # THE DS HOME served same-origin (K0 §3, the documented serving DECISION): the operator app's
+                # only stylesheet chain (/ds/styles.css → the 26-file cascade), _ds_bundle.js, and index.js
+                # (the sanctioned door) are served FROM design/claude-ds — the ONE home, never a copy/symlink
+                # (a public/ symlink would make vite bake a second copy into dist — exactly the drift the DS
+                # constitution forbids). STATIC, READ-ONLY, realpath-contained; missing → explicit 404.
+                fp = os.path.realpath(os.path.join(DS_DIR, path[len("/ds/"):]))
+                if not fp.startswith(os.path.realpath(DS_DIR) + os.sep):
+                    self._send(400, "{}")                   # path escape → malformed request
+                elif os.path.isfile(fp):
+                    ctype = _mimetypes.guess_type(fp)[0] or "application/octet-stream"
+                    with open(fp, "rb") as f:
+                        self._send(200, f.read(), ctype)
+                else:
+                    self._send(404, "{}")
             elif path.startswith("/api/image/"):
                 # IMAGES: serve an image's BYTES by id. /api/image/<id> → cc_images.image_bytes (the record's
                 # blob:// → store.get_blob) → Content-Type from the record's mime. The viewable half of the

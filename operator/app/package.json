@@ -1,0 +1,23 @@
+{
+  "name": "operator-app",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "The operator console (K1 home) — thin React shell over the bridge (/api), styled ONLY by the claude-ds chain (K0). Tooling mirrors surface/app (the proven quarry).",
+  "scripts": {
+    "dev": "vite --port 5175",
+    "build": "vite build",
+    "preview": "vite preview --port 5175"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.7"
+  }
+}

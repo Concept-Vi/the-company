@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-density="comfortable">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover so a future PWA can use env(safe-area-inset-*) (the tab bar rides it) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Operator</title>
+    <!-- K0: the app's ONLY stylesheet is the claude-ds chain — styles.css is the DS's single
+         entry (its @import order IS the documented 26-file cascade). Served by the bridge at
+         /ds/* from the one DS home (design/claude-ds); the vite dev server proxies /ds there.
+         ZERO other css, ZERO raw hex/px anywhere in this app (the acceptance test gates it). -->
+    <link rel="stylesheet" href="/ds/styles.css" />
+  </head>
+  <body>
+    <!-- #root, NOT #app: the DS bundle's studio sources are DOM-guarded on #app
+         (claude-ds CLAUDE.md §5) — using #root keeps them dormant when the bundle loads. -->
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
