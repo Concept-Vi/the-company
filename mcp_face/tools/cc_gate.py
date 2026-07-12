@@ -22,6 +22,11 @@ OPS = ("gate", "resume", "abort", "rewind", "list", "get")
 
 
 def register(mcp, suite):
+    # P0.4 — wire the gate-event emitter to the suite's event layer (mirrors cc_board's set_board_emitter):
+    # gate/resume/abort/rewind become visible fabric events, closing the destructive-abort audit gap.
+    from runtime import cc_gate as _cg
+    _cg.set_gate_emitter(lambda ev, fields: suite.emit_run_record(f"gate.{ev}", 0, **fields))
+
     @mcp.tool()
     def cc_gate(op: Literal["gate", "resume", "abort", "rewind", "list", "get"],
                 step_address: str = "", session: str = "", gate: str = "", source: str = "",

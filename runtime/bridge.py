@@ -580,7 +580,10 @@ def _supervisor_call(path: str, body: dict | None = None, timeout: int = 30) -> 
     consequential ones are operator-token-gated at the route. Supervisor down → an honest 503 shape."""
     import urllib.request as _ur
     import urllib.error as _ue
-    url = f"http://127.0.0.1:8771{path}"
+    # P1 config fix: env-first (was a bare literal — the bridge proxy couldn't be repointed at all).
+    # Inline rather than importing cc_channels: the bridge deliberately never imports the transport hub.
+    _base = os.environ.get("COMPANY_SUPERVISOR_BASE", "http://127.0.0.1:8771").rstrip("/")
+    url = f"{_base}{path}"
     try:
         if body is None:
             r = _ur.urlopen(url, timeout=timeout)

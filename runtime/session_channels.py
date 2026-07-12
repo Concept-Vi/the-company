@@ -95,8 +95,12 @@ ROW_STATUS = ("active", "archived", "dispersed", "promoted")   # the row lifecyc
 
 LEAF = "channels.jsonl"                          # beside mail.jsonl under <store>/agent_sessions/
 LOCK_KEY = "agent_sessions:channels"             # the cross-process append lock (the mail-leaf twin)
-SUPERVISOR_URL = "http://127.0.0.1:8771"         # the supervisor's READ face (ops/services.json row);
-                                                 # probed read-only for busy-refinement, never commanded
+# the supervisor's READ face (ops/services.json row); probed read-only for busy-refinement, never
+# commanded. P1 config fix: this was the ONE runtime holdout hardcoded with NO env override (every
+# sibling honors COMPANY_SUPERVISOR_BASE) — now it imports the canonical env-first constant from
+# cc_channels (one default literal in runtime, not N). Import is cycle-safe: cc_channels never imports
+# this module (the 2026-06-29 retirement made it transport-only).
+from runtime.cc_channels import DEFAULT_SUPERVISOR_BASE as SUPERVISOR_URL
 
 
 def _now() -> str:

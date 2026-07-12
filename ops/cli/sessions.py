@@ -17,11 +17,15 @@ supervisor down is a LOUD, teaching failure — never a silent no-op.
   company session fleet                    list the point-in-time CLONE fleet (handle · cut · era)
 """
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
 
-SUPERVISOR = "http://127.0.0.1:8771"
+# P1 config fix: was a bare literal with NO env override (the only unconfigurable supervisor address
+# besides the bridge proxy). Env-first now; the default literal stays local because this CLI is
+# deliberately dependency-light (no runtime imports).
+SUPERVISOR = os.environ.get("COMPANY_SUPERVISOR_BASE", "http://127.0.0.1:8771")
 
 
 def _call(method, path, body=None, timeout=30):

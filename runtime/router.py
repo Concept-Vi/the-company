@@ -64,15 +64,37 @@ def _supervisor_inject(base: str, session: str, content: str, source: str) -> "t
         return False, str(e)
 
 
-def _queue(store, uuid: str, content: str, frm: str, thread: str | None) -> dict:
-    """Durable mailbox append (verb=queue) — the target pulls it via sessions(op='inbox') next turn.
-    The SAME leaf + shape session_channels/session_post write (content to CAS, one mail record)."""
+def _record(store, uuid: str, content: str, frm: str, thread: str | None, *,
+            delivered: bool, transport: str | None = None) -> dict:
+    """The durable mail record — written for EVERY routed message, not only the queued ones (P0.5:
+    record-AND-deliver, the review's data-loss fix — deliver-XOR-queue would erase live-delivered
+    history the moment channel posts route through here). `verb` is ALWAYS "queue" on this leaf: the
+    supervisor acts only on deliver/wake/consult, so a record for an already-live-delivered message is
+    never double-injected (the proven post_to_channel backstop pattern). `delivered`/`transport` carry
+    the truth for inbox/history readers: delivered:true = it already landed live, this row is the
+    audit/backstop copy; delivered:false = a real queued message to pick up."""
     cas = store.put_content(content)
     rec = {"to": f"session://{uuid}", "from": frm, "verb": "queue", "cas": cas,
-           "source": "runtime.router"}
+           "delivered": delivered, "source": "runtime.router"}
+    if transport:
+        rec["transport"] = transport
     if thread:
         rec["thread"] = thread
     return store.append_agent_mail(rec)
+
+
+def _record_lenient(store, uuid, content, frm, thread, *, delivered: bool,
+                    transport: str | None) -> "tuple[bool, str | None]":
+    """Record best-effort AFTER a successful live delivery: a record failure must never turn a delivered
+    message into an error — but it is SURFACED on the receipt (recorded:false + reason), never silent."""
+    if store is None or not uuid:
+        return False, ("no store to record to" if store is None
+                       else "no durable uuid to record against (live-only member)")
+    try:
+        _record(store, uuid, content, frm, thread, delivered=delivered, transport=transport)
+        return True, None
+    except Exception as e:                       # noqa: BLE001 — audit best-effort, delivery already true
+        return False, f"record failed: {type(e).__name__}: {e}"
 
 
 def route(target: str, content: str, *, frm: str = "fabric", thread: str | None = None,
@@ -105,8 +127,14 @@ def route(target: str, content: str, *, frm: str = "fabric", thread: str | None 
         except cc.ChannelError as e:
             r = {"ok": False, "error": str(e)}
         if r.get("ok"):
-            return _receipt(target, pr, delivered=True, transport=r.get("transport", "channel"),
-                            verb="inject", reason="live .mjs inject confirmed (HTTP 200)")
+            tr = r.get("transport", "channel")
+            rec_ok, rec_err = _record_lenient(store, uuid, content, frm, thread,
+                                              delivered=True, transport=tr)
+            out = _receipt(target, pr, delivered=True, transport=tr, verb="inject",
+                           reason="live .mjs inject confirmed (HTTP 200)"
+                                  + ("" if rec_ok else f" [{rec_err}]"))
+            out["recorded"] = rec_ok
+            return out
         fail = f".mjs push not ok ({r.get('error') or 'non-200 from port'})"   # do NOT claim delivered
 
     # rung 2 — supervised-live via the owning supervisor's /inject
@@ -118,18 +146,25 @@ def route(target: str, content: str, *, frm: str = "fabric", thread: str | None 
         if session_key:
             ok, err = _supervisor_inject(base or cc.DEFAULT_SUPERVISOR_BASE, session_key, content, frm)
             if ok:
-                return _receipt(target, pr, delivered=True, transport="supervised", verb="inject",
-                                reason="supervisor /inject confirmed (HTTP 200)")
+                rec_ok, rec_err = _record_lenient(store, uuid, content, frm, thread,
+                                                  delivered=True, transport="supervised")
+                out = _receipt(target, pr, delivered=True, transport="supervised", verb="inject",
+                               reason="supervisor /inject confirmed (HTTP 200)"
+                                      + ("" if rec_ok else f" [{rec_err}]"))
+                out["recorded"] = rec_ok
+                return out
             fail = (fail + "; " if fail else "") + f"supervisor inject failed ({err})"
 
     # rung 3 — durable queue (never a silent drop): persist for next-turn pull
     if uuid and store is not None:
         if not dry_run:
-            _queue(store, uuid, content, frm, thread)
+            _record(store, uuid, content, frm, thread, delivered=False)
         pre = (fail + " -> " if fail else "")
-        return _receipt(target, pr, delivered=False, queued=True, transport="queue", verb="queue",
-                        reason=pre + "no live transport reached them; queued to the durable mailbox "
-                               "(they pull it via sessions(op='inbox') next turn).")
+        out = _receipt(target, pr, delivered=False, queued=True, transport="queue", verb="queue",
+                       reason=pre + "no live transport reached them; queued to the durable mailbox "
+                              "(they pull it via sessions(op='inbox') next turn).")
+        out["recorded"] = not dry_run
+        return out
 
     # rung 4 — genuinely unreachable: LOUD, never a phantom OK
     why = fail or "no live transport and state=" + str(pr.get("state"))

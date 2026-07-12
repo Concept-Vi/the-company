@@ -96,9 +96,12 @@ def _read_reg(path: str):
 def _transport_of(reg: dict) -> str:
     """A member's transport (the unified per-member dispatch axis). BACK-COMPAT: a registration with
     no explicit `transport` (the original portful channel-session shape, or any reg carrying a `port`)
-    is a "channel" member — the HTTP-POST-to-port transport that shipped first."""
+    is a "channel" member — the HTTP-POST-to-port transport that shipped first.
+    "mail" (register_self without a port) = PULL-only: no live push exists; delivery is the durable
+    queue (pending-mentions fold + the nag hook). Previously this fell through to "channel", producing
+    a phantom-live member whose port-0 push always failed (P0.3 fix — recognize it, fail loud on push)."""
     t = reg.get("transport")
-    if t in ("channel", "supervised"):
+    if t in ("channel", "supervised", "mail"):
         return t
     return "channel"
 
@@ -224,6 +227,12 @@ def push(handle_or_reg, content: str, *, meta: "dict | None" = None, base_timeou
     transport = _transport_of(reg)
     if transport == "supervised":
         return _push_supervised(reg, content, meta=meta or {}, base_timeout=base_timeout)
+    if transport == "mail":
+        raise ChannelError(
+            f"member {reg.get('handle')!r} is PULL-only (transport 'mail' — registered without a live "
+            f"port). There is no live push; deliver via the durable queue (send/router queues it; the "
+            f"member picks it up via its inbox / the pending-mentions nag). Fail loud, never a "
+            f"phantom port-0 push.")
     port = reg["port"]
     body = json.dumps({"content": content, "meta": meta or {}}).encode()
     req = urllib.request.Request(f"http://127.0.0.1:{port}", data=body, method="POST",
@@ -453,6 +462,38 @@ def route_reply(from_handle: str, thread: str, text: str) -> dict:
     return {"recorded": True, "delivered": False, "to": origin, "transport": res.get("transport"),
             "reason": "push reached the transport but it did not confirm delivery (non-200) — recorded, "
                       "not confirmed live", "thread": thread}
+
+
+def mail_since(idx: int = -1, *, to_any: "set | None" = None, frm: str | None = None,
+               limit: int = 50) -> dict:
+    """Cursor'd read of the transport mail log (_mail.jsonl) — the agent_mail_since twin for THIS leaf
+    (additive P2 helper for the `mailbox` door; `mail()` below stays the thread-transcript view).
+    `idx` = the 0-based line index of the last row already consumed (-1 = everything), OLDEST-first;
+    each returned row carries its `idx`; `next_idx` is the last returned (or last scanned) index — the
+    client-held cursor, pagination never skips. Filters: `to_any` (a set of handles — a session's
+    inbox across its churned handles), `frm`. Malformed lines are skipped but still advance the scan."""
+    out = []
+    next_idx = idx
+    if not os.path.exists(MAIL_LOG):
+        return {"rows": [], "next_idx": idx}
+    with open(MAIL_LOG, encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            if i <= idx:
+                continue
+            next_idx = i
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if to_any is not None and r.get("to") not in to_any:
+                continue
+            if frm and r.get("frm") != frm:
+                continue
+            r["idx"] = i
+            out.append(r)
+            if limit and len(out) >= limit:
+                break
+    return {"rows": out, "next_idx": next_idx}
 
 
 def mail(thread: str = "", limit: int = 50) -> list:

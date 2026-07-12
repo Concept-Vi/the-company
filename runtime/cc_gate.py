@@ -44,11 +44,55 @@ SUPERVISOR = os.environ.get("COMPANY_SUPERVISOR_BASE", "http://127.0.0.1:8771")
 # equivalent before the swap). The grammar declares the shape; this module validates through it.
 GATE_STATES = ("gated", "resumed", "aborted", "rewound")
 FRONTMATTER_KEYS = ("id", "step_address", "session", "state", "control", "by", "note",
-                    "rewound_to", "created", "updated", "history")
+                    "rewound_to", "interrupt_http", "created", "updated", "history")
 
 
 class GateError(RuntimeError):
     """A gate op could not run — raised TEACHING-loud (never a silent no-op). Mirrors BoardError/CloneError."""
+
+
+# ── the gate-event emitter (P0.4 — mirrors cc_board's injected-emitter pattern) ────────────────────────
+# Gate transitions — ESPECIALLY the destructive abort (interrupt+teardown kills a live session) — were
+# invisible to the fabric: _transition wrote only the private .data/gates/<id>.md file, so an abort left
+# no trace on events.jsonl (the review's audit-gap finding). Now every transition emits `gate.<control>`
+# on the shared event layer. cc_gate stays standalone (no suite import — no cycle); the MCP face injects
+# suite.emit_run_record at register() time; UNSET falls back to the durable bus directly. Lenient like
+# every telemetry emit: a failure is SURFACED on the returned record (emit_error), never breaks the write.
+_UNSET_EMITTER = object()   # sentinel: "never configured" ≠ "explicitly off (None)"
+_GATE_EMITTER = _UNSET_EMITTER
+_BUS_CACHE: dict = {}       # {store_path: FsStore} — the default emitter's lazy store handle
+
+
+def set_gate_emitter(fn) -> None:
+    """Install the process's gate-event emitter — a callable emit(control: str, fields: dict). Wired by
+    the MCP face (suite.emit_run_record) or a test subscriber. None = EXPLICITLY off; UNSET (default) =
+    the durable-bus fallback (gate activity lands on the shared events.jsonl whichever face acted)."""
+    global _GATE_EMITTER
+    _GATE_EMITTER = fn
+
+
+def _default_bus_emitter(event: str, fields: dict) -> None:
+    path = os.environ.get("COMPANY_STORE") or os.path.join(REPO, ".data", "store")
+    store = _BUS_CACHE.get(path)
+    if store is None:
+        from store.fs_store import FsStore
+        store = _BUS_CACHE[path] = FsStore(path)
+    store.append_event({"kind": f"gate.{event}",
+                        "summary": f"{event}: {fields.get('step_address') or fields.get('id') or ''}",
+                        **fields})
+
+
+def _emit_gate_event(event: str, fields: dict) -> str | None:
+    """Emit a gate event leniently. Returns an error string on failure (surfaced on the record, never
+    raised) or None on success/emitter-off."""
+    fn = _default_bus_emitter if _GATE_EMITTER is _UNSET_EMITTER else _GATE_EMITTER
+    if fn is None:
+        return None
+    try:
+        fn(event, fields)
+        return None
+    except Exception as e:                       # VISIBILITY best-effort — never break the file write
+        return f"{type(e).__name__}: {e}"
 
 
 def _sup(path: str, body=None, method: str = "POST", timeout: float = 30):
@@ -137,6 +181,12 @@ def _transition(rec: dict, to_state: str, control: str, by: str, note: str, *,
     if extra:
         rec.update(extra)
     _write(gates_dir, rec)
+    # P0.4 — every lifecycle transition is a fabric event (the abort audit-gap fix); lenient, post-write.
+    err = _emit_gate_event(control, {"id": rec.get("id"), "step_address": rec.get("step_address"),
+                                     "session": rec.get("session"), "from": rec["history"][-1]["from"],
+                                     "to": to_state, "by": by or "", "note": note or ""})
+    if err:
+        rec = dict(rec); rec["emit_error"] = err          # surfaced on the return, not persisted
     return rec
 
 
@@ -156,6 +206,11 @@ def gate(step_address: str, session: str, *, note: str = "", by: str = "", gates
            "history": [{"from": None, "to": "gated", "control": "gate", "by": by or "", "ts": _now(),
                         "note": note or ""}]}
     _write(gates_dir, rec)
+    # P0.4 — the registration itself is a fabric event too (gate() writes directly, not via _transition).
+    err = _emit_gate_event("gate", {"id": rec["id"], "step_address": step_address, "session": session,
+                                    "from": None, "to": "gated", "by": by or "", "note": note or ""})
+    if err:
+        rec = dict(rec); rec["emit_error"] = err
     return rec
 
 
@@ -176,12 +231,16 @@ def abort(gate_id_or_step: str, *, by: str = "", note: str = "", gates_dir: str 
     session = rec.get("session")
     if not session:
         raise GateError(f"gate {rec['id']} has no session — cannot abort. Fail loud.")
-    _sup("/interrupt", {"session": session})          # stop the in-flight turn
+    # P0.4 — capture the /interrupt result instead of discarding it. A failed interrupt does NOT block the
+    # abort (teardown is the no-orphan backstop either way) but it is RECORDED, never silently swallowed.
+    icode, ir = _sup("/interrupt", {"session": session})          # stop the in-flight turn
     code, r = _sup("/teardown", {"session": session})  # no-orphan: tear the session down
     if code != 200:
         raise GateError(f"abort: supervisor /teardown for {session} failed (HTTP {code}): {r}. Fail loud.")
-    return _transition(rec, "aborted", "abort", by, note or f"interrupt+teardown {session} (no-orphan)",
-                       gates_dir=gates_dir)
+    inote = "" if icode == 200 else f" [interrupt FAILED (HTTP {icode}): {ir} — teardown was the backstop]"
+    return _transition(rec, "aborted", "abort", by,
+                       (note or f"interrupt+teardown {session} (no-orphan)") + inote,
+                       gates_dir=gates_dir, extra={"interrupt_http": icode})
 
 
 def rewind(gate_id_or_step: str, source_jsonl: str, at: str, *, by: str = "", note: str = "",

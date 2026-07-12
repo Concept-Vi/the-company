@@ -39,7 +39,7 @@ from runtime import session_channels as sc
 
 OPS = ("list", "describe", "history", "edges")
 ACTIONS = ("create", "gather", "add", "remove", "status", "post", "mode",
-           "promote", "disperse", "archive", "react", "unreact")
+           "promote", "disperse", "archive", "retire", "react", "unreact")
 
 
 def _to_sdk_annotations(ann: CompanyToolAnnotations, title: str,
@@ -181,13 +181,14 @@ def register(mcp, suite):
         CompanyToolAnnotations(readonly=False, destructive=False, idempotent=False),
         "Session fabric — act on channels/gatherings (write)"))
     def channel_act(action: Literal["create", "gather", "add", "remove", "status", "post",
-                                    "mode", "promote", "disperse", "archive", "react", "unreact"],
+                                    "mode", "promote", "disperse", "archive", "retire",
+                                    "react", "unreact"],
                     channel: str = "", name: str = "", purpose: str = "",
                     members: list = None, session: str = "", participation: str = "awake",
                     message: str = "", from_session: str = "", thread: str = "",
                     mode: str = "", coordinator: str = "", parent: str = "",
                     kind: str = "live-session", label: str = "",
-                    reply_to: int = None, emoji: str = "") -> dict:
+                    reply_to: int = None, emoji: str = "", force: bool = False) -> dict:
         """ACT on the cross-session fabric's structure (the one WRITE — CQRS twin of `channels`).
         Everything is a durable store append; NOTHING here spawns or wakes a session (a channel
         post routes deliver-class intents to the supervisor for live members and queue-class for
@@ -224,7 +225,14 @@ def register(mcp, suite):
           action="mode"     — set coordination (`channel`, `mode`; conducted needs `coordinator`).
           action="promote"  — gathering → durable channel (provenance stamped both ways).
           action="disperse" — let a gathering go (terminal; history stays readable).
-          action="archive"  — close a channel (terminal; history stays readable).
+          action="archive"  — close a channel (terminal; history stays readable). GATED on harvest
+                              coverage (P5): archiving with members who never crystallized a harvest
+                              REFUSES with the coverage ledger — retire first (records the gap
+                              honestly), or pass `force=True` to close anyway (the gap is then yours).
+          action="retire"   — crystallize the channel's TOTALITY into the corpus + a linked board
+                              record with a coverage check (`channel`, `from_session`=who retires,
+                              `message`=summary; `force=True` to ALSO archive — explicit, never a
+                              side effect). The cc_retire discipline, folded in as lifecycle.
 
         VERIFY consequences, don't assume: a post returns its fan (per-member verb + mail seq) —
         replies land under the returned `thread` (sessions(op='inbox', thread=…)); the channel's
@@ -286,7 +294,24 @@ def register(mcp, suite):
                             "channel; its history remains readable."}
         elif action == "disperse":
             row = sc.disperse_gathering(store, channel)
-        else:  # archive
+        elif action == "retire":
+            # P5 — the cc_retire discipline as a lifecycle verb (the runtime function unchanged).
+            if not from_session:
+                raise ValueError("channel_act(action='retire') needs `from_session` — who is "
+                                 "performing the retirement (provenance on the corpus record).")
+            from runtime import cc_retire as _cr
+            return {"action": action,
+                    **_cr.retire_channel(store, channel, author_session=from_session,
+                                         summary=message or "", archive=force)}
+        else:  # archive — GATED on harvest coverage (P5): the bypass the review flagged, closed.
+            from runtime import cc_retire as _cr
+            cov = _cr.harvest_status(store, channel)
+            if cov["members"] and not cov["complete"] and not force:
+                raise ValueError(
+                    f"channel_act(action='archive'): channel://{channel} has members with NO harvest "
+                    f"({cov['missing']}) — archiving now silently loses their perspective. Retire "
+                    f"first (channel_act(action='retire', channel=…, from_session=…) records the "
+                    f"coverage gap honestly), or pass force=True to close anyway.")
             row = sc.archive_channel(store, channel)
         return {"action": action, "channel": f"channel://{row['id']}", "status": row["status"],
                 "mode": row["mode"], "coordinator": row.get("coordinator"),

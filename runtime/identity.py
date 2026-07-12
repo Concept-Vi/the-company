@@ -40,10 +40,18 @@ from runtime import cc_channels as cc
 from runtime import principals
 from runtime import session_scan
 
-# The address schemes a target may arrive dressed in (contracts/address.py grammar). We strip the
-# scheme and resolve the bare id — R5: `session://ch-h8xvlf6i` must RESOLVE, not raise (the traced
-# broken circuit). clone://<sid>/<at> carries the source sid as its first path segment.
-_SCHEMES = ("session://", "agent://", "clone://")
+# The ACTOR address schemes this resolver strips to a bare id — R5: `session://ch-h8xvlf6i` must
+# RESOLVE, not raise (the traced broken circuit). clone://<sid>/<at> carries the source sid as its
+# first path segment. P0.6: this is a SUBSET OF THE ONE GRAMMAR (contracts.address.SCHEMES), asserted
+# at import so the two lists can never silently diverge again (the addressing review found this module
+# carrying a private scheme list the grammar didn't know — two competing vocabularies for one notion).
+# channel:// is deliberately NOT stripped here: a channel is a ROOM, not an actor — send() resolves it
+# via session_channels before the router ever calls this resolver.
+from contracts.address import SCHEMES as _GRAMMAR_SCHEMES
+_ACTOR_SCHEMES = ("session", "agent", "clone")
+assert all(s in _GRAMMAR_SCHEMES for s in _ACTOR_SCHEMES), \
+    "identity: actor schemes missing from contracts.address.SCHEMES — the one grammar must declare them"
+_SCHEMES = tuple(f"{s}://" for s in _ACTOR_SCHEMES)
 
 
 def _strip_scheme(target: str) -> str:
@@ -262,8 +270,14 @@ def _row_from_channel_reg(reg: dict, supervised_idx: dict, deep: bool = False) -
     uuid, how = recover_uuid(reg, deep=deep)
     kind = principals.resolve_kind(reg).get("kind")
     sup = (uuid and supervised_idx.get(uuid)) or None
+    reachable = True
     if transport == "supervised" or sup:
         state, transports = "supervised-live", ["supervised"]
+    elif transport == "mail":
+        # register_self without a port: the session is ALIVE (claude_pid anchors presence) but PULL-only —
+        # no live transport exists. The router sees neither "channel" nor "supervised" here and falls to
+        # the durable queue rung — exactly the delivery this member signed up for (P0.3: no phantom-live).
+        state, transports, reachable = "unsupervised-live", ["mail"], False
     else:
         state, transports = "unsupervised-live", ["channel"]
     return {
@@ -272,7 +286,7 @@ def _row_from_channel_reg(reg: dict, supervised_idx: dict, deep: bool = False) -
         "as_id": (sup or {}).get("as_id") or reg.get("supervisor_session"),
         "agent_id": reg.get("agent_id") or (reg.get("profile") or {}).get("agent_id"),
         "cwd": reg.get("cwd"), "description": reg.get("description"), "model": reg.get("model"),
-        "kind": kind, "state": state, "transports": transports, "reachable": True,
+        "kind": kind, "state": state, "transports": transports, "reachable": reachable,
         "port": reg.get("port"), "pid": reg.get("pid"), "claude_pid": reg.get("claude_pid"),
         "forked_from": reg.get("forked_from"),
         "reg": reg, "sources": ["cc_channels"] + (["supervisor"] if sup else []),
