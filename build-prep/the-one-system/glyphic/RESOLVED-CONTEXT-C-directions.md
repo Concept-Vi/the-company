@@ -111,6 +111,41 @@ title, jsonl_path, turns…} — everything below is the extension space):
     session unregistered until the importer ran). Islands-join-mainland on identity itself: ONE address scheme
     for members.
 
+## 4.5 · TIM'S STANDOUT HIGHLIGHTS (2026-07-12 — salience tags, NOT demoting the rest; the all-wanted mandate stands)
+From the form-threads message, the ones he called "fantastic thinking / really loved the connection":
+**One response, many faces (the ConceptV echo) · The conversation becomes a glyphgraph (the full circle) ·
+Both directions — your inputs get resolved too · LOD on speech (the spatial theorem again) · Voices as identity
++ Tim's as the tunable one · It governs every output surface, not just chat.**
+(Note: in tagging these he manually performed exactly what ctx.verdict formalizes — a salience pass over blocks.)
+
+## 4.6 · THE BLOCK/CHAIN/FORK SEED (Tim, 2026-07-12 — the next face; follow-the-threads mandate)
+Tim's seed, decompressed: the titled/numbered ideas in messages are **BLOCKS**. Messages are a SEQUENCE from the
+start; blocks live inside them (containment); when blocks get referenced/built-on across messages they form
+**CHAINS / sub-chains** (relation). Expanding sessions produce so many blocks that most "get far back, forgotten,
+partially misremembered, or collapse" — THE core pain. Wanted: **block-level addresses** so each block can be
+responded to BY ITS OWN CHAIN (branching supported natively). **FORKS**: different chains could have their own
+fork/subagent (main agent above them); forks could REGISTER IN THE FABRIC as children of the registered main.
+**FRONT-END**: he has toyed with channel/board UIs where text renders as clickable BLOCKS; comments ATTACH TO THE
+BLOCK'S ADDRESS; replies nest at that address ("the session has nested"). CLI is unworkable for this (must
+hand-write labels; unmentioned blocks get lost). Boards feel like the basic testing ground. Judges relate ("check
+against stuff unknown"); many fork↔main/fork↔fork interactions expected; "many others I haven't thought to mention."
+THE THREADS (mine, follow-ups): (a) block = the ATOM — message=frame/container, block=glyphic/noun, reference=edge,
+chain=clause-thread → the glyphic grammar + spatial addresses (msg.block mixed-radix; absence-is-an-address →
+"blocks never responded to" becomes QUERYABLE = the anti-loss query); (b) chains = deliberate branching (the jsonl
+parentUuid tree exists but is accidental/unmanaged — 560 leaves observed); (c) fork-per-chain: each fork holds ONE
+chain hot (solves context-dilution), main = synthesizer; forks = fabric members with parent-lineage (member-registry
+threads #9/#12); inter-chain judges watch contradictions/duplication ACROSS chains (the convergence-checking we did
+by hand with the embedding session, mechanized); (d) front-end via boards: cc_board already has typed items +
+addresses + comments + links; blocks-as-cards, click-to-comment = a user turn ADDRESSED to a block, routed to that
+chain's fork. **The form system emits block-structured responses natively (schema-enforced) → the UI gets blocks
+for free — output grammar → blocks → UI is ONE pipeline.** Same surface as the glyphgraph canvas at a different
+LOD (card-text ↔ glyph); (e) THE RECOGNITION: click-a-block-comment-at-its-address = the Virtual Hub's ANNOTATION
+SYSTEM (comments bound to XYZ coordinates) reborn on conversation — Tim has re-derived his own decade-old
+primitive; (f) born-typed vs mined: blocks make structure AT AUTHORING (schema-first/extract-once applied to
+conversation); judges still mine the implicit; both feed ctx.*; his OWN messages get blocked too (both-directions);
+(g) fabric objects: block:// + chain:// join the one address scheme; a chain can be a channel ATTACHMENT or be
+PROMOTED to a channel (gathering→channel promotion exists); chains as sub-sessions = "the session has nested."
+
 ## 5 · Status + honest reality
 Exists today: registration (importer/supervisor), profiles {model, role, focus, expertise}, channels + members +
 posts + threads, boards (typed items + links + scopes: project://|channel://|global; authors as addresses),
