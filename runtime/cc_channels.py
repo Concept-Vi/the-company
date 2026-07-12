@@ -490,7 +490,7 @@ def mail(thread: str = "", limit: int = 50) -> list:
 # remove_member, archive_channel, fold_channels, get_channel} (each takes a `store` as its first arg).
 
 
-def register_self(handle: str | None = None, *, description: str = "", port: int = 0) -> dict:
+def register_self(handle: str | None = None, *, name: str = "", description: str = "", port: int = 0) -> dict:
     """SELF-REGISTRATION — any session joins the fabric (Tim 2026-06-29). Writes .data/channels/<handle>.json
     for THIS session, keyed by its session-unique claude-ancestor PID, so `self`/`reply` resolve for it and
     board @mentions reach it. No `port` → transport 'mail' (PULL delivery: the pending-mentions fold + the
@@ -513,8 +513,10 @@ def register_self(handle: str | None = None, *, description: str = "", port: int
     except Exception:  # noqa: BLE001 — ambiguous self still registers; the hook back-fills session_id
         sid = ""
     reg = {"handle": handle, "session_id": sid, "cwd": os.getcwd(),
+           "name": name or (existing or {}).get("name", ""),
            "description": description or (existing or {}).get("description", ""),
-           "pid": os.getpid(), "claude_pid": cp,
+           "pid": cp, "claude_pid": cp,   # liveness anchors on the SESSION (claude) pid — the registering
+           # subprocess dies instantly; recording it got registrations pruned as dead (live bug, 2026-06-29)
            "port": port or (existing or {}).get("port", 0),
            "transport": "channel" if (port or (existing or {}).get("port")) else "mail",
            "started": (existing or {}).get("started") or _time.strftime("%Y-%m-%dT%H:%M:%S")}

@@ -625,18 +625,64 @@ def edit_item(item_id: str, *, title: str | None = None, body: str | None = None
 #    now first-class on the board so it works on a block://, a code:// card, a decision://, anything ─────────
 def comment(target_addr: str, body: str, author_session: str, *, title: str = "Comment",
             channel: str = "", item_type: str = "note", board_dir: str | None = None,
-            author: str | None = None) -> dict:
+            author: str | None = None, message_type: str | None = None) -> dict:
     """COMMENT on any address: files a board item linked `commented_on` → `target_addr`. The comment is
-    itself addressed (board://<id>), so it can be replied to (threading) and commented on in turn."""
+    itself addressed (board://<id>), so it can be replied to (threading) and commented on in turn.
+
+    `message_type` — the TYPED-MESSAGE kind (a message_types/ registry row) carrying the OBLIGATION the
+    addressed members are held to (mention→reply · ask→answer · review_request→verdict · handoff→ack ·
+    fyi→nothing). Defaults to 'mention' when the body carries @mentions, else untyped. Unknown kinds
+    fail loud (registry-is-truth; add a row — see guide://adding_message_verbs)."""
     if not target_addr or not body or not author_session:
         raise BoardError("comment needs `target_addr`, `body`, and `author_session`. Fail loud.")
+    if message_type is not None:
+        _msg_reg()[message_type]                       # fail-loud validate against the registry
     rec = file_item(item_type, title, body, author_session, channel=channel,
                     links=[{"kind": "commented_on", "target": target_addr}], board_dir=board_dir, author=author)
+    if message_type is None and _MENTION_RE.search(body):
+        message_type = "mention"                       # the default typed kind for a mention-carrying comment
+    if message_type:
+        rec["message_type"] = message_type             # persists via the open frontmatter (F3)
+        _write(board_dir, rec)
     _route_mentions(rec, board_dir=board_dir)
     return rec
 
 
 _MENTION_RE = re.compile(r"(?<![\w./-])@([A-Za-z0-9][A-Za-z0-9_-]{1,63})\b")
+
+_MSG_TYPES = None
+
+
+def _msg_reg():
+    """The typed-message registry (lazy singleton, file-discovered from message_types/)."""
+    global _MSG_TYPES
+    if _MSG_TYPES is None:
+        from runtime.message_types import MessageTypeRegistry
+        _MSG_TYPES = MessageTypeRegistry().discover([os.path.join(REPO, "message_types")])
+    return _MSG_TYPES
+
+
+def _resolve_member_token(token: str) -> str:
+    """An @token resolves to a member HANDLE: exact handle match first, then the registration's human
+    NAME (Tim 2026-06-29: 'a label they go by, like a name'). Unresolved tokens pass through unchanged
+    (recorded as-is — visible, never dropped)."""
+    regdir = os.path.join(REPO, ".data", "channels")
+    try:
+        names = {}
+        for fn in os.listdir(regdir):
+            if not fn.endswith(".json") or fn.startswith("_"):
+                continue
+            if fn[:-5] == token:
+                return token                      # exact handle
+            try:
+                r = json.load(open(os.path.join(regdir, fn)))
+            except (OSError, ValueError):
+                continue
+            if r.get("name"):
+                names[r["name"].lower()] = r.get("handle") or fn[:-5]
+        return names.get(token.lower(), token)
+    except OSError:
+        return token
 
 
 def _route_mentions(rec: dict, *, board_dir: str | None = None) -> list:
@@ -646,19 +692,21 @@ def _route_mentions(rec: dict, *, board_dir: str | None = None) -> list:
     comment record as `mentions` (possible since the frontmatter opened, F3) — undelivered is visible,
     never silent. The comment itself always stands regardless of delivery (the board is the durable half).
     A handle = a live channel member (`.data/channels/<handle>.json`); resolution rides cc_channels.find."""
-    handles = sorted(set(_MENTION_RE.findall(rec.get("body", "") or "")))
-    if not handles:
+    tokens = sorted(set(_MENTION_RE.findall(rec.get("body", "") or "")))
+    if not tokens:
         return []
     from runtime import cc_channels as cc   # lazy — no import cycle (verified: cc_channels ∌ cc_board)
     author = rec.get("author_session", "board")
+    kind = rec.get("message_type") or "mention"
     outcomes = []
-    for h in handles:
-        if h == author:
+    for t in tokens:
+        h = _resolve_member_token(t)          # @name resolves to the handle; unresolved passes through
+        if h == author or t == author:
             continue                          # no self-ping
         try:
-            r = cc.send(h, f"[board mention · {rec.get('channel','')} · from {author}]\n"
-                           f"You were mentioned on {rec['address']} (re: {rec.get('links',[{}])[0].get('target','')}):\n\n"
-                           f"{rec.get('body','')}",
+            r = cc.send(h, f"[board {kind} · {rec.get('channel','')} · from {author}]\n"
+                           f"You were addressed on {rec['address']} (re: {rec.get('links',[{}])[0].get('target','')}). "
+                           f"Reply must land ON THE BOARD (reply_to_mention):\n\n{rec.get('body','')}",
                         frm=author, thread=f"board-{rec['id']}")
             outcomes.append({"handle": h, "delivered": bool(r.get("ok"))})
         except Exception as e:  # noqa: BLE001 — the comment stands; the failure is recorded, not raised
@@ -815,21 +863,36 @@ def is_pinned(item: str, view_id: str, *, board_dir: str | None = None) -> bool:
     return _board_target(item) in pinned_on_view(view_id, board_dir=board_dir)
 
 
-def pending_mentions(handle: str, *, board_dir: str | None = None) -> list[dict]:
-    """The PULL half of the mention loop (own/reflect — the BOARD is the ledger, no second store): every
-    comment that mentions `handle` and has NO reply yet BY that handle. Push (_route_mentions → cc.send)
-    is best-effort; THIS fold + the UserPromptSubmit nag hook are the guarantee — a mention cannot
-    silently rot, because it stays pending until the mentioned member's reply lands on the board."""
+def pending_obligations(handle: str, *, board_dir: str | None = None) -> list[dict]:
+    """The PULL half of the TYPED-MESSAGE loop (own/reflect — the BOARD is the ledger, no second store):
+    every comment addressed to `handle` whose message-kind carries an OBLIGATION (reply/verdict/ack) that
+    `handle` has not yet met (no reply by them). Push (_route_mentions → cc.send) is best-effort; THIS
+    fold + the UserPromptSubmit nag hook are the guarantee — a typed message cannot silently rot; it
+    stays pending until the closing action lands on the board. `fyi` (obligation none) never pends.
+    Each returned item carries `_obligation` (what is owed) for the nag/render."""
+    reg = _msg_reg()
     out = []
     for it in list_items(board_dir=board_dir):
         ms = it.get("mentions") or []
         if not any(m.get("handle") == handle for m in ms):
             continue
+        kind = it.get("message_type") or "mention"
+        obligation = reg[kind].obligation if kind in reg else "reply"
+        if obligation == "none":
+            continue
         replies = reverse_traverse(it["address"], "reply_to", board_dir=board_dir)
         if any(r["item"].get("author_session") == handle for r in replies):
             continue
+        it = dict(it)
+        it["_obligation"] = obligation
         out.append(it)
     return sorted(out, key=lambda x: x.get("created", ""))
+
+
+def pending_mentions(handle: str, *, board_dir: str | None = None) -> list[dict]:
+    """Back-compat view: the pending TYPED messages for `handle` (see pending_obligations — the
+    generalized fold; a mention is the reply-obligation kind)."""
+    return pending_obligations(handle, board_dir=board_dir)
 
 
 def reply_to_mention(body: str, *, handle: str | None = None, comment_addr: str | None = None,
@@ -848,11 +911,18 @@ def reply_to_mention(body: str, *, handle: str | None = None, comment_addr: str 
                              "registration. Join first: cc_channels.register_self(). Fail loud.")
         handle = me["handle"]
     if comment_addr:
+        # accepts board://item-x, item-x, or a bare id — Tim: 'the agent puts some ID in when several are open'
         target = get_item(comment_addr.split("://", 1)[-1], board_dir=board_dir)
     else:
-        pend = pending_mentions(handle, board_dir=board_dir)
+        pend = pending_obligations(handle, board_dir=board_dir)
         if not pend:
-            raise BoardError(f"reply_to_mention: no pending mentions for {handle!r}. Fail loud "
-                             "(nothing to reply to — name a comment_addr to reply to a specific one).")
+            raise BoardError(f"reply_to_mention: no pending typed messages for {handle!r}. Fail loud "
+                             "(nothing to reply to — pass an ID to reply to a specific one).")
+        if len(pend) > 1:
+            ids = [f"{p['id']} ({p.get('_obligation','reply')}, from {p.get('author_session','?')})" for p in pend]
+            raise BoardError(
+                f"reply_to_mention: {len(pend)} typed messages are open for {handle!r} — say WHICH: "
+                f"reply_to_mention(body, comment_addr='<id>'). Open: {ids}. Fail loud (never guess "
+                f"which conversation you're answering).")
         target = pend[0]
     return reply(target["address"], body, handle, channel=target.get("channel", ""), board_dir=board_dir)

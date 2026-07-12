@@ -25,24 +25,28 @@ try:
     if not me or not me.get("handle"):
         sys.exit(0)                                   # not a registered member — no nag, no error
     from runtime import cc_board as cb
-    pend = cb.pending_mentions(me["handle"])
+    pend = cb.pending_obligations(me["handle"])
     if not pend:
         sys.exit(0)
-    lines = [f"<board-mentions pending={len(pend)} for=\"{me['handle']}\">",
-             "You have unanswered @mentions on the company board (a TYPED message — a reply is expected; "
-             "it must land ON THE BOARD, not only in this chat). Reply with:",
-             "  cd ~/company && .venv/bin/python -c \"import sys;sys.path.insert(0,'.');"
-             "from runtime.cc_board import reply_to_mention;print(reply_to_mention('YOUR REPLY')['address'])\"",
+    multi = len(pend) > 1
+    lines = [f"<board-obligations pending={len(pend)} for=\"{me['handle']}\">",
+             "You have unmet TYPED messages on the company board — each carries an obligation "
+             "(reply/verdict/ack) that must land ON THE BOARD, not only in this chat. Reply with:",
+             ("  cd ~/company && .venv/bin/python -c \"import sys;sys.path.insert(0,'.');"
+              "from runtime.cc_board import reply_to_mention;"
+              "print(reply_to_mention('YOUR REPLY'" + (", comment_addr='<ID>'" if multi else "") + ")['address'])\""),
+             ("  (several are open — you MUST pass the ID of the one you're answering)" if multi else ""),
              ""]
     for p in pend[:5]:
         frm = p.get("author_session", "?")
+        ob = p.get("_obligation", "reply")
         tgt = next((l.get("target") for l in (p.get("links") or []) if l.get("kind") == "commented_on"), "")
         body = (p.get("body") or "").strip().replace("\n", " ")[:240]
-        lines.append(f"- {p['address']} · from {frm} · on {tgt}: {body}")
+        lines.append(f"- ID {p['id']} · owe: {ob} · from {frm} · on {tgt}: {body}")
     if len(pend) > 5:
-        lines.append(f"- … and {len(pend)-5} more (cc_board.pending_mentions)")
-    lines.append("</board-mentions>")
-    print("\n".join(lines))
+        lines.append(f"- … and {len(pend)-5} more (cc_board.pending_obligations)")
+    lines.append("</board-obligations>")
+    print("\n".join([l for l in lines if l != ""] if not multi else lines))
 except Exception:  # noqa: BLE001 — fail-soft: a hook must never break the session
     pass
 sys.exit(0)

@@ -11,6 +11,14 @@
             "command": "bash /home/tim/company/ops/hooks/cc_registry_freshness_check.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/tim/company/.venv/bin/python /home/tim/company/ops/hooks/auto_register.py"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [

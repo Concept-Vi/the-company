@@ -41,18 +41,38 @@ cb.reply(c1["address"], "butting in", "author-b", board_dir=bd)
 check("a reply by someone ELSE does not close the mention",
       [p["id"] for p in cb.pending_mentions("member-x", board_dir=bd)] == [c1["id"], c2["id"]])
 
-# reply_to_mention resolves the OLDEST pending, no address needed
-r = cb.reply_to_mention("here are my thoughts", handle="member-x", board_dir=bd)
-check("reply_to_mention filed a threaded reply on the OLDEST pending mention",
+# MULTIPLE open → must pass the ID (Tim: 'if there are multiple open they need to put whatever ID in')
+try:
+    cb.reply_to_mention("ambiguous", handle="member-x", board_dir=bd)
+    check("multiple open WITHOUT an ID fails loud (never guess the conversation)", False)
+except cb.BoardError as e:
+    check("multiple open WITHOUT an ID fails loud (never guess the conversation)", "WHICH" in str(e))
+
+# reply with the ID — bare item id accepted
+r = cb.reply_to_mention("here are my thoughts", handle="member-x", comment_addr=c1["id"], board_dir=bd)
+check("reply_to_mention answers the NAMED comment (bare id accepted)",
       any(l.get("kind") == "reply_to" and l.get("target") == c1["address"] for l in (r.get("links") or [])))
 check("the replied mention CLOSED (dropped from pending)",
       [p["id"] for p in cb.pending_mentions("member-x", board_dir=bd)] == [c2["id"]])
 
-# reply to a NAMED comment
-r2 = cb.reply_to_mention("answering the second directly", handle="member-x", comment_addr=c2["address"], board_dir=bd)
-check("reply_to_mention answers a NAMED comment when asked",
+# ONE open → no ID needed (resolves unambiguously)
+r2 = cb.reply_to_mention("answering the second", handle="member-x", board_dir=bd)
+check("a SINGLE open message resolves with no ID",
       any(l.get("target") == c2["address"] for l in (r2.get("links") or []) if l.get("kind") == "reply_to"))
 check("all pending cleared", cb.pending_mentions("member-x", board_dir=bd) == [])
+
+# typed kinds: fyi never pends; ask does; obligations are labelled
+c3 = cb.comment(target["address"], "@member-x just so you know", "author-a", message_type="fyi", board_dir=bd)
+check("an FYI (obligation none) never pends", cb.pending_obligations("member-x", board_dir=bd) == [])
+c4 = cb.comment(target["address"], "@member-x what do you think?", "author-a", message_type="ask", board_dir=bd)
+po = cb.pending_obligations("member-x", board_dir=bd)
+check("an ASK pends with its obligation labelled", len(po) == 1 and po[0]["_obligation"] == "reply")
+try:
+    cb.comment(target["address"], "@member-x", "author-a", message_type="not-a-kind", board_dir=bd)
+    check("an unknown message kind fails loud (registry-is-truth)", False)
+except KeyError:
+    check("an unknown message kind fails loud (registry-is-truth)", True)
+cb.reply_to_mention("answered", handle="member-x", board_dir=bd)
 
 # fail-loud on nothing pending
 try:
