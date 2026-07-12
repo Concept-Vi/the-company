@@ -813,3 +813,46 @@ def pinned_on_view(view_id: str, *, board_dir: str | None = None) -> list[str]:
 def is_pinned(item: str, view_id: str, *, board_dir: str | None = None) -> bool:
     """Is `item` pinned ON `view_id`? (Salience is view-scoped — asks THIS view, never the item globally.)"""
     return _board_target(item) in pinned_on_view(view_id, board_dir=board_dir)
+
+
+def pending_mentions(handle: str, *, board_dir: str | None = None) -> list[dict]:
+    """The PULL half of the mention loop (own/reflect — the BOARD is the ledger, no second store): every
+    comment that mentions `handle` and has NO reply yet BY that handle. Push (_route_mentions → cc.send)
+    is best-effort; THIS fold + the UserPromptSubmit nag hook are the guarantee — a mention cannot
+    silently rot, because it stays pending until the mentioned member's reply lands on the board."""
+    out = []
+    for it in list_items(board_dir=board_dir):
+        ms = it.get("mentions") or []
+        if not any(m.get("handle") == handle for m in ms):
+            continue
+        replies = reverse_traverse(it["address"], "reply_to", board_dir=board_dir)
+        if any(r["item"].get("author_session") == handle for r in replies):
+            continue
+        out.append(it)
+    return sorted(out, key=lambda x: x.get("created", ""))
+
+
+def reply_to_mention(body: str, *, handle: str | None = None, comment_addr: str | None = None,
+                     board_dir: str | None = None) -> dict:
+    """`reply` RESOLVES for everyone (Tim 2026-06-29): answer the caller's OLDEST pending mention (or the
+    one named by `comment_addr`) as a threaded board reply — no addresses needed. handle=None → resolve
+    SELF via the fabric registration (session_scan.resolve_self_member). Fail-loud when self cannot
+    resolve or nothing is pending — never a silent no-op."""
+    if not body:
+        raise BoardError("reply_to_mention needs `body`. Fail loud.")
+    if handle is None:
+        from runtime.session_scan import resolve_self_member   # lazy — no import cycle
+        me = resolve_self_member()
+        if not me:
+            raise BoardError("reply_to_mention: SELF does not resolve — this session has no fabric "
+                             "registration. Join first: cc_channels.register_self(). Fail loud.")
+        handle = me["handle"]
+    if comment_addr:
+        target = get_item(comment_addr.split("://", 1)[-1], board_dir=board_dir)
+    else:
+        pend = pending_mentions(handle, board_dir=board_dir)
+        if not pend:
+            raise BoardError(f"reply_to_mention: no pending mentions for {handle!r}. Fail loud "
+                             "(nothing to reply to — name a comment_addr to reply to a specific one).")
+        target = pend[0]
+    return reply(target["address"], body, handle, channel=target.get("channel", ""), board_dir=board_dir)

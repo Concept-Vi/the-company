@@ -488,3 +488,37 @@ def mail(thread: str = "", limit: int = 50) -> list:
 #   • runtime/cc_attachments.py       — channel existence check
 # Use runtime.session_channels.{create_channel, channel_members, is_shared, set_shared, add_member,
 # remove_member, archive_channel, fold_channels, get_channel} (each takes a `store` as its first arg).
+
+
+def register_self(handle: str | None = None, *, description: str = "", port: int = 0) -> dict:
+    """SELF-REGISTRATION — any session joins the fabric (Tim 2026-06-29). Writes .data/channels/<handle>.json
+    for THIS session, keyed by its session-unique claude-ancestor PID, so `self`/`reply` resolve for it and
+    board @mentions reach it. No `port` → transport 'mail' (PULL delivery: the pending-mentions fold + the
+    UserPromptSubmit nag hook guarantee arrival; live push needs a port). Idempotent per claude_pid: if a
+    registration for this session exists it is UPDATED (same file), never duplicated. Fail-loud without a
+    resolvable self."""
+    import time as _time
+    from runtime.session_scan import _claude_ancestor_pid, resolve_own_session, resolve_self_member
+    cp = _claude_ancestor_pid()
+    if cp is None:
+        raise ChannelError("register_self: no claude-ancestor PID — not a live Claude Code session. Fail loud.")
+    existing = resolve_self_member()
+    if existing:
+        handle = existing.get("handle")
+    if not handle:
+        handle = f"ch-{uuid.uuid4().hex[:8]}"
+    sid = ""
+    try:
+        sid = (resolve_own_session() or {}).get("session_id", "") or ""
+    except Exception:  # noqa: BLE001 — ambiguous self still registers; the hook back-fills session_id
+        sid = ""
+    reg = {"handle": handle, "session_id": sid, "cwd": os.getcwd(),
+           "description": description or (existing or {}).get("description", ""),
+           "pid": os.getpid(), "claude_pid": cp,
+           "port": port or (existing or {}).get("port", 0),
+           "transport": "channel" if (port or (existing or {}).get("port")) else "mail",
+           "started": (existing or {}).get("started") or _time.strftime("%Y-%m-%dT%H:%M:%S")}
+    os.makedirs(CHAN_DIR, exist_ok=True)
+    with open(os.path.join(CHAN_DIR, f"{handle}.json"), "w", encoding="utf-8") as f:
+        json.dump(reg, f, indent=2)
+    return reg

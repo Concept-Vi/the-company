@@ -415,3 +415,29 @@ if __name__ == "__main__":
         write_rows = False
     rep = write_scan(path, out_dir, write_rows=write_rows)
     print(json.dumps(rep, indent=2))
+
+
+def resolve_self_member() -> dict | None:
+    """The self→MEMBER join (P2, Tim 2026-06-29: 'members need to be registered so agents self-identify
+    and things like reply and self resolve for everyone'). Returns THIS session's fabric registration row
+    {handle, claude_pid, session_id, port, transport, ...} by matching the session-unique claude-ancestor
+    PID against .data/channels/*.json — the join _self_marker already runs internally but discards.
+    None = this session has no registration yet (join via cc_channels.register_self)."""
+    cp = _claude_ancestor_pid()
+    if cp is None:
+        return None
+    regdir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".data", "channels")
+    try:
+        for fn in os.listdir(regdir):
+            if not fn.endswith(".json") or fn.startswith("_"):
+                continue
+            try:
+                r = json.load(open(os.path.join(regdir, fn)))
+            except (OSError, ValueError):
+                continue
+            if r.get("claude_pid") == cp:
+                r["handle"] = r.get("handle") or fn[:-5]
+                return r
+    except OSError:
+        return None
+    return None
