@@ -13,10 +13,9 @@ Either way the fix is a DELIBERATE act: change the tool's posture AND this manif
 commit. Editing this file IS the decision record.
 
 SEEDED 2026-07-13 from the live registry (behavior-preserving — this declares what IS, it does not
-re-decide it). Entries flagged for an explicit lead/Tim review on the B4 thread: `operator` (exposes
-the system's working-with-Tim rules to the client tier) and `corpus` (repo-derived content) — both are
-read-only and currently tagged safe; whether they SHOULD be client-visible is a policy call, recorded
-there, not silently changed here.
+re-decide it). NARROWED 2026-07-13 (lead's ruling, thread lead-fabric-collab): `operator` (Tim's working rules)
+and `corpus` (repo-derived content) removed from the client tier — read-only but policy-sensitive;
+operator-only now. The grant-shadow may log divergence until re-seeded (it records, never decides).
 """
 
 # Every tool the PUBLIC client tier may see. Sorted; one per line so diffs read as decisions.
@@ -26,7 +25,6 @@ REMOTE_SAFE_MANIFEST = frozenset({
     "channels",
     "cognition_info",
     "cognition_inputs",
-    "corpus",
     "directory",
     "field_types",
     "list_by_type",
@@ -37,7 +35,6 @@ REMOTE_SAFE_MANIFEST = frozenset({
     "marks",
     "models_for_role",
     "object_info",
-    "operator",
     "principal",
     "reduce_rule_names",
     "sessions",

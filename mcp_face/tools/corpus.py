@@ -9,13 +9,13 @@ methods (list_corpus/find_corpus/read_corpus_record/query_corpus), no new engine
 """
 from typing import Literal
 
-from mcp.types import ToolAnnotations    # posture="safe" → remote.py:_tool_posture reads it (registry-native)
+from mcp.types import ToolAnnotations    # hints only — NOT posture-tagged: operator-only since the 2026-07-13 narrowing
 
 
 
 def register(mcp, suite):
     # READ-ONLY across every op (query/list/find/read/neighbours/determine — all reads, no writes). Client-safe.
-    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False, posture="safe"))
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
     def corpus(op: Literal["query", "list", "find", "read", "neighbours", "determine"], project: str = "", kind: str = "", projection: str = "",
                source_address: str = "", address: str = "", text: str = "", space: str = "",
                k: int = 8, rerank: bool = False, top_n: int = 0, emb: str = "pplx", min_score: float = 0.0,
