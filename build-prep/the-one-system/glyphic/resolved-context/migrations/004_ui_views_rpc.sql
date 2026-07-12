@@ -1,0 +1,5 @@
+-- 004_ui_views_rpc.sql — the block surface's data faces (2026-07-13, the UI session with Tim).
+-- Read: public.ctx_units / public.ctx_edges (PostgREST via Kong :15421; anon read).
+-- Write: public.ctx_comment(parent, body, author) — a comment unit + comments_on edge AT the address;
+--        public.ctx_transition(unit, to_state) — the registry lifecycle refuses illegal moves loudly.
+-- (Applied live; recorded here as the migration of record. See ctx-blocks.html in surface/app/public.)

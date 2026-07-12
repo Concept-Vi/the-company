@@ -1,0 +1,159 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Blocks — the conversation substrate</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- THE BLOCK SURFACE v1 (Tim + the agent together, 2026-07-13). Renders the LIVE ctx substrate:
+     conversation as typed, addressed, state-bearing units — click a block, comment AT its address,
+     flip its state (the lifecycle refuses illegal moves loudly). Data: Kong :15421 → PostgREST →
+     public.ctx_units/ctx_edges + the ctx_comment/ctx_transition RPCs. No mock anywhere. -->
+<style>
+  :root{--paper:#FCFAF2;--paper2:#F6F1E4;--ink:#1F1A12;--ink2:#3A3026;--ink3:#6B5F47;--muted:#A89678;
+        --line:#E8DFC5;--faint:#EFE7D2;--bronze:#988058;--bronze2:#7A6A48;--gold:#E0C010;--goldsoft:#FBF4C8;
+        --green:#5A8A4A;--clay:#B5482E;--blue:#4A6FA5}
+  body{font:15px/1.5 system-ui,sans-serif;background:var(--paper);color:var(--ink);margin:0}
+  .wrap{max-width:1240px;margin:0 auto;padding:26px 20px 90px}
+  h1{font-size:22px;color:var(--bronze);margin:0 0 2px;letter-spacing:-.01em}
+  .sub{color:var(--ink3);font-size:13px;margin:0 0 16px}
+  .cols{display:grid;grid-template-columns:1fr 400px;gap:18px;align-items:start}
+  .frame{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+  .frame>.fhead{font:600 11px/1 ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+  .fhead .addr{color:var(--bronze)}
+  .block{border:1.5px solid var(--line);border-left-width:5px;border-radius:10px;padding:9px 12px;margin:7px 0;cursor:pointer;background:#fff;transition:box-shadow .12s, transform .06s}
+  .block:hover{box-shadow:0 2px 10px rgba(31,26,18,.09)}
+  .block.sel{outline:2px solid var(--gold);outline-offset:1px}
+  .block.st-open{border-left-color:var(--gold);background:linear-gradient(90deg,var(--goldsoft) 0,#fff 30%)}
+  .block.st-answered{border-left-color:var(--green)}
+  .block.st-draft{border-left-color:var(--muted);border-left-style:dashed}
+  .block.st-superseded{border-left-color:var(--line);opacity:.55}
+  .block.st-parked{border-left-color:var(--blue)}
+  .brow{display:flex;gap:6px;align-items:center;margin-bottom:3px;flex-wrap:wrap}
+  .chip{font:600 9.5px/1 ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;border-radius:5px;padding:3px 6px;background:var(--paper2);color:var(--ink3)}
+  .chip.state-open{background:var(--goldsoft);color:#8a6d00}
+  .chip.state-answered{background:#e7f0e2;color:var(--green)}
+  .chip.hl{background:var(--gold);color:#fff}
+  .chip.kind{background:var(--paper2)}
+  .baddr{font:500 9.5px/1 ui-monospace,monospace;color:var(--muted);margin-left:auto}
+  .btext{font-size:13.5px;line-height:1.45;color:var(--ink2)}
+  .comment{margin:4px 0 4px 26px;border-left:3px solid var(--faint);padding:5px 10px;font-size:12.5px;color:var(--ink3);background:var(--paper2);border-radius:0 8px 8px 0}
+  .comment .who{font-weight:700;color:var(--bronze2)}
+  /* detail rail */
+  .rail{position:sticky;top:14px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+  .rail h2{font:600 11px/1 ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+  .rail .empty{color:var(--muted);font-size:13px}
+  .rail .full{font-size:14px;line-height:1.55;color:var(--ink);white-space:pre-wrap}
+  .meta{font:500 11px/1.7 ui-monospace,monospace;color:var(--ink3);margin:10px 0;border-top:1px solid var(--faint);padding-top:10px}
+  textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--paper2);padding:9px 10px;font:500 13px/1.45 system-ui;color:var(--ink);min-height:64px;resize:vertical}
+  button{font:600 12px/1 system-ui;color:#fff;background:var(--bronze);border:none;border-radius:8px;padding:9px 13px;cursor:pointer;margin-right:6px;margin-top:6px}
+  button:hover{background:var(--bronze2)}
+  button.ghost{background:transparent;color:var(--bronze2);border:1px solid var(--line)}
+  .statebtns{margin-top:8px}
+  .err{color:var(--clay);font:500 12px/1.5 ui-monospace,monospace;white-space:pre-wrap;margin-top:8px}
+  .ok{color:var(--green);font:600 12px/1.4 system-ui;margin-top:8px}
+  .filters{display:flex;gap:7px;margin:0 0 14px;flex-wrap:wrap}
+  .f{font:600 12px/1 system-ui;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink3);cursor:pointer}
+  .f.on{background:var(--goldsoft);border-color:var(--gold);color:#8a6d00}
+</style></head><body><div class="wrap">
+<h1>Blocks</h1>
+<p class="sub">The conversation substrate, live — typed, addressed, state-bearing units. Click a block to read, comment at its address, or move its state (illegal moves are refused by the registry, loudly). Gold&nbsp;= open (awaiting return) · green = answered · faded = superseded · ★ = Tim's highlight.</p>
+<div class="filters" id="filters">
+  <span class="f on" data-f="all">everything</span>
+  <span class="f" data-f="open">open only</span>
+  <span class="f" data-f="hl">★ highlights</span>
+</div>
+<div class="cols">
+  <div id="tree"><em style="color:var(--muted)">loading the substrate…</em></div>
+  <div class="rail" id="rail"><h2>Block</h2><div class="empty">Click a block — its full text, verdict, chain and actions appear here.</div></div>
+</div>
+</div>
+<script>
+const BASE='http://127.0.0.1:15421/rest/v1';
+const KEY='eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlLWxvY2FsIiwgImV4cCI6IDIwMDAwMDAwMDB9.gkz-CLpiAPR7P5vE-BQFH2UV28cSZt5iGvE1G9bwvmA';
+const H={'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'};
+let UNITS=[],EDGES=[],SEL=null,FILTER='all';
+
+async function api(path,opts){ const r=await fetch(BASE+path,{headers:H,...opts});
+  const t=await r.text(); if(!r.ok) throw new Error('substrate: HTTP '+r.status+' — '+t.slice(0,300));
+  return t?JSON.parse(t):null; }
+
+async function load(){
+  UNITS=await api('/ctx_units?select=*&order=ts.asc');
+  EDGES=await api('/ctx_edges?select=*');
+  render();
+}
+function kids(id){ return UNITS.filter(u=>u.parent_id===id); }
+function show(u){
+  if(FILTER==='open') return u.state==='open' || kids(u.id).some(show);
+  if(FILTER==='hl') return u.tim_highlight || kids(u.id).some(show);
+  return true;
+}
+function render(){
+  const tree=document.getElementById('tree'); tree.innerHTML='';
+  const roots=UNITS.filter(u=>!u.parent_id);
+  for(const root of roots){
+    if(!show(root)&&!kids(root.id).some(show)) continue;
+    const f=document.createElement('div'); f.className='frame';
+    f.innerHTML=`<div class="fhead"><span>${esc(root.body||root.type)}</span><span class="addr">${esc(root.address_path)}</span></div>`;
+    renderChildren(root.id,f,0);
+    tree.appendChild(f);
+  }
+}
+function renderChildren(pid,into,depth){
+  for(const u of kids(pid)){
+    if(u.type==='comment'){ // comments render inline under their parent
+      const c=document.createElement('div'); c.className='comment';
+      c.innerHTML=`<span class="who">${esc((u.meta&&u.meta.author)||'?')}</span> ${esc(u.body||'')}`;
+      into.appendChild(c); continue;
+    }
+    if(u.type==='message'&&!kids(u.id).length) continue;   // empty message shells collapse
+    if(u.type!=='message'){
+      if(!show(u)) continue;
+      const b=document.createElement('div');
+      b.className='block st-'+u.state+(SEL===u.id?' sel':'');
+      b.style.marginLeft=(depth*14)+'px';
+      b.innerHTML=`<div class="brow">${u.tim_highlight?'<span class="chip hl">★</span>':''}<span class="chip state-${u.state}">${u.state}</span>${u.verdict_kind?`<span class="chip kind">${u.verdict_kind}${u.verdict_salience!=null?' '+u.verdict_salience:''}</span>`:''}<span class="baddr">${esc(shortAddr(u.address_path))}</span></div><div class="btext">${esc(u.body||'')}</div>`;
+      b.onclick=e=>{e.stopPropagation();select(u.id);};
+      into.appendChild(b);
+      renderChildren(u.id,into,depth+1);
+    } else {
+      renderChildren(u.id,into,depth);
+    }
+  }
+}
+function shortAddr(a){ const p=(a||'').split('/'); return p.length>2?p[0]+'/…/'+p[p.length-1]:a; }
+function select(id){
+  SEL=id; render();
+  const u=UNITS.find(x=>x.id===id); if(!u) return;
+  const rel=EDGES.filter(e=>e.from_id===id||e.to_id===id).map(e=>{
+    const other=UNITS.find(x=>x.id===(e.from_id===id?e.to_id:e.from_id));
+    return `${e.from_id===id?'—'+e.kind+'→':'←'+e.kind+'—'} ${other?shortAddr(other.address_path):'?'}`;});
+  const legal={'draft':['open'],'open':['answered','superseded','parked'],'parked':['open'],'answered':['superseded']}[u.state]||[];
+  document.getElementById('rail').innerHTML=
+    `<h2>Block · ${esc(shortAddr(u.address_path))}</h2>
+     <div class="full">${esc(u.body||'')}</div>
+     <div class="meta">state: ${u.state}${u.verdict_kind?` · judged: ${u.verdict_kind} (salience ${u.verdict_salience??'—'}, lod ${u.verdict_lod??'—'})`:''}${u.tim_highlight?' · ★ Tim highlight':''}
+     ${rel.length?'<br>'+rel.map(esc).join('<br>'):''}</div>
+     <textarea id="cbox" placeholder="Comment at this address… (it becomes a unit, judged like everything else)"></textarea>
+     <div><button onclick="comment()">comment</button>
+     <span class="statebtns">${legal.map(s=>`<button class="ghost" onclick="transition('${s}')">→ ${s}</button>`).join('')}</span></div>
+     <div id="msg"></div>`;
+}
+async function comment(){
+  const t=document.getElementById('cbox').value.trim(); if(!t) return;
+  try{ await api('/rpc/ctx_comment',{method:'POST',body:JSON.stringify({parent:SEL,body:t,author:'tim'})});
+    document.getElementById('msg').innerHTML='<div class="ok">landed at the address ✓</div>'; await load(); select(SEL);
+  }catch(e){ document.getElementById('msg').innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+}
+async function transition(to){
+  try{ await api('/rpc/ctx_transition',{method:'POST',body:JSON.stringify({unit:SEL,to_state:to})});
+    await load(); select(SEL);
+  }catch(e){ document.getElementById('msg').innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+}
+document.getElementById('filters').onclick=e=>{
+  const f=e.target.closest('.f'); if(!f) return;
+  FILTER=f.dataset.f;
+  document.querySelectorAll('.f').forEach(x=>x.classList.toggle('on',x===f));
+  render();
+};
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+load().catch(e=>{document.getElementById('tree').innerHTML='<div class="err">'+esc(e.message)+'</div>'});
+</script>
+</body></html>
