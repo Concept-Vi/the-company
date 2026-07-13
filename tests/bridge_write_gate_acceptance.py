@@ -113,8 +113,16 @@ def main():
         code, out = _req("/api/voice/log", body=b'{"event":"gate-probe"}')
         check("a FREE POST runs without a token (the voice loop never breaks on auth)",
               code == 200, f"{code} {out}")
+        code, out = _req("/api/voice/log?src=probe", body=b'{"event":"q-probe"}')
+        check("a FREE POST + query-string is NOT wrongly GATED (gate classifies by route, not path+query)",
+              code != 403, f"gate refused a free route over a query param: {code} {out}")
+        # (whether dispatch 200s or 404s on the query is the dispatcher's raw-path-match concern, NOT the
+        #  gate's — the gate's sole job here is to never wrongly refuse a free route; that is what we assert.)
         code, out = _req("/api/route-invented-tomorrow")
         check("an UNDECLARED route gates fail-closed (403 before any 404)", code == 403,
+              f"{code} {out}")
+        code, out = _req("/api/journey/start?x=1")
+        check("a CONSEQUENTIAL route + query-string still gates (strip never opens a hole)", code == 403,
               f"{code} {out}")
     finally:
         srv.shutdown()

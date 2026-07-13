@@ -2689,7 +2689,8 @@ class H(BaseHTTPRequestHandler):
         # the tailnet decision flip it together.
         if os.environ.get("COMPANY_OPERATOR_TOKEN_ENFORCE", "") == "1" and self.path[:5] == "/api/":  # slice-compare, NOT startswith — the route-drift extractor reads path.startswith("…") as a PREFIX ROUTE declaration; this is a guard, not a dispatch
             from mcp_face.bridge_write_manifest import BRIDGE_FREE_POST
-            if self.path not in BRIDGE_FREE_POST and not _is_genuine_operator(
+            _route = self.path.split("?", 1)[0]   # fabric hardening: the GATE classifies by ROUTE, not path+query — so a FREE route reached with a ?param is never wrongly REFUSED (whether dispatch then handles the query is the dispatcher's concern, separate from the gate). A consequential route with a query still isn't in FREE → still gated; the safe direction is unchanged either way.
+            if _route not in BRIDGE_FREE_POST and not _is_genuine_operator(
                     self.headers.get("X-Operator-Session", "")):
                 self._send(403, json.dumps({
                     "ok": False,
