@@ -3,11 +3,10 @@
 <title>Relational glyphic — look & meaning</title>
 <style>
   :root{
-    --paper:#FCFAF2; --paper-2:#F8F3E1; --paper-3:#F2EAD0; --white:#FFFFFF;
-    --ink:#1F1A12; --ink-3:#6B5F47; --ink-4:#9C8C6E;
-    --gold:#E0C010; --gold-deep:#9F772C; --gold-soft:#F4E89A; --gold-50:#FBF4C8; --gold-dashed:#D8C040;
-    --bronze:#988058; --bronze-2:#7A6A48; --bronze-warm:#C09D5D;
-    --border:#E8DFC5; --border-faint:#F0E9D2;
+    --paper:#FCFAF2; --paper-2:var(--paper-2); --paper-3:var(--paper-3); --white:#FFFFFF;
+    --ink:#1F1A12; --ink-3:#6B5F47; --ink-4:var(--ink-4);
+    --gold:var(--accent-gold); --gold-deep:var(--accent-gold-deep); --gold-soft:var(--accent-gold-soft); --gold-50:#FBF4C8; --gold-dashed:var(--accent-gold-dashed);
+    --bronze:var(--accent-bronze); --bronze-2:var(--accent-bronze-2); --bronze-warm:#C09D5D;
     --font-d:"Sora",ui-sans-serif,system-ui,sans-serif; --font-b:"DM Sans",ui-sans-serif,system-ui,sans-serif;
   }
   *{box-sizing:border-box}
@@ -19,7 +18,7 @@
   h2{font-family:var(--font-d);font-weight:600;font-size:19px;letter-spacing:-.01em;color:var(--ink);margin:34px 0 4px}
   .sub{color:var(--ink-3);font-size:13.5px;margin:0 0 16px}
   .row{display:flex;flex-wrap:wrap;gap:16px}
-  .card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px;flex:1;min-width:240px;box-shadow:0 1px 2px rgba(31,26,18,.03),0 6px 18px rgba(31,26,18,.04)}
+  .card{background:var(--white);border:1px solid var(--border-default);border-radius:12px;padding:18px;flex:1;min-width:240px;box-shadow:0 1px 2px rgba(31,26,18,.03),0 6px 18px rgba(31,26,18,.04)}
   .card .tag{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--bronze);margin-bottom:14px}
   .marker{display:flex;align-items:center;gap:8px;min-height:54px}
   .note{font-size:12.5px;color:var(--ink-3);margin-top:14px}

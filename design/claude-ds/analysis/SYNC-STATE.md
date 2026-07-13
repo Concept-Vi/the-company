@@ -77,3 +77,12 @@ Repo-only extras: .gitignore, atomicity/.gitkeep, this record (also pushed to cl
 **The repo and the cloud project are now ONE, byte-level.** Future divergence prevention =
 the fabric-integration mapping (two-engines plan agreed with Tim: counterpart substrate
 machinery over claude-ds as project root × the DS's own registries as the symbol level).
+
+## PUSH 2026-07-13 (session 1fbd0fe1, ds-map): repo → cloud, the post-sync work backlog
+Auth window opened; pushed the full delta since the export landing (2902cec..HEAD, 136 files + this record):
+map+gaps machinery (_system/{substrate-map,substrate-graph,gate}.py · registry/*) · the loud-fail fallback
+purge (938→1 across tokens/system/core/app) · the 32 drawn icons (cv-icons.js) · theme-frozen-alias fixes
+(theme/density/skins.css) · U6 components (components/*, the operator-controls specimen) · U10 self-hosted
+fonts (assets/fonts/*.woff2 + tokens/fonts.css) · U4 packaging entry (package.json + index.js) · analyses
+(COMPANY-FRONTEND-MECHANISMS, COMPANY-KNOWLEDGE-LAYER, FRONTEND-REPLACEMENT-INVENTORY) · descriptions layer.
+Verification: round-trip re-fetch on tokens/density.css (--control-h-md present) + registry/GAPS.md.

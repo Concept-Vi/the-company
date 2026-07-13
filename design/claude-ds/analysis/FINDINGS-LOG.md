@@ -5,6 +5,17 @@
 > autonomous sessions don't repeat or contradict. Newest first.
 >
 
+## Slice 88 — the LOCAL bundle recompiler + U6 into the bundle (lead, 2026-07-13)
+The bundle's compiler lives in the cloud tooling only ("rebuilds at end of turn" there), so components
+landed repo-side between cloud sessions leave _ds_bundle.js stale — U6 proved it (10 components on disk,
+absent from the bundle; the operator app imported source as a workaround). Added _system/bundle_append.py:
+an additive, format-4-faithful local recompiler (reads the header manifest; transforms ES-convention
+createElement sources exactly as the cloud does; refuses JSX + non-React imports loud; idempotent; updates
+components[]+sourceHashes). Ran it: +10 sources, +11 names (ToastHost/Sheet/List/ListRow/Menu/Checkbox/
+Radio/AppShell/Table/Search/Skeleton) — VERIFIED BY EXECUTION (node fake-window eval: 11/11 resolve, 0
+component errors, old names intact). Cloud compiler remains canonical owner; hashes agree on regeneration.
+Open: the operator app still source-imports these (switch to the bundle door = its next beat).
+
 ## Slice 87 — U6 (operator-app lane): the MISSING operator-grade components, into the one home
 The console-app set the DS lacked, built as system citizens (CSS in `tokens/controls.css` L2 +
 thin token-class wrappers in `components/` + Type rows in `app/registry/components-type.js` +

@@ -41,6 +41,8 @@
 
   --shadow-c: hsl(20 30% 3% / 1);
   --grain-opacity: 0.07; /* @kind other */
+  /* re-bind bare aliases in-scope (theme-frozen-alias class, registry/GAPS.md) */
+  --icon-ink: var(--ink-2); --icon-muted: var(--ink-4); --viz-axis: var(--ink-4); --viz-label: var(--ink-3); --cv-icon-bg: var(--bg-canvas);
 }
 
 /* ---- DARK — full warm dark ---------------------------------- */
@@ -68,6 +70,8 @@
 
   --shadow-c: hsl(20 40% 2% / 1);
   --grain-opacity: 0.08; /* @kind other */
+  /* re-bind bare aliases in-scope (theme-frozen-alias class, registry/GAPS.md) */
+  --icon-ink: var(--ink-2); --icon-muted: var(--ink-4); --viz-axis: var(--ink-4); --viz-label: var(--ink-3); --cv-icon-bg: var(--bg-canvas);
 }
 
 /* ---- CONTRAST — high-contrast light (accessibility) --------- */
@@ -86,6 +90,8 @@
   --border-default: #B6A876;
   --border-strong:  #8A7C52;
   --shadow-c: hsl(28 25% 12% / 1);
+  /* re-bind bare aliases in-scope (theme-frozen-alias class, registry/GAPS.md) */
+  --icon-ink: var(--ink-2); --icon-muted: var(--ink-4); --viz-axis: var(--ink-4); --viz-label: var(--ink-3); --cv-icon-bg: var(--bg-canvas);
 }
 
 /* ---- GROUND — clean ↔ warm sub-axis of `light` (capital-raise vs the ivory

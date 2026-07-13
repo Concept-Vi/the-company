@@ -61,7 +61,7 @@ for f in sorted(fold, key=lambda f: -len(fold[f])):
                       "type": typ(e), "type_label": lab, "icon": ic,
                       "refs": refs(e), "bytes": e.get("bytes", 0), "lines": e.get("lines"),
                       "depth": a.count("/"), "order": order_map[a], "mtime": mtime(a),
-                      "summary": "", "spine": a in spine_set, "zone": e.get("zone"),
+                      "summary": e.get("description", ""), "spine": a in spine_set, "zone": e.get("zone"),
                       "out": len([x for x in e.get("edges", []) if x.get("resolved") in addr])})
     mts = [n["mtime"] for n in nodes if n["mtime"]]
     clusters.append({"id": f, "label": f, "file_count": len(members),

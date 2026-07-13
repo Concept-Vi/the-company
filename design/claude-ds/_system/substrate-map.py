@@ -68,6 +68,16 @@ for dirpath, dirs, fnames in os.walk(ROOT):
 
 files = {a: e for a, e in addr.items() if e["kind"] == "file"}
 
+# fold in the survey descriptions (registry/descriptions.json — authored by read-and-report
+# agents, one line per file; the map carries them as the address's human face)
+try:
+    _desc = json.load(open("registry/descriptions.json"))["descriptions"]
+    for _p, _d in _desc.items():
+        if _p in addr:
+            addr[_p]["description"] = _d
+except (OSError, KeyError, json.JSONDecodeError):
+    pass
+
 def read(a):
     try:
         return open(os.path.join(ROOT, a), encoding="utf-8", errors="replace").read()
@@ -311,6 +321,86 @@ for a, e in files.items():
     if hits:
         raw_colors[a] = hits
         e["raw_colors"] = hits
+
+# ------------------------------------------------------- consumer trees
+# "THE MAP EATS THE APP AS IT'S BORN" (lead pact): external DS consumers are
+# scanned for token/icon consumption which folds into the SAME symbol tables —
+# an app view referencing a token/icon the DS lacks ghosts ON THE INTRODUCING
+# COMMIT. Consumer files are NOT DS addresses; they appear as consumer:<path>.
+CONSUMER_TREES = ["/home/tim/company/operator/app/src", "/home/tim/company/operator/app/index.html"]
+consumer_files = 0
+for croot in CONSUMER_TREES:
+    if not os.path.exists(croot):
+        continue
+    cpaths = []
+    if os.path.isfile(croot):
+        cpaths = [croot]
+    else:
+        for dp, ds, fs in os.walk(croot):
+            ds[:] = [d for d in ds if d not in ("node_modules", "dist", ".git")]
+            cpaths += [os.path.join(dp, f) for f in fs if f.endswith((".ts", ".tsx", ".js", ".jsx", ".css", ".html"))]
+    for cp in cpaths:
+        consumer_files += 1
+        tag = "consumer:" + os.path.relpath(cp, "/home/tim/company")
+        try:
+            txt = strip_comments(open(cp, encoding="utf-8", errors="replace").read(),
+                                 os.path.splitext(cp)[1].lstrip("."))
+        except OSError:
+            continue
+        for tk, closer in RE_TOKEN_USE.findall(txt):
+            t_use[tk].append(tag)
+            if closer == ")":
+                t_use_hard[tk].append(tag)
+        for rx in RE_ICON_USE:
+            for m in rx.finditer(txt):
+                i_use[m.group(1)].append(tag)
+
+# ------------------------------------------------------- bundle staleness
+# (lead's find, U6 landing): _ds_bundle.js is generated from app sources — a
+# component on disk but absent from the bundle = stale bundle, source-imports
+# papering over it. Mechanical diff: components/<X>.jsx vs bundle content.
+bundle_txt = read("_ds_bundle.js")
+stale_bundle = []
+if bundle_txt:
+    for a in sorted(files):
+        if a.startswith("components/") and a.endswith(".jsx"):
+            comp = os.path.basename(a)[:-4]
+            if comp not in bundle_txt:
+                stale_bundle.append(comp)
+
+# ------------------------------------------------------- theme-frozen aliases
+# THE DEFECT CLASS (found empirically by the U6 lane, --state-selected): a bare
+# alias `--x: var(--y)` declared at :root RESOLVES AT :root — under a SCOPED
+# theme (data-theme on a subtree) --y flips but --x stays frozen at the :root
+# value. Latent bug IFF --y varies under some scope S and --x is NOT re-declared
+# under S. (An alias of a never-theming token freezes harmlessly — not flagged.)
+RE_SCOPE_ATTR = re.compile(r'\[(data-(?:theme|ground|skin|density))="([a-z-]+)"\]')
+RE_BARE_ALIAS = re.compile(r'^var\(\s*(--[\w-]+)\s*\)$')
+root_vals, scoped_tokens = {}, defaultdict(set)   # token->value · scope->tokens
+for a in files:
+    if not (a.endswith(".css") or a.endswith(".html")) or files[a].get("zone") or files[a].get("derived"):
+        continue
+    txt = strip_comments(read(a), files[a]["extension"])
+    for m in re.finditer(r'([^{}]+)\{([^{}]*)\}', txt):
+        sel = m.group(1).strip().split('\n')[-1].strip()
+        decls = re.findall(r'(--[a-zA-Z][\w-]*)\s*:\s*([^;]+);', m.group(2))
+        if sel.startswith(':root') or sel in ('html',) or sel.startswith('html,'):
+            for tk, v in decls:
+                root_vals[tk] = v.strip()
+        for sm in RE_SCOPE_ATTR.finditer(sel):
+            scope = f'{sm.group(1)}="{sm.group(2)}"'
+            for tk, v in decls:
+                scoped_tokens[scope].add(tk)
+frozen_aliases = []   # (alias, target, [scopes where target varies but alias absent])
+for tk, v in sorted(root_vals.items()):
+    am = RE_BARE_ALIAS.match(v)
+    if not am:
+        continue
+    target = am.group(1)
+    bad_scopes = [s for s, toks in sorted(scoped_tokens.items())
+                  if target in toks and tk not in toks]
+    if bad_scopes:
+        frozen_aliases.append((tk, target, bad_scopes))
 
 # ---------------------------------------------------------------- pass C: symbol registries
 # icons registered: the CV_ICONS.data keys
@@ -560,6 +650,13 @@ for v, d in sorted(by_val.items(), key=lambda kv: -kv[1]["n"]):
                    " · e.g. " + ", ".join(f"`{p}`" for p in d["files"][:3]))
 lines += sect("RAW COLOURS — literal colours in live styling files, outside var() fallbacks (should use tokens)", rc_rows)
 
+lines += sect("STALE BUNDLE — component on disk, absent from _ds_bundle.js (source-imports papering over it)",
+              ["- `components/" + c + ".jsx`" for c in stale_bundle])
+
+lines += sect("THEME-FROZEN ALIASES — --x: var(--y) at :root where --y varies under a scope that never re-declares --x (the --state-selected class)",
+              [f"- `{tk}` -> `{tg}` frozen under: " + ", ".join(f"`{s}`" for s in sc[:5])
+               for tk, tg, sc in frozen_aliases])
+
 open("registry/GAPS.md", "w").write("\n".join(lines))
 
 # persist the gap scoreboard in the registry so the GATE diffs data, not prose
@@ -571,6 +668,8 @@ symbols["_meta"]["gap_counts"] = {
     "orphan_tokens": len(ot), "orphan_icons": len(oi), "orphan_globals": len(og),
     "orphan_axes": len(oax), "orphan_actions": len(oac), "orphan_types": len(oty),
     "raw_colour_values": len(by_val), "path_drift_heals": len(heal_live),
+    "theme_frozen_aliases": len(frozen_aliases),
+    "stale_bundle_components": len(stale_bundle), "consumer_files_scanned": consumer_files,
 }
 symbols["_meta"]["ghost_keys"] = sorted(
     [k for k, v in symbols["tokens"].items() if v["ghost"]] +
@@ -586,6 +685,7 @@ print(f"ghost files (live) {len(gf)} · ghost tokens hard {len(gt)} family {len(
 print(f"orphan tokens {len(ot)} · orphan icons {len(oi)} · orphan globals {len(og)} · orphan axes {len(oax)}")
 print(f"symbols: globals {len(symbols['globals'])} tokens {len(symbols['tokens'])} icons {len(symbols['icons'])} axes {len(symbols['axes'])} glyphs {symbols['glyphs']}")
 print(f"  + types {len(symbols['types'])} actions {len(symbols['actions'])} decorators {len(symbols['decorators'])} events {len(symbols['events'])} skins {len(symbols['skins'])}")
+print(f"theme-frozen aliases {len(frozen_aliases)}")
 print(f"ghost actions {len(gac)} · ghost types {len(gty)} · ghost skins {len(gsk)} · dead-letter events {len(gdl)} · deaf triggers {len(gdf)}")
 print(f"orphan actions {len(oac)} · orphan types {len(oty)}")
 parametric = sum(1 for v in symbols['tokens'].values() if v.get('class') == 'parametric')

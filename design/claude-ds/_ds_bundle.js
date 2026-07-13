@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"ConceptVDesignSystem_c8f43c","components":[{"name":"Avatar","sourcePath":"components/Avatar.jsx"},{"name":"Badge","sourcePath":"components/Badge.jsx"},{"name":"Button","sourcePath":"components/Button.jsx"},{"name":"Card","sourcePath":"components/Card.jsx"},{"name":"Glyphic","sourcePath":"components/Glyphic.jsx"},{"name":"Input","sourcePath":"components/Input.jsx"},{"name":"Modal","sourcePath":"components/Modal.jsx"},{"name":"Popover","sourcePath":"components/Popover.jsx"},{"name":"Segmented","sourcePath":"components/Segmented.jsx"},{"name":"Select","sourcePath":"components/Select.jsx"},{"name":"Stepper","sourcePath":"components/Stepper.jsx"},{"name":"Switch","sourcePath":"components/Switch.jsx"},{"name":"Tabs","sourcePath":"components/Tabs.jsx"},{"name":"Tooltip","sourcePath":"components/Tooltip.jsx"},{"name":"ContainmentTree","sourcePath":"core/ContainmentTree.jsx"},{"name":"DiagramSolver","sourcePath":"core/DiagramSolver.jsx"},{"name":"RenderType","sourcePath":"core/RenderType.jsx"},{"name":"CoreTypes","sourcePath":"core/RenderType.jsx"},{"name":"Slide","sourcePath":"core/Slide.jsx"},{"name":"Archetypes","sourcePath":"core/Slide.jsx"}],"sourceHashes":{"app/App.jsx":"7d4f61231dd6","app/ai/ai-block.js":"9669a2358e22","app/ai/ai-capabilities-canvas.js":"a5a23e6f81a5","app/ai/ai-glyphic-language.js":"7027167fe99a","app/ai/ai-glyphic.js":"233aeeb42f55","app/ai/ai-imagery.js":"38ab8719d29b","app/ai/ai-layout.js":"4cb411f97f19","app/ai/ai-registry.js":"c8cdedfac2ed","app/ai/ai-seed.js":"859b99602e91","app/ai/ai-studio.js":"6cf619016650","app/ai/host-runtime.js":"6d09d196bbdf","app/ai/host-serializer.js":"3624b7c2d896","app/canvases/AIStudio.jsx":"59e91e06ede6","app/canvases/Architecture.jsx":"476715ae9f15","app/canvases/Bridge.jsx":"ad27b5e2e51b","app/canvases/Build.jsx":"4ed9e6999cd7","app/canvases/Colors.jsx":"2223049f7a4e","app/canvases/Components.jsx":"5ec59a18e929","app/canvases/Icons.jsx":"9d708456807a","app/canvases/Imagery.jsx":"9252f47f8c91","app/canvases/Inbox.jsx":"2bde75c16d43","app/canvases/Overview.jsx":"a166faab8ea0","app/canvases/Patterns.jsx":"77b6d1c11342","app/canvases/Registry.jsx":"05fa2d45cf64","app/canvases/RegistryInspector.jsx":"98729a371542","app/canvases/Settings.jsx":"3a7f5012011d","app/canvases/StubCanvases.jsx":"493682597dae","app/canvases/Templates.jsx":"fc5124dc5e0d","app/canvases/TypeBuilder.jsx":"e9eba42aa601","app/canvases/TypeBuilder2.jsx":"57e78baecb14","app/canvases/Voice.jsx":"653e780a8833","app/canvases/Workshop.jsx":"c1eb9822f2a5","app/canvases/workshop/AIEngine.jsx":"76bc2b8043cf","app/canvases/workshop/Blocks.jsx":"7c6327a87584","app/canvases/workshop/Export.jsx":"a862dacdfd69","app/canvases/workshop/Layouts.jsx":"0035eae201b2","app/canvases/workshop/Library.jsx":"12fea63360ad","app/canvases/workshop/Polish.jsx":"8f3ec8036eda","app/canvases/workshop/Section.jsx":"3fc095530924","app/canvases/workshop/WidgetBuilder.jsx":"eafc3a532724","app/canvases/workshop/WizardBuilder.jsx":"105d38657fd8","app/components/CanvasHeader.jsx":"43a6ffe145f8","app/components/ChatRail.jsx":"4acf69cb0ce2","app/components/CommandPalette.jsx":"04cd8707dff8","app/components/ExportPatch.jsx":"2568c63a1dcb","app/components/ImageEditor.jsx":"8dfce267fb77","app/components/KitPreviews.jsx":"0614572698f7","app/components/MaskEditor.jsx":"0cc0ade4f8c6","app/components/Pano360.jsx":"326bd1b39aff","app/components/RefinePop.jsx":"86c1a60173aa","app/components/Resizable.jsx":"1af1e686479e","app/components/Sidebar.jsx":"2b991a403a21","app/components/Toast.jsx":"8fa5f4debec9","app/components/ViShape.jsx":"7ce5d121927a","app/components/usePersisted.js":"c00d18f30e24","app/registry/SaveAsTypeModal.jsx":"a1dc8a171c27","app/registry/actions.js":"ac2e3c17342f","app/registry/block-type.js":"913831d5c0f8","app/registry/components-type.js":"00f717b1a520","app/registry/conditions.js":"f0d052d2a498","app/registry/decorators.js":"5fd06e4fd912","app/registry/events.js":"94252b942974","app/registry/glyphic-type.js":"ebdaec0b56d6","app/registry/inspector.js":"f6279914c954","app/registry/kinds-type.js":"af814c49bdf2","app/registry/project.js":"0c5fb640ae19","app/registry/query.js":"3df2f09a8ebb","app/registry/relationships-seed.js":"2e6c7a6920c4","app/registry/text-type.js":"2a1e6b5a44b8","app/registry/types-adapter.js":"684b87f40cca","app/registry/types-core.js":"9b2636603aa8","app/registry/types-hooks.js":"5b1fa00eaaba","app/registry/types-seed.js":"84c6eb79f7e1","app/registry/types-thumb.jsx":"e4a74607f7d1","app/registry/types-ui.jsx":"6ea8c2338c43","app/registry/types-vi.js":"04769b31ac0b","app/registry/vars.js":"bc2f4b8b9695","app/registry/views.js":"f5a953fcd243","app/services/ai-presets.js":"42386f3d1aef","app/services/company.js":"8c2b09f641ad","app/services/image-store.js":"bc148d43658e","app/services/openai.js":"d6de45be91cb","assets/brand/root-unity-mark.js":"0b63995cf170","assets/icons/CvIcon.jsx":"5eac79214445","assets/icons/cv-edges.js":"78ae5a5f5c39","assets/icons/cv-glyphics.js":"c725940cec9c","assets/icons/cv-icons.js":"597ee68276e2","assets/icons/cv-meaning.js":"d9971dd38d9e","assets/icons/cv-organisms.js":"bf12edd36ab4","assets/icons/cv-shapes.js":"3510a57fd011","assets/icons/cv-vi-glyph.js":"82b41fccbe8f","assets/icons/glyphgraph.js":"61ff1620b74e","atomicity/Atlas.jsx":"0c35a71042cf","atomicity/AtomiCity.jsx":"4f68c3dee6f8","atomicity/Explore.jsx":"1c4e4a7ae23d","atomicity/Foundations.jsx":"5ee0f5b47f41","atomicity/Home.jsx":"4b1c8e9e2745","atomicity/Ingest.jsx":"a70d8280c96b","atomicity/ViConsole.jsx":"5d049d056052","atomicity/VoiceSurface.jsx":"10594eadad08","atomicity/atlas-model.js":"0a98094b032e","atomicity/explore-engine.js":"3955958a41ca","atomicity/ingest.js":"6acb703e0c9f","atomicity/kit.jsx":"a4718a540cbe","atomicity/mode-engine.js":"e076ac2a3bbf","atomicity/override.js":"2d2ab208a7ef","atomicity/picker.js":"88e2102d340c","atomicity/scan-engine.js":"0336d04027e5","atomicity/shot.js":"9619510f8bd5","atomicity/vi-brain.js":"72d2b1bc80a7","axes/axis-core.js":"8f4502d1203e","axes/color/color-axis.js":"0d3a204f28e4","axes/density/density-axis.js":"c52268147a11","axes/depth/depth-axis.js":"f34d104b3c8b","axes/fill/fill-axis.js":"cb1a2f7e8911","axes/flow/flow-axis.js":"a4c667a0f057","axes/form/form-axis.js":"049eaa0adb26","axes/glow/glow-axis.js":"d44d6fe92b51","axes/ground/ground-axis.js":"151c723b3efb","axes/level/level-axis.js":"12ff7bff604e","axes/material/material-axis.js":"9f9c6a0cc627","axes/motion/motion-axis.js":"5e9657a74643","axes/ordinal/ordinal-axis.js":"2cabf83eb1cd","axes/shadow/shadow-axis.js":"f3f6abc14912","axes/size/size-axis.js":"87b6e7c0abe6","axes/skin/skin-axis.js":"ec33e8ed9cd7","axes/space/space-axis.js":"d3bc2c781bdc","axes/symbol/symbol-axis.js":"d06b5807c203","axes/texture/texture-axis.js":"083a45234160","components/Avatar.jsx":"a38b44cde8e5","components/Badge.jsx":"3cdd070ca5ff","components/Button.jsx":"d7a24dd3c9ba","components/Card.jsx":"cd29853874e3","components/Glyphic.jsx":"87c6c5cbf2e3","components/Input.jsx":"ad7903b8a238","components/Modal.jsx":"4c29b3aedf7a","components/Popover.jsx":"f018f29a70c4","components/Segmented.jsx":"622f617e8abd","components/Select.jsx":"af68f318361d","components/Stepper.jsx":"a4fbfd19513c","components/Switch.jsx":"b1e1f0d6eb6e","components/Tabs.jsx":"86845adedf04","components/Tooltip.jsx":"9dae0cf9a304","core/ContainmentTree.jsx":"ee553931eb74","core/DiagramSolver.jsx":"26b5710fd6cf","core/RenderType.jsx":"a1e421c665bc","core/Slide.jsx":"6357ab078294","core/archetype-catalog.js":"11c8d6e1e752","core/cv-address.js":"f3288dc54228","core/cv-arc.js":"8f7f9e119a36","core/cv-node.js":"8dafff80f0d1","core/graph-layout.js":"80cb67a7c741","core/layout-fit.js":"dd35942b3a7f","core/morph.js":"4cc8e0f757d9","core/render-scene.js":"a61156c4b1f7","core/render3d.js":"058eb02a94ac","core/slide-fit.js":"ac7974a00f9b","core/world-camera.js":"7cf894c7a08f","preview/image-slot.js":"9309434cb09c","system/build-system-map.js":"6dffd000dc21","system/gl-inspector.js":"9d6ec362108b","tweaks-panel.jsx":"6591467622ed","ui_kits/platform/ActionToolbar.jsx":"631fbddb47bc","ui_kits/platform/Chats.jsx":"5e17e4777f6d","ui_kits/platform/PlatformApp.jsx":"27838168f0c5","ui_kits/platform/PlatformSidebar.jsx":"e005aeec0535","ui_kits/platform/TopBar.jsx":"e0fcf91e7496","ui_kits/platform/screens/BrandKit.jsx":"c2c42d40ad59","ui_kits/platform/screens/Calendar.jsx":"f5ec612b1250","ui_kits/platform/screens/Gallery.jsx":"e44df1327bc8","ui_kits/platform/screens/HubSettings.jsx":"0bff95d1aa3f","ui_kits/platform/screens/Stub.jsx":"c759c2c94cee","ui_kits/vi/ChatPanel.jsx":"abf8ceb04fcc","ui_kits/vi/OutputPreview.jsx":"e29b7550e83a","ui_kits/vi/TaskTree.jsx":"f8a4f3c48b5c","ui_kits/vi/ViKitApp.jsx":"96c12112e88d","ui_kits/vi/ViMark.jsx":"674be272106e","ui_kits/vi/ViStatusPill.jsx":"7163964718c6","ui_kits/virtual-hub/CaptureComment.jsx":"191e64d165b7","ui_kits/virtual-hub/FloorplanOverlay.jsx":"3a97552eb6dc","ui_kits/virtual-hub/HubApp.jsx":"1a612d556d39","ui_kits/virtual-hub/HubBug.jsx":"d0ebbb7f6f80","ui_kits/virtual-hub/InfoPanel.jsx":"bc98573b1e03","ui_kits/virtual-hub/MenuButton.jsx":"fb80f4cec705","ui_kits/virtual-hub/QuickMenu.jsx":"2bd0aee86d80","ui_kits/virtual-hub/SharePanel.jsx":"560df1a59586"},"inlinedExternals":[],"unexposedExports":[{"name":"typeToNode","sourcePath":"core/RenderType.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"ConceptVDesignSystem_c8f43c","components":[{"name":"Avatar","sourcePath":"components/Avatar.jsx"},{"name":"Badge","sourcePath":"components/Badge.jsx"},{"name":"Button","sourcePath":"components/Button.jsx"},{"name":"Card","sourcePath":"components/Card.jsx"},{"name":"Glyphic","sourcePath":"components/Glyphic.jsx"},{"name":"Input","sourcePath":"components/Input.jsx"},{"name":"Modal","sourcePath":"components/Modal.jsx"},{"name":"Popover","sourcePath":"components/Popover.jsx"},{"name":"Segmented","sourcePath":"components/Segmented.jsx"},{"name":"Select","sourcePath":"components/Select.jsx"},{"name":"Stepper","sourcePath":"components/Stepper.jsx"},{"name":"Switch","sourcePath":"components/Switch.jsx"},{"name":"Tabs","sourcePath":"components/Tabs.jsx"},{"name":"Tooltip","sourcePath":"components/Tooltip.jsx"},{"name":"ContainmentTree","sourcePath":"core/ContainmentTree.jsx"},{"name":"DiagramSolver","sourcePath":"core/DiagramSolver.jsx"},{"name":"RenderType","sourcePath":"core/RenderType.jsx"},{"name":"CoreTypes","sourcePath":"core/RenderType.jsx"},{"name":"Slide","sourcePath":"core/Slide.jsx"},{"name":"Archetypes","sourcePath":"core/Slide.jsx"},{"name":"AppShell","sourcePath":"components/AppShell.jsx"},{"name":"Checkbox","sourcePath":"components/Checkbox.jsx"},{"name":"List","sourcePath":"components/List.jsx"},{"name":"ListRow","sourcePath":"components/List.jsx"},{"name":"Menu","sourcePath":"components/Menu.jsx"},{"name":"Radio","sourcePath":"components/Radio.jsx"},{"name":"Search","sourcePath":"components/Search.jsx"},{"name":"Sheet","sourcePath":"components/Sheet.jsx"},{"name":"Skeleton","sourcePath":"components/Skeleton.jsx"},{"name":"Table","sourcePath":"components/Table.jsx"},{"name":"ToastHost","sourcePath":"components/Toast.jsx"}],"sourceHashes":{"app/App.jsx":"7d4f61231dd6","app/ai/ai-block.js":"9669a2358e22","app/ai/ai-capabilities-canvas.js":"a5a23e6f81a5","app/ai/ai-glyphic-language.js":"7027167fe99a","app/ai/ai-glyphic.js":"233aeeb42f55","app/ai/ai-imagery.js":"38ab8719d29b","app/ai/ai-layout.js":"4cb411f97f19","app/ai/ai-registry.js":"c8cdedfac2ed","app/ai/ai-seed.js":"859b99602e91","app/ai/ai-studio.js":"6cf619016650","app/ai/host-runtime.js":"6d09d196bbdf","app/ai/host-serializer.js":"3624b7c2d896","app/canvases/AIStudio.jsx":"59e91e06ede6","app/canvases/Architecture.jsx":"476715ae9f15","app/canvases/Bridge.jsx":"ad27b5e2e51b","app/canvases/Build.jsx":"4ed9e6999cd7","app/canvases/Colors.jsx":"2223049f7a4e","app/canvases/Components.jsx":"5ec59a18e929","app/canvases/Icons.jsx":"9d708456807a","app/canvases/Imagery.jsx":"9252f47f8c91","app/canvases/Inbox.jsx":"2bde75c16d43","app/canvases/Overview.jsx":"a166faab8ea0","app/canvases/Patterns.jsx":"77b6d1c11342","app/canvases/Registry.jsx":"05fa2d45cf64","app/canvases/RegistryInspector.jsx":"98729a371542","app/canvases/Settings.jsx":"3a7f5012011d","app/canvases/StubCanvases.jsx":"493682597dae","app/canvases/Templates.jsx":"fc5124dc5e0d","app/canvases/TypeBuilder.jsx":"e9eba42aa601","app/canvases/TypeBuilder2.jsx":"57e78baecb14","app/canvases/Voice.jsx":"653e780a8833","app/canvases/Workshop.jsx":"c1eb9822f2a5","app/canvases/workshop/AIEngine.jsx":"76bc2b8043cf","app/canvases/workshop/Blocks.jsx":"7c6327a87584","app/canvases/workshop/Export.jsx":"a862dacdfd69","app/canvases/workshop/Layouts.jsx":"0035eae201b2","app/canvases/workshop/Library.jsx":"12fea63360ad","app/canvases/workshop/Polish.jsx":"8f3ec8036eda","app/canvases/workshop/Section.jsx":"3fc095530924","app/canvases/workshop/WidgetBuilder.jsx":"eafc3a532724","app/canvases/workshop/WizardBuilder.jsx":"105d38657fd8","app/components/CanvasHeader.jsx":"43a6ffe145f8","app/components/ChatRail.jsx":"4acf69cb0ce2","app/components/CommandPalette.jsx":"04cd8707dff8","app/components/ExportPatch.jsx":"2568c63a1dcb","app/components/ImageEditor.jsx":"8dfce267fb77","app/components/KitPreviews.jsx":"0614572698f7","app/components/MaskEditor.jsx":"0cc0ade4f8c6","app/components/Pano360.jsx":"326bd1b39aff","app/components/RefinePop.jsx":"86c1a60173aa","app/components/Resizable.jsx":"1af1e686479e","app/components/Sidebar.jsx":"2b991a403a21","app/components/Toast.jsx":"8fa5f4debec9","app/components/ViShape.jsx":"7ce5d121927a","app/components/usePersisted.js":"c00d18f30e24","app/registry/SaveAsTypeModal.jsx":"a1dc8a171c27","app/registry/actions.js":"ac2e3c17342f","app/registry/block-type.js":"913831d5c0f8","app/registry/components-type.js":"00f717b1a520","app/registry/conditions.js":"f0d052d2a498","app/registry/decorators.js":"5fd06e4fd912","app/registry/events.js":"94252b942974","app/registry/glyphic-type.js":"ebdaec0b56d6","app/registry/inspector.js":"f6279914c954","app/registry/kinds-type.js":"af814c49bdf2","app/registry/project.js":"0c5fb640ae19","app/registry/query.js":"3df2f09a8ebb","app/registry/relationships-seed.js":"2e6c7a6920c4","app/registry/text-type.js":"2a1e6b5a44b8","app/registry/types-adapter.js":"684b87f40cca","app/registry/types-core.js":"9b2636603aa8","app/registry/types-hooks.js":"5b1fa00eaaba","app/registry/types-seed.js":"84c6eb79f7e1","app/registry/types-thumb.jsx":"e4a74607f7d1","app/registry/types-ui.jsx":"6ea8c2338c43","app/registry/types-vi.js":"04769b31ac0b","app/registry/vars.js":"bc2f4b8b9695","app/registry/views.js":"f5a953fcd243","app/services/ai-presets.js":"42386f3d1aef","app/services/company.js":"8c2b09f641ad","app/services/image-store.js":"bc148d43658e","app/services/openai.js":"d6de45be91cb","assets/brand/root-unity-mark.js":"0b63995cf170","assets/icons/CvIcon.jsx":"5eac79214445","assets/icons/cv-edges.js":"78ae5a5f5c39","assets/icons/cv-glyphics.js":"c725940cec9c","assets/icons/cv-icons.js":"597ee68276e2","assets/icons/cv-meaning.js":"d9971dd38d9e","assets/icons/cv-organisms.js":"bf12edd36ab4","assets/icons/cv-shapes.js":"3510a57fd011","assets/icons/cv-vi-glyph.js":"82b41fccbe8f","assets/icons/glyphgraph.js":"61ff1620b74e","atomicity/Atlas.jsx":"0c35a71042cf","atomicity/AtomiCity.jsx":"4f68c3dee6f8","atomicity/Explore.jsx":"1c4e4a7ae23d","atomicity/Foundations.jsx":"5ee0f5b47f41","atomicity/Home.jsx":"4b1c8e9e2745","atomicity/Ingest.jsx":"a70d8280c96b","atomicity/ViConsole.jsx":"5d049d056052","atomicity/VoiceSurface.jsx":"10594eadad08","atomicity/atlas-model.js":"0a98094b032e","atomicity/explore-engine.js":"3955958a41ca","atomicity/ingest.js":"6acb703e0c9f","atomicity/kit.jsx":"a4718a540cbe","atomicity/mode-engine.js":"e076ac2a3bbf","atomicity/override.js":"2d2ab208a7ef","atomicity/picker.js":"88e2102d340c","atomicity/scan-engine.js":"0336d04027e5","atomicity/shot.js":"9619510f8bd5","atomicity/vi-brain.js":"72d2b1bc80a7","axes/axis-core.js":"8f4502d1203e","axes/color/color-axis.js":"0d3a204f28e4","axes/density/density-axis.js":"c52268147a11","axes/depth/depth-axis.js":"f34d104b3c8b","axes/fill/fill-axis.js":"cb1a2f7e8911","axes/flow/flow-axis.js":"a4c667a0f057","axes/form/form-axis.js":"049eaa0adb26","axes/glow/glow-axis.js":"d44d6fe92b51","axes/ground/ground-axis.js":"151c723b3efb","axes/level/level-axis.js":"12ff7bff604e","axes/material/material-axis.js":"9f9c6a0cc627","axes/motion/motion-axis.js":"5e9657a74643","axes/ordinal/ordinal-axis.js":"2cabf83eb1cd","axes/shadow/shadow-axis.js":"f3f6abc14912","axes/size/size-axis.js":"87b6e7c0abe6","axes/skin/skin-axis.js":"ec33e8ed9cd7","axes/space/space-axis.js":"d3bc2c781bdc","axes/symbol/symbol-axis.js":"d06b5807c203","axes/texture/texture-axis.js":"083a45234160","components/AppShell.jsx":"3f9f276ffd19","components/Avatar.jsx":"a38b44cde8e5","components/Badge.jsx":"3cdd070ca5ff","components/Button.jsx":"d7a24dd3c9ba","components/Card.jsx":"cd29853874e3","components/Checkbox.jsx":"75e48db4efee","components/Glyphic.jsx":"87c6c5cbf2e3","components/Input.jsx":"ad7903b8a238","components/List.jsx":"c4c2a82a4745","components/Menu.jsx":"bb31e85ebfd6","components/Modal.jsx":"4c29b3aedf7a","components/Popover.jsx":"f018f29a70c4","components/Radio.jsx":"d85f059b8c4f","components/Search.jsx":"6d25c1e77e26","components/Segmented.jsx":"622f617e8abd","components/Select.jsx":"af68f318361d","components/Sheet.jsx":"e4132582f73e","components/Skeleton.jsx":"4948d827bd7b","components/Stepper.jsx":"a4fbfd19513c","components/Switch.jsx":"b1e1f0d6eb6e","components/Table.jsx":"aaa5a9541c89","components/Tabs.jsx":"86845adedf04","components/Toast.jsx":"e5d573095a03","components/Tooltip.jsx":"9dae0cf9a304","core/ContainmentTree.jsx":"ee553931eb74","core/DiagramSolver.jsx":"26b5710fd6cf","core/RenderType.jsx":"a1e421c665bc","core/Slide.jsx":"6357ab078294","core/archetype-catalog.js":"11c8d6e1e752","core/cv-address.js":"f3288dc54228","core/cv-arc.js":"8f7f9e119a36","core/cv-node.js":"8dafff80f0d1","core/graph-layout.js":"80cb67a7c741","core/layout-fit.js":"dd35942b3a7f","core/morph.js":"4cc8e0f757d9","core/render-scene.js":"a61156c4b1f7","core/render3d.js":"058eb02a94ac","core/slide-fit.js":"ac7974a00f9b","core/world-camera.js":"7cf894c7a08f","preview/image-slot.js":"9309434cb09c","system/build-system-map.js":"6dffd000dc21","system/gl-inspector.js":"9d6ec362108b","tweaks-panel.jsx":"6591467622ed","ui_kits/platform/ActionToolbar.jsx":"631fbddb47bc","ui_kits/platform/Chats.jsx":"5e17e4777f6d","ui_kits/platform/PlatformApp.jsx":"27838168f0c5","ui_kits/platform/PlatformSidebar.jsx":"e005aeec0535","ui_kits/platform/TopBar.jsx":"e0fcf91e7496","ui_kits/platform/screens/BrandKit.jsx":"c2c42d40ad59","ui_kits/platform/screens/Calendar.jsx":"f5ec612b1250","ui_kits/platform/screens/Gallery.jsx":"e44df1327bc8","ui_kits/platform/screens/HubSettings.jsx":"0bff95d1aa3f","ui_kits/platform/screens/Stub.jsx":"c759c2c94cee","ui_kits/vi/ChatPanel.jsx":"abf8ceb04fcc","ui_kits/vi/OutputPreview.jsx":"e29b7550e83a","ui_kits/vi/TaskTree.jsx":"f8a4f3c48b5c","ui_kits/vi/ViKitApp.jsx":"96c12112e88d","ui_kits/vi/ViMark.jsx":"674be272106e","ui_kits/vi/ViStatusPill.jsx":"7163964718c6","ui_kits/virtual-hub/CaptureComment.jsx":"191e64d165b7","ui_kits/virtual-hub/FloorplanOverlay.jsx":"3a97552eb6dc","ui_kits/virtual-hub/HubApp.jsx":"1a612d556d39","ui_kits/virtual-hub/HubBug.jsx":"d0ebbb7f6f80","ui_kits/virtual-hub/InfoPanel.jsx":"bc98573b1e03","ui_kits/virtual-hub/MenuButton.jsx":"fb80f4cec705","ui_kits/virtual-hub/QuickMenu.jsx":"2bd0aee86d80","ui_kits/virtual-hub/SharePanel.jsx":"560df1a59586"},"inlinedExternals":[],"unexposedExports":[{"name":"typeToNode","sourcePath":"core/RenderType.jsx"}]} */
 
 (() => {
 
@@ -71772,6 +71772,460 @@ function SharePanel({
 window.SharePanel = SharePanel;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/virtual-hub/SharePanel.jsx", error: String((e && e.message) || e) }); }
 
+// components/AppShell.jsx
+try { (() => {
+// components/AppShell.jsx — the console chrome: a desktop nav rail that
+// becomes a bottom tab bar on mobile. RIDES tokens/device.css's existing
+// .cv-appbar/.cv-tabbar CSS verbatim (never a hand-rolled phone chrome —
+// the DESIGN-LANGUAGE law); the rail is the only genuinely new chrome,
+// since device.css only ever covered the phone. Surface switching is the
+// [data-surface]/@media machinery declared alongside .cv-appshell in
+// tokens/controls.css. Slots: header (or a plain title), nav items, content.
+/* global React, window */
+/* global React */
+const h = React.createElement;
+
+function navIcon(name) {
+  const CvIcon = (typeof window !== "undefined" && window.CvIcon) || null;
+  return (name && CvIcon) ? h(CvIcon, { name, size: 20 }) : null;
+}
+
+function AppShell(props) {
+  const { nav = [], activeId, onNavigate, header, title, className = "", children, ...rest } = props || {};
+  const headerEl = header !== undefined
+    ? header
+    : (title != null ? h("div", { className: "cv-appbar" }, h("span", { className: "cv-appbar__title" }, title)) : null);
+
+  return h("div", Object.assign({ className: ["cv-appshell", className].filter(Boolean).join(" ") }, rest),
+    headerEl,
+    h("div", { className: "cv-appshell__body" },
+      nav.length ? h("nav", { className: "cv-appshell__rail", "aria-label": "Primary" },
+        nav.map((it) => h("button", {
+          key: it.id, type: "button", className: "cv-rail-item",
+          "aria-current": it.id === activeId ? "page" : undefined,
+          onClick: onNavigate ? () => onNavigate(it.id) : undefined,
+        },
+          it.icon ? h("span", { className: "cv-rail-item__icon" }, navIcon(it.icon)) : null,
+          h("span", { className: "truncate" }, it.label)))) : null,
+      h("div", { className: "cv-appshell__content" },
+        h("div", { className: "cv-appshell__scroll" }, children))),
+    nav.length ? h("nav", { className: "cv-tabbar cv-appshell__tabbar", "aria-label": "Primary" },
+      nav.map((it) => h("button", {
+        key: it.id, type: "button", className: "cv-tab", "aria-selected": it.id === activeId ? "true" : "false",
+        onClick: onNavigate ? () => onNavigate(it.id) : undefined,
+      },
+        it.icon ? navIcon(it.icon) : null,
+        h("span", null, it.label)))) : null);
+}
+Object.assign(__ds_scope, { AppShell, __ds_default_components_AppShell_jsx: AppShell });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/AppShell.jsx", error: String((e && e.message) || e) }); }
+
+// components/Checkbox.jsx
+try { (() => {
+// components/Checkbox.jsx — token-styled checkbox (gold = the selection/
+// decision colour-discipline rule). Native input restyled via .cv-checkbox;
+// label+hint ride the SAME .cv-field/.cv-label/.cv-hint stack as Input —
+// never a second labelled-field convention.
+/* global React */
+/* global React */
+const h = React.createElement;
+
+function Checkbox(props) {
+  const { label, hint, error, id, indeterminate, className = "", ...rest } = props || {};
+  const ref = React.useRef(null);
+  React.useEffect(() => { if (ref.current) ref.current.indeterminate = !!indeterminate; }, [indeterminate]);
+  const control = h("input", Object.assign({
+    ref, type: "checkbox", id,
+    className: ["cv-checkbox", className].filter(Boolean).join(" "),
+    "aria-invalid": error ? "true" : undefined,
+  }, rest));
+  if (label == null && hint == null && error == null) return control;
+  return h("div", { className: "cv-field" },
+    h("span", { className: "cv-check-row" }, control, label != null ? h("label", { className: "cv-label", htmlFor: id }, label) : null),
+    (error != null || hint != null)
+      ? h("span", { className: "cv-hint" + (error != null ? " cv-hint--error" : "") }, error != null ? error : hint)
+      : null);
+}
+Object.assign(__ds_scope, { Checkbox, __ds_default_components_Checkbox_jsx: Checkbox });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/Checkbox.jsx", error: String((e && e.message) || e) }); }
+
+// components/List.jsx
+try { (() => {
+// components/List.jsx — rows: leading glyph/avatar slot · primary+secondary
+// text (length-budgeted to the SAME tokens tokens/text.css declares,
+// --len-title/--len-desc — not a re-invented number) · trailing meta/action.
+// Selection/hover state rides .interactive (tokens/states.css) — no second
+// interaction language. Row height is --row-h (density-aware, tokens/density.css).
+/* global React */
+/* global React */
+const h = React.createElement;
+
+function ListRow(props) {
+  const {
+    leading, primary, secondary, trailing, selected, onSelect,
+    className = "", children, ...rest
+  } = props || {};
+  const interactive = !!onSelect;
+  return h("div", Object.assign({
+    className: ["cv-list-row", interactive ? "interactive" : "", className].filter(Boolean).join(" "),
+    role: interactive ? "option" : undefined,
+    tabIndex: interactive ? 0 : undefined,
+    "aria-selected": interactive ? (selected ? "true" : "false") : undefined,
+    onClick: onSelect,
+    onKeyDown: interactive ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(e); } } : undefined,
+  }, rest),
+    leading != null ? h("span", { className: "cv-list-row__leading" }, leading) : null,
+    (primary != null || secondary != null || children != null)
+      ? h("span", { className: "cv-list-row__body min0" },
+          primary != null ? h("span", { className: "cv-list-row__primary truncate" }, primary) : null,
+          secondary != null ? h("span", { className: "cv-list-row__secondary truncate" }, secondary) : null,
+          children)
+      : null,
+    trailing != null ? h("span", { className: "cv-list-row__trailing" }, trailing) : null);
+}
+
+function List(props) {
+  const { rows = [], divided = true, className = "", children, ...rest } = props || {};
+  const content = children != null
+    ? children
+    : rows.map((r, i) => h(ListRow, Object.assign({ key: r.key != null ? r.key : i }, r)));
+  return h("div", Object.assign({
+    className: ["cv-list", divided ? "cv-list--divided" : "", className].filter(Boolean).join(" "),
+    role: (rows.length || children) ? "list" : undefined,
+  }, rest), content);
+}
+Object.assign(__ds_scope, { List, ListRow, __ds_default_components_List_jsx: List });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/List.jsx", error: String((e && e.message) || e) }); }
+
+// components/Menu.jsx
+try { (() => {
+// components/Menu.jsx — action menu riding the shared Popover engine
+// (window.CV_POPOVER.Component — the ONE floating-layer implementation;
+// Menu adds no second positioning system). `trigger` is cloned with the
+// anchor ref + open toggle. items = [{icon,label,danger,disabled,onSelect}]
+// or {separator:true}. Keyboard: arrow keys move focus, Enter/Space select,
+// Escape/outside-click close (already handled by Popover). role="menu".
+/* global React, window */
+/* global React */
+const h = React.createElement;
+
+function Menu(props) {
+  const { trigger, items = [], placement = "bottom-start", className = "", onOpenChange } = props || {};
+  const anchorRef = React.useRef(null);
+  const [open, setOpen] = React.useState(false);
+  const [focusIdx, setFocusIdx] = React.useState(-1);
+  const selectable = items.map((it, i) => ((it && it.separator) ? -1 : i)).filter((i) => i !== -1);
+
+  const setOpenState = (next) => {
+    setOpen(next);
+    if (onOpenChange) onOpenChange(next);
+    if (!next) setFocusIdx(-1);
+  };
+  const close = () => setOpenState(false);
+
+  const CvIcon = (typeof window !== "undefined" && window.CvIcon) || null;
+  const Popover = (typeof window !== "undefined" && window.CV_POPOVER && window.CV_POPOVER.Component) || null;
+
+  const onKeyDown = (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!selectable.length) return;
+      const dir = e.key === "ArrowDown" ? 1 : -1;
+      const cur = selectable.indexOf(focusIdx);
+      const next = selectable[(cur + dir + selectable.length) % selectable.length];
+      setFocusIdx(next);
+    } else if (e.key === "Enter" || e.key === " ") {
+      if (focusIdx === -1) return;
+      e.preventDefault();
+      const it = items[focusIdx];
+      if (it && !it.disabled && it.onSelect) { it.onSelect(); close(); }
+    } else if (e.key === "Home") { e.preventDefault(); if (selectable.length) setFocusIdx(selectable[0]); }
+    else if (e.key === "End") { e.preventDefault(); if (selectable.length) setFocusIdx(selectable[selectable.length - 1]); }
+  };
+
+  const triggerEl = trigger ? React.cloneElement(trigger, {
+    ref: anchorRef,
+    "aria-haspopup": "menu",
+    "aria-expanded": open ? "true" : "false",
+    onClick: (e) => { if (trigger.props.onClick) trigger.props.onClick(e); setOpenState(!open); },
+  }) : null;
+
+  return h(React.Fragment, null,
+    triggerEl,
+    (open && Popover) ? h(Popover, { open: true, anchorRef, placement, gap: 6, onRequestClose: close },
+      h("div", { className: ["cv-menu", className].filter(Boolean).join(" "), role: "menu", onKeyDown },
+        items.map((it, i) => {
+          if (it && it.separator) return h("div", { key: "sep" + i, className: "cv-menu__sep", role: "separator" });
+          const icon = (it.icon && CvIcon) ? h(CvIcon, { name: it.icon, size: 16 }) : null;
+          return h("button", {
+            key: it.value != null ? it.value : i, type: "button", role: "menuitem", tabIndex: -1,
+            className: ["cv-menu__item", it.danger ? "cv-menu__item--danger" : "", i === focusIdx ? "is-focused" : ""].filter(Boolean).join(" "),
+            "aria-disabled": it.disabled ? "true" : undefined,
+            onMouseEnter: () => setFocusIdx(i),
+            onClick: it.disabled ? undefined : () => { if (it.onSelect) it.onSelect(); close(); },
+          }, icon, h("span", { className: "cv-menu__label" }, it.label));
+        }))) : null);
+}
+Object.assign(__ds_scope, { Menu, __ds_default_components_Menu_jsx: Menu });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/Menu.jsx", error: String((e && e.message) || e) }); }
+
+// components/Radio.jsx
+try { (() => {
+// components/Radio.jsx — token-styled radio (gold = the selection/decision
+// colour-discipline rule). Native input restyled via .cv-radio; label+hint
+// ride the SAME .cv-field/.cv-label/.cv-hint stack as Input/Checkbox.
+/* global React */
+/* global React */
+const h = React.createElement;
+
+function Radio(props) {
+  const { label, hint, error, id, className = "", ...rest } = props || {};
+  const control = h("input", Object.assign({
+    type: "radio", id,
+    className: ["cv-radio", className].filter(Boolean).join(" "),
+    "aria-invalid": error ? "true" : undefined,
+  }, rest));
+  if (label == null && hint == null && error == null) return control;
+  return h("div", { className: "cv-field" },
+    h("span", { className: "cv-check-row" }, control, label != null ? h("label", { className: "cv-label", htmlFor: id }, label) : null),
+    (error != null || hint != null)
+      ? h("span", { className: "cv-hint" + (error != null ? " cv-hint--error" : "") }, error != null ? error : hint)
+      : null);
+}
+Object.assign(__ds_scope, { Radio, __ds_default_components_Radio_jsx: Radio });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/Radio.jsx", error: String((e && e.message) || e) }); }
+
+// components/Search.jsx
+try { (() => {
+// components/Search.jsx — React wrapper over the CSS-only .cv-search pill
+// (tokens/controls.css: rounded search field, icon + input, gold focus-within).
+// The leading icon resolves through window.CvIcon from the ONE icon library
+// (assets/icons/cv-icons.js). onChange receives the string value.
+/* global React, window */
+/* global React */
+const h = React.createElement;
+
+function Search(props) {
+  const { value, onChange, placeholder = "Search…", icon = "search", trailing, className = "", ...rest } = props || {};
+  const CvIcon = (typeof window !== "undefined" && window.CvIcon) || null;
+  return h("div", Object.assign({ className: ["cv-search", className].filter(Boolean).join(" "), role: "search" }, rest),
+    (icon && CvIcon) ? h(CvIcon, { name: icon, size: 16, tone: "muted" }) : null,
+    h("input", {
+      type: "search", value, placeholder, "aria-label": typeof placeholder === "string" ? placeholder : "Search",
+      onChange: onChange ? (e) => onChange(e.target.value, e) : undefined,
+    }),
+    trailing != null ? trailing : null);
+}
+Object.assign(__ds_scope, { Search, __ds_default_components_Search_jsx: Search });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/Search.jsx", error: String((e && e.message) || e) }); }
+
+// components/Sheet.jsx
+try { (() => {
+// components/Sheet.jsx — mobile-first slide-in panel, the touch sibling of
+// Modal. Shares Modal's overlay/backdrop/Escape/close-button conventions
+// (reuses .cv-modal__head/__title/__close/__foot — one home for dialog
+// chrome, never a second). side="right" (a desktop-leaning drawer) |
+// "bottom" (a mobile sheet, carries a --touch-min-guarded drag handle).
+// Controlled via `open`; stays mounted through the exit transition so the
+// slide-out is a motion, never a teleport.
+/* global React */
+/* global React */
+const h = React.createElement;
+
+function reducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function Sheet(props) {
+  const { open, onClose, side = "bottom", title, footer, className = "", children, ...rest } = props || {};
+  const [mounted, setMounted] = React.useState(!!open);
+  const [entered, setEntered] = React.useState(false);
+  const closeTimer = React.useRef();
+
+  React.useEffect(() => {
+    if (open) {
+      clearTimeout(closeTimer.current);
+      setMounted(true);
+      const raf = requestAnimationFrame(() => setEntered(true));
+      return () => cancelAnimationFrame(raf);
+    }
+    setEntered(false);
+    closeTimer.current = setTimeout(() => setMounted(false), reducedMotion() ? 0 : 260);
+    return () => clearTimeout(closeTimer.current);
+  }, [open]);
+
+  React.useEffect(() => {
+    if (!mounted || !onClose) return undefined;
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mounted, onClose]);
+
+  if (!mounted) return null;
+  return h("div", { className: "cv-sheet-overlay", onClick: onClose ? (e) => { if (e.target === e.currentTarget) onClose(); } : undefined },
+    h("div", Object.assign({
+      className: ["cv-sheet", entered ? "is-open" : "", !open ? "is-closing" : "", className].filter(Boolean).join(" "),
+      "data-side": side, role: "dialog", "aria-modal": "true", "data-material": "skin",
+    }, rest),
+      side === "bottom" ? h("div", { className: "cv-sheet__handle-hit" }, h("span", { className: "cv-sheet__handle", "aria-hidden": "true" })) : null,
+      (title != null || onClose) ? h("div", { className: "cv-modal__head" },
+        title != null ? h("h2", { className: "cv-modal__title" }, title) : h("span", { style: { flex: 1 } }),
+        onClose ? h("button", { className: "cv-modal__close", "aria-label": "Close", onClick: onClose }, "×") : null) : null,
+      h("div", null, children),
+      footer != null ? h("div", { className: "cv-modal__foot" }, footer) : null));
+}
+Object.assign(__ds_scope, { Sheet, __ds_default_components_Sheet_jsx: Sheet });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/Sheet.jsx", error: String((e && e.message) || e) }); }
+
+// components/Skeleton.jsx
+try { (() => {
+// components/Skeleton.jsx — React wrapper over the CSS-only .skeleton
+// (tokens/states.css: shimmer placeholder; reduced-motion already gated
+// there). variant text|line|circle|block maps to the existing modifier
+// classes; width/height are per-instance geometry (the one prop that is
+// legitimately instance data, passed as style, not a token).
+/* global React */
+/* global React */
+const h = React.createElement;
+
+function Skeleton(props) {
+  const { variant = "line", width, height, className = "", style, ...rest } = props || {};
+  const cls = ["skeleton", variant !== "block" ? variant : "", className].filter(Boolean).join(" ");
+  const s = Object.assign({}, style);
+  if (width != null) s.width = typeof width === "number" ? width + "px" : width;
+  if (height != null) s.height = typeof height === "number" ? height + "px" : height;
+  return h("span", Object.assign({ className: cls, style: s, "aria-hidden": "true" }, rest));
+}
+Object.assign(__ds_scope, { Skeleton, __ds_default_components_Skeleton_jsx: Skeleton });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/Skeleton.jsx", error: String((e && e.message) || e) }); }
+
+// components/Table.jsx
+try { (() => {
+// components/Table.jsx — React wrapper over the CSS-only .cv-table
+// (tokens/controls.css: the comparison/pricing table). columns declare
+// key/label + num (right-aligned tabular numerals via .cv-table__num) +
+// feature (the highlighted gold offer column via .cv-table__feature).
+// striped = .cv-table--striped. Pass children for full manual control.
+/* global React */
+/* global React */
+const h = React.createElement;
+
+function Table(props) {
+  const { columns = [], rows = [], striped, className = "", children, ...rest } = props || {};
+  const cls = ["cv-table", striped ? "cv-table--striped" : "", className].filter(Boolean).join(" ");
+  if (children != null) return h("table", Object.assign({ className: cls }, rest), children);
+  const cellCls = (c) => [c.num ? "cv-table__num" : "", c.feature ? "cv-table__feature" : ""].filter(Boolean).join(" ") || undefined;
+  return h("table", Object.assign({ className: cls }, rest),
+    columns.length ? h("thead", null, h("tr", null,
+      columns.map((c) => h("th", { key: c.key, className: c.num ? "cv-table__num" : undefined, scope: "col" }, c.label)))) : null,
+    h("tbody", null, rows.map((r, i) =>
+      h("tr", { key: r.key != null ? r.key : i },
+        columns.map((c) => h("td", { key: c.key, className: cellCls(c) }, r[c.key]))))));
+}
+Object.assign(__ds_scope, { Table, __ds_default_components_Table_jsx: Table });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/Table.jsx", error: String((e && e.message) || e) }); }
+
+// components/Toast.jsx
+try { (() => {
+// components/Toast.jsx — global notifier: a window-level queue + <ToastHost/>.
+// window.CV_TOAST is the ONE queue (the CV_* global-home pattern already used
+// by window.CV_POPOVER) — call CV_TOAST.show({...}) from anywhere; mount ONE
+// <ToastHost/> per page to render it. Tones ride the Badge tone vocabulary
+// (gold/success/warning/error/comm). Enter/exit use the tokens/motion.css
+// primitives (.enter-*/.exit-*), which already gate prefers-reduced-motion;
+// the JS-side removal delay additionally collapses to 0 under reduced motion
+// so a dismissed toast never leaves a lingering gap.
+/* global React, window */
+/* global React */
+const h = React.createElement;
+
+function reducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+let _id = 0;
+const _listeners = new Set();
+const _queue = [];
+
+function _emit() { _listeners.forEach((fn) => fn(_queue.slice())); }
+
+// opts: { tone, title, message, action:{label,onClick}, duration }
+// duration: ms before auto-dismiss; 0 disables auto-dismiss. Default 4200.
+function show(opts) {
+  opts = opts || {};
+  const toast = {
+    id: ++_id,
+    tone: opts.tone,
+    title: opts.title,
+    message: opts.message,
+    action: opts.action || null,
+    duration: opts.duration == null ? 4200 : opts.duration,
+    exiting: false,
+  };
+  _queue.push(toast);
+  _emit();
+  if (toast.duration !== 0) {
+    toast._timer = setTimeout(() => dismiss(toast.id), toast.duration);
+  }
+  return toast.id;
+}
+
+function dismiss(id) {
+  const t = _queue.find((x) => x.id === id);
+  if (!t || t.exiting) return;
+  clearTimeout(t._timer);
+  t.exiting = true;
+  _emit();
+  // let the exit animation play before removing from the queue (skipped under
+  // reduced motion, where the CSS transition itself already collapses to 1ms)
+  setTimeout(() => {
+    const i = _queue.findIndex((x) => x.id === id);
+    if (i !== -1) _queue.splice(i, 1);
+    _emit();
+  }, reducedMotion() ? 0 : 260);
+}
+
+function subscribe(fn) { _listeners.add(fn); fn(_queue.slice()); return () => _listeners.delete(fn); }
+
+if (typeof window !== "undefined") {
+  window.CV_TOAST = window.CV_TOAST || {};
+  window.CV_TOAST.show = show;
+  window.CV_TOAST.dismiss = dismiss;
+  window.CV_TOAST.subscribe = subscribe;
+}
+
+const ENTER = { top: "enter-down", bottom: "enter-up" };
+const EXIT = { top: "exit-up", bottom: "exit-down" };
+
+// One host per page. position = "top-right"(default) | "top-center" |
+// "top-left" | "bottom-right" | "bottom-center" | "bottom-left".
+function ToastHost(props) {
+  const { position = "top-right", className = "" } = props || {};
+  const [items, setItems] = React.useState(() => _queue.slice());
+  React.useEffect(() => subscribe(setItems), []);
+  const corner = position.indexOf("bottom") === 0 ? "bottom" : "top";
+  if (!items.length) return null;
+  return h("div", { className: ["cv-toast-host", className].filter(Boolean).join(" "), "data-position": position },
+    items.map((t) => h("div", {
+      key: t.id,
+      className: ["cv-toast", t.tone ? "cv-toast--" + t.tone : "", t.exiting ? EXIT[corner] : ENTER[corner]].filter(Boolean).join(" "),
+      role: "status", "aria-live": "polite", "data-material": "skin",
+    },
+      h("span", { className: "cv-toast__dot", "aria-hidden": "true" }),
+      h("div", { className: "cv-toast__body" },
+        t.title != null ? h("div", { className: "cv-toast__title" }, t.title) : null,
+        t.message != null ? h("div", { className: "cv-toast__msg" }, t.message) : null),
+      t.action ? h("button", {
+        type: "button", className: "cv-toast__action",
+        onClick: () => { if (t.action.onClick) t.action.onClick(); dismiss(t.id); },
+      }, t.action.label) : null,
+      h("button", { type: "button", className: "cv-toast__close", "aria-label": "Dismiss", onClick: () => dismiss(t.id) }, "×"))));
+}
+Object.assign(__ds_scope, { ToastHost, __ds_default_components_Toast_jsx: ToastHost });
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/Toast.jsx", error: String((e && e.message) || e) }); }
+
 __ds_ns.Avatar = __ds_scope.Avatar;
 
 __ds_ns.Badge = __ds_scope.Badge;
@@ -71811,5 +72265,28 @@ __ds_ns.CoreTypes = __ds_scope.CoreTypes;
 __ds_ns.Slide = __ds_scope.Slide;
 
 __ds_ns.Archetypes = __ds_scope.Archetypes;
+
+
+__ds_ns.AppShell = __ds_scope.AppShell;
+
+__ds_ns.Checkbox = __ds_scope.Checkbox;
+
+__ds_ns.List = __ds_scope.List;
+
+__ds_ns.ListRow = __ds_scope.ListRow;
+
+__ds_ns.Menu = __ds_scope.Menu;
+
+__ds_ns.Radio = __ds_scope.Radio;
+
+__ds_ns.Search = __ds_scope.Search;
+
+__ds_ns.Sheet = __ds_scope.Sheet;
+
+__ds_ns.Skeleton = __ds_scope.Skeleton;
+
+__ds_ns.Table = __ds_scope.Table;
+
+__ds_ns.ToastHost = __ds_scope.ToastHost;
 
 })();

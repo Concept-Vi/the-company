@@ -1,11 +1,5 @@
 *, *::before, *::after { box-sizing: border-box; }
   :root {
-  /* loud-fail wave B: hoisted defaults (were per-site fallbacks) */
-  --zone-base-strong: #F3ECDA;
-  --zone-base-surface: #FBF7EC;
-  --zone-panel-edge: #E6DCC2;
-  --zone-panel-surface: #F4EEDD;
-
     --paper: var(--bg-surface);
     --ground: var(--zone-base-surface);
     --rail-bg: var(--zone-panel-surface);

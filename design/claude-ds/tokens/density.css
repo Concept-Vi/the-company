@@ -36,5 +36,5 @@
 [data-density="spacious"]    { --density: 1.25; /* @kind other */ }
 
 /* density also relaxes the fluid spacing + surface gutter */
-[data-density="compact"]  { --space-fluid-md: clamp(10px, 1.6vw, 20px); --gutter: var(--s-4); }
-[data-density="spacious"] { --space-fluid-md: clamp(20px, 3vw, 40px);   --gutter: var(--s-12); }
+[data-density="compact"]  { --space-fluid-md: clamp(10px, 1.6vw, 20px); --gutter: var(--s-4); --dgm-node-gap: var(--space-fluid-md); /* re-bind (frozen-alias class) */ }
+[data-density="spacious"] { --space-fluid-md: clamp(20px, 3vw, 40px);   --gutter: var(--s-12); --dgm-node-gap: var(--space-fluid-md); /* re-bind (frozen-alias class) */ }

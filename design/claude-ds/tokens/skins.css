@@ -245,6 +245,7 @@
      skin re-binds ink DARKER (this is the skin's own voice, one home) */
   --ink: oklch(0.24 0.02 75); /* @kind color */
   --ink-2: oklch(0.38 0.022 78); /* @kind color */
+  --icon-ink: var(--ink-2); /* re-bind (frozen-alias class) */
 }
 /* the stone skin's own surface — hoisted onto the SKIN scope as
    --skin-mat-* roles (read by the [data-material="skin"] binding). */
@@ -299,6 +300,7 @@
   --skin-mat-shadow-lifted: var(--shadow-contact), var(--shadow-ambient-lifted); /* @kind shadow */
   --skin-mat-radius:        var(--r-xl);
   --skin-mat-radius-inner:  var(--r-lg);
+  --mat-texture: var(--skin-mat-texture); /* re-bind (frozen-alias class) */
 }
 /* porcelain wells read DEBOSSED: inner top shade + light bottom lip */
 [data-skin="stone"] [data-material="skin"].material--inset {
@@ -497,6 +499,7 @@
   --skin-mat-shadow-lifted: var(--shadow-contact), var(--shadow-ambient-lifted); /* @kind shadow */
   --skin-mat-radius:        var(--r-lg); /* paper corners are tighter than stone */
   --skin-mat-radius-inner:  var(--r-md);
+  --mat-texture: var(--skin-mat-texture); /* re-bind (frozen-alias class) */
 }
 [data-skin="parchment"] [data-material="skin"].material--inset {
   box-shadow:
@@ -557,6 +560,7 @@
   --skin-mat-shadow-lifted: var(--shadow-contact), var(--shadow-ambient-lifted); /* @kind shadow */
   --skin-mat-radius:        var(--r-xl);
   --skin-mat-radius-inner:  var(--r-lg);
+  --mat-texture: var(--skin-mat-texture); /* re-bind (frozen-alias class) */
 }
 [data-skin="carbon"] [data-material="skin"].material--inset {
   box-shadow:

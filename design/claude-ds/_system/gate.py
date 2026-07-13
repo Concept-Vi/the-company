@@ -44,7 +44,7 @@ base_keys = set(base["_meta"].get("ghost_keys", []))
 
 # 3. verdict
 REGRESSION_COUNTS = [k for k in new_counts
-                     if k.startswith(("ghost_", "dead_", "deaf_")) or k == "raw_colour_values"]
+                     if k.startswith(("ghost_", "dead_", "deaf_")) or k in ("raw_colour_values", "theme_frozen_aliases", "stale_bundle_components")]
 findings = []
 for k in REGRESSION_COUNTS:
     if new_counts.get(k, 0) > base_counts.get(k, 0):

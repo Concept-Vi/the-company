@@ -1,12 +1,12 @@
 {
  "_meta": {
-  "generated": "2026-07-12T23:04:08Z",
+  "generated": "2026-07-12T23:59:34Z",
   "by": "_system/substrate-map.py",
   "company_address_prefix": "project://claude-ds/",
   "gap_counts": {
    "ghost_files_live": 31,
    "ghost_tokens_hard": 0,
-   "ghost_tokens_family": 0,
+   "ghost_tokens_family": 1,
    "ghost_globals": 2,
    "ghost_icons": 0,
    "ghost_axes": 0,
@@ -15,14 +15,17 @@
    "ghost_skins": 0,
    "dead_letter_events": 0,
    "deaf_triggers": 3,
-   "orphan_tokens": 143,
+   "orphan_tokens": 140,
    "orphan_icons": 98,
    "orphan_globals": 4,
    "orphan_axes": 1,
    "orphan_actions": 9,
    "orphan_types": 132,
-   "raw_colour_values": 324,
-   "path_drift_heals": 32
+   "raw_colour_values": 315,
+   "path_drift_heals": 32,
+   "theme_frozen_aliases": 0,
+   "stale_bundle_components": 2,
+   "consumer_files_scanned": 9
   },
   "ghost_keys": [
    "cv://action/insert",
@@ -30,6 +33,7 @@
    "cv://global/CV_ARCHETYPE_",
    "cv://global/CV_HOST_NATIVE",
    "cv://global/CV_STUDIO",
+   "cv://token/--frame-desktop",
    "cv://type/chart",
    "cv://type/num",
    "cv://type/plus",
@@ -999,6 +1003,7 @@
     "Tonal Zoning System.html",
     "_archive-v1/colors_and_type.css",
     "_archive-v1/tonal-zoning.css",
+    "_demo/glyphic-board.html",
     "_qa/archetype-test.html",
     "_qa/bridge-test.html",
     "_qa/core-test.html",
@@ -1118,6 +1123,7 @@
     "colors_and_type.css"
    ],
    "consumed_in": [
+    "_demo/glyphic-board.html",
     "app/registry/inspector.js",
     "assets/icons/cv-organisms.js",
     "assets/icons/cv-shapes.js",
@@ -1214,6 +1220,7 @@
     "Tonal Zoning System.html",
     "_archive-v1/colors_and_type.css",
     "_archive-v1/tonal-zoning.css",
+    "_demo/glyphic-board.html",
     "_demo/verify_g2.js",
     "_qa/decorators-test.html",
     "app/app.css",
@@ -1390,6 +1397,7 @@
     "colors_and_type.css"
    ],
    "consumed_in": [
+    "_demo/glyphic-board.html",
     "app/app.css",
     "app/canvases/Build.jsx",
     "app/canvases/Components.jsx",
@@ -1418,6 +1426,7 @@
     "colors_and_type.css"
    ],
    "consumed_in": [
+    "_demo/glyphic-board.html",
     "_qa/cv-node-test.html",
     "_qa/decorators-test.html",
     "_qa/meta-test.html",
@@ -1514,6 +1523,7 @@
    ],
    "consumed_in": [
     "_archive-v1/tonal-zoning.css",
+    "_demo/glyphic-board.html",
     "app/app.css",
     "app/canvases/Colors.jsx",
     "app/canvases/Components.jsx",
@@ -1849,7 +1859,8 @@
     "app/canvases/Components.jsx",
     "app/workshop.css",
     "atomicity/atomicity.css",
-    "preview/components_buttons.html"
+    "preview/components_buttons.html",
+    "system/system-map.html"
    ],
    "class": "defined",
    "ghost": false,
@@ -2081,17 +2092,6 @@
    "ghost": false,
    "orphan": false
   },
-  "cv://token/--border": {
-   "defined_in": [
-    "_demo/glyphic-board.html"
-   ],
-   "consumed_in": [
-    "_demo/glyphic-board.html"
-   ],
-   "class": "defined",
-   "ghost": false,
-   "orphan": false
-  },
   "cv://token/--border-dark": {
    "defined_in": [
     "_archive-v1/colors_and_type.css",
@@ -2128,6 +2128,7 @@
     "tokens/theme.css"
    ],
    "consumed_in": [
+    "_demo/glyphic-board.html",
     "app/app.css",
     "app/canvases/Build.jsx",
     "app/canvases/Colors.jsx",
@@ -2163,7 +2164,6 @@
   "cv://token/--border-faint": {
    "defined_in": [
     "_archive-v1/colors_and_type.css",
-    "_demo/glyphic-board.html",
     "colors_and_type.css",
     "tokens/theme.css"
    ],
@@ -2613,7 +2613,8 @@
   },
   "cv://token/--cv-icon-bg": {
    "defined_in": [
-    "tokens/icons.css"
+    "tokens/icons.css",
+    "tokens/theme.css"
    ],
    "consumed_in": [
     "assets/icons/cv-icons.js",
@@ -3162,6 +3163,7 @@
   },
   "cv://token/--dgm-node-gap": {
    "defined_in": [
+    "tokens/density.css",
     "tokens/diagram.css"
    ],
    "consumed_in": [
@@ -4675,6 +4677,15 @@
    "ghost": false,
    "orphan": false
   },
+  "cv://token/--frame-desktop": {
+   "defined_in": [],
+   "consumed_in": [
+    "consumer:operator/app/src/views/Arrival.tsx"
+   ],
+   "class": "ghost-family",
+   "ghost": true,
+   "orphan": false
+  },
   "cv://token/--frame-desktop-ar": {
    "defined_in": [
     "tokens/surfaces.css"
@@ -6025,7 +6036,9 @@
   },
   "cv://token/--icon-ink": {
    "defined_in": [
-    "tokens/icons.css"
+    "tokens/icons.css",
+    "tokens/skins.css",
+    "tokens/theme.css"
    ],
    "consumed_in": [
     "tokens/icons.css"
@@ -6067,7 +6080,8 @@
   },
   "cv://token/--icon-muted": {
    "defined_in": [
-    "tokens/icons.css"
+    "tokens/icons.css",
+    "tokens/theme.css"
    ],
    "consumed_in": [
     "tokens/icons.css"
@@ -6289,8 +6303,10 @@
     "tokens/controls.css",
     "tokens/dataviz.css",
     "tokens/icons.css",
+    "tokens/skins.css",
     "tokens/text.css",
     "tokens/texture.css",
+    "tokens/theme.css",
     "tonal-zoning.css"
    ],
    "class": "defined",
@@ -6353,6 +6369,7 @@
     "tokens/skins.css",
     "tokens/states.css",
     "tokens/text.css",
+    "tokens/theme.css",
     "tonal-zoning.css"
    ],
    "class": "defined",
@@ -6368,6 +6385,7 @@
    ],
    "consumed_in": [
     "_archive-v1/tonal-zoning.css",
+    "_demo/glyphic-board.html",
     "app/app.css",
     "app/deck.css",
     "app/imagery.css",
@@ -6396,6 +6414,7 @@
     "tokens/dataviz.css",
     "tokens/device.css",
     "tokens/icons.css",
+    "tokens/theme.css",
     "tonal-zoning.css"
    ],
    "class": "defined",
@@ -7425,6 +7444,7 @@
     "tokens/theme.css"
    ],
    "consumed_in": [
+    "_demo/glyphic-board.html",
     "app/app.css",
     "app/imagery.css",
     "atomicity/atomicity.css",
@@ -8507,6 +8527,7 @@
     "app/deck.css",
     "app/imagery.css",
     "atomicity/atomicity.css",
+    "consumer:operator/app/src/views/Arrival.tsx",
     "experiments/tonal-glass.html",
     "specimens/glass-gallery/dashboard.html",
     "specimens/glass-gallery/glass-app.css",
@@ -8545,6 +8566,8 @@
     "app/deck.css",
     "app/imagery.css",
     "atomicity/atomicity.css",
+    "consumer:operator/app/src/App.tsx",
+    "consumer:operator/app/src/views/Arrival.tsx",
     "experiments/tonal-glass.html",
     "specimens/glass-gallery/dashboard.html",
     "specimens/glass-gallery/glass-app.css",
@@ -8608,6 +8631,8 @@
     "app/deck.css",
     "app/imagery.css",
     "atomicity/atomicity.css",
+    "consumer:operator/app/src/App.tsx",
+    "consumer:operator/app/src/views/Arrival.tsx",
     "specimens/glass-gallery/dashboard.html",
     "specimens/glass-gallery/inbox.html",
     "specimens/glass-gallery/index.html",
@@ -9455,6 +9480,7 @@
     "tokens/sizing.css"
    ],
    "consumed_in": [
+    "tokens/density.css",
     "tokens/diagram.css",
     "tokens/layout.css",
     "tokens/sizing.css"
@@ -9730,6 +9756,7 @@
     "system/language.html",
     "system/studio.css",
     "system/the-whole-thing.html",
+    "ui_kits/platform/platform.css",
     "ui_kits/vi/OutputPreview.jsx",
     "ui_kits/vi/vi.css",
     "ui_kits/virtual-hub/hub.css"
@@ -9746,7 +9773,8 @@
    "consumed_in": [
     "app/canvases/Voice.jsx",
     "app/imagery.css",
-    "app/workshop.css"
+    "app/workshop.css",
+    "ui_kits/platform/platform.css"
    ],
    "class": "defined",
    "ghost": false,
@@ -9761,7 +9789,8 @@
     "app/registry.css",
     "assets/icons/cv-glyphics.js",
     "system/glyphic-system.html",
-    "system/type-system.html"
+    "system/type-system.html",
+    "ui_kits/platform/platform.css"
    ],
    "class": "defined",
    "ghost": false,
@@ -9772,30 +9801,36 @@
     "_archive-v1/colors_and_type.css",
     "colors_and_type.css"
    ],
-   "consumed_in": [],
+   "consumed_in": [
+    "ui_kits/platform/platform.css"
+   ],
    "class": "defined",
    "ghost": false,
-   "orphan": true
+   "orphan": false
   },
   "cv://token/--status-pending": {
    "defined_in": [
     "_archive-v1/colors_and_type.css",
     "colors_and_type.css"
    ],
-   "consumed_in": [],
+   "consumed_in": [
+    "ui_kits/platform/platform.css"
+   ],
    "class": "defined",
    "ghost": false,
-   "orphan": true
+   "orphan": false
   },
   "cv://token/--status-pending-bg": {
    "defined_in": [
     "_archive-v1/colors_and_type.css",
     "colors_and_type.css"
    ],
-   "consumed_in": [],
+   "consumed_in": [
+    "ui_kits/platform/platform.css"
+   ],
    "class": "defined",
    "ghost": false,
-   "orphan": true
+   "orphan": false
   },
   "cv://token/--status-success": {
    "defined_in": [
@@ -9817,6 +9852,7 @@
     "preview/brand_voice.html",
     "system/studio.css",
     "tokens/texture.css",
+    "ui_kits/platform/platform.css",
     "ui_kits/vi/ChatPanel.jsx",
     "ui_kits/vi/vi.css"
    ],
@@ -9835,7 +9871,8 @@
     "app/canvases/Voice.jsx",
     "app/canvases/Workshop.jsx",
     "app/imagery.css",
-    "app/workshop.css"
+    "app/workshop.css",
+    "ui_kits/platform/platform.css"
    ],
    "class": "defined",
    "ghost": false,
@@ -9853,7 +9890,8 @@
     "assets/icons/cv-glyphics.js",
     "system/glyphic-foundry.html",
     "system/glyphic-system.html",
-    "system/type-system.html"
+    "system/type-system.html",
+    "ui_kits/platform/platform.css"
    ],
    "class": "defined",
    "ghost": false,
@@ -9865,7 +9903,8 @@
     "colors_and_type.css"
    ],
    "consumed_in": [
-    "app/imagery.css"
+    "app/imagery.css",
+    "ui_kits/platform/platform.css"
    ],
    "class": "defined",
    "ghost": false,
@@ -10646,7 +10685,8 @@
   },
   "cv://token/--viz-axis": {
    "defined_in": [
-    "tokens/dataviz.css"
+    "tokens/dataviz.css",
+    "tokens/theme.css"
    ],
    "consumed_in": [
     "tokens/dataviz.css"
@@ -10694,7 +10734,8 @@
   },
   "cv://token/--viz-label": {
    "defined_in": [
-    "tokens/dataviz.css"
+    "tokens/dataviz.css",
+    "tokens/theme.css"
    ],
    "consumed_in": [
     "tokens/dataviz.css"
@@ -11033,8 +11074,7 @@
   "cv://token/--zone-base-strong": {
    "defined_in": [
     "_archive-v1/colors_and_type.css",
-    "colors_and_type.css",
-    "system/studio.css"
+    "colors_and_type.css"
    ],
    "consumed_in": [
     "_archive-v1/tonal-zoning.css",
@@ -11049,8 +11089,7 @@
   "cv://token/--zone-base-surface": {
    "defined_in": [
     "_archive-v1/colors_and_type.css",
-    "colors_and_type.css",
-    "system/studio.css"
+    "colors_and_type.css"
    ],
    "consumed_in": [
     "Tonal Zoning System.html",
@@ -11317,8 +11356,7 @@
   "cv://token/--zone-panel-edge": {
    "defined_in": [
     "_archive-v1/colors_and_type.css",
-    "colors_and_type.css",
-    "system/studio.css"
+    "colors_and_type.css"
    ],
    "consumed_in": [
     "Tonal Zoning System.html",
@@ -11366,8 +11404,7 @@
   "cv://token/--zone-panel-surface": {
    "defined_in": [
     "_archive-v1/colors_and_type.css",
-    "colors_and_type.css",
-    "system/studio.css"
+    "colors_and_type.css"
    ],
    "consumed_in": [
     "Tonal Zoning System.html",
