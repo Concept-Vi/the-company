@@ -23,6 +23,15 @@ type DSNamespace = Record<string, unknown> & {
   Card: React.ComponentType<Record<string, unknown>>
   Badge: React.ComponentType<Record<string, unknown>>
   Segmented: React.ComponentType<Record<string, unknown>>
+  Button: React.ComponentType<Record<string, unknown>>
+  // U6 chrome (landed 2026-07-13, now compiled into _ds_bundle.js — the bundle-recompile
+  // that closed the former "bundle-stale chrome" tension; see AGENTS.md's contract-tensions
+  // note for the history). Consumed through ds() like every other component — never a
+  // source import of design/claude-ds/components/*.jsx from this app.
+  AppShell: React.ComponentType<Record<string, unknown>>
+  List: React.ComponentType<Record<string, unknown>>
+  ListRow: React.ComponentType<Record<string, unknown>>
+  ToastHost: React.ComponentType<Record<string, unknown>>
 }
 type DSDoor = {
   getDS: () => DSNamespace

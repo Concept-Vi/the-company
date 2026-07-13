@@ -19,11 +19,10 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: Number(process.env.VITE_DEV_PORT) || 5175,
-    fs: {
-      // The AppShell/List chrome components (U6, landed post-bundle — not yet compiled into
-      // _ds_bundle.js) are imported AS SOURCE from the one DS home; allow vite to read it.
-      allow: ['..', '../../design/claude-ds'],
-    },
+    // No fs.allow reach into design/claude-ds (there was one, for the now-closed bundle-stale-chrome
+    // tension — AGENTS.md — while AppShell/List/Toast were imported AS SOURCE). Every DS component now
+    // comes through ds() → the compiled _ds_bundle.js, served same-origin over the /ds proxy below —
+    // vite never needs to read the DS's source tree.
     proxy: {
       // /api = the Suite/bridge face (the same thick contract canvas/app + surface/app use).
       '/api': process.env.VITE_API_TARGET || 'http://127.0.0.1:8770',

@@ -6,18 +6,10 @@
 // data-density setters on <html>; the DS axes do all the styling work from there.
 import { useEffect, useState } from 'react'
 import { ds } from './ds'
-// U6 chrome landed after the last bundle compile — source import from the one DS home
-// (see AGENTS.md for the bundle-stale tension; CSS still rides only /ds/styles.css).
-import type React from 'react'
-import { AppShell as AppShellDS } from '../../../design/claude-ds/components/AppShell.jsx'
-// The DS ships real .d.ts files beside these sources, but their `React.HTMLAttributes`
-// inheritance doesn't resolve from OUTSIDE the DS dir (no node_modules there), which
-// erases `children` from the prop type. Loosen locally — runtime shape is unchanged.
-const AppShell = AppShellDS as unknown as React.ComponentType<Record<string, unknown>>
 import Arrival from './views/Arrival'
 import Inbox from './views/Inbox'
 import NotBuilt from './views/NotBuilt'
-import { installAddressCapture, installPointerBridge } from './lib/address'
+import { installAddressCapture, installPointerBridge, stamp } from './lib/address'
 
 const NAV = [
   { id: 'arrival', label: 'Arrival' },
@@ -36,7 +28,7 @@ function setAxis(attr: 'data-theme' | 'data-density', value: string) {
 }
 
 export default function App() {
-  const { Card, Segmented } = ds()
+  const { Card, Segmented, AppShell } = ds()
   const [active, setActive] = useState('arrival')
   const [theme, setTheme] = useState(document.documentElement.getAttribute('data-theme') || 'light')
   const [density, setDensity] = useState(document.documentElement.getAttribute('data-density') || 'comfortable')
@@ -45,6 +37,18 @@ export default function App() {
     // the harvested address spine — clicks on data-ui-ref elements route to the one sink
     installAddressCapture()
     installPointerBridge()
+    // AppShell (the bundle's compiled component) renders the nav rail/tab-bar buttons
+    // internally — it has no per-item address prop (AGENTS.md's address-scheme note).
+    // Stamp data-ui-ref onto the real DOM nodes it produced, once: NAV's order is 1:1
+    // with both button lists and every button is React-keyed by `it.id`, so these nodes
+    // never get recreated — one stamp at mount holds for the app's lifetime.
+    const railItems = document.querySelectorAll('.cv-appshell__rail .cv-rail-item')
+    const tabItems = document.querySelectorAll('.cv-appshell__tabbar .cv-tab')
+    NAV.forEach((item, i) => {
+      const addr = `ui://operator/nav/${item.id}`
+      railItems[i]?.setAttribute('data-ui-ref', addr)
+      tabItems[i]?.setAttribute('data-ui-ref', addr)
+    })
   }, [])
 
   const header = (
@@ -55,6 +59,7 @@ export default function App() {
         Operator
       </span>
       <Segmented
+        {...stamp('ui://operator/dials/theme')}
         aria-label="Theme"
         options={THEMES}
         value={theme}
@@ -64,6 +69,7 @@ export default function App() {
         }}
       />
       <Segmented
+        {...stamp('ui://operator/dials/density')}
         aria-label="Density"
         options={DENSITIES}
         value={density}

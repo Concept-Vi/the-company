@@ -7,17 +7,18 @@
 // confirm, but the fold is cheap enough to just re-fetch); failure toasts loud and the card stays
 // (never a silent no-op). Empty inbox = the designed "nothing needs you · N running" state —
 // N = the live inbox-source count (`sources.length`), never a blank screen.
-import { useCallback, useEffect, useState } from 'react'
-import { ApiError, actOnCard, fetchNeedsMe, type InboxCard, type InboxVerb, type NeedsMe } from '../lib/api'
+// LIVE REFRESH (I2): tails GET /api/stream from the live edge (the SAME EventSource + Last-Event-ID
+// pattern as Arrival — gapless auto-reconnect), same as views/Arrival.tsx. ANY event debounce-refetches
+// needs-me (~2s) — not just the board/decision kinds the fold cares about, because the bus's real kind
+// vocabulary doesn't line up 1:1 with the source names (e.g. a decision resolving lands as kind
+// `op.run`/`op:"decision.decided"`, not `kind:"decision.decided"` — verified against
+// runtime/decision_registry.py + runtime/bridge.py:1673). Debouncing on the general pulse is honest
+// about that and still isn't polling: nothing fires without a real event landing on the bus.
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ApiError, actOnCard, fetchNeedsMe, fetchNow, type InboxCard, type InboxVerb, type NeedsMe } from '../lib/api'
 import { ds } from '../ds'
+import { stamp } from '../lib/address'
 import type React from 'react'
-import { List as ListDS, ListRow as ListRowDS } from '../../../../design/claude-ds/components/List.jsx'
-// U6 Toast landed after the last bundle compile (same tension as AppShell/List — see AGENTS.md):
-// imported AS SOURCE from the one DS home until the bundle recompiles; CSS still rides styles.css.
-import ToastHostDS from '../../../../design/claude-ds/components/Toast.jsx'
-const List = ListDS as unknown as React.ComponentType<Record<string, unknown>>
-const ListRow = ListRowDS as unknown as React.ComponentType<Record<string, unknown>>
-const ToastHost = ToastHostDS as unknown as React.ComponentType<Record<string, unknown>>
 
 declare global {
   interface Window {
@@ -30,10 +31,11 @@ function toast(opts: { tone?: string; title?: React.ReactNode; message?: React.R
 }
 
 export default function Inbox() {
-  const { Card, Badge, Button } = ds()
+  const { Card, Badge, Button, List, ListRow, ToastHost } = ds()
   const [data, setData] = useState<NeedsMe | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null) // "<source>:<id>:<verb>" while a POST is in flight
+  const debounceRef = useRef<number | null>(null)
 
   const load = useCallback(() => {
     fetchNeedsMe()
@@ -46,6 +48,37 @@ export default function Inbox() {
 
   useEffect(() => {
     load()
+  }, [load])
+
+  // THE LIVE TAIL (I2) — same EventSource + Last-Event-ID pattern as Arrival's pulse: read the
+  // live edge once (GET /api/now), then tail /api/stream from there. The browser's own gapless
+  // reconnect (Last-Event-ID) means we never poll — a dropped connection resumes exactly where
+  // it left off, driven entirely by the bridge pushing real events, never a timer.
+  useEffect(() => {
+    let es: EventSource | null = null
+    let alive = true
+    fetchNow()
+      .then((now) => {
+        if (!alive) return
+        const edge = now.last_event?.seq ?? -1
+        es = new EventSource(`/api/stream?since=${edge}`)
+        es.onmessage = () => {
+          // debounce ~2s: a burst of events (a board fold, a decision resolving) collapses to
+          // one refetch, never a refetch-per-event and never a setInterval anywhere.
+          if (debounceRef.current !== null) window.clearTimeout(debounceRef.current)
+          debounceRef.current = window.setTimeout(() => {
+            debounceRef.current = null
+            load()
+          }, 2000)
+        }
+        es.onerror = () => {} // browser auto-reconnects with Last-Event-ID (gapless)
+      })
+      .catch(() => {}) // the live tail is an enhancement — needs-me still works from the initial GET if /api/now fails
+    return () => {
+      alive = false
+      es?.close()
+      if (debounceRef.current !== null) window.clearTimeout(debounceRef.current)
+    }
   }, [load])
 
   const onVerb = useCallback(
@@ -113,7 +146,12 @@ export default function Inbox() {
         </div>
       ) : (
         data.cards.map((card) => (
-          <Card key={`${card.source}:${card.id}`} title={card.title} sub={card.created || undefined}>
+          <Card
+            key={`${card.source}:${card.id}`}
+            {...stamp(`ui://operator/inbox/card/${card.id}`)}
+            title={card.title}
+            sub={card.created || undefined}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-3)', marginBottom: 'var(--s-3)', flexWrap: 'wrap' }}>
               <Badge tone="comm">{card.source}</Badge>
               <span>{card.why}</span>

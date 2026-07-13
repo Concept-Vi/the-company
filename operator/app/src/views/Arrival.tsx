@@ -5,20 +5,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { ApiError, fetchGreeting, fetchNow, type Greeting } from '../lib/api'
 import { ds } from '../ds'
-// U6 chrome components landed AFTER the last _ds_bundle.js compile — imported AS SOURCE
-// from the one DS home until the bundle is recompiled (tension noted in AGENTS.md; the
-// CSS still comes only from the one /ds/styles.css chain).
-import type React from 'react'
-import { List as ListDS, ListRow as ListRowDS } from '../../../../design/claude-ds/components/List.jsx'
-// The DS's .d.ts inheritance (React.HTMLAttributes) doesn't resolve from outside the DS
-// dir (no node_modules there), which erases `children` — loosen locally, runtime unchanged.
-const List = ListDS as unknown as React.ComponentType<Record<string, unknown>>
-const ListRow = ListRowDS as unknown as React.ComponentType<Record<string, unknown>>
+import { stamp } from '../lib/address'
 
 type Pulse = { count: number; lastSeq: number; lastKind: string; lastTs: string }
 
 export default function Arrival() {
-  const { Card, Badge } = ds()
+  const { Card, Badge, List, ListRow } = ds()
   const [greeting, setGreeting] = useState<Greeting | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pulse, setPulse] = useState<Pulse>({ count: 0, lastSeq: -1, lastKind: '', lastTs: '' })
@@ -105,7 +97,7 @@ export default function Arrival() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-6)', padding: 'var(--s-6)', maxWidth: 'var(--frame-desktop, 100%)' }}>
       {/* the live pulse line */}
-      <Card pad="sm">
+      <Card {...stamp('ui://operator/arrival/pulse')} pad="sm">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-4)', flexWrap: 'wrap' }}>
           <Badge tone={pulse.count > 0 ? 'success' : undefined} dot>
             live
@@ -127,6 +119,7 @@ export default function Arrival() {
 
       {/* built while away — git-ground-truth headlines */}
       <Card
+        {...stamp('ui://operator/arrival/built')}
         title="Built while you were away"
         sub={greeting.since ? `since ${greeting.since.slice(0, 16).replace('T', ' ')}` : 'since the beginning'}
       >
@@ -149,7 +142,7 @@ export default function Arrival() {
       </Card>
 
       {/* waiting on the operator's gate */}
-      <Card title="Waiting on you" sub="the gate — newest first">
+      <Card {...stamp('ui://operator/arrival/waiting')} title="Waiting on you" sub="the gate — newest first">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-3)', marginBottom: 'var(--s-3)' }}>
           <Badge tone={greeting.waiting_total > 0 ? 'warning' : 'success'}>{greeting.waiting_total}</Badge>
           <span>{greeting.waiting_total > 0 ? 'items need your decision' : 'nothing waits on you'}</span>
@@ -164,7 +157,7 @@ export default function Arrival() {
       </Card>
 
       {/* the now signal */}
-      <Card title="Now">
+      <Card {...stamp('ui://operator/arrival/now')} title="Now">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-3)', flexWrap: 'wrap' }}>
           <Badge tone="comm" dot>
             {String(greeting.now.mode || 'unknown')}
@@ -181,7 +174,7 @@ export default function Arrival() {
 
       {/* returned memories — only when a condition has actually fired */}
       {greeting.returned_memories.length ? (
-        <Card title="Returned memories" sub="a return-condition came true">
+        <Card {...stamp('ui://operator/arrival/memories')} title="Returned memories" sub="a return-condition came true">
           <List divided>
             {greeting.returned_memories.map((m, i) => (
               <ListRow key={i} primary={m.what_returns || m.memory || ''} secondary={m.fired_because} />
