@@ -7,10 +7,17 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { bootDS } from './ds'
+import { mintOperatorSession } from './lib/api'
 
 async function main() {
   const rootEl = document.getElementById('root')
   if (!rootEl) throw new Error('[operator-app] #root missing from index.html')
+  // #1b: mint the per-process operator-session token ALONGSIDE the DS boot (not blocking first
+  // paint on it — enforcement is flag-gated off today, so a mint failure must not brick the app).
+  // Loud in the console either way (no-silent-failures) — never swallowed into nothing.
+  void mintOperatorSession().catch((e: unknown) =>
+    console.warn('[operator-app] /api/operator-session mint failed — POSTs will carry no token:', e),
+  )
   try {
     await bootDS()
   } catch (e) {

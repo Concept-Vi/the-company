@@ -58,7 +58,7 @@ BRIDGE_ROUTES = (
     "/api/stream", "/api/mockup-feedback", "/api/mockup-feedback/status", "/api/corpus", "/api/graph",
     "/api/graphs", "/api/object_info", "/api/cognition_info", "/api/type_info", "/api/types", "/api/layers", "/api/layer-dims", "/api/models",
     "/api/chat-models", "/api/fit", "/api/surfaced", "/api/events", "/api/now", "/api/chat",
-    "/api/conversations", "/api/conversation", "/api/rhm-config", "/api/inbox", "/api/last-change",
+    "/api/conversations", "/api/conversation", "/api/rhm-config", "/api/inbox", "/api/needs-me", "/api/last-change",
     "/api/self-change-log", "/api/panels", "/api/capabilities", "/api/capabilities/introspection",
     "/api/ui_info", "/api/scope", "/api/pages",
     "/api/address-help", "/api/context", "/api/territory", "/api/may", "/api/access-of", "/api/keeper", "/api/up-translate", "/api/self-changes-at", "/api/annotations",
@@ -1914,6 +1914,12 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.rhm_config()))
             elif path == "/api/inbox":
                 self._send(200, json.dumps(SUITE.inbox_lanes()))
+            elif path == "/api/needs-me":                  # I1: the registry-driven NEEDS-ME INBOX —
+                # folds every `inbox_sources/*` row (decisions/surfaced/obligations/board_requests) into
+                # ONE card list (runtime.needs_me.needs_me_inbox). A GET = free (read, K0/#1b floor) —
+                # a broken source fails SOFT into the payload's `errors[]`, never a blank inbox.
+                from runtime.needs_me import needs_me_inbox
+                self._send(200, json.dumps(needs_me_inbox()))
             elif path == "/api/last-change":
                 self._send(200, json.dumps(SUITE.last_self_change() or {}))
             elif path == "/api/self-change-log":           # the self-modification AUDIT LEDGER (Finding #1)

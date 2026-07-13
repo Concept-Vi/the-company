@@ -1,6 +1,7 @@
 // THE CHROME — the DS AppShell (nav rail desktop / tab bar mobile, tokens/controls.css +
-// tokens/device.css) framing the view set. Nav: Arrival · Inbox · Chat · Channels — only
-// Arrival is real this beat; the rest render the honest .state-block empty state (K3).
+// tokens/device.css) framing the view set. Nav: Arrival · Inbox · Chat · Channels — Arrival
+// (B2) and Inbox (I1, the needs-me registry fold) are real; Chat/Channels still render the
+// honest .state-block empty state (K3 order).
 // Header: title + the theme/density dials (U6 Segmented) — three-way data-theme +
 // data-density setters on <html>; the DS axes do all the styling work from there.
 import { useEffect, useState } from 'react'
@@ -14,6 +15,7 @@ import { AppShell as AppShellDS } from '../../../design/claude-ds/components/App
 // erases `children` from the prop type. Loosen locally — runtime shape is unchanged.
 const AppShell = AppShellDS as unknown as React.ComponentType<Record<string, unknown>>
 import Arrival from './views/Arrival'
+import Inbox from './views/Inbox'
 import NotBuilt from './views/NotBuilt'
 import { installAddressCapture, installPointerBridge } from './lib/address'
 
@@ -77,6 +79,8 @@ export default function App() {
     <AppShell nav={NAV} activeId={active} onNavigate={setActive} header={header}>
       {active === 'arrival' ? (
         <Arrival />
+      ) : active === 'inbox' ? (
+        <Inbox />
       ) : (
         <div style={{ padding: 'var(--s-6)' }}>
           <Card>
