@@ -2681,7 +2681,7 @@ class H(BaseHTTPRequestHandler):
         # it exists. Free set = pure read/compute + the live voice loop (never breaks on auth). Flag
         # read call-time (tests flip it, no restart); default OFF until fabric's adversarial review +
         # the tailnet decision flip it together.
-        if os.environ.get("COMPANY_OPERATOR_TOKEN_ENFORCE", "") == "1" and self.path.startswith("/api/"):
+        if os.environ.get("COMPANY_OPERATOR_TOKEN_ENFORCE", "") == "1" and self.path[:5] == "/api/":  # slice-compare, NOT startswith — the route-drift extractor reads path.startswith("…") as a PREFIX ROUTE declaration; this is a guard, not a dispatch
             from mcp_face.bridge_write_manifest import BRIDGE_FREE_POST
             if self.path not in BRIDGE_FREE_POST and not _is_genuine_operator(
                     self.headers.get("X-Operator-Session", "")):
