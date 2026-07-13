@@ -91,7 +91,7 @@ BRIDGE_ROUTES = (
     # THE TOOL FACE (GAP 3): the generic invoke door — FAIL-CLOSED operator gate (mirrors remote.py
     # _is_allowed + remote_exposure.json + operator-face deltas + the unified-floor attribution slot).
     "/api/tools/invoke",
-    "/api/propose", "/api/decision", "/api/resolve", "/api/revert", "/api/checkpoint", "/api/pin",
+    "/api/propose", "/api/decision", "/api/resolve", "/api/resolver", "/api/revert", "/api/checkpoint", "/api/pin",
     "/api/react", "/api/attach-chat", "/api/approve-reach", "/api/intent-at",
     "/api/review/start", "/api/review/next", "/api/guide/start", "/api/walkthrough/start",
     "/api/journey/start", "/api/journey/step", "/api/journey/stop", "/api/debrief/start",
@@ -2673,6 +2673,26 @@ class H(BaseHTTPRequestHandler):
         # connections; curl uses a fresh socket per call, so it's invisible there). Force-close POST
         # sockets — GET (incl. the stream) still keeps alive.
         self.close_connection = True
+        # B4 leg (a) — THE CONSEQUENTIAL-WRITE GATE (co-design board://item-33970ac8; ONE auth doctrine
+        # with the remote front). When COMPANY_OPERATOR_TOKEN_ENFORCE=1: every POST NOT in the declared
+        # FREE set (mcp_face/bridge_write_manifest.py — fabric's declaration, lead-confirmed seed) must
+        # carry a genuine X-Operator-Session token → else 403 TEACH-AND-REFUSE. FAIL-CLOSED BY
+        # CONSTRUCTION: consequential = everything-not-free, so a brand-new route is gated the instant
+        # it exists. Free set = pure read/compute + the live voice loop (never breaks on auth). Flag
+        # read call-time (tests flip it, no restart); default OFF until fabric's adversarial review +
+        # the tailnet decision flip it together.
+        if os.environ.get("COMPANY_OPERATOR_TOKEN_ENFORCE", "") == "1" and self.path.startswith("/api/"):
+            from mcp_face.bridge_write_manifest import BRIDGE_FREE_POST
+            if self.path not in BRIDGE_FREE_POST and not _is_genuine_operator(
+                    self.headers.get("X-Operator-Session", "")):
+                self._send(403, json.dumps({
+                    "ok": False,
+                    "error": f"REFUSED — {self.path} is a CONSEQUENTIAL WRITE (everything outside the "
+                             f"declared FREE set in mcp_face/bridge_write_manifest.py is; fail-closed, "
+                             f"so new routes gate automatically). It needs a genuine operator-session "
+                             f"token: mint via GET /api/operator-session, send as X-Operator-Session. "
+                             f"Opening a route token-free is a reviewed manifest edit, never a bypass."}))
+                return
         try:
             if self.path == "/api/brain/ask":             # SUPERVISOR-AS-BRAIN backend (the RHM mind, source-router)
                 # The cognition behind window.forkVBrain (the frontend DOM module — projection/DNA's lane). POST
@@ -2917,7 +2937,11 @@ class H(BaseHTTPRequestHandler):
                         "is_gated": True, "gate": _GATED[_act], "executed": False,
                         "note": "PROPOSAL only — the embedded-CLI surfaces this; the operator/lead runs it through "
                                 "the gated path. The face proposes, it does not spawn/post (the floor)."}}))
-            elif self.path == "/api/resolve":               # THE RESOLVER door (4th-primitive seam) — pure computation
+            elif self.path == "/api/resolver":              # THE RESOLVER door (4th-primitive seam) — pure computation
+                # RENAMED from /api/resolve (2026-07-13, B4-leg2 manifest work): this newer route had
+                # SHADOWED the older OPERATOR approval door of the same name further down the elif chain
+                # — canvas's approve POSTs ({id,choice}) were hitting THIS pure resolver and 400ing.
+                # Distinct names, both live: /api/resolver = pure compute; /api/resolve = the verdict.
                 # resolve(invariant, coordinate) → {slot: value}. The HTTP door so the SURFACE can compute its
                 # own allocation from a coordinate (screen-size as root → derived layout, NO @media breakpoints).
                 # POST {invariant:{slot:relationship-AST|select|literal}, coordinate:{axis:value}}. runtime.resolver

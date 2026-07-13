@@ -33,17 +33,26 @@ toward safety (a real read wrongly gated is a visible 403, never an ungated writ
 # POST routes that run WITHOUT the operator token — pure read/compute + lenient traces. Sorted; one per
 # line so a diff reads as a boundary decision. Everything NOT here is consequential (token required).
 BRIDGE_FREE_POST = frozenset({
-    "/api/resolve",              # pure layout resolver (resolve(invariant,coordinate)->slot); no gate by its own header
+    # LEAD-CONFIRMED SEED (2026-07-13, route bodies read — the co-design's confirmation pass):
+    "/api/resolver",             # pure layout resolver — RENAMED from /api/resolve, which had SHADOWED the
+                                 # operator approval door of the same name (found BY this manifest work);
+                                 # /api/resolve (the verdict door) is consequential and NOT here.
     "/api/query",                # ledger.query read
     "/api/coa",                  # course-of-action compute (read)
     "/api/voice/log",            # lenient client-side voice trace (loss changes nothing)
-    # ⚠ fabric-uncertain — lead confirm these are pure read/compute before leaving free:
-    "/api/cognition/preview_turn",   # ⚠ name says preview (no commit) — confirm it writes nothing
-    "/api/cognition/role/dry_run",   # ⚠ dry_run — confirm no persist
-    "/api/cognition/rule/dry_run",   # ⚠ dry_run — confirm no persist
-    "/api/cognition/rule/validate",  # ⚠ validate — confirm no persist
-    "/api/decision/explain",         # ⚠ explain — confirm read-only (vs decision/* writes)
-    "/api/intent-at",                # ⚠ confirm read (a lookup) vs a build-intent write
+    "/api/cognition/preview_turn",   # CONFIRMED read-only (bridge.py: "PREVIEW a full staged turn (read-only)")
+    "/api/cognition/role/dry_run",   # CONFIRMED no persist (isolated test run)
+    "/api/cognition/rule/dry_run",   # CONFIRMED no persist (routing decision over samples)
+    "/api/cognition/rule/validate",  # CONFIRMED no persist (live AST validation)
+    "/api/decision/explain",         # CONFIRMED read-only (grounded walk-through compose)
+    # /api/intent-at REMOVED from free (lead): it RECORDS the comment durably (ingest_comment) and
+    # surfaces a build-intent — a consequential write despite the read-ish name.
+    # THE VOICE-LOOP COMPUTE SET (lead addition — pure compute; gating these breaks Tim's live voice
+    # loop mid-conversation with zero security win):
+    "/api/stt",                      # speech→text compute
+    "/api/tts",                      # text→speech compute
+    "/api/voice/stt-partial",        # streaming STT partials
+    "/api/voice/finished-thought",   # the semantic endpoint judge (pure compute)
 })
 # NOTE (why up-translate / address-help / stale-at are NOT here though they're reads): they are GET
 # routes on the read-only GET face, not POST — this manifest governs the POST face only (the test

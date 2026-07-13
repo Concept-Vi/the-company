@@ -74,10 +74,50 @@ def main():
         print("\nbridge_write_gate_acceptance: LAYER 1 PASS (layer 2 pending)")
         sys.exit(2)
 
-    # (LAYER 2 body — filled in when enforcement lands: spin the bridge on a tmp port, POST a
-    #  consequential route w/o a token → assert 403 + teaching body naming the route; POST a FREE route
-    #  → assert it runs; POST a consequential route WITH a minted token → assert it runs.)
-    check("LAYER 2 enforcement asserted", False, "layer-2 body not yet implemented — lead's wiring landed?")
+    # LAYER 2 body (lead-filled on landing the wiring, 2026-07-13 — fabric reviews): a LIVE ephemeral
+    # bridge on a scratch port; behavior asserted, not inferred.
+    import json as _json, threading, time, urllib.request, urllib.error
+    from http.server import ThreadingHTTPServer
+    import runtime.bridge as _bridge
+    PORT = 8977
+
+    def _req(path, method="POST", token=None, body=b"{}"):
+        r = urllib.request.Request(f"http://127.0.0.1:{PORT}{path}",
+                                   data=body if method == "POST" else None, method=method,
+                                   headers={"Content-Type": "application/json",
+                                            **({"X-Operator-Session": token} if token else {})})
+        try:
+            with urllib.request.urlopen(r, timeout=15) as resp:
+                return resp.status, _json.loads(resp.read() or b"{}")
+        except urllib.error.HTTPError as e:
+            try:
+                return e.code, _json.loads(e.read() or b"{}")
+            except ValueError:
+                return e.code, {}
+
+    srv = ThreadingHTTPServer(("127.0.0.1", PORT), _bridge.H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    time.sleep(0.3)
+    try:
+        code, out = _req("/api/journey/start")
+        check("consequential POST w/o token → 403 TEACH-AND-REFUSE", code == 403,
+              f"expected 403, got {code}: {out}")
+        check("…the refusal names the route + the manifest + the mint door",
+              "/api/journey/start" in str(out) and "bridge_write_manifest" in str(out)
+              and "operator-session" in str(out), f"teaching body incomplete: {out}")
+        code, out = _req("/api/operator-session", method="GET")
+        tok = out.get("operator_session", "")
+        check("the mint door answers (GET face, ungated)", code == 200 and bool(tok), f"{code} {out}")
+        code, out = _req("/api/journey/start", token=tok)
+        check("the SAME consequential POST WITH the minted token runs", code == 200, f"{code} {out}")
+        code, out = _req("/api/voice/log", body=b'{"event":"gate-probe"}')
+        check("a FREE POST runs without a token (the voice loop never breaks on auth)",
+              code == 200, f"{code} {out}")
+        code, out = _req("/api/route-invented-tomorrow")
+        check("an UNDECLARED route gates fail-closed (403 before any 404)", code == 403,
+              f"{code} {out}")
+    finally:
+        srv.shutdown()
     if FAIL:
         print(f"\nFAIL — {len(FAIL)} failed"); sys.exit(1)
     print("\nbridge_write_gate_acceptance: PASS (both layers)")

@@ -1,6 +1,6 @@
 // THE HOST RESOLVE-CONSUME — the host half of resolve(device-coordinate)→allocation (RESOLVER-CONTRACT.md §3/§7).
 // The host COMPUTES its layout allocation from the screen-size COORDINATE by asking fork's resolver primitive
-// (/api/resolve, POST {invariant, coordinate} → {ok, resolved:{slot:value}}) — NOT @media breakpoints. The
+// (/api/resolver — renamed 2026-07-13, was /api/resolve which SHADOWED the operator approval door; POST {invariant, coordinate} → {ok, resolved:{slot:value}}) — NOT @media breakpoints. The
 // invariant (the per-slot relationships) is authored HERE to the locked contract; fork's resolve() evaluates it.
 //
 // DEGRADE-CLEAN (contract §6): /api/resolve is committed-not-live until the lead's batched bounce (the running
@@ -62,7 +62,7 @@ export async function resolveAndApplyModal(): Promise<void> {
   const coordinate = coordinateFromWindow()
   let resolved: Record<string, unknown> | null = null
   try {
-    const r = await fetch('/api/resolve', {
+    const r = await fetch('/api/resolver', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ invariant: MODAL_INVARIANT, coordinate }),
